@@ -216,6 +216,26 @@ const MainApp: React.FC = () => {
     return () => { map.current?.remove(); map.current = null; };
   }, []);
 
+  // --- FIX: Map Layout Invalidation (Prevents Grey Tiles) ---
+  useEffect(() => {
+    if (!mapLoaded || !map.current) return;
+
+    // Force map to recalculate container size after render
+    const timer = setTimeout(() => {
+        map.current?.invalidateSize();
+    }, 200);
+
+    const handleResize = () => {
+        map.current?.invalidateSize();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+        clearTimeout(timer);
+        window.removeEventListener('resize', handleResize);
+    };
+  }, [mapLoaded]);
+
   // Map Tile Manager
   useEffect(() => {
       if (!map.current) return;
