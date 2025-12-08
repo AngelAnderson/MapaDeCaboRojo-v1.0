@@ -24,9 +24,13 @@ const getEnvVar = (key: string): string => {
   return '';
 };
 
-// Use VITE_ keys primarily
-const SUPABASE_URL = getEnvVar('VITE_SUPABASE_URL') || 'https://vprjteqgmanntvisjrvp.supabase.co';
-const SUPABASE_ANON_KEY = getEnvVar('VITE_SUPABASE_ANON_KEY');
+// HARDCODED FALLBACKS (To fix "Fake Data" issue if env vars fail)
+const DEFAULT_URL = 'https://vprjteqgmanntvisjrvp.supabase.co';
+const DEFAULT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwcmp0ZXFnbWFubnR2aXNqcnZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0NDAwODgsImV4cCI6MjA4MDAxNjA4OH0.JBRyroLWbjh6Ow9un24c77mbr_zl9P7hdd6YUzt8LgY';
+
+// Use VITE_ keys primarily, fallback to hardcoded strings
+const SUPABASE_URL = getEnvVar('VITE_SUPABASE_URL') || DEFAULT_URL;
+const SUPABASE_ANON_KEY = getEnvVar('VITE_SUPABASE_ANON_KEY') || DEFAULT_KEY;
 
 // --- HELPER: ERROR MESSAGE EXTRACTION ---
 const getErrorMessage = (error: any): string => {
