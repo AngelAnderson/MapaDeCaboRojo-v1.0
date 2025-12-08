@@ -1,30 +1,32 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { Place, PlaceCategory, ParkingStatus, AdminLog, Event, EventCategory } from '../types';
 
-// --- SAFE ENVIRONMENT VARIABLE EXTRACTION ---
-const getEnvVar = (key: string, viteKey: string): string => {
-  let val = '';
+// --- SAFE ENVIRONMENT VARIABLE EXTRACTION (Vite/Browser Compatible) ---
+const getEnvVar = (key: string): string => {
+  // 1. Check Vite Import Meta (Standard for Vite apps)
   try {
     // @ts-ignore
-    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[viteKey]) {
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
       // @ts-ignore
-      val = import.meta.env[viteKey];
+      if (import.meta.env[key]) return import.meta.env[key];
     }
   } catch (e) {}
 
-  if (!val) {
-    try {
-      if (typeof process !== 'undefined' && process.env && process.env[viteKey]) {
-        val = process.env[viteKey] || '';
-      }
-    } catch (e) {}
-  }
-  return val ? val.trim() : '';
+  // 2. Fallback check for process.env (but protected against RefError)
+  try {
+    // @ts-ignore
+    if (typeof process !== 'undefined' && typeof process.env !== 'undefined') {
+      // @ts-ignore
+      if (process.env[key]) return process.env[key];
+    }
+  } catch (e) {}
+  
+  return '';
 };
 
-const SUPABASE_URL = getEnvVar('VITE_SUPABASE_URL', 'VITE_SUPABASE_URL') || 'https://vprjteqgmanntvisjrvp.supabase.co';
-const SUPABASE_ANON_KEY = getEnvVar('VITE_SUPABASE_ANON_KEY', 'VITE_SUPABASE_ANON_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwcmp0ZXFnbWFubnR2aXNqcnZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0NDAwODgsImV4cCI6MjA4MDAxNjA4OH0.JBRyroLWbjh6Ow9un24c77mbr_zl9P7hdd6YUzt8LgY';
+// Use VITE_ keys primarily
+const SUPABASE_URL = getEnvVar('VITE_SUPABASE_URL') || 'https://vprjteqgmanntvisjrvp.supabase.co';
+const SUPABASE_ANON_KEY = getEnvVar('VITE_SUPABASE_ANON_KEY');
 
 // --- HELPER: ERROR MESSAGE EXTRACTION ---
 const getErrorMessage = (error: any): string => {
@@ -92,6 +94,7 @@ const createMockClient = () => {
               error: null 
           });
       },
+      signOut: () => Promise.resolve({ error: null })
     },
     storage: {
       from: () => ({

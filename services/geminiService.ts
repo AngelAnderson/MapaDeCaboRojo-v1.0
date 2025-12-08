@@ -1,21 +1,27 @@
 import { GoogleGenAI, Chat } from "@google/genai";
 import { Place, ParkingStatus, Event, Coordinates } from "../types";
 
-// --- SAFE API KEY RETRIEVAL ---
+// --- SAFE API KEY RETRIEVAL (VITE + VERCEL FRIENDLY) ---
 const getApiKey = (): string => {
-  // 1. Try Vite Env (Correct way for Vercel)
+  // 1. Primary: Vite Environment Variables (Browser)
   try {
     // @ts-ignore
-    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_GOOGLE_API_KEY) {
+    if (typeof import.meta !== 'undefined' && import.meta.env) {
       // @ts-ignore
-      return import.meta.env.VITE_GOOGLE_API_KEY;
+      if (import.meta.env.VITE_GOOGLE_API_KEY) return import.meta.env.VITE_GOOGLE_API_KEY;
+      // @ts-ignore
+      if (import.meta.env.API_KEY) return import.meta.env.API_KEY;
     }
   } catch (e) {}
 
-  // 2. Fallback to process.env
+  // 2. Fallback: Safer process.env check (prevents ReferenceError in strict browser modes)
   try {
-    if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
-      return process.env.API_KEY;
+    // @ts-ignore
+    if (typeof process !== 'undefined' && typeof process.env !== 'undefined') {
+      // @ts-ignore
+      if (process.env.VITE_GOOGLE_API_KEY) return process.env.VITE_GOOGLE_API_KEY;
+      // @ts-ignore
+      if (process.env.API_KEY) return process.env.API_KEY;
     }
   } catch (e) {}
   
