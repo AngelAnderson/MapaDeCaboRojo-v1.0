@@ -217,7 +217,7 @@ const MainApp: React.FC = () => {
             // --- SMOOTHNESS CONFIG ---
             zoomSnap: 0.1, // Allows fractional zooming (buttery smooth)
             zoomDelta: 0.5, // Smaller steps for buttons
-            wheelPxPerZoomLevel: 60, // FASTER ZOOM: Lower value = more sensitive (Default was 120)
+            wheelPxPerZoomLevel: 3, // FASTER ZOOM: Lower value = more sensitive (Default was 120)
             inertia: true,
             inertiaDeceleration: 3500, // Heavier feel
             easeLinearity: 0.2 // Smoother flyTo easing
