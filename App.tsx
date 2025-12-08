@@ -209,7 +209,19 @@ const MainApp: React.FC = () => {
   useEffect(() => {
     if (map.current || !mapContainer.current) return;
     try {
-        map.current = L.map(mapContainer.current, { center: [CABO_ROJO_CENTER.lat, CABO_ROJO_CENTER.lng], zoom: 13, zoomControl: false, attributionControl: false });
+        map.current = L.map(mapContainer.current, { 
+            center: [CABO_ROJO_CENTER.lat, CABO_ROJO_CENTER.lng], 
+            zoom: 13, 
+            zoomControl: false, 
+            attributionControl: false,
+            // --- SMOOTHNESS CONFIG ---
+            zoomSnap: 0.1, // Allows fractional zooming (buttery smooth)
+            zoomDelta: 0.5, // Smaller steps for buttons
+            wheelPxPerZoomLevel: 120, // Slower/smoother wheel zoom
+            inertia: true,
+            inertiaDeceleration: 3500, // Heavier feel
+            easeLinearity: 0.2 // Smoother flyTo easing
+        });
         map.current.on('moveend', () => { /* Optional: Update bounds state if needed */ });
         setMapLoaded(true);
     } catch (error) { console.error("Map failed", error); }
