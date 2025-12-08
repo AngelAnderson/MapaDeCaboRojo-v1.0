@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { createConciergeChat } from '../services/geminiService';
 import { ChatMessage, Place, Event, Coordinates } from '../types';
@@ -27,7 +28,7 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
   useEffect(() => {
     if (isOpen) {
         if (messages.length === 0) {
-            setMessages([{ role: 'model', text: '¡Wepa! Soy Cabo. ¿En qué te ayudo?' }]);
+            setMessages([{ role: 'model', text: '¡Wepa! Soy El Veci. ¿En qué te ayudo?' }]);
         }
         
         // Try to get location silently to help AI

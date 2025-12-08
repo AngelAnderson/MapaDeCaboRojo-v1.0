@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Chat } from "@google/genai";
 import { Place, ParkingStatus, Event, Coordinates } from "../types";
 
@@ -83,7 +84,7 @@ const sanitizeInput = (input: string): string => {
 };
 
 const BASE_SYSTEM_INSTRUCTION = `
-Eres **El Veci**, un vecino digital que vive en Cabo Rojo, Puerto Rico.
+Eres **El Vecino Digital** (todos te dicen de cariño **El Veci**), un vecino digital que vive en Cabo Rojo, Puerto Rico.
 
 TU PERSONALIDAD:
 - Eres jocoso, gracioso, hablas como vecino buena gente.
