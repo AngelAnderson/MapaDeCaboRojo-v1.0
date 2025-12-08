@@ -3,17 +3,32 @@ import { Place, ParkingStatus, Event, Coordinates } from "../types";
 
 // --- SAFE API KEY RETRIEVAL ---
 const getApiKey = (): string => {
+  // 1. Try Vite Env (Correct way for Vercel)
   try {
-    // Check for process.env safely
+    // @ts-ignore
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_GOOGLE_API_KEY) {
+      // @ts-ignore
+      return import.meta.env.VITE_GOOGLE_API_KEY;
+    }
+  } catch (e) {}
+
+  // 2. Fallback to process.env
+  try {
     if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
       return process.env.API_KEY;
     }
   } catch (e) {}
+  
   return '';
 };
 
-// Initialize Gemini
-const ai = new GoogleGenAI({ apiKey: getApiKey() });
+// Initialize Gemini Safely (Lazy Load)
+const apiKey = getApiKey();
+const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+
+if (!ai) {
+    console.warn("⚠️ Google Gemini API Key missing. Chat features will be disabled.");
+}
 
 // --- SECURITY: RATE LIMITER ---
 class RateLimiter {
@@ -107,9 +122,6 @@ const formatPlacesForContext = (places: Place[], userLocation?: Coordinates): st
     
     let context = "\n\n### CONOCIMIENTO LOCAL (LUGARES REALES EN TU BASE DE DATOS):\n";
     
-    // Add logic to sort by distance if location is available? 
-    // For now, just appending distance info is enough for the LLM to decide.
-    
     places.forEach(p => {
         let distanceInfo = "";
         if (userLocation && p.coords && p.coords.lat) {
@@ -164,6 +176,8 @@ const formatEventsForContext = (events: Event[]): string => {
 };
 
 export const createConciergeChat = (places: Place[], events: Event[] = [], userLocation?: Coordinates): Chat => {
+  if (!ai) throw new Error("AI Service Unavailable (Missing Key)");
+
   const placeContext = formatPlacesForContext(places, userLocation);
   const eventContext = formatEventsForContext(events);
   
@@ -189,6 +203,7 @@ export const generateMarketingCopy = async (
     category: string, 
     platform: 'instagram' | 'email' | 'radio' = 'instagram'
 ): Promise<string> => {
+    if (!ai) return "Sistema AI desconectado.";
     if (!limiter.check()) return "¡Chico, aguanta! Mucha prisa. Intenta en un minuto.";
     
     try {
@@ -222,6 +237,7 @@ export const generateMarketingCopy = async (
 }
 
 export const enhanceDescription = async (currentDescription: string, name: string): Promise<string> => {
+    if (!ai) return currentDescription;
     if (!limiter.check()) return currentDescription;
 
     try {
@@ -243,6 +259,7 @@ export const enhanceDescription = async (currentDescription: string, name: strin
 }
 
 export const suggestTags = async (name: string, category: string): Promise<string> => {
+    if (!ai) return "";
     if (!limiter.check()) return "";
 
     try {
