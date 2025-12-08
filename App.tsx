@@ -451,8 +451,8 @@ const MainApp: React.FC = () => {
     <div className="h-screen w-screen flex flex-col overflow-hidden relative bg-slate-50 dark:bg-slate-900 font-sans transition-colors duration-500">
       <div className="noise-overlay"></div>
       
-      {/* Top Bar */}
-      <div className="absolute top-0 left-0 right-0 z-[1000] p-5 pointer-events-none flex justify-between items-start">
+      {/* Top Bar - Semantic Header */}
+      <header className="absolute top-0 left-0 right-0 z-[1000] p-5 pointer-events-none flex justify-between items-start">
         <WeatherWidget />
         <div className="pointer-events-auto flex flex-col gap-3 items-end">
             <button onClick={toggleTheme} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-amber-500 dark:text-purple-300 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">
@@ -461,10 +461,10 @@ const MainApp: React.FC = () => {
             <button onClick={() => setLanguage(language === 'es' ? 'en' : 'es')} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-800 dark:text-white p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-[10px] uppercase hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">{language === 'es' ? 'EN' : 'ES'}</button>
             <button onClick={() => setIsAdminOpen(true)} className="bg-slate-900/80 dark:bg-slate-800/80 backdrop-blur-md text-white w-10 h-10 rounded-full flex items-center justify-center text-xs hover:bg-black transition-colors shadow-lg"><i className="fa-solid fa-lock"></i></button>
         </div>
-      </div>
+      </header>
       
-      {/* Map Container */}
-      <div ref={mapContainer} className="flex-1 w-full h-full focus:outline-none relative z-0 bg-slate-100 dark:bg-slate-800" />
+      {/* Map Container - Semantic Main */}
+      <main ref={mapContainer} className="flex-1 w-full h-full focus:outline-none relative z-0 bg-slate-100 dark:bg-slate-800" role="application" aria-label="Interactive Map of Cabo Rojo" />
       
       {/* User Location FAB */}
       <div className="absolute right-5 bottom-[100px] z-[1000]">
@@ -474,17 +474,19 @@ const MainApp: React.FC = () => {
       </div>
 
       {/* Interface Elements */}
-      <ExplorerSheet 
-        places={filteredList} 
-        onSelect={(p) => setSelectedPlace(p)} 
-        isVisible={activeTab === 'explore'}
-        searchText={searchText}
-        onSearchChange={setSearchText}
-        resultCount={resultCount}
-        activeGroup={activeGroup}
-        onCategoryChange={(g) => { setActiveGroup(g); setSearchText(''); }}
-        focusTrigger={searchFocusTrigger}
-      />
+      <aside>
+        <ExplorerSheet 
+          places={filteredList} 
+          onSelect={(p) => setSelectedPlace(p)} 
+          isVisible={activeTab === 'explore'}
+          searchText={searchText}
+          onSearchChange={setSearchText}
+          resultCount={resultCount}
+          activeGroup={activeGroup}
+          onCategoryChange={(g) => { setActiveGroup(g); setSearchText(''); }}
+          focusTrigger={searchFocusTrigger}
+        />
+      </aside>
 
       <BottomNav 
         activeTab={activeTab} 
@@ -500,7 +502,19 @@ const MainApp: React.FC = () => {
         isDarkMode={isDarkMode}
       />
 
-      {selectedPlace && <div className="z-[3100] relative"><PlaceCard place={selectedPlace} onClose={() => setSelectedPlace(null)} onNavigate={handleNavigate} onAskAi={() => { setSelectedPlace(null); setIsConciergeOpen(true); }} onSuggestEdit={() => { setSelectedPlace(null); setIsSuggestOpen(true); }} /></div>}
+      {selectedPlace && (
+        <div className="z-[3100] relative">
+          <PlaceCard 
+            place={selectedPlace} 
+            allPlaces={places} // Pass full list for Smart Links
+            onSelect={setSelectedPlace} // Pass handler for Smart Links
+            onClose={() => setSelectedPlace(null)} 
+            onNavigate={handleNavigate} 
+            onAskAi={() => { setSelectedPlace(null); setIsConciergeOpen(true); }} 
+            onSuggestEdit={() => { setSelectedPlace(null); setIsSuggestOpen(true); }} 
+          />
+        </div>
+      )}
       
       <div className="z-[3200] relative"><Concierge isOpen={isConciergeOpen} onClose={() => setIsConciergeOpen(false)} places={places} events={events} onNavigateToPlace={handleChatNavigation} /></div>
       <div className="z-[3200] relative"><ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} onSuggest={() => { setIsContactOpen(false); setIsSuggestOpen(true); }} /></div>

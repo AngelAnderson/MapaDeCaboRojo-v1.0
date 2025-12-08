@@ -2,7 +2,30 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-    <title>Mapa de Cabo Rojo</title>
+    
+    <!-- PWA / App Configuration -->
+    <title>Mapa de Cabo Rojo | Guía Turística y Playas</title>
+    <meta name="description" content="La guía digital más completa de Cabo Rojo, Puerto Rico. Encuentra playas, restaurantes, chinchorros y eventos locales. Pregúntale a El Veci, tu asistente inteligente." />
+    <meta name="keywords" content="Cabo Rojo, Puerto Rico, Playa Sucia, Combate, Boquerón, Turismo, Restaurantes, Guía Turística" />
+    <meta name="robots" content="index, follow" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0F766E" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <!-- Open Graph / Social Sharing (WhatsApp, Facebook, iMessage) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://mapadecaborojo.com/" />
+    <meta property="og:title" content="Mapa de Cabo Rojo 🌴" />
+    <meta property="og:description" content="Playas, chinchorros y consejos locales. Pregúntale a El Veci qué hacer hoy." />
+    <meta property="og:image" content="https://images.unsplash.com/photo-1599060690625-f70e9c8cb5eb?q=80&w=1200&auto=format&fit=crop" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Mapa de Cabo Rojo" />
+    <meta name="twitter:description" content="Tu guía inteligente para el oeste de Puerto Rico." />
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1599060690625-f70e9c8cb5eb?q=80&w=1200&auto=format&fit=crop" />
+
     <!-- Tailwind CSS (Keep CDN for simplicity, or move to build step later) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Leaflet CSS -->
@@ -117,14 +140,14 @@
   <script type="importmap">
 {
   "imports": {
-    "vite": "https://aistudiocdn.com/vite@^7.2.7",
-    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.2",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0",
-    "react/": "https://aistudiocdn.com/react@^19.2.1/",
     "react": "https://aistudiocdn.com/react@^19.2.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0",
     "leaflet": "https://aistudiocdn.com/leaflet@^1.9.4",
-    "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.87.0"
+    "@supabase/supabase-js": "https://aistudiocdn.com/@supabase/supabase-js@^2.87.0",
+    "vite": "https://aistudiocdn.com/vite@^7.2.7",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.2"
   }
 }
 </script>
