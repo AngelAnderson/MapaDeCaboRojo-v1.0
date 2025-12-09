@@ -18,7 +18,7 @@ const SectionHeader = ({ title, icon, isOpen, onClick }: { title: string, icon: 
     </button>
 );
 
-const InputGroup = ({ label, children }: { label: string, children: React.ReactNode }) => (
+const InputGroup = ({ label, children }: { label: string, children?: React.ReactNode }) => (
     <div className="mb-4">
         <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">{label}</label>
         {children}

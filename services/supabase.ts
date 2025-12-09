@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import { Place, PlaceCategory, ParkingStatus, AdminLog, Event, EventCategory } from '../types';
 
@@ -122,18 +123,26 @@ export const supabase = isLive
 
 // --- MAPPERS ---
 const mapCategory = (catRaw: string, subCatRaw?: string): PlaceCategory => {
-  const c = (catRaw || '').toLowerCase();
-  const s = (subCatRaw || '').toLowerCase();
-  const combined = c + ' ' + s;
-  if (combined.includes('beach') || combined.includes('playa') || combined.includes('cayo')) return PlaceCategory.BEACH;
-  if (combined.includes('sight') || combined.includes('faro') || combined.includes('turis') || combined.includes('landmark')) return PlaceCategory.SIGHTS;
-  if (combined.includes('bar') || combined.includes('pub') || combined.includes('discoteca') || combined.includes('night')) return PlaceCategory.NIGHTLIFE;
-  if (combined.includes('food') || combined.includes('restaurant') || combined.includes('comida') || combined.includes('bakery')) return PlaceCategory.FOOD;
-  if (combined.includes('hotel') || combined.includes('airbnb') || combined.includes('motel')) return PlaceCategory.LODGING;
-  if (combined.includes('hospital') || combined.includes('pharmacy') || combined.includes('medical')) return PlaceCategory.HEALTH;
-  if (combined.includes('shop') || combined.includes('store') || combined.includes('mall')) return PlaceCategory.SHOPPING;
-  if (combined.includes('tour') || combined.includes('rental') || combined.includes('boat')) return PlaceCategory.ACTIVITY;
-  if (combined.includes('mechanic') || combined.includes('taller') || combined.includes('gov') || combined.includes('bank')) return PlaceCategory.SERVICE;
+  const cleanCat = (catRaw || '').toUpperCase().trim();
+  
+  // 1. Direct Match: If the DB value exactly matches a known Category Enum, use it.
+  if (Object.values(PlaceCategory).includes(cleanCat as PlaceCategory)) {
+      return cleanCat as PlaceCategory;
+  }
+
+  // 2. Fuzzy Match: Fallback for legacy data or free-text entries
+  const combined = (catRaw || '').toLowerCase() + ' ' + (subCatRaw || '').toLowerCase();
+  
+  if (combined.includes('beach') || combined.includes('playa') || combined.includes('cayo') || combined.includes('balneario')) return PlaceCategory.BEACH;
+  if (combined.includes('sight') || combined.includes('faro') || combined.includes('turis') || combined.includes('landmark') || combined.includes('monument')) return PlaceCategory.SIGHTS;
+  if (combined.includes('bar') || combined.includes('pub') || combined.includes('discoteca') || combined.includes('night') || combined.includes('drinks') || combined.includes('club')) return PlaceCategory.NIGHTLIFE;
+  if (combined.includes('food') || combined.includes('restaurant') || combined.includes('comida') || combined.includes('bakery') || combined.includes('cafe') || combined.includes('pizza') || combined.includes('burger')) return PlaceCategory.FOOD;
+  if (combined.includes('hotel') || combined.includes('airbnb') || combined.includes('motel') || combined.includes('guesthouse') || combined.includes('resort')) return PlaceCategory.LODGING;
+  if (combined.includes('hospital') || combined.includes('pharmacy') || combined.includes('medical') || combined.includes('clinic') || combined.includes('doctor') || combined.includes('health')) return PlaceCategory.HEALTH;
+  if (combined.includes('shop') || combined.includes('store') || combined.includes('mall') || combined.includes('boutique') || combined.includes('market')) return PlaceCategory.SHOPPING;
+  if (combined.includes('tour') || combined.includes('rental') || combined.includes('boat') || combined.includes('activity') || combined.includes('charter') || combined.includes('dive')) return PlaceCategory.ACTIVITY;
+  if (combined.includes('mechanic') || combined.includes('taller') || combined.includes('gov') || combined.includes('bank') || combined.includes('police') || combined.includes('atm') || combined.includes('service')) return PlaceCategory.SERVICE;
+  
   return PlaceCategory.LOGISTICS;
 };
 
