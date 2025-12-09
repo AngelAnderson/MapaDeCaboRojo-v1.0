@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -12,7 +13,8 @@ const CATEGORY_GROUPS = [
   { key: 'COMIDA', labelKey: 'cat_food', icon: 'utensils', color: 'bg-[#FF3B30] text-white shadow-lg shadow-red-500/30' },
   { key: 'HOSPEDAJE', labelKey: 'cat_lodging', icon: 'bed', color: 'bg-[#5AC8FA] text-white shadow-lg shadow-cyan-500/30' },
   { key: 'SERVICIOS', labelKey: 'cat_services', icon: 'map-pin', color: 'bg-[#8E8E93] text-white shadow-lg shadow-slate-500/30' },
-  { key: 'EVENTOS', labelKey: 'Eventos', icon: 'calendar-star', color: 'bg-[#AF52DE] text-white shadow-lg shadow-purple-500/30' }
+  { key: 'EVENTOS', labelKey: 'Eventos', icon: 'calendar-star', color: 'bg-[#AF52DE] text-white shadow-lg shadow-purple-500/30' },
+  { key: 'FAVORITES', labelKey: 'cat_favorites', icon: 'heart', color: 'bg-pink-600 text-white shadow-lg shadow-pink-500/30' }
 ];
 
 const CategoryPills: React.FC<CategoryPillsProps> = ({ activeGroup, onSelect }) => {
@@ -23,7 +25,6 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({ activeGroup, onSelect }) 
       <div className="flex gap-3 w-max pr-4">
         {CATEGORY_GROUPS.map((group) => {
           const isActive = activeGroup === group.key;
-          // Handle dynamic translations vs static labels
           const label = group.labelKey.startsWith('cat_') ? t(group.labelKey as any) : group.labelKey;
           
           return (

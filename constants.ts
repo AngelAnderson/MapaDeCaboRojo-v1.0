@@ -1,5 +1,5 @@
 
-import { Place, PlaceCategory, ParkingStatus } from './types';
+import { Place, PlaceCategory, ParkingStatus, Event, EventCategory } from './types';
 
 // Leaflet/OSM does not require a token for standard tiles
 export const CABO_ROJO_CENTER = { lat: 17.9620, lng: -67.1650 };
@@ -157,5 +157,35 @@ export const PLACES: Place[] = [
     tags: ['farmacia', 'hielo', 'sunblock'],
     address: 'PR-100',
     vibe: ['Práctico']
+  }
+];
+
+export const FALLBACK_EVENTS: Event[] = [
+  {
+    id: 'evt-1',
+    title: 'Noche de Jazz en la Plaza',
+    description: 'Música en vivo con artistas locales. Trae tu silla.',
+    category: EventCategory.MUSIC,
+    startTime: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+    endTime: new Date(Date.now() + 90000000).toISOString(),
+    locationName: 'Plaza Ramón Emeterio Betances',
+    status: 'published',
+    isFeatured: true,
+    isRecurring: false,
+    coords: { lat: 18.0865, lng: -67.1457 },
+    imageUrl: 'https://images.unsplash.com/photo-1511192336575-5a79af67a629?auto=format&fit=crop&q=80&w=1000'
+  },
+  {
+    id: 'evt-2',
+    title: 'Festival del Pescao',
+    description: 'Gastronomía, artesanías y música en Puerto Real.',
+    category: EventCategory.FESTIVAL,
+    startTime: new Date(Date.now() + 172800000).toISOString(), // Day after tomorrow
+    locationName: 'Puerto Real',
+    status: 'published',
+    isFeatured: true,
+    isRecurring: false,
+    coords: { lat: 18.0750, lng: -67.1886 },
+    imageUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&q=80&w=1000'
   }
 ];

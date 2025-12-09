@@ -4,6 +4,7 @@ import { createConciergeChat } from '../services/geminiService';
 import { ChatMessage, Place, Event, Coordinates } from '../types';
 import Button from './Button';
 import { useLanguage } from '../i18n/LanguageContext';
+import { logUserActivity } from '../services/supabase';
 
 interface ConciergeProps {
   isOpen: boolean;
@@ -62,6 +63,9 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
     setInput('');
     setIsLoading(true);
     
+    // Log user activity
+    logUserActivity('USER_CHAT', textToSend);
+
     try {
       if (chatRef.current) {
         const result = await chatRef.current.sendMessage({ message: textToSend });

@@ -14,6 +14,7 @@ export const translations = {
     cat_food: "Comer",
     cat_lodging: "Dormir",
     cat_services: "Servicios",
+    cat_favorites: "Favoritos",
     directions: "Ir Ahora",
     call: "Llamar",
     website: "Web",
@@ -57,19 +58,18 @@ export const translations = {
     btn_email: "Email",
     btn_x: "Twitter",
     btn_instagram: "Instagram",
-    // New Contact Hub Keys
     contact_ai_promo: "Pregúntale al Veci",
     contact_ai_desc: "¿Buscas algo rápido? El chat es lo más veloz.",
     contact_business_title: "¿Tienes un Negocio?",
     contact_business_action: "Gestionar mi Negocio",
     contact_socials: "Redes Sociales",
     report_issue: "Reportar Error",
-    // Navigation
     nav_map: "Mapa",
     nav_explore: "Explorar",
     nav_add: "Añadir",
     nav_help: "Chat",
     nav_contact: "Contacto",
+    add_to_calendar: "Añadir a Calendario",
   },
   en: {
     loading: "Loading...",
@@ -85,6 +85,7 @@ export const translations = {
     cat_food: "Eat",
     cat_lodging: "Stay",
     cat_services: "Services",
+    cat_favorites: "Favorites",
     directions: "Get There",
     call: "Call",
     website: "Web",
@@ -128,18 +129,17 @@ export const translations = {
     btn_email: "Email",
     btn_x: "Twitter",
     btn_instagram: "Instagram",
-    // New Contact Hub Keys
     contact_ai_promo: "Ask El Veci (AI)",
     contact_ai_desc: "Need a quick answer? Chat is fastest.",
     contact_business_title: "Business Owner?",
     contact_business_action: "Manage My Business",
     contact_socials: "Social Media",
     report_issue: "Report Bug",
-    // Navigation
     nav_map: "Map",
     nav_explore: "Explore",
     nav_add: "Add",
     nav_help: "Chat",
     nav_contact: "Contact",
+    add_to_calendar: "Add to Calendar",
   }
 };

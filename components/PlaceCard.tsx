@@ -1,15 +1,18 @@
+
 import React from 'react';
 import { Place, ParkingStatus } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
 
 interface PlaceCardProps {
   place: Place;
-  allPlaces?: Place[]; // Added for Smart Links
-  onSelect?: (place: Place) => void; // Added for Smart Links navigation
+  allPlaces?: Place[]; 
+  onSelect?: (place: Place) => void; 
   onClose: () => void;
   onNavigate: () => void;
   onAskAi: (question: string) => void;
   onSuggestEdit: () => void;
+  isFavorite?: boolean;
+  onToggleFavorite?: () => void;
 }
 
 const InfoBadge = ({ icon, label, active, colorClass, darkColorClass }: any) => (
@@ -19,14 +22,14 @@ const InfoBadge = ({ icon, label, active, colorClass, darkColorClass }: any) => 
   </div>
 );
 
-const ActionButton = ({ icon, label, onClick, disabled, primary }: any) => (
-  <button onClick={onClick} disabled={disabled} className={`flex-1 flex flex-col items-center justify-center py-3 rounded-2xl transition-transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 ${primary ? 'bg-teal-600 text-white shadow-lg shadow-teal-900/20' : 'bg-white dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-600'}`}>
+const ActionButton = ({ icon, label, onClick, disabled, primary, color }: any) => (
+  <button onClick={onClick} disabled={disabled} className={`flex-1 flex flex-col items-center justify-center py-3 rounded-2xl transition-transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 ${primary ? 'bg-teal-600 text-white shadow-lg shadow-teal-900/20' : color ? color : 'bg-white dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-600'}`}>
     <i className={`fa-solid fa-${icon} text-lg mb-1`} aria-hidden="true"></i>
     <span className="text-xs font-bold">{label}</span>
   </button>
 );
 
-const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClose, onNavigate, onAskAi, onSuggestEdit }) => {
+const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClose, onNavigate, onAskAi, onSuggestEdit, isFavorite, onToggleFavorite }) => {
   const { t } = useLanguage();
 
   const handleShare = async () => {
@@ -41,13 +44,29 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
       if (place.gmapsUrl) { window.open(place.gmapsUrl, '_blank'); } else { onNavigate(); }
   };
 
-  // --- SMART LINKS LOGIC ---
-  // Find up to 3 places with the same category, excluding the current one
+  const handleCalendar = () => {
+      if (!place.contact_info?.eventStart) return;
+      
+      const start = new Date(place.contact_info.eventStart).toISOString().replace(/-|:|\.\d\d\d/g, "");
+      const end = place.contact_info.eventEnd 
+          ? new Date(place.contact_info.eventEnd).toISOString().replace(/-|:|\.\d\d\d/g, "")
+          : new Date(new Date(place.contact_info.eventStart).getTime() + 2 * 60 * 60 * 1000).toISOString().replace(/-|:|\.\d\d\d/g, "");
+      
+      const title = encodeURIComponent(place.name);
+      const details = encodeURIComponent(place.description);
+      const location = encodeURIComponent(place.address || 'Cabo Rojo, PR');
+      
+      const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`;
+      window.open(url, '_blank');
+  };
+
   const relatedPlaces = allPlaces 
     ? allPlaces
         .filter(p => p.id !== place.id && p.category === place.category)
         .slice(0, 3) 
     : [];
+  
+  const isEvent = place.contact_info?.isEvent === true;
 
   return (
     <article className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.3)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.6)] z-[2000] animate-slide-up max-h-[90vh] overflow-y-auto flex flex-col transition-colors duration-300" role="dialog" aria-modal="true" aria-labelledby="place-name">
@@ -59,13 +78,23 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
       <header className="relative w-full h-72 shrink-0 group">
         <img src={place.imageUrl || 'https://picsum.photos/800/600'} alt={place.name} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
-        <button onClick={onClose} aria-label="Close" className="absolute top-4 right-4 bg-black/30 backdrop-blur-md text-white p-3 rounded-full w-10 h-10 flex items-center justify-center hover:bg-black/50 transition-colors z-30 focus:outline-none focus:ring-2 focus:ring-white">
-          <i className="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
-        </button>
+        
+        <div className="absolute top-4 right-4 flex gap-3 z-30">
+             {onToggleFavorite && (
+                <button onClick={onToggleFavorite} className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-colors ${isFavorite ? 'bg-pink-500 text-white' : 'bg-black/30 text-white hover:bg-black/50'}`}>
+                    <i className={`fa-${isFavorite ? 'solid' : 'regular'} fa-heart text-lg`}></i>
+                </button>
+             )}
+            <button onClick={onClose} aria-label="Close" className="bg-black/30 backdrop-blur-md text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-black/50 transition-colors focus:outline-none focus:ring-2 focus:ring-white">
+                <i className="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+            </button>
+        </div>
+
         <div className="absolute bottom-0 left-0 p-6 text-white w-full">
           <div className="flex items-center gap-2 mb-2">
             <span className="bg-teal-500/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide shadow-sm">{place.category}</span>
-            {place.priceLevel && <span className="bg-slate-800/60 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold">{place.priceLevel}</span>}
+            {place.priceLevel && !isEvent && <span className="bg-slate-800/60 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold">{place.priceLevel}</span>}
+            {isEvent && <span className="bg-purple-600/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase">📅 {place.priceLevel}</span>}
             {place.isVerified && <span className="text-blue-400 text-xs flex items-center gap-1"><i className="fa-solid fa-circle-check" aria-hidden="true"></i></span>}
           </div>
           <h1 id="place-name" className="text-3xl font-black leading-tight shadow-black drop-shadow-md">{place.name}</h1>
@@ -80,8 +109,11 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
       <div className="p-6 space-y-6 bg-white dark:bg-slate-800 -mt-4 rounded-t-3xl relative z-10 flex-1 transition-colors duration-300">
         <nav className="flex gap-3">
           <ActionButton icon="location-arrow" label={t('directions')} onClick={navigationHandler} primary />
-          <ActionButton icon="phone" label={t('call')} onClick={() => window.open(`tel:${place.phone}`)} disabled={!place.phone} />
-          <ActionButton icon="globe" label={t('website')} onClick={() => window.open(place.website, '_blank')} disabled={!place.website} />
+          {isEvent ? (
+              <ActionButton icon="calendar-plus" label={t('add_to_calendar')} onClick={handleCalendar} color="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800" />
+          ) : (
+              <ActionButton icon="phone" label={t('call')} onClick={() => window.open(`tel:${place.phone}`)} disabled={!place.phone} />
+          )}
           <ActionButton icon="share-nodes" label={t('share')} onClick={handleShare} />
         </nav>
 
@@ -95,7 +127,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
                 {place.address && (
                     <div className="flex items-start gap-3">
                         <i className="fa-solid fa-map-pin text-teal-600 dark:text-teal-400 mt-1"></i>
-                        <div><p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase">{t('address')}</p><p className="text-sm text-slate-700 dark:text-slate-200">{place.address}</p></div>
+                        <div><p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase">{isEvent ? 'Ubicación' : t('address')}</p><p className="text-sm text-slate-700 dark:text-slate-200">{place.address}</p></div>
                     </div>
                 )}
                 {place.phone && (
@@ -132,7 +164,6 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
           </button>
         </div>
 
-        {/* --- SMART INTERNAL LINKING SECTION --- */}
         {relatedPlaces.length > 0 && onSelect && (
           <section className="pt-2">
             <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-3 tracking-wider">Explora También</h3>

@@ -126,7 +126,8 @@ const mapCategory = (catRaw: string, subCatRaw?: string): PlaceCategory => {
   const cleanCat = (catRaw || '').toUpperCase().trim();
   
   // 1. Direct Match: If the DB value exactly matches a known Category Enum, use it.
-  if (Object.values(PlaceCategory).includes(cleanCat as PlaceCategory)) {
+  const validCategories = Object.values(PlaceCategory) as string[];
+  if (validCategories.includes(cleanCat)) {
       return cleanCat as PlaceCategory;
   }
 
@@ -154,12 +155,29 @@ const mapParking = (amenities: any): ParkingStatus => {
   return ParkingStatus.FREE;
 };
 
+const generateSlug = (name: string): string => {
+    const cleanName = name.toLowerCase().trim()
+        .replace(/[^\w\s-]/g, '') // Remove non-word chars
+        .replace(/[\s_-]+/g, '-') // Replace spaces and underscores with -
+        .replace(/^-+|-+$/g, ''); // Trim leading/trailing -
+    
+    // Append random string to ensure uniqueness and avoid PK/Unique constraint errors
+    const randomSuffix = Math.random().toString(36).substring(2, 7);
+    return `${cleanName}-${randomSuffix}`;
+};
+
 const mapPlaceToDb = (place: Partial<Place>) => {
     // Ensure we handle partial updates gracefully, but for now we reconstruct the whole object.
     // Use nullish coalescing (??) to preserve 0/false values.
+    
+    // If it has a slug (existing item), keep it. If not, generate new unique one.
+    const slug = place.slug && place.slug.length > 2 
+        ? place.slug 
+        : generateSlug(place.name || 'untitled');
+
     return {
         name: place.name || '',
-        slug: place.slug || place.name?.toLowerCase().replace(/ /g, '-') || '',
+        slug: slug,
         description: place.description || '',
         category: place.category || 'SIGHTS', 
         lat: place.coords?.lat ?? 0,
@@ -194,6 +212,23 @@ const mapPlaceToDb = (place: Partial<Place>) => {
     };
 };
 
+const mapEventToDb = (event: Partial<Event>) => {
+    return {
+        title: event.title || 'Untitled Event',
+        description: event.description || '',
+        category: event.category || 'COMMUNITY',
+        start_time: event.startTime,
+        end_time: event.endTime,
+        location_name: event.locationName || '',
+        place_id: event.placeId || null,
+        image_url: event.imageUrl || '',
+        status: event.status || 'published',
+        is_recurring: event.isRecurring || false,
+        is_featured: event.isFeatured || false,
+        map_link: event.mapLink || ''
+    };
+};
+
 const logAction = async (action: string, placeName: string, details: string) => {
     try {
         await supabase.from('admin_logs').insert([{
@@ -203,6 +238,30 @@ const logAction = async (action: string, placeName: string, details: string) => 
             created_at: new Date().toISOString()
         }]);
     } catch (e) { console.warn(e); }
+};
+
+export const logUserActivity = async (action: 'USER_SEARCH' | 'USER_CHAT', term: string) => {
+    try {
+        await supabase.from('admin_logs').insert([{
+            action,
+            place_name: term.substring(0, 100), // Truncate for safety
+            details: 'User Activity',
+            created_at: new Date().toISOString()
+        }]);
+    } catch (e) { 
+        console.warn("User logging failed (Likely Permissions/RLS):", e); 
+    }
+};
+
+export const getAdminLogs = async (): Promise<AdminLog[]> => {
+    try {
+        const { data, error } = await supabase.from('admin_logs').select('*').order('created_at', { ascending: false }).limit(50);
+        if (error) {
+            console.warn("Log fetch error (table might not exist yet):", error.message);
+            return [];
+        }
+        return data as AdminLog[];
+    } catch (e) { return []; }
 };
 
 export const getPlaces = async (): Promise<Place[]> => {
@@ -258,13 +317,35 @@ export const getPlaces = async (): Promise<Place[]> => {
 
 export const getEvents = async (): Promise<Event[]> => {
     try {
-        const { data, error } = await supabase.from('events').select(`*, places (lat, lon)`).gte('start_time', new Date().toISOString()).eq('status', 'published');
+        // Try simple select first to avoid join errors if relation is missing
+        const { data, error } = await supabase.from('events').select(`*, places (lat, lon)`).order('start_time', { ascending: true });
+        
         if (error) {
-            if (!error.message.includes('relation "events" does not exist')) {
-                console.error("Events fetch error:", error);
-            }
-            return [];
+             // Fallback: If relation 'places' doesn't exist, try simple select
+            console.warn("Complex event fetch failed, trying simple:", error.message);
+            const simple = await supabase.from('events').select('*').order('start_time', { ascending: true });
+            if (simple.error) throw simple.error;
+            if (!simple.data) return [];
+            
+             return simple.data.map((row: any) => ({
+                id: row.id,
+                title: row.title,
+                description: row.description || '',
+                category: (row.category as EventCategory) || EventCategory.COMMUNITY,
+                startTime: row.start_time,
+                endTime: row.end_time,
+                isRecurring: row.is_recurring || false,
+                recurrenceRule: row.recurrence_rule,
+                locationName: row.location_name || '',
+                placeId: row.place_id,
+                imageUrl: row.image_url,
+                status: row.status,
+                isFeatured: row.is_featured || false,
+                mapLink: row.map_link,
+                coords: undefined // No coords in simple fetch
+            }));
         }
+
         if (!data) return [];
         return data.map((row: any) => ({
             id: row.id,
@@ -283,7 +364,10 @@ export const getEvents = async (): Promise<Event[]> => {
             mapLink: row.map_link,
             coords: row.places ? { lat: row.places.lat, lng: row.places.lon } : undefined
         }));
-    } catch (e) { return []; }
+    } catch (e) { 
+        console.error("Event fetch error:", e);
+        return []; 
+    }
 };
 
 export const createPlace = async (place: Partial<Place>): Promise<{ success: boolean; error?: string }> => {
@@ -351,6 +435,49 @@ export const deletePlace = async (id: string): Promise<{ success: boolean; error
     } catch (e: any) { 
         console.error("Delete Error:", e);
         return { success: false, error: getErrorMessage(e) }; 
+    }
+};
+
+// --- EVENT CRUD ---
+
+export const createEvent = async (event: Partial<Event>): Promise<{ success: boolean; error?: string }> => {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) throw new Error("Unauthorized");
+        const dbPayload = mapEventToDb(event);
+        const { error } = await supabase.from('events').insert([dbPayload]);
+        if (error) throw error;
+        await logAction('CREATE_EVENT', event.title || 'Unknown', 'Event created by Admin');
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: getErrorMessage(e) };
+    }
+};
+
+export const updateEvent = async (id: string, event: Partial<Event>): Promise<{ success: boolean; error?: string }> => {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) throw new Error("Unauthorized");
+        const dbPayload = mapEventToDb(event);
+        const { error } = await supabase.from('events').update(dbPayload).eq('id', id).select();
+        if (error) throw error;
+        await logAction('UPDATE_EVENT', event.title || 'Unknown', 'Event updated by Admin');
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: getErrorMessage(e) };
+    }
+};
+
+export const deleteEvent = async (id: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) throw new Error("Unauthorized");
+        const { error } = await supabase.from('events').delete().eq('id', id);
+        if (error) throw error;
+        await logAction('DELETE_EVENT', id, 'Event deleted');
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: getErrorMessage(e) };
     }
 };
 
