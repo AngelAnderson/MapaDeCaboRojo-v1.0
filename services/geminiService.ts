@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Chat, FunctionDeclaration, Type } from "@google/genai";
 import { Place, Event, Coordinates, AdminLog, ParkingStatus } from "../types";
 
@@ -105,20 +104,22 @@ export const moderateUserContent = async (name: string, description: string): Pr
 export const generateMarketingCopy = async (
     placeName: string, 
     category: string, 
-    platform: 'instagram' | 'email' | 'radio' | 'campaign_bundle' = 'instagram'
+    platform: 'instagram' | 'email' | 'radio' | 'campaign_bundle' = 'instagram',
+    tone: string = 'chill',
+    language: string = 'spanglish'
 ): Promise<string> => {
     try {
         const res = await fetch('/api/marketing', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: placeName, category, platform })
+            body: JSON.stringify({ name: placeName, category, platform, tone, language })
         });
         if (!res.ok) throw new Error("API Error");
         const data = await res.json();
         return data.text;
     } catch (e) {
         console.warn("Falling back to client-side marketing");
-        const prompt = `Genera copy de marketing (${platform}) para ${placeName} (${category}).`;
+        const prompt = `Genera copy de marketing (${platform}) para ${placeName} (${category}). Tono: ${tone}, Idioma: ${language}.`;
         const r = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
         return r.text || "";
     }

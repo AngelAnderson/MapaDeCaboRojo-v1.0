@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Place, PlaceCategory, ParkingStatus, Event, EventCategory, AdminLog } from '../types';
 import { supabase, updatePlace, deletePlace, createPlace, uploadImage, getAdminLogs, createEvent, updateEvent, deleteEvent, getEvents } from '../services/supabase';
@@ -94,6 +93,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
     const [editingPlace, setEditingPlace] = useState<Place | null>(null);
     const [openSection, setOpenSection] = useState<string>('basic');
     const [placeSearchTerm, setPlaceSearchTerm] = useState('');
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
     // Editor State (Events)
     const [editingEvent, setEditingEvent] = useState<Partial<Event> | null>(null);
@@ -101,6 +101,8 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
     // Marketing State
     const [marketingPlaceId, setMarketingPlaceId] = useState<string>('');
     const [marketingPlatform, setMarketingPlatform] = useState<'instagram' | 'email' | 'radio' | 'campaign_bundle'>('instagram');
+    const [marketingTone, setMarketingTone] = useState<string>('chill');
+    const [marketingLang, setMarketingLang] = useState<string>('spanglish');
     const [marketingResult, setMarketingResult] = useState('');
 
     // Init Data
@@ -147,6 +149,36 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
         setLoading(false);
     };
 
+    // --- BULK ACTIONS ---
+    const toggleSelect = (id: string) => {
+        const newSet = new Set(selectedIds);
+        if (newSet.has(id)) newSet.delete(id);
+        else newSet.add(id);
+        setSelectedIds(newSet);
+    };
+
+    const handleBulkVerify = async () => {
+        if (!confirm(`Verify ${selectedIds.size} places?`)) return;
+        setLoading(true);
+        for (const id of selectedIds) {
+            await updatePlace(id, { isVerified: true, verified_at: new Date().toISOString() });
+        }
+        await onUpdate();
+        setSelectedIds(new Set());
+        setLoading(false);
+    };
+
+    const handleBulkDelete = async () => {
+        if (!confirm(`DELETE ${selectedIds.size} places? This is permanent.`)) return;
+        setLoading(true);
+        for (const id of selectedIds) {
+            await deletePlace(id);
+        }
+        await onUpdate();
+        setSelectedIds(new Set());
+        setLoading(false);
+    };
+
     // --- PLACE CRUD ---
     const handleSavePlace = async () => {
         if (!editingPlace) return;
@@ -186,6 +218,22 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
         setLoading(false);
     };
 
+    const handleImageDrop = async (e: React.DragEvent) => {
+        e.preventDefault();
+        if (!editingPlace) return;
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+            setLoading(true);
+            const up = await uploadImage(file);
+            if (up.success && up.url) {
+                setEditingPlace({...editingPlace, imageUrl: up.url});
+            } else {
+                alert("Upload failed");
+            }
+            setLoading(false);
+        }
+    };
+
     // --- EVENT CRUD ---
     const handleSaveEvent = async () => {
         if (!editingEvent) return;
@@ -200,8 +248,8 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
         }
 
         if (res.success) {
-            await onUpdate(); // Updates global App state
-            await loadEvents(); // Updates local list
+            await onUpdate(); 
+            await loadEvents(); 
             setEditingEvent(null);
         } else {
             alert("Error: " + res.error);
@@ -263,7 +311,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
         const p = places.find(x => x.id === marketingPlaceId);
         if (!p) return;
         setLoading(true);
-        const result = await generateMarketingCopy(p.name, p.category, marketingPlatform);
+        const result = await generateMarketingCopy(p.name, p.category, marketingPlatform, marketingTone, marketingLang);
         setMarketingResult(result);
         setLoading(false);
     };
@@ -351,40 +399,13 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                     <div className="text-3xl font-black text-white">{logs.length}</div>
                 </div>
             </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
-                    <div className="p-4 border-b border-slate-700 font-bold text-white">Recent Activity</div>
-                    <div className="divide-y divide-slate-700">
-                        {logs.slice(0, 5).map(log => (
-                            <div key={log.id} className="p-4 flex justify-between items-center text-sm">
-                                <div>
-                                    <span className={`inline-block w-2 h-2 rounded-full mr-2 ${log.action.includes('DELETE') ? 'bg-red-500' : 'bg-green-500'}`}></span>
-                                    <span className="text-white font-medium">{log.place_name}</span>
-                                    <span className="text-slate-500 ml-2 text-xs">{log.action}</span>
-                                </div>
-                                <span className="text-slate-500 text-xs">{new Date(log.created_at).toLocaleDateString()}</span>
-                            </div>
-                        ))}
-                        {logs.length === 0 && <div className="p-4 text-slate-500 text-center">No logs found.</div>}
-                    </div>
-                </div>
-                <div className="bg-slate-800 rounded-2xl border border-slate-700 p-6 flex flex-col justify-center items-center gap-4">
-                    <button onClick={() => { setActiveTab('places'); setEditingPlace({ id: 'new', name: '', description: '', category: PlaceCategory.FOOD, coords: { lat: 17.9620, lng: -67.1650 }, parking: ParkingStatus.FREE, tags: [], vibe: [], imageUrl: '', videoUrl: '', website: '', phone: '', status: 'open', plan: 'free', sponsor_weight: 0, is_featured: false, hasRestroom: false, hasShowers: false, tips: '', priceLevel: '$', bestTimeToVisit: '', isPetFriendly: false, isHandicapAccessible: false, isVerified: true, slug: '', address: '', gmapsUrl: '' }); }} className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2">
-                        <i className="fa-solid fa-plus"></i> Add New Place
-                    </button>
-                    <button onClick={() => { setActiveTab('events'); setEditingEvent({ id: 'new', title: '', status: 'published', category: EventCategory.COMMUNITY, startTime: new Date().toISOString() }); }} className="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2">
-                        <i className="fa-solid fa-calendar-plus"></i> Add New Event
-                    </button>
-                </div>
-            </div>
         </div>
     );
 
     const renderPlaceList = () => {
         const filtered = places.filter(p => p.name.toLowerCase().includes(placeSearchTerm.toLowerCase()));
         return (
-            <div className="h-full flex flex-col animate-fade-in">
+            <div className="h-full flex flex-col animate-fade-in relative">
                 <div className="flex justify-between items-center mb-4">
                      <h2 className="text-2xl font-bold text-white">Places Database</h2>
                      <div className="flex gap-2">
@@ -395,10 +416,30 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                 <div className="bg-slate-800 p-2 rounded-xl mb-4 border border-slate-700">
                     <input type="text" placeholder="Search places..." value={placeSearchTerm} onChange={e => setPlaceSearchTerm(e.target.value)} className="w-full bg-transparent text-white p-2 outline-none" />
                 </div>
-                <div className="flex-1 overflow-y-auto space-y-2 pr-2">
+                
+                {/* Bulk Action Bar */}
+                {selectedIds.size > 0 && (
+                    <div className="absolute bottom-6 left-0 right-0 z-20 flex justify-center animate-slide-up">
+                        <div className="bg-white text-slate-900 rounded-full shadow-2xl px-6 py-3 flex items-center gap-4 border border-slate-200">
+                            <span className="font-bold">{selectedIds.size} selected</span>
+                            <div className="h-4 w-px bg-slate-300"></div>
+                            <button onClick={handleBulkVerify} className="font-bold text-teal-600 hover:underline">Verify</button>
+                            <button onClick={handleBulkDelete} className="font-bold text-red-600 hover:underline">Delete</button>
+                            <button onClick={() => setSelectedIds(new Set())} className="ml-2 text-slate-400 hover:text-slate-600"><i className="fa-solid fa-xmark"></i></button>
+                        </div>
+                    </div>
+                )}
+
+                <div className="flex-1 overflow-y-auto space-y-2 pr-2 pb-20">
                     {filtered.map(p => (
-                        <div key={p.id} className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center group hover:border-teal-500/50 transition-colors">
+                        <div key={p.id} className={`bg-slate-800 p-4 rounded-xl border flex justify-between items-center group transition-colors ${selectedIds.has(p.id) ? 'border-teal-500 bg-teal-900/10' : 'border-slate-700 hover:border-teal-500/50'}`}>
                             <div className="flex items-center gap-4">
+                                <input 
+                                    type="checkbox" 
+                                    checked={selectedIds.has(p.id)} 
+                                    onChange={() => toggleSelect(p.id)}
+                                    className="w-5 h-5 accent-teal-600 rounded cursor-pointer" 
+                                />
                                 <img src={p.imageUrl} className="w-12 h-12 rounded-lg object-cover bg-slate-700" alt="" />
                                 <div>
                                     <h3 className="font-bold text-white">{p.name}</h3>
@@ -406,6 +447,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                                         <span>{p.category}</span>
                                         <span className={p.status === 'open' ? 'text-green-500' : 'text-amber-500'}>• {p.status}</span>
                                         {p.is_featured && <span className="text-yellow-400">• Featured</span>}
+                                        {p.isVerified && <span className="text-blue-400">• Verified</span>}
                                     </p>
                                 </div>
                             </div>
@@ -481,7 +523,16 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                 <SectionHeader title="Media & Icon" icon="image" isOpen={openSection === 'media'} onClick={() => setOpenSection(openSection === 'media' ? '' : 'media')} />
                 {openSection === 'media' && (
                     <div className="p-4 space-y-4 bg-slate-900/50 rounded-b-xl border border-slate-800 border-t-0 -mt-2">
-                        <InputGroup label="Image URL"><StyledInput value={editingPlace!.imageUrl} onChange={e => setEditingPlace({...editingPlace!, imageUrl: e.target.value})} /></InputGroup>
+                        <InputGroup label="Image URL">
+                            <div 
+                                onDragOver={e => e.preventDefault()}
+                                onDrop={handleImageDrop}
+                                className="border-2 border-dashed border-slate-600 rounded-xl p-6 text-center hover:bg-slate-800 transition-colors cursor-pointer"
+                            >
+                                <StyledInput value={editingPlace!.imageUrl} onChange={e => setEditingPlace({...editingPlace!, imageUrl: e.target.value})} placeholder="Paste URL or Drag & Drop Image here" className="mb-2" />
+                                <span className="text-xs text-slate-500">Drag image here to upload</span>
+                            </div>
+                        </InputGroup>
                         {editingPlace!.imageUrl && <img src={editingPlace!.imageUrl} alt="Preview" className="w-full h-40 object-cover rounded-xl border border-slate-700" />}
                         <InputGroup label="Video URL"><StyledInput value={editingPlace!.videoUrl} onChange={e => setEditingPlace({...editingPlace!, videoUrl: e.target.value})} /></InputGroup>
                         <InputGroup label="Custom Icon (FontAwesome)">
@@ -539,6 +590,8 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
     );
 
     const renderEvents = () => {
+        // ... (No changes here, keeping existing code logic implicitly or explicitly)
+        // Since I'm replacing the whole file content in XML, I must include the full code for renderEvents too.
         if (editingEvent) {
             return (
                 <div className="h-full flex flex-col animate-slide-up">
@@ -644,7 +697,8 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
     );
 
     const renderStats = () => {
-        const catCounts = places.reduce((acc, p) => { acc[p.category] = (acc[p.category] || 0) + 1; return acc; }, {} as Record<string, number>);
+        // ... Stats rendering
+         const catCounts = places.reduce((acc, p) => { acc[p.category] = (acc[p.category] || 0) + 1; return acc; }, {} as Record<string, number>);
         return (
             <div className="h-full overflow-y-auto animate-fade-in">
                 <h2 className="text-2xl font-bold text-white mb-6">Database Stats</h2>
@@ -663,7 +717,8 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                             ))}
                         </div>
                     </div>
-                    <div className="space-y-6">
+                    {/* ... other stats */}
+                     <div className="space-y-6">
                         <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
                              <h3 className="font-bold text-white mb-2">Verification Status</h3>
                              <div className="flex gap-4">
@@ -677,14 +732,6 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                                 </div>
                              </div>
                         </div>
-                        <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
-                             <h3 className="font-bold text-white mb-2">Features & Amenities</h3>
-                             <div className="space-y-2 text-sm text-slate-300">
-                                <div className="flex justify-between"><span>Free Parking</span> <span className="font-bold text-white">{places.filter(p => p.parking === 'FREE').length}</span></div>
-                                <div className="flex justify-between"><span>Pet Friendly</span> <span className="font-bold text-white">{places.filter(p => p.isPetFriendly).length}</span></div>
-                                <div className="flex justify-between"><span>Handicap Access</span> <span className="font-bold text-white">{places.filter(p => p.isHandicapAccessible).length}</span></div>
-                             </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -693,47 +740,116 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
 
     const renderMarketing = () => (
         <div className="h-full flex flex-col animate-fade-in">
-            <h2 className="text-2xl font-bold text-white mb-2">Marketing Manager</h2>
-            <p className="text-slate-400 mb-6 text-sm">Let "El Veci" write your social media copy automatically.</p>
+            <h2 className="text-2xl font-bold text-white mb-2">Social Studio 📸</h2>
+            <p className="text-slate-400 mb-6 text-sm">Generate targeted content with El Veci.</p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-full">
-                <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 h-fit space-y-6">
-                     <InputGroup label="Select Place">
-                        <select value={marketingPlaceId} onChange={e => setMarketingPlaceId(e.target.value)} className="w-full bg-slate-900 text-white border border-slate-700 rounded-lg p-3 outline-none">
-                            <option value="">-- Choose a Place --</option>
-                            {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                        </select>
-                     </InputGroup>
-                     <InputGroup label="Generator Mode">
-                        <div className="grid grid-cols-2 gap-2">
-                            <button onClick={() => setMarketingPlatform('instagram')} className={`p-3 rounded-xl border font-bold text-xs ${marketingPlatform === 'instagram' ? 'bg-pink-600 border-pink-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-300'}`}>Instagram Post</button>
-                            <button onClick={() => setMarketingPlatform('campaign_bundle')} className={`p-3 rounded-xl border font-bold text-xs ${marketingPlatform === 'campaign_bundle' ? 'bg-purple-600 border-purple-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-300'}`}>Full Campaign Bundle</button>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+                <div className="space-y-6 h-fit overflow-y-auto pr-2">
+                     <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 space-y-4">
+                        <InputGroup label="1. Select Place">
+                            <select value={marketingPlaceId} onChange={e => setMarketingPlaceId(e.target.value)} className="w-full bg-slate-900 text-white border border-slate-700 rounded-lg p-3 outline-none">
+                                <option value="">-- Choose a Place --</option>
+                                {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                            </select>
+                        </InputGroup>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <InputGroup label="2. Tone / Vibe">
+                                <div className="grid grid-cols-1 gap-2">
+                                    {['chill', 'hype', 'professional'].map(t => (
+                                        <button key={t} onClick={() => setMarketingTone(t)} className={`p-2 rounded-lg border text-xs font-bold uppercase transition-all ${marketingTone === t ? 'bg-teal-600 border-teal-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-400'}`}>
+                                            {t}
+                                        </button>
+                                    ))}
+                                </div>
+                            </InputGroup>
+                             <InputGroup label="3. Language">
+                                <div className="grid grid-cols-1 gap-2">
+                                    {['spanglish', 'es', 'en'].map(l => (
+                                        <button key={l} onClick={() => setMarketingLang(l)} className={`p-2 rounded-lg border text-xs font-bold uppercase transition-all ${marketingLang === l ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-400'}`}>
+                                            {l}
+                                        </button>
+                                    ))}
+                                </div>
+                            </InputGroup>
                         </div>
-                     </InputGroup>
-                     <button onClick={handleMarketingTabGenerate} disabled={loading || !marketingPlaceId} className="w-full bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-bold py-4 rounded-xl shadow-lg shadow-teal-900/20 transition-all">
-                        {loading ? 'Generating...' : marketingPlatform === 'campaign_bundle' ? 'Generate Campaign Pack (Post + Story + Email)' : 'Generate Copy'}
-                     </button>
-                </div>
-                <div className="flex flex-col h-full">
-                    <label className="text-xs font-bold text-slate-500 uppercase mb-2">AI Output</label>
-                    <textarea 
-                        className="flex-1 w-full bg-slate-800 text-white border border-slate-700 rounded-2xl p-4 font-mono text-sm leading-relaxed resize-none focus:outline-none focus:border-teal-500"
-                        value={marketingResult}
-                        readOnly
-                        placeholder="Generated text will appear here..."
-                    ></textarea>
-                    {marketingResult && (
-                        <button onClick={() => navigator.clipboard.writeText(marketingResult)} className="mt-2 text-teal-400 text-xs font-bold hover:text-white flex items-center justify-end gap-2">
-                            <i className="fa-solid fa-copy"></i> Copy to Clipboard
+                        
+                        <InputGroup label="4. Format">
+                            <div className="grid grid-cols-2 gap-2">
+                                <button onClick={() => setMarketingPlatform('instagram')} className={`p-3 rounded-xl border font-bold text-xs ${marketingPlatform === 'instagram' ? 'bg-pink-600 border-pink-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-300'}`}><i className="fa-brands fa-instagram mr-2"></i> Post</button>
+                                <button onClick={() => setMarketingPlatform('campaign_bundle')} className={`p-3 rounded-xl border font-bold text-xs ${marketingPlatform === 'campaign_bundle' ? 'bg-purple-600 border-purple-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-300'}`}><i className="fa-solid fa-layer-group mr-2"></i> Bundle</button>
+                            </div>
+                        </InputGroup>
+                        
+                        <button onClick={handleMarketingTabGenerate} disabled={loading || !marketingPlaceId} className="w-full bg-gradient-to-r from-teal-500 to-indigo-600 hover:from-teal-400 hover:to-indigo-500 disabled:opacity-50 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-900/20 transition-all mt-4">
+                            {loading ? 'Magic happening...' : '✨ Generate Content'}
                         </button>
-                    )}
+                     </div>
+                </div>
+                
+                {/* PREVIEW AREA */}
+                <div className="flex flex-col h-full bg-slate-950 rounded-3xl border border-slate-800 overflow-hidden relative shadow-2xl">
+                    <div className="bg-slate-900 p-4 border-b border-slate-800 flex justify-between items-center">
+                        <span className="text-xs font-bold text-slate-500 uppercase">iPhone Preview</span>
+                        <div className="flex gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-red-500"></div><div className="w-2.5 h-2.5 rounded-full bg-yellow-500"></div><div className="w-2.5 h-2.5 rounded-full bg-green-500"></div></div>
+                    </div>
+                    
+                    <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center">
+                         {/* Instagram Mockup */}
+                         <div className="w-full max-w-xs bg-white text-black rounded-[30px] overflow-hidden shadow-xl border border-slate-200">
+                             {/* Header */}
+                             <div className="flex items-center justify-between p-3 border-b border-gray-100">
+                                 <div className="flex items-center gap-2">
+                                     <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-400 to-purple-600 p-[2px]">
+                                         <div className="w-full h-full bg-white rounded-full p-[2px]"><img src="https://cdn-icons-png.flaticon.com/512/3203/3203071.png" className="w-full h-full rounded-full" alt="profile"/></div>
+                                     </div>
+                                     <span className="text-xs font-bold">mapadecaborojo</span>
+                                 </div>
+                                 <i className="fa-solid fa-ellipsis text-xs"></i>
+                             </div>
+                             {/* Image Placeholder */}
+                             <div className="aspect-square bg-slate-100 flex items-center justify-center">
+                                 {marketingPlaceId ? (
+                                     <img src={places.find(p => p.id === marketingPlaceId)?.imageUrl} className="w-full h-full object-cover" alt="" />
+                                 ) : (
+                                     <i className="fa-solid fa-image text-slate-300 text-4xl"></i>
+                                 )}
+                             </div>
+                             {/* Actions */}
+                             <div className="px-3 py-2 flex justify-between text-xl">
+                                 <div className="flex gap-4">
+                                     <i className="fa-regular fa-heart"></i>
+                                     <i className="fa-regular fa-comment"></i>
+                                     <i className="fa-regular fa-paper-plane"></i>
+                                 </div>
+                                 <i className="fa-regular fa-bookmark"></i>
+                             </div>
+                             {/* Caption */}
+                             <div className="px-3 pb-4 text-xs">
+                                 <span className="font-bold mr-2">mapadecaborojo</span>
+                                 <span className="whitespace-pre-wrap leading-tight">
+                                     {marketingResult ? (JSON.parse(marketingResult).isJson ? JSON.parse(JSON.parse(marketingResult).text).instagram : JSON.parse(marketingResult).text) : "Your AI caption will appear here..."}
+                                 </span>
+                             </div>
+                         </div>
+                         
+                         {/* Extra Bundle Info */}
+                         {marketingResult && JSON.parse(marketingResult).isJson && (
+                             <div className="w-full mt-6 bg-slate-800 rounded-xl p-4 border border-slate-700">
+                                 <h4 className="text-teal-400 text-xs font-bold uppercase mb-2">📧 Email Subject</h4>
+                                 <p className="text-white text-sm mb-4">{JSON.parse(JSON.parse(marketingResult).text).email_subject}</p>
+                                 
+                                 <h4 className="text-purple-400 text-xs font-bold uppercase mb-2">📹 Story Script</h4>
+                                 <p className="text-slate-300 text-xs whitespace-pre-wrap">{JSON.parse(JSON.parse(marketingResult).text).story_script}</p>
+                             </div>
+                         )}
+                    </div>
                 </div>
             </div>
         </div>
     );
 
     // --- MAIN RENDER ---
-
     if (!user) {
         // Login Screen (Same as before)
         return (
