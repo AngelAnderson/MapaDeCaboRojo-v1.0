@@ -376,7 +376,7 @@ export const createPlace = async (place: Partial<Place>): Promise<{ success: boo
         const isAdmin = !!session?.user;
         let dbPayload = mapPlaceToDb(place);
         if (!isAdmin) {
-            dbPayload.status = 'open'; // Auto-publish for MVP
+            dbPayload.status = 'pending'; // Changed: Require admin review
             dbPayload.is_verified = false;
             dbPayload.sponsor_weight = 0;
             // Basic sanitization

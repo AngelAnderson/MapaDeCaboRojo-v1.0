@@ -402,15 +402,18 @@ const MainApp: React.FC = () => {
         }
     } as Place));
 
+    // Base Filter: Only show published places
+    const publishedPlaces = places.filter(p => p.status !== 'pending');
+
     if (groupDef.categories === 'EVENTS') {
         filtered = mappedEvents;
     } else if (groupDef.categories === 'FAVORITES') {
-        const allItems = [...places, ...mappedEvents];
+        const allItems = [...publishedPlaces, ...mappedEvents];
         filtered = allItems.filter(p => savedIds.includes(p.id));
     } else {
         filtered = groupDef.categories === 'ALL' 
-          ? places 
-          : places.filter(p => (groupDef.categories as PlaceCategory[]).includes(p.category));
+          ? publishedPlaces 
+          : publishedPlaces.filter(p => (groupDef.categories as PlaceCategory[]).includes(p.category));
     }
 
     if (searchText.trim()) {
