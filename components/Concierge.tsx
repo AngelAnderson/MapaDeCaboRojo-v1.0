@@ -21,6 +21,7 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [userLoc, setUserLoc] = useState<Coordinates | undefined>(undefined);
+  const [weatherContext, setWeatherContext] = useState<string>('');
   
   // Visual Search State
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -28,7 +29,7 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
   const chatRef = useRef<any>(null); 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Initialize: Get Location & Set Welcome Message
+  // Initialize: Get Location & Set Welcome Message & Weather
   useEffect(() => {
     if (isOpen) {
         if (messages.length === 0) {
@@ -43,6 +44,27 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
                 { enableHighAccuracy: false, timeout: 5000 }
             );
         }
+
+        // Fetch Weather Context for AI
+        const fetchWeather = async () => {
+            try {
+                // Fetching for Boqueron area
+                const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=18.0262&longitude=-67.1725&current=temperature_2m,weather_code&temperature_unit=fahrenheit&timezone=America%2FPuerto_Rico');
+                const data = await res.json();
+                const temp = Math.round(data.current.temperature_2m);
+                const code = data.current.weather_code;
+                
+                let condition = "Despejado";
+                if (code > 2) condition = "Nublado";
+                if (code > 50) condition = "Lluvia ligera";
+                if (code > 80) condition = "Lluvia fuerte";
+                
+                setWeatherContext(`${temp}°F, ${condition}`);
+            } catch(e) {
+                setWeatherContext("No disponible (Asume soleado)");
+            }
+        };
+        fetchWeather();
     }
   }, [isOpen]);
 
@@ -50,11 +72,20 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
   useEffect(() => {
     if (places.length > 0 || events.length > 0) {
       try { 
-          // Re-create chat with new context (location, new places)
-          chatRef.current = createConciergeChat(places, events, userLoc); 
+          // Current Time Context
+          const now = new Date();
+          const dateStr = now.toLocaleDateString('es-PR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+          const timeStr = now.toLocaleTimeString('es-PR', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+          // Re-create chat with new context (location, new places, time, weather)
+          chatRef.current = createConciergeChat(places, events, userLoc, {
+              date: dateStr,
+              time: timeStr,
+              weather: weatherContext || "Cargando..."
+          }); 
       } catch (e) { console.error("Chat init error:", e); }
     }
-  }, [places, events, userLoc]);
+  }, [places, events, userLoc, weatherContext]);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 

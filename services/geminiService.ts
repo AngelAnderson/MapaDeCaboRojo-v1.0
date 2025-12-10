@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Chat, FunctionDeclaration, Type, Modality } from "@google/genai";
 import { Place, Event, Coordinates, AdminLog, ItineraryItem, PlaceCategory } from "../types";
 
@@ -80,14 +81,29 @@ const reportPlaceIssueTool: FunctionDeclaration = {
 };
 
 // 1. CHAT (Client-Side for Speed)
-export const createConciergeChat = (places: Place[], events: Event[] = [], userLocation?: Coordinates): Chat => {
+export const createConciergeChat = (
+    places: Place[], 
+    events: Event[] = [], 
+    userLocation?: Coordinates,
+    realtimeContext?: { date: string, time: string, weather: string }
+): Chat => {
   const placeContext = formatPlacesForContext(places, userLocation);
   const eventContext = formatEventsForContext(events);
+  
+  let timeContext = "";
+  if (realtimeContext) {
+      timeContext = `
+      \n### REALIDAD ACTUAL (Úsala para responder sobre horarios y clima):
+      - Hoy es: ${realtimeContext.date}
+      - Hora Actual: ${realtimeContext.time}
+      - Clima en Cabo Rojo: ${realtimeContext.weather}
+      `;
+  }
   
   return ai.chats.create({
     model: 'gemini-2.5-flash',
     config: {
-      systemInstruction: BASE_SYSTEM_INSTRUCTION + placeContext + eventContext + 
+      systemInstruction: BASE_SYSTEM_INSTRUCTION + timeContext + placeContext + eventContext + 
       "\n\nIMPORTANTE: Si el usuario pregunta por un lugar que NO está en la lista provista, pero TÚ sabes que existe en Cabo Rojo, LLAMA a la función reportMissingPlace. Si el usuario te corrige información sobre un lugar existente, LLAMA a reportPlaceIssue.",
       temperature: 0.7,
       tools: [{ functionDeclarations: [reportMissingPlaceTool, reportPlaceIssueTool] }],
