@@ -1,8 +1,7 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { Place, ParkingStatus, DaySchedule, Coordinates } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
-import { generateAudioGuide } from '../services/geminiService';
 
 interface PlaceCardProps {
   place: Place;
@@ -130,12 +129,6 @@ const HoursDisplay = ({ hours }: { hours: { note?: string, structured?: DaySched
 const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClose, onNavigate, onAskAi, onSuggestEdit, isFavorite, onToggleFavorite, userLocation }) => {
   const { t } = useLanguage();
   
-  // Audio State
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const sourceNodeRef = useRef<AudioBufferSourceNode | null>(null);
-
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): string => {
     const R = 6371; // km
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -146,50 +139,6 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return (R * c).toFixed(1) + ' km';
   };
-
-  const handleToggleAudio = async () => {
-      if (isPlaying) {
-          sourceNodeRef.current?.stop();
-          setIsPlaying(false);
-          return;
-      }
-
-      setIsLoadingAudio(true);
-      const audioData = await generateAudioGuide(place);
-      
-      if (audioData) {
-          try {
-             if (!audioContextRef.current) {
-                 audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-             }
-             if (audioContextRef.current.state === 'suspended') {
-                 await audioContextRef.current.resume();
-             }
-
-             const buffer = await audioContextRef.current.decodeAudioData(audioData);
-             
-             sourceNodeRef.current = audioContextRef.current.createBufferSource();
-             sourceNodeRef.current.buffer = buffer;
-             sourceNodeRef.current.connect(audioContextRef.current.destination);
-             
-             sourceNodeRef.current.onended = () => setIsPlaying(false);
-             
-             sourceNodeRef.current.start();
-             setIsPlaying(true);
-          } catch(e) {
-             console.error("Audio Playback Error", e);
-             alert(t('audio_error'));
-          }
-      } else {
-          alert(t('audio_error'));
-      }
-      setIsLoadingAudio(false);
-  };
-  
-  // Cleanup audio on unmount
-  React.useEffect(() => {
-      return () => { sourceNodeRef.current?.stop(); audioContextRef.current?.close(); };
-  }, []);
 
   const handleShare = async () => {
     const url = new URL(window.location.origin);
@@ -331,36 +280,6 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
           <ActionButton icon="share-nodes" label={t('share')} onClick={handleShare} />
         </nav>
         
-        {/* AUDIO GUIDE PLAYER */}
-        <section className="bg-gradient-to-r from-slate-900 to-slate-800 dark:from-slate-700 dark:to-slate-600 rounded-2xl p-4 flex items-center justify-between shadow-lg relative overflow-hidden group">
-            <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            <div className="flex items-center gap-4 z-10">
-                <button 
-                    onClick={handleToggleAudio}
-                    disabled={isLoadingAudio}
-                    className={`w-12 h-12 rounded-full flex items-center justify-center transition-all ${isPlaying ? 'bg-red-500 text-white animate-pulse' : 'bg-white text-slate-900 hover:scale-105'}`}
-                >
-                    {isLoadingAudio ? (
-                        <i className="fa-solid fa-spinner fa-spin text-lg"></i>
-                    ) : (
-                        <i className={`fa-solid ${isPlaying ? 'fa-pause' : 'fa-headphones'} text-lg`}></i>
-                    )}
-                </button>
-                <div>
-                    <h3 className="text-white font-bold text-sm">{t('audio_guide_title')}</h3>
-                    <p className="text-slate-300 text-xs">{isPlaying ? t('audio_playing') : t('audio_listen')}</p>
-                </div>
-            </div>
-            {isPlaying && (
-                <div className="flex gap-1 items-end h-6 z-10">
-                    <div className="w-1 bg-teal-400 animate-[bounce_1s_infinite] h-3"></div>
-                    <div className="w-1 bg-teal-400 animate-[bounce_1.2s_infinite] h-5"></div>
-                    <div className="w-1 bg-teal-400 animate-[bounce_0.8s_infinite] h-2"></div>
-                    <div className="w-1 bg-teal-400 animate-[bounce_1.1s_infinite] h-4"></div>
-                </div>
-            )}
-        </section>
-
         {isClosed && (
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-2xl flex items-center gap-4">
                 <i className="fa-solid fa-store-slash text-red-500 text-2xl"></i>
