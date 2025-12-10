@@ -2,31 +2,15 @@
 import { GoogleGenAI, Chat, FunctionDeclaration, Type, Modality } from "@google/genai";
 import { Place, Event, Coordinates, AdminLog, ItineraryItem, PlaceCategory } from "../types";
 
-// --- SAFE ENVIRONMENT VARIABLE EXTRACTION ---
-const getEnvVar = (key: string): string => {
-  try {
-    // @ts-ignore
-    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
-      // @ts-ignore
-      return import.meta.env[key];
-    }
-  } catch (e) {}
-  try {
-    // @ts-ignore
-    if (typeof process !== 'undefined' && process.env && process.env[key]) {
-      // @ts-ignore
-      return process.env[key];
-    }
-  } catch (e) {}
-  return '';
-};
+// The API key must be obtained exclusively from the environment variable process.env.API_KEY.
+// We access it directly so Vite can perform the static replacement during build.
+const apiKey = process.env.API_KEY;
 
-const apiKey = getEnvVar('API_KEY');
 if (!apiKey) {
     console.error("⚠️ API_KEY is missing. AI features will fail.");
 }
 
-const ai = new GoogleGenAI({ apiKey });
+const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
 const BASE_SYSTEM_INSTRUCTION = `
 Eres **El Vecino Digital** (todos te dicen de cariño **El Veci**), un vecino digital que vive en Cabo Rojo, Puerto Rico.
