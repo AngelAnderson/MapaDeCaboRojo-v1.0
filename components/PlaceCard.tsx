@@ -155,18 +155,31 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
       }
 
       setIsLoadingAudio(true);
-      const buffer = await generateAudioGuide(place);
+      const audioData = await generateAudioGuide(place);
       
-      if (buffer) {
-          audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-          sourceNodeRef.current = audioContextRef.current.createBufferSource();
-          sourceNodeRef.current.buffer = buffer;
-          sourceNodeRef.current.connect(audioContextRef.current.destination);
-          
-          sourceNodeRef.current.onended = () => setIsPlaying(false);
-          
-          sourceNodeRef.current.start();
-          setIsPlaying(true);
+      if (audioData) {
+          try {
+             if (!audioContextRef.current) {
+                 audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+             }
+             if (audioContextRef.current.state === 'suspended') {
+                 await audioContextRef.current.resume();
+             }
+
+             const buffer = await audioContextRef.current.decodeAudioData(audioData);
+             
+             sourceNodeRef.current = audioContextRef.current.createBufferSource();
+             sourceNodeRef.current.buffer = buffer;
+             sourceNodeRef.current.connect(audioContextRef.current.destination);
+             
+             sourceNodeRef.current.onended = () => setIsPlaying(false);
+             
+             sourceNodeRef.current.start();
+             setIsPlaying(true);
+          } catch(e) {
+             console.error("Audio Playback Error", e);
+             alert(t('audio_error'));
+          }
       } else {
           alert(t('audio_error'));
       }

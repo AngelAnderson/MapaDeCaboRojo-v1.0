@@ -295,7 +295,8 @@ const decodeBase64ToArrayBuffer = (base64: string) => {
     return bytes.buffer;
 };
 
-export const generateAudioGuide = async (place: Place): Promise<AudioBuffer | null> => {
+// Changed return type to ArrayBuffer to avoid creating AudioContext here
+export const generateAudioGuide = async (place: Place): Promise<ArrayBuffer | null> => {
     const prompt = `
     Eres un guía turístico local de Cabo Rojo, Puerto Rico (El Veci).
     Cuenta una historia MUY breve (max 40 segundos) y emocionante sobre: ${place.name}.
@@ -308,7 +309,7 @@ export const generateAudioGuide = async (place: Place): Promise<AudioBuffer | nu
             model: "gemini-2.5-flash-preview-tts",
             contents: [{ parts: [{ text: prompt }] }],
             config: {
-                responseModalities: [Modality.AUDIO],
+                responseModalities: [Modality.AUDIO], 
                 speechConfig: {
                     voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } }
                 }
@@ -318,9 +319,8 @@ export const generateAudioGuide = async (place: Place): Promise<AudioBuffer | nu
         const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
         
         if (base64Audio) {
-            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-            const audioBuffer = await audioContext.decodeAudioData(decodeBase64ToArrayBuffer(base64Audio));
-            return audioBuffer;
+            // Return raw buffer, let the UI component handle the Context to prevent resource limits
+            return decodeBase64ToArrayBuffer(base64Audio);
         }
         return null;
     } catch (e) {
