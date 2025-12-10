@@ -167,13 +167,17 @@ const generateSlug = (name: string): string => {
 };
 
 const mapPlaceToDb = (place: Partial<Place>) => {
-    // Ensure we handle partial updates gracefully, but for now we reconstruct the whole object.
-    // Use nullish coalescing (??) to preserve 0/false values.
-    
     // If it has a slug (existing item), keep it. If not, generate new unique one.
     const slug = place.slug && place.slug.length > 2 
         ? place.slug 
         : generateSlug(place.name || 'untitled');
+
+    // FIX: Map "pending" to a valid DB enum value ('open') but unverified.
+    // The DB enum likely only supports 'open' | 'closed'.
+    let dbStatus = place.status;
+    if (dbStatus === 'pending') {
+        dbStatus = 'open';
+    }
 
     return {
         name: place.name || '',
@@ -186,8 +190,9 @@ const mapPlaceToDb = (place: Partial<Place>) => {
         video_url: place.videoUrl || '',
         sponsor_weight: place.sponsor_weight ?? (place.is_featured ? 100 : 0),
         plan: place.plan || 'free',
-        status: place.status || 'open',
-        is_verified: place.isVerified ?? false,
+        status: dbStatus || 'open',
+        // If status was pending, force is_verified to false if not explicitly true
+        is_verified: place.status === 'pending' ? false : (place.isVerified ?? false),
         verified_at: place.isVerified ? new Date().toISOString() : null,
         website: place.website || '',
         phone: place.phone || '',
@@ -289,7 +294,8 @@ export const getPlaces = async (): Promise<Place[]> => {
       is_featured: (row.sponsor_weight && row.sponsor_weight > 80) || false,
       sponsor_weight: row.sponsor_weight || 0,
       plan: row.plan || 'free',
-      status: row.status || 'open',
+      // Map unverified places back to 'pending' for UI logic
+      status: (!row.is_verified ? 'pending' : (row.status || 'open')),
       slug: row.slug || '',
       tags: row.tags || [],
       address: row.address || '',
@@ -317,11 +323,9 @@ export const getPlaces = async (): Promise<Place[]> => {
 
 export const getEvents = async (): Promise<Event[]> => {
     try {
-        // Try simple select first to avoid join errors if relation is missing
         const { data, error } = await supabase.from('events').select(`*, places (lat, lon)`).order('start_time', { ascending: true });
         
         if (error) {
-             // Fallback: If relation 'places' doesn't exist, try simple select
             console.warn("Complex event fetch failed, trying simple:", error.message);
             const simple = await supabase.from('events').select('*').order('start_time', { ascending: true });
             if (simple.error) throw simple.error;
@@ -342,7 +346,7 @@ export const getEvents = async (): Promise<Event[]> => {
                 status: row.status,
                 isFeatured: row.is_featured || false,
                 mapLink: row.map_link,
-                coords: undefined // No coords in simple fetch
+                coords: undefined 
             }));
         }
 
@@ -375,14 +379,16 @@ export const createPlace = async (place: Partial<Place>): Promise<{ success: boo
         const { data: { session } } = await supabase.auth.getSession();
         const isAdmin = !!session?.user;
         let dbPayload = mapPlaceToDb(place);
+        
         if (!isAdmin) {
-            dbPayload.status = 'pending'; // Changed: Require admin review
-            dbPayload.is_verified = false;
+            dbPayload.status = 'open'; // Force valid DB enum
+            dbPayload.is_verified = false; // Mark as pending review
             dbPayload.sponsor_weight = 0;
             // Basic sanitization
             dbPayload.name = dbPayload.name.replace(/<[^>]*>?/gm, '');
             dbPayload.description = dbPayload.description.replace(/<[^>]*>?/gm, '');
         }
+        
         const { error } = await supabase.from('places').insert([dbPayload]);
         if (error) throw error;
         await logAction('CREATE', place.name || 'Unknown', isAdmin ? 'Record created by Admin' : 'User Suggestion');
@@ -402,7 +408,6 @@ export const updatePlace = async (id: string, place: Partial<Place>): Promise<{ 
         console.log("🚀 Updating Place ID:", id);
         console.log("📦 Payload:", dbPayload);
 
-        // CRITICAL FIX: Add .select() to ensure the DB actually performs the update and returns the row.
         const { data, error } = await supabase.from('places').update(dbPayload).eq('id', id).select();
         
         if (error) {
@@ -437,8 +442,6 @@ export const deletePlace = async (id: string): Promise<{ success: boolean; error
         return { success: false, error: getErrorMessage(e) }; 
     }
 };
-
-// --- EVENT CRUD ---
 
 export const createEvent = async (event: Partial<Event>): Promise<{ success: boolean; error?: string }> => {
     try {
