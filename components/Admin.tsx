@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Place, PlaceCategory, ParkingStatus, Event, EventCategory, AdminLog } from '../types';
 import { supabase, updatePlace, deletePlace, createPlace, uploadImage, getAdminLogs, createEvent, updateEvent, deleteEvent, getEvents } from '../services/supabase';
-import { generateMarketingCopy, enhanceDescription } from '../services/geminiService';
+import { generateMarketingCopy, enhanceDescription, generateExecutiveBriefing, enrichPlaceMetadata } from '../services/geminiService';
 import L from 'leaflet';
 
 // --- Helper Components ---
@@ -88,6 +88,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
     const [activeTab, setActiveTab] = useState<'dashboard' | 'places' | 'events' | 'marketing' | 'stats' | 'logs'>('dashboard');
     const [logs, setLogs] = useState<AdminLog[]>([]);
     const [eventsList, setEventsList] = useState<Event[]>(initialEvents || []);
+    const [briefing, setBriefing] = useState<string>(''); // For AI Analyst
     
     // Editor State (Places)
     const [editingPlace, setEditingPlace] = useState<Place | null>(null);
@@ -99,7 +100,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
 
     // Marketing State
     const [marketingPlaceId, setMarketingPlaceId] = useState<string>('');
-    const [marketingPlatform, setMarketingPlatform] = useState<'instagram' | 'email' | 'radio'>('instagram');
+    const [marketingPlatform, setMarketingPlatform] = useState<'instagram' | 'email' | 'radio' | 'campaign_bundle'>('instagram');
     const [marketingResult, setMarketingResult] = useState('');
 
     // Init Data
@@ -113,19 +114,29 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
         if (activeTab === 'logs') loadLogs();
         if (activeTab === 'events') loadEvents();
         if (activeTab === 'dashboard') {
-            loadLogs();
-            if (!initialEvents) loadEvents();
+            loadLogs().then((fetchedLogs) => {
+                if (!initialEvents) loadEvents();
+                if (!briefing && fetchedLogs) {
+                    generateBriefing(fetchedLogs);
+                }
+            });
         }
     }, [activeTab]);
 
     const loadLogs = async () => {
         const data = await getAdminLogs();
         setLogs(data);
+        return data;
     };
 
     const loadEvents = async () => {
         const data = await getEvents();
         setEventsList(data);
+    };
+
+    const generateBriefing = async (currentLogs: AdminLog[]) => {
+        const report = await generateExecutiveBriefing(currentLogs, places);
+        setBriefing(report);
     };
 
     const handleLogin = async () => {
@@ -208,15 +219,6 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
     };
 
     // AI Helpers
-    const runAiMarketing = async (place?: Place) => {
-        const target = place || editingPlace;
-        if (!target) return;
-        setLoading(true);
-        const copy = await generateMarketingCopy(target.name, target.category, 'instagram');
-        alert(copy); 
-        setLoading(false);
-    };
-    
     const runAiEnhance = async () => {
         if (!editingPlace) return;
         setLoading(true);
@@ -225,6 +227,37 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
         setLoading(false);
     };
     
+    const handleBatchAutoFix = async () => {
+        if (!confirm("Magic Wand will find 5 places with missing tags or short descriptions and auto-fix them. Continue?")) return;
+        setLoading(true);
+
+        const candidates = places
+            .filter(p => !p.tags || p.tags.length === 0 || p.description.length < 50 || !p.vibe || p.vibe.length === 0)
+            .slice(0, 5);
+
+        if (candidates.length === 0) {
+            alert("No places need fixing! Good job.");
+            setLoading(false);
+            return;
+        }
+
+        let fixCount = 0;
+        for (const p of candidates) {
+            const enriched = await enrichPlaceMetadata(p.name, p.description);
+            await updatePlace(p.id, {
+                ...p,
+                description: enriched.description.length > p.description.length ? enriched.description : p.description,
+                tags: enriched.tags && enriched.tags.length > 0 ? enriched.tags : p.tags,
+                vibe: enriched.vibe && enriched.vibe.length > 0 ? enriched.vibe : p.vibe
+            });
+            fixCount++;
+        }
+
+        await onUpdate();
+        alert(`✨ Magic Wand fixed ${fixCount} places!`);
+        setLoading(false);
+    };
+
     const handleMarketingTabGenerate = async () => {
         if (!marketingPlaceId) return alert("Please select a place first.");
         const p = places.find(x => x.id === marketingPlaceId);
@@ -275,8 +308,31 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
 
     const renderDashboard = () => (
         <div className="space-y-6 animate-fade-in">
-            <h2 className="text-2xl font-bold text-white mb-4">Overview</h2>
+            <h2 className="text-2xl font-bold text-white mb-4">Dashboard & Overview</h2>
             
+            {/* AI Analyst Briefing */}
+            <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-6 rounded-2xl border border-teal-500/30 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <i className="fa-solid fa-robot text-9xl text-white"></i>
+                </div>
+                <div className="relative z-10">
+                    <h3 className="text-teal-400 font-bold uppercase text-xs tracking-wider mb-2 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-teal-400 rounded-full animate-pulse"></span>
+                        Morning Briefing (AI Analyst)
+                    </h3>
+                    {briefing ? (
+                        <div className="prose prose-invert prose-sm max-w-none text-slate-300" dangerouslySetInnerHTML={{ __html: briefing }}>
+                            {/* Render HTML content from server-side generation */}
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-3 text-slate-400 py-4">
+                            <i className="fa-solid fa-circle-notch fa-spin"></i>
+                            El Veci is analyzing your data...
+                        </div>
+                    )}
+                </div>
+            </div>
+
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
                     <div className="text-slate-400 text-xs font-bold uppercase mb-1">Total Places</div>
@@ -331,7 +387,10 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
             <div className="h-full flex flex-col animate-fade-in">
                 <div className="flex justify-between items-center mb-4">
                      <h2 className="text-2xl font-bold text-white">Places Database</h2>
-                     <button onClick={() => setEditingPlace({ id: 'new', name: '', description: '', category: PlaceCategory.FOOD, coords: { lat: 17.9620, lng: -67.1650 }, parking: ParkingStatus.FREE, tags: [], vibe: [], imageUrl: '', videoUrl: '', website: '', phone: '', status: 'open', plan: 'free', sponsor_weight: 0, is_featured: false, hasRestroom: false, hasShowers: false, tips: '', priceLevel: '$', bestTimeToVisit: '', isPetFriendly: false, isHandicapAccessible: false, isVerified: true, slug: '', address: '', gmapsUrl: '' })} className="bg-teal-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-teal-900/20 hover:scale-105 transition-transform"><i className="fa-solid fa-plus mr-2"></i> New Place</button>
+                     <div className="flex gap-2">
+                        <button onClick={handleBatchAutoFix} disabled={loading} className="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-purple-900/20 hover:scale-105 transition-transform"><i className="fa-solid fa-wand-magic-sparkles mr-2"></i> Auto-Fix Data</button>
+                        <button onClick={() => setEditingPlace({ id: 'new', name: '', description: '', category: PlaceCategory.FOOD, coords: { lat: 17.9620, lng: -67.1650 }, parking: ParkingStatus.FREE, tags: [], vibe: [], imageUrl: '', videoUrl: '', website: '', phone: '', status: 'open', plan: 'free', sponsor_weight: 0, is_featured: false, hasRestroom: false, hasShowers: false, tips: '', priceLevel: '$', bestTimeToVisit: '', isPetFriendly: false, isHandicapAccessible: false, isVerified: true, slug: '', address: '', gmapsUrl: '' })} className="bg-teal-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-teal-900/20 hover:scale-105 transition-transform"><i className="fa-solid fa-plus mr-2"></i> New Place</button>
+                     </div>
                 </div>
                 <div className="bg-slate-800 p-2 rounded-xl mb-4 border border-slate-700">
                     <input type="text" placeholder="Search places..." value={placeSearchTerm} onChange={e => setPlaceSearchTerm(e.target.value)} className="w-full bg-transparent text-white p-2 outline-none" />
@@ -566,12 +625,14 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                                     <td className="px-4 py-3 font-bold text-white">
                                         {log.action === 'USER_SEARCH' ? <span className="text-blue-400">SEARCH</span> : 
                                          log.action === 'USER_CHAT' ? <span className="text-purple-400">AI CHAT</span> : 
+                                         log.action === 'AI_BRIEFING' ? <span className="text-teal-400 animate-pulse">⚡ BRIEFING</span> :
+                                         log.action === 'UPDATE_SUGGESTION' ? <span className="text-orange-400">REPORT</span> :
                                          log.action.includes('DELETE') ? <span className="text-red-400">{log.action}</span> :
                                          <span className="text-teal-400">{log.action}</span>
                                         }
                                     </td>
                                     <td className="px-4 py-3 text-white">{log.place_name}</td>
-                                    <td className="px-4 py-3 text-xs opacity-70 truncate max-w-[200px]">{log.details}</td>
+                                    <td className="px-4 py-3 text-xs opacity-70 truncate max-w-[200px]">{log.details.startsWith('<') ? 'HTML Content' : log.details}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -632,8 +693,8 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
 
     const renderMarketing = () => (
         <div className="h-full flex flex-col animate-fade-in">
-            <h2 className="text-2xl font-bold text-white mb-2">Marketing Generator</h2>
-            <p className="text-slate-400 mb-6 text-sm">Use AI (El Veci) to write social media copy for your places.</p>
+            <h2 className="text-2xl font-bold text-white mb-2">Marketing Manager</h2>
+            <p className="text-slate-400 mb-6 text-sm">Let "El Veci" write your social media copy automatically.</p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-full">
                 <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 h-fit space-y-6">
@@ -643,15 +704,14 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                             {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                         </select>
                      </InputGroup>
-                     <InputGroup label="Platform / Style">
-                        <div className="grid grid-cols-3 gap-2">
-                            <button onClick={() => setMarketingPlatform('instagram')} className={`p-3 rounded-xl border font-bold text-xs ${marketingPlatform === 'instagram' ? 'bg-pink-600 border-pink-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-300'}`}>Instagram</button>
-                            <button onClick={() => setMarketingPlatform('email')} className={`p-3 rounded-xl border font-bold text-xs ${marketingPlatform === 'email' ? 'bg-blue-600 border-blue-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-300'}`}>Email</button>
-                            <button onClick={() => setMarketingPlatform('radio')} className={`p-3 rounded-xl border font-bold text-xs ${marketingPlatform === 'radio' ? 'bg-orange-600 border-orange-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-300'}`}>Radio</button>
+                     <InputGroup label="Generator Mode">
+                        <div className="grid grid-cols-2 gap-2">
+                            <button onClick={() => setMarketingPlatform('instagram')} className={`p-3 rounded-xl border font-bold text-xs ${marketingPlatform === 'instagram' ? 'bg-pink-600 border-pink-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-300'}`}>Instagram Post</button>
+                            <button onClick={() => setMarketingPlatform('campaign_bundle')} className={`p-3 rounded-xl border font-bold text-xs ${marketingPlatform === 'campaign_bundle' ? 'bg-purple-600 border-purple-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-300'}`}>Full Campaign Bundle</button>
                         </div>
                      </InputGroup>
                      <button onClick={handleMarketingTabGenerate} disabled={loading || !marketingPlaceId} className="w-full bg-teal-600 hover:bg-teal-500 disabled:opacity-50 text-white font-bold py-4 rounded-xl shadow-lg shadow-teal-900/20 transition-all">
-                        {loading ? 'Generating...' : 'Generate Copy'}
+                        {loading ? 'Generating...' : marketingPlatform === 'campaign_bundle' ? 'Generate Campaign Pack (Post + Story + Email)' : 'Generate Copy'}
                      </button>
                 </div>
                 <div className="flex flex-col h-full">

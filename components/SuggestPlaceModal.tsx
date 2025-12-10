@@ -1,6 +1,7 @@
 
 import React, { useState, useRef } from 'react';
 import { createPlace, uploadImage } from '../services/supabase';
+import { moderateUserContent } from '../services/geminiService';
 import { PlaceCategory, ParkingStatus } from '../types';
 import Button from './Button';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -14,6 +15,7 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
   const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
+  const [analyzing, setAnalyzing] = useState(false); // New state for AI Bouncer
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState('');
@@ -33,6 +35,17 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
 
   const handleSubmit = async () => {
     if (!name.trim()) return alert("El nombre es obligatorio");
+    
+    // AI Bouncer Check
+    setAnalyzing(true);
+    const moderation = await moderateUserContent(name, description);
+    setAnalyzing(false);
+
+    if (!moderation.safe) {
+        alert(`👮‍♂️ El Veci dice: "${moderation.reason || 'Eso no parece un lugar real.'}"\n\nIntenta arreglarlo.`);
+        return;
+    }
+
     setLoading(true);
     try {
       let imageUrl = '';
@@ -40,10 +53,18 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
         const up = await uploadImage(imageFile);
         if (up.success && up.url) imageUrl = up.url;
       }
+      
       const res = await createPlace({
         name, category, gmapsUrl, address, description, tips, imageUrl, phone, website, parking, hasRestroom, isPetFriendly,
-        status: 'open', coords: { lat: 17.9620, lng: -67.1650 }, is_featured: false, sponsor_weight: 0, isVerified: false
+        status: 'pending', // Always pending for user suggestions
+        coords: { lat: 17.9620, lng: -67.1650 }, 
+        is_featured: false, 
+        sponsor_weight: 0, 
+        isVerified: false,
+        // Tag valid AI suggestions for easier admin review
+        tags: ['User Suggestion', 'AI Verified'] 
       });
+
       if (res.success) setStep(3);
       else alert("Error: " + res.error);
     } catch (e) { alert("Error de conexión"); } 
@@ -82,7 +103,14 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
                 <div className="flex justify-between items-center"><span className="text-sm font-medium">{t('suggest_restroom')}</span><input type="checkbox" checked={hasRestroom} onChange={e => setHasRestroom(e.target.checked)} className="w-5 h-5 accent-teal-600 rounded" /></div>
                 <div className="flex justify-between items-center"><span className="text-sm font-medium">{t('suggest_pet')}</span><input type="checkbox" checked={isPetFriendly} onChange={e => setIsPetFriendly(e.target.checked)} className="w-5 h-5 accent-teal-600 rounded" /></div>
               </div>
-              <div className="flex gap-2"><button onClick={() => setStep(1)} className="p-3 text-slate-500 dark:text-slate-400 font-bold hover:text-slate-700 dark:hover:text-slate-200 transition-colors">{t('back')}</button><Button label={loading ? t('loading') : t('suggest_btn')} onClick={handleSubmit} disabled={loading} /></div>
+              <div className="flex gap-2">
+                <button onClick={() => setStep(1)} className="p-3 text-slate-500 dark:text-slate-400 font-bold hover:text-slate-700 dark:hover:text-slate-200 transition-colors">{t('back')}</button>
+                <Button 
+                    label={analyzing ? "Analizando (El Veci)..." : loading ? t('loading') : t('suggest_btn')} 
+                    onClick={handleSubmit} 
+                    disabled={loading || analyzing} 
+                />
+              </div>
             </div>
           )}
           {step === 3 && (

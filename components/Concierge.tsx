@@ -1,10 +1,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { createConciergeChat } from '../services/geminiService';
-import { ChatMessage, Place, Event, Coordinates } from '../types';
+import { ChatMessage, Place, Event, Coordinates, PlaceCategory } from '../types';
 import Button from './Button';
 import { useLanguage } from '../i18n/LanguageContext';
-import { logUserActivity } from '../services/supabase';
+import { logUserActivity, createPlace } from '../services/supabase';
 
 interface ConciergeProps {
   isOpen: boolean;
@@ -69,10 +69,69 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
     try {
       if (chatRef.current) {
         const result = await chatRef.current.sendMessage({ message: textToSend });
-        const responseText = result.text || "...";
-        setMessages(prev => [...prev, { role: 'model', text: responseText }]);
+        
+        // --- HANDLE FUNCTION CALLS (Auto-Capture Missing Places & Updates) ---
+        const calls = result.functionCalls;
+        
+        if (calls && calls.length > 0) {
+             const newParts: any[] = [];
+             
+             for (const call of calls) {
+                 if (call.name === 'reportMissingPlace') {
+                     console.log("🤖 AI Auto-Reporting Missing Place:", call.args);
+                     const { name, category, description, address } = call.args as any;
+
+                     // Silently create the pending place
+                     await createPlace({
+                         name,
+                         description,
+                         category: (category as PlaceCategory) || PlaceCategory.SIGHTS,
+                         address: address || 'Cabo Rojo, PR',
+                         status: 'pending',
+                         tags: ['AI-Auto-Capture', 'Pending Review'],
+                         is_featured: false,
+                         coords: { lat: 17.9620, lng: -67.1650 } // Default center until admin fixes it
+                     });
+
+                     newParts.push({
+                         functionResponse: {
+                             name: call.name,
+                             id: call.id,
+                             response: { success: true, message: "Place captured in database as Pending." }
+                         }
+                     });
+                 }
+                 
+                 if (call.name === 'reportPlaceIssue') {
+                     console.log("🤖 AI Reporting Issue:", call.args);
+                     const { placeName, issueType, details } = call.args as any;
+                     
+                     // Log specially for admin to see
+                     await logUserActivity('UPDATE_SUGGESTION', `${placeName} [${issueType}]: ${details}`);
+
+                     newParts.push({
+                         functionResponse: {
+                             name: call.name,
+                             id: call.id,
+                             response: { success: true, message: "Issue logged for admin review." }
+                         }
+                     });
+                 }
+             }
+
+             // Send execution result back to AI to generate final user response
+             if (newParts.length > 0) {
+                 const followUp = await chatRef.current.sendMessage(newParts);
+                 const finalResponse = followUp.text || "¡Oído! Lo anoté para que el equipo lo verifique.";
+                 setMessages(prev => [...prev, { role: 'model', text: finalResponse }]);
+             }
+        } else {
+             const responseText = result.text || "...";
+             setMessages(prev => [...prev, { role: 'model', text: responseText }]);
+        }
       }
     } catch (error) { 
+        console.error(error);
         setMessages(prev => [...prev, { role: 'model', text: 'Mala mía, se me fue la señal. Intenta otra vez.' }]); 
     } finally { 
         setIsLoading(false); 
@@ -93,40 +152,18 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
   };
 
   // --- MAGIC LINKS PARSER ---
-  // Detects place names in text and wraps them in buttons
   const renderMessageContent = (text: string) => {
-    // We want to preserve newlines first
     const lines = text.split('\n');
-    
     return lines.map((line, lineIdx) => {
-        // If empty line, return spacer
         if (!line.trim()) return <div key={lineIdx} className="h-2"></div>;
 
-        // Check for bullet points
         const isBullet = line.trim().startsWith('- ') || line.trim().startsWith('* ');
         const cleanLine = isBullet ? line.trim().substring(2) : line;
 
-        // Magic Link Logic: Split line by place names
-        // We create a complex regex to match any place name case-insensitively
-        // To avoid performance issues, we filter places that might be in the text first? 
-        // No, let's just do a greedy match for known places.
-        
-        const parts: React.ReactNode[] = [];
-        let remainingText = cleanLine;
-
-        // Sort places by name length (descending) to match longest names first (e.g. "Playa Sucia" before "Playa")
         const sortedPlaces = [...places].sort((a, b) => b.name.length - a.name.length);
-
-        // This is a simplified parser. For a robust one, we'd need a tokenizing approach, 
-        // but for this UI, we can just scan for specific names.
-        
-        // React does not easily allow recursive regex replacement for components. 
-        // We will do a single pass finding the first match, then recursing on the rest.
         
         const parseSegment = (segment: string): React.ReactNode[] => {
             if (!segment) return [];
-            
-            // Find the first occurrence of ANY place name
             let firstMatchIndex = -1;
             let matchedPlace: Place | null = null;
             let matchedName = "";
@@ -145,7 +182,6 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
             if (matchedPlace && firstMatchIndex !== -1) {
                 const before = segment.substring(0, firstMatchIndex);
                 const after = segment.substring(firstMatchIndex + matchedName.length);
-                
                 return [
                     ...parseSegment(before),
                     <button 
@@ -158,8 +194,6 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
                     ...parseSegment(after)
                 ];
             }
-
-            // No matches, just return text with bold formatting
             return [<span key={Math.random()} dangerouslySetInnerHTML={{ __html: segment.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>') }} />];
         };
 
@@ -169,13 +203,10 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
             return (
                 <div key={lineIdx} className="flex gap-2 ml-2 mb-1">
                     <span className="text-teal-300 mt-1.5 text-[10px]"><i className="fa-solid fa-circle"></i></span>
-                    <div className="flex-1">
-                        {contentNodes}
-                    </div>
+                    <div className="flex-1">{contentNodes}</div>
                 </div>
             );
         }
-        
         return <div key={lineIdx} className="mb-1">{contentNodes}</div>;
     });
   };

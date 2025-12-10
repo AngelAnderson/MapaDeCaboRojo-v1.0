@@ -115,7 +115,7 @@ export interface ChatMessage {
 
 export interface AdminLog {
   id: string;
-  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'MARKETING_GEN' | 'USER_SEARCH' | 'USER_CHAT';
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'MARKETING_GEN' | 'USER_SEARCH' | 'USER_CHAT' | 'AI_BRIEFING' | 'CREATE_EVENT' | 'UPDATE_EVENT' | 'DELETE_EVENT' | 'UPDATE_SUGGESTION';
   place_name: string;
   details: string;
   created_at: string;

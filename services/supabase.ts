@@ -240,12 +240,12 @@ const logAction = async (action: string, placeName: string, details: string) => 
     } catch (e) { console.warn(e); }
 };
 
-export const logUserActivity = async (action: 'USER_SEARCH' | 'USER_CHAT', term: string) => {
+export const logUserActivity = async (action: 'USER_SEARCH' | 'USER_CHAT' | 'UPDATE_SUGGESTION', term: string) => {
     try {
         await supabase.from('admin_logs').insert([{
             action,
             place_name: term.substring(0, 100), // Truncate for safety
-            details: 'User Activity',
+            details: action === 'UPDATE_SUGGESTION' ? term : 'User Activity',
             created_at: new Date().toISOString()
         }]);
     } catch (e) { 

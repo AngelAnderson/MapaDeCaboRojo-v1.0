@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron-briefing",
+      "schedule": "0 11 * * *"
+    }
+  ],
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "functions": {
+    "api/*.ts": {
+      "maxDuration": 60
+    }
+  }
+}
