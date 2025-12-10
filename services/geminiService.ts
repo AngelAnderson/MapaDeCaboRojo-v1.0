@@ -1,4 +1,3 @@
-
 import { GoogleGenAI, Chat, FunctionDeclaration, Type, Modality } from "@google/genai";
 import { Place, Event, Coordinates, AdminLog, ItineraryItem, PlaceCategory } from "../types";
 
@@ -333,18 +332,19 @@ export const generateAudioGuide = async (place: Place): Promise<ArrayBuffer | nu
 export const discoverPlaces = async (categoryQuery: string, existingNames: string[]): Promise<Partial<Place>[]> => {
     const prompt = `
     Act as a Database Seeder for a Cabo Rojo Tourism App.
-    Find 10 REAL places in Cabo Rojo, Puerto Rico that match this category: "${categoryQuery}".
+    Find 10 REAL, VERIFIED places in Cabo Rojo, Puerto Rico that match this category: "${categoryQuery}".
+    Use Google Search to ensure they exist and get accurate location.
     
-    EXCLUDE these places that already exist: ${existingNames.slice(0, 50).join(', ')}.
+    EXCLUDE these places: ${existingNames.slice(0, 50).join(', ')}.
     
-    Return a strict JSON Array of objects with this schema:
+    Return a strict JSON Array (no markdown) of objects with this schema:
     [
       {
         "name": "Official Name",
         "description": "Short description (max 100 chars, local style)",
-        "category": "One of: BEACH, FOOD, SIGHTS, NIGHTLIFE, LOGISTICS, SHOPPING",
-        "lat": 17.xxxxx (Approximate latitude),
-        "lng": -67.xxxxx (Approximate longitude),
+        "category": "One of: BEACH, FOOD, SIGHTS, NIGHTLIFE, LOGISTICS, SHOPPING, LODGING, HEALTH, ACTIVITY, SERVICE",
+        "lat": 17.xxxxx,
+        "lng": -67.xxxxx,
         "address": "Approximate address",
         "tips": "A local tip",
         "priceLevel": "$" or "$$" or "$$$",
@@ -357,10 +357,16 @@ export const discoverPlaces = async (categoryQuery: string, existingNames: strin
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash',
             contents: prompt,
-            config: { responseMimeType: 'application/json' }
+            config: { 
+                tools: [{ googleSearch: {} }] 
+            }
         });
         
-        const raw = JSON.parse(response.text || "[]");
+        let jsonStr = response.text || "[]";
+        // Clean markdown formatting if present
+        jsonStr = jsonStr.replace(/```json/g, '').replace(/```/g, '').trim();
+        
+        const raw = JSON.parse(jsonStr);
         
         // Map to Partial<Place> to ensure type safety
         return raw.map((p: any) => ({
@@ -373,7 +379,9 @@ export const discoverPlaces = async (categoryQuery: string, existingNames: strin
             priceLevel: p.priceLevel,
             vibe: p.vibe || [],
             status: 'open',
-            isVerified: true
+            isVerified: true,
+            // Robust URL Construction
+            gmapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name + ' Cabo Rojo PR')}`
         }));
     } catch (e) {
         console.error("Discovery Error", e);
