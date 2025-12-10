@@ -1,10 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
-import { Place, Collection } from '../types';
+import { Place, Collection, Coordinates } from '../types';
 import SearchBar from './SearchBar';
 import CategoryPills from './CategoryPills';
 import { logUserActivity } from '../services/supabase';
 import { COLLECTIONS } from '../constants';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface ExplorerSheetProps {
   places: Place[];
@@ -20,7 +21,8 @@ interface ExplorerSheetProps {
   onToggleFavorite?: (id: string) => void;
   onSelectCollection?: (collection: Collection | null) => void;
   activeCollectionId?: string | null;
-  onCameraClick?: () => void; // Added for visual search
+  onCameraClick?: () => void; 
+  userLocation?: Coordinates;
 }
 
 const ExplorerSheet: React.FC<ExplorerSheetProps> = ({ 
@@ -37,9 +39,12 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
   onToggleFavorite,
   onSelectCollection,
   activeCollectionId,
-  onCameraClick
+  onCameraClick,
+  userLocation
 }) => {
+  const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
+  const [sortBy, setSortBy] = useState<'recommended' | 'distance'>('recommended');
 
   // Debounced Logging for Search
   useEffect(() => {
@@ -52,11 +57,28 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
     return () => clearTimeout(delayDebounceFn);
   }, [searchText]);
 
-  useEffect(() => {
-    if (isVisible) {
-      // Optional reset
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  // Sort places logic
+  const sortedPlaces = [...places].sort((a, b) => {
+    if (sortBy === 'distance' && userLocation && a.coords && b.coords) {
+        const distA = calculateDistance(userLocation.lat, userLocation.lng, a.coords.lat, a.coords.lng);
+        const distB = calculateDistance(userLocation.lat, userLocation.lng, b.coords.lat, b.coords.lng);
+        return distA - distB;
     }
-  }, [isVisible]);
+    // Default: Sort by Featured first, then Name
+    if (a.is_featured === b.is_featured) return 0;
+    return a.is_featured ? -1 : 1;
+  });
 
   return (
     <div 
@@ -71,7 +93,18 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
       <div className="px-5 pb-2 space-y-4 shrink-0">
         <div className="flex justify-between items-baseline">
             <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Explorar</h2>
-            <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{resultCount} Lugares</span>
+            <div className="flex items-center gap-3">
+                {userLocation && (
+                    <button 
+                        onClick={() => setSortBy(prev => prev === 'recommended' ? 'distance' : 'recommended')}
+                        className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all flex items-center gap-1 ${sortBy === 'distance' ? 'bg-teal-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}
+                    >
+                        <i className={`fa-solid ${sortBy === 'distance' ? 'fa-location-crosshairs' : 'fa-star'}`}></i>
+                        {sortBy === 'distance' ? t('sort_distance') : t('sort_recommended')}
+                    </button>
+                )}
+                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{resultCount}</span>
+            </div>
         </div>
         <SearchBar 
             value={searchText} 
@@ -113,16 +146,22 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
       )}
 
       <div className="flex-1 overflow-y-auto px-4 py-2 space-y-3 pb-32 mask-image-b">
-        {places.length === 0 ? (
+        {sortedPlaces.length === 0 ? (
             <div className="text-center py-16 opacity-40">
                 <i className="fa-solid fa-map-location-dot text-5xl mb-3 text-slate-300 dark:text-slate-500"></i>
                 <p className="text-base font-bold text-slate-400 dark:text-slate-500">Sin resultados</p>
             </div>
         ) : (
-            places.map(place => {
+            sortedPlaces.map(place => {
                 const isEvent = place.contact_info?.isEvent === true;
                 const isFavorite = savedIds.includes(place.id);
                 const isClosed = place.status === 'closed';
+                
+                let dist = '';
+                if (userLocation && place.coords) {
+                    const d = calculateDistance(userLocation.lat, userLocation.lng, place.coords.lat, place.coords.lng);
+                    dist = d.toFixed(1) + ' km';
+                }
 
                 return (
                     <div key={place.id} onClick={() => onSelect(place)} className="flex items-center gap-4 p-3 pr-4 rounded-[24px] bg-white/50 dark:bg-slate-700/40 hover:bg-white dark:hover:bg-slate-700 active:scale-[0.98] transition-all cursor-pointer border border-white/60 dark:border-slate-600/50 shadow-sm group backdrop-blur-sm relative">
@@ -142,8 +181,9 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                                     <i className="fa-regular fa-calendar mr-1"></i> {place.priceLevel}
                                 </p>
                             ) : (
-                                <p className="text-xs text-slate-500 dark:text-slate-300 font-medium truncate mb-2">
-                                    {place.category} • {place.priceLevel || '$'}
+                                <p className="text-xs text-slate-500 dark:text-slate-300 font-medium truncate mb-2 flex items-center gap-2">
+                                    <span>{place.category} • {place.priceLevel || '$'}</span>
+                                    {dist && <span className="text-teal-600 dark:text-teal-400 font-bold">• {dist}</span>}
                                 </p>
                             )}
                             

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { Place, PlaceCategory, Coordinates, Event, ParkingStatus, Collection } from '../types';
@@ -94,6 +95,18 @@ const generateMarkerHtml = (place: Place, isMarina: boolean): string => {
   `;
 };
 
+// Haversine Distance Helper (km)
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+};
+
 const CATEGORY_GROUPS = {
   ALL: { categories: 'ALL' },
   EXPLORA: { categories: [PlaceCategory.BEACH, PlaceCategory.SIGHTS, PlaceCategory.ACTIVITY] },
@@ -140,6 +153,7 @@ const MainApp: React.FC = () => {
   const [searchFocusTrigger, setSearchFocusTrigger] = useState(0);
   const [resultCount, setResultCount] = useState(0); 
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
+  const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   
   // Map State
   const [mapStyle, setMapStyle] = useState<'standard' | 'satellite'>('standard');
@@ -286,6 +300,20 @@ const MainApp: React.FC = () => {
     };
     if (mapLoaded) initData();
   }, [mapLoaded]);
+
+  // Try to get location on mount silently
+  useEffect(() => {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                const { latitude, longitude } = pos.coords;
+                setUserLocation({ lat: latitude, lng: longitude });
+            },
+            () => {}, // ignore error
+            { enableHighAccuracy: false }
+        );
+    }
+  }, []);
 
   // Map Initialization
   useEffect(() => {
@@ -521,7 +549,8 @@ const MainApp: React.FC = () => {
     navigator.geolocation.getCurrentPosition(
       (pos) => { 
           const { latitude, longitude } = pos.coords;
-          
+          setUserLocation({ lat: latitude, lng: longitude });
+
           // Fly to user
           map.current?.flyTo([latitude, longitude], 15);
           
@@ -645,6 +674,7 @@ const MainApp: React.FC = () => {
               setActiveTab('explore'); // Ensure sheet is visible if triggered elsewhere
               setIsConciergeOpen(true);
           }}
+          userLocation={userLocation || undefined}
         />
       </aside>
 
@@ -663,6 +693,7 @@ const MainApp: React.FC = () => {
             onSuggestEdit={() => { setSelectedPlace(null); setIsSuggestOpen(true); }}
             isFavorite={savedIds.includes(selectedPlace.id)}
             onToggleFavorite={() => toggleFavorite(selectedPlace.id)}
+            userLocation={userLocation || undefined}
           />
         </div>
       )}

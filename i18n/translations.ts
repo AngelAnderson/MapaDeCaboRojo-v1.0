@@ -77,6 +77,12 @@ export const translations = {
     status_open_day: "Abierto (Horario Solar)",
     status_caution_night: "Abierto - Precaución de Noche",
     status_closed_now: "Cerrado Ahora",
+    audio_guide_title: "Historia del Veci",
+    audio_listen: "Escuchar Historia",
+    audio_playing: "Reproduciendo...",
+    audio_error: "No pude generar el audio. Intenta de nuevo.",
+    sort_recommended: "Recomendados",
+    sort_distance: "Cerca de ti"
   },
   en: {
     loading: "Loading...",
@@ -155,5 +161,11 @@ export const translations = {
     status_open_day: "Open (Daylight)",
     status_caution_night: "Caution - Night",
     status_closed_now: "Closed Now",
+    audio_guide_title: "El Veci's Story",
+    audio_listen: "Listen to Story",
+    audio_playing: "Playing...",
+    audio_error: "Could not generate audio. Try again.",
+    sort_recommended: "Recommended",
+    sort_distance: "Near Me"
   }
 };

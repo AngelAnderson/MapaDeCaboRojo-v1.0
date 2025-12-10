@@ -1,5 +1,5 @@
 
-import { GoogleGenAI, Chat, FunctionDeclaration, Type } from "@google/genai";
+import { GoogleGenAI, Chat, FunctionDeclaration, Type, Modality } from "@google/genai";
 import { Place, Event, Coordinates, AdminLog, ItineraryItem } from "../types";
 
 // The API key must be obtained exclusively from the environment variable process.env.API_KEY.
@@ -280,5 +280,51 @@ export const generateTripItinerary = async (preferences: string, places: Place[]
 
     } catch (e) {
         return [];
+    }
+};
+
+// 8. AUDIO GUIDE (TTS)
+// Helper to decode Base64 to ArrayBuffer
+const decodeBase64ToArrayBuffer = (base64: string) => {
+    const binaryString = atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+};
+
+export const generateAudioGuide = async (place: Place): Promise<AudioBuffer | null> => {
+    const prompt = `
+    Eres un guía turístico local de Cabo Rojo, Puerto Rico (El Veci).
+    Cuenta una historia MUY breve (max 40 segundos) y emocionante sobre: ${place.name}.
+    Usa jerga boricua ligera, hazlo sonar como un cuento interesante, no una enciclopedia.
+    Menciona: ${place.description} y este tip secreto: ${place.tips}.
+    `;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash-preview-tts",
+            contents: prompt,
+            config: {
+                responseModalities: [Modality.AUDIO],
+                speechConfig: {
+                    voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } }
+                }
+            }
+        });
+
+        const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+        
+        if (base64Audio) {
+            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const audioBuffer = await audioContext.decodeAudioData(decodeBase64ToArrayBuffer(base64Audio));
+            return audioBuffer;
+        }
+        return null;
+    } catch (e) {
+        console.error("TTS Error:", e);
+        return null;
     }
 };
