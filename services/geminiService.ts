@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Chat, FunctionDeclaration, Type, Modality } from "@google/genai";
-import { Place, Event, Coordinates, AdminLog, ItineraryItem } from "../types";
+import { Place, Event, Coordinates, AdminLog, ItineraryItem, PlaceCategory } from "../types";
 
 // The API key must be obtained exclusively from the environment variable process.env.API_KEY.
 // Assume this variable is pre-configured, valid, and accessible in the execution context.
@@ -309,7 +309,7 @@ export const generateAudioGuide = async (place: Place): Promise<ArrayBuffer | nu
             model: "gemini-2.5-flash-preview-tts",
             contents: [{ parts: [{ text: prompt }] }],
             config: {
-                responseModalities: [Modality.AUDIO], 
+                responseModalities: ['AUDIO'], 
                 speechConfig: {
                     voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } }
                 }
@@ -326,5 +326,57 @@ export const generateAudioGuide = async (place: Place): Promise<ArrayBuffer | nu
     } catch (e) {
         console.error("TTS Error:", e);
         return null;
+    }
+};
+
+// 9. BULK DISCOVERY (Database Filling)
+export const discoverPlaces = async (categoryQuery: string, existingNames: string[]): Promise<Partial<Place>[]> => {
+    const prompt = `
+    Act as a Database Seeder for a Cabo Rojo Tourism App.
+    Find 10 REAL places in Cabo Rojo, Puerto Rico that match this category: "${categoryQuery}".
+    
+    EXCLUDE these places that already exist: ${existingNames.slice(0, 50).join(', ')}.
+    
+    Return a strict JSON Array of objects with this schema:
+    [
+      {
+        "name": "Official Name",
+        "description": "Short description (max 100 chars, local style)",
+        "category": "One of: BEACH, FOOD, SIGHTS, NIGHTLIFE, LOGISTICS, SHOPPING",
+        "lat": 17.xxxxx (Approximate latitude),
+        "lng": -67.xxxxx (Approximate longitude),
+        "address": "Approximate address",
+        "tips": "A local tip",
+        "priceLevel": "$" or "$$" or "$$$",
+        "vibe": ["Tag1", "Tag2"]
+      }
+    ]
+    `;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: { responseMimeType: 'application/json' }
+        });
+        
+        const raw = JSON.parse(response.text || "[]");
+        
+        // Map to Partial<Place> to ensure type safety
+        return raw.map((p: any) => ({
+            name: p.name,
+            description: p.description,
+            category: p.category as PlaceCategory,
+            coords: { lat: p.lat, lng: p.lng },
+            address: p.address,
+            tips: p.tips,
+            priceLevel: p.priceLevel,
+            vibe: p.vibe || [],
+            status: 'open',
+            isVerified: true
+        }));
+    } catch (e) {
+        console.error("Discovery Error", e);
+        return [];
     }
 };

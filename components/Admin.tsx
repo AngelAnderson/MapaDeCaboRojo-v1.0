@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Place, PlaceCategory, ParkingStatus, Event, EventCategory, AdminLog, DaySchedule } from '../types';
 import { supabase, updatePlace, deletePlace, createPlace, uploadImage, getAdminLogs, createEvent, updateEvent, deleteEvent, getEvents } from '../services/supabase';
-import { generateMarketingCopy, enhanceDescription, generateExecutiveBriefing, enrichPlaceMetadata } from '../services/geminiService';
+import { generateMarketingCopy, enhanceDescription, generateExecutiveBriefing, enrichPlaceMetadata, discoverPlaces } from '../services/geminiService';
 import L from 'leaflet';
 import { useLanguage } from '../i18n/LanguageContext'; // Added import
 
@@ -170,6 +170,12 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
     const [placeSearchTerm, setPlaceSearchTerm] = useState('');
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
+    // Import State (Batch AI)
+    const [isImportOpen, setIsImportOpen] = useState(false);
+    const [importCategory, setImportCategory] = useState('');
+    const [importResults, setImportResults] = useState<Partial<Place>[]>([]);
+    const [importSelection, setImportSelection] = useState<Set<number>>(new Set());
+
     // Editor State (Events)
     const [editingEvent, setEditingEvent] = useState<Partial<Event> | null>(null);
 
@@ -315,6 +321,48 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
             }
             setLoading(false);
         }
+    };
+
+    // --- AI IMPORT ---
+    const handleDiscoverPlaces = async () => {
+        if (!importCategory) return alert("Enter a category (e.g. 'Seafood', 'Beaches')");
+        setLoading(true);
+        setImportResults([]);
+        
+        const existingNames = places.map(p => p.name);
+        const results = await discoverPlaces(importCategory, existingNames);
+        
+        setImportResults(results);
+        // Auto select all by default
+        const allIndexes = new Set(results.map((_, i) => i));
+        setImportSelection(allIndexes);
+        
+        setLoading(false);
+    };
+
+    const handleImportCommit = async () => {
+        if (importSelection.size === 0) return;
+        setLoading(true);
+        
+        let count = 0;
+        const selectedPlaces = importResults.filter((_, i) => importSelection.has(i));
+
+        for (const p of selectedPlaces) {
+            await createPlace({
+                ...p,
+                is_featured: false,
+                sponsor_weight: 0,
+                status: 'open',
+                isVerified: true // Admin created -> Verified
+            });
+            count++;
+        }
+
+        await onUpdate();
+        alert(`Successfully imported ${count} places!`);
+        setLoading(false);
+        setIsImportOpen(false);
+        setImportResults([]);
     };
 
     // --- EVENT CRUD ---
@@ -659,6 +707,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                 <div className="flex justify-between items-center mb-4">
                      <h2 className="text-2xl font-bold text-white">Places Database</h2>
                      <div className="flex gap-2">
+                        <button onClick={() => setIsImportOpen(true)} className="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-blue-900/20 hover:scale-105 transition-transform"><i className="fa-solid fa-robot mr-2"></i> AI Import</button>
                         <button onClick={handleBatchAutoFix} disabled={loading} className="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-purple-900/20 hover:scale-105 transition-transform"><i className="fa-solid fa-wand-magic-sparkles mr-2"></i> Auto-Fix Data</button>
                         <button onClick={() => setEditingPlace({ id: 'new', name: '', description: '', category: PlaceCategory.FOOD, coords: { lat: 17.9620, lng: -67.1650 }, parking: ParkingStatus.FREE, tags: [], vibe: [], imageUrl: '', videoUrl: '', website: '', phone: '', status: 'open', plan: 'free', sponsor_weight: 0, is_featured: false, hasRestroom: false, hasShowers: false, tips: '', priceLevel: '$', bestTimeToVisit: '', isPetFriendly: false, isHandicapAccessible: false, isVerified: true, slug: '', address: '', gmapsUrl: '', opening_hours: { note: '', structured: [], type: 'fixed' }, isMobile: false })} className="bg-teal-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-teal-900/20 hover:scale-105 transition-transform"><i className="fa-solid fa-plus mr-2"></i> New Place</button>
                      </div>
@@ -711,6 +760,84 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
             </div>
         );
     };
+
+    const renderImportModal = () => (
+        <div className="fixed inset-0 bg-slate-900/90 z-[3600] flex items-center justify-center p-4">
+            <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl">
+                <div className="p-6 border-b border-slate-700 flex justify-between items-center">
+                    <div>
+                        <h2 className="text-xl font-bold text-white">AI Batch Import</h2>
+                        <p className="text-slate-400 text-sm">Fill your database automatically</p>
+                    </div>
+                    <button onClick={() => setIsImportOpen(false)}><i className="fa-solid fa-xmark text-slate-400 hover:text-white text-xl"></i></button>
+                </div>
+                
+                <div className="p-6 flex-1 overflow-y-auto space-y-6">
+                    <div className="flex gap-3">
+                         <input 
+                            value={importCategory}
+                            onChange={(e) => setImportCategory(e.target.value)}
+                            placeholder="Enter Category (e.g. Seafood, Chinchorros, Beaches)"
+                            className="flex-1 bg-slate-900 text-white border border-slate-700 rounded-lg p-3 outline-none focus:border-blue-500"
+                         />
+                         <button 
+                            onClick={handleDiscoverPlaces}
+                            disabled={loading}
+                            className="bg-blue-600 hover:bg-blue-500 text-white px-6 rounded-lg font-bold shadow-lg"
+                         >
+                            {loading ? <i className="fa-solid fa-spinner fa-spin"></i> : 'Discover'}
+                         </button>
+                    </div>
+
+                    {importResults.length > 0 && (
+                        <div className="space-y-2">
+                             <div className="flex justify-between items-center text-sm text-slate-400 mb-2">
+                                 <span>Found {importResults.length} places</span>
+                                 <button 
+                                    onClick={() => setImportSelection(importSelection.size === importResults.length ? new Set() : new Set(importResults.map((_, i) => i)))}
+                                    className="text-blue-400 hover:underline"
+                                 >
+                                    {importSelection.size === importResults.length ? 'Deselect All' : 'Select All'}
+                                 </button>
+                             </div>
+                             {importResults.map((place, idx) => (
+                                 <div key={idx} className={`p-3 rounded-lg border flex items-start gap-3 ${importSelection.has(idx) ? 'bg-blue-900/20 border-blue-500/50' : 'bg-slate-900/50 border-slate-700'}`}>
+                                     <input 
+                                        type="checkbox"
+                                        checked={importSelection.has(idx)}
+                                        onChange={() => {
+                                            const next = new Set(importSelection);
+                                            if (next.has(idx)) next.delete(idx); else next.add(idx);
+                                            setImportSelection(next);
+                                        }}
+                                        className="mt-1 w-4 h-4 accent-blue-500"
+                                     />
+                                     <div className="flex-1 min-w-0">
+                                         <h4 className="font-bold text-white text-sm">{place.name}</h4>
+                                         <p className="text-xs text-slate-400 truncate">{place.description}</p>
+                                         <div className="flex gap-2 mt-1">
+                                             <span className="text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded">{place.category}</span>
+                                             <span className="text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded">{place.address}</span>
+                                         </div>
+                                     </div>
+                                 </div>
+                             ))}
+                        </div>
+                    )}
+                </div>
+
+                <div className="p-4 border-t border-slate-700 bg-slate-900/50 rounded-b-2xl flex justify-end">
+                    <button 
+                        onClick={handleImportCommit}
+                        disabled={loading || importSelection.size === 0}
+                        className="bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg font-bold shadow-lg"
+                    >
+                        Import {importSelection.size} Places
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
 
     const renderPlaceEditor = () => (
         <div className="h-full flex flex-col animate-slide-up">
@@ -937,6 +1064,9 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                     {activeTab === 'marketing' && renderMarketing()}
                 </div>
             </main>
+            
+            {/* Modal Layer */}
+            {isImportOpen && renderImportModal()}
         </div>
     );
 };
