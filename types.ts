@@ -23,6 +23,13 @@ export interface Coordinates {
   lng: number;
 }
 
+export interface DaySchedule {
+  day: number; // 0 = Sunday, 1 = Monday, etc.
+  open: string; // "09:00"
+  close: string; // "17:00"
+  isClosed: boolean;
+}
+
 export interface Place {
   id: string;
   name: string;
@@ -50,6 +57,7 @@ export interface Place {
   sponsor_weight: number;
   is_featured: boolean;
   isSecret?: boolean;
+  isMobile?: boolean; // New: For businesses that come to you
 
   parking: ParkingStatus;
   hasRestroom: boolean;
@@ -68,8 +76,8 @@ export interface Place {
   created_at?: string;
 
   opening_hours?: {
-    note?: string;
-    structured?: any;
+    note?: string; // Free text fallback
+    structured?: DaySchedule[]; // Structured data
   };
 
   rating?: number;

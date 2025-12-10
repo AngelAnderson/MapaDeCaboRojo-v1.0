@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { createClient } from '@supabase/supabase-js';
 
@@ -21,38 +22,57 @@ export default async function handler(request: Request) {
     .from('places')
     .select('name');
 
-  const logText = logs ? logs.map((l: any) => `${l.action}: ${l.place_name}`).join('\n') : "No data.";
+  const logText = logs ? logs.map((l: any) => `${l.action}: ${l.place_name} [${l.details}]`).join('\n') : "No data.";
   const placeText = places ? places.map((p: any) => p.name).join(', ') : "";
 
   // 2. AI Analysis
   const prompt = `
-    Actúa como un Analista de Negocios para una App de Turismo en Cabo Rojo.
-    Analiza la actividad de ayer:
+    Act as a Senior Business Analyst for a Tourism App in Cabo Rojo, Puerto Rico.
+    Analyze yesterday's activity logs and the current inventory.
+
+    LOGS:
     ${logText}
 
-    Inventario actual: ${placeText.substring(0, 200)}...
+    INVENTORY SAMPLE:
+    ${placeText.substring(0, 300)}...
 
-    Genera un "Morning Briefing" corto en HTML simple (sin head/body, solo p, ul, strong).
-    Dime tendencias, qué busca la gente que no tenemos, y una acción recomendada.
+    TASK:
+    Generate a "Morning Briefing" in a JSON format containing HTML strings for both English and Spanish.
+    
+    The HTML should be "Dashboard Ready" using Tailwind CSS classes suitable for a Dark Mode UI (text-slate-300, bg-slate-800/50, border-slate-700, text-teal-400 for highlights).
+    
+    Structure the report with these sections:
+    1. 📊 **The Pulse** (General sentiment/activity level)
+    2. 🔍 **Search Trends** (What are people looking for? Any gaps?)
+    3. 🚨 **Critical Actions** (What needs fixing immediately?)
+    4. 💡 **Opportunity** (Marketing or content idea)
+
+    RESPONSE FORMAT (Strict JSON):
+    {
+      "en": "<div class='space-y-4'>...HTML content...</div>",
+      "es": "<div class='space-y-4'>...Contenido HTML...</div>"
+    }
   `;
 
   try {
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
-        contents: prompt
+        contents: prompt,
+        config: { responseMimeType: "application/json" }
     });
     
-    const briefing = response.text || "No analysis generated.";
+    // Ensure we store the raw JSON string
+    const briefingJson = response.text || "{}";
 
     // 3. Save to DB as a special Log
     await supabase.from('admin_logs').insert([{
         action: 'AI_BRIEFING',
-        place_name: 'Morning Report',
-        details: briefing,
+        place_name: 'Daily Report',
+        details: briefingJson, // Storing the JSON string
         created_at: new Date().toISOString()
     }]);
 
-    return new Response(JSON.stringify({ success: true, briefing }), {
+    return new Response(JSON.stringify({ success: true }), {
         headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { Place, PlaceCategory, Coordinates, Event, ParkingStatus, Collection } from '../types';
@@ -141,6 +140,9 @@ const MainApp: React.FC = () => {
   const [searchFocusTrigger, setSearchFocusTrigger] = useState(0);
   const [resultCount, setResultCount] = useState(0); 
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
+  
+  // Map State
+  const [mapStyle, setMapStyle] = useState<'standard' | 'satellite'>('standard');
 
   // Modal State
   const [isConciergeOpen, setIsConciergeOpen] = useState(false);
@@ -316,20 +318,32 @@ const MainApp: React.FC = () => {
     return () => { clearTimeout(timer); window.removeEventListener('resize', handleResize); };
   }, [mapLoaded]);
 
-  // Map Tile Manager
+  // Map Tile Manager (Standard vs Satellite)
   useEffect(() => {
       if (!map.current) return;
       if (tileLayer.current) tileLayer.current.remove();
 
-      const lightTiles = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-      const darkTiles = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+      let tileUrl = '';
+      let attribution = '';
+
+      if (mapStyle === 'satellite') {
+          // ESRI World Imagery
+          tileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+          attribution = 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community';
+      } else {
+          // Standard CartoDB (Light/Dark)
+          const lightTiles = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+          const darkTiles = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+          tileUrl = isDarkMode ? darkTiles : lightTiles;
+          attribution = '&copy; OpenStreetMap & CARTO';
+      }
       
-      tileLayer.current = L.tileLayer(isDarkMode ? darkTiles : lightTiles, { 
-          attribution: '&copy; OpenStreetMap & CARTO',
-          maxZoom: 20 
+      tileLayer.current = L.tileLayer(tileUrl, { 
+          attribution,
+          maxZoom: 19 // ESRI allows usually up to 19 or higher
       }).addTo(map.current);
 
-  }, [isDarkMode, mapLoaded]);
+  }, [isDarkMode, mapLoaded, mapStyle]);
 
   // Boat Animation
   useEffect(() => {
@@ -459,17 +473,20 @@ const MainApp: React.FC = () => {
       }).addTo(map.current!);
       
       const tooltipContent = `
-        <div class="bg-white/90 dark:bg-slate-800/90 backdrop-blur-md border border-white/20 dark:border-slate-600 shadow-xl rounded-xl px-3 py-2 text-center transform transition-all min-w-[120px]">
-          <div class="font-bold text-slate-800 dark:text-slate-100 text-xs mb-0.5">${place.name}</div>
-          <div class="flex items-center justify-center gap-2">
-              <span class="text-[9px] font-bold uppercase tracking-wider text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/30 px-1.5 rounded-sm">${place.category}</span>
+        <div class="relative bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-2xl rounded-xl px-4 py-2 text-center transform transition-all min-w-[140px] -translate-y-1">
+          <div class="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight mb-1">${place.name}</div>
+          <div class="flex items-center justify-center gap-2 text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">
+              <span>${place.category}</span>
+              <span class="text-teal-500">•</span>
+              <span>${place.priceLevel || 'Free'}</span>
           </div>
+          ${place.status === 'closed' ? '<div class="mt-1 text-[10px] font-bold text-red-500 bg-red-100 dark:bg-red-900/30 rounded px-1">CERRADO</div>' : ''}
         </div>
       `;
 
       marker.bindTooltip(tooltipContent, {
         direction: 'top',
-        offset: [0, -45],
+        offset: [0, -50], // Shifted slightly higher to clear the pin head
         className: 'custom-tooltip',
         opacity: 1,
         permanent: false 
@@ -589,7 +606,21 @@ const MainApp: React.FC = () => {
       
       <main ref={mapContainer} className="flex-1 w-full h-full focus:outline-none relative z-0 bg-slate-100 dark:bg-slate-800" role="application" aria-label="Interactive Map of Cabo Rojo" />
       
-      <div className="absolute right-5 bottom-[100px] z-[1000]">
+      {/* Map Controls (Location & Satellite) */}
+      <div className="absolute right-5 bottom-[100px] z-[1000] flex flex-col gap-3">
+         {/* Satellite Toggle */}
+        <button 
+            onClick={() => setMapStyle(prev => prev === 'standard' ? 'satellite' : 'standard')} 
+            className={`w-12 h-12 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex items-center justify-center border transition-all active:scale-95 ${
+                mapStyle === 'satellite' 
+                ? 'bg-teal-600 text-white border-teal-500' 
+                : 'bg-white/90 dark:bg-slate-800/90 backdrop-blur-md text-slate-600 dark:text-slate-300 border-white dark:border-slate-700'
+            }`}
+        >
+          <i className={`fa-solid ${mapStyle === 'satellite' ? 'fa-map' : 'fa-layer-group'} text-lg`}></i>
+        </button>
+
+        {/* User Location */}
         <button onClick={centerOnUser} className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-md text-blue-600 dark:text-blue-400 w-12 h-12 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex items-center justify-center border border-white dark:border-slate-700 active:scale-95 transition-transform">
           <i className="fa-solid fa-location-crosshairs text-xl"></i>
         </button>

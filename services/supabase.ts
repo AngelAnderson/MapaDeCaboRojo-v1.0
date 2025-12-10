@@ -210,7 +210,8 @@ const mapPlaceToDb = (place: Partial<Place>) => {
             restrooms: place.hasRestroom ?? false,
             showers: place.hasShowers ?? false,
             tips: place.tips || '',
-            custom_icon: place.customIcon || ''
+            custom_icon: place.customIcon || '',
+            is_mobile: place.isMobile ?? false // New mapping
         },
         opening_hours: place.opening_hours || { note: "No especificado" },
         contact_info: place.contact_info || {}
@@ -313,7 +314,8 @@ export const getPlaces = async (): Promise<Place[]> => {
       created_at: row.created_at,
       opening_hours: row.opening_hours || { note: '' },
       contact_info: row.contact_info || {},
-      customIcon: row.custom_icon || row.amenities?.custom_icon || '' 
+      customIcon: row.custom_icon || row.amenities?.custom_icon || '',
+      isMobile: row.amenities?.is_mobile || false // Map back from DB
     }));
   } catch (err) { 
     console.error("🔴 Unexpected Error in getPlaces:", err);

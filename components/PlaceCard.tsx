@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Place, ParkingStatus } from '../types';
+import React, { useState } from 'react';
+import { Place, ParkingStatus, DaySchedule } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
 
 interface PlaceCardProps {
@@ -28,6 +28,72 @@ const ActionButton = ({ icon, label, onClick, disabled, primary, color }: any) =
     <span className="text-xs font-bold">{label}</span>
   </button>
 );
+
+const HoursDisplay = ({ hours }: { hours: { note?: string, structured?: DaySchedule[] } }) => {
+    const [expanded, setExpanded] = useState(false);
+    const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const now = new Date();
+    const todayIdx = now.getDay();
+    
+    // Logic to calculate if open now
+    let status = { text: "Horario n/a", color: "text-slate-500", bg: "bg-slate-100" };
+    
+    if (hours?.structured && hours.structured.length === 7) {
+        const today = hours.structured[todayIdx];
+        if (today.isClosed) {
+            status = { text: "Cerrado Hoy", color: "text-red-500", bg: "bg-red-100 dark:bg-red-900/30" };
+        } else if (today.open && today.close) {
+            const currentMins = now.getHours() * 60 + now.getMinutes();
+            const [openH, openM] = today.open.split(':').map(Number);
+            const [closeH, closeM] = today.close.split(':').map(Number);
+            const openMins = openH * 60 + openM;
+            const closeMins = closeH * 60 + closeM;
+            
+            if (currentMins >= openMins && currentMins < closeMins) {
+                status = { text: `Abierto • Cierra ${today.close}`, color: "text-green-600", bg: "bg-green-100 dark:bg-green-900/30" };
+            } else {
+                status = { text: "Cerrado Ahora", color: "text-red-500", bg: "bg-red-100 dark:bg-red-900/30" };
+            }
+        }
+    } else if (hours?.note) {
+         status = { text: hours.note, color: "text-slate-600", bg: "bg-slate-100 dark:bg-slate-700" };
+    }
+
+    return (
+        <div className="bg-slate-50 dark:bg-slate-700/50 rounded-2xl border border-slate-100 dark:border-slate-600 overflow-hidden">
+             <div onClick={() => setExpanded(!expanded)} className="p-4 flex justify-between items-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-600/50 transition-colors">
+                <div className="flex items-center gap-3">
+                    <i className="fa-regular fa-clock text-slate-400"></i>
+                    <div>
+                        <p className="text-xs font-bold uppercase text-slate-400">Horario</p>
+                        <p className={`text-sm font-bold ${status.color}`}>{status.text}</p>
+                    </div>
+                </div>
+                {hours?.structured && (
+                    <i className={`fa-solid fa-chevron-down text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`}></i>
+                )}
+             </div>
+             
+             {expanded && hours?.structured && (
+                 <div className="px-4 pb-4 border-t border-slate-200 dark:border-slate-600 pt-3">
+                     <div className="space-y-2">
+                         {hours.structured.map((d, i) => (
+                             <div key={i} className={`flex justify-between text-sm ${i === todayIdx ? 'font-bold text-teal-600 dark:text-teal-400' : 'text-slate-600 dark:text-slate-300'}`}>
+                                 <span className="w-10">{DAYS[i]}</span>
+                                 {d.isClosed ? (
+                                     <span className="text-slate-400 italic">Cerrado</span>
+                                 ) : (
+                                     <span>{d.open} - {d.close}</span>
+                                 )}
+                             </div>
+                         ))}
+                     </div>
+                     {hours.note && <div className="mt-3 text-xs text-slate-500 italic border-t border-slate-200 dark:border-slate-600 pt-2">{hours.note}</div>}
+                 </div>
+             )}
+        </div>
+    );
+};
 
 const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClose, onNavigate, onAskAi, onSuggestEdit, isFavorite, onToggleFavorite }) => {
   const { t } = useLanguage();
@@ -116,6 +182,12 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
           <div className="flex items-center gap-2 mb-2">
             <span className="bg-teal-500/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide shadow-sm">{place.category}</span>
             
+            {place.isMobile && (
+                 <span className="bg-purple-600/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide shadow-sm flex items-center gap-1">
+                    <i className="fa-solid fa-truck-fast"></i> Domicilio
+                 </span>
+            )}
+
             {isClosed ? (
                 <span className="bg-red-500/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide shadow-sm">Closed</span>
             ) : (
@@ -138,11 +210,28 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
 
       <div className="p-6 space-y-6 bg-white dark:bg-slate-800 -mt-4 rounded-t-3xl relative z-10 flex-1 transition-colors duration-300">
         <nav className="flex gap-3">
-          <ActionButton icon="location-arrow" label={t('directions')} onClick={navigationHandler} primary />
+          {/* Navigation Action */}
+          {place.isMobile ? (
+              <ActionButton 
+                icon="phone" 
+                label={t('call')} 
+                onClick={() => window.open(`tel:${place.phone}`)} 
+                primary 
+                disabled={!place.phone} 
+              />
+          ) : (
+              <ActionButton icon="location-arrow" label={t('directions')} onClick={navigationHandler} primary />
+          )}
+
           {isEvent ? (
               <ActionButton icon="calendar-plus" label={t('add_to_calendar')} onClick={handleCalendar} color="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800" />
           ) : (
-              <ActionButton icon="phone" label={t('call')} onClick={() => window.open(`tel:${place.phone}`)} disabled={!place.phone || isClosed} />
+              // If Mobile, the primary button is already Call. If not mobile, this is the Call button.
+              place.isMobile ? (
+                  <ActionButton icon="message" label="WhatsApp" onClick={() => window.open(`https://wa.me/1${place.phone.replace(/\D/g,'')}`, '_blank')} color="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800" disabled={!place.phone} />
+              ) : (
+                  <ActionButton icon="phone" label={t('call')} onClick={() => window.open(`tel:${place.phone}`)} disabled={!place.phone || isClosed} />
+              )
           )}
           <ActionButton icon="share-nodes" label={t('share')} onClick={handleShare} />
         </nav>
@@ -161,13 +250,29 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
           <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-2 tracking-wider">{t('the_scoop')}</h3>
           <p className="text-slate-700 dark:text-slate-200 text-lg leading-relaxed">{place.description}</p>
         </section>
+
+        {/* --- HOURS DISPLAY SECTION --- */}
+        {!isClosed && place.opening_hours && (
+            <section>
+                <HoursDisplay hours={place.opening_hours} />
+            </section>
+        )}
         
         {(place.address || place.phone || place.gmapsUrl) && (
             <section className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-600 space-y-3 transition-colors">
                 {place.address && (
                     <div className="flex items-start gap-3">
-                        <i className="fa-solid fa-map-pin text-teal-600 dark:text-teal-400 mt-1"></i>
-                        <div><p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase">{isEvent ? 'Ubicación' : t('address')}</p><p className="text-sm text-slate-700 dark:text-slate-200">{place.address}</p></div>
+                        {place.isMobile ? (
+                            <i className="fa-solid fa-truck-fast text-purple-500 dark:text-purple-400 mt-1"></i>
+                        ) : (
+                            <i className="fa-solid fa-map-pin text-teal-600 dark:text-teal-400 mt-1"></i>
+                        )}
+                        <div>
+                            <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase">
+                                {isEvent ? 'Ubicación' : (place.isMobile ? 'Zona de Servicio' : t('address'))}
+                            </p>
+                            <p className="text-sm text-slate-700 dark:text-slate-200">{place.address}</p>
+                        </div>
                     </div>
                 )}
                 {place.phone && (
@@ -182,13 +287,18 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
         <section>
           <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-3 tracking-wider">{t('logistics')}</h3>
           <div className="grid grid-cols-4 gap-2">
-            <InfoBadge 
-                icon="square-parking" 
-                label={place.parking === ParkingStatus.FREE ? 'Free' : 'Paid'} 
-                active={true} 
-                colorClass={place.parking === ParkingStatus.FREE ? 'bg-green-50 border-green-200 text-green-700' : 'bg-yellow-50 border-yellow-200 text-yellow-700'} 
-                darkColorClass={place.parking === ParkingStatus.FREE ? 'dark:bg-green-900/30 dark:border-green-800/30 dark:text-green-300' : 'dark:bg-yellow-900/30 dark:border-yellow-800/30 dark:text-yellow-300'}
-            />
+            {!place.isMobile && (
+                <InfoBadge 
+                    icon="square-parking" 
+                    label={place.parking === ParkingStatus.FREE ? 'Free' : 'Paid'} 
+                    active={true} 
+                    colorClass={place.parking === ParkingStatus.FREE ? 'bg-green-50 border-green-200 text-green-700' : 'bg-yellow-50 border-yellow-200 text-yellow-700'} 
+                    darkColorClass={place.parking === ParkingStatus.FREE ? 'dark:bg-green-900/30 dark:border-green-800/30 dark:text-green-300' : 'dark:bg-yellow-900/30 dark:border-yellow-800/30 dark:text-yellow-300'}
+                />
+            )}
+            {place.isMobile && (
+                <InfoBadge icon="house-user" label="Domicilio" active={true} colorClass="bg-purple-50 border-purple-200 text-purple-700" darkColorClass="dark:bg-purple-900/30 dark:border-purple-800/30 dark:text-purple-300" />
+            )}
             <InfoBadge icon="restroom" label="WC" active={place.hasRestroom} colorClass="bg-blue-50 border-blue-200 text-blue-700" darkColorClass="dark:bg-blue-900/30 dark:border-blue-800/30 dark:text-blue-300" />
             <InfoBadge icon="dog" label="Pet" active={place.isPetFriendly} colorClass="bg-orange-50 border-orange-200 text-orange-700" darkColorClass="dark:bg-orange-900/30 dark:border-orange-800/30 dark:text-orange-300" />
             <InfoBadge icon="wheelchair" label="Access" active={place.isHandicapAccessible} colorClass="bg-purple-50 border-purple-200 text-purple-700" darkColorClass="dark:bg-purple-900/30 dark:border-purple-800/30 dark:text-purple-300" />

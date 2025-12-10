@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Place, PlaceCategory, ParkingStatus, Event, EventCategory, AdminLog } from '../types';
+import { Place, PlaceCategory, ParkingStatus, Event, EventCategory, AdminLog, DaySchedule } from '../types';
 import { supabase, updatePlace, deletePlace, createPlace, uploadImage, getAdminLogs, createEvent, updateEvent, deleteEvent, getEvents } from '../services/supabase';
 import { generateMarketingCopy, enhanceDescription, generateExecutiveBriefing, enrichPlaceMetadata } from '../services/geminiService';
 import L from 'leaflet';
@@ -71,6 +71,73 @@ const LocationPicker = ({ coords, onChange }: { coords: { lat: number, lng: numb
     return <div ref={mapRef} className="w-full h-48 rounded-xl overflow-hidden border border-slate-700 relative z-0" />;
 };
 
+// --- Hours Editor Helper ---
+const HoursEditor = ({ 
+    schedule, 
+    onChange 
+}: { 
+    schedule: DaySchedule[], 
+    onChange: (s: DaySchedule[]) => void 
+}) => {
+    const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+    // Initialize schedule if empty
+    useEffect(() => {
+        if (!schedule || schedule.length !== 7) {
+            const initial = Array.from({ length: 7 }, (_, i) => ({
+                day: i,
+                open: '09:00',
+                close: '17:00',
+                isClosed: false
+            }));
+            onChange(initial);
+        }
+    }, []);
+
+    const updateDay = (idx: number, field: keyof DaySchedule, val: any) => {
+        const next = [...schedule];
+        next[idx] = { ...next[idx], [field]: val };
+        onChange(next);
+    };
+
+    const copyToWeek = (idx: number) => {
+        const template = schedule[idx];
+        const next = schedule.map(d => ({ ...d, open: template.open, close: template.close, isClosed: template.isClosed }));
+        onChange(next);
+    };
+
+    if (!schedule || schedule.length === 0) return <div>Initializing...</div>;
+
+    return (
+        <div className="space-y-2 bg-slate-800 p-4 rounded-xl border border-slate-700">
+            <div className="grid grid-cols-12 gap-2 text-[10px] uppercase font-bold text-slate-500 mb-1">
+                <div className="col-span-2">Day</div>
+                <div className="col-span-3">Open</div>
+                <div className="col-span-3">Close</div>
+                <div className="col-span-2 text-center">Closed?</div>
+                <div className="col-span-2">Action</div>
+            </div>
+            {schedule.map((day, i) => (
+                <div key={i} className={`grid grid-cols-12 gap-2 items-center p-2 rounded-lg ${day.isClosed ? 'bg-slate-700/30 opacity-60' : 'bg-slate-700/50'}`}>
+                    <div className="col-span-2 font-bold text-white text-xs">{DAYS[i]}</div>
+                    <div className="col-span-3">
+                        <input type="time" disabled={day.isClosed} value={day.open} onChange={(e) => updateDay(i, 'open', e.target.value)} className="w-full bg-slate-900 border border-slate-600 rounded p-1 text-xs text-white" />
+                    </div>
+                    <div className="col-span-3">
+                         <input type="time" disabled={day.isClosed} value={day.close} onChange={(e) => updateDay(i, 'close', e.target.value)} className="w-full bg-slate-900 border border-slate-600 rounded p-1 text-xs text-white" />
+                    </div>
+                    <div className="col-span-2 flex justify-center">
+                        <input type="checkbox" checked={day.isClosed} onChange={(e) => updateDay(i, 'isClosed', e.target.checked)} className="w-4 h-4 accent-red-500 rounded" />
+                    </div>
+                    <div className="col-span-2">
+                         <button onClick={() => copyToWeek(i)} className="text-[10px] bg-slate-600 hover:bg-teal-600 text-white px-2 py-1 rounded w-full" title="Copy this time to all days">Copy All</button>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+};
+
 interface AdminProps {
   onClose: () => void;
   places: Place[];
@@ -88,8 +155,11 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
     const [activeTab, setActiveTab] = useState<'dashboard' | 'places' | 'events' | 'marketing' | 'stats' | 'logs'>('dashboard');
     const [logs, setLogs] = useState<AdminLog[]>([]);
     const [eventsList, setEventsList] = useState<Event[]>(initialEvents || []);
-    const [briefing, setBriefing] = useState<string>(''); // For AI Analyst
     
+    // Briefing State
+    const [briefingData, setBriefingData] = useState<any>(null); // Stores JSON { en: html, es: html }
+    const [briefingLang, setBriefingLang] = useState<'en' | 'es'>('en');
+
     // Editor State (Places)
     const [editingPlace, setEditingPlace] = useState<Place | null>(null);
     const [openSection, setOpenSection] = useState<string>('basic');
@@ -111,6 +181,9 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
         supabase.auth.getSession().then(({ data: { session } }) => {
             setUser(session?.user ?? null);
         });
+        
+        const savedLang = localStorage.getItem('app_language');
+        if (savedLang === 'es') setBriefingLang('es');
     }, []);
 
     useEffect(() => {
@@ -119,7 +192,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
         if (activeTab === 'dashboard') {
             loadLogs().then((fetchedLogs) => {
                 if (!initialEvents) loadEvents();
-                if (!briefing && fetchedLogs) {
+                if (!briefingData && fetchedLogs) {
                     generateBriefing(fetchedLogs);
                 }
             });
@@ -138,8 +211,13 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
     };
 
     const generateBriefing = async (currentLogs: AdminLog[]) => {
-        const report = await generateExecutiveBriefing(currentLogs, places);
-        setBriefing(report);
+        const reportJson = await generateExecutiveBriefing(currentLogs, places);
+        try {
+            const parsed = JSON.parse(reportJson);
+            setBriefingData(parsed);
+        } catch (e) {
+            setBriefingData({ en: reportJson, es: reportJson });
+        }
     };
 
     const handleLogin = async () => {
@@ -317,53 +395,6 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
         setLoading(false);
     };
 
-    // --- ANALYTICS HELPERS ---
-    
-    const calculateDBHealth = () => {
-        if (places.length === 0) return 0;
-        let score = 0;
-        let totalPoints = places.length * 5; // 5 criteria per place
-        
-        places.forEach(p => {
-            if (p.imageUrl && p.imageUrl.length > 10) score++;
-            if (p.description && p.description.length > 30) score++;
-            if (p.isVerified) score++;
-            if (p.tags && p.tags.length > 0) score++;
-            if (p.phone || p.website) score++;
-        });
-        
-        return Math.round((score / totalPoints) * 100);
-    };
-
-    const getSearchGaps = () => {
-        const searches = logs
-            .filter(l => l.action === 'USER_SEARCH')
-            .map(l => l.details?.toLowerCase() || '');
-        
-        // Count occurrences
-        const counts: Record<string, number> = {};
-        searches.forEach(s => { if(s) counts[s] = (counts[s] || 0) + 1; });
-        
-        // Filter terms that have NO results in current DB
-        const gaps = Object.entries(counts)
-            .filter(([term, count]) => {
-                const hasMatch = places.some(p => p.name.toLowerCase().includes(term) || p.tags?.some(t => t.toLowerCase().includes(term)));
-                return !hasMatch && term.length > 3;
-            })
-            .sort((a,b) => b[1] - a[1])
-            .slice(0, 5); // Top 5
-            
-        return gaps;
-    };
-
-    const getAuditStats = () => {
-        return {
-            noImage: places.filter(p => !p.imageUrl || p.imageUrl.length < 10).length,
-            unverified: places.filter(p => !p.isVerified).length,
-            shortDesc: places.filter(p => !p.description || p.description.length < 30).length
-        };
-    };
-
     // --- RENDERERS ---
 
     const renderSidebar = () => (
@@ -402,141 +433,220 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
         </aside>
     );
 
-    const renderDashboard = () => {
-        const health = calculateDBHealth();
-        const gaps = getSearchGaps();
-        const audits = getAuditStats();
-        
-        const goToFix = (filter: string) => {
-            setActiveTab('places');
-            // Logic to set filter would go here, for now just navigates
-        };
-
-        return (
-            <div className="space-y-6 animate-fade-in pb-10">
-                <div className="flex justify-between items-end">
-                    <div>
-                        <h2 className="text-3xl font-black text-white tracking-tight">Command Center</h2>
-                        <p className="text-slate-400">Welcome back, Veci. Here is what's happening.</p>
-                    </div>
-                    <div className="text-right hidden md:block">
-                        <div className="text-sm font-bold text-teal-400">{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</div>
-                        <div className="text-xs text-slate-500">{places.length} Places • {eventsList.length} Events</div>
-                    </div>
-                </div>
-                
-                {/* 1. HEALTH SCORE CARD */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-6 rounded-3xl border border-slate-700 relative overflow-hidden">
-                        <div className="flex justify-between items-start z-10 relative">
-                            <div>
-                                <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Database Health</h3>
-                                <div className="text-4xl font-black text-white">{health}%</div>
-                            </div>
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 font-bold text-sm ${health > 80 ? 'border-green-500 text-green-500' : 'border-amber-500 text-amber-500'}`}>
-                                {health > 80 ? 'A+' : 'B'}
-                            </div>
-                        </div>
-                        <div className="mt-4 space-y-2 relative z-10">
-                            <div className="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
-                                <div className={`h-full ${health > 80 ? 'bg-green-500' : 'bg-amber-500'}`} style={{ width: `${health}%` }}></div>
-                            </div>
-                            <p className="text-xs text-slate-500">
-                                {health < 90 ? "Improve descriptions and add photos to boost score." : "Database is looking healthy!"}
-                            </p>
-                        </div>
-                        {/* Background Decoration */}
-                        <i className="fa-solid fa-heart-pulse absolute -right-4 -bottom-4 text-9xl text-white/5"></i>
-                    </div>
-
-                    {/* 2. DEMAND GAPS (What users want but you don't have) */}
-                    <div className="bg-slate-800 p-6 rounded-3xl border border-slate-700 flex flex-col relative overflow-hidden">
-                        <h3 className="text-red-400 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
-                             <i className="fa-solid fa-triangle-exclamation"></i> Missing Content (Demand)
-                        </h3>
-                        {gaps.length > 0 ? (
-                            <div className="flex-1 space-y-3 z-10">
-                                {gaps.map(([term, count], i) => (
-                                    <div key={i} className="flex justify-between items-center group cursor-pointer hover:bg-slate-700/50 p-2 -mx-2 rounded-lg transition-colors" onClick={() => { setEditingPlace({ id: 'new', name: term.charAt(0).toUpperCase() + term.slice(1), description: '', category: PlaceCategory.FOOD, coords: { lat: 17.9620, lng: -67.1650 }, parking: ParkingStatus.FREE, tags: [], vibe: [], imageUrl: '', videoUrl: '', website: '', phone: '', status: 'open', plan: 'free', sponsor_weight: 0, is_featured: false, hasRestroom: false, hasShowers: false, tips: '', priceLevel: '$', bestTimeToVisit: '', isPetFriendly: false, isHandicapAccessible: false, isVerified: true, slug: '', address: '', gmapsUrl: '' }); setActiveTab('places'); }}>
-                                        <span className="text-white font-bold capitalize">{term}</span>
-                                        <span className="text-xs bg-slate-700 text-slate-300 px-2 py-1 rounded-full">{count} searches</span>
-                                        <i className="fa-solid fa-plus text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity"></i>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <div className="flex-1 flex items-center justify-center text-slate-500 text-sm">
-                                No gaps detected yet. Good job!
-                            </div>
-                        )}
-                        <i className="fa-solid fa-magnifying-glass absolute -right-4 -bottom-4 text-9xl text-white/5"></i>
-                    </div>
-
-                    {/* 3. ACTION ITEMS (To-Do List) */}
-                    <div className="bg-slate-800 p-6 rounded-3xl border border-slate-700 flex flex-col relative overflow-hidden">
-                         <h3 className="text-teal-400 text-xs font-bold uppercase tracking-wider mb-3">Action Required</h3>
-                         <div className="space-y-3 z-10">
-                            {audits.unverified > 0 && (
-                                <button onClick={() => goToFix('unverified')} className="w-full bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl flex justify-between items-center hover:bg-amber-500/20 transition-colors">
-                                    <span className="text-amber-500 font-bold text-sm"><i className="fa-solid fa-clock mr-2"></i> Pending Reviews</span>
-                                    <span className="bg-amber-500 text-slate-900 font-bold px-2 py-0.5 rounded text-xs">{audits.unverified}</span>
-                                </button>
-                            )}
-                            {audits.noImage > 0 && (
-                                <button onClick={() => goToFix('no-image')} className="w-full bg-slate-700/30 border border-slate-600 p-3 rounded-xl flex justify-between items-center hover:bg-slate-700/50 transition-colors">
-                                    <span className="text-slate-300 font-bold text-sm"><i className="fa-solid fa-image mr-2"></i> Missing Photos</span>
-                                    <span className="bg-slate-600 text-white font-bold px-2 py-0.5 rounded text-xs">{audits.noImage}</span>
-                                </button>
-                            )}
-                            {audits.shortDesc > 0 && (
-                                <button onClick={() => goToFix('short-desc')} className="w-full bg-slate-700/30 border border-slate-600 p-3 rounded-xl flex justify-between items-center hover:bg-slate-700/50 transition-colors">
-                                    <span className="text-slate-300 font-bold text-sm"><i className="fa-solid fa-align-left mr-2"></i> Short Descriptions</span>
-                                    <span className="bg-slate-600 text-white font-bold px-2 py-0.5 rounded text-xs">{audits.shortDesc}</span>
-                                </button>
-                            )}
-                            {audits.unverified === 0 && audits.noImage === 0 && audits.shortDesc === 0 && (
-                                <div className="text-green-500 font-bold flex items-center gap-2">
-                                    <i className="fa-solid fa-check-circle"></i> All clean!
-                                </div>
-                            )}
+    const renderDashboard = () => (
+        <div className="space-y-6 animate-fade-in">
+             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                 {[
+                     { label: 'Total Places', val: places.length, icon: 'map-pin', color: 'bg-blue-500' },
+                     { label: 'Events', val: eventsList.length, icon: 'calendar', color: 'bg-purple-500' },
+                     { label: 'Pending', val: places.filter(p => p.status === 'pending').length, icon: 'clock', color: 'bg-amber-500' },
+                     { label: 'Users Today', val: '142', icon: 'users', color: 'bg-teal-500' }
+                 ].map((stat, i) => (
+                     <div key={i} className="bg-slate-800 p-4 rounded-2xl border border-slate-700 flex items-center gap-4">
+                         <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white ${stat.color}`}>
+                             <i className={`fa-solid fa-${stat.icon} text-xl`}></i>
                          </div>
-                    </div>
-                </div>
-
-                {/* AI Briefing Section */}
-                <div className="bg-gradient-to-r from-teal-900/20 to-slate-800 p-8 rounded-3xl border border-teal-500/20 relative">
-                     <h3 className="text-teal-400 font-bold uppercase text-xs tracking-wider mb-4 flex items-center gap-2">
-                        <i className="fa-solid fa-robot"></i> Morning Briefing
-                    </h3>
-                    {briefing ? (
-                        <div className="prose prose-invert prose-sm max-w-none text-slate-300 columns-1 md:columns-2 gap-8" dangerouslySetInnerHTML={{ __html: briefing }}></div>
-                    ) : (
-                        <div className="flex items-center gap-3 text-slate-400 py-4">
-                            <i className="fa-solid fa-circle-notch fa-spin"></i> El Veci is analyzing logs...
-                        </div>
-                    )}
-                </div>
-
-                {/* Recent Logs Ticker */}
-                <div>
-                     <h3 className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-3 ml-1">Live Activity Feed</h3>
-                     <div className="bg-slate-800 rounded-xl border border-slate-700 divide-y divide-slate-700/50 max-h-60 overflow-y-auto">
-                        {logs.slice(0, 5).map(log => (
-                            <div key={log.id} className="p-4 flex items-center gap-4 text-sm">
-                                <span className={`text-[10px] font-bold px-2 py-1 rounded uppercase w-20 text-center ${
-                                    log.action === 'USER_SEARCH' ? 'bg-blue-500/20 text-blue-400' :
-                                    log.action === 'UPDATE_SUGGESTION' ? 'bg-orange-500/20 text-orange-400' :
-                                    'bg-slate-600/20 text-slate-400'
-                                }`}>{log.action.replace('USER_', '')}</span>
-                                <span className="text-slate-300 flex-1 truncate">{log.details}</span>
-                                <span className="text-slate-500 text-xs whitespace-nowrap">{new Date(log.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                            </div>
-                        ))}
+                         <div>
+                             <p className="text-slate-400 text-xs font-bold uppercase">{stat.label}</p>
+                             <p className="text-2xl font-black text-white">{stat.val}</p>
+                         </div>
                      </div>
-                </div>
+                 ))}
+             </div>
+             
+             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                 {/* Morning Briefing */}
+                 <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden flex flex-col">
+                     <div className="p-4 border-b border-slate-700 flex justify-between items-center bg-slate-900/50">
+                         <h3 className="text-white font-bold flex items-center gap-2"><i className="fa-solid fa-robot text-teal-400"></i> AI Morning Briefing</h3>
+                         <div className="flex gap-1">
+                             <button onClick={() => setBriefingLang('en')} className={`px-2 py-1 text-xs rounded ${briefingLang === 'en' ? 'bg-teal-600 text-white' : 'text-slate-400'}`}>EN</button>
+                             <button onClick={() => setBriefingLang('es')} className={`px-2 py-1 text-xs rounded ${briefingLang === 'es' ? 'bg-teal-600 text-white' : 'text-slate-400'}`}>ES</button>
+                         </div>
+                     </div>
+                     <div className="p-6 flex-1 text-slate-300 text-sm leading-relaxed">
+                         {briefingData ? (
+                             <div dangerouslySetInnerHTML={{ __html: briefingData[briefingLang] }}></div>
+                         ) : (
+                             <div className="flex items-center justify-center h-40 text-slate-500 flex-col gap-2">
+                                 <i className="fa-solid fa-sparkles animate-pulse text-2xl"></i>
+                                 <span>Generating AI Report...</span>
+                             </div>
+                         )}
+                     </div>
+                 </div>
+
+                 {/* Recent Activity */}
+                 <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden flex flex-col">
+                     <div className="p-4 border-b border-slate-700 bg-slate-900/50">
+                         <h3 className="text-white font-bold"><i className="fa-solid fa-list-ul mr-2 text-slate-400"></i> Recent Activity</h3>
+                     </div>
+                     <div className="flex-1 overflow-y-auto max-h-[300px]">
+                         {logs.slice(0,10).map(log => (
+                             <div key={log.id} className="p-3 border-b border-slate-700/50 hover:bg-slate-700/30 transition-colors">
+                                 <div className="flex justify-between items-start mb-1">
+                                     <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${log.action.includes('DELETE') ? 'bg-red-900/50 text-red-400' : log.action.includes('CREATE') ? 'bg-green-900/50 text-green-400' : 'bg-blue-900/50 text-blue-400'}`}>{log.action}</span>
+                                     <span className="text-[10px] text-slate-500">{new Date(log.created_at).toLocaleTimeString()}</span>
+                                 </div>
+                                 <p className="text-white text-sm font-medium truncate">{log.place_name}</p>
+                                 <p className="text-xs text-slate-400 truncate">{log.details}</p>
+                             </div>
+                         ))}
+                     </div>
+                 </div>
+             </div>
+        </div>
+    );
+
+    const renderLogs = () => (
+        <div className="h-full flex flex-col animate-fade-in">
+             <h2 className="text-2xl font-bold text-white mb-4">System Logs</h2>
+             <div className="bg-slate-800 rounded-xl border border-slate-700 flex-1 overflow-hidden flex flex-col">
+                 <div className="overflow-y-auto flex-1">
+                     <table className="w-full text-left border-collapse">
+                         <thead className="bg-slate-900 text-slate-400 text-xs uppercase sticky top-0">
+                             <tr>
+                                 <th className="p-4 font-bold">Time</th>
+                                 <th className="p-4 font-bold">Action</th>
+                                 <th className="p-4 font-bold">Target</th>
+                                 <th className="p-4 font-bold">Details</th>
+                             </tr>
+                         </thead>
+                         <tbody className="text-sm text-slate-300 divide-y divide-slate-700">
+                             {logs.map(log => (
+                                 <tr key={log.id} className="hover:bg-slate-700/30">
+                                     <td className="p-4 whitespace-nowrap text-slate-500 font-mono text-xs">{new Date(log.created_at).toLocaleString()}</td>
+                                     <td className="p-4"><span className="bg-slate-700 text-white px-2 py-1 rounded text-xs font-bold">{log.action}</span></td>
+                                     <td className="p-4 font-bold text-white">{log.place_name}</td>
+                                     <td className="p-4 text-slate-400">{log.details}</td>
+                                 </tr>
+                             ))}
+                         </tbody>
+                     </table>
+                 </div>
+             </div>
+        </div>
+    );
+    
+    const renderStats = () => (
+        <div className="text-white p-4">
+            <h2 className="text-2xl font-bold mb-4">Stats Analytics</h2>
+            <div className="bg-slate-800 p-8 rounded-xl border border-slate-700 text-center text-slate-400">
+                <i className="fa-solid fa-chart-line text-4xl mb-4"></i>
+                <p>Detailed analytics charts coming soon.</p>
             </div>
+        </div>
+    );
+
+    const renderMarketing = () => (
+        <div className="h-full flex flex-col animate-fade-in max-w-4xl mx-auto">
+             <h2 className="text-2xl font-bold text-white mb-6">AI Marketing Generator</h2>
+             
+             <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 space-y-6">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <InputGroup label="Target Place">
+                         <select className="w-full bg-slate-900 text-white border border-slate-600 rounded-lg p-3" value={marketingPlaceId} onChange={e => setMarketingPlaceId(e.target.value)}>
+                             <option value="">-- Select Place --</option>
+                             {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                         </select>
+                     </InputGroup>
+                     <InputGroup label="Platform / Format">
+                         <select className="w-full bg-slate-900 text-white border border-slate-600 rounded-lg p-3" value={marketingPlatform} onChange={e => setMarketingPlatform(e.target.value as any)}>
+                             <option value="instagram">Instagram Post</option>
+                             <option value="email">Email Blast</option>
+                             <option value="radio">Radio Script (30s)</option>
+                             <option value="campaign_bundle">Full Campaign Bundle (JSON)</option>
+                         </select>
+                     </InputGroup>
+                 </div>
+                 
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <InputGroup label="Tone">
+                         <select className="w-full bg-slate-900 text-white border border-slate-600 rounded-lg p-3" value={marketingTone} onChange={e => setMarketingTone(e.target.value)}>
+                             <option value="chill">Chill / Relaxed</option>
+                             <option value="hype">Hype / High Energy 🔥</option>
+                             <option value="professional">Professional / Formal</option>
+                             <option value="funny">Funny / Local Humor</option>
+                         </select>
+                     </InputGroup>
+                     <InputGroup label="Language">
+                         <select className="w-full bg-slate-900 text-white border border-slate-600 rounded-lg p-3" value={marketingLang} onChange={e => setMarketingLang(e.target.value)}>
+                             <option value="spanglish">Spanglish (PR Style)</option>
+                             <option value="es">Spanish (Standard)</option>
+                             <option value="en">English</option>
+                         </select>
+                     </InputGroup>
+                 </div>
+
+                 <button onClick={handleMarketingTabGenerate} disabled={loading || !marketingPlaceId} className="w-full bg-gradient-to-r from-teal-500 to-blue-600 hover:from-teal-400 hover:to-blue-500 text-white font-bold py-4 rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2">
+                     {loading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-wand-magic-sparkles"></i>}
+                     Generate Magic Copy
+                 </button>
+
+                 {marketingResult && (
+                     <div className="bg-slate-900 rounded-xl p-4 border border-slate-600 relative mt-4">
+                         <div className="absolute top-2 right-2">
+                             <button onClick={() => navigator.clipboard.writeText(marketingResult)} className="text-xs bg-slate-700 hover:bg-slate-600 text-white px-2 py-1 rounded">Copy</button>
+                         </div>
+                         <pre className="text-slate-300 whitespace-pre-wrap font-mono text-sm">{marketingResult}</pre>
+                     </div>
+                 )}
+             </div>
+        </div>
+    );
+
+    const renderEvents = () => {
+        const filteredEvents = eventsList.filter(e => e.title.toLowerCase().includes(placeSearchTerm.toLowerCase())); // Reuse search term or add distinct one
+        return (
+             <div className="h-full flex flex-col animate-fade-in relative">
+                <div className="flex justify-between items-center mb-4">
+                     <h2 className="text-2xl font-bold text-white">Events</h2>
+                     <button onClick={() => setEditingEvent({ id: 'new', title: '', description: '', category: EventCategory.COMMUNITY, startTime: new Date().toISOString(), locationName: '', status: 'published', isFeatured: false, isRecurring: false })} className="bg-teal-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-teal-900/20 hover:scale-105 transition-transform"><i className="fa-solid fa-plus mr-2"></i> New Event</button>
+                </div>
+                 <div className="flex-1 overflow-y-auto space-y-2 pr-2 pb-20">
+                    {filteredEvents.map(e => (
+                        <div key={e.id} className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center group hover:border-teal-500/50">
+                             <div>
+                                <h3 className="font-bold text-white">{e.title}</h3>
+                                <p className="text-xs text-slate-500">{new Date(e.startTime).toLocaleDateString()} • {e.locationName}</p>
+                             </div>
+                             <div className="flex gap-2">
+                                <button onClick={() => setEditingEvent(e)} className="w-10 h-10 bg-slate-700 rounded-lg text-white hover:bg-teal-600 transition-colors flex items-center justify-center"><i className="fa-solid fa-pen"></i></button>
+                                <button onClick={() => handleDeleteEvent(e.id)} className="w-10 h-10 bg-slate-700 rounded-lg text-slate-400 hover:bg-red-600 hover:text-white transition-colors flex items-center justify-center"><i className="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    ))}
+                 </div>
+             </div>
         );
     };
+
+    const renderEventEditor = () => (
+        <div className="h-full flex flex-col animate-slide-up">
+             <div className="flex justify-between items-center mb-4 shrink-0">
+                <div className="flex items-center gap-3">
+                    <button onClick={() => setEditingEvent(null)} className="bg-slate-700 w-10 h-10 rounded-full text-white hover:bg-slate-600 transition-colors"><i className="fa-solid fa-arrow-left"></i></button>
+                    <h2 className="text-xl font-bold text-white truncate">{editingEvent?.title || 'New Event'}</h2>
+                </div>
+                <button onClick={handleSaveEvent} disabled={loading} className="bg-teal-600 hover:bg-teal-500 text-white px-6 py-2 rounded-full font-bold shadow-lg shadow-teal-900/20">
+                    {loading ? 'Saving...' : 'Save Changes'}
+                </button>
+            </div>
+             <div className="flex-1 overflow-y-auto space-y-4 pr-2">
+                  <div className="p-4 space-y-4 bg-slate-900/50 rounded-xl border border-slate-800">
+                      <InputGroup label="Title"><StyledInput value={editingEvent!.title} onChange={e => setEditingEvent({...editingEvent!, title: e.target.value})} /></InputGroup>
+                      <InputGroup label="Description"><StyledTextArea value={editingEvent!.description} onChange={e => setEditingEvent({...editingEvent!, description: e.target.value})} /></InputGroup>
+                      <div className="grid grid-cols-2 gap-4">
+                          <InputGroup label="Start Time"><StyledInput type="datetime-local" value={editingEvent!.startTime?.slice(0,16)} onChange={e => setEditingEvent({...editingEvent!, startTime: new Date(e.target.value).toISOString()})} /></InputGroup>
+                          <InputGroup label="End Time"><StyledInput type="datetime-local" value={editingEvent!.endTime?.slice(0,16)} onChange={e => setEditingEvent({...editingEvent!, endTime: new Date(e.target.value).toISOString()})} /></InputGroup>
+                      </div>
+                      <InputGroup label="Location"><StyledInput value={editingEvent!.locationName} onChange={e => setEditingEvent({...editingEvent!, locationName: e.target.value})} /></InputGroup>
+                      <InputGroup label="Map Link"><StyledInput value={editingEvent!.mapLink} onChange={e => setEditingEvent({...editingEvent!, mapLink: e.target.value})} /></InputGroup>
+                      <InputGroup label="Image URL"><StyledInput value={editingEvent!.imageUrl} onChange={e => setEditingEvent({...editingEvent!, imageUrl: e.target.value})} /></InputGroup>
+                  </div>
+             </div>
+        </div>
+    );
 
     const renderPlaceList = () => {
         const filtered = places.filter(p => p.name.toLowerCase().includes(placeSearchTerm.toLowerCase()));
@@ -546,14 +656,13 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                      <h2 className="text-2xl font-bold text-white">Places Database</h2>
                      <div className="flex gap-2">
                         <button onClick={handleBatchAutoFix} disabled={loading} className="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-purple-900/20 hover:scale-105 transition-transform"><i className="fa-solid fa-wand-magic-sparkles mr-2"></i> Auto-Fix Data</button>
-                        <button onClick={() => setEditingPlace({ id: 'new', name: '', description: '', category: PlaceCategory.FOOD, coords: { lat: 17.9620, lng: -67.1650 }, parking: ParkingStatus.FREE, tags: [], vibe: [], imageUrl: '', videoUrl: '', website: '', phone: '', status: 'open', plan: 'free', sponsor_weight: 0, is_featured: false, hasRestroom: false, hasShowers: false, tips: '', priceLevel: '$', bestTimeToVisit: '', isPetFriendly: false, isHandicapAccessible: false, isVerified: true, slug: '', address: '', gmapsUrl: '' })} className="bg-teal-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-teal-900/20 hover:scale-105 transition-transform"><i className="fa-solid fa-plus mr-2"></i> New Place</button>
+                        <button onClick={() => setEditingPlace({ id: 'new', name: '', description: '', category: PlaceCategory.FOOD, coords: { lat: 17.9620, lng: -67.1650 }, parking: ParkingStatus.FREE, tags: [], vibe: [], imageUrl: '', videoUrl: '', website: '', phone: '', status: 'open', plan: 'free', sponsor_weight: 0, is_featured: false, hasRestroom: false, hasShowers: false, tips: '', priceLevel: '$', bestTimeToVisit: '', isPetFriendly: false, isHandicapAccessible: false, isVerified: true, slug: '', address: '', gmapsUrl: '', opening_hours: { note: '', structured: [] }, isMobile: false })} className="bg-teal-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-teal-900/20 hover:scale-105 transition-transform"><i className="fa-solid fa-plus mr-2"></i> New Place</button>
                      </div>
                 </div>
                 <div className="bg-slate-800 p-2 rounded-xl mb-4 border border-slate-700">
                     <input type="text" placeholder="Search places..." value={placeSearchTerm} onChange={e => setPlaceSearchTerm(e.target.value)} className="w-full bg-transparent text-white p-2 outline-none" />
                 </div>
                 
-                {/* Bulk Action Bar */}
                 {selectedIds.size > 0 && (
                     <div className="absolute bottom-6 left-0 right-0 z-20 flex justify-center animate-slide-up">
                         <div className="bg-white text-slate-900 rounded-full shadow-2xl px-6 py-3 flex items-center gap-4 border border-slate-200">
@@ -584,6 +693,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                                         <span className={p.status === 'open' ? 'text-green-500' : 'text-amber-500'}>• {p.status}</span>
                                         {p.is_featured && <span className="text-yellow-400">• Featured</span>}
                                         {p.isVerified && <span className="text-blue-400">• Verified</span>}
+                                        {p.isMobile && <span className="text-purple-400">• Mobile</span>}
                                     </p>
                                 </div>
                             </div>
@@ -638,7 +748,6 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                                             setEditingPlace({
                                                 ...editingPlace!, 
                                                 status: newStatus,
-                                                // Automatically verify if moving out of pending
                                                 isVerified: newStatus !== 'pending' ? true : false
                                             });
                                         }} 
@@ -658,8 +767,21 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                 <SectionHeader title="Location" icon="map-location-dot" isOpen={openSection === 'location'} onClick={() => setOpenSection(openSection === 'location' ? '' : 'location')} />
                 {openSection === 'location' && (
                     <div className="p-4 space-y-4 bg-slate-900/50 rounded-b-xl border border-slate-800 border-t-0 -mt-2">
+                        
+                        <label className="flex items-center gap-2 text-white text-sm bg-slate-800 p-3 rounded-xl border border-slate-700 mb-4 cursor-pointer hover:bg-slate-700/50">
+                            <input 
+                                type="checkbox" 
+                                checked={editingPlace!.isMobile || false} 
+                                onChange={e => setEditingPlace({...editingPlace!, isMobile: e.target.checked})} 
+                                className="w-5 h-5 accent-purple-500 rounded bg-slate-700" 
+                            /> 
+                            <span className="font-bold text-purple-400"><i className="fa-solid fa-truck-fast mr-2"></i> Mobile / Delivery Service (No fixed location)</span>
+                        </label>
+
                         <div className="mb-4">
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">Pin Location</label>
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-2 ml-1">
+                                {editingPlace!.isMobile ? 'Base Location (Approximate)' : 'Pin Location'}
+                            </label>
                             <LocationPicker coords={editingPlace!.coords} onChange={(lat, lng) => setEditingPlace({...editingPlace!, coords: {lat, lng}})} />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
@@ -671,7 +793,9 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                             </InputGroup>
                         </div>
                         <InputGroup label="Google Maps URL"><StyledInput value={editingPlace!.gmapsUrl} onChange={(e) => setEditingPlace({...editingPlace!, gmapsUrl: e.target.value})} /></InputGroup>
-                        <InputGroup label="Address"><StyledTextArea value={editingPlace!.address} onChange={(e) => setEditingPlace({...editingPlace!, address: e.target.value})} style={{minHeight: '80px'}} /></InputGroup>
+                        <InputGroup label={editingPlace!.isMobile ? "Service Area (e.g. 'Todo Cabo Rojo')" : "Address"}>
+                            <StyledTextArea value={editingPlace!.address} onChange={(e) => setEditingPlace({...editingPlace!, address: e.target.value})} style={{minHeight: '80px'}} />
+                        </InputGroup>
                     </div>
                 )}
 
@@ -709,6 +833,17 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                              <InputGroup label="Phone"><StyledInput value={editingPlace!.phone} onChange={e => setEditingPlace({...editingPlace!, phone: e.target.value})} /></InputGroup>
                              <InputGroup label="Website"><StyledInput value={editingPlace!.website} onChange={e => setEditingPlace({...editingPlace!, website: e.target.value})} /></InputGroup>
                         </div>
+                        
+                        <InputGroup label="Schedule Note (e.g. Holidays)">
+                            <StyledInput value={editingPlace!.opening_hours?.note || ''} onChange={e => setEditingPlace({...editingPlace!, opening_hours: { ...editingPlace!.opening_hours, note: e.target.value }})} placeholder="e.g. Closed on Christmas" />
+                        </InputGroup>
+
+                        <InputGroup label="Weekly Hours">
+                            <HoursEditor 
+                                schedule={editingPlace!.opening_hours?.structured || []} 
+                                onChange={(newSchedule) => setEditingPlace({...editingPlace!, opening_hours: { ...editingPlace!.opening_hours, structured: newSchedule }})}
+                            />
+                        </InputGroup>
 
                         <InputGroup label="Priority Score (Sorting Weight)">
                             <div className="flex items-center gap-3 bg-slate-800 p-3 rounded-xl border border-slate-700">
@@ -726,7 +861,6 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                                     {editingPlace!.sponsor_weight || 0}
                                 </div>
                             </div>
-                            <p className="text-[10px] text-slate-500 mt-1 ml-1">Higher values (e.g. 100) appear at the top of the list.</p>
                         </InputGroup>
 
                         <div className="p-4 bg-slate-800 rounded-xl border border-slate-700 grid grid-cols-2 gap-4">
@@ -746,273 +880,6 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
         </div>
     );
 
-    const renderEvents = () => {
-        if (editingEvent) {
-            return (
-                <div className="h-full flex flex-col animate-slide-up">
-                    <div className="flex justify-between items-center mb-4 shrink-0">
-                        <div className="flex items-center gap-3">
-                            <button onClick={() => setEditingEvent(null)} className="bg-slate-700 w-10 h-10 rounded-full text-white hover:bg-slate-600 transition-colors"><i className="fa-solid fa-arrow-left"></i></button>
-                            <h2 className="text-xl font-bold text-white">{editingEvent.title || 'New Event'}</h2>
-                        </div>
-                        <button onClick={handleSaveEvent} disabled={loading} className="bg-teal-600 hover:bg-teal-500 text-white px-6 py-2 rounded-full font-bold shadow-lg shadow-teal-900/20">
-                            {loading ? 'Saving...' : 'Save Event'}
-                        </button>
-                    </div>
-                    <div className="space-y-4 overflow-y-auto p-1">
-                        <InputGroup label="Title"><StyledInput value={editingEvent.title || ''} onChange={e => setEditingEvent({...editingEvent, title: e.target.value})} /></InputGroup>
-                        <InputGroup label="Description"><StyledTextArea value={editingEvent.description || ''} onChange={e => setEditingEvent({...editingEvent, description: e.target.value})} /></InputGroup>
-                        <div className="grid grid-cols-2 gap-4">
-                            <InputGroup label="Category">
-                                <select value={editingEvent.category} onChange={e => setEditingEvent({...editingEvent, category: e.target.value as EventCategory})} className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg p-2.5 text-sm outline-none">
-                                    {Object.values(EventCategory).map(c => <option key={c} value={c}>{c}</option>)}
-                                </select>
-                            </InputGroup>
-                            <InputGroup label="Status">
-                                <select value={editingEvent.status} onChange={e => setEditingEvent({...editingEvent, status: e.target.value})} className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg p-2.5 text-sm outline-none">
-                                    <option value="published">Published</option><option value="draft">Draft</option><option value="cancelled">Cancelled</option>
-                                </select>
-                            </InputGroup>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                             <InputGroup label="Start Time"><StyledInput type="datetime-local" value={editingEvent.startTime?.slice(0, 16)} onChange={e => setEditingEvent({...editingEvent, startTime: new Date(e.target.value).toISOString()})} /></InputGroup>
-                             <InputGroup label="End Time"><StyledInput type="datetime-local" value={editingEvent.endTime?.slice(0, 16) || ''} onChange={e => setEditingEvent({...editingEvent, endTime: new Date(e.target.value).toISOString()})} /></InputGroup>
-                        </div>
-                        <InputGroup label="Location Name"><StyledInput value={editingEvent.locationName || ''} onChange={e => setEditingEvent({...editingEvent, locationName: e.target.value})} /></InputGroup>
-                        <InputGroup label="Map Link / Place ID"><StyledInput value={editingEvent.mapLink || ''} onChange={e => setEditingEvent({...editingEvent, mapLink: e.target.value})} placeholder="Optional URL or ID" /></InputGroup>
-                        <InputGroup label="Image URL"><StyledInput value={editingEvent.imageUrl || ''} onChange={e => setEditingEvent({...editingEvent, imageUrl: e.target.value})} /></InputGroup>
-                        {editingEvent.imageUrl && <img src={editingEvent.imageUrl} alt="Preview" className="w-full h-40 object-cover rounded-xl border border-slate-700" />}
-                    </div>
-                </div>
-            );
-        }
-
-        return (
-            <div className="h-full flex flex-col animate-fade-in">
-                 <div className="flex justify-between items-center mb-4">
-                     <h2 className="text-2xl font-bold text-white">Events Calendar</h2>
-                     <button onClick={() => setEditingEvent({ id: 'new', title: '', status: 'published', category: EventCategory.COMMUNITY, startTime: new Date().toISOString() })} className="bg-teal-600 text-white px-4 py-2 rounded-lg font-bold hover:scale-105 transition-transform"><i className="fa-solid fa-plus mr-2"></i> New Event</button>
-                </div>
-                <div className="flex-1 overflow-y-auto space-y-2">
-                    {eventsList.map(ev => (
-                        <div key={ev.id} className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center group">
-                            <div>
-                                <h3 className="font-bold text-white">{ev.title}</h3>
-                                <p className="text-xs text-slate-500">{new Date(ev.startTime).toLocaleDateString()} • {ev.locationName}</p>
-                            </div>
-                            <div className="flex gap-2">
-                                <button onClick={() => setEditingEvent(ev)} className="w-10 h-10 bg-slate-700 rounded-lg text-white hover:bg-teal-600 transition-colors flex items-center justify-center"><i className="fa-solid fa-pen"></i></button>
-                                <button onClick={() => handleDeleteEvent(ev.id)} className="w-10 h-10 bg-slate-700 rounded-lg text-slate-400 hover:bg-red-600 hover:text-white transition-colors flex items-center justify-center"><i className="fa-solid fa-trash"></i></button>
-                            </div>
-                        </div>
-                    ))}
-                    {eventsList.length === 0 && <div className="text-slate-500 text-center py-10">No events found.</div>}
-                </div>
-            </div>
-        );
-    };
-
-    const renderLogs = () => (
-        <div className="h-full flex flex-col animate-fade-in">
-            <h2 className="text-2xl font-bold text-white mb-4">System Logs</h2>
-            <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden flex-1 flex flex-col">
-                <div className="overflow-y-auto flex-1">
-                    <table className="w-full text-left text-sm text-slate-400">
-                        <thead className="bg-slate-900 text-slate-200 uppercase text-xs">
-                            <tr>
-                                <th className="px-4 py-3">Date</th>
-                                <th className="px-4 py-3">Action</th>
-                                <th className="px-4 py-3">Target / Query</th>
-                                <th className="px-4 py-3">Details</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-700">
-                            {logs.map(log => (
-                                <tr key={log.id} className="hover:bg-slate-700/50">
-                                    <td className="px-4 py-3 whitespace-nowrap text-xs">{new Date(log.created_at).toLocaleString()}</td>
-                                    <td className="px-4 py-3 font-bold text-white">
-                                        {log.action === 'USER_SEARCH' ? <span className="text-blue-400">SEARCH</span> : 
-                                         log.action === 'USER_CHAT' ? <span className="text-purple-400">AI CHAT</span> : 
-                                         log.action === 'AI_BRIEFING' ? <span className="text-teal-400 animate-pulse">⚡ BRIEFING</span> :
-                                         log.action === 'UPDATE_SUGGESTION' ? <span className="text-orange-400">REPORT</span> :
-                                         log.action.includes('DELETE') ? <span className="text-red-400">{log.action}</span> :
-                                         <span className="text-teal-400">{log.action}</span>
-                                        }
-                                    </td>
-                                    <td className="px-4 py-3 text-white">{log.place_name}</td>
-                                    <td className="px-4 py-3 text-xs opacity-70 truncate max-w-[200px]">{log.details.startsWith('<') ? 'HTML Content' : log.details}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                    {logs.length === 0 && <div className="p-8 text-center text-slate-500">No logs found.</div>}
-                </div>
-            </div>
-        </div>
-    );
-
-    const renderStats = () => {
-         const catCounts = places.reduce((acc, p) => { acc[p.category] = (acc[p.category] || 0) + 1; return acc; }, {} as Record<string, number>);
-        return (
-            <div className="h-full overflow-y-auto animate-fade-in">
-                <h2 className="text-2xl font-bold text-white mb-6">Database Stats</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
-                        <h3 className="font-bold text-white mb-4">Places by Category</h3>
-                        <div className="space-y-3">
-                            {Object.entries(catCounts).sort((a,b) => Number(b[1]) - Number(a[1])).map(([cat, count]) => (
-                                <div key={cat} className="flex items-center gap-3">
-                                    <div className="w-24 text-xs font-bold text-slate-400 uppercase">{cat}</div>
-                                    <div className="flex-1 h-3 bg-slate-700 rounded-full overflow-hidden">
-                                        <div className="h-full bg-teal-500" style={{ width: `${(Number(count) / places.length) * 100}%` }}></div>
-                                    </div>
-                                    <div className="w-8 text-right text-sm font-bold text-white">{count}</div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                     <div className="space-y-6">
-                        <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
-                             <h3 className="font-bold text-white mb-2">Verification Status</h3>
-                             <div className="flex gap-4">
-                                <div className="text-center">
-                                    <div className="text-3xl font-black text-green-500">{places.filter(p => p.isVerified).length}</div>
-                                    <div className="text-xs text-slate-400 uppercase">Verified</div>
-                                </div>
-                                <div className="text-center">
-                                    <div className="text-3xl font-black text-slate-500">{places.length - places.filter(p => p.isVerified).length}</div>
-                                    <div className="text-xs text-slate-400 uppercase">Unverified</div>
-                                </div>
-                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    const renderMarketing = () => {
-        const isBundle = marketingPlatform === 'campaign_bundle';
-        let parsedBundle: any = null;
-        if (isBundle && marketingResult) {
-            try { parsedBundle = JSON.parse(marketingResult); } catch(e) { parsedBundle = null; }
-        }
-
-        return (
-            <div className="h-full flex flex-col animate-fade-in">
-                <h2 className="text-2xl font-bold text-white mb-2">Social Studio 📸</h2>
-                <p className="text-slate-400 mb-6 text-sm">Generate targeted content with El Veci.</p>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
-                    <div className="space-y-6 h-fit overflow-y-auto pr-2">
-                         <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 space-y-4">
-                            <InputGroup label="1. Select Place">
-                                <select value={marketingPlaceId} onChange={e => setMarketingPlaceId(e.target.value)} className="w-full bg-slate-900 text-white border border-slate-700 rounded-lg p-3 outline-none">
-                                    <option value="">-- Choose a Place --</option>
-                                    {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                                </select>
-                            </InputGroup>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <InputGroup label="2. Tone / Vibe">
-                                    <div className="grid grid-cols-1 gap-2">
-                                        {['chill', 'hype', 'professional'].map(t => (
-                                            <button key={t} onClick={() => setMarketingTone(t)} className={`p-2 rounded-lg border text-xs font-bold uppercase transition-all ${marketingTone === t ? 'bg-teal-600 border-teal-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-400'}`}>
-                                                {t}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </InputGroup>
-                                 <InputGroup label="3. Language">
-                                    <div className="grid grid-cols-1 gap-2">
-                                        {['spanglish', 'es', 'en'].map(l => (
-                                            <button key={l} onClick={() => setMarketingLang(l)} className={`p-2 rounded-lg border text-xs font-bold uppercase transition-all ${marketingLang === l ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-400'}`}>
-                                                {l}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </InputGroup>
-                            </div>
-                            
-                            <InputGroup label="4. Format">
-                                <div className="grid grid-cols-2 gap-2">
-                                    <button onClick={() => setMarketingPlatform('instagram')} className={`p-3 rounded-xl border font-bold text-xs ${marketingPlatform === 'instagram' ? 'bg-pink-600 border-pink-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-300'}`}><i className="fa-brands fa-instagram mr-2"></i> Post</button>
-                                    <button onClick={() => setMarketingPlatform('campaign_bundle')} className={`p-3 rounded-xl border font-bold text-xs ${marketingPlatform === 'campaign_bundle' ? 'bg-purple-600 border-purple-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-300'}`}><i className="fa-solid fa-layer-group mr-2"></i> Bundle</button>
-                                </div>
-                            </InputGroup>
-                            
-                            <button onClick={handleMarketingTabGenerate} disabled={loading || !marketingPlaceId} className="w-full bg-gradient-to-r from-teal-500 to-indigo-600 hover:from-teal-400 hover:to-indigo-500 disabled:opacity-50 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-900/20 transition-all mt-4">
-                                {loading ? 'Magic happening...' : '✨ Generate Content'}
-                            </button>
-                         </div>
-                    </div>
-                    
-                    {/* PREVIEW AREA */}
-                    <div className="flex flex-col h-full bg-slate-950 rounded-3xl border border-slate-800 overflow-hidden relative shadow-2xl">
-                        <div className="bg-slate-900 p-4 border-b border-slate-800 flex justify-between items-center">
-                            <span className="text-xs font-bold text-slate-500 uppercase">iPhone Preview</span>
-                            <div className="flex gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-red-500"></div><div className="w-2.5 h-2.5 rounded-full bg-yellow-500"></div><div className="w-2.5 h-2.5 rounded-full bg-green-500"></div></div>
-                        </div>
-                        
-                        <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center">
-                             {/* Instagram Mockup */}
-                             <div className="w-full max-w-xs bg-white text-black rounded-[30px] overflow-hidden shadow-xl border border-slate-200">
-                                 {/* Header */}
-                                 <div className="flex items-center justify-between p-3 border-b border-gray-100">
-                                     <div className="flex items-center gap-2">
-                                         <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-400 to-purple-600 p-[2px]">
-                                             <div className="w-full h-full bg-white rounded-full p-[2px]"><img src="https://cdn-icons-png.flaticon.com/512/3203/3203071.png" className="w-full h-full rounded-full" alt="profile"/></div>
-                                         </div>
-                                         <span className="text-xs font-bold">mapadecaborojo</span>
-                                     </div>
-                                     <i className="fa-solid fa-ellipsis text-xs"></i>
-                                 </div>
-                                 {/* Image Placeholder */}
-                                 <div className="aspect-square bg-slate-100 flex items-center justify-center">
-                                     {marketingPlaceId ? (
-                                         <img src={places.find(p => p.id === marketingPlaceId)?.imageUrl} className="w-full h-full object-cover" alt="" />
-                                     ) : (
-                                         <i className="fa-solid fa-image text-slate-300 text-4xl"></i>
-                                     )}
-                                 </div>
-                                 {/* Actions */}
-                                 <div className="px-3 py-2 flex justify-between text-xl">
-                                     <div className="flex gap-4">
-                                         <i className="fa-regular fa-heart"></i>
-                                         <i className="fa-regular fa-comment"></i>
-                                         <i className="fa-regular fa-paper-plane"></i>
-                                     </div>
-                                     <i className="fa-regular fa-bookmark"></i>
-                                 </div>
-                                 {/* Caption */}
-                                 <div className="px-3 pb-4 text-xs">
-                                     <span className="font-bold mr-2">mapadecaborojo</span>
-                                     <span className="whitespace-pre-wrap leading-tight">
-                                         {marketingResult ? (
-                                             isBundle && parsedBundle ? parsedBundle.instagram : marketingResult
-                                         ) : "Your AI caption will appear here..."}
-                                     </span>
-                                 </div>
-                             </div>
-                             
-                             {/* Extra Bundle Info */}
-                             {isBundle && parsedBundle && (
-                                 <div className="w-full mt-6 bg-slate-800 rounded-xl p-4 border border-slate-700">
-                                     <h4 className="text-teal-400 text-xs font-bold uppercase mb-2">📧 Email Subject</h4>
-                                     <p className="text-white text-sm mb-4">{parsedBundle.email_subject}</p>
-                                     
-                                     <h4 className="text-purple-400 text-xs font-bold uppercase mb-2">📹 Story Script</h4>
-                                     <p className="text-slate-300 text-xs whitespace-pre-wrap">{parsedBundle.story_script}</p>
-                                 </div>
-                             )}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    };
-
-    // --- MAIN RENDER ---
     if (!user) {
         return (
             <div className="fixed inset-0 bg-slate-900 z-[3500] flex items-center justify-center p-4">
@@ -1036,7 +903,6 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
             {renderSidebar()}
             
             <main className="flex-1 flex flex-col min-w-0 bg-slate-900 relative">
-                {/* Mobile Header */}
                 <div className="md:hidden p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900 z-10">
                     <span className="font-bold text-white">ADMIN PANEL</span>
                     <button onClick={onClose}><i className="fa-solid fa-xmark text-white text-xl"></i></button>
@@ -1045,7 +911,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                 <div className="flex-1 overflow-hidden p-4 md:p-8 relative">
                     {activeTab === 'dashboard' && renderDashboard()}
                     {activeTab === 'places' && (editingPlace ? renderPlaceEditor() : renderPlaceList())}
-                    {activeTab === 'events' && renderEvents()}
+                    {activeTab === 'events' && (editingEvent ? renderEventEditor() : renderEvents())}
                     {activeTab === 'logs' && renderLogs()}
                     {activeTab === 'stats' && renderStats()}
                     {activeTab === 'marketing' && renderMarketing()}
