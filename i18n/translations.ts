@@ -70,6 +70,13 @@ export const translations = {
     nav_help: "Chat",
     nav_contact: "Contacto",
     add_to_calendar: "Añadir a Calendario",
+    sched_fixed: "Horario Fijo",
+    sched_24_7: "24/7",
+    sched_nature: "Salida a Puesta del Sol",
+    status_open_24: "Abierto 24 Horas",
+    status_open_day: "Abierto (Horario Solar)",
+    status_caution_night: "Abierto - Precaución de Noche",
+    status_closed_now: "Cerrado Ahora",
   },
   en: {
     loading: "Loading...",
@@ -141,5 +148,12 @@ export const translations = {
     nav_help: "Chat",
     nav_contact: "Contact",
     add_to_calendar: "Add to Calendar",
+    sched_fixed: "Fixed Hours",
+    sched_24_7: "24/7",
+    sched_nature: "Sunrise to Sunset",
+    status_open_24: "Open 24 Hours",
+    status_open_day: "Open (Daylight)",
+    status_caution_night: "Caution - Night",
+    status_closed_now: "Closed Now",
   }
 };

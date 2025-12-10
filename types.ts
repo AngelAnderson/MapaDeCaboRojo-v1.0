@@ -76,6 +76,7 @@ export interface Place {
   created_at?: string;
 
   opening_hours?: {
+    type?: 'fixed' | '24_7' | 'sunrise_sunset'; // New field
     note?: string; // Free text fallback
     structured?: DaySchedule[]; // Structured data
   };

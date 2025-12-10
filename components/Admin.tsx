@@ -4,6 +4,7 @@ import { Place, PlaceCategory, ParkingStatus, Event, EventCategory, AdminLog, Da
 import { supabase, updatePlace, deletePlace, createPlace, uploadImage, getAdminLogs, createEvent, updateEvent, deleteEvent, getEvents } from '../services/supabase';
 import { generateMarketingCopy, enhanceDescription, generateExecutiveBriefing, enrichPlaceMetadata } from '../services/geminiService';
 import L from 'leaflet';
+import { useLanguage } from '../i18n/LanguageContext'; // Added import
 
 // --- Helper Components ---
 
@@ -146,6 +147,9 @@ interface AdminProps {
 }
 
 const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, onUpdate }) => {
+    // Add t hook for translations inside Admin components
+    const { t } = useLanguage(); 
+    
     const [user, setUser] = useState<any>(null);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -656,7 +660,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                      <h2 className="text-2xl font-bold text-white">Places Database</h2>
                      <div className="flex gap-2">
                         <button onClick={handleBatchAutoFix} disabled={loading} className="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-purple-900/20 hover:scale-105 transition-transform"><i className="fa-solid fa-wand-magic-sparkles mr-2"></i> Auto-Fix Data</button>
-                        <button onClick={() => setEditingPlace({ id: 'new', name: '', description: '', category: PlaceCategory.FOOD, coords: { lat: 17.9620, lng: -67.1650 }, parking: ParkingStatus.FREE, tags: [], vibe: [], imageUrl: '', videoUrl: '', website: '', phone: '', status: 'open', plan: 'free', sponsor_weight: 0, is_featured: false, hasRestroom: false, hasShowers: false, tips: '', priceLevel: '$', bestTimeToVisit: '', isPetFriendly: false, isHandicapAccessible: false, isVerified: true, slug: '', address: '', gmapsUrl: '', opening_hours: { note: '', structured: [] }, isMobile: false })} className="bg-teal-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-teal-900/20 hover:scale-105 transition-transform"><i className="fa-solid fa-plus mr-2"></i> New Place</button>
+                        <button onClick={() => setEditingPlace({ id: 'new', name: '', description: '', category: PlaceCategory.FOOD, coords: { lat: 17.9620, lng: -67.1650 }, parking: ParkingStatus.FREE, tags: [], vibe: [], imageUrl: '', videoUrl: '', website: '', phone: '', status: 'open', plan: 'free', sponsor_weight: 0, is_featured: false, hasRestroom: false, hasShowers: false, tips: '', priceLevel: '$', bestTimeToVisit: '', isPetFriendly: false, isHandicapAccessible: false, isVerified: true, slug: '', address: '', gmapsUrl: '', opening_hours: { note: '', structured: [], type: 'fixed' }, isMobile: false })} className="bg-teal-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-teal-900/20 hover:scale-105 transition-transform"><i className="fa-solid fa-plus mr-2"></i> New Place</button>
                      </div>
                 </div>
                 <div className="bg-slate-800 p-2 rounded-xl mb-4 border border-slate-700">
@@ -838,12 +842,28 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                             <StyledInput value={editingPlace!.opening_hours?.note || ''} onChange={e => setEditingPlace({...editingPlace!, opening_hours: { ...editingPlace!.opening_hours, note: e.target.value }})} placeholder="e.g. Closed on Christmas" />
                         </InputGroup>
 
-                        <InputGroup label="Weekly Hours">
-                            <HoursEditor 
-                                schedule={editingPlace!.opening_hours?.structured || []} 
-                                onChange={(newSchedule) => setEditingPlace({...editingPlace!, opening_hours: { ...editingPlace!.opening_hours, structured: newSchedule }})}
-                            />
+                        {/* NEW: Schedule Type Selector */}
+                        <InputGroup label="Schedule Type">
+                            <select 
+                                value={editingPlace!.opening_hours?.type || 'fixed'}
+                                onChange={e => setEditingPlace({...editingPlace!, opening_hours: { ...editingPlace!.opening_hours, type: e.target.value as any }})}
+                                className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg p-2.5 text-sm outline-none focus:border-teal-500"
+                            >
+                                <option value="fixed">{t('sched_fixed')}</option>
+                                <option value="24_7">{t('sched_24_7')}</option>
+                                <option value="sunrise_sunset">{t('sched_nature')}</option>
+                            </select>
                         </InputGroup>
+
+                        {/* Only show weekly editor if type is fixed (or undefined default) */}
+                        {(!editingPlace!.opening_hours?.type || editingPlace!.opening_hours.type === 'fixed') && (
+                            <InputGroup label="Weekly Hours">
+                                <HoursEditor 
+                                    schedule={editingPlace!.opening_hours?.structured || []} 
+                                    onChange={(newSchedule) => setEditingPlace({...editingPlace!, opening_hours: { ...editingPlace!.opening_hours, structured: newSchedule }})}
+                                />
+                            </InputGroup>
+                        )}
 
                         <InputGroup label="Priority Score (Sorting Weight)">
                             <div className="flex items-center gap-3 bg-slate-800 p-3 rounded-xl border border-slate-700">

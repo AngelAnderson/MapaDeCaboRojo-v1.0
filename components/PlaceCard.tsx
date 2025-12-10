@@ -29,19 +29,37 @@ const ActionButton = ({ icon, label, onClick, disabled, primary, color }: any) =
   </button>
 );
 
-const HoursDisplay = ({ hours }: { hours: { note?: string, structured?: DaySchedule[] } }) => {
+const HoursDisplay = ({ hours }: { hours: { note?: string, structured?: DaySchedule[], type?: 'fixed' | '24_7' | 'sunrise_sunset' } }) => {
+    const { t } = useLanguage();
     const [expanded, setExpanded] = useState(false);
     const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const now = new Date();
     const todayIdx = now.getDay();
     
-    // Logic to calculate if open now
-    let status = { text: "Horario n/a", color: "text-slate-500", bg: "bg-slate-100" };
+    let status = { text: "Horario n/a", color: "text-slate-500", bg: "bg-slate-100", icon: "clock" };
     
-    if (hours?.structured && hours.structured.length === 7) {
+    // Logic 1: 24/7
+    if (hours.type === '24_7') {
+        status = { text: t('status_open_24'), color: "text-green-600", bg: "bg-green-100 dark:bg-green-900/30", icon: "clock" };
+    } 
+    // Logic 2: Sunrise to Sunset (Nature)
+    else if (hours.type === 'sunrise_sunset') {
+        const currentHour = now.getHours();
+        // Approximate Daylight: 6 AM to 7 PM (19:00)
+        const isDaytime = currentHour >= 6 && currentHour < 19;
+        
+        if (isDaytime) {
+            status = { text: t('status_open_day'), color: "text-green-600", bg: "bg-green-100 dark:bg-green-900/30", icon: "sun" };
+        } else {
+            // Night warning
+            status = { text: t('status_caution_night'), color: "text-orange-600", bg: "bg-orange-100 dark:bg-orange-900/30", icon: "triangle-exclamation" };
+        }
+    }
+    // Logic 3: Fixed / Structured Hours
+    else if (hours?.structured && hours.structured.length === 7) {
         const today = hours.structured[todayIdx];
         if (today.isClosed) {
-            status = { text: "Cerrado Hoy", color: "text-red-500", bg: "bg-red-100 dark:bg-red-900/30" };
+            status = { text: "Cerrado Hoy", color: "text-red-500", bg: "bg-red-100 dark:bg-red-900/30", icon: "clock" };
         } else if (today.open && today.close) {
             const currentMins = now.getHours() * 60 + now.getMinutes();
             const [openH, openM] = today.open.split(':').map(Number);
@@ -50,31 +68,33 @@ const HoursDisplay = ({ hours }: { hours: { note?: string, structured?: DaySched
             const closeMins = closeH * 60 + closeM;
             
             if (currentMins >= openMins && currentMins < closeMins) {
-                status = { text: `Abierto • Cierra ${today.close}`, color: "text-green-600", bg: "bg-green-100 dark:bg-green-900/30" };
+                status = { text: `Abierto • Cierra ${today.close}`, color: "text-green-600", bg: "bg-green-100 dark:bg-green-900/30", icon: "clock" };
             } else {
-                status = { text: "Cerrado Ahora", color: "text-red-500", bg: "bg-red-100 dark:bg-red-900/30" };
+                status = { text: t('status_closed_now'), color: "text-red-500", bg: "bg-red-100 dark:bg-red-900/30", icon: "clock" };
             }
         }
     } else if (hours?.note) {
-         status = { text: hours.note, color: "text-slate-600", bg: "bg-slate-100 dark:bg-slate-700" };
+         status = { text: hours.note, color: "text-slate-600", bg: "bg-slate-100 dark:bg-slate-700", icon: "clock" };
     }
+
+    const showExpand = hours.type === 'fixed' || (!hours.type && hours.structured);
 
     return (
         <div className="bg-slate-50 dark:bg-slate-700/50 rounded-2xl border border-slate-100 dark:border-slate-600 overflow-hidden">
-             <div onClick={() => setExpanded(!expanded)} className="p-4 flex justify-between items-center cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-600/50 transition-colors">
+             <div onClick={() => showExpand && setExpanded(!expanded)} className={`p-4 flex justify-between items-center transition-colors ${showExpand ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-600/50' : ''}`}>
                 <div className="flex items-center gap-3">
-                    <i className="fa-regular fa-clock text-slate-400"></i>
+                    <i className={`fa-solid fa-${status.icon} ${status.color}`}></i>
                     <div>
                         <p className="text-xs font-bold uppercase text-slate-400">Horario</p>
                         <p className={`text-sm font-bold ${status.color}`}>{status.text}</p>
                     </div>
                 </div>
-                {hours?.structured && (
+                {showExpand && (
                     <i className={`fa-solid fa-chevron-down text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`}></i>
                 )}
              </div>
              
-             {expanded && hours?.structured && (
+             {expanded && showExpand && hours?.structured && (
                  <div className="px-4 pb-4 border-t border-slate-200 dark:border-slate-600 pt-3">
                      <div className="space-y-2">
                          {hours.structured.map((d, i) => (
