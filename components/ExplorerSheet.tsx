@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Place } from '../types';
 import SearchBar from './SearchBar';
@@ -63,7 +62,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
 
       <div className="px-5 pb-2 space-y-4 shrink-0">
         <div className="flex justify-between items-baseline">
-            <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Explorar</h3>
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Explorar</h2>
             <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{resultCount} Lugares</span>
         </div>
         <SearchBar 

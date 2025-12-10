@@ -1,32 +1,45 @@
-<html lang="es" class="light">
+<html lang="es" class="light" prefix="og: http://ogp.me/ns#">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     
-    <!-- PWA / App Configuration -->
-    <title>Mapa de Cabo Rojo | Guía Turística y Playas</title>
-    <meta name="description" content="La guía digital más completa de Cabo Rojo, Puerto Rico. Encuentra playas, restaurantes, chinchorros y eventos locales. Pregúntale a El Veci, tu asistente inteligente." />
-    <meta name="keywords" content="Cabo Rojo, Puerto Rico, Playa Sucia, Combate, Boquerón, Turismo, Restaurantes, Guía Turística" />
+    <!-- SEO & Identity -->
+    <title>Mapa de Cabo Rojo | Playas, Turismo y Comida Local</title>
+    <meta name="description" content="La guía definitiva de Cabo Rojo, Puerto Rico. Mapa interactivo con playas, restaurantes, chinchorros y eventos. Planifica tu visita con El Veci, tu guía local digital." />
+    <meta name="keywords" content="Cabo Rojo, Puerto Rico, Playa Sucia, Combate, Boquerón, Turismo Interno, Mapa Interactivo, Restaurantes, Playas, Joyuda, El Veci" />
+    <meta name="author" content="MapaDeCaboRojo.com" />
+    <link rel="canonical" href="https://mapadecaborojo.com/" />
     <meta name="robots" content="index, follow" />
+    
+    <!-- PWA Configuration -->
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#0F766E" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Cabo Rojo" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
-    <!-- Open Graph / Social Sharing (WhatsApp, Facebook, iMessage) -->
+    <!-- Open Graph / Facebook / WhatsApp -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://mapadecaborojo.com/" />
-    <meta property="og:title" content="Mapa de Cabo Rojo 🌴" />
-    <meta property="og:description" content="Playas, chinchorros y consejos locales. Pregúntale a El Veci qué hacer hoy." />
+    <meta property="og:title" content="Mapa de Cabo Rojo 🌴 | Tu Guía Digital" />
+    <meta property="og:description" content="Descubre las mejores playas, chinchorros y rincones secretos de Cabo Rojo. Pregúntale a El Veci qué hacer hoy." />
     <meta property="og:image" content="https://images.unsplash.com/photo-1599060690625-f70e9c8cb5eb?q=80&w=1200&auto=format&fit=crop" />
+    <meta property="og:image:alt" content="Vista aérea de la costa de Cabo Rojo" />
+    <meta property="og:site_name" content="Mapa de Cabo Rojo" />
+    <meta property="og:locale" content="es_PR" />
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Mapa de Cabo Rojo" />
-    <meta name="twitter:description" content="Tu guía inteligente para el oeste de Puerto Rico." />
+    <meta name="twitter:site" content="@mapadecaborojo" />
+    <meta name="twitter:title" content="Mapa de Cabo Rojo 🌴" />
+    <meta name="twitter:description" content="Tu guía inteligente para el oeste de Puerto Rico. Playas, comida y aventuras." />
     <meta name="twitter:image" content="https://images.unsplash.com/photo-1599060690625-f70e9c8cb5eb?q=80&w=1200&auto=format&fit=crop" />
 
-    <!-- Tailwind CSS (Keep CDN for simplicity, or move to build step later) -->
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="https://cdn-icons-png.flaticon.com/512/3203/3203071.png">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3203/3203071.png">
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -166,9 +179,8 @@
 }
 </script>
 </head>
-  <body class="dark:bg-slate-900 dark:text-slate-100 transition-colors duration-300">
+  <body class="dark:bg-slate-900 dark:text-slate-100 transition-colors duration-300" itemscope itemtype="https://schema.org/WebPage">
     <div id="root"></div>
-    <!-- CRITICAL FIX: Entry point for Vite/Vercel to load React code -->
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { Place, PlaceCategory, Coordinates, Event, ParkingStatus } from '../types';
@@ -154,6 +153,22 @@ const MainApp: React.FC = () => {
   });
 
   // --- EFFECTS ---
+
+  // SEO: Dynamic Document Title
+  useEffect(() => {
+    const baseTitle = "Mapa de Cabo Rojo";
+    if (selectedPlace) {
+        document.title = `${selectedPlace.name} | ${baseTitle}`;
+    } else if (activeTab === 'explore') {
+        document.title = `Explorar Lugares | ${baseTitle}`;
+    } else if (activeTab === 'map') {
+        document.title = `Mapa Interactivo | ${baseTitle}`;
+    } else if (isConciergeOpen) {
+        document.title = `El Veci (AI) | ${baseTitle}`;
+    } else {
+        document.title = `${baseTitle} | Guía Turística`;
+    }
+  }, [selectedPlace, activeTab, isConciergeOpen]);
 
   // VIP Check
   useEffect(() => { 
