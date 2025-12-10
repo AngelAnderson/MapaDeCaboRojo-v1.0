@@ -52,7 +52,7 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
       try { 
           // Re-create chat with new context (location, new places)
           chatRef.current = createConciergeChat(places, events, userLoc); 
-      } catch (e) { console.error("API Key missing"); }
+      } catch (e) { console.error("Chat init error:", e); }
     }
   }, [places, events, userLoc]);
 
@@ -141,6 +141,7 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
                          status: 'pending',
                          tags: ['AI-Auto-Capture', 'Pending Review'],
                          is_featured: false,
+                         sponsor_weight: 0,
                          coords: { lat: 17.9620, lng: -67.1650 } 
                      });
 
@@ -178,9 +179,15 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
              setMessages(prev => [...prev, { role: 'model', text: responseText }]);
         }
       }
-    } catch (error) { 
-        console.error(error);
-        setMessages(prev => [...prev, { role: 'model', text: 'Mala mía, se me fue la señal. Intenta otra vez.' }]); 
+    } catch (error: any) { 
+        console.error("Chat Error:", error);
+        let msg = 'Mala mía, se me fue la señal. Intenta otra vez.';
+        
+        if (error.message?.includes('API key') || error.message?.includes('403')) {
+            msg = 'Error de Configuración: Falta la llave del API (API_KEY missing).';
+        }
+        
+        setMessages(prev => [...prev, { role: 'model', text: msg }]); 
     } finally { 
         setIsLoading(false); 
     }

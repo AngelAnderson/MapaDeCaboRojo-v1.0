@@ -2,8 +2,12 @@ import { GoogleGenAI, Chat, FunctionDeclaration, Type, Modality } from "@google/
 import { Place, Event, Coordinates, AdminLog, ItineraryItem, PlaceCategory } from "../types";
 
 // The API key must be obtained exclusively from the environment variable process.env.API_KEY.
-// Assume this variable is pre-configured, valid, and accessible in the execution context.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+const apiKey = process.env.API_KEY || '';
+if (!apiKey) {
+    console.error("⚠️ API_KEY is missing. AI features will fail.");
+}
+
+const ai = new GoogleGenAI({ apiKey });
 
 const BASE_SYSTEM_INSTRUCTION = `
 Eres **El Vecino Digital** (todos te dicen de cariño **El Veci**), un vecino digital que vive en Cabo Rojo, Puerto Rico.
@@ -20,9 +24,17 @@ OBJETIVO:
 
 const formatPlacesForContext = (places: Place[], userLocation?: Coordinates): string => {
     if (!places || places.length === 0) return "";
-    let context = "\n\n### CONOCIMIENTO LOCAL:\n";
-    places.forEach(p => {
-        context += `- ${p.name} (${p.category}): ${p.description}. Tips: ${p.tips}\n`;
+    
+    // OPTIMIZATION: Limit context to avoid token overflow/timeouts
+    // Prioritize Featured places, then others. Limit to 60 total.
+    const sorted = [...places].sort((a, b) => (a.is_featured === b.is_featured ? 0 : a.is_featured ? -1 : 1));
+    const selection = sorted.slice(0, 60);
+
+    let context = "\n\n### CONOCIMIENTO LOCAL (Top Lugares):\n";
+    selection.forEach(p => {
+        // Truncate description to save tokens
+        const shortDesc = p.description.length > 150 ? p.description.substring(0, 147) + "..." : p.description;
+        context += `- ${p.name} (${p.category}): ${shortDesc}. Tips: ${p.tips}\n`;
     });
     return context;
 };
@@ -30,7 +42,7 @@ const formatPlacesForContext = (places: Place[], userLocation?: Coordinates): st
 const formatEventsForContext = (events: Event[]): string => {
     if (!events || events.length === 0) return "";
     let context = `\n\n### EVENTOS:\n`;
-    events.forEach(e => {
+    events.slice(0, 20).forEach(e => {
         context += `- ${e.title} (${new Date(e.startTime).toLocaleDateString()}): ${e.description}\n`;
     });
     return context;
@@ -131,7 +143,12 @@ export const generateExecutiveBriefing = async (logs: AdminLog[], places: Place[
     // Check if there is a recent AI Briefing in the logs
     const recentBriefing = logs.find(l => l.action === 'AI_BRIEFING');
     if (recentBriefing) {
-        return recentBriefing.details; // Returns the JSON string stored in DB
+        let details = recentBriefing.details;
+        // Robustness: If details starts with ```json, clean it
+        if (details.includes('```')) {
+            details = details.replace(/```json/g, '').replace(/```/g, '').trim();
+        }
+        return details; 
     }
 
     // Else run manually (Client-side fallback)
@@ -151,7 +168,11 @@ export const generateExecutiveBriefing = async (logs: AdminLog[], places: Place[
             contents: prompt,
             config: { responseMimeType: 'application/json' }
         });
-        return r.text || "{}";
+        
+        let text = r.text || "{}";
+        // Clean markdown formatting if present
+        text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        return text;
     } catch(e) {
         return JSON.stringify({ en: "Error generating briefing.", es: "Error generando reporte." });
     }
@@ -176,7 +197,8 @@ export const enrichPlaceMetadata = async (name: string, currentDesc: string): Pr
             config: { responseMimeType: 'application/json' }
         });
         
-        return JSON.parse(r.text || "{}");
+        const text = (r.text || "{}").replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(text);
     } catch (e) {
         return { description: currentDesc, tags: [], vibe: [] };
     }
@@ -229,7 +251,8 @@ export const identifyPlaceFromImage = async (base64Image: string, places: Place[
             config: { responseMimeType: 'application/json' }
         });
 
-        const result = JSON.parse(response.text || "{}");
+        const text = (response.text || "{}").replace(/```json/g, '').replace(/```/g, '').trim();
+        const result = JSON.parse(text);
         const matchedPlace = places.find(p => p.name === result.matchedPlaceName);
         
         return {
@@ -269,7 +292,8 @@ export const generateTripItinerary = async (preferences: string, places: Place[]
             config: { responseMimeType: 'application/json' }
         });
         
-        const itinerary = JSON.parse(response.text || "[]");
+        const text = (response.text || "[]").replace(/```json/g, '').replace(/```/g, '').trim();
+        const itinerary = JSON.parse(text);
         
         // Match IDs back
         return itinerary.map((item: any) => ({
