@@ -641,7 +641,7 @@ const MainApp: React.FC = () => {
               }`}
               title="Toggle Satellite View"
             >
-              <i className={`fa-solid ${mapStyle === 'satellite' ? 'fa-map' : 'fa-globe'}`}></i>
+              <i className={`fa-solid ${mapStyle === 'satellite' ? 'fa-map' : 'fa-layer-group'}`}></i>
             </button>
         </div>
       </header>
