@@ -38,6 +38,16 @@ const HoursDisplay = ({ hours }: { hours: { note?: string, structured?: DaySched
     const now = new Date();
     const todayIdx = now.getDay();
     
+    // Helper to convert 24h "14:00" to 12h "2:00 PM"
+    const to12h = (timeStr: string) => {
+      if (!timeStr) return '';
+      const [hours, minutes] = timeStr.split(':').map(Number);
+      const suffix = hours >= 12 ? 'PM' : 'AM';
+      const h = hours % 12 || 12; // Convert 0 to 12
+      const m = minutes.toString().padStart(2, '0');
+      return `${h}:${m} ${suffix}`;
+    };
+    
     let status = { text: "Horario n/a", color: "text-slate-500", bg: "bg-slate-100", icon: "clock" };
     
     // Logic 1: 24/7
@@ -70,7 +80,7 @@ const HoursDisplay = ({ hours }: { hours: { note?: string, structured?: DaySched
             const closeMins = closeH * 60 + closeM;
             
             if (currentMins >= openMins && currentMins < closeMins) {
-                status = { text: `Abierto • Cierra ${today.close}`, color: "text-green-600", bg: "bg-green-100 dark:bg-green-900/30", icon: "clock" };
+                status = { text: `Abierto • Cierra ${to12h(today.close)}`, color: "text-green-600", bg: "bg-green-100 dark:bg-green-900/30", icon: "clock" };
             } else {
                 status = { text: t('status_closed_now'), color: "text-red-500", bg: "bg-red-100 dark:bg-red-900/30", icon: "clock" };
             }
@@ -105,7 +115,7 @@ const HoursDisplay = ({ hours }: { hours: { note?: string, structured?: DaySched
                                  {d.isClosed ? (
                                      <span className="text-slate-400 italic">Cerrado</span>
                                  ) : (
-                                     <span>{d.open} - {d.close}</span>
+                                     <span>{to12h(d.open)} - {to12h(d.close)}</span>
                                  )}
                              </div>
                          ))}

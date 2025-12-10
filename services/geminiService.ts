@@ -306,7 +306,7 @@ export const generateAudioGuide = async (place: Place): Promise<AudioBuffer | nu
     try {
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash-preview-tts",
-            contents: prompt,
+            contents: [{ parts: [{ text: prompt }] }],
             config: {
                 responseModalities: [Modality.AUDIO],
                 speechConfig: {
