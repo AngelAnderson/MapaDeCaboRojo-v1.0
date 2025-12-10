@@ -3,13 +3,16 @@ import { GoogleGenAI, Chat, FunctionDeclaration, Type, Modality } from "@google/
 import { Place, Event, Coordinates, AdminLog, ItineraryItem, PlaceCategory } from "../types";
 
 // --- API KEY SETUP ---
-// We try to get the key from either the process.env shim or the standard Vite import.meta.env.
-// The vite.config.ts now ensures both are populated with the correct key during build.
+// Robustly check for the API Key in multiple places:
+// 1. process.env.API_KEY (Injected by Vite define in vite.config.ts)
+// 2. import.meta.env.VITE_API_KEY (Standard Vite Env Var)
+// 3. import.meta.env.VITE_GOOGLE_API_KEY (Alternative naming)
+// 4. import.meta.env.API_KEY (Non-standard but possible fallback)
 // @ts-ignore
-const apiKey = process.env.API_KEY || import.meta.env.VITE_API_KEY || '';
+const apiKey = process.env.API_KEY || (import.meta as any).env?.VITE_API_KEY || (import.meta as any).env?.VITE_GOOGLE_API_KEY || (import.meta as any).env?.API_KEY || '';
 
 if (!apiKey) {
-    console.error("⚠️ API_KEY is missing. AI features will fail. Please check your environment variables.");
+    console.error("⚠️ API_KEY is missing. AI features will fail. Please check your .env file or Vercel Environment Variables.");
 }
 
 const ai = new GoogleGenAI({ apiKey: apiKey });
