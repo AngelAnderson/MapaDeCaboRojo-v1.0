@@ -2,8 +2,26 @@
 import { GoogleGenAI, Chat, FunctionDeclaration, Type, Modality } from "@google/genai";
 import { Place, Event, Coordinates, AdminLog, ItineraryItem, PlaceCategory } from "../types";
 
-// The API key must be obtained exclusively from the environment variable process.env.API_KEY.
-const apiKey = process.env.API_KEY || '';
+// --- SAFE ENVIRONMENT VARIABLE EXTRACTION ---
+const getEnvVar = (key: string): string => {
+  try {
+    // @ts-ignore
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
+      // @ts-ignore
+      return import.meta.env[key];
+    }
+  } catch (e) {}
+  try {
+    // @ts-ignore
+    if (typeof process !== 'undefined' && process.env && process.env[key]) {
+      // @ts-ignore
+      return process.env[key];
+    }
+  } catch (e) {}
+  return '';
+};
+
+const apiKey = getEnvVar('API_KEY');
 if (!apiKey) {
     console.error("⚠️ API_KEY is missing. AI features will fail.");
 }
@@ -93,10 +111,11 @@ export const createConciergeChat = (
   let timeContext = "";
   if (realtimeContext) {
       timeContext = `
-      \n### REALIDAD ACTUAL (Úsala para responder sobre horarios y clima):
+      \n### REALIDAD ACTUAL (IMPORTANTE):
       - Hoy es: ${realtimeContext.date}
       - Hora Actual: ${realtimeContext.time}
       - Clima en Cabo Rojo: ${realtimeContext.weather}
+      Si te preguntan si un lugar está abierto, CALCULA si la hora actual está dentro del horario del lugar (si lo sabes).
       `;
   }
   

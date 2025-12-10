@@ -630,25 +630,26 @@ const MainApp: React.FC = () => {
             </button>
             <button onClick={() => setLanguage(language === 'es' ? 'en' : 'es')} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-800 dark:text-white p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-[10px] uppercase hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">{language === 'es' ? 'EN' : 'ES'}</button>
             <button onClick={() => setIsAdminOpen(true)} className="bg-slate-900/80 dark:bg-slate-800/80 backdrop-blur-md text-white w-10 h-10 rounded-full flex items-center justify-center text-xs hover:bg-black transition-colors shadow-lg"><i className="fa-solid fa-lock"></i></button>
+            
+            {/* Satellite Toggle */}
+            <button 
+              onClick={() => setMapStyle(prev => prev === 'standard' ? 'satellite' : 'standard')} 
+              className={`backdrop-blur-md w-10 h-10 rounded-full flex items-center justify-center text-xs shadow-lg transition-all active:scale-95 border ${
+                mapStyle === 'satellite'
+                  ? 'bg-teal-600 text-white border-teal-500' 
+                  : 'bg-white/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 border-white/40 dark:border-slate-700 hover:scale-105'
+              }`}
+              title="Toggle Satellite View"
+            >
+              <i className={`fa-solid ${mapStyle === 'satellite' ? 'fa-map' : 'fa-earth-americas'}`}></i>
+            </button>
         </div>
       </header>
       
       <main ref={mapContainer} className="flex-1 w-full h-full focus:outline-none relative z-0 bg-slate-100 dark:bg-slate-800" role="application" aria-label="Interactive Map of Cabo Rojo" />
       
-      {/* Map Controls (Location & Satellite) */}
+      {/* Map Controls (Location) */}
       <div className="absolute right-5 bottom-[100px] z-[1000] flex flex-col gap-3">
-         {/* Satellite Toggle */}
-        <button 
-            onClick={() => setMapStyle(prev => prev === 'standard' ? 'satellite' : 'standard')} 
-            className={`w-12 h-12 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex items-center justify-center border transition-all active:scale-95 ${
-                mapStyle === 'satellite' 
-                ? 'bg-teal-600 text-white border-teal-500' 
-                : 'bg-white/90 dark:bg-slate-800/90 backdrop-blur-md text-slate-600 dark:text-slate-300 border-white dark:border-slate-700'
-            }`}
-        >
-          <i className={`fa-solid ${mapStyle === 'satellite' ? 'fa-map' : 'fa-layer-group'} text-lg`}></i>
-        </button>
-
         {/* User Location */}
         <button onClick={centerOnUser} className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-md text-blue-600 dark:text-blue-400 w-12 h-12 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex items-center justify-center border border-white dark:border-slate-700 active:scale-95 transition-transform">
           <i className="fa-solid fa-location-crosshairs text-xl"></i>
