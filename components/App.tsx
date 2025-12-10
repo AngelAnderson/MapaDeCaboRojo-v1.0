@@ -402,8 +402,8 @@ const MainApp: React.FC = () => {
         }
     } as Place));
 
-    // Base Filter: Only show published places
-    const publishedPlaces = places.filter(p => p.status !== 'pending');
+    // Base Filter: Only show published places (Verified and Open)
+    const publishedPlaces = places.filter(p => p.status !== 'pending' && p.isVerified);
 
     if (groupDef.categories === 'EVENTS') {
         filtered = mappedEvents;

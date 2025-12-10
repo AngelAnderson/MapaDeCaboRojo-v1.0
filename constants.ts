@@ -24,7 +24,7 @@ const DEFAULT_PLACE_PROPS = {
   vibe: [],
   isPetFriendly: false,
   isHandicapAccessible: false,
-  isVerified: false,
+  isVerified: true,
 };
 
 export const PLACES: Place[] = [

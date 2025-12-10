@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Place, PlaceCategory, ParkingStatus, Event, EventCategory, AdminLog } from '../types';
 import { supabase, updatePlace, deletePlace, createPlace, uploadImage, getAdminLogs, createEvent, updateEvent, deleteEvent, getEvents } from '../services/supabase';
@@ -493,7 +494,27 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                         </InputGroup>
                         <div className="flex gap-4">
                             <div className="flex-1"><InputGroup label="Price"><StyledInput value={editingPlace!.priceLevel} onChange={e => setEditingPlace({...editingPlace!, priceLevel: e.target.value})} /></InputGroup></div>
-                            <div className="flex-1"><InputGroup label="Status"><select value={editingPlace!.status} onChange={e => setEditingPlace({...editingPlace!, status: e.target.value as any})} className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg p-2.5 text-sm outline-none"><option value="open">Open</option><option value="closed">Closed</option><option value="pending">Pending</option></select></InputGroup></div>
+                            <div className="flex-1">
+                                <InputGroup label="Status">
+                                    <select 
+                                        value={editingPlace!.status} 
+                                        onChange={e => {
+                                            const newStatus = e.target.value as any;
+                                            setEditingPlace({
+                                                ...editingPlace!, 
+                                                status: newStatus,
+                                                // Automatically verify if moving out of pending
+                                                isVerified: newStatus !== 'pending' ? true : false
+                                            });
+                                        }} 
+                                        className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg p-2.5 text-sm outline-none"
+                                    >
+                                        <option value="open">Open</option>
+                                        <option value="closed">Closed</option>
+                                        <option value="pending">Pending</option>
+                                    </select>
+                                </InputGroup>
+                            </div>
                         </div>
                     </div>
                 )}
@@ -580,6 +601,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                              <label className="flex items-center gap-2 text-white text-sm"><input type="checkbox" checked={editingPlace!.isPetFriendly} onChange={e => setEditingPlace({...editingPlace!, isPetFriendly: e.target.checked})} className="w-4 h-4 accent-teal-500 rounded" /> Pet Friendly</label>
                              <label className="flex items-center gap-2 text-white text-sm"><input type="checkbox" checked={editingPlace!.isHandicapAccessible} onChange={e => setEditingPlace({...editingPlace!, isHandicapAccessible: e.target.checked})} className="w-4 h-4 accent-teal-500 rounded" /> Handicap Access</label>
                              <label className="flex items-center gap-2 text-white text-sm font-bold text-yellow-400"><input type="checkbox" checked={editingPlace!.is_featured} onChange={e => setEditingPlace({...editingPlace!, is_featured: e.target.checked})} className="w-4 h-4 accent-yellow-400 rounded bg-slate-700" /> Featured (⭐)</label>
+                             <label className="flex items-center gap-2 text-white text-sm font-bold text-blue-400"><input type="checkbox" checked={editingPlace!.isVerified} onChange={e => setEditingPlace({...editingPlace!, isVerified: e.target.checked})} className="w-4 h-4 accent-blue-400 rounded bg-slate-700" /> Verified</label>
                         </div>
                         <InputGroup label="Local Tips (El Veci says...)"><StyledTextArea value={editingPlace!.tips} onChange={e => setEditingPlace({...editingPlace!, tips: e.target.value})} /></InputGroup>
                         <InputGroup label="Vibe Tags (Comma sep)"><StyledInput value={editingPlace!.vibe?.join(', ')} onChange={e => setEditingPlace({...editingPlace!, vibe: e.target.value.split(',').map(s => s.trim())})} placeholder="e.g. Chill, Party, Romantic" /></InputGroup>
@@ -590,8 +612,6 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
     );
 
     const renderEvents = () => {
-        // ... (No changes here, keeping existing code logic implicitly or explicitly)
-        // Since I'm replacing the whole file content in XML, I must include the full code for renderEvents too.
         if (editingEvent) {
             return (
                 <div className="h-full flex flex-col animate-slide-up">
@@ -697,7 +717,6 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
     );
 
     const renderStats = () => {
-        // ... Stats rendering
          const catCounts = places.reduce((acc, p) => { acc[p.category] = (acc[p.category] || 0) + 1; return acc; }, {} as Record<string, number>);
         return (
             <div className="h-full overflow-y-auto animate-fade-in">
@@ -717,7 +736,6 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                             ))}
                         </div>
                     </div>
-                    {/* ... other stats */}
                      <div className="space-y-6">
                         <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
                              <h3 className="font-bold text-white mb-2">Verification Status</h3>
@@ -851,7 +869,6 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
 
     // --- MAIN RENDER ---
     if (!user) {
-        // Login Screen (Same as before)
         return (
             <div className="fixed inset-0 bg-slate-900 z-[3500] flex items-center justify-center p-4">
                 <div className="bg-slate-800 p-8 rounded-2xl w-full max-w-sm border border-slate-700 shadow-2xl">
