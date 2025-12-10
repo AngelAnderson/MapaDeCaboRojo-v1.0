@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import L from 'leaflet';
 import { Place, PlaceCategory, Coordinates, Event, ParkingStatus, Collection } from './types';
@@ -178,7 +179,13 @@ const MainApp: React.FC = () => {
   // This list is used for Map Markers, Explorer Sheet, Search, and URL Deep Linking.
   // The 'places' state retains pending items so they can be viewed in the Admin panel.
   const publishedPlaces = useMemo(() => {
-    return places.filter(p => p.status !== 'pending' && p.isVerified);
+    return places.filter(p => {
+       // STRICT Filtering: Must be explicitly verified AND not pending
+       // We assume any place not verified or marked as pending is invisible to the public
+       if (p.status === 'pending') return false;
+       if (!p.isVerified) return false;
+       return true;
+    });
   }, [places]);
 
   // --- EFFECTS ---
@@ -296,6 +303,7 @@ const MainApp: React.FC = () => {
         // Initial fly logic (only if no URL param)
         const params = new URLSearchParams(window.location.search);
         if (!params.get('place')) {
+            // Check against realPlaces but ensure we aren't defaulting to a pending item (though fallback logic usually handles this)
             let initialPlace = realPlaces.find(p => p.id === DEFAULT_PLACE_ID && p.status !== 'pending');
             if (!initialPlace && realPlaces.length > 0) initialPlace = realPlaces.find(p => p.is_featured && p.status !== 'pending');
             if (!initialPlace) initialPlace = FALLBACK_PLACES.find(p => p.id === DEFAULT_PLACE_ID);
