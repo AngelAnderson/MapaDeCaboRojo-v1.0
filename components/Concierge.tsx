@@ -121,7 +121,7 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
 
              // Send execution result back to AI to generate final user response
              if (newParts.length > 0) {
-                 const followUp = await chatRef.current.sendMessage(newParts);
+                 const followUp = await chatRef.current.sendMessage({ message: newParts });
                  const finalResponse = followUp.text || "¡Oído! Lo anoté para que el equipo lo verifique.";
                  setMessages(prev => [...prev, { role: 'model', text: finalResponse }]);
              }
