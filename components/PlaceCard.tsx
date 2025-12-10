@@ -33,11 +33,23 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
   const { t } = useLanguage();
 
   const handleShare = async () => {
+    // Generate Deep Link URL
+    const url = new URL(window.location.origin);
+    url.searchParams.set('place', place.slug || place.id);
+    const shareUrl = url.toString();
+
     if (navigator.share) {
       try {
-        await navigator.share({ title: place.name, text: `Check this out: ${place.name}`, url: window.location.href });
+        await navigator.share({ 
+          title: place.name, 
+          text: `Chequea este lugar en Cabo Rojo: ${place.name} 🌴`, 
+          url: shareUrl 
+        });
       } catch (e) { console.log('Share aborted'); }
-    } else { alert("Copied!"); }
+    } else { 
+      navigator.clipboard.writeText(shareUrl);
+      alert("Link copiado: " + shareUrl); 
+    }
   };
 
   const navigationHandler = () => {

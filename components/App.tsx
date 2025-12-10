@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { Place, PlaceCategory, Coordinates, Event, ParkingStatus } from '../types';
@@ -13,6 +14,7 @@ import { LanguageProvider, useLanguage } from './i18n/LanguageContext';
 import ExplorerSheet from './components/ExplorerSheet';
 import BottomNav from './components/BottomNav';
 import CommandMenu from './components/CommandMenu';
+import SeoEngine from './components/SeoEngine';
 
 // --- CONSTANTS & HELPERS (Pure Functions) ---
 
@@ -154,22 +156,6 @@ const MainApp: React.FC = () => {
 
   // --- EFFECTS ---
 
-  // SEO: Dynamic Document Title
-  useEffect(() => {
-    const baseTitle = "Mapa de Cabo Rojo";
-    if (selectedPlace) {
-        document.title = `${selectedPlace.name} | ${baseTitle}`;
-    } else if (activeTab === 'explore') {
-        document.title = `Explorar Lugares | ${baseTitle}`;
-    } else if (activeTab === 'map') {
-        document.title = `Mapa Interactivo | ${baseTitle}`;
-    } else if (isConciergeOpen) {
-        document.title = `El Veci (AI) | ${baseTitle}`;
-    } else {
-        document.title = `${baseTitle} | Guía Turística`;
-    }
-  }, [selectedPlace, activeTab, isConciergeOpen]);
-
   // VIP Check
   useEffect(() => { 
     const vip = localStorage.getItem('cabo_vip_status'); 
@@ -211,6 +197,56 @@ const MainApp: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  // --- DEEP LINKING & URL STATE ---
+  
+  // 1. On Load: Check URL for ?place=slug
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const placeSlug = params.get('place');
+    if (placeSlug && places.length > 0) {
+        const found = places.find(p => p.slug === placeSlug || p.id === placeSlug);
+        if (found) {
+            setSelectedPlace(found);
+            // Fly to it
+            if (map.current && found.coords) {
+                 setTimeout(() => {
+                    map.current?.flyTo([found.coords.lat, found.coords.lng], 16, { duration: 1.5 });
+                 }, 1000);
+            }
+        }
+    }
+  }, [places]);
+
+  // 2. On Selection: Update URL (Deep Link)
+  useEffect(() => {
+    if (selectedPlace) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('place', selectedPlace.slug || selectedPlace.id);
+        window.history.pushState({}, '', url);
+    } else {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('place');
+        window.history.pushState({}, '', url);
+    }
+  }, [selectedPlace]);
+
+  // 3. Handle Browser Back Button
+  useEffect(() => {
+    const handlePopState = () => {
+        const params = new URLSearchParams(window.location.search);
+        const placeSlug = params.get('place');
+        if (!placeSlug) {
+            setSelectedPlace(null);
+        } else {
+            const found = places.find(p => p.slug === placeSlug || p.id === placeSlug);
+            if (found) setSelectedPlace(found);
+        }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [places]);
+
+
   // Initial Data Fetch & FlyTo
   const fetchRealData = async () => {
       console.log("Fetching real data from Supabase...");
@@ -221,21 +257,25 @@ const MainApp: React.FC = () => {
       if (realEvents.length > 0) {
         setEvents(realEvents);
       }
-      
       return realPlaces;
   };
 
   useEffect(() => {
     const initData = async () => {
         const realPlaces = await fetchRealData();
-        let initialPlace = realPlaces.find(p => p.id === DEFAULT_PLACE_ID);
-        if (!initialPlace && realPlaces.length > 0) initialPlace = realPlaces.find(p => p.is_featured);
-        if (!initialPlace) initialPlace = FALLBACK_PLACES.find(p => p.id === DEFAULT_PLACE_ID);
+        
+        // Initial fly logic (only if no URL param)
+        const params = new URLSearchParams(window.location.search);
+        if (!params.get('place')) {
+            let initialPlace = realPlaces.find(p => p.id === DEFAULT_PLACE_ID);
+            if (!initialPlace && realPlaces.length > 0) initialPlace = realPlaces.find(p => p.is_featured);
+            if (!initialPlace) initialPlace = FALLBACK_PLACES.find(p => p.id === DEFAULT_PLACE_ID);
 
-        if (initialPlace && map.current && initialPlace.coords) {
-            setTimeout(() => {
-                map.current?.flyTo([initialPlace!.coords.lat, initialPlace!.coords.lng], 16, { duration: 3, easeLinearity: 0.25 });
-            }, 800);
+            if (initialPlace && map.current && initialPlace.coords) {
+                setTimeout(() => {
+                    map.current?.flyTo([initialPlace!.coords.lat, initialPlace!.coords.lng], 16, { duration: 3, easeLinearity: 0.25 });
+                }, 800);
+            }
         }
     };
     if (mapLoaded) initData();
@@ -487,6 +527,14 @@ const MainApp: React.FC = () => {
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden relative bg-slate-50 dark:bg-slate-900 font-sans transition-colors duration-500">
       <div className="noise-overlay"></div>
+      
+      {/* SEO Engine */}
+      <SeoEngine 
+        place={selectedPlace} 
+        title={selectedPlace ? `${selectedPlace.name} | Cabo Rojo` : undefined}
+        description={selectedPlace ? selectedPlace.description : undefined}
+        image={selectedPlace ? selectedPlace.imageUrl : undefined}
+      />
       
       <header className="absolute top-0 left-0 right-0 z-[1000] p-5 pointer-events-none flex justify-between items-start">
         <WeatherWidget />
