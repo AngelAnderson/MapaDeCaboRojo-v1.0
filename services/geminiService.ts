@@ -2,25 +2,10 @@
 import { GoogleGenAI, Chat, FunctionDeclaration, Type, Modality } from "@google/genai";
 import { Place, Event, Coordinates, AdminLog, ItineraryItem, PlaceCategory } from "../types";
 
-// --- ROBUST API KEY EXTRACTION ---
-// We check multiple standard locations to ensure the key is found in Vite/Vercel environments.
-const getApiKey = (): string => {
-    // 1. Check process.env (Vite define shim)
-    if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
-        return process.env.API_KEY;
-    }
-    // 2. Check import.meta.env (Vite standard)
-    // @ts-ignore
-    if (typeof import.meta !== 'undefined' && import.meta.env) {
-        // @ts-ignore
-        if (import.meta.env.VITE_API_KEY) return import.meta.env.VITE_API_KEY;
-        // @ts-ignore
-        if (import.meta.env.API_KEY) return import.meta.env.API_KEY;
-    }
-    return '';
-};
-
-const apiKey = getApiKey();
+// --- API KEY SETUP ---
+// We access the variables DIRECTLY. This allows Vite to perform static replacement at build time.
+// If we wrap them in complex logic or dynamic access (e.g. process.env[key]), Vite cannot see them to replace them.
+const apiKey = process.env.API_KEY || (import.meta as any).env?.VITE_API_KEY || '';
 
 if (!apiKey) {
     console.error("⚠️ API_KEY is missing. AI features will fail. Ensure API_KEY or VITE_API_KEY is set in your .env or Vercel settings.");
