@@ -79,6 +79,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
     : [];
   
   const isEvent = place.contact_info?.isEvent === true;
+  const isClosed = place.status === 'closed';
 
   return (
     <article className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.3)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.6)] z-[2000] animate-slide-up max-h-[90vh] overflow-y-auto flex flex-col transition-colors duration-300" role="dialog" aria-modal="true" aria-labelledby="place-name">
@@ -87,10 +88,19 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
       </button>
 
       {/* Semantic Header */}
-      <header className="relative w-full h-72 shrink-0 group">
-        <img src={place.imageUrl || 'https://picsum.photos/800/600'} alt={place.name} className="w-full h-full object-cover" />
+      <header className="relative w-full h-72 shrink-0 group bg-slate-900">
+        <img src={place.imageUrl || 'https://picsum.photos/800/600'} alt={place.name} className={`w-full h-full object-cover transition-all ${isClosed ? 'grayscale opacity-60' : ''}`} />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
         
+        {/* Closed Overlay */}
+        {isClosed && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="bg-red-600/90 backdrop-blur-sm text-white px-6 py-2 rounded-xl border-2 border-white/20 shadow-2xl transform -rotate-6">
+                    <span className="text-xl font-black uppercase tracking-widest">Cerrado</span>
+                </div>
+            </div>
+        )}
+
         <div className="absolute top-4 right-4 flex gap-3 z-30">
              {onToggleFavorite && (
                 <button onClick={onToggleFavorite} className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-colors ${isFavorite ? 'bg-pink-500 text-white' : 'bg-black/30 text-white hover:bg-black/50'}`}>
@@ -105,8 +115,16 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
         <div className="absolute bottom-0 left-0 p-6 text-white w-full">
           <div className="flex items-center gap-2 mb-2">
             <span className="bg-teal-500/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide shadow-sm">{place.category}</span>
-            {place.priceLevel && !isEvent && <span className="bg-slate-800/60 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold">{place.priceLevel}</span>}
-            {isEvent && <span className="bg-purple-600/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase">📅 {place.priceLevel}</span>}
+            
+            {isClosed ? (
+                <span className="bg-red-500/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide shadow-sm">Closed</span>
+            ) : (
+                <>
+                    {place.priceLevel && !isEvent && <span className="bg-slate-800/60 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold">{place.priceLevel}</span>}
+                    {isEvent && <span className="bg-purple-600/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase">📅 {place.priceLevel}</span>}
+                </>
+            )}
+
             {place.isVerified && <span className="text-blue-400 text-xs flex items-center gap-1"><i className="fa-solid fa-circle-check" aria-hidden="true"></i></span>}
           </div>
           <h1 id="place-name" className="text-3xl font-black leading-tight shadow-black drop-shadow-md">{place.name}</h1>
@@ -124,10 +142,20 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
           {isEvent ? (
               <ActionButton icon="calendar-plus" label={t('add_to_calendar')} onClick={handleCalendar} color="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800" />
           ) : (
-              <ActionButton icon="phone" label={t('call')} onClick={() => window.open(`tel:${place.phone}`)} disabled={!place.phone} />
+              <ActionButton icon="phone" label={t('call')} onClick={() => window.open(`tel:${place.phone}`)} disabled={!place.phone || isClosed} />
           )}
           <ActionButton icon="share-nodes" label={t('share')} onClick={handleShare} />
         </nav>
+
+        {isClosed && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-2xl flex items-center gap-4">
+                <i className="fa-solid fa-store-slash text-red-500 text-2xl"></i>
+                <div>
+                    <h4 className="font-bold text-red-600 dark:text-red-400">Este lugar está cerrado.</h4>
+                    <p className="text-xs text-red-500/80 dark:text-red-400/80">Puede ser temporal o permanente. Verifica antes de ir.</p>
+                </div>
+            </div>
+        )}
 
         <section>
           <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-2 tracking-wider">{t('the_scoop')}</h3>

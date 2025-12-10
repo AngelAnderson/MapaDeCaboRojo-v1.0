@@ -317,6 +317,53 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
         setLoading(false);
     };
 
+    // --- ANALYTICS HELPERS ---
+    
+    const calculateDBHealth = () => {
+        if (places.length === 0) return 0;
+        let score = 0;
+        let totalPoints = places.length * 5; // 5 criteria per place
+        
+        places.forEach(p => {
+            if (p.imageUrl && p.imageUrl.length > 10) score++;
+            if (p.description && p.description.length > 30) score++;
+            if (p.isVerified) score++;
+            if (p.tags && p.tags.length > 0) score++;
+            if (p.phone || p.website) score++;
+        });
+        
+        return Math.round((score / totalPoints) * 100);
+    };
+
+    const getSearchGaps = () => {
+        const searches = logs
+            .filter(l => l.action === 'USER_SEARCH')
+            .map(l => l.details?.toLowerCase() || '');
+        
+        // Count occurrences
+        const counts: Record<string, number> = {};
+        searches.forEach(s => { if(s) counts[s] = (counts[s] || 0) + 1; });
+        
+        // Filter terms that have NO results in current DB
+        const gaps = Object.entries(counts)
+            .filter(([term, count]) => {
+                const hasMatch = places.some(p => p.name.toLowerCase().includes(term) || p.tags?.some(t => t.toLowerCase().includes(term)));
+                return !hasMatch && term.length > 3;
+            })
+            .sort((a,b) => b[1] - a[1])
+            .slice(0, 5); // Top 5
+            
+        return gaps;
+    };
+
+    const getAuditStats = () => {
+        return {
+            noImage: places.filter(p => !p.imageUrl || p.imageUrl.length < 10).length,
+            unverified: places.filter(p => !p.isVerified).length,
+            shortDesc: places.filter(p => !p.description || p.description.length < 30).length
+        };
+    };
+
     // --- RENDERERS ---
 
     const renderSidebar = () => (
@@ -355,53 +402,141 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
         </aside>
     );
 
-    const renderDashboard = () => (
-        <div className="space-y-6 animate-fade-in">
-            <h2 className="text-2xl font-bold text-white mb-4">Dashboard & Overview</h2>
-            
-            {/* AI Analyst Briefing */}
-            <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-6 rounded-2xl border border-teal-500/30 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                    <i className="fa-solid fa-robot text-9xl text-white"></i>
+    const renderDashboard = () => {
+        const health = calculateDBHealth();
+        const gaps = getSearchGaps();
+        const audits = getAuditStats();
+        
+        const goToFix = (filter: string) => {
+            setActiveTab('places');
+            // Logic to set filter would go here, for now just navigates
+        };
+
+        return (
+            <div className="space-y-6 animate-fade-in pb-10">
+                <div className="flex justify-between items-end">
+                    <div>
+                        <h2 className="text-3xl font-black text-white tracking-tight">Command Center</h2>
+                        <p className="text-slate-400">Welcome back, Veci. Here is what's happening.</p>
+                    </div>
+                    <div className="text-right hidden md:block">
+                        <div className="text-sm font-bold text-teal-400">{new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</div>
+                        <div className="text-xs text-slate-500">{places.length} Places • {eventsList.length} Events</div>
+                    </div>
                 </div>
-                <div className="relative z-10">
-                    <h3 className="text-teal-400 font-bold uppercase text-xs tracking-wider mb-2 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-teal-400 rounded-full animate-pulse"></span>
-                        Morning Briefing (AI Analyst)
+                
+                {/* 1. HEALTH SCORE CARD */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-6 rounded-3xl border border-slate-700 relative overflow-hidden">
+                        <div className="flex justify-between items-start z-10 relative">
+                            <div>
+                                <h3 className="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Database Health</h3>
+                                <div className="text-4xl font-black text-white">{health}%</div>
+                            </div>
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 font-bold text-sm ${health > 80 ? 'border-green-500 text-green-500' : 'border-amber-500 text-amber-500'}`}>
+                                {health > 80 ? 'A+' : 'B'}
+                            </div>
+                        </div>
+                        <div className="mt-4 space-y-2 relative z-10">
+                            <div className="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                                <div className={`h-full ${health > 80 ? 'bg-green-500' : 'bg-amber-500'}`} style={{ width: `${health}%` }}></div>
+                            </div>
+                            <p className="text-xs text-slate-500">
+                                {health < 90 ? "Improve descriptions and add photos to boost score." : "Database is looking healthy!"}
+                            </p>
+                        </div>
+                        {/* Background Decoration */}
+                        <i className="fa-solid fa-heart-pulse absolute -right-4 -bottom-4 text-9xl text-white/5"></i>
+                    </div>
+
+                    {/* 2. DEMAND GAPS (What users want but you don't have) */}
+                    <div className="bg-slate-800 p-6 rounded-3xl border border-slate-700 flex flex-col relative overflow-hidden">
+                        <h3 className="text-red-400 text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
+                             <i className="fa-solid fa-triangle-exclamation"></i> Missing Content (Demand)
+                        </h3>
+                        {gaps.length > 0 ? (
+                            <div className="flex-1 space-y-3 z-10">
+                                {gaps.map(([term, count], i) => (
+                                    <div key={i} className="flex justify-between items-center group cursor-pointer hover:bg-slate-700/50 p-2 -mx-2 rounded-lg transition-colors" onClick={() => { setEditingPlace({ id: 'new', name: term.charAt(0).toUpperCase() + term.slice(1), description: '', category: PlaceCategory.FOOD, coords: { lat: 17.9620, lng: -67.1650 }, parking: ParkingStatus.FREE, tags: [], vibe: [], imageUrl: '', videoUrl: '', website: '', phone: '', status: 'open', plan: 'free', sponsor_weight: 0, is_featured: false, hasRestroom: false, hasShowers: false, tips: '', priceLevel: '$', bestTimeToVisit: '', isPetFriendly: false, isHandicapAccessible: false, isVerified: true, slug: '', address: '', gmapsUrl: '' }); setActiveTab('places'); }}>
+                                        <span className="text-white font-bold capitalize">{term}</span>
+                                        <span className="text-xs bg-slate-700 text-slate-300 px-2 py-1 rounded-full">{count} searches</span>
+                                        <i className="fa-solid fa-plus text-teal-500 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="flex-1 flex items-center justify-center text-slate-500 text-sm">
+                                No gaps detected yet. Good job!
+                            </div>
+                        )}
+                        <i className="fa-solid fa-magnifying-glass absolute -right-4 -bottom-4 text-9xl text-white/5"></i>
+                    </div>
+
+                    {/* 3. ACTION ITEMS (To-Do List) */}
+                    <div className="bg-slate-800 p-6 rounded-3xl border border-slate-700 flex flex-col relative overflow-hidden">
+                         <h3 className="text-teal-400 text-xs font-bold uppercase tracking-wider mb-3">Action Required</h3>
+                         <div className="space-y-3 z-10">
+                            {audits.unverified > 0 && (
+                                <button onClick={() => goToFix('unverified')} className="w-full bg-amber-500/10 border border-amber-500/30 p-3 rounded-xl flex justify-between items-center hover:bg-amber-500/20 transition-colors">
+                                    <span className="text-amber-500 font-bold text-sm"><i className="fa-solid fa-clock mr-2"></i> Pending Reviews</span>
+                                    <span className="bg-amber-500 text-slate-900 font-bold px-2 py-0.5 rounded text-xs">{audits.unverified}</span>
+                                </button>
+                            )}
+                            {audits.noImage > 0 && (
+                                <button onClick={() => goToFix('no-image')} className="w-full bg-slate-700/30 border border-slate-600 p-3 rounded-xl flex justify-between items-center hover:bg-slate-700/50 transition-colors">
+                                    <span className="text-slate-300 font-bold text-sm"><i className="fa-solid fa-image mr-2"></i> Missing Photos</span>
+                                    <span className="bg-slate-600 text-white font-bold px-2 py-0.5 rounded text-xs">{audits.noImage}</span>
+                                </button>
+                            )}
+                            {audits.shortDesc > 0 && (
+                                <button onClick={() => goToFix('short-desc')} className="w-full bg-slate-700/30 border border-slate-600 p-3 rounded-xl flex justify-between items-center hover:bg-slate-700/50 transition-colors">
+                                    <span className="text-slate-300 font-bold text-sm"><i className="fa-solid fa-align-left mr-2"></i> Short Descriptions</span>
+                                    <span className="bg-slate-600 text-white font-bold px-2 py-0.5 rounded text-xs">{audits.shortDesc}</span>
+                                </button>
+                            )}
+                            {audits.unverified === 0 && audits.noImage === 0 && audits.shortDesc === 0 && (
+                                <div className="text-green-500 font-bold flex items-center gap-2">
+                                    <i className="fa-solid fa-check-circle"></i> All clean!
+                                </div>
+                            )}
+                         </div>
+                    </div>
+                </div>
+
+                {/* AI Briefing Section */}
+                <div className="bg-gradient-to-r from-teal-900/20 to-slate-800 p-8 rounded-3xl border border-teal-500/20 relative">
+                     <h3 className="text-teal-400 font-bold uppercase text-xs tracking-wider mb-4 flex items-center gap-2">
+                        <i className="fa-solid fa-robot"></i> Morning Briefing
                     </h3>
                     {briefing ? (
-                        <div className="prose prose-invert prose-sm max-w-none text-slate-300" dangerouslySetInnerHTML={{ __html: briefing }}>
-                            {/* Render HTML content from server-side generation */}
-                        </div>
+                        <div className="prose prose-invert prose-sm max-w-none text-slate-300 columns-1 md:columns-2 gap-8" dangerouslySetInnerHTML={{ __html: briefing }}></div>
                     ) : (
                         <div className="flex items-center gap-3 text-slate-400 py-4">
-                            <i className="fa-solid fa-circle-notch fa-spin"></i>
-                            El Veci is analyzing your data...
+                            <i className="fa-solid fa-circle-notch fa-spin"></i> El Veci is analyzing logs...
                         </div>
                     )}
                 </div>
-            </div>
 
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
-                    <div className="text-slate-400 text-xs font-bold uppercase mb-1">Total Places</div>
-                    <div className="text-3xl font-black text-white">{places.length}</div>
-                </div>
-                <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
-                    <div className="text-slate-400 text-xs font-bold uppercase mb-1">Active Events</div>
-                    <div className="text-3xl font-black text-white">{eventsList.length}</div>
-                </div>
-                <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
-                    <div className="text-slate-400 text-xs font-bold uppercase mb-1">Pending Review</div>
-                    <div className="text-3xl font-black text-amber-400">{places.filter(p => p.status === 'pending').length}</div>
-                </div>
-                <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
-                    <div className="text-slate-400 text-xs font-bold uppercase mb-1">Total Logs</div>
-                    <div className="text-3xl font-black text-white">{logs.length}</div>
+                {/* Recent Logs Ticker */}
+                <div>
+                     <h3 className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-3 ml-1">Live Activity Feed</h3>
+                     <div className="bg-slate-800 rounded-xl border border-slate-700 divide-y divide-slate-700/50 max-h-60 overflow-y-auto">
+                        {logs.slice(0, 5).map(log => (
+                            <div key={log.id} className="p-4 flex items-center gap-4 text-sm">
+                                <span className={`text-[10px] font-bold px-2 py-1 rounded uppercase w-20 text-center ${
+                                    log.action === 'USER_SEARCH' ? 'bg-blue-500/20 text-blue-400' :
+                                    log.action === 'UPDATE_SUGGESTION' ? 'bg-orange-500/20 text-orange-400' :
+                                    'bg-slate-600/20 text-slate-400'
+                                }`}>{log.action.replace('USER_', '')}</span>
+                                <span className="text-slate-300 flex-1 truncate">{log.details}</span>
+                                <span className="text-slate-500 text-xs whitespace-nowrap">{new Date(log.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                            </div>
+                        ))}
+                     </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     const renderPlaceList = () => {
         const filtered = places.filter(p => p.name.toLowerCase().includes(placeSearchTerm.toLowerCase()));
@@ -756,116 +891,126 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
         );
     };
 
-    const renderMarketing = () => (
-        <div className="h-full flex flex-col animate-fade-in">
-            <h2 className="text-2xl font-bold text-white mb-2">Social Studio 📸</h2>
-            <p className="text-slate-400 mb-6 text-sm">Generate targeted content with El Veci.</p>
+    const renderMarketing = () => {
+        const isBundle = marketingPlatform === 'campaign_bundle';
+        let parsedBundle: any = null;
+        if (isBundle && marketingResult) {
+            try { parsedBundle = JSON.parse(marketingResult); } catch(e) { parsedBundle = null; }
+        }
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
-                <div className="space-y-6 h-fit overflow-y-auto pr-2">
-                     <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 space-y-4">
-                        <InputGroup label="1. Select Place">
-                            <select value={marketingPlaceId} onChange={e => setMarketingPlaceId(e.target.value)} className="w-full bg-slate-900 text-white border border-slate-700 rounded-lg p-3 outline-none">
-                                <option value="">-- Choose a Place --</option>
-                                {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                            </select>
-                        </InputGroup>
+        return (
+            <div className="h-full flex flex-col animate-fade-in">
+                <h2 className="text-2xl font-bold text-white mb-2">Social Studio 📸</h2>
+                <p className="text-slate-400 mb-6 text-sm">Generate targeted content with El Veci.</p>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <InputGroup label="2. Tone / Vibe">
-                                <div className="grid grid-cols-1 gap-2">
-                                    {['chill', 'hype', 'professional'].map(t => (
-                                        <button key={t} onClick={() => setMarketingTone(t)} className={`p-2 rounded-lg border text-xs font-bold uppercase transition-all ${marketingTone === t ? 'bg-teal-600 border-teal-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-400'}`}>
-                                            {t}
-                                        </button>
-                                    ))}
-                                </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
+                    <div className="space-y-6 h-fit overflow-y-auto pr-2">
+                         <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 space-y-4">
+                            <InputGroup label="1. Select Place">
+                                <select value={marketingPlaceId} onChange={e => setMarketingPlaceId(e.target.value)} className="w-full bg-slate-900 text-white border border-slate-700 rounded-lg p-3 outline-none">
+                                    <option value="">-- Choose a Place --</option>
+                                    {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                </select>
                             </InputGroup>
-                             <InputGroup label="3. Language">
-                                <div className="grid grid-cols-1 gap-2">
-                                    {['spanglish', 'es', 'en'].map(l => (
-                                        <button key={l} onClick={() => setMarketingLang(l)} className={`p-2 rounded-lg border text-xs font-bold uppercase transition-all ${marketingLang === l ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-400'}`}>
-                                            {l}
-                                        </button>
-                                    ))}
-                                </div>
-                            </InputGroup>
-                        </div>
-                        
-                        <InputGroup label="4. Format">
-                            <div className="grid grid-cols-2 gap-2">
-                                <button onClick={() => setMarketingPlatform('instagram')} className={`p-3 rounded-xl border font-bold text-xs ${marketingPlatform === 'instagram' ? 'bg-pink-600 border-pink-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-300'}`}><i className="fa-brands fa-instagram mr-2"></i> Post</button>
-                                <button onClick={() => setMarketingPlatform('campaign_bundle')} className={`p-3 rounded-xl border font-bold text-xs ${marketingPlatform === 'campaign_bundle' ? 'bg-purple-600 border-purple-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-300'}`}><i className="fa-solid fa-layer-group mr-2"></i> Bundle</button>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <InputGroup label="2. Tone / Vibe">
+                                    <div className="grid grid-cols-1 gap-2">
+                                        {['chill', 'hype', 'professional'].map(t => (
+                                            <button key={t} onClick={() => setMarketingTone(t)} className={`p-2 rounded-lg border text-xs font-bold uppercase transition-all ${marketingTone === t ? 'bg-teal-600 border-teal-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-400'}`}>
+                                                {t}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </InputGroup>
+                                 <InputGroup label="3. Language">
+                                    <div className="grid grid-cols-1 gap-2">
+                                        {['spanglish', 'es', 'en'].map(l => (
+                                            <button key={l} onClick={() => setMarketingLang(l)} className={`p-2 rounded-lg border text-xs font-bold uppercase transition-all ${marketingLang === l ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-400'}`}>
+                                                {l}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </InputGroup>
                             </div>
-                        </InputGroup>
-                        
-                        <button onClick={handleMarketingTabGenerate} disabled={loading || !marketingPlaceId} className="w-full bg-gradient-to-r from-teal-500 to-indigo-600 hover:from-teal-400 hover:to-indigo-500 disabled:opacity-50 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-900/20 transition-all mt-4">
-                            {loading ? 'Magic happening...' : '✨ Generate Content'}
-                        </button>
-                     </div>
-                </div>
-                
-                {/* PREVIEW AREA */}
-                <div className="flex flex-col h-full bg-slate-950 rounded-3xl border border-slate-800 overflow-hidden relative shadow-2xl">
-                    <div className="bg-slate-900 p-4 border-b border-slate-800 flex justify-between items-center">
-                        <span className="text-xs font-bold text-slate-500 uppercase">iPhone Preview</span>
-                        <div className="flex gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-red-500"></div><div className="w-2.5 h-2.5 rounded-full bg-yellow-500"></div><div className="w-2.5 h-2.5 rounded-full bg-green-500"></div></div>
+                            
+                            <InputGroup label="4. Format">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button onClick={() => setMarketingPlatform('instagram')} className={`p-3 rounded-xl border font-bold text-xs ${marketingPlatform === 'instagram' ? 'bg-pink-600 border-pink-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-300'}`}><i className="fa-brands fa-instagram mr-2"></i> Post</button>
+                                    <button onClick={() => setMarketingPlatform('campaign_bundle')} className={`p-3 rounded-xl border font-bold text-xs ${marketingPlatform === 'campaign_bundle' ? 'bg-purple-600 border-purple-500 text-white' : 'bg-slate-700 border-slate-600 text-slate-300'}`}><i className="fa-solid fa-layer-group mr-2"></i> Bundle</button>
+                                </div>
+                            </InputGroup>
+                            
+                            <button onClick={handleMarketingTabGenerate} disabled={loading || !marketingPlaceId} className="w-full bg-gradient-to-r from-teal-500 to-indigo-600 hover:from-teal-400 hover:to-indigo-500 disabled:opacity-50 text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-900/20 transition-all mt-4">
+                                {loading ? 'Magic happening...' : '✨ Generate Content'}
+                            </button>
+                         </div>
                     </div>
                     
-                    <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center">
-                         {/* Instagram Mockup */}
-                         <div className="w-full max-w-xs bg-white text-black rounded-[30px] overflow-hidden shadow-xl border border-slate-200">
-                             {/* Header */}
-                             <div className="flex items-center justify-between p-3 border-b border-gray-100">
-                                 <div className="flex items-center gap-2">
-                                     <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-400 to-purple-600 p-[2px]">
-                                         <div className="w-full h-full bg-white rounded-full p-[2px]"><img src="https://cdn-icons-png.flaticon.com/512/3203/3203071.png" className="w-full h-full rounded-full" alt="profile"/></div>
+                    {/* PREVIEW AREA */}
+                    <div className="flex flex-col h-full bg-slate-950 rounded-3xl border border-slate-800 overflow-hidden relative shadow-2xl">
+                        <div className="bg-slate-900 p-4 border-b border-slate-800 flex justify-between items-center">
+                            <span className="text-xs font-bold text-slate-500 uppercase">iPhone Preview</span>
+                            <div className="flex gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-red-500"></div><div className="w-2.5 h-2.5 rounded-full bg-yellow-500"></div><div className="w-2.5 h-2.5 rounded-full bg-green-500"></div></div>
+                        </div>
+                        
+                        <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center">
+                             {/* Instagram Mockup */}
+                             <div className="w-full max-w-xs bg-white text-black rounded-[30px] overflow-hidden shadow-xl border border-slate-200">
+                                 {/* Header */}
+                                 <div className="flex items-center justify-between p-3 border-b border-gray-100">
+                                     <div className="flex items-center gap-2">
+                                         <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-yellow-400 to-purple-600 p-[2px]">
+                                             <div className="w-full h-full bg-white rounded-full p-[2px]"><img src="https://cdn-icons-png.flaticon.com/512/3203/3203071.png" className="w-full h-full rounded-full" alt="profile"/></div>
+                                         </div>
+                                         <span className="text-xs font-bold">mapadecaborojo</span>
                                      </div>
-                                     <span className="text-xs font-bold">mapadecaborojo</span>
+                                     <i className="fa-solid fa-ellipsis text-xs"></i>
                                  </div>
-                                 <i className="fa-solid fa-ellipsis text-xs"></i>
-                             </div>
-                             {/* Image Placeholder */}
-                             <div className="aspect-square bg-slate-100 flex items-center justify-center">
-                                 {marketingPlaceId ? (
-                                     <img src={places.find(p => p.id === marketingPlaceId)?.imageUrl} className="w-full h-full object-cover" alt="" />
-                                 ) : (
-                                     <i className="fa-solid fa-image text-slate-300 text-4xl"></i>
-                                 )}
-                             </div>
-                             {/* Actions */}
-                             <div className="px-3 py-2 flex justify-between text-xl">
-                                 <div className="flex gap-4">
-                                     <i className="fa-regular fa-heart"></i>
-                                     <i className="fa-regular fa-comment"></i>
-                                     <i className="fa-regular fa-paper-plane"></i>
+                                 {/* Image Placeholder */}
+                                 <div className="aspect-square bg-slate-100 flex items-center justify-center">
+                                     {marketingPlaceId ? (
+                                         <img src={places.find(p => p.id === marketingPlaceId)?.imageUrl} className="w-full h-full object-cover" alt="" />
+                                     ) : (
+                                         <i className="fa-solid fa-image text-slate-300 text-4xl"></i>
+                                     )}
                                  </div>
-                                 <i className="fa-regular fa-bookmark"></i>
+                                 {/* Actions */}
+                                 <div className="px-3 py-2 flex justify-between text-xl">
+                                     <div className="flex gap-4">
+                                         <i className="fa-regular fa-heart"></i>
+                                         <i className="fa-regular fa-comment"></i>
+                                         <i className="fa-regular fa-paper-plane"></i>
+                                     </div>
+                                     <i className="fa-regular fa-bookmark"></i>
+                                 </div>
+                                 {/* Caption */}
+                                 <div className="px-3 pb-4 text-xs">
+                                     <span className="font-bold mr-2">mapadecaborojo</span>
+                                     <span className="whitespace-pre-wrap leading-tight">
+                                         {marketingResult ? (
+                                             isBundle && parsedBundle ? parsedBundle.instagram : marketingResult
+                                         ) : "Your AI caption will appear here..."}
+                                     </span>
+                                 </div>
                              </div>
-                             {/* Caption */}
-                             <div className="px-3 pb-4 text-xs">
-                                 <span className="font-bold mr-2">mapadecaborojo</span>
-                                 <span className="whitespace-pre-wrap leading-tight">
-                                     {marketingResult ? (JSON.parse(marketingResult).isJson ? JSON.parse(JSON.parse(marketingResult).text).instagram : JSON.parse(marketingResult).text) : "Your AI caption will appear here..."}
-                                 </span>
-                             </div>
-                         </div>
-                         
-                         {/* Extra Bundle Info */}
-                         {marketingResult && JSON.parse(marketingResult).isJson && (
-                             <div className="w-full mt-6 bg-slate-800 rounded-xl p-4 border border-slate-700">
-                                 <h4 className="text-teal-400 text-xs font-bold uppercase mb-2">📧 Email Subject</h4>
-                                 <p className="text-white text-sm mb-4">{JSON.parse(JSON.parse(marketingResult).text).email_subject}</p>
-                                 
-                                 <h4 className="text-purple-400 text-xs font-bold uppercase mb-2">📹 Story Script</h4>
-                                 <p className="text-slate-300 text-xs whitespace-pre-wrap">{JSON.parse(JSON.parse(marketingResult).text).story_script}</p>
-                             </div>
-                         )}
+                             
+                             {/* Extra Bundle Info */}
+                             {isBundle && parsedBundle && (
+                                 <div className="w-full mt-6 bg-slate-800 rounded-xl p-4 border border-slate-700">
+                                     <h4 className="text-teal-400 text-xs font-bold uppercase mb-2">📧 Email Subject</h4>
+                                     <p className="text-white text-sm mb-4">{parsedBundle.email_subject}</p>
+                                     
+                                     <h4 className="text-purple-400 text-xs font-bold uppercase mb-2">📹 Story Script</h4>
+                                     <p className="text-slate-300 text-xs whitespace-pre-wrap">{parsedBundle.story_script}</p>
+                                 </div>
+                             )}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     // --- MAIN RENDER ---
     if (!user) {

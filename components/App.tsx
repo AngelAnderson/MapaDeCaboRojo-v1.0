@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import L from 'leaflet';
-import { Place, PlaceCategory, Coordinates, Event, ParkingStatus } from '../types';
-import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, CABO_ROJO_CENTER, DEFAULT_PLACE_ID } from '../constants';
+import { Place, PlaceCategory, Coordinates, Event, ParkingStatus, Collection } from '../types';
+import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, COLLECTIONS, CABO_ROJO_CENTER, DEFAULT_PLACE_ID } from '../constants';
 import PlaceCard from './components/PlaceCard';
 import Concierge from './components/Concierge';
 import Admin from './components/Admin';
@@ -83,12 +83,14 @@ const generateMarkerHtml = (place: Place, isMarina: boolean): string => {
     `;
   }
 
-  const catColor = getMarkerColor(place.category);
+  const isClosed = place.status === 'closed';
+  // Use Grey (#64748b - slate-500) for closed places, otherwise use category color
+  const catColor = isClosed ? '#64748b' : getMarkerColor(place.category);
   const iconClass = getSmartIcon(place);
 
   return `
     <div style="width: 36px; height: 36px; background: ${catColor}; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s ease;">
-      <i class="fa-solid ${iconClass} text-white" style="transform: rotate(45deg); font-size: 15px;"></i>
+      <i class="fa-solid ${iconClass} text-white" style="transform: rotate(45deg); font-size: 15px; opacity: ${isClosed ? '0.7' : '1'};"></i>
     </div>
   `;
 };
@@ -113,6 +115,7 @@ const MainApp: React.FC = () => {
   const map = useRef<L.Map | null>(null);
   const tileLayer = useRef<L.TileLayer | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
+  const userLocMarkerRef = useRef<L.Marker | null>(null); // New Ref for User Location
   const boatMarkerRef = useRef<L.Marker | null>(null);
   const requestRef = useRef<number>(0);
   
@@ -133,6 +136,7 @@ const MainApp: React.FC = () => {
   const [activeTab, setActiveTab] = useState('map');
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [activeGroup, setActiveGroup] = useState<string>('ALL');
+  const [activeCollection, setActiveCollection] = useState<Collection | null>(null);
   const [searchText, setSearchText] = useState(''); 
   const [searchFocusTrigger, setSearchFocusTrigger] = useState(0);
   const [resultCount, setResultCount] = useState(0); 
@@ -327,7 +331,7 @@ const MainApp: React.FC = () => {
 
   }, [isDarkMode, mapLoaded]);
 
-  // Boat Animation (Same as before)
+  // Boat Animation
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
     const DOCK_POS = { lat: 18.0750, lng: -67.1886 }; 
@@ -402,10 +406,14 @@ const MainApp: React.FC = () => {
         }
     } as Place));
 
-    // Base Filter: Only show published places (Verified and Open)
+    // Base Filter: Only show published places (Verified and Open/Closed) - Pending are hidden
     const publishedPlaces = places.filter(p => p.status !== 'pending' && p.isVerified);
 
-    if (groupDef.categories === 'EVENTS') {
+    if (activeCollection) {
+        // COLLECTION MODE
+        const allItems = [...publishedPlaces, ...mappedEvents];
+        filtered = allItems.filter(p => activeCollection.placeIds.includes(p.id));
+    } else if (groupDef.categories === 'EVENTS') {
         filtered = mappedEvents;
     } else if (groupDef.categories === 'FAVORITES') {
         const allItems = [...publishedPlaces, ...mappedEvents];
@@ -431,9 +439,12 @@ const MainApp: React.FC = () => {
     // 2. Render Markers
     markersRef.current.forEach(marker => marker.remove());
     markersRef.current = [];
+    
+    const bounds = L.latLngBounds([]);
 
     filtered.forEach(place => {
       if (!place.coords.lat || !place.coords.lng) return;
+      bounds.extend([place.coords.lat, place.coords.lng]);
 
       const isMarina = place.id === DEFAULT_PLACE_ID; 
       const html = generateMarkerHtml(place, isMarina);
@@ -472,8 +483,15 @@ const MainApp: React.FC = () => {
       
       markersRef.current.push(marker);
     });
+    
+    // --- SMART ZOOM (Fit Bounds) ---
+    // Automatically zoom to show all results if filter changed, unless it's just a text search (too jumpy)
+    if (filtered.length > 0 && map.current && !selectedPlace && !searchText) {
+        // Add padding so pins aren't on the edge
+        map.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 15, animate: true, duration: 1.5 });
+    }
 
-  }, [activeGroup, mapLoaded, places, events, language, searchText, isVipUnlocked, savedIds]); 
+  }, [activeGroup, mapLoaded, places, events, language, searchText, isVipUnlocked, savedIds, activeCollection]); 
 
   // --- HANDLERS ---
 
@@ -484,7 +502,25 @@ const MainApp: React.FC = () => {
   const centerOnUser = () => { 
     if (!navigator.geolocation) return alert("Geolocation not supported"); 
     navigator.geolocation.getCurrentPosition(
-      (pos) => { map.current?.flyTo([pos.coords.latitude, pos.coords.longitude], 15); }, 
+      (pos) => { 
+          const { latitude, longitude } = pos.coords;
+          
+          // Fly to user
+          map.current?.flyTo([latitude, longitude], 15);
+          
+          // Add User Marker if not exists
+          if (!userLocMarkerRef.current && map.current) {
+               const userIconHtml = `
+                <div class="relative w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-md">
+                    <div class="absolute inset-0 bg-blue-500 rounded-full animate-ping opacity-75"></div>
+                </div>
+               `;
+               const userIcon = L.divIcon({ className: 'bg-transparent', html: userIconHtml, iconSize: [20, 20] });
+               userLocMarkerRef.current = L.marker([latitude, longitude], { icon: userIcon, zIndexOffset: 2000 }).addTo(map.current);
+          } else if (userLocMarkerRef.current) {
+              userLocMarkerRef.current.setLatLng([latitude, longitude]);
+          }
+      }, 
       (err) => console.error(err), 
       { enableHighAccuracy: true }
     ); 
@@ -508,6 +544,7 @@ const MainApp: React.FC = () => {
       setActiveTab(tabId);
       if (tabId === 'map') {
           setActiveGroup('ALL');
+          setActiveCollection(null);
           setSearchText('');
           if (map.current) map.current.flyTo([CABO_ROJO_CENTER.lat, CABO_ROJO_CENTER.lng], 13, { duration: 1.5 });
       }
@@ -567,10 +604,16 @@ const MainApp: React.FC = () => {
           onSearchChange={setSearchText}
           resultCount={resultCount}
           activeGroup={activeGroup}
-          onCategoryChange={(g) => { setActiveGroup(g); setSearchText(''); }}
+          onCategoryChange={(g) => { setActiveGroup(g); setActiveCollection(null); setSearchText(''); }}
           focusTrigger={searchFocusTrigger}
           savedIds={savedIds}
           onToggleFavorite={toggleFavorite}
+          activeCollectionId={activeCollection?.id}
+          onSelectCollection={setActiveCollection}
+          onCameraClick={() => {
+              setActiveTab('explore'); // Ensure sheet is visible if triggered elsewhere
+              setIsConciergeOpen(true);
+          }}
         />
       </aside>
 

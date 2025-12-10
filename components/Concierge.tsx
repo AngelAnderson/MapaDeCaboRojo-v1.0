@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { createConciergeChat } from '../services/geminiService';
-import { ChatMessage, Place, Event, Coordinates, PlaceCategory } from '../types';
+import { createConciergeChat, identifyPlaceFromImage, generateTripItinerary } from '../services/geminiService';
+import { ChatMessage, Place, Event, Coordinates, PlaceCategory, ItineraryItem } from '../types';
 import Button from './Button';
 import { useLanguage } from '../i18n/LanguageContext';
 import { logUserActivity, createPlace } from '../services/supabase';
@@ -22,6 +22,9 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
   const [isListening, setIsListening] = useState(false);
   const [userLoc, setUserLoc] = useState<Coordinates | undefined>(undefined);
   
+  // Visual Search State
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const chatRef = useRef<any>(null); 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -29,7 +32,7 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
   useEffect(() => {
     if (isOpen) {
         if (messages.length === 0) {
-            setMessages([{ role: 'model', text: '¡Wepa! Soy El Veci. ¿En qué te ayudo?' }]);
+            setMessages([{ role: 'model', text: '¡Wepa! Soy El Veci. ¿En qué te ayudo? Puedo planificar tu día o identificar lugares por foto.' }]);
         }
         
         // Try to get location silently to help AI
@@ -54,6 +57,55 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
   }, [places, events, userLoc]);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+
+  // --- SPECIAL FEATURES ---
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+          const base64String = (reader.result as string).split(',')[1];
+          
+          setMessages(prev => [...prev, { role: 'user', text: "📸 [Foto]", imageUrl: reader.result as string }]);
+          setIsLoading(true);
+
+          const result = await identifyPlaceFromImage(base64String, places);
+          
+          setMessages(prev => [...prev, { role: 'model', text: result.explanation }]);
+          
+          if (result.matchedPlaceId) {
+             const place = places.find(p => p.id === result.matchedPlaceId);
+             if (place) {
+                 setTimeout(() => onNavigateToPlace(place), 1500);
+             }
+          }
+          setIsLoading(false);
+      };
+      reader.readAsDataURL(file);
+  };
+
+  const handlePlanTrip = async (vibe: string) => {
+      setMessages(prev => [...prev, { role: 'user', text: `Ármame un plan: ${vibe}` }]);
+      setIsLoading(true);
+      
+      const itinerary = await generateTripItinerary(vibe, places);
+      
+      if (itinerary.length > 0) {
+          setMessages(prev => [...prev, { 
+              role: 'model', 
+              text: '¡Aquí tienes el plan perfecto!', 
+              isItinerary: true, 
+              itineraryData: itinerary 
+          }]);
+      } else {
+          setMessages(prev => [...prev, { role: 'model', text: 'Mala mía, no pude armar el plan. Intenta de nuevo.' }]);
+      }
+      setIsLoading(false);
+  };
+
+  // --- STANDARD CHAT ---
 
   const handleSend = async (overrideText?: string) => {
     const textToSend = overrideText || input;
@@ -81,7 +133,6 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
                      console.log("🤖 AI Auto-Reporting Missing Place:", call.args);
                      const { name, category, description, address } = call.args as any;
 
-                     // Silently create the pending place
                      await createPlace({
                          name,
                          description,
@@ -90,7 +141,7 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
                          status: 'pending',
                          tags: ['AI-Auto-Capture', 'Pending Review'],
                          is_featured: false,
-                         coords: { lat: 17.9620, lng: -67.1650 } // Default center until admin fixes it
+                         coords: { lat: 17.9620, lng: -67.1650 } 
                      });
 
                      newParts.push({
@@ -105,8 +156,6 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
                  if (call.name === 'reportPlaceIssue') {
                      console.log("🤖 AI Reporting Issue:", call.args);
                      const { placeName, issueType, details } = call.args as any;
-                     
-                     // Log specially for admin to see
                      await logUserActivity('UPDATE_SUGGESTION', `${placeName} [${issueType}]: ${details}`);
 
                      newParts.push({
@@ -119,7 +168,6 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
                  }
              }
 
-             // Send execution result back to AI to generate final user response
              if (newParts.length > 0) {
                  const followUp = await chatRef.current.sendMessage({ message: newParts });
                  const finalResponse = followUp.text || "¡Oído! Lo anoté para que el equipo lo verifique.";
@@ -151,8 +199,46 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
     setIsListening(true);
   };
 
-  // --- MAGIC LINKS PARSER ---
-  const renderMessageContent = (text: string) => {
+  // --- RENDERERS ---
+
+  const renderItinerary = (items: ItineraryItem[]) => (
+      <div className="mt-2 space-y-0 relative border-l-2 border-teal-200 dark:border-teal-800 ml-3">
+          {items.map((item, i) => (
+              <div key={i} className="mb-6 ml-6 relative">
+                  <span className="absolute -left-[33px] top-0 w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900 border-2 border-teal-500 flex items-center justify-center z-10">
+                      <i className={`fa-solid ${item.icon} text-teal-600 dark:text-teal-400 text-xs`}></i>
+                  </span>
+                  <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+                      <span className="text-xs font-bold text-teal-600 dark:text-teal-400 uppercase tracking-wide">{item.time}</span>
+                      <h4 className="font-bold text-slate-900 dark:text-white">{item.activity}</h4>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">{item.description}</p>
+                      {item.placeId && (
+                           <button 
+                               onClick={() => {
+                                   const p = places.find(x => x.id === item.placeId);
+                                   if(p) onNavigateToPlace(p);
+                               }}
+                               className="text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 px-2 py-1 rounded-md font-bold text-slate-700 dark:text-slate-300 hover:text-teal-500 flex items-center gap-2 w-full justify-center"
+                           >
+                               <i className="fa-solid fa-location-arrow"></i> Ver Lugar
+                           </button>
+                      )}
+                  </div>
+              </div>
+          ))}
+      </div>
+  );
+
+  const renderMessageContent = (msg: ChatMessage) => {
+    if (msg.isItinerary && msg.itineraryData) {
+        return renderItinerary(msg.itineraryData);
+    }
+    
+    if (msg.imageUrl) {
+        return <img src={msg.imageUrl} alt="Uploaded" className="rounded-xl max-h-40 border border-white/20 mb-2" />;
+    }
+
+    const text = msg.text;
     const lines = text.split('\n');
     return lines.map((line, lineIdx) => {
         if (!line.trim()) return <div key={lineIdx} className="h-2"></div>;
@@ -222,7 +308,6 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
           <div className="flex items-center gap-3">
             <div className="bg-white dark:bg-slate-800 p-2 rounded-full border-2 border-teal-500 dark:border-teal-700 shadow-sm relative">
                 <i className="fa-solid fa-robot text-teal-600 dark:text-teal-400 text-2xl"></i>
-                {userLoc && <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border border-white" title="Location Active"></div>}
             </div>
             <div>
                 <h2 className="text-white font-black text-xl tracking-tight">{t('concierge_title')}</h2>
@@ -239,7 +324,7 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
           {messages.map((msg, idx) => (
             <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up`}>
               <div className={`max-w-[85%] p-4 rounded-2xl text-[15px] leading-relaxed shadow-sm ${msg.role === 'user' ? 'bg-teal-600 text-white rounded-br-none' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-bl-none'}`}>
-                {msg.role === 'model' ? renderMessageContent(msg.text) : msg.text}
+                {renderMessageContent(msg)}
               </div>
             </div>
           ))}
@@ -247,11 +332,7 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
           {isLoading && (
             <div className="flex justify-start">
                 <div className="bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 p-4 rounded-2xl rounded-bl-none text-sm shadow-sm border border-slate-200 dark:border-slate-700 flex items-center gap-3">
-                    <div className="flex gap-1">
-                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                    </div>
+                    <i className="fa-solid fa-circle-notch fa-spin"></i>
                     <span className="font-medium text-xs uppercase tracking-wide">{t('concierge_thinking')}</span>
                 </div>
             </div>
@@ -262,16 +343,24 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
         {/* Input Area */}
         <div className="p-4 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700">
           <div className="flex gap-2">
+            
+            {/* Camera Upload */}
+            <button onClick={() => fileInputRef.current?.click()} className="bg-slate-100 dark:bg-slate-700 hover:bg-teal-100 dark:hover:bg-teal-900/30 text-slate-500 dark:text-slate-400 p-4 rounded-2xl w-14 flex items-center justify-center shadow-sm active:scale-95 transition-all">
+                <i className="fa-solid fa-camera text-lg"></i>
+            </button>
+            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+
             <div className="flex-1 relative">
                 <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder={t('concierge_placeholder')} className={`w-full bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white text-base p-4 pr-12 rounded-2xl border transition-all focus:outline-none placeholder:text-slate-400 ${isListening ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-slate-200 dark:border-slate-600 focus:border-teal-500 focus:bg-white dark:focus:bg-slate-800'}`} />
                 <button onClick={handleMicClick} className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full transition-all ${isListening ? 'text-red-500 animate-pulse' : 'text-slate-400 hover:text-teal-600 hover:bg-slate-200 dark:hover:bg-slate-600'}`}><i className={`fa-solid ${isListening ? 'fa-microphone-lines' : 'fa-microphone'} text-lg`}></i></button>
             </div>
             <button onClick={() => handleSend()} disabled={isLoading || !input.trim()} className="bg-teal-600 hover:bg-teal-700 text-white p-4 rounded-2xl w-14 flex items-center justify-center shadow-md active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed"><i className="fa-solid fa-paper-plane text-lg"></i></button>
           </div>
+          
           <div className="mt-3 flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-            <button onClick={() => handleSend("¿Qué eventos hay hoy?")} className="whitespace-nowrap bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 px-4 py-2 rounded-full text-xs font-bold border border-purple-200 dark:border-purple-800/30 transition-colors shadow-sm active:scale-95"><i className="fa-solid fa-calendar-day mr-1"></i> Agenda Hoy</button>
-            <button onClick={() => handleSend("Ármame una ruta de un día.")} className="whitespace-nowrap bg-orange-50 dark:bg-orange-900/30 hover:bg-orange-100 dark:hover:bg-orange-900/50 text-orange-700 dark:text-orange-300 px-4 py-2 rounded-full text-xs font-bold border border-orange-200 dark:border-orange-800/30 transition-colors shadow-sm active:scale-95"><i className="fa-solid fa-map-location-dot mr-1"></i> {t('concierge_help_route')}</button>
-            <button onClick={() => handleSend("Recomiéndame algo de comer.")} className="whitespace-nowrap bg-red-50 dark:bg-red-900/30 hover:bg-red-100 dark:hover:bg-red-900/50 text-red-700 dark:text-red-300 px-4 py-2 rounded-full text-xs font-bold border border-red-200 dark:border-red-800/30 transition-colors shadow-sm active:scale-95"><i className="fa-solid fa-utensils mr-1"></i> {t('concierge_help_food')}</button>
+            <button onClick={() => handlePlanTrip("Familiar y tranquilo")} className="whitespace-nowrap bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-full text-xs font-bold border border-blue-200 dark:border-blue-800/30 transition-colors shadow-sm active:scale-95"><i className="fa-solid fa-child-reaching mr-1"></i> Plan Familiar</button>
+            <button onClick={() => handlePlanTrip("Chinchorreo y fiesta")} className="whitespace-nowrap bg-purple-50 dark:bg-purple-900/30 hover:bg-purple-100 text-purple-700 dark:text-purple-300 px-4 py-2 rounded-full text-xs font-bold border border-purple-200 dark:border-purple-800/30 transition-colors shadow-sm active:scale-95"><i className="fa-solid fa-beer-mug-empty mr-1"></i> Ruta Chinchorreo</button>
+            <button onClick={() => handlePlanTrip("Romántico y atardecer")} className="whitespace-nowrap bg-pink-50 dark:bg-pink-900/30 hover:bg-pink-100 text-pink-700 dark:text-pink-300 px-4 py-2 rounded-full text-xs font-bold border border-pink-200 dark:border-pink-800/30 transition-colors shadow-sm active:scale-95"><i className="fa-solid fa-heart mr-1"></i> Cita Romántica</button>
           </div>
         </div>
       </div>

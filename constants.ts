@@ -1,5 +1,5 @@
 
-import { Place, PlaceCategory, ParkingStatus, Event, EventCategory } from './types';
+import { Place, PlaceCategory, ParkingStatus, Event, EventCategory, Collection } from './types';
 
 // Leaflet/OSM does not require a token for standard tiles
 export const CABO_ROJO_CENTER = { lat: 17.9620, lng: -67.1650 };
@@ -187,5 +187,40 @@ export const FALLBACK_EVENTS: Event[] = [
     isRecurring: false,
     coords: { lat: 18.0750, lng: -67.1886 },
     imageUrl: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&q=80&w=1000'
+  }
+];
+
+export const COLLECTIONS: Collection[] = [
+  {
+    id: 'col-sunset',
+    title: 'Atardeceres Mágicos',
+    subtitle: 'Los mejores spots para ver caer el sol.',
+    icon: 'sun',
+    color: 'from-orange-400 to-red-500',
+    placeIds: ['5', '2', '1'] // Combate, Faro, Playa Sucia
+  },
+  {
+    id: 'col-foodie',
+    title: 'Ruta del Sabor',
+    subtitle: 'Mofongo, mariscos y buen ambiente.',
+    icon: 'utensils',
+    color: 'from-green-400 to-emerald-600',
+    placeIds: ['4'] // Boqueron
+  },
+  {
+    id: 'col-photo',
+    title: 'Instagram Spots',
+    subtitle: 'Lugares para la foto perfecta.',
+    icon: 'camera',
+    color: 'from-pink-500 to-purple-600',
+    placeIds: ['6', '2', '1'] // Salinas, Faro, Playa Sucia
+  },
+  {
+    id: 'col-family',
+    title: 'Familiar y Relax',
+    subtitle: 'Aguas tranquilas para niños.',
+    icon: 'child-reaching',
+    color: 'from-blue-400 to-cyan-500',
+    placeIds: ['3', '6'] // Buye, Salinas
   }
 ];

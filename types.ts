@@ -76,14 +76,6 @@ export interface Place {
   crowdLevel?: 'LOW' | 'MEDIUM' | 'HIGH';
 }
 
-export enum EventCategory {
-  MUSIC = 'MUSIC',
-  FESTIVAL = 'FESTIVAL',
-  SPORTS = 'SPORTS',
-  COMMUNITY = 'COMMUNITY',
-  FOOD = 'FOOD'
-}
-
 export interface Event {
   id: string;
   title: string;
@@ -102,15 +94,45 @@ export interface Event {
   coords?: Coordinates;
 }
 
+export enum EventCategory {
+  MUSIC = 'MUSIC',
+  FESTIVAL = 'FESTIVAL',
+  SPORTS = 'SPORTS',
+  COMMUNITY = 'COMMUNITY',
+  FOOD = 'FOOD'
+}
+
+export interface Collection {
+  id: string;
+  title: string;
+  subtitle: string;
+  icon: string;
+  color: string;
+  placeIds: string[]; // IDs of places in this collection
+  tags?: string[]; // Or match by tags
+}
+
 export interface WeatherData {
   temp: number;
   condition: string;
   windSpeed: number;
 }
 
+export interface ItineraryItem {
+  time: string;
+  activity: string;
+  placeName?: string; // If it matches a DB place
+  placeId?: string;
+  description: string;
+  icon: string;
+}
+
 export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
+  isItinerary?: boolean;
+  itineraryData?: ItineraryItem[];
+  imageUrl?: string;
 }
 
 export interface AdminLog {

@@ -1,5 +1,6 @@
+
 import { GoogleGenAI, Chat, FunctionDeclaration, Type } from "@google/genai";
-import { Place, Event, Coordinates, AdminLog, ParkingStatus } from "../types";
+import { Place, Event, Coordinates, AdminLog, ItineraryItem } from "../types";
 
 // The API key must be obtained exclusively from the environment variable process.env.API_KEY.
 // Assume this variable is pre-configured, valid, and accessible in the execution context.
@@ -184,3 +185,82 @@ export const suggestTags = async (name: string, category: string): Promise<strin
         return response.text || "";
     } catch (e) { return ""; }
 }
+
+// 6. VISUAL SEARCH (Gemini Vision)
+export const identifyPlaceFromImage = async (base64Image: string, places: Place[]): Promise<{ matchedPlaceId?: string, explanation: string }> => {
+    try {
+        const placesList = places.map(p => p.name).join(", ");
+        const prompt = `
+        Mira esta foto tomada en Cabo Rojo, Puerto Rico.
+        ¿Es alguno de estos lugares?: ${placesList}
+        
+        Si reconoces el lugar, responde con un JSON:
+        { "matchedPlaceName": "Exact Name From List", "explanation": "Breve frase divertida de El Veci confirmando qué es." }
+        
+        Si NO es un lugar turístico obvio de Cabo Rojo, responde:
+        { "matchedPlaceName": null, "explanation": "Mera, no reconozco eso. ¿Seguro que es en Cabo Rojo?" }
+        `;
+
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: {
+                parts: [
+                    { inlineData: { mimeType: 'image/jpeg', data: base64Image } },
+                    { text: prompt }
+                ]
+            },
+            config: { responseMimeType: 'application/json' }
+        });
+
+        const result = JSON.parse(response.text || "{}");
+        const matchedPlace = places.find(p => p.name === result.matchedPlaceName);
+        
+        return {
+            matchedPlaceId: matchedPlace?.id,
+            explanation: result.explanation || "¡Wepa! Esa foto está dura."
+        };
+    } catch (e) {
+        console.error("Vision Error", e);
+        return { explanation: "Chico, se me empañaron los lentes. Intenta otra foto." };
+    }
+};
+
+// 7. STRUCTURED ITINERARY GENERATOR
+export const generateTripItinerary = async (preferences: string, places: Place[]): Promise<ItineraryItem[]> => {
+    const placesJson = places.map(p => ({ id: p.id, name: p.name, category: p.category })).slice(0, 50); // Context limit
+    
+    const prompt = `
+    Crea un itinerario de un día en Cabo Rojo basado en: "${preferences}".
+    Usa estos lugares disponibles: ${JSON.stringify(placesJson)}.
+    
+    Responde SOLAMENTE con un array JSON de objetos:
+    [
+      { 
+        "time": "9:00 AM", 
+        "activity": "Título corto", 
+        "placeName": "Nombre exacto si aplica (o null)", 
+        "description": "Breve descripción divertida",
+        "icon": "fa-sun" (FontAwesome icon name)
+      }
+    ]
+    `;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: { responseMimeType: 'application/json' }
+        });
+        
+        const itinerary = JSON.parse(response.text || "[]");
+        
+        // Match IDs back
+        return itinerary.map((item: any) => ({
+            ...item,
+            placeId: places.find(p => p.name === item.placeName)?.id
+        }));
+
+    } catch (e) {
+        return [];
+    }
+};
