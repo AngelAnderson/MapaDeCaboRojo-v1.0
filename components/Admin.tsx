@@ -226,6 +226,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                 ...details,
                 id: prev?.id || 'new',
                 status: prev?.status || 'open',
+                isVerified: true, // Default to verified for admin imports
                 coords: details.coords || prev?.coords || { lat: 17.9620, lng: -67.1650 },
                 amenities: { 
                     ...prev?.amenities, 
@@ -247,19 +248,30 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
     const handleSavePlace = async () => {
         if (!editingPlace) return;
         setLoading(true);
-        if (editingPlace.isLanding) {
-            const conflictingPlaces = places.filter(p => !!p.isLanding && p.id !== editingPlace.id);
+        
+        // Ensure consistency between status and verification
+        const placeToSave = { ...editingPlace };
+        if (placeToSave.status !== 'pending') {
+            placeToSave.isVerified = true;
+        } else {
+            placeToSave.isVerified = false;
+        }
+
+        if (placeToSave.isLanding) {
+            const conflictingPlaces = places.filter(p => !!p.isLanding && p.id !== placeToSave.id);
             for (const conflict of conflictingPlaces) {
                 await updatePlace(conflict.id, { ...conflict, isLanding: false });
             }
         }
+        
         let res;
-        if (editingPlace.id === 'new') {
-            const { id, ...newPlace } = editingPlace;
+        if (placeToSave.id === 'new') {
+            const { id, ...newPlace } = placeToSave;
             res = await createPlace(newPlace);
         } else {
-            res = await updatePlace(editingPlace.id, editingPlace);
+            res = await updatePlace(placeToSave.id, placeToSave);
         }
+        
         if (res.success) {
             await onUpdate();
             setEditingPlace(null);
@@ -367,7 +379,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                             <div className="flex justify-between gap-4">
                                 <input type="text" placeholder="Search places..." className="flex-1 bg-slate-800 border border-slate-700 text-white p-3 rounded-xl focus:outline-none focus:border-teal-500" value={placeSearchTerm} onChange={e => setPlaceSearchTerm(e.target.value)} />
                                 <button onClick={handleExportCSV} className="bg-slate-700 hover:bg-slate-600 text-white font-bold px-4 py-2 rounded-xl transition-colors flex items-center gap-2"><i className="fa-solid fa-file-csv"></i> Export CSV</button>
-                                <button onClick={() => setEditingPlace({ id: 'new', name: '', category: PlaceCategory.FOOD, description: '', coords: { lat: 18.0, lng: -67.1 }, amenities: {}, status: 'open', is_featured: false, sponsor_weight: 0, plan: 'free', parking: ParkingStatus.FREE, imagePosition: 'center' } as Place)} className="bg-teal-600 hover:bg-teal-500 text-white font-bold px-6 rounded-xl transition-colors shadow-lg shadow-teal-900/20"><i className="fa-solid fa-plus mr-2"></i> New Place</button>
+                                <button onClick={() => setEditingPlace({ id: 'new', name: '', category: PlaceCategory.FOOD, description: '', coords: { lat: 18.0, lng: -67.1 }, amenities: {}, status: 'open', isVerified: true, is_featured: false, sponsor_weight: 0, plan: 'free', parking: ParkingStatus.FREE, imagePosition: 'center' } as Place)} className="bg-teal-600 hover:bg-teal-500 text-white font-bold px-6 rounded-xl transition-colors shadow-lg shadow-teal-900/20"><i className="fa-solid fa-plus mr-2"></i> New Place</button>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                 {places.filter(p => p.name.toLowerCase().includes(placeSearchTerm.toLowerCase())).map(place => (
@@ -447,7 +459,24 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                                         <label className="relative inline-flex items-center cursor-pointer"><input type="checkbox" className="sr-only peer" checked={editingPlace.isLanding || false} onChange={e => setEditingPlace({...editingPlace, isLanding: e.target.checked})} /><div className="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div></label>
                                     </div>
                                     <div className="grid grid-cols-2 gap-4">
-                                        <InputGroup label="Status"><select value={editingPlace.status} onChange={e => setEditingPlace({...editingPlace, status: e.target.value as any})} className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg p-2.5 text-sm"><option value="open">Open</option><option value="closed">Closed</option><option value="pending">Pending</option></select></InputGroup>
+                                        <InputGroup label="Status">
+                                            <select 
+                                                value={editingPlace.status} 
+                                                onChange={e => {
+                                                    const newStatus = e.target.value as any;
+                                                    setEditingPlace({
+                                                        ...editingPlace, 
+                                                        status: newStatus,
+                                                        isVerified: newStatus !== 'pending' 
+                                                    })
+                                                }} 
+                                                className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg p-2.5 text-sm"
+                                            >
+                                                <option value="open">Open</option>
+                                                <option value="closed">Closed</option>
+                                                <option value="pending">Pending</option>
+                                            </select>
+                                        </InputGroup>
                                         <InputGroup label="Plan"><select value={editingPlace.plan} onChange={e => setEditingPlace({...editingPlace, plan: e.target.value as any})} className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg p-2.5 text-sm"><option value="free">Free</option><option value="basic">Basic</option><option value="pro">Pro</option></select></InputGroup>
                                     </div>
                                     
