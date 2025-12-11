@@ -207,6 +207,7 @@ const mapPlaceToDb = (place: Partial<Place>) => {
         is_handicap_accessible: place.isHandicapAccessible ?? false,
         tags: place.tags || [],
         amenities: {
+            ...(place.amenities || {}), // SPREAD EXISTING TO PREVENT DATA LOSS
             parking: place.parking || ParkingStatus.FREE,
             restrooms: place.hasRestroom ?? false,
             showers: place.hasShowers ?? false,
@@ -214,7 +215,9 @@ const mapPlaceToDb = (place: Partial<Place>) => {
             tips: place.tips || '',
             custom_icon: place.customIcon || '',
             is_mobile: place.isMobile ?? false,
-            is_landing: place.isLanding ?? false // Save Landing Flag
+            // FORCE BOOLEAN SAVE: Ensure this is always true/false, never undefined
+            is_landing: place.isLanding === true,
+            image_position: place.imagePosition || 'center'
         },
         opening_hours: place.opening_hours || { note: "No especificado" },
         contact_info: place.contact_info || {}
@@ -295,6 +298,7 @@ export const getPlaces = async (): Promise<Place[]> => {
       hasShowers: row.amenities?.showers || false,
       hasGenerator: row.amenities?.has_generator || false,
       imageUrl: row.image_url || `https://picsum.photos/600/400?random=${row.id.substring(0,4)}`,
+      imagePosition: row.amenities?.image_position || 'center',
       tips: row.amenities?.tips || '',
       is_featured: (row.sponsor_weight && row.sponsor_weight > 80) || false,
       sponsor_weight: row.sponsor_weight || 0,
@@ -320,7 +324,8 @@ export const getPlaces = async (): Promise<Place[]> => {
       contact_info: row.contact_info || {},
       customIcon: row.custom_icon || row.amenities?.custom_icon || '',
       isMobile: row.amenities?.is_mobile || false,
-      isLanding: row.amenities?.is_landing || false // Load Landing Flag
+      // ROBUST MAPPING: Check for boolean OR string "true"
+      isLanding: row.amenities?.is_landing === true || row.amenities?.is_landing === 'true'
     }));
   } catch (err) { 
     console.error("🔴 Unexpected Error in getPlaces:", err);

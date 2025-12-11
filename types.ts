@@ -46,6 +46,7 @@ export interface Place {
   location?: any;
 
   imageUrl: string;
+  imagePosition?: string; // New: 'top' | 'center' | 'bottom'
   videoUrl: string;
   customIcon?: string;
 

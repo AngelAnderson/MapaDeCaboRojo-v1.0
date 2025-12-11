@@ -52,13 +52,13 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
       if (searchText.trim().length > 2) {
         logUserActivity('USER_SEARCH', searchText.trim());
       }
-    }, 2000); // Wait 2 seconds after typing stops
+    }, 2000); 
 
     return () => clearTimeout(delayDebounceFn);
   }, [searchText]);
 
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371; // km
+    const R = 6371; 
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -68,14 +68,12 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
     return R * c;
   };
 
-  // Sort places logic
   const sortedPlaces = [...places].sort((a, b) => {
     if (sortBy === 'distance' && userLocation && a.coords && b.coords) {
         const distA = calculateDistance(userLocation.lat, userLocation.lng, a.coords.lat, a.coords.lng);
         const distB = calculateDistance(userLocation.lat, userLocation.lng, b.coords.lat, b.coords.lng);
         return distA - distB;
     }
-    // Default: Sort by Featured first, then Name
     if (a.is_featured === b.is_featured) return 0;
     return a.is_featured ? -1 : 1;
   });
@@ -120,7 +118,6 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
         />
       </div>
       
-      {/* Collections Carousel - Only show when ALL is selected or exploring general categories */}
       {activeGroup === 'ALL' && !searchText && (
         <div className="pl-5 pb-2 shrink-0 overflow-x-auto no-scrollbar">
             <div className="flex gap-3 w-max pr-5">
@@ -166,7 +163,12 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                 return (
                     <div key={place.id} onClick={() => onSelect(place)} className="flex items-center gap-4 p-3 pr-4 rounded-[24px] bg-white/50 dark:bg-slate-700/40 hover:bg-white dark:hover:bg-slate-700 active:scale-[0.98] transition-all cursor-pointer border border-white/60 dark:border-slate-600/50 shadow-sm group backdrop-blur-sm relative">
                         <div className="relative w-20 h-20 shrink-0">
-                            <img src={place.imageUrl} className={`w-full h-full rounded-[18px] object-cover bg-slate-200 dark:bg-slate-700 shadow-inner ${isClosed ? 'grayscale opacity-70' : ''}`} alt={place.name} />
+                            <img 
+                                src={place.imageUrl} 
+                                className={`w-full h-full rounded-[18px] object-cover bg-slate-200 dark:bg-slate-700 shadow-inner ${isClosed ? 'grayscale opacity-70' : ''}`} 
+                                style={{ objectPosition: place.imagePosition || 'center' }} 
+                                alt={place.name} 
+                            />
                             {place.is_featured && <div className="absolute top-1 left-1 w-2.5 h-2.5 bg-yellow-400 rounded-full border-2 border-white dark:border-slate-900 shadow-sm"></div>}
                             {isFavorite && <div className="absolute bottom-1 right-1 bg-pink-500 text-white text-[8px] w-5 h-5 flex items-center justify-center rounded-full shadow-md"><i className="fa-solid fa-heart"></i></div>}
                         </div>
@@ -175,7 +177,6 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                                 <h4 className={`font-bold truncate text-[16px] leading-tight ${isClosed ? 'text-slate-500 dark:text-slate-400' : 'text-slate-900 dark:text-white'}`}>{place.name}</h4>
                             </div>
                             
-                            {/* Special display for events (Date vs Category) */}
                             {isEvent ? (
                                 <p className="text-xs text-purple-600 dark:text-purple-400 font-bold truncate mb-2 uppercase">
                                     <i className="fa-regular fa-calendar mr-1"></i> {place.priceLevel}

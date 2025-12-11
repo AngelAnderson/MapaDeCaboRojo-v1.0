@@ -56,13 +56,10 @@ const HoursDisplay = ({ hours }: { hours: { note?: string, structured?: DaySched
     // Logic 2: Sunrise to Sunset (Nature)
     else if (hours.type === 'sunrise_sunset') {
         const currentHour = now.getHours();
-        // Approximate Daylight: 6 AM to 7 PM (19:00)
         const isDaytime = currentHour >= 6 && currentHour < 19;
-        
         if (isDaytime) {
             status = { text: t('status_open_day'), color: "text-green-600", bg: "bg-green-100 dark:bg-green-900/30", icon: "sun" };
         } else {
-            // Night warning
             status = { text: t('status_caution_night'), color: "text-orange-600", bg: "bg-orange-100 dark:bg-orange-900/30", icon: "triangle-exclamation" };
         }
     }
@@ -111,11 +108,7 @@ const HoursDisplay = ({ hours }: { hours: { note?: string, structured?: DaySched
                          {hours.structured.map((d, i) => (
                              <div key={i} className={`flex justify-between text-sm ${i === todayIdx ? 'font-bold text-teal-600 dark:text-teal-400' : 'text-slate-600 dark:text-slate-300'}`}>
                                  <span className="w-10">{DAYS[i]}</span>
-                                 {d.isClosed ? (
-                                     <span className="text-slate-400 italic">Cerrado</span>
-                                 ) : (
-                                     <span>{to12h(d.open)} - {to12h(d.close)}</span>
-                                 )}
+                                 {d.isClosed ? <span className="text-slate-400 italic">Cerrado</span> : <span>{to12h(d.open)} - {to12h(d.close)}</span>}
                              </div>
                          ))}
                      </div>
@@ -130,7 +123,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
   const { t } = useLanguage();
   
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): string => {
-    const R = 6371; // km
+    const R = 6371; 
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -146,13 +139,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
     const shareUrl = url.toString();
 
     if (navigator.share) {
-      try {
-        await navigator.share({ 
-          title: place.name, 
-          text: `Chequea este lugar en Cabo Rojo: ${place.name} 🌴`, 
-          url: shareUrl 
-        });
-      } catch (e) { console.log('Share aborted'); }
+      try { await navigator.share({ title: place.name, text: `Chequea este lugar: ${place.name} 🌴`, url: shareUrl }); } catch (e) {}
     } else { 
       navigator.clipboard.writeText(shareUrl);
       alert("Link copiado: " + shareUrl); 
@@ -169,7 +156,6 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
       const end = place.contact_info.eventEnd 
           ? new Date(place.contact_info.eventEnd).toISOString().replace(/-|:|\.\d\d\d/g, "")
           : new Date(new Date(place.contact_info.eventStart).getTime() + 2 * 60 * 60 * 1000).toISOString().replace(/-|:|\.\d\d\d/g, "");
-      
       const title = encodeURIComponent(place.name);
       const details = encodeURIComponent(place.description);
       const location = encodeURIComponent(place.address || 'Cabo Rojo, PR');
@@ -177,12 +163,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
       window.open(url, '_blank');
   };
 
-  const relatedPlaces = allPlaces 
-    ? allPlaces
-        .filter(p => p.id !== place.id && p.category === place.category)
-        .slice(0, 3) 
-    : [];
-  
+  const relatedPlaces = allPlaces ? allPlaces.filter(p => p.id !== place.id && p.category === place.category).slice(0, 3) : [];
   const isEvent = place.contact_info?.isEvent === true;
   const isClosed = place.status === 'closed';
 
@@ -194,10 +175,14 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
 
       {/* Semantic Header */}
       <header className="relative w-full h-72 shrink-0 group bg-slate-900">
-        <img src={place.imageUrl || 'https://picsum.photos/800/600'} alt={place.name} className={`w-full h-full object-cover transition-all ${isClosed ? 'grayscale opacity-60' : ''}`} />
+        <img 
+            src={place.imageUrl || 'https://picsum.photos/800/600'} 
+            alt={place.name} 
+            className={`w-full h-full object-cover transition-all ${isClosed ? 'grayscale opacity-60' : ''}`} 
+            style={{ objectPosition: place.imagePosition || 'center' }} 
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
         
-        {/* Closed Overlay */}
         {isClosed && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div className="bg-red-600/90 backdrop-blur-sm text-white px-6 py-2 rounded-xl border-2 border-white/20 shadow-2xl transform -rotate-6">
@@ -220,139 +205,46 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
         <div className="absolute bottom-0 left-0 p-6 text-white w-full">
           <div className="flex items-center gap-2 mb-2">
             <span className="bg-teal-500/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide shadow-sm">{place.category}</span>
-            
-            {place.isMobile && (
-                 <span className="bg-purple-600/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide shadow-sm flex items-center gap-1">
-                    <i className="fa-solid fa-truck-fast"></i> Domicilio
-                 </span>
-            )}
-
-            {place.hasGenerator && (
-                 <span className="bg-yellow-500/90 text-black backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide shadow-sm flex items-center gap-1">
-                    <i className="fa-solid fa-bolt"></i> Planta Eléctrica
-                 </span>
-            )}
-            
-            {userLocation && (
-                <span className="bg-slate-700/80 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold flex items-center gap-1">
-                    <i className="fa-solid fa-location-arrow text-[10px]"></i>
-                    {calculateDistance(userLocation.lat, userLocation.lng, place.coords.lat, place.coords.lng)}
-                </span>
-            )}
-
-            {isClosed ? (
-                <span className="bg-red-500/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide shadow-sm">Closed</span>
-            ) : (
-                <>
-                    {place.priceLevel && !isEvent && <span className="bg-slate-800/60 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold">{place.priceLevel}</span>}
-                    {isEvent && <span className="bg-purple-600/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase">📅 {place.priceLevel}</span>}
-                </>
-            )}
-
+            {place.isMobile && <span className="bg-purple-600/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide shadow-sm flex items-center gap-1"><i className="fa-solid fa-truck-fast"></i> Domicilio</span>}
+            {place.hasGenerator && <span className="bg-yellow-500/90 text-black backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide shadow-sm flex items-center gap-1"><i className="fa-solid fa-bolt"></i> Planta Eléctrica</span>}
+            {userLocation && <span className="bg-slate-700/80 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold flex items-center gap-1"><i className="fa-solid fa-location-arrow text-[10px]"></i>{calculateDistance(userLocation.lat, userLocation.lng, place.coords.lat, place.coords.lng)}</span>}
+            {isClosed ? <span className="bg-red-500/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide shadow-sm">Closed</span> : <>{place.priceLevel && !isEvent && <span className="bg-slate-800/60 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold">{place.priceLevel}</span>}{isEvent && <span className="bg-purple-600/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase">📅 {place.priceLevel}</span>}</>}
             {place.isVerified && <span className="text-blue-400 text-xs flex items-center gap-1"><i className="fa-solid fa-circle-check" aria-hidden="true"></i></span>}
           </div>
           <h1 id="place-name" className="text-3xl font-black leading-tight shadow-black drop-shadow-md">{place.name}</h1>
-          {place.vibe && place.vibe.length > 0 && (
-            <div className="flex gap-2 mt-2 overflow-x-auto no-scrollbar" role="list">
-              {place.vibe.map((v, i) => <span key={i} className="text-xs font-medium text-slate-200 border border-white/20 px-2 py-0.5 rounded-full whitespace-nowrap" role="listitem">✨ {v}</span>)}
-            </div>
-          )}
+          {place.vibe && place.vibe.length > 0 && <div className="flex gap-2 mt-2 overflow-x-auto no-scrollbar" role="list">{place.vibe.map((v, i) => <span key={i} className="text-xs font-medium text-slate-200 border border-white/20 px-2 py-0.5 rounded-full whitespace-nowrap" role="listitem">✨ {v}</span>)}</div>}
         </div>
       </header>
 
       <div className="p-6 space-y-6 bg-white dark:bg-slate-800 -mt-4 rounded-t-3xl relative z-10 flex-1 transition-colors duration-300">
         <nav className="flex gap-3">
-          {place.isMobile ? (
-              <ActionButton 
-                icon="phone" 
-                label={t('call')} 
-                onClick={() => window.open(`tel:${place.phone}`)} 
-                primary 
-                disabled={!place.phone} 
-              />
-          ) : (
-              <ActionButton icon="location-arrow" label={t('directions')} onClick={navigationHandler} primary />
-          )}
-
-          {isEvent ? (
-              <ActionButton icon="calendar-plus" label={t('add_to_calendar')} onClick={handleCalendar} color="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800" />
-          ) : (
-              place.isMobile ? (
-                  <ActionButton icon="message" label="WhatsApp" onClick={() => window.open(`https://wa.me/1${place.phone.replace(/\D/g,'')}`, '_blank')} color="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800" disabled={!place.phone} />
-              ) : (
-                  <ActionButton icon="phone" label={t('call')} onClick={() => window.open(`tel:${place.phone}`)} disabled={!place.phone || isClosed} />
-              )
-          )}
+          {place.isMobile ? <ActionButton icon="phone" label={t('call')} onClick={() => window.open(`tel:${place.phone}`)} primary disabled={!place.phone} /> : <ActionButton icon="location-arrow" label={t('directions')} onClick={navigationHandler} primary />}
+          {isEvent ? <ActionButton icon="calendar-plus" label={t('add_to_calendar')} onClick={handleCalendar} color="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800" /> : (place.isMobile ? <ActionButton icon="message" label="WhatsApp" onClick={() => window.open(`https://wa.me/1${place.phone.replace(/\D/g,'')}`, '_blank')} color="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800" disabled={!place.phone} /> : <ActionButton icon="phone" label={t('call')} onClick={() => window.open(`tel:${place.phone}`)} disabled={!place.phone || isClosed} />)}
           <ActionButton icon="share-nodes" label={t('share')} onClick={handleShare} />
         </nav>
         
-        {isClosed && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-2xl flex items-center gap-4">
-                <i className="fa-solid fa-store-slash text-red-500 text-2xl"></i>
-                <div>
-                    <h4 className="font-bold text-red-600 dark:text-red-400">Este lugar está cerrado.</h4>
-                    <p className="text-xs text-red-500/80 dark:text-red-400/80">Puede ser temporal o permanente. Verifica antes de ir.</p>
-                </div>
-            </div>
-        )}
+        {isClosed && <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-2xl flex items-center gap-4"><i className="fa-solid fa-store-slash text-red-500 text-2xl"></i><div><h4 className="font-bold text-red-600 dark:text-red-400">Este lugar está cerrado.</h4><p className="text-xs text-red-500/80 dark:text-red-400/80">Puede ser temporal o permanente. Verifica antes de ir.</p></div></div>}
 
         <section>
           <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-2 tracking-wider">{t('the_scoop')}</h3>
           <p className="text-slate-700 dark:text-slate-200 text-lg leading-relaxed">{place.description}</p>
         </section>
 
-        {!isClosed && place.opening_hours && (
-            <section>
-                <HoursDisplay hours={place.opening_hours} />
-            </section>
-        )}
+        {!isClosed && place.opening_hours && <section><HoursDisplay hours={place.opening_hours} /></section>}
         
         {(place.address || place.phone || place.gmapsUrl) && (
             <section className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-600 space-y-3 transition-colors">
-                {place.address && (
-                    <div className="flex items-start gap-3">
-                        {place.isMobile ? (
-                            <i className="fa-solid fa-truck-fast text-purple-500 dark:text-purple-400 mt-1"></i>
-                        ) : (
-                            <i className="fa-solid fa-map-pin text-teal-600 dark:text-teal-400 mt-1"></i>
-                        )}
-                        <div>
-                            <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase">
-                                {isEvent ? 'Ubicación' : (place.isMobile ? 'Zona de Servicio' : t('address'))}
-                            </p>
-                            <p className="text-sm text-slate-700 dark:text-slate-200">{place.address}</p>
-                        </div>
-                    </div>
-                )}
-                {place.phone && (
-                    <div className="flex items-start gap-3 pt-2 border-t border-slate-200 dark:border-slate-600">
-                        <i className="fa-solid fa-phone text-teal-600 dark:text-teal-400 mt-1"></i>
-                        <div><p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase">Teléfono</p><a href={`tel:${place.phone}`} className="text-sm text-teal-600 dark:text-teal-400 font-bold underline">{place.phone}</a></div>
-                    </div>
-                )}
+                {place.address && <div className="flex items-start gap-3">{place.isMobile ? <i className="fa-solid fa-truck-fast text-purple-500 dark:text-purple-400 mt-1"></i> : <i className="fa-solid fa-map-pin text-teal-600 dark:text-teal-400 mt-1"></i>}<div><p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase">{isEvent ? 'Ubicación' : (place.isMobile ? 'Zona de Servicio' : t('address'))}</p><p className="text-sm text-slate-700 dark:text-slate-200">{place.address}</p></div></div>}
+                {place.phone && <div className="flex items-start gap-3 pt-2 border-t border-slate-200 dark:border-slate-600"><i className="fa-solid fa-phone text-teal-600 dark:text-teal-400 mt-1"></i><div><p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase">Teléfono</p><a href={`tel:${place.phone}`} className="text-sm text-teal-600 dark:text-teal-400 font-bold underline">{place.phone}</a></div></div>}
             </section>
         )}
 
         <section>
           <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-3 tracking-wider">{t('logistics')}</h3>
           <div className="grid grid-cols-4 gap-2">
-            {!place.isMobile && (
-                <InfoBadge 
-                    icon="square-parking" 
-                    label={place.parking === ParkingStatus.FREE ? 'Free' : 'Paid'} 
-                    active={true} 
-                    colorClass={place.parking === ParkingStatus.FREE ? 'bg-green-50 border-green-200 text-green-700' : 'bg-yellow-50 border-yellow-200 text-yellow-700'} 
-                    darkColorClass={place.parking === ParkingStatus.FREE ? 'dark:bg-green-900/30 dark:border-green-800/30 dark:text-green-300' : 'dark:bg-yellow-900/30 dark:border-yellow-800/30 dark:text-yellow-300'}
-                />
-            )}
-            
-            {place.hasGenerator && (
-                <InfoBadge icon="bolt" label="Planta" active={true} colorClass="bg-yellow-100 border-yellow-300 text-yellow-800" darkColorClass="dark:bg-yellow-900/40 dark:border-yellow-600/30 dark:text-yellow-200" />
-            )}
-
-            {place.isMobile && (
-                <InfoBadge icon="house-user" label="Domicilio" active={true} colorClass="bg-purple-50 border-purple-200 text-purple-700" darkColorClass="dark:bg-purple-900/30 dark:border-purple-800/30 dark:text-purple-300" />
-            )}
+            {!place.isMobile && <InfoBadge icon="square-parking" label={place.parking === ParkingStatus.FREE ? 'Free' : 'Paid'} active={true} colorClass={place.parking === ParkingStatus.FREE ? 'bg-green-50 border-green-200 text-green-700' : 'bg-yellow-50 border-yellow-200 text-yellow-700'} darkColorClass={place.parking === ParkingStatus.FREE ? 'dark:bg-green-900/30 dark:border-green-800/30 dark:text-green-300' : 'dark:bg-yellow-900/30 dark:border-yellow-800/30 dark:text-yellow-300'} />}
+            {place.hasGenerator && <InfoBadge icon="bolt" label="Planta" active={true} colorClass="bg-yellow-100 border-yellow-300 text-yellow-800" darkColorClass="dark:bg-yellow-900/40 dark:border-yellow-600/30 dark:text-yellow-200" />}
+            {place.isMobile && <InfoBadge icon="house-user" label="Domicilio" active={true} colorClass="bg-purple-50 border-purple-200 text-purple-700" darkColorClass="dark:bg-purple-900/30 dark:border-purple-800/30 dark:text-purple-300" />}
             <InfoBadge icon="restroom" label="WC" active={place.hasRestroom} colorClass="bg-blue-50 border-blue-200 text-blue-700" darkColorClass="dark:bg-blue-900/30 dark:border-blue-800/30 dark:text-blue-300" />
             <InfoBadge icon="dog" label="Pet" active={place.isPetFriendly} colorClass="bg-orange-50 border-orange-200 text-orange-700" darkColorClass="dark:bg-orange-900/30 dark:border-orange-800/30 dark:text-orange-300" />
             <InfoBadge icon="wheelchair" label="Access" active={place.isHandicapAccessible} colorClass="bg-purple-50 border-purple-200 text-purple-700" darkColorClass="dark:bg-purple-900/30 dark:border-purple-800/30 dark:text-purple-300" />
