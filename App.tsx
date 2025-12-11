@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import L from 'leaflet';
-import { Place, PlaceCategory, Coordinates, Event, ParkingStatus, Collection } from '../types';
-import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, COLLECTIONS, CABO_ROJO_CENTER, DEFAULT_PLACE_ID } from '../constants';
+import { Place, PlaceCategory, Coordinates, Event, ParkingStatus, Collection } from './types';
+import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, COLLECTIONS, CABO_ROJO_CENTER, DEFAULT_PLACE_ID } from './constants';
 import PlaceCard from './components/PlaceCard';
 import Concierge from './components/Concierge';
 import Admin from './components/Admin';
@@ -652,8 +652,11 @@ const MainApp: React.FC = () => {
               <i className={`fa-solid ${isDarkMode ? 'fa-moon' : 'fa-sun'}`}></i>
             </button>
             <button onClick={() => setLanguage(language === 'es' ? 'en' : 'es')} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-800 dark:text-white p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-[10px] uppercase hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">{language === 'es' ? 'EN' : 'ES'}</button>
-            <button onClick={() => setIsAdminOpen(true)} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-600 dark:text-slate-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center" aria-label="Admin Login">
+            <button onClick={() => setIsAdminOpen(true)} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-600 dark:text-slate-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">
               <i className="fa-solid fa-lock"></i>
+            </button>
+            <button onClick={centerOnUser} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-blue-500 dark:text-blue-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">
+                <i className="fa-solid fa-location-crosshairs"></i>
             </button>
         </div>
       </header>
@@ -661,13 +664,6 @@ const MainApp: React.FC = () => {
       {/* Main Content Area */}
       <main className="flex-1 relative w-full h-full">
         <div ref={mapContainer} className="absolute inset-0 z-0 bg-slate-200 dark:bg-slate-800 transition-colors" />
-        
-        {/* Floating Controls (User Loc) */}
-        <div className="absolute bottom-32 right-5 z-[1000] flex flex-col gap-3">
-             <button onClick={centerOnUser} className="w-12 h-12 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md rounded-2xl shadow-xl flex items-center justify-center text-blue-500 dark:text-blue-400 hover:scale-105 transition-transform border border-white/50 dark:border-slate-700">
-                <i className="fa-solid fa-location-crosshairs text-xl"></i>
-             </button>
-        </div>
       </main>
 
       {/* Sheets & Modals */}
