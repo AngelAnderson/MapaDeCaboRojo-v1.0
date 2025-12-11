@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import L from 'leaflet';
 import { Place, PlaceCategory, Coordinates, Event, ParkingStatus, Collection } from '../types';
 import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, COLLECTIONS, CABO_ROJO_CENTER, DEFAULT_PLACE_ID } from '../constants';
@@ -174,6 +174,20 @@ const MainApp: React.FC = () => {
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
+  // --- DERIVED STATE (STRICT FILTERING) ---
+  // IMPORTANT: We create a publishedPlaces list that strictly filters out pending items.
+  // This list is used for Map Markers, Explorer Sheet, Search, and URL Deep Linking.
+  // The 'places' state retains pending items so they can be viewed in the Admin panel.
+  const publishedPlaces = useMemo(() => {
+    return places.filter(p => {
+       // STRICT Filtering: Must be explicitly verified AND not pending
+       // We assume any place not verified or marked as pending is invisible to the public
+       if (p.status === 'pending') return false;
+       if (!p.isVerified) return false;
+       return true;
+    });
+  }, [places]);
+
   // --- EFFECTS ---
 
   // VIP Check
@@ -223,8 +237,9 @@ const MainApp: React.FC = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const placeSlug = params.get('place');
-    if (placeSlug && places.length > 0) {
-        const found = places.find(p => p.slug === placeSlug || p.id === placeSlug);
+    // NOTE: We only search within `publishedPlaces` to prevent deep linking to pending/hidden items.
+    if (placeSlug && publishedPlaces.length > 0) {
+        const found = publishedPlaces.find(p => p.slug === placeSlug || p.id === placeSlug);
         if (found) {
             setSelectedPlace(found);
             // Fly to it
@@ -235,7 +250,7 @@ const MainApp: React.FC = () => {
             }
         }
     }
-  }, [places]);
+  }, [publishedPlaces]);
 
   // 2. On Selection: Update URL (Deep Link)
   useEffect(() => {
@@ -258,13 +273,13 @@ const MainApp: React.FC = () => {
         if (!placeSlug) {
             setSelectedPlace(null);
         } else {
-            const found = places.find(p => p.slug === placeSlug || p.id === placeSlug);
+            const found = publishedPlaces.find(p => p.slug === placeSlug || p.id === placeSlug);
             if (found) setSelectedPlace(found);
         }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [places]);
+  }, [publishedPlaces]);
 
 
   // Initial Data Fetch & FlyTo
@@ -282,13 +297,15 @@ const MainApp: React.FC = () => {
 
   useEffect(() => {
     const initData = async () => {
+        // We use the raw list here to determine fallback center, but `publishedPlaces` state will update naturally
         const realPlaces = await fetchRealData();
         
         // Initial fly logic (only if no URL param)
         const params = new URLSearchParams(window.location.search);
         if (!params.get('place')) {
-            let initialPlace = realPlaces.find(p => p.id === DEFAULT_PLACE_ID);
-            if (!initialPlace && realPlaces.length > 0) initialPlace = realPlaces.find(p => p.is_featured);
+            // Check against realPlaces but ensure we aren't defaulting to a pending item (though fallback logic usually handles this)
+            let initialPlace = realPlaces.find(p => p.id === DEFAULT_PLACE_ID && p.status !== 'pending');
+            if (!initialPlace && realPlaces.length > 0) initialPlace = realPlaces.find(p => p.is_featured && p.status !== 'pending');
             if (!initialPlace) initialPlace = FALLBACK_PLACES.find(p => p.id === DEFAULT_PLACE_ID);
 
             if (initialPlace && map.current && initialPlace.coords) {
@@ -327,7 +344,7 @@ const MainApp: React.FC = () => {
             zoomSnap: 0.1, 
             zoomDelta: 0.5, 
             wheelPxPerZoomLevel: 3, 
-            inertia: true,
+            inertia: true, 
             inertiaDeceleration: 3500, 
             easeLinearity: 0.2 
         });
@@ -448,17 +465,17 @@ const MainApp: React.FC = () => {
         }
     } as Place));
 
-    // Base Filter: Only show published places (Verified and Open/Closed) - Pending are hidden
-    const publishedPlaces = places.filter(p => p.status !== 'pending' && p.isVerified);
+    // Base Filter: Use the centralized `publishedPlaces` to ensure pending items are hidden
+    // Note: `publishedPlaces` is already filtered by `useMemo` above.
 
     if (activeCollection) {
         // COLLECTION MODE
-        const allItems = [...publishedPlaces, ...mappedEvents];
+        const allItems = [...publishedPlaces, ...mappedEvents]; 
         filtered = allItems.filter(p => activeCollection.placeIds.includes(p.id));
     } else if (groupDef.categories === 'EVENTS') {
         filtered = mappedEvents;
     } else if (groupDef.categories === 'FAVORITES') {
-        const allItems = [...publishedPlaces, ...mappedEvents];
+        const allItems = [...publishedPlaces, ...mappedEvents]; 
         filtered = allItems.filter(p => savedIds.includes(p.id));
     } else {
         filtered = groupDef.categories === 'ALL' 
@@ -536,7 +553,7 @@ const MainApp: React.FC = () => {
         map.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 15, animate: true, duration: 1.5 });
     }
 
-  }, [activeGroup, mapLoaded, places, events, language, searchText, isVipUnlocked, savedIds, activeCollection]); 
+  }, [activeGroup, mapLoaded, places, publishedPlaces, events, language, searchText, isVipUnlocked, savedIds, activeCollection]); 
 
   // --- HANDLERS ---
 
@@ -625,7 +642,82 @@ const MainApp: React.FC = () => {
       <header className="absolute top-0 left-0 right-0 z-[1000] p-5 pointer-events-none flex justify-between items-start">
         <WeatherWidget />
         <div className="pointer-events-auto flex flex-col gap-3 items-end">
+            <button 
+              onClick={() => setMapStyle(prev => prev === 'standard' ? 'satellite' : 'standard')}
+              className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-emerald-600 dark:text-emerald-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center mb-0"
+              title={mapStyle === 'standard' ? "Vista Satélite" : "Vista Mapa"}
+            >
+              <i className={`fa-solid ${mapStyle === 'standard' ? 'fa-satellite' : 'fa-map'}`}></i>
+            </button>
             <button onClick={toggleTheme} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-amber-500 dark:text-purple-300 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">
               <i className={`fa-solid ${isDarkMode ? 'fa-moon' : 'fa-sun'}`}></i>
             </button>
-            <button onClick={() => setLanguage(language === 'es' ? 'en' : 'es')} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-800 dark:text-white p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-[10px] uppercase hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">{language === 'es' ? 'EN' : 'ES
+            <button onClick={() => setLanguage(language === 'es' ? 'en' : 'es')} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-800 dark:text-white p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-[10px] uppercase hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">{language === 'es' ? 'EN' : 'ES'}</button>
+            <button onClick={() => setIsAdminOpen(true)} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-600 dark:text-slate-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">
+              <i className="fa-solid fa-lock"></i>
+            </button>
+            <button onClick={centerOnUser} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-blue-500 dark:text-blue-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">
+                <i className="fa-solid fa-location-crosshairs"></i>
+            </button>
+        </div>
+      </header>
+
+      {/* Main Content Area */}
+      <main className="flex-1 relative w-full h-full">
+        <div ref={mapContainer} className="absolute inset-0 z-0 bg-slate-200 dark:bg-slate-800 transition-colors" />
+      </main>
+
+      {/* Sheets & Modals */}
+      <ExplorerSheet 
+        places={filteredList} 
+        onSelect={(p) => { setSelectedPlace(p); map.current?.flyTo([p.coords.lat, p.coords.lng], 16, { duration: 1.5 }); }} 
+        isVisible={activeTab === 'explore'} 
+        searchText={searchText}
+        onSearchChange={setSearchText}
+        resultCount={resultCount}
+        activeGroup={activeGroup}
+        onCategoryChange={setActiveGroup}
+        focusTrigger={searchFocusTrigger}
+        savedIds={savedIds}
+        onToggleFavorite={toggleFavorite}
+        onSelectCollection={setActiveCollection}
+        activeCollectionId={activeCollection?.id}
+        onCameraClick={() => { setIsConciergeOpen(true); }}
+        userLocation={userLocation || undefined}
+      />
+
+      <BottomNav activeTab={activeTab} onTabChange={handleTabChange} onAction={handleNavAction} />
+
+      {selectedPlace && (
+        <PlaceCard 
+            place={selectedPlace} 
+            allPlaces={publishedPlaces} 
+            onSelect={(p) => { setSelectedPlace(p); map.current?.flyTo([p.coords.lat, p.coords.lng], 16, { duration: 1.5 }); }}
+            onClose={() => setSelectedPlace(null)} 
+            onNavigate={handleNavigate}
+            onAskAi={() => setIsConciergeOpen(true)}
+            onSuggestEdit={() => { setIsContactOpen(true); }}
+            isFavorite={savedIds.includes(selectedPlace.id)}
+            onToggleFavorite={() => toggleFavorite(selectedPlace.id)}
+            userLocation={userLocation || undefined}
+        />
+      )}
+
+      <Concierge 
+        isOpen={isConciergeOpen} 
+        onClose={() => setIsConciergeOpen(false)} 
+        places={publishedPlaces} 
+        events={events} 
+        onNavigateToPlace={handleChatNavigation}
+      />
+      
+      <SuggestPlaceModal isOpen={isSuggestOpen} onClose={() => setIsSuggestOpen(false)} />
+      <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} onSuggest={() => { setIsContactOpen(false); setIsSuggestOpen(true); }} onChat={() => { setIsContactOpen(false); setIsConciergeOpen(true); }} />
+      {isAdminOpen && <Admin onClose={() => setIsAdminOpen(false)} places={places} events={events} onUpdate={fetchRealData} />}
+      <CommandMenu isOpen={isCommandMenuOpen} onClose={() => setIsCommandMenuOpen(false)} onSelect={handleCommandSelect} isDarkMode={isDarkMode} />
+
+    </div>
+  );
+};
+
+export default MainApp;

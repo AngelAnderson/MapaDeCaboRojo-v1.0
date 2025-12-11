@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import L from 'leaflet';
-import { Place, PlaceCategory, Coordinates, Event, ParkingStatus, Collection } from './types';
-import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, COLLECTIONS, CABO_ROJO_CENTER, DEFAULT_PLACE_ID } from './constants';
+import { Place, PlaceCategory, Coordinates, Event, ParkingStatus, Collection } from '../types';
+import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, COLLECTIONS, CABO_ROJO_CENTER, DEFAULT_PLACE_ID } from '../constants';
 import PlaceCard from './components/PlaceCard';
 import Concierge from './components/Concierge';
 import Admin from './components/Admin';
@@ -344,7 +343,7 @@ const MainApp: React.FC = () => {
             zoomSnap: 0.1, 
             zoomDelta: 0.5, 
             wheelPxPerZoomLevel: 3, 
-            inertia: true,
+            inertia: true, 
             inertiaDeceleration: 3500, 
             easeLinearity: 0.2 
         });
@@ -465,14 +464,17 @@ const MainApp: React.FC = () => {
         }
     } as Place));
 
+    // Base Filter: Use the centralized `publishedPlaces` to ensure pending items are hidden
+    // Note: `publishedPlaces` is already filtered by `useMemo` above.
+
     if (activeCollection) {
         // COLLECTION MODE
-        const allItems = [...publishedPlaces, ...mappedEvents];
+        const allItems = [...publishedPlaces, ...mappedEvents]; 
         filtered = allItems.filter(p => activeCollection.placeIds.includes(p.id));
     } else if (groupDef.categories === 'EVENTS') {
         filtered = mappedEvents;
     } else if (groupDef.categories === 'FAVORITES') {
-        const allItems = [...publishedPlaces, ...mappedEvents];
+        const allItems = [...publishedPlaces, ...mappedEvents]; 
         filtered = allItems.filter(p => savedIds.includes(p.id));
     } else {
         filtered = groupDef.categories === 'ALL' 
@@ -550,7 +552,7 @@ const MainApp: React.FC = () => {
         map.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 15, animate: true, duration: 1.5 });
     }
 
-  }, [activeGroup, mapLoaded, publishedPlaces, events, language, searchText, isVipUnlocked, savedIds, activeCollection]); 
+  }, [activeGroup, mapLoaded, places, publishedPlaces, events, language, searchText, isVipUnlocked, savedIds, activeCollection]); 
 
   // --- HANDLERS ---
 
@@ -639,84 +641,86 @@ const MainApp: React.FC = () => {
       <header className="absolute top-0 left-0 right-0 z-[1000] p-5 pointer-events-none flex justify-between items-start">
         <WeatherWidget />
         <div className="pointer-events-auto flex flex-col gap-3 items-end">
+            <button 
+              onClick={() => setMapStyle(prev => prev === 'standard' ? 'satellite' : 'standard')}
+              className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-emerald-600 dark:text-emerald-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center mb-0"
+              title={mapStyle === 'standard' ? "Vista Satélite" : "Vista Mapa"}
+            >
+              <i className={`fa-solid ${mapStyle === 'standard' ? 'fa-satellite' : 'fa-map'}`}></i>
+            </button>
             <button onClick={toggleTheme} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-amber-500 dark:text-purple-300 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">
               <i className={`fa-solid ${isDarkMode ? 'fa-moon' : 'fa-sun'}`}></i>
             </button>
             <button onClick={() => setLanguage(language === 'es' ? 'en' : 'es')} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-800 dark:text-white p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-[10px] uppercase hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">{language === 'es' ? 'EN' : 'ES'}</button>
-            <button onClick={() => setIsAdminOpen(true)} className="bg-slate-900/80 dark:bg-slate-800/80 backdrop-blur-md text-white w-10 h-10 rounded-full flex items-center justify-center text-xs hover:bg-black transition-colors shadow-lg"><i className="fa-solid fa-lock"></i></button>
+            <button onClick={() => setIsAdminOpen(true)} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-600 dark:text-slate-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center" aria-label="Admin Login">
+              <i className="fa-solid fa-lock"></i>
+            </button>
         </div>
       </header>
-      
-      {/* Map Container - Semantic Main */}
-      <main ref={mapContainer} className="flex-1 w-full h-full focus:outline-none relative z-0 bg-slate-100 dark:bg-slate-800" role="application" aria-label="Interactive Map of Cabo Rojo" />
-      
-      {/* User Location FAB */}
-      <div className="absolute right-5 bottom-[100px] z-[1000]">
-        <button onClick={centerOnUser} className="bg-white/90 dark:bg-slate-800/90 backdrop-blur-md text-blue-600 dark:text-blue-400 w-12 h-12 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex items-center justify-center border border-white dark:border-slate-700 active:scale-95 transition-transform">
-          <i className="fa-solid fa-location-crosshairs text-xl"></i>
-        </button>
-      </div>
 
-      {/* Interface Elements */}
-      <aside>
-        <ExplorerSheet 
-          places={filteredList} 
-          onSelect={(p) => setSelectedPlace(p)} 
-          isVisible={activeTab === 'explore'}
-          searchText={searchText}
-          onSearchChange={setSearchText}
-          resultCount={resultCount}
-          activeGroup={activeGroup}
-          onCategoryChange={(g) => { setActiveGroup(g); setSearchText(''); }}
-          focusTrigger={searchFocusTrigger}
-          savedIds={savedIds}
-          onToggleFavorite={toggleFavorite}
-          activeCollectionId={activeCollection?.id}
-          onSelectCollection={(col) => setActiveCollection(col)}
-          onCameraClick={() => { setIsConciergeOpen(true); }}
-          userLocation={userLocation || undefined}
-        />
-      </aside>
+      {/* Main Content Area */}
+      <main className="flex-1 relative w-full h-full">
+        <div ref={mapContainer} className="absolute inset-0 z-0 bg-slate-200 dark:bg-slate-800 transition-colors" />
+        
+        {/* Floating Controls (User Loc) */}
+        <div className="absolute bottom-32 right-5 z-[1000] flex flex-col gap-3">
+             <button onClick={centerOnUser} className="w-12 h-12 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md rounded-2xl shadow-xl flex items-center justify-center text-blue-500 dark:text-blue-400 hover:scale-105 transition-transform border border-white/50 dark:border-slate-700">
+                <i className="fa-solid fa-location-crosshairs text-xl"></i>
+             </button>
+        </div>
+      </main>
 
-      <BottomNav 
-        activeTab={activeTab} 
-        onTabChange={handleTabChange} 
-        onAction={handleNavAction} 
+      {/* Sheets & Modals */}
+      <ExplorerSheet 
+        places={filteredList} 
+        onSelect={(p) => { setSelectedPlace(p); map.current?.flyTo([p.coords.lat, p.coords.lng], 16, { duration: 1.5 }); }} 
+        isVisible={activeTab === 'explore'} 
+        searchText={searchText}
+        onSearchChange={setSearchText}
+        resultCount={resultCount}
+        activeGroup={activeGroup}
+        onCategoryChange={setActiveGroup}
+        focusTrigger={searchFocusTrigger}
+        savedIds={savedIds}
+        onToggleFavorite={toggleFavorite}
+        onSelectCollection={setActiveCollection}
+        activeCollectionId={activeCollection?.id}
+        onCameraClick={() => { setIsConciergeOpen(true); }}
+        userLocation={userLocation || undefined}
       />
 
-      {/* Modals & Overlays */}
-      <CommandMenu 
-        isOpen={isCommandMenuOpen} 
-        onClose={() => setIsCommandMenuOpen(false)} 
-        onSelect={handleCommandSelect}
-        isDarkMode={isDarkMode}
-      />
+      <BottomNav activeTab={activeTab} onTabChange={handleTabChange} onAction={handleNavAction} />
 
       {selectedPlace && (
-        <div className="z-[3100] relative">
-          <PlaceCard 
+        <PlaceCard 
             place={selectedPlace} 
-            allPlaces={publishedPlaces} // Pass strict published list for suggestions
-            onSelect={setSelectedPlace} 
+            allPlaces={publishedPlaces} 
+            onSelect={(p) => { setSelectedPlace(p); map.current?.flyTo([p.coords.lat, p.coords.lng], 16, { duration: 1.5 }); }}
             onClose={() => setSelectedPlace(null)} 
-            onNavigate={handleNavigate} 
-            onAskAi={() => { setSelectedPlace(null); setIsConciergeOpen(true); }} 
-            onSuggestEdit={() => { setSelectedPlace(null); setIsSuggestOpen(true); }} 
+            onNavigate={handleNavigate}
+            onAskAi={() => setIsConciergeOpen(true)}
+            onSuggestEdit={() => { setIsContactOpen(true); }}
             isFavorite={savedIds.includes(selectedPlace.id)}
             onToggleFavorite={() => toggleFavorite(selectedPlace.id)}
             userLocation={userLocation || undefined}
-          />
-        </div>
+        />
       )}
+
+      <Concierge 
+        isOpen={isConciergeOpen} 
+        onClose={() => setIsConciergeOpen(false)} 
+        places={publishedPlaces} 
+        events={events} 
+        onNavigateToPlace={handleChatNavigation}
+      />
       
-      <div className="z-[3200] relative"><Concierge isOpen={isConciergeOpen} onClose={() => setIsConciergeOpen(false)} places={publishedPlaces} events={events} onNavigateToPlace={handleChatNavigation} /></div>
-      <div className="z-[3200] relative"><ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} onSuggest={() => { setIsContactOpen(false); setIsSuggestOpen(true); }} /></div>
-      <div className="z-[3300] relative"><SuggestPlaceModal isOpen={isSuggestOpen} onClose={() => setIsSuggestOpen(false)} /></div>
-      
-      {isAdminOpen && <div className="z-[3500] relative"><Admin onClose={() => setIsAdminOpen(false)} places={places} events={events} onUpdate={fetchRealData} /></div>}
+      <SuggestPlaceModal isOpen={isSuggestOpen} onClose={() => setIsSuggestOpen(false)} />
+      <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} onSuggest={() => { setIsContactOpen(false); setIsSuggestOpen(true); }} onChat={() => { setIsContactOpen(false); setIsConciergeOpen(true); }} />
+      {isAdminOpen && <Admin onClose={() => setIsAdminOpen(false)} places={places} events={events} onUpdate={fetchRealData} />}
+      <CommandMenu isOpen={isCommandMenuOpen} onClose={() => setIsCommandMenuOpen(false)} onSelect={handleCommandSelect} isDarkMode={isDarkMode} />
+
     </div>
   );
 };
 
-const App: React.FC = () => { return <LanguageProvider><MainApp /></LanguageProvider>; };
-export default App;
+export default MainApp;
