@@ -509,3 +509,43 @@ export const generateEditorialContent = async (
         return "Error conectando con El Veci AI.";
     }
 };
+
+// 11. LOCATION RESOLVER (Admin Helper)
+export const findCoordinates = async (query: string): Promise<{ lat: number, lng: number } | null> => {
+    // Basic regex for Google Maps Links
+    const linkRegex = /@(-?\d+\.\d+),(-?\d+\.\d+)/;
+    const match = query.match(linkRegex);
+    if (match) {
+        return { lat: parseFloat(match[1]), lng: parseFloat(match[2]) };
+    }
+
+    const qParamRegex = /[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/;
+    const qMatch = query.match(qParamRegex);
+    if (qMatch) {
+        return { lat: parseFloat(qMatch[1]), lng: parseFloat(qMatch[2]) };
+    }
+
+    // Fallback to AI + Google Search for address resolution
+    const prompt = `
+    Find the exact geographic coordinates (Latitude and Longitude) for this place in Puerto Rico: "${query}".
+    Return ONLY a JSON object: { "lat": number, "lng": number }.
+    If you can't find it, return null.
+    `;
+    
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+            config: { 
+                responseMimeType: "application/json",
+                tools: [{ googleSearch: {} }]
+            }
+        });
+        
+        const text = (response.text || "{}").replace(/```json/g, '').replace(/```/g, '').trim();
+        return JSON.parse(text);
+    } catch (e) {
+        console.error("Location Resolve Error:", e);
+        return null;
+    }
+}

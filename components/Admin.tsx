@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Place, PlaceCategory, ParkingStatus, Event, EventCategory, AdminLog, DaySchedule } from '../types';
 import { supabase, updatePlace, deletePlace, createPlace, uploadImage, getAdminLogs, createEvent, updateEvent, deleteEvent, getEvents } from '../services/supabase';
-import { generateMarketingCopy, enhanceDescription, generateExecutiveBriefing, enrichPlaceMetadata, discoverPlaces, generateEditorialContent } from '../services/geminiService';
+import { generateMarketingCopy, enhanceDescription, generateExecutiveBriefing, enrichPlaceMetadata, discoverPlaces, generateEditorialContent, findCoordinates } from '../services/geminiService';
 import L from 'leaflet';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -33,22 +33,25 @@ const SectionHeader = ({ title, icon, isOpen, onClick }: any) => (
     </button>
 );
 
-const LocationPicker = ({ coords, onChange }: { coords: { lat: number, lng: number }, onChange: (lat: number, lng: number) => void }) => {
+const LocationPicker = ({ coords, onChange, centerTrigger }: { coords: { lat: number, lng: number }, onChange: (lat: number, lng: number) => void, centerTrigger?: number }) => {
     const mapRef = useRef<HTMLDivElement>(null);
     const mapInstance = useRef<L.Map | null>(null);
     const markerInstance = useRef<L.Marker | null>(null);
 
+    // Initialize Map
     useEffect(() => {
         if (!mapRef.current) return;
         if (!mapInstance.current) {
-            mapInstance.current = L.map(mapRef.current, { attributionControl: false }).setView([coords.lat || 17.9620, coords.lng || -67.1650], 13);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(mapInstance.current);
+            mapInstance.current = L.map(mapRef.current, { attributionControl: false }).setView([coords.lat || 17.9620, coords.lng || -67.1650], 15);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png').addTo(mapInstance.current);
             
+            // Map click moves marker
             mapInstance.current.on('click', (e) => {
                 const { lat, lng } = e.latlng;
                 onChange(lat, lng);
             });
         }
+
         return () => { 
             if (mapInstance.current) {
                  mapInstance.current.remove();
@@ -58,18 +61,46 @@ const LocationPicker = ({ coords, onChange }: { coords: { lat: number, lng: numb
         };
     }, []);
 
+    // Handle Coordinate Updates & Dragging
     useEffect(() => {
         if (mapInstance.current) {
+            const lat = coords.lat || 17.9620;
+            const lng = coords.lng || -67.1650;
+
             if (!markerInstance.current) {
-                 markerInstance.current = L.marker([coords.lat, coords.lng]).addTo(mapInstance.current);
+                 const customIcon = L.divIcon({
+                     className: 'bg-transparent',
+                     html: `<div style="width: 30px; height: 30px; background: #0f766e; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.3);"></div>`,
+                     iconSize: [30, 30],
+                     iconAnchor: [15, 30]
+                 });
+
+                 markerInstance.current = L.marker([lat, lng], { 
+                     icon: customIcon,
+                     draggable: true // ENABLE DRAGGING
+                 }).addTo(mapInstance.current);
+
+                 // Listen for drag end
+                 markerInstance.current.on('dragend', (e) => {
+                     const pos = e.target.getLatLng();
+                     onChange(pos.lat, pos.lng);
+                 });
             } else {
-                 markerInstance.current.setLatLng([coords.lat, coords.lng]);
+                 markerInstance.current.setLatLng([lat, lng]);
+                 // Optional: Pan map if the new coordinate is far away (manual typing)
+                 // mapInstance.current.panTo([lat, lng]);
             }
-            mapInstance.current.setView([coords.lat, coords.lng], mapInstance.current.getZoom());
         }
     }, [coords.lat, coords.lng]);
 
-    return <div ref={mapRef} className="w-full h-48 rounded-xl overflow-hidden border border-slate-700 relative z-0" />;
+    // Fly to location when triggered externally (Search)
+    useEffect(() => {
+        if (mapInstance.current && centerTrigger) {
+             mapInstance.current.flyTo([coords.lat, coords.lng], 16, { duration: 1.5 });
+        }
+    }, [centerTrigger]);
+
+    return <div ref={mapRef} className="w-full h-64 rounded-xl overflow-hidden border border-slate-700 relative z-0" />;
 };
 
 // --- Hours Editor Helper ---
@@ -171,6 +202,13 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
     // Editorial State
     const [editorialResult, setEditorialResult] = useState('');
     const [editorialLoading, setEditorialLoading] = useState(false);
+
+    // Location Tools State
+    const [locationQuery, setLocationQuery] = useState('');
+    const [locating, setLocating] = useState(false);
+    const [mapCenterTrigger, setMapCenterTrigger] = useState(0);
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         checkUser();
@@ -335,6 +373,35 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
         setLoading(false);
     };
 
+    const handleAutoLocate = async () => {
+        if (!locationQuery.trim()) return;
+        setLocating(true);
+        const coords = await findCoordinates(locationQuery);
+        setLocating(false);
+        
+        if (coords) {
+            setEditingPlace(prev => prev ? { ...prev, coords: { lat: coords.lat, lng: coords.lng } } : null);
+            setMapCenterTrigger(prev => prev + 1); // Trigger map flyTo
+        } else {
+            alert("Couldn't find coordinates. Try a simpler address or paste a Google Maps link.");
+        }
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !editingPlace) return;
+
+        setLoading(true);
+        const res = await uploadImage(file);
+        if (res.success && res.url) {
+            setEditingPlace({ ...editingPlace, imageUrl: res.url });
+        } else {
+            alert("Upload failed: " + (res.error || "Unknown error"));
+        }
+        setLoading(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+
     return (
         <div className="fixed inset-0 z-[5000] bg-slate-900 text-white flex overflow-hidden font-sans">
             
@@ -342,7 +409,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
             <div className="w-64 bg-slate-950 border-r border-slate-800 flex flex-col shrink-0">
                 <div className="p-6">
                     <h2 className="text-xl font-black tracking-tighter text-teal-400">EL VECI <span className="text-slate-600">OS</span></h2>
-                    <p className="text-xs text-slate-500 font-mono mt-1">v2.4.0 • Stable</p>
+                    <p className="text-xs text-slate-500 font-mono mt-1">v2.5.0 • Stable</p>
                 </div>
                 
                 <nav className="flex-1 px-4 space-y-1">
@@ -628,10 +695,56 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                                     <SectionHeader title="Location" icon="map-pin" isOpen={openSection === 'location'} onClick={() => setOpenSection(openSection === 'location' ? '' : 'location')} />
                                     {openSection === 'location' && (
                                         <div className="space-y-4 animate-fade-in">
-                                            <LocationPicker coords={editingPlace.coords} onChange={(lat, lng) => setEditingPlace({...editingPlace, coords: { lat, lng }})} />
+                                            
+                                            {/* SMART LOCATOR TOOL */}
+                                            <div className="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
+                                                <label className="text-xs font-bold text-teal-400 uppercase flex items-center gap-2">
+                                                    <i className="fa-solid fa-crosshairs"></i> Smart Locator
+                                                </label>
+                                                <div className="flex gap-2">
+                                                    <input 
+                                                        type="text" 
+                                                        value={locationQuery}
+                                                        onChange={(e) => setLocationQuery(e.target.value)}
+                                                        placeholder="Name, Address, or Paste Google Maps Link"
+                                                        className="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:border-teal-500 outline-none"
+                                                    />
+                                                    <button 
+                                                        onClick={handleAutoLocate}
+                                                        disabled={locating}
+                                                        className="bg-teal-600 hover:bg-teal-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors disabled:opacity-50"
+                                                    >
+                                                        {locating ? <i className="fa-solid fa-spinner fa-spin"></i> : "Find"}
+                                                    </button>
+                                                </div>
+                                                <p className="text-[10px] text-slate-500">
+                                                    Tip: Paste a Google Maps link (e.g., https://goo.gl/maps/...) to extract exact coordinates instantly.
+                                                </p>
+                                            </div>
+
+                                            <LocationPicker 
+                                                coords={editingPlace.coords} 
+                                                onChange={(lat, lng) => setEditingPlace({...editingPlace, coords: { lat, lng }})} 
+                                                centerTrigger={mapCenterTrigger}
+                                            />
+                                            
                                             <div className="grid grid-cols-2 gap-4">
-                                                <InputGroup label="Latitude"><StyledInput value={editingPlace.coords.lat} readOnly /></InputGroup>
-                                                <InputGroup label="Longitude"><StyledInput value={editingPlace.coords.lng} readOnly /></InputGroup>
+                                                <InputGroup label="Latitude">
+                                                  <StyledInput 
+                                                    type="number" 
+                                                    step="any" 
+                                                    value={editingPlace.coords.lat} 
+                                                    onChange={e => setEditingPlace({...editingPlace, coords: { ...editingPlace.coords, lat: parseFloat(e.target.value) || 0 }})} 
+                                                  />
+                                                </InputGroup>
+                                                <InputGroup label="Longitude">
+                                                  <StyledInput 
+                                                    type="number" 
+                                                    step="any" 
+                                                    value={editingPlace.coords.lng} 
+                                                    onChange={e => setEditingPlace({...editingPlace, coords: { ...editingPlace.coords, lng: parseFloat(e.target.value) || 0 }})} 
+                                                  />
+                                                </InputGroup>
                                             </div>
                                             <InputGroup label="Address"><StyledInput value={editingPlace.address} onChange={e => setEditingPlace({...editingPlace, address: e.target.value})} /></InputGroup>
                                             <InputGroup label="Google Maps URL"><StyledInput value={editingPlace.gmapsUrl} onChange={e => setEditingPlace({...editingPlace, gmapsUrl: e.target.value})} /></InputGroup>
@@ -641,12 +754,67 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                                     <SectionHeader title="Media & Contact" icon="image" isOpen={openSection === 'media'} onClick={() => setOpenSection(openSection === 'media' ? '' : 'media')} />
                                     {openSection === 'media' && (
                                         <div className="space-y-4 animate-fade-in">
-                                            <InputGroup label="Image URL">
-                                                <div className="flex gap-2">
-                                                    <StyledInput value={editingPlace.imageUrl} onChange={e => setEditingPlace({...editingPlace, imageUrl: e.target.value})} />
-                                                    {editingPlace.imageUrl && <img src={editingPlace.imageUrl} className="w-10 h-10 rounded-lg object-cover bg-slate-800" />}
+                                            <InputGroup label="Main Photo">
+                                                <div className="space-y-3">
+                                                    {/* Preview Area */}
+                                                    <div className="relative w-full h-48 bg-slate-800 rounded-xl border-2 border-dashed border-slate-700 flex items-center justify-center overflow-hidden group">
+                                                        {editingPlace.imageUrl ? (
+                                                            <>
+                                                                <img src={editingPlace.imageUrl} className="w-full h-full object-cover" />
+                                                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                                                    <button 
+                                                                        onClick={() => window.open(editingPlace.imageUrl, '_blank')}
+                                                                        className="p-2 bg-white/10 hover:bg-white/20 rounded-full text-white backdrop-blur-md transition-colors"
+                                                                        title="View Full"
+                                                                    >
+                                                                        <i className="fa-solid fa-expand"></i>
+                                                                    </button>
+                                                                    <button 
+                                                                        onClick={() => setEditingPlace({...editingPlace, imageUrl: ''})}
+                                                                        className="p-2 bg-red-500/20 hover:bg-red-500 rounded-full text-white backdrop-blur-md transition-colors"
+                                                                        title="Remove Image"
+                                                                    >
+                                                                        <i className="fa-solid fa-trash"></i>
+                                                                    </button>
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <div className="text-slate-500 flex flex-col items-center">
+                                                                <i className="fa-regular fa-image text-3xl mb-2"></i>
+                                                                <span className="text-xs">No image set</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Actions */}
+                                                    <div className="flex gap-2">
+                                                        <input 
+                                                            type="text" 
+                                                            value={editingPlace.imageUrl} 
+                                                            onChange={e => setEditingPlace({...editingPlace, imageUrl: e.target.value})} 
+                                                            placeholder="Paste URL or upload..."
+                                                            className="flex-1 bg-slate-800 border border-slate-700 text-white p-2.5 rounded-lg text-sm focus:border-teal-500 outline-none"
+                                                        />
+                                                        <button 
+                                                            onClick={() => fileInputRef.current?.click()}
+                                                            disabled={loading}
+                                                            className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2"
+                                                        >
+                                                            {loading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-cloud-arrow-up"></i>}
+                                                            Upload
+                                                        </button>
+                                                        <input 
+                                                            type="file" 
+                                                            ref={fileInputRef} 
+                                                            className="hidden" 
+                                                            accept="image/jpeg,image/png,image/webp" 
+                                                            onChange={handleImageUpload} 
+                                                        />
+                                                    </div>
+                                                    <p className="text-[10px] text-slate-500">Supported: JPG, PNG, WEBP. Max 5MB.</p>
                                                 </div>
                                             </InputGroup>
+
                                             <InputGroup label="Phone"><StyledInput value={editingPlace.phone} onChange={e => setEditingPlace({...editingPlace, phone: e.target.value})} /></InputGroup>
                                             <InputGroup label="Website"><StyledInput value={editingPlace.website} onChange={e => setEditingPlace({...editingPlace, website: e.target.value})} /></InputGroup>
                                         </div>
