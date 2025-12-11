@@ -302,9 +302,14 @@ const MainApp: React.FC = () => {
         // Initial fly logic (only if no URL param)
         const params = new URLSearchParams(window.location.search);
         if (!params.get('place')) {
-            // Check against realPlaces but ensure we aren't defaulting to a pending item (though fallback logic usually handles this)
-            let initialPlace = realPlaces.find(p => p.id === DEFAULT_PLACE_ID && p.status !== 'pending');
+            // Priority 1: Check for "Landing Place" flag set via Admin
+            let initialPlace = realPlaces.find(p => p.isLanding);
+
+            // Priority 2: Fallback to featured non-pending place
+            if (!initialPlace) initialPlace = realPlaces.find(p => p.id === DEFAULT_PLACE_ID && p.status !== 'pending');
             if (!initialPlace && realPlaces.length > 0) initialPlace = realPlaces.find(p => p.is_featured && p.status !== 'pending');
+            
+            // Priority 3: Fallback hardcoded
             if (!initialPlace) initialPlace = FALLBACK_PLACES.find(p => p.id === DEFAULT_PLACE_ID);
 
             if (initialPlace && map.current && initialPlace.coords) {

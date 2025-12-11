@@ -1,4 +1,5 @@
 
+
 import { createClient } from '@supabase/supabase-js';
 import { Place, PlaceCategory, ParkingStatus, AdminLog, Event, EventCategory } from '../types';
 
@@ -212,7 +213,8 @@ const mapPlaceToDb = (place: Partial<Place>) => {
             has_generator: place.hasGenerator ?? false,
             tips: place.tips || '',
             custom_icon: place.customIcon || '',
-            is_mobile: place.isMobile ?? false
+            is_mobile: place.isMobile ?? false,
+            is_landing: place.isLanding ?? false // Save Landing Flag
         },
         opening_hours: place.opening_hours || { note: "No especificado" },
         contact_info: place.contact_info || {}
@@ -317,7 +319,8 @@ export const getPlaces = async (): Promise<Place[]> => {
       opening_hours: row.opening_hours || { note: '' },
       contact_info: row.contact_info || {},
       customIcon: row.custom_icon || row.amenities?.custom_icon || '',
-      isMobile: row.amenities?.is_mobile || false // Map back from DB
+      isMobile: row.amenities?.is_mobile || false,
+      isLanding: row.amenities?.is_landing || false // Load Landing Flag
     }));
   } catch (err) { 
     console.error("🔴 Unexpected Error in getPlaces:", err);

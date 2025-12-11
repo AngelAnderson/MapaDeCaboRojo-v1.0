@@ -335,6 +335,15 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
         if (!editingPlace) return;
         setLoading(true);
         
+        // Exclusivity Check for Landing Page Flag
+        if (editingPlace.isLanding) {
+            const previous = places.find(p => p.isLanding && p.id !== editingPlace.id);
+            if (previous) {
+                // Must pass FULL object to avoid data loss due to mapPlaceToDb implementation logic
+                await updatePlace(previous.id, { ...previous, isLanding: false });
+            }
+        }
+
         let res;
         if (editingPlace.id === 'new') {
             const { id, ...newPlace } = editingPlace;
@@ -506,7 +515,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                         </div>
                     )}
 
-                    {/* EDITORIAL VIEW (NEW) */}
+                    {/* EDITORIAL VIEW */}
                     {activeTab === 'editorial' && (
                          <div className="max-w-4xl mx-auto space-y-6">
                             <div className="grid grid-cols-2 gap-4">
@@ -605,6 +614,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                                                 <img src={place.imageUrl} className="w-full h-full object-cover" />
                                             </div>
                                         )}
+                                        {place.isLanding && <span className="absolute top-2 right-2 bg-teal-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-20 shadow-sm"><i className="fa-solid fa-house"></i> START</span>}
                                         <p className="text-xs text-slate-400 line-clamp-2 relative z-10">{place.description}</p>
                                     </div>
                                 ))}
@@ -644,6 +654,28 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, o
                                         <button onClick={handleMagicWand} disabled={loading} className="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">
                                             {loading ? 'Thinking...' : 'Magic Fix'}
                                         </button>
+                                    </div>
+
+                                    {/* VISIBLE START LOCATION TOGGLE */}
+                                    <div className={`p-4 rounded-xl border flex items-center justify-between transition-colors ${editingPlace.isLanding ? 'bg-teal-900/30 border-teal-500/50' : 'bg-slate-800 border-slate-700'}`}>
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${editingPlace.isLanding ? 'bg-teal-500 text-white' : 'bg-slate-700 text-slate-400'}`}>
+                                                <i className="fa-solid fa-map-pin"></i>
+                                            </div>
+                                            <div>
+                                                <h4 className={`font-bold text-sm ${editingPlace.isLanding ? 'text-teal-400' : 'text-white'}`}>Start Location</h4>
+                                                <p className="text-xs text-slate-400">Users will land here when opening the app.</p>
+                                            </div>
+                                        </div>
+                                        <label className="relative inline-flex items-center cursor-pointer">
+                                            <input 
+                                                type="checkbox" 
+                                                className="sr-only peer" 
+                                                checked={editingPlace.isLanding || false}
+                                                onChange={e => setEditingPlace({...editingPlace, isLanding: e.target.checked})} 
+                                            />
+                                            <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
+                                        </label>
                                     </div>
 
                                     {/* Status & Plan */}

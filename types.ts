@@ -1,4 +1,5 @@
 
+
 export enum PlaceCategory {
   BEACH = 'BEACH',
   FOOD = 'FOOD',
@@ -58,6 +59,7 @@ export interface Place {
   is_featured: boolean;
   isSecret?: boolean;
   isMobile?: boolean; // New: For businesses that come to you
+  isLanding?: boolean; // New: Sets this place as the initial map center
 
   parking: ParkingStatus;
   hasRestroom: boolean;
