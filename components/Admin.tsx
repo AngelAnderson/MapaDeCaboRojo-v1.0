@@ -1,8 +1,8 @@
+
 import React, { useState, useEffect, useRef } from 'react';
-import { Place, Event, AdminLog, PlaceCategory, ParkingStatus } from '../types';
-import { useLanguage } from '../i18n/LanguageContext';
-import { supabase, getAdminLogs, getEvents, createPlace, updatePlace, deletePlace, uploadImage } from '../services/supabase';
-import { fetchPlaceDetails, findCoordinates, enrichPlaceMetadata, generateExecutiveBriefing, generateEditorialContent } from '../services/geminiService';
+import { Place, Event, PlaceCategory, ParkingStatus, EventCategory, AdminLog, DaySchedule } from '../types';
+import { updatePlace, deletePlace, createPlace, updateEvent, deleteEvent, createEvent, getAdminLogs, uploadImage, loginAdmin, checkSession } from '../services/supabase';
+import { fetchPlaceDetails } from '../services/geminiService';
 
 interface AdminProps {
   onClose: () => void;
@@ -11,615 +11,686 @@ interface AdminProps {
   onUpdate: () => void;
 }
 
-const InputGroup = ({ label, children }: { label: string, children?: React.ReactNode }) => (
-  <div className="space-y-1">
-    <label className="text-xs font-bold text-slate-400 uppercase">{label}</label>
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+// --- UI COMPONENTS ---
+
+const Section = ({ title, icon, children }: { title: string, icon: string, children?: React.ReactNode }) => (
+    <div className="bg-slate-800/50 rounded-2xl border border-slate-700 overflow-hidden mb-6">
+        <div className="bg-slate-800/80 px-4 py-3 border-b border-slate-700 flex items-center gap-2">
+            <i className={`fa-solid fa-${icon} text-teal-500`}></i>
+            <h3 className="font-bold text-slate-200 text-sm uppercase tracking-wide">{title}</h3>
+        </div>
+        <div className="p-4 space-y-4">
+            {children}
+        </div>
+    </div>
+);
+
+const InputGroup = ({ label, children, description }: { label: string, children?: React.ReactNode, description?: string }) => (
+  <div className="flex flex-col gap-1.5">
+    <div className="flex justify-between items-baseline">
+        <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">{label}</label>
+        {description && <span className="text-[10px] text-slate-500 italic">{description}</span>}
+    </div>
     {children}
   </div>
 );
 
 const StyledInput = (props: React.InputHTMLAttributes<HTMLInputElement>) => (
-  <input className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg p-2.5 text-sm focus:border-teal-500 outline-none transition-colors" {...props} />
+  <input className="w-full bg-slate-900 text-white border border-slate-700 rounded-xl p-3 text-base focus:border-teal-500 outline-none transition-colors placeholder:text-slate-600 appearance-none" {...props} />
+);
+
+const StyledSelect = (props: React.SelectHTMLAttributes<HTMLSelectElement>) => (
+  <div className="relative">
+      <select className="w-full bg-slate-900 text-white border border-slate-700 rounded-xl p-3 text-base focus:border-teal-500 outline-none transition-colors appearance-none cursor-pointer" {...props} />
+      <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none">
+          <i className="fa-solid fa-chevron-down text-xs"></i>
+      </div>
+  </div>
 );
 
 const StyledTextArea = (props: React.TextareaHTMLAttributes<HTMLTextAreaElement>) => (
-  <textarea className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg p-2.5 text-sm focus:border-teal-500 outline-none transition-colors min-h-[100px]" {...props} />
+  <textarea className="w-full bg-slate-900 text-white border border-slate-700 rounded-xl p-3 text-base min-h-[100px] focus:border-teal-500 outline-none transition-colors resize-y placeholder:text-slate-600" {...props} />
 );
 
-const SectionHeader = ({ title, icon, isOpen, onClick }: any) => (
-    <button onClick={onClick} className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all ${isOpen ? 'bg-slate-800 border-teal-500/50 text-white' : 'bg-slate-900/50 border-slate-800 text-slate-400 hover:bg-slate-800'}`}>
-        <div className="flex items-center gap-3"><i className={`fa-solid fa-${icon} ${isOpen ? 'text-teal-400' : ''}`}></i><span className="font-bold text-sm">{title}</span></div>
-        <i className={`fa-solid fa-chevron-down transition-transform ${isOpen ? 'rotate-180' : ''}`}></i>
-    </button>
+const Toggle = ({ label, checked, onChange, icon }: { label: string, checked: boolean, onChange: (val: boolean) => void, icon?: string }) => (
+    <div 
+        onClick={() => onChange(!checked)}
+        className={`flex items-center gap-3 p-4 rounded-xl border cursor-pointer transition-all select-none active:scale-95 ${checked ? 'bg-teal-900/30 border-teal-500/50' : 'bg-slate-900 border-slate-700 hover:bg-slate-800'}`}
+    >
+        <div className={`w-6 h-6 rounded flex items-center justify-center transition-colors shrink-0 ${checked ? 'bg-teal-500 text-white' : 'bg-slate-700 text-slate-500'}`}>
+            {checked && <i className="fa-solid fa-check text-xs"></i>}
+        </div>
+        <div className="flex items-center gap-2 overflow-hidden">
+            {icon && <i className={`fa-solid fa-${icon} ${checked ? 'text-teal-400' : 'text-slate-500'} w-5 text-center`}></i>}
+            <span className={`text-sm font-bold truncate ${checked ? 'text-white' : 'text-slate-400'}`}>{label}</span>
+        </div>
+    </div>
 );
 
-const HoursEditor = ({ schedule, onChange }: { schedule: any[], onChange: (s: any[]) => void }) => {
-    // Basic implementation for structured hours
-    return <div className="text-slate-500 text-xs italic bg-slate-800 p-2 rounded">Structured Hours Editor UI (Coming Soon)</div>
-};
-
-const LocationPicker = ({ coords, onChange, centerTrigger }: any) => {
-    // Placeholder for map picker
-    return <div className="h-32 bg-slate-800 rounded-lg flex items-center justify-center text-slate-500 text-xs mb-2">Map Picker Placeholder</div>;
-};
-
-const Admin: React.FC<AdminProps> = ({ onClose, places, events: initialEvents, onUpdate }) => {
-    const { t } = useLanguage();
-    const [user, setUser] = useState<any>(null);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [dragActive, setDragActive] = useState(false);
-    
-    // UI State
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'places' | 'events' | 'editorial' | 'marketing' | 'logs' | 'team'>('dashboard');
-    const [logs, setLogs] = useState<AdminLog[]>([]);
-    const [eventsList, setEventsList] = useState<Event[]>(initialEvents || []);
-    
-    // Briefing State
-    const [briefingData, setBriefingData] = useState<any>(null); 
-    const [briefingLang, setBriefingLang] = useState<'en' | 'es'>('en');
-
-    // Editor State (Places)
-    const [editingPlace, setEditingPlace] = useState<Place | null>(null);
-    const [openSection, setOpenSection] = useState<string>('basic');
-    const [placeSearchTerm, setPlaceSearchTerm] = useState('');
-    const [importQuery, setImportQuery] = useState('');
-    const [isImporting, setIsImporting] = useState(false);
-    
-    // Editorial State
-    const [editorialResult, setEditorialResult] = useState('');
-    const [editorialLoading, setEditorialLoading] = useState(false);
-
-    // Location Tools State
-    const [locationQuery, setLocationQuery] = useState('');
-    const [locating, setLocating] = useState(false);
-    const [mapCenterTrigger, setMapCenterTrigger] = useState(0);
-
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    const [teamMembers] = useState([
-        { id: 1, name: 'Angel (You)', role: 'Owner', email: 'angel@caborojo.com', status: 'Online', lastActive: 'Now' },
-        { id: 2, name: 'Noelia', role: 'Admin', email: 'noelia@caborojo.com', status: 'Active', lastActive: '2h ago' }
-    ]);
-
-    useEffect(() => {
-        checkUser();
-        if (initialEvents) setEventsList(initialEvents);
-    }, [initialEvents]);
-
-    const checkUser = async () => {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-            setUser(session.user);
-            loadDashboardData();
-        }
-    };
-
-    const loadDashboardData = async () => {
-        const logsData = await getAdminLogs();
-        setLogs(logsData);
-        const evts = await getEvents();
-        setEventsList(evts);
-        try {
-            const lastBriefing = logsData.find(l => l.action === 'AI_BRIEFING');
-            if (lastBriefing) {
-                setBriefingData(JSON.parse(lastBriefing.details));
-            }
-        } catch(e) {}
-    };
-
-    const handleLogin = async () => {
-        setLoading(true);
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) alert(error.message);
-        else {
-            setUser(data.user);
-            loadDashboardData();
-        }
-        setLoading(false);
-    };
-
-    const handleDrag = (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.type === "dragenter" || e.type === "dragover") {
-            setDragActive(true);
-        } else if (e.type === "dragleave") {
-            setDragActive(false);
-        }
-    };
-
-    const handleDrop = async (e: React.DragEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setDragActive(false);
-        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            await processFile(e.dataTransfer.files[0]);
-        }
-    };
-
-    const handlePaste = async (e: React.ClipboardEvent) => {
-        if (e.clipboardData.files && e.clipboardData.files[0]) {
-            e.preventDefault();
-            await processFile(e.clipboardData.files[0]);
-        }
-    };
-
-    const processFile = async (file: File) => {
-        if (!editingPlace) return;
-        setLoading(true);
-        const res = await uploadImage(file);
-        if (res.success && res.url) {
-            setEditingPlace({ ...editingPlace, imageUrl: res.url });
-        } else {
-            alert("Upload failed: " + (res.error || "Unknown error"));
-        }
-        setLoading(false);
-    };
-
-    const handleGenerateBriefing = async () => {
-        setLoading(true);
-        try {
-            const res = await fetch('/api/cron-briefing');
-            if (res.ok) {
-                loadDashboardData(); 
-            } else {
-                const raw = await generateExecutiveBriefing(logs, places);
-                setBriefingData(JSON.parse(raw));
-            }
-        } catch(e) { console.error(e); }
-        setLoading(false);
-    };
-
-    const handleExportCSV = () => {
-        const headers = ["id", "name", "category", "description", "lat", "lon", "status", "is_featured", "tags", "amenities", "opening_hours", "contact_info", "sponsor_weight"];
-        const rows = places.map(p => [
-            p.id, `"${p.name.replace(/"/g, '""')}"`, p.category, `"${p.description.replace(/"/g, '""')}"`, p.coords.lat, p.coords.lng, p.status, p.is_featured, `"${(p.tags || []).join(', ')}"`, `"${JSON.stringify(p.amenities || {}).replace(/"/g, '""')}"`, `"${JSON.stringify(p.opening_hours || {}).replace(/"/g, '""')}"`, `"${JSON.stringify(p.contact_info || {}).replace(/"/g, '""')}"`, p.sponsor_weight
-        ]);
-        const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `places_export_${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
-
-    const runEditorial = async (type: 'weekly_events' | 'notifications' | 'weekly_summary' | 'daily_content') => {
-        setEditorialLoading(true);
-        const text = await generateEditorialContent(type, places, eventsList);
-        setEditorialResult(text);
-        setEditorialLoading(false);
-    };
-
-    if (!user) {
-        return (
-            <div className="fixed inset-0 z-[5000] bg-slate-900 flex items-center justify-center p-4">
-                <div className="w-full max-w-sm bg-slate-800 p-8 rounded-3xl border border-slate-700 shadow-2xl">
-                    <div className="text-center mb-8">
-                        <div className="w-16 h-16 bg-teal-900/50 text-teal-400 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl border border-teal-500/30"><i className="fa-solid fa-lock"></i></div>
-                        <h2 className="text-2xl font-black text-white">Admin Access</h2>
-                    </div>
-                    <div className="space-y-4">
-                        <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-xl focus:border-teal-500 outline-none" />
-                        <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="w-full bg-slate-900 border border-slate-700 text-white p-3 rounded-xl focus:border-teal-500 outline-none" />
-                        <button onClick={handleLogin} disabled={loading} className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold p-3 rounded-xl transition-colors disabled:opacity-50">{loading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : "Unlock System"}</button>
-                        <button onClick={onClose} className="w-full text-slate-500 text-sm font-bold p-2 hover:text-white">Cancel</button>
-                    </div>
-                </div>
-            </div>
-        );
-    }
-
-    const handleSmartImport = async () => {
-        if (!importQuery) return;
-        setIsImporting(true);
-        const details = await fetchPlaceDetails(importQuery);
-        setIsImporting(false);
-        
-        if (details) {
-            setEditingPlace(prev => ({
-                ...prev!,
-                ...details,
-                id: prev?.id || 'new',
-                status: prev?.status || 'open',
-                isVerified: true, // Default to verified for admin imports
-                coords: details.coords || prev?.coords || { lat: 17.9620, lng: -67.1650 },
-                amenities: { 
-                    ...prev?.amenities, 
-                    ...details.amenities 
-                },
-                opening_hours: details.opening_hours || prev?.opening_hours || { note: '' },
-                parking: details.parking || prev?.parking || ParkingStatus.FREE,
-                isPetFriendly: details.isPetFriendly ?? prev?.isPetFriendly ?? false,
-                hasRestroom: details.hasRestroom ?? prev?.hasRestroom ?? false,
-                hasGenerator: details.hasGenerator ?? prev?.hasGenerator ?? false,
-                imageUrl: details.imageUrl || prev?.imageUrl || '',
-            }));
-            setMapCenterTrigger(prev => prev + 1);
-        } else {
-            alert("Could not find place details. Try a more specific name.");
-        }
-    };
-
-    const handleSavePlace = async () => {
-        if (!editingPlace) return;
-        setLoading(true);
-        
-        // Ensure consistency between status and verification
-        const placeToSave = { ...editingPlace };
-        if (placeToSave.status !== 'pending') {
-            placeToSave.isVerified = true;
-        } else {
-            placeToSave.isVerified = false;
-        }
-
-        if (placeToSave.isLanding) {
-            const conflictingPlaces = places.filter(p => !!p.isLanding && p.id !== placeToSave.id);
-            for (const conflict of conflictingPlaces) {
-                await updatePlace(conflict.id, { ...conflict, isLanding: false });
-            }
-        }
-        
-        let res;
-        if (placeToSave.id === 'new') {
-            const { id, ...newPlace } = placeToSave;
-            res = await createPlace(newPlace);
-        } else {
-            res = await updatePlace(placeToSave.id, placeToSave);
-        }
-        
-        if (res.success) {
-            await onUpdate();
-            setEditingPlace(null);
-            loadDashboardData();
-        } else {
-            alert("Error: " + res.error);
-        }
-        setLoading(false);
-    };
-
-    const handleDeletePlace = async (id: string) => {
-        if (!confirm("Are you sure? This cannot be undone.")) return;
-        await deletePlace(id);
-        await onUpdate();
-        loadDashboardData();
-    };
-
-    const handleMagicWand = async () => {
-        if (!editingPlace) return;
-        setLoading(true);
-        const enhanced = await enrichPlaceMetadata(editingPlace.name, editingPlace.description);
-        setEditingPlace({ ...editingPlace, description: enhanced.description, tags: enhanced.tags, vibe: enhanced.vibe });
-        setLoading(false);
-    };
-
-    const handleAutoLocate = async () => {
-        if (!locationQuery.trim()) return;
-        setLocating(true);
-        const coords = await findCoordinates(locationQuery);
-        setLocating(false);
-        if (coords) {
-            setEditingPlace(prev => prev ? { ...prev, coords: { lat: coords.lat, lng: coords.lng } } : null);
-            setMapCenterTrigger(prev => prev + 1); 
-        } else {
-            alert("Couldn't find coordinates. Try a simpler address or paste a Google Maps link.");
-        }
-    };
-
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) await processFile(file);
-        if (fileInputRef.current) fileInputRef.current.value = '';
-    };
-
-    const landingPlace = places.find(p => p.isLanding);
-
+const Toast = ({ message, type, onClose }: { message: string, type: 'success' | 'error', onClose: () => void }) => {
+    useEffect(() => { const t = setTimeout(onClose, 3000); return () => clearTimeout(t); }, []);
     return (
-        <div className="fixed inset-0 z-[5000] bg-slate-900 text-white flex overflow-hidden font-sans">
-            <div className="w-64 bg-slate-950 border-r border-slate-800 flex flex-col shrink-0">
-                <div className="p-6">
-                    <h2 className="text-xl font-black tracking-tighter text-teal-400">EL VECI <span className="text-slate-600">OS</span></h2>
-                    <p className="text-xs text-slate-500 font-mono mt-1">v2.9.0 • Stable</p>
+        <div className={`fixed top-4 left-1/2 -translate-x-1/2 z-[6000] px-6 py-3 rounded-full shadow-2xl flex items-center gap-3 animate-slide-up ${type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'}`}>
+            <i className={`fa-solid fa-${type === 'success' ? 'check' : 'triangle-exclamation'}`}></i>
+            <span className="font-bold text-sm">{message}</span>
+        </div>
+    );
+};
+
+// --- MAIN COMPONENT ---
+
+const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
+  // Auth State
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authLoading, setAuthLoading] = useState(true);
+
+  // App State
+  const [activeTab, setActiveTab] = useState<'places' | 'events' | 'logs'>('places');
+  const [editingPlace, setEditingPlace] = useState<Partial<Place> | null>(null);
+  const [editingEvent, setEditingEvent] = useState<Partial<Event> | null>(null);
+  const [logs, setLogs] = useState<AdminLog[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [toast, setToast] = useState<{msg: string, type: 'success'|'error'} | null>(null);
+  
+  // Smart Import State
+  const [importQuery, setImportQuery] = useState('');
+  const [importLoading, setImportLoading] = useState(false);
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Filter lists
+  const filteredPlaces = places.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredEvents = events.filter(e => e.title.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  // Check Session on Mount
+  useEffect(() => {
+      checkSession().then(hasSession => {
+          if (hasSession) setIsAuthenticated(true);
+          setAuthLoading(false);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'logs' && isAuthenticated) {
+      getAdminLogs().then(setLogs);
+    }
+  }, [activeTab, isAuthenticated]);
+
+  const handleLogin = async () => {
+      if (!email || !password) return showToast("Enter credentials", 'error');
+      setAuthLoading(true);
+      const res = await loginAdmin(email, password);
+      setAuthLoading(false);
+      if (res.user) {
+          setIsAuthenticated(true);
+      } else {
+          showToast(res.error || "Login failed", 'error');
+      }
+  };
+
+  const showToast = (msg: string, type: 'success' | 'error') => {
+      setToast({ msg, type });
+      setTimeout(() => setToast(null), 3000);
+  };
+
+  const handleGetLocation = () => {
+      if (!navigator.geolocation) return alert("Geolocation not supported");
+      navigator.geolocation.getCurrentPosition(
+          (pos) => {
+              if (editingPlace) {
+                  setEditingPlace({
+                      ...editingPlace,
+                      coords: { lat: pos.coords.latitude, lng: pos.coords.longitude }
+                  });
+                  showToast("GPS Updated!", 'success');
+              }
+          },
+          (err) => alert("Error getting location: " + err.message),
+          { enableHighAccuracy: true }
+      );
+  };
+
+  const handleSavePlace = async () => {
+    if (!editingPlace || !editingPlace.name) return showToast("Name is required", 'error');
+    setIsSaving(true);
+    try {
+      if (editingPlace.id) {
+        const res = await updatePlace(editingPlace.id, editingPlace);
+        if (!res.success) throw new Error(res.error);
+      } else {
+        const res = await createPlace(editingPlace);
+        if (!res.success) throw new Error(res.error);
+      }
+      await onUpdate();
+      showToast("Guardado exitosamente", 'success');
+      setEditingPlace(null); // Return to list on mobile/desktop
+    } catch (e: any) {
+      showToast(e.message || "Error saving", 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleDeletePlace = async (id: string) => {
+    if (confirm("Are you sure? This action cannot be undone.")) {
+      await deletePlace(id);
+      await onUpdate();
+      setEditingPlace(null);
+      showToast("Place deleted", 'success');
+    }
+  };
+
+  const handleSaveEvent = async () => {
+      if (!editingEvent || !editingEvent.title) return showToast("Title is required", 'error');
+      setIsSaving(true);
+      try {
+          if (editingEvent.id) {
+              await updateEvent(editingEvent.id, editingEvent);
+          } else {
+              await createEvent(editingEvent);
+          }
+          await onUpdate();
+          setEditingEvent(null);
+          showToast("Event saved", 'success');
+      } catch (e: any) {
+          showToast(e.message || "Error saving event", 'error');
+      } finally {
+          setIsSaving(false);
+      }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      setIsUploading(true);
+      const res = await uploadImage(file);
+      setIsUploading(false);
+
+      if (res.success && res.url) {
+          if (activeTab === 'places' && editingPlace) {
+              setEditingPlace({ ...editingPlace, imageUrl: res.url });
+          } else if (activeTab === 'events' && editingEvent) {
+              setEditingEvent({ ...editingEvent, imageUrl: res.url });
+          }
+          showToast("Image uploaded!", 'success');
+      } else {
+          showToast(res.error || "Upload failed", 'error');
+      }
+  };
+
+  const handleSmartImport = async () => {
+      if (!importQuery) return showToast("Enter a name or link", 'error');
+      setImportLoading(true);
+      try {
+          const details = await fetchPlaceDetails(importQuery);
+          if (details) {
+              setEditingPlace(prev => ({
+                  ...prev,
+                  ...details,
+                  id: prev?.id, // Preserve ID
+                  status: prev?.status || 'open'
+              }));
+              showToast("Import Successful!", 'success');
+              setImportQuery('');
+          } else {
+              showToast("Could not find place details.", 'error');
+          }
+      } catch (e) {
+          showToast("Import failed", 'error');
+      } finally {
+          setImportLoading(false);
+      }
+  };
+
+  // --- SCHEDULE HELPERS ---
+  const getStructuredHours = (): DaySchedule[] => {
+      if (editingPlace?.opening_hours?.structured && editingPlace.opening_hours.structured.length === 7) {
+          return editingPlace.opening_hours.structured;
+      }
+      // Initialize if missing
+      return Array(7).fill(null).map((_, i) => ({ day: i, open: '09:00', close: '17:00', isClosed: false }));
+  };
+
+  const updateScheduleDay = (idx: number, field: keyof DaySchedule, val: any) => {
+      const current = getStructuredHours();
+      current[idx] = { ...current[idx], [field]: val };
+      setEditingPlace({
+          ...editingPlace,
+          opening_hours: { ...(editingPlace?.opening_hours || {}), structured: current }
+      });
+  };
+
+  const applyMonToFri = () => {
+      const current = getStructuredHours();
+      const monday = current[1]; // Monday
+      const newSchedule = current.map((d, i) => {
+          if (i >= 1 && i <= 5) return { ...d, open: monday.open, close: monday.close, isClosed: monday.isClosed };
+          return d;
+      });
+      setEditingPlace({
+          ...editingPlace,
+          opening_hours: { ...(editingPlace?.opening_hours || {}), structured: newSchedule }
+      });
+      showToast("Applied Mon settings to Tue-Fri", 'success');
+  };
+
+  // --- LOGIN SCREEN ---
+  if (!isAuthenticated) {
+      return (
+        <div className="fixed inset-0 bg-slate-900 z-[5000] flex flex-col items-center justify-center p-6 animate-fade-in font-sans text-slate-200">
+            {toast && <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
+            <button onClick={onClose} className="absolute top-4 right-4 p-2 text-slate-500 hover:text-white"><i className="fa-solid fa-xmark text-2xl"></i></button>
+            
+            <div className="w-full max-w-sm">
+                <div className="text-center mb-8">
+                    <div className="w-20 h-20 bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-700 shadow-xl">
+                        <i className="fa-solid fa-lock text-3xl text-teal-500"></i>
+                    </div>
+                    <h1 className="text-2xl font-black text-white">Admin Access</h1>
+                    <p className="text-slate-500 text-sm">Secure Entry Point</p>
                 </div>
-                <nav className="flex-1 px-4 space-y-1">
-                    {[{ id: 'dashboard', icon: 'chart-line', label: 'Dashboard' }, { id: 'places', icon: 'map-location-dot', label: 'Places DB' }, { id: 'events', icon: 'calendar-days', label: 'Events' }, { id: 'editorial', icon: 'pen-nib', label: 'Editorial' }, { id: 'marketing', icon: 'bullhorn', label: 'Marketing AI' }, { id: 'team', icon: 'users', label: 'Team' }, { id: 'logs', icon: 'terminal', label: 'System Logs' }].map(item => (
-                        <button key={item.id} onClick={() => setActiveTab(item.id as any)} className={`w-full flex items-center gap-3 p-3 rounded-lg text-sm font-bold transition-all ${activeTab === item.id ? 'bg-teal-900/30 text-teal-400 border border-teal-500/30' : 'text-slate-400 hover:bg-slate-900 hover:text-white'}`}>
-                            <i className={`fa-solid fa-${item.icon} w-5 text-center`}></i>{item.label}
-                        </button>
-                    ))}
-                </nav>
-                <div className="p-4 border-t border-slate-800">
-                    <button onClick={onClose} className="w-full flex items-center gap-3 p-3 rounded-lg text-sm font-bold text-slate-400 hover:text-white hover:bg-red-900/20 transition-colors"><i className="fa-solid fa-power-off w-5 text-center"></i>Exit System</button>
+
+                <div className="space-y-4">
+                    <input 
+                        type="email" 
+                        placeholder="Email" 
+                        value={email}
+                        onChange={e => setEmail(e.target.value)}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl p-4 text-white outline-none focus:border-teal-500 transition-colors"
+                    />
+                    <input 
+                        type="password" 
+                        placeholder="Password" 
+                        value={password}
+                        onChange={e => setPassword(e.target.value)}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl p-4 text-white outline-none focus:border-teal-500 transition-colors"
+                    />
+                    <button 
+                        onClick={handleLogin} 
+                        disabled={authLoading}
+                        className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-teal-900/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                    >
+                        {authLoading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : 'Login'}
+                    </button>
                 </div>
             </div>
+        </div>
+      );
+  }
 
-            <div className="flex-1 flex flex-col overflow-hidden bg-slate-900 relative">
-                <header className="h-16 border-b border-slate-800 flex items-center justify-between px-6 bg-slate-900/50 backdrop-blur-md sticky top-0 z-20">
-                    <h1 className="text-lg font-bold uppercase tracking-widest text-slate-400">{activeTab}</h1>
-                    <div className="flex items-center gap-4"><div className="flex items-center gap-2 px-3 py-1.5 bg-green-900/30 rounded-full border border-green-500/30"><div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div><span className="text-xs font-bold text-green-400">System Online</span></div></div>
-                </header>
+  // --- DASHBOARD ---
+  const isEditing = editingPlace || editingEvent;
 
-                <div className="flex-1 overflow-y-auto p-6">
-                    {activeTab === 'dashboard' && (
-                        <div className="max-w-5xl mx-auto space-y-6">
-                            <div className="grid grid-cols-4 gap-4">
-                                <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700">
-                                    <p className="text-xs font-bold text-slate-500 uppercase">Total Places</p>
-                                    <p className="text-3xl font-black text-white">{places.length}</p>
-                                </div>
-                                <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700">
-                                    <p className="text-xs font-bold text-slate-500 uppercase">Pending Review</p>
-                                    <p className="text-3xl font-black text-orange-400">{places.filter(p => p.status === 'pending').length}</p>
-                                </div>
-                                <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700">
-                                    <p className="text-xs font-bold text-slate-500 uppercase">Events Active</p>
-                                    <p className="text-3xl font-black text-purple-400">{eventsList.length}</p>
-                                </div>
-                                <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700">
-                                    <p className="text-xs font-bold text-slate-500 uppercase">Logs (24h)</p>
-                                    <p className="text-3xl font-black text-blue-400">{logs.length}</p>
-                                </div>
+  return (
+    <div className="fixed inset-0 bg-slate-900 z-[5000] flex flex-col font-sans text-slate-200">
+      
+      {toast && <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
+
+      {/* HEADER */}
+      <header className="bg-slate-900 border-b border-slate-700 p-3 flex justify-between items-center shadow-md z-20 h-16 shrink-0">
+        {isEditing ? (
+            <div className="flex items-center gap-3 w-full">
+                <button 
+                    onClick={() => { setEditingPlace(null); setEditingEvent(null); }} 
+                    className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 active:bg-slate-700 transition-colors"
+                >
+                    <i className="fa-solid fa-arrow-left"></i>
+                </button>
+                <div className="flex-1 min-w-0">
+                    <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Editing</h2>
+                    <p className="text-white font-bold truncate">{editingPlace?.name || editingEvent?.title || 'New Item'}</p>
+                </div>
+                <button 
+                    onClick={activeTab === 'places' ? handleSavePlace : handleSaveEvent} 
+                    disabled={isSaving}
+                    className="bg-teal-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-teal-900/20 active:scale-95 transition-transform flex items-center gap-2"
+                >
+                    {isSaving && <i className="fa-solid fa-circle-notch fa-spin"></i>}
+                    <span>Save</span>
+                </button>
+            </div>
+        ) : (
+            <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-3">
+                    <div className="bg-teal-600 w-8 h-8 rounded-lg flex items-center justify-center shadow-lg shadow-teal-500/20">
+                        <i className="fa-solid fa-lock text-white text-xs"></i>
+                    </div>
+                    <span className="font-black text-lg tracking-tight">Admin</span>
+                </div>
+                
+                <div className="flex bg-slate-800 p-1 rounded-lg border border-slate-700">
+                    <button onClick={() => setActiveTab('places')} className={`px-3 py-1.5 rounded-md text-xs font-bold ${activeTab === 'places' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>Places</button>
+                    <button onClick={() => setActiveTab('events')} className={`px-3 py-1.5 rounded-md text-xs font-bold ${activeTab === 'events' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>Events</button>
+                    <button onClick={() => setActiveTab('logs')} className={`px-3 py-1.5 rounded-md text-xs font-bold ${activeTab === 'logs' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>Logs</button>
+                </div>
+
+                <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center border border-slate-700">
+                    <i className="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        )}
+      </header>
+
+      {/* BODY CONTENT */}
+      <div className="flex-1 overflow-hidden flex relative">
+        
+        {/* LIST VIEW (Sidebar on Desktop, Full on Mobile when not editing) */}
+        <div className={`w-full md:w-80 border-r border-slate-700 bg-slate-900 flex flex-col ${isEditing ? 'hidden md:flex' : 'flex'}`}>
+            <div className="p-4 border-b border-slate-700">
+                <div className="relative">
+                    <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                    <input 
+                        type="text" 
+                        placeholder="Search..." 
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-white text-sm focus:border-teal-500 outline-none"
+                    />
+                </div>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
+                {activeTab === 'places' && (
+                    <>
+                    <button 
+                        onClick={() => setEditingPlace({ name: '', category: PlaceCategory.FOOD, status: 'open', plan: 'free', coords: { lat: 0, lng: 0 }, amenities: {}, parking: ParkingStatus.FREE })} 
+                        className="w-full p-4 rounded-xl border-2 border-dashed border-slate-700 text-slate-400 hover:border-teal-500 hover:text-teal-500 hover:bg-slate-800 transition-all font-bold text-sm flex items-center justify-center gap-2"
+                    >
+                        <i className="fa-solid fa-plus"></i> Add New Place
+                    </button>
+                    {filteredPlaces.map(p => (
+                        <div key={p.id} onClick={() => setEditingPlace(p)} className={`p-4 rounded-xl border cursor-pointer transition-all active:scale-[0.98] ${editingPlace?.id === p.id ? 'bg-teal-900/20 border-teal-500/50' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'}`}>
+                            <div className="flex justify-between items-start mb-1">
+                                <h4 className={`font-bold text-sm truncate ${editingPlace?.id === p.id ? 'text-teal-400' : 'text-slate-200'}`}>{p.name}</h4>
+                                <div className={`w-2 h-2 rounded-full mt-1.5 ${p.status === 'open' ? 'bg-emerald-500' : p.status === 'pending' ? 'bg-amber-500 animate-pulse' : 'bg-red-500'}`}></div>
                             </div>
-                            <div className="bg-teal-900/20 border border-teal-500/30 p-4 rounded-2xl flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-teal-500/20 text-teal-400 rounded-full flex items-center justify-center"><i className="fa-solid fa-map-pin text-xl"></i></div>
-                                    <div><h3 className="font-bold text-white text-lg">Current Start Location</h3><p className="text-teal-200/70 text-sm">{landingPlace ? landingPlace.name : 'None Set (Using Default)'}</p></div>
-                                </div>
-                                {landingPlace && <button onClick={() => setEditingPlace(landingPlace)} className="bg-teal-600 hover:bg-teal-500 text-white px-4 py-2 rounded-lg text-sm font-bold">Edit</button>}
+                            <div className="flex items-center gap-2 text-xs text-slate-500">
+                                <span className="uppercase tracking-wider font-bold">{p.category}</span>
+                                {p.is_featured && <span className="text-amber-500"><i className="fa-solid fa-star"></i></span>}
                             </div>
                         </div>
-                    )}
-
-                    {activeTab === 'places' && (
-                        <div className="space-y-4">
-                            <div className="flex justify-between gap-4">
-                                <input type="text" placeholder="Search places..." className="flex-1 bg-slate-800 border border-slate-700 text-white p-3 rounded-xl focus:outline-none focus:border-teal-500" value={placeSearchTerm} onChange={e => setPlaceSearchTerm(e.target.value)} />
-                                <button onClick={handleExportCSV} className="bg-slate-700 hover:bg-slate-600 text-white font-bold px-4 py-2 rounded-xl transition-colors flex items-center gap-2"><i className="fa-solid fa-file-csv"></i> Export CSV</button>
-                                <button onClick={() => setEditingPlace({ id: 'new', name: '', category: PlaceCategory.FOOD, description: '', coords: { lat: 18.0, lng: -67.1 }, amenities: {}, status: 'open', isVerified: true, is_featured: false, sponsor_weight: 0, plan: 'free', parking: ParkingStatus.FREE, imagePosition: 'center' } as Place)} className="bg-teal-600 hover:bg-teal-500 text-white font-bold px-6 rounded-xl transition-colors shadow-lg shadow-teal-900/20"><i className="fa-solid fa-plus mr-2"></i> New Place</button>
+                    ))}
+                    </>
+                )}
+                
+                {activeTab === 'events' && (
+                     <>
+                        <button onClick={() => setEditingEvent({ title: '', category: EventCategory.COMMUNITY, status: 'published' })} className="w-full p-4 rounded-xl border-2 border-dashed border-slate-700 text-slate-400 hover:border-teal-500 hover:text-teal-500 hover:bg-slate-800 transition-all font-bold text-sm flex items-center justify-center gap-2">
+                            <i className="fa-solid fa-plus"></i> Add New Event
+                        </button>
+                        {filteredEvents.map(e => (
+                             <div key={e.id} onClick={() => setEditingEvent(e)} className="p-4 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 cursor-pointer">
+                                <h4 className="text-slate-200 font-bold text-sm truncate">{e.title}</h4>
+                                <p className="text-slate-500 text-xs truncate">{new Date(e.startTime).toLocaleDateString()}</p>
                             </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {places.filter(p => p.name.toLowerCase().includes(placeSearchTerm.toLowerCase())).map(place => (
-                                    <div key={place.id} onClick={() => setEditingPlace(place)} className="bg-slate-800 border border-slate-700 rounded-xl p-4 cursor-pointer hover:border-teal-500 transition-all group relative overflow-hidden">
-                                        <div className="flex justify-between items-start mb-2 relative z-10">
-                                            <div><h3 className="font-bold text-white group-hover:text-teal-400 transition-colors">{place.name}</h3><span className="text-xs text-slate-500 uppercase font-bold tracking-wider">{place.category}</span></div>
-                                            <div className={`w-2 h-2 rounded-full ${place.status === 'open' ? 'bg-green-500' : place.status === 'pending' ? 'bg-orange-500 animate-pulse' : 'bg-red-500'}`}></div>
-                                        </div>
-                                        {place.imageUrl && <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity"><img src={place.imageUrl} className="w-full h-full object-cover" style={{ objectPosition: place.imagePosition || 'center' }} /></div>}
-                                        {place.isLanding && <span className="absolute top-2 right-2 bg-teal-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full z-20 shadow-sm"><i className="fa-solid fa-house"></i> START</span>}
-                                        <p className="text-xs text-slate-400 line-clamp-2 relative z-10">{place.description}</p>
+                        ))}
+                    </>
+                )}
+
+                {activeTab === 'logs' && (
+                     <div className="space-y-3">
+                        {logs.map(log => (
+                            <div key={log.id} className="bg-slate-800 p-3 rounded-xl border border-slate-700 text-xs">
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className={`font-bold px-1.5 rounded ${log.action === 'UPDATE' ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'}`}>{log.action}</span>
+                                    <span className="text-slate-500">{new Date(log.created_at).toLocaleTimeString()}</span>
+                                </div>
+                                <p className="text-slate-300 font-medium truncate">{log.place_name}</p>
+                                <p className="text-slate-500 truncate">{log.details}</p>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+
+        {/* EDITOR VIEW (Full screen on mobile if editing) */}
+        <div className={`flex-1 bg-slate-900 overflow-y-auto custom-scrollbar ${isEditing ? 'absolute inset-0 z-10 md:static' : 'hidden md:flex flex-col items-center justify-center'}`}>
+            
+            {activeTab === 'places' && editingPlace ? (
+                <div className="p-4 md:p-8 max-w-3xl mx-auto pb-32 animate-slide-up">
+                    
+                    {/* ID & Delete Header */}
+                    <div className="flex justify-between items-center mb-6 bg-slate-800 p-4 rounded-xl border border-slate-700">
+                        <span className="font-mono text-xs text-slate-500">{editingPlace.id || 'NEW RECORD'}</span>
+                        {editingPlace.id && <button onClick={() => handleDeletePlace(editingPlace.id!)} className="text-red-500 hover:bg-red-500/10 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">Delete Record</button>}
+                    </div>
+
+                    {/* SMART IMPORT */}
+                    <div className="bg-gradient-to-r from-indigo-900/50 to-purple-900/50 p-4 rounded-2xl border border-indigo-500/30 mb-6 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 p-4 opacity-10">
+                            <i className="fa-solid fa-wand-magic-sparkles text-6xl text-white"></i>
+                        </div>
+                        <h3 className="text-sm font-bold text-indigo-200 uppercase tracking-wide mb-3 flex items-center gap-2">
+                            <i className="fa-solid fa-bolt text-yellow-400"></i> Smart Import
+                        </h3>
+                        <div className="flex gap-2 relative z-10">
+                            <input 
+                                className="flex-1 bg-slate-900/80 border border-indigo-500/30 rounded-xl px-4 text-white placeholder:text-indigo-300/50 focus:border-indigo-400 outline-none" 
+                                placeholder="Paste Google Maps Link or Place Name..."
+                                value={importQuery}
+                                onChange={(e) => setImportQuery(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleSmartImport()}
+                            />
+                            <button 
+                                onClick={handleSmartImport}
+                                disabled={importLoading}
+                                className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-xl font-bold transition-all shadow-lg shadow-indigo-900/50 flex items-center gap-2 disabled:opacity-50"
+                            >
+                                {importLoading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-download"></i>}
+                                <span className="hidden md:inline">Auto-Fill</span>
+                            </button>
+                        </div>
+                        <p className="text-[10px] text-indigo-300 mt-2 ml-1">
+                            Fetches photos, hours, address, coords & more from Google/Web.
+                        </p>
+                    </div>
+
+                    <Section title="Basic Info" icon="circle-info">
+                        <InputGroup label="Name"><StyledInput value={editingPlace.name || ''} onChange={e => setEditingPlace({...editingPlace, name: e.target.value})} /></InputGroup>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <InputGroup label="Category">
+                                <StyledSelect 
+                                    value={editingPlace.category || PlaceCategory.FOOD} 
+                                    onChange={e => setEditingPlace({...editingPlace, category: e.target.value as PlaceCategory})}
+                                >
+                                    {Object.values(PlaceCategory).map(c => <option key={c} value={c}>{c}</option>)}
+                                </StyledSelect>
+                            </InputGroup>
+                            <InputGroup label="Icon Name">
+                                <div className="flex gap-2">
+                                    <StyledInput value={editingPlace.customIcon || ''} onChange={e => setEditingPlace({...editingPlace, customIcon: e.target.value})} placeholder="pizza-slice" />
+                                    <div className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-teal-400 text-xl shrink-0">
+                                        <i className={`fa-solid fa-${editingPlace.customIcon || 'icons'}`}></i>
                                     </div>
-                                ))}
-                            </div>
+                                </div>
+                            </InputGroup>
                         </div>
-                    )}
+                        <InputGroup label="Description"><StyledTextArea value={editingPlace.description || ''} onChange={e => setEditingPlace({...editingPlace, description: e.target.value})} /></InputGroup>
+                        <InputGroup label="Tags"><StyledInput value={(editingPlace.tags || []).join(', ')} onChange={e => setEditingPlace({...editingPlace, tags: e.target.value.split(',').map(s => s.trim())})} /></InputGroup>
+                    </Section>
 
-                    {activeTab === 'team' && (
-                        <div className="max-w-4xl mx-auto space-y-6">
-                            <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
-                                <h3 className="text-xl font-bold text-white mb-4">Administrators</h3>
-                                <div className="space-y-4">
-                                    {teamMembers.map(member => (
-                                        <div key={member.id} className="flex items-center justify-between p-4 bg-slate-900 rounded-xl border border-slate-700">
-                                            <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-full bg-teal-900/50 border border-teal-500/30 flex items-center justify-center text-teal-400 font-bold">{member.name.charAt(0)}</div><div><h4 className="text-white font-bold">{member.name}</h4><p className="text-xs text-slate-500">{member.email}</p></div></div>
-                                            <div className="flex items-center gap-4"><div className="text-right"><p className="text-[10px] text-slate-500 uppercase font-bold">Status</p><div className="flex items-center gap-1.5 justify-end"><div className={`w-2 h-2 rounded-full ${member.status === 'Online' ? 'bg-green-500 animate-pulse' : 'bg-teal-500'}`}></div><span className="text-xs text-white">{member.status}</span></div></div></div>
+                    <Section title="Location" icon="map-location-dot">
+                        <InputGroup label="Address"><StyledInput value={editingPlace.address || ''} onChange={e => setEditingPlace({...editingPlace, address: e.target.value})} /></InputGroup>
+                        <div className="grid grid-cols-2 gap-4">
+                             <InputGroup label="Lat"><StyledInput type="number" value={editingPlace.coords?.lat || 0} onChange={e => setEditingPlace({...editingPlace, coords: { ...editingPlace.coords!, lat: parseFloat(e.target.value) }})} /></InputGroup>
+                             <InputGroup label="Lng"><StyledInput type="number" value={editingPlace.coords?.lng || 0} onChange={e => setEditingPlace({...editingPlace, coords: { ...editingPlace.coords!, lng: parseFloat(e.target.value) }})} /></InputGroup>
+                        </div>
+                        <button onClick={handleGetLocation} className="w-full py-3 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/50 font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform">
+                            <i className="fa-solid fa-location-crosshairs"></i> Use My Current Location
+                        </button>
+                        <InputGroup label="Maps Link"><StyledInput value={editingPlace.gmapsUrl || ''} onChange={e => setEditingPlace({...editingPlace, gmapsUrl: e.target.value})} /></InputGroup>
+                    </Section>
+
+                    <Section title="Operations & Hours" icon="clock">
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 block">Hours Strategy</label>
+                        <div className="bg-slate-900/50 p-1 rounded-xl border border-slate-700 flex mb-4">
+                            {['fixed', '24_7', 'sunrise_sunset'].map(type => (
+                                <button 
+                                    key={type}
+                                    onClick={() => setEditingPlace({...editingPlace, opening_hours: { ...(editingPlace.opening_hours || {}), type: type as any } })}
+                                    className={`flex-1 py-2 text-[10px] font-bold uppercase rounded-lg transition-colors ${editingPlace.opening_hours?.type === type || (!editingPlace.opening_hours?.type && type === 'fixed') ? 'bg-teal-600 text-white shadow-sm' : 'text-slate-400 hover:text-white'}`}
+                                >
+                                    {type === '24_7' ? '24/7' : type.replace('_', ' ')}
+                                </button>
+                            ))}
+                        </div>
+                        
+                        {(!editingPlace.opening_hours?.type || editingPlace.opening_hours?.type === 'fixed') && (
+                            <div className="space-y-4">
+                                <InputGroup label="Display Note (e.g. Daily 8am-5pm)">
+                                    <StyledInput 
+                                        value={editingPlace.opening_hours?.note || ''} 
+                                        onChange={e => setEditingPlace({...editingPlace, opening_hours: { ...editingPlace.opening_hours, note: e.target.value }})} 
+                                    />
+                                </InputGroup>
+
+                                <div className="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden">
+                                    <div className="p-3 bg-slate-800 border-b border-slate-700 flex justify-between items-center">
+                                        <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">Weekly Schedule</span>
+                                        <button onClick={applyMonToFri} className="text-[10px] bg-teal-600/20 text-teal-400 px-2 py-1 rounded hover:bg-teal-600/30 transition-colors font-bold">
+                                            Apply Mon-Fri
+                                        </button>
+                                    </div>
+                                    {getStructuredHours().map((dayData, index) => (
+                                        <div key={index} className="flex items-center gap-3 p-3 border-b border-slate-800 last:border-0 hover:bg-slate-800/30 transition-colors">
+                                            <div className="w-8 text-xs font-bold text-slate-400 uppercase">{DAYS[index]}</div>
+                                            
+                                            <div className="flex-1 flex items-center gap-2">
+                                                {!dayData.isClosed ? (
+                                                    <>
+                                                        <input 
+                                                            type="time" 
+                                                            value={dayData.open} 
+                                                            onChange={e => updateScheduleDay(index, 'open', e.target.value)}
+                                                            className="bg-slate-800 text-white text-sm rounded-lg p-1 border border-slate-600 focus:border-teal-500 outline-none w-24 text-center"
+                                                        />
+                                                        <span className="text-slate-600 font-bold">-</span>
+                                                        <input 
+                                                            type="time" 
+                                                            value={dayData.close} 
+                                                            onChange={e => updateScheduleDay(index, 'close', e.target.value)}
+                                                            className="bg-slate-800 text-white text-sm rounded-lg p-1 border border-slate-600 focus:border-teal-500 outline-none w-24 text-center"
+                                                        />
+                                                    </>
+                                                ) : (
+                                                    <span className="text-xs text-slate-500 italic flex-1 text-center font-medium bg-slate-800/50 py-1.5 rounded-lg">Closed</span>
+                                                )}
+                                            </div>
+
+                                            <button 
+                                                onClick={() => updateScheduleDay(index, 'isClosed', !dayData.isClosed)}
+                                                className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${dayData.isClosed ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}
+                                                title={dayData.isClosed ? "Mark as Open" : "Mark as Closed"}
+                                            >
+                                                <i className={`fa-solid ${dayData.isClosed ? 'fa-ban' : 'fa-check'}`}></i>
+                                            </button>
                                         </div>
                                     ))}
                                 </div>
                             </div>
+                        )}
+                        <InputGroup label="Phone"><StyledInput type="tel" value={editingPlace.phone || ''} onChange={e => setEditingPlace({...editingPlace, phone: e.target.value})} /></InputGroup>
+                        <InputGroup label="Website"><StyledInput value={editingPlace.website || ''} onChange={e => setEditingPlace({...editingPlace, website: e.target.value})} /></InputGroup>
+                    </Section>
+
+                    <Section title="Media" icon="image">
+                         <div 
+                            className="relative w-full aspect-video bg-slate-800 rounded-xl border-2 border-dashed border-slate-700 flex flex-col items-center justify-center overflow-hidden mb-4"
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            {editingPlace.imageUrl ? (
+                                <img src={editingPlace.imageUrl} className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="text-center p-4 text-slate-500">
+                                    <i className="fa-solid fa-cloud-arrow-up text-3xl mb-2"></i>
+                                    <p className="font-bold">Tap to Upload</p>
+                                </div>
+                            )}
+                            {isUploading && <div className="absolute inset-0 bg-black/60 flex items-center justify-center"><i className="fa-solid fa-spinner fa-spin text-2xl"></i></div>}
                         </div>
-                    )}
-
-                    {editingPlace && (
-                        <div className="fixed inset-0 z-[6000] bg-slate-950/80 backdrop-blur-sm flex justify-end">
-                            <div className="w-full max-w-2xl bg-slate-900 h-full border-l border-slate-800 shadow-2xl flex flex-col animate-slide-up" onPaste={handlePaste}>
-                                <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900 z-10">
-                                    <div><h2 className="text-xl font-black text-white">{editingPlace.id === 'new' ? 'Create New Place' : 'Edit Place'}</h2><p className="text-xs text-slate-500 font-mono">{editingPlace.id}</p></div>
-                                    <div className="flex gap-2">
-                                        {editingPlace.id !== 'new' && <button onClick={() => handleDeletePlace(editingPlace.id)} className="w-10 h-10 rounded-full bg-red-900/20 text-red-500 hover:bg-red-500 hover:text-white transition-colors flex items-center justify-center"><i className="fa-solid fa-trash"></i></button>}
-                                        <button onClick={() => setEditingPlace(null)} className="w-10 h-10 rounded-full bg-slate-800 text-slate-400 hover:text-white transition-colors flex items-center justify-center"><i className="fa-solid fa-xmark"></i></button>
-                                    </div>
-                                </div>
-                                <div className="flex-1 overflow-y-auto p-6 space-y-8 pb-32">
-                                    <div className="bg-gradient-to-br from-blue-900/30 to-slate-800 p-5 rounded-2xl border border-blue-500/20 shadow-lg">
-                                        <label className="text-xs font-bold text-blue-400 uppercase mb-2 block flex items-center gap-2">
-                                            <i className="fa-solid fa-bolt"></i> Smart Import
-                                        </label>
-                                        <div className="flex gap-2">
-                                            <input 
-                                                type="text" 
-                                                value={importQuery}
-                                                onChange={(e) => setImportQuery(e.target.value)}
-                                                placeholder="Paste Google Maps Link or Place Name..."
-                                                className="flex-1 bg-slate-900 border border-slate-700 text-white p-3 rounded-xl focus:border-blue-500 outline-none text-sm"
-                                            />
-                                            <button 
-                                                onClick={handleSmartImport}
-                                                disabled={isImporting || !importQuery}
-                                                className="bg-blue-600 hover:bg-blue-500 text-white px-5 rounded-xl text-sm font-bold transition-colors disabled:opacity-50 flex items-center gap-2"
-                                            >
-                                                {isImporting ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-wand-magic-sparkles"></i>}
-                                                Auto-Fill
-                                            </button>
-                                        </div>
-                                        <p className="text-[10px] text-slate-400 mt-2">
-                                            El Veci will search Google to extract the address, category, phone, photo, and hours.
-                                        </p>
-                                    </div>
-
-                                    <div className="bg-gradient-to-r from-purple-900/20 to-teal-900/20 p-4 rounded-xl border border-white/5 flex items-center justify-between">
-                                        <div><h4 className="text-sm font-bold text-white"><i className="fa-solid fa-wand-magic-sparkles text-purple-400 mr-2"></i>AI Assistant</h4><p className="text-xs text-slate-400">Auto-enhance descriptions & tags</p></div>
-                                        <button onClick={handleMagicWand} disabled={loading} className="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">{loading ? 'Thinking...' : 'Magic Fix'}</button>
-                                    </div>
-                                    <div className={`p-4 rounded-xl border flex items-center justify-between transition-colors ${editingPlace.isLanding ? 'bg-teal-900/30 border-teal-500/50' : 'bg-slate-800 border-slate-700'}`}>
-                                        <div className="flex items-center gap-3"><div className={`w-10 h-10 rounded-full flex items-center justify-center ${editingPlace.isLanding ? 'bg-teal-500 text-white' : 'bg-slate-700 text-slate-400'}`}><i className="fa-solid fa-map-pin"></i></div><div><h4 className={`font-bold text-sm ${editingPlace.isLanding ? 'text-teal-400' : 'text-white'}`}>Start Location</h4><p className="text-xs text-slate-400">Users will land here.</p></div></div>
-                                        <label className="relative inline-flex items-center cursor-pointer"><input type="checkbox" className="sr-only peer" checked={editingPlace.isLanding || false} onChange={e => setEditingPlace({...editingPlace, isLanding: e.target.checked})} /><div className="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div></label>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <InputGroup label="Status">
-                                            <select 
-                                                value={editingPlace.status} 
-                                                onChange={e => {
-                                                    const newStatus = e.target.value as any;
-                                                    setEditingPlace({
-                                                        ...editingPlace, 
-                                                        status: newStatus,
-                                                        isVerified: newStatus !== 'pending' 
-                                                    })
-                                                }} 
-                                                className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg p-2.5 text-sm"
-                                            >
-                                                <option value="open">Open</option>
-                                                <option value="closed">Closed</option>
-                                                <option value="pending">Pending</option>
-                                            </select>
-                                        </InputGroup>
-                                        <InputGroup label="Plan"><select value={editingPlace.plan} onChange={e => setEditingPlace({...editingPlace, plan: e.target.value as any})} className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg p-2.5 text-sm"><option value="free">Free</option><option value="basic">Basic</option><option value="pro">Pro</option></select></InputGroup>
-                                    </div>
-                                    
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <label className="bg-slate-800 p-3 rounded-xl border border-slate-700 flex items-center justify-between cursor-pointer hover:bg-slate-700/50">
-                                            <span className="text-xs font-bold text-white">Parking?</span>
-                                            <select 
-                                                value={editingPlace.parking} 
-                                                onChange={e => setEditingPlace({...editingPlace, parking: e.target.value as any})}
-                                                className="bg-transparent text-teal-400 text-xs font-bold outline-none text-right w-16"
-                                            >
-                                                <option value="FREE">Free</option>
-                                                <option value="PAID">Paid</option>
-                                                <option value="NONE">None</option>
-                                            </select>
-                                        </label>
-                                        <label className="bg-slate-800 p-3 rounded-xl border border-slate-700 flex items-center justify-between cursor-pointer hover:bg-slate-700/50">
-                                            <span className="text-xs font-bold text-white">Pet?</span>
-                                            <input type="checkbox" checked={editingPlace.isPetFriendly} onChange={e => setEditingPlace({...editingPlace, isPetFriendly: e.target.checked})} className="w-4 h-4 accent-teal-500 rounded" />
-                                        </label>
-                                        <label className="bg-slate-800 p-3 rounded-xl border border-slate-700 flex items-center justify-between cursor-pointer hover:bg-slate-700/50">
-                                            <span className="text-xs font-bold text-white">Restroom?</span>
-                                            <input type="checkbox" checked={editingPlace.hasRestroom} onChange={e => setEditingPlace({...editingPlace, hasRestroom: e.target.checked})} className="w-4 h-4 accent-teal-500 rounded" />
-                                        </label>
-                                        <label className="bg-slate-800 p-3 rounded-xl border border-slate-700 flex items-center justify-between cursor-pointer hover:bg-slate-700/50">
-                                            <span className="text-xs font-bold text-white">Generator?</span>
-                                            <input type="checkbox" checked={editingPlace.hasGenerator} onChange={e => setEditingPlace({...editingPlace, hasGenerator: e.target.checked})} className="w-4 h-4 accent-yellow-500 rounded" />
-                                        </label>
-                                    </div>
-
-                                    <div className="space-y-4">
-                                        <InputGroup label="Name"><StyledInput value={editingPlace.name} onChange={e => setEditingPlace({...editingPlace, name: e.target.value})} /></InputGroup>
-                                        <InputGroup label="Category"><select value={editingPlace.category} onChange={e => setEditingPlace({...editingPlace, category: e.target.value as PlaceCategory})} className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg p-2.5 text-sm">{Object.values(PlaceCategory).map(c => <option key={c} value={c}>{c}</option>)}</select></InputGroup>
-                                        <InputGroup label="Description"><StyledTextArea value={editingPlace.description} onChange={e => setEditingPlace({...editingPlace, description: e.target.value})} /></InputGroup>
-                                        <InputGroup label="Tags (comma separated)"><StyledInput value={(editingPlace.tags || []).join(', ')} onChange={e => setEditingPlace({...editingPlace, tags: e.target.value.split(',').map(s => s.trim())})} /></InputGroup>
-                                    </div>
-
-                                    <SectionHeader title="Media & Contact" icon="image" isOpen={openSection === 'media'} onClick={() => setOpenSection(openSection === 'media' ? '' : 'media')} />
-                                    {openSection === 'media' && (
-                                        <div className="space-y-4 animate-fade-in">
-                                            <InputGroup label="Main Photo (Drag & Drop or Paste)">
-                                                <div className="space-y-3">
-                                                    <div 
-                                                        className={`relative w-full h-48 bg-slate-800 rounded-xl border-2 border-dashed flex items-center justify-center overflow-hidden group transition-colors ${dragActive ? 'border-teal-500 bg-teal-900/20' : 'border-slate-700 hover:border-slate-500'}`}
-                                                        onDragEnter={handleDrag}
-                                                        onDragLeave={handleDrag}
-                                                        onDragOver={handleDrag}
-                                                        onDrop={handleDrop}
-                                                    >
-                                                        {editingPlace.imageUrl ? (
-                                                            <>
-                                                                <img 
-                                                                    src={editingPlace.imageUrl} 
-                                                                    className="w-full h-full object-cover transition-all" 
-                                                                    style={{ objectPosition: editingPlace.imagePosition || 'center' }} 
-                                                                />
-                                                                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                                                    <button onClick={() => window.open(editingPlace.imageUrl, '_blank')} className="p-2 bg-white/10 hover:bg-white/20 rounded-full text-white backdrop-blur-md transition-colors"><i className="fa-solid fa-expand"></i></button>
-                                                                    <button onClick={() => setEditingPlace({...editingPlace, imageUrl: ''})} className="p-2 bg-red-500/20 hover:bg-red-500 rounded-full text-white backdrop-blur-md transition-colors"><i className="fa-solid fa-trash"></i></button>
-                                                                </div>
-                                                            </>
-                                                        ) : (
-                                                            <div className="text-slate-500 flex flex-col items-center pointer-events-none">
-                                                                <i className="fa-regular fa-image text-3xl mb-2"></i>
-                                                                <span className="text-xs">{dragActive ? 'Drop image here' : 'Drag, Paste, or Upload'}</span>
-                                                            </div>
-                                                        )}
-                                                        {loading && <div className="absolute inset-0 bg-black/60 flex items-center justify-center"><i className="fa-solid fa-circle-notch fa-spin text-teal-500 text-3xl"></i></div>}
-                                                    </div>
-
-                                                    <div className="flex items-center justify-between bg-slate-800 p-2 rounded-lg border border-slate-700">
-                                                        <span className="text-[10px] uppercase font-bold text-slate-500 ml-2">Focus Point</span>
-                                                        <div className="flex gap-1">
-                                                            {['top', 'center', 'bottom'].map((pos) => (
-                                                                <button
-                                                                    key={pos}
-                                                                    onClick={() => setEditingPlace({ ...editingPlace, imagePosition: pos })}
-                                                                    className={`px-3 py-1 rounded text-xs font-bold transition-colors ${editingPlace.imagePosition === pos || (!editingPlace.imagePosition && pos === 'center') ? 'bg-teal-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}
-                                                                >
-                                                                    {pos === 'top' ? '⬆ Top' : pos === 'bottom' ? '⬇ Bottom' : '⏺ Center'}
-                                                                </button>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="flex gap-2">
-                                                        <input type="text" value={editingPlace.imageUrl} onChange={e => setEditingPlace({...editingPlace, imageUrl: e.target.value})} placeholder="Paste URL..." className="flex-1 bg-slate-800 border border-slate-700 text-white p-2.5 rounded-lg text-sm focus:border-teal-500 outline-none" />
-                                                        <button onClick={() => fileInputRef.current?.click()} disabled={loading} className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2">
-                                                            {loading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-cloud-arrow-up"></i>} Upload
-                                                        </button>
-                                                        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
-                                                    </div>
-                                                </div>
-                                            </InputGroup>
-                                            <InputGroup label="Phone"><StyledInput value={editingPlace.phone} onChange={e => setEditingPlace({...editingPlace, phone: e.target.value})} /></InputGroup>
-                                            <InputGroup label="Website"><StyledInput value={editingPlace.website} onChange={e => setEditingPlace({...editingPlace, website: e.target.value})} /></InputGroup>
-                                        </div>
-                                    )}
-                                    <SectionHeader title="Location" icon="map-pin" isOpen={openSection === 'location'} onClick={() => setOpenSection(openSection === 'location' ? '' : 'location')} />
-                                    {openSection === 'location' && (
-                                        <div className="space-y-4 animate-fade-in">
-                                            <div className="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
-                                                <label className="text-xs font-bold text-teal-400 uppercase flex items-center gap-2"><i className="fa-solid fa-crosshairs"></i> Smart Locator</label>
-                                                <div className="flex gap-2">
-                                                    <input type="text" value={locationQuery} onChange={(e) => setLocationQuery(e.target.value)} placeholder="Name, Address, or Paste Google Maps Link" className="flex-1 bg-slate-900 border border-slate-600 rounded-lg px-3 py-2 text-sm text-white focus:border-teal-500 outline-none" />
-                                                    <button onClick={handleAutoLocate} disabled={locating} className="bg-teal-600 hover:bg-teal-500 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors disabled:opacity-50">{locating ? <i className="fa-solid fa-spinner fa-spin"></i> : "Find"}</button>
-                                                </div>
-                                            </div>
-                                            <LocationPicker coords={editingPlace.coords} onChange={(lat: number, lng: number) => setEditingPlace({...editingPlace, coords: { lat, lng }})} centerTrigger={mapCenterTrigger} />
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <InputGroup label="Latitude"><StyledInput type="number" step="any" value={editingPlace.coords.lat} onChange={e => setEditingPlace({...editingPlace, coords: { ...editingPlace.coords, lat: parseFloat(e.target.value) || 0 }})} /></InputGroup>
-                                                <InputGroup label="Longitude"><StyledInput type="number" step="any" value={editingPlace.coords.lng} onChange={e => setEditingPlace({...editingPlace, coords: { ...editingPlace.coords, lng: parseFloat(e.target.value) || 0 }})} /></InputGroup>
-                                            </div>
-                                            <InputGroup label="Address"><StyledInput value={editingPlace.address} onChange={e => setEditingPlace({...editingPlace, address: e.target.value})} /></InputGroup>
-                                            <InputGroup label="Google Maps URL"><StyledInput value={editingPlace.gmapsUrl} onChange={e => setEditingPlace({...editingPlace, gmapsUrl: e.target.value})} /></InputGroup>
-                                        </div>
-                                    )}
-                                    <SectionHeader title="Operations" icon="clock" isOpen={openSection === 'ops'} onClick={() => setOpenSection(openSection === 'ops' ? '' : 'ops')} />
-                                    {openSection === 'ops' && (
-                                        <div className="space-y-4 animate-fade-in">
-                                             <InputGroup label="Opening Hours Strategy">
-                                                 <select value={editingPlace.opening_hours?.type || 'fixed'} onChange={e => setEditingPlace({...editingPlace, opening_hours: { ...editingPlace.opening_hours, type: e.target.value as any }})} className="w-full bg-slate-800 text-white border border-slate-700 rounded-lg p-2.5 text-sm mb-4">
-                                                     <option value="fixed">Fixed Schedule</option><option value="24_7">Open 24/7</option><option value="sunrise_sunset">Sunrise to Sunset</option>
-                                                 </select>
-                                             </InputGroup>
-                                             {(editingPlace.opening_hours?.type === 'fixed' || !editingPlace.opening_hours?.type) && (
-                                                 <HoursEditor schedule={editingPlace.opening_hours?.structured || []} onChange={s => setEditingPlace({ ...editingPlace, opening_hours: { ...editingPlace.opening_hours, structured: s } })} />
-                                             )}
-                                             <InputGroup label="Manual Note"><StyledInput value={editingPlace.opening_hours?.note || ''} onChange={e => setEditingPlace({...editingPlace, opening_hours: { ...editingPlace.opening_hours, note: e.target.value }})} placeholder="e.g. Call for hours" /></InputGroup>
-                                        </div>
-                                    )}
-                                </div>
-                                <div className="p-6 border-t border-slate-800 bg-slate-900 flex justify-end gap-3 sticky bottom-0 z-20">
-                                    <button onClick={() => setEditingPlace(null)} className="px-6 py-3 font-bold text-slate-400 hover:text-white transition-colors">Cancel</button>
-                                    <button onClick={handleSavePlace} disabled={loading} className="px-8 py-3 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-xl shadow-lg shadow-teal-900/20 transition-all active:scale-95 disabled:opacity-50">{loading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : "Save Changes"}</button>
-                                </div>
-                            </div>
+                        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+                        <InputGroup label="Image URL"><StyledInput value={editingPlace.imageUrl || ''} onChange={e => setEditingPlace({...editingPlace, imageUrl: e.target.value})} /></InputGroup>
+                        
+                        <div className="grid grid-cols-3 gap-2">
+                             {['top', 'center', 'bottom'].map(pos => (
+                                <button 
+                                    key={pos} 
+                                    onClick={() => setEditingPlace({...editingPlace, imagePosition: pos})}
+                                    className={`py-2 rounded-lg border text-xs font-bold uppercase ${editingPlace.imagePosition === pos ? 'bg-teal-600 border-teal-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-500'}`}
+                                >
+                                    {pos}
+                                </button>
+                             ))}
                         </div>
-                    )}
+                    </Section>
+
+                    <Section title="Details & Amenities" icon="list-check">
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <Toggle label="Visible (Open)" checked={editingPlace.status === 'open'} onChange={v => setEditingPlace({...editingPlace, status: v ? 'open' : 'closed'})} icon="eye" />
+                            <Toggle label="Verified" checked={editingPlace.isVerified || false} onChange={v => setEditingPlace({...editingPlace, isVerified: v})} icon="certificate" />
+                            <Toggle label="Featured" checked={editingPlace.is_featured || false} onChange={v => setEditingPlace({...editingPlace, is_featured: v})} icon="star" />
+                            <Toggle label="Landing Spot" checked={editingPlace.isLanding || false} onChange={v => setEditingPlace({...editingPlace, isLanding: v})} icon="map-pin" />
+                            <Toggle label="Pet Friendly" checked={editingPlace.isPetFriendly || false} onChange={v => setEditingPlace({...editingPlace, isPetFriendly: v})} icon="dog" />
+                            <Toggle label="Restrooms" checked={editingPlace.hasRestroom || false} onChange={v => setEditingPlace({...editingPlace, hasRestroom: v})} icon="restroom" />
+                            <Toggle label="Generator" checked={editingPlace.hasGenerator || false} onChange={v => setEditingPlace({...editingPlace, hasGenerator: v})} icon="bolt" />
+                            <Toggle label="Paid Parking" checked={editingPlace.parking === ParkingStatus.PAID} onChange={v => setEditingPlace({...editingPlace, parking: v ? ParkingStatus.PAID : ParkingStatus.FREE})} icon="square-parking" />
+                         </div>
+                         <div className="mt-4 space-y-4">
+                            <InputGroup label="El Veci Tip"><StyledTextArea value={editingPlace.tips || ''} onChange={e => setEditingPlace({...editingPlace, tips: e.target.value})} /></InputGroup>
+                            
+                            <InputGroup label="Advanced Contact Info (JSON)" description="Raw JSON for extra details like Instagram, Email, Manager">
+                                <StyledTextArea 
+                                    className="font-mono text-xs h-24 bg-slate-950 text-emerald-400 border-slate-800"
+                                    value={JSON.stringify(editingPlace.contact_info || {}, null, 2)} 
+                                    onChange={e => {
+                                        try {
+                                            const parsed = JSON.parse(e.target.value);
+                                            setEditingPlace({...editingPlace, contact_info: parsed});
+                                        } catch(err) {
+                                            // Allow typing, validate on blur/save ideally, but for now just let it be (state won't update if invalid json)
+                                        }
+                                    }} 
+                                />
+                            </InputGroup>
+                         </div>
+                    </Section>
+
+                    <div className="h-12"></div>
                 </div>
-            </div>
+            ) : activeTab === 'events' && editingEvent ? (
+                <div className="p-4 md:p-8 max-w-2xl mx-auto">
+                    <Section title="Event Details" icon="calendar">
+                        <InputGroup label="Title"><StyledInput value={editingEvent.title || ''} onChange={e => setEditingEvent({...editingEvent, title: e.target.value})} /></InputGroup>
+                        <InputGroup label="Description"><StyledTextArea value={editingEvent.description || ''} onChange={e => setEditingEvent({...editingEvent, description: e.target.value})} /></InputGroup>
+                        <InputGroup label="Start"><StyledInput type="datetime-local" value={editingEvent.startTime?.slice(0, 16) || ''} onChange={e => setEditingEvent({...editingEvent, startTime: new Date(e.target.value).toISOString()})} /></InputGroup>
+                        <InputGroup label="End"><StyledInput type="datetime-local" value={editingEvent.endTime?.slice(0, 16) || ''} onChange={e => setEditingEvent({...editingEvent, endTime: new Date(e.target.value).toISOString()})} /></InputGroup>
+                        <div 
+                            className="relative w-full aspect-video bg-slate-800 rounded-xl border-2 border-dashed border-slate-700 flex flex-col items-center justify-center overflow-hidden mt-4"
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            {editingEvent.imageUrl ? <img src={editingEvent.imageUrl} className="w-full h-full object-cover" /> : <p>Upload Image</p>}
+                        </div>
+                        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+                    </Section>
+                </div>
+            ) : (
+                <div className="text-center text-slate-500 opacity-50">
+                    <i className="fa-solid fa-hand-pointer text-4xl mb-4"></i>
+                    <p>Select an item from the list</p>
+                </div>
+            )}
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
 export default Admin;

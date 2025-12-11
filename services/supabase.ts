@@ -1,11 +1,9 @@
 
-
 import { createClient } from '@supabase/supabase-js';
 import { Place, PlaceCategory, ParkingStatus, AdminLog, Event, EventCategory } from '../types';
 
 // --- SAFE ENVIRONMENT VARIABLE EXTRACTION (Vite/Browser Compatible) ---
 const getEnvVar = (key: string): string => {
-  // 1. Check Vite Import Meta (Standard for Vite apps)
   try {
     // @ts-ignore
     if (typeof import.meta !== 'undefined' && import.meta.env) {
@@ -14,7 +12,6 @@ const getEnvVar = (key: string): string => {
     }
   } catch (e) {}
 
-  // 2. Fallback check for process.env (but protected against RefError)
   try {
     // @ts-ignore
     if (typeof process !== 'undefined' && typeof process.env !== 'undefined') {
@@ -47,7 +44,6 @@ const getErrorMessage = (error: any): string => {
     const msg = error.message || error.error_description || error.details || error.hint;
     if (msg && typeof msg === 'string') return msg;
     
-    // Fallback to JSON stringify for objects
     try {
       return JSON.stringify(error);
     } catch (e) {
@@ -113,7 +109,7 @@ const createMockClient = () => {
 
 const isLive = SUPABASE_URL.length > 0 && SUPABASE_ANON_KEY.length > 0;
 if (isLive) {
-  console.log("🔌 Supabase Client Initialized for: vprjteqgmanntvisjrvp");
+  console.log("🔌 Supabase Client Initialized");
 } else {
   console.log("⚠️ Supabase Credentials not found. Using Mock Client.");
 }
@@ -126,24 +122,22 @@ export const supabase = isLive
 const mapCategory = (catRaw: string, subCatRaw?: string): PlaceCategory => {
   const cleanCat = (catRaw || '').toUpperCase().trim();
   
-  // 1. Direct Match: If the DB value exactly matches a known Category Enum, use it.
   const validCategories = Object.values(PlaceCategory) as string[];
   if (validCategories.includes(cleanCat)) {
       return cleanCat as PlaceCategory;
   }
 
-  // 2. Fuzzy Match: Fallback for legacy data or free-text entries
   const combined = (catRaw || '').toLowerCase() + ' ' + (subCatRaw || '').toLowerCase();
   
-  if (combined.includes('beach') || combined.includes('playa') || combined.includes('cayo') || combined.includes('balneario')) return PlaceCategory.BEACH;
-  if (combined.includes('sight') || combined.includes('faro') || combined.includes('turis') || combined.includes('landmark') || combined.includes('monument')) return PlaceCategory.SIGHTS;
-  if (combined.includes('bar') || combined.includes('pub') || combined.includes('discoteca') || combined.includes('night') || combined.includes('drinks') || combined.includes('club')) return PlaceCategory.NIGHTLIFE;
-  if (combined.includes('food') || combined.includes('restaurant') || combined.includes('comida') || combined.includes('bakery') || combined.includes('cafe') || combined.includes('pizza') || combined.includes('burger')) return PlaceCategory.FOOD;
-  if (combined.includes('hotel') || combined.includes('airbnb') || combined.includes('motel') || combined.includes('guesthouse') || combined.includes('resort')) return PlaceCategory.LODGING;
-  if (combined.includes('hospital') || combined.includes('pharmacy') || combined.includes('medical') || combined.includes('clinic') || combined.includes('doctor') || combined.includes('health')) return PlaceCategory.HEALTH;
-  if (combined.includes('shop') || combined.includes('store') || combined.includes('mall') || combined.includes('boutique') || combined.includes('market')) return PlaceCategory.SHOPPING;
-  if (combined.includes('tour') || combined.includes('rental') || combined.includes('boat') || combined.includes('activity') || combined.includes('charter') || combined.includes('dive')) return PlaceCategory.ACTIVITY;
-  if (combined.includes('mechanic') || combined.includes('taller') || combined.includes('gov') || combined.includes('bank') || combined.includes('police') || combined.includes('atm') || combined.includes('service')) return PlaceCategory.SERVICE;
+  if (combined.includes('beach') || combined.includes('playa') || combined.includes('cayo')) return PlaceCategory.BEACH;
+  if (combined.includes('sight') || combined.includes('faro') || combined.includes('turis')) return PlaceCategory.SIGHTS;
+  if (combined.includes('bar') || combined.includes('pub') || combined.includes('discoteca')) return PlaceCategory.NIGHTLIFE;
+  if (combined.includes('food') || combined.includes('restaurant') || combined.includes('comida')) return PlaceCategory.FOOD;
+  if (combined.includes('hotel') || combined.includes('airbnb') || combined.includes('guesthouse')) return PlaceCategory.LODGING;
+  if (combined.includes('hospital') || combined.includes('pharmacy') || combined.includes('medical')) return PlaceCategory.HEALTH;
+  if (combined.includes('shop') || combined.includes('store') || combined.includes('mall')) return PlaceCategory.SHOPPING;
+  if (combined.includes('tour') || combined.includes('rental') || combined.includes('boat')) return PlaceCategory.ACTIVITY;
+  if (combined.includes('mechanic') || combined.includes('taller') || combined.includes('bank')) return PlaceCategory.SERVICE;
   
   return PlaceCategory.LOGISTICS;
 };
@@ -158,23 +152,19 @@ const mapParking = (amenities: any): ParkingStatus => {
 
 const generateSlug = (name: string): string => {
     const cleanName = name.toLowerCase().trim()
-        .replace(/[^\w\s-]/g, '') // Remove non-word chars
-        .replace(/[\s_-]+/g, '-') // Replace spaces and underscores with -
-        .replace(/^-+|-+$/g, ''); // Trim leading/trailing -
+        .replace(/[^\w\s-]/g, '') 
+        .replace(/[\s_-]+/g, '-') 
+        .replace(/^-+|-+$/g, ''); 
     
-    // Append random string to ensure uniqueness and avoid PK/Unique constraint errors
     const randomSuffix = Math.random().toString(36).substring(2, 7);
     return `${cleanName}-${randomSuffix}`;
 };
 
 const mapPlaceToDb = (place: Partial<Place>) => {
-    // If it has a slug (existing item), keep it. If not, generate new unique one.
     const slug = place.slug && place.slug.length > 2 
         ? place.slug 
         : generateSlug(place.name || 'untitled');
 
-    // FIX: Map "pending" to a valid DB enum value ('open') but unverified.
-    // The DB enum likely only supports 'open' | 'closed'.
     let dbStatus = place.status;
     if (dbStatus === 'pending') {
         dbStatus = 'open';
@@ -192,7 +182,6 @@ const mapPlaceToDb = (place: Partial<Place>) => {
         sponsor_weight: place.sponsor_weight ?? (place.is_featured ? 100 : 0),
         plan: place.plan || 'free',
         status: dbStatus || 'open',
-        // If status was pending, force is_verified to false if not explicitly true
         is_verified: place.status === 'pending' ? false : (place.isVerified ?? false),
         verified_at: place.isVerified ? new Date().toISOString() : null,
         website: place.website || '',
@@ -207,7 +196,7 @@ const mapPlaceToDb = (place: Partial<Place>) => {
         is_handicap_accessible: place.isHandicapAccessible ?? false,
         tags: place.tags || [],
         amenities: {
-            ...(place.amenities || {}), // SPREAD EXISTING TO PREVENT DATA LOSS
+            ...(place.amenities || {}), // Preserves existing fields not managed by UI
             parking: place.parking || ParkingStatus.FREE,
             restrooms: place.hasRestroom ?? false,
             showers: place.hasShowers ?? false,
@@ -215,7 +204,6 @@ const mapPlaceToDb = (place: Partial<Place>) => {
             tips: place.tips || '',
             custom_icon: place.customIcon || '',
             is_mobile: place.isMobile ?? false,
-            // FORCE BOOLEAN SAVE: Ensure this is always true/false, never undefined
             is_landing: place.isLanding === true,
             image_position: place.imagePosition || 'center'
         },
@@ -252,16 +240,29 @@ const logAction = async (action: string, placeName: string, details: string) => 
     } catch (e) { console.warn(e); }
 };
 
+// --- AUTH HELPERS ---
+export const loginAdmin = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    return { user: data.user, error: error ? getErrorMessage(error) : null };
+};
+
+export const checkSession = async () => {
+    const { data } = await supabase.auth.getSession();
+    return !!data.session;
+};
+
+// --- PUBLIC METHODS ---
+
 export const logUserActivity = async (action: 'USER_SEARCH' | 'USER_CHAT' | 'UPDATE_SUGGESTION', term: string) => {
     try {
         await supabase.from('admin_logs').insert([{
             action,
-            place_name: term.substring(0, 100), // Truncate for safety
+            place_name: term.substring(0, 100),
             details: action === 'UPDATE_SUGGESTION' ? term : 'User Activity',
             created_at: new Date().toISOString()
         }]);
     } catch (e) { 
-        console.warn("User logging failed (Likely Permissions/RLS):", e); 
+        console.warn("User logging failed:", e); 
     }
 };
 
@@ -269,7 +270,7 @@ export const getAdminLogs = async (): Promise<AdminLog[]> => {
     try {
         const { data, error } = await supabase.from('admin_logs').select('*').order('created_at', { ascending: false }).limit(50);
         if (error) {
-            console.warn("Log fetch error (table might not exist yet):", error.message);
+            console.warn("Log fetch error:", error.message);
             return [];
         }
         return data as AdminLog[];
@@ -281,7 +282,7 @@ export const getPlaces = async (): Promise<Place[]> => {
     const { data, error } = await supabase.from('places').select('*'); 
     
     if (error) {
-        console.error("🔴 Supabase Fetch Error (places):", error.message, error.details);
+        console.error("Supabase Fetch Error:", error.message);
         return [];
     }
     
@@ -303,7 +304,6 @@ export const getPlaces = async (): Promise<Place[]> => {
       is_featured: (row.sponsor_weight && row.sponsor_weight > 80) || false,
       sponsor_weight: row.sponsor_weight || 0,
       plan: row.plan || 'free',
-      // Map unverified places back to 'pending' for UI logic
       status: (!row.is_verified ? 'pending' : (row.status || 'open')),
       slug: row.slug || '',
       tags: row.tags || [],
@@ -324,11 +324,11 @@ export const getPlaces = async (): Promise<Place[]> => {
       contact_info: row.contact_info || {},
       customIcon: row.custom_icon || row.amenities?.custom_icon || '',
       isMobile: row.amenities?.is_mobile || false,
-      // ROBUST MAPPING: Check for boolean OR string "true"
-      isLanding: row.amenities?.is_landing === true || row.amenities?.is_landing === 'true'
+      isLanding: row.amenities?.is_landing === true || row.amenities?.is_landing === 'true',
+      amenities: row.amenities || {} // CRITICAL: Preserve raw amenities for Admin updates
     }));
   } catch (err) { 
-    console.error("🔴 Unexpected Error in getPlaces:", err);
+    console.error("Unexpected Error in getPlaces:", err);
     return []; 
   }
 };
@@ -338,7 +338,7 @@ export const getEvents = async (): Promise<Event[]> => {
         const { data, error } = await supabase.from('events').select(`*, places (lat, lon)`).order('start_time', { ascending: true });
         
         if (error) {
-            console.warn("Complex event fetch failed, trying simple:", error.message);
+            // Fallback for when relationship doesn't exist yet
             const simple = await supabase.from('events').select('*').order('start_time', { ascending: true });
             if (simple.error) throw simple.error;
             if (!simple.data) return [];
@@ -393,10 +393,9 @@ export const createPlace = async (place: Partial<Place>): Promise<{ success: boo
         let dbPayload = mapPlaceToDb(place);
         
         if (!isAdmin) {
-            dbPayload.status = 'open'; // Force valid DB enum
-            dbPayload.is_verified = false; // Mark as pending review
+            dbPayload.status = 'open'; 
+            dbPayload.is_verified = false; 
             dbPayload.sponsor_weight = 0;
-            // Basic sanitization
             dbPayload.name = dbPayload.name.replace(/<[^>]*>?/gm, '');
             dbPayload.description = dbPayload.description.replace(/<[^>]*>?/gm, '');
         }
@@ -406,7 +405,7 @@ export const createPlace = async (place: Partial<Place>): Promise<{ success: boo
         await logAction('CREATE', place.name || 'Unknown', isAdmin ? 'Record created by Admin' : 'User Suggestion');
         return { success: true };
     } catch (e: any) { 
-        console.error("Create Error:", JSON.stringify(e, null, 2));
+        console.error("Create Error:", e);
         return { success: false, error: getErrorMessage(e) }; 
     }
 };
@@ -414,29 +413,24 @@ export const createPlace = async (place: Partial<Place>): Promise<{ success: boo
 export const updatePlace = async (id: string, place: Partial<Place>): Promise<{ success: boolean; error?: string }> => {
     try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) throw new Error("Unauthorized");
-        const dbPayload = mapPlaceToDb(place);
+        if (!session?.user) throw new Error("Unauthorized: Please log in.");
         
+        const dbPayload = mapPlaceToDb(place);
         console.log("🚀 Updating Place ID:", id);
-        console.log("📦 Payload:", dbPayload);
 
         const { data, error } = await supabase.from('places').update(dbPayload).eq('id', id).select();
         
-        if (error) {
-            console.error("❌ Supabase Update Failed:", JSON.stringify(error, null, 2));
-            throw error;
-        }
+        if (error) throw error;
         
         if (!data || data.length === 0) {
-            console.warn("⚠️ No records updated. ID mismatch or RLS policy block.");
-            throw new Error("Update failed: No records modified. Check RLS policies.");
+            throw new Error("Update failed: No records modified. Check Permissions/RLS.");
         }
 
-        console.log("✅ Update Success:", data);
+        console.log("✅ Update Success");
         await logAction('UPDATE', place.name || 'Unknown', 'Record updated');
         return { success: true };
     } catch (e: any) { 
-        console.error("Update Error Exception:", JSON.stringify(e, null, 2));
+        console.error("Update Error Exception:", e); 
         return { success: false, error: getErrorMessage(e) }; 
     }
 };
