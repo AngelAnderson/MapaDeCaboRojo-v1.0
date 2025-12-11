@@ -449,6 +449,7 @@ const MainApp: React.FC = () => {
         parking: ParkingStatus.FREE,
         hasRestroom: true,
         hasShowers: false,
+        hasGenerator: false,
         tips: `Horario: ${new Date(e.startTime).toLocaleTimeString([], {hour:'numeric', minute:'2-digit', hour12:true})}`,
         priceLevel: new Date(e.startTime).toLocaleDateString([], {month:'short', day:'numeric'}), 
         bestTimeToVisit: 'A tiempo',
@@ -462,7 +463,7 @@ const MainApp: React.FC = () => {
             eventEnd: e.endTime,
             isEvent: true 
         }
-    } as Place));
+    } as unknown as Place));
 
     // Base Filter: Use the centralized `publishedPlaces` to ensure pending items are hidden
     // Note: `publishedPlaces` is already filtered by `useMemo` above.

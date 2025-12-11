@@ -226,6 +226,12 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
                     <i className="fa-solid fa-truck-fast"></i> Domicilio
                  </span>
             )}
+
+            {place.hasGenerator && (
+                 <span className="bg-yellow-500/90 text-black backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide shadow-sm flex items-center gap-1">
+                    <i className="fa-solid fa-bolt"></i> Planta Eléctrica
+                 </span>
+            )}
             
             {userLocation && (
                 <span className="bg-slate-700/80 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold flex items-center gap-1">
@@ -339,6 +345,11 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
                     darkColorClass={place.parking === ParkingStatus.FREE ? 'dark:bg-green-900/30 dark:border-green-800/30 dark:text-green-300' : 'dark:bg-yellow-900/30 dark:border-yellow-800/30 dark:text-yellow-300'}
                 />
             )}
+            
+            {place.hasGenerator && (
+                <InfoBadge icon="bolt" label="Planta" active={true} colorClass="bg-yellow-100 border-yellow-300 text-yellow-800" darkColorClass="dark:bg-yellow-900/40 dark:border-yellow-600/30 dark:text-yellow-200" />
+            )}
+
             {place.isMobile && (
                 <InfoBadge icon="house-user" label="Domicilio" active={true} colorClass="bg-purple-50 border-purple-200 text-purple-700" darkColorClass="dark:bg-purple-900/30 dark:border-purple-800/30 dark:text-purple-300" />
             )}

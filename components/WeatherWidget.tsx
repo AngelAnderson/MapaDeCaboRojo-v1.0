@@ -7,6 +7,7 @@ interface WeatherState {
   advice: string;
   icon: string;
   loading: boolean;
+  isSafe: boolean; // New state for visual indicator
 }
 
 const WeatherWidget: React.FC = () => {
@@ -16,6 +17,7 @@ const WeatherWidget: React.FC = () => {
     advice: 'Cargando el clima...',
     icon: 'fa-sun',
     loading: true,
+    isSafe: true,
   });
 
   useEffect(() => {
@@ -41,52 +43,56 @@ const WeatherWidget: React.FC = () => {
         const isDay = current.is_day === 1;
 
         let condition = 'Soleado';
-        let advice = 'Día perfecto para la playa. Ponte bloqueador.';
+        let advice = 'Arranca pa\' la playa.';
         let icon = isDay ? 'fa-sun' : 'fa-moon';
+        let isSafe = true;
 
         // Refined WMO Weather Code Interpretation
         if (code >= 95) {
             condition = 'Tormenta';
-            advice = '¡Truenos! Salte del agua ya.';
+            advice = '¡PELIGRO! Quédate quieto. No salgas.';
             icon = 'fa-cloud-bolt';
+            isSafe = false;
         } else if (code >= 61 || (code >= 80 && code <= 82)) {
             condition = 'Lluvia';
-            advice = 'Está lloviendo. Cuidado con los patinazos.';
+            advice = 'Se te agüó la fiesta. Busca techo o un chinchorro.';
             icon = 'fa-cloud-showers-heavy';
+            isSafe = false;
         } else if (code >= 51) {
             condition = 'Llovizna';
             advice = 'Una llovizna boba. Se quita rápido.';
             icon = 'fa-cloud-rain';
         } else if (code === 3) {
             condition = 'Nublado';
-            advice = 'Bueno para caminar, el sol no pica tanto.';
+            advice = 'Perfecto pa\' caminar, el sol no pica.';
             icon = 'fa-cloud';
         } else if (code === 2) {
-            condition = 'Parcialmente Soleado';
-            advice = 'Sol con algunas nubes. Rico.';
+            condition = 'Parcial';
+            advice = 'Sol con nubes. Rico pa\' fotos.';
             icon = isDay ? 'fa-cloud-sun' : 'fa-cloud-moon';
         } else if (code === 1) {
-            condition = 'Mayormente Despejado'; 
-            advice = 'Casi ni hay nubes. Aprovecha.';
+            condition = 'Despejado'; 
+            advice = 'Cielo azul. ¡Aprovecha!';
             icon = isDay ? 'fa-sun' : 'fa-moon';
         } else {
             // Code 0
             condition = isDay ? 'Soleado' : 'Despejado';
-            advice = isDay ? 'Día brillante. ¡A la playa!' : 'Noche clara, perfecta para observar estrellas.';
+            advice = isDay ? 'Brillante. ¡Ponte sunblock!' : 'Noche clara. Mira las estrellas.';
             icon = isDay ? 'fa-sun' : 'fa-moon';
         }
 
         // Extreme Conditions Overrides
         if (temp > 100) {
-            advice = '¡Calor extremo! Hidrátate bien.';
+            advice = '¡Calor infernal! Hidrátate o busca aire.';
             icon = 'fa-temperature-arrow-up';
         }
-        if (wind > 16) {
-            advice = 'Mucho viento. Cuidado con el oleaje.';
+        if (wind > 18) {
+            advice = 'Viento fuerte. Cuidado con el oleaje.';
             icon = 'fa-wind';
+            isSafe = false;
         }
 
-        setWeather({ temp, condition, advice, icon, loading: false });
+        setWeather({ temp, condition, advice, icon, loading: false, isSafe });
 
       } catch (e) {
         setWeather({
@@ -94,7 +100,8 @@ const WeatherWidget: React.FC = () => {
             condition: 'Tropical',
             advice: 'El clima de siempre: Calor y playa.',
             icon: 'fa-umbrella-beach',
-            loading: false
+            loading: false,
+            isSafe: true
         });
       }
     };
@@ -117,13 +124,16 @@ const WeatherWidget: React.FC = () => {
   }
 
   return (
-    <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-white/50 dark:border-slate-700 pointer-events-auto animate-float flex items-center gap-4 max-w-[280px]">
+    <div className={`bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-3 rounded-2xl shadow-xl border ${weather.isSafe ? 'border-white/50 dark:border-slate-700' : 'border-red-500/50 dark:border-red-500/30'} pointer-events-auto animate-float flex items-center gap-4 max-w-[280px]`}>
         <div className="flex flex-col items-center justify-center w-12 text-center">
-            <i className={`fa-solid ${weather.icon} text-3xl ${weather.icon.includes('moon') ? 'text-purple-400' : 'text-orange-500'} mb-1`}></i>
+            <i className={`fa-solid ${weather.icon} text-3xl ${weather.isSafe ? (weather.icon.includes('moon') ? 'text-purple-400' : 'text-orange-500') : 'text-slate-500'} mb-1`}></i>
             <span className="text-xl font-black text-slate-800 dark:text-white leading-none">{weather.temp}°</span>
         </div>
         <div className="flex-1 border-l border-slate-200 dark:border-slate-700 pl-3">
-            <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">{weather.condition}</p>
+            <div className="flex items-center gap-2">
+                 <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">{weather.condition}</p>
+                 {!weather.isSafe && <i className="fa-solid fa-triangle-exclamation text-amber-500 text-xs animate-pulse"></i>}
+            </div>
             <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-tight">{weather.advice}</p>
         </div>
     </div>

@@ -25,6 +25,7 @@ const DEFAULT_PLACE_PROPS = {
   isPetFriendly: false,
   isHandicapAccessible: false,
   isVerified: true,
+  hasGenerator: false, // Default
 };
 
 export const PLACES: Place[] = [
@@ -101,7 +102,8 @@ export const PLACES: Place[] = [
     tags: ['comida', 'noche', 'barras'],
     address: 'PR-101',
     vibe: ['Fiesta', 'Gastronómico'],
-    priceLevel: '$$'
+    priceLevel: '$$',
+    hasGenerator: true // Boqueron usually has power
   },
   {
     ...DEFAULT_PLACE_PROPS,
@@ -156,7 +158,8 @@ export const PLACES: Place[] = [
     tips: 'Abierto hasta las 9PM.',
     tags: ['farmacia', 'hielo', 'sunblock'],
     address: 'PR-100',
-    vibe: ['Práctico']
+    vibe: ['Práctico'],
+    hasGenerator: true
   }
 ];
 

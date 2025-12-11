@@ -62,6 +62,7 @@ export interface Place {
   parking: ParkingStatus;
   hasRestroom: boolean;
   hasShowers: boolean;
+  hasGenerator: boolean; // New: Planta Eléctrica
   tips: string;
   amenities?: Record<string, any>;
   

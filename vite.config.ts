@@ -6,6 +6,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
   // The third argument '' means load ALL env vars, not just VITE_ prefixed ones.
+  // @ts-ignore
   const env = loadEnv(mode, process.cwd(), '');
 
   // Fallback to process.env for system variables (important for Vercel/Netlify CI/CD)

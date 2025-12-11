@@ -209,9 +209,10 @@ const mapPlaceToDb = (place: Partial<Place>) => {
             parking: place.parking || ParkingStatus.FREE,
             restrooms: place.hasRestroom ?? false,
             showers: place.hasShowers ?? false,
+            has_generator: place.hasGenerator ?? false,
             tips: place.tips || '',
             custom_icon: place.customIcon || '',
-            is_mobile: place.isMobile ?? false // New mapping
+            is_mobile: place.isMobile ?? false
         },
         opening_hours: place.opening_hours || { note: "No especificado" },
         contact_info: place.contact_info || {}
@@ -290,6 +291,7 @@ export const getPlaces = async (): Promise<Place[]> => {
       parking: mapParking(row.amenities),
       hasRestroom: row.amenities?.restrooms || false,
       hasShowers: row.amenities?.showers || false,
+      hasGenerator: row.amenities?.has_generator || false,
       imageUrl: row.image_url || `https://picsum.photos/600/400?random=${row.id.substring(0,4)}`,
       tips: row.amenities?.tips || '',
       is_featured: (row.sponsor_weight && row.sponsor_weight > 80) || false,
