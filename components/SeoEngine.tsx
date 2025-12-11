@@ -11,8 +11,8 @@ interface SeoEngineProps {
 }
 
 const SeoEngine: React.FC<SeoEngineProps> = ({ 
-  title = "Mapa de Cabo Rojo 🌴 | Tu Guía Digital", 
-  description = "Descubre las mejores playas, chinchorros y rincones secretos de Cabo Rojo. Pregúntale a El Veci qué hacer hoy.", 
+  title = "El Veci — El Copiloto del Pueblo", 
+  description = "Navega Cabo Rojo como si vivieras aquí.", 
   image = "https://images.unsplash.com/photo-1599060690625-f70e9c8cb5eb?q=80&w=1200&auto=format&fit=crop",
   place,
   event
@@ -110,7 +110,7 @@ const SeoEngine: React.FC<SeoEngineProps> = ({
         schemaData = {
             "@context": "https://schema.org",
             "@type": "WebSite",
-            "name": "Mapa de Cabo Rojo",
+            "name": "El Veci",
             "url": "https://mapadecaborojo.com/",
             "potentialAction": {
               "@type": "SearchAction",
