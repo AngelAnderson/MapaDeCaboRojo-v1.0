@@ -64,6 +64,9 @@ export default async function handler(req: any, res: any) {
       case 'analyze-demand':
         result = await handleAnalyzeDemand(payload);
         break;
+      case 'parse-raw':
+        result = await handleParseRaw(payload);
+        break;
       default:
         return res.status(400).json({ error: "Unknown action" });
     }
@@ -320,6 +323,35 @@ async function handleGenerateSeoMetaTags({ name, description, category }: any) {
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: `Generate SEO JSON { "metaTitle": string, "metaDescription": string } for "${name}" (${category}). Desc: ${description}.`,
+    config: { responseMimeType: 'application/json' }
+  });
+  return JSON.parse(response.text);
+}
+
+async function handleParseRaw({ text }: any) {
+  const prompt = `
+    Act as a Data Entry Specialist.
+    Analyze this raw text about a place in Cabo Rojo, PR: "${text}"
+    
+    Extract structured data into this JSON format:
+    {
+        "name": string (Title Case),
+        "description": string (Engaging, max 150 chars),
+        "category": string (One of: BEACH, FOOD, SIGHTS, LOGISTICS, LODGING, SHOPPING, HEALTH, NIGHTLIFE, ACTIVITY, SERVICE),
+        "address": string (or empty),
+        "phone": string (or empty),
+        "website": string (or empty),
+        "tips": string (Local tip based on text),
+        "tags": string[],
+        "priceLevel": string ($, $$, $$$),
+        "parking": string (FREE, PAID, NONE),
+        "hasRestroom": boolean,
+        "isPetFriendly": boolean
+    }
+  `;
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: prompt,
     config: { responseMimeType: 'application/json' }
   });
   return JSON.parse(response.text);
