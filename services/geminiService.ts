@@ -239,7 +239,13 @@ export const sendConciergeMessage = async (
                 bestTimeToVisit: p.bestTimeToVisit, // Added
                 opening_hours: p.opening_hours 
             })),
-            events: events.map(e => ({ title: e.title, start: e.startTime })),
+            // Ensure full event details are passed
+            events: events.map(e => ({ 
+                title: e.title, 
+                start: e.startTime, 
+                description: e.description,
+                location: e.locationName 
+            })),
             userLoc, 
             ...contextInfo
         }

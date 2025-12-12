@@ -100,7 +100,8 @@ async function handleChat({ message, history, context }: any) {
     events: context.events.map((e: any) => ({
       title: e.title,
       date: e.start,
-      desc: e.description
+      desc: e.description,
+      loc: e.location
     }))
   };
 

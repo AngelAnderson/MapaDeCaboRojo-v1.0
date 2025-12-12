@@ -344,39 +344,21 @@ export const getPlaces = async (): Promise<Place[]> => {
 
 export const getEvents = async (): Promise<Event[]> => {
     try {
-        const { data, error } = await supabase.from('events').select(`*, places (lat, lon)`).order('start_time', { ascending: true });
+        // Simple select first to ensure data access works, avoiding potential JOIN issues with RLS
+        const { data, error } = await supabase.from('events').select('*').order('start_time', { ascending: true });
         
         if (error) {
-            // Fallback for when relationship doesn't exist yet
-            const simple = await supabase.from('events').select('*').order('start_time', { ascending: true });
-            if (simple.error) throw simple.error;
-            if (!simple.data) return [];
-            
-             return simple.data.map((row: any) => ({
-                id: row.id,
-                title: escapeHTML(row.title),
-                description: escapeHTML(row.description) || '',
-                // Cast enum
-                category: (row.category ? row.category.toUpperCase() : 'COMMUNITY') as EventCategory,
-                startTime: row.start_time,
-                endTime: row.end_time,
-                isRecurring: row.is_recurring || false,
-                recurrenceRule: row.recurrence_rule,
-                locationName: escapeHTML(row.location_name) || '',
-                placeId: row.place_id,
-                imageUrl: escapeHTML(row.image_url),
-                status: row.status,
-                isFeatured: row.is_featured || false,
-                mapLink: escapeHTML(row.map_link),
-                coords: undefined 
-            }));
+            console.error("Supabase Events Error:", error.message);
+            return [];
         }
 
         if (!data) return [];
+
         return data.map((row: any) => ({
             id: row.id,
             title: escapeHTML(row.title),
             description: escapeHTML(row.description) || '',
+            // Cast enum safely
             category: (row.category ? row.category.toUpperCase() : 'COMMUNITY') as EventCategory,
             startTime: row.start_time,
             endTime: row.end_time,
@@ -385,10 +367,10 @@ export const getEvents = async (): Promise<Event[]> => {
             locationName: escapeHTML(row.location_name) || '',
             placeId: row.place_id,
             imageUrl: escapeHTML(row.image_url),
-            status: row.status,
+            status: row.status || 'published', // Default to published if null/missing in app logic
             isFeatured: row.is_featured || false,
             mapLink: escapeHTML(row.map_link),
-            coords: row.places ? { lat: row.places.lat, lng: row.places.lon } : undefined
+            coords: undefined // We won't join here to keep it robust; map logic handles missing coords
         }));
     } catch (e) { 
         console.error("Event fetch error:", e);
