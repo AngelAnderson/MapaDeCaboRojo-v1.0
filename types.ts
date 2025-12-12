@@ -164,8 +164,16 @@ export interface ChatMessage {
 
 export interface AdminLog {
   id: string;
-  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'MARKETING_GEN' | 'USER_SEARCH' | 'USER_CHAT' | 'AI_BRIEFING' | 'CREATE_EVENT' | 'UPDATE_EVENT' | 'DELETE_EVENT' | 'UPDATE_SUGGESTION' | 'CREATE_CAT' | 'UPDATE_CAT' | 'DELETE_CAT';
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'MARKETING_GEN' | 'USER_SEARCH' | 'USER_CHAT' | 'AI_BRIEFING' | 'CREATE_EVENT' | 'UPDATE_EVENT' | 'DELETE_EVENT' | 'UPDATE_SUGGESTION' | 'CREATE_CAT' | 'UPDATE_CAT' | 'DELETE_CAT' | 'INSIGHT_SNAPSHOT';
   place_name: string;
-  details: string;
+  details: string; // JSON string for complicated data
   created_at: string;
+}
+
+export interface InsightSnapshot {
+  trending_topics: { topic: string; count: number }[];
+  content_gaps: { gap: string; description: string; urgency: 'HIGH' | 'MEDIUM' | 'LOW' }[];
+  recommendation: string;
+  user_intent_prediction: string;
+  timestamp: string;
 }

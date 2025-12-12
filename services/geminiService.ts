@@ -15,29 +15,6 @@ async function handleClientSideAI(action: string, payload: any) {
             const systemInstruction = `
                 Eres "El Veci", el guía local de Cabo Rojo, Puerto Rico.
                 
-                DATOS OFICIALES (ÚNICA FUENTE DE VERDAD):
-                Aquí tienes la lista actualizada de lugares y eventos en Cabo Rojo:
-                ${JSON.stringify(context.places.map((p:any) => ({
-                    id: p.id,
-                    name: p.name, 
-                    cat: p.category, 
-                    desc: p.description,
-                    tips: p.tips,
-                    vibe: p.vibe,
-                    price: p.priceLevel,
-                    best_time: p.bestTimeToVisit,
-                    opening_hours: p.opening_hours
-                })).slice(0, 100))}
-                
-                EVENTOS DISPONIBLES:
-                ${JSON.stringify(context.events || [])}
-
-                REGLAS ESTRICTAS DE INVENTARIO:
-                1. **SOLO lo que ves arriba**: No recomiendes lugares ni eventos que no estén en las listas JSON de arriba. Si no está en la lista, NO EXISTE para ti.
-                2. **Eventos**: Si te preguntan por eventos, busca SOLO en la lista 'EVENTOS DISPONIBLES'. Si está vacía, di: "No tengo eventos en calendario ahora mismo."
-                3. **Lugares**: Si te preguntan por sitios para comer o visitar, usa SOLO la lista de 'places'.
-                4. **NO IDs**: Nunca menciones el ID del lugar en el texto de tu respuesta.
-
                 LANGUAGE / IDIOMA:
                 - DETECTA EL IDIOMA DEL USUARIO.
                 - English input -> English output (Friendly, helpful).
@@ -47,13 +24,38 @@ async function handleClientSideAI(action: string, payload: any) {
                 - Amable, respetuoso.
                 - ¡IMPORTANTE!: Al final de tu respuesta (al menos 1 de cada 2 veces), cuenta un chiste corto y sano ("chiste mongu" / dad joke).
                 
+                DATOS EN TIEMPO REAL:
+                Aquí tienes la lista actualizada de lugares y eventos en Cabo Rojo:
+                ${JSON.stringify(context.places.map((p:any) => ({
+                    id: p.id,
+                    name: p.name, 
+                    cat: p.category, 
+                    desc: p.description,
+                    tags: p.tags,
+                    address: p.address,
+                    tips: p.tips,
+                    vibe: p.vibe,
+                    opening_hours: p.opening_hours
+                })).slice(0, 100))}
+
+                EVENTOS:
+                ${JSON.stringify(context.events || [])}
+
+                REGLAS DE BÚSQUEDA Y PRIORIDAD:
+                1. **EVENTOS (Prioridad Alta):** Si el usuario pregunta "¿Qué hay para hacer?" o "¿Eventos hoy?", revisa el array de EVENTOS primero.
+                2. **BARRIOS (Geografía):** Si mencionan "Puerto Real", "Boquerón", "Joyuda", "Combate", o "Pueblo", filtra lugares usando el campo 'address' o 'tags'.
+                3. **SERVICIOS:** Si preguntan por plomeros o mecánicos, busca en la categoría SERVICE.
+                4. **PROHIBIDO IDs**: NUNCA escribas el ID o UUID del lugar en el texto de respuesta. Solo di el nombre. El ID es interno.
+
                 CONTEXTO DE TIEMPO (PUERTO RICO):
                 - Fecha Actual: ${context.date}
                 - Hora Actual: ${context.time}
-                - Usa ESTA hora para chequear 'opening_hours' de tu base de datos.
+                - Usa ESTA hora para chequear 'opening_hours'.
 
                 Instrucciones:
-                1. Responde siempre en JSON: { "text": "...", "suggested_place_ids": ["id"] }
+                1. Usa SOLAMENTE esta información para responder sobre lugares.
+                2. Si recomiendas un lugar, trata de mencionar su nombre exacto.
+                3. Responde siempre en JSON: { "text": "...", "suggested_place_ids": ["id"] }
             `;
             
             // Map history for Gemini SDK
@@ -81,7 +83,7 @@ async function handleClientSideAI(action: string, payload: any) {
 
         case 'itinerary': {
             const { vibe, places } = payload;
-            const prompt = `Crea un itinerario de 1 día en Cabo Rojo. Vibe: "${vibe}". Lugares (USA SOLO ESTOS): ${places.map((p:any)=>p.name).join(', ')}. Return JSON Array with fields: time, activity, description, icon (fontawesome).`;
+            const prompt = `Crea un itinerario de 1 día en Cabo Rojo. Vibe: "${vibe}". Lugares: ${places.map((p:any)=>p.name).join(', ')}. Return JSON Array with fields: time, activity, description, icon (fontawesome).`;
             const res = await clientAI.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
@@ -134,6 +136,62 @@ async function handleClientSideAI(action: string, payload: any) {
                 config: isJson ? { responseMimeType: 'application/json' } : undefined
             });
             return { text: res.text };
+        }
+
+        case 'parse-raw': {
+            const { text } = payload;
+            const prompt = `
+                Act as a Data Entry Specialist.
+                Analyze this raw text about a place in Cabo Rojo, PR: "${text}"
+                
+                Extract structured data into this JSON format:
+                {
+                    "name": string (Title Case),
+                    "description": string (Engaging, max 150 chars),
+                    "category": string (One of: BEACH, FOOD, SIGHTS, LOGISTICS, LODGING, SHOPPING, HEALTH, NIGHTLIFE, ACTIVITY, SERVICE),
+                    "address": string (or empty),
+                    "phone": string (or empty),
+                    "website": string (or empty),
+                    "tips": string (Local tip based on text),
+                    "tags": string[],
+                    "priceLevel": string ($, $$, $$$),
+                    "parking": string (FREE, PAID, NONE),
+                    "hasRestroom": boolean,
+                    "isPetFriendly": boolean
+                }
+            `;
+            const res = await clientAI.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: { responseMimeType: 'application/json' }
+            });
+            return JSON.parse(res.text || "{}");
+        }
+
+        case 'parse-bulk': {
+            const { text } = payload;
+            const prompt = `
+                You are a data entry assistant for a tourism app in Cabo Rojo, Puerto Rico.
+                Process this list of raw text (names or descriptions).
+                Return a JSON ARRAY of objects.
+                
+                Input List:
+                ${text}
+
+                For EACH item, guess the following based on the name/context:
+                - name: The clean name of the place.
+                - category: One of [BEACH, FOOD, SIGHTS, LOGISTICS, LODGING, SHOPPING, HEALTH, NIGHTLIFE, ACTIVITY, SERVICE]. Default to SERVICE if unsure.
+                - description: A short, catchy description (max 10 words) in Spanish.
+                - tags: Array of 2-3 keywords.
+                
+                Return ONLY the JSON Array.
+            `;
+            const res = await clientAI.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: { responseMimeType: 'application/json' }
+            });
+            return JSON.parse(res.text || "[]");
         }
 
         case 'analyze-demand': {
@@ -245,18 +303,11 @@ export const sendConciergeMessage = async (
                 tips: p.tips,
                 vibe: p.vibe,
                 address: p.address,
+                tags: p.tags, // Added for filtering
                 status: p.status,
-                priceLevel: p.priceLevel, // Added
-                bestTimeToVisit: p.bestTimeToVisit, // Added
-                opening_hours: p.opening_hours 
+                opening_hours: p.opening_hours // Passed so AI can check time
             })),
-            // Ensure full event details are passed
-            events: events.map(e => ({ 
-                title: e.title, 
-                start: e.startTime, 
-                description: e.description,
-                location: e.locationName 
-            })),
+            events: events.map(e => ({ title: e.title, start: e.startTime })),
             userLoc, 
             ...contextInfo
         }
@@ -348,6 +399,16 @@ export const generateSeoMetaTags = async (name: string, description: string, cat
 
 export const analyzeUserDemand = async (searchTerms: string[], categories: string[]) => {
     const res = await callAI('analyze-demand', { searchTerms, categories });
+    return res;
+};
+
+export const parsePlaceFromRawText = async (text: string) => {
+    const res = await callAI('parse-raw', { text });
+    return res;
+};
+
+export const parseBulkPlaces = async (text: string) => {
+    const res = await callAI('parse-bulk', { text });
     return res;
 };
 

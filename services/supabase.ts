@@ -1,6 +1,6 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { Place, PlaceCategory, ParkingStatus, AdminLog, Event, EventCategory, Category } from '../types';
+import { Place, PlaceCategory, ParkingStatus, AdminLog, Event, EventCategory, Category, InsightSnapshot } from '../types';
 import { DEFAULT_CATEGORIES } from '../constants';
 
 // --- SAFE ENVIRONMENT VARIABLE EXTRACTION (Vite/Browser Compatible) ---
@@ -277,6 +277,34 @@ export const getAdminLogs = async (limit: number = 50): Promise<AdminLog[]> => {
             .limit(limit);
         if (error) return [];
         return data as AdminLog[];
+    } catch (e) { return []; }
+};
+
+export const saveInsightSnapshot = async (analysis: InsightSnapshot) => {
+    try {
+        const jsonDetails = JSON.stringify(analysis);
+        // Reuse admin_logs table to store insights history without schema migration
+        await logAction('INSIGHT_SNAPSHOT', 'AI Intelligence', jsonDetails);
+    } catch (e) { console.error(e); }
+};
+
+export const getLatestInsights = async (): Promise<InsightSnapshot[]> => {
+    try {
+        const { data, error } = await supabase
+            .from('admin_logs')
+            .select('*')
+            .eq('action', 'INSIGHT_SNAPSHOT')
+            .order('created_at', { ascending: false })
+            .limit(5); // Get last 5 snapshots
+        
+        if (error || !data) return [];
+        
+        return data.map((log: any) => {
+            try {
+                const parsed = JSON.parse(log.details);
+                return { ...parsed, timestamp: log.created_at };
+            } catch { return null; }
+        }).filter(Boolean) as InsightSnapshot[];
     } catch (e) { return []; }
 };
 

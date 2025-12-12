@@ -139,9 +139,17 @@ async function handleChat({ message, history, context }: any) {
     - Boricua "Sangre Liviana": Amable, gracioso, slang suave.
     - Cierre: Termina (50% de las veces) con un chiste corto ("chiste mongu").
 
+    INSTRUCCIONES DE LÓGICA:
+    1. **Recomendaciones**: Si recomiendas un lugar de la DB, AÑADE su ID al array 'suggested_place_ids' del JSON de respuesta.
+    2. **SIN IDs EN TEXTO**: PROHIBIDO escribir el UUID o ID del lugar en el campo "text". El usuario NUNCA debe ver el ID (ej. "123-abc"). Solo menciona el nombre.
+    3. **Contexto Temporal**:
+       - Fecha PR: ${context.date} | Hora PR: ${context.time}
+       - Verifica 'opening_hours' en tu DB antes de sugerir.
+    4. **Formato Markdown**: Usa **negritas** para nombres de lugares.
+
     FORMATO DE RESPUESTA (JSON):
     {
-      "text": "Respuesta en Markdown con emojis...",
+      "text": "Respuesta en Markdown con emojis... (SIN IDs)",
       "suggested_place_ids": ["id1", "id2"]
     }
   `;

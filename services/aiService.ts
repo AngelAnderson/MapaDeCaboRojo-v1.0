@@ -195,7 +195,26 @@ async function handleClientSideAI(action: string, payload: any) {
 
         case 'analyze-demand': {
             const { searchTerms, categories } = payload;
-            const prompt = `Analyze search terms: ${JSON.stringify(searchTerms)}. Existing categories: ${categories.join(',')}. Identify content gaps. Return JSON: { trending_topics: [{topic,count}], content_gaps: [{gap, description, urgency}], recommendation: string }`;
+            const prompt = `
+            You are a Strategic Business Intelligence Analyst for Cabo Rojo Tourism.
+            
+            INPUT DATA:
+            - Raw Search Terms: ${JSON.stringify(searchTerms)}
+            - Existing Categories: ${categories.join(', ')}
+
+            TASK:
+            1. Analyze the search terms to "read the mind" of the user. What is the intent behind the searches? (e.g. "Pizza" at 9am might mean "Breakfast", "Romantic" might mean "Sunset").
+            2. Identify Content Gaps: What are they searching for that we likely lack?
+            3. Predict Trends: Based on this, what should we add next?
+
+            RETURN JSON ONLY:
+            {
+              "trending_topics": [{"topic": string, "count": number}],
+              "content_gaps": [{"gap": string, "description": string, "urgency": "HIGH" | "MEDIUM" | "LOW"}],
+              "recommendation": string (executive summary in Spanish, focused on business decisions),
+              "user_intent_prediction": string (What users *really* want, Spanish)
+            }
+            `;
             const res = await clientAI.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: prompt,
