@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Place, Event, PlaceCategory, ParkingStatus, EventCategory, AdminLog, DaySchedule } from '../types';
 import { updatePlace, deletePlace, createPlace, updateEvent, deleteEvent, createEvent, getAdminLogs, uploadImage, loginAdmin, checkSession } from '../services/supabase';
-import { generateMarketingCopy, categorizeAndTagPlace, enhanceDescription, generateElVeciTip, generateImageAltText, generateSeoMetaTags, analyzeUserDemand } from '../services/aiService'; // Updated imports
+import { generateMarketingCopy, categorizeAndTagPlace, enhanceDescription, generateElVeciTip, generateImageAltText, generateSeoMetaTags, analyzeUserDemand, parsePlaceFromRawText } from '../services/aiService'; 
 import { fetchPlaceDetails, autocompletePlace } from '../services/placesService';
 import { useLanguage } from '../i18n/LanguageContext';
 import { translations } from '../i18n/translations';
@@ -110,6 +110,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
   // Smart Import State
   const [importQuery, setImportQuery] = useState('');
   const [importLoading, setImportLoading] = useState(false);
+  const [magicParsing, setMagicParsing] = useState(false); // NEW State for AI Parser
   const [autocompleteSuggestions, setAutocompleteSuggestions] = useState<any[]>([]);
   const autocompleteTimeoutRef = useRef<number | null>(null);
 
@@ -410,6 +411,33 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
           showToast(e.message || t('admin_import_failed'), 'error');
       } finally {
           setImportLoading(false);
+      }
+  };
+
+  const handleMagicParse = async () => {
+      if (!importQuery || importQuery.length < 5) return showToast("Paste some text first (at least 5 chars).", 'error');
+      setMagicParsing(true);
+      try {
+          const parsed = await parsePlaceFromRawText(importQuery);
+          if (parsed && parsed.name) {
+              setEditingPlace(prev => ({
+                  ...prev,
+                  ...parsed,
+                  id: prev?.id, // Preserve ID
+                  status: prev?.status || 'open', // Preserve status
+                  imageUrl: prev?.imageUrl || '', // Don't wipe existing image if parsing text
+                  // Ensure category maps to Enum
+                  category: Object.values(PlaceCategory).includes(parsed.category) ? parsed.category : PlaceCategory.SERVICE
+              }));
+              showToast("Magic Parse Successful!", 'success');
+              setImportQuery('');
+          } else {
+              showToast("AI couldn't understand the text.", 'error');
+          }
+      } catch (e) {
+          showToast("AI Parse Failed", 'error');
+      } finally {
+          setMagicParsing(false);
       }
   };
 
@@ -976,23 +1004,34 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                             <i className="fa-solid fa-bolt text-yellow-400"></i> {t('admin_smart_import')}
                         </h3>
                         <div className="relative z-10">
-                            <div className="flex gap-2">
-                                <input 
-                                    className="flex-1 bg-slate-900/80 border border-indigo-500/30 rounded-xl px-4 text-white placeholder:text-indigo-300/50 focus:border-indigo-400 outline-none" 
+                            <div className="flex flex-col gap-3">
+                                <textarea 
+                                    className="w-full bg-slate-900/80 border border-indigo-500/30 rounded-xl px-4 py-3 text-white placeholder:text-indigo-300/50 focus:border-indigo-400 outline-none resize-y min-h-[80px]" 
                                     placeholder={t('admin_import_placeholder')}
                                     value={importQuery}
                                     onChange={(e) => setImportQuery(e.target.value)}
-                                    onKeyDown={(e) => { if (e.key === 'Enter' && autocompleteSuggestions.length > 0) handleSmartImport(autocompleteSuggestions[0].description); else if (e.key === 'Enter') handleSmartImport(importQuery); }}
+                                    onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && autocompleteSuggestions.length > 0) handleSmartImport(autocompleteSuggestions[0].description); }}
                                 />
-                                <button 
-                                    onClick={() => handleSmartImport(importQuery)}
-                                    disabled={importLoading || !importQuery}
-                                    className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-xl font-bold transition-all shadow-lg shadow-indigo-900/50 flex items-center gap-2 disabled:opacity-50"
-                                >
-                                    {importLoading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-download"></i>}
-                                    <span className="hidden md:inline">{t('admin_auto_fill')}</span>
-                                </button>
+                                <div className="flex gap-2">
+                                    <button 
+                                        onClick={() => handleSmartImport(importQuery)}
+                                        disabled={importLoading || !importQuery}
+                                        className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-xl font-bold transition-all shadow-lg shadow-indigo-900/50 flex items-center justify-center gap-2 disabled:opacity-50"
+                                    >
+                                        {importLoading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-download"></i>}
+                                        <span>{t('admin_auto_fill')}</span>
+                                    </button>
+                                    <button 
+                                        onClick={handleMagicParse}
+                                        disabled={magicParsing || !importQuery}
+                                        className="flex-1 bg-fuchsia-600 hover:bg-fuchsia-500 text-white px-4 py-3 rounded-xl font-bold transition-all shadow-lg shadow-fuchsia-900/50 flex items-center justify-center gap-2 disabled:opacity-50"
+                                    >
+                                        {magicParsing ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-wand-magic-sparkles"></i>}
+                                        <span>Magic Parse</span>
+                                    </button>
+                                </div>
                             </div>
+                            
                             {autocompleteSuggestions.length > 0 && (
                                 <ul className="absolute left-0 right-0 bg-slate-800 border border-slate-700 rounded-xl mt-2 max-h-48 overflow-y-auto shadow-lg z-20">
                                     {autocompleteSuggestions.map((suggestion, index) => (

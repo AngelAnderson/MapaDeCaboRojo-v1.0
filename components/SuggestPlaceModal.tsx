@@ -1,5 +1,4 @@
 
-
 import React, { useState, useRef } from 'react';
 import { createPlace, uploadImage } from '../services/supabase';
 import { moderateUserContent } from '../services/aiService'; // Updated import
@@ -30,6 +29,11 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [phone, setPhone] = useState('');
   const [website, setWebsite] = useState('');
+  
+  // Hours State
+  const [hoursType, setHoursType] = useState<'fixed' | '24_7' | 'sunrise_sunset'>('fixed');
+  const [hoursNote, setHoursNote] = useState('');
+
   const [parking, setParking] = useState<ParkingStatus>(ParkingStatus.FREE);
   const [hasRestroom, setHasRestroom] = useState(false);
   const [isPetFriendly, setIsPetFriendly] = useState(false);
@@ -64,14 +68,6 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
         return;
     }
 
-    // --- SECURITY NOTE: CAPTCHA Placeholder ---
-    // Implement a CAPTCHA here (e.g., Google reCAPTCHA) to prevent bot submissions.
-    // This is crucial for publicly accessible forms like place suggestions.
-    // if (!await verifyCaptcha()) {
-    //   alert("Please complete the CAPTCHA.");
-    //   return;
-    // }
-
     setLoading(true);
     try {
       let imageUrl = '';
@@ -92,8 +88,6 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
         const coordsResult = await findCoordinates(gmapsUrl);
         if (coordsResult) {
           resolvedCoords = coordsResult;
-          // Optionally, you could also try to get a better address from other AI call here
-          // For now, we rely on admin to fill address if not explicitly given by user
         }
         setResolvingCoords(false);
       }
@@ -116,7 +110,11 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
         is_featured: false, 
         sponsor_weight: 0, 
         isVerified: false,
-        tags: ['User Suggestion', 'AI Verified'] 
+        tags: ['User Suggestion', 'AI Verified'],
+        opening_hours: {
+            type: hoursType,
+            note: hoursNote // Simplest way for users to submit hours without complex UI
+        }
       });
 
       if (res.success) setStep(3);
@@ -151,6 +149,35 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
           {step === 2 && (
             <div className="space-y-4 animate-slide-up">
               <div><label className={labelClass}>{t('suggest_desc')}</label><textarea className={`${inputClass} h-24`} value={description} onChange={e => setDescription(e.target.value)} /></div>
+              
+              {/* Hours Section */}
+              <div>
+                  <label className={labelClass}>{t('hours')}</label>
+                  <div className="bg-slate-50 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200 dark:border-slate-700 flex mb-2">
+                      {[
+                          { id: 'fixed', label: t('sched_fixed') },
+                          { id: '24_7', label: t('sched_24_7') },
+                          { id: 'sunrise_sunset', label: t('sched_nature') }
+                      ].map(opt => (
+                          <button 
+                              key={opt.id}
+                              onClick={() => setHoursType(opt.id as any)}
+                              className={`flex-1 py-2 text-[10px] font-bold uppercase rounded-lg transition-colors ${hoursType === opt.id ? 'bg-teal-600 text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-700'}`}
+                          >
+                              {opt.label}
+                          </button>
+                      ))}
+                  </div>
+                  {hoursType === 'fixed' && (
+                      <input 
+                          className={inputClass} 
+                          value={hoursNote} 
+                          onChange={e => setHoursNote(e.target.value)} 
+                          placeholder={t('suggest_hours_placeholder')} 
+                      />
+                  )}
+              </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <div><label className={labelClass}>{t('suggest_phone')}</label><input className={inputClass} value={phone} onChange={e => setPhone(e.target.value)} /></div>
                 <div><label className={labelClass}>{t('suggest_web')}</label><input className={inputClass} value={website} onChange={e => setWebsite(e.target.value)} /></div>

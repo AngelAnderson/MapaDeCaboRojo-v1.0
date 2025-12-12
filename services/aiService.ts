@@ -129,6 +129,48 @@ async function handleClientSideAI(action: string, payload: any) {
             return { text: res.text };
         }
 
+        case 'parse-raw': {
+            // New case for raw text parsing
+            const { text } = payload;
+            const prompt = `
+                Act as a Data Entry Specialist.
+                Analyze this raw text about a place in Cabo Rojo, PR: "${text}"
+                
+                Extract structured data into this JSON format:
+                {
+                    "name": string (Title Case),
+                    "description": string (Engaging, max 150 chars),
+                    "category": string (One of: BEACH, FOOD, SIGHTS, LOGISTICS, LODGING, SHOPPING, HEALTH, NIGHTLIFE, ACTIVITY, SERVICE),
+                    "address": string (or empty),
+                    "phone": string (or empty),
+                    "website": string (or empty),
+                    "tips": string (Local tip based on text),
+                    "tags": string[],
+                    "priceLevel": string ($, $$, $$$),
+                    "parking": string (FREE, PAID, NONE),
+                    "hasRestroom": boolean,
+                    "isPetFriendly": boolean
+                }
+            `;
+            const res = await clientAI.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: { responseMimeType: 'application/json' }
+            });
+            return JSON.parse(res.text || "{}");
+        }
+
+        case 'analyze-demand': {
+            const { searchTerms, categories } = payload;
+            const prompt = `Analyze search terms: ${JSON.stringify(searchTerms)}. Existing categories: ${categories.join(',')}. Identify content gaps. Return JSON: { trending_topics: [{topic,count}], content_gaps: [{gap, description, urgency}], recommendation: string }`;
+            const res = await clientAI.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: { responseMimeType: 'application/json' }
+            });
+            return JSON.parse(res.text || "{}");
+        }
+
         // Admin Helpers
         case 'categorize-tags':
             return JSON.parse((await clientAI.models.generateContent({
@@ -161,17 +203,6 @@ async function handleClientSideAI(action: string, payload: any) {
                 contents: `SEO Meta Tags for "${payload.name}". Return JSON {metaTitle, metaDescription}`,
                 config: { responseMimeType: 'application/json' }
             })).text || "{}");
-
-        case 'analyze-demand': {
-            const { searchTerms, categories } = payload;
-            const prompt = `Analyze search terms: ${JSON.stringify(searchTerms)}. Existing categories: ${categories.join(',')}. Identify content gaps. Return JSON: { trending_topics: [{topic,count}], content_gaps: [{gap, description, urgency}], recommendation: string }`;
-            const res = await clientAI.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-                config: { responseMimeType: 'application/json' }
-            });
-            return JSON.parse(res.text || "{}");
-        }
 
         default:
             throw new Error(`Unknown Action: ${action}`);
@@ -333,6 +364,12 @@ export const generateSeoMetaTags = async (name: string, description: string, cat
 
 export const analyzeUserDemand = async (searchTerms: string[], categories: string[]) => {
     const res = await callAI('analyze-demand', { searchTerms, categories });
+    return res;
+};
+
+export const parsePlaceFromRawText = async (text: string) => {
+    // New function to expose the 'parse-raw' action to the frontend
+    const res = await callAI('parse-raw', { text });
     return res;
 };
 
