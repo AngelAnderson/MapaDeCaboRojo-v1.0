@@ -20,8 +20,23 @@ const SeoEngine: React.FC<SeoEngineProps> = ({
 
   // 1. Update Basic Meta Tags
   useEffect(() => {
+    let currentTitle = title;
+    let currentDescription = description;
+    let currentImage = image;
+
+    if (place) {
+      // Prioritize AI-generated metaTitle/metaDescription if available
+      currentTitle = place.metaTitle || `${place.name} | Cabo Rojo`;
+      currentDescription = place.metaDescription || place.description;
+      currentImage = place.imageUrl || currentImage;
+    } else if (event) {
+      currentTitle = event.title;
+      currentDescription = event.description;
+      currentImage = event.imageUrl || currentImage;
+    }
+
     // Document Title
-    document.title = title;
+    document.title = currentTitle;
 
     // Meta Tags Helper
     const setMeta = (name: string, content: string, isProperty = false) => {
@@ -34,20 +49,20 @@ const SeoEngine: React.FC<SeoEngineProps> = ({
       element.setAttribute('content', content);
     };
 
-    setMeta('description', description);
+    setMeta('description', currentDescription);
     
     // Open Graph
-    setMeta('og:title', title, true);
-    setMeta('og:description', description, true);
-    setMeta('og:image', image, true);
+    setMeta('og:title', currentTitle, true);
+    setMeta('og:description', currentDescription, true);
+    setMeta('og:image', currentImage, true);
     setMeta('og:url', window.location.href, true);
     
     // Twitter
-    setMeta('twitter:title', title);
-    setMeta('twitter:description', description);
-    setMeta('twitter:image', image);
+    setMeta('twitter:title', currentTitle);
+    setMeta('twitter:description', currentDescription);
+    setMeta('twitter:image', currentImage);
 
-  }, [title, description, image]);
+  }, [title, description, image, place, event]);
 
   // 2. Inject Structured Data (JSON-LD)
   useEffect(() => {
@@ -72,8 +87,8 @@ const SeoEngine: React.FC<SeoEngineProps> = ({
         },
         "geo": {
           "@type": "GeoCoordinates",
-          "latitude": place.coords.lat,
-          "longitude": place.coords.lng
+          "latitude": place.coords?.lat, // Use optional chaining for coords
+          "longitude": place.coords?.lng
         },
         "priceRange": place.priceLevel || "$",
         "aggregateRating": place.is_featured ? {

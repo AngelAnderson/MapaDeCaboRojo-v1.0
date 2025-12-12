@@ -23,6 +23,7 @@ interface ExplorerSheetProps {
   activeCollectionId?: string | null;
   onCameraClick?: () => void; 
   userLocation?: Coordinates;
+  onTabChange: (tabId: string) => void; // Added for explicit close button
 }
 
 const ExplorerSheet: React.FC<ExplorerSheetProps> = ({ 
@@ -40,7 +41,8 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
   onSelectCollection,
   activeCollectionId,
   onCameraClick,
-  userLocation
+  userLocation,
+  onTabChange // Destructure new prop
 }) => {
   const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
@@ -89,7 +91,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
       </div>
 
       <div className="px-5 pb-2 space-y-4 shrink-0">
-        <div className="flex justify-between items-baseline">
+        <div className="flex justify-between items-center"> {/* Changed to items-center for better alignment with close button */}
             <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Explorar</h2>
             <div className="flex items-center gap-3">
                 {userLocation && (
@@ -102,6 +104,14 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                     </button>
                 )}
                 <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{resultCount}</span>
+                {/* Close Button */}
+                <button 
+                  onClick={() => onTabChange('map')} 
+                  className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 p-2 rounded-full"
+                  aria-label={t('close')}
+                >
+                    <i className="fa-solid fa-xmark text-xl"></i>
+                </button>
             </div>
         </div>
         <SearchBar 
@@ -121,7 +131,11 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
       {activeGroup === 'ALL' && !searchText && (
         <div className="pl-5 pb-2 shrink-0 overflow-x-auto no-scrollbar">
             <div className="flex gap-3 w-max pr-5">
-                {COLLECTIONS.map(col => {
+                {COLLECTIONS
+                    .filter(col => 
+                        !['col-sunset', 'col-foodie', 'col-photo', 'col-family'].includes(col.id)
+                    )
+                    .map(col => {
                     const isActive = activeCollectionId === col.id;
                     return (
                         <button 
@@ -146,7 +160,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
         {sortedPlaces.length === 0 ? (
             <div className="text-center py-16 opacity-40">
                 <i className="fa-solid fa-map-location-dot text-5xl mb-3 text-slate-300 dark:text-slate-500"></i>
-                <p className="text-base font-bold text-slate-400 dark:text-slate-500">Sin resultados</p>
+                <p className="text-base font-bold text-slate-400 dark:text-slate-500">{t('no_results')}</p>
             </div>
         ) : (
             sortedPlaces.map(place => {
@@ -189,10 +203,10 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                             )}
                             
                             <div className="flex flex-wrap gap-1.5">
-                                {isClosed && <span className="text-[9px] bg-red-100/50 dark:bg-red-900/30 text-red-800 dark:text-red-300 px-2 py-0.5 rounded-md font-bold uppercase tracking-wide border border-red-100/50 dark:border-red-800/30">Cerrado</span>}
-                                {place.parking === 'FREE' && <span className="text-[9px] bg-emerald-100/50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-md font-bold uppercase tracking-wide border border-emerald-100/50 dark:border-emerald-800/30">Free Parking</span>}
-                                {place.is_featured && <span className="text-[9px] bg-amber-100/50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-md font-bold uppercase tracking-wide border border-amber-100/50 dark:border-amber-800/30">Top Pick</span>}
-                                {place.hasGenerator && <span className="text-[9px] bg-yellow-100/50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 px-2 py-0.5 rounded-md font-bold uppercase tracking-wide border border-yellow-100/50 dark:border-yellow-800/30"><i className="fa-solid fa-bolt mr-0.5"></i> Planta</span>}
+                                {isClosed && <span className="text-[9px] bg-red-100/50 dark:bg-red-900/30 text-red-800 dark:text-red-300 px-2 py-0.5 rounded-md font-bold uppercase tracking-wide border border-red-100/50 dark:border-red-800/30">{t('status_closed')}</span>}
+                                {place.parking === 'FREE' && <span className="text-[9px] bg-emerald-100/50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-md font-bold uppercase tracking-wide border border-emerald-100/50 dark:border-emerald-800/30">{t('free_parking_label')}</span>}
+                                {place.is_featured && <span className="text-[9px] bg-amber-100/50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-md font-bold uppercase tracking-wide border border-amber-100/50 dark:border-amber-800/30">{t('top_pick')}</span>}
+                                {place.hasGenerator && <span className="text-[9px] bg-yellow-100/50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 px-2 py-0.5 rounded-md font-bold uppercase tracking-wide border border-yellow-100/50 dark:border-yellow-800/30"><i className="fa-solid fa-bolt mr-0.5"></i> {t('generator')}</span>}
                             </div>
                         </div>
                         <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-600/50 flex items-center justify-center group-hover:bg-slate-200 dark:group-hover:bg-slate-500 transition-colors">

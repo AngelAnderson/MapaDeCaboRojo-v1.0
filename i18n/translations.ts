@@ -19,20 +19,14 @@ export const translations = {
     call: "Llamar",
     website: "Web",
     share: "Enviar",
+    share_text: "Chequea este lugar: {{name}} 🌴", // New: for PlaceCard sharing
+    link_copied: "Link copiado", // New: for PlaceCard sharing alert
     the_scoop: "La Nota",
     logistics: "Logística",
     address: "Dirección",
     best_time: "Mejor Hora",
     tip_title: "Consejo del Veci",
     ask_ai: "Preguntarle al Veci",
-    suggest_edit: "Sugerir actualización",
-    concierge_title: "El Veci",
-    concierge_subtitle: "El Copiloto del Pueblo",
-    concierge_placeholder: "Escribe aquí...",
-    concierge_thinking: "Pensando...",
-    concierge_help_route: "Ármame la Ruta",
-    concierge_help_restroom: "¿Baños?",
-    concierge_help_food: "Comida",
     suggest_title: "Sugerir Lugar",
     suggest_subtitle: "Ayuda a la comunidad",
     suggest_name: "Nombre del Lugar",
@@ -47,7 +41,9 @@ export const translations = {
     suggest_pet: "¿Pet Friendly?",
     suggest_success_title: "¡Recibido!",
     suggest_success_msg: "El lugar ya está visible en el mapa. El admin lo revisará pronto.",
+    suggest_success_msg_admin_review: "¡Gracias! Tu sugerencia fue recibida y ahora está en fila para ser revisada por un administrador. Una vez verificada, aparecerá en el mapa. ¡Agradecemos tu contribución!",
     suggest_btn: "Publicar Ahora",
+    suggest_analyzing_el_veci: "Analizando (El Veci)...", // New
     admin_login: "Entrar al Sistema",
     admin_places: "Mis Lugares",
     contact_title: "Centro de Ayuda",
@@ -77,12 +73,215 @@ export const translations = {
     status_open_day: "Abierto (Horario Solar)",
     status_caution_night: "Abierto - Precaución de Noche",
     status_closed_now: "Cerrado Ahora",
+    status_closed: "Cerrado", // New: for PlaceCard alert
     audio_guide_title: "Historia del Veci",
     audio_listen: "Escuchar Historia",
     audio_playing: "Reproduciendo...",
     audio_error: "No pude generar el audio. Intenta de nuevo.",
     sort_recommended: "Recomendados",
-    sort_distance: "Cerca de ti"
+    sort_distance: "Cerca de ti",
+
+    // Admin Panel Translations (New)
+    admin_access_title: "Acceso Admin",
+    admin_access_subtitle: "Punto de Entrada Seguro",
+    admin_email_placeholder: "Email",
+    admin_password_placeholder: "Contraseña",
+    admin_login_button: "Acceder",
+    admin_enter_credentials: "Ingresa tus credenciales",
+    admin_login_failed: "Inicio de sesión fallido",
+    admin_editing: "Editando",
+    admin_new_item: "Nuevo Elemento",
+    admin_events: "Eventos",
+    admin_logs: "Registros",
+    admin_search_placeholder: "Buscar...",
+    admin_add_new_place: "Añadir Lugar Nuevo",
+    admin_add_new_event: "Añadir Evento Nuevo",
+    admin_delete_record: "Eliminar Registro",
+    admin_smart_import: "Importación Inteligente",
+    admin_import_placeholder: "Pega Link de Google Maps o Nombre del Lugar...",
+    admin_auto_fill: "Autocompletar",
+    admin_import_description: "Obtiene fotos, horarios, dirección, coordenadas y más de Google/Web.",
+    admin_basic_info: "Información Básica",
+    admin_name: "Nombre",
+    admin_category: "Categoría",
+    admin_icon_name: "Nombre del Icono",
+    admin_description: "Descripción",
+    admin_tags: "Etiquetas",
+    admin_location: "Ubicación",
+    admin_address: "Dirección",
+    admin_use_current_location: "Usar mi ubicación actual",
+    admin_maps_link: "Enlace de Google Maps",
+    admin_maps_link_placeholder: "Ej. https://goo.gl/maps/caborojo",
+    admin_operations_hours: "Operaciones y Horarios",
+    admin_hours_strategy: "Estrategia de Horarios",
+    admin_display_note: "Nota de Visualización",
+    admin_display_note_desc: "Ej. Abierto diariamente 8am-5pm",
+    admin_weekly_schedule: "Horario Semanal",
+    admin_apply_mon_to_fri: "Aplicar Lunes a Viernes",
+    admin_closed: "Cerrado",
+    admin_mark_as_open: "Marcar como Abierto",
+    admin_mark_as_closed: "Marcar como Cerrado",
+    admin_phone: "Teléfono",
+    admin_website: "Sitio Web",
+    admin_media: "Medios",
+    admin_tap_to_upload: "Toca para Subir",
+    admin_image_url: "URL de la Imagen",
+    admin_image_alt_text: "Texto Alternativo de Imagen", // New
+    admin_image_alt_text_placeholder: "Ej. Faro Los Morrillos al atardecer.", // New
+    admin_details_amenities: "Detalles y Amenidades",
+    admin_visible_open: "Visible (Abierto)",
+    admin_verified: "Verificado",
+    admin_featured: "Destacado",
+    admin_landing_spot: "Punto de Aterrizaje",
+    admin_pet_friendly: "Pet Friendly",
+    admin_restrooms: "Baños",
+    admin_generator: "Planta Eléctrica",
+    admin_paid_parking: "Parking de Pago",
+    admin_el_veci_tip: "Consejo del Veci",
+    admin_advanced_contact_info: "Info de Contacto Avanzada (JSON)",
+    admin_advanced_contact_info_desc: "JSON crudo para detalles extra como Instagram, Email, Gerente",
+    admin_ai_marketing_studio: "Estudio de Marketing IA",
+    admin_platform: "Plataforma",
+    admin_tone: "Tono",
+    admin_tone_hype: "Hype (Emocionado)",
+    admin_tone_chill: "Chill (Relajado)",
+    admin_tone_professional: "Profesional",
+    admin_generate_copy: "Generar Contenido",
+    copied: "¡Copiado!",
+    admin_delete_event: "Eliminar Evento",
+    admin_event_details: "Detalles del Evento",
+    admin_title: "Título",
+    admin_start: "Inicio",
+    admin_end: "Fin",
+    admin_upload_image: "Subir Imagen",
+    admin_select_item: "Selecciona un elemento de la lista",
+    admin_geolocation_not_supported: "Geolocalización no soportada",
+    admin_gps_updated: "¡GPS Actualizado!",
+    admin_error_getting_location: "Error al obtener la ubicación",
+    admin_name_required: "El nombre es obligatorio",
+    admin_invalid_latitude: "Latitud inválida (-90 a 90)",
+    admin_invalid_longitude: "Longitud inválida (-180 a 180)",
+    admin_invalid_json: "JSON inválido en Información de Contacto",
+    admin_saved_successfully: "Guardado exitosamente",
+    admin_error_saving: "Error al guardar",
+    admin_confirm_delete_place: "¿Estás seguro? Esta acción no se puede deshacer.",
+    admin_place_deleted: "Lugar eliminado",
+    admin_failed_to_delete: "Fallo al eliminar",
+    admin_unexpected_delete_error: "Error inesperado al eliminar",
+    admin_title_required: "El título es obligatorio",
+    admin_end_time_after_start: "La hora de finalización debe ser posterior a la de inicio",
+    admin_event_saved: "Evento guardado",
+    admin_error_saving_event: "Error al guardar el evento",
+    admin_confirm_delete_event: "¿Estás seguro de que quieres eliminar este evento?",
+    admin_event_deleted: "Evento eliminado",
+    admin_failed_to_delete_event: "Fallo al eliminar el evento",
+    admin_image_uploaded: "¡Imagen subida!",
+    admin_upload_failed: "Fallo al subir",
+    admin_enter_name_or_link: "Ingresa un nombre o enlace",
+    admin_import_successful: "¡Importación exitosa!",
+    admin_could_not_find_details: "No se pudieron encontrar los detalles del lugar.",
+    admin_import_failed: "Fallo en la importación",
+    admin_need_name_first: "Necesitas el nombre primero",
+    admin_default_zoom: "Zoom por Defecto", // New
+    admin_default_zoom_desc: "Nivel de zoom al cargar este lugar (ej. 16)", // New
+    admin_applied_mon_to_fri: "Horario de L-V aplicado.", // New for admin schedule
+
+    // AI Features in Admin
+    admin_ai_suggest_category_tags: "Sugerir Categoría y Etiquetas con IA", // New
+    admin_ai_suggest_category_tags_success: "IA sugirió categoría y etiquetas.", // New
+    admin_ai_suggest_category_tags_fail: "IA no pudo sugerir categoría/etiquetas.", // New
+    admin_ai_suggest_category_tags_error: "Error al generar categoría/etiquetas con IA.", // New
+    admin_ai_enhance_description: "Mejorar Descripción con IA", // New
+    admin_ai_enhance_description_success: "IA mejoró la descripción.", // New
+    admin_ai_enhance_description_fail: "IA no pudo mejorar la descripción.", // New
+    admin_ai_enhance_description_error: "Error al mejorar descripción con IA.", // New
+    admin_ai_generate_tip: "Generar Consejo del Veci con IA", // New
+    admin_ai_generate_tip_success: "IA generó el Consejo del Veci.", // New
+    admin_ai_generate_tip_fail: "IA no pudo generar un consejo.", // New
+    admin_ai_generate_tip_error: "Error al generar consejo con IA.", // New
+    admin_ai_generate_alt_text: "Generar Texto Alternativo con IA", // New
+    admin_ai_generate_alt_text_success: "IA generó texto alternativo.", // New
+    admin_ai_generate_alt_text_fail: "IA no pudo generar texto alternativo.", // New
+    admin_ai_generate_alt_text_error: "Error al generar texto alternativo con IA.", // New
+    admin_ai_generate_seo: "Generar SEO con IA", // New
+    admin_ai_generate_seo_success: "IA generó meta tags SEO.", // New
+    admin_ai_generate_seo_fail: "IA no pudo generar meta tags SEO.", // New
+    admin_ai_generate_seo_error: "Error al generar meta tags SEO con IA.", // New
+    admin_meta_title: "Título SEO", // New
+    admin_meta_title_desc: "Título optimizado para motores de búsqueda (max 60 caracteres).", // New
+    admin_meta_title_placeholder: "Ej. Faro Los Morrillos | Cabo Rojo PR", // New
+    admin_meta_description: "Meta Descripción SEO", // New
+    admin_meta_description_desc: "Descripción optimizada para motores de búsqueda (max 160 caracteres).", // New
+    admin_meta_description_placeholder: "Ej. Descubre el histórico Faro Los Morrillos en Cabo Rojo, Puerto Rico. Vistas panorámicas y naturaleza virgen. ¡Tu guía local para una aventura inolvidable!", // New
+    
+    // Place Card Badges (New)
+    delivery: "Domicilio",
+    generator: "Planta Eléctrica",
+    parking_label: "Parking {{status}}", // New, dynamic
+    free_parking_label: "Parking Gratis", // Kept for other uses
+    paid_parking_label: "Parking Pago", // Kept for other uses
+    delivery_label: "A Domicilio",
+    restroom_label: "Baños",
+    pet_friendly_label: "Pet Friendly",
+    accessibility_label: "Accesible",
+    hours: "Horario",
+    hours_na: "Horario n/a",
+    hours_not_available: "Horario no disponible",
+    status_closed_today: "Cerrado Hoy",
+    status_open_now: "Abierto • Cierra {{time}}",
+    place_closed_title: "Este lugar está cerrado.",
+    place_closed_info: "Puede ser temporal o permanente. Verifica antes de ir.",
+    event_location: "Ubicación del Evento",
+    service_area: "Zona de Servicio",
+    phone: "Teléfono",
+    explore_also: "Explora También",
+    suggest_image_too_large: "La imagen es muy grande. Intenta con una menor a 5MB.", // New for SuggestPlaceModal
+    suggest_name_required: "El nombre es obligatorio", // New for SuggestPlaceModal
+    suggest_ai_bouncer_alert: "👮‍♂️ El Veci dice: \"{{reason}}\"\n\nIntenta arreglarlo.", // New for SuggestPlaceModal
+    suggest_ai_bouncer_default_reason: "Eso no parece un lugar real.", // New for SuggestPlaceModal
+    suggest_image_upload_error: "Error al subir la imagen.", // New for SuggestPlaceModal
+    suggest_submission_error: "Error al enviar la sugerencia. Por favor, inténtalo de nuevo.", // New for SuggestPlaceModal
+    suggest_connection_error: "Error de conexión al enviar la sugerencia.", // New for SuggestPlaceModal
+    suggest_upload_photo: "Subir Foto", // New for SuggestPlaceModal
+    no_results: "Sin resultados", // New for ExplorerSheet
+    top_pick: "Recomendado", // New for ExplorerSheet
+    what_is_this: "¿Qué es esto?", // New for SearchBar
+    light_mode: "Modo Claro", // New for CommandMenu
+    dark_mode: "Modo Oscuro", // New for CommandMenu
+    switch_to_english: "Cambiar a Inglés", // New for CommandMenu
+    switch_to_spanish: "Cambiar a Español", // New for CommandMenu
+    type_a_command: "Escribe un comando...", // New for CommandMenu
+    no_results_found: "No se encontraron resultados.", // New for CommandMenu
+    app_version: "Map de Cabo Rojo OS 2.0", // New for CommandMenu footer
+    select: "Seleccionar", // New for CommandMenu footer
+    navigate: "Navegar", // New for CommandMenu footer
+    zoom_in: "Acercar", // New
+    zoom_out: "Alejar", // New
+    satellite_view: "Vista Satélite", // New
+    map_view: "Vista Mapa", // New
+
+    // Weather Widget Translations
+    weather_loading: "Cargando el clima...",
+    weather_sunny: "Soleado",
+    weather_advice_beach: "Arranca pa' la playa.",
+    weather_storm: "Tormenta",
+    weather_advice_storm: "¡PELIGRO! Quédate quieto. No salgas.",
+    weather_rain: "Lluvia",
+    weather_advice_rain: "Se te agüó la fiesta. Busca techo o un chinchorro.",
+    weather_drizzle: "Llovizna",
+    weather_advice_drizzle: "Una llovizna boba. Se quita rápido.",
+    weather_cloudy: "Nublado",
+    weather_advice_cloudy: "Perfecto pa' caminar, el sol no pica.",
+    weather_partial_cloudy: "Parcialmente Nublado",
+    weather_advice_partial_cloudy: "Sol con nubes. Rico pa' fotos.",
+    weather_clear: "Despejado",
+    weather_advice_clear: "Cielo azul. ¡Aprovecha!",
+    weather_advice_hot: "Brillante. ¡Ponte sunblock!",
+    weather_advice_stars: "Noche clara. Mira las estrellas.",
+    weather_advice_infernal_heat: "¡Calor infernal! Hidrátate o busca aire.",
+    weather_advice_strong_wind: "Viento fuerte. Cuidado con el oleaje.",
+    weather_tropical: "Tropical",
+    weather_advice_default: "El clima de siempre: Calor y playa.",
   },
   en: {
     loading: "Loading...",
@@ -103,6 +302,8 @@ export const translations = {
     call: "Call",
     website: "Web",
     share: "Share",
+    share_text: "Check out this place: {{name}} 🌴", // New: for PlaceCard sharing
+    link_copied: "Link copied", // New: for PlaceCard sharing alert
     the_scoop: "The Scoop",
     logistics: "Logistics",
     address: "Address",
@@ -131,7 +332,9 @@ export const translations = {
     suggest_pet: "Pet Friendly?",
     suggest_success_title: "Received!",
     suggest_success_msg: "The place is now visible on the map. Admin will review soon.",
+    suggest_success_msg_admin_review: "Thanks! Your suggestion has been received and is now in line for admin review. Once verified, it will appear on the map. We appreciate your contribution!",
     suggest_btn: "Publish Now",
+    suggest_analyzing_el_veci: "Analyzing (El Veci)...", // New
     admin_login: "System Login",
     admin_places: "My Places",
     contact_title: "Help Center",
@@ -161,11 +364,214 @@ export const translations = {
     status_open_day: "Open (Daylight)",
     status_caution_night: "Caution - Night",
     status_closed_now: "Closed Now",
+    status_closed: "Closed", // New: for PlaceCard alert
     audio_guide_title: "El Veci's Story",
     audio_listen: "Listen to Story",
     audio_playing: "Playing...",
     audio_error: "Could not generate audio. Try again.",
     sort_recommended: "Recommended",
-    sort_distance: "Near Me"
+    sort_distance: "Near Me",
+
+    // Admin Panel Translations (New)
+    admin_access_title: "Admin Access",
+    admin_access_subtitle: "Secure Entry Point",
+    admin_email_placeholder: "Email",
+    admin_password_placeholder: "Password",
+    admin_login_button: "Login",
+    admin_enter_credentials: "Enter your credentials",
+    admin_login_failed: "Login failed",
+    admin_editing: "Editing",
+    admin_new_item: "New Item",
+    admin_events: "Events",
+    admin_logs: "Logs",
+    admin_search_placeholder: "Search...",
+    admin_add_new_place: "Add New Place",
+    admin_add_new_event: "Add New Event",
+    admin_delete_record: "Delete Record",
+    admin_smart_import: "Smart Import",
+    admin_import_placeholder: "Paste Google Maps Link or Place Name...",
+    admin_auto_fill: "Auto-Fill",
+    admin_import_description: "Fetches photos, hours, address, coords & more from Google/Web.",
+    admin_basic_info: "Basic Info",
+    admin_name: "Name",
+    admin_category: "Category",
+    admin_icon_name: "Icon Name",
+    admin_description: "Description",
+    admin_tags: "Tags",
+    admin_location: "Location",
+    admin_address: "Address",
+    admin_use_current_location: "Use My Current Location",
+    admin_maps_link: "Maps Link",
+    admin_maps_link_placeholder: "e.g. https://goo.gl/maps/caborojo",
+    admin_operations_hours: "Operations & Hours",
+    admin_hours_strategy: "Hours Strategy",
+    admin_display_note: "Display Note",
+    admin_display_note_desc: "e.g. Daily 8am-5pm",
+    admin_weekly_schedule: "Weekly Schedule",
+    admin_apply_mon_to_fri: "Apply Mon-Fri",
+    admin_closed: "Closed",
+    admin_mark_as_open: "Mark as Open",
+    admin_mark_as_closed: "Mark as Closed",
+    admin_phone: "Phone",
+    admin_website: "Website",
+    admin_media: "Media",
+    admin_tap_to_upload: "Tap to Upload",
+    admin_image_url: "Image URL",
+    admin_image_alt_text: "Image Alt Text", // New
+    admin_image_alt_text_placeholder: "e.g. Los Morrillos Lighthouse at sunset.", // New
+    admin_details_amenities: "Details & Amenities",
+    admin_visible_open: "Visible (Open)",
+    admin_verified: "Verified",
+    admin_featured: "Featured",
+    admin_landing_spot: "Landing Spot",
+    admin_pet_friendly: "Pet Friendly",
+    admin_restrooms: "Restrooms",
+    admin_generator: "Generator",
+    admin_paid_parking: "Paid Parking",
+    admin_el_veci_tip: "El Veci Tip",
+    admin_advanced_contact_info: "Advanced Contact Info (JSON)",
+    admin_advanced_contact_info_desc: "Raw JSON for extra details like Instagram, Email, Manager",
+    admin_ai_marketing_studio: "AI Marketing Studio",
+    admin_platform: "Platform",
+    admin_tone: "Tone",
+    admin_tone_hype: "Hype (Excited)",
+    admin_tone_chill: "Chill (Relaxed)",
+    admin_tone_professional: "Professional",
+    admin_generate_copy: "Generate Copy",
+    copied: "Copied!",
+    admin_delete_event: "Delete Event",
+    admin_event_details: "Event Details",
+    admin_title: "Title",
+    admin_start: "Start",
+    admin_end: "End",
+    admin_upload_image: "Upload Image",
+    admin_select_item: "Select an item from the list",
+    admin_geolocation_not_supported: "Geolocation not supported",
+    admin_gps_updated: "GPS Updated!",
+    admin_error_getting_location: "Error getting location",
+    admin_name_required: "Name is required",
+    admin_invalid_latitude: "Invalid Latitude (-90 to 90)",
+    admin_invalid_longitude: "Invalid Longitude (-180 to 180)",
+    admin_invalid_json: "Invalid JSON in Contact Info",
+    admin_saved_successfully: "Saved successfully",
+    admin_error_saving: "Error saving",
+    admin_confirm_delete_place: "Are you sure? This action cannot be undone.",
+    admin_place_deleted: "Place deleted",
+    admin_failed_to_delete: "Failed to delete",
+    admin_unexpected_delete_error: "Unexpected error deleting",
+    admin_title_required: "Title is required",
+    admin_end_time_after_start: "End time must be after start time",
+    admin_event_saved: "Event saved",
+    admin_error_saving_event: "Error saving event",
+    admin_confirm_delete_event: "Are you sure you want to delete this event?",
+    admin_event_deleted: "Event deleted",
+    admin_failed_to_delete_event: "Failed to delete event",
+    admin_image_uploaded: "Image uploaded!",
+    admin_upload_failed: "Upload failed",
+    admin_enter_name_or_link: "Enter a name or link",
+    admin_import_successful: "Import Successful!",
+    admin_could_not_find_details: "Could not find place details.",
+    admin_import_failed: "Import failed",
+    admin_need_name_first: "Need name first",
+    admin_default_zoom: "Default Zoom", // New
+    admin_default_zoom_desc: "Zoom level when loading this place (e.g. 16)", // New
+    admin_applied_mon_to_fri: "Mon-Fri schedule applied.", // New for admin schedule
+
+    // AI Features in Admin
+    admin_ai_suggest_category_tags: "Suggest Category & Tags with AI", // New
+    admin_ai_suggest_category_tags_success: "AI suggested category and tags.", // New
+    admin_ai_suggest_category_tags_fail: "AI could not suggest category/tags.", // New
+    admin_ai_suggest_category_tags_error: "Error generating category/tags with AI.", // New
+    admin_ai_enhance_description: "Enhance Description with AI", // New
+    admin_ai_enhance_description_success: "AI enhanced description.", // New
+    admin_ai_enhance_description_fail: "AI could not enhance description.", // New
+    admin_ai_enhance_description_error: "Error enhancing description with AI.", // New
+    admin_ai_generate_tip: "Generate El Veci Tip with AI", // New
+    admin_ai_generate_tip_success: "AI generated El Veci Tip.", // New
+    admin_ai_generate_tip_fail: "AI could not generate a tip.", // New
+    admin_ai_generate_tip_error: "Error generating tip with AI.", // New
+    admin_ai_generate_alt_text: "Generate Alt Text with AI", // New
+    admin_ai_generate_alt_text_success: "AI generated alt text.", // New
+    admin_ai_generate_alt_text_fail: "AI could not generate alt text.", // New
+    admin_ai_generate_alt_text_error: "Error generating alt text with AI.", // New
+    admin_ai_generate_seo: "Generate SEO with AI", // New
+    admin_ai_generate_seo_success: "AI generated SEO meta tags.", // New
+    admin_ai_generate_seo_fail: "AI could not generate SEO meta tags.", // New
+    admin_ai_generate_seo_error: "Error generating SEO meta tags with AI.", // New
+    admin_meta_title: "SEO Title", // New
+    admin_meta_title_desc: "Optimized title for search engines (max 60 chars).", // New
+    admin_meta_title_placeholder: "e.g. Los Morrillos Lighthouse | Cabo Rojo PR", // New
+    admin_meta_description: "SEO Meta Description", // New
+    admin_meta_description_desc: "Optimized description for search engines (max 160 chars).", // New
+    admin_meta_description_placeholder: "e.g. Discover the historic Los Morrillos Lighthouse in Cabo Rojo, Puerto Rico. Panoramic views & pristine nature. Your local guide to an unforgettable adventure!", // New
+
+    // Place Card Badges (New)
+    delivery: "Delivery",
+    generator: "Generator",
+    parking_label: "{{status}} Parking", // New, dynamic
+    free_parking_label: "Free Parking", // Kept for other uses
+    paid_parking_label: "Paid Parking", // Kept for other uses
+    delivery_label: "Delivery",
+    restroom_label: "Restrooms",
+    pet_friendly_label: "Pet Friendly",
+    accessibility_label: "Accessible",
+    hours: "Hours",
+    hours_na: "Hours n/a",
+    hours_not_available: "Hours not available",
+    status_closed_today: "Closed Today",
+    status_open_now: "Open • Closes {{time}}",
+    place_closed_title: "This place is closed.",
+    place_closed_info: "May be temporary or permanent. Verify before going.",
+    event_location: "Event Location",
+    service_area: "Service Area",
+    phone: "Phone",
+    explore_also: "Explore Also",
+    suggest_image_too_large: "Image is too large. Try one under 5MB.", // New for SuggestPlaceModal
+    suggest_name_required: "Name is required", // New for SuggestPlaceModal
+    suggest_ai_bouncer_alert: "👮‍♂️ El Veci says: \"{{reason}}\"\n\nTry fixing it.", // New for SuggestPlaceModal
+    suggest_ai_bouncer_default_reason: "That doesn't look like a real place.", // New for SuggestPlaceModal
+    suggest_image_upload_error: "Error uploading image.", // New for SuggestPlaceModal
+    suggest_submission_error: "Error submitting suggestion. Please try again.", // New for SuggestPlaceModal
+    suggest_connection_error: "Connection error when submitting suggestion.", // New for SuggestPlaceModal
+    suggest_upload_photo: "Upload Photo", // New for SuggestPlaceModal
+    no_results: "No results", // New for ExplorerSheet
+    top_pick: "Top Pick", // New for ExplorerSheet
+    what_is_this: "What is this?", // New for SearchBar
+    light_mode: "Light Mode", // New for CommandMenu
+    dark_mode: "Dark Mode", // New for CommandMenu
+    switch_to_english: "Switch to English", // New for CommandMenu
+    switch_to_spanish: "Cambiar a Español", // New for CommandMenu
+    type_a_command: "Type a command...", // New for CommandMenu
+    no_results_found: "No results found.", // New for CommandMenu
+    app_version: "Map de Cabo Rojo OS 2.0", // New for CommandMenu footer
+    select: "Select", // New for CommandMenu footer
+    navigate: "Navigate", // New for CommandMenu footer
+    zoom_in: "Zoom In", // New
+    zoom_out: "Zoom Out", // New
+    satellite_view: "Satellite View", // New
+    map_view: "Map View", // New
+
+    // Weather Widget Translations
+    weather_loading: "Loading weather...",
+    weather_sunny: "Sunny",
+    weather_advice_beach: "Go to the beach!",
+    weather_storm: "Storm",
+    weather_advice_storm: "DANGER! Stay put. Do not go out.",
+    weather_rain: "Rain",
+    weather_advice_rain: "Rainy day. Find shelter or a local spot.",
+    weather_drizzle: "Drizzle",
+    weather_advice_drizzle: "Just a light drizzle. It'll pass quickly.",
+    weather_cloudy: "Cloudy",
+    weather_advice_cloudy: "Perfect for walking, sun won't burn.",
+    weather_partial_cloudy: "Partly Cloudy",
+    weather_advice_partial_cloudy: "Sun with clouds. Great for photos.",
+    weather_clear: "Clear",
+    weather_advice_clear: "Enjoy the blue sky!",
+    weather_advice_hot: "Bright. Put on sunblock!",
+    weather_advice_stars: "Clear night. Look at the stars.",
+    weather_advice_infernal_heat: "Infernal heat! Hydrate or find AC.",
+    weather_advice_strong_wind: "Strong wind. Watch out for waves.",
+    weather_tropical: "Tropical",
+    weather_advice_default: "The usual weather: Heat and beach.",
   }
 };

@@ -7,7 +7,8 @@ type Language = 'es' | 'en';
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: keyof typeof translations['es']) => string;
+  // Updated t function to accept an optional options object for interpolation
+  t: (key: keyof typeof translations['es'], options?: Record<string, string | number>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
@@ -27,8 +28,16 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     localStorage.setItem('app_language', lang);
   };
 
-  const t = (key: keyof typeof translations['es']) => {
-    return translations[language][key] || key;
+  // Updated t function implementation to handle interpolation
+  const t = (key: keyof typeof translations['es'], options?: Record<string, string | number>) => {
+    let text = translations[language][key] || key;
+    if (options) {
+      for (const optKey in options) {
+        // Use a global regex for all occurrences
+        text = text.replace(new RegExp(`{{${optKey}}}`, 'g'), String(options[optKey]));
+      }
+    }
+    return text;
   };
 
   return (
@@ -45,3 +54,4 @@ export const useLanguage = () => {
   }
   return context;
 };
+    

@@ -7,7 +7,7 @@ interface WeatherState {
   advice: string;
   icon: string;
   loading: boolean;
-  isSafe: boolean; // New state for visual indicator
+  isSafe: boolean; 
 }
 
 const WeatherWidget: React.FC = () => {
@@ -20,24 +20,22 @@ const WeatherWidget: React.FC = () => {
     isSafe: true,
   });
 
-  useEffect(() => {
-    const fetchWeather = async () => {
+  const fetchWeather = async () => {
+      // Visibility Check: Don't fetch if tab is hidden to save battery/data
+      if (document.hidden) return;
+
       try {
-        // COORDINATES UPDATE: Switched from Town Center (Inland) to Boquerón (Coast)
-        // This gives a more accurate "Beach Weather" reading which is usually sunnier.
         const LAT = 18.0262; 
         const LNG = -67.1725;
-        
         const timestamp = new Date().getTime();
         
-        // Added 'apparent_temperature' (Feels Like) & 'is_day'
         const res = await fetch(
           `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LNG}&current=apparent_temperature,weather_code,wind_speed_10m,is_day&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FPuerto_Rico&t=${timestamp}`
         );
         const data = await res.json();
         
         const current = data.current;
-        const temp = Math.round(current.apparent_temperature); // Using Heat Index
+        const temp = Math.round(current.apparent_temperature);
         const code = current.weather_code;
         const wind = current.wind_speed_10m;
         const isDay = current.is_day === 1;
@@ -47,7 +45,6 @@ const WeatherWidget: React.FC = () => {
         let icon = isDay ? 'fa-sun' : 'fa-moon';
         let isSafe = true;
 
-        // Refined WMO Weather Code Interpretation
         if (code >= 95) {
             condition = 'Tormenta';
             advice = '¡PELIGRO! Quédate quieto. No salgas.';
@@ -75,13 +72,11 @@ const WeatherWidget: React.FC = () => {
             advice = 'Cielo azul. ¡Aprovecha!';
             icon = isDay ? 'fa-sun' : 'fa-moon';
         } else {
-            // Code 0
             condition = isDay ? 'Soleado' : 'Despejado';
             advice = isDay ? 'Brillante. ¡Ponte sunblock!' : 'Noche clara. Mira las estrellas.';
             icon = isDay ? 'fa-sun' : 'fa-moon';
         }
 
-        // Extreme Conditions Overrides
         if (temp > 100) {
             advice = '¡Calor infernal! Hidrátate o busca aire.';
             icon = 'fa-temperature-arrow-up';
@@ -104,11 +99,22 @@ const WeatherWidget: React.FC = () => {
             isSafe: true
         });
       }
-    };
+  };
 
-    fetchWeather();
+  useEffect(() => {
+    fetchWeather(); // Initial fetch
     const interval = setInterval(fetchWeather, 600000); // 10 mins
-    return () => clearInterval(interval);
+    
+    // Add visibility listener to re-fetch when user comes back
+    const handleVisibilityChange = () => {
+        if (!document.hidden) fetchWeather();
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+        clearInterval(interval);
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
   }, []);
 
   if (weather.loading) {

@@ -1,5 +1,4 @@
 
-
 export enum PlaceCategory {
   BEACH = 'BEACH',
   FOOD = 'FOOD',
@@ -41,12 +40,13 @@ export interface Place {
   tags: string[];
   
   address: string;
-  coords: Coordinates;
+  coords?: Coordinates; // Made optional
   gmapsUrl: string;
   location?: any;
 
   imageUrl: string;
   imagePosition?: string; // New: 'top' | 'center' | 'bottom'
+  imageAlt?: string; // New: AI-generated alt text for images
   videoUrl: string;
   customIcon?: string;
 
@@ -61,6 +61,7 @@ export interface Place {
   isSecret?: boolean;
   isMobile?: boolean; // New: For businesses that come to you
   isLanding?: boolean; // New: Sets this place as the initial map center
+  defaultZoom?: number; // New: Default zoom level for this place
 
   parking: ParkingStatus;
   hasRestroom: boolean;
@@ -87,6 +88,9 @@ export interface Place {
 
   rating?: number;
   crowdLevel?: 'LOW' | 'MEDIUM' | 'HIGH';
+
+  metaTitle?: string; // New: AI-generated SEO title
+  metaDescription?: string; // New: AI-generated SEO meta description
 }
 
 export interface Event {

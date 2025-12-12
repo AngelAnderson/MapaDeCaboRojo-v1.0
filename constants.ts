@@ -1,4 +1,5 @@
 
+
 import { Place, PlaceCategory, ParkingStatus, Event, EventCategory, Collection } from './types';
 
 // Leaflet/OSM does not require a token for standard tiles
@@ -6,6 +7,37 @@ export const CABO_ROJO_CENTER = { lat: 17.9620, lng: -67.1650 };
 
 // The ID of the place to showcase on load (Maria Puerto Real)
 export const DEFAULT_PLACE_ID = 'e8618968-ef0c-4113-9084-0765f716d6f9';
+
+// Default zoom level for places if not specified
+export const DEFAULT_PLACE_ZOOM = 16; 
+
+// --- MARKER COLORS (Moved from App.tsx) ---
+export const CATEGORY_COLORS: Record<string, string> = {
+  [PlaceCategory.BEACH]: '#FF9500', // Orange
+  [PlaceCategory.FOOD]: '#FF3B30', // Red
+  [PlaceCategory.SIGHTS]: '#007AFF', // Blue
+  [PlaceCategory.NIGHTLIFE]: '#AF52DE', // Purple
+  [PlaceCategory.LODGING]: '#5AC8FA', // Teal/Cyan
+  [PlaceCategory.HEALTH]: '#FF2D55', // Pink
+  [PlaceCategory.SERVICE]: '#8E8E93', // Gray
+  [PlaceCategory.LOGISTICS]: '#FFCC00', // Yellow
+  DEFAULT: '#8E8E93'
+};
+
+export const getMarkerColor = (cat: PlaceCategory | string): string => { 
+  return CATEGORY_COLORS[cat as string] || CATEGORY_COLORS.DEFAULT;
+};
+
+// --- CATEGORY GROUPS (Moved from App.tsx) ---
+export const CATEGORY_GROUPS: Record<string, { categories: PlaceCategory[] | 'ALL' | 'EVENTS' | 'FAVORITES' }> = {
+  ALL: { categories: 'ALL' },
+  EXPLORA: { categories: [PlaceCategory.BEACH, PlaceCategory.SIGHTS, PlaceCategory.ACTIVITY] },
+  COMIDA: { categories: [PlaceCategory.FOOD, PlaceCategory.NIGHTLIFE] },
+  HOSPEDAJE: { categories: [PlaceCategory.LODGING] },
+  SERVICIOS: { categories: [PlaceCategory.LOGISTICS, PlaceCategory.SHOPPING, PlaceCategory.HEALTH, PlaceCategory.SERVICE] },
+  EVENTOS: { categories: 'EVENTS' },
+  FAVORITOS: { categories: 'FAVORITES' }
+};
 
 const DEFAULT_PLACE_PROPS = {
   slug: '',
@@ -26,6 +58,7 @@ const DEFAULT_PLACE_PROPS = {
   isHandicapAccessible: false,
   isVerified: true,
   hasGenerator: false, // Default
+  defaultZoom: DEFAULT_PLACE_ZOOM, // New default zoom
 };
 
 export const PLACES: Place[] = [

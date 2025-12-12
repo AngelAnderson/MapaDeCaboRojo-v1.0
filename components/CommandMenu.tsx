@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -38,12 +39,12 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, onSelect, is
     // Actions
     { id: 'action_search', label: t('search'), icon: 'magnifying-glass', group: 'Actions' },
     { id: 'action_add', label: t('btn_suggest'), icon: 'circle-plus', group: 'Actions' },
-    { id: 'action_chat', label: t('concierge_title'), icon: 'robot', group: 'Actions' },
+    { id: 'action_chat', label: t('nav_help'), icon: 'robot', group: 'Actions' },
     { id: 'action_contact', label: t('nav_contact'), icon: 'address-book', group: 'Actions' },
 
     // System
-    { id: 'sys_theme', label: isDarkMode ? 'Light Mode' : 'Dark Mode', icon: isDarkMode ? 'sun' : 'moon', group: 'System', shortcut: 'T' },
-    { id: 'sys_lang', label: language === 'es' ? 'Switch to English' : 'Cambiar a Español', icon: 'language', group: 'System', shortcut: 'L' },
+    { id: 'sys_theme', label: isDarkMode ? t('light_mode') : t('dark_mode'), icon: isDarkMode ? 'sun' : 'moon', group: 'System', shortcut: 'T' },
+    { id: 'sys_lang', label: language === 'es' ? t('switch_to_english') : t('switch_to_spanish'), icon: 'language', group: 'System', shortcut: 'L' },
     { id: 'sys_admin', label: t('admin_login'), icon: 'lock', group: 'System' },
   ];
 
@@ -85,7 +86,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, onSelect, is
             ref={inputRef}
             type="text"
             className="flex-1 bg-transparent border-none outline-none text-xl text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-medium"
-            placeholder="Type a command..."
+            placeholder={t('type_a_command')}
             value={query}
             onChange={e => { setQuery(e.target.value); setActiveIndex(0); }}
             onKeyDown={handleKeyDown}
@@ -99,7 +100,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, onSelect, is
         <div className="max-h-[60vh] overflow-y-auto p-2">
           {filteredCommands.length === 0 ? (
             <div className="p-8 text-center text-slate-400 dark:text-slate-500">
-              <p>No results found.</p>
+              <p>{t('no_results_found')}</p>
             </div>
           ) : (
             <>
@@ -151,10 +152,10 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, onSelect, is
         
         {/* Footer */}
         <div className="bg-slate-50/80 dark:bg-slate-900/50 border-t border-slate-200/50 dark:border-slate-700/50 px-4 py-2 flex justify-between items-center text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-            <span>Map de Cabo Rojo OS 2.0</span>
+            <span>{t('app_version')}</span>
             <div className="flex gap-3">
-                <span>Select <b className="text-slate-600 dark:text-slate-300">↵</b></span>
-                <span>Navigate <b className="text-slate-600 dark:text-slate-300">↑↓</b></span>
+                <span>{t('select')} <b className="text-slate-600 dark:text-slate-300">↵</b></span>
+                <span>{t('navigate')} <b className="text-slate-600 dark:text-slate-300">↑↓</b></span>
             </div>
         </div>
       </div>

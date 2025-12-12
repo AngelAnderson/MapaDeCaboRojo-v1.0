@@ -2,7 +2,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Place, Event, PlaceCategory, ParkingStatus, EventCategory, AdminLog, DaySchedule } from '../types';
 import { updatePlace, deletePlace, createPlace, updateEvent, deleteEvent, createEvent, getAdminLogs, uploadImage, loginAdmin, checkSession } from '../services/supabase';
-import { fetchPlaceDetails } from '../services/geminiService';
+import { generateMarketingCopy, categorizeAndTagPlace, enhanceDescription, generateElVeciTip, generateImageAltText, generateSeoMetaTags } from '../services/aiService'; // Updated imports
+import { fetchPlaceDetails, autocompletePlace } from '../services/placesService';
+import { useLanguage } from '../i18n/LanguageContext';
+import { translations } from '../i18n/translations';
+import { DEFAULT_PLACE_ZOOM } from '../constants';
 
 interface AdminProps {
   onClose: () => void;
@@ -27,8 +31,8 @@ const Section = ({ title, icon, children }: { title: string, icon: string, child
     </div>
 );
 
-const InputGroup = ({ label, children, description }: { label: string, children?: React.ReactNode, description?: string }) => (
-  <div className="flex flex-col gap-1.5">
+const InputGroup = ({ label, children, description, className }: { label: string, children?: React.ReactNode, description?: string, className?: string }) => (
+  <div className={`flex flex-col gap-1.5 ${className || ''}`}>
     <div className="flex justify-between items-baseline">
         <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">{label}</label>
         {description && <span className="text-[10px] text-slate-500 italic">{description}</span>}
@@ -82,6 +86,8 @@ const Toast = ({ message, type, onClose }: { message: string, type: 'success' | 
 // --- MAIN COMPONENT ---
 
 const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
+  const { t } = useLanguage(); // Use for translations
+
   // Auth State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [email, setEmail] = useState('');
@@ -98,9 +104,28 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
   const [isUploading, setIsUploading] = useState(false);
   const [toast, setToast] = useState<{msg: string, type: 'success'|'error'} | null>(null);
   
+  // Safe JSON Editing State
+  const [jsonString, setJsonString] = useState('');
+
   // Smart Import State
   const [importQuery, setImportQuery] = useState('');
   const [importLoading, setImportLoading] = useState(false);
+  const [autocompleteSuggestions, setAutocompleteSuggestions] = useState<any[]>([]);
+  const autocompleteTimeoutRef = useRef<number | null>(null);
+
+  // AI Content Generation States
+  const [isAiGeneratingCategoryTags, setIsAiGeneratingCategoryTags] = useState(false);
+  const [isAiEnhancingDescription, setIsAiEnhancingDescription] = useState(false);
+  const [isAiGeneratingTip, setIsAiGeneratingTip] = useState(false);
+  const [isAiGeneratingAltText, setIsAiGeneratingAltText] = useState(false);
+  const [isAiGeneratingSeo, setIsAiGeneratingSeo] = useState(false); // New AI SEO State
+
+
+  // Marketing State
+  const [marketingPlatform, setMarketingPlatform] = useState<'instagram' | 'radio' | 'email' | 'campaign_bundle'>('instagram'); // Added 'campaign_bundle'
+  const [marketingTone, setMarketingTone] = useState<'hype' | 'chill' | 'professional'>('hype');
+  const [marketingResult, setMarketingResult] = useState('');
+  const [isGeneratingMarketing, setIsGeneratingMarketing] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -121,16 +146,49 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
       getAdminLogs().then(setLogs);
     }
   }, [activeTab, isAuthenticated]);
+  
+  // Sync JSON string state when place changes
+  useEffect(() => {
+    if (editingPlace) {
+        setJsonString(JSON.stringify(editingPlace.contact_info || {}, null, 2));
+    }
+  }, [editingPlace?.id]);
+
+  // Handle autocomplete input
+  useEffect(() => {
+    if (autocompleteTimeoutRef.current) {
+      clearTimeout(autocompleteTimeoutRef.current);
+    }
+    if (importQuery.length > 2) {
+      autocompleteTimeoutRef.current = window.setTimeout(async () => {
+        try {
+          const suggestions = await autocompletePlace(importQuery);
+          setAutocompleteSuggestions(suggestions);
+        } catch (e) {
+          console.error("Autocomplete fetch error:", e);
+          setAutocompleteSuggestions([]);
+        }
+      }, 300); // Debounce time
+    } else {
+      setAutocompleteSuggestions([]);
+    }
+    return () => {
+      if (autocompleteTimeoutRef.current) {
+        clearTimeout(autocompleteTimeoutRef.current);
+      }
+    };
+  }, [importQuery]);
+
 
   const handleLogin = async () => {
-      if (!email || !password) return showToast("Enter credentials", 'error');
+      if (!email || !password) return showToast(t('admin_enter_credentials'), 'error');
       setAuthLoading(true);
       const res = await loginAdmin(email, password);
       setAuthLoading(false);
       if (res.user) {
           setIsAuthenticated(true);
       } else {
-          showToast(res.error || "Login failed", 'error');
+          showToast(res.error || t('admin_login_failed'), 'error');
       }
   };
 
@@ -140,7 +198,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
   };
 
   const handleGetLocation = () => {
-      if (!navigator.geolocation) return alert("Geolocation not supported");
+      if (!navigator.geolocation) return showToast(t('admin_geolocation_not_supported'), 'error');
       navigator.geolocation.getCurrentPosition(
           (pos) => {
               if (editingPlace) {
@@ -148,16 +206,33 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                       ...editingPlace,
                       coords: { lat: pos.coords.latitude, lng: pos.coords.longitude }
                   });
-                  showToast("GPS Updated!", 'success');
+                  showToast(t('admin_gps_updated'), 'success');
               }
           },
-          (err) => alert("Error getting location: " + err.message),
+          (err) => showToast(`${t('admin_error_getting_location')}: ${err.message}`, 'error'),
           { enableHighAccuracy: true }
       );
   };
 
   const handleSavePlace = async () => {
-    if (!editingPlace || !editingPlace.name) return showToast("Name is required", 'error');
+    if (!editingPlace || !editingPlace.name) return showToast(t('admin_name_required'), 'error');
+    
+    // Coordinate Validation (only if lat/lng are provided, not null)
+    if (editingPlace.coords?.lat !== undefined && editingPlace.coords?.lat !== null) {
+        if (editingPlace.coords.lat > 90 || editingPlace.coords.lat < -90) return showToast(t('admin_invalid_latitude'), 'error');
+    }
+    if (editingPlace.coords?.lng !== undefined && editingPlace.coords?.lng !== null) {
+        if (editingPlace.coords.lng > 180 || editingPlace.coords.lng < -180) return showToast(t('admin_invalid_longitude'), 'error');
+    }
+
+    // Parse JSON
+    try {
+        const parsed = JSON.parse(jsonString);
+        editingPlace.contact_info = parsed;
+    } catch (e) {
+        return showToast(t('admin_invalid_json'), 'error');
+    }
+
     setIsSaving(true);
     try {
       if (editingPlace.id) {
@@ -168,26 +243,45 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
         if (!res.success) throw new Error(res.error);
       }
       await onUpdate();
-      showToast("Guardado exitosamente", 'success');
+      showToast(t('admin_saved_successfully'), 'success');
       setEditingPlace(null); // Return to list on mobile/desktop
     } catch (e: any) {
-      showToast(e.message || "Error saving", 'error');
+      showToast(e.message || t('admin_error_saving'), 'error');
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDeletePlace = async (id: string) => {
-    if (confirm("Are you sure? This action cannot be undone.")) {
-      await deletePlace(id);
-      await onUpdate();
-      setEditingPlace(null);
-      showToast("Place deleted", 'success');
+    if (confirm(t('admin_confirm_delete_place'))) {
+      setIsSaving(true); // Re-using isSaving to show spinner/block interactions
+      try {
+        const res = await deletePlace(id);
+        if (res.success) {
+          setEditingPlace(null);
+          await onUpdate();
+          showToast(t('admin_place_deleted'), 'success');
+        } else {
+          showToast(res.error || t('admin_failed_to_delete'), 'error');
+        }
+      } catch (e) {
+        showToast(t('admin_unexpected_delete_error'), 'error');
+      } finally {
+        setIsSaving(false);
+      }
     }
   };
 
   const handleSaveEvent = async () => {
-      if (!editingEvent || !editingEvent.title) return showToast("Title is required", 'error');
+      if (!editingEvent || !editingEvent.title) return showToast(t('admin_title_required'), 'error');
+      
+      // Date Logic Validation
+      if (editingEvent.startTime && editingEvent.endTime) {
+          if (new Date(editingEvent.endTime) <= new Date(editingEvent.startTime)) {
+              return showToast(t('admin_end_time_after_start'), 'error');
+          }
+      }
+
       setIsSaving(true);
       try {
           if (editingEvent.id) {
@@ -197,12 +291,30 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
           }
           await onUpdate();
           setEditingEvent(null);
-          showToast("Event saved", 'success');
+          showToast(t('admin_event_saved'), 'success');
       } catch (e: any) {
-          showToast(e.message || "Error saving event", 'error');
+          showToast(e.message || t('admin_error_saving_event'), 'error');
       } finally {
           setIsSaving(false);
       }
+  };
+
+  const handleDeleteEvent = async (id: string) => {
+    if (confirm(t('admin_confirm_delete_event'))) {
+      setIsSaving(true);
+      try {
+        const res = await deleteEvent(id);
+        if (res.success) {
+          setEditingEvent(null);
+          await onUpdate();
+          showToast(t('admin_event_deleted'), 'success');
+        } else {
+          showToast(res.error || t('admin_failed_to_delete_event'), 'error');
+        }
+      } finally {
+        setIsSaving(false);
+      }
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -219,35 +331,153 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
           } else if (activeTab === 'events' && editingEvent) {
               setEditingEvent({ ...editingEvent, imageUrl: res.url });
           }
-          showToast("Image uploaded!", 'success');
+          showToast(t('admin_image_uploaded'), 'success');
       } else {
-          showToast(res.error || "Upload failed", 'error');
+          showToast(res.error || t('admin_upload_failed'), 'error');
       }
   };
 
-  const handleSmartImport = async () => {
-      if (!importQuery) return showToast("Enter a name or link", 'error');
+  const handleSmartImport = async (queryOrPlaceId: string) => {
+      if (!queryOrPlaceId) return showToast(t('admin_enter_name_or_link'), 'error');
       setImportLoading(true);
+      setAutocompleteSuggestions([]); // Clear suggestions once an import is initiated
       try {
-          const details = await fetchPlaceDetails(importQuery);
+          const details = await fetchPlaceDetails(queryOrPlaceId);
           if (details) {
               setEditingPlace(prev => ({
                   ...prev,
                   ...details,
                   id: prev?.id, // Preserve ID
-                  status: prev?.status || 'open'
+                  status: prev?.status || 'open',
+                  imageUrl: details.imageUrl || prev?.imageUrl || '', // Use imported image, then previous, then empty
+                  gmapsUrl: details.gmapsUrl || prev?.gmapsUrl || '' // Use imported GMaps URL, then previous, then empty
               }));
-              showToast("Import Successful!", 'success');
+              showToast(t('admin_import_successful'), 'success');
               setImportQuery('');
           } else {
-              showToast("Could not find place details.", 'error');
+              showToast(t('admin_could_not_find_details'), 'error');
           }
-      } catch (e) {
-          showToast("Import failed", 'error');
+      } catch (e: any) {
+          console.error("Smart Import Failed:", e);
+          showToast(e.message || t('admin_import_failed'), 'error');
       } finally {
           setImportLoading(false);
       }
   };
+
+  const handleGenerateMarketing = async () => {
+      if (!editingPlace?.name) return showToast(t('admin_need_name_first'), 'error');
+      setIsGeneratingMarketing(true);
+      const copy = await generateMarketingCopy(editingPlace.name, marketingPlatform, marketingTone);
+      setMarketingResult(copy);
+      setIsGeneratingMarketing(false);
+  };
+
+  // --- NEW AI HANDLERS ---
+  const handleAiSuggestCategoryAndTags = async () => {
+      if (!editingPlace?.name || !editingPlace.description) {
+          return showToast("Need name and description to suggest categories/tags.", 'error');
+      }
+      setIsAiGeneratingCategoryTags(true);
+      try {
+          const result = await categorizeAndTagPlace(editingPlace.name, editingPlace.description);
+          if (result) {
+              setEditingPlace(prev => ({
+                  ...prev,
+                  category: result.category,
+                  tags: result.tags
+              }));
+              showToast(t('admin_ai_suggest_category_tags_success'), 'success');
+          } else {
+              showToast(t('admin_ai_suggest_category_tags_fail'), 'error');
+          }
+      } catch (e) {
+          showToast(t('admin_ai_suggest_category_tags_error'), 'error');
+      } finally {
+          setIsAiGeneratingCategoryTags(false);
+      }
+  };
+
+  const handleAiEnhanceDescription = async () => {
+      if (!editingPlace?.name || !editingPlace.description) {
+          return showToast("Need name and description to enhance.", 'error');
+      }
+      setIsAiEnhancingDescription(true);
+      try {
+          const result = await enhanceDescription(editingPlace.name, editingPlace.description);
+          if (result) {
+              setEditingPlace(prev => ({ ...prev, description: result }));
+              showToast(t('admin_ai_enhance_description_success'), 'success');
+          } else {
+              showToast(t('admin_ai_enhance_description_fail'), 'error');
+          }
+      } catch (e) {
+          showToast(t('admin_ai_enhance_description_error'), 'error');
+      } finally {
+          setIsAiEnhancingDescription(false);
+      }
+  };
+
+  const handleAiGenerateTip = async () => {
+      if (!editingPlace?.name || !editingPlace.description || !editingPlace.category) {
+          return showToast("Need name, description, and category to generate a tip.", 'error');
+      }
+      setIsAiGeneratingTip(true);
+      try {
+          const result = await generateElVeciTip(editingPlace.name, editingPlace.category, editingPlace.description);
+          if (result) {
+              setEditingPlace(prev => ({ ...prev, tips: result }));
+              showToast(t('admin_ai_generate_tip_success'), 'success');
+          } else {
+              showToast(t('admin_ai_generate_tip_fail'), 'error');
+          }
+      } catch (e) {
+          showToast(t('admin_ai_generate_tip_error'), 'error');
+      } finally {
+          setIsAiGeneratingTip(false);
+      }
+  };
+
+  const handleAiGenerateAltText = async () => {
+    if (!editingPlace?.imageUrl) {
+        return showToast("Need an image URL to generate alt text.", 'error');
+    }
+    setIsAiGeneratingAltText(true);
+    try {
+        const result = await generateImageAltText(editingPlace.imageUrl);
+        if (result) {
+            setEditingPlace(prev => ({ ...prev, imageAlt: result }));
+            showToast(t('admin_ai_generate_alt_text_success'), 'success');
+        } else {
+            showToast(t('admin_ai_generate_alt_text_fail'), 'error');
+        }
+    } catch (e) {
+        showToast(t('admin_ai_generate_alt_text_error'), 'error');
+    } finally {
+        setIsAiGeneratingAltText(false);
+    }
+  };
+
+  const handleAiGenerateSeo = async () => {
+    if (!editingPlace?.name || !editingPlace.description || !editingPlace.category) {
+        return showToast("Need name, description, and category to generate SEO tags.", 'error');
+    }
+    setIsAiGeneratingSeo(true);
+    try {
+        const result = await generateSeoMetaTags(editingPlace.name, editingPlace.description, editingPlace.category);
+        if (result) {
+            setEditingPlace(prev => ({ ...prev, metaTitle: result.metaTitle, metaDescription: result.metaDescription }));
+            showToast(t('admin_ai_generate_seo_success'), 'success');
+        } else {
+            showToast(t('admin_ai_generate_seo_fail'), 'error');
+        }
+    } catch (e) {
+        showToast(t('admin_ai_generate_seo_error'), 'error');
+    } finally {
+        setIsAiGeneratingSeo(false);
+    }
+  };
+
 
   // --- SCHEDULE HELPERS ---
   const getStructuredHours = (): DaySchedule[] => {
@@ -278,7 +508,8 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
           ...editingPlace,
           opening_hours: { ...(editingPlace?.opening_hours || {}), structured: newSchedule }
       });
-      showToast("Applied Mon settings to Tue-Fri", 'success');
+      // Fix: Explicitly cast to the key type for t() to address potential TS inference issues
+      showToast(t('admin_applied_mon_to_fri' as keyof typeof translations.es), 'success');
   };
 
   // --- LOGIN SCREEN ---
@@ -293,21 +524,21 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                     <div className="w-20 h-20 bg-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-slate-700 shadow-xl">
                         <i className="fa-solid fa-lock text-3xl text-teal-500"></i>
                     </div>
-                    <h1 className="text-2xl font-black text-white">Admin Access</h1>
-                    <p className="text-slate-500 text-sm">Secure Entry Point</p>
+                    <h1 className="text-2xl font-black text-white">{t('admin_access_title')}</h1>
+                    <p className="text-slate-500 text-sm">{t('admin_access_subtitle')}</p>
                 </div>
 
                 <div className="space-y-4">
                     <input 
                         type="email" 
-                        placeholder="Email" 
+                        placeholder={t('admin_email_placeholder')} 
                         value={email}
                         onChange={e => setEmail(e.target.value)}
                         className="w-full bg-slate-800 border border-slate-700 rounded-xl p-4 text-white outline-none focus:border-teal-500 transition-colors"
                     />
                     <input 
                         type="password" 
-                        placeholder="Password" 
+                        placeholder={t('admin_password_placeholder')} 
                         value={password}
                         onChange={e => setPassword(e.target.value)}
                         className="w-full bg-slate-800 border border-slate-700 rounded-xl p-4 text-white outline-none focus:border-teal-500 transition-colors"
@@ -317,7 +548,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                         disabled={authLoading}
                         className="w-full bg-teal-600 hover:bg-teal-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-teal-900/20 transition-all active:scale-95 flex items-center justify-center gap-2"
                     >
-                        {authLoading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : 'Login'}
+                        {authLoading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : t('admin_login_button')}
                     </button>
                 </div>
             </div>
@@ -344,8 +575,8 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                     <i className="fa-solid fa-arrow-left"></i>
                 </button>
                 <div className="flex-1 min-w-0">
-                    <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider">Editing</h2>
-                    <p className="text-white font-bold truncate">{editingPlace?.name || editingEvent?.title || 'New Item'}</p>
+                    <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider">{t('admin_editing')}</h2>
+                    <p className="text-white font-bold truncate">{editingPlace?.name || editingEvent?.title || t('admin_new_item')}</p>
                 </div>
                 <button 
                     onClick={activeTab === 'places' ? handleSavePlace : handleSaveEvent} 
@@ -353,7 +584,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                     className="bg-teal-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-teal-900/20 active:scale-95 transition-transform flex items-center gap-2"
                 >
                     {isSaving && <i className="fa-solid fa-circle-notch fa-spin"></i>}
-                    <span>Save</span>
+                    <span>{t('save')}</span>
                 </button>
             </div>
         ) : (
@@ -366,9 +597,9 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                 </div>
                 
                 <div className="flex bg-slate-800 p-1 rounded-lg border border-slate-700">
-                    <button onClick={() => setActiveTab('places')} className={`px-3 py-1.5 rounded-md text-xs font-bold ${activeTab === 'places' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>Places</button>
-                    <button onClick={() => setActiveTab('events')} className={`px-3 py-1.5 rounded-md text-xs font-bold ${activeTab === 'events' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>Events</button>
-                    <button onClick={() => setActiveTab('logs')} className={`px-3 py-1.5 rounded-md text-xs font-bold ${activeTab === 'logs' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>Logs</button>
+                    <button onClick={() => setActiveTab('places')} className={`px-3 py-1.5 rounded-md text-xs font-bold ${activeTab === 'places' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>{t('admin_places')}</button>
+                    <button onClick={() => setActiveTab('events')} className={`px-3 py-1.5 rounded-md text-xs font-bold ${activeTab === 'events' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>{t('admin_events')}</button>
+                    <button onClick={() => setActiveTab('logs')} className={`px-3 py-1.5 rounded-md text-xs font-bold ${activeTab === 'logs' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>{t('admin_logs')}</button>
                 </div>
 
                 <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center border border-slate-700">
@@ -388,7 +619,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                     <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
                     <input 
                         type="text" 
-                        placeholder="Search..." 
+                        placeholder={t('admin_search_placeholder')} 
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-white text-sm focus:border-teal-500 outline-none"
@@ -400,10 +631,23 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                 {activeTab === 'places' && (
                     <>
                     <button 
-                        onClick={() => setEditingPlace({ name: '', category: PlaceCategory.FOOD, status: 'open', plan: 'free', coords: { lat: 0, lng: 0 }, amenities: {}, parking: ParkingStatus.FREE })} 
+                        onClick={() => {
+                            const newPlace: Partial<Place> = { 
+                                name: '', 
+                                category: PlaceCategory.FOOD, 
+                                status: 'open', 
+                                plan: 'free', 
+                                coords: undefined, // Default to undefined
+                                amenities: {}, 
+                                parking: ParkingStatus.FREE,
+                                defaultZoom: DEFAULT_PLACE_ZOOM, // Default zoom for new places
+                            };
+                            setEditingPlace(newPlace);
+                            setJsonString('{}');
+                        }} 
                         className="w-full p-4 rounded-xl border-2 border-dashed border-slate-700 text-slate-400 hover:border-teal-500 hover:text-teal-500 hover:bg-slate-800 transition-all font-bold text-sm flex items-center justify-center gap-2"
                     >
-                        <i className="fa-solid fa-plus"></i> Add New Place
+                        <i className="fa-solid fa-plus"></i> {t('admin_add_new_place')}
                     </button>
                     {filteredPlaces.map(p => (
                         <div key={p.id} onClick={() => setEditingPlace(p)} className={`p-4 rounded-xl border cursor-pointer transition-all active:scale-[0.98] ${editingPlace?.id === p.id ? 'bg-teal-900/20 border-teal-500/50' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'}`}>
@@ -423,7 +667,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                 {activeTab === 'events' && (
                      <>
                         <button onClick={() => setEditingEvent({ title: '', category: EventCategory.COMMUNITY, status: 'published' })} className="w-full p-4 rounded-xl border-2 border-dashed border-slate-700 text-slate-400 hover:border-teal-500 hover:text-teal-500 hover:bg-slate-800 transition-all font-bold text-sm flex items-center justify-center gap-2">
-                            <i className="fa-solid fa-plus"></i> Add New Event
+                            <i className="fa-solid fa-plus"></i> {t('admin_add_new_event')}
                         </button>
                         {filteredEvents.map(e => (
                              <div key={e.id} onClick={() => setEditingEvent(e)} className="p-4 rounded-xl bg-slate-800 border border-slate-700 hover:bg-slate-700 cursor-pointer">
@@ -460,7 +704,16 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                     {/* ID & Delete Header */}
                     <div className="flex justify-between items-center mb-6 bg-slate-800 p-4 rounded-xl border border-slate-700">
                         <span className="font-mono text-xs text-slate-500">{editingPlace.id || 'NEW RECORD'}</span>
-                        {editingPlace.id && <button onClick={() => handleDeletePlace(editingPlace.id!)} className="text-red-500 hover:bg-red-500/10 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors">Delete Record</button>}
+                        {editingPlace.id && (
+                            <button 
+                                onClick={() => handleDeletePlace(editingPlace.id!)} 
+                                disabled={isSaving}
+                                className="text-red-500 hover:bg-red-500/10 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {isSaving ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-trash"></i>}
+                                <span>{t('admin_delete_record')}</span>
+                            </button>
+                        )}
                     </div>
 
                     {/* SMART IMPORT */}
@@ -469,34 +722,53 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                             <i className="fa-solid fa-wand-magic-sparkles text-6xl text-white"></i>
                         </div>
                         <h3 className="text-sm font-bold text-indigo-200 uppercase tracking-wide mb-3 flex items-center gap-2">
-                            <i className="fa-solid fa-bolt text-yellow-400"></i> Smart Import
+                            <i className="fa-solid fa-bolt text-yellow-400"></i> {t('admin_smart_import')}
                         </h3>
-                        <div className="flex gap-2 relative z-10">
-                            <input 
-                                className="flex-1 bg-slate-900/80 border border-indigo-500/30 rounded-xl px-4 text-white placeholder:text-indigo-300/50 focus:border-indigo-400 outline-none" 
-                                placeholder="Paste Google Maps Link or Place Name..."
-                                value={importQuery}
-                                onChange={(e) => setImportQuery(e.target.value)}
-                                onKeyDown={(e) => e.key === 'Enter' && handleSmartImport()}
-                            />
-                            <button 
-                                onClick={handleSmartImport}
-                                disabled={importLoading}
-                                className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-xl font-bold transition-all shadow-lg shadow-indigo-900/50 flex items-center gap-2 disabled:opacity-50"
-                            >
-                                {importLoading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-download"></i>}
-                                <span className="hidden md:inline">Auto-Fill</span>
-                            </button>
+                        <div className="relative z-10">
+                            <div className="flex gap-2">
+                                <input 
+                                    className="flex-1 bg-slate-900/80 border border-indigo-500/30 rounded-xl px-4 text-white placeholder:text-indigo-300/50 focus:border-indigo-400 outline-none" 
+                                    placeholder={t('admin_import_placeholder')}
+                                    value={importQuery}
+                                    onChange={(e) => setImportQuery(e.target.value)}
+                                    onKeyDown={(e) => { if (e.key === 'Enter' && autocompleteSuggestions.length > 0) handleSmartImport(autocompleteSuggestions[0].description); else if (e.key === 'Enter') handleSmartImport(importQuery); }}
+                                />
+                                <button 
+                                    onClick={() => handleSmartImport(importQuery)}
+                                    disabled={importLoading || !importQuery}
+                                    className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-3 rounded-xl font-bold transition-all shadow-lg shadow-indigo-900/50 flex items-center gap-2 disabled:opacity-50"
+                                >
+                                    {importLoading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-download"></i>}
+                                    <span className="hidden md:inline">{t('admin_auto_fill')}</span>
+                                </button>
+                            </div>
+                            {autocompleteSuggestions.length > 0 && (
+                                <ul className="absolute left-0 right-0 bg-slate-800 border border-slate-700 rounded-xl mt-2 max-h-48 overflow-y-auto shadow-lg z-20">
+                                    {autocompleteSuggestions.map((suggestion, index) => (
+                                        <li 
+                                            key={suggestion.place_id} 
+                                            onClick={() => {
+                                                setImportQuery(suggestion.description);
+                                                handleSmartImport(suggestion.place_id); // Use place_id for details
+                                            }}
+                                            className="px-4 py-3 text-sm text-white hover:bg-slate-700 cursor-pointer transition-colors border-b border-slate-700 last:border-b-0"
+                                        >
+                                            <span className="font-bold">{suggestion.structured_formatting?.main_text || suggestion.description}</span>
+                                            <span className="text-slate-400 block text-xs">{suggestion.structured_formatting?.secondary_text}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
                         </div>
                         <p className="text-[10px] text-indigo-300 mt-2 ml-1">
-                            Fetches photos, hours, address, coords & more from Google/Web.
+                            {t('admin_import_description')}
                         </p>
                     </div>
 
-                    <Section title="Basic Info" icon="circle-info">
-                        <InputGroup label="Name"><StyledInput value={editingPlace.name || ''} onChange={e => setEditingPlace({...editingPlace, name: e.target.value})} /></InputGroup>
+                    <Section title={t('admin_basic_info')} icon="circle-info">
+                        <InputGroup label={t('admin_name')}><StyledInput value={editingPlace.name || ''} onChange={e => setEditingPlace({...editingPlace, name: e.target.value})} /></InputGroup>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <InputGroup label="Category">
+                            <InputGroup label={t('admin_category')}>
                                 <StyledSelect 
                                     value={editingPlace.category || PlaceCategory.FOOD} 
                                     onChange={e => setEditingPlace({...editingPlace, category: e.target.value as PlaceCategory})}
@@ -504,7 +776,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                                     {Object.values(PlaceCategory).map(c => <option key={c} value={c}>{c}</option>)}
                                 </StyledSelect>
                             </InputGroup>
-                            <InputGroup label="Icon Name">
+                            <InputGroup label={t('admin_icon_name')}>
                                 <div className="flex gap-2">
                                     <StyledInput value={editingPlace.customIcon || ''} onChange={e => setEditingPlace({...editingPlace, customIcon: e.target.value})} placeholder="pizza-slice" />
                                     <div className="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-teal-400 text-xl shrink-0">
@@ -513,24 +785,62 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                                 </div>
                             </InputGroup>
                         </div>
-                        <InputGroup label="Description"><StyledTextArea value={editingPlace.description || ''} onChange={e => setEditingPlace({...editingPlace, description: e.target.value})} /></InputGroup>
-                        <InputGroup label="Tags"><StyledInput value={(editingPlace.tags || []).join(', ')} onChange={e => setEditingPlace({...editingPlace, tags: e.target.value.split(',').map(s => s.trim())})} /></InputGroup>
+                        <button 
+                            onClick={handleAiSuggestCategoryAndTags} 
+                            disabled={isAiGeneratingCategoryTags || !editingPlace.name || !editingPlace.description}
+                            className="w-full bg-blue-600/20 text-blue-400 border border-blue-500/50 font-bold text-sm py-3 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform mt-2"
+                        >
+                            {isAiGeneratingCategoryTags ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-sparkles"></i>}
+                            <span>{t('admin_ai_suggest_category_tags')}</span>
+                        </button>
+                        <InputGroup label={t('admin_description')}>
+                            <StyledTextArea value={editingPlace.description || ''} onChange={e => setEditingPlace({...editingPlace, description: e.target.value})} />
+                            <button 
+                                onClick={handleAiEnhanceDescription} 
+                                disabled={isAiEnhancingDescription || !editingPlace.name || !editingPlace.description}
+                                className="w-full bg-blue-600/20 text-blue-400 border border-blue-500/50 font-bold text-sm py-3 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform mt-2"
+                            >
+                                {isAiEnhancingDescription ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-star-half-stroke"></i>}
+                                <span>{t('admin_ai_enhance_description')}</span>
+                            </button>
+                        </InputGroup>
+                        <InputGroup label={t('admin_tags')}><StyledInput value={(editingPlace.tags || []).join(', ')} onChange={e => setEditingPlace({...editingPlace, tags: e.target.value.split(',').map(s => s.trim())})} /></InputGroup>
+                        
+                        {/* New: SEO Meta Tags */}
+                        <InputGroup label={t('admin_meta_title')} description={t('admin_meta_title_desc')}>
+                            <StyledInput value={editingPlace.metaTitle || ''} onChange={e => setEditingPlace({...editingPlace, metaTitle: e.target.value})} placeholder={t('admin_meta_title_placeholder')} maxLength={60} />
+                        </InputGroup>
+                        <InputGroup label={t('admin_meta_description')} description={t('admin_meta_description_desc')}>
+                            <StyledTextArea value={editingPlace.metaDescription || ''} onChange={e => setEditingPlace({...editingPlace, metaDescription: e.target.value})} placeholder={t('admin_meta_description_placeholder')} maxLength={160} />
+                            <button 
+                                onClick={handleAiGenerateSeo} 
+                                disabled={isAiGeneratingSeo || !editingPlace.name || !editingPlace.description || !editingPlace.category}
+                                className="w-full bg-blue-600/20 text-blue-400 border border-blue-500/50 font-bold text-sm py-3 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform mt-2"
+                            >
+                                {isAiGeneratingSeo ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-magnifying-glass-chart"></i>}
+                                <span>{t('admin_ai_generate_seo')}</span>
+                            </button>
+                        </InputGroup>
+
                     </Section>
 
-                    <Section title="Location" icon="map-location-dot">
-                        <InputGroup label="Address"><StyledInput value={editingPlace.address || ''} onChange={e => setEditingPlace({...editingPlace, address: e.target.value})} /></InputGroup>
+                    <Section title={t('admin_location')} icon="map-location-dot">
+                        <InputGroup label={t('admin_address')}><StyledInput value={editingPlace.address || ''} onChange={e => setEditingPlace({...editingPlace, address: e.target.value})} /></InputGroup>
                         <div className="grid grid-cols-2 gap-4">
-                             <InputGroup label="Lat"><StyledInput type="number" value={editingPlace.coords?.lat || 0} onChange={e => setEditingPlace({...editingPlace, coords: { ...editingPlace.coords!, lat: parseFloat(e.target.value) }})} /></InputGroup>
-                             <InputGroup label="Lng"><StyledInput type="number" value={editingPlace.coords?.lng || 0} onChange={e => setEditingPlace({...editingPlace, coords: { ...editingPlace.coords!, lng: parseFloat(e.target.value) }})} /></InputGroup>
+                             <InputGroup label="Lat"><StyledInput type="number" value={editingPlace.coords?.lat ?? ''} onChange={e => setEditingPlace({...editingPlace, coords: { ...editingPlace.coords!, lat: e.target.value === '' ? null : parseFloat(e.target.value) }})} /></InputGroup>
+                             <InputGroup label="Lng"><StyledInput type="number" value={editingPlace.coords?.lng ?? ''} onChange={e => setEditingPlace({...editingPlace, coords: { ...editingPlace.coords!, lng: e.target.value === '' ? null : parseFloat(e.target.value) }})} /></InputGroup>
                         </div>
                         <button onClick={handleGetLocation} className="w-full py-3 rounded-xl bg-blue-600/20 text-blue-400 border border-blue-500/50 font-bold text-sm flex items-center justify-center gap-2 active:scale-95 transition-transform">
-                            <i className="fa-solid fa-location-crosshairs"></i> Use My Current Location
+                            <i className="fa-solid fa-location-crosshairs"></i> {t('admin_use_current_location')}
                         </button>
-                        <InputGroup label="Maps Link"><StyledInput value={editingPlace.gmapsUrl || ''} onChange={e => setEditingPlace({...editingPlace, gmapsUrl: e.target.value})} /></InputGroup>
+                        <InputGroup label={t('admin_maps_link')}><StyledInput value={editingPlace.gmapsUrl || ''} onChange={e => setEditingPlace({...editingPlace, gmapsUrl: e.target.value})} /></InputGroup>
+                        <InputGroup label={t('admin_default_zoom')} description={t('admin_default_zoom_desc')}>
+                            <StyledInput type="number" value={editingPlace.defaultZoom ?? ''} onChange={e => setEditingPlace({...editingPlace, defaultZoom: e.target.value === '' ? null : parseInt(e.target.value)})} placeholder="16" />
+                        </InputGroup>
                     </Section>
 
-                    <Section title="Operations & Hours" icon="clock">
-                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 block">Hours Strategy</label>
+                    <Section title={t('admin_operations_hours')} icon="clock">
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 block">{t('admin_hours_strategy')}</label>
                         <div className="bg-slate-900/50 p-1 rounded-xl border border-slate-700 flex mb-4">
                             {['fixed', '24_7', 'sunrise_sunset'].map(type => (
                                 <button 
@@ -545,7 +855,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                         
                         {(!editingPlace.opening_hours?.type || editingPlace.opening_hours?.type === 'fixed') && (
                             <div className="space-y-4">
-                                <InputGroup label="Display Note (e.g. Daily 8am-5pm)">
+                                <InputGroup label={t('admin_display_note')} description={t('admin_display_note_desc')}>
                                     <StyledInput 
                                         value={editingPlace.opening_hours?.note || ''} 
                                         onChange={e => setEditingPlace({...editingPlace, opening_hours: { ...editingPlace.opening_hours, note: e.target.value }})} 
@@ -554,9 +864,9 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
 
                                 <div className="bg-slate-900 border border-slate-700 rounded-xl overflow-hidden">
                                     <div className="p-3 bg-slate-800 border-b border-slate-700 flex justify-between items-center">
-                                        <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">Weekly Schedule</span>
+                                        <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">{t('admin_weekly_schedule')}</span>
                                         <button onClick={applyMonToFri} className="text-[10px] bg-teal-600/20 text-teal-400 px-2 py-1 rounded hover:bg-teal-600/30 transition-colors font-bold">
-                                            Apply Mon-Fri
+                                            {t('admin_apply_mon_to_fri')}
                                         </button>
                                     </div>
                                     {getStructuredHours().map((dayData, index) => (
@@ -581,14 +891,14 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                                                         />
                                                     </>
                                                 ) : (
-                                                    <span className="text-xs text-slate-500 italic flex-1 text-center font-medium bg-slate-800/50 py-1.5 rounded-lg">Closed</span>
+                                                    <span className="text-xs text-slate-500 italic flex-1 text-center font-medium bg-slate-800/50 py-1.5 rounded-lg">{t('admin_closed')}</span>
                                                 )}
                                             </div>
 
                                             <button 
                                                 onClick={() => updateScheduleDay(index, 'isClosed', !dayData.isClosed)}
                                                 className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${dayData.isClosed ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}
-                                                title={dayData.isClosed ? "Mark as Open" : "Mark as Closed"}
+                                                title={dayData.isClosed ? t('admin_mark_as_open') : t('admin_mark_as_closed')}
                                             >
                                                 <i className={`fa-solid ${dayData.isClosed ? 'fa-ban' : 'fa-check'}`}></i>
                                             </button>
@@ -597,27 +907,38 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                                 </div>
                             </div>
                         )}
-                        <InputGroup label="Phone"><StyledInput type="tel" value={editingPlace.phone || ''} onChange={e => setEditingPlace({...editingPlace, phone: e.target.value})} /></InputGroup>
-                        <InputGroup label="Website"><StyledInput value={editingPlace.website || ''} onChange={e => setEditingPlace({...editingPlace, website: e.target.value})} /></InputGroup>
+                        <InputGroup label={t('admin_phone')}><StyledInput type="tel" value={editingPlace.phone || ''} onChange={e => setEditingPlace({...editingPlace, phone: e.target.value})} /></InputGroup>
+                        <InputGroup label={t('admin_website')}><StyledInput value={editingPlace.website || ''} onChange={e => setEditingPlace({...editingPlace, website: e.target.value})} /></InputGroup>
                     </Section>
 
-                    <Section title="Media" icon="image">
+                    <Section title={t('admin_media')} icon="image">
                          <div 
                             className="relative w-full aspect-video bg-slate-800 rounded-xl border-2 border-dashed border-slate-700 flex flex-col items-center justify-center overflow-hidden mb-4"
                             onClick={() => fileInputRef.current?.click()}
                         >
                             {editingPlace.imageUrl ? (
-                                <img src={editingPlace.imageUrl} className="w-full h-full object-cover" />
+                                <img src={editingPlace.imageUrl} className="w-full h-full object-cover" alt={editingPlace.imageAlt || editingPlace.name || "Place image"} />
                             ) : (
                                 <div className="text-center p-4 text-slate-500">
                                     <i className="fa-solid fa-cloud-arrow-up text-3xl mb-2"></i>
-                                    <p className="font-bold">Tap to Upload</p>
+                                    <p className="font-bold">{t('admin_tap_to_upload')}</p>
                                 </div>
                             )}
                             {isUploading && <div className="absolute inset-0 bg-black/60 flex items-center justify-center"><i className="fa-solid fa-spinner fa-spin text-2xl"></i></div>}
                         </div>
                         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
-                        <InputGroup label="Image URL"><StyledInput value={editingPlace.imageUrl || ''} onChange={e => setEditingPlace({...editingPlace, imageUrl: e.target.value})} /></InputGroup>
+                        <InputGroup label={t('admin_image_url')}><StyledInput value={editingPlace.imageUrl || ''} onChange={e => setEditingPlace({...editingPlace, imageUrl: e.target.value})} /></InputGroup>
+                        <InputGroup label={t('admin_image_alt_text')}> {/* Updated label */}
+                            <StyledTextArea value={editingPlace.imageAlt || ''} onChange={e => setEditingPlace({...editingPlace, imageAlt: e.target.value})} placeholder={t('admin_image_alt_text_placeholder')} />
+                            <button 
+                                onClick={handleAiGenerateAltText} 
+                                disabled={isAiGeneratingAltText || !editingPlace.imageUrl}
+                                className="w-full bg-blue-600/20 text-blue-400 border border-blue-500/50 font-bold text-sm py-3 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform mt-2"
+                            >
+                                {isAiGeneratingAltText ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-eye"></i>}
+                                <span>{t('admin_ai_generate_alt_text')}</span>
+                            </button>
+                        </InputGroup>
                         
                         <div className="grid grid-cols-3 gap-2">
                              {['top', 'center', 'bottom'].map(pos => (
@@ -632,51 +953,122 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                         </div>
                     </Section>
 
-                    <Section title="Details & Amenities" icon="list-check">
+                    <Section title={t('admin_details_amenities')} icon="list-check">
                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <Toggle label="Visible (Open)" checked={editingPlace.status === 'open'} onChange={v => setEditingPlace({...editingPlace, status: v ? 'open' : 'closed'})} icon="eye" />
-                            <Toggle label="Verified" checked={editingPlace.isVerified || false} onChange={v => setEditingPlace({...editingPlace, isVerified: v})} icon="certificate" />
-                            <Toggle label="Featured" checked={editingPlace.is_featured || false} onChange={v => setEditingPlace({...editingPlace, is_featured: v})} icon="star" />
-                            <Toggle label="Landing Spot" checked={editingPlace.isLanding || false} onChange={v => setEditingPlace({...editingPlace, isLanding: v})} icon="map-pin" />
-                            <Toggle label="Pet Friendly" checked={editingPlace.isPetFriendly || false} onChange={v => setEditingPlace({...editingPlace, isPetFriendly: v})} icon="dog" />
-                            <Toggle label="Restrooms" checked={editingPlace.hasRestroom || false} onChange={v => setEditingPlace({...editingPlace, hasRestroom: v})} icon="restroom" />
-                            <Toggle label="Generator" checked={editingPlace.hasGenerator || false} onChange={v => setEditingPlace({...editingPlace, hasGenerator: v})} icon="bolt" />
-                            <Toggle label="Paid Parking" checked={editingPlace.parking === ParkingStatus.PAID} onChange={v => setEditingPlace({...editingPlace, parking: v ? ParkingStatus.PAID : ParkingStatus.FREE})} icon="square-parking" />
+                            <Toggle label={t('admin_visible_open')} checked={editingPlace.status === 'open'} onChange={v => setEditingPlace({...editingPlace, status: v ? 'open' : 'closed'})} icon="eye" />
+                            {/* Verified Toggle now sets status to open if true */}
+                            <Toggle label={t('admin_verified')} checked={editingPlace.isVerified || false} onChange={v => setEditingPlace({...editingPlace, isVerified: v, status: v ? 'open' : editingPlace.status})} icon="certificate" />
+                            <Toggle label={t('admin_featured')} checked={editingPlace.is_featured || false} onChange={v => setEditingPlace({...editingPlace, is_featured: v})} icon="star" />
+                            <Toggle label={t('admin_landing_spot')} checked={editingPlace.isLanding || false} onChange={v => setEditingPlace({...editingPlace, isLanding: v})} icon="map-pin" />
+                            <Toggle label={t('admin_pet_friendly')} checked={editingPlace.isPetFriendly || false} onChange={v => setEditingPlace({...editingPlace, isPetFriendly: v})} icon="dog" />
+                            <Toggle label={t('admin_restrooms')} checked={editingPlace.hasRestroom || false} onChange={v => setEditingPlace({...editingPlace, hasRestroom: v})} icon="restroom" />
+                            <Toggle label={t('admin_generator')} checked={editingPlace.hasGenerator || false} onChange={v => setEditingPlace({...editingPlace, hasGenerator: v})} icon="bolt" />
+                            <Toggle label={t('admin_paid_parking')} checked={editingPlace.parking === ParkingStatus.PAID} onChange={v => setEditingPlace({...editingPlace, parking: v ? ParkingStatus.PAID : ParkingStatus.FREE})} icon="square-parking" />
                          </div>
                          <div className="mt-4 space-y-4">
-                            <InputGroup label="El Veci Tip"><StyledTextArea value={editingPlace.tips || ''} onChange={e => setEditingPlace({...editingPlace, tips: e.target.value})} /></InputGroup>
+                            <InputGroup label={t('admin_el_veci_tip')}>
+                                <StyledTextArea value={editingPlace.tips || ''} onChange={e => setEditingPlace({...editingPlace, tips: e.target.value})} />
+                                <button 
+                                    onClick={handleAiGenerateTip} 
+                                    disabled={isAiGeneratingTip || !editingPlace.name || !editingPlace.description || !editingPlace.category}
+                                    className="w-full bg-blue-600/20 text-blue-400 border border-blue-500/50 font-bold text-sm py-3 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform mt-2"
+                                >
+                                    {isAiGeneratingTip ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-lightbulb"></i>}
+                                    <span>{t('admin_ai_generate_tip')}</span>
+                                </button>
+                            </InputGroup>
                             
-                            <InputGroup label="Advanced Contact Info (JSON)" description="Raw JSON for extra details like Instagram, Email, Manager">
+                            <InputGroup label={t('admin_advanced_contact_info')} description={t('admin_advanced_contact_info_desc')}>
                                 <StyledTextArea 
                                     className="font-mono text-xs h-24 bg-slate-950 text-emerald-400 border-slate-800"
-                                    value={JSON.stringify(editingPlace.contact_info || {}, null, 2)} 
-                                    onChange={e => {
-                                        try {
-                                            const parsed = JSON.parse(e.target.value);
-                                            setEditingPlace({...editingPlace, contact_info: parsed});
-                                        } catch(err) {
-                                            // Allow typing, validate on blur/save ideally, but for now just let it be (state won't update if invalid json)
-                                        }
-                                    }} 
+                                    value={jsonString}
+                                    onChange={e => setJsonString(e.target.value)} 
+                                    placeholder="{}"
                                 />
                             </InputGroup>
                          </div>
                     </Section>
 
+                    {/* AI MARKETING STUDIO */}
+                    <Section title={t('admin_ai_marketing_studio')} icon="bullhorn">
+                        <div className="grid grid-cols-2 gap-3 mb-3">
+                            <InputGroup label={t('admin_platform')}>
+                                <StyledSelect 
+                                    value={marketingPlatform} 
+                                    onChange={e => setMarketingPlatform(e.target.value as any)}
+                                >
+                                    <option value="instagram">Instagram</option>
+                                    <option value="radio">Radio Script</option>
+                                    <option value="email">Email Blast</option>
+                                    <option value="campaign_bundle">Campaign Bundle</option> {/* New Option */}
+                                </StyledSelect>
+                            </InputGroup>
+                            <InputGroup label={t('admin_tone')}>
+                                <StyledSelect 
+                                    value={marketingTone} 
+                                    onChange={e => setMarketingTone(e.target.value as any)}
+                                >
+                                    <option value="hype">🔥 {t('admin_tone_hype')}</option>
+                                    <option value="chill">🌴 {t('admin_tone_chill')}</option>
+                                    <option value="professional">💼 {t('admin_tone_professional')}</option>
+                                </StyledSelect>
+                            </InputGroup>
+                        </div>
+                        
+                        <button 
+                            onClick={handleGenerateMarketing} 
+                            disabled={isGeneratingMarketing || !editingPlace.name}
+                            className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white font-bold py-3 rounded-xl mb-4 shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+                        >
+                            {isGeneratingMarketing ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-wand-magic-sparkles"></i>}
+                            {t('admin_generate_copy')}
+                        </button>
+
+                        {marketingResult && (
+                            <div className="bg-slate-900 border border-slate-700 rounded-xl p-3 relative group">
+                                <textarea 
+                                    className="w-full bg-transparent text-slate-300 text-sm h-32 outline-none resize-none font-mono"
+                                    value={marketingResult}
+                                    readOnly
+                                />
+                                <button 
+                                    onClick={() => { navigator.clipboard.writeText(marketingResult); showToast(t('copied'), 'success'); }}
+                                    className="absolute top-2 right-2 bg-slate-800 text-slate-400 hover:text-white p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <i className="fa-regular fa-copy"></i>
+                                </button>
+                            </div>
+                        )}
+                    </Section>
+
                     <div className="h-12"></div>
                 </div>
             ) : activeTab === 'events' && editingEvent ? (
-                <div className="p-4 md:p-8 max-w-2xl mx-auto">
-                    <Section title="Event Details" icon="calendar">
-                        <InputGroup label="Title"><StyledInput value={editingEvent.title || ''} onChange={e => setEditingEvent({...editingEvent, title: e.target.value})} /></InputGroup>
-                        <InputGroup label="Description"><StyledTextArea value={editingEvent.description || ''} onChange={e => setEditingEvent({...editingEvent, description: e.target.value})} /></InputGroup>
-                        <InputGroup label="Start"><StyledInput type="datetime-local" value={editingEvent.startTime?.slice(0, 16) || ''} onChange={e => setEditingEvent({...editingEvent, startTime: new Date(e.target.value).toISOString()})} /></InputGroup>
-                        <InputGroup label="End"><StyledInput type="datetime-local" value={editingEvent.endTime?.slice(0, 16) || ''} onChange={e => setEditingEvent({...editingEvent, endTime: new Date(e.target.value).toISOString()})} /></InputGroup>
+                <div className="p-4 md:p-8 max-w-2xl mx-auto pb-32 animate-slide-up">
+                    <div className="flex justify-between items-center mb-6 bg-slate-800 p-4 rounded-xl border border-slate-700">
+                        <span className="font-mono text-xs text-slate-500">{editingEvent.id || 'NEW EVENT'}</span>
+                        {editingEvent.id && (
+                            <button 
+                                onClick={() => handleDeleteEvent(editingEvent.id!)} 
+                                disabled={isSaving}
+                                className="text-red-500 hover:bg-red-500/10 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-2"
+                            >
+                                {isSaving ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-trash"></i>}
+                                <span>{t('admin_delete_event')}</span>
+                            </button>
+                        )}
+                    </div>
+
+                    <Section title={t('admin_event_details')} icon="calendar">
+                        <InputGroup label={t('admin_title')}><StyledInput value={editingEvent.title || ''} onChange={e => setEditingEvent({...editingEvent, title: e.target.value})} /></InputGroup>
+                        <InputGroup label={t('admin_description')}><StyledTextArea value={editingEvent.description || ''} onChange={e => setEditingEvent({...editingEvent, description: e.target.value})} /></InputGroup>
+                        <InputGroup label={t('admin_start')}><StyledInput type="datetime-local" value={editingEvent.startTime?.slice(0, 16) || ''} onChange={e => setEditingEvent({...editingEvent, startTime: new Date(e.target.value).toISOString()})} /></InputGroup>
+                        <InputGroup label={t('admin_end')}><StyledInput type="datetime-local" value={editingEvent.endTime?.slice(0, 16) || ''} onChange={e => setEditingEvent({...editingEvent, endTime: new Date(e.target.value).toISOString()})} /></InputGroup>
                         <div 
                             className="relative w-full aspect-video bg-slate-800 rounded-xl border-2 border-dashed border-slate-700 flex flex-col items-center justify-center overflow-hidden mt-4"
                             onClick={() => fileInputRef.current?.click()}
                         >
-                            {editingEvent.imageUrl ? <img src={editingEvent.imageUrl} className="w-full h-full object-cover" /> : <p>Upload Image</p>}
+                            {editingEvent.imageUrl ? <img src={editingEvent.imageUrl} className="w-full h-full object-cover" alt={editingEvent.title || "Event image"} /> : <p>{t('admin_upload_image')}</p>}
                         </div>
                         <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
                     </Section>
@@ -684,7 +1076,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
             ) : (
                 <div className="text-center text-slate-500 opacity-50">
                     <i className="fa-solid fa-hand-pointer text-4xl mb-4"></i>
-                    <p>Select an item from the list</p>
+                    <p>{t('admin_select_item')}</p>
                 </div>
             )}
         </div>

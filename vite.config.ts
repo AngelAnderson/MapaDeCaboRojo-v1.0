@@ -1,4 +1,5 @@
 
+
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 
@@ -16,6 +17,7 @@ export default defineConfig(({ mode }) => {
   
   const supabaseUrl = env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
   const supabaseKey = env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
+  const googlePlacesApiKey = env.VITE_GOOGLE_PLACES_API_KEY || process.env.VITE_GOOGLE_PLACES_API_KEY || '';
 
   return {
     plugins: [react()],
@@ -24,6 +26,7 @@ export default defineConfig(({ mode }) => {
       'process.env.API_KEY': JSON.stringify(apiKey),
       'process.env.VITE_SUPABASE_URL': JSON.stringify(supabaseUrl),
       'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(supabaseKey),
+      'process.env.VITE_GOOGLE_PLACES_API_KEY': JSON.stringify(googlePlacesApiKey),
       // Global process.env fallback to empty object to prevent "process is not defined" errors
       'process.env': {} 
     },

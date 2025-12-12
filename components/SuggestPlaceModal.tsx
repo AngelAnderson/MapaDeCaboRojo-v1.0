@@ -1,7 +1,9 @@
 
+
 import React, { useState, useRef } from 'react';
 import { createPlace, uploadImage } from '../services/supabase';
-import { moderateUserContent } from '../services/geminiService';
+import { moderateUserContent } from '../services/aiService'; // Updated import
+import { findCoordinates } from '../services/placesService'; // Updated import
 import { PlaceCategory, ParkingStatus } from '../types';
 import Button from './Button';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -15,13 +17,14 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
   const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
-  const [analyzing, setAnalyzing] = useState(false); // New state for AI Bouncer
+  const [analyzing, setAnalyzing] = useState(false); // State for AI Bouncer
+  const [resolvingCoords, setResolvingCoords] = useState(false); // New state for AI coord resolution
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState('');
   const [category, setCategory] = useState<PlaceCategory>(PlaceCategory.FOOD);
   const [gmapsUrl, setGmapsUrl] = useState('');
-  const [address, setAddress] = useState('');
+  // Removed address from direct user input - to be resolved by AI or admin
   const [description, setDescription] = useState('');
   const [tips, setTips] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -33,18 +36,41 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
 
   if (!isOpen) return null;
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+          if (file.size > 5 * 1024 * 1024) { // 5MB Limit
+              alert(t('suggest_image_too_large'));
+              return;
+          }
+          setImageFile(file);
+      }
+  };
+
   const handleSubmit = async () => {
-    if (!name.trim()) return alert("El nombre es obligatorio");
+    if (!name.trim()) {
+      alert(t('suggest_name_required'));
+      return;
+    }
     
     // AI Bouncer Check
     setAnalyzing(true);
+    // These inputs will be sanitized by `moderateUserContent` and `createPlace`
     const moderation = await moderateUserContent(name, description);
     setAnalyzing(false);
 
     if (!moderation.safe) {
-        alert(`👮‍♂️ El Veci dice: "${moderation.reason || 'Eso no parece un lugar real.'}"\n\nIntenta arreglarlo.`);
+        alert(t('suggest_ai_bouncer_alert', { reason: moderation.reason || t('suggest_ai_bouncer_default_reason') }));
         return;
     }
+
+    // --- SECURITY NOTE: CAPTCHA Placeholder ---
+    // Implement a CAPTCHA here (e.g., Google reCAPTCHA) to prevent bot submissions.
+    // This is crucial for publicly accessible forms like place suggestions.
+    // if (!await verifyCaptcha()) {
+    //   alert("Please complete the CAPTCHA.");
+    //   return;
+    // }
 
     setLoading(true);
     try {
@@ -52,22 +78,53 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
       if (imageFile) {
         const up = await uploadImage(imageFile);
         if (up.success && up.url) imageUrl = up.url;
+        else {
+          alert(up.error || t('suggest_image_upload_error'));
+          setLoading(false);
+          return;
+        }
+      }
+
+      let resolvedCoords;
+      let resolvedAddress = '';
+      if (gmapsUrl.trim()) {
+        setResolvingCoords(true); // Indicate that coords are being resolved
+        const coordsResult = await findCoordinates(gmapsUrl);
+        if (coordsResult) {
+          resolvedCoords = coordsResult;
+          // Optionally, you could also try to get a better address from other AI call here
+          // For now, we rely on admin to fill address if not explicitly given by user
+        }
+        setResolvingCoords(false);
       }
       
       const res = await createPlace({
-        name, category, gmapsUrl, address, description, tips, imageUrl, phone, website, parking, hasRestroom, isPetFriendly,
+        name, 
+        category, 
+        gmapsUrl, 
+        address: resolvedAddress, // Start with empty, admin can refine
+        description, 
+        tips, 
+        imageUrl, 
+        phone, 
+        website, 
+        parking, 
+        hasRestroom, 
+        isPetFriendly,
         status: 'pending', // Always pending for user suggestions
-        coords: { lat: 17.9620, lng: -67.1650 }, 
+        coords: resolvedCoords, // Pass resolved coords or undefined
         is_featured: false, 
         sponsor_weight: 0, 
         isVerified: false,
-        // Tag valid AI suggestions for easier admin review
         tags: ['User Suggestion', 'AI Verified'] 
       });
 
       if (res.success) setStep(3);
-      else alert("Error: " + res.error);
-    } catch (e) { alert("Error de conexión"); } 
+      else alert(res.error || t('suggest_submission_error')); 
+    } catch (e) { 
+      console.error("Submission Error:", e);
+      alert(t('suggest_connection_error')); 
+    } 
     finally { setLoading(false); }
   };
 
@@ -86,8 +143,8 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
             <div className="space-y-4 animate-slide-up">
               <div><label className={labelClass}>{t('suggest_name')} *</label><input className={inputClass} value={name} onChange={e => setName(e.target.value)} placeholder="Ej. El Chinchorro de Juana" /></div>
               <div><label className={labelClass}>{t('suggest_category')}</label><select className={inputClass} value={category} onChange={e => setCategory(e.target.value as PlaceCategory)}>{Object.values(PlaceCategory).map(c => <option key={c} value={c} className="text-slate-900 bg-white">{c}</option>)}</select></div>
-              <div><label className={labelClass}>{t('suggest_gmaps')}</label><input className={inputClass} value={gmapsUrl} onChange={e => setGmapsUrl(e.target.value)} placeholder="Pega el link aquí" /></div>
-              <div><label className={labelClass}>{t('suggest_photo')}</label><div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-4 text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">{imageFile ? <span className="text-teal-600 dark:text-teal-400 font-bold">{imageFile.name}</span> : <span className="text-slate-400 dark:text-slate-500"><i className="fa-solid fa-camera mr-2"></i> Subir Foto</span>}</div><input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} /></div>
+              <div><label className={labelClass}>{t('suggest_gmaps')}</label><input className={inputClass} value={gmapsUrl} onChange={e => setGmapsUrl(e.target.value)} placeholder={t('admin_maps_link_placeholder')} /></div>
+              <div><label className={labelClass}>{t('suggest_photo')}</label><div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-4 text-center cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">{imageFile ? <span className="text-teal-600 dark:text-teal-400 font-bold">{imageFile.name}</span> : <span className="text-slate-400 dark:text-slate-500"><i className="fa-solid fa-camera mr-2"></i> {t('suggest_upload_photo')}</span>}</div><input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileSelect} /></div>
               <Button label={t('next')} onClick={() => setStep(2)} />
             </div>
           )}
@@ -106,15 +163,16 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
               <div className="flex gap-2">
                 <button onClick={() => setStep(1)} className="p-3 text-slate-500 dark:text-slate-400 font-bold hover:text-slate-700 dark:hover:text-slate-200 transition-colors">{t('back')}</button>
                 <Button 
-                    label={analyzing ? "Analizando (El Veci)..." : loading ? t('loading') : t('suggest_btn')} 
+                    label={analyzing || resolvingCoords ? t('suggest_analyzing_el_veci') : loading ? t('loading') : t('suggest_btn')} 
                     onClick={handleSubmit} 
-                    disabled={loading || analyzing} 
+                    disabled={loading || analyzing || resolvingCoords} 
+                    icon={analyzing || resolvingCoords ? "circle-notch fa-spin" : undefined}
                 />
               </div>
             </div>
           )}
           {step === 3 && (
-            <div className="text-center py-10 animate-fade-in"><div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-sm"><i className="fa-solid fa-check"></i></div><h3 className="text-2xl font-bold text-slate-800 dark:text-white">{t('suggest_success_title')}</h3><p className="text-slate-600 dark:text-slate-300 mt-2">{t('suggest_success_msg')}</p><button onClick={onClose} className="mt-8 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-8 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition-transform">{t('close')}</button></div>
+            <div className="text-center py-10 animate-fade-in"><div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-sm"><i className="fa-solid fa-check"></i></div><h3 className="text-2xl font-bold text-slate-800 dark:text-white">{t('suggest_success_title')}</h3><p className="text-slate-600 dark:text-slate-300 mt-2">{t('suggest_success_msg_admin_review')}</p><button onClick={onClose} className="mt-8 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-8 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition-transform">{t('close')}</button></div>
           )}
         </div>
       </div>

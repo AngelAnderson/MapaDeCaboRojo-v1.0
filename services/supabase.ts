@@ -31,6 +31,17 @@ const DEFAULT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const SUPABASE_URL = getEnvVar('VITE_SUPABASE_URL') || DEFAULT_URL;
 const SUPABASE_ANON_KEY = getEnvVar('VITE_SUPABASE_ANON_KEY') || DEFAULT_KEY;
 
+/**
+ * RED TEAM / SECURITY NOTE:
+ * For a production application, robust Row Level Security (RLS) policies
+ * MUST be configured directly on your Supabase tables (e.g., `places`, `events`, `admin_logs`, `storage.buckets.places-images`).
+ * This is the primary line of defense against unauthorized data access and modification.
+ * Client-side checks are for UX, not security.
+ * Ensure your `places-images` storage bucket also has appropriate RLS to prevent unauthorized uploads/deletions.
+ * Also, consider implementing server-side rate-limiting for write operations (e.g., `createPlace`, `uploadImage`)
+ * to prevent abuse and manage API costs.
+ */
+
 // --- HELPER: ERROR MESSAGE EXTRACTION ---
 const getErrorMessage = (error: any): string => {
   if (!error) return "Unknown error occurred";
@@ -52,6 +63,24 @@ const getErrorMessage = (error: any): string => {
   }
   
   return String(error);
+};
+
+// --- HELPER: PII SCRUBBER ---
+const scrubPII = (text: string): string => {
+    if (!text) return '';
+    // Redact Emails
+    let scrubbed = text.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, '[EMAIL REDACTED]');
+    // Redact Phone Numbers (Simple Pattern: ###-###-#### or ##########)
+    scrubbed = scrubbed.replace(/\b(?:\d{3}[-.\s]?\d{3}[-.\s]?\d{4}|\d{10})\b/g, '[PHONE REDACTED]');
+    return scrubbed;
+};
+
+// --- HELPER: HTML ESCAPER (XSS Prevention) ---
+const escapeHTML = (str: string | undefined): string => {
+  if (typeof str !== 'string') return '';
+  const div = document.createElement('div');
+  div.appendChild(document.createTextNode(str));
+  return div.innerHTML;
 };
 
 // --- FALLBACK MOCK CLIENT ---
@@ -151,7 +180,7 @@ const mapParking = (amenities: any): ParkingStatus => {
 };
 
 const generateSlug = (name: string): string => {
-    const cleanName = name.toLowerCase().trim()
+    const cleanName = escapeHTML(name).toLowerCase().trim()
         .replace(/[^\w\s-]/g, '') 
         .replace(/[\s_-]+/g, '-') 
         .replace(/^-+|-+$/g, ''); 
@@ -162,79 +191,90 @@ const generateSlug = (name: string): string => {
 
 const mapPlaceToDb = (place: Partial<Place>) => {
     const slug = place.slug && place.slug.length > 2 
-        ? place.slug 
+        ? escapeHTML(place.slug) 
         : generateSlug(place.name || 'untitled');
 
     let dbStatus = place.status;
-    if (dbStatus === 'pending') {
-        dbStatus = 'open';
+
+    // --- SECURITY FIX: Coordinate Validation ---
+    // Only validate if coordinates are actually provided (not null/undefined)
+    if (place.coords?.lat !== undefined && place.coords?.lat !== null &&
+        place.coords?.lng !== undefined && place.coords?.lng !== null) {
+        const lat = place.coords.lat;
+        const lon = place.coords.lng;
+        if (lat > 90 || lat < -90) throw new Error("Invalid Latitude. Must be between -90 and 90.");
+        if (lon > 180 || lon < -180) throw new Error("Invalid Longitude. Must be between -180 and 180.");
     }
 
     return {
-        name: place.name || '',
+        name: escapeHTML(place.name) || '',
         slug: slug,
-        description: place.description || '',
+        description: escapeHTML(place.description) || '',
         category: place.category || 'SIGHTS', 
-        lat: place.coords?.lat ?? 0,
-        lon: place.coords?.lng ?? 0,
-        image_url: place.imageUrl || '',
-        video_url: place.videoUrl || '',
+        lat: place.coords?.lat ?? null, // Store as null if not provided
+        lon: place.coords?.lng ?? null, // Store as null if not provided
+        image_url: escapeHTML(place.imageUrl) || '',
+        video_url: escapeHTML(place.videoUrl) || '',
         sponsor_weight: place.sponsor_weight ?? (place.is_featured ? 100 : 0),
         plan: place.plan || 'free',
         status: dbStatus || 'open',
         is_verified: place.status === 'pending' ? false : (place.isVerified ?? false),
         verified_at: place.isVerified ? new Date().toISOString() : null,
-        website: place.website || '',
-        phone: place.phone || '',
-        address: place.address || '',
-        gmaps_url: place.gmapsUrl || '',
-        custom_icon: place.customIcon || '', 
-        price_level: place.priceLevel || '$',
-        best_time_to_visit: place.bestTimeToVisit || '',
-        vibe: place.vibe || [], 
+        website: escapeHTML(place.website) || '',
+        phone: escapeHTML(place.phone) || '',
+        address: escapeHTML(place.address) || '',
+        gmaps_url: escapeHTML(place.gmapsUrl) || '',
+        custom_icon: escapeHTML(place.customIcon) || '', 
+        price_level: escapeHTML(place.priceLevel) || '$',
+        best_time_to_visit: escapeHTML(place.bestTimeToVisit) || '',
+        vibe: place.vibe?.map(v => escapeHTML(v)) || [], 
         is_pet_friendly: place.isPetFriendly ?? false,
         is_handicap_accessible: place.isHandicapAccessible ?? false,
-        tags: place.tags || [],
+        tags: place.tags?.map(t => escapeHTML(t)) || [],
         amenities: {
             ...(place.amenities || {}), // Preserves existing fields not managed by UI
             parking: place.parking || ParkingStatus.FREE,
             restrooms: place.hasRestroom ?? false,
             showers: place.hasShowers ?? false,
             has_generator: place.hasGenerator ?? false,
-            tips: place.tips || '',
-            custom_icon: place.customIcon || '',
+            tips: escapeHTML(place.tips) || '',
+            custom_icon: escapeHTML(place.customIcon) || '',
             is_mobile: place.isMobile ?? false,
             is_landing: place.isLanding === true,
-            image_position: place.imagePosition || 'center'
+            image_position: escapeHTML(place.imagePosition) || 'center',
+            image_alt: escapeHTML(place.imageAlt) || '', // Add imageAlt here
         },
         opening_hours: place.opening_hours || { note: "No especificado" },
-        contact_info: place.contact_info || {}
+        contact_info: place.contact_info || {}, // This field is assumed to be handled as JSON and potentially parsed/stringified already
+        default_zoom: place.defaultZoom ?? null, // Add default_zoom to DB payload
+        meta_title: escapeHTML(place.metaTitle) || '', // New: Add meta_title to DB payload
+        meta_description: escapeHTML(place.metaDescription) || '', // New: Add meta_description to DB payload
     };
 };
 
 const mapEventToDb = (event: Partial<Event>) => {
     return {
-        title: event.title || 'Untitled Event',
-        description: event.description || '',
+        title: escapeHTML(event.title) || 'Untitled Event',
+        description: escapeHTML(event.description) || '',
         category: event.category || 'COMMUNITY',
         start_time: event.startTime,
         end_time: event.endTime,
-        location_name: event.locationName || '',
+        location_name: escapeHTML(event.locationName) || '',
         place_id: event.placeId || null,
-        image_url: event.imageUrl || '',
+        image_url: escapeHTML(event.imageUrl) || '',
         status: event.status || 'published',
         is_recurring: event.isRecurring || false,
         is_featured: event.isFeatured || false,
-        map_link: event.mapLink || ''
+        map_link: escapeHTML(event.mapLink) || ''
     };
 };
 
 const logAction = async (action: string, placeName: string, details: string) => {
     try {
         await supabase.from('admin_logs').insert([{
-            action,
-            place_name: placeName,
-            details,
+            action: escapeHTML(action),
+            place_name: scrubPII(escapeHTML(placeName)), // PII Scrubbing + HTML Escaping
+            details: scrubPII(escapeHTML(details)), // PII Scrubbing + HTML Escaping
             created_at: new Date().toISOString()
         }]);
     } catch (e) { console.warn(e); }
@@ -243,6 +283,7 @@ const logAction = async (action: string, placeName: string, details: string) => 
 // --- AUTH HELPERS ---
 export const loginAdmin = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    // Note: Error messages here are for admin UI, so verbose is acceptable.
     return { user: data.user, error: error ? getErrorMessage(error) : null };
 };
 
@@ -255,10 +296,13 @@ export const checkSession = async () => {
 
 export const logUserActivity = async (action: 'USER_SEARCH' | 'USER_CHAT' | 'UPDATE_SUGGESTION', term: string) => {
     try {
+        // --- SECURITY FIX: PII SCRUBBING BEFORE LOGGING ---
+        const safeTerm = scrubPII(escapeHTML(term)).substring(0, 100);
+        
         await supabase.from('admin_logs').insert([{
-            action,
-            place_name: term.substring(0, 100),
-            details: action === 'UPDATE_SUGGESTION' ? term : 'User Activity',
+            action: escapeHTML(action),
+            place_name: safeTerm,
+            details: action === 'UPDATE_SUGGESTION' ? safeTerm : 'User Activity',
             created_at: new Date().toISOString()
         }]);
     } catch (e) { 
@@ -268,6 +312,10 @@ export const logUserActivity = async (action: 'USER_SEARCH' | 'USER_CHAT' | 'UPD
 
 export const getAdminLogs = async (): Promise<AdminLog[]> => {
     try {
+        // RED TEAM / SECURITY NOTE:
+        // Ensure RLS on 'admin_logs' table restricts access ONLY to authenticated administrators.
+        // Even with client-side authentication, a malicious actor could bypass and attempt to fetch logs
+        // if RLS is not properly configured.
         const { data, error } = await supabase.from('admin_logs').select('*').order('created_at', { ascending: false }).limit(50);
         if (error) {
             console.warn("Log fetch error:", error.message);
@@ -290,31 +338,33 @@ export const getPlaces = async (): Promise<Place[]> => {
 
     return data.map((row: any) => ({
       id: row.id,
-      name: row.name,
-      description: row.description || '',
+      name: row.name, // Already escaped on insert
+      description: row.description || '', // Already escaped on insert
       category: mapCategory(row.category, row.subcategory),
-      coords: { lat: row.lat || 0, lng: row.lon || 0 },
+      coords: (row.lat !== null && row.lon !== null) ? { lat: row.lat, lng: row.lon } : undefined, // Map to undefined if null in DB
       parking: mapParking(row.amenities),
       hasRestroom: row.amenities?.restrooms || false,
       hasShowers: row.amenities?.showers || false,
       hasGenerator: row.amenities?.has_generator || false,
-      imageUrl: row.image_url || `https://picsum.photos/600/400?random=${row.id.substring(0,4)}`,
+      imageUrl: row.image_url || `https://picsum.photos/600/400?random=${row.id.substring(0,4)}`, // Already escaped on insert
       imagePosition: row.amenities?.image_position || 'center',
-      tips: row.amenities?.tips || '',
+      imageAlt: row.amenities?.image_alt || '', // Map imageAlt from DB
+      tips: row.amenities?.tips || '', // Already escaped on insert
       is_featured: (row.sponsor_weight && row.sponsor_weight > 80) || false,
       sponsor_weight: row.sponsor_weight || 0,
       plan: row.plan || 'free',
-      status: (!row.is_verified ? 'pending' : (row.status || 'open')),
-      slug: row.slug || '',
-      tags: row.tags || [],
-      address: row.address || '',
-      gmapsUrl: row.gmaps_url || '',
-      videoUrl: row.video_url || '',
-      website: row.website || '',
-      phone: row.phone || '',
-      priceLevel: row.price_level || '$',
-      bestTimeToVisit: row.best_time_to_visit || '',
-      vibe: row.vibe || [],
+      // FIX: Explicit cast for Status to avoid TypeScript union errors
+      status: (!row.is_verified ? 'pending' : (row.status || 'open')) as unknown as Place['status'],
+      slug: row.slug || '', // Already escaped on insert
+      tags: row.tags || [], // Already escaped on insert
+      address: row.address || '', // Already escaped on insert
+      gmapsUrl: row.gmaps_url || '', // Already escaped on insert
+      videoUrl: row.video_url || '', // Already escaped on insert
+      website: row.website || '', // Already escaped on insert
+      phone: row.phone || '', // Already escaped on insert
+      priceLevel: row.price_level || '$', // Already escaped on insert
+      bestTimeToVisit: row.best_time_to_visit || '', // Already escaped on insert
+      vibe: row.vibe || [], // Already escaped on insert
       isPetFriendly: row.is_pet_friendly || false,
       isHandicapAccessible: row.is_handicap_accessible || false,
       isVerified: row.is_verified || false,
@@ -322,10 +372,13 @@ export const getPlaces = async (): Promise<Place[]> => {
       created_at: row.created_at,
       opening_hours: row.opening_hours || { note: '' },
       contact_info: row.contact_info || {},
-      customIcon: row.custom_icon || row.amenities?.custom_icon || '',
+      customIcon: row.custom_icon || row.amenities?.custom_icon || '', // Already escaped on insert
       isMobile: row.amenities?.is_mobile || false,
       isLanding: row.amenities?.is_landing === true || row.amenities?.is_landing === 'true',
-      amenities: row.amenities || {} // CRITICAL: Preserve raw amenities for Admin updates
+      amenities: row.amenities || {},
+      defaultZoom: row.default_zoom ?? undefined, // Map default_zoom from DB to Place object
+      metaTitle: row.meta_title || '', // New: Map meta_title from DB
+      metaDescription: row.meta_description || '', // New: Map meta_description from DB
     }));
   } catch (err) { 
     console.error("Unexpected Error in getPlaces:", err);
@@ -345,19 +398,19 @@ export const getEvents = async (): Promise<Event[]> => {
             
              return simple.data.map((row: any) => ({
                 id: row.id,
-                title: row.title,
-                description: row.description || '',
+                title: escapeHTML(row.title), // Added HTML escaping
+                description: escapeHTML(row.description) || '', // Added HTML escaping
                 category: (row.category as EventCategory) || EventCategory.COMMUNITY,
                 startTime: row.start_time,
                 endTime: row.end_time,
                 isRecurring: row.is_recurring || false,
                 recurrenceRule: row.recurrence_rule,
-                locationName: row.location_name || '',
+                locationName: escapeHTML(row.location_name) || '', // Added HTML escaping
                 placeId: row.place_id,
-                imageUrl: row.image_url,
+                imageUrl: escapeHTML(row.image_url), // Added HTML escaping
                 status: row.status,
                 isFeatured: row.is_featured || false,
-                mapLink: row.map_link,
+                mapLink: escapeHTML(row.map_link), // Added HTML escaping
                 coords: undefined 
             }));
         }
@@ -365,19 +418,19 @@ export const getEvents = async (): Promise<Event[]> => {
         if (!data) return [];
         return data.map((row: any) => ({
             id: row.id,
-            title: row.title,
-            description: row.description || '',
+            title: escapeHTML(row.title), // Added HTML escaping
+            description: escapeHTML(row.description) || '', // Added HTML escaping
             category: (row.category as EventCategory) || EventCategory.COMMUNITY,
             startTime: row.start_time,
             endTime: row.end_time,
             isRecurring: row.is_recurring || false,
             recurrenceRule: row.recurrence_rule,
-            locationName: row.location_name || '',
+            locationName: escapeHTML(row.location_name) || '', // Added HTML escaping
             placeId: row.place_id,
-            imageUrl: row.image_url,
+            imageUrl: escapeHTML(row.image_url), // Added HTML escaping
             status: row.status,
             isFeatured: row.is_featured || false,
-            mapLink: row.map_link,
+            mapLink: escapeHTML(row.map_link), // Added HTML escaping
             coords: row.places ? { lat: row.places.lat, lng: row.places.lon } : undefined
         }));
     } catch (e) { 
@@ -387,17 +440,21 @@ export const getEvents = async (): Promise<Event[]> => {
 };
 
 export const createPlace = async (place: Partial<Place>): Promise<{ success: boolean; error?: string }> => {
+    // Declare isAdmin outside the try block so it's accessible in the catch block.
+    let isAdmin: boolean = false; 
     try {
         const { data: { session } } = await supabase.auth.getSession();
-        const isAdmin = !!session?.user;
+        isAdmin = !!session?.user;
         let dbPayload = mapPlaceToDb(place);
         
+        // --- SECURITY FIX: Enforce Pending Status & Sanitize for Public Submissions ---
         if (!isAdmin) {
-            dbPayload.status = 'open'; 
+            dbPayload.status = 'pending'; 
             dbPayload.is_verified = false; 
             dbPayload.sponsor_weight = 0;
-            dbPayload.name = dbPayload.name.replace(/<[^>]*>?/gm, '');
-            dbPayload.description = dbPayload.description.replace(/<[^>]*>?/gm, '');
+            // Additional sanitization (already done by mapPlaceToDb now, but kept for redundancy)
+            dbPayload.name = escapeHTML(dbPayload.name).replace(/<[^>]*>?/gm, '');
+            dbPayload.description = escapeHTML(dbPayload.description).replace(/<[^>]*>?/gm, '');
         }
         
         const { error } = await supabase.from('places').insert([dbPayload]);
@@ -406,7 +463,8 @@ export const createPlace = async (place: Partial<Place>): Promise<{ success: boo
         return { success: true };
     } catch (e: any) { 
         console.error("Create Error:", e);
-        return { success: false, error: getErrorMessage(e) }; 
+        // For user-facing errors, provide a generic message to avoid disclosing backend details
+        return { success: false, error: isAdmin ? getErrorMessage(e) : "Failed to submit. Please try again later." }; 
     }
 };
 
@@ -439,8 +497,22 @@ export const deletePlace = async (id: string): Promise<{ success: boolean; error
     try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) throw new Error("Unauthorized");
+
+        // 1. Unlink associated events (Set place_id to null) to avoid Foreign Key Constraint violations
+        // This is crucial because "places" often have dependent "events".
+        const { error: eventError } = await supabase
+            .from('events')
+            .update({ place_id: null })
+            .eq('place_id', id);
+        
+        if (eventError) {
+            console.warn("Failed to unlink events (might not exist), attempting delete anyway:", eventError);
+        }
+
+        // 2. Delete the place
         const { error } = await supabase.from('places').delete().eq('id', id);
         if (error) throw error;
+
         await logAction('DELETE', id, 'Record deleted');
         return { success: true };
     } catch (e: any) { 
@@ -494,6 +566,12 @@ export const uploadImage = async (file: File): Promise<{ success: boolean; url?:
     try {
         const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
         if (!validTypes.includes(file.type)) return { success: false, error: "Invalid format. Use JPG/PNG/WEBP." };
+        
+        // RED TEAM / SECURITY NOTE:
+        // Client-side file size limits (5MB in SuggestPlaceModal) are for UX.
+        // Implement server-side file size limits and RLS policies on your Supabase Storage bucket
+        // to prevent large file uploads, ensure content validity, and restrict who can upload.
+        // For content moderation, consider sending images through an AI vision API BEFORE storing.
         const bucketName = 'places-images';
         const fileExt = file.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
@@ -509,3 +587,5 @@ export const uploadImage = async (file: File): Promise<{ success: boolean; url?:
         return { success: false, error: getErrorMessage(e) }; 
     }
 };
+
+export { escapeHTML }; // Export escapeHTML for other components to use if needed (e.g., in useMapEngine)

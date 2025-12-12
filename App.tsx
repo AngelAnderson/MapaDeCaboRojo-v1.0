@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import L from 'leaflet';
-import { Place, PlaceCategory, Coordinates, Event, ParkingStatus, Collection } from './types';
-import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, COLLECTIONS, CABO_ROJO_CENTER, DEFAULT_PLACE_ID } from './constants';
+import { Place, PlaceCategory, Coordinates, Event, ParkingStatus, Collection } from '../types';
+import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, COLLECTIONS, CABO_ROJO_CENTER, DEFAULT_PLACE_ID } from '../constants';
 import PlaceCard from './components/PlaceCard';
 import Concierge from './components/Concierge';
 import Admin from './components/Admin';
@@ -116,24 +117,21 @@ const CATEGORY_GROUPS = {
   FAVORITOS: { categories: 'FAVORITES' }
 };
 
+// --- CUSTOM HOOKS (Logic Extraction) ---
+import { usePlacesData } from '../hooks/usePlacesData';
+import { useMapEngine } from '../hooks/useMapEngine';
+import { useRouter } from '../hooks/useRouter';
+
 // --- MAIN COMPONENT ---
 
 const MainApp: React.FC = () => {
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   
   // Refs
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<L.Map | null>(null);
-  const tileLayer = useRef<L.TileLayer | null>(null);
-  const markersRef = useRef<L.Marker[]>([]);
-  const userLocMarkerRef = useRef<L.Marker | null>(null); // New Ref for User Location
-  const boatMarkerRef = useRef<L.Marker | null>(null);
-  const requestRef = useRef<number>(0);
   
   // Data State
-  const [places, setPlaces] = useState<Place[]>(FALLBACK_PLACES);
-  const [events, setEvents] = useState<Event[]>(FALLBACK_EVENTS); 
-  const [filteredList, setFilteredList] = useState<Place[]>([]);
+  const { places, events, publishedPlaces, mappedEvents, loading, refreshData } = usePlacesData();
   
   // Favorites State
   const [savedIds, setSavedIds] = useState<string[]>(() => {
@@ -150,7 +148,6 @@ const MainApp: React.FC = () => {
   const [activeCollection, setActiveCollection] = useState<Collection | null>(null);
   const [searchText, setSearchText] = useState(''); 
   const [searchFocusTrigger, setSearchFocusTrigger] = useState(0);
-  const [resultCount, setResultCount] = useState(0); 
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   
@@ -164,7 +161,6 @@ const MainApp: React.FC = () => {
   const [isSuggestOpen, setIsSuggestOpen] = useState(false); 
   
   // System State
-  const [mapLoaded, setMapLoaded] = useState(false);
   const [isVipUnlocked, setIsVipUnlocked] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('theme');
@@ -173,19 +169,28 @@ const MainApp: React.FC = () => {
     return window.matchMedia('(prefers-color-scheme: dark)').matches;
   });
 
-  // --- DERIVED STATE (STRICT FILTERING) ---
-  // IMPORTANT: We create a publishedPlaces list that strictly filters out pending items.
-  // This list is used for Map Markers, Explorer Sheet, Search, and URL Deep Linking.
-  // The 'places' state retains pending items so they can be viewed in the Admin panel.
-  const publishedPlaces = useMemo(() => {
-    return places.filter(p => {
-       // STRICT Filtering: Must be explicitly verified AND not pending
-       // We assume any place not verified or marked as pending is invisible to the public
-       if (p.status === 'pending') return false;
-       if (!p.isVerified) return false;
-       return true;
-    });
-  }, [places]);
+  // --- DERIVED STATE ---
+  const filteredList = React.useMemo(() => {
+    let list: Place[] = [];
+    if (activeCollection) {
+        list = [...publishedPlaces, ...mappedEvents].filter(p => activeCollection.placeIds.includes(p.id));
+    } else if (activeGroup === 'EVENTS') {
+        list = mappedEvents;
+    } else if (activeGroup === 'FAVORITES') {
+        list = [...publishedPlaces, ...mappedEvents].filter(p => savedIds.includes(p.id));
+    } else if (activeGroup === 'ALL') {
+        list = publishedPlaces;
+    } else {
+        // @ts-ignore
+        const cats = { EXPLORA: ['BEACH','SIGHTS','ACTIVITY'], COMIDA: ['FOOD','NIGHTLIFE'], HOSPEDAJE: ['LODGING'], SERVICIOS: ['LOGISTICS','SHOPPING','HEALTH','SERVICE'] }[activeGroup] || [];
+        list = publishedPlaces.filter(p => cats.includes(p.category));
+    }
+    if (searchText) {
+        const lower = searchText.toLowerCase();
+        list = list.filter(p => p.name.toLowerCase().includes(lower) || p.tags?.some(t => t.toLowerCase().includes(lower)));
+    }
+    return list;
+  }, [activeGroup, activeCollection, publishedPlaces, mappedEvents, savedIds, searchText]);
 
   // --- EFFECTS ---
 
@@ -202,21 +207,8 @@ const MainApp: React.FC = () => {
     } else {
       document.documentElement.classList.remove('dark');
     }
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
   }, [isDarkMode]);
-
-  const toggleTheme = () => {
-    const newMode = !isDarkMode;
-    setIsDarkMode(newMode);
-    localStorage.setItem('theme', newMode ? 'dark' : 'light');
-  };
-
-  const toggleFavorite = (id: string) => {
-    setSavedIds(prev => {
-        const newIds = prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id];
-        localStorage.setItem('cabo_saved_places', JSON.stringify(newIds));
-        return newIds;
-    });
-  };
 
   // Keyboard Shortcuts
   useEffect(() => {
@@ -230,92 +222,17 @@ const MainApp: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // --- DEEP LINKING & URL STATE ---
-  
-  // 1. On Load: Check URL for ?place=slug
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const placeSlug = params.get('place');
-    // NOTE: We only search within `publishedPlaces` to prevent deep linking to pending/hidden items.
-    if (placeSlug && publishedPlaces.length > 0) {
-        const found = publishedPlaces.find(p => p.slug === placeSlug || p.id === placeSlug);
-        if (found) {
-            setSelectedPlace(found);
-            // Fly to it
-            if (map.current && found.coords) {
-                 setTimeout(() => {
-                    map.current?.flyTo([found.coords.lat, found.coords.lng], 16, { duration: 1.5 });
-                 }, 1000);
-            }
-        }
-    }
-  }, [publishedPlaces]);
+  // Initialize Map Engine
+  const { mapLoaded, flyTo, flyHome, showUserLocation, invalidateSize, zoomIn, zoomOut } = useMapEngine( // Added zoomIn, zoomOut
+    mapContainer,
+    isDarkMode,
+    mapStyle,
+    filteredList,
+    (p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); } // Use p.defaultZoom here
+  );
 
-  // 2. On Selection: Update URL (Deep Link)
-  useEffect(() => {
-    if (selectedPlace) {
-        const url = new URL(window.location.href);
-        url.searchParams.set('place', selectedPlace.slug || selectedPlace.id);
-        window.history.pushState({}, '', url);
-    } else {
-        const url = new URL(window.location.href);
-        url.searchParams.delete('place');
-        window.history.pushState({}, '', url);
-    }
-  }, [selectedPlace]);
-
-  // 3. Handle Browser Back Button
-  useEffect(() => {
-    const handlePopState = () => {
-        const params = new URLSearchParams(window.location.search);
-        const placeSlug = params.get('place');
-        if (!placeSlug) {
-            setSelectedPlace(null);
-        } else {
-            const found = publishedPlaces.find(p => p.slug === placeSlug || p.id === placeSlug);
-            if (found) setSelectedPlace(found);
-        }
-    };
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [publishedPlaces]);
-
-
-  // Initial Data Fetch & FlyTo
-  const fetchRealData = async () => {
-      console.log("Fetching real data from Supabase...");
-      const realPlaces = await getPlaces();
-      if (realPlaces.length > 0) setPlaces(realPlaces);
-      
-      const realEvents = await getEvents();
-      if (realEvents.length > 0) {
-        setEvents(realEvents);
-      }
-      return realPlaces;
-  };
-
-  useEffect(() => {
-    const initData = async () => {
-        // We use the raw list here to determine fallback center, but `publishedPlaces` state will update naturally
-        const realPlaces = await fetchRealData();
-        
-        // Initial fly logic (only if no URL param)
-        const params = new URLSearchParams(window.location.search);
-        if (!params.get('place')) {
-            // Check against realPlaces but ensure we aren't defaulting to a pending item (though fallback logic usually handles this)
-            let initialPlace = realPlaces.find(p => p.id === DEFAULT_PLACE_ID && p.status !== 'pending');
-            if (!initialPlace && realPlaces.length > 0) initialPlace = realPlaces.find(p => p.is_featured && p.status !== 'pending');
-            if (!initialPlace) initialPlace = FALLBACK_PLACES.find(p => p.id === DEFAULT_PLACE_ID);
-
-            if (initialPlace && map.current && initialPlace.coords) {
-                setTimeout(() => {
-                    map.current?.flyTo([initialPlace!.coords.lat, initialPlace!.coords.lng], 16, { duration: 3, easeLinearity: 0.25 });
-                }, 800);
-            }
-        }
-    };
-    if (mapLoaded) initData();
-  }, [mapLoaded]);
+  // Initialize Router (Handles all URL state safely)
+  useRouter(publishedPlaces, selectedPlace, setSelectedPlace, flyTo);
 
   // Try to get location on mount silently
   useEffect(() => {
@@ -324,6 +241,7 @@ const MainApp: React.FC = () => {
             (pos) => {
                 const { latitude, longitude } = pos.coords;
                 setUserLocation({ lat: latitude, lng: longitude });
+                // Only show dot if map is loaded, handled by useMapEngine internal effect/check
             },
             () => {}, // ignore error
             { enableHighAccuracy: false }
@@ -331,229 +249,10 @@ const MainApp: React.FC = () => {
     }
   }, []);
 
-  // Map Initialization
-  useEffect(() => {
-    if (map.current || !mapContainer.current) return;
-    try {
-        map.current = L.map(mapContainer.current, { 
-            center: [CABO_ROJO_CENTER.lat, CABO_ROJO_CENTER.lng], 
-            zoom: 13, 
-            zoomControl: false, 
-            attributionControl: false,
-            zoomSnap: 0.1, 
-            zoomDelta: 0.5, 
-            wheelPxPerZoomLevel: 3, 
-            inertia: true, 
-            inertiaDeceleration: 3500, 
-            easeLinearity: 0.2 
-        });
-        map.current.on('moveend', () => { /* Optional: Update bounds state if needed */ });
-        setMapLoaded(true);
-    } catch (error) { console.error("Map failed", error); }
-    return () => { map.current?.remove(); map.current = null; };
-  }, []);
-
   // Fix: Map Layout Invalidation
   useEffect(() => {
-    if (!mapLoaded || !map.current) return;
-    const timer = setTimeout(() => { map.current?.invalidateSize(); }, 200);
-    const handleResize = () => { map.current?.invalidateSize(); };
-    window.addEventListener('resize', handleResize);
-    return () => { clearTimeout(timer); window.removeEventListener('resize', handleResize); };
-  }, [mapLoaded]);
-
-  // Map Tile Manager (Standard vs Satellite)
-  useEffect(() => {
-      if (!map.current) return;
-      if (tileLayer.current) tileLayer.current.remove();
-
-      let tileUrl = '';
-      let attribution = '';
-
-      if (mapStyle === 'satellite') {
-          // ESRI World Imagery
-          tileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-          attribution = 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community';
-      } else {
-          // Standard CartoDB (Light/Dark)
-          const lightTiles = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-          const darkTiles = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-          tileUrl = isDarkMode ? darkTiles : lightTiles;
-          attribution = '&copy; OpenStreetMap & CARTO';
-      }
-      
-      tileLayer.current = L.tileLayer(tileUrl, { 
-          attribution,
-          maxZoom: 19 // ESRI allows usually up to 19 or higher
-      }).addTo(map.current);
-
-  }, [isDarkMode, mapLoaded, mapStyle]);
-
-  // Boat Animation
-  useEffect(() => {
-    if (!map.current || !mapLoaded) return;
-    const DOCK_POS = { lat: 18.0750, lng: -67.1886 }; 
-    const SEA_POS = { lat: 18.0736, lng: -67.1900 };
-    const boatHtml = `
-      <div id="animated-boat" class="animate-bob transition-transform duration-700 ease-in-out" style="font-size: 28px; color: #007AFF; filter: drop-shadow(0 4px 8px rgba(0,122,255,0.4));">
-        <i class="fa-solid fa-sailboat"></i>
-      </div>
-    `;
-    const boatIcon = L.divIcon({ className: 'bg-transparent', html: boatHtml, iconSize: [30, 30], iconAnchor: [15, 15] });
-    boatMarkerRef.current = L.marker([SEA_POS.lat, SEA_POS.lng], { icon: boatIcon, interactive: false, zIndexOffset: 50 }).addTo(map.current);
-    
-    const animateBoat = (time: number) => {
-        const phase = (Math.sin(time / 3000 - Math.PI / 2) + 1) / 2; 
-        const lat = SEA_POS.lat + (DOCK_POS.lat - SEA_POS.lat) * phase;
-        const lng = SEA_POS.lng + (DOCK_POS.lng - SEA_POS.lng) * phase;
-        if (boatMarkerRef.current) {
-            boatMarkerRef.current.setLatLng([lat, lng]);
-            const isMovingToDock = Math.sin(time / 3000) > 0;
-            const el = document.getElementById('animated-boat');
-            if (el) el.style.transform = isMovingToDock ? 'scaleX(-1)' : 'scaleX(1)';
-        }
-        requestRef.current = requestAnimationFrame(animateBoat);
-    };
-    requestRef.current = requestAnimationFrame(animateBoat);
-    return () => { if (requestRef.current) cancelAnimationFrame(requestRef.current); };
-  }, [mapLoaded]);
-
-  // Filtering & Marker Rendering Logic
-  useEffect(() => {
-    if (!map.current || !mapLoaded) return;
-    
-    // @ts-ignore
-    const groupDef = CATEGORY_GROUPS[activeGroup] || CATEGORY_GROUPS['ALL'];
-    let filtered: Place[] = [];
-    
-    // Helper to map Events to Places
-    const mappedEvents = events.map(e => ({
-        id: e.id,
-        name: e.title,
-        slug: `event-${e.id}`,
-        description: e.description,
-        category: e.category as unknown as PlaceCategory,
-        coords: e.coords || { lat: 0, lng: 0 },
-        imageUrl: e.imageUrl || 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=1000',
-        videoUrl: '',
-        website: '',
-        phone: '',
-        address: e.locationName,
-        gmapsUrl: e.mapLink || '',
-        customIcon: 'fa-calendar-check',
-        status: 'open',
-        plan: 'free',
-        sponsor_weight: e.isFeatured ? 100 : 50,
-        is_featured: e.isFeatured,
-        tags: ['Evento', e.category],
-        parking: ParkingStatus.FREE,
-        hasRestroom: true,
-        hasShowers: false,
-        hasGenerator: false,
-        tips: `Horario: ${new Date(e.startTime).toLocaleTimeString([], {hour:'numeric', minute:'2-digit', hour12:true})}`,
-        priceLevel: new Date(e.startTime).toLocaleDateString([], {month:'short', day:'numeric'}), 
-        bestTimeToVisit: 'A tiempo',
-        vibe: ['Social', 'Comunidad'],
-        isPetFriendly: true,
-        isHandicapAccessible: true,
-        isVerified: true,
-        opening_hours: { note: new Date(e.startTime).toLocaleString() },
-        contact_info: { 
-            eventStart: e.startTime, 
-            eventEnd: e.endTime,
-            isEvent: true 
-        }
-    } as unknown as Place));
-
-    // Base Filter: Use the centralized `publishedPlaces` to ensure pending items are hidden
-    // Note: `publishedPlaces` is already filtered by `useMemo` above.
-
-    if (activeCollection) {
-        // COLLECTION MODE
-        const allItems = [...publishedPlaces, ...mappedEvents]; 
-        filtered = allItems.filter(p => activeCollection.placeIds.includes(p.id));
-    } else if (groupDef.categories === 'EVENTS') {
-        filtered = mappedEvents;
-    } else if (groupDef.categories === 'FAVORITES') {
-        const allItems = [...publishedPlaces, ...mappedEvents]; 
-        filtered = allItems.filter(p => savedIds.includes(p.id));
-    } else {
-        filtered = groupDef.categories === 'ALL' 
-          ? publishedPlaces 
-          : publishedPlaces.filter(p => (groupDef.categories as PlaceCategory[]).includes(p.category));
-    }
-
-    if (searchText.trim()) {
-        const lower = searchText.toLowerCase();
-        filtered = filtered.filter(p => 
-          p.name.toLowerCase().includes(lower) || 
-          p.description.toLowerCase().includes(lower) || 
-          p.tags?.some(t => t.toLowerCase().includes(lower))
-        );
-    }
-    
-    setFilteredList(filtered); 
-    setResultCount(filtered.length);
-    
-    // 2. Render Markers
-    markersRef.current.forEach(marker => marker.remove());
-    markersRef.current = [];
-    
-    const bounds = L.latLngBounds([]);
-
-    filtered.forEach(place => {
-      if (!place.coords.lat || !place.coords.lng) return;
-      bounds.extend([place.coords.lat, place.coords.lng]);
-
-      const isMarina = place.id === DEFAULT_PLACE_ID; 
-      const html = generateMarkerHtml(place, isMarina);
-      const size: L.PointTuple = [40, 40];
-      const anchor: L.PointTuple = [20, 40];
-
-      const icon = L.divIcon({ className: 'custom-pin group', html: html, iconSize: size, iconAnchor: anchor });
-      
-      const marker = L.marker([place.coords.lat, place.coords.lng], { 
-        icon: icon, 
-        zIndexOffset: isMarina ? 1000 : 0 
-      }).addTo(map.current!);
-      
-      const tooltipContent = `
-        <div class="relative bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-2xl rounded-xl px-4 py-2 text-center transform transition-all min-w-[140px] -translate-y-1">
-          <div class="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight mb-1">${place.name}</div>
-          <div class="flex items-center justify-center gap-2 text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">
-              <span>${place.category}</span>
-              <span class="text-teal-500">•</span>
-              <span>${place.priceLevel || 'Free'}</span>
-          </div>
-          ${place.status === 'closed' ? '<div class="mt-1 text-[10px] font-bold text-red-500 bg-red-100 dark:bg-red-900/30 rounded px-1">CERRADO</div>' : ''}
-        </div>
-      `;
-
-      marker.bindTooltip(tooltipContent, {
-        direction: 'top',
-        offset: [0, -50], // Shifted slightly higher to clear the pin head
-        className: 'custom-tooltip',
-        opacity: 1,
-        permanent: false 
-      });
-
-      marker.on('click', (e) => { 
-        L.DomEvent.stopPropagation(e); 
-        setSelectedPlace(place); 
-        map.current?.flyTo([place.coords.lat, place.coords.lng], 16, { duration: 1.2, easeLinearity: 0.2 }); 
-      });
-      
-      markersRef.current.push(marker);
-    });
-    
-    // --- SMART ZOOM (Fit Bounds) ---
-    // Automatically zoom to show all results if filter changed, unless it's just a text search (too jumpy)
-    if (filtered.length > 0 && map.current && !selectedPlace && !searchText) {
-        // Add padding so pins aren't on the edge
-        map.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 15, animate: true, duration: 1.5 });
-    }
-
-  }, [activeGroup, mapLoaded, places, publishedPlaces, events, language, searchText, isVipUnlocked, savedIds, activeCollection]); 
+    if (mapLoaded) invalidateSize();
+  }, [mapLoaded, activeTab]);
 
   // --- HANDLERS ---
 
@@ -562,27 +261,13 @@ const MainApp: React.FC = () => {
   };
 
   const centerOnUser = () => { 
-    if (!navigator.geolocation) return alert("Geolocation not supported"); 
+    if (!navigator.geolocation) return alert(t('admin_geolocation_not_supported')); 
     navigator.geolocation.getCurrentPosition(
       (pos) => { 
           const { latitude, longitude } = pos.coords;
           setUserLocation({ lat: latitude, lng: longitude });
-
-          // Fly to user
-          map.current?.flyTo([latitude, longitude], 15);
-          
-          // Add User Marker if not exists
-          if (!userLocMarkerRef.current && map.current) {
-               const userIconHtml = `
-                <div class="relative w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-md">
-                    <div class="absolute inset-0 bg-blue-500 rounded-full animate-ping opacity-75"></div>
-                </div>
-               `;
-               const userIcon = L.divIcon({ className: 'bg-transparent', html: userIconHtml, iconSize: [20, 20] });
-               userLocMarkerRef.current = L.marker([latitude, longitude], { icon: userIcon, zIndexOffset: 2000 }).addTo(map.current);
-          } else if (userLocMarkerRef.current) {
-              userLocMarkerRef.current.setLatLng([latitude, longitude]);
-          }
+          flyTo({ lat: latitude, lng: longitude }, 15);
+          showUserLocation(latitude, longitude);
       }, 
       (err) => console.error(err), 
       { enableHighAccuracy: true }
@@ -592,9 +277,7 @@ const MainApp: React.FC = () => {
   const handleChatNavigation = (place: Place) => {
       setIsConciergeOpen(false);
       setSelectedPlace(place);
-      if (place.coords && map.current) {
-          map.current.flyTo([place.coords.lat, place.coords.lng], 16, { duration: 1.5 });
-      }
+      if (place.coords) flyTo(place.coords, place.defaultZoom || 16); // Use place.defaultZoom here too
   };
 
   const handleNavAction = (action: string) => {
@@ -609,7 +292,7 @@ const MainApp: React.FC = () => {
           setActiveGroup('ALL');
           setActiveCollection(null);
           setSearchText('');
-          if (map.current) map.current.flyTo([CABO_ROJO_CENTER.lat, CABO_ROJO_CENTER.lng], 13, { duration: 1.5 });
+          flyHome();
       }
   };
 
@@ -621,10 +304,18 @@ const MainApp: React.FC = () => {
           case 'action_add': setIsSuggestOpen(true); break;
           case 'action_chat': setIsConciergeOpen(true); break;
           case 'action_contact': setIsContactOpen(true); break;
-          case 'sys_theme': toggleTheme(); break;
+          case 'sys_theme': setIsDarkMode(!isDarkMode); break;
           case 'sys_lang': setLanguage(language === 'es' ? 'en' : 'es'); break;
           case 'sys_admin': setIsAdminOpen(true); break;
       }
+  };
+
+  const toggleFavorite = (id: string) => {
+    setSavedIds(prev => {
+        const newIds = prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id];
+        localStorage.setItem('cabo_saved_places', JSON.stringify(newIds));
+        return newIds;
+    });
   };
 
   return (
@@ -645,11 +336,25 @@ const MainApp: React.FC = () => {
             <button 
               onClick={() => setMapStyle(prev => prev === 'standard' ? 'satellite' : 'standard')}
               className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-emerald-600 dark:text-emerald-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center mb-0"
-              title={mapStyle === 'standard' ? "Vista Satélite" : "Vista Mapa"}
+              title={mapStyle === 'standard' ? t('satellite_view') : t('map_view')}
             >
               <i className={`fa-solid ${mapStyle === 'standard' ? 'fa-satellite' : 'fa-map'}`}></i>
             </button>
-            <button onClick={toggleTheme} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-amber-500 dark:text-purple-300 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">
+            <button 
+              onClick={() => zoomIn()} 
+              className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-600 dark:text-slate-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"
+              title={t('zoom_in')}
+            >
+                <i className="fa-solid fa-plus"></i>
+            </button>
+            <button 
+              onClick={() => zoomOut()} 
+              className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-600 dark:text-slate-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"
+              title={t('zoom_out')}
+            >
+                <i className="fa-solid fa-minus"></i>
+            </button>
+            <button onClick={() => setIsDarkMode(!isDarkMode)} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-amber-500 dark:text-purple-300 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">
               <i className={`fa-solid ${isDarkMode ? 'fa-moon' : 'fa-sun'}`}></i>
             </button>
             <button onClick={() => setLanguage(language === 'es' ? 'en' : 'es')} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-800 dark:text-white p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-[10px] uppercase hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">{language === 'es' ? 'EN' : 'ES'}</button>
@@ -670,11 +375,11 @@ const MainApp: React.FC = () => {
       {/* Sheets & Modals */}
       <ExplorerSheet 
         places={filteredList} 
-        onSelect={(p) => { setSelectedPlace(p); map.current?.flyTo([p.coords.lat, p.coords.lng], 16, { duration: 1.5 }); }} 
+        onSelect={(p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); }} // Use p.defaultZoom here
         isVisible={activeTab === 'explore'} 
         searchText={searchText}
         onSearchChange={setSearchText}
-        resultCount={resultCount}
+        resultCount={filteredList.length}
         activeGroup={activeGroup}
         onCategoryChange={setActiveGroup}
         focusTrigger={searchFocusTrigger}
@@ -684,6 +389,7 @@ const MainApp: React.FC = () => {
         activeCollectionId={activeCollection?.id}
         onCameraClick={() => { setIsConciergeOpen(true); }}
         userLocation={userLocation || undefined}
+        onTabChange={handleTabChange} // Pass the handler
       />
 
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} onAction={handleNavAction} />
@@ -692,7 +398,7 @@ const MainApp: React.FC = () => {
         <PlaceCard 
             place={selectedPlace} 
             allPlaces={publishedPlaces} 
-            onSelect={(p) => { setSelectedPlace(p); map.current?.flyTo([p.coords.lat, p.coords.lng], 16, { duration: 1.5 }); }}
+            onSelect={(p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); }} // Use p.defaultZoom here
             onClose={() => setSelectedPlace(null)} 
             onNavigate={handleNavigate}
             onAskAi={() => setIsConciergeOpen(true)}
@@ -709,11 +415,12 @@ const MainApp: React.FC = () => {
         places={publishedPlaces} 
         events={events} 
         onNavigateToPlace={handleChatNavigation}
+        userLocation={userLocation || undefined}
       />
       
       <SuggestPlaceModal isOpen={isSuggestOpen} onClose={() => setIsSuggestOpen(false)} />
       <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} onSuggest={() => { setIsContactOpen(false); setIsSuggestOpen(true); }} onChat={() => { setIsContactOpen(false); setIsConciergeOpen(true); }} />
-      {isAdminOpen && <Admin onClose={() => setIsAdminOpen(false)} places={places} events={events} onUpdate={fetchRealData} />}
+      {isAdminOpen && <Admin onClose={() => setIsAdminOpen(false)} places={places} events={events} onUpdate={refreshData} />}
       <CommandMenu isOpen={isCommandMenuOpen} onClose={() => setIsCommandMenuOpen(false)} onSelect={handleCommandSelect} isDarkMode={isDarkMode} />
 
     </div>

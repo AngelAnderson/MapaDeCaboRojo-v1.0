@@ -1,5 +1,7 @@
 {
   "name": "MapaDeCaboRojo.com",
   "description": "Navega Cabo Rojo como si vivieras aquí.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "geolocation"
+  ]
 }

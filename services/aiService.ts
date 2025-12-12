@@ -1,5 +1,6 @@
 
-import { Place, Event, Coordinates, AdminLog, ItineraryItem, PlaceCategory, ParkingStatus } from "../types";
+import { Place, Event, Coordinates, AdminLog, ItineraryItem, PlaceCategory } from "../types";
+import { escapeHTML } from './supabase'; // Import the HTML escaper
 
 // Helper to call Server-Side AI
 const callAI = async (action: string, payload: any) => {
@@ -96,52 +97,51 @@ export const generateAudioScript = async (placeName: string, description: string
 };
 
 // 8. MARKETING GENERATOR (Uses existing api/marketing.ts)
-export const generateMarketingCopy = async (name: string, platform: string, tone: string) => {
+export const generateMarketingCopy = async (name: string, platform: string, tone: string): Promise<string> => {
     try {
         const res = await fetch('/api/marketing', {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' }, // Ensure Content-Type is set
             body: JSON.stringify({ name, platform, tone })
         });
         const data = await res.json();
+        // If it's a campaign bundle, data.text will be the JSON string.
+        // Otherwise, it's plain text.
         return data.text || "Error.";
     } catch (e) { return "Service unavailable."; }
 };
 
-// 9. LOCATION RESOLVER
-export const findCoordinates = async (query: string): Promise<{ lat: number, lng: number } | null> => {
-    const res = await callAI('coords', { query });
+// --- NEW AI ADMIN FUNCTIONS ---
+
+// 9. CATEGORIZE & TAG PLACE
+export const categorizeAndTagPlace = async (name: string, description: string): Promise<{ category: PlaceCategory, tags: string[] } | null> => {
+    const res = await callAI('categorize-tags', { name, description });
     return extractJson(res);
 };
 
-// 10. PLACE DETAILS (SMART IMPORT)
-export const fetchPlaceDetails = async (query: string): Promise<Partial<Place> | null> => {
-    const res = await callAI('details', { query });
-    const data = extractJson(res);
-    
-    if (!data || !data.name) return null;
-
-    let parkingStatus = ParkingStatus.FREE;
-    if (data.parking === 'PAID') parkingStatus = ParkingStatus.PAID;
-    if (data.parking === 'NONE') parkingStatus = ParkingStatus.NONE;
-
-    return {
-        name: data.name,
-        description: data.description,
-        category: data.category as PlaceCategory,
-        coords: data.lat && data.lng ? { lat: data.lat, lng: data.lng } : undefined, // Only set coords if both lat/lng exist
-        address: data.address,
-        phone: data.phone,
-        website: data.website,
-        priceLevel: data.priceLevel,
-        tags: data.tags || [],
-        tips: data.tips || '',
-        imageUrl: data.imageUrl || '',
-        parking: parkingStatus,
-        isPetFriendly: !!data.petFriendly,
-        hasRestroom: !!data.hasRestroom,
-        hasGenerator: !!data.hasGenerator,
-        opening_hours: { note: data.hours || '', type: 'fixed' },
-        // Use the returned gmapsUrl if available, otherwise construct a search link
-        gmapsUrl: data.gmapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.name + ' Cabo Rojo')}`
-    };
+// 10. ENHANCE DESCRIPTION
+export const enhanceDescription = async (name: string, description: string): Promise<string | null> => {
+    const res = await callAI('enhance-description', { name, description });
+    return res?.text || null;
 };
+
+// 11. GENERATE EL VECI TIP
+export const generateElVeciTip = async (name: string, category: PlaceCategory, description: string): Promise<string | null> => {
+    const res = await callAI('generate-tips', { name, category, description });
+    return res?.text || null;
+};
+
+// 12. GENERATE IMAGE ALT TEXT
+export const generateImageAltText = async (imageUrl: string): Promise<string | null> => {
+    const res = await callAI('generate-alt-text', { imageUrl });
+    return res?.text || null;
+};
+
+// 13. GENERATE SEO META TAGS
+export const generateSeoMetaTags = async (name: string, description: string, category: PlaceCategory): Promise<{ metaTitle: string, metaDescription: string } | null> => {
+    const res = await callAI('generate-seo-meta-tags', { name, description, category });
+    return extractJson(res);
+};
+
+// Removed findCoordinates and fetchPlaceDetails from here.
+// They will now reside in services/placesService.ts and use the Google Places API via a proxy.
