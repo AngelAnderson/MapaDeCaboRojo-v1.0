@@ -1,20 +1,153 @@
 
+import { GoogleGenAI, Type } from "@google/genai";
 import { Place, Event, Coordinates, AdminLog, ItineraryItem, PlaceCategory } from "../types";
-import { escapeHTML } from './supabase'; // Import the HTML escaper
 
-// Helper to call Server-Side AI
+// Initialize Client-Side AI (Fallback)
+const clientAI = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+
+// --- CLIENT-SIDE FALLBACK HANDLER ---
+async function handleClientSideAI(action: string, payload: any) {
+    console.log(`🤖 Switching to Client-Side AI for: ${action}`);
+    
+    switch (action) {
+        case 'chat': {
+            const { message, history, context } = payload;
+            const systemInstruction = `
+                Eres "El Veci", el guía local de Cabo Rojo, Puerto Rico.
+                PERSONALIDAD: Amable, respetuoso, boricua.
+                DATOS: ${JSON.stringify(context.places.map((p:any) => ({name: p.name, cat: p.category, desc: p.description})).slice(0, 50))}
+            `;
+            const chat = clientAI.chats.create({
+                model: 'gemini-2.5-flash',
+                history: history.map((h: any) => ({ role: h.role, parts: [{ text: h.text }] })),
+                config: { systemInstruction }
+            });
+            const result = await chat.sendMessage({ message });
+            return { text: result.text };
+        }
+
+        case 'itinerary': {
+            const { vibe, places } = payload;
+            const prompt = `Crea un itinerario de 1 día en Cabo Rojo. Vibe: "${vibe}". Lugares: ${places.map((p:any)=>p.name).join(', ')}. Return JSON Array with fields: time, activity, description, icon (fontawesome).`;
+            const res = await clientAI.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: { responseMimeType: 'application/json' }
+            });
+            return JSON.parse(res.text || "[]");
+        }
+
+        case 'identify': {
+            const prompt = `Analyze image. Is it Cabo Rojo? Return JSON { "matchedPlaceId": null, "explanation": "string" }`;
+            const res = await clientAI.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: { parts: [{ inlineData: { mimeType: 'image/jpeg', data: payload.image } }, { text: prompt }] },
+                config: { responseMimeType: 'application/json' }
+            });
+            return JSON.parse(res.text || "{}");
+        }
+
+        case 'moderate': {
+            const { name, description } = payload;
+            const prompt = `Analiza el siguiente texto sugerido por un usuario.
+            Nombre: ${name}
+            Descripción: ${description}
+            Responde SOLAMENTE con un objeto JSON:
+            {"safe": boolean, "reason": "string (español boricua)"}`;
+            
+            const res = await clientAI.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: { responseMimeType: 'application/json' }
+            });
+            return JSON.parse(res.text || "{\"safe\": true}");
+        }
+
+        case 'marketing': {
+            const { name, category, platform, tone } = payload;
+            let prompt = "";
+            let isJson = false;
+            
+            if (platform === 'campaign_bundle') {
+                isJson = true;
+                prompt = `Act as Social Media Manager for "${name}" (${category}) in Cabo Rojo. Tone: ${tone}. Generate JSON Campaign Bundle: { "instagram_caption": "", "story_script": "", "email_subject": "", "email_body": "" }`;
+            } else {
+                prompt = `Generate ${platform} copy for "${name}" (${category}). Tone: ${tone}. Max 150 words.`;
+            }
+
+            const res = await clientAI.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: isJson ? { responseMimeType: 'application/json' } : undefined
+            });
+            return { text: res.text };
+        }
+
+        // Admin Helpers
+        case 'categorize-tags':
+            return JSON.parse((await clientAI.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: `Categorize "${payload.name}". Desc: "${payload.description}". Return JSON {category, tags[]}`,
+                config: { responseMimeType: 'application/json' }
+            })).text || "{}");
+
+        case 'enhance-description':
+            return { text: (await clientAI.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: `Improve description for "${payload.name}": "${payload.description}"`
+            })).text };
+
+        case 'generate-tips':
+            return { text: (await clientAI.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: `Give a local tip for "${payload.name}" (${payload.category}).`
+            })).text };
+
+        case 'generate-alt-text':
+            return { text: (await clientAI.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: { parts: [{ image: { url: payload.imageUrl } }, { text: "Generate alt text (max 15 words)." }] }
+            })).text };
+
+        case 'generate-seo-meta-tags':
+            return JSON.parse((await clientAI.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: `SEO Meta Tags for "${payload.name}". Return JSON {metaTitle, metaDescription}`,
+                config: { responseMimeType: 'application/json' }
+            })).text || "{}");
+
+        default:
+            throw new Error(`Unknown Action: ${action}`);
+    }
+}
+
+// --- MAIN CALLER ---
 const callAI = async (action: string, payload: any) => {
     try {
-        const res = await fetch('/api/ai', {
+        // 1. Try Backend API
+        const res = await fetch(action === 'marketing' ? '/api/marketing' : '/api/ai', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action, payload })
+            body: JSON.stringify(action === 'marketing' ? payload : { action, payload })
         });
-        if (!res.ok) throw new Error("AI Service Error");
+        
+        const contentType = res.headers.get("content-type");
+        if (!res.ok || !contentType || !contentType.includes("application/json")) {
+            throw new Error("Backend unavailable");
+        }
         return await res.json();
     } catch (e) {
-        console.error(`AI Error [${action}]:`, e);
-        return null;
+        // 2. Fallback to Client-Side
+        if (!process.env.API_KEY) {
+            console.error("Missing API_KEY for client fallback.");
+            return null;
+        }
+        try {
+            return await handleClientSideAI(action, payload);
+        } catch (clientError) {
+            console.error(`Client AI Failed [${action}]:`, clientError);
+            return null;
+        }
     }
 };
 
@@ -24,135 +157,97 @@ const extractJson = (data: any) => {
     try { return JSON.parse(data); } catch(e) { return {}; }
 };
 
-// 1. CHAT & CONCIERGE (Proxy)
+// --- EXPORTS ---
+
 export const createConciergeChat = (places: Place[], events: Event[], userLoc: Coordinates | undefined, context: any) => {
-    // Keep history locally to send to stateless server
     let history: any[] = [];
-    
     return {
         sendMessage: async ({ message }: { message: string }) => {
             const payload = {
                 message,
                 history,
                 context: {
-                    // Send full objects (sanitized on server) instead of pre-mapping to text string
-                    // This allows the server to build a strict JSON "Local Database" for the AI
-                    places: places.map(p => ({ 
-                        id: p.id,
-                        name: p.name, 
-                        category: p.category, 
-                        description: p.description,
-                        amenities: p.amenities, // Crucial for "Do they have bathrooms?"
-                        status: p.status,
-                        address: p.address
-                    })),
-                    events: events.map(e => ({ 
-                        title: e.title, 
-                        start: e.startTime,
-                        description: e.description 
-                    })),
-                    userLoc,
-                    ...context
+                    places: places.map(p => ({ id: p.id, name: p.name, category: p.category, description: p.description?.substring(0,200) })),
+                    events: events.map(e => ({ title: e.title, start: e.startTime })),
+                    userLoc, ...context
                 }
             };
-
             const response = await callAI('chat', payload);
-            
-            if (response && response.text) {
-                // Update local history
+            if (response?.text) {
                 history.push({ role: 'user', text: message });
                 history.push({ role: 'model', text: response.text });
                 return { text: response.text };
             }
-            return { text: "Mala mía, El Veci se fue de break. Intenta ya mismo." };
+            return { text: "El Veci está durmiendo. Intenta más tarde." };
         }
     };
 };
 
-// 2. IMAGE IDENTIFICATION
 export const identifyPlaceFromImage = async (base64Image: string, places: Place[]) => {
     const res = await callAI('identify', { image: base64Image });
-    return extractJson(res) || { matchedPlaceId: null, explanation: "No pude ver bien la foto." };
+    return extractJson(res) || { matchedPlaceId: null, explanation: "No pude procesar la imagen." };
 };
 
-// 3. TRIP ITINERARY
 export const generateTripItinerary = async (vibe: string, places: Place[]): Promise<ItineraryItem[]> => {
-    const res = await callAI('itinerary', { vibe, places: places.map(p => ({ name: p.name, category: p.category })) });
-    const data = extractJson(res);
-    return Array.isArray(data) ? data : [];
+    const res = await callAI('itinerary', { vibe, places: places.map(p => ({ name: p.name })) });
+    return Array.isArray(res) ? res : (res?.itinerary || []);
 };
 
-// 4. CONTENT MODERATION (Uses existing api/moderate.ts)
-export const moderateUserContent = async (name: string, description: string) => {
+export const moderateUserContent = async (name: string, description: string): Promise<{ safe: boolean; reason?: string }> => {
     try {
         const res = await fetch('/api/moderate', {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, description })
         });
-        return await res.json();
-    } catch (e) { return { safe: true }; }
+        const contentType = res.headers.get("content-type");
+        if (res.ok && contentType && contentType.includes("application/json")) {
+             return await res.json();
+        }
+    } catch (e) {
+        // Fallback handled below
+    }
+
+    if (process.env.API_KEY) {
+        try {
+            return await handleClientSideAI('moderate', { name, description });
+        } catch(e) { console.error(e); }
+    }
+    
+    return { safe: true }; 
 };
 
-// 5. ENRICH METADATA
-export const enrichPlaceMetadata = async (name: string, description: string) => {
-    // Basic implementation for now, or route to details
-    return { description, tags: [], vibe: [] };
-};
-
-// 6. BRIEFING (Uses existing api/cron-briefing.ts manually if needed, or skipped)
-export const generateExecutiveBriefing = async (logs: AdminLog[], places: Place[]) => {
-    return "{}"; // Briefings handled by CRON mostly
-};
-
-// 7. AUDIO GUIDE SCRIPT
-export const generateAudioScript = async (placeName: string, description: string) => {
-    const res = await callAI('script', { placeName, description });
-    return res?.text || "Bienvenidos a Cabo Rojo.";
-};
-
-// 8. MARKETING GENERATOR (Uses existing api/marketing.ts)
 export const generateMarketingCopy = async (name: string, platform: string, tone: string): Promise<string> => {
-    try {
-        const res = await fetch('/api/marketing', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }, // Ensure Content-Type is set
-            body: JSON.stringify({ name, platform, tone })
-        });
-        const data = await res.json();
-        // If it's a campaign bundle, data.text will be the JSON string.
-        // Otherwise, it's plain text.
-        return data.text || "Error.";
-    } catch (e) { return "Service unavailable."; }
+    const res = await callAI('marketing', { name, category: 'General', platform, tone });
+    return res?.text || "Error generating copy.";
 };
 
-// --- NEW AI ADMIN FUNCTIONS ---
-
-// 9. CATEGORIZE & TAG PLACE
-export const categorizeAndTagPlace = async (name: string, description: string): Promise<{ category: PlaceCategory, tags: string[] } | null> => {
+export const categorizeAndTagPlace = async (name: string, description: string) => {
     const res = await callAI('categorize-tags', { name, description });
-    return extractJson(res);
+    return res;
 };
 
-// 10. ENHANCE DESCRIPTION
-export const enhanceDescription = async (name: string, description: string): Promise<string | null> => {
+export const enhanceDescription = async (name: string, description: string) => {
     const res = await callAI('enhance-description', { name, description });
-    return res?.text || null;
+    return res?.text;
 };
 
-// 11. GENERATE EL VECI TIP
-export const generateElVeciTip = async (name: string, category: PlaceCategory, description: string): Promise<string | null> => {
+export const generateElVeciTip = async (name: string, category: string, description: string) => {
     const res = await callAI('generate-tips', { name, category, description });
-    return res?.text || null;
+    return res?.text;
 };
 
-// 12. GENERATE IMAGE ALT TEXT
-export const generateImageAltText = async (imageUrl: string): Promise<string | null> => {
+export const generateImageAltText = async (imageUrl: string) => {
     const res = await callAI('generate-alt-text', { imageUrl });
-    return res?.text || null;
+    return res?.text;
 };
 
-// 13. GENERATE SEO META TAGS
-export const generateSeoMetaTags = async (name: string, description: string, category: PlaceCategory): Promise<{ metaTitle: string, metaDescription: string } | null> => {
+export const generateSeoMetaTags = async (name: string, description: string, category: string) => {
     const res = await callAI('generate-seo-meta-tags', { name, description, category });
-    return extractJson(res);
+    return res;
 };
+
+// Unused placeholders kept for type compatibility
+export const enrichPlaceMetadata = async () => ({});
+export const generateExecutiveBriefing = async () => "{}";
+export const generateAudioScript = async () => "";

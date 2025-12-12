@@ -85,12 +85,13 @@ const escapeHTML = (str: string | undefined): string => {
 
 // --- FALLBACK MOCK CLIENT ---
 const createMockClient = () => {
-  console.warn("⚠️  SUPABASE KEY MISSING: App running in Offline/Mock Mode. Database features will not persist.");
+  console.warn("⚠️  SUPABASE KEY MISSING: App running in Offline/Mock Mode. Write operations will be simulated.");
   
   const mockChainable = (data: any = [], error: any = null) => {
       const chain: any = {
           select: () => chain,
-          insert: () => Promise.resolve({ data: null, error: { message: "Offline Mode: Cannot write to DB" } }),
+          // MOCK CHANGE: Return success for write ops so UI doesn't break in demo mode
+          insert: () => Promise.resolve({ data: [{}], error: null }),
           update: () => chain,
           delete: () => chain,
           eq: () => chain,
@@ -101,6 +102,8 @@ const createMockClient = () => {
           order: () => chain,
           limit: () => chain,
           single: () => chain,
+          upload: () => Promise.resolve({ data: { path: "mock_path" }, error: null }),
+          getPublicUrl: () => ({ data: { publicUrl: "https://picsum.photos/seed/mock/800/600" } }),
           then: (onfulfilled: any) => Promise.resolve({ data, error }).then(onfulfilled)
       };
       return chain;
@@ -109,11 +112,11 @@ const createMockClient = () => {
   return {
     from: (table: string) => ({
       select: () => mockChainable([], null),
-      insert: () => Promise.resolve({ data: null, error: { message: "Offline Mode: Cannot write to DB" } }),
-      update: () => mockChainable(null, { message: "Offline Mode: Cannot update DB" }),
-      delete: () => mockChainable(null, { message: "Offline Mode: Cannot delete" }),
-      upload: () => Promise.resolve({ data: null, error: { message: "Offline Mode: No Storage" } }),
-      getPublicUrl: () => ({ data: { publicUrl: "" } })
+      insert: () => Promise.resolve({ data: [{}], error: null }),
+      update: () => mockChainable([], null),
+      delete: () => mockChainable([], null), // Simulate successful delete
+      upload: () => Promise.resolve({ data: { path: "mock_path" }, error: null }),
+      getPublicUrl: () => ({ data: { publicUrl: "https://picsum.photos/seed/mock/800/600" } })
     }),
     auth: {
       getSession: () => Promise.resolve({ data: { session: null }, error: null }),
@@ -129,8 +132,8 @@ const createMockClient = () => {
     },
     storage: {
       from: () => ({
-        upload: () => Promise.resolve({ data: null, error: { message: "Offline Mode: No Storage" } }),
-        getPublicUrl: () => ({ data: { publicUrl: "" } })
+        upload: () => Promise.resolve({ data: { path: "mock_path" }, error: null }),
+        getPublicUrl: () => ({ data: { publicUrl: "https://picsum.photos/seed/mock/800/600" } })
       })
     }
   };
@@ -479,7 +482,8 @@ export const updatePlace = async (id: string, place: Partial<Place>): Promise<{ 
         if (error) throw error;
         
         if (!data || data.length === 0) {
-            throw new Error("Update failed: No records modified. Check Permissions/RLS.");
+            // Note: In Mock Mode, data might be empty but error is null, handled by isLive logic or loose checks
+            if (isLive) throw new Error("Update failed: No records modified. Check Permissions/RLS.");
         }
 
         console.log("✅ Update Success");
@@ -504,7 +508,7 @@ export const deletePlace = async (id: string): Promise<{ success: boolean; error
             .eq('place_id', id);
         
         if (eventError) {
-            console.warn("Failed to unlink events (might not exist), attempting delete anyway:", eventError);
+            console.warn("Failed to unlink events (might not exist or permission denied), attempting delete anyway:", eventError);
         }
 
         // 2. Delete the place
@@ -515,6 +519,12 @@ export const deletePlace = async (id: string): Promise<{ success: boolean; error
         return { success: true };
     } catch (e: any) { 
         console.error("Delete Error:", e);
+        
+        // Handle Foreign Key Violations specifically
+        if (e.code === '23503') { // Postgres FK violation code
+             return { success: false, error: "Cannot delete: This place is linked to other records (e.g. Events). Please delete those first." };
+        }
+
         return { success: false, error: getErrorMessage(e) }; 
     }
 };
