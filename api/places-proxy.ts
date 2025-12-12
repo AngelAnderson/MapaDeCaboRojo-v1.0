@@ -1,10 +1,9 @@
-
 export default async function handler(req: any, res: any) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // Handle query params from req.query (Vercel/Express style)
+  // Handle query params from req.query (Standard Node/Vercel)
   const { action, query, place_id } = req.query;
   
   const apiKey = process.env.GOOGLE_PLACES_API_KEY || process.env.VITE_GOOGLE_PLACES_API_KEY;

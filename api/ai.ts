@@ -1,4 +1,3 @@
-
 import { GoogleGenAI } from "@google/genai";
 import { createClient } from '@supabase/supabase-js';
 
@@ -23,12 +22,13 @@ const escapeHTML = (str: string | undefined): string => {
 };
 
 export default async function handler(req: any, res: any) {
+  // Standard Vercel/Node.js CORS and Method check
   if (req.method !== 'POST') {
     return res.status(405).send("Method not allowed");
   }
 
   try {
-    // In Vercel Node.js runtime, req.body is already parsed if Content-Type is application/json
+    // In Vercel Node.js runtime, req.body is already parsed automatically
     const { action, payload } = req.body;
 
     let result;
@@ -61,10 +61,10 @@ export default async function handler(req: any, res: any) {
         result = await handleGenerateSeoMetaTags(payload);
         break;
       default:
-        return res.status(400).send("Unknown action");
+        return res.status(400).json({ error: "Unknown action" });
     }
 
-    // Send the result back
+    // Send the result back immediately
     return res.status(200).json(result);
 
   } catch (e: any) {
@@ -73,7 +73,7 @@ export default async function handler(req: any, res: any) {
   }
 }
 
-// --- HANDLERS (Now returning plain objects, not Response objects) ---
+// --- HANDLERS ---
 
 async function handleChat({ message, history, context }: any) {
   const localDatabase = {
@@ -95,26 +95,30 @@ async function handleChat({ message, history, context }: any) {
 
   const systemInstruction = `
     Hola. Eres "El Vecino Digital", pero tus amigos te dicen "El Veci".
-    Tu trabajo es ser el guía más servicial, amable y paciente de Cabo Rojo, Puerto Rico.
+    Tu misión es ser el guía más servicial, amable y paciente de Cabo Rojo, Puerto Rico.
     
-    ### TU PERSONALIDAD ###
-    1. **Sabiduría y Paciencia:** Hablas de manera clara, pausada y respetuosa. Imagina que le explicas las cosas a una persona de 105 años. Usa un tono cálido.
-    2. **Cero Drama:** Te mantienes alejado de controversias. Todo es constructivo y positivo.
-    3. **Claridad:** Evita la jerga moderna confusa. Usa un español de Puerto Rico clásico y educado.
-    4. **El Toque Final:** SIEMPRE termina tu respuesta con un chiste sano, corto y simpático.
+    ### TU PERSONALIDAD (IMPORTANTE) ###
+    1. **Sabiduría y Respeto:** Hablas de manera clara, pausada y respetuosa. Imagina que le explicas las cosas a una persona de 105 años que quieres mucho. Usa un tono cálido de "buen vecino".
+    2. **Cero Drama:** Te mantienes alejado de controversias, chismes o negatividad. Todo es constructivo, positivo y útil.
+    3. **Claridad Total:** Evita la jerga moderna confusa (nada de slang de internet). Usa un español de Puerto Rico clásico, educado y fácil de entender.
+    4. **El Toque Final (Chiste):** SIEMPRE, sin excepción, termina tu respuesta con un chiste sano, corto y simpático (puede ser de pepito, jíbaros, o bobo) para alegrar el día.
 
     ### TUS FUENTES DE INFORMACIÓN ###
-    1. **BASE DE DATOS LOCAL:** 
-       Usa esto para recomendar sitios:
+    1. **BASE DE DATOS LOCAL (Tu Memoria):** 
+       Aquí tienes la lista oficial de lugares y eventos en Cabo Rojo. Úsala primero.
        ${JSON.stringify(localDatabase).substring(0, 30000)} ...
        
-    2. **GOOGLE SEARCH:**
-       Úsalo para clima, noticias, o datos que no tengas en la lista.
+    2. **GOOGLE SEARCH (Tu Lupa):**
+       Úsalo OBLIGATORIAMENTE para:
+       - El clima actual (si te preguntan).
+       - Noticias recientes.
+       - Horarios o datos que no estén en tu base de datos.
+       - Temas generales de Puerto Rico fuera de Cabo Rojo.
 
     ### CONTEXTO ACTUAL ###
     Fecha: ${escapeHTML(context.date)}
     Hora: ${escapeHTML(context.time)}
-    Clima: ${escapeHTML(context.weather)}
+    Clima Reportado: ${escapeHTML(context.weather)}
   `;
 
   const chatHistory = history.map((msg: any) => ({
@@ -147,7 +151,7 @@ async function handleIdentify({ image }: any) {
     },
     config: { responseMimeType: 'application/json' }
   });
-  return JSON.parse(response.text); // Expecting JSON response
+  return JSON.parse(response.text);
 }
 
 async function handleItinerary({ vibe, places }: any) {
