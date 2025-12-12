@@ -1,3 +1,4 @@
+
 import { GoogleGenAI } from "@google/genai";
 import { createClient } from '@supabase/supabase-js';
 
@@ -28,7 +29,6 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    // In Vercel Node.js runtime, req.body is already parsed automatically
     const { action, payload } = req.body;
 
     let result;
@@ -64,7 +64,6 @@ export default async function handler(req: any, res: any) {
         return res.status(400).json({ error: "Unknown action" });
     }
 
-    // Send the result back immediately
     return res.status(200).json(result);
 
   } catch (e: any) {
@@ -135,7 +134,7 @@ async function handleChat({ message, history, context }: any) {
     }
   });
 
-  const result = await chat.sendMessage(escapeHTML(message));
+  const result = await chat.sendMessage(message); // Pass raw message, SDK handles it
   return { text: result.text };
 }
 
@@ -146,7 +145,7 @@ async function handleIdentify({ image }: any) {
     contents: {
       parts: [
         { inlineData: { mimeType: 'image/jpeg', data: image } },
-        { text: escapeHTML(prompt) }
+        { text: prompt } // Pass raw prompt
       ]
     },
     config: { responseMimeType: 'application/json' }
@@ -156,10 +155,12 @@ async function handleIdentify({ image }: any) {
 
 async function handleItinerary({ vibe, places }: any) {
   const sanitizedPlacesList = places.map((p: any) => `${escapeHTML(p.name)} (${escapeHTML(p.category)})`).join(', ');
+  // Vibe is user input, so we escape it. The rest is static structure.
   const prompt = `Create a 1-day itinerary for Cabo Rojo based on vibe: "${escapeHTML(vibe)}". Available: ${sanitizedPlacesList}. Return JSON array: [{ "time": "09:00 AM", "activity": "Title", "description": "Desc", "placeId": "id", "icon": "fa-icon" }]`;
+  
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
-    contents: escapeHTML(prompt),
+    contents: prompt, // Pass prompt directly without escaping quotes in JSON structure
     config: { responseMimeType: 'application/json' }
   });
   return JSON.parse(response.text);
@@ -169,7 +170,7 @@ async function handleScript({ placeName, description }: any) {
   const prompt = `Escribe un guión de audio guía de 30 segundos para "${escapeHTML(placeName)}" en Cabo Rojo. Tono: Amable, educado, como un vecino sabio. Texto plano.`;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
-    contents: escapeHTML(prompt)
+    contents: prompt
   });
   return { text: escapeHTML(response.text) };
 }
@@ -207,7 +208,7 @@ async function handleGenerateAltText({ imageUrl }: any) {
   const prompt = `Describe image for alt text. Concise, descriptive. Max 15 words.`;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash', 
-    contents: { parts: [{ image: { url: imageUrl } }, { text: escapeHTML(prompt) }] }
+    contents: { parts: [{ image: { url: imageUrl } }, { text: prompt }] }
   });
   return { text: escapeHTML(response.text) };
 }
