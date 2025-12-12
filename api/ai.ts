@@ -1,8 +1,6 @@
 
 import { GoogleGenAI } from "@google/genai";
 import { createClient } from '@supabase/supabase-js';
-// Removed: import { escapeHTML } from '../services/supabase'; 
-import { PlaceCategory } from '../types'; 
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 const supabase = createClient(
@@ -139,7 +137,7 @@ async function handleChat({ message, history, context }: any) {
   return new Response(JSON.stringify({ text: result.text }), { headers: { 'Content-Type': 'application/json' } });
 }
 
-async function handleIdentify({ image }) {
+async function handleIdentify({ image }: any) {
   const prompt = `Analyze this image. Is it a location in Cabo Rojo, Puerto Rico? Return JSON: { "matchedPlaceId": string | null, "explanation": "Explicación amable y clara en español." }`;
   
   const response = await ai.models.generateContent({
@@ -155,7 +153,7 @@ async function handleIdentify({ image }) {
   return new Response(escapeHTML(response.text), { headers: { 'Content-Type': 'application/json' } });
 }
 
-async function handleItinerary({ vibe, places }) {
+async function handleItinerary({ vibe, places }: any) {
   const sanitizedPlacesList = places
     .map((p: any) => `${escapeHTML(p.name)} (${escapeHTML(p.category)})`)
     .join(', ');
@@ -170,7 +168,7 @@ async function handleItinerary({ vibe, places }) {
   return new Response(escapeHTML(response.text), { headers: { 'Content-Type': 'application/json' } });
 }
 
-async function handleScript({ placeName, description }) {
+async function handleScript({ placeName, description }: any) {
   const prompt = `Escribe un guión de audio guía de 30 segundos para "${escapeHTML(placeName)}" en Cabo Rojo. Tono: Amable, educado, como un vecino sabio contando una historia. Texto plano.`;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
@@ -180,7 +178,8 @@ async function handleScript({ placeName, description }) {
 }
 
 async function handleCategorizeAndTag({ name, description }: { name: string, description: string }) {
-  const categories = Object.values(PlaceCategory).join(', ');
+  // Hardcoded categories to avoid import issues
+  const categories = "BEACH, FOOD, SIGHTS, LOGISTICS, LODGING, SHOPPING, HEALTH, NIGHTLIFE, ACTIVITY, SERVICE";
   const prompt = `
     Act as a tourism content analyst.
     Given a place name and description, identify the best primary category and relevant tags from a predefined list.
@@ -211,7 +210,7 @@ async function handleEnhanceDescription({ name, description }: { name: string, d
   return new Response(JSON.stringify({ text: escapeHTML(response.text) }), { headers: { 'Content-Type': 'application/json' } });
 }
 
-async function handleGenerateTips({ name, category, description }: { name: string, category: PlaceCategory, description: string }) {
+async function handleGenerateTips({ name, category, description }: { name: string, category: string, description: string }) {
   const prompt = `
     Actúa como 'El Veci', un experto local sabio de Cabo Rojo. 
     Genera un consejo práctico y útil para visitantes de "${escapeHTML(name)}" (Categoría: ${escapeHTML(category)}).
@@ -242,7 +241,7 @@ async function handleGenerateAltText({ imageUrl }: { imageUrl: string }) {
   return new Response(JSON.stringify({ text: escapeHTML(response.text) }), { headers: { 'Content-Type': 'application/json' } });
 }
 
-async function handleGenerateSeoMetaTags({ name, description, category }: { name: string, description: string, category: PlaceCategory }) {
+async function handleGenerateSeoMetaTags({ name, description, category }: { name: string, description: string, category: string }) {
   const prompt = `
     Generate SEO-optimized meta title and meta description for a tourism app entry.
     Place Name: "${escapeHTML(name)}"
