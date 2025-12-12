@@ -669,8 +669,8 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
       <div className="flex-1 overflow-hidden flex relative">
         
         {/* SIDEBAR LIST */}
-        <div className={`w-full md:w-80 border-r border-slate-700 bg-slate-900 flex flex-col ${isEditing || bulkMode ? 'hidden md:flex' : 'flex'} ${activeTab === 'insights' ? 'hidden md:hidden' : ''}`}>
-            {activeTab !== 'insights' && activeTab !== 'categories' && (
+        <div className={`w-full md:w-80 border-r border-slate-700 bg-slate-900 flex flex-col ${isEditing || bulkMode ? 'hidden md:flex' : 'flex'} ${activeTab === 'insights' || activeTab === 'logs' ? 'hidden md:hidden' : ''}`}>
+            {activeTab !== 'insights' && activeTab !== 'categories' && activeTab !== 'logs' && (
                 <div className="p-4 border-b border-slate-700">
                     <div className="relative">
                         <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
@@ -741,9 +741,82 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
         </div>
 
         {/* EDITOR AREA */}
-        <div className={`flex-1 bg-slate-900 overflow-y-auto custom-scrollbar ${isEditing || bulkMode ? 'absolute inset-0 z-10 md:static' : (activeTab === 'insights' ? 'w-full' : 'hidden md:flex flex-col items-center justify-center')}`}>
+        <div className={`flex-1 bg-slate-900 overflow-y-auto custom-scrollbar ${isEditing || bulkMode ? 'absolute inset-0 z-10 md:static' : ((activeTab === 'insights' || activeTab === 'logs') ? 'w-full' : 'hidden md:flex flex-col items-center justify-center')}`}>
             
-            {activeTab === 'categories' && editingCategory ? (
+            {activeTab === 'insights' ? (
+                <div className="p-8 max-w-5xl mx-auto animate-slide-up space-y-8">
+                    <div className="flex justify-between items-center">
+                        <h2 className="text-2xl font-black text-white flex items-center gap-3"><i className="fa-solid fa-chart-line text-teal-500"></i> Insights & Demand</h2>
+                        <button onClick={handleAnalyzeDemand} disabled={isAnalyzingDemand} className="bg-teal-600 hover:bg-teal-500 text-white px-4 py-2 rounded-xl font-bold shadow-lg flex items-center gap-2 transition-all">{isAnalyzingDemand ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-wand-magic-sparkles"></i>} <span>Run AI Analysis</span></button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
+                            <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wide mb-4">Top User Searches</h3>
+                            {topSearches.length > 0 ? (
+                                <div className="space-y-3">
+                                    {topSearches.map((s, i) => (
+                                        <div key={i} className="flex justify-between items-center bg-slate-900/50 p-3 rounded-xl border border-slate-700/50">
+                                            <span className="text-white font-bold text-sm">{s.term}</span>
+                                            <span className="text-teal-400 font-mono text-xs font-bold">{s.count} hits</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : <p className="text-slate-500 text-sm">No recent search data available.</p>}
+                        </div>
+
+                        <div className="bg-gradient-to-br from-indigo-900/40 to-purple-900/40 p-6 rounded-2xl border border-indigo-500/30 shadow-xl">
+                            <h3 className="text-sm font-bold text-indigo-200 uppercase tracking-wide mb-4 flex items-center gap-2"><i className="fa-solid fa-brain"></i> AI Analysis</h3>
+                            {demandAnalysis ? (
+                                <div className="space-y-4">
+                                    <div className="bg-indigo-950/50 p-4 rounded-xl border border-indigo-500/20">
+                                        <p className="text-xs font-bold text-indigo-300 mb-1">RECOMMENDATION</p>
+                                        <p className="text-white text-sm leading-relaxed">{demandAnalysis.recommendation}</p>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <p className="text-xs font-bold text-indigo-300">DETECTED GAPS</p>
+                                        {demandAnalysis.content_gaps?.map((gap: any, i: number) => (
+                                            <div key={i} className="flex items-center gap-2">
+                                                <span className={`w-2 h-2 rounded-full ${gap.urgency === 'HIGH' ? 'bg-red-500' : 'bg-yellow-500'}`}></span>
+                                                <span className="text-slate-200 text-xs font-bold">{gap.gap}</span>
+                                                <span className="text-slate-500 text-xs">- {gap.description}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-center py-10 opacity-50">
+                                    <i className="fa-solid fa-chart-pie text-4xl mb-2"></i>
+                                    <p className="text-sm">Click "Run AI Analysis" to process logs.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            ) : activeTab === 'logs' ? (
+                <div className="p-8 max-w-6xl mx-auto animate-slide-up h-full flex flex-col">
+                    <h2 className="text-2xl font-black text-white mb-6 flex items-center gap-3"><i className="fa-solid fa-terminal text-slate-500"></i> System Logs</h2>
+                    <div className="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden flex-1 flex flex-col">
+                        <div className="grid grid-cols-12 gap-4 bg-slate-900 p-4 border-b border-slate-800 font-bold text-xs text-slate-400 uppercase tracking-wide">
+                            <div className="col-span-2">Time</div>
+                            <div className="col-span-2">Action</div>
+                            <div className="col-span-3">Target</div>
+                            <div className="col-span-5">Details</div>
+                        </div>
+                        <div className="flex-1 overflow-y-auto custom-scrollbar">
+                            {logs.map(log => (
+                                <div key={log.id} className="grid grid-cols-12 gap-4 p-4 border-b border-slate-800/50 text-xs hover:bg-slate-900/30 transition-colors">
+                                    <div className="col-span-2 text-slate-500 font-mono">{new Date(log.created_at).toLocaleString()}</div>
+                                    <div className="col-span-2 font-bold text-teal-400">{log.action}</div>
+                                    <div className="col-span-3 text-white truncate">{log.place_name}</div>
+                                    <div className="col-span-5 text-slate-400 truncate font-mono">{log.details}</div>
+                                </div>
+                            ))}
+                            {logs.length === 0 && <div className="p-8 text-center text-slate-600 italic">No logs found.</div>}
+                        </div>
+                    </div>
+                </div>
+            ) : activeTab === 'categories' && editingCategory ? (
                 <div className="p-8 max-w-2xl mx-auto animate-slide-up">
                     <div className="flex justify-between items-center mb-6 bg-slate-800 p-4 rounded-xl border border-slate-700">
                         <span className="font-mono text-xs text-slate-500">{editingCategory.id ? 'EDITING' : 'CREATING'}</span>
