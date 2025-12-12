@@ -939,6 +939,61 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                     </Section>
                     <div className="h-12"></div>
                 </div>
+            ) : bulkMode ? (
+                <div className="p-8 max-w-4xl mx-auto animate-slide-up h-full flex flex-col">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-2xl font-black text-white flex items-center gap-3">
+                            <i className="fa-solid fa-layer-group text-purple-500"></i>
+                            Bulk Operations
+                        </h2>
+                        <button onClick={() => setBulkMode(false)} className="text-slate-400 hover:text-white"><i className="fa-solid fa-xmark text-xl"></i></button>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full min-h-0">
+                        <div className="flex flex-col gap-4">
+                            <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 block">Import Mode</label>
+                                <div className="flex bg-slate-900 rounded-lg p-1">
+                                    <button onClick={() => setBulkType('scout')} className={`flex-1 py-2 rounded-md text-xs font-bold transition-colors ${bulkType === 'scout' ? 'bg-purple-600 text-white' : 'text-slate-400'}`}>Scout (Google Maps/Names)</button>
+                                    <button onClick={() => setBulkType('json')} className={`flex-1 py-2 rounded-md text-xs font-bold transition-colors ${bulkType === 'json' ? 'bg-purple-600 text-white' : 'text-slate-400'}`}>Raw JSON</button>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 flex flex-col">
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Input Data</label>
+                                <textarea 
+                                    className="flex-1 w-full bg-slate-800 border border-slate-700 rounded-xl p-4 text-xs font-mono text-emerald-400 outline-none focus:border-purple-500 resize-none" 
+                                    placeholder={bulkType === 'scout' ? "Paste list of place names or Google Maps links (one per line)..." : "[ { \"name\": \"Place Name\", ... }, ... ]"}
+                                    value={bulkInput}
+                                    onChange={(e) => setBulkInput(e.target.value)}
+                                />
+                            </div>
+
+                            <button 
+                                onClick={handleBulkImport} 
+                                disabled={isBulkProcessing || !bulkInput}
+                                className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-4 rounded-xl shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {isBulkProcessing ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-play"></i>}
+                                <span>Start Processing</span>
+                            </button>
+                        </div>
+
+                        <div className="bg-slate-950 rounded-xl border border-slate-800 p-4 overflow-y-auto font-mono text-xs flex flex-col">
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 sticky top-0 bg-slate-950 pb-2 border-b border-slate-800">Execution Log</label>
+                            <div className="space-y-1">
+                                {bulkLogs.length === 0 && <span className="text-slate-600 italic">Ready to process...</span>}
+                                {bulkLogs.map((log, i) => (
+                                    <div key={i} className={`flex gap-2 ${log.status === 'error' ? 'text-red-400' : log.status === 'success' ? 'text-emerald-400' : 'text-slate-300'}`}>
+                                        <span className="opacity-50">[{new Date().toLocaleTimeString()}]</span>
+                                        <span>{log.msg}</span>
+                                    </div>
+                                ))}
+                                {isBulkProcessing && <div className="text-purple-400 animate-pulse">Processing next item...</div>}
+                            </div>
+                        </div>
+                    </div>
+                </div>
             ) : (
                 <div className="text-center text-slate-500 opacity-50"><i className="fa-solid fa-hand-pointer text-4xl mb-4"></i><p>{t('admin_select_item')}</p></div>
             )}
