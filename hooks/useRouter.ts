@@ -118,8 +118,7 @@ export const useRouter = (
 
             if (!placeSlug) {
                 setSelectedPlace(null);
-                // When going back to map view without a specific place, fly home.
-                setTimeout(() => onFlyTo(CABO_ROJO_CENTER, 13), 100); 
+                // Do NOT fly home here. Let the map stay at the last viewed position.
             } else {
                 const found = publishedPlaces.find(p => p.slug === placeSlug || p.id === placeSlug);
                 if (found) {
@@ -130,6 +129,7 @@ export const useRouter = (
                     }
                 } else {
                     setSelectedPlace(null); // Place not found, clear selection
+                    // If place is invalid, we might want to stay or reset. Resetting seems safer here for invalid links.
                     setTimeout(() => onFlyTo(CABO_ROJO_CENTER, 13), 100); 
                 }
             }

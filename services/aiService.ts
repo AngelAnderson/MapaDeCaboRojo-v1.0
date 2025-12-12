@@ -35,8 +35,22 @@ export const createConciergeChat = (places: Place[], events: Event[], userLoc: C
                 message,
                 history,
                 context: {
-                    places: places.map(p => ({ name: p.name, category: p.category, description: p.description })),
-                    events: events.map(e => ({ title: e.title, start: e.startTime })),
+                    // Send full objects (sanitized on server) instead of pre-mapping to text string
+                    // This allows the server to build a strict JSON "Local Database" for the AI
+                    places: places.map(p => ({ 
+                        id: p.id,
+                        name: p.name, 
+                        category: p.category, 
+                        description: p.description,
+                        amenities: p.amenities, // Crucial for "Do they have bathrooms?"
+                        status: p.status,
+                        address: p.address
+                    })),
+                    events: events.map(e => ({ 
+                        title: e.title, 
+                        start: e.startTime,
+                        description: e.description 
+                    })),
                     userLoc,
                     ...context
                 }
@@ -142,6 +156,3 @@ export const generateSeoMetaTags = async (name: string, description: string, cat
     const res = await callAI('generate-seo-meta-tags', { name, description, category });
     return extractJson(res);
 };
-
-// Removed findCoordinates and fetchPlaceDetails from here.
-// They will now reside in services/placesService.ts and use the Google Places API via a proxy.

@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import L from 'leaflet';
 import { Place, PlaceCategory, Coordinates, Event, ParkingStatus, Collection } from './types';
-import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, COLLECTIONS, CABO_ROJO_CENTER, DEFAULT_PLACE_ID } from './constants';
+import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, COLLECTIONS, CABO_ROJO_CENTER, DEFAULT_PLACE_ID, DEFAULT_PLACE_ZOOM } from './constants';
 import PlaceCard from './components/PlaceCard';
 import Concierge from './components/Concierge';
 import Admin from './components/Admin';
@@ -232,21 +232,6 @@ const MainApp: React.FC = () => {
   // Initialize Router (Handles all URL state safely)
   useRouter(publishedPlaces, selectedPlace, setSelectedPlace, flyTo);
 
-  // NO LONGER automatically requesting geolocation on mount
-  // useEffect(() => {
-  //   if (navigator.geolocation) {
-  //       navigator.geolocation.getCurrentPosition(
-  //           (pos) => {
-  //               const { latitude, longitude } = pos.coords;
-  //               setUserLocation({ lat: latitude, lng: longitude });
-  //               // Only show dot if map is loaded, handled by useMapEngine internal effect/check
-  //           },
-  //           () => {}, // ignore error
-  //           { enableHighAccuracy: false }
-  //       );
-  //   }
-  // }, []);
-
   // Fix: Map Layout Invalidation
   useEffect(() => {
     if (mapLoaded) invalidateSize();
@@ -284,13 +269,25 @@ const MainApp: React.FC = () => {
     if (action === 'contact') setIsContactOpen(true);
   };
 
-  const handleTabChange = (tabId: string) => {
+  const handleTabChange = (tabId: string, forceReset: boolean = true) => {
       setActiveTab(tabId);
       if (tabId === 'map') {
-          setActiveGroup('ALL');
-          setActiveCollection(null);
-          setSearchText('');
-          flyHome();
+          // If forceReset is true (Default/BottomNav click), we reset the map to home.
+          // If forceReset is false (Explore close / Place select), we just switch the view, keeping map context.
+          if (forceReset) {
+              setActiveGroup('ALL');
+              setActiveCollection(null);
+              setSearchText('');
+              setSelectedPlace(null); // Ensure place card is closed
+              
+              // Logic: Reset to Landing Place OR Default Center (same behavior as Router on load)
+              const landingPlace = publishedPlaces.find(p => p.isLanding);
+              if (landingPlace && landingPlace.coords) {
+                  flyTo(landingPlace.coords, landingPlace.defaultZoom || DEFAULT_PLACE_ZOOM);
+              } else {
+                  flyHome(); // Defaults to CABO_ROJO_CENTER
+              }
+          }
       }
   };
 
@@ -373,7 +370,11 @@ const MainApp: React.FC = () => {
       {/* Sheets & Modals */}
       <ExplorerSheet 
         places={filteredList} 
-        onSelect={(p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); }} // Use p.defaultZoom here
+        onSelect={(p) => { 
+            setSelectedPlace(p); 
+            flyTo(p.coords, p.defaultZoom);
+            handleTabChange('map', false); // Switch to map tab, but DO NOT reset map position
+        }} 
         isVisible={activeTab === 'explore'} 
         searchText={searchText}
         onSearchChange={setSearchText}

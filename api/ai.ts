@@ -16,20 +16,10 @@ export default async function handler(req: Request) {
   try {
     const { action, payload } = await req.json();
 
-    // RED TEAM / SECURITY NOTE:
-    // All AI endpoints are susceptible to abuse (cost, resource exhaustion).
-    // Implement robust server-side rate-limiting for ALL actions here to prevent:
-    // - Excessive API calls to Gemini (cost overruns).
-    // - Denial-of-Service (DoS) against your serverless functions.
-    // Consider adding IP-based or user-based rate limits.
-
     switch (action) {
       case 'chat':
         return await handleChat(payload);
       case 'identify':
-        // RED TEAM / SECURITY NOTE:
-        // This endpoint involves image processing (potentially expensive).
-        // Ensure strong server-side rate-limiting is applied specifically to 'identify' requests.
         return await handleIdentify(payload);
       case 'itinerary':
         return await handleItinerary(payload);
@@ -43,15 +33,12 @@ export default async function handler(req: Request) {
         return await handleGenerateTips(payload);
       case 'generate-alt-text':
         return await handleGenerateAltText(payload);
-      case 'generate-seo-meta-tags': // New AI action
+      case 'generate-seo-meta-tags':
         return await handleGenerateSeoMetaTags(payload);
       default:
         return new Response("Unknown action", { status: 400 });
     }
   } catch (e: any) {
-    // RED TEAM / SECURITY NOTE:
-    // Avoid exposing raw error messages to the client.
-    // Log detailed errors securely on the server, but return generic messages.
     console.error("AI API Error:", e);
     return new Response(JSON.stringify({ error: "An AI service error occurred." }), { 
         status: 500,
@@ -63,52 +50,85 @@ export default async function handler(req: Request) {
 // --- HANDLERS ---
 
 async function handleChat({ message, history, context }: any) {
-  // --- SECURITY FIX: Sanitize context variables and user message before passing to AI ---
-  const sanitizedPlacesList = context.places
-    .map((p: any) => `${escapeHTML(p.name)} (${escapeHTML(p.category)}): ${escapeHTML(p.description)}`)
-    .join('\n');
-  
+  // 1. Prepare "Ground Truth" Data
+  // We strictly structure this so the AI knows exactly what is "Verified Local Data".
+  const localDatabase = {
+    places: context.places.map((p: any) => ({
+      id: p.id,
+      name: escapeHTML(p.name),
+      category: p.category,
+      description: escapeHTML(p.description),
+      amenities: p.amenities || {}, // Pass amenities for better answers (parking, restrooms)
+      status: p.status,
+      address: escapeHTML(p.address)
+    })),
+    events: context.events.map((e: any) => ({
+      title: escapeHTML(e.title),
+      start: e.start,
+      description: escapeHTML(e.description)
+    }))
+  };
+
   const systemInstruction = `
-    You are 'El Veci', a local concierge for Cabo Rojo, Puerto Rico. 
-    Speak in 'Spanglish' with local Puerto Rican slang (Boricua style). Be helpful, friendly, and cool.
+    You are 'El Veci', the smartest local concierge for Cabo Rojo, Puerto Rico.
+    You speak in 'Spanglish' with local Boricua slang (e.g., 'Wepa', 'Bregamos', 'Brutal', 'Jangueo').
     
-    Context:
-    Date/Time: ${escapeHTML(context.date)} ${escapeHTML(context.time)}
-    Weather: ${escapeHTML(context.weather)}
-    User Location: ${context.userLoc ? `${escapeHTML(String(context.userLoc.lat))}, ${escapeHTML(String(context.userLoc.lng))}` : "Unknown"}
+    ### YOUR KNOWLEDGE SOURCES ###
     
-    Places Database:
-    ${sanitizedPlacesList}
+    1. **LOCAL DATABASE (High Priority):** 
+       I have provided you with a JSON object containing the *official* list of places and events.
+       ${JSON.stringify(localDatabase).substring(0, 30000)} ... (truncated for token limit safety if needed)
+       
+    2. **GOOGLE SEARCH (Fallback):**
+       You have access to Google Search. Use it for:
+       - Weather, News, Real-time status.
+       - Details about a place *not* in the Local Database.
+       - Verifying specific facts (like "Is X open on holidays?") if the Local Database is vague.
+
+    ### CRITICAL RULES TO AVOID HALLUCINATION ###
     
-    Answer questions about where to go. If you recommend a place, use its exact name.
+    1. **IF IT'S IN THE DB:** Recommend it enthusiastically. Use the exact Name and Address from the DB.
+    2. **IF IT'S NOT IN THE DB:** Do NOT invent it. Say: "No lo tengo en mi lista oficial, pero déjame buscar..." and then use Google Search to find it.
+    3. **NO FAKE ATTRIBUTES:** If the DB says 'amenities: {}', do not assume it has parking. Check Google Search or say you aren't sure.
+    4. **LOCATION:** You are strictly focused on Cabo Rojo, Puerto Rico. If a user asks for pizza, look for pizza *in Cabo Rojo*.
+
+    ### CONTEXT ###
+    Current Time: ${escapeHTML(context.date)} ${escapeHTML(context.time)}
+    User Location: ${context.userLoc ? `${context.userLoc.lat}, ${context.userLoc.lng}` : "Unknown"}
   `;
 
-  // Reconstruct Chat History for Gemini SDK, ensuring messages are sanitized
+  // Reconstruct Chat History
   const chatHistory = history.map((msg: any) => ({
     role: msg.role,
-    parts: [{ text: escapeHTML(msg.text) }] // Sanitize historical messages
+    parts: [{ text: escapeHTML(msg.text) }]
   }));
 
+  // Create Chat with Google Search Tool enabled
   const chat = ai.chats.create({
     model: 'gemini-2.5-flash',
     history: chatHistory,
-    config: { systemInstruction }
+    config: { 
+      systemInstruction,
+      tools: [{ googleSearch: {} }], // ENABLE GROUNDING
+    }
   });
 
-  const result = await chat.sendMessage(escapeHTML(message)); // Sanitize current message
-  return new Response(JSON.stringify({ text: escapeHTML(result.text) }), { headers: { 'Content-Type': 'application/json' } });
+  const result = await chat.sendMessage(escapeHTML(message));
+  
+  // The result.text will contain the answer, potentially enriched by Search.
+  // Grounding metadata is available in result.candidates[0].groundingMetadata if needed later.
+  return new Response(JSON.stringify({ text: result.text }), { headers: { 'Content-Type': 'application/json' } });
 }
 
 async function handleIdentify({ image }) {
-  // No direct text prompt from user here, but if there were, it would be sanitized.
   const prompt = `Analyze this image. Is it a location in Cabo Rojo, Puerto Rico? Return JSON: { "matchedPlaceId": string | null, "explanation": "Spanglish explanation" }`;
   
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: {
       parts: [
-        { inlineData: { mimeType: 'image/jpeg', data: image } }, // Image data doesn't need HTML escaping
-        { text: escapeHTML(prompt) } // Sanitize the fixed prompt
+        { inlineData: { mimeType: 'image/jpeg', data: image } },
+        { text: escapeHTML(prompt) }
       ]
     },
     config: { responseMimeType: 'application/json' }
@@ -117,7 +137,6 @@ async function handleIdentify({ image }) {
 }
 
 async function handleItinerary({ vibe, places }) {
-  // --- SECURITY FIX: Sanitize context variables ---
   const sanitizedPlacesList = places
     .map((p: any) => `${escapeHTML(p.name)} (${escapeHTML(p.category)})`)
     .join(', ');
@@ -126,18 +145,17 @@ async function handleItinerary({ vibe, places }) {
   
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
-    contents: escapeHTML(prompt), // Sanitize the constructed prompt
+    contents: escapeHTML(prompt),
     config: { responseMimeType: 'application/json' }
   });
   return new Response(escapeHTML(response.text), { headers: { 'Content-Type': 'application/json' } });
 }
 
 async function handleScript({ placeName, description }) {
-  // --- SECURITY FIX: Sanitize placeName and description ---
   const prompt = `Write a 30-sec audio guide script for "${escapeHTML(placeName)}" in Cabo Rojo (Puerto Rico style slang). Desc: "${escapeHTML(description)}". Plain text.`;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
-    contents: escapeHTML(prompt) // Sanitize the constructed prompt
+    contents: escapeHTML(prompt)
   });
   return new Response(JSON.stringify({ text: escapeHTML(response.text) }), { headers: { 'Content-Type': 'application/json' } });
 }
@@ -147,14 +165,10 @@ async function handleCategorizeAndTag({ name, description }: { name: string, des
   const prompt = `
     Act as a tourism content analyst.
     Given a place name and description, identify the best primary category and relevant tags from a predefined list.
-    
     Predefined Categories: ${categories}
-    
     Place Name: "${escapeHTML(name)}"
     Description: "${escapeHTML(description)}"
-    
-    Return a JSON object with 'category' (one of the predefined categories) and 'tags' (array of strings, max 5, in Spanish).
-    Example: {"category": "BEACH", "tags": ["playa", "familiar", "arena blanca"]}
+    Return a JSON object with 'category' and 'tags' (array of strings, max 5, in Spanish).
   `;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
@@ -168,7 +182,6 @@ async function handleEnhanceDescription({ name, description }: { name: string, d
   const prompt = `
     Rewrite the following description for a tourism app. Make it more engaging, descriptive, and concise for "${escapeHTML(name)}" in Cabo Rojo, Puerto Rico.
     Maintain a friendly, inviting tone. Keep it under 150 words.
-    
     Original Description: "${escapeHTML(description)}"
   `;
   const response = await ai.models.generateContent({
@@ -183,7 +196,6 @@ async function handleGenerateTips({ name, category, description }: { name: strin
     Act as 'El Veci', a local expert in Cabo Rojo. 
     Generate a concise, helpful, and "Boricua" (Puerto Rican slang) style tip for visitors to "${escapeHTML(name)}" (Category: ${escapeHTML(category)}).
     Context: "${escapeHTML(description)}"
-    
     The tip should be practical and unique, reflecting local knowledge. Keep it under 50 words.
   `;
   const response = await ai.models.generateContent({
@@ -194,16 +206,15 @@ async function handleGenerateTips({ name, category, description }: { name: strin
 }
 
 async function handleGenerateAltText({ imageUrl }: { imageUrl: string }) {
-  // Assuming imageUrl is a publicly accessible URL for the AI to fetch.
   const prompt = `
     Describe this image for an accessibility alt text. Focus on key visual elements of the place.
     Keep it concise and descriptive, under 15 words.
   `;
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash', // Vision capable model
+    model: 'gemini-2.5-flash', 
     contents: {
       parts: [
-        { image: { url: imageUrl } }, // Pass URL directly for vision model
+        { image: { url: imageUrl } },
         { text: escapeHTML(prompt) }
       ]
     }
@@ -211,20 +222,15 @@ async function handleGenerateAltText({ imageUrl }: { imageUrl: string }) {
   return new Response(JSON.stringify({ text: escapeHTML(response.text) }), { headers: { 'Content-Type': 'application/json' } });
 }
 
-// New AI action handler for SEO Meta Tags
 async function handleGenerateSeoMetaTags({ name, description, category }: { name: string, description: string, category: PlaceCategory }) {
   const prompt = `
     Generate SEO-optimized meta title and meta description for a tourism app entry.
-    
     Place Name: "${escapeHTML(name)}"
     Category: "${escapeHTML(category)}"
     Description: "${escapeHTML(description)}"
-    
-    Meta Title: Should be under 60 characters, include place name and "Cabo Rojo", and be keyword-rich.
-    Meta Description: Should be under 160 characters, compelling, descriptive, and include relevant keywords for tourism in Cabo Rojo.
-    
-    Return a JSON object: {"metaTitle": "string", "metaDescription": "string"}
-    Example: {"metaTitle": "Playa Sucia: Joya de Cabo Rojo, PR", "metaDescription": "Descubre Playa Sucia, la playa más virgen de Cabo Rojo, Puerto Rico. Aguas turquesas, arena blanca y vistas espectaculares del Faro Los Morrillos."}
+    Meta Title: Under 60 chars, keyword-rich.
+    Meta Description: Under 160 chars, compelling.
+    Return JSON: {"metaTitle": "string", "metaDescription": "string"}
   `;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',

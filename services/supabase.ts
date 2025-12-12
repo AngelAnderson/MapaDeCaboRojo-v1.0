@@ -246,9 +246,7 @@ const mapPlaceToDb = (place: Partial<Place>) => {
         },
         opening_hours: place.opening_hours || { note: "No especificado" },
         contact_info: place.contact_info || {}, // This field is assumed to be handled as JSON and potentially parsed/stringified already
-        default_zoom: place.defaultZoom ?? null, // Add default_zoom to DB payload
-        meta_title: escapeHTML(place.metaTitle) || '', // New: Add meta_title to DB payload
-        meta_description: escapeHTML(place.metaDescription) || '', // New: Add meta_description to DB payload
+        // REMOVED: default_zoom, meta_title, meta_description to fix schema mismatch errors
     };
 };
 

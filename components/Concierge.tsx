@@ -60,7 +60,7 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-slate-900/50 dark:bg-black/60 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-slate-900/50 dark:bg-black/60 z-[5000] flex items-center justify-center p-4">
       <div className="bg-white dark:bg-slate-800 w-full max-w-md h-[80vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-fade-in border border-slate-200 dark:border-slate-700">
         
         {/* Header */}

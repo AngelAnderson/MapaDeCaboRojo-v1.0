@@ -23,7 +23,7 @@ interface ExplorerSheetProps {
   activeCollectionId?: string | null;
   onCameraClick?: () => void; 
   userLocation?: Coordinates;
-  onTabChange: (tabId: string) => void; // Added for explicit close button
+  onTabChange: (tabId: string, forceReset?: boolean) => void; // Updated signature
 }
 
 const ExplorerSheet: React.FC<ExplorerSheetProps> = ({ 
@@ -106,7 +106,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                 <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{resultCount}</span>
                 {/* Close Button */}
                 <button 
-                  onClick={() => onTabChange('map')} 
+                  onClick={() => onTabChange('map', false)} 
                   className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 p-2 rounded-full"
                   aria-label={t('close')}
                 >
