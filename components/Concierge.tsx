@@ -191,7 +191,7 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
              </button>
 
              <button 
-                onClick={() => handleSend(language === 'es' ? "Lista los próximos 5 eventos usando SOLO tu base de datos local (Supabase). No busques en internet. Incluye fecha y hora." : "List the next 5 upcoming events using ONLY your local database. Do not search the internet. Include date and time.")} 
+                onClick={() => handleSend(language === 'es' ? "Lista los eventos de las próximas 2 semanas que tengas en tu base de datos. No busques en internet. Incluye fecha y hora." : "List events for the next 2 weeks from your database. Do not search the internet. Include date and time.")} 
                 disabled={isLoading} 
                 className="bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-4 py-3 rounded-xl text-xs font-bold border border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
              >
