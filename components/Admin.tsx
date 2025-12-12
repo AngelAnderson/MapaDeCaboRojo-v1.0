@@ -709,6 +709,18 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                             <button onClick={() => setEditingCategory({ id: '', label_en: '', label_es: '', color: '#888888', icon: 'tag' })} className="flex-1 p-4 rounded-xl border-2 border-dashed border-slate-700 text-slate-400 hover:border-teal-500 hover:text-teal-500 hover:bg-slate-800 transition-all font-bold text-sm flex flex-col items-center justify-center gap-1"><i className="fa-solid fa-plus text-lg"></i> <span className="text-[10px]">New Cat</span></button>
                             <button onClick={handleSeedCategories} className="flex-1 p-4 rounded-xl border-2 border-dashed border-slate-700 text-orange-400 hover:border-orange-500 hover:text-orange-500 hover:bg-orange-900/10 transition-all font-bold text-sm flex flex-col items-center justify-center gap-1"><i className="fa-solid fa-database text-lg"></i> <span className="text-[10px]">Initialize Defaults</span></button>
                         </div>
+                        
+                        {/* WARNING BANNER FOR MISSING DEFAULTS */}
+                        {categories.length > 0 && categories.length < 5 && !categories.some(c => c.id === 'BEACH') && (
+                             <div className="bg-amber-900/30 border border-amber-500/30 p-3 rounded-xl flex items-center gap-3">
+                                 <i className="fa-solid fa-triangle-exclamation text-amber-500 text-xl"></i>
+                                 <div className="flex-1">
+                                     <p className="text-amber-200 font-bold text-xs">Defaults Hidden</p>
+                                     <p className="text-amber-400/80 text-[10px] leading-tight">You're in Custom Mode. Click 'Initialize Defaults' to restore standard categories.</p>
+                                 </div>
+                             </div>
+                        )}
+
                         {categories.map(c => (
                             <div key={c.id} onClick={() => setEditingCategory(c)} className={`p-4 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${editingCategory?.id === c.id ? 'bg-teal-900/20 border-teal-500/50' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'}`}>
                                 <div className="w-8 h-8 rounded flex items-center justify-center" style={{ backgroundColor: c.color }}><i className={`fa-solid fa-${c.icon} text-white text-xs`}></i></div>

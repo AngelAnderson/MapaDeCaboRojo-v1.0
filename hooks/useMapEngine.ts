@@ -8,47 +8,70 @@ import { escapeHTML } from '../services/supabase';
 // --- INTERNAL HELPERS ---
 
 const getSmartIcon = (place: Place, categories?: Category[]): string => {
-    if (place.customIcon) return place.customIcon;
+    let icon = '';
+
+    // 1. Custom Icon (Highest Priority)
+    if (place.customIcon) {
+        icon = place.customIcon;
+    }
     
-    // Look up icon from dynamic categories if available
-    if (categories) {
+    // 2. Dynamic Category from DB
+    else if (categories) {
         const cat = categories.find(c => c.id === place.category);
-        if (cat && cat.icon) return cat.icon;
+        if (cat && cat.icon) {
+            icon = cat.icon;
+        }
     }
 
-    const lowerName = place.name.toLowerCase();
-    
-    // Keyword-based icon overrides
-    const iconMap: Record<string, string> = {
-      'hospital': 'fa-hospital',
-      'farmacia': 'fa-pills',
-      'policia': 'fa-shield-halved',
-      'mechanic': 'fa-wrench',
-      'gasolina': 'fa-gas-pump',
-      'pizza': 'fa-pizza-slice',
-      'coffee': 'fa-mug-hot',
-      'burger': 'fa-burger'
-    };
+    // 3. Keyword Match (Smart Fallback if no specific category icon found yet)
+    if (!icon) {
+        const lowerName = place.name.toLowerCase();
+        const iconMap: Record<string, string> = {
+            'hospital': 'fa-hospital',
+            'farmacia': 'fa-pills',
+            'policia': 'fa-shield-halved',
+            'mechanic': 'fa-wrench',
+            'gasolina': 'fa-gas-pump',
+            'pizza': 'fa-pizza-slice',
+            'coffee': 'fa-mug-hot',
+            'cafe': 'fa-mug-hot',
+            'burger': 'fa-burger',
+            'sushi': 'fa-fish',
+            'tacos': 'fa-pepper-hot',
+            'ice cream': 'fa-ice-cream',
+            'beer': 'fa-beer-mug-empty',
+            'bar': 'fa-martini-glass-citrus',
+            'faro': 'fa-lighthouse'
+        };
 
-    for (const key in iconMap) {
-      if (lowerName.includes(key)) return iconMap[key];
+        for (const key in iconMap) {
+            if (lowerName.includes(key)) {
+                icon = iconMap[key];
+                break;
+            }
+        }
     }
     
-    // Category-based fallbacks (Static)
-    switch (place.category) { 
-        case 'BEACH': return 'fa-umbrella-beach'; 
-        case 'FOOD': return 'fa-utensils'; 
-        case 'SIGHTS': return 'fa-binoculars'; 
-        case 'LOGISTICS': return 'fa-gas-pump'; 
-        case 'LODGING': return 'fa-bed'; 
-        case 'NIGHTLIFE': return 'fa-champagne-glasses'; 
-        case 'HEALTH': return 'fa-staff-snake';
-        case 'SHOPPING': return 'fa-bag-shopping';
-        case 'ACTIVITY': return 'fa-person-hiking';
-        case 'CULTURE': return 'fa-masks-theater';
-        case 'SERVICE': return 'fa-bell-concierge';
-        default: return 'fa-location-dot'; 
+    // 4. Static Category Fallback (Last Resort)
+    if (!icon) {
+        switch (place.category) { 
+            case 'BEACH': icon = 'fa-umbrella-beach'; break;
+            case 'FOOD': icon = 'fa-utensils'; break;
+            case 'SIGHTS': icon = 'fa-binoculars'; break;
+            case 'LOGISTICS': icon = 'fa-gas-pump'; break;
+            case 'LODGING': icon = 'fa-bed'; break;
+            case 'NIGHTLIFE': icon = 'fa-champagne-glasses'; break;
+            case 'HEALTH': icon = 'fa-staff-snake'; break;
+            case 'SHOPPING': icon = 'fa-bag-shopping'; break;
+            case 'ACTIVITY': icon = 'fa-person-hiking'; break;
+            case 'CULTURE': icon = 'fa-masks-theater'; break;
+            case 'SERVICE': icon = 'fa-bell-concierge'; break;
+            default: icon = 'fa-location-dot'; break;
+        }
     }
+
+    // Ensure FontAwesome prefix
+    return icon.startsWith('fa-') ? icon : `fa-${icon}`;
 };
 
 const generateMarkerHtml = (place: Place, categories?: Category[]): string => { 
