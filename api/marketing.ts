@@ -3,59 +3,35 @@ import { GoogleGenAI } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-// Node-safe HTML Escaper
 const escapeHTML = (str: string | undefined): string => {
   if (typeof str !== 'string') return '';
-  return str.replace(/[&<>'"]/g, 
-    tag => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      "'": '&#39;',
-      '"': '&quot;'
-    }[tag] || tag)
-  );
+  return str.replace(/[&<>'"]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
 };
 
-export default async function handler(request: Request) {
-  if (request.method !== 'POST') return new Response("Method not allowed", { status: 405 });
+export default async function handler(req: any, res: any) {
+  if (req.method !== 'POST') {
+    return res.status(405).send("Method not allowed");
+  }
   
-  const body = await request.json();
-  const { name, category, platform, tone = 'chill', language = 'spanglish' } = body;
+  const { name, category, platform, tone = 'chill', language = 'spanglish' } = req.body;
 
-  // --- SECURITY FIX: Sanitize all incoming user-controlled inputs ---
   const sanitizedName = escapeHTML(name);
   const sanitizedCategory = escapeHTML(category);
   const sanitizedPlatform = escapeHTML(platform);
   const sanitizedTone = escapeHTML(tone);
   const sanitizedLanguage = escapeHTML(language);
 
-  const toneDesc = sanitizedTone === 'hype' ? 'Excited, High Energy, use many emojis !!!' : sanitizedTone === 'professional' ? 'Formal, Informative, Polite' : 'Relaxed, Friendly, Local vibe';
-  const langDesc = sanitizedLanguage === 'en' ? 'English' : sanitizedLanguage === 'es' ? 'Spanish' : 'Spanglish (Puerto Rico Style)';
+  const toneDesc = sanitizedTone === 'hype' ? 'Excited, High Energy' : sanitizedTone === 'professional' ? 'Formal, Polite' : 'Relaxed, Friendly';
+  const langDesc = sanitizedLanguage === 'en' ? 'English' : sanitizedLanguage === 'es' ? 'Spanish' : 'Spanglish (PR Style)';
 
   let prompt = "";
   let isJson = false;
 
   if (sanitizedPlatform === 'campaign_bundle') {
       isJson = true;
-      prompt = `Act as a Social Media Manager for "${sanitizedName}" (${sanitizedCategory}) in Cabo Rojo, Puerto Rico.
-      Tone: ${toneDesc}.
-      Language: ${langDesc}.
-
-      Generate a Campaign Bundle in JSON format:
-      {
-        "instagram_caption": "Caption with emojis and hashtags (under 200 chars)",
-        "story_script": "Short script for a 15s video (Scene + Text, under 100 words)",
-        "email_subject": "Catchy email subject line (under 50 chars)",
-        "email_body": "Short promo email body (under 150 words)"
-      }
-      Ensure all generated text is HTML escaped within the JSON values.`;
+      prompt = `Act as Social Media Manager for "${sanitizedName}" (${sanitizedCategory}) in Cabo Rojo. Tone: ${toneDesc}. Lang: ${langDesc}. Generate JSON Campaign Bundle: { "instagram_caption": "", "story_script": "", "email_subject": "", "email_body": "" }`;
   } else {
-      prompt = `Generate a ${sanitizedPlatform} copy for "${sanitizedName}" (${sanitizedCategory}) in Cabo Rojo.
-      Tone: ${toneDesc}.
-      Language: ${langDesc}.
-      Include local emojis and hashtags. Max 150 words.
-      Ensure all generated text is HTML escaped.`;
+      prompt = `Generate ${sanitizedPlatform} copy for "${sanitizedName}" (${sanitizedCategory}). Tone: ${toneDesc}. Lang: ${langDesc}. Max 150 words.`;
   }
 
   try {
@@ -65,16 +41,11 @@ export default async function handler(request: Request) {
         config: isJson ? { responseMimeType: "application/json" } : undefined
       });
 
-      // --- SECURITY FIX: Always HTML escape the final output from AI ---
-      // If it's JSON, the internal values should already be escaped by the prompt.
-      // If it's plain text, escape the whole thing.
       const escapedText = isJson ? response.text : escapeHTML(response.text);
 
-      return new Response(JSON.stringify({ text: escapedText, isJson }), {
-          headers: { 'Content-Type': 'application/json' }
-      });
+      return res.status(200).json({ text: escapedText, isJson });
   } catch (e) {
       console.error("AI Marketing API Error:", e);
-      return new Response(JSON.stringify({ error: "Failed to generate marketing copy." }), { status: 500 });
+      return res.status(500).json({ error: "Failed to generate marketing copy." });
   }
 }

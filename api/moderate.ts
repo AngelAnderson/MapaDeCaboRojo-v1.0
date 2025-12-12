@@ -1,23 +1,20 @@
+
 import { GoogleGenAI } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
-export default async function handler(request: Request) {
-  if (request.method !== 'POST') return new Response("Method not allowed", { status: 405 });
+export default async function handler(req: any, res: any) {
+  if (req.method !== 'POST') {
+    return res.status(405).send("Method not allowed");
+  }
   
-  const body = await request.json();
-  const { name, description } = body;
+  const { name, description } = req.body;
 
-  const prompt = `Analiza el siguiente texto sugerido por un usuario para un directorio turístico.
+  const prompt = `Analiza el siguiente texto sugerido por un usuario.
         Nombre: ${name}
         Descripción: ${description}
-        
         Responde SOLAMENTE con un objeto JSON:
-        {"safe": boolean, "reason": "string (en español boricua, estilo El Veci)"}
-        
-        Reglas:
-        1. safe: false si contiene insultos, pornografía, spam, gibberish.
-        2. safe: true si parece un lugar legítimo.
+        {"safe": boolean, "reason": "string (español boricua)"}
   `;
 
   try {
@@ -26,11 +23,8 @@ export default async function handler(request: Request) {
         contents: prompt,
         config: { responseMimeType: "application/json" }
       });
-
-      return new Response(response.text || "{}", {
-          headers: { 'Content-Type': 'application/json' }
-      });
+      return res.status(200).json(JSON.parse(response.text || "{}"));
   } catch (e) {
-      return new Response(JSON.stringify({ safe: true, error: "AI Unreachable" }), { status: 200 });
+      return res.status(200).json({ safe: true, error: "AI Unreachable" });
   }
 }

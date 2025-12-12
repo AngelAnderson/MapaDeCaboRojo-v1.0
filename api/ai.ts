@@ -8,7 +8,7 @@ const supabase = createClient(
   process.env.VITE_SUPABASE_ANON_KEY || ''
 );
 
-// Node-safe HTML Escaper (Regex based)
+// Node-safe HTML Escaper
 const escapeHTML = (str: string | undefined): string => {
   if (typeof str !== 'string') return '';
   return str.replace(/[&<>'"]/g, 
@@ -22,48 +22,60 @@ const escapeHTML = (str: string | undefined): string => {
   );
 };
 
-export default async function handler(req: Request) {
-  if (req.method !== 'POST') return new Response("Method not allowed", { status: 405 });
+export default async function handler(req: any, res: any) {
+  if (req.method !== 'POST') {
+    return res.status(405).send("Method not allowed");
+  }
 
   try {
-    const { action, payload } = await req.json();
+    // In Vercel Node.js runtime, req.body is already parsed if Content-Type is application/json
+    const { action, payload } = req.body;
 
+    let result;
     switch (action) {
       case 'chat':
-        return await handleChat(payload);
+        result = await handleChat(payload);
+        break;
       case 'identify':
-        return await handleIdentify(payload);
+        result = await handleIdentify(payload);
+        break;
       case 'itinerary':
-        return await handleItinerary(payload);
+        result = await handleItinerary(payload);
+        break;
       case 'script':
-        return await handleScript(payload);
+        result = await handleScript(payload);
+        break;
       case 'categorize-tags':
-        return await handleCategorizeAndTag(payload);
+        result = await handleCategorizeAndTag(payload);
+        break;
       case 'enhance-description':
-        return await handleEnhanceDescription(payload);
+        result = await handleEnhanceDescription(payload);
+        break;
       case 'generate-tips':
-        return await handleGenerateTips(payload);
+        result = await handleGenerateTips(payload);
+        break;
       case 'generate-alt-text':
-        return await handleGenerateAltText(payload);
+        result = await handleGenerateAltText(payload);
+        break;
       case 'generate-seo-meta-tags':
-        return await handleGenerateSeoMetaTags(payload);
+        result = await handleGenerateSeoMetaTags(payload);
+        break;
       default:
-        return new Response("Unknown action", { status: 400 });
+        return res.status(400).send("Unknown action");
     }
+
+    // Send the result back
+    return res.status(200).json(result);
+
   } catch (e: any) {
     console.error("AI API Error:", e);
-    return new Response(JSON.stringify({ error: "An AI service error occurred." }), { 
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-    });
+    return res.status(500).json({ error: "An AI service error occurred." });
   }
 }
 
-// --- HANDLERS ---
+// --- HANDLERS (Now returning plain objects, not Response objects) ---
 
 async function handleChat({ message, history, context }: any) {
-  // 1. Prepare "Ground Truth" Data
-  // We strictly structure this so the AI knows exactly what is "Verified Local Data".
   const localDatabase = {
     places: context.places.map((p: any) => ({
       id: p.id,
@@ -86,60 +98,45 @@ async function handleChat({ message, history, context }: any) {
     Tu trabajo es ser el guía más servicial, amable y paciente de Cabo Rojo, Puerto Rico.
     
     ### TU PERSONALIDAD ###
-    1. **Sabiduría y Paciencia:** Hablas de manera clara, pausada y respetuosa. Imagina que le explicas las cosas a una persona de 105 años que quieres mucho. Usa un tono cálido y de "buen vecino".
-    2. **Cero Drama:** Te mantienes alejado de controversias, chismes o negatividad. Todo es constructivo y positivo.
-    3. **Claridad:** Evita la jerga moderna confusa (nada de "jangueo intenso" o palabras de Gen-Z). Usa un español de Puerto Rico clásico, educado y entendible.
-    4. **El Toque Final:** SIEMPRE termina tu respuesta con un chiste sano, corto y simpático (puede ser de pepito, de jíbaros, o bobo).
+    1. **Sabiduría y Paciencia:** Hablas de manera clara, pausada y respetuosa. Imagina que le explicas las cosas a una persona de 105 años. Usa un tono cálido.
+    2. **Cero Drama:** Te mantienes alejado de controversias. Todo es constructivo y positivo.
+    3. **Claridad:** Evita la jerga moderna confusa. Usa un español de Puerto Rico clásico y educado.
+    4. **El Toque Final:** SIEMPRE termina tu respuesta con un chiste sano, corto y simpático.
 
     ### TUS FUENTES DE INFORMACIÓN ###
-    1. **BASE DE DATOS LOCAL (Prioridad Máxima):** 
-       Aquí tienes la lista oficial de lugares y eventos en Cabo Rojo. Úsala para recomendar sitios.
-       ${JSON.stringify(localDatabase).substring(0, 30000)} ... (truncado por seguridad)
+    1. **BASE DE DATOS LOCAL:** 
+       Usa esto para recomendar sitios:
+       ${JSON.stringify(localDatabase).substring(0, 30000)} ...
        
-    2. **GOOGLE SEARCH (Herramienta de Apoyo):**
-       Tienes acceso a Google Search. Úsalo OBLIGATORIAMENTE para:
-       - Verificar el clima actual.
-       - Buscar noticias recientes.
-       - Confirmar horarios si la base de datos no los tiene.
-       - Contestar preguntas generales si no encuentras el lugar en tu lista.
-
-    ### REGLAS DE RESPUESTA ###
-    - Si te preguntan por un lugar en la lista, da los detalles con entusiasmo y precisión.
-    - Si te preguntan la hora o el clima, respóndelo con exactitud usando el contexto o Google Search.
-    - Si no sabes algo, di: "Mire, honestamente no tengo ese dato a la mano, pero déjeme averiguarlo" y usa Google Search.
-    - **IMPORTANTE:** Al despedirte en cada mensaje, cuenta el chiste.
+    2. **GOOGLE SEARCH:**
+       Úsalo para clima, noticias, o datos que no tengas en la lista.
 
     ### CONTEXTO ACTUAL ###
     Fecha: ${escapeHTML(context.date)}
     Hora: ${escapeHTML(context.time)}
-    Clima Reportado: ${escapeHTML(context.weather)}
-    Ubicación Usuario: ${context.userLoc ? `${context.userLoc.lat}, ${context.userLoc.lng}` : "Desconocida"}
+    Clima: ${escapeHTML(context.weather)}
   `;
 
-  // Reconstruct Chat History
   const chatHistory = history.map((msg: any) => ({
     role: msg.role,
     parts: [{ text: escapeHTML(msg.text) }]
   }));
 
-  // Create Chat with Google Search Tool enabled
   const chat = ai.chats.create({
     model: 'gemini-2.5-flash',
     history: chatHistory,
     config: { 
       systemInstruction,
-      tools: [{ googleSearch: {} }], // ENABLE GROUNDING
+      tools: [{ googleSearch: {} }],
     }
   });
 
   const result = await chat.sendMessage(escapeHTML(message));
-  
-  return new Response(JSON.stringify({ text: result.text }), { headers: { 'Content-Type': 'application/json' } });
+  return { text: result.text };
 }
 
 async function handleIdentify({ image }: any) {
   const prompt = `Analyze this image. Is it a location in Cabo Rojo, Puerto Rico? Return JSON: { "matchedPlaceId": string | null, "explanation": "Explicación amable y clara en español." }`;
-  
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: {
@@ -150,111 +147,73 @@ async function handleIdentify({ image }: any) {
     },
     config: { responseMimeType: 'application/json' }
   });
-  return new Response(escapeHTML(response.text), { headers: { 'Content-Type': 'application/json' } });
+  return JSON.parse(response.text); // Expecting JSON response
 }
 
 async function handleItinerary({ vibe, places }: any) {
-  const sanitizedPlacesList = places
-    .map((p: any) => `${escapeHTML(p.name)} (${escapeHTML(p.category)})`)
-    .join(', ');
-  
+  const sanitizedPlacesList = places.map((p: any) => `${escapeHTML(p.name)} (${escapeHTML(p.category)})`).join(', ');
   const prompt = `Create a 1-day itinerary for Cabo Rojo based on vibe: "${escapeHTML(vibe)}". Available: ${sanitizedPlacesList}. Return JSON array: [{ "time": "09:00 AM", "activity": "Title", "description": "Desc", "placeId": "id", "icon": "fa-icon" }]`;
-  
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: escapeHTML(prompt),
     config: { responseMimeType: 'application/json' }
   });
-  return new Response(escapeHTML(response.text), { headers: { 'Content-Type': 'application/json' } });
+  return JSON.parse(response.text);
 }
 
 async function handleScript({ placeName, description }: any) {
-  const prompt = `Escribe un guión de audio guía de 30 segundos para "${escapeHTML(placeName)}" en Cabo Rojo. Tono: Amable, educado, como un vecino sabio contando una historia. Texto plano.`;
+  const prompt = `Escribe un guión de audio guía de 30 segundos para "${escapeHTML(placeName)}" en Cabo Rojo. Tono: Amable, educado, como un vecino sabio. Texto plano.`;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: escapeHTML(prompt)
   });
-  return new Response(JSON.stringify({ text: escapeHTML(response.text) }), { headers: { 'Content-Type': 'application/json' } });
+  return { text: escapeHTML(response.text) };
 }
 
-async function handleCategorizeAndTag({ name, description }: { name: string, description: string }) {
-  // Hardcoded categories to avoid import issues
+async function handleCategorizeAndTag({ name, description }: any) {
   const categories = "BEACH, FOOD, SIGHTS, LOGISTICS, LODGING, SHOPPING, HEALTH, NIGHTLIFE, ACTIVITY, SERVICE";
-  const prompt = `
-    Act as a tourism content analyst.
-    Given a place name and description, identify the best primary category and relevant tags from a predefined list.
-    Predefined Categories: ${categories}
-    Place Name: "${escapeHTML(name)}"
-    Description: "${escapeHTML(description)}"
-    Return a JSON object with 'category' and 'tags' (array of strings, max 5, in Spanish).
-  `;
+  const prompt = `Act as a tourism analyst. Identify best category/tags. Categories: ${categories}. Place: "${escapeHTML(name)}". Desc: "${escapeHTML(description)}". Return JSON { "category": string, "tags": string[] }`;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: prompt,
     config: { responseMimeType: 'application/json' }
   });
-  return new Response(escapeHTML(response.text), { headers: { 'Content-Type': 'application/json' } });
+  return JSON.parse(response.text);
 }
 
-async function handleEnhanceDescription({ name, description }: { name: string, description: string }) {
-  const prompt = `
-    Reescribe la siguiente descripción para una app de turismo. Hazla más atractiva pero mantén un tono respetuoso y claro.
-    Lugar: "${escapeHTML(name)}" en Cabo Rojo.
-    Original: "${escapeHTML(description)}"
-    Mantenlo bajo 150 palabras.
-  `;
+async function handleEnhanceDescription({ name, description }: any) {
+  const prompt = `Reescribe descripción para app turismo. Tono respetuoso y claro. Lugar: "${escapeHTML(name)}". Original: "${escapeHTML(description)}". Max 150 palabras.`;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: prompt
   });
-  return new Response(JSON.stringify({ text: escapeHTML(response.text) }), { headers: { 'Content-Type': 'application/json' } });
+  return { text: escapeHTML(response.text) };
 }
 
-async function handleGenerateTips({ name, category, description }: { name: string, category: string, description: string }) {
-  const prompt = `
-    Actúa como 'El Veci', un experto local sabio de Cabo Rojo. 
-    Genera un consejo práctico y útil para visitantes de "${escapeHTML(name)}" (Categoría: ${escapeHTML(category)}).
-    Contexto: "${escapeHTML(description)}"
-    El consejo debe ser claro, como si se lo dieras a un amigo mayor. Mantenlo bajo 50 palabras.
-  `;
+async function handleGenerateTips({ name, category, description }: any) {
+  const prompt = `Actúa como 'El Veci'. Consejo sabio y práctico para "${escapeHTML(name)}" (${category}). Contexto: "${escapeHTML(description)}". Max 50 palabras.`;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: prompt
   });
-  return new Response(JSON.stringify({ text: escapeHTML(response.text) }), { headers: { 'Content-Type': 'application/json' } });
+  return { text: escapeHTML(response.text) };
 }
 
-async function handleGenerateAltText({ imageUrl }: { imageUrl: string }) {
-  const prompt = `
-    Describe this image for an accessibility alt text. Focus on key visual elements of the place.
-    Keep it concise and descriptive, under 15 words.
-  `;
+async function handleGenerateAltText({ imageUrl }: any) {
+  const prompt = `Describe image for alt text. Concise, descriptive. Max 15 words.`;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash', 
-    contents: {
-      parts: [
-        { image: { url: imageUrl } },
-        { text: escapeHTML(prompt) }
-      ]
-    }
+    contents: { parts: [{ image: { url: imageUrl } }, { text: escapeHTML(prompt) }] }
   });
-  return new Response(JSON.stringify({ text: escapeHTML(response.text) }), { headers: { 'Content-Type': 'application/json' } });
+  return { text: escapeHTML(response.text) };
 }
 
-async function handleGenerateSeoMetaTags({ name, description, category }: { name: string, description: string, category: string }) {
-  const prompt = `
-    Generate SEO-optimized meta title and meta description for a tourism app entry.
-    Place Name: "${escapeHTML(name)}"
-    Category: "${escapeHTML(category)}"
-    Description: "${escapeHTML(description)}"
-    Meta Title: Under 60 chars, keyword-rich.
-    Meta Description: Under 160 chars, compelling.
-    Return JSON: {"metaTitle": "string", "metaDescription": "string"}
-  `;
+async function handleGenerateSeoMetaTags({ name, description, category }: any) {
+  const prompt = `Generate SEO meta tags. Place: "${escapeHTML(name)}". JSON: {"metaTitle": string, "metaDescription": string}`;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: prompt,
     config: { responseMimeType: 'application/json' }
   });
-  return new Response(escapeHTML(response.text), { headers: { 'Content-Type': 'application/json' } });
+  return JSON.parse(response.text);
 }
