@@ -1,14 +1,28 @@
 
 import { GoogleGenAI } from "@google/genai";
 import { createClient } from '@supabase/supabase-js';
-import { escapeHTML } from '../services/supabase'; // Import the new HTML escaper
-import { PlaceCategory } from '../types'; // Import PlaceCategory
+// Removed: import { escapeHTML } from '../services/supabase'; 
+import { PlaceCategory } from '../types'; 
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
   process.env.VITE_SUPABASE_ANON_KEY || ''
 );
+
+// Node-safe HTML Escaper (Regex based)
+const escapeHTML = (str: string | undefined): string => {
+  if (typeof str !== 'string') return '';
+  return str.replace(/[&<>'"]/g, 
+    tag => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;'
+    }[tag] || tag)
+  );
+};
 
 export default async function handler(req: Request) {
   if (req.method !== 'POST') return new Response("Method not allowed", { status: 405 });
@@ -116,7 +130,6 @@ async function handleChat({ message, history, context }: any) {
   const result = await chat.sendMessage(escapeHTML(message));
   
   // The result.text will contain the answer, potentially enriched by Search.
-  // Grounding metadata is available in result.candidates[0].groundingMetadata if needed later.
   return new Response(JSON.stringify({ text: result.text }), { headers: { 'Content-Type': 'application/json' } });
 }
 

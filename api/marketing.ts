@@ -3,6 +3,20 @@ import { GoogleGenAI } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
+// Node-safe HTML Escaper
+const escapeHTML = (str: string | undefined): string => {
+  if (typeof str !== 'string') return '';
+  return str.replace(/[&<>'"]/g, 
+    tag => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      "'": '&#39;',
+      '"': '&quot;'
+    }[tag] || tag)
+  );
+};
+
 export default async function handler(request: Request) {
   if (request.method !== 'POST') return new Response("Method not allowed", { status: 405 });
   
@@ -63,12 +77,4 @@ export default async function handler(request: Request) {
       console.error("AI Marketing API Error:", e);
       return new Response(JSON.stringify({ error: "Failed to generate marketing copy." }), { status: 500 });
   }
-}
-
-// Basic HTML escaping utility (can be imported from common utils if available)
-function escapeHTML(str: string | undefined): string {
-  if (typeof str !== 'string') return '';
-  const div = document.createElement('div');
-  div.appendChild(document.createTextNode(str));
-  return div.innerHTML;
 }
