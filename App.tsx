@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import L from 'leaflet';
-import { Place, PlaceCategory, Coordinates, Event, ParkingStatus, Collection } from '../types';
-import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, COLLECTIONS, CABO_ROJO_CENTER, DEFAULT_PLACE_ID } from '../constants';
+import { Place, PlaceCategory, Coordinates, Event, ParkingStatus, Collection } from './types';
+import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, COLLECTIONS, CABO_ROJO_CENTER, DEFAULT_PLACE_ID } from './constants';
 import PlaceCard from './components/PlaceCard';
 import Concierge from './components/Concierge';
 import Admin from './components/Admin';
@@ -15,6 +15,9 @@ import ExplorerSheet from './components/ExplorerSheet';
 import BottomNav from './components/BottomNav';
 import CommandMenu from './components/CommandMenu';
 import SeoEngine from './components/SeoEngine';
+import { usePlacesData } from './hooks/usePlacesData';
+import { useMapEngine } from './hooks/useMapEngine';
+import { useRouter } from './hooks/useRouter';
 
 // --- CONSTANTS & HELPERS (Pure Functions) ---
 
@@ -116,11 +119,6 @@ const CATEGORY_GROUPS = {
   EVENTOS: { categories: 'EVENTS' },
   FAVORITOS: { categories: 'FAVORITES' }
 };
-
-// --- CUSTOM HOOKS (Logic Extraction) ---
-import { usePlacesData } from '../hooks/usePlacesData';
-import { useMapEngine } from '../hooks/useMapEngine';
-import { useRouter } from '../hooks/useRouter';
 
 // --- MAIN COMPONENT ---
 
@@ -234,20 +232,20 @@ const MainApp: React.FC = () => {
   // Initialize Router (Handles all URL state safely)
   useRouter(publishedPlaces, selectedPlace, setSelectedPlace, flyTo);
 
-  // Try to get location on mount silently
-  useEffect(() => {
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (pos) => {
-                const { latitude, longitude } = pos.coords;
-                setUserLocation({ lat: latitude, lng: longitude });
-                // Only show dot if map is loaded, handled by useMapEngine internal effect/check
-            },
-            () => {}, // ignore error
-            { enableHighAccuracy: false }
-        );
-    }
-  }, []);
+  // NO LONGER automatically requesting geolocation on mount
+  // useEffect(() => {
+  //   if (navigator.geolocation) {
+  //       navigator.geolocation.getCurrentPosition(
+  //           (pos) => {
+  //               const { latitude, longitude } = pos.coords;
+  //               setUserLocation({ lat: latitude, lng: longitude });
+  //               // Only show dot if map is loaded, handled by useMapEngine internal effect/check
+  //           },
+  //           () => {}, // ignore error
+  //           { enableHighAccuracy: false }
+  //       );
+  //   }
+  // }, []);
 
   // Fix: Map Layout Invalidation
   useEffect(() => {
