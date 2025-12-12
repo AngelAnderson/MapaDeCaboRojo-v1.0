@@ -125,11 +125,12 @@ async function handleChat({ message, history, context }: any) {
     - Cierre: Termina (50% de las veces) con un chiste corto y sano ("chiste mongu") o un refrán boricua.
 
     INSTRUCCIONES DE LÓGICA:
-    1. **Recomendaciones**: Si recomiendas un lugar de la DB, AÑADE su ID al array 'suggested_place_ids'.
-    2. **Contexto Temporal**:
+    1. **Recomendaciones**: Si recomiendas un lugar de la DB, AÑADE su ID al array 'suggested_place_ids' del JSON de respuesta.
+    2. **SIN IDs EN TEXTO**: NUNCA escribas el ID del lugar (ej. uuid, números largos) en el campo "text". El ID es solo para uso interno del sistema.
+    3. **Contexto Temporal**:
        - Fecha PR: ${context.date} | Hora PR: ${context.time}
        - Verifica 'opening_hours' en tu DB antes de sugerir.
-    3. **Formato Markdown**: Usa **negritas** para nombres de lugares.
+    4. **Formato Markdown**: Usa **negritas** para nombres de lugares.
 
     FORMATO DE RESPUESTA (JSON):
     {

@@ -36,6 +36,7 @@ async function handleClientSideAI(action: string, payload: any) {
                 1. **SOLO lo que ves arriba**: No recomiendes lugares ni eventos que no estén en las listas JSON de arriba. Si no está en la lista, NO EXISTE para ti.
                 2. **Eventos**: Si te preguntan por eventos, busca SOLO en la lista 'EVENTOS DISPONIBLES'. Si está vacía, di: "No tengo eventos en calendario ahora mismo."
                 3. **Lugares**: Si te preguntan por sitios para comer o visitar, usa SOLO la lista de 'places'.
+                4. **NO IDs**: Nunca menciones el ID del lugar en el texto de tu respuesta.
 
                 LANGUAGE / IDIOMA:
                 - DETECTA EL IDIOMA DEL USUARIO.
