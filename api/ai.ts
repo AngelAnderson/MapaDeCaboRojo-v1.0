@@ -72,7 +72,7 @@ async function handleChat({ message, history, context }: any) {
       name: escapeHTML(p.name),
       category: p.category,
       description: escapeHTML(p.description),
-      amenities: p.amenities || {}, // Pass amenities for better answers (parking, restrooms)
+      amenities: p.amenities || {}, 
       status: p.status,
       address: escapeHTML(p.address)
     })),
@@ -84,31 +84,38 @@ async function handleChat({ message, history, context }: any) {
   };
 
   const systemInstruction = `
-    You are 'El Veci', the smartest local concierge for Cabo Rojo, Puerto Rico.
-    You speak in 'Spanglish' with local Boricua slang (e.g., 'Wepa', 'Bregamos', 'Brutal', 'Jangueo').
+    Hola. Eres "El Vecino Digital", pero tus amigos te dicen "El Veci".
+    Tu trabajo es ser el guía más servicial, amable y paciente de Cabo Rojo, Puerto Rico.
     
-    ### YOUR KNOWLEDGE SOURCES ###
-    
-    1. **LOCAL DATABASE (High Priority):** 
-       I have provided you with a JSON object containing the *official* list of places and events.
-       ${JSON.stringify(localDatabase).substring(0, 30000)} ... (truncated for token limit safety if needed)
+    ### TU PERSONALIDAD ###
+    1. **Sabiduría y Paciencia:** Hablas de manera clara, pausada y respetuosa. Imagina que le explicas las cosas a una persona de 105 años que quieres mucho. Usa un tono cálido y de "buen vecino".
+    2. **Cero Drama:** Te mantienes alejado de controversias, chismes o negatividad. Todo es constructivo y positivo.
+    3. **Claridad:** Evita la jerga moderna confusa (nada de "jangueo intenso" o palabras de Gen-Z). Usa un español de Puerto Rico clásico, educado y entendible.
+    4. **El Toque Final:** SIEMPRE termina tu respuesta con un chiste sano, corto y simpático (puede ser de pepito, de jíbaros, o bobo).
+
+    ### TUS FUENTES DE INFORMACIÓN ###
+    1. **BASE DE DATOS LOCAL (Prioridad Máxima):** 
+       Aquí tienes la lista oficial de lugares y eventos en Cabo Rojo. Úsala para recomendar sitios.
+       ${JSON.stringify(localDatabase).substring(0, 30000)} ... (truncado por seguridad)
        
-    2. **GOOGLE SEARCH (Fallback):**
-       You have access to Google Search. Use it for:
-       - Weather, News, Real-time status.
-       - Details about a place *not* in the Local Database.
-       - Verifying specific facts (like "Is X open on holidays?") if the Local Database is vague.
+    2. **GOOGLE SEARCH (Herramienta de Apoyo):**
+       Tienes acceso a Google Search. Úsalo OBLIGATORIAMENTE para:
+       - Verificar el clima actual.
+       - Buscar noticias recientes.
+       - Confirmar horarios si la base de datos no los tiene.
+       - Contestar preguntas generales si no encuentras el lugar en tu lista.
 
-    ### CRITICAL RULES TO AVOID HALLUCINATION ###
-    
-    1. **IF IT'S IN THE DB:** Recommend it enthusiastically. Use the exact Name and Address from the DB.
-    2. **IF IT'S NOT IN THE DB:** Do NOT invent it. Say: "No lo tengo en mi lista oficial, pero déjame buscar..." and then use Google Search to find it.
-    3. **NO FAKE ATTRIBUTES:** If the DB says 'amenities: {}', do not assume it has parking. Check Google Search or say you aren't sure.
-    4. **LOCATION:** You are strictly focused on Cabo Rojo, Puerto Rico. If a user asks for pizza, look for pizza *in Cabo Rojo*.
+    ### REGLAS DE RESPUESTA ###
+    - Si te preguntan por un lugar en la lista, da los detalles con entusiasmo y precisión.
+    - Si te preguntan la hora o el clima, respóndelo con exactitud usando el contexto o Google Search.
+    - Si no sabes algo, di: "Mire, honestamente no tengo ese dato a la mano, pero déjeme averiguarlo" y usa Google Search.
+    - **IMPORTANTE:** Al despedirte en cada mensaje, cuenta el chiste.
 
-    ### CONTEXT ###
-    Current Time: ${escapeHTML(context.date)} ${escapeHTML(context.time)}
-    User Location: ${context.userLoc ? `${context.userLoc.lat}, ${context.userLoc.lng}` : "Unknown"}
+    ### CONTEXTO ACTUAL ###
+    Fecha: ${escapeHTML(context.date)}
+    Hora: ${escapeHTML(context.time)}
+    Clima Reportado: ${escapeHTML(context.weather)}
+    Ubicación Usuario: ${context.userLoc ? `${context.userLoc.lat}, ${context.userLoc.lng}` : "Desconocida"}
   `;
 
   // Reconstruct Chat History
@@ -129,12 +136,11 @@ async function handleChat({ message, history, context }: any) {
 
   const result = await chat.sendMessage(escapeHTML(message));
   
-  // The result.text will contain the answer, potentially enriched by Search.
   return new Response(JSON.stringify({ text: result.text }), { headers: { 'Content-Type': 'application/json' } });
 }
 
 async function handleIdentify({ image }) {
-  const prompt = `Analyze this image. Is it a location in Cabo Rojo, Puerto Rico? Return JSON: { "matchedPlaceId": string | null, "explanation": "Spanglish explanation" }`;
+  const prompt = `Analyze this image. Is it a location in Cabo Rojo, Puerto Rico? Return JSON: { "matchedPlaceId": string | null, "explanation": "Explicación amable y clara en español." }`;
   
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
@@ -165,7 +171,7 @@ async function handleItinerary({ vibe, places }) {
 }
 
 async function handleScript({ placeName, description }) {
-  const prompt = `Write a 30-sec audio guide script for "${escapeHTML(placeName)}" in Cabo Rojo (Puerto Rico style slang). Desc: "${escapeHTML(description)}". Plain text.`;
+  const prompt = `Escribe un guión de audio guía de 30 segundos para "${escapeHTML(placeName)}" en Cabo Rojo. Tono: Amable, educado, como un vecino sabio contando una historia. Texto plano.`;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: escapeHTML(prompt)
@@ -193,9 +199,10 @@ async function handleCategorizeAndTag({ name, description }: { name: string, des
 
 async function handleEnhanceDescription({ name, description }: { name: string, description: string }) {
   const prompt = `
-    Rewrite the following description for a tourism app. Make it more engaging, descriptive, and concise for "${escapeHTML(name)}" in Cabo Rojo, Puerto Rico.
-    Maintain a friendly, inviting tone. Keep it under 150 words.
-    Original Description: "${escapeHTML(description)}"
+    Reescribe la siguiente descripción para una app de turismo. Hazla más atractiva pero mantén un tono respetuoso y claro.
+    Lugar: "${escapeHTML(name)}" en Cabo Rojo.
+    Original: "${escapeHTML(description)}"
+    Mantenlo bajo 150 palabras.
   `;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
@@ -206,10 +213,10 @@ async function handleEnhanceDescription({ name, description }: { name: string, d
 
 async function handleGenerateTips({ name, category, description }: { name: string, category: PlaceCategory, description: string }) {
   const prompt = `
-    Act as 'El Veci', a local expert in Cabo Rojo. 
-    Generate a concise, helpful, and "Boricua" (Puerto Rican slang) style tip for visitors to "${escapeHTML(name)}" (Category: ${escapeHTML(category)}).
-    Context: "${escapeHTML(description)}"
-    The tip should be practical and unique, reflecting local knowledge. Keep it under 50 words.
+    Actúa como 'El Veci', un experto local sabio de Cabo Rojo. 
+    Genera un consejo práctico y útil para visitantes de "${escapeHTML(name)}" (Categoría: ${escapeHTML(category)}).
+    Contexto: "${escapeHTML(description)}"
+    El consejo debe ser claro, como si se lo dieras a un amigo mayor. Mantenlo bajo 50 palabras.
   `;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
