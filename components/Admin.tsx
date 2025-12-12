@@ -95,7 +95,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
   const [authLoading, setAuthLoading] = useState(true);
 
   // App State
-  const [activeTab, setActiveTab] = useState<'places' | 'events' | 'logs'>('places');
+  const [activeTab, setActiveTab] = useState<'inbox' | 'places' | 'events' | 'logs'>('places');
   const [editingPlace, setEditingPlace] = useState<Partial<Place> | null>(null);
   const [editingEvent, setEditingEvent] = useState<Partial<Event> | null>(null);
   const [logs, setLogs] = useState<AdminLog[]>([]);
@@ -129,8 +129,18 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Filter lists
-  const filteredPlaces = places.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  // --- FILTER LISTS (Enhanced for Inbox) ---
+  
+  // 1. Pending Places (Inbox) - "Idiot Proof" Filter
+  const pendingPlaces = places.filter(p => p.status === 'pending');
+  
+  // 2. Visible Places (My Places) - Exclude pending to clean up list
+  const filteredPlaces = places.filter(p => 
+      p.status !== 'pending' && 
+      p.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  // 3. Events
   const filteredEvents = events.filter(e => e.title.toLowerCase().includes(searchTerm.toLowerCase()));
 
   // Check Session on Mount
@@ -214,7 +224,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
       );
   };
 
-  const handleSavePlace = async () => {
+  const handleSavePlace = async (autoApprove: boolean = false) => {
     if (!editingPlace || !editingPlace.name) return showToast(t('admin_name_required'), 'error');
     
     // Coordinate Validation (only if lat/lng are provided, not null)
@@ -231,6 +241,12 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
         editingPlace.contact_info = parsed;
     } catch (e) {
         return showToast(t('admin_invalid_json'), 'error');
+    }
+
+    // Auto Approve Logic
+    if (autoApprove) {
+        editingPlace.status = 'open';
+        editingPlace.isVerified = true;
     }
 
     setIsSaving(true);
@@ -326,7 +342,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
       setIsUploading(false);
 
       if (res.success && res.url) {
-          if (activeTab === 'places' && editingPlace) {
+          if ((activeTab === 'places' || activeTab === 'inbox') && editingPlace) {
               setEditingPlace({ ...editingPlace, imageUrl: res.url });
           } else if (activeTab === 'events' && editingEvent) {
               setEditingEvent({ ...editingEvent, imageUrl: res.url });
@@ -579,7 +595,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                     <p className="text-white font-bold truncate">{editingPlace?.name || editingEvent?.title || t('admin_new_item')}</p>
                 </div>
                 <button 
-                    onClick={activeTab === 'places' ? handleSavePlace : handleSaveEvent} 
+                    onClick={() => activeTab === 'places' || activeTab === 'inbox' ? handleSavePlace(false) : handleSaveEvent()} 
                     disabled={isSaving}
                     className="bg-teal-600 text-white px-4 py-2 rounded-lg font-bold shadow-lg shadow-teal-900/20 active:scale-95 transition-transform flex items-center gap-2"
                 >
@@ -597,6 +613,10 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                 </div>
                 
                 <div className="flex bg-slate-800 p-1 rounded-lg border border-slate-700">
+                    <button onClick={() => setActiveTab('inbox')} className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1 ${activeTab === 'inbox' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>
+                        {t('admin_inbox')}
+                        {pendingPlaces.length > 0 && <span className="bg-red-500 text-white px-1.5 rounded-full text-[9px]">{pendingPlaces.length}</span>}
+                    </button>
                     <button onClick={() => setActiveTab('places')} className={`px-3 py-1.5 rounded-md text-xs font-bold ${activeTab === 'places' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>{t('admin_places')}</button>
                     <button onClick={() => setActiveTab('events')} className={`px-3 py-1.5 rounded-md text-xs font-bold ${activeTab === 'events' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>{t('admin_events')}</button>
                     <button onClick={() => setActiveTab('logs')} className={`px-3 py-1.5 rounded-md text-xs font-bold ${activeTab === 'logs' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>{t('admin_logs')}</button>
@@ -628,6 +648,25 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
             </div>
             
             <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
+                {/* INBOX TAB (Pending) */}
+                {activeTab === 'inbox' && (
+                    <>
+                    {pendingPlaces.length === 0 && <div className="text-slate-500 text-center text-xs py-10 opacity-50">No pending items.</div>}
+                    {pendingPlaces.map(p => (
+                        <div key={p.id} onClick={() => setEditingPlace(p)} className={`p-4 rounded-xl border cursor-pointer transition-all active:scale-[0.98] border-l-4 border-l-amber-500 ${editingPlace?.id === p.id ? 'bg-teal-900/20 border-teal-500/50' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'}`}>
+                            <div className="flex justify-between items-start mb-1">
+                                <h4 className={`font-bold text-sm truncate ${editingPlace?.id === p.id ? 'text-teal-400' : 'text-slate-200'}`}>{p.name}</h4>
+                                <span className="bg-amber-500/20 text-amber-400 text-[9px] px-1.5 py-0.5 rounded font-bold uppercase">{t('admin_pending_review')}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-slate-500">
+                                <span className="uppercase tracking-wider font-bold">{p.category}</span>
+                            </div>
+                        </div>
+                    ))}
+                    </>
+                )}
+
+                {/* PLACES TAB (Live) */}
                 {activeTab === 'places' && (
                     <>
                     <button 
@@ -698,13 +737,39 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
         {/* EDITOR VIEW (Full screen on mobile if editing) */}
         <div className={`flex-1 bg-slate-900 overflow-y-auto custom-scrollbar ${isEditing ? 'absolute inset-0 z-10 md:static' : 'hidden md:flex flex-col items-center justify-center'}`}>
             
-            {activeTab === 'places' && editingPlace ? (
+            {(activeTab === 'places' || activeTab === 'inbox') && editingPlace ? (
                 <div className="p-4 md:p-8 max-w-3xl mx-auto pb-32 animate-slide-up">
                     
+                    {/* --- PROMINENT REVIEW SECTION FOR PENDING ITEMS --- */}
+                    {editingPlace.status === 'pending' && (
+                        <div className="bg-amber-500/10 border-2 border-amber-500/50 rounded-2xl p-6 mb-8 text-center animate-pulse-slow">
+                            <div className="w-16 h-16 bg-amber-500 text-slate-900 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-lg shadow-amber-500/20">
+                                <i className="fa-solid fa-magnifying-glass-location"></i>
+                            </div>
+                            <h2 className="text-xl font-black text-amber-400 mb-2">{t('admin_review_alert')}</h2>
+                            <p className="text-slate-400 mb-6 text-sm max-w-md mx-auto">This place was suggested by a user. Please verify details before publishing.</p>
+                            
+                            <div className="flex justify-center gap-4">
+                                <button 
+                                    onClick={() => editingPlace.id && handleDeletePlace(editingPlace.id)}
+                                    className="bg-slate-800 text-red-400 border border-slate-700 px-6 py-3 rounded-xl font-bold hover:bg-red-500/20 hover:border-red-500 transition-all flex items-center gap-2"
+                                >
+                                    <i className="fa-solid fa-trash"></i> {t('admin_reject_delete')}
+                                </button>
+                                <button 
+                                    onClick={() => handleSavePlace(true)} // Pass true to auto-approve
+                                    className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-emerald-500 shadow-lg shadow-emerald-900/50 transition-all flex items-center gap-2 scale-105"
+                                >
+                                    <i className="fa-solid fa-check-circle"></i> {t('admin_approve_publish')}
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
                     {/* ID & Delete Header */}
                     <div className="flex justify-between items-center mb-6 bg-slate-800 p-4 rounded-xl border border-slate-700">
                         <span className="font-mono text-xs text-slate-500">{editingPlace.id || 'NEW RECORD'}</span>
-                        {editingPlace.id && (
+                        {editingPlace.id && editingPlace.status !== 'pending' && (
                             <button 
                                 onClick={() => handleDeletePlace(editingPlace.id!)} 
                                 disabled={isSaving}

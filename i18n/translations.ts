@@ -19,8 +19,8 @@ export const translations = {
     call: "Llamar",
     website: "Web",
     share: "Enviar",
-    share_text: "Chequea este lugar: {{name}} 🌴", // New: for PlaceCard sharing
-    link_copied: "Link copiado", // New: for PlaceCard sharing alert
+    share_text: "Chequea este lugar: {{name}} 🌴",
+    link_copied: "Link copiado",
     the_scoop: "La Nota",
     logistics: "Logística",
     address: "Dirección",
@@ -43,7 +43,7 @@ export const translations = {
     suggest_success_msg: "El lugar ya está visible en el mapa. El admin lo revisará pronto.",
     suggest_success_msg_admin_review: "¡Gracias! Tu sugerencia fue recibida y ahora está en fila para ser revisada por un administrador. Una vez verificada, aparecerá en el mapa. ¡Agradecemos tu contribución!",
     suggest_btn: "Publicar Ahora",
-    suggest_analyzing_el_veci: "Analizando (El Veci)...", // New
+    suggest_analyzing_el_veci: "Analizando (El Veci)...",
     admin_login: "Entrar al Sistema",
     admin_places: "Mis Lugares",
     contact_title: "Centro de Ayuda",
@@ -73,7 +73,7 @@ export const translations = {
     status_open_day: "Abierto (Horario Solar)",
     status_caution_night: "Abierto - Precaución de Noche",
     status_closed_now: "Cerrado Ahora",
-    status_closed: "Cerrado", // New: for PlaceCard alert
+    status_closed: "Cerrado",
     audio_guide_title: "Historia del Veci",
     audio_listen: "Escuchar Historia",
     audio_playing: "Reproduciendo...",
@@ -81,7 +81,7 @@ export const translations = {
     sort_recommended: "Recomendados",
     sort_distance: "Cerca de ti",
 
-    // Admin Panel Translations (New)
+    // Admin Panel Translations
     admin_access_title: "Acceso Admin",
     admin_access_subtitle: "Punto de Entrada Seguro",
     admin_email_placeholder: "Email",
@@ -93,6 +93,11 @@ export const translations = {
     admin_new_item: "Nuevo Elemento",
     admin_events: "Eventos",
     admin_logs: "Registros",
+    admin_inbox: "Bandeja (Inbox)", // New
+    admin_pending_review: "Pendiente de Revisión", // New
+    admin_approve_publish: "Aprobar y Publicar", // New
+    admin_reject_delete: "Rechazar", // New
+    admin_review_alert: "Sugerencia de Usuario", // New
     admin_search_placeholder: "Buscar...",
     admin_add_new_place: "Añadir Lugar Nuevo",
     admin_add_new_event: "Añadir Evento Nuevo",
@@ -126,8 +131,8 @@ export const translations = {
     admin_media: "Medios",
     admin_tap_to_upload: "Toca para Subir",
     admin_image_url: "URL de la Imagen",
-    admin_image_alt_text: "Texto Alternativo de Imagen", // New
-    admin_image_alt_text_placeholder: "Ej. Faro Los Morrillos al atardecer.", // New
+    admin_image_alt_text: "Texto Alternativo de Imagen",
+    admin_image_alt_text_placeholder: "Ej. Faro Los Morrillos al atardecer.",
     admin_details_amenities: "Detalles y Amenidades",
     admin_visible_open: "Visible (Abierto)",
     admin_verified: "Verificado",
@@ -182,44 +187,42 @@ export const translations = {
     admin_could_not_find_details: "No se pudieron encontrar los detalles del lugar.",
     admin_import_failed: "Fallo en la importación",
     admin_need_name_first: "Necesitas el nombre primero",
-    admin_default_zoom: "Zoom por Defecto", // New
-    admin_default_zoom_desc: "Nivel de zoom al cargar este lugar (ej. 16)", // New
-    admin_applied_mon_to_fri: "Horario de L-V aplicado.", // New for admin schedule
+    admin_default_zoom: "Zoom por Defecto",
+    admin_default_zoom_desc: "Nivel de zoom al cargar este lugar (ej. 16)",
+    admin_applied_mon_to_fri: "Horario de L-V aplicado.",
 
-    // AI Features in Admin
-    admin_ai_suggest_category_tags: "Sugerir Categoría y Etiquetas con IA", // New
-    admin_ai_suggest_category_tags_success: "IA sugirió categoría y etiquetas.", // New
-    admin_ai_suggest_category_tags_fail: "IA no pudo sugerir categoría/etiquetas.", // New
-    admin_ai_suggest_category_tags_error: "Error al generar categoría/etiquetas con IA.", // New
-    admin_ai_enhance_description: "Mejorar Descripción con IA", // New
-    admin_ai_enhance_description_success: "IA mejoró la descripción.", // New
-    admin_ai_enhance_description_fail: "IA no pudo mejorar la descripción.", // New
-    admin_ai_enhance_description_error: "Error al mejorar descripción con IA.", // New
-    admin_ai_generate_tip: "Generar Consejo del Veci con IA", // New
-    admin_ai_generate_tip_success: "IA generó el Consejo del Veci.", // New
-    admin_ai_generate_tip_fail: "IA no pudo generar un consejo.", // New
-    admin_ai_generate_tip_error: "Error al generar consejo con IA.", // New
-    admin_ai_generate_alt_text: "Generar Texto Alternativo con IA", // New
-    admin_ai_generate_alt_text_success: "IA generó texto alternativo.", // New
-    admin_ai_generate_alt_text_fail: "IA no pudo generar texto alternativo.", // New
-    admin_ai_generate_alt_text_error: "Error al generar texto alternativo con IA.", // New
-    admin_ai_generate_seo: "Generar SEO con IA", // New
-    admin_ai_generate_seo_success: "IA generó meta tags SEO.", // New
-    admin_ai_generate_seo_fail: "IA no pudo generar meta tags SEO.", // New
-    admin_ai_generate_seo_error: "Error al generar meta tags SEO con IA.", // New
-    admin_meta_title: "Título SEO", // New
-    admin_meta_title_desc: "Título optimizado para motores de búsqueda (max 60 caracteres).", // New
-    admin_meta_title_placeholder: "Ej. Faro Los Morrillos | Cabo Rojo PR", // New
-    admin_meta_description: "Meta Descripción SEO", // New
-    admin_meta_description_desc: "Descripción optimizada para motores de búsqueda (max 160 caracteres).", // New
-    admin_meta_description_placeholder: "Ej. Descubre el histórico Faro Los Morrillos en Cabo Rojo, Puerto Rico. Vistas panorámicas y naturaleza virgen. ¡Tu guía local para una aventura inolvidable!", // New
+    admin_ai_suggest_category_tags: "Sugerir Categoría y Etiquetas con IA",
+    admin_ai_suggest_category_tags_success: "IA sugirió categoría y etiquetas.",
+    admin_ai_suggest_category_tags_fail: "IA no pudo sugerir categoría/etiquetas.",
+    admin_ai_suggest_category_tags_error: "Error al generar categoría/etiquetas con IA.",
+    admin_ai_enhance_description: "Mejorar Descripción con IA",
+    admin_ai_enhance_description_success: "IA mejoró la descripción.",
+    admin_ai_enhance_description_fail: "IA no pudo mejorar la descripción.",
+    admin_ai_enhance_description_error: "Error al mejorar descripción con IA.",
+    admin_ai_generate_tip: "Generar Consejo del Veci con IA",
+    admin_ai_generate_tip_success: "IA generó el Consejo del Veci.",
+    admin_ai_generate_tip_fail: "IA no pudo generar un consejo.",
+    admin_ai_generate_tip_error: "Error al generar consejo con IA.",
+    admin_ai_generate_alt_text: "Generar Texto Alternativo con IA",
+    admin_ai_generate_alt_text_success: "IA generó texto alternativo.",
+    admin_ai_generate_alt_text_fail: "IA no pudo generar texto alternativo.",
+    admin_ai_generate_alt_text_error: "Error al generar texto alternativo con IA.",
+    admin_ai_generate_seo: "Generar SEO con IA",
+    admin_ai_generate_seo_success: "IA generó meta tags SEO.",
+    admin_ai_generate_seo_fail: "IA no pudo generar meta tags SEO.",
+    admin_ai_generate_seo_error: "Error al generar meta tags SEO con IA.",
+    admin_meta_title: "Título SEO",
+    admin_meta_title_desc: "Título optimizado para motores de búsqueda (max 60 caracteres).",
+    admin_meta_title_placeholder: "Ej. Faro Los Morrillos | Cabo Rojo PR",
+    admin_meta_description: "Meta Descripción SEO",
+    admin_meta_description_desc: "Descripción optimizada para motores de búsqueda (max 160 caracteres).",
+    admin_meta_description_placeholder: "Ej. Descubre el histórico Faro Los Morrillos en Cabo Rojo, Puerto Rico. Vistas panorámicas y naturaleza virgen. ¡Tu guía local para una aventura inolvidable!",
     
-    // Place Card Badges (New)
     delivery: "Domicilio",
     generator: "Planta Eléctrica",
-    parking_label: "Parking {{status}}", // New, dynamic
-    free_parking_label: "Parking Gratis", // Kept for other uses
-    paid_parking_label: "Parking Pago", // Kept for other uses
+    parking_label: "Parking {{status}}",
+    free_parking_label: "Parking Gratis",
+    paid_parking_label: "Parking Pago",
     delivery_label: "A Domicilio",
     restroom_label: "Baños",
     pet_friendly_label: "Pet Friendly",
@@ -235,32 +238,31 @@ export const translations = {
     service_area: "Zona de Servicio",
     phone: "Teléfono",
     explore_also: "Explora También",
-    suggest_image_too_large: "La imagen es muy grande. Intenta con una menor a 5MB.", // New for SuggestPlaceModal
-    suggest_name_required: "El nombre es obligatorio", // New for SuggestPlaceModal
-    suggest_ai_bouncer_alert: "👮‍♂️ El Veci dice: \"{{reason}}\"\n\nIntenta arreglarlo.", // New for SuggestPlaceModal
-    suggest_ai_bouncer_default_reason: "Eso no parece un lugar real.", // New for SuggestPlaceModal
-    suggest_image_upload_error: "Error al subir la imagen.", // New for SuggestPlaceModal
-    suggest_submission_error: "Error al enviar la sugerencia. Por favor, inténtalo de nuevo.", // New for SuggestPlaceModal
-    suggest_connection_error: "Error de conexión al enviar la sugerencia.", // New for SuggestPlaceModal
-    suggest_upload_photo: "Subir Foto", // New for SuggestPlaceModal
-    no_results: "Sin resultados", // New for ExplorerSheet
-    top_pick: "Recomendado", // New for ExplorerSheet
-    what_is_this: "¿Qué es esto?", // New for SearchBar
-    light_mode: "Modo Claro", // New for CommandMenu
-    dark_mode: "Modo Oscuro", // New for CommandMenu
-    switch_to_english: "Cambiar a Inglés", // New for CommandMenu
-    switch_to_spanish: "Cambiar a Español", // New for CommandMenu
-    type_a_command: "Escribe un comando...", // New for CommandMenu
-    no_results_found: "No se encontraron resultados.", // New for CommandMenu
-    app_version: "Map de Cabo Rojo OS 2.0", // New for CommandMenu footer
-    select: "Seleccionar", // New for CommandMenu footer
-    navigate: "Navegar", // New for CommandMenu footer
-    zoom_in: "Acercar", // New
-    zoom_out: "Alejar", // New
-    satellite_view: "Vista Satélite", // New
-    map_view: "Vista Mapa", // New
+    suggest_image_too_large: "La imagen es muy grande. Intenta con una menor a 5MB.",
+    suggest_name_required: "El nombre es obligatorio",
+    suggest_ai_bouncer_alert: "👮‍♂️ El Veci dice: \"{{reason}}\"\n\nIntenta arreglarlo.",
+    suggest_ai_bouncer_default_reason: "Eso no parece un lugar real.",
+    suggest_image_upload_error: "Error al subir la imagen.",
+    suggest_submission_error: "Error al enviar la sugerencia. Por favor, inténtalo de nuevo.",
+    suggest_connection_error: "Error de conexión al enviar la sugerencia.",
+    suggest_upload_photo: "Subir Foto",
+    no_results: "Sin resultados",
+    top_pick: "Recomendado",
+    what_is_this: "¿Qué es esto?",
+    light_mode: "Modo Claro",
+    dark_mode: "Modo Oscuro",
+    switch_to_english: "Cambiar a Inglés",
+    switch_to_spanish: "Cambiar a Español",
+    type_a_command: "Escribe un comando...",
+    no_results_found: "No se encontraron resultados.",
+    app_version: "Map de Cabo Rojo OS 2.0",
+    select: "Seleccionar",
+    navigate: "Navegar",
+    zoom_in: "Acercar",
+    zoom_out: "Alejar",
+    satellite_view: "Vista Satélite",
+    map_view: "Vista Mapa",
 
-    // Weather Widget Translations
     weather_loading: "Cargando el clima...",
     weather_sunny: "Soleado",
     weather_advice_beach: "Arranca pa' la playa.",
@@ -302,8 +304,8 @@ export const translations = {
     call: "Call",
     website: "Web",
     share: "Share",
-    share_text: "Check out this place: {{name}} 🌴", // New: for PlaceCard sharing
-    link_copied: "Link copied", // New: for PlaceCard sharing alert
+    share_text: "Check out this place: {{name}} 🌴",
+    link_copied: "Link copied",
     the_scoop: "The Scoop",
     logistics: "Logistics",
     address: "Address",
@@ -334,7 +336,7 @@ export const translations = {
     suggest_success_msg: "The place is now visible on the map. Admin will review soon.",
     suggest_success_msg_admin_review: "Thanks! Your suggestion has been received and is now in line for admin review. Once verified, it will appear on the map. We appreciate your contribution!",
     suggest_btn: "Publish Now",
-    suggest_analyzing_el_veci: "Analyzing (El Veci)...", // New
+    suggest_analyzing_el_veci: "Analyzing (El Veci)...",
     admin_login: "System Login",
     admin_places: "My Places",
     contact_title: "Help Center",
@@ -364,7 +366,7 @@ export const translations = {
     status_open_day: "Open (Daylight)",
     status_caution_night: "Caution - Night",
     status_closed_now: "Closed Now",
-    status_closed: "Closed", // New: for PlaceCard alert
+    status_closed: "Closed",
     audio_guide_title: "El Veci's Story",
     audio_listen: "Listen to Story",
     audio_playing: "Playing...",
@@ -372,7 +374,7 @@ export const translations = {
     sort_recommended: "Recommended",
     sort_distance: "Near Me",
 
-    // Admin Panel Translations (New)
+    // Admin Panel Translations
     admin_access_title: "Admin Access",
     admin_access_subtitle: "Secure Entry Point",
     admin_email_placeholder: "Email",
@@ -384,6 +386,11 @@ export const translations = {
     admin_new_item: "New Item",
     admin_events: "Events",
     admin_logs: "Logs",
+    admin_inbox: "Inbox", // New
+    admin_pending_review: "Pending Review", // New
+    admin_approve_publish: "Approve & Publish", // New
+    admin_reject_delete: "Reject", // New
+    admin_review_alert: "User Suggestion", // New
     admin_search_placeholder: "Search...",
     admin_add_new_place: "Add New Place",
     admin_add_new_event: "Add New Event",
@@ -417,8 +424,8 @@ export const translations = {
     admin_media: "Media",
     admin_tap_to_upload: "Tap to Upload",
     admin_image_url: "Image URL",
-    admin_image_alt_text: "Image Alt Text", // New
-    admin_image_alt_text_placeholder: "e.g. Los Morrillos Lighthouse at sunset.", // New
+    admin_image_alt_text: "Image Alt Text",
+    admin_image_alt_text_placeholder: "e.g. Los Morrillos Lighthouse at sunset.",
     admin_details_amenities: "Details & Amenities",
     admin_visible_open: "Visible (Open)",
     admin_verified: "Verified",
@@ -473,44 +480,42 @@ export const translations = {
     admin_could_not_find_details: "Could not find place details.",
     admin_import_failed: "Import failed",
     admin_need_name_first: "Need name first",
-    admin_default_zoom: "Default Zoom", // New
-    admin_default_zoom_desc: "Zoom level when loading this place (e.g. 16)", // New
-    admin_applied_mon_to_fri: "Mon-Fri schedule applied.", // New for admin schedule
+    admin_default_zoom: "Default Zoom",
+    admin_default_zoom_desc: "Zoom level when loading this place (e.g. 16)",
+    admin_applied_mon_to_fri: "Mon-Fri schedule applied.",
 
-    // AI Features in Admin
-    admin_ai_suggest_category_tags: "Suggest Category & Tags with AI", // New
-    admin_ai_suggest_category_tags_success: "AI suggested category and tags.", // New
-    admin_ai_suggest_category_tags_fail: "AI could not suggest category/tags.", // New
-    admin_ai_suggest_category_tags_error: "Error generating category/tags with AI.", // New
-    admin_ai_enhance_description: "Enhance Description with AI", // New
-    admin_ai_enhance_description_success: "AI enhanced description.", // New
-    admin_ai_enhance_description_fail: "AI could not enhance description.", // New
-    admin_ai_enhance_description_error: "Error enhancing description with AI.", // New
-    admin_ai_generate_tip: "Generate El Veci Tip with AI", // New
-    admin_ai_generate_tip_success: "AI generated El Veci Tip.", // New
-    admin_ai_generate_tip_fail: "AI could not generate a tip.", // New
-    admin_ai_generate_tip_error: "Error generating tip with AI.", // New
-    admin_ai_generate_alt_text: "Generate Alt Text with AI", // New
-    admin_ai_generate_alt_text_success: "AI generated alt text.", // New
-    admin_ai_generate_alt_text_fail: "AI could not generate alt text.", // New
-    admin_ai_generate_alt_text_error: "Error generating alt text with AI.", // New
-    admin_ai_generate_seo: "Generate SEO with AI", // New
-    admin_ai_generate_seo_success: "AI generated SEO meta tags.", // New
-    admin_ai_generate_seo_fail: "AI could not generate SEO meta tags.", // New
-    admin_ai_generate_seo_error: "Error generating SEO meta tags with AI.", // New
-    admin_meta_title: "SEO Title", // New
-    admin_meta_title_desc: "Optimized title for search engines (max 60 chars).", // New
-    admin_meta_title_placeholder: "e.g. Los Morrillos Lighthouse | Cabo Rojo PR", // New
-    admin_meta_description: "SEO Meta Description", // New
-    admin_meta_description_desc: "Optimized description for search engines (max 160 chars).", // New
-    admin_meta_description_placeholder: "e.g. Discover the historic Los Morrillos Lighthouse in Cabo Rojo, Puerto Rico. Panoramic views & pristine nature. Your local guide to an unforgettable adventure!", // New
-
-    // Place Card Badges (New)
+    admin_ai_suggest_category_tags: "Suggest Category & Tags with AI",
+    admin_ai_suggest_category_tags_success: "AI suggested category and tags.",
+    admin_ai_suggest_category_tags_fail: "AI could not suggest category/tags.",
+    admin_ai_suggest_category_tags_error: "Error generating category/tags with AI.",
+    admin_ai_enhance_description: "Enhance Description with AI",
+    admin_ai_enhance_description_success: "AI enhanced description.",
+    admin_ai_enhance_description_fail: "AI could not enhance description.",
+    admin_ai_enhance_description_error: "Error enhancing description with AI.",
+    admin_ai_generate_tip: "Generate El Veci Tip with AI",
+    admin_ai_generate_tip_success: "AI generated El Veci Tip.",
+    admin_ai_generate_tip_fail: "AI could not generate a tip.",
+    admin_ai_generate_tip_error: "Error generating tip with AI.",
+    admin_ai_generate_alt_text: "Generate Alt Text with AI",
+    admin_ai_generate_alt_text_success: "AI generated alt text.",
+    admin_ai_generate_alt_text_fail: "AI could not generate alt text.",
+    admin_ai_generate_alt_text_error: "Error generating alt text with AI.",
+    admin_ai_generate_seo: "Generate SEO with AI",
+    admin_ai_generate_seo_success: "AI generated SEO meta tags.",
+    admin_ai_generate_seo_fail: "AI could not generate SEO meta tags.",
+    admin_ai_generate_seo_error: "Error generating SEO meta tags with AI.",
+    admin_meta_title: "SEO Title",
+    admin_meta_title_desc: "Optimized title for search engines (max 60 chars).",
+    admin_meta_title_placeholder: "e.g. Los Morrillos Lighthouse | Cabo Rojo PR",
+    admin_meta_description: "SEO Meta Description",
+    admin_meta_description_desc: "Optimized description for search engines (max 160 chars).",
+    admin_meta_description_placeholder: "e.g. Discover the historic Los Morrillos Lighthouse in Cabo Rojo, Puerto Rico. Panoramic views & pristine nature. Your local guide to an unforgettable adventure!",
+    
     delivery: "Delivery",
     generator: "Generator",
-    parking_label: "{{status}} Parking", // New, dynamic
-    free_parking_label: "Free Parking", // Kept for other uses
-    paid_parking_label: "Paid Parking", // Kept for other uses
+    parking_label: "{{status}} Parking",
+    free_parking_label: "Free Parking",
+    paid_parking_label: "Paid Parking",
     delivery_label: "Delivery",
     restroom_label: "Restrooms",
     pet_friendly_label: "Pet Friendly",
@@ -526,32 +531,31 @@ export const translations = {
     service_area: "Service Area",
     phone: "Phone",
     explore_also: "Explore Also",
-    suggest_image_too_large: "Image is too large. Try one under 5MB.", // New for SuggestPlaceModal
-    suggest_name_required: "Name is required", // New for SuggestPlaceModal
-    suggest_ai_bouncer_alert: "👮‍♂️ El Veci says: \"{{reason}}\"\n\nTry fixing it.", // New for SuggestPlaceModal
-    suggest_ai_bouncer_default_reason: "That doesn't look like a real place.", // New for SuggestPlaceModal
-    suggest_image_upload_error: "Error uploading image.", // New for SuggestPlaceModal
-    suggest_submission_error: "Error submitting suggestion. Please try again.", // New for SuggestPlaceModal
-    suggest_connection_error: "Connection error when submitting suggestion.", // New for SuggestPlaceModal
-    suggest_upload_photo: "Upload Photo", // New for SuggestPlaceModal
-    no_results: "No results", // New for ExplorerSheet
-    top_pick: "Top Pick", // New for ExplorerSheet
-    what_is_this: "What is this?", // New for SearchBar
-    light_mode: "Light Mode", // New for CommandMenu
-    dark_mode: "Dark Mode", // New for CommandMenu
-    switch_to_english: "Switch to English", // New for CommandMenu
-    switch_to_spanish: "Cambiar a Español", // New for CommandMenu
-    type_a_command: "Type a command...", // New for CommandMenu
-    no_results_found: "No results found.", // New for CommandMenu
-    app_version: "Map de Cabo Rojo OS 2.0", // New for CommandMenu footer
-    select: "Select", // New for CommandMenu footer
-    navigate: "Navigate", // New for CommandMenu footer
-    zoom_in: "Zoom In", // New
-    zoom_out: "Zoom Out", // New
-    satellite_view: "Satellite View", // New
-    map_view: "Map View", // New
+    suggest_image_too_large: "Image is too large. Try one under 5MB.",
+    suggest_name_required: "Name is required",
+    suggest_ai_bouncer_alert: "👮‍♂️ El Veci says: \"{{reason}}\"\n\nTry fixing it.",
+    suggest_ai_bouncer_default_reason: "That doesn't look like a real place.",
+    suggest_image_upload_error: "Error uploading image.",
+    suggest_submission_error: "Error submitting suggestion. Please try again.",
+    suggest_connection_error: "Connection error when submitting suggestion.",
+    suggest_upload_photo: "Upload Photo",
+    no_results: "No results",
+    top_pick: "Top Pick",
+    what_is_this: "What is this?",
+    light_mode: "Light Mode",
+    dark_mode: "Dark Mode",
+    switch_to_english: "Switch to English",
+    switch_to_spanish: "Cambiar a Español",
+    type_a_command: "Type a command...",
+    no_results_found: "No results found.",
+    app_version: "Map de Cabo Rojo OS 2.0",
+    select: "Select",
+    navigate: "Navigate",
+    zoom_in: "Zoom In",
+    zoom_out: "Zoom Out",
+    satellite_view: "Satellite View",
+    map_view: "Map View",
 
-    // Weather Widget Translations
     weather_loading: "Loading weather...",
     weather_sunny: "Sunny",
     weather_advice_beach: "Go to the beach!",
