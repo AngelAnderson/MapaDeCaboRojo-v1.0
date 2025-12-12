@@ -82,57 +82,59 @@ export default async function handler(req: any, res: any) {
 
 async function handleChat({ message, history, context }: any) {
   // Use the places sent directly from the frontend (which now come from Supabase)
-  // We limit to 150 items to keep context manageable, but include more fields.
+  // We include MORE fields now for "Smarter" recommendations
   const localDatabase = {
     places: context.places.map((p: any) => ({
       id: p.id,
       name: p.name,
       category: p.category,
-      desc: p.description, // Full description
+      desc: p.description, 
       tips: p.tips,
-      vibe: p.vibe,
+      vibe: p.vibe, // Critical for "mood" matching
       status: p.status,
+      price: p.priceLevel, // Critical for budget matching
+      best_time: p.bestTimeToVisit, // Critical for logistics
       address: p.address,
-      opening_hours: p.opening_hours // Passed so AI can check time
+      opening_hours: p.opening_hours 
     })).slice(0, 150), 
     events: context.events.map((e: any) => ({
       title: e.title,
-      date: e.start
+      date: e.start,
+      desc: e.description
     }))
   };
 
   const systemInstruction = `
-    Eres "El Veci", el guía local de Cabo Rojo, Puerto Rico.
+    Eres "El Veci", el guía local experto de Cabo Rojo, Puerto Rico.
     
-    LANGUAGE / IDIOMA:
-    - DETECTA EL IDIOMA DEL USUARIO.
-    - Si el usuario escribe en Inglés -> Responde en Inglés (pero mantén nombres propios como "chinchorreo" o "playa sucia" y explícalos si es necesario).
-    - Si el usuario escribe en Español -> Responde en Español de Puerto Rico (Boricua, amable, "local").
-
-    PERSONALIDAD:
-    - Amable, respetuoso y servicial.
-    - Tu objetivo es ayudar a la gente a pasarla bien.
-    - ¡IMPORTANTE!: Al final de tu respuesta (al menos 1 de cada 2 veces), cuenta un chiste corto y sano ("chiste mongu" / dad joke) relacionado a lo que se habló.
-    - Si respondes en inglés, el chiste debe ser en inglés.
-
-    BASE DE DATOS (Recién actualizada):
+    BASE DE DATOS LOCAL (LA ÚNICA VERDAD):
     ${JSON.stringify(localDatabase)}
 
-    INSTRUCCIONES PARA RECOMENDACIONES:
-    1. Si recomiendas un lugar ESPECÍFICO de tu base de datos, DEBES añadir su 'id' al array 'suggested_place_ids' en la respuesta JSON.
-    2. CHECK DE HORARIOS (PUERTO RICO TIME):
-       - Fecha Actual en PR: ${context.date}
-       - Hora Actual en PR: ${context.time}
-       - COMPARACIÓN: Mira 'opening_hours' del lugar y compara con la Hora Actual en PR.
-       - Si crees que está cerrado, AVÍSALE al usuario en el texto ("Ojo, en Cabo Rojo son las ${context.time} y esto cierra a las X... / Heads up, it's ${context.time} in PR and this closes at X...").
-    3. Si un lugar tiene status 'closed', di que está cerrado permanentemente.
-    4. Usa la información de 'tips' y 'vibe' para dar mejores recomendaciones.
+    REGLAS ESTRICTAS DE DATOS:
+    1. **Inventario Cerrado**: Para recomendar lugares (comida, playas) o listar eventos, usa ÚNICAMENTE la 'BASE DE DATOS LOCAL' de arriba.
+    2. **Eventos**: Si te preguntan por eventos ("¿Qué hay para hacer?", "Eventos hoy"), revisa el array 'events' en tu base de datos. Si está vacío o no hay coincidencias, di explícitamente: "No veo eventos programados en la app por ahora." NO busques eventos en Google.
+    3. **Lugares**: Si te piden "mejores playas" o "restaurantes", escoge SOLO de la lista 'places'. No inventes lugares ni traigas lugares de internet que no estén en la lista.
+
+    USO DE GOOGLE SEARCH:
+    - Úsalo SOLO para: Clima actual, noticias de emergencia (tráfico, luz, agua), o para verificar horarios de apertura *si* la base de datos dice 'null'.
+    - PROHIBIDO usar Google Search para buscar "listas de eventos" o "lugares turísticos".
+
+    PERSONALIDAD:
+    - Boricua "Sangre Liviana": Amable, gracioso, usas slang suave (brutal, nítido, jangueo, chinchorreo).
+    - Servicial: Si preguntan por comida, sugiere 2-3 opciones de tu lista.
+    - Cierre: Termina (50% de las veces) con un chiste corto y sano ("chiste mongu") o un refrán boricua.
+
+    INSTRUCCIONES DE LÓGICA:
+    1. **Recomendaciones**: Si recomiendas un lugar de la DB, AÑADE su ID al array 'suggested_place_ids'.
+    2. **Contexto Temporal**:
+       - Fecha PR: ${context.date} | Hora PR: ${context.time}
+       - Verifica 'opening_hours' en tu DB antes de sugerir.
+    3. **Formato Markdown**: Usa **negritas** para nombres de lugares.
 
     FORMATO DE RESPUESTA (JSON):
-    Siempre responde en JSON.
     {
-      "text": "Tu respuesta conversacional aquí...",
-      "suggested_place_ids": ["id1", "id2"] // Solo si mencionas lugares específicos
+      "text": "Respuesta en Markdown con emojis...",
+      "suggested_place_ids": ["id1", "id2"]
     }
   `;
 
@@ -149,8 +151,9 @@ async function handleChat({ message, history, context }: any) {
     history: validHistory,
     config: { 
       systemInstruction,
-      responseMimeType: "application/json", // Force JSON output for easier UI handling
-      tools: [{ googleSearch: {} }], // Available if needed, but instructed to use sparingly
+      responseMimeType: "application/json", 
+      // ENABLE GOOGLE SEARCH GROUNDING - But limited by prompt constraints above
+      tools: [{ googleSearch: {} }], 
     }
   });
 
@@ -188,14 +191,15 @@ async function handleItinerary({ vibe, places }: any) {
   const simplifiedPlaces = places.map((p: any) => `${p.name} (ID: ${p.id}, Cat: ${p.category})`).join(', ');
 
   const prompt = `
-    Crea un itinerario de 1 día en Cabo Rojo.
+    Crea un itinerario de 1 día en Cabo Rojo, Puerto Rico.
     Vibe: "${vibe}"
-    Lugares Disponibles: ${simplifiedPlaces}
+    Lugares Disponibles (USA SOLO ESTOS): ${simplifiedPlaces}
     
     Reglas:
-    1. Usa iconos FontAwesome apropiados.
-    2. Si sugieres un lugar de la lista, INCLUYE SU ID exacto en 'placeId'.
-    3. Sé lógico con los tiempos y distancias.
+    1. LÓGICA GEOGRÁFICA: Agrupa lugares cercanos (ej. Faro y Playa Sucia van juntos).
+    2. COMIDA: Incluye paradas para comer en horas lógicas usando los lugares disponibles.
+    3. TIEMPO: Considera el tiempo de traslado y disfrute.
+    4. ICONOS: Usa iconos FontAwesome divertidos.
   `;
 
   const response = await ai.models.generateContent({
@@ -218,6 +222,7 @@ async function handleItinerary({ vibe, places }: any) {
 
 async function handleIdentify({ image }: any) {
   const prompt = `Analyze this image. Is it a location in Cabo Rojo, Puerto Rico? 
+  If yes, describe where it likely is. If no, say it doesn't look like Cabo Rojo.
   Return JSON: { "matchedPlaceId": string | null, "explanation": "Explicación amable y clara en español." }`;
   
   const response = await ai.models.generateContent({
