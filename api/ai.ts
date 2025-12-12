@@ -81,21 +81,22 @@ export default async function handler(req: any, res: any) {
 // --- HANDLERS ---
 
 async function handleChat({ message, history, context }: any) {
-  // Optimize Context: Flatten relevant data to save tokens and reduce noise
+  // Use the places sent directly from the frontend (which now come from Supabase)
+  // We limit to 150 items to keep context manageable, but include more fields.
   const localDatabase = {
     places: context.places.map((p: any) => ({
       id: p.id,
       name: p.name,
       category: p.category,
-      desc: p.description?.substring(0, 150), // Truncate descriptions for context
-      tags: p.tags,
+      desc: p.description, // Full description
+      tips: p.tips,
+      vibe: p.vibe,
       status: p.status,
       address: p.address
-    })).slice(0, 100), // Limit number of places
+    })).slice(0, 150), 
     events: context.events.map((e: any) => ({
       title: e.title,
-      date: e.start,
-      desc: e.description?.substring(0, 100)
+      date: e.start
     }))
   };
 
@@ -107,11 +108,16 @@ async function handleChat({ message, history, context }: any) {
     - Tu objetivo es ayudar a la gente a pasarla bien.
     - Siempre terminas con un chiste corto y sano.
 
-    DATOS:
-    - Base de datos local: ${JSON.stringify(localDatabase)}
-    - Usa Google Search SOLAMENTE si preguntan por el clima actual o noticias recientes. Para lugares, usa tu base de datos primero.
+    BASE DE DATOS (Recién actualizada):
+    ${JSON.stringify(localDatabase)}
 
-    CONTEXTO:
+    INSTRUCCIONES:
+    - Usa Google Search SOLAMENTE si preguntan por el clima actual o noticias recientes. 
+    - Para recomendar lugares, USA TU BASE DE DATOS LOCAL PRIMERO.
+    - Si un lugar tiene status 'closed', avísale al usuario.
+    - Usa la información de 'tips' y 'vibe' para dar mejores recomendaciones.
+
+    CONTEXTO ACTUAL:
     - Fecha: ${context.date}
     - Hora: ${context.time}
   `;

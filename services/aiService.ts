@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Place, Event, Coordinates, AdminLog, ItineraryItem, PlaceCategory } from "../types";
+import { Place, Event, Coordinates, AdminLog, ItineraryItem, PlaceCategory, ChatMessage } from "../types";
 
 // Initialize Client-Side AI (Fallback)
 const clientAI = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
@@ -15,11 +15,31 @@ async function handleClientSideAI(action: string, payload: any) {
             const systemInstruction = `
                 Eres "El Veci", el guía local de Cabo Rojo, Puerto Rico.
                 PERSONALIDAD: Amable, respetuoso, boricua.
-                DATOS: ${JSON.stringify(context.places.map((p:any) => ({name: p.name, cat: p.category, desc: p.description})).slice(0, 50))}
+                
+                DATOS EN TIEMPO REAL:
+                Aquí tienes la lista actualizada de lugares y eventos en Cabo Rojo:
+                ${JSON.stringify(context.places.map((p:any) => ({
+                    name: p.name, 
+                    cat: p.category, 
+                    desc: p.description,
+                    tips: p.tips,
+                    vibe: p.vibe
+                })).slice(0, 100))}
+
+                Instrucciones:
+                1. Usa SOLAMENTE esta información para responder sobre lugares.
+                2. Si no sabes algo, di que no estás seguro, no inventes.
             `;
+            
+            // Map history for Gemini SDK
+            const formattedHistory = history.map((h: any) => ({
+                role: h.role === 'model' ? 'model' : 'user',
+                parts: [{ text: h.text }]
+            }));
+
             const chat = clientAI.chats.create({
                 model: 'gemini-2.5-flash',
-                history: history.map((h: any) => ({ role: h.role, parts: [{ text: h.text }] })),
+                history: formattedHistory,
                 config: { systemInstruction }
             });
             const result = await chat.sendMessage({ message });
@@ -159,26 +179,50 @@ const extractJson = (data: any) => {
 
 // --- EXPORTS ---
 
+// REFACTORED: Stateless message sender to ensure fresh data on every turn
+export const sendConciergeMessage = async (
+    message: string, 
+    history: ChatMessage[], 
+    places: Place[], 
+    events: Event[], 
+    userLoc: Coordinates | undefined, 
+    contextInfo: any
+) => {
+    const payload = {
+        message,
+        history: history.map(h => ({ role: h.role, text: h.text })),
+        context: {
+            // We pass the Full Place Data here so the AI sees Supabase updates immediately
+            places: places.map(p => ({ 
+                id: p.id, 
+                name: p.name, 
+                category: p.category, 
+                description: p.description, // No truncation to give AI full context
+                tips: p.tips,
+                vibe: p.vibe,
+                address: p.address,
+                status: p.status
+            })),
+            events: events.map(e => ({ title: e.title, start: e.startTime })),
+            userLoc, 
+            ...contextInfo
+        }
+    };
+
+    const response = await callAI('chat', payload);
+    return response?.text || "El Veci está durmiendo. Intenta más tarde.";
+};
+
+// Deprecated: Kept only if other files reference it, but `sendConciergeMessage` is preferred.
 export const createConciergeChat = (places: Place[], events: Event[], userLoc: Coordinates | undefined, context: any) => {
     let history: any[] = [];
     return {
         sendMessage: async ({ message }: { message: string }) => {
-            const payload = {
-                message,
-                history,
-                context: {
-                    places: places.map(p => ({ id: p.id, name: p.name, category: p.category, description: p.description?.substring(0,200) })),
-                    events: events.map(e => ({ title: e.title, start: e.startTime })),
-                    userLoc, ...context
-                }
-            };
-            const response = await callAI('chat', payload);
-            if (response?.text) {
-                history.push({ role: 'user', text: message });
-                history.push({ role: 'model', text: response.text });
-                return { text: response.text };
-            }
-            return { text: "El Veci está durmiendo. Intenta más tarde." };
+            // This legacy wrapper now just calls the new stateless function
+            const responseText = await sendConciergeMessage(message, history.map(h => ({ role: h.role, text: h.text })), places, events, userLoc, context);
+            history.push({ role: 'user', text: message });
+            history.push({ role: 'model', text: responseText });
+            return { text: responseText };
         }
     };
 };
@@ -247,7 +291,6 @@ export const generateSeoMetaTags = async (name: string, description: string, cat
     return res;
 };
 
-// Unused placeholders kept for type compatibility
 export const enrichPlaceMetadata = async () => ({});
 export const generateExecutiveBriefing = async () => "{}";
 export const generateAudioScript = async () => "";
