@@ -110,9 +110,16 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
   // Smart Import State
   const [importQuery, setImportQuery] = useState('');
   const [importLoading, setImportLoading] = useState(false);
-  const [magicParsing, setMagicParsing] = useState(false); // NEW State for AI Parser
+  const [magicParsing, setMagicParsing] = useState(false); 
   const [autocompleteSuggestions, setAutocompleteSuggestions] = useState<any[]>([]);
   const autocompleteTimeoutRef = useRef<number | null>(null);
+
+  // Bulk Import State
+  const [bulkMode, setBulkMode] = useState(false);
+  const [bulkInput, setBulkInput] = useState('');
+  const [bulkType, setBulkType] = useState<'scout' | 'json'>('scout');
+  const [bulkLogs, setBulkLogs] = useState<{status: 'success'|'error'|'pending', msg: string}[]>([]);
+  const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
   // AI Content Generation States
   const [isAiGeneratingCategoryTags, setIsAiGeneratingCategoryTags] = useState(false);
@@ -130,7 +137,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
 
 
   // Marketing State
-  const [marketingPlatform, setMarketingPlatform] = useState<'instagram' | 'radio' | 'email' | 'campaign_bundle'>('instagram'); // Added 'campaign_bundle'
+  const [marketingPlatform, setMarketingPlatform] = useState<'instagram' | 'radio' | 'email' | 'campaign_bundle'>('instagram'); 
   const [marketingTone, setMarketingTone] = useState<'hype' | 'chill' | 'professional'>('hype');
   const [marketingResult, setMarketingResult] = useState('');
   const [isGeneratingMarketing, setIsGeneratingMarketing] = useState(false);
@@ -300,6 +307,75 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
       setIsSaving(false);
     }
   };
+
+  // --- BULK IMPORT LOGIC ---
+  const handleBulkImport = async () => {
+      setIsBulkProcessing(true);
+      setBulkLogs([]);
+      const lines = bulkInput.split('\n').filter(line => line.trim() !== '');
+      
+      if (bulkType === 'scout') {
+          // BATCH SCOUT MODE (Fetch Details via Google Proxy)
+          for (const query of lines) {
+              setBulkLogs(prev => [...prev, { status: 'pending', msg: `Scouting: ${query}...` }]);
+              try {
+                  const details = await fetchPlaceDetails(query);
+                  if (details && details.name) {
+                      const res = await createPlace({
+                          ...details,
+                          status: 'open',
+                          isVerified: true,
+                          sponsor_weight: 0,
+                          tags: ['Batch Scout', ...(details.tags || [])]
+                      });
+                      
+                      if (res.success) {
+                          setBulkLogs(prev => [...prev, { status: 'success', msg: `✅ Saved: ${details.name}` }]);
+                      } else {
+                          setBulkLogs(prev => [...prev, { status: 'error', msg: `❌ DB Error: ${query} - ${res.error}` }]);
+                      }
+                  } else {
+                      setBulkLogs(prev => [...prev, { status: 'error', msg: `❌ Not Found: ${query}` }]);
+                  }
+                  // Slight delay to be nice to APIs
+                  await new Promise(r => setTimeout(r, 800));
+              } catch (e: any) {
+                  setBulkLogs(prev => [...prev, { status: 'error', msg: `❌ Error: ${query} - ${e.message}` }]);
+              }
+          }
+      } else {
+          // RAW JSON MODE
+          try {
+              const data = JSON.parse(bulkInput);
+              if (!Array.isArray(data)) throw new Error("Input must be a JSON Array");
+              
+              for (const place of data) {
+                  setBulkLogs(prev => [...prev, { status: 'pending', msg: `Processing: ${place.name || 'Unknown'}...` }]);
+                  
+                  // Ensure minimal requirements
+                  const payload = {
+                      ...place,
+                      status: place.status || 'open',
+                      category: place.category || PlaceCategory.SERVICE,
+                      isVerified: true
+                  };
+
+                  const res = await createPlace(payload);
+                  if (res.success) {
+                      setBulkLogs(prev => [...prev, { status: 'success', msg: `✅ Imported: ${payload.name}` }]);
+                  } else {
+                      setBulkLogs(prev => [...prev, { status: 'error', msg: `❌ Failed: ${payload.name} - ${res.error}` }]);
+                  }
+              }
+          } catch (e: any) {
+              setBulkLogs(prev => [...prev, { status: 'error', msg: `CRITICAL: Invalid JSON - ${e.message}` }]);
+          }
+      }
+      
+      await onUpdate();
+      setIsBulkProcessing(false);
+  };
+
 
   const handleDeletePlace = async (id: string) => {
     if (confirm(t('admin_confirm_delete_place'))) {
@@ -662,7 +738,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
         {isEditing ? (
             <div className="flex items-center gap-3 w-full">
                 <button 
-                    onClick={() => { setEditingPlace(null); setEditingEvent(null); }} 
+                    onClick={() => { setEditingPlace(null); setEditingEvent(null); setBulkMode(false); }} 
                     className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 active:bg-slate-700 transition-colors"
                 >
                     <i className="fa-solid fa-arrow-left"></i>
@@ -711,7 +787,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
       <div className="flex-1 overflow-hidden flex relative">
         
         {/* LIST VIEW (Sidebar on Desktop, Full on Mobile when not editing) */}
-        <div className={`w-full md:w-80 border-r border-slate-700 bg-slate-900 flex flex-col ${isEditing ? 'hidden md:flex' : 'flex'} ${activeTab === 'insights' ? 'hidden md:hidden' : ''}`}>
+        <div className={`w-full md:w-80 border-r border-slate-700 bg-slate-900 flex flex-col ${isEditing || bulkMode ? 'hidden md:flex' : 'flex'} ${activeTab === 'insights' ? 'hidden md:hidden' : ''}`}>
             {activeTab !== 'insights' && (
                 <div className="p-4 border-b border-slate-700">
                     <div className="relative">
@@ -749,25 +825,36 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                 {/* PLACES TAB (Live) */}
                 {activeTab === 'places' && (
                     <>
-                    <button 
-                        onClick={() => {
-                            const newPlace: Partial<Place> = { 
-                                name: '', 
-                                category: PlaceCategory.FOOD, 
-                                status: 'open', 
-                                plan: 'free', 
-                                coords: undefined, // Default to undefined
-                                amenities: {}, 
-                                parking: ParkingStatus.FREE,
-                                defaultZoom: DEFAULT_PLACE_ZOOM, // Default zoom for new places
-                            };
-                            setEditingPlace(newPlace);
-                            setJsonString('{}');
-                        }} 
-                        className="w-full p-4 rounded-xl border-2 border-dashed border-slate-700 text-slate-400 hover:border-teal-500 hover:text-teal-500 hover:bg-slate-800 transition-all font-bold text-sm flex items-center justify-center gap-2"
-                    >
-                        <i className="fa-solid fa-plus"></i> {t('admin_add_new_place')}
-                    </button>
+                    <div className="flex gap-2">
+                        <button 
+                            onClick={() => {
+                                const newPlace: Partial<Place> = { 
+                                    name: '', 
+                                    category: PlaceCategory.FOOD, 
+                                    status: 'open', 
+                                    plan: 'free', 
+                                    coords: undefined, // Default to undefined
+                                    amenities: {}, 
+                                    parking: ParkingStatus.FREE,
+                                    defaultZoom: DEFAULT_PLACE_ZOOM, // Default zoom for new places
+                                };
+                                setEditingPlace(newPlace);
+                                setJsonString('{}');
+                            }} 
+                            className="flex-1 p-4 rounded-xl border-2 border-dashed border-slate-700 text-slate-400 hover:border-teal-500 hover:text-teal-500 hover:bg-slate-800 transition-all font-bold text-sm flex flex-col items-center justify-center gap-1"
+                        >
+                            <i className="fa-solid fa-plus text-lg"></i> <span className="text-[10px]">Add New</span>
+                        </button>
+                        
+                        {/* BULK IMPORT BUTTON */}
+                        <button 
+                            onClick={() => { setBulkMode(true); setEditingPlace(null); }}
+                            className="flex-1 p-4 rounded-xl border-2 border-dashed border-slate-700 text-purple-400 hover:border-purple-500 hover:text-purple-500 hover:bg-purple-900/10 transition-all font-bold text-sm flex flex-col items-center justify-center gap-1"
+                        >
+                            <i className="fa-solid fa-layer-group text-lg"></i> <span className="text-[10px]">Bulk Ops</span>
+                        </button>
+                    </div>
+
                     {filteredPlaces.map(p => (
                         <div key={p.id} onClick={() => setEditingPlace(p)} className={`p-4 rounded-xl border cursor-pointer transition-all active:scale-[0.98] ${editingPlace?.id === p.id ? 'bg-teal-900/20 border-teal-500/50' : 'bg-slate-800 border-slate-700 hover:bg-slate-700'}`}>
                             <div className="flex justify-between items-start mb-1">
@@ -815,7 +902,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
         </div>
 
         {/* EDITOR VIEW (Full screen on mobile if editing) */}
-        <div className={`flex-1 bg-slate-900 overflow-y-auto custom-scrollbar ${isEditing ? 'absolute inset-0 z-10 md:static' : (activeTab === 'insights' ? 'w-full' : 'hidden md:flex flex-col items-center justify-center')}`}>
+        <div className={`flex-1 bg-slate-900 overflow-y-auto custom-scrollbar ${isEditing || bulkMode ? 'absolute inset-0 z-10 md:static' : (activeTab === 'insights' ? 'w-full' : 'hidden md:flex flex-col items-center justify-center')}`}>
             
             {activeTab === 'insights' ? (
                 <div className="p-6 max-w-6xl mx-auto space-y-8 animate-slide-up">
@@ -950,6 +1037,65 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                             </div>
                         </div>
                     </div>
+                </div>
+            ) : bulkMode ? (
+                <div className="p-4 md:p-8 max-w-4xl mx-auto pb-32 animate-slide-up">
+                    <div className="flex items-center gap-3 mb-6">
+                        <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center text-white text-2xl shadow-lg shadow-purple-500/20">
+                            <i className="fa-solid fa-layer-group"></i>
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-black text-white">Bulk Operations Center</h2>
+                            <p className="text-slate-400 text-sm">Mass import tools for rapid data entry.</p>
+                        </div>
+                    </div>
+
+                    <div className="flex gap-4 mb-6">
+                        <button onClick={() => setBulkType('scout')} className={`flex-1 p-4 rounded-xl border-2 font-bold text-sm transition-all flex flex-col items-center gap-2 ${bulkType === 'scout' ? 'bg-purple-900/30 border-purple-500 text-purple-300' : 'bg-slate-800 border-slate-700 text-slate-500 hover:border-slate-600'}`}>
+                            <i className="fa-solid fa-robot text-2xl"></i>
+                            Batch Scout (Auto-Fetch)
+                        </button>
+                        <button onClick={() => setBulkType('json')} className={`flex-1 p-4 rounded-xl border-2 font-bold text-sm transition-all flex flex-col items-center gap-2 ${bulkType === 'json' ? 'bg-blue-900/30 border-blue-500 text-blue-300' : 'bg-slate-800 border-slate-700 text-slate-500 hover:border-slate-600'}`}>
+                            <i className="fa-solid fa-code text-2xl"></i>
+                            JSON Import
+                        </button>
+                    </div>
+
+                    <div className="bg-slate-800/50 border border-slate-700 rounded-2xl p-4 mb-6">
+                        <div className="flex justify-between items-center mb-3">
+                            <label className="text-xs font-bold text-slate-400 uppercase tracking-wide">
+                                {bulkType === 'scout' ? "Place List (One per line)" : "Raw JSON Array"}
+                            </label>
+                            {bulkType === 'scout' && <span className="text-[10px] bg-purple-500/20 text-purple-400 px-2 py-1 rounded">Accepts Names or Google Maps Links</span>}
+                        </div>
+                        <textarea 
+                            value={bulkInput}
+                            onChange={(e) => setBulkInput(e.target.value)}
+                            placeholder={bulkType === 'scout' ? "El Meson Sandwiches\nBuye Beach\nhttps://goo.gl/maps/..." : "[ { \"name\": \"Place A\", ... }, ... ]"}
+                            className="w-full h-64 bg-slate-900 text-white font-mono text-sm p-4 rounded-xl border border-slate-700 focus:border-purple-500 outline-none resize-none"
+                        />
+                    </div>
+
+                    <button 
+                        onClick={handleBulkImport} 
+                        disabled={isBulkProcessing || !bulkInput.trim()}
+                        className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-4 rounded-xl shadow-lg shadow-purple-900/50 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100 flex items-center justify-center gap-3"
+                    >
+                        {isBulkProcessing ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-rocket"></i>}
+                        <span>{isBulkProcessing ? "Processing Batch..." : "Start Batch Import"}</span>
+                    </button>
+
+                    {/* CONSOLE OUTPUT */}
+                    {bulkLogs.length > 0 && (
+                        <div className="mt-8 bg-black/80 rounded-xl border border-slate-800 p-4 font-mono text-xs h-64 overflow-y-auto">
+                            {bulkLogs.map((log, i) => (
+                                <div key={i} className={`mb-1 ${log.status === 'success' ? 'text-green-400' : log.status === 'error' ? 'text-red-400' : 'text-slate-400 animate-pulse'}`}>
+                                    <span className="opacity-50 mr-2">[{new Date().toLocaleTimeString()}]</span>
+                                    {log.msg}
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             ) : (activeTab === 'places' || activeTab === 'inbox') && editingPlace ? (
                 <div className="p-4 md:p-8 max-w-3xl mx-auto pb-32 animate-slide-up">
