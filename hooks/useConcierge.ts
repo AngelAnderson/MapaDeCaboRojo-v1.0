@@ -11,11 +11,8 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
   const [isListening, setIsListening] = useState(false);
   const [weatherContext, setWeatherContext] = useState<string>('');
   
-  // 1. Init Weather & Welcome
+  // 1. Init Weather
   useEffect(() => {
-    if (messages.length === 0) {
-        setMessages([{ role: 'model', text: '¡Wepa! Soy El Veci. I speak English too! ¿En qué te ayudo? / How can I help?' }]);
-    }
     const fetchWeather = async () => {
         try {
             // Quick timeout for weather to not block chat

@@ -14,7 +14,7 @@ interface ConciergeProps {
 }
 
 const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, onNavigateToPlace, userLocation }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -179,10 +179,25 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
             </div>
             <button onClick={() => handleSend()} disabled={isLoading} className="bg-teal-600 text-white p-4 rounded-2xl w-14 hover:bg-teal-700 transition-colors shadow-lg shadow-teal-500/30 disabled:opacity-50 disabled:shadow-none"><i className="fa-solid fa-paper-plane"></i></button>
           </div>
-          <div className="mt-3 flex gap-2 overflow-x-auto no-scrollbar">
-             {["Plan Familiar", "Ruta Chinchorreo", "Cita Romántica"].map(v => (
-                 <button key={v} onClick={() => handlePlanTrip(v)} disabled={isLoading} className="whitespace-nowrap bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-4 py-2 rounded-full text-xs font-bold border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors disabled:opacity-50">{v}</button>
-             ))}
+          
+          <div className="mt-3 grid grid-cols-2 gap-2">
+             <button 
+                onClick={() => handleSend(language === 'es' ? "¿Qué lugares de comida están abiertos ahora?" : "What food places are open right now?")} 
+                disabled={isLoading} 
+                className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-4 py-3 rounded-xl text-xs font-bold border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
+             >
+                 <i className="fa-solid fa-utensils"></i>
+                 {language === 'es' ? 'Comida Abierta' : 'Open for Food'}
+             </button>
+
+             <button 
+                onClick={() => handleSend(language === 'es' ? "¿Qué eventos hay próximamente? Incluye detalles." : "What are the upcoming events? Include details.")} 
+                disabled={isLoading} 
+                className="bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-4 py-3 rounded-xl text-xs font-bold border border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
+             >
+                 <i className="fa-regular fa-calendar-days"></i>
+                 {language === 'es' ? 'Próximos Eventos' : 'Upcoming Events'}
+             </button>
           </div>
         </div>
       </div>
