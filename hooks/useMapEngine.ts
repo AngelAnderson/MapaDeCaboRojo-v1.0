@@ -1,14 +1,21 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
-import { Place, PlaceCategory, Coordinates } from '../types';
-import { CABO_ROJO_CENTER, DEFAULT_PLACE_ID, CATEGORY_COLORS, getMarkerColor, DEFAULT_PLACE_ZOOM } from '../constants';
-import { escapeHTML } from '../services/supabase'; // Import the HTML escaper
+import { Place, PlaceCategory, Coordinates, Category } from '../types';
+import { CABO_ROJO_CENTER, DEFAULT_PLACE_ID, CATEGORY_COLORS, DEFAULT_PLACE_ZOOM } from '../constants';
+import { escapeHTML } from '../services/supabase'; 
 
 // --- INTERNAL HELPERS ---
-// CATEGORY_COLORS and getMarkerColor are now imported from constants.ts
 
-const getSmartIcon = (place: Place): string => {
+const getSmartIcon = (place: Place, categories?: Category[]): string => {
     if (place.customIcon) return place.customIcon;
+    
+    // Look up icon from dynamic categories if available
+    if (categories) {
+        const cat = categories.find(c => c.id === place.category);
+        if (cat && cat.icon) return cat.icon;
+    }
+
     const lowerName = place.name.toLowerCase();
     
     // Keyword-based icon overrides
@@ -27,25 +34,41 @@ const getSmartIcon = (place: Place): string => {
       if (lowerName.includes(key)) return iconMap[key];
     }
     
-    // Category-based fallbacks
+    // Category-based fallbacks (Static)
     switch (place.category) { 
-        case PlaceCategory.BEACH: return 'fa-umbrella-beach'; 
-        case PlaceCategory.FOOD: return 'fa-utensils'; 
-        case PlaceCategory.SIGHTS: return 'fa-camera'; 
-        case PlaceCategory.LOGISTICS: return 'fa-gas-pump'; 
-        case PlaceCategory.LODGING: return 'fa-bed'; 
-        case PlaceCategory.NIGHTLIFE: return 'fa-champagne-glasses'; 
-        case PlaceCategory.HEALTH: return 'fa-heart-pulse';
-        case PlaceCategory.SHOPPING: return 'fa-bag-shopping';
-        case PlaceCategory.ACTIVITY: return 'fa-person-hiking';
+        case 'BEACH': return 'fa-umbrella-beach'; 
+        case 'FOOD': return 'fa-utensils'; 
+        case 'SIGHTS': return 'fa-binoculars'; 
+        case 'LOGISTICS': return 'fa-gas-pump'; 
+        case 'LODGING': return 'fa-bed'; 
+        case 'NIGHTLIFE': return 'fa-champagne-glasses'; 
+        case 'HEALTH': return 'fa-staff-snake';
+        case 'SHOPPING': return 'fa-bag-shopping';
+        case 'ACTIVITY': return 'fa-person-hiking';
+        case 'CULTURE': return 'fa-masks-theater';
+        case 'SERVICE': return 'fa-bell-concierge';
         default: return 'fa-location-dot'; 
     }
 };
 
-const generateMarkerHtml = (place: Place): string => { // Removed isMarina parameter
+const generateMarkerHtml = (place: Place, categories?: Category[]): string => { 
   const isClosed = place.status === 'closed';
-  const catColor = isClosed ? '#64748b' : (CATEGORY_COLORS[place.category] || CATEGORY_COLORS.DEFAULT);
-  const iconClass = getSmartIcon(place); 
+  
+  // 1. Start with the static fallback color
+  let catColor = CATEGORY_COLORS[place.category] || CATEGORY_COLORS.DEFAULT;
+  
+  // 2. Try to find a dynamic color from the database list
+  if (categories && categories.length > 0) {
+      const cat = categories.find(c => c.id === place.category);
+      if (cat) catColor = cat.color;
+  }
+
+  // 3. Override if closed
+  if (isClosed) {
+      catColor = '#64748b'; // Slate 500
+  }
+
+  const iconClass = getSmartIcon(place, categories); 
 
   return `
     <div style="width: 36px; height: 36px; background: ${catColor}; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s ease;">
@@ -61,12 +84,12 @@ export const useMapEngine = (
     isDarkMode: boolean,
     mapStyle: 'standard' | 'satellite',
     placesToRender: Place[],
-    onPlaceSelect: (p: Place) => void
+    onPlaceSelect: (p: Place) => void,
+    categories?: Category[] // NEW
 ) => {
     const map = useRef<L.Map | null>(null);
     const tileLayer = useRef<L.TileLayer | null>(null);
     const markersRef = useRef<L.Marker[]>([]);
-    // Removed boatMarkerRef as boat animation is no longer needed
     const userLocMarkerRef = useRef<L.Marker | null>(null);
     const [mapLoaded, setMapLoaded] = useState(false);
 
@@ -98,7 +121,7 @@ export const useMapEngine = (
             const lightTiles = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
             const darkTiles = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
             tileUrl = isDarkMode ? darkTiles : lightTiles;
-            attribution = '&copy; OpenStreetMap and CARTO'; // Changed to & OpenStreetMap and CARTO as previously only CARTO was there
+            attribution = '&copy; OpenStreetMap and CARTO'; 
         }
         tileLayer.current = L.tileLayer(tileUrl, { 
             attribution,
@@ -120,14 +143,13 @@ export const useMapEngine = (
             
             bounds.extend([place.coords.lat, place.coords.lng]);
 
-            // Removed isMarina check here
-            const html = generateMarkerHtml(place); 
+            const html = generateMarkerHtml(place, categories); 
             const icon = L.divIcon({ className: 'custom-pin group', html: html, iconSize: [40, 40], iconAnchor: [20, 40] });
             
             const marker = L.marker([place.coords.lat, place.coords.lng], { icon: icon, zIndexOffset: place.id === DEFAULT_PLACE_ID ? 1000 : 0 }) // Keep zIndex for DEFAULT_PLACE_ID if it needs to be on top
                 .addTo(map.current!);
             
-            // Tooltip Logic - --- SECURITY FIX: Escape HTML content ---
+            // Tooltip Logic
             const tooltipHtml = `
                 <div class="relative bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-2xl rounded-xl px-4 py-2 text-center transform transition-all min-w-[140px] -translate-y-1">
                 <div class="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight mb-1">${escapeHTML(place.name)}</div>
@@ -145,9 +167,7 @@ export const useMapEngine = (
         if (placesToRender.length > 0 && map.current && placesToRender.length < 50) {
              // Optional: map.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
         }
-    }, [placesToRender, mapLoaded]);
-
-    // Removed the boat animation logic as requested.
+    }, [placesToRender, mapLoaded, categories]); // Re-render when categories change
 
     // Public Methods
     const flyTo = (coords: Coordinates, zoom: number | undefined = DEFAULT_PLACE_ZOOM) => { // Default to DEFAULT_PLACE_ZOOM
@@ -170,8 +190,8 @@ export const useMapEngine = (
     };
 
     const invalidateSize = () => map.current?.invalidateSize();
-    const zoomIn = () => map.current?.zoomIn(); // Expose zoomIn
-    const zoomOut = () => map.current?.zoomOut(); // Expose zoomOut
+    const zoomIn = () => map.current?.zoomIn(); 
+    const zoomOut = () => map.current?.zoomOut(); 
 
     return { mapLoaded, flyTo, flyHome, showUserLocation, invalidateSize, zoomIn, zoomOut };
 };

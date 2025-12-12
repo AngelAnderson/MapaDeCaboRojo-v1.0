@@ -1,12 +1,13 @@
 
 import { useState, useEffect, useMemo } from 'react';
-import { Place, Event, PlaceCategory, ParkingStatus } from '../types';
-import { getPlaces, getEvents } from '../services/supabase';
-import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, DEFAULT_PLACE_ID } from '../constants';
+import { Place, Event, PlaceCategory, ParkingStatus, Category } from '../types';
+import { getPlaces, getEvents, getCategories } from '../services/supabase';
+import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, DEFAULT_CATEGORIES } from '../constants';
 
 export const usePlacesData = () => {
   const [places, setPlaces] = useState<Place[]>(FALLBACK_PLACES);
   const [events, setEvents] = useState<Event[]>(FALLBACK_EVENTS);
+  const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
   const [loading, setLoading] = useState(true);
 
   // Initial Fetch
@@ -14,11 +15,16 @@ export const usePlacesData = () => {
     const initData = async () => {
         try {
             console.log("Fetching real data...");
-            const realPlaces = await getPlaces();
+            const [realPlaces, realEvents, realCategories] = await Promise.all([
+                getPlaces(),
+                getEvents(),
+                getCategories()
+            ]);
+
             if (realPlaces.length > 0) setPlaces(realPlaces);
-            
-            const realEvents = await getEvents();
             if (realEvents.length > 0) setEvents(realEvents);
+            if (realCategories.length > 0) setCategories(realCategories);
+            
         } catch (e) {
             console.error("Data load failed, using fallbacks", e);
         } finally {
@@ -44,7 +50,7 @@ export const usePlacesData = () => {
         name: e.title,
         slug: `event-${e.id}`,
         description: e.description,
-        category: e.category as unknown as PlaceCategory,
+        category: e.category as unknown as string,
         // If coords are not available for an event, default to 0,0 for mapping convenience,
         // but the 'Place' type itself now allows `coords` to be optional.
         coords: e.coords || { lat: 0, lng: 0 }, 
@@ -73,15 +79,15 @@ export const usePlacesData = () => {
         isVerified: true,
         opening_hours: { note: new Date(e.startTime).toLocaleString() },
         contact_info: { eventStart: e.startTime, eventEnd: e.endTime, isEvent: true }
-    } as Place)); // Cast to Place as coords are now definitely present or defaulted
+    } as Place)); 
   }, [events]);
 
   const refreshData = async () => {
-      const p = await getPlaces();
+      const [p, e, c] = await Promise.all([getPlaces(), getEvents(), getCategories()]);
       if(p.length > 0) setPlaces(p);
-      const e = await getEvents();
       if(e.length > 0) setEvents(e);
+      if(c.length > 0) setCategories(c);
   };
 
-  return { places, events, publishedPlaces, mappedEvents, loading, refreshData };
+  return { places, events, categories, publishedPlaces, mappedEvents, loading, refreshData };
 };

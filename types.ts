@@ -30,23 +30,32 @@ export interface DaySchedule {
   isClosed: boolean;
 }
 
+export interface Category {
+  id: string; // The key (e.g., 'BEACH', 'FOOD')
+  label_es: string;
+  label_en: string;
+  icon: string; // FontAwesome icon name (e.g., 'umbrella-beach')
+  color: string; // Hex code (e.g., '#FF9500')
+  order_index?: number;
+}
+
 export interface Place {
   id: string;
   name: string;
   slug: string;
   description: string;
-  category: PlaceCategory;
+  category: string; // Changed from enum to string to support dynamic categories
   subcategory?: string;
   tags: string[];
   
   address: string;
-  coords?: Coordinates; // Made optional
+  coords?: Coordinates; 
   gmapsUrl: string;
   location?: any;
 
   imageUrl: string;
-  imagePosition?: string; // New: 'top' | 'center' | 'bottom'
-  imageAlt?: string; // New: AI-generated alt text for images
+  imagePosition?: string; 
+  imageAlt?: string; 
   videoUrl: string;
   customIcon?: string;
 
@@ -59,14 +68,14 @@ export interface Place {
   sponsor_weight: number;
   is_featured: boolean;
   isSecret?: boolean;
-  isMobile?: boolean; // New: For businesses that come to you
-  isLanding?: boolean; // New: Sets this place as the initial map center
-  defaultZoom?: number; // New: Default zoom level for this place
+  isMobile?: boolean; 
+  isLanding?: boolean; 
+  defaultZoom?: number; 
 
   parking: ParkingStatus;
   hasRestroom: boolean;
   hasShowers: boolean;
-  hasGenerator: boolean; // New: Planta Eléctrica
+  hasGenerator: boolean; 
   tips: string;
   amenities?: Record<string, any>;
   
@@ -81,16 +90,16 @@ export interface Place {
   created_at?: string;
 
   opening_hours?: {
-    type?: 'fixed' | '24_7' | 'sunrise_sunset'; // New field
-    note?: string; // Free text fallback
-    structured?: DaySchedule[]; // Structured data
+    type?: 'fixed' | '24_7' | 'sunrise_sunset'; 
+    note?: string; 
+    structured?: DaySchedule[]; 
   };
 
   rating?: number;
   crowdLevel?: 'LOW' | 'MEDIUM' | 'HIGH';
 
-  metaTitle?: string; // New: AI-generated SEO title
-  metaDescription?: string; // New: AI-generated SEO meta description
+  metaTitle?: string; 
+  metaDescription?: string; 
 }
 
 export interface Event {
@@ -125,8 +134,8 @@ export interface Collection {
   subtitle: string;
   icon: string;
   color: string;
-  placeIds: string[]; // IDs of places in this collection
-  tags?: string[]; // Or match by tags
+  placeIds: string[]; 
+  tags?: string[]; 
 }
 
 export interface WeatherData {
@@ -138,7 +147,7 @@ export interface WeatherData {
 export interface ItineraryItem {
   time: string;
   activity: string;
-  placeName?: string; // If it matches a DB place
+  placeName?: string; 
   placeId?: string;
   description: string;
   icon: string;
@@ -150,12 +159,12 @@ export interface ChatMessage {
   isItinerary?: boolean;
   itineraryData?: ItineraryItem[];
   imageUrl?: string;
-  suggestedPlaceIds?: string[]; // New: List of IDs the AI wants to show cards for
+  suggestedPlaceIds?: string[]; 
 }
 
 export interface AdminLog {
   id: string;
-  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'MARKETING_GEN' | 'USER_SEARCH' | 'USER_CHAT' | 'AI_BRIEFING' | 'CREATE_EVENT' | 'UPDATE_EVENT' | 'DELETE_EVENT' | 'UPDATE_SUGGESTION';
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'MARKETING_GEN' | 'USER_SEARCH' | 'USER_CHAT' | 'AI_BRIEFING' | 'CREATE_EVENT' | 'UPDATE_EVENT' | 'DELETE_EVENT' | 'UPDATE_SUGGESTION' | 'CREATE_CAT' | 'UPDATE_CAT' | 'DELETE_CAT';
   place_name: string;
   details: string;
   created_at: string;

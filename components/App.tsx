@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import L from 'leaflet';
 import { Place, PlaceCategory, Coordinates, Event, ParkingStatus, Collection } from '../types';
-import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, COLLECTIONS, CABO_ROJO_CENTER, DEFAULT_PLACE_ID } from '../constants';
+import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, COLLECTIONS, CABO_ROJO_CENTER, DEFAULT_PLACE_ID, DEFAULT_PLACE_ZOOM } from '../constants';
 import PlaceCard from './components/PlaceCard';
 import Concierge from './components/Concierge';
 import Admin from './components/Admin';
@@ -15,107 +15,6 @@ import ExplorerSheet from './components/ExplorerSheet';
 import BottomNav from './components/BottomNav';
 import CommandMenu from './components/CommandMenu';
 import SeoEngine from './components/SeoEngine';
-
-// --- CONSTANTS & HELPERS (Pure Functions) ---
-
-const CATEGORY_COLORS: Record<string, string> = {
-  [PlaceCategory.BEACH]: '#FF9500', // Orange
-  [PlaceCategory.FOOD]: '#FF3B30', // Red
-  [PlaceCategory.SIGHTS]: '#007AFF', // Blue
-  [PlaceCategory.NIGHTLIFE]: '#AF52DE', // Purple
-  [PlaceCategory.LODGING]: '#5AC8FA', // Teal/Cyan
-  [PlaceCategory.HEALTH]: '#FF2D55', // Pink
-  [PlaceCategory.SERVICE]: '#8E8E93', // Gray
-  [PlaceCategory.LOGISTICS]: '#FFCC00', // Yellow
-  DEFAULT: '#8E8E93'
-};
-
-const getMarkerColor = (cat: PlaceCategory | string): string => { 
-  return CATEGORY_COLORS[cat as string] || CATEGORY_COLORS.DEFAULT;
-};
-
-const getSmartIcon = (place: Place): string => {
-    if (place.customIcon) return place.customIcon;
-    const lowerName = place.name.toLowerCase();
-    
-    // Keyword-based icon overrides
-    const iconMap: Record<string, string> = {
-      'hospital': 'fa-hospital',
-      'farmacia': 'fa-pills',
-      'policia': 'fa-shield-halved',
-      'mechanic': 'fa-wrench',
-      'gasolina': 'fa-gas-pump',
-      'pizza': 'fa-pizza-slice',
-      'coffee': 'fa-mug-hot',
-      'burger': 'fa-burger'
-    };
-
-    for (const key in iconMap) {
-      if (lowerName.includes(key)) return iconMap[key];
-    }
-    
-    // Category-based fallbacks
-    switch (place.category) { 
-        case PlaceCategory.BEACH: return 'fa-umbrella-beach'; 
-        case PlaceCategory.FOOD: return 'fa-utensils'; 
-        case PlaceCategory.SIGHTS: return 'fa-camera'; 
-        case PlaceCategory.LOGISTICS: return 'fa-gas-pump'; 
-        case PlaceCategory.LODGING: return 'fa-bed'; 
-        case PlaceCategory.NIGHTLIFE: return 'fa-champagne-glasses'; 
-        case PlaceCategory.HEALTH: return 'fa-heart-pulse';
-        case PlaceCategory.SHOPPING: return 'fa-bag-shopping';
-        case PlaceCategory.ACTIVITY: return 'fa-person-hiking';
-        default: return 'fa-location-dot'; 
-    }
-};
-
-/**
- * Generates the HTML string for a Leaflet DivIcon.
- * Keeps the main component code clean from template literals.
- */
-const generateMarkerHtml = (place: Place, isMarina: boolean): string => {
-  if (isMarina) {
-    return `
-      <div class="premium-pulse rounded-full" style="width: 50px; height: 50px; position: absolute; top: -5px; left: -5px; z-index: 0;"></div>
-      <div class="premium-shine" style="width: 40px; height: 40px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2.5px solid white; display: flex; align-items: center; justify-content: center; position: relative; z-index: 10;">
-          <i class="fa-solid fa-anchor text-white" style="transform: rotate(45deg); font-size: 18px; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.2));"></i>
-      </div>
-    `;
-  }
-
-  const isClosed = place.status === 'closed';
-  // Use Grey (#64748b - slate-500) for closed places, otherwise use category color
-  const catColor = isClosed ? '#64748b' : getMarkerColor(place.category);
-  const iconClass = getSmartIcon(place);
-
-  return `
-    <div style="width: 36px; height: 36px; background: ${catColor}; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s ease;">
-      <i class="fa-solid ${iconClass} text-white" style="transform: rotate(45deg); font-size: 15px; opacity: ${isClosed ? '0.7' : '1'};"></i>
-    </div>
-  `;
-};
-
-// Haversine Distance Helper (km)
-const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371; // km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLon/2) * Math.sin(dLon/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-};
-
-const CATEGORY_GROUPS = {
-  ALL: { categories: 'ALL' },
-  EXPLORA: { categories: [PlaceCategory.BEACH, PlaceCategory.SIGHTS, PlaceCategory.ACTIVITY] },
-  COMIDA: { categories: [PlaceCategory.FOOD, PlaceCategory.NIGHTLIFE] },
-  HOSPEDAJE: { categories: [PlaceCategory.LODGING] },
-  SERVICIOS: { categories: [PlaceCategory.LOGISTICS, PlaceCategory.SHOPPING, PlaceCategory.HEALTH, PlaceCategory.SERVICE] },
-  EVENTOS: { categories: 'EVENTS' },
-  FAVORITOS: { categories: 'FAVORITES' }
-};
 
 // --- CUSTOM HOOKS (Logic Extraction) ---
 import { usePlacesData } from '../hooks/usePlacesData';
@@ -130,8 +29,8 @@ const MainApp: React.FC = () => {
   // Refs
   const mapContainer = useRef<HTMLDivElement>(null);
   
-  // Data State
-  const { places, events, publishedPlaces, mappedEvents, loading, refreshData } = usePlacesData();
+  // Data State - Now includes categories
+  const { places, events, categories, publishedPlaces, mappedEvents, loading, refreshData } = usePlacesData();
   
   // Favorites State
   const [savedIds, setSavedIds] = useState<string[]>(() => {
@@ -181,9 +80,8 @@ const MainApp: React.FC = () => {
     } else if (activeGroup === 'ALL') {
         list = publishedPlaces;
     } else {
-        // @ts-ignore
-        const cats = { EXPLORA: ['BEACH','SIGHTS','ACTIVITY'], COMIDA: ['FOOD','NIGHTLIFE'], HOSPEDAJE: ['LODGING'], SERVICIOS: ['LOGISTICS','SHOPPING','HEALTH','SERVICE'] }[activeGroup] || [];
-        list = publishedPlaces.filter(p => cats.includes(p.category));
+        // Dynamic Filtering based on Category ID
+        list = publishedPlaces.filter(p => p.category === activeGroup);
     }
     if (searchText) {
         const lower = searchText.toLowerCase();
@@ -222,13 +120,14 @@ const MainApp: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Initialize Map Engine
-  const { mapLoaded, flyTo, flyHome, showUserLocation, invalidateSize, zoomIn, zoomOut } = useMapEngine( // Added zoomIn, zoomOut
+  // Initialize Map Engine (Pass categories for dynamic colors)
+  const { mapLoaded, flyTo, flyHome, showUserLocation, invalidateSize, zoomIn, zoomOut } = useMapEngine( 
     mapContainer,
     isDarkMode,
     mapStyle,
     filteredList,
-    (p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); } // Use p.defaultZoom here
+    (p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); },
+    categories // NEW PROP
   );
 
   // Initialize Router (Handles all URL state safely)
@@ -262,7 +161,7 @@ const MainApp: React.FC = () => {
   const handleChatNavigation = (place: Place) => {
       setIsConciergeOpen(false);
       setSelectedPlace(place);
-      if (place.coords) flyTo(place.coords, place.defaultZoom || 16); // Use place.defaultZoom here too
+      if (place.coords) flyTo(place.coords, place.defaultZoom || 16); 
   };
 
   const handleNavAction = (action: string) => {
@@ -360,7 +259,7 @@ const MainApp: React.FC = () => {
       {/* Sheets & Modals */}
       <ExplorerSheet 
         places={filteredList} 
-        onSelect={(p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); }} // Use p.defaultZoom here
+        onSelect={(p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); }} 
         isVisible={activeTab === 'explore'} 
         searchText={searchText}
         onSearchChange={setSearchText}
@@ -374,7 +273,8 @@ const MainApp: React.FC = () => {
         activeCollectionId={activeCollection?.id}
         onCameraClick={() => { setIsConciergeOpen(true); }}
         userLocation={userLocation || undefined}
-        onTabChange={handleTabChange} // Pass the handler
+        onTabChange={handleTabChange}
+        categories={categories} // NEW PROP
       />
 
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} onAction={handleNavAction} />
@@ -383,7 +283,7 @@ const MainApp: React.FC = () => {
         <PlaceCard 
             place={selectedPlace} 
             allPlaces={publishedPlaces} 
-            onSelect={(p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); }} // Use p.defaultZoom here
+            onSelect={(p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); }} 
             onClose={() => setSelectedPlace(null)} 
             onNavigate={handleNavigate}
             onAskAi={() => setIsConciergeOpen(true)}
@@ -405,7 +305,7 @@ const MainApp: React.FC = () => {
       
       <SuggestPlaceModal isOpen={isSuggestOpen} onClose={() => setIsSuggestOpen(false)} />
       <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} onSuggest={() => { setIsContactOpen(false); setIsSuggestOpen(true); }} onChat={() => { setIsContactOpen(false); setIsConciergeOpen(true); }} />
-      {isAdminOpen && <Admin onClose={() => setIsAdminOpen(false)} places={places} events={events} onUpdate={refreshData} />}
+      {isAdminOpen && <Admin onClose={() => setIsAdminOpen(false)} places={places} events={events} categories={categories} onUpdate={refreshData} />}
       <CommandMenu isOpen={isCommandMenuOpen} onClose={() => setIsCommandMenuOpen(false)} onSelect={handleCommandSelect} isDarkMode={isDarkMode} />
 
     </div>

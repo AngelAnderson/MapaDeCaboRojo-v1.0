@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Place, Collection, Coordinates } from '../types';
+import { Place, Collection, Coordinates, Category } from '../types';
 import SearchBar from './SearchBar';
 import CategoryPills from './CategoryPills';
 import { logUserActivity } from '../services/supabase';
@@ -23,7 +23,8 @@ interface ExplorerSheetProps {
   activeCollectionId?: string | null;
   onCameraClick?: () => void; 
   userLocation?: Coordinates;
-  onTabChange: (tabId: string, forceReset?: boolean) => void; // Updated signature
+  onTabChange: (tabId: string, forceReset?: boolean) => void;
+  categories?: Category[]; // NEW
 }
 
 const ExplorerSheet: React.FC<ExplorerSheetProps> = ({ 
@@ -42,7 +43,8 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
   activeCollectionId,
   onCameraClick,
   userLocation,
-  onTabChange // Destructure new prop
+  onTabChange,
+  categories // NEW
 }) => {
   const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
@@ -91,7 +93,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
       </div>
 
       <div className="px-5 pb-2 space-y-4 shrink-0">
-        <div className="flex justify-between items-center"> {/* Changed to items-center for better alignment with close button */}
+        <div className="flex justify-between items-center">
             <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Explorar</h2>
             <div className="flex items-center gap-3">
                 {userLocation && (
@@ -125,6 +127,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
         <CategoryPills 
             activeGroup={activeGroup} 
             onSelect={(g) => { onCategoryChange(g); if(onSelectCollection) onSelectCollection(null); }} 
+            categories={categories} // NEW
         />
       </div>
       

@@ -1,6 +1,7 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { Place, PlaceCategory, ParkingStatus, AdminLog, Event, EventCategory } from '../types';
+import { Place, PlaceCategory, ParkingStatus, AdminLog, Event, EventCategory, Category } from '../types';
+import { DEFAULT_CATEGORIES } from '../constants';
 
 // --- SAFE ENVIRONMENT VARIABLE EXTRACTION (Vite/Browser Compatible) ---
 const getEnvVar = (key: string): string => {
@@ -127,13 +128,8 @@ export const supabase = isLive
   : createMockClient() as any;
 
 // --- MAPPERS ---
-const mapCategory = (catRaw: string, subCatRaw?: string): PlaceCategory => {
-  const cleanCat = (catRaw || '').toUpperCase().trim();
-  const validCategories = Object.values(PlaceCategory) as string[];
-  if (validCategories.includes(cleanCat)) {
-      return cleanCat as PlaceCategory;
-  }
-  return PlaceCategory.LOGISTICS; // Default fallback
+const mapCategory = (catRaw: string, subCatRaw?: string): string => {
+  return (catRaw || '').toUpperCase().trim();
 };
 
 const mapParking = (amenities: any): ParkingStatus => {
@@ -159,8 +155,6 @@ const mapPlaceToDb = (place: Partial<Place>) => {
         ? escapeHTML(place.slug) 
         : generateSlug(place.name || 'untitled');
 
-    // FIX: "pending" is not in DB enum. Map 'pending' -> 'closed' in DB.
-    // The app relies on is_verified=false to identify pending items.
     let dbStatus = place.status;
     if (dbStatus === 'pending') {
         dbStatus = 'closed';
@@ -284,6 +278,59 @@ export const getAdminLogs = async (limit: number = 50): Promise<AdminLog[]> => {
         if (error) return [];
         return data as AdminLog[];
     } catch (e) { return []; }
+};
+
+export const getCategories = async (): Promise<Category[]> => {
+    try {
+        const { data, error } = await supabase.from('categories').select('*').order('order_index', { ascending: true });
+        if (error || !data || data.length === 0) {
+            console.warn("Using Default Categories (DB Empty or Error)");
+            return DEFAULT_CATEGORIES;
+        }
+        return data as Category[];
+    } catch (e) {
+        console.error("Error fetching categories:", e);
+        return DEFAULT_CATEGORIES;
+    }
+};
+
+export const createCategory = async (category: Category): Promise<{ success: boolean; error?: string }> => {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) throw new Error("Unauthorized");
+        const { error } = await supabase.from('categories').insert([category]);
+        if (error) throw error;
+        await logAction('CREATE_CAT', category.id, `Created category ${category.label_en}`);
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: getErrorMessage(e) };
+    }
+};
+
+export const updateCategory = async (id: string, category: Partial<Category>): Promise<{ success: boolean; error?: string }> => {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) throw new Error("Unauthorized");
+        const { error } = await supabase.from('categories').update(category).eq('id', id);
+        if (error) throw error;
+        await logAction('UPDATE_CAT', id, `Updated category`);
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: getErrorMessage(e) };
+    }
+};
+
+export const deleteCategory = async (id: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) throw new Error("Unauthorized");
+        const { error } = await supabase.from('categories').delete().eq('id', id);
+        if (error) throw error;
+        await logAction('DELETE_CAT', id, `Deleted category`);
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: getErrorMessage(e) };
+    }
 };
 
 export const getPlaces = async (): Promise<Place[]> => {
