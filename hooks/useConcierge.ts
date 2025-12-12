@@ -14,7 +14,7 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
   // 1. Init Weather & Welcome
   useEffect(() => {
     if (messages.length === 0) {
-        setMessages([{ role: 'model', text: '¡Wepa! Soy El Veci. ¿En qué te ayudo? Puedo planificar tu día o identificar lugares por foto.' }]);
+        setMessages([{ role: 'model', text: '¡Wepa! Soy El Veci. I speak English too! ¿En qué te ayudo? / How can I help?' }]);
     }
     const fetchWeather = async () => {
         try {
@@ -44,15 +44,28 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
     logUserActivity('USER_CHAT', text);
 
     try {
+        // FORCE PUERTO RICO TIMEZONE
+        // This ensures that if a user is in a different time zone, the AI checks opening hours relative to PR.
         const now = new Date();
+        const prDate = new Intl.DateTimeFormat('es-PR', { 
+            timeZone: 'America/Puerto_Rico', 
+            dateStyle: 'full' 
+        }).format(now);
+        
+        const prTime = new Intl.DateTimeFormat('en-US', { 
+            timeZone: 'America/Puerto_Rico', 
+            hour: 'numeric', 
+            minute: 'numeric', 
+            hour12: true 
+        }).format(now);
+
         const contextInfo = {
-            date: now.toLocaleDateString('es-PR'),
-            time: now.toLocaleTimeString('es-PR'),
+            date: prDate, // e.g., "lunes, 24 de agosto de 2025"
+            time: prTime, // e.g., "4:30 PM"
             weather: weatherContext || 'Tropical'
         };
 
         // Pass the CURRENT 'places' and 'events' props directly to the service
-        // This ensures the AI sees the data loaded from Supabase, not stale initial state.
         const response = await sendConciergeMessage(
             text, 
             newHistory, 
@@ -70,7 +83,7 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
         }]);
         
     } catch (e) {
-        setMessages(prev => [...prev, { role: 'model', text: "Mala mía, se me fue la señal. Intenta otra vez." }]);
+        setMessages(prev => [...prev, { role: 'model', text: "Mala mía, se me fue la señal. Intenta otra vez. / My bad, lost signal. Try again." }]);
     } finally {
         setIsLoading(false);
     }

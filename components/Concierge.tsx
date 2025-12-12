@@ -62,12 +62,40 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
       );
   };
 
+  // Simple Markdown Parser for Chat
+  const renderMarkdown = (text: string) => {
+    // 1. Split by Bold (**text**)
+    // 2. Then split by Links ([text](url)) inside non-bold parts
+    return text.split(/(\*\*.*?\*\*)/g).map((part, i) => {
+        if (part.startsWith('**') && part.endsWith('**')) {
+            return <strong key={i} className="font-black">{part.slice(2, -2)}</strong>;
+        }
+        return part.split(/(\[.*?\]\(.*?\))/g).map((subPart, j) => {
+            const linkMatch = subPart.match(/^\[(.*?)\]\((.*?)\)$/);
+            if (linkMatch) {
+                return (
+                    <a 
+                        key={`${i}-${j}`} 
+                        href={linkMatch[2]} 
+                        target="_blank" 
+                        rel="noreferrer" 
+                        className="underline font-bold opacity-90 hover:opacity-100 decoration-2"
+                    >
+                        {linkMatch[1]}
+                    </a>
+                );
+            }
+            return subPart;
+        });
+    });
+  };
+
   const renderMessageContent = (msg: ChatMessage) => {
     if (msg.isItinerary) {
         return (
             <div>
                 {/* Always show the text message if present */}
-                <div className="mb-3 font-medium">{msg.text}</div>
+                <div className="mb-3 font-medium">{renderMarkdown(msg.text)}</div>
                 
                 {(!msg.itineraryData || msg.itineraryData.length === 0) ? (
                     <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-xl text-xs">
@@ -95,7 +123,7 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
     
     return (
         <div>
-            <div className="whitespace-pre-line leading-relaxed">{msg.text}</div>
+            <div className="whitespace-pre-line leading-relaxed">{renderMarkdown(msg.text)}</div>
             {msg.suggestedPlaceIds && msg.suggestedPlaceIds.length > 0 && renderSuggestedPlaces(msg.suggestedPlaceIds)}
         </div>
     ); 
