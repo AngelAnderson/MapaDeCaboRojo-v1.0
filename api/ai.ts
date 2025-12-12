@@ -67,6 +67,9 @@ export default async function handler(req: any, res: any) {
       case 'parse-raw':
         result = await handleParseRaw(payload);
         break;
+      case 'parse-bulk':
+        result = await handleParseBulk(payload);
+        break;
       default:
         return res.status(400).json({ error: "Unknown action" });
     }
@@ -348,6 +351,31 @@ async function handleParseRaw({ text }: any) {
         "hasRestroom": boolean,
         "isPetFriendly": boolean
     }
+  `;
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: prompt,
+    config: { responseMimeType: 'application/json' }
+  });
+  return JSON.parse(response.text);
+}
+
+async function handleParseBulk({ text }: any) {
+  const prompt = `
+    You are a data entry assistant for a tourism app in Cabo Rojo, Puerto Rico.
+    Process this list of raw text (names or descriptions).
+    Return a JSON ARRAY of objects.
+    
+    Input List:
+    ${text}
+
+    For EACH item, guess the following based on the name/context:
+    - name: The clean name of the place.
+    - category: One of [BEACH, FOOD, SIGHTS, LOGISTICS, LODGING, SHOPPING, HEALTH, NIGHTLIFE, ACTIVITY, SERVICE]. Default to SERVICE if unsure.
+    - description: A short, catchy description (max 10 words) in Spanish.
+    - tags: Array of 2-3 keywords.
+    
+    Return ONLY the JSON Array.
   `;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',

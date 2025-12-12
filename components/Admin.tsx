@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Place, Event, PlaceCategory, ParkingStatus, EventCategory, AdminLog, DaySchedule, Category } from '../types';
 import { updatePlace, deletePlace, createPlace, updateEvent, deleteEvent, createEvent, getAdminLogs, uploadImage, loginAdmin, checkSession, createCategory, updateCategory, deleteCategory } from '../services/supabase';
-import { generateMarketingCopy, categorizeAndTagPlace, enhanceDescription, generateElVeciTip, generateImageAltText, generateSeoMetaTags, analyzeUserDemand, parsePlaceFromRawText } from '../services/aiService'; 
+import { generateMarketingCopy, categorizeAndTagPlace, enhanceDescription, generateElVeciTip, generateImageAltText, generateSeoMetaTags, analyzeUserDemand, parsePlaceFromRawText, parseBulkPlaces } from '../services/aiService'; 
 import { fetchPlaceDetails, autocompletePlace } from '../services/placesService';
 import { useLanguage } from '../i18n/LanguageContext';
 import { translations } from '../i18n/translations';
@@ -119,7 +119,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
   // Bulk Import State
   const [bulkMode, setBulkMode] = useState(false);
   const [bulkInput, setBulkInput] = useState('');
-  const [bulkType, setBulkType] = useState<'scout' | 'json'>('scout');
+  const [bulkType, setBulkType] = useState<'ai_magic' | 'scout' | 'json'>('ai_magic');
   const [bulkLogs, setBulkLogs] = useState<{status: 'success'|'error'|'pending', msg: string}[]>([]);
   const [isBulkProcessing, setIsBulkProcessing] = useState(false);
 
@@ -292,9 +292,49 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
   const handleBulkImport = async () => {
       setIsBulkProcessing(true);
       setBulkLogs([]);
-      const lines = bulkInput.split('\n').filter(line => line.trim() !== '');
+      const rawInput = bulkInput.trim();
       
-      if (bulkType === 'scout') {
+      if (!rawInput) {
+          setIsBulkProcessing(false);
+          return showToast("Input cannot be empty", 'error');
+      }
+
+      if (bulkType === 'ai_magic') {
+          // New "Magic List" Logic
+          setBulkLogs([{ status: 'pending', msg: '✨ AI is analyzing your list... (This takes a few seconds)' }]);
+          try {
+              const aiPlaces = await parseBulkPlaces(rawInput);
+              if (!Array.isArray(aiPlaces) || aiPlaces.length === 0) {
+                  throw new Error("AI could not find any places in text.");
+              }
+
+              for (const place of aiPlaces) {
+                  setBulkLogs(prev => [...prev, { status: 'pending', msg: `Adding: ${place.name}...` }]);
+                  
+                  // Use 'pending' status so Admin can review later (addresses, etc)
+                  const payload = { 
+                      ...place, 
+                      status: 'pending', 
+                      isVerified: false, // Needs manual verification later
+                      sponsor_weight: 0 
+                  };
+                  
+                  const res = await createPlace(payload);
+                  if (res.success) {
+                      setBulkLogs(prev => [...prev, { status: 'success', msg: `✅ Added: ${place.name} (Check Inbox)` }]);
+                  } else {
+                      setBulkLogs(prev => [...prev, { status: 'error', msg: `❌ Failed: ${place.name} - ${res.error}` }]);
+                  }
+                  // Small delay to be safe
+                  await new Promise(r => setTimeout(r, 200));
+              }
+          } catch (e: any) {
+              setBulkLogs(prev => [...prev, { status: 'error', msg: `CRITICAL: AI Error - ${e.message}` }]);
+          }
+
+      } else if (bulkType === 'scout') {
+          // Traditional Google Scout Logic
+          const lines = rawInput.split('\n').filter(line => line.trim() !== '');
           for (const query of lines) {
               setBulkLogs(prev => [...prev, { status: 'pending', msg: `Scouting: ${query}...` }]);
               try {
@@ -315,14 +355,15 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                   } else {
                       setBulkLogs(prev => [...prev, { status: 'error', msg: `❌ Not Found: ${query}` }]);
                   }
-                  await new Promise(r => setTimeout(r, 800));
+                  await new Promise(r => setTimeout(r, 1000)); // Increased delay to avoid rate limits
               } catch (e: any) {
                   setBulkLogs(prev => [...prev, { status: 'error', msg: `❌ Error: ${query} - ${e.message}` }]);
               }
           }
       } else {
+          // Legacy JSON Logic
           try {
-              const data = JSON.parse(bulkInput);
+              const data = JSON.parse(rawInput);
               if (!Array.isArray(data)) throw new Error("Input must be a JSON Array");
               
               for (const place of data) {
@@ -1027,7 +1068,8 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                             <div className="bg-slate-800 p-4 rounded-xl border border-slate-700">
                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2 block">Import Mode</label>
                                 <div className="flex bg-slate-900 rounded-lg p-1">
-                                    <button onClick={() => setBulkType('scout')} className={`flex-1 py-2 rounded-md text-xs font-bold transition-colors ${bulkType === 'scout' ? 'bg-purple-600 text-white' : 'text-slate-400'}`}>Scout (Google Maps/Names)</button>
+                                    <button onClick={() => setBulkType('ai_magic')} className={`flex-1 py-2 rounded-md text-xs font-bold transition-colors ${bulkType === 'ai_magic' ? 'bg-purple-600 text-white' : 'text-slate-400'}`}>Magic List (AI)</button>
+                                    <button onClick={() => setBulkType('scout')} className={`flex-1 py-2 rounded-md text-xs font-bold transition-colors ${bulkType === 'scout' ? 'bg-purple-600 text-white' : 'text-slate-400'}`}>Google Scout</button>
                                     <button onClick={() => setBulkType('json')} className={`flex-1 py-2 rounded-md text-xs font-bold transition-colors ${bulkType === 'json' ? 'bg-purple-600 text-white' : 'text-slate-400'}`}>Raw JSON</button>
                                 </div>
                             </div>
@@ -1036,7 +1078,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-2">Input Data</label>
                                 <textarea 
                                     className="flex-1 w-full bg-slate-800 border border-slate-700 rounded-xl p-4 text-xs font-mono text-emerald-400 outline-none focus:border-purple-500 resize-none" 
-                                    placeholder={bulkType === 'scout' ? "Paste list of place names or Google Maps links (one per line)..." : "[ { \"name\": \"Place Name\", ... }, ... ]"}
+                                    placeholder={bulkType === 'json' ? "[ { \"name\": \"Place Name\", ... }, ... ]" : "Paste a raw list of places here...\ne.g.\nTacos Don Rafa\nPlaya Buye\nFarmacia Belmonte"}
                                     value={bulkInput}
                                     onChange={(e) => setBulkInput(e.target.value)}
                                 />

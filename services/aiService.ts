@@ -130,7 +130,6 @@ async function handleClientSideAI(action: string, payload: any) {
         }
 
         case 'parse-raw': {
-            // New case for raw text parsing
             const { text } = payload;
             const prompt = `
                 Act as a Data Entry Specialist.
@@ -158,6 +157,32 @@ async function handleClientSideAI(action: string, payload: any) {
                 config: { responseMimeType: 'application/json' }
             });
             return JSON.parse(res.text || "{}");
+        }
+
+        case 'parse-bulk': {
+            const { text } = payload;
+            const prompt = `
+                You are a data entry assistant for a tourism app in Cabo Rojo, Puerto Rico.
+                Process this list of raw text (names or descriptions).
+                Return a JSON ARRAY of objects.
+                
+                Input List:
+                ${text}
+
+                For EACH item, guess the following based on the name/context:
+                - name: The clean name of the place.
+                - category: One of [BEACH, FOOD, SIGHTS, LOGISTICS, LODGING, SHOPPING, HEALTH, NIGHTLIFE, ACTIVITY, SERVICE]. Default to SERVICE if unsure.
+                - description: A short, catchy description (max 10 words) in Spanish.
+                - tags: Array of 2-3 keywords.
+                
+                Return ONLY the JSON Array.
+            `;
+            const res = await clientAI.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: { responseMimeType: 'application/json' }
+            });
+            return JSON.parse(res.text || "[]");
         }
 
         case 'analyze-demand': {
@@ -368,8 +393,12 @@ export const analyzeUserDemand = async (searchTerms: string[], categories: strin
 };
 
 export const parsePlaceFromRawText = async (text: string) => {
-    // New function to expose the 'parse-raw' action to the frontend
     const res = await callAI('parse-raw', { text });
+    return res;
+};
+
+export const parseBulkPlaces = async (text: string) => {
+    const res = await callAI('parse-bulk', { text });
     return res;
 };
 
