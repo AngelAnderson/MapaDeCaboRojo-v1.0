@@ -17,9 +17,9 @@ import CommandMenu from './components/CommandMenu';
 import SeoEngine from './components/SeoEngine';
 
 // --- CUSTOM HOOKS (Logic Extraction) ---
-import { usePlacesData } from '../hooks/usePlacesData';
-import { useMapEngine } from '../hooks/useMapEngine';
-import { useRouter } from '../hooks/useRouter';
+import { usePlacesData } from './hooks/usePlacesData';
+import { useMapEngine } from './hooks/useMapEngine';
+import { useRouter } from './hooks/useRouter';
 
 // --- MAIN COMPONENT ---
 
