@@ -1,8 +1,7 @@
 
-
 import { useState, useRef, useEffect } from 'react';
 import { Place, Event, ChatMessage, Coordinates, PlaceCategory } from '../types';
-import { createConciergeChat, identifyPlaceFromImage, generateTripItinerary } from '../services/aiService'; // Updated import
+import { createConciergeChat, identifyPlaceFromImage, generateTripItinerary } from '../services/aiService'; 
 import { logUserActivity, createPlace } from '../services/supabase';
 
 export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordinates) => {
@@ -22,15 +21,20 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
     }
     const fetchWeather = async () => {
         try {
-            const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=18.0262&longitude=-67.1725&current=temperature_2m,weather_code&temperature_unit=fahrenheit&timezone=America%2FPuerto_Rico');
+            // Quick timeout for weather to not block chat
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 2000);
+            
+            const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=18.0262&longitude=-67.1725&current=temperature_2m,weather_code&temperature_unit=fahrenheit&timezone=America%2FPuerto_Rico', { signal: controller.signal });
+            clearTimeout(timeoutId);
             const data = await res.json();
             setWeatherContext(`${Math.round(data.current.temperature_2m)}°F`);
-        } catch(e) { setWeatherContext("Soleado"); }
+        } catch(e) { setWeatherContext("Tropical"); }
     };
     fetchWeather();
   }, []);
 
-  // 2. Initialize Chat (ONCE)
+  // 2. Initialize Chat (ONCE, when places are ready)
   useEffect(() => {
     if (places.length > 0 && !chatInitialized.current) {
         const now = new Date();
@@ -41,7 +45,7 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
         });
         chatInitialized.current = true;
     }
-  }, [places.length, weatherContext]); // Reduced dependency churn
+  }, [places.length, weatherContext]); 
 
   // 3. Handlers
   const handleSend = async (overrideText?: string) => {
@@ -49,8 +53,8 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
     if (!text.trim() || isLoading) return;
 
     if (!chatRef.current) {
-        // Fallback if chat didn't init (e.g. offline)
-        setMessages(prev => [...prev, { role: 'user', text }, { role: 'model', text: "Espérate un momento, estoy cargando..." }]);
+        // Fallback if chat didn't init yet
+        setMessages(prev => [...prev, { role: 'user', text }, { role: 'model', text: "Dame un break, estoy calentando motores..." }]);
         return;
     }
 
@@ -61,27 +65,13 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
 
     try {
         const result = await chatRef.current.sendMessage({ message: text });
-        // Handle Function Calls (Auto-Capture)
-        if (result.functionCalls?.length > 0) {
-            const newParts: any[] = [];
-            for (const call of result.functionCalls) {
-                if (call.name === 'reportMissingPlace') {
-                    const { name, category, description, address } = call.args as any;
-                    await createPlace({ name, description, category: (category as PlaceCategory), address, status: 'pending', coords: {lat:18,lng:-67} });
-                    newParts.push({ functionResponse: { name: call.name, id: call.id, response: { success: true } } });
-                }
-            }
-            if (newParts.length > 0) {
-                const followUp = await chatRef.current.sendMessage({ message: newParts });
-                setMessages(prev => [...prev, { role: 'model', text: followUp.text }]);
-            } else {
-                setMessages(prev => [...prev, { role: 'model', text: result.text }]);
-            }
-        } else {
-            setMessages(prev => [...prev, { role: 'model', text: result.text }]);
-        }
+        
+        // Handle potential function calls from the model (Future Proofing)
+        // Currently we just display the text
+        setMessages(prev => [...prev, { role: 'model', text: result.text }]);
+        
     } catch (e) {
-        setMessages(prev => [...prev, { role: 'model', text: "Mala mía, se me fue la señal." }]);
+        setMessages(prev => [...prev, { role: 'model', text: "Mala mía, se me fue la señal. Intenta otra vez." }]);
     } finally {
         setIsLoading(false);
     }
@@ -95,14 +85,38 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
 
       const reader = new FileReader();
       reader.onloadend = async () => {
+          // const base64 = (reader.result as string).split(',')[1];
+          // setMessages(prev => [...prev, { role: 'user', text: "📸 [Foto]", imageUrl: reader.result as string }]);
+          // setIsLoading(true);
+          
+          // try {
+          //   const result = await identifyPlaceFromImage(base64, places);
+          //   setMessages(prev => [...prev, { role: 'model', text: result.explanation }]);
+          //   if (result.matchedPlaceId) {
+          //      const p = places.find(x => x.id === result.matchedPlaceId);
+          //      if (p) setTimeout(() => onNavigate(p), 1500);
+          //   }
+          // } catch (e) {
+          //   setMessages(prev => [...prev, { role: 'model', text: "No pude procesar la imagen." }]);
+          // } finally {
+          //   setIsLoading(false);
+          // }
+          
+          // Optimized for safety and clarity:
           const base64 = (reader.result as string).split(',')[1];
           setMessages(prev => [...prev, { role: 'user', text: "📸 [Foto]", imageUrl: reader.result as string }]);
           setIsLoading(true);
+          
+          // Fire and forget identification for better UX flow? No, user waits for answer.
           const result = await identifyPlaceFromImage(base64, places);
-          setMessages(prev => [...prev, { role: 'model', text: result.explanation }]);
+          
+          setMessages(prev => [...prev, { role: 'model', text: result.explanation || "Interesante foto..." }]);
           if (result.matchedPlaceId) {
              const p = places.find(x => x.id === result.matchedPlaceId);
-             if (p) setTimeout(() => onNavigate(p), 1500);
+             if (p) {
+                 // Add a small "View Place" button or automatic nav suggestion
+                 setTimeout(() => onNavigate(p), 2000);
+             }
           }
           setIsLoading(false);
       };
@@ -112,9 +126,19 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
   const handlePlanTrip = async (vibe: string) => {
       setMessages(prev => [...prev, { role: 'user', text: `Ármame un plan: ${vibe}` }]);
       setIsLoading(true);
-      const itinerary = await generateTripItinerary(vibe, places);
-      setMessages(prev => [...prev, { role: 'model', text: '¡Aquí tienes el plan!', isItinerary: true, itineraryData: itinerary }]);
-      setIsLoading(false);
+      
+      try {
+        const itinerary = await generateTripItinerary(vibe, places);
+        if (itinerary && itinerary.length > 0) {
+            setMessages(prev => [...prev, { role: 'model', text: '¡Aquí tienes el plan!', isItinerary: true, itineraryData: itinerary }]);
+        } else {
+            throw new Error("Empty itinerary");
+        }
+      } catch (e) {
+        setMessages(prev => [...prev, { role: 'model', text: 'Ups, no pude armar el plan. Intenta de nuevo.' }]);
+      } finally {
+        setIsLoading(false);
+      }
   };
 
   return { messages, input, setInput, isLoading, isListening, handleSend, handleImageUpload, handlePlanTrip, setIsListening };

@@ -1,12 +1,7 @@
 
-import { GoogleGenAI } from "@google/genai";
-import { createClient } from '@supabase/supabase-js';
+import { GoogleGenAI, Type } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-const supabase = createClient(
-  process.env.VITE_SUPABASE_URL || '',
-  process.env.VITE_SUPABASE_ANON_KEY || ''
-);
 
 // Node-safe HTML Escaper
 const escapeHTML = (str: string | undefined): string => {
@@ -23,14 +18,20 @@ const escapeHTML = (str: string | undefined): string => {
 };
 
 export default async function handler(req: any, res: any) {
-  // Standard Vercel/Node.js CORS and Method check
+  // 1. CORS & Method Check
   if (req.method !== 'POST') {
-    return res.status(405).send("Method not allowed");
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    const { action, payload } = req.body;
+    // 2. Body Parsing (Handle both parsed and string bodies)
+    let body = req.body;
+    if (typeof body === 'string') {
+      try { body = JSON.parse(body); } catch (e) { return res.status(400).json({ error: "Invalid JSON body" }); }
+    }
+    const { action, payload } = body;
 
+    // 3. Routing
     let result;
     switch (action) {
       case 'chat':
@@ -67,85 +68,133 @@ export default async function handler(req: any, res: any) {
     return res.status(200).json(result);
 
   } catch (e: any) {
-    console.error("AI API Error:", e);
-    return res.status(500).json({ error: "An AI service error occurred." });
+    console.error(`AI API Error:`, e);
+    // Return a friendly error structure that the frontend can handle safely
+    return res.status(500).json({ 
+      error: "Service Error", 
+      details: e.message,
+      text: "Mala mía, El Veci se fue de break. Intenta ya mismo." 
+    });
   }
 }
 
 // --- HANDLERS ---
 
 async function handleChat({ message, history, context }: any) {
+  // Optimize Context: Flatten relevant data to save tokens and reduce noise
   const localDatabase = {
     places: context.places.map((p: any) => ({
       id: p.id,
-      name: escapeHTML(p.name),
+      name: p.name,
       category: p.category,
-      description: escapeHTML(p.description),
-      amenities: p.amenities || {}, 
+      desc: p.description?.substring(0, 150), // Truncate descriptions for context
+      tags: p.tags,
       status: p.status,
-      address: escapeHTML(p.address)
-    })),
+      address: p.address
+    })).slice(0, 100), // Limit number of places
     events: context.events.map((e: any) => ({
-      title: escapeHTML(e.title),
-      start: e.start,
-      description: escapeHTML(e.description)
+      title: e.title,
+      date: e.start,
+      desc: e.description?.substring(0, 100)
     }))
   };
 
   const systemInstruction = `
-    Hola. Eres "El Vecino Digital", pero tus amigos te dicen "El Veci".
-    Tu misión es ser el guía más servicial, amable y paciente de Cabo Rojo, Puerto Rico.
+    Eres "El Veci", el guía local de Cabo Rojo, Puerto Rico.
     
-    ### TU PERSONALIDAD (IMPORTANTE) ###
-    1. **Sabiduría y Respeto:** Hablas de manera clara, pausada y respetuosa. Imagina que le explicas las cosas a una persona de 105 años que quieres mucho. Usa un tono cálido de "buen vecino".
-    2. **Cero Drama:** Te mantienes alejado de controversias, chismes o negatividad. Todo es constructivo, positivo y útil.
-    3. **Claridad Total:** Evita la jerga moderna confusa (nada de slang de internet). Usa un español de Puerto Rico clásico, educado y fácil de entender.
-    4. **El Toque Final (Chiste):** SIEMPRE, sin excepción, termina tu respuesta con un chiste sano, corto y simpático (puede ser de pepito, jíbaros, o bobo) para alegrar el día.
+    PERSONALIDAD:
+    - Amable, respetuoso y hablas español de Puerto Rico (pero claro).
+    - Tu objetivo es ayudar a la gente a pasarla bien.
+    - Siempre terminas con un chiste corto y sano.
 
-    ### TUS FUENTES DE INFORMACIÓN ###
-    1. **BASE DE DATOS LOCAL (Tu Memoria):** 
-       Aquí tienes la lista oficial de lugares y eventos en Cabo Rojo. Úsala primero.
-       ${JSON.stringify(localDatabase).substring(0, 30000)} ...
-       
-    2. **GOOGLE SEARCH (Tu Lupa):**
-       Úsalo OBLIGATORIAMENTE para:
-       - El clima actual (si te preguntan).
-       - Noticias recientes.
-       - Horarios o datos que no estén en tu base de datos.
-       - Temas generales de Puerto Rico fuera de Cabo Rojo.
+    DATOS:
+    - Base de datos local: ${JSON.stringify(localDatabase)}
+    - Usa Google Search SOLAMENTE si preguntan por el clima actual o noticias recientes. Para lugares, usa tu base de datos primero.
 
-    ### CONTEXTO ACTUAL ###
-    Fecha: ${escapeHTML(context.date)}
-    Hora: ${escapeHTML(context.time)}
-    Clima Reportado: ${escapeHTML(context.weather)}
+    CONTEXTO:
+    - Fecha: ${context.date}
+    - Hora: ${context.time}
   `;
 
-  const chatHistory = history.map((msg: any) => ({
-    role: msg.role,
-    parts: [{ text: escapeHTML(msg.text) }]
-  }));
+  // Filter and format history to prevent API errors
+  const validHistory = (history || [])
+    .filter((h: any) => h.role && h.text)
+    .map((h: any) => ({
+      role: h.role,
+      parts: [{ text: h.text }]
+    }));
 
   const chat = ai.chats.create({
     model: 'gemini-2.5-flash',
-    history: chatHistory,
+    history: validHistory,
     config: { 
       systemInstruction,
-      tools: [{ googleSearch: {} }],
+      tools: [{ googleSearch: {} }], // Available if needed, but instructed to use sparingly
     }
   });
 
-  const result = await chat.sendMessage(message); // Pass raw message, SDK handles it
+  const result = await chat.sendMessage(message);
   return { text: result.text };
 }
 
+async function handleItinerary({ vibe, places }: any) {
+  // Use a Strict Schema to prevent "White Bubble" (empty JSON) errors
+  const responseSchema = {
+    type: Type.ARRAY,
+    items: {
+      type: Type.OBJECT,
+      properties: {
+        time: { type: Type.STRING, description: "Hora (e.g. 09:00 AM)" },
+        activity: { type: Type.STRING, description: "Nombre corto de la actividad" },
+        description: { type: Type.STRING, description: "Breve descripción de qué hacer" },
+        placeId: { type: Type.STRING, description: "ID del lugar si existe en la lista provista, o null", nullable: true },
+        icon: { type: Type.STRING, description: "Nombre de icono FontAwesome sin el prefijo 'fa-', ej: 'umbrella-beach', 'utensils', 'camera'" }
+      },
+      required: ["time", "activity", "description", "icon"]
+    }
+  };
+
+  const simplifiedPlaces = places.map((p: any) => `${p.name} (ID: ${p.id}, Cat: ${p.category})`).join(', ');
+
+  const prompt = `
+    Crea un itinerario de 1 día en Cabo Rojo.
+    Vibe: "${vibe}"
+    Lugares Disponibles: ${simplifiedPlaces}
+    
+    Reglas:
+    1. Usa iconos FontAwesome apropiados.
+    2. Si sugieres un lugar de la lista, INCLUYE SU ID exacto en 'placeId'.
+    3. Sé lógico con los tiempos y distancias.
+  `;
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: prompt,
+    config: { 
+      responseMimeType: 'application/json',
+      responseSchema: responseSchema
+    }
+  });
+
+  // Since we use responseSchema, parsing is safer, but we still try/catch
+  try {
+    return JSON.parse(response.text);
+  } catch (e) {
+    console.error("Itinerary JSON parse error:", response.text);
+    return []; // Return empty array safely on parse failure
+  }
+}
+
 async function handleIdentify({ image }: any) {
-  const prompt = `Analyze this image. Is it a location in Cabo Rojo, Puerto Rico? Return JSON: { "matchedPlaceId": string | null, "explanation": "Explicación amable y clara en español." }`;
+  const prompt = `Analyze this image. Is it a location in Cabo Rojo, Puerto Rico? 
+  Return JSON: { "matchedPlaceId": string | null, "explanation": "Explicación amable y clara en español." }`;
+  
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: {
       parts: [
         { inlineData: { mimeType: 'image/jpeg', data: image } },
-        { text: prompt } // Pass raw prompt
+        { text: prompt }
       ]
     },
     config: { responseMimeType: 'application/json' }
@@ -153,31 +202,21 @@ async function handleIdentify({ image }: any) {
   return JSON.parse(response.text);
 }
 
-async function handleItinerary({ vibe, places }: any) {
-  const sanitizedPlacesList = places.map((p: any) => `${escapeHTML(p.name)} (${escapeHTML(p.category)})`).join(', ');
-  // Vibe is user input, so we escape it. The rest is static structure.
-  const prompt = `Create a 1-day itinerary for Cabo Rojo based on vibe: "${escapeHTML(vibe)}". Available: ${sanitizedPlacesList}. Return JSON array: [{ "time": "09:00 AM", "activity": "Title", "description": "Desc", "placeId": "id", "icon": "fa-icon" }]`;
-  
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: prompt, // Pass prompt directly without escaping quotes in JSON structure
-    config: { responseMimeType: 'application/json' }
-  });
-  return JSON.parse(response.text);
-}
+// --- SIMPLER HELPERS (Standard Text Responses) ---
 
 async function handleScript({ placeName, description }: any) {
-  const prompt = `Escribe un guión de audio guía de 30 segundos para "${escapeHTML(placeName)}" en Cabo Rojo. Tono: Amable, educado, como un vecino sabio. Texto plano.`;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
-    contents: prompt
+    contents: `Escribe un guión de audio guía de 30 segundos para "${placeName}". Descripción: "${description}". Tono: Amable.`
   });
-  return { text: escapeHTML(response.text) };
+  return { text: response.text };
 }
 
 async function handleCategorizeAndTag({ name, description }: any) {
-  const categories = "BEACH, FOOD, SIGHTS, LOGISTICS, LODGING, SHOPPING, HEALTH, NIGHTLIFE, ACTIVITY, SERVICE";
-  const prompt = `Act as a tourism analyst. Identify best category/tags. Categories: ${categories}. Place: "${escapeHTML(name)}". Desc: "${escapeHTML(description)}". Return JSON { "category": string, "tags": string[] }`;
+  const prompt = `Categories: BEACH, FOOD, SIGHTS, LOGISTICS, LODGING, SHOPPING, HEALTH, NIGHTLIFE, ACTIVITY, SERVICE. 
+  Place: "${name}". Desc: "${description}". 
+  Return JSON { "category": string, "tags": string[] }`;
+  
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: prompt,
@@ -187,37 +226,33 @@ async function handleCategorizeAndTag({ name, description }: any) {
 }
 
 async function handleEnhanceDescription({ name, description }: any) {
-  const prompt = `Reescribe descripción para app turismo. Tono respetuoso y claro. Lugar: "${escapeHTML(name)}". Original: "${escapeHTML(description)}". Max 150 palabras.`;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
-    contents: prompt
+    contents: `Mejora esta descripción para una app de turismo (max 150 palabras, tono atractivo): "${description}" para el lugar "${name}".`
   });
-  return { text: escapeHTML(response.text) };
+  return { text: response.text };
 }
 
 async function handleGenerateTips({ name, category, description }: any) {
-  const prompt = `Actúa como 'El Veci'. Consejo sabio y práctico para "${escapeHTML(name)}" (${category}). Contexto: "${escapeHTML(description)}". Max 50 palabras.`;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
-    contents: prompt
+    contents: `Dame un consejo "Local" (El Veci) para "${name}" (${category}). Contexto: ${description}. Max 50 palabras.`
   });
-  return { text: escapeHTML(response.text) };
+  return { text: response.text };
 }
 
 async function handleGenerateAltText({ imageUrl }: any) {
-  const prompt = `Describe image for alt text. Concise, descriptive. Max 15 words.`;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash', 
-    contents: { parts: [{ image: { url: imageUrl } }, { text: prompt }] }
+    contents: { parts: [{ image: { url: imageUrl } }, { text: "Generate concise alt text for this image (max 15 words)." }] }
   });
-  return { text: escapeHTML(response.text) };
+  return { text: response.text };
 }
 
 async function handleGenerateSeoMetaTags({ name, description, category }: any) {
-  const prompt = `Generate SEO meta tags. Place: "${escapeHTML(name)}". JSON: {"metaTitle": string, "metaDescription": string}`;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
-    contents: prompt,
+    contents: `Generate SEO JSON { "metaTitle": string, "metaDescription": string } for "${name}" (${category}). Desc: ${description}.`,
     config: { responseMimeType: 'application/json' }
   });
   return JSON.parse(response.text);

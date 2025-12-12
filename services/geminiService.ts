@@ -9,7 +9,11 @@ const callAI = async (action: string, payload: any) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action, payload })
         });
-        if (!res.ok) throw new Error("AI Service Error");
+        
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error || "AI Service Error");
+        }
         return await res.json();
     } catch (e) {
         console.error(`AI Error [${action}]:`, e);
@@ -30,11 +34,22 @@ export const createConciergeChat = (places: Place[], events: Event[], userLoc: C
     
     return {
         sendMessage: async ({ message }: { message: string }) => {
+            // OPTIMIZATION: Only send necessary fields to save tokens
+            const minPlaces = places.map(p => ({
+                id: p.id,
+                name: p.name,
+                category: p.category,
+                description: p.description ? p.description.substring(0, 200) : "",
+                status: p.status,
+                address: p.address,
+                tags: p.tags
+            }));
+
             const payload = {
                 message,
                 history,
                 context: {
-                    places: places.map(p => ({ name: p.name, category: p.category, description: p.description })),
+                    places: minPlaces,
                     events: events.map(e => ({ title: e.title, start: e.startTime })),
                     userLoc,
                     ...context
@@ -62,16 +77,20 @@ export const identifyPlaceFromImage = async (base64Image: string, places: Place[
 
 // 3. TRIP ITINERARY
 export const generateTripItinerary = async (vibe: string, places: Place[]): Promise<ItineraryItem[]> => {
-    const res = await callAI('itinerary', { vibe, places: places.map(p => ({ name: p.name, category: p.category })) });
-    const data = extractJson(res);
-    return Array.isArray(data) ? data : [];
+    // Send lightweight place objects
+    const minPlaces = places.map(p => ({ id: p.id, name: p.name, category: p.category }));
+    const res = await callAI('itinerary', { vibe, places: minPlaces });
+    
+    // The API now returns the JSON directly, no need to extract from .text
+    return Array.isArray(res) ? res : [];
 };
 
-// 4. CONTENT MODERATION (Uses existing api/moderate.ts)
+// 4. CONTENT MODERATION
 export const moderateUserContent = async (name: string, description: string) => {
     try {
         const res = await fetch('/api/moderate', {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, description })
         });
         return await res.json();
@@ -80,13 +99,12 @@ export const moderateUserContent = async (name: string, description: string) => 
 
 // 5. ENRICH METADATA
 export const enrichPlaceMetadata = async (name: string, description: string) => {
-    // Basic implementation for now, or route to details
     return { description, tags: [], vibe: [] };
 };
 
-// 6. BRIEFING (Uses existing api/cron-briefing.ts manually if needed, or skipped)
+// 6. BRIEFING
 export const generateExecutiveBriefing = async (logs: AdminLog[], places: Place[]) => {
-    return "{}"; // Briefings handled by CRON mostly
+    return "{}";
 };
 
 // 7. AUDIO GUIDE SCRIPT
@@ -95,11 +113,12 @@ export const generateAudioScript = async (placeName: string, description: string
     return res?.text || "Bienvenidos a Cabo Rojo.";
 };
 
-// 8. MARKETING GENERATOR (Uses existing api/marketing.ts)
+// 8. MARKETING GENERATOR
 export const generateMarketingCopy = async (name: string, platform: string, tone: string) => {
     try {
         const res = await fetch('/api/marketing', {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, platform, tone })
         });
         const data = await res.json();
@@ -107,41 +126,28 @@ export const generateMarketingCopy = async (name: string, platform: string, tone
     } catch (e) { return "Service unavailable."; }
 };
 
-// 9. LOCATION RESOLVER
-export const findCoordinates = async (query: string): Promise<{ lat: number, lng: number } | null> => {
-    const res = await callAI('coords', { query });
-    return extractJson(res);
+// 9. NEW ADMIN AI FUNCTIONS
+export const categorizeAndTagPlace = async (name: string, description: string) => {
+    const res = await callAI('categorize-tags', { name, description });
+    return res;
 };
 
-// 10. PLACE DETAILS (SMART IMPORT)
-export const fetchPlaceDetails = async (query: string): Promise<Partial<Place> | null> => {
-    const res = await callAI('details', { query });
-    const data = extractJson(res);
-    
-    if (!data || !data.name) return null;
+export const enhanceDescription = async (name: string, description: string) => {
+    const res = await callAI('enhance-description', { name, description });
+    return res?.text;
+};
 
-    let parkingStatus = ParkingStatus.FREE;
-    if (data.parking === 'PAID') parkingStatus = ParkingStatus.PAID;
-    if (data.parking === 'NONE') parkingStatus = ParkingStatus.NONE;
+export const generateElVeciTip = async (name: string, category: string, description: string) => {
+    const res = await callAI('generate-tips', { name, category, description });
+    return res?.text;
+};
 
-    return {
-        name: data.name,
-        description: data.description,
-        category: data.category as PlaceCategory,
-        coords: data.lat && data.lng ? { lat: data.lat, lng: data.lng } : undefined, // Only set coords if both lat/lng exist
-        address: data.address,
-        phone: data.phone,
-        website: data.website,
-        priceLevel: data.priceLevel,
-        tags: data.tags || [],
-        tips: data.tips || '',
-        imageUrl: data.imageUrl || '',
-        parking: parkingStatus,
-        isPetFriendly: !!data.petFriendly,
-        hasRestroom: !!data.hasRestroom,
-        hasGenerator: !!data.hasGenerator,
-        opening_hours: { note: data.hours || '', type: 'fixed' },
-        // Use the returned gmapsUrl if available, otherwise construct a search link
-        gmapsUrl: data.gmapsUrl || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.name + ' Cabo Rojo')}`
-    };
+export const generateImageAltText = async (imageUrl: string) => {
+    const res = await callAI('generate-alt-text', { imageUrl });
+    return res?.text;
+};
+
+export const generateSeoMetaTags = async (name: string, description: string, category: string) => {
+    const res = await callAI('generate-seo-meta-tags', { name, description, category });
+    return res;
 };
