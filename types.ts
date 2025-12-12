@@ -150,6 +150,7 @@ export interface ChatMessage {
   isItinerary?: boolean;
   itineraryData?: ItineraryItem[];
   imageUrl?: string;
+  suggestedPlaceIds?: string[]; // New: List of IDs the AI wants to show cards for
 }
 
 export interface AdminLog {

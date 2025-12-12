@@ -92,7 +92,8 @@ async function handleChat({ message, history, context }: any) {
       tips: p.tips,
       vibe: p.vibe,
       status: p.status,
-      address: p.address
+      address: p.address,
+      opening_hours: p.opening_hours // Passed so AI can check time
     })).slice(0, 150), 
     events: context.events.map((e: any) => ({
       title: e.title,
@@ -106,16 +107,23 @@ async function handleChat({ message, history, context }: any) {
     PERSONALIDAD:
     - Amable, respetuoso y hablas español de Puerto Rico (pero claro).
     - Tu objetivo es ayudar a la gente a pasarla bien.
-    - Siempre terminas con un chiste corto y sano.
+    - ¡IMPORTANTE!: Al final de tu respuesta (al menos 1 de cada 2 veces), cuenta un chiste corto y sano ("chiste mongu") relacionado a lo que se habló.
 
     BASE DE DATOS (Recién actualizada):
     ${JSON.stringify(localDatabase)}
 
-    INSTRUCCIONES:
-    - Usa Google Search SOLAMENTE si preguntan por el clima actual o noticias recientes. 
-    - Para recomendar lugares, USA TU BASE DE DATOS LOCAL PRIMERO.
-    - Si un lugar tiene status 'closed', avísale al usuario.
-    - Usa la información de 'tips' y 'vibe' para dar mejores recomendaciones.
+    INSTRUCCIONES PARA RECOMENDACIONES:
+    1. Si recomiendas un lugar ESPECÍFICO de tu base de datos, DEBES añadir su 'id' al array 'suggested_place_ids' en la respuesta JSON.
+    2. CHECK DE HORARIOS: Mira 'opening_hours' del lugar y compara con la fecha/hora actual del usuario (${context.date} ${context.time}). Si crees que está cerrado, AVÍSALE al usuario en el texto ("Ojo, parece que cierran a las X...").
+    3. Si un lugar tiene status 'closed', di que está cerrado permanentemente.
+    4. Usa la información de 'tips' y 'vibe' para dar mejores recomendaciones.
+
+    FORMATO DE RESPUESTA (JSON):
+    Siempre responde en JSON.
+    {
+      "text": "Tu respuesta conversacional aquí...",
+      "suggested_place_ids": ["id1", "id2"] // Solo si mencionas lugares específicos
+    }
 
     CONTEXTO ACTUAL:
     - Fecha: ${context.date}
@@ -135,12 +143,27 @@ async function handleChat({ message, history, context }: any) {
     history: validHistory,
     config: { 
       systemInstruction,
+      responseMimeType: "application/json", // Force JSON output for easier UI handling
       tools: [{ googleSearch: {} }], // Available if needed, but instructed to use sparingly
     }
   });
 
   const result = await chat.sendMessage(message);
-  return { text: result.text };
+  
+  // The result.text will be a JSON string. We parse it here or let the frontend parse it.
+  // It's safer to let the frontend parse the string contained in 'text' property of the API response,
+  // BUT our frontend expects 'text' to be the readable string.
+  // So we parse the Gemini JSON response here and return structured data to the frontend.
+  try {
+      const jsonResponse = JSON.parse(result.text || "{}");
+      return { 
+          text: jsonResponse.text,
+          suggestedPlaceIds: jsonResponse.suggested_place_ids 
+      };
+  } catch (e) {
+      // Fallback if model fails to return JSON
+      return { text: result.text };
+  }
 }
 
 async function handleItinerary({ vibe, places }: any) {

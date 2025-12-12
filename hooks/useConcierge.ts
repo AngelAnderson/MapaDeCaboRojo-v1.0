@@ -53,7 +53,7 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
 
         // Pass the CURRENT 'places' and 'events' props directly to the service
         // This ensures the AI sees the data loaded from Supabase, not stale initial state.
-        const responseText = await sendConciergeMessage(
+        const response = await sendConciergeMessage(
             text, 
             newHistory, 
             places, 
@@ -62,7 +62,12 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
             contextInfo
         );
         
-        setMessages(prev => [...prev, { role: 'model', text: responseText }]);
+        // Response contains text and optional suggestedPlaceIds
+        setMessages(prev => [...prev, { 
+            role: 'model', 
+            text: response.text, 
+            suggestedPlaceIds: response.suggestedPlaceIds 
+        }]);
         
     } catch (e) {
         setMessages(prev => [...prev, { role: 'model', text: "Mala mía, se me fue la señal. Intenta otra vez." }]);

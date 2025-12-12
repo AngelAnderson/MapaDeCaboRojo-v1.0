@@ -35,6 +35,33 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
     setIsListening(true);
   };
 
+  const renderSuggestedPlaces = (ids: string[]) => {
+      const suggestions = places.filter(p => ids.includes(p.id));
+      if (suggestions.length === 0) return null;
+
+      return (
+          <div className="flex gap-2 overflow-x-auto no-scrollbar mt-3 pb-2 -ml-2 pl-2">
+              {suggestions.map(place => (
+                  <button 
+                    key={place.id}
+                    onClick={() => onNavigateToPlace(place)}
+                    className="flex-shrink-0 w-32 bg-white dark:bg-slate-700/50 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-600 active:scale-95 transition-transform text-left group"
+                  >
+                      <div className="h-20 w-full overflow-hidden relative">
+                          <img src={place.imageUrl} alt={place.name} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                          <span className="absolute bottom-1 left-2 text-[10px] text-white font-bold uppercase tracking-wide">{place.category}</span>
+                      </div>
+                      <div className="p-2">
+                          <h4 className="text-xs font-bold text-slate-800 dark:text-white truncate group-hover:text-teal-500 transition-colors">{place.name}</h4>
+                          <p className="text-[9px] text-slate-500 dark:text-slate-400 truncate">{place.status === 'closed' ? '🔴 Cerrado' : '🟢 Abierto'}</p>
+                      </div>
+                  </button>
+              ))}
+          </div>
+      );
+  };
+
   const renderMessageContent = (msg: ChatMessage) => {
     if (msg.isItinerary) {
         return (
@@ -66,7 +93,12 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
     }
     if (msg.imageUrl) return <img src={msg.imageUrl} alt="Uploaded" className="rounded-xl max-h-40 border border-white/20 mb-2" />;
     
-    return <div>{msg.text}</div>; 
+    return (
+        <div>
+            <div className="whitespace-pre-line leading-relaxed">{msg.text}</div>
+            {msg.suggestedPlaceIds && msg.suggestedPlaceIds.length > 0 && renderSuggestedPlaces(msg.suggestedPlaceIds)}
+        </div>
+    ); 
   };
 
   if (!isOpen) return null;
@@ -91,7 +123,7 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
         <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-slate-50 dark:bg-slate-900">
           {messages.map((msg, idx) => (
             <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up`}>
-              <div className={`max-w-[85%] p-4 rounded-2xl text-[15px] shadow-sm ${msg.role === 'user' ? 'bg-teal-600 text-white rounded-br-none' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none border dark:border-slate-700'}`}>
+              <div className={`max-w-[90%] p-4 rounded-2xl text-[15px] shadow-sm ${msg.role === 'user' ? 'bg-teal-600 text-white rounded-br-none' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none border dark:border-slate-700'}`}>
                 {renderMessageContent(msg)}
               </div>
             </div>

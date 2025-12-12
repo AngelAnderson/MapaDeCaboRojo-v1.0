@@ -19,6 +19,7 @@ async function handleClientSideAI(action: string, payload: any) {
                 DATOS EN TIEMPO REAL:
                 Aquí tienes la lista actualizada de lugares y eventos en Cabo Rojo:
                 ${JSON.stringify(context.places.map((p:any) => ({
+                    id: p.id,
                     name: p.name, 
                     cat: p.category, 
                     desc: p.description,
@@ -28,7 +29,8 @@ async function handleClientSideAI(action: string, payload: any) {
 
                 Instrucciones:
                 1. Usa SOLAMENTE esta información para responder sobre lugares.
-                2. Si no sabes algo, di que no estás seguro, no inventes.
+                2. Si recomiendas un lugar, trata de mencionar su nombre exacto.
+                3. Responde siempre en JSON: { "text": "...", "suggested_place_ids": ["id"] }
             `;
             
             // Map history for Gemini SDK
@@ -40,10 +42,18 @@ async function handleClientSideAI(action: string, payload: any) {
             const chat = clientAI.chats.create({
                 model: 'gemini-2.5-flash',
                 history: formattedHistory,
-                config: { systemInstruction }
+                config: { 
+                    systemInstruction,
+                    responseMimeType: 'application/json'
+                }
             });
             const result = await chat.sendMessage({ message });
-            return { text: result.text };
+            try {
+                const json = JSON.parse(result.text || "{}");
+                return { text: json.text, suggestedPlaceIds: json.suggested_place_ids };
+            } catch (e) {
+                return { text: result.text };
+            }
         }
 
         case 'itinerary': {
@@ -201,7 +211,8 @@ export const sendConciergeMessage = async (
                 tips: p.tips,
                 vibe: p.vibe,
                 address: p.address,
-                status: p.status
+                status: p.status,
+                opening_hours: p.opening_hours // Passed so AI can check time
             })),
             events: events.map(e => ({ title: e.title, start: e.startTime })),
             userLoc, 
@@ -210,7 +221,8 @@ export const sendConciergeMessage = async (
     };
 
     const response = await callAI('chat', payload);
-    return response?.text || "El Veci está durmiendo. Intenta más tarde.";
+    // Response object now contains { text, suggestedPlaceIds }
+    return response || { text: "El Veci está durmiendo. Intenta más tarde." };
 };
 
 // Deprecated: Kept only if other files reference it, but `sendConciergeMessage` is preferred.
@@ -219,10 +231,11 @@ export const createConciergeChat = (places: Place[], events: Event[], userLoc: C
     return {
         sendMessage: async ({ message }: { message: string }) => {
             // This legacy wrapper now just calls the new stateless function
-            const responseText = await sendConciergeMessage(message, history.map(h => ({ role: h.role, text: h.text })), places, events, userLoc, context);
+            const response = await sendConciergeMessage(message, history.map(h => ({ role: h.role, text: h.text })), places, events, userLoc, context);
+            const text = response.text;
             history.push({ role: 'user', text: message });
-            history.push({ role: 'model', text: responseText });
-            return { text: responseText };
+            history.push({ role: 'model', text: text });
+            return { text: text };
         }
     };
 };
