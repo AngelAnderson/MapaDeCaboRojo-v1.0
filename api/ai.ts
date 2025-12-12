@@ -61,6 +61,9 @@ export default async function handler(req: any, res: any) {
       case 'generate-seo-meta-tags':
         result = await handleGenerateSeoMetaTags(payload);
         break;
+      case 'analyze-demand':
+        result = await handleAnalyzeDemand(payload);
+        break;
       default:
         return res.status(400).json({ error: "Unknown action" });
     }
@@ -235,6 +238,32 @@ async function handleIdentify({ image }: any) {
         { text: prompt }
       ]
     },
+    config: { responseMimeType: 'application/json' }
+  });
+  return JSON.parse(response.text);
+}
+
+async function handleAnalyzeDemand({ searchTerms, categories }: any) {
+  const prompt = `
+    You are a Business Intelligence Analyst for a tourism app.
+    Here is a list of raw search terms and questions users have typed recently:
+    ${JSON.stringify(searchTerms)}
+
+    Here are the categories we currently have in our database:
+    ${categories.join(', ')}
+
+    Analyze the user intent and identify gaps.
+    Return a JSON object with:
+    {
+      "trending_topics": [{"topic": string, "count": number}],
+      "content_gaps": [{"gap": string, "description": string, "urgency": "HIGH" | "MEDIUM" | "LOW"}],
+      "recommendation": string (executive summary in Spanish)
+    }
+  `;
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: prompt,
     config: { responseMimeType: 'application/json' }
   });
   return JSON.parse(response.text);

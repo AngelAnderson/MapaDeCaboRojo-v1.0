@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Place, Event, PlaceCategory, ParkingStatus, EventCategory, AdminLog, DaySchedule } from '../types';
 import { updatePlace, deletePlace, createPlace, updateEvent, deleteEvent, createEvent, getAdminLogs, uploadImage, loginAdmin, checkSession } from '../services/supabase';
-import { generateMarketingCopy, categorizeAndTagPlace, enhanceDescription, generateElVeciTip, generateImageAltText, generateSeoMetaTags } from '../services/aiService'; // Updated imports
+import { generateMarketingCopy, categorizeAndTagPlace, enhanceDescription, generateElVeciTip, generateImageAltText, generateSeoMetaTags, analyzeUserDemand } from '../services/aiService'; // Updated imports
 import { fetchPlaceDetails, autocompletePlace } from '../services/placesService';
 import { useLanguage } from '../i18n/LanguageContext';
 import { translations } from '../i18n/translations';
@@ -95,7 +95,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
   const [authLoading, setAuthLoading] = useState(true);
 
   // App State
-  const [activeTab, setActiveTab] = useState<'inbox' | 'places' | 'events' | 'logs'>('places');
+  const [activeTab, setActiveTab] = useState<'inbox' | 'places' | 'events' | 'logs' | 'insights'>('places');
   const [editingPlace, setEditingPlace] = useState<Partial<Place> | null>(null);
   const [editingEvent, setEditingEvent] = useState<Partial<Event> | null>(null);
   const [logs, setLogs] = useState<AdminLog[]>([]);
@@ -118,7 +118,14 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
   const [isAiEnhancingDescription, setIsAiEnhancingDescription] = useState(false);
   const [isAiGeneratingTip, setIsAiGeneratingTip] = useState(false);
   const [isAiGeneratingAltText, setIsAiGeneratingAltText] = useState(false);
-  const [isAiGeneratingSeo, setIsAiGeneratingSeo] = useState(false); // New AI SEO State
+  const [isAiGeneratingSeo, setIsAiGeneratingSeo] = useState(false);
+
+  // Insights & Analytics State
+  const [userLogs, setUserLogs] = useState<AdminLog[]>([]);
+  const [systemLogs, setSystemLogs] = useState<AdminLog[]>([]);
+  const [topSearches, setTopSearches] = useState<{term: string, count: number}[]>([]);
+  const [demandAnalysis, setDemandAnalysis] = useState<any>(null);
+  const [isAnalyzingDemand, setIsAnalyzingDemand] = useState(false);
 
 
   // Marketing State
@@ -152,8 +159,33 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'logs' && isAuthenticated) {
-      getAdminLogs().then(setLogs);
+    if ((activeTab === 'logs' || activeTab === 'insights') && isAuthenticated) {
+      // Fetch more logs for insights to get better statistical data
+      const limit = activeTab === 'insights' ? 500 : 50;
+      getAdminLogs(limit).then(fetchedLogs => {
+          setLogs(fetchedLogs);
+          
+          // Partition Logs
+          const uLogs = fetchedLogs.filter(l => ['USER_SEARCH', 'USER_CHAT'].includes(l.action));
+          const sLogs = fetchedLogs.filter(l => !['USER_SEARCH', 'USER_CHAT'].includes(l.action));
+          setUserLogs(uLogs);
+          setSystemLogs(sLogs);
+
+          // Calculate Top Searches
+          const searchCounts: Record<string, number> = {};
+          uLogs.filter(l => l.action === 'USER_SEARCH').forEach(l => {
+              // Basic normalization
+              const term = l.place_name.trim().toLowerCase();
+              if (term.length > 2) {
+                  searchCounts[term] = (searchCounts[term] || 0) + 1;
+              }
+          });
+          const sortedSearches = Object.entries(searchCounts)
+              .map(([term, count]) => ({ term, count }))
+              .sort((a, b) => b.count - a.count)
+              .slice(0, 10);
+          setTopSearches(sortedSearches);
+      });
     }
   }, [activeTab, isAuthenticated]);
   
@@ -494,6 +526,23 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
     }
   };
 
+  const handleAnalyzeDemand = async () => {
+      setIsAnalyzingDemand(true);
+      try {
+          // Extract plain text queries from USER_SEARCH and USER_CHAT logs
+          const queries = userLogs.map(l => l.place_name || l.details);
+          const currentCategories = Object.values(PlaceCategory);
+          
+          const analysis = await analyzeUserDemand(queries, currentCategories);
+          setDemandAnalysis(analysis);
+          showToast("Analysis Complete", 'success');
+      } catch (e) {
+          showToast("Analysis Failed", 'error');
+      } finally {
+          setIsAnalyzingDemand(false);
+      }
+  };
+
 
   // --- SCHEDULE HELPERS ---
   const getStructuredHours = (): DaySchedule[] => {
@@ -612,14 +661,15 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                     <span className="font-black text-lg tracking-tight">Admin</span>
                 </div>
                 
-                <div className="flex bg-slate-800 p-1 rounded-lg border border-slate-700">
-                    <button onClick={() => setActiveTab('inbox')} className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1 ${activeTab === 'inbox' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>
+                <div className="flex bg-slate-800 p-1 rounded-lg border border-slate-700 overflow-x-auto no-scrollbar">
+                    <button onClick={() => setActiveTab('inbox')} className={`px-3 py-1.5 rounded-md text-xs font-bold flex items-center gap-1 whitespace-nowrap ${activeTab === 'inbox' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>
                         {t('admin_inbox')}
                         {pendingPlaces.length > 0 && <span className="bg-red-500 text-white px-1.5 rounded-full text-[9px]">{pendingPlaces.length}</span>}
                     </button>
-                    <button onClick={() => setActiveTab('places')} className={`px-3 py-1.5 rounded-md text-xs font-bold ${activeTab === 'places' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>{t('admin_places')}</button>
-                    <button onClick={() => setActiveTab('events')} className={`px-3 py-1.5 rounded-md text-xs font-bold ${activeTab === 'events' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>{t('admin_events')}</button>
-                    <button onClick={() => setActiveTab('logs')} className={`px-3 py-1.5 rounded-md text-xs font-bold ${activeTab === 'logs' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>{t('admin_logs')}</button>
+                    <button onClick={() => setActiveTab('places')} className={`px-3 py-1.5 rounded-md text-xs font-bold whitespace-nowrap ${activeTab === 'places' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>{t('admin_places')}</button>
+                    <button onClick={() => setActiveTab('events')} className={`px-3 py-1.5 rounded-md text-xs font-bold whitespace-nowrap ${activeTab === 'events' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>{t('admin_events')}</button>
+                    <button onClick={() => setActiveTab('insights')} className={`px-3 py-1.5 rounded-md text-xs font-bold whitespace-nowrap ${activeTab === 'insights' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>Insights</button>
+                    <button onClick={() => setActiveTab('logs')} className={`px-3 py-1.5 rounded-md text-xs font-bold whitespace-nowrap ${activeTab === 'logs' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>{t('admin_logs')}</button>
                 </div>
 
                 <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center border border-slate-700">
@@ -633,19 +683,21 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
       <div className="flex-1 overflow-hidden flex relative">
         
         {/* LIST VIEW (Sidebar on Desktop, Full on Mobile when not editing) */}
-        <div className={`w-full md:w-80 border-r border-slate-700 bg-slate-900 flex flex-col ${isEditing ? 'hidden md:flex' : 'flex'}`}>
-            <div className="p-4 border-b border-slate-700">
-                <div className="relative">
-                    <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
-                    <input 
-                        type="text" 
-                        placeholder={t('admin_search_placeholder')} 
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-white text-sm focus:border-teal-500 outline-none"
-                    />
+        <div className={`w-full md:w-80 border-r border-slate-700 bg-slate-900 flex flex-col ${isEditing ? 'hidden md:flex' : 'flex'} ${activeTab === 'insights' ? 'hidden md:hidden' : ''}`}>
+            {activeTab !== 'insights' && (
+                <div className="p-4 border-b border-slate-700">
+                    <div className="relative">
+                        <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                        <input 
+                            type="text" 
+                            placeholder={t('admin_search_placeholder')} 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-10 pr-4 py-3 text-white text-sm focus:border-teal-500 outline-none"
+                        />
+                    </div>
                 </div>
-            </div>
+            )}
             
             <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
                 {/* INBOX TAB (Pending) */}
@@ -722,7 +774,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
                         {logs.map(log => (
                             <div key={log.id} className="bg-slate-800 p-3 rounded-xl border border-slate-700 text-xs">
                                 <div className="flex justify-between items-center mb-1">
-                                    <span className={`font-bold px-1.5 rounded ${log.action === 'UPDATE' ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'}`}>{log.action}</span>
+                                    <span className={`font-bold px-1.5 rounded ${['USER_SEARCH','USER_CHAT'].includes(log.action) ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'}`}>{log.action}</span>
                                     <span className="text-slate-500">{new Date(log.created_at).toLocaleTimeString()}</span>
                                 </div>
                                 <p className="text-slate-300 font-medium truncate">{log.place_name}</p>
@@ -735,9 +787,143 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, onUpdate }) => {
         </div>
 
         {/* EDITOR VIEW (Full screen on mobile if editing) */}
-        <div className={`flex-1 bg-slate-900 overflow-y-auto custom-scrollbar ${isEditing ? 'absolute inset-0 z-10 md:static' : 'hidden md:flex flex-col items-center justify-center'}`}>
+        <div className={`flex-1 bg-slate-900 overflow-y-auto custom-scrollbar ${isEditing ? 'absolute inset-0 z-10 md:static' : (activeTab === 'insights' ? 'w-full' : 'hidden md:flex flex-col items-center justify-center')}`}>
             
-            {(activeTab === 'places' || activeTab === 'inbox') && editingPlace ? (
+            {activeTab === 'insights' ? (
+                <div className="p-6 max-w-6xl mx-auto space-y-8 animate-slide-up">
+                    <div className="flex justify-between items-end">
+                        <div>
+                            <h2 className="text-3xl font-black text-white tracking-tight mb-2">Market Intelligence</h2>
+                            <p className="text-slate-400">Analysis based on the last {logs.length} interactions.</p>
+                        </div>
+                        <button 
+                            onClick={handleAnalyzeDemand} 
+                            disabled={isAnalyzingDemand}
+                            className="bg-gradient-to-r from-teal-500 to-emerald-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-teal-900/50 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                        >
+                            {isAnalyzingDemand ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-wand-magic-sparkles"></i>}
+                            Analyze Demand
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* LEFT: USER ACTIVITY */}
+                        <div className="space-y-6">
+                            <div className="bg-slate-800/50 rounded-2xl border border-slate-700 p-6">
+                                <h3 className="text-teal-400 font-bold uppercase tracking-wider text-sm mb-4 flex items-center gap-2">
+                                    <i className="fa-solid fa-users-viewfinder"></i> User Intent (Top Searches)
+                                </h3>
+                                {topSearches.length > 0 ? (
+                                    <div className="space-y-3">
+                                        {topSearches.map((s, i) => (
+                                            <div key={i} className="flex items-center justify-between p-3 bg-slate-900/50 rounded-xl border border-slate-700/50">
+                                                <div className="flex items-center gap-3">
+                                                    <span className="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-500">#{i+1}</span>
+                                                    <span className="font-bold text-slate-200 capitalize">{s.term}</span>
+                                                </div>
+                                                <span className="bg-teal-900/30 text-teal-400 text-xs font-bold px-2 py-1 rounded-lg">{s.count} hits</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-slate-500 text-center py-8">Not enough data yet.</p>
+                                )}
+                            </div>
+
+                            {/* Recent Activity Log Preview */}
+                            <div className="bg-slate-800/50 rounded-2xl border border-slate-700 p-6">
+                                <h3 className="text-purple-400 font-bold uppercase tracking-wider text-sm mb-4 flex items-center gap-2">
+                                    <i className="fa-solid fa-comments"></i> Recent Questions
+                                </h3>
+                                <div className="space-y-2 max-h-60 overflow-y-auto custom-scrollbar">
+                                    {userLogs.slice(0, 10).map(l => (
+                                        <div key={l.id} className="text-xs p-2 border-b border-slate-700/50">
+                                            <span className="text-slate-500 mr-2">[{new Date(l.created_at).toLocaleTimeString()}]</span>
+                                            <span className="text-slate-300">{l.place_name || l.details}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* RIGHT: AI ANALYSIS */}
+                        <div className="space-y-6">
+                            {demandAnalysis ? (
+                                <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-600 shadow-2xl p-6 animate-fade-in">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                                            <i className="fa-solid fa-brain text-xl"></i>
+                                        </div>
+                                        <div>
+                                            <h3 className="font-black text-xl text-white">AI Demand Report</h3>
+                                            <p className="text-xs text-indigo-300">Generated just now</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-6">
+                                        <div>
+                                            <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Executive Summary</h4>
+                                            <p className="text-slate-300 leading-relaxed bg-black/20 p-4 rounded-xl border border-white/5">
+                                                {demandAnalysis.recommendation}
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <h4 className="text-xs font-bold text-red-400 uppercase tracking-wide mb-2">Missing Content (High Priority)</h4>
+                                            <div className="space-y-2">
+                                                {demandAnalysis.content_gaps?.map((gap: any, i: number) => (
+                                                    <div key={i} className="bg-red-500/10 border border-red-500/30 p-3 rounded-xl flex justify-between items-start">
+                                                        <div>
+                                                            <div className="font-bold text-red-200">{gap.gap}</div>
+                                                            <div className="text-xs text-red-300/70">{gap.description}</div>
+                                                        </div>
+                                                        <span className="text-[10px] font-bold bg-red-500 text-white px-1.5 py-0.5 rounded">{gap.urgency}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wide mb-2">Trending Topics</h4>
+                                            <div className="flex flex-wrap gap-2">
+                                                {demandAnalysis.trending_topics?.map((t: any, i: number) => (
+                                                    <span key={i} className="bg-emerald-900/30 text-emerald-300 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-bold">
+                                                        {t.topic} <span className="opacity-50 ml-1">x{t.count}</span>
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="h-full bg-slate-800/30 rounded-2xl border border-slate-700/50 border-dashed flex flex-col items-center justify-center p-10 text-center">
+                                    <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mb-4 text-slate-600">
+                                        <i className="fa-solid fa-chart-pie text-2xl"></i>
+                                    </div>
+                                    <h3 className="text-slate-300 font-bold mb-2">No Analysis Yet</h3>
+                                    <p className="text-slate-500 text-sm max-w-xs">
+                                        Click "Analyze Demand" to have the AI process user search logs and identify missing opportunities.
+                                    </p>
+                                </div>
+                            )}
+
+                            <div className="bg-slate-800/50 rounded-2xl border border-slate-700 p-6 opacity-60">
+                                <h3 className="text-slate-400 font-bold uppercase tracking-wider text-sm mb-4 flex items-center gap-2">
+                                    <i className="fa-solid fa-server"></i> System Audit Log
+                                </h3>
+                                <div className="space-y-2 max-h-40 overflow-y-auto custom-scrollbar">
+                                    {systemLogs.slice(0, 10).map(l => (
+                                        <div key={l.id} className="text-xs p-2 border-b border-slate-700/50 flex justify-between">
+                                            <span className="text-slate-300">{l.action}: {l.place_name}</span>
+                                            <span className="text-slate-500">{new Date(l.created_at).toLocaleDateString()}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ) : (activeTab === 'places' || activeTab === 'inbox') && editingPlace ? (
                 <div className="p-4 md:p-8 max-w-3xl mx-auto pb-32 animate-slide-up">
                     
                     {/* --- PROMINENT REVIEW SECTION FOR PENDING ITEMS --- */}

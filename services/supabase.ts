@@ -274,9 +274,13 @@ export const logUserActivity = async (action: 'USER_SEARCH' | 'USER_CHAT' | 'UPD
     }
 };
 
-export const getAdminLogs = async (): Promise<AdminLog[]> => {
+export const getAdminLogs = async (limit: number = 50): Promise<AdminLog[]> => {
     try {
-        const { data, error } = await supabase.from('admin_logs').select('*').order('created_at', { ascending: false }).limit(50);
+        const { data, error } = await supabase
+            .from('admin_logs')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(limit);
         if (error) return [];
         return data as AdminLog[];
     } catch (e) { return []; }

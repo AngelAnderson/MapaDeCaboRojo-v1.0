@@ -180,23 +180,14 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
             <button onClick={() => handleSend()} disabled={isLoading} className="bg-teal-600 text-white p-4 rounded-2xl w-14 hover:bg-teal-700 transition-colors shadow-lg shadow-teal-500/30 disabled:opacity-50 disabled:shadow-none"><i className="fa-solid fa-paper-plane"></i></button>
           </div>
           
-          <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="mt-3">
              <button 
                 onClick={() => handleSend(language === 'es' ? "¿Qué lugares de comida están abiertos ahora?" : "What food places are open right now?")} 
                 disabled={isLoading} 
-                className="bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-4 py-3 rounded-xl text-xs font-bold border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
+                className="w-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-4 py-3 rounded-xl text-xs font-bold border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
              >
                  <i className="fa-solid fa-utensils"></i>
                  {language === 'es' ? 'Comida Abierta' : 'Open for Food'}
-             </button>
-
-             <button 
-                onClick={() => handleSend(language === 'es' ? "Lista los eventos de las próximas 2 semanas que tengas en tu base de datos. No busques en internet. Incluye fecha y hora." : "List events for the next 2 weeks from your database. Do not search the internet. Include date and time.")} 
-                disabled={isLoading} 
-                className="bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 px-4 py-3 rounded-xl text-xs font-bold border border-purple-200 dark:border-purple-800 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
-             >
-                 <i className="fa-regular fa-calendar-days"></i>
-                 {language === 'es' ? 'Próximos Eventos' : 'Upcoming Events'}
              </button>
           </div>
         </div>

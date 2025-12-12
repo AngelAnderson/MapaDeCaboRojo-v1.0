@@ -136,6 +136,17 @@ async function handleClientSideAI(action: string, payload: any) {
             return { text: res.text };
         }
 
+        case 'analyze-demand': {
+            const { searchTerms, categories } = payload;
+            const prompt = `Analyze search terms: ${JSON.stringify(searchTerms)}. Existing categories: ${categories.join(',')}. Identify content gaps. Return JSON: { trending_topics: [{topic,count}], content_gaps: [{gap, description, urgency}], recommendation: string }`;
+            const res = await clientAI.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt,
+                config: { responseMimeType: 'application/json' }
+            });
+            return JSON.parse(res.text || "{}");
+        }
+
         // Admin Helpers
         case 'categorize-tags':
             return JSON.parse((await clientAI.models.generateContent({
@@ -332,6 +343,11 @@ export const generateImageAltText = async (imageUrl: string) => {
 
 export const generateSeoMetaTags = async (name: string, description: string, category: string) => {
     const res = await callAI('generate-seo-meta-tags', { name, description, category });
+    return res;
+};
+
+export const analyzeUserDemand = async (searchTerms: string[], categories: string[]) => {
+    const res = await callAI('analyze-demand', { searchTerms, categories });
     return res;
 };
 
