@@ -159,7 +159,12 @@ const mapPlaceToDb = (place: Partial<Place>) => {
         ? escapeHTML(place.slug) 
         : generateSlug(place.name || 'untitled');
 
+    // FIX: "pending" is not in DB enum. Map 'pending' -> 'closed' in DB.
+    // The app relies on is_verified=false to identify pending items.
     let dbStatus = place.status;
+    if (dbStatus === 'pending') {
+        dbStatus = 'closed';
+    }
 
     // Validate Coordinates
     if (place.coords?.lat !== undefined && place.coords?.lat !== null &&
@@ -209,8 +214,7 @@ const mapPlaceToDb = (place: Partial<Place>) => {
         opening_hours: place.opening_hours || { note: "No especificado" },
         contact_info: place.contact_info || {},
         is_featured: place.is_featured || false,
-        default_zoom: place.defaultZoom || null, // Added to match schema
-        // meta_title and meta_description are intentionally OMITTED as they are not in the provided schema
+        default_zoom: place.defaultZoom || null, 
     };
 };
 
@@ -218,7 +222,7 @@ const mapEventToDb = (event: Partial<Event>) => {
     return {
         title: escapeHTML(event.title) || 'Untitled Event',
         description: escapeHTML(event.description) || '',
-        // Enforce lowercase for Postgres Enum compatibility if defined as 'community' in DB
+        // Enforce lowercase for Postgres Enum compatibility
         category: (event.category || 'community').toLowerCase(),
         start_time: event.startTime,
         end_time: event.endTime,
@@ -307,6 +311,7 @@ export const getPlaces = async (): Promise<Place[]> => {
       is_featured: (row.sponsor_weight && row.sponsor_weight > 80) || false,
       sponsor_weight: row.sponsor_weight || 0,
       plan: row.plan || 'free',
+      // Logic: If !is_verified, treat as 'pending' in App, even if DB says 'closed'
       status: (!row.is_verified ? 'pending' : (row.status || 'open')) as unknown as Place['status'],
       slug: row.slug || '',
       tags: row.tags || [],
@@ -330,7 +335,6 @@ export const getPlaces = async (): Promise<Place[]> => {
       isLanding: row.amenities?.is_landing === true || row.amenities?.is_landing === 'true',
       amenities: row.amenities || {},
       defaultZoom: row.default_zoom ?? undefined,
-      // Note: meta_title/desc are not in the schema, so we do not map them here.
     }));
   } catch (err) { 
     console.error("Unexpected Error in getPlaces:", err);
@@ -400,7 +404,8 @@ export const createPlace = async (place: Partial<Place>): Promise<{ success: boo
         let dbPayload = mapPlaceToDb(place);
         
         if (!isAdmin) {
-            dbPayload.status = 'pending'; 
+            // FIX: Use 'closed' instead of 'pending' to satisfy DB enum
+            dbPayload.status = 'closed'; 
             dbPayload.is_verified = false; 
             dbPayload.sponsor_weight = 0;
             dbPayload.name = escapeHTML(dbPayload.name).replace(/<[^>]*>?/gm, '');
