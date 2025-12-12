@@ -180,14 +180,27 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
             <button onClick={() => handleSend()} disabled={isLoading} className="bg-teal-600 text-white p-4 rounded-2xl w-14 hover:bg-teal-700 transition-colors shadow-lg shadow-teal-500/30 disabled:opacity-50 disabled:shadow-none"><i className="fa-solid fa-paper-plane"></i></button>
           </div>
           
-          <div className="mt-3">
+          <div className="mt-3 flex gap-2 overflow-x-auto no-scrollbar pb-1">
              <button 
-                onClick={() => handleSend(language === 'es' ? "¿Qué lugares de comida están abiertos ahora?" : "What food places are open right now?")} 
+                onClick={() => handleSend("¿Qué eventos hay para hoy o esta semana?")} 
                 disabled={isLoading} 
-                className="w-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 px-4 py-3 rounded-xl text-xs font-bold border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
+                className="whitespace-nowrap px-4 py-2.5 rounded-xl text-xs font-bold border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 dark:bg-purple-900/20 dark:border-purple-800 dark:text-purple-300 transition-colors"
              >
-                 <i className="fa-solid fa-utensils"></i>
-                 {language === 'es' ? 'Comida Abierta' : 'Open for Food'}
+                 🎉 Eventos Hoy
+             </button>
+             <button 
+                onClick={() => handleSend("¿Qué recomiendas en Puerto Real?")} 
+                disabled={isLoading} 
+                className="whitespace-nowrap px-4 py-2.5 rounded-xl text-xs font-bold border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300 transition-colors"
+             >
+                 ⚓ Puerto Real
+             </button>
+             <button 
+                onClick={() => handleSend("Necesito un servicio (plomero, mecánico, etc.)")} 
+                disabled={isLoading} 
+                className="whitespace-nowrap px-4 py-2.5 rounded-xl text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 transition-colors"
+             >
+                 🛠️ Servicios
              </button>
           </div>
         </div>

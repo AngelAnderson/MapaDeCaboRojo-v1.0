@@ -22,9 +22,7 @@ async function handleClientSideAI(action: string, payload: any) {
 
                 PERSONALIDAD:
                 - Amable, respetuoso.
-                - Tu objetivo es ayudar a la gente a pasarla bien.
                 - ¡IMPORTANTE!: Al final de tu respuesta (al menos 1 de cada 2 veces), cuenta un chiste corto y sano ("chiste mongu" / dad joke).
-                - Si respondes en inglés, el chiste debe ser en inglés.
                 
                 DATOS EN TIEMPO REAL:
                 Aquí tienes la lista actualizada de lugares y eventos en Cabo Rojo:
@@ -33,10 +31,20 @@ async function handleClientSideAI(action: string, payload: any) {
                     name: p.name, 
                     cat: p.category, 
                     desc: p.description,
+                    tags: p.tags,
+                    address: p.address,
                     tips: p.tips,
                     vibe: p.vibe,
                     opening_hours: p.opening_hours
                 })).slice(0, 100))}
+
+                EVENTOS:
+                ${JSON.stringify(context.events || [])}
+
+                REGLAS DE BÚSQUEDA Y PRIORIDAD:
+                1. **EVENTOS (Prioridad Alta):** Si el usuario pregunta "¿Qué hay para hacer?" o "¿Eventos hoy?", revisa el array de EVENTOS primero.
+                2. **BARRIOS (Geografía):** Si mencionan "Puerto Real", "Boquerón", "Joyuda", "Combate", o "Pueblo", filtra lugares usando el campo 'address' o 'tags'.
+                3. **SERVICIOS:** Si preguntan por plomeros o mecánicos, busca en la categoría SERVICE.
 
                 CONTEXTO DE TIEMPO (PUERTO RICO):
                 - Fecha Actual: ${context.date}
@@ -290,10 +298,11 @@ export const sendConciergeMessage = async (
                 id: p.id, 
                 name: p.name, 
                 category: p.category, 
-                description: p.description, // No truncation to give AI full context
+                description: p.description, 
                 tips: p.tips,
                 vibe: p.vibe,
                 address: p.address,
+                tags: p.tags, // Added for filtering
                 status: p.status,
                 opening_hours: p.opening_hours // Passed so AI can check time
             })),

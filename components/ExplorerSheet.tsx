@@ -24,8 +24,12 @@ interface ExplorerSheetProps {
   onCameraClick?: () => void; 
   userLocation?: Coordinates;
   onTabChange: (tabId: string, forceReset?: boolean) => void;
-  categories?: Category[]; // NEW
+  categories?: Category[]; 
 }
+
+const NEIGHBORHOODS = [
+    "Joyuda", "Boquerón", "Puerto Real", "Combate", "Pueblo", "Corozo", "Miradero"
+];
 
 const ExplorerSheet: React.FC<ExplorerSheetProps> = ({ 
   places, 
@@ -44,11 +48,12 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
   onCameraClick,
   userLocation,
   onTabChange,
-  categories // NEW
+  categories 
 }) => {
   const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const [sortBy, setSortBy] = useState<'recommended' | 'distance'>('recommended');
+  const [activeNeighborhood, setActiveNeighborhood] = useState<string | null>(null);
 
   // Debounced Logging for Search
   useEffect(() => {
@@ -72,15 +77,23 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
     return R * c;
   };
 
-  const sortedPlaces = [...places].sort((a, b) => {
-    if (sortBy === 'distance' && userLocation && a.coords && b.coords) {
-        const distA = calculateDistance(userLocation.lat, userLocation.lng, a.coords.lat, a.coords.lng);
-        const distB = calculateDistance(userLocation.lat, userLocation.lng, b.coords.lat, b.coords.lng);
-        return distA - distB;
-    }
-    if (a.is_featured === b.is_featured) return 0;
-    return a.is_featured ? -1 : 1;
-  });
+  const sortedPlaces = [...places]
+    .filter(p => {
+        if (!activeNeighborhood) return true;
+        const normalizedHood = activeNeighborhood.toLowerCase();
+        // Check address or tags for neighborhood name
+        return (p.address && p.address.toLowerCase().includes(normalizedHood)) || 
+               (p.tags && p.tags.some(t => t.toLowerCase().includes(normalizedHood)));
+    })
+    .sort((a, b) => {
+        if (sortBy === 'distance' && userLocation && a.coords && b.coords) {
+            const distA = calculateDistance(userLocation.lat, userLocation.lng, a.coords.lat, a.coords.lng);
+            const distB = calculateDistance(userLocation.lat, userLocation.lng, b.coords.lat, b.coords.lng);
+            return distA - distB;
+        }
+        if (a.is_featured === b.is_featured) return 0;
+        return a.is_featured ? -1 : 1;
+    });
 
   return (
     <div 
@@ -105,7 +118,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                         {sortBy === 'distance' ? t('sort_distance') : t('sort_recommended')}
                     </button>
                 )}
-                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{resultCount}</span>
+                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{sortedPlaces.length}</span>
                 {/* Close Button */}
                 <button 
                   onClick={() => onTabChange('map', false)} 
@@ -127,11 +140,28 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
         <CategoryPills 
             activeGroup={activeGroup} 
             onSelect={(g) => { onCategoryChange(g); if(onSelectCollection) onSelectCollection(null); }} 
-            categories={categories} // NEW
+            categories={categories} 
         />
+        
+        {/* Neighborhood Chips */}
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 -ml-1 pl-1">
+            {NEIGHBORHOODS.map(hood => (
+                <button
+                    key={hood}
+                    onClick={() => setActiveNeighborhood(activeNeighborhood === hood ? null : hood)}
+                    className={`px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wide border transition-colors whitespace-nowrap ${
+                        activeNeighborhood === hood 
+                        ? 'bg-slate-800 text-white border-slate-800 dark:bg-white dark:text-slate-900' 
+                        : 'bg-transparent text-slate-500 border-slate-300 dark:border-slate-600 hover:border-slate-400'
+                    }`}
+                >
+                    {hood}
+                </button>
+            ))}
+        </div>
       </div>
       
-      {activeGroup === 'ALL' && !searchText && (
+      {activeGroup === 'ALL' && !searchText && !activeNeighborhood && (
         <div className="pl-5 pb-2 shrink-0 overflow-x-auto no-scrollbar">
             <div className="flex gap-3 w-max pr-5">
                 {COLLECTIONS
