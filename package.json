@@ -1,3 +1,4 @@
+
 {
   "name": "mapadecaborojo",
   "private": true,
@@ -14,7 +15,8 @@
     "leaflet": "^1.9.4",
     "@supabase/supabase-js": "^2.39.8",
     "@google/genai": "latest",
-    "html2canvas": "^1.4.1"
+    "html2canvas": "^1.4.1",
+    "idb-keyval": "^6.2.1"
   },
   "devDependencies": {
     "@types/react": "^19.0.0",
