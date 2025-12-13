@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas'; 
-import { Place, Event, PlaceCategory, ParkingStatus, EventCategory, AdminLog, DaySchedule, Category, InsightSnapshot } from '../types';
-import { updatePlace, deletePlace, createPlace, updateEvent, deleteEvent, createEvent, getAdminLogs, uploadImage, loginAdmin, checkSession, createCategory, updateCategory, deleteCategory, saveInsightSnapshot, getLatestInsights } from '../services/supabase';
+import { Place, Event, PlaceCategory, ParkingStatus, EventCategory, AdminLog, DaySchedule, Category, InsightSnapshot, Person } from '../types';
+import { updatePlace, deletePlace, createPlace, updateEvent, deleteEvent, createEvent, getAdminLogs, uploadImage, loginAdmin, checkSession, createCategory, updateCategory, deleteCategory, saveInsightSnapshot, getLatestInsights, createPerson, updatePerson, deletePerson, getPeople } from '../services/supabase';
 import { generateMarketingCopy, categorizeAndTagPlace, enhanceDescription, generateElVeciTip, generateImageAltText, generateSeoMetaTags, analyzeUserDemand, parsePlaceFromRawText, parseBulkPlaces } from '../services/aiService'; 
 import { fetchPlaceDetails, autocompletePlace, generateSessionToken } from '../services/placesService';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -143,10 +143,13 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
   const [password, setPassword] = useState('');
   const [authLoading, setAuthLoading] = useState(true);
 
-  const [activeTab, setActiveTab] = useState<'inbox' | 'places' | 'events' | 'logs' | 'insights' | 'categories'>('places');
+  const [activeTab, setActiveTab] = useState<'inbox' | 'places' | 'events' | 'logs' | 'insights' | 'categories' | 'people'>('places');
   const [editingPlace, setEditingPlace] = useState<Partial<Place> | null>(null);
   const [editingEvent, setEditingEvent] = useState<Partial<Event> | null>(null);
   const [editingCategory, setEditingCategory] = useState<Partial<Category> | null>(null);
+  const [editingPerson, setEditingPerson] = useState<Partial<Person> | null>(null);
+  const [people, setPeople] = useState<Person[]>([]);
+
   const [logs, setLogs] = useState<AdminLog[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -214,6 +217,10 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
       !searchTerm || matchesSearch(c.label_es) || matchesSearch(c.label_en) || matchesSearch(c.id)
   );
 
+  const filteredPeople = people.filter(p => 
+      !searchTerm || matchesSearch(p.name) || matchesSearch(p.role) || matchesSearch(p.bio)
+  );
+
   useEffect(() => {
       checkSession().then(hasSession => {
           if (hasSession) setIsAuthenticated(true);
@@ -222,6 +229,9 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
   }, []);
 
   useEffect(() => {
+    if (activeTab === 'people' && isAuthenticated) {
+        getPeople().then(setPeople);
+    }
     if ((activeTab === 'logs' || activeTab === 'insights') && isAuthenticated) {
       // ... (Rest of logs logic)
       const limit = activeTab === 'insights' ? 500 : 50;
@@ -475,6 +485,27 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
       }
   };
 
+  const handleSavePerson = async () => {
+      if (!editingPerson || !editingPerson.name) return showToast("Name required", 'error');
+      setIsSaving(true);
+      try {
+          if (editingPerson.id) { await updatePerson(editingPerson.id, editingPerson); }
+          else { await createPerson(editingPerson); }
+          setPeople(await getPeople());
+          await onUpdate(); 
+          showToast("Person saved", 'success'); 
+          setEditingPerson(null);
+      } catch(e: any) { showToast(e.message, 'error'); } finally { setIsSaving(false); }
+  };
+
+  const handleDeletePerson = async (id: string) => {
+      if(confirm("Delete Person?")) {
+          setIsSaving(true);
+          try { await deletePerson(id); setPeople(await getPeople()); await onUpdate(); showToast("Deleted", 'success'); setEditingPerson(null); }
+          catch(e) { showToast("Error", 'error'); } finally { setIsSaving(false); }
+      }
+  };
+
   const handleGenerateSocialCard = async () => {
       if (!socialCardRef.current || !editingPlace) return;
       setIsGeneratingCard(true);
@@ -507,7 +538,8 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
       try {
           const res = await uploadImage(file);
           if (res.success && res.url) {
-              setEditingPlace(prev => ({ ...prev!, imageUrl: res.url })); // Non-null assertion on prev since this is only active when editingPlace is set
+              if (editingPlace) setEditingPlace(prev => ({ ...prev!, imageUrl: res.url }));
+              else if (editingPerson) setEditingPerson(prev => ({ ...prev!, imageUrl: res.url }));
               showToast("Image uploaded successfully", 'success');
           } else {
               showToast(res.error || "Upload failed", 'error');
@@ -709,7 +741,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
     );
   }
 
-  const isEditing = editingPlace || editingEvent || editingCategory;
+  const isEditing = editingPlace || editingEvent || editingCategory || editingPerson;
 
   return (
     <div className="fixed inset-0 bg-slate-900 z-[5000] flex flex-col font-sans text-slate-200">
@@ -721,7 +753,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
         {isEditing ? (
             <div className="flex items-center gap-3 w-full">
                 <button 
-                    onClick={() => { setEditingPlace(null); setEditingEvent(null); setEditingCategory(null); setBulkMode(false); }} 
+                    onClick={() => { setEditingPlace(null); setEditingEvent(null); setEditingCategory(null); setEditingPerson(null); setBulkMode(false); }} 
                     className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400 active:bg-slate-700 transition-colors"
                 >
                     <i className="fa-solid fa-arrow-left"></i>
@@ -729,12 +761,13 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                 <div className="flex-1 min-w-0">
                     <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider">{t('admin_editing')}</h2>
                     <p className="text-white font-bold truncate">
-                        {editingPlace?.name || editingEvent?.title || editingCategory?.id || t('admin_new_item')}
+                        {editingPlace?.name || editingEvent?.title || editingCategory?.id || editingPerson?.name || t('admin_new_item')}
                     </p>
                 </div>
                 <button 
                     onClick={() => {
                         if (activeTab === 'categories') handleSaveCategory();
+                        else if (activeTab === 'people') handleSavePerson();
                         else if (activeTab === 'places' || activeTab === 'inbox') handleSavePlace(false);
                         else handleSaveEvent();
                     }} 
@@ -759,6 +792,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                     </button>
                     <button onClick={() => setActiveTab('places')} className={`px-3 py-1.5 rounded-md text-xs font-bold whitespace-nowrap ${activeTab === 'places' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>{t('admin_places')}</button>
                     <button onClick={() => setActiveTab('events')} className={`px-3 py-1.5 rounded-md text-xs font-bold whitespace-nowrap ${activeTab === 'events' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>{t('admin_events')}</button>
+                    <button onClick={() => setActiveTab('people')} className={`px-3 py-1.5 rounded-md text-xs font-bold whitespace-nowrap ${activeTab === 'people' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>People</button>
                     <button onClick={() => setActiveTab('categories')} className={`px-3 py-1.5 rounded-md text-xs font-bold whitespace-nowrap ${activeTab === 'categories' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>Cats</button>
                     <button onClick={() => setActiveTab('insights')} className={`px-3 py-1.5 rounded-md text-xs font-bold whitespace-nowrap ${activeTab === 'insights' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>Insights</button>
                     <button onClick={() => setActiveTab('logs')} className={`px-3 py-1.5 rounded-md text-xs font-bold whitespace-nowrap ${activeTab === 'logs' ? 'bg-slate-700 text-white' : 'text-slate-500'}`}>{t('admin_logs')}</button>
@@ -774,7 +808,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
         {/* ... (Sidebar logic unchanged) ... */}
         <div className={`w-full md:w-80 border-r border-slate-700 bg-slate-900 flex flex-col ${isEditing || bulkMode ? 'hidden md:flex' : 'flex'} ${activeTab === 'insights' || activeTab === 'logs' ? 'hidden md:hidden' : ''}`}>
             {/* Search Bar in Sidebar */}
-            {!isEditing && (activeTab === 'places' || activeTab === 'inbox' || activeTab === 'events' || activeTab === 'categories') && (
+            {!isEditing && (activeTab === 'places' || activeTab === 'inbox' || activeTab === 'events' || activeTab === 'categories' || activeTab === 'people') && (
                 <div className="p-3 border-b border-slate-800 sticky top-0 bg-slate-900 z-10">
                     <div className="relative group">
                         <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-teal-500 transition-colors">
@@ -851,6 +885,26 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                                 </div>
                                 <div className="flex items-center gap-2 text-xs text-slate-500">
                                     <i className="fa-solid fa-location-dot"></i> {e.locationName}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </>
+            )}
+            {activeTab === 'people' && (
+                <>
+                    <div className="p-2">
+                        <button onClick={() => setEditingPerson({ name: '', role: '', bio: '' })} className="w-full p-4 rounded-xl border-2 border-dashed border-slate-700 text-slate-400 hover:border-emerald-500 hover:text-emerald-500 hover:bg-slate-800 transition-all font-bold text-sm flex flex-col items-center justify-center gap-1"><i className="fa-solid fa-user-plus text-lg"></i> <span className="text-[10px]">Add Person</span></button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
+                        {filteredPeople.map(p => (
+                            <div key={p.id} onClick={() => setEditingPerson(p)} className={`p-4 rounded-xl border cursor-pointer transition-all flex gap-3 items-center ${editingPerson?.id === p.id ? 'bg-emerald-900/20 border-emerald-500/50' : 'bg-slate-800 border-slate-700'}`}>
+                                <div className="w-10 h-10 rounded-full bg-slate-700 overflow-hidden shrink-0">
+                                    {p.imageUrl ? <img src={p.imageUrl} className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-slate-500"><i className="fa-solid fa-user"></i></div>}
+                                </div>
+                                <div className="min-w-0">
+                                    <h4 className="font-bold text-sm text-slate-200 truncate">{p.name}</h4>
+                                    <p className="text-[10px] text-slate-500 uppercase font-bold">{p.role}</p>
                                 </div>
                             </div>
                         ))}
@@ -990,6 +1044,8 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                             <InputGroup label="Category">
                                 <StyledSelect value={editingPlace.category} onChange={e => setEditingPlace({...editingPlace, category: e.target.value})}>
                                     {categories.map(c => <option key={c.id} value={c.id}>{c.label_es}</option>)}
+                                    <option value="HISTORY">Historic / Landmark</option>
+                                    <option value="PROJECT">Project / Development</option>
                                 </StyledSelect>
                             </InputGroup>
                             <InputGroup label="Custom Icon (FontAwesome)" description="e.g. pizza-slice (no fa- prefix)">
@@ -1265,8 +1321,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                 </div>
             )}
 
-            {/* EVENT EDITOR, CATEGORY EDITOR, LOGS, INSIGHTS views unchanged ... */}
-            {/* ... */}
+            {/* EVENT EDITOR */}
             {activeTab === 'events' && editingEvent && (
                 <div className="p-4 md:p-8 max-w-3xl mx-auto pb-32 animate-slide-up">
                     <div className="flex justify-between items-center mb-6 bg-slate-800 p-4 rounded-xl border border-slate-700">
@@ -1285,6 +1340,48 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                         </div>
                         <InputGroup label="Location"><StyledInput value={editingEvent.locationName || ''} onChange={e => setEditingEvent({...editingEvent, locationName: e.target.value})} /></InputGroup>
                         <InputGroup label="Description"><StyledTextArea value={editingEvent.description || ''} onChange={e => setEditingEvent({...editingEvent, description: e.target.value})} /></InputGroup>
+                    </Section>
+                </div>
+            )}
+
+            {/* PERSON EDITOR */}
+            {activeTab === 'people' && editingPerson && (
+                <div className="p-4 md:p-8 max-w-3xl mx-auto pb-32 animate-slide-up">
+                    <div className="flex justify-between items-center mb-6 bg-slate-800 p-4 rounded-xl border border-slate-700">
+                        <span className="font-bold text-white text-lg">Person Editor</span>
+                        {editingPerson.id && (
+                            <button onClick={() => handleDeletePerson(editingPerson.id!)} className="text-red-500 hover:text-red-400 px-3 py-2 rounded-lg hover:bg-red-900/20 transition-colors">
+                                <i className="fa-solid fa-trash"></i>
+                            </button>
+                        )}
+                    </div>
+                    <Section title="Basic Info" icon="user">
+                        <InputGroup label="Name"><StyledInput value={editingPerson.name || ''} onChange={e => setEditingPerson({...editingPerson, name: e.target.value})} /></InputGroup>
+                        <InputGroup label="Role / Title"><StyledInput value={editingPerson.role || ''} onChange={e => setEditingPerson({...editingPerson, role: e.target.value})} placeholder="e.g. Mayor, Historic Figure" /></InputGroup>
+                        <InputGroup label="Years"><StyledInput value={editingPerson.years || ''} onChange={e => setEditingPerson({...editingPerson, years: e.target.value})} placeholder="e.g. 1920-1990" /></InputGroup>
+                        <InputGroup label="Biography"><StyledTextArea value={editingPerson.bio || ''} onChange={e => setEditingPerson({...editingPerson, bio: e.target.value})} /></InputGroup>
+                    </Section>
+                    
+                    <Section title="Media" icon="image">
+                        <InputGroup label="Image URL">
+                            <div className="flex gap-2">
+                                <StyledInput value={editingPerson.imageUrl || ''} onChange={e => setEditingPerson({...editingPerson, imageUrl: e.target.value})} />
+                                <button onClick={() => fileInputRef.current?.click()} className="bg-slate-700 text-white px-4 rounded-xl flex items-center justify-center min-w-[50px] hover:bg-slate-600 transition-colors">
+                                    <i className="fa-solid fa-upload"></i>
+                                </button>
+                            </div>
+                            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+                        </InputGroup>
+                        {editingPerson.imageUrl && <img src={editingPerson.imageUrl} alt="Preview" className="w-32 h-32 object-cover rounded-xl mt-2 border border-slate-700" />}
+                    </Section>
+
+                    <Section title="Link to Place" icon="map-pin">
+                        <InputGroup label="Associated Place">
+                            <StyledSelect value={editingPerson.placeId || ''} onChange={e => setEditingPerson({...editingPerson, placeId: e.target.value || undefined})}>
+                                <option value="">-- None --</option>
+                                {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                            </StyledSelect>
+                        </InputGroup>
                     </Section>
                 </div>
             )}
@@ -1396,7 +1493,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
             )}
 
             {/* EMPTY STATE */}
-            {!editingPlace && !editingEvent && !editingCategory && !['logs','insights'].includes(activeTab) && !bulkMode && (
+            {!editingPlace && !editingEvent && !editingCategory && !editingPerson && !['logs','insights'].includes(activeTab) && !bulkMode && (
                 <div className="text-center text-slate-500 opacity-50"><i className="fa-solid fa-hand-pointer text-4xl mb-4"></i><p>{t('admin_select_item')}</p></div>
             )}
         </div>

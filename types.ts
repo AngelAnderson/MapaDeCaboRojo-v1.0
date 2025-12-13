@@ -9,7 +9,9 @@ export enum PlaceCategory {
   HEALTH = 'HEALTH',
   NIGHTLIFE = 'NIGHTLIFE',
   ACTIVITY = 'ACTIVITY',
-  SERVICE = 'SERVICE'
+  SERVICE = 'SERVICE',
+  HISTORY = 'HISTORY', // New: For statues, markers
+  PROJECT = 'PROJECT'  // New: For Esencia, developments
 }
 
 export enum ParkingStatus {
@@ -39,12 +41,22 @@ export interface Category {
   order_index?: number;
 }
 
+export interface Person {
+  id: string;
+  name: string;
+  role: string; // e.g. "Prócer", "Alcalde", "Dueño", "Leyenda"
+  bio: string;
+  imageUrl?: string;
+  placeId?: string; // Optional Foreign Key to a Place
+  years?: string; // e.g. "1791 - 1825"
+}
+
 export interface Place {
   id: string;
   name: string;
   slug: string;
   description: string;
-  category: string; // Changed from enum to string to support dynamic categories
+  category: string; 
   subcategory?: string;
   tags: string[];
   
@@ -100,6 +112,8 @@ export interface Place {
 
   metaTitle?: string; 
   metaDescription?: string; 
+  
+  relatedPeople?: Person[]; // Hydrated in hook
 }
 
 export interface Event {
@@ -164,7 +178,7 @@ export interface ChatMessage {
 
 export interface AdminLog {
   id: string;
-  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'MARKETING_GEN' | 'USER_SEARCH' | 'USER_CHAT' | 'AI_BRIEFING' | 'CREATE_EVENT' | 'UPDATE_EVENT' | 'DELETE_EVENT' | 'UPDATE_SUGGESTION' | 'CREATE_CAT' | 'UPDATE_CAT' | 'DELETE_CAT' | 'INSIGHT_SNAPSHOT';
+  action: 'CREATE' | 'UPDATE' | 'DELETE' | 'MARKETING_GEN' | 'USER_SEARCH' | 'USER_CHAT' | 'AI_BRIEFING' | 'CREATE_EVENT' | 'UPDATE_EVENT' | 'DELETE_EVENT' | 'UPDATE_SUGGESTION' | 'CREATE_CAT' | 'UPDATE_CAT' | 'DELETE_CAT' | 'CREATE_PERSON' | 'UPDATE_PERSON' | 'DELETE_PERSON' | 'INSIGHT_SNAPSHOT';
   place_name: string;
   details: string; // JSON string for complicated data
   created_at: string;

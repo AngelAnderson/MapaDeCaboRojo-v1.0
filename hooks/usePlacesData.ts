@@ -1,13 +1,14 @@
 
 import { useState, useEffect, useMemo } from 'react';
-import { Place, Event, PlaceCategory, ParkingStatus, Category } from '../types';
-import { getPlaces, getEvents, getCategories, checkDataVersion } from '../services/supabase';
+import { Place, Event, PlaceCategory, ParkingStatus, Category, Person } from '../types';
+import { getPlaces, getEvents, getCategories, getPeople, checkDataVersion } from '../services/supabase';
 import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, DEFAULT_CATEGORIES } from '../constants';
 
 export const usePlacesData = () => {
   const [places, setPlaces] = useState<Place[]>(FALLBACK_PLACES);
   const [events, setEvents] = useState<Event[]>(FALLBACK_EVENTS);
   const [categories, setCategories] = useState<Category[]>(DEFAULT_CATEGORIES);
+  const [people, setPeople] = useState<Person[]>([]); // New State for People
   const [loading, setLoading] = useState(true);
 
   // Initial Fetch
@@ -21,15 +22,27 @@ export const usePlacesData = () => {
 
             // 2. Load Data (will hit network if cache was cleared, or cache if valid)
             console.log("Fetching real data...");
-            const [realPlaces, realEvents, realCategories] = await Promise.all([
+            const [realPlaces, realEvents, realCategories, realPeople] = await Promise.all([
                 getPlaces(),
                 getEvents(),
-                getCategories()
+                getCategories(),
+                getPeople()
             ]);
 
-            if (realPlaces.length > 0) setPlaces(realPlaces);
+            // Hydrate Places with People
+            const hydratedPlaces = realPlaces.map(p => {
+                // Find people linked to this place
+                const linkedPeople = realPeople.filter(person => person.placeId === p.id);
+                if (linkedPeople.length > 0) {
+                    return { ...p, relatedPeople: linkedPeople };
+                }
+                return p;
+            });
+
+            if (hydratedPlaces.length > 0) setPlaces(hydratedPlaces);
             if (realEvents.length > 0) setEvents(realEvents);
             if (realCategories.length > 0) setCategories(realCategories);
+            if (realPeople.length > 0) setPeople(realPeople);
             
         } catch (e) {
             console.error("Data load failed, using fallbacks", e);
@@ -110,11 +123,25 @@ export const usePlacesData = () => {
   }, [events]);
 
   const refreshData = async () => {
-      const [p, e, c] = await Promise.all([getPlaces(), getEvents(), getCategories()]);
-      if(p.length > 0) setPlaces(p);
-      if(e.length > 0) setEvents(e);
-      if(c.length > 0) setCategories(c);
+      // Re-fetch everything to ensure hydration is correct
+      const [realPlaces, realEvents, realCategories, realPeople] = await Promise.all([
+          getPlaces(),
+          getEvents(),
+          getCategories(),
+          getPeople()
+      ]);
+
+      const hydratedPlaces = realPlaces.map(p => {
+          const linkedPeople = realPeople.filter(person => person.placeId === p.id);
+          if (linkedPeople.length > 0) return { ...p, relatedPeople: linkedPeople };
+          return p;
+      });
+
+      if(hydratedPlaces.length > 0) setPlaces(hydratedPlaces);
+      if(realEvents.length > 0) setEvents(realEvents);
+      if(realCategories.length > 0) setCategories(realCategories);
+      if(realPeople.length > 0) setPeople(realPeople);
   };
 
-  return { places, events, categories, publishedPlaces, mappedEvents, loading, refreshData };
+  return { places, events, categories, people, publishedPlaces, mappedEvents, loading, refreshData };
 };

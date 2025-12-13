@@ -1,7 +1,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { get, set, del } from 'idb-keyval';
-import { Place, PlaceCategory, ParkingStatus, AdminLog, Event, EventCategory, Category, InsightSnapshot } from '../types';
+import { Place, PlaceCategory, ParkingStatus, AdminLog, Event, EventCategory, Category, InsightSnapshot, Person } from '../types';
 import { DEFAULT_CATEGORIES } from '../constants';
 
 // --- SAFE ENVIRONMENT VARIABLE EXTRACTION (Vite/Browser Compatible) ---
@@ -418,6 +418,17 @@ const mapEventToDb = (event: Partial<Event>) => {
     };
 };
 
+const mapPersonToDb = (person: Partial<Person>) => {
+    return {
+        name: escapeHTML(person.name) || 'Unknown',
+        role: escapeHTML(person.role) || '',
+        bio: escapeHTML(person.bio) || '',
+        image_url: escapeHTML(person.imageUrl) || '',
+        place_id: person.placeId || null,
+        years: escapeHTML(person.years) || ''
+    };
+};
+
 const logAction = async (action: string, placeName: string, details: string) => {
     try {
         await supabase.from('admin_logs').insert([{
@@ -452,6 +463,7 @@ export const checkDataVersion = async (): Promise<void> => {
                 'CREATE', 'UPDATE', 'DELETE', 
                 'CREATE_EVENT', 'UPDATE_EVENT', 'DELETE_EVENT', 
                 'CREATE_CAT', 'UPDATE_CAT', 'DELETE_CAT',
+                'CREATE_PERSON', 'UPDATE_PERSON', 'DELETE_PERSON',
                 'SYNC_G_PLACES', 'SYNC_VIBE', 'SYNC_WEATHER' // Include automated syncs
             ])
             .order('created_at', { ascending: false })
@@ -480,6 +492,7 @@ export const checkDataVersion = async (): Promise<void> => {
             await invalidateCache('PLACES');
             await invalidateCache('EVENTS');
             await invalidateCache('CATEGORIES');
+            await invalidateCache('PEOPLE');
             
             // Update local version
             await set('cabo_data_version', serverTimeStr);
@@ -729,6 +742,84 @@ export const getEvents = async (): Promise<Event[]> => {
     } catch (e) { 
         console.error("Event fetch error:", e);
         return []; 
+    }
+};
+
+export const getPeople = async (): Promise<Person[]> => {
+    const cached = await getFromCache('PEOPLE');
+    if (cached) return cached;
+
+    try {
+        const { data, error } = await supabase.from('people').select('*');
+        if (error) {
+            if (error.code === '42P01') {
+                console.warn("People table missing, skipping.");
+                return [];
+            }
+            console.warn("Supabase People Fetch Error:", error.message);
+            return [];
+        }
+        if (!data) return [];
+
+        const mapped = data.map((row: any) => ({
+            id: row.id,
+            name: escapeHTML(row.name),
+            role: escapeHTML(row.role),
+            bio: escapeHTML(row.bio),
+            imageUrl: escapeHTML(row.image_url),
+            placeId: row.place_id,
+            years: escapeHTML(row.years)
+        }));
+
+        await setCache('PEOPLE', mapped);
+        return mapped;
+    } catch(e) {
+        console.error("People fetch error:", e);
+        return [];
+    }
+};
+
+export const createPerson = async (person: Partial<Person>): Promise<{ success: boolean; error?: string }> => {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) throw new Error("Unauthorized");
+        const dbPayload = mapPersonToDb(person);
+        const { error } = await supabase.from('people').insert([dbPayload]);
+        if (error) throw error;
+        await logAction('CREATE_PERSON', person.name || 'Unknown', 'Person created by Admin');
+        await invalidateCache('PEOPLE');
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: getErrorMessage(e) };
+    }
+};
+
+export const updatePerson = async (id: string, person: Partial<Person>): Promise<{ success: boolean; error?: string }> => {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) throw new Error("Unauthorized");
+        const dbPayload = mapPersonToDb(person);
+        const { error } = await supabase.from('people').update(dbPayload).eq('id', id);
+        if (error) throw error;
+        await logAction('UPDATE_PERSON', person.name || 'Unknown', 'Person updated by Admin');
+        await invalidateCache('PEOPLE');
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: getErrorMessage(e) };
+    }
+};
+
+export const deletePerson = async (id: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user) throw new Error("Unauthorized");
+        const { error } = await supabase.from('people').delete().eq('id', id);
+        if (error) throw error;
+        await logAction('DELETE_PERSON', id, 'Person deleted');
+        await invalidateCache('PEOPLE');
+        return { success: true };
+    } catch (e: any) {
+        return { success: false, error: getErrorMessage(e) };
     }
 };
 

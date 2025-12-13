@@ -283,6 +283,33 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
           <p className="text-slate-700 dark:text-slate-200 text-lg leading-relaxed">{place.description}</p>
         </section>
 
+        {/* --- LINKED PEOPLE SECTION --- */}
+        {place.relatedPeople && place.relatedPeople.length > 0 && (
+            <section>
+                <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-3 tracking-wider flex items-center gap-2">
+                    <i className="fa-solid fa-user-group"></i> Gente Importante
+                </h3>
+                <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+                    {place.relatedPeople.map(person => (
+                        <div key={person.id} className="min-w-[240px] bg-slate-50 dark:bg-slate-700/50 rounded-xl p-3 border border-slate-100 dark:border-slate-600 flex items-center gap-3">
+                            <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-600 overflow-hidden shrink-0">
+                                {person.imageUrl ? (
+                                    <img src={person.imageUrl} alt={person.name} className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-slate-400"><i className="fa-solid fa-user"></i></div>
+                                )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h4 className="font-bold text-slate-800 dark:text-white text-sm truncate">{person.name}</h4>
+                                <p className="text-xs text-teal-600 dark:text-teal-400 font-bold uppercase truncate">{person.role}</p>
+                                {person.years && <p className="text-[10px] text-slate-500">{person.years}</p>}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+        )}
+
         {!isClosed && place.opening_hours && <section><HoursDisplay hours={place.opening_hours} /></section>}
         
         {(place.address || place.phone || place.gmapsUrl) && (
