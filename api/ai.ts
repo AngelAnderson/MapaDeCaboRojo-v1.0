@@ -90,7 +90,7 @@ async function handleChat({ message, history, context }: any) {
   const { places, events, user_context } = context;
 
   const systemInstruction = `
-    Eres "El Veci", un guía local digital de Cabo Rojo, Puerto Rico.
+    Eres "El Veci", el guía local de Cabo Rojo, Puerto Rico.
     
     TU MISIÓN:
     Ayudar a usuarios a encontrar lugares y eventos usando *exclusivamente* tu base de datos local.
@@ -144,7 +144,7 @@ async function handleChat({ message, history, context }: any) {
           suggestedPlaceIds: jsonResponse.suggested_place_ids 
       };
   } catch (e) {
-      return { text: result.text };
+      return { text: result.text || "" };
   }
 }
 
@@ -188,7 +188,7 @@ async function handleItinerary({ vibe, places }: any) {
   });
 
   try {
-    return JSON.parse(response.text);
+    return JSON.parse(response.text || "[]");
   } catch (e) {
     return []; 
   }
@@ -209,7 +209,7 @@ async function handleIdentify({ image }: any) {
     },
     config: { responseMimeType: 'application/json' }
   });
-  return JSON.parse(response.text);
+  return JSON.parse(response.text || "{}");
 }
 
 async function handleAnalyzeDemand({ searchTerms, categories }: any) {
@@ -229,7 +229,7 @@ async function handleAnalyzeDemand({ searchTerms, categories }: any) {
     contents: prompt,
     config: { responseMimeType: 'application/json' }
   });
-  return JSON.parse(response.text);
+  return JSON.parse(response.text || "{}");
 }
 
 // --- HELPER FUNCTIONS ---
@@ -239,7 +239,7 @@ async function handleScript({ placeName, description }: any) {
     model: 'gemini-2.5-flash',
     contents: `Guión de audio guía (30s) para "${placeName}". Desc: "${description}". Tono: Amable.`
   });
-  return { text: response.text };
+  return { text: response.text || "" };
 }
 
 async function handleCategorizeAndTag({ name, description }: any) {
@@ -249,7 +249,7 @@ async function handleCategorizeAndTag({ name, description }: any) {
     contents: prompt,
     config: { responseMimeType: 'application/json' }
   });
-  return JSON.parse(response.text);
+  return JSON.parse(response.text || "{}");
 }
 
 async function handleEnhanceDescription({ name, description }: any) {
@@ -257,7 +257,7 @@ async function handleEnhanceDescription({ name, description }: any) {
     model: 'gemini-2.5-flash',
     contents: `Mejora descripción (max 150 palabras) para "${name}": "${description}".`
   });
-  return { text: response.text };
+  return { text: response.text || "" };
 }
 
 async function handleGenerateTips({ name, category, description }: any) {
@@ -265,15 +265,34 @@ async function handleGenerateTips({ name, category, description }: any) {
     model: 'gemini-2.5-flash',
     contents: `Consejo local para "${name}" (${category}). Contexto: ${description}.`
   });
-  return { text: response.text };
+  return { text: response.text || "" };
 }
 
 async function handleGenerateAltText({ imageUrl }: any) {
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash', 
-    contents: { parts: [{ image: { url: imageUrl } }, { text: "Alt text (max 15 words)." }] }
-  });
-  return { text: response.text };
+  try {
+    // 1. Fetch the image
+    const imageRes = await fetch(imageUrl);
+    if (!imageRes.ok) throw new Error("Failed to fetch image");
+    const arrayBuffer = await imageRes.arrayBuffer();
+    
+    // 2. Convert to Base64
+    const base64Data = Buffer.from(arrayBuffer).toString('base64');
+    const mimeType = imageRes.headers.get('content-type') || 'image/jpeg';
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: { 
+        parts: [
+          { inlineData: { mimeType: mimeType, data: base64Data } }, 
+          { text: "Generate SEO alt text (max 15 words) for this place image." }
+        ] 
+      }
+    });
+    return { text: response.text || "" };
+  } catch (e) {
+    console.error("Generate Alt Text Error:", e);
+    return { text: "Error generating alt text." };
+  }
 }
 
 async function handleGenerateSeoMetaTags({ name, description, category }: any) {
@@ -282,7 +301,7 @@ async function handleGenerateSeoMetaTags({ name, description, category }: any) {
     contents: `SEO JSON { "metaTitle": string, "metaDescription": string } for "${name}" (${category}).`,
     config: { responseMimeType: 'application/json' }
   });
-  return JSON.parse(response.text);
+  return JSON.parse(response.text || "{}");
 }
 
 async function handleParseRaw({ text }: any) {
@@ -292,7 +311,7 @@ async function handleParseRaw({ text }: any) {
     contents: prompt,
     config: { responseMimeType: 'application/json' }
   });
-  return JSON.parse(response.text);
+  return JSON.parse(response.text || "{}");
 }
 
 async function handleParseBulk({ text }: any) {
@@ -302,5 +321,5 @@ async function handleParseBulk({ text }: any) {
     contents: prompt,
     config: { responseMimeType: 'application/json' }
   });
-  return JSON.parse(response.text);
+  return JSON.parse(response.text || "[]");
 }
