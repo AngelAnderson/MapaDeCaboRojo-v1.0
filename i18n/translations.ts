@@ -81,6 +81,8 @@ export const translations = {
     audio_error: "No pude generar el audio. Intenta de nuevo.",
     sort_recommended: "Recomendados",
     sort_distance: "Cerca de ti",
+    holiday_warning: "Feriado: {{name}}",
+    earthquake_alert: "Sismo Reciente",
 
     // Admin Panel Translations
     admin_access_title: "Acceso Admin",
@@ -375,6 +377,8 @@ export const translations = {
     audio_error: "Could not generate audio. Try again.",
     sort_recommended: "Recommended",
     sort_distance: "Near Me",
+    holiday_warning: "Holiday: {{name}}",
+    earthquake_alert: "Recent Quake",
 
     // Admin Panel Translations
     admin_access_title: "Admin Access",

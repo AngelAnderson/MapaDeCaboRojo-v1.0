@@ -1,5 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
+import { getRecentEarthquakes, EarthQuake } from '../services/externalServices';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface WeatherState {
   temp: number;
@@ -11,17 +13,21 @@ interface WeatherState {
 }
 
 const WeatherWidget: React.FC = () => {
+  const { t } = useLanguage();
   const [weather, setWeather] = useState<WeatherState>({
     temp: 0,
     condition: '',
-    advice: 'Cargando el clima...',
+    advice: t('weather_loading'),
     icon: 'fa-sun',
     loading: true,
     isSafe: true,
   });
+  
+  const [quake, setQuake] = useState<EarthQuake | null>(null);
+  const [showQuake, setShowQuake] = useState(false);
 
   const fetchWeather = async () => {
-      // Visibility Check: Don't fetch if tab is hidden to save battery/data
+      // Visibility Check
       if (document.hidden) return;
 
       try {
@@ -40,49 +46,49 @@ const WeatherWidget: React.FC = () => {
         const wind = current.wind_speed_10m;
         const isDay = current.is_day === 1;
 
-        let condition = 'Soleado';
-        let advice = 'Arranca pa\' la playa.';
+        let condition = t('weather_sunny');
+        let advice = t('weather_advice_beach');
         let icon = isDay ? 'fa-sun' : 'fa-moon';
         let isSafe = true;
 
         if (code >= 95) {
-            condition = 'Tormenta';
-            advice = '¡PELIGRO! Quédate quieto. No salgas.';
+            condition = t('weather_storm');
+            advice = t('weather_advice_storm');
             icon = 'fa-cloud-bolt';
             isSafe = false;
         } else if (code >= 61 || (code >= 80 && code <= 82)) {
-            condition = 'Lluvia';
-            advice = 'Se te agüó la fiesta. Busca techo o un chinchorro.';
+            condition = t('weather_rain');
+            advice = t('weather_advice_rain');
             icon = 'fa-cloud-showers-heavy';
             isSafe = false;
         } else if (code >= 51) {
-            condition = 'Llovizna';
-            advice = 'Una llovizna boba. Se quita rápido.';
+            condition = t('weather_drizzle');
+            advice = t('weather_advice_drizzle');
             icon = 'fa-cloud-rain';
         } else if (code === 3) {
-            condition = 'Nublado';
-            advice = 'Perfecto pa\' caminar, el sol no pica.';
+            condition = t('weather_cloudy');
+            advice = t('weather_advice_cloudy');
             icon = 'fa-cloud';
         } else if (code === 2) {
-            condition = 'Parcial';
-            advice = 'Sol con nubes. Rico pa\' fotos.';
+            condition = t('weather_partial_cloudy');
+            advice = t('weather_advice_partial_cloudy');
             icon = isDay ? 'fa-cloud-sun' : 'fa-cloud-moon';
         } else if (code === 1) {
-            condition = 'Despejado'; 
-            advice = 'Cielo azul. ¡Aprovecha!';
+            condition = t('weather_clear'); 
+            advice = t('weather_advice_clear');
             icon = isDay ? 'fa-sun' : 'fa-moon';
         } else {
-            condition = isDay ? 'Soleado' : 'Despejado';
-            advice = isDay ? 'Brillante. ¡Ponte sunblock!' : 'Noche clara. Mira las estrellas.';
+            condition = isDay ? t('weather_sunny') : t('weather_clear');
+            advice = isDay ? t('weather_advice_hot') : t('weather_advice_stars');
             icon = isDay ? 'fa-sun' : 'fa-moon';
         }
 
         if (temp > 100) {
-            advice = '¡Calor infernal! Hidrátate o busca aire.';
+            advice = t('weather_advice_infernal_heat');
             icon = 'fa-temperature-arrow-up';
         }
         if (wind > 18) {
-            advice = 'Viento fuerte. Cuidado con el oleaje.';
+            advice = t('weather_advice_strong_wind');
             icon = 'fa-wind';
             isSafe = false;
         }
@@ -92,8 +98,8 @@ const WeatherWidget: React.FC = () => {
       } catch (e) {
         setWeather({
             temp: 85,
-            condition: 'Tropical',
-            advice: 'El clima de siempre: Calor y playa.',
+            condition: t('weather_tropical'),
+            advice: t('weather_advice_default'),
             icon: 'fa-umbrella-beach',
             loading: false,
             isSafe: true
@@ -101,11 +107,28 @@ const WeatherWidget: React.FC = () => {
       }
   };
 
+  const fetchQuakes = async () => {
+      const q = await getRecentEarthquakes();
+      // Only show if it happened in the last 12 hours
+      if (q && (Date.now() - q.time < 12 * 60 * 60 * 1000)) {
+          setQuake(q);
+      }
+  };
+
   useEffect(() => {
-    fetchWeather(); // Initial fetch
+    fetchWeather();
+    fetchQuakes();
+    
     const interval = setInterval(fetchWeather, 600000); // 10 mins
     
-    // Add visibility listener to re-fetch when user comes back
+    // Cycle between weather and quake alert every 5 seconds if quake exists
+    let cycleInterval: any;
+    if (quake) {
+        cycleInterval = setInterval(() => {
+            setShowQuake(prev => !prev);
+        }, 5000);
+    }
+
     const handleVisibilityChange = () => {
         if (!document.hidden) fetchWeather();
     };
@@ -113,9 +136,10 @@ const WeatherWidget: React.FC = () => {
 
     return () => {
         clearInterval(interval);
+        if (cycleInterval) clearInterval(cycleInterval);
         document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, []);
+  }, [quake]); // Re-run effect if quake state changes to set up cycler
 
   if (weather.loading) {
       return (
@@ -125,6 +149,25 @@ const WeatherWidget: React.FC = () => {
                  <div className="w-16 h-4 bg-slate-200 dark:bg-slate-700 rounded"></div>
                  <div className="w-24 h-3 bg-slate-200 dark:bg-slate-700 rounded"></div>
              </div>
+        </div>
+      );
+  }
+
+  // Quake Alert View
+  if (showQuake && quake) {
+      return (
+        <div className="bg-amber-50/95 dark:bg-amber-950/90 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-amber-200 dark:border-amber-700/50 pointer-events-auto animate-float flex items-center gap-4 max-w-[280px]">
+            <div className="flex flex-col items-center justify-center w-12 text-center">
+                <i className="fa-solid fa-house-crack text-3xl text-amber-600 dark:text-amber-500 mb-1 animate-bob"></i>
+                <span className="text-sm font-black text-amber-800 dark:text-amber-400 leading-none">{quake.mag.toFixed(1)}</span>
+            </div>
+            <div className="flex-1 border-l border-amber-200 dark:border-amber-800 pl-3">
+                <div className="flex items-center gap-2">
+                    <p className="text-xs font-bold text-amber-700 dark:text-amber-500 uppercase tracking-wider mb-0.5">{t('earthquake_alert')}</p>
+                </div>
+                <p className="text-[10px] text-amber-800 dark:text-amber-200 font-medium leading-tight truncate">{quake.place}</p>
+                <p className="text-[9px] text-amber-600/70 dark:text-amber-400/70 mt-0.5">{new Date(quake.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+            </div>
         </div>
       );
   }

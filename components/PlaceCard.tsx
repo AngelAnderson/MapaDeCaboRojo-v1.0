@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Place, ParkingStatus, DaySchedule, Coordinates } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
-// Removed: import { generateAudioScript } from '../services/geminiService';
+import { checkPublicHolidays, PublicHoliday } from '../services/externalServices';
 
 interface PlaceCardProps {
   place: Place;
@@ -34,15 +34,19 @@ const ActionButton = ({ icon, label, onClick, disabled, primary, color, loading 
 const HoursDisplay = ({ hours }: { hours: { note?: string, structured?: DaySchedule[], type?: 'fixed' | '24_7' | 'sunrise_sunset' } }) => {
     const { t } = useLanguage();
     const [expanded, setExpanded] = useState(false);
+    const [holiday, setHoliday] = useState<PublicHoliday | null>(null);
     const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const now = new Date();
     const todayIdx = now.getDay();
+
+    useEffect(() => {
+        checkPublicHolidays().then(setHoliday);
+    }, []);
     
     // Helper to convert 24h "14:00" to 12h "2:00 PM"
     const to12h = (timeStr: string) => {
       if (!timeStr || !timeStr.includes(':')) return '';
       const [hours, minutes] = timeStr.split(':').map(Number);
-      // Fix: Call isNaN on hours and minutes separately
       if (isNaN(hours) || isNaN(minutes)) return '';
       
       const suffix = hours >= 12 ? 'PM' : 'AM';
@@ -113,9 +117,18 @@ const HoursDisplay = ({ hours }: { hours: { note?: string, structured?: DaySched
                 )}
              </div>
              
+             {holiday && (
+                 <div className="px-4 pb-2">
+                     <div className="bg-amber-100/50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-lg p-2 flex items-center gap-2">
+                         <i className="fa-solid fa-calendar-day text-amber-600 dark:text-amber-400"></i>
+                         <p className="text-[10px] text-amber-800 dark:text-amber-200 font-bold">{t('holiday_warning', { name: holiday.localName })}</p>
+                     </div>
+                 </div>
+             )}
+             
              {expanded && showExpand && hours?.structured && (
-                 <div className="px-4 pb-4 border-t border-slate-200 dark:border-slate-600 pt-3">
-                     <div className="space-y-2">
+                 <div className="px-4 pb-4 pt-2">
+                     <div className="space-y-2 border-t border-slate-200 dark:border-slate-600 pt-3">
                          {hours.structured.map((d, i) => (
                              <div key={i} className={`flex justify-between text-sm ${i === todayIdx ? 'font-bold text-teal-600 dark:text-teal-400' : 'text-slate-600 dark:text-slate-300'}`}>
                                  <span className="w-10">{DAYS[i]}</span>
@@ -132,8 +145,6 @@ const HoursDisplay = ({ hours }: { hours: { note?: string, structured?: DaySched
 
 const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClose, onNavigate, onAskAi, onSuggestEdit, isFavorite, onToggleFavorite, userLocation }) => {
   const { t } = useLanguage();
-  // Removed: const [isPlaying, setIsPlaying] = useState(false);
-  // Removed: const [isAudioLoading, setIsAudioLoading] = useState(false);
   
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): string => {
     const R = 6371; 
@@ -176,19 +187,6 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
 
   const navigationHandler = () => {
       if (place.gmapsUrl) { window.open(place.gmapsUrl, '_blank'); } else { onNavigate(); }
-  };
-
-  const handleCalendar = () => {
-      if (!place.contact_info?.eventStart) return;
-      const start = new Date(place.contact_info.eventStart).toISOString().replace(/-|:|\.\d\d\d/g, "");
-      const end = place.contact_info.eventEnd 
-          ? new Date(place.contact_info.eventEnd).toISOString().replace(/-|:|\.\d\d\d/g, "")
-          : new Date(new Date(place.contact_info.eventStart).getTime() + 2 * 60 * 60 * 1000).toISOString().replace(/-|:|\.\d\d\d/g, "");
-      const title = encodeURIComponent(place.name);
-      const details = encodeURIComponent(place.description);
-      const location = encodeURIComponent(place.address || 'Cabo Rojo, PR');
-      const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`;
-      window.open(url, '_blank');
   };
 
   const relatedPlaces = allPlaces ? allPlaces.filter(p => p.id !== place.id && p.category === place.category).slice(0, 3) : [];
