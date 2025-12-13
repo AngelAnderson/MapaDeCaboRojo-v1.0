@@ -193,12 +193,26 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const pendingPlaces = places.filter(p => p.status === 'pending');
+  const searchLower = searchTerm.toLowerCase();
+  const matchesSearch = (text?: string) => text?.toLowerCase().includes(searchLower);
+
+  const pendingPlaces = places.filter(p => 
+      p.status === 'pending' && 
+      (!searchTerm || matchesSearch(p.name) || matchesSearch(p.description) || matchesSearch(p.id))
+  );
+  
   const filteredPlaces = places.filter(p => 
       p.status !== 'pending' && 
-      p.name.toLowerCase().includes(searchTerm.toLowerCase())
+      (!searchTerm || matchesSearch(p.name) || matchesSearch(p.description) || matchesSearch(p.tags?.join(' ')) || matchesSearch(p.id))
   );
-  const filteredEvents = events.filter(e => e.title.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const filteredEvents = events.filter(e => 
+      !searchTerm || matchesSearch(e.title) || matchesSearch(e.locationName) || matchesSearch(e.description)
+  );
+
+  const filteredCategories = categories.filter(c => 
+      !searchTerm || matchesSearch(c.label_es) || matchesSearch(c.label_en) || matchesSearch(c.id)
+  );
 
   useEffect(() => {
       checkSession().then(hasSession => {
@@ -759,6 +773,32 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
       <div className="flex-1 overflow-hidden flex relative">
         {/* ... (Sidebar logic unchanged) ... */}
         <div className={`w-full md:w-80 border-r border-slate-700 bg-slate-900 flex flex-col ${isEditing || bulkMode ? 'hidden md:flex' : 'flex'} ${activeTab === 'insights' || activeTab === 'logs' ? 'hidden md:hidden' : ''}`}>
+            {/* Search Bar in Sidebar */}
+            {!isEditing && (activeTab === 'places' || activeTab === 'inbox' || activeTab === 'events' || activeTab === 'categories') && (
+                <div className="p-3 border-b border-slate-800 sticky top-0 bg-slate-900 z-10">
+                    <div className="relative group">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-teal-500 transition-colors">
+                            <i className="fa-solid fa-magnifying-glass text-xs"></i>
+                        </div>
+                        <input 
+                            type="text" 
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder={t('admin_search_placeholder') || "Search..."}
+                            className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-xs font-medium rounded-lg py-2.5 pl-9 pr-8 outline-none focus:border-teal-500/50 focus:bg-slate-800/80 transition-all placeholder:text-slate-600"
+                        />
+                        {searchTerm && (
+                            <button 
+                                onClick={() => setSearchTerm('')} 
+                                className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-slate-500 hover:text-white transition-colors"
+                            >
+                                <i className="fa-solid fa-circle-xmark text-xs"></i>
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+
             {/* ... (Keep sidebar sections for places, inbox, events, categories) ... */}
             {activeTab === 'places' && (
                 <>
@@ -823,7 +863,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                         <button onClick={() => setEditingCategory({ id: '', label_es: '', label_en: '', icon: 'tag', color: '#64748b' })} className="w-full p-4 rounded-xl border-2 border-dashed border-slate-700 text-slate-400 hover:border-blue-500 hover:text-blue-500 hover:bg-slate-800 transition-all font-bold text-sm flex flex-col items-center justify-center gap-1"><i className="fa-solid fa-tag text-lg"></i> <span className="text-[10px]">Add Category</span></button>
                     </div>
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
-                        {categories.map(c => (
+                        {filteredCategories.map(c => (
                             <div key={c.id} onClick={() => setEditingCategory(c)} className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center gap-3 ${editingCategory?.id === c.id ? 'bg-blue-900/20 border-blue-500/50' : 'bg-slate-800 border-slate-700'}`}>
                                 <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white" style={{backgroundColor: c.color}}>
                                     <i className={`fa-solid fa-${c.icon}`}></i>
