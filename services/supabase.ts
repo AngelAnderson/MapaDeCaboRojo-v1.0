@@ -1,5 +1,6 @@
 
 import { createClient } from '@supabase/supabase-js';
+import { get, set, del } from 'idb-keyval';
 import { Place, PlaceCategory, ParkingStatus, AdminLog, Event, EventCategory, Category, InsightSnapshot } from '../types';
 import { DEFAULT_CATEGORIES } from '../constants';
 
@@ -38,23 +39,22 @@ const CACHE_KEY_PREFIX = 'cabo_signal_saver_';
 const MEMORY_TTL = 5 * 60 * 1000; // 5 Minutes for RAM
 const PERSISTENT_TTL = 24 * 60 * 60 * 1000; // 24 Hours for Disk (Signal Saver)
 
-const getFromCache = (key: string) => {
+const getFromCache = async (key: string) => {
     // 1. Try Memory first (Fastest)
     if (memoryCache[key] && (Date.now() - memoryCache[key].timestamp < MEMORY_TTL)) {
         return memoryCache[key].data;
     }
 
-    // 2. Try Persistent Storage (Signal Saver Mode)
+    // 2. Try Persistent Storage (Signal Saver Mode) - IDB
     try {
-        const stored = localStorage.getItem(CACHE_KEY_PREFIX + key);
+        const stored = await get(CACHE_KEY_PREFIX + key);
         if (stored) {
-            const parsed = JSON.parse(stored);
-            // Check if valid within 24h
-            if (Date.now() - parsed.timestamp < PERSISTENT_TTL) {
+            // stored is { data, timestamp }
+            if (Date.now() - stored.timestamp < PERSISTENT_TTL) {
                 // Hydrate memory cache for this session
-                memoryCache[key] = { data: parsed.data, timestamp: Date.now() };
-                console.log(`🔌 Signal Saver: Loaded ${key} from offline cache.`);
-                return parsed.data;
+                memoryCache[key] = { data: stored.data, timestamp: Date.now() };
+                console.log(`🔌 Signal Saver: Loaded ${key} from offline cache (IDB).`);
+                return stored.data;
             }
         }
     } catch(e) { 
@@ -64,23 +64,23 @@ const getFromCache = (key: string) => {
     return null;
 };
 
-const setCache = (key: string, data: any) => {
+const setCache = async (key: string, data: any) => {
     const timestamp = Date.now();
     // Update Memory
     memoryCache[key] = { data, timestamp };
     
-    // Update Persistent Storage
+    // Update Persistent Storage (IDB)
     try {
-        localStorage.setItem(CACHE_KEY_PREFIX + key, JSON.stringify({ data, timestamp }));
+        await set(CACHE_KEY_PREFIX + key, { data, timestamp });
     } catch (e) { 
-        console.warn("Signal Saver write error (Storage Full?):", e); 
+        console.warn("Signal Saver write error (IDB):", e); 
     }
 };
 
-const invalidateCache = (key: string) => {
+const invalidateCache = async (key: string) => {
     delete memoryCache[key];
     try {
-        localStorage.removeItem(CACHE_KEY_PREFIX + key);
+        await del(CACHE_KEY_PREFIX + key);
     } catch (e) {
         console.warn("Signal Saver clear error:", e);
     }
@@ -497,7 +497,7 @@ export const getLatestInsights = async (): Promise<InsightSnapshot[]> => {
 
 export const getCategories = async (): Promise<Category[]> => {
     // Cache Check
-    const cached = getFromCache('CATEGORIES');
+    const cached = await getFromCache('CATEGORIES');
     if (cached) return cached;
 
     try {
@@ -517,7 +517,7 @@ export const getCategories = async (): Promise<Category[]> => {
             return DEFAULT_CATEGORIES;
         }
 
-        setCache('CATEGORIES', data);
+        await setCache('CATEGORIES', data);
         return data as Category[];
     } catch (e) {
         console.error("Error fetching categories:", e);
@@ -533,7 +533,7 @@ export const createCategory = async (category: Category): Promise<{ success: boo
         if (error) throw error;
         await logAction('CREATE_CAT', category.id, `Created category ${category.label_en}`);
         
-        invalidateCache('CATEGORIES');
+        await invalidateCache('CATEGORIES');
         return { success: true };
     } catch (e: any) {
         return { success: false, error: getErrorMessage(e) };
@@ -548,7 +548,7 @@ export const updateCategory = async (id: string, category: Partial<Category>): P
         if (error) throw error;
         await logAction('UPDATE_CAT', id, `Updated category`);
         
-        invalidateCache('CATEGORIES');
+        await invalidateCache('CATEGORIES');
         return { success: true };
     } catch (e: any) {
         return { success: false, error: getErrorMessage(e) };
@@ -563,7 +563,7 @@ export const deleteCategory = async (id: string): Promise<{ success: boolean; er
         if (error) throw error;
         await logAction('DELETE_CAT', id, `Deleted category`);
         
-        invalidateCache('CATEGORIES');
+        await invalidateCache('CATEGORIES');
         return { success: true };
     } catch (e: any) {
         return { success: false, error: getErrorMessage(e) };
@@ -572,7 +572,7 @@ export const deleteCategory = async (id: string): Promise<{ success: boolean; er
 
 export const getPlaces = async (): Promise<Place[]> => {
   // Cache Check
-  const cached = getFromCache('PLACES');
+  const cached = await getFromCache('PLACES');
   if (cached) return cached;
 
   try {
@@ -629,7 +629,7 @@ export const getPlaces = async (): Promise<Place[]> => {
       defaultZoom: row.default_zoom ?? undefined,
     }));
 
-    setCache('PLACES', mapped);
+    await setCache('PLACES', mapped);
     return mapped;
   } catch (err) { 
     console.error("Unexpected Error in getPlaces:", err);
@@ -639,7 +639,7 @@ export const getPlaces = async (): Promise<Place[]> => {
 
 export const getEvents = async (): Promise<Event[]> => {
     // Cache Check
-    const cached = getFromCache('EVENTS');
+    const cached = await getFromCache('EVENTS');
     if (cached) return cached;
 
     try {
@@ -672,7 +672,7 @@ export const getEvents = async (): Promise<Event[]> => {
             coords: undefined // We won't join here to keep it robust; map logic handles missing coords
         }));
 
-        setCache('EVENTS', mapped);
+        await setCache('EVENTS', mapped);
         return mapped;
     } catch (e) { 
         console.error("Event fetch error:", e);
@@ -710,7 +710,7 @@ export const createPlace = async (place: Partial<Place>): Promise<{ success: boo
         await logAction('CREATE', place.name || 'Unknown', isAdmin ? 'Record created by Admin' : 'User Suggestion');
         
         // Invalidate Cache (both memory and persistent)
-        invalidateCache('PLACES');
+        await invalidateCache('PLACES');
         
         return { success: true };
     } catch (e: any) { 
@@ -746,7 +746,7 @@ export const updatePlace = async (id: string, place: Partial<Place>): Promise<{ 
         await logAction('UPDATE', place.name || 'Unknown', 'Record updated');
         
         // Invalidate Cache (both memory and persistent)
-        invalidateCache('PLACES');
+        await invalidateCache('PLACES');
 
         return { success: true };
     } catch (e: any) { 
@@ -777,7 +777,7 @@ export const deletePlace = async (id: string): Promise<{ success: boolean; error
         await logAction('DELETE', id, 'Record deleted');
         
         // Invalidate Cache (both memory and persistent)
-        invalidateCache('PLACES');
+        await invalidateCache('PLACES');
 
         return { success: true };
     } catch (e: any) { 
@@ -799,7 +799,7 @@ export const createEvent = async (event: Partial<Event>): Promise<{ success: boo
         await logAction('CREATE_EVENT', event.title || 'Unknown', 'Event created by Admin');
         
         // Invalidate Cache
-        invalidateCache('EVENTS');
+        await invalidateCache('EVENTS');
 
         return { success: true };
     } catch (e: any) {
@@ -817,7 +817,7 @@ export const updateEvent = async (id: string, event: Partial<Event>): Promise<{ 
         await logAction('UPDATE_EVENT', event.title || 'Unknown', 'Event updated by Admin');
         
         // Invalidate Cache
-        invalidateCache('EVENTS');
+        await invalidateCache('EVENTS');
 
         return { success: true };
     } catch (e: any) {
@@ -834,7 +834,7 @@ export const deleteEvent = async (id: string): Promise<{ success: boolean; error
         await logAction('DELETE_EVENT', id, 'Event deleted');
         
         // Invalidate Cache
-        invalidateCache('EVENTS');
+        await invalidateCache('EVENTS');
 
         return { success: true };
     } catch (e: any) {
