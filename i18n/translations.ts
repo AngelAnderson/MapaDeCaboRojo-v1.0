@@ -84,6 +84,19 @@ export const translations = {
     holiday_warning: "Feriado: {{name}}",
     earthquake_alert: "Sismo Reciente",
 
+    // About Page
+    about_title: "Sobre Nosotros",
+    about_subtitle: "La historia detrás del mapa",
+    about_el_veci_title: "¿Quién es El Veci?",
+    about_el_veci_desc: "El Veci no es un robot cualquiera. Es la esencia de un local que ha vivido en Cabo Rojo toda la vida. Su misión es simple: guiarte como lo haría un buen vecino, con honestidad, respeto y sin palabras complicadas.",
+    about_mission_title: "Nuestra Misión",
+    about_mission_desc: "Crear el copiloto digital definitivo para Cabo Rojo. Queremos que navegues el pueblo como si vivieras aquí, encontrando desde la playa más famosa hasta el chinchorro más escondido.",
+    about_signal_saver: "Signal Saver™",
+    about_signal_saver_desc: "Sabemos que la señal se va en la playa. Esta app guarda los datos automáticamente para que siga funcionando aunque te quedes sin internet en Playa Sucia.",
+    about_privacy: "Privacidad Primero",
+    about_privacy_desc: "No vendemos tus datos. No rastreamos tus movimientos. Solo queremos que la pases bien.",
+    about_community_built: "Construido para la Comunidad",
+
     // Admin Panel Translations
     admin_access_title: "Acceso Admin",
     admin_access_subtitle: "Punto de Entrada Seguro",
@@ -379,6 +392,19 @@ export const translations = {
     sort_distance: "Near Me",
     holiday_warning: "Holiday: {{name}}",
     earthquake_alert: "Recent Quake",
+
+    // About Page
+    about_title: "About Us",
+    about_subtitle: "The story behind the map",
+    about_el_veci_title: "Who is El Veci?",
+    about_el_veci_desc: "El Veci isn't just a robot. He captures the spirit of a local who has lived in Cabo Rojo all his life. His mission is simple: guide you like a good neighbor would—honestly, respectfully, and without complicated jargon.",
+    about_mission_title: "Our Mission",
+    about_mission_desc: "To create the definitive digital copilot for Cabo Rojo. We want you to navigate the town as if you lived here, finding everything from the most famous beach to the most hidden 'chinchorro'.",
+    about_signal_saver: "Signal Saver™",
+    about_signal_saver_desc: "We know the signal drops at the beach. This app caches data automatically so it keeps working even if you lose internet at Playa Sucia.",
+    about_privacy: "Privacy First",
+    about_privacy_desc: "We don't sell your data. We don't track your movements. We just want you to have a good time.",
+    about_community_built: "Built for the Community",
 
     // Admin Panel Translations
     admin_access_title: "Admin Access",

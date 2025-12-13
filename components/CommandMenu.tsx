@@ -41,8 +41,9 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, onSelect, is
     { id: 'action_add', label: t('btn_suggest'), icon: 'circle-plus', group: 'Actions' },
     { id: 'action_chat', label: t('nav_help'), icon: 'robot', group: 'Actions' },
     { id: 'action_contact', label: t('nav_contact'), icon: 'address-book', group: 'Actions' },
-
+    
     // System
+    { id: 'action_about', label: t('about_title'), icon: 'circle-info', group: 'System' },
     { id: 'sys_theme', label: isDarkMode ? t('light_mode') : t('dark_mode'), icon: isDarkMode ? 'sun' : 'moon', group: 'System', shortcut: 'T' },
     { id: 'sys_lang', label: language === 'es' ? t('switch_to_english') : t('switch_to_spanish'), icon: 'language', group: 'System', shortcut: 'L' },
     { id: 'sys_admin', label: t('admin_login'), icon: 'lock', group: 'System' },
@@ -104,7 +105,6 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, onSelect, is
             </div>
           ) : (
             <>
-              {/* Grouping logic could be added here, but flat list is cleaner for Spotlight feel */}
               {filteredCommands.map((cmd, index) => (
                 <button
                   key={cmd.id}

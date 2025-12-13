@@ -9,6 +9,7 @@ import Admin from './Admin';
 import ContactModal from './ContactModal';
 import SuggestPlaceModal from './SuggestPlaceModal'; 
 import SuggestPage from './SuggestPage'; 
+import AboutPage from './AboutPage'; // Import AboutPage
 import WeatherWidget from './WeatherWidget'; 
 import { getPlaces, getEvents } from '../services/supabase'; 
 import { LanguageProvider, useLanguage } from '../i18n/LanguageContext';
@@ -161,6 +162,7 @@ const MapApp: React.FC = () => {
     (action) => {
       // 'suggest' action in map view opens the modal
       if (action === 'suggest') setIsSuggestOpen(true);
+      if (action === 'about') window.location.href = '/?page=about'; // Force reload for clean page state
     }
   );
 
@@ -224,6 +226,7 @@ const MapApp: React.FC = () => {
           case 'action_add': setIsSuggestOpen(true); break;
           case 'action_chat': setIsConciergeOpen(true); break;
           case 'action_contact': setIsContactOpen(true); break;
+          case 'action_about': window.location.href = '/?page=about'; break; // New Action
           case 'sys_theme': setIsDarkMode(!isDarkMode); break;
           case 'sys_lang': setLanguage(language === 'es' ? 'en' : 'es'); break;
           case 'sys_admin': setIsAdminOpen(true); break;
@@ -287,7 +290,7 @@ const MapApp: React.FC = () => {
 
 // --- ROOT ROUTER COMPONENT ---
 const App: React.FC = () => {
-  const [currentRoute, setCurrentRoute] = useState<'map' | 'suggest'>('map');
+  const [currentRoute, setCurrentRoute] = useState<'map' | 'suggest' | 'about'>('map');
 
   useEffect(() => {
     const checkRoute = () => {
@@ -298,6 +301,8 @@ const App: React.FC = () => {
 
       if (searchParams.get('page') === 'suggest' || hash.includes('page=suggest') || path === '/suggest') {
         setCurrentRoute('suggest');
+      } else if (searchParams.get('page') === 'about' || hash.includes('page=about') || path === '/about') {
+        setCurrentRoute('about');
       } else {
         setCurrentRoute('map');
       }
@@ -313,6 +318,10 @@ const App: React.FC = () => {
 
   if (currentRoute === 'suggest') {
     return <SuggestPage />;
+  }
+  
+  if (currentRoute === 'about') {
+    return <AboutPage />;
   }
 
   return <MapApp />;
