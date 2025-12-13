@@ -92,31 +92,27 @@ export default async function handler(req: any, res: any) {
 async function handleChat({ message, history, context }: any) {
   const { ctx, p, e } = context;
   
-  // Create a strict string representation of "NOW"
-  // If we rely on system prompt only, strict safety filters might ignore it.
-  // We will inject this into the user's message as a [SYSTEM CONTEXT] block.
-  const nowContext = `
-    [SYSTEM_DATA]
-    Current Date: ${ctx.date} (ISO: ${ctx.iso})
-    Current Time: ${ctx.time}
-    Day of Week: ${ctx.current_day}
-    Weather: ${ctx.weather} (Raining: ${ctx.is_raining})
-    [/SYSTEM_DATA]
-  `;
-
+  // FORCE TIME AWARENESS IN SYSTEM INSTRUCTION
+  // We explicitly tell the model "TODAY IS X" in the system prompt.
   const systemInstruction = `
     Eres "El Veci", un señor amable, sabio y servicial que ha vivido en Cabo Rojo toda la vida.
+
+    --- DATOS DE TIEMPO REAL (VERDAD ABSOLUTA) ---
+    FECHA DE HOY: ${ctx.date} (Día: ${ctx.current_day})
+    HORA ACTUAL: ${ctx.time}
+    CLIMA: ${ctx.weather} (Lluvia: ${ctx.is_raining ? 'SÍ' : 'NO'})
+    ----------------------------------------------
 
     TU MISIÓN:
     Ayudar a tus vecinos (los usuarios) a encontrar lugares y eventos usando *exclusivamente* los apuntes de tu libreta (la base de datos provista).
 
     REGLAS DE ORO:
-    1. **FECHA:** Usa el bloque [SYSTEM_DATA] que recibirás con el mensaje para saber la fecha exacta. NO adivines. Hoy es esa fecha. Confirma la fecha si te preguntan.
-    2. **STATUS:** En la lista de lugares 'p', el campo 'st' es la verdad absoluta sobre el horario AHORA. Si dice "Cerrado", está cerrado.
-    3. **CLIMA:** Si 'is_raining' es true, sugiere lugares con techo (rs=true).
-    4. **EVENTOS:** Compara siempre la fecha del evento con la "Current Date" del [SYSTEM_DATA]. Si ya pasó, IGNÓRALO.
+    1. **TIEMPO SAGRADO:** Si el usuario pregunta la fecha o la hora, responde con los datos de arriba. No alucines otra fecha.
+    2. **STATUS:** Para saber si un lugar está abierto, usa la hora actual (${ctx.time}) y compara con los horarios del lugar.
+    3. **CLIMA:** Si está lloviendo (${ctx.is_raining}), sugiere lugares bajo techo.
+    4. **EVENTOS:** Solo menciona eventos futuros (después de ${ctx.iso}).
 
-    DATOS:
+    DATOS DE TU LIBRETA:
     Lugares: ${JSON.stringify(p)}
     Eventos: ${JSON.stringify(e)}
   `;
@@ -138,11 +134,7 @@ async function handleChat({ message, history, context }: any) {
     }
   });
 
-  // INJECTION: We append the context to the user's message.
-  // This forces the model to "see" the date immediately as part of the current turn.
-  const augmentedMessage = `${message}\n\n${nowContext}`;
-
-  const result = await chat.sendMessage(augmentedMessage);
+  const result = await chat.sendMessage(message);
   
   try {
       const jsonResponse = JSON.parse(result.text || "{}");
