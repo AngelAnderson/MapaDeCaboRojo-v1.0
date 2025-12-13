@@ -170,6 +170,10 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
   const [bulkProcessing, setBulkProcessing] = useState(false);
   const [bulkResults, setBulkResults] = useState<Partial<Place>[]>([]);
   
+  // OSM Import State
+  const [osmCategory, setOsmCategory] = useState('FOOD');
+  const [osmLoading, setOsmLoading] = useState(false);
+  
   // Autocomplete State
   const [autocompleteSuggestions, setAutocompleteSuggestions] = useState<any[]>([]);
   const autocompleteTimeoutRef = useRef<number | null>(null);
@@ -403,6 +407,33 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
           showToast("Bulk AI Failed.", 'error');
       } finally {
           setBulkProcessing(false);
+      }
+  };
+
+  const handleOsmImport = async () => {
+      setOsmLoading(true);
+      try {
+          const res = await fetch('/api/import-osm', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ categoryKey: osmCategory })
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+              if (data.results.length > 0) {
+                  // Append new results to existing bulk results
+                  setBulkResults(prev => [...prev, ...data.results]);
+                  showToast(t('admin_osm_success', { count: data.count }), 'success');
+              } else {
+                  showToast(t('admin_osm_no_new'), 'error');
+              }
+          } else {
+              showToast(data.error || "OSM Import Failed", 'error');
+          }
+      } catch (e) {
+          showToast("Network Error", 'error');
+      } finally {
+          setOsmLoading(false);
       }
   };
 
@@ -929,7 +960,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                         {filteredPeople.map(p => (
                             <div key={p.id} onClick={() => setEditingPerson(p)} className={`p-4 rounded-xl border cursor-pointer transition-all flex gap-3 items-center ${editingPerson?.id === p.id ? 'bg-emerald-900/20 border-emerald-500/50' : 'bg-slate-800 border-slate-700'}`}>
                                 <div className="w-10 h-10 rounded-full bg-slate-700 overflow-hidden shrink-0">
-                                    {p.imageUrl ? <img src={p.imageUrl} className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-slate-500"><i className="fa-solid fa-user"></i></div>}
+                                    {p.imageUrl ? <img src={p.imageUrl} className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-slate-500"><i className="fa-solid fa-user"></i></div>
                                 </div>
                                 <div className="min-w-0">
                                     <h4 className="font-bold text-sm text-slate-200 truncate">{p.name}</h4>
@@ -972,6 +1003,28 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                         <button onClick={() => setBulkMode(false)} className="bg-slate-800 text-slate-400 hover:text-white px-4 py-2 rounded-lg border border-slate-700 text-sm font-bold">Cancel</button>
                     </div>
 
+                    <Section title={t('admin_osm_import_title')} icon="map">
+                        <p className="text-xs text-slate-400 mb-2">{t('admin_osm_import_desc')}</p>
+                        <div className="flex gap-2">
+                            <StyledSelect 
+                                value={osmCategory} 
+                                onChange={e => setOsmCategory(e.target.value)}
+                                className="flex-1"
+                            >
+                                {categories.map(c => <option key={c.id} value={c.id}>{c.label_es}</option>)}
+                                <option value="SERVICE">Servicios</option>
+                            </StyledSelect>
+                            <button 
+                                onClick={handleOsmImport}
+                                disabled={osmLoading}
+                                className="bg-blue-600 hover:bg-blue-500 text-white px-6 rounded-xl font-bold flex items-center gap-2 transition-colors whitespace-nowrap"
+                            >
+                                {osmLoading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-satellite-dish"></i>}
+                                {t('admin_osm_scan_btn')}
+                            </button>
+                        </div>
+                    </Section>
+
                     <Section title="AI Magic Parser" icon="wand-magic-sparkles">
                         <p className="text-xs text-slate-400 mb-2">Paste a raw list of places (names, descriptions, addresses) and let AI structure them for you.</p>
                         <StyledTextArea 
@@ -992,7 +1045,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
 
                     {bulkResults.length > 0 && (
                         <div className="space-y-3 mt-6">
-                            <h3 className="font-bold text-white mb-2">Results ({bulkResults.length})</h3>
+                            <h3 className="font-bold text-white mb-2">{t('admin_osm_results')} ({bulkResults.length})</h3>
                             {bulkResults.map((item, idx) => (
                                 <div key={idx} className="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center group">
                                     <div>
@@ -1001,7 +1054,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                                         <span className="text-xs text-slate-500">{item.description?.substring(0, 50)}...</span>
                                     </div>
                                     <button onClick={() => saveBulkItem(idx)} className="bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white p-2 rounded-lg transition-colors">
-                                        <i className="fa-solid fa-plus"></i> Save
+                                        <i className="fa-solid fa-plus"></i> {t('save')}
                                     </button>
                                 </div>
                             ))}

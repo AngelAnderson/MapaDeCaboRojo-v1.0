@@ -1,6 +1,7 @@
 
 export const translations = {
   es: {
+    // ... (Keep existing translations)
     loading: "Cargando...",
     cancel: "Cancelar",
     save: "Guardar",
@@ -109,11 +110,11 @@ export const translations = {
     admin_new_item: "Nuevo Elemento",
     admin_events: "Eventos",
     admin_logs: "Registros",
-    admin_inbox: "Bandeja (Inbox)", // New
-    admin_pending_review: "Pendiente de Revisión", // New
-    admin_approve_publish: "Aprobar y Publicar", // New
-    admin_reject_delete: "Rechazar", // New
-    admin_review_alert: "Sugerencia de Usuario", // New
+    admin_inbox: "Bandeja (Inbox)", 
+    admin_pending_review: "Pendiente de Revisión",
+    admin_approve_publish: "Aprobar y Publicar",
+    admin_reject_delete: "Rechazar",
+    admin_review_alert: "Sugerencia de Usuario",
     admin_search_placeholder: "Buscar...",
     admin_add_new_place: "Añadir Lugar Nuevo",
     admin_add_new_event: "Añadir Evento Nuevo",
@@ -206,6 +207,15 @@ export const translations = {
     admin_default_zoom: "Zoom por Defecto",
     admin_default_zoom_desc: "Nivel de zoom al cargar este lugar (ej. 16)",
     admin_applied_mon_to_fri: "Horario de L-V aplicado.",
+
+    // OSM Import Translations
+    admin_osm_import_title: "Importar desde OpenStreetMap",
+    admin_osm_import_desc: "Escanea Cabo Rojo para encontrar lugares automáticamente y añadirlos a la lista de revisión.",
+    admin_osm_scan_btn: "Escanear Area",
+    admin_osm_category_select: "Categoría OSM",
+    admin_osm_results: "Resultados del Escaneo",
+    admin_osm_success: "¡Importación completada! {{count}} lugares nuevos encontrados.",
+    admin_osm_no_new: "No se encontraron lugares nuevos en esta categoría.",
 
     admin_ai_suggest_category_tags: "Sugerir Categoría y Etiquetas con IA",
     admin_ai_suggest_category_tags_success: "IA sugirió categoría y etiquetas.",
@@ -302,6 +312,7 @@ export const translations = {
     weather_advice_default: "El clima de siempre: Calor y playa.",
   },
   en: {
+    // ... (Keep existing translations)
     loading: "Loading...",
     cancel: "Cancel",
     save: "Save",
@@ -418,11 +429,11 @@ export const translations = {
     admin_new_item: "New Item",
     admin_events: "Events",
     admin_logs: "Logs",
-    admin_inbox: "Inbox", // New
-    admin_pending_review: "Pending Review", // New
-    admin_approve_publish: "Approve & Publish", // New
-    admin_reject_delete: "Reject", // New
-    admin_review_alert: "User Suggestion", // New
+    admin_inbox: "Inbox", 
+    admin_pending_review: "Pending Review",
+    admin_approve_publish: "Approve & Publish",
+    admin_reject_delete: "Reject",
+    admin_review_alert: "User Suggestion",
     admin_search_placeholder: "Search...",
     admin_add_new_place: "Add New Place",
     admin_add_new_event: "Add New Event",
@@ -515,6 +526,15 @@ export const translations = {
     admin_default_zoom: "Default Zoom",
     admin_default_zoom_desc: "Zoom level when loading this place (e.g. 16)",
     admin_applied_mon_to_fri: "Mon-Fri schedule applied.",
+
+    // OSM Import Translations
+    admin_osm_import_title: "Import from OpenStreetMap",
+    admin_osm_import_desc: "Scan Cabo Rojo to automatically find places and add them to the review list.",
+    admin_osm_scan_btn: "Scan Area",
+    admin_osm_category_select: "OSM Category",
+    admin_osm_results: "Scan Results",
+    admin_osm_success: "Import complete! {{count}} new places found.",
+    admin_osm_no_new: "No new places found in this category.",
 
     admin_ai_suggest_category_tags: "Suggest Category & Tags with AI",
     admin_ai_suggest_category_tags_success: "AI suggested category and tags.",
