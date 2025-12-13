@@ -6,6 +6,7 @@ import CategoryPills from './CategoryPills';
 import { logUserActivity } from '../services/supabase';
 import { COLLECTIONS } from '../constants';
 import { useLanguage } from '../i18n/LanguageContext';
+import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 
 interface ExplorerSheetProps {
   places: Place[];
@@ -211,10 +212,11 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                     <div key={place.id} onClick={() => onSelect(place)} className="flex items-center gap-4 p-3 pr-4 rounded-[24px] bg-white/50 dark:bg-slate-700/40 hover:bg-white dark:hover:bg-slate-700 active:scale-[0.98] transition-all cursor-pointer border border-white/60 dark:border-slate-600/50 shadow-sm group backdrop-blur-sm relative">
                         <div className="relative w-20 h-20 shrink-0">
                             <img 
-                                src={place.imageUrl} 
+                                src={getOptimizedImageUrl(place.imageUrl, 200)} 
                                 className={`w-full h-full rounded-[18px] object-cover bg-slate-200 dark:bg-slate-700 shadow-inner ${isClosed ? 'grayscale opacity-70' : ''}`} 
                                 style={{ objectPosition: place.imagePosition || 'center' }} 
                                 alt={place.name} 
+                                loading="lazy"
                             />
                             {place.is_featured && <div className="absolute top-1 left-1 w-2.5 h-2.5 bg-yellow-400 rounded-full border-2 border-white dark:border-slate-900 shadow-sm"></div>}
                             {isFavorite && <div className="absolute bottom-1 right-1 bg-pink-500 text-white text-[8px] w-5 h-5 flex items-center justify-center rounded-full shadow-md"><i className="fa-solid fa-heart"></i></div>}

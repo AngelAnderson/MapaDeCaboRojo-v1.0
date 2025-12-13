@@ -61,6 +61,52 @@ const escapeHTML = (str: string | undefined): string => {
   return div.innerHTML;
 };
 
+// --- HELPER: IMAGE COMPRESSION ---
+const compressImage = async (file: File): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+        const maxWidth = 1200;
+        const maxHeight = 1200;
+        const quality = 0.8;
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target?.result as string;
+            img.onload = () => {
+                let width = img.width;
+                let height = img.height;
+
+                // Calculate new dimensions
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width *= maxHeight / height;
+                        height = maxHeight;
+                    }
+                }
+
+                const canvas = document.createElement('canvas');
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx?.drawImage(img, 0, 0, width, height);
+
+                // Convert to WebP blob
+                canvas.toBlob((blob) => {
+                    if (blob) resolve(blob);
+                    else reject(new Error("Canvas conversion failed"));
+                }, 'image/webp', quality);
+            };
+            img.onerror = (err) => reject(err);
+        };
+        reader.onerror = (err) => reject(err);
+    });
+};
+
 // --- HELPER: DELETE IMAGE FROM STORAGE ---
 const deleteImageFromUrl = async (fullUrl: string) => {
     if (!fullUrl || typeof fullUrl !== 'string') return;
@@ -247,7 +293,7 @@ const mapEventToDb = (event: Partial<Event>) => {
         title: escapeHTML(event.title) || 'Untitled Event',
         description: escapeHTML(event.description) || '',
         // Enforce lowercase for Postgres Enum compatibility
-        category: (event.category || 'community').toLowerCase(),
+        category: (event.category ? event.category.toUpperCase() : 'COMMUNITY').toLowerCase(),
         start_time: event.startTime,
         end_time: event.endTime,
         location_name: escapeHTML(event.locationName) || '',
@@ -633,12 +679,25 @@ export const uploadImage = async (file: File): Promise<{ success: boolean; url?:
         const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
         if (!validTypes.includes(file.type)) return { success: false, error: "Invalid format. Use JPG/PNG/WEBP." };
         
+        // --- CLIENT SIDE COMPRESSION ---
+        // We compress BEFORE uploading to save storage space and egress bandwidth
+        let processedBlob: Blob = file;
+        try {
+            console.log(`Original size: ${(file.size / 1024).toFixed(2)} KB`);
+            processedBlob = await compressImage(file);
+            console.log(`Compressed size: ${(processedBlob.size / 1024).toFixed(2)} KB`);
+        } catch (compError) {
+            console.warn("Compression failed, falling back to original", compError);
+        }
+
         const bucketName = 'places-images';
-        const fileExt = file.name.split('.').pop();
+        // Force .webp extension if we compressed it
+        const fileExt = processedBlob.type === 'image/webp' ? 'webp' : file.name.split('.').pop();
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
         const filePath = `${fileName}`;
+        
         // @ts-ignore
-        const { error } = await supabase.storage.from(bucketName).upload(filePath, file);
+        const { error } = await supabase.storage.from(bucketName).upload(filePath, processedBlob);
         if (error) throw error;
         // @ts-ignore
         const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);

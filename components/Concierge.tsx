@@ -3,6 +3,7 @@ import React, { useRef, useEffect } from 'react';
 import { ChatMessage, Place, Event, Coordinates } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useConcierge } from '../hooks/useConcierge';
+import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 
 interface ConciergeProps {
   isOpen: boolean;
@@ -48,7 +49,7 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
                     className="flex-shrink-0 w-32 bg-white dark:bg-slate-700/50 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-600 active:scale-95 transition-transform text-left group"
                   >
                       <div className="h-20 w-full overflow-hidden relative">
-                          <img src={place.imageUrl} alt={place.name} className="w-full h-full object-cover" />
+                          <img src={getOptimizedImageUrl(place.imageUrl, 300)} alt={place.name} className="w-full h-full object-cover" loading="lazy" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                           <span className="absolute bottom-1 left-2 text-[10px] text-white font-bold uppercase tracking-wide">{place.category}</span>
                       </div>

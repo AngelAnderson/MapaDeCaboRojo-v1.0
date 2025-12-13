@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Place, ParkingStatus, DaySchedule, Coordinates } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
 import { checkPublicHolidays, PublicHoliday } from '../services/externalServices';
+import { getPlaceHeaderImage } from '../utils/imageOptimizer';
 
 interface PlaceCardProps {
   place: Place;
@@ -210,10 +211,11 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
       {/* Semantic Header */}
       <header className="relative w-full h-72 shrink-0 group bg-slate-900">
         <img 
-            src={place.imageUrl || 'https://picsum.photos/800/600'} 
+            src={getPlaceHeaderImage(place.imageUrl) || 'https://picsum.photos/800/600'} 
             alt={place.name} 
             className={`w-full h-full object-cover transition-all ${isClosed ? 'grayscale opacity-60' : ''}`} 
-            style={{ objectPosition: place.imagePosition || 'center' }} 
+            style={{ objectPosition: place.imagePosition || 'center' }}
+            loading="eager"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
         
@@ -343,7 +345,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
                   className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors text-left group"
                 >
                   <div className="w-12 h-12 rounded-lg bg-slate-200 overflow-hidden shrink-0">
-                    <img src={rp.imageUrl} className="w-full h-full object-cover" />
+                    <img src={getPlaceHeaderImage(rp.imageUrl)} className="w-full h-full object-cover" loading="lazy" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm truncate group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">{rp.name}</h4>
