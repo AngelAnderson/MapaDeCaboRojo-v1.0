@@ -42,7 +42,6 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
 
     try {
         // FORCE PUERTO RICO TIMEZONE
-        // This ensures that if a user is in a different time zone, the AI checks opening hours relative to PR.
         const now = new Date();
         const prDate = new Intl.DateTimeFormat('es-PR', { 
             timeZone: 'America/Puerto_Rico', 
@@ -63,6 +62,7 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
         };
 
         // Pass the CURRENT 'places' and 'events' props directly to the service
+        // Enriched context for smarter answers
         const response = await sendConciergeMessage(
             text, 
             newHistory, 

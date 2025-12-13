@@ -1,20 +1,19 @@
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import L from 'leaflet';
 import { Place, PlaceCategory, Coordinates, Event, ParkingStatus, Collection } from '../types';
 import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, COLLECTIONS, CABO_ROJO_CENTER, DEFAULT_PLACE_ID, DEFAULT_PLACE_ZOOM } from '../constants';
-import PlaceCard from './components/PlaceCard';
-import Concierge from './components/Concierge';
-import Admin from './components/Admin';
-import ContactModal from './components/ContactModal';
-import SuggestPlaceModal from './components/SuggestPlaceModal'; 
-import WeatherWidget from './components/WeatherWidget'; 
-import { getPlaces, getEvents } from './services/supabase'; 
-import { LanguageProvider, useLanguage } from './i18n/LanguageContext';
-import ExplorerSheet from './components/ExplorerSheet';
-import BottomNav from './components/BottomNav';
-import CommandMenu from './components/CommandMenu';
-import SeoEngine from './components/SeoEngine';
+import PlaceCard from './PlaceCard';
+import Concierge from './Concierge';
+import Admin from './Admin';
+import ContactModal from './ContactModal';
+import SuggestPlaceModal from './SuggestPlaceModal'; 
+import WeatherWidget from './WeatherWidget'; 
+import { getPlaces, getEvents } from '../services/supabase'; 
+import { LanguageProvider, useLanguage } from '../i18n/LanguageContext';
+import ExplorerSheet from './ExplorerSheet';
+import BottomNav from './BottomNav';
+import CommandMenu from './CommandMenu';
+import SeoEngine from './SeoEngine';
 
 // --- CUSTOM HOOKS (Logic Extraction) ---
 import { usePlacesData } from '../hooks/usePlacesData';
@@ -40,15 +39,42 @@ const MainApp: React.FC = () => {
     } catch(e) { return []; }
   });
   
+  // Smart Sorting Logic
+  const getSmartCategory = () => {
+      const h = new Date().getHours();
+      // Morning (5am - 11am): Food (Breakfast)
+      if (h >= 5 && h < 11) return 'FOOD';
+      // Day (11am - 6pm): Beaches
+      if (h >= 11 && h < 18) return 'BEACH';
+      // Night (6pm - 5am): Nightlife
+      if (h >= 18 || h < 5) return 'NIGHTLIFE';
+      return 'ALL';
+  };
+
   // UI State
   const [activeTab, setActiveTab] = useState('map');
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
-  const [activeGroup, setActiveGroup] = useState<string>('ALL');
+  // Initialize with Smart Category (Context-Aware Sorting)
+  const [activeGroup, setActiveGroup] = useState<string>(() => getSmartCategory());
   const [activeCollection, setActiveCollection] = useState<Collection | null>(null);
   const [searchText, setSearchText] = useState(''); 
   const [searchFocusTrigger, setSearchFocusTrigger] = useState(0);
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
+  
+  // Offline State (Signal Saver)
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+
+  useEffect(() => {
+      const handleOnline = () => setIsOffline(false);
+      const handleOffline = () => setIsOffline(true);
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+      return () => {
+          window.removeEventListener('online', handleOnline);
+          window.removeEventListener('offline', handleOffline);
+      };
+  }, []);
   
   // Map State
   const [mapStyle, setMapStyle] = useState<'standard' | 'satellite'>('standard');
@@ -170,13 +196,23 @@ const MainApp: React.FC = () => {
     if (action === 'contact') setIsContactOpen(true);
   };
 
-  const handleTabChange = (tabId: string) => {
+  const handleTabChange = (tabId: string, forceReset: boolean = true) => {
       setActiveTab(tabId);
       if (tabId === 'map') {
-          setActiveGroup('ALL');
-          setActiveCollection(null);
-          setSearchText('');
-          flyHome();
+          if (forceReset) {
+              // Note: We don't reset to 'ALL' anymore to respect Smart Sorting or User Choice
+              // We only clear collection/search/selection
+              setActiveCollection(null);
+              setSearchText('');
+              setSelectedPlace(null);
+              
+              const landingPlace = publishedPlaces.find(p => p.isLanding);
+              if (landingPlace && landingPlace.coords) {
+                  flyTo(landingPlace.coords, landingPlace.defaultZoom || DEFAULT_PLACE_ZOOM);
+              } else {
+                  flyHome();
+              }
+          }
       }
   };
 
@@ -214,9 +250,14 @@ const MainApp: React.FC = () => {
         image={selectedPlace ? selectedPlace.imageUrl : undefined}
       />
       
-      <header className="absolute top-0 left-0 right-0 z-[1000] p-5 pointer-events-none flex justify-between items-start">
+      <header className="absolute top-0 left-0 right-0 z-[1000] px-5 pt-10 pb-5 pointer-events-none flex justify-between items-start">
         <WeatherWidget />
         <div className="pointer-events-auto flex flex-col gap-3 items-end">
+            {isOffline && (
+                <div className="bg-amber-500 text-white p-2.5 rounded-full shadow-lg border border-white/40 font-bold text-xl w-10 h-10 flex items-center justify-center animate-pulse" title="Signal Saver Mode (Offline)">
+                    <i className="fa-solid fa-wifi"></i>
+                </div>
+            )}
             <button 
               onClick={() => setMapStyle(prev => prev === 'standard' ? 'satellite' : 'standard')}
               className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-emerald-600 dark:text-emerald-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center mb-0"
@@ -259,7 +300,11 @@ const MainApp: React.FC = () => {
       {/* Sheets & Modals */}
       <ExplorerSheet 
         places={filteredList} 
-        onSelect={(p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); }} 
+        onSelect={(p) => { 
+            setSelectedPlace(p); 
+            flyTo(p.coords, p.defaultZoom);
+            handleTabChange('map', false); // Switch to map tab, but DO NOT reset map position
+        }} 
         isVisible={activeTab === 'explore'} 
         searchText={searchText}
         onSearchChange={setSearchText}

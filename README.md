@@ -1,138 +1,155 @@
-# 🌴 MapaDeCaboRojo.com
 
-**El Copiloto Digital definitivo para navegar Cabo Rojo, Puerto Rico.**
+# 🌴 MapaDeCaboRojo.com (El Veci)
 
-This project is a modern, mobile-first Progressive Web App (PWA) designed to guide locals and tourists through Cabo Rojo. It features an interactive map, a "Neighbory" AI Concierge named "El Veci", and a comprehensive directory of beaches, restaurants, and logistics.
+**The Definitive Digital Copilot for Cabo Rojo, Puerto Rico.**
 
----
-
-## 🏗 High-Level Architecture
-
-The application follows a **Serverless / Client-Heavy** architecture to ensure speed and offline resilience.
-
-### 1. Frontend Core
-*   **Framework:** React 18 with TypeScript.
-*   **Styling:** Tailwind CSS with a custom "Cupertino/Glassmorphism" design system. It supports system-based and manual Dark Mode.
-*   **Maps:** Leaflet.js rendering **CartoDB Voyager** (Day) and **CartoDB Dark Matter** (Night) tiles.
-*   **Icons:** FontAwesome 6 (Pro/Free mix).
-
-### 2. Backend & Data (Supabase)
-*   **Database:** PostgreSQL via Supabase.
-*   **Auth:** Supabase Auth (Email/Password) for Admin access.
-*   **Storage:** Supabase Storage buckets for hosting place images.
-*   **Resiliency:** The app includes a **Mock Client** (`services/supabase.ts`). If the database keys are missing or the connection fails, the app falls back to a read-only mode using hardcoded data constants (`constants.ts`), preventing a "White Screen of Death".
-
-### 3. Artificial Intelligence (Google Gemini)
-*   **Model:** Gemini 2.5 Flash.
-*   **Service:** `services/geminiService.ts`
-*   **Features:**
-    *   **"El Veci" Concierge:** RAG-lite implementation. It injects the current list of `Places` and `Events` into the system prompt context, allowing the AI to answer specific questions about the local database with a distinct Puerto Rican personality.
-    *   **Admin Tools:** Generates marketing copy (Instagram/Email/Radio), improves place descriptions, and auto-tags places using AI.
+This project is a Progressive Web App (PWA) that combines a curated local directory with a Generative AI Concierge ("El Veci") to guide tourists and locals. It is built for resilience, speed, and offline usage in areas with poor cellular coverage.
 
 ---
 
-## 🚀 Getting Started
+## 1. 🏗 High-Level Architecture
+
+The system operates on a **Serverless / Client-Heavy** hybrid architecture.
+
+### **Frontend ( The Client)**
+*   **Core:** React 18 + TypeScript + Vite.
+*   **State Management:** React Hooks (`usePlacesData`, `useMapEngine`) + LocalStorage (for offline caching).
+*   **Mapping:** Leaflet.js rendering CartoDB tiles (Light/Dark).
+*   **Styling:** Tailwind CSS with a custom "Glassmorphism" UI kit.
+*   **Routing:** Custom hash/search-param router (`useRouter.ts`) to ensure shareable links work in sandboxed environments.
+
+### **Backend (The Data Layer)**
+*   **Database:** Supabase (PostgreSQL).
+*   **Storage:** Supabase Storage (Bucket: `places-images`) for user/admin uploads.
+*   **Edge/Serverless Functions:** Hosted on **Vercel** (`/api` directory). These act as secure proxies for third-party APIs to keep keys hidden from the client.
+
+### **Intelligence (The Brain)**
+*   **AI Model:** Google Gemini 2.5 Flash via `@google/genai`.
+*   **Implementation:**
+    *   **RAG-Lite:** We inject a minified JSON representation of places/events into the system prompt context.
+    *   **Services:** `services/aiService.ts` handles prompt engineering, intent detection, and structured JSON output.
+
+### **Resilience ("Signal Saver")**
+*   **Offline Mode:** `services/supabase.ts` implements a custom caching layer.
+*   **Logic:** If the DB connection fails (offline/bad signal), the app hydrates from `localStorage` (TTL: 24h) or falls back to hardcoded `constants.ts`.
+
+---
+
+## 2. 🚦 Getting Started
 
 ### Prerequisites
 *   Node.js 18+
 *   npm or yarn
+*   A Supabase Project
+*   Google AI Studio Key (Gemini)
+*   Google Cloud Console Key (Maps/Places API)
 
-### Installation
+### Environment Variables
+Create a `.env` file in the root. **Do not commit this file.**
 
-1.  **Clone the repository**
-    ```bash
-    git clone https://github.com/your-repo/mapadecaborojo.git
-    cd mapadecaborojo
-    ```
+```env
+# Client-Side Exposed (Vite)
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-public-anon-key
+VITE_GOOGLE_PLACES_API_KEY=your-google-places-key (Optional: for client-side maps/autocomplete)
 
-2.  **Install Dependencies**
+# Server-Side Only (Vercel/Node)
+API_KEY=your-gemini-api-key
+GOOGLE_PLACES_API_KEY=your-google-places-key (For API proxies)
+CRON_SECRET=your-vercel-cron-secret (For automated maintenance)
+```
+
+### Installation & Run
+
+1.  **Install Dependencies:**
     ```bash
     npm install
     ```
 
-3.  **Environment Setup**
-    Create a `.env` file in the root directory (or use `.env.local` if using Vite):
-
-    ```env
-    # Supabase Credentials
-    VITE_SUPABASE_URL=your_supabase_project_url
-    VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-
-    # Google Gemini API Key
-    API_KEY=your_gemini_api_key
-    ```
-    *Note: If you skip this step, the app will run in "Mock Mode" using fallback data.*
-
-4.  **Run Development Server**
+2.  **Run Development Server:**
     ```bash
-    npm start
-    # or
     npm run dev
     ```
+    *Note: The frontend will run on `localhost:3000`. API routes (`/api/*`) require running via `vercel dev` or deployment to work correctly, as they are serverless functions.*
+
+3.  **Mock Mode:**
+    If you do not provide Supabase keys, the app will automatically switch to **Mock Mode**, using data from `constants.ts` and logging write actions to the console instead of a DB.
 
 ---
 
-## 🗄 Database Schema (Inferred)
+## 3. 🗄 Database Schema
 
-The application relies on the following PostgreSQL structure hosted on Supabase.
+The database is PostgreSQL hosted on Supabase.
 
-### Tables
-
-#### `public.places`
-The core directory of locations.
+### `public.places`
+The master directory of locations.
 *   `id` (uuid, PK): Unique identifier.
-*   `name` (text): Place name.
-*   `category` (text): BEACH, FOOD, SIGHTS, etc.
-*   `description` (text): Short bio.
-*   `lat` / `lon` (float): Geographic coordinates.
-*   `image_url` (text): URL to the main photo.
-*   `amenities` (jsonb): Stores flexible data like `{ parking: 'FREE', restrooms: true, tips: '...' }`.
-*   `sponsor_weight` (int): Determines sorting priority (0-100).
-*   `status` (text): 'open', 'closed', or 'pending' (for user suggestions).
-*   `is_featured` (boolean): Highlights the place on the map.
-*   `tags` (text[]): Array of search keywords.
-*   `opening_hours` (jsonb): Structured hours.
-*   `contact_info` (jsonb): Phone, email, socials.
+*   `name` (text): Searchable name.
+*   `category` (text): Enum-like string (e.g., 'BEACH', 'FOOD').
+*   `lat` / `lon` (float): Geocoordinates.
+*   `status` (text): 'open', 'closed', 'pending'.
+*   `amenities` (jsonb): Flexible storage for tags.
+    *   `{ parking: 'FREE', restrooms: true, has_generator: true, surf_report: {...}, vibe_check: {...} }`
+*   `opening_hours` (jsonb): Structured hours for "Open Now" logic.
+*   `sponsor_weight` (int): 0-100. Determines sorting order.
+*   `is_featured` (bool): Shows "Star" on map.
 
-#### `public.events`
-Dynamic agenda items.
-*   `id` (uuid, PK)
-*   `title` (text)
-*   `start_time` (timestamptz)
-*   `place_id` (uuid, FK -> places.id): Optional link to a physical place.
-*   `location_name` (text): Text fallback if no place_id.
-*   `category` (text): MUSIC, FESTIVAL, etc.
+### `public.events`
+Time-sensitive activities.
+*   `id` (uuid, PK).
+*   `title` (text).
+*   `start_time` / `end_time` (timestamptz).
+*   `location_name` (text).
+*   `place_id` (uuid, FK): Optional link to a Place.
 
-#### `public.admin_logs`
-Audit trail for admin actions.
-*   `id` (uuid, PK)
-*   `action` (text): CREATE, UPDATE, DELETE, MARKETING_GEN.
-*   `place_name` (text)
-*   `created_at` (timestamptz)
+### `public.categories`
+Dynamic configuration for UI filters.
+*   `id` (text, PK): e.g., 'BEACH'.
+*   `label_es` / `label_en` (text): Display names.
+*   `icon` (text): FontAwesome class name suffix.
+*   `color` (text): Hex code or Tailwind class.
 
-### Storage
-*   **Bucket:** `places-images` (Public) - Used for uploading user suggestions and admin photos.
-
----
-
-## 📦 External Dependencies
-
-| Dependency | Purpose |
-| :--- | :--- |
-| **react** | Core UI library. |
-| **leaflet** | Rendering the interactive map logic. |
-| **tailwindcss** | Styling utility for Glassmorphism and Dark Mode. |
-| **@supabase/supabase-js** | Official client for database, auth, and storage. |
-| **@google/genai** | SDK for connecting to Gemini 2.5 Flash model. |
-| **html2canvas** | Used for screenshotting or generating visual assets (if needed). |
-| **FontAwesome** | (Loaded via CDN) UI Icons. |
-| **Google Fonts** | (Loaded via CDN) 'Inter' font family. |
+### `public.admin_logs`
+Audit trail and AI memory.
+*   `action` (text): 'USER_SEARCH', 'UPDATE', 'AI_BRIEFING'.
+*   `details` (text): Context or JSON dump.
+*   *Used to track what users are searching for to improve the database.*
 
 ---
 
-## 🎨 UI/UX Philosophy ("The Apple Touch")
-The app implements a **"Cupertino" aesthetic**:
-1.  **Glassmorphism:** Heavy use of `backdrop-blur-xl` and semi-transparent whites/blacks.
-2.  **Noise/Grain:** A subtle SVG noise overlay (`.noise-overlay` in `index.html`) gives the app a premium, textured feel.
-3.  **Animations:** Smooth transitions (flyTo map movements, sliding sheets) rather than abrupt state changes.
-4.  **Typography:** Uses `Inter`, closely mirroring Apple's San Francisco font.
+## 4. 📦 External Dependencies & Rationale
+
+| Dependency | Purpose | Why? |
+| :--- | :--- | :--- |
+| **react / react-dom** | UI Framework | Component-based architecture, ecosystem. |
+| **vite** | Build Tool | Extremely fast HMR (Hot Module Replacement). |
+| **leaflet** | Maps | Lightweight, open-source, no cost per load (unlike Google Maps SDK). |
+| **@supabase/supabase-js** | Backend SDK | Auth, DB, and Realtime in one package. |
+| **@google/genai** | AI | Native SDK for Gemini 2.5 Flash. Low latency, high reasoning. |
+| **tailwindcss** | Styling | Rapid UI development, consistency, dark mode. |
+| **html2canvas** | Features | Used in Admin panel to generate "Instagram Stories" from place data. |
+| **Open-Meteo API** | Data | Free weather/marine data (No API key required). |
+| **USGS Earthquake API** | Data | Free seismic data (No API key required). |
+
+---
+
+## 5. 🛡 How Not To Break It (Protocols)
+
+### For Humans 👨‍💻
+1.  **Do NOT touch `constants.ts` structure:** This file serves as the fail-safe. If the DB dies, the app runs from here.
+2.  **Leaflet Refs:** When modifying `useMapEngine`, always ensure `map.current` exists before calling methods. The map is detached on component unmount.
+3.  **API Proxies:** Do not call Google Places API or Gemini API directly from client-side components (`.tsx`). Always go through `/api/` endpoints to protect credentials.
+
+### For AI Agents 🤖
+1.  **Token Economy:** When updating `prepareAiContext` in `geminiService.ts`, strictly limit the fields sent to the LLM. Use `n` for name, `d` for description. Do not send full JSON blobs.
+2.  **Type Safety:** Always import interfaces from `../types` when creating new components. Do not infer types inline.
+3.  **Supabase RLS:** If you modify database logic, ensure you are respecting Row Level Security. `anon` users can only READ. `service_role` or authenticated users can WRITE.
+4.  **Signal Saver:** Any new data fetching hook **MUST** implement the caching pattern found in `services/supabase.ts` (Memory -> LocalStorage -> Network) to ensure offline functionality.
+
+---
+
+## 6. 🔄 Automations (Cron Jobs)
+Defined in `vercel.json`:
+1.  **Briefing (`/api/cron-briefing`):** Runs daily at 11 AM. Analyzes search logs and generates a business report.
+2.  **Maintenance (`/api/cron-maintenance`):** Runs weekly. Archives past events and prunes old logs.
+3.  **Vibe Check (`/api/cron-vibe`):** Runs Mon/Thu. Fetches new Google Reviews for random places and updates the "Vibe" summary using AI.

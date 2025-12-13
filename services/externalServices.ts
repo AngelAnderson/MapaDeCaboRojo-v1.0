@@ -12,9 +12,34 @@ export interface EarthQuake {
 }
 
 export const getRecentEarthquakes = async (): Promise<EarthQuake | null> => {
+    const CACHE_KEY = 'cabo_recent_quake';
+    
     try {
-        // Fetch 2.5+ earthquakes from the last day
-        const res = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson');
+        // 1. Check Cache (TTL: 15 minutes)
+        const cachedRaw = localStorage.getItem(CACHE_KEY);
+        if (cachedRaw) {
+            try {
+                const cached = JSON.parse(cachedRaw);
+                const age = Date.now() - cached.timestamp;
+                if (age < 15 * 60 * 1000) { // 15 mins
+                    return cached.data;
+                }
+            } catch (parseError) {
+                localStorage.removeItem(CACHE_KEY);
+            }
+        }
+
+        // 2. Fetch with Timeout (5 seconds)
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        const res = await fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson', {
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
         const data = await res.json();
         
         // Filter for Puerto Rico Region (Rough Bounding Box)
@@ -24,23 +49,42 @@ export const getRecentEarthquakes = async (): Promise<EarthQuake | null> => {
             return lat >= 17.0 && lat <= 20.0 && lng >= -69.0 && lng <= -64.0;
         });
 
-        if (prQuakes.length === 0) return null;
+        let result: EarthQuake | null = null;
 
-        // Get the strongest or most recent
-        const significant = prQuakes.find((f: any) => f.properties.mag >= 4.0);
-        const latest = prQuakes[0]; // GeoJSON is usually sorted by time desc, but USGS sort is time desc by default
+        if (prQuakes.length > 0) {
+            // Get the strongest or most recent
+            const significant = prQuakes.find((f: any) => f.properties.mag >= 4.0);
+            const latest = prQuakes[0]; // GeoJSON is usually sorted by time desc
 
-        const target = significant || latest;
+            const target = significant || latest;
+            
+            result = {
+                place: target.properties.place,
+                mag: target.properties.mag,
+                time: target.properties.time,
+                url: target.properties.url,
+                isSignificant: target.properties.mag >= 4.0
+            };
+        }
+
+        // 3. Update Cache
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+            timestamp: Date.now(),
+            data: result
+        }));
         
-        return {
-            place: target.properties.place,
-            mag: target.properties.mag,
-            time: target.properties.time,
-            url: target.properties.url,
-            isSignificant: target.properties.mag >= 4.0
-        };
+        return result;
+
     } catch (e) {
-        console.warn("USGS API Error:", e);
+        // 4. Graceful Fallback
+        // Don't warn visibly in console for network/timeout errors, just debug
+        console.debug("USGS Feed unavailable (using stale cache if possible):", e);
+        
+        // Try to return stale cache if fetch fails
+        const cachedRaw = localStorage.getItem(CACHE_KEY);
+        if (cachedRaw) {
+            try { return JSON.parse(cachedRaw).data; } catch(err) {}
+        }
         return null;
     }
 };
@@ -68,7 +112,14 @@ export const checkPublicHolidays = async (): Promise<PublicHoliday | null> => {
         if (cached) {
             holidays = JSON.parse(cached);
         } else {
-            const res = await fetch(`https://date.nager.at/api/v3/publicholidays/${year}/PR`);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            
+            const res = await fetch(`https://date.nager.at/api/v3/publicholidays/${year}/PR`, {
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
             if (!res.ok) throw new Error("Holiday API fail");
             holidays = await res.json();
             localStorage.setItem(cacheKey, JSON.stringify(holidays));
@@ -78,7 +129,7 @@ export const checkPublicHolidays = async (): Promise<PublicHoliday | null> => {
         return todayHoliday || null;
 
     } catch (e) {
-        console.warn("Holiday API Error:", e);
+        console.debug("Holiday API Error:", e);
         return null;
     }
 };

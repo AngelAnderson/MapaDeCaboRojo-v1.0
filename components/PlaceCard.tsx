@@ -202,6 +202,9 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
   const vibeCheck = place.amenities?.vibe_check;
   const isVibeFresh = vibeCheck?.text;
 
+  // Fallback Logic: Seeded random based on ID for consistency
+  const fallbackImage = `https://picsum.photos/seed/${place.id}/800/600`;
+
   return (
     <article className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.3)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.6)] z-[2000] animate-slide-up max-h-[90vh] overflow-y-auto flex flex-col transition-colors duration-300" role="dialog" aria-modal="true" aria-labelledby="place-name">
       <button className="sticky top-0 z-20 w-full flex justify-center pt-3 pb-1 bg-gradient-to-b from-black/40 to-transparent focus:outline-none" onClick={onClose} aria-label={t('close')}>
@@ -211,11 +214,12 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
       {/* Semantic Header */}
       <header className="relative w-full h-72 shrink-0 group bg-slate-900">
         <img 
-            src={getPlaceHeaderImage(place.imageUrl) || 'https://picsum.photos/800/600'} 
+            src={getPlaceHeaderImage(place.imageUrl) || fallbackImage} 
             alt={place.name} 
             className={`w-full h-full object-cover transition-all ${isClosed ? 'grayscale opacity-60' : ''}`} 
             style={{ objectPosition: place.imagePosition || 'center' }}
             loading="eager"
+            onError={(e) => { e.currentTarget.src = fallbackImage; }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
         
@@ -345,7 +349,12 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
                   className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors text-left group"
                 >
                   <div className="w-12 h-12 rounded-lg bg-slate-200 overflow-hidden shrink-0">
-                    <img src={getPlaceHeaderImage(rp.imageUrl)} className="w-full h-full object-cover" loading="lazy" />
+                    <img 
+                      src={getPlaceHeaderImage(rp.imageUrl) || `https://picsum.photos/seed/${rp.id}/200/200`} 
+                      className="w-full h-full object-cover" 
+                      loading="lazy" 
+                      onError={(e) => { e.currentTarget.src = `https://picsum.photos/seed/${rp.id}/200/200`; }}
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm truncate group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">{rp.name}</h4>

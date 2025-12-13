@@ -42,23 +42,32 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
 
       return (
           <div className="flex gap-2 overflow-x-auto no-scrollbar mt-3 pb-2 -ml-2 pl-2">
-              {suggestions.map(place => (
-                  <button 
-                    key={place.id}
-                    onClick={() => onNavigateToPlace(place)}
-                    className="flex-shrink-0 w-32 bg-white dark:bg-slate-700/50 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-600 active:scale-95 transition-transform text-left group"
-                  >
-                      <div className="h-20 w-full overflow-hidden relative">
-                          <img src={getOptimizedImageUrl(place.imageUrl, 300)} alt={place.name} className="w-full h-full object-cover" loading="lazy" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                          <span className="absolute bottom-1 left-2 text-[10px] text-white font-bold uppercase tracking-wide">{place.category}</span>
-                      </div>
-                      <div className="p-2">
-                          <h4 className="text-xs font-bold text-slate-800 dark:text-white truncate group-hover:text-teal-500 transition-colors">{place.name}</h4>
-                          <p className="text-[9px] text-slate-500 dark:text-slate-400 truncate">{place.status === 'closed' ? '🔴 Cerrado' : '🟢 Abierto'}</p>
-                      </div>
-                  </button>
-              ))}
+              {suggestions.map(place => {
+                  const fallbackImage = `https://picsum.photos/seed/${place.id}/300/200`;
+                  return (
+                    <button 
+                        key={place.id}
+                        onClick={() => onNavigateToPlace(place)}
+                        className="flex-shrink-0 w-32 bg-white dark:bg-slate-700/50 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-600 active:scale-95 transition-transform text-left group"
+                    >
+                        <div className="h-20 w-full overflow-hidden relative">
+                            <img 
+                                src={getOptimizedImageUrl(place.imageUrl, 300) || fallbackImage} 
+                                alt={place.name} 
+                                className="w-full h-full object-cover" 
+                                loading="lazy" 
+                                onError={(e) => { e.currentTarget.src = fallbackImage; }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                            <span className="absolute bottom-1 left-2 text-[10px] text-white font-bold uppercase tracking-wide">{place.category}</span>
+                        </div>
+                        <div className="p-2">
+                            <h4 className="text-xs font-bold text-slate-800 dark:text-white truncate group-hover:text-teal-500 transition-colors">{place.name}</h4>
+                            <p className="text-[9px] text-slate-500 dark:text-slate-400 truncate">{place.status === 'closed' ? '🔴 Cerrado' : '🟢 Abierto'}</p>
+                        </div>
+                    </button>
+                  );
+              })}
           </div>
       );
   };

@@ -32,6 +32,51 @@ const DEFAULT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const SUPABASE_URL = getEnvVar('VITE_SUPABASE_URL') || DEFAULT_URL;
 const SUPABASE_ANON_KEY = getEnvVar('VITE_SUPABASE_ANON_KEY') || DEFAULT_KEY;
 
+// --- SIGNAL SAVER CACHE SYSTEM ---
+const memoryCache: Record<string, { data: any; timestamp: number }> = {};
+const CACHE_KEY_PREFIX = 'cabo_signal_saver_';
+const MEMORY_TTL = 5 * 60 * 1000; // 5 Minutes for RAM
+const PERSISTENT_TTL = 24 * 60 * 60 * 1000; // 24 Hours for Disk (Signal Saver)
+
+const getFromCache = (key: string) => {
+    // 1. Try Memory first (Fastest)
+    if (memoryCache[key] && (Date.now() - memoryCache[key].timestamp < MEMORY_TTL)) {
+        return memoryCache[key].data;
+    }
+
+    // 2. Try Persistent Storage (Signal Saver Mode)
+    try {
+        const stored = localStorage.getItem(CACHE_KEY_PREFIX + key);
+        if (stored) {
+            const parsed = JSON.parse(stored);
+            // Check if valid within 24h
+            if (Date.now() - parsed.timestamp < PERSISTENT_TTL) {
+                // Hydrate memory cache for this session
+                memoryCache[key] = { data: parsed.data, timestamp: Date.now() };
+                console.log(`🔌 Signal Saver: Loaded ${key} from offline cache.`);
+                return parsed.data;
+            }
+        }
+    } catch(e) { 
+        console.warn("Signal Saver read error:", e); 
+    }
+    
+    return null;
+};
+
+const setCache = (key: string, data: any) => {
+    const timestamp = Date.now();
+    // Update Memory
+    memoryCache[key] = { data, timestamp };
+    
+    // Update Persistent Storage
+    try {
+        localStorage.setItem(CACHE_KEY_PREFIX + key, JSON.stringify({ data, timestamp }));
+    } catch (e) { 
+        console.warn("Signal Saver write error (Storage Full?):", e); 
+    }
+};
+
 // --- HELPER: ERROR MESSAGE EXTRACTION ---
 const getErrorMessage = (error: any): string => {
   if (!error) return "Unknown error occurred";
@@ -299,7 +344,7 @@ const mapEventToDb = (event: Partial<Event>) => {
         location_name: escapeHTML(event.locationName) || '',
         place_id: event.placeId || null,
         image_url: escapeHTML(event.imageUrl) || '',
-        status: event.status || 'published',
+        status: event.status || 'pending', // Default to pending as per schema
         is_recurring: event.isRecurring || false,
         is_featured: event.isFeatured || false,
         map_link: escapeHTML(event.mapLink) || ''
@@ -385,6 +430,10 @@ export const getLatestInsights = async (): Promise<InsightSnapshot[]> => {
 };
 
 export const getCategories = async (): Promise<Category[]> => {
+    // Cache Check
+    const cached = getFromCache('CATEGORIES');
+    if (cached) return cached;
+
     try {
         const { data, error } = await supabase.from('categories').select('*').order('order_index', { ascending: true });
         
@@ -399,10 +448,10 @@ export const getCategories = async (): Promise<Category[]> => {
         }
 
         if (!data || data.length === 0) {
-            // DB is empty, use defaults silently
             return DEFAULT_CATEGORIES;
         }
 
+        setCache('CATEGORIES', data);
         return data as Category[];
     } catch (e) {
         console.error("Error fetching categories:", e);
@@ -450,6 +499,10 @@ export const deleteCategory = async (id: string): Promise<{ success: boolean; er
 };
 
 export const getPlaces = async (): Promise<Place[]> => {
+  // Cache Check
+  const cached = getFromCache('PLACES');
+  if (cached) return cached;
+
   try {
     // Select ALL records for Admin/Chat usage
     const { data, error } = await supabase.from('places').select('*'); 
@@ -461,7 +514,7 @@ export const getPlaces = async (): Promise<Place[]> => {
     
     if (!data) return [];
 
-    return data.map((row: any) => ({
+    const mapped = data.map((row: any) => ({
       id: row.id,
       name: row.name,
       description: row.description || '',
@@ -503,6 +556,9 @@ export const getPlaces = async (): Promise<Place[]> => {
       amenities: row.amenities || {},
       defaultZoom: row.default_zoom ?? undefined,
     }));
+
+    setCache('PLACES', mapped);
+    return mapped;
   } catch (err) { 
     console.error("Unexpected Error in getPlaces:", err);
     return []; 
@@ -510,6 +566,10 @@ export const getPlaces = async (): Promise<Place[]> => {
 };
 
 export const getEvents = async (): Promise<Event[]> => {
+    // Cache Check
+    const cached = getFromCache('EVENTS');
+    if (cached) return cached;
+
     try {
         // Simple select first to ensure data access works, avoiding potential JOIN issues with RLS
         const { data, error } = await supabase.from('events').select('*').order('start_time', { ascending: true });
@@ -521,11 +581,11 @@ export const getEvents = async (): Promise<Event[]> => {
 
         if (!data) return [];
 
-        return data.map((row: any) => ({
+        const mapped = data.map((row: any) => ({
             id: row.id,
             title: escapeHTML(row.title),
             description: escapeHTML(row.description) || '',
-            // Cast enum safely
+            // Cast enum safely, schema uses lowercase, app uses uppercase enum
             category: (row.category ? row.category.toUpperCase() : 'COMMUNITY') as EventCategory,
             startTime: row.start_time,
             endTime: row.end_time,
@@ -534,11 +594,14 @@ export const getEvents = async (): Promise<Event[]> => {
             locationName: escapeHTML(row.location_name) || '',
             placeId: row.place_id,
             imageUrl: escapeHTML(row.image_url),
-            status: row.status || 'published', // Default to published if null/missing in app logic
+            status: row.status || 'pending',
             isFeatured: row.is_featured || false,
             mapLink: escapeHTML(row.map_link),
             coords: undefined // We won't join here to keep it robust; map logic handles missing coords
         }));
+
+        setCache('EVENTS', mapped);
+        return mapped;
     } catch (e) { 
         console.error("Event fetch error:", e);
         return []; 
@@ -564,6 +627,10 @@ export const createPlace = async (place: Partial<Place>): Promise<{ success: boo
         const { error } = await supabase.from('places').insert([dbPayload]);
         if (error) throw error;
         await logAction('CREATE', place.name || 'Unknown', isAdmin ? 'Record created by Admin' : 'User Suggestion');
+        
+        // Invalidate Cache
+        delete memoryCache['PLACES'];
+        
         return { success: true };
     } catch (e: any) { 
         console.error("Create Error:", e);
@@ -596,6 +663,10 @@ export const updatePlace = async (id: string, place: Partial<Place>): Promise<{ 
         }
 
         await logAction('UPDATE', place.name || 'Unknown', 'Record updated');
+        
+        // Invalidate Cache
+        delete memoryCache['PLACES'];
+
         return { success: true };
     } catch (e: any) { 
         console.error("Update Error Exception:", e); 
@@ -623,6 +694,10 @@ export const deletePlace = async (id: string): Promise<{ success: boolean; error
         }
 
         await logAction('DELETE', id, 'Record deleted');
+        
+        // Invalidate Cache
+        delete memoryCache['PLACES'];
+
         return { success: true };
     } catch (e: any) { 
         console.error("Delete Error:", e);
@@ -641,6 +716,10 @@ export const createEvent = async (event: Partial<Event>): Promise<{ success: boo
         const { error } = await supabase.from('events').insert([dbPayload]);
         if (error) throw error;
         await logAction('CREATE_EVENT', event.title || 'Unknown', 'Event created by Admin');
+        
+        // Invalidate Cache
+        delete memoryCache['EVENTS'];
+
         return { success: true };
     } catch (e: any) {
         return { success: false, error: getErrorMessage(e) };
@@ -655,6 +734,10 @@ export const updateEvent = async (id: string, event: Partial<Event>): Promise<{ 
         const { error } = await supabase.from('events').update(dbPayload).eq('id', id).select();
         if (error) throw error;
         await logAction('UPDATE_EVENT', event.title || 'Unknown', 'Event updated by Admin');
+        
+        // Invalidate Cache
+        delete memoryCache['EVENTS'];
+
         return { success: true };
     } catch (e: any) {
         return { success: false, error: getErrorMessage(e) };
@@ -668,6 +751,10 @@ export const deleteEvent = async (id: string): Promise<{ success: boolean; error
         const { error } = await supabase.from('events').delete().eq('id', id);
         if (error) throw error;
         await logAction('DELETE_EVENT', id, 'Event deleted');
+        
+        // Invalidate Cache
+        delete memoryCache['EVENTS'];
+
         return { success: true };
     } catch (e: any) {
         return { success: false, error: getErrorMessage(e) };

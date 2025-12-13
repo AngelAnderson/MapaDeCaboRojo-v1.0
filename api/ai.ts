@@ -18,20 +18,17 @@ const escapeHTML = (str: string | undefined): string => {
 };
 
 export default async function handler(req: any, res: any) {
-  // 1. CORS & Method Check
   if (req.method !== 'POST') {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    // 2. Body Parsing (Handle both parsed and string bodies)
     let body = req.body;
     if (typeof body === 'string') {
       try { body = JSON.parse(body); } catch (e) { return res.status(400).json({ error: "Invalid JSON body" }); }
     }
     const { action, payload } = body;
 
-    // 3. Routing
     let result;
     switch (action) {
       case 'chat':
@@ -78,7 +75,6 @@ export default async function handler(req: any, res: any) {
 
   } catch (e: any) {
     console.error(`AI API Error:`, e);
-    // Return a friendly error structure that the frontend can handle safely
     return res.status(500).json({ 
       error: "Service Error", 
       details: e.message,
@@ -90,71 +86,38 @@ export default async function handler(req: any, res: any) {
 // --- HANDLERS ---
 
 async function handleChat({ message, history, context }: any) {
-  // Use the places sent directly from the frontend (which now come from Supabase)
-  // We include MORE fields now for "Smarter" recommendations
-  const localDatabase = {
-    places: context.places.map((p: any) => ({
-      id: p.id,
-      name: p.name,
-      category: p.category,
-      desc: p.description, 
-      tags: p.tags || [], // ADDED TAGS FOR SERVICE MATCHING
-      address: p.address, // ADDED ADDRESS FOR NEIGHBORHOOD MATCHING
-      tips: p.tips,
-      vibe: p.vibe, // Critical for "mood" matching
-      status: p.status,
-      price: p.priceLevel, // Critical for budget matching
-      best_time: p.bestTimeToVisit, // Critical for logistics
-      opening_hours: p.opening_hours 
-    })).slice(0, 150), 
-    events: context.events.map((e: any) => ({
-      title: e.title,
-      date: e.start,
-      desc: e.description,
-      loc: e.location
-    }))
-  };
+  // Use the pre-processed context from the frontend
+  const { places, events, user_context } = context;
 
   const systemInstruction = `
-    Eres "El Veci", el guía local experto de Cabo Rojo, Puerto Rico.
+    Eres "El Veci", un guía local digital de Cabo Rojo, Puerto Rico.
     
-    BASE DE DATOS LOCAL (LA ÚNICA VERDAD):
-    ${JSON.stringify(localDatabase)}
+    TU MISIÓN:
+    Ayudar a usuarios a encontrar lugares y eventos usando *exclusivamente* tu base de datos local.
 
-    REGLAS DE BÚSQUEDA Y PRIORIDAD:
-    1. **EVENTOS (Prioridad Alta):** Si el usuario pregunta "¿Qué hay para hacer?", "¿Eventos hoy?", "Música en vivo", PRIMERO revisa la lista 'events'. Si hay eventos activos, menciónalos primero.
-    2. **BARRIOS (Geografía):** Si el usuario menciona "Puerto Real", "Boquerón", "Joyuda", "Combate", o "El Pueblo", filtra la lista 'places' buscando ese texto en el campo 'address' o 'tags'. Recomienda SOLO lugares de esa zona.
-    3. **SERVICIOS (Plomeros, Barberos, etc.):** Si preguntan por servicios (ej. "plomero", "corte de pelo", "mecánico"), busca en la categoría 'SERVICE' y revisa los 'tags' y 'name' de la base de datos.
+    BASE DE DATOS (LA ÚNICA VERDAD):
+    - Lugares Disponibles: ${JSON.stringify(places)}
+    - Eventos (Prioridad Alta): ${JSON.stringify(events)}
     
-    REGLAS ESTRICTAS DE DATOS:
-    - **Inventario Cerrado**: Usa ÚNICAMENTE la 'BASE DE DATOS LOCAL'. No inventes lugares.
-    - **Si no lo tienes**: Si preguntan por algo específico (ej. "Restaurante Chino") y no está en tu lista, di honestamente: "Mala mía, no tengo un chino registrado en mi base de datos todavía." y ofrece una alternativa cercana (ej. "Pero tengo estos sitios de comida criolla...").
-    - **Ayuda General**: Si el usuario dice "Ayúdame" o "Dame opciones", pregúntale: "¿Qué mood tienes? ¿Playa, Chinchorreo, Comida o Eventos?".
+    CONTEXTO ACTUAL:
+    - Fecha/Hora: ${user_context.current_date} @ ${user_context.current_time}
+    - Clima: ${user_context.weather}
 
-    USO DE GOOGLE SEARCH:
-    - Úsalo SOLO para: Clima actual, noticias de emergencia, o verificar horarios si dicen 'null'.
-    - PROHIBIDO buscar listas de "mejores restaurantes" en Google. Usa tu DB.
+    REGLAS ESTRICTAS DE RESPUESTA (ANTI-ALUCINACIÓN):
+    1. **Cero Inventos:** Si el usuario pregunta por un lugar que NO está en la lista 'places', di: "No tengo ese lugar en mi registro oficial, pero te puedo recomendar..." y sugiere uno de la lista que sea similar. NUNCA inventes horarios o menús.
+    2. **Busca por Contexto:** Si el usuario dice "tengo calor", busca lugares con "Aire Acondicionado" o "Playa" en 'full_context'. Si dice "sin luz", busca "Planta Eléctrica".
+    3. **Eventos Primero:** Si preguntan "¿Qué hay hoy?", mira la lista de 'events' y compara con la Fecha Actual.
+    4. **Privacidad de IDs:** Nunca muestres el UUID en el texto. Úsalo solo en el JSON de respuesta.
 
-    PERSONALIDAD:
-    - Boricua "Sangre Liviana": Amable, gracioso, slang suave.
-    - Cierre: Termina (50% de las veces) con un chiste corto ("chiste mongu").
-
-    INSTRUCCIONES DE LÓGICA:
-    1. **Recomendaciones**: Si recomiendas un lugar de la DB, AÑADE su ID al array 'suggested_place_ids' del JSON de respuesta.
-    2. **SIN IDs EN TEXTO**: PROHIBIDO escribir el UUID o ID del lugar en el campo "text". El usuario NUNCA debe ver el ID (ej. "123-abc"). Solo menciona el nombre.
-    3. **Contexto Temporal**:
-       - Fecha PR: ${context.date} | Hora PR: ${context.time}
-       - Verifica 'opening_hours' en tu DB antes de sugerir.
-    4. **Formato Markdown**: Usa **negritas** para nombres de lugares.
-
-    FORMATO DE RESPUESTA (JSON):
+    FORMATO DE RESPUESTA JSON:
+    Debes responder SIEMPRE con este objeto JSON exacto:
     {
-      "text": "Respuesta en Markdown con emojis... (SIN IDs)",
-      "suggested_place_ids": ["id1", "id2"]
+      "text": "Tu respuesta amable en Markdown...", 
+      "suggested_place_ids": ["id1", "id2"] // Array con los IDs de los lugares mencionados
     }
   `;
 
-  // Filter and format history to prevent API errors
+  // Clean history
   const validHistory = (history || [])
     .filter((h: any) => h.role && h.text)
     .map((h: any) => ({
@@ -168,8 +131,7 @@ async function handleChat({ message, history, context }: any) {
     config: { 
       systemInstruction,
       responseMimeType: "application/json", 
-      // ENABLE GOOGLE SEARCH GROUNDING - But limited by prompt constraints above
-      tools: [{ googleSearch: {} }], 
+      // Note: Google Search tool removed to enforce local-only logic as requested
     }
   });
 
@@ -182,13 +144,11 @@ async function handleChat({ message, history, context }: any) {
           suggestedPlaceIds: jsonResponse.suggested_place_ids 
       };
   } catch (e) {
-      // Fallback if model fails to return JSON
       return { text: result.text };
   }
 }
 
 async function handleItinerary({ vibe, places }: any) {
-  // Use a Strict Schema to prevent "White Bubble" (empty JSON) errors
   const responseSchema = {
     type: Type.ARRAY,
     items: {
@@ -204,18 +164,18 @@ async function handleItinerary({ vibe, places }: any) {
     }
   };
 
-  const simplifiedPlaces = places.map((p: any) => `${p.name} (ID: ${p.id}, Cat: ${p.category})`).join(', ');
+  // Only pass names and IDs to save tokens
+  const simplifiedPlaces = places.map((p: any) => `${p.name} (ID: ${p.id})`).join(', ');
 
   const prompt = `
     Crea un itinerario de 1 día en Cabo Rojo, Puerto Rico.
     Vibe: "${vibe}"
-    Lugares Disponibles (USA SOLO ESTOS): ${simplifiedPlaces}
+    Lugares Disponibles: ${simplifiedPlaces}
     
     Reglas:
-    1. LÓGICA GEOGRÁFICA: Agrupa lugares cercanos (ej. Faro y Playa Sucia van juntos).
-    2. COMIDA: Incluye paradas para comer en horas lógicas usando los lugares disponibles.
-    3. TIEMPO: Considera el tiempo de traslado y disfrute.
-    4. ICONOS: Usa iconos FontAwesome divertidos.
+    1. Usa SOLO lugares de la lista si es posible.
+    2. Agrupa geográficamente.
+    3. Incluye tiempos de comida.
   `;
 
   const response = await ai.models.generateContent({
@@ -227,12 +187,10 @@ async function handleItinerary({ vibe, places }: any) {
     }
   });
 
-  // Since we use responseSchema, parsing is safer, but we still try/catch
   try {
     return JSON.parse(response.text);
   } catch (e) {
-    console.error("Itinerary JSON parse error:", response.text);
-    return []; // Return empty array safely on parse failure
+    return []; 
   }
 }
 
@@ -256,19 +214,13 @@ async function handleIdentify({ image }: any) {
 
 async function handleAnalyzeDemand({ searchTerms, categories }: any) {
   const prompt = `
-    You are a Business Intelligence Analyst for a tourism app.
-    Here is a list of raw search terms and questions users have typed recently:
-    ${JSON.stringify(searchTerms)}
-
-    Here are the categories we currently have in our database:
-    ${categories.join(', ')}
-
-    Analyze the user intent and identify gaps.
-    Return a JSON object with:
-    {
+    Analyze search terms: ${JSON.stringify(searchTerms)}. 
+    Existing Categories: ${categories.join(', ')}.
+    Return JSON: {
       "trending_topics": [{"topic": string, "count": number}],
       "content_gaps": [{"gap": string, "description": string, "urgency": "HIGH" | "MEDIUM" | "LOW"}],
-      "recommendation": string (executive summary in Spanish)
+      "recommendation": string,
+      "user_intent_prediction": string
     }
   `;
 
@@ -280,21 +232,18 @@ async function handleAnalyzeDemand({ searchTerms, categories }: any) {
   return JSON.parse(response.text);
 }
 
-// --- SIMPLER HELPERS (Standard Text Responses) ---
+// --- HELPER FUNCTIONS ---
 
 async function handleScript({ placeName, description }: any) {
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
-    contents: `Escribe un guión de audio guía de 30 segundos para "${placeName}". Descripción: "${description}". Tono: Amable.`
+    contents: `Guión de audio guía (30s) para "${placeName}". Desc: "${description}". Tono: Amable.`
   });
   return { text: response.text };
 }
 
 async function handleCategorizeAndTag({ name, description }: any) {
-  const prompt = `Categories: BEACH, FOOD, SIGHTS, LOGISTICS, LODGING, SHOPPING, HEALTH, NIGHTLIFE, ACTIVITY, SERVICE. 
-  Place: "${name}". Desc: "${description}". 
-  Return JSON { "category": string, "tags": string[] }`;
-  
+  const prompt = `Place: "${name}". Desc: "${description}". Return JSON { "category": string, "tags": string[] }`;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: prompt,
@@ -306,7 +255,7 @@ async function handleCategorizeAndTag({ name, description }: any) {
 async function handleEnhanceDescription({ name, description }: any) {
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
-    contents: `Mejora esta descripción para una app de turismo (max 150 palabras, tono atractivo): "${description}" para el lugar "${name}".`
+    contents: `Mejora descripción (max 150 palabras) para "${name}": "${description}".`
   });
   return { text: response.text };
 }
@@ -314,7 +263,7 @@ async function handleEnhanceDescription({ name, description }: any) {
 async function handleGenerateTips({ name, category, description }: any) {
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
-    contents: `Dame un consejo "Local" (El Veci) para "${name}" (${category}). Contexto: ${description}. Max 50 palabras.`
+    contents: `Consejo local para "${name}" (${category}). Contexto: ${description}.`
   });
   return { text: response.text };
 }
@@ -322,7 +271,7 @@ async function handleGenerateTips({ name, category, description }: any) {
 async function handleGenerateAltText({ imageUrl }: any) {
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash', 
-    contents: { parts: [{ image: { url: imageUrl } }, { text: "Generate concise alt text for this image (max 15 words)." }] }
+    contents: { parts: [{ image: { url: imageUrl } }, { text: "Alt text (max 15 words)." }] }
   });
   return { text: response.text };
 }
@@ -330,33 +279,14 @@ async function handleGenerateAltText({ imageUrl }: any) {
 async function handleGenerateSeoMetaTags({ name, description, category }: any) {
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
-    contents: `Generate SEO JSON { "metaTitle": string, "metaDescription": string } for "${name}" (${category}). Desc: ${description}.`,
+    contents: `SEO JSON { "metaTitle": string, "metaDescription": string } for "${name}" (${category}).`,
     config: { responseMimeType: 'application/json' }
   });
   return JSON.parse(response.text);
 }
 
 async function handleParseRaw({ text }: any) {
-  const prompt = `
-    Act as a Data Entry Specialist.
-    Analyze this raw text about a place in Cabo Rojo, PR: "${text}"
-    
-    Extract structured data into this JSON format:
-    {
-        "name": string (Title Case),
-        "description": string (Engaging, max 150 chars),
-        "category": string (One of: BEACH, FOOD, SIGHTS, LOGISTICS, LODGING, SHOPPING, HEALTH, NIGHTLIFE, ACTIVITY, SERVICE),
-        "address": string (or empty),
-        "phone": string (or empty),
-        "website": string (or empty),
-        "tips": string (Local tip based on text),
-        "tags": string[],
-        "priceLevel": string ($, $$, $$$),
-        "parking": string (FREE, PAID, NONE),
-        "hasRestroom": boolean,
-        "isPetFriendly": boolean
-    }
-  `;
+  const prompt = `Parse raw text into JSON place data: "${text}". Schema: { name, description, category, address, phone, website, tips, tags, priceLevel, parking, hasRestroom, isPetFriendly }`;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: prompt,
@@ -366,22 +296,7 @@ async function handleParseRaw({ text }: any) {
 }
 
 async function handleParseBulk({ text }: any) {
-  const prompt = `
-    You are a data entry assistant for a tourism app in Cabo Rojo, Puerto Rico.
-    Process this list of raw text (names or descriptions).
-    Return a JSON ARRAY of objects.
-    
-    Input List:
-    ${text}
-
-    For EACH item, guess the following based on the name/context:
-    - name: The clean name of the place.
-    - category: One of [BEACH, FOOD, SIGHTS, LOGISTICS, LODGING, SHOPPING, HEALTH, NIGHTLIFE, ACTIVITY, SERVICE]. Default to SERVICE if unsure.
-    - description: A short, catchy description (max 10 words) in Spanish.
-    - tags: Array of 2-3 keywords.
-    
-    Return ONLY the JSON Array.
-  `;
+  const prompt = `Parse list of places: "${text}". Return JSON Array of Place objects.`;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: prompt,

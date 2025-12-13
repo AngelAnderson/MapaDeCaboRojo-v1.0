@@ -24,7 +24,6 @@ const WeatherWidget: React.FC = () => {
   });
   
   const [quake, setQuake] = useState<EarthQuake | null>(null);
-  const [showQuake, setShowQuake] = useState(false);
 
   const fetchWeather = async () => {
       // Visibility Check
@@ -109,26 +108,25 @@ const WeatherWidget: React.FC = () => {
 
   const fetchQuakes = async () => {
       const q = await getRecentEarthquakes();
-      // Only show if it happened in the last 12 hours
-      if (q && (Date.now() - q.time < 12 * 60 * 60 * 1000)) {
+      // Only show if Magnitude is > 5.0 (Significant) AND happened in last 6 hours
+      // This reduces "noise" from minor tremors
+      if (q && q.mag >= 5.0 && (Date.now() - q.time < 6 * 60 * 60 * 1000)) {
           setQuake(q);
+      } else {
+          setQuake(null);
       }
   };
 
+  // 1. Data Fetching Effect (Runs once + Interval)
   useEffect(() => {
     fetchWeather();
     fetchQuakes();
     
-    const interval = setInterval(fetchWeather, 600000); // 10 mins
+    const interval = setInterval(() => {
+        fetchWeather();
+        fetchQuakes();
+    }, 600000); // 10 mins
     
-    // Cycle between weather and quake alert every 5 seconds if quake exists
-    let cycleInterval: any;
-    if (quake) {
-        cycleInterval = setInterval(() => {
-            setShowQuake(prev => !prev);
-        }, 5000);
-    }
-
     const handleVisibilityChange = () => {
         if (!document.hidden) fetchWeather();
     };
@@ -136,10 +134,9 @@ const WeatherWidget: React.FC = () => {
 
     return () => {
         clearInterval(interval);
-        if (cycleInterval) clearInterval(cycleInterval);
         document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [quake]); // Re-run effect if quake state changes to set up cycler
+  }, []); 
 
   if (weather.loading) {
       return (
@@ -153,38 +150,45 @@ const WeatherWidget: React.FC = () => {
       );
   }
 
-  // Quake Alert View
-  if (showQuake && quake) {
-      return (
-        <div className="bg-amber-50/95 dark:bg-amber-950/90 backdrop-blur-md p-3 rounded-2xl shadow-xl border border-amber-200 dark:border-amber-700/50 pointer-events-auto animate-float flex items-center gap-4 max-w-[280px]">
-            <div className="flex flex-col items-center justify-center w-12 text-center">
-                <i className="fa-solid fa-house-crack text-3xl text-amber-600 dark:text-amber-500 mb-1 animate-bob"></i>
-                <span className="text-sm font-black text-amber-800 dark:text-amber-400 leading-none">{quake.mag.toFixed(1)}</span>
-            </div>
-            <div className="flex-1 border-l border-amber-200 dark:border-amber-800 pl-3">
-                <div className="flex items-center gap-2">
-                    <p className="text-xs font-bold text-amber-700 dark:text-amber-500 uppercase tracking-wider mb-0.5">{t('earthquake_alert')}</p>
-                </div>
-                <p className="text-[10px] text-amber-800 dark:text-amber-200 font-medium leading-tight truncate">{quake.place}</p>
-                <p className="text-[9px] text-amber-600/70 dark:text-amber-400/70 mt-0.5">{new Date(quake.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-            </div>
-        </div>
-      );
-  }
+  // Only show quake mode if a significant quake exists. No more cycling.
+  const isAlertMode = !!quake;
 
+  // Use a stable container so the 'animate-float' class doesn't reset when content changes
   return (
-    <div className={`bg-white/95 dark:bg-slate-900/95 backdrop-blur-md p-3 rounded-2xl shadow-xl border ${weather.isSafe ? 'border-white/50 dark:border-slate-700' : 'border-red-500/50 dark:border-red-500/30'} pointer-events-auto animate-float flex items-center gap-4 max-w-[280px]`}>
-        <div className="flex flex-col items-center justify-center w-12 text-center">
-            <i className={`fa-solid ${weather.icon} text-3xl ${weather.isSafe ? (weather.icon.includes('moon') ? 'text-purple-400' : 'text-orange-500') : 'text-slate-500'} mb-1`}></i>
-            <span className="text-xl font-black text-slate-800 dark:text-white leading-none">{weather.temp}°</span>
-        </div>
-        <div className="flex-1 border-l border-slate-200 dark:border-slate-700 pl-3">
-            <div className="flex items-center gap-2">
-                 <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">{weather.condition}</p>
-                 {!weather.isSafe && <i className="fa-solid fa-triangle-exclamation text-amber-500 text-xs animate-pulse"></i>}
-            </div>
-            <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-tight">{weather.advice}</p>
-        </div>
+    <div className={`backdrop-blur-md p-3 rounded-2xl shadow-xl border pointer-events-auto animate-float flex items-center gap-4 max-w-[280px] transition-colors duration-500 ${
+        isAlertMode 
+        ? 'bg-amber-50/95 dark:bg-amber-950/90 border-amber-200 dark:border-amber-700/50' 
+        : `bg-white/95 dark:bg-slate-900/95 ${weather.isSafe ? 'border-white/50 dark:border-slate-700' : 'border-red-500/50 dark:border-red-500/30'}`
+    }`}>
+        {isAlertMode ? (
+            <>
+                <div className="flex flex-col items-center justify-center w-12 text-center shrink-0">
+                    <i className="fa-solid fa-house-crack text-3xl text-amber-600 dark:text-amber-500 mb-1 animate-bob"></i>
+                    <span className="text-sm font-black text-amber-800 dark:text-amber-400 leading-none">{quake!.mag.toFixed(1)}</span>
+                </div>
+                <div className="flex-1 border-l border-amber-200 dark:border-amber-800 pl-3 min-w-0">
+                    <div className="flex items-center gap-2">
+                        <p className="text-xs font-bold text-amber-700 dark:text-amber-500 uppercase tracking-wider mb-0.5">{t('earthquake_alert')}</p>
+                    </div>
+                    <p className="text-[10px] text-amber-800 dark:text-amber-200 font-medium leading-tight truncate">{quake!.place}</p>
+                    <p className="text-[9px] text-amber-600/70 dark:text-amber-400/70 mt-0.5">{new Date(quake!.time).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                </div>
+            </>
+        ) : (
+            <>
+                <div className="flex flex-col items-center justify-center w-12 text-center shrink-0">
+                    <i className={`fa-solid ${weather.icon} text-3xl ${weather.isSafe ? (weather.icon.includes('moon') ? 'text-purple-400' : 'text-orange-500') : 'text-slate-500'} mb-1`}></i>
+                    <span className="text-xl font-black text-slate-800 dark:text-white leading-none">{weather.temp}°</span>
+                </div>
+                <div className="flex-1 border-l border-slate-200 dark:border-slate-700 pl-3 min-w-0">
+                    <div className="flex items-center gap-2">
+                        <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">{weather.condition}</p>
+                        {!weather.isSafe && <i className="fa-solid fa-triangle-exclamation text-amber-500 text-xs animate-pulse"></i>}
+                    </div>
+                    <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-tight truncate">{weather.advice}</p>
+                </div>
+            </>
+        )}
     </div>
   );
 };
