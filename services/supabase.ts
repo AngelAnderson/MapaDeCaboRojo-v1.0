@@ -180,6 +180,62 @@ const deleteImageFromUrl = async (fullUrl: string) => {
     }
 };
 
+// --- HELPER: DUPLICATE DETECTOR ---
+// Returns string ID of duplicate if found, otherwise null
+const checkForDuplicates = async (name: string, gmapsUrl: string, coords?: { lat: number, lng: number }): Promise<string | null> => {
+    // 1. Google Maps URL Check (Strongest Signal)
+    if (gmapsUrl && gmapsUrl.length > 10) {
+        // Extract ID if possible
+        let cleanUrlFragment = gmapsUrl;
+        if (gmapsUrl.includes('place_id:')) cleanUrlFragment = gmapsUrl.split('place_id:')[1].split('&')[0];
+        else if (gmapsUrl.includes('/place/')) cleanUrlFragment = gmapsUrl.split('/place/')[1].split('/')[0];
+        
+        // Search DB for partial match
+        const { data: urlMatches } = await supabase
+            .from('places')
+            .select('id, name, gmaps_url')
+            .ilike('gmaps_url', `%${cleanUrlFragment}%`)
+            .limit(1);
+            
+        if (urlMatches && urlMatches.length > 0) return `Duplicate URL with: ${urlMatches[0].name}`;
+    }
+
+    // 2. Name Normalization Check
+    const cleanName = name.toLowerCase().trim().replace(/[^\w\s]/gi, ''); // Remove special chars
+    const { data: nameMatches } = await supabase
+        .from('places')
+        .select('id, name')
+        .ilike('name', cleanName) // Case-insensitive exact match
+        .limit(1);
+
+    if (nameMatches && nameMatches.length > 0) return `Duplicate Name with: ${nameMatches[0].name}`;
+
+    // 3. Proximity Check (25 meters)
+    if (coords) {
+        // Note: Ideally use PostGIS, but for this scale, client-side filtering of a small area is fine
+        // We fetch places roughly within 0.001 degrees (~100m) and then refine distance
+        const { data: nearPlaces } = await supabase
+            .from('places')
+            .select('id, name, lat, lon')
+            .gt('lat', coords.lat - 0.001)
+            .lt('lat', coords.lat + 0.001)
+            .gt('lon', coords.lng - 0.001)
+            .lt('lon', coords.lng + 0.001);
+
+        if (nearPlaces) {
+            for (const p of nearPlaces) {
+                if (p.lat && p.lon) {
+                    const dist = Math.sqrt(Math.pow(p.lat - coords.lat, 2) + Math.pow(p.lon - coords.lng, 2));
+                    // Roughly 0.0002 degrees is ~22 meters
+                    if (dist < 0.0002) return `Location too close to: ${p.name}`;
+                }
+            }
+        }
+    }
+
+    return null;
+};
+
 // --- FALLBACK MOCK CLIENT ---
 const createMockClient = () => {
   console.warn("⚠️  SUPABASE KEY MISSING: App running in Offline/Mock Mode. Write operations will be simulated.");
@@ -195,6 +251,7 @@ const createMockClient = () => {
           gt: () => chain,
           lte: () => chain,
           lt: () => chain,
+          ilike: () => chain, // Added for duplicate check
           order: () => chain,
           limit: () => chain,
           single: () => chain,
@@ -615,6 +672,15 @@ export const createPlace = async (place: Partial<Place>): Promise<{ success: boo
         isAdmin = !!session?.user;
         let dbPayload = mapPlaceToDb(place);
         
+        // --- DUPLICATE CHECK (GATEKEEPER) ---
+        // Run checks before insertion
+        const duplicateReason = await checkForDuplicates(dbPayload.name, dbPayload.gmaps_url, place.coords);
+        if (duplicateReason) {
+            console.warn("Duplicate Prevention:", duplicateReason);
+            // Return error to UI
+            return { success: false, error: `Duplicate detected: ${duplicateReason}` };
+        }
+
         if (!isAdmin) {
             // FIX: Use 'closed' instead of 'pending' to satisfy DB enum
             dbPayload.status = 'closed'; 

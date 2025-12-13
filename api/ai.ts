@@ -1,5 +1,5 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
+import { Buffer } from "buffer";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -104,7 +104,7 @@ async function handleChat({ message, history, context }: any) {
     - Clima: ${user_context.weather}
 
     REGLAS ESTRICTAS DE RESPUESTA (ANTI-ALUCINACIÓN):
-    1. **Cero Inventos:** Si el usuario pregunta por un lugar que NO está en la lista 'places', di: "No tengo ese lugar en mi registro oficial, pero te puedo recomendar..." y sugiere uno de la lista que sea similar. NUNCA inventes horarios o menús.
+    1. **Cero Inventos:** Si el usuario pregunta "¿Qué hay para hacer?" o "¿Qué eventos hay?", RESPÓNDELE usando el JSON de lugares y eventos. Si el usuario pregunta por un lugar que NO está en la lista 'places', di: "No tengo ese lugar en mi registro oficial, pero te puedo recomendar..." y sugiere uno de la lista que sea similar. NUNCA inventes horarios o menús.
     2. **Busca por Contexto:** Si el usuario dice "tengo calor", busca lugares con "Aire Acondicionado" o "Playa" en 'full_context'. Si dice "sin luz", busca "Planta Eléctrica".
     3. **Eventos Primero:** Si preguntan "¿Qué hay hoy?", mira la lista de 'events' y compara con la Fecha Actual.
     4. **Privacidad de IDs:** Nunca muestres el UUID en el texto. Úsalo solo en el JSON de respuesta.
