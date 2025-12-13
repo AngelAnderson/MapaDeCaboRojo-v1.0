@@ -21,6 +21,7 @@ import SeoEngine from './SeoEngine';
 import { usePlacesData } from '../hooks/usePlacesData';
 import { useMapEngine } from '../hooks/useMapEngine';
 import { useRouter } from '../hooks/useRouter';
+import { useWeather } from '../hooks/useWeather';
 
 // --- MAP APPLICATION COMPONENT ---
 // This contains the heavy logic for the map view
@@ -32,6 +33,7 @@ const MapApp: React.FC = () => {
   
   // Data State
   const { places, events, categories, publishedPlaces, mappedEvents, loading, refreshData } = usePlacesData();
+  const weather = useWeather(); // Centralized Weather
   
   // Favorites State
   const [savedIds, setSavedIds] = useState<string[]>(() => {
@@ -248,7 +250,7 @@ const MapApp: React.FC = () => {
       />
       
       <header className="absolute top-0 left-0 right-0 z-[1000] px-5 pt-16 md:pt-10 pb-5 pointer-events-none flex justify-between items-start">
-        <WeatherWidget />
+        <WeatherWidget weather={weather} />
         <div className="pointer-events-auto flex flex-col gap-3 items-end">
             {isOffline && (
                 <div className="bg-amber-500 text-white p-2.5 rounded-full shadow-lg border border-white/40 font-bold text-xl w-10 h-10 flex items-center justify-center animate-pulse" title="Signal Saver Mode (Offline)">
@@ -274,7 +276,7 @@ const MapApp: React.FC = () => {
       <ExplorerSheet places={filteredList} onSelect={(p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); handleTabChange('map', false); }} isVisible={activeTab === 'explore'} searchText={searchText} onSearchChange={setSearchText} resultCount={filteredList.length} activeGroup={activeGroup} onCategoryChange={setActiveGroup} focusTrigger={searchFocusTrigger} savedIds={savedIds} onToggleFavorite={toggleFavorite} onSelectCollection={setActiveCollection} activeCollectionId={activeCollection?.id} onCameraClick={() => { setIsConciergeOpen(true); }} userLocation={userLocation || undefined} onTabChange={handleTabChange} categories={categories} />
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} onAction={handleNavAction} />
       {selectedPlace && <PlaceCard place={selectedPlace} allPlaces={publishedPlaces} onSelect={(p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); }} onClose={() => setSelectedPlace(null)} onNavigate={handleNavigate} onAskAi={() => setIsConciergeOpen(true)} onSuggestEdit={() => { setIsContactOpen(true); }} isFavorite={savedIds.includes(selectedPlace.id)} onToggleFavorite={() => toggleFavorite(selectedPlace.id)} userLocation={userLocation || undefined} />}
-      <Concierge isOpen={isConciergeOpen} onClose={() => setIsConciergeOpen(false)} places={publishedPlaces} events={events} onNavigateToPlace={handleChatNavigation} userLocation={userLocation || undefined} />
+      <Concierge isOpen={isConciergeOpen} onClose={() => setIsConciergeOpen(false)} places={publishedPlaces} events={events} onNavigateToPlace={handleChatNavigation} userLocation={userLocation || undefined} weather={weather} />
       <SuggestPlaceModal isOpen={isSuggestOpen} onClose={() => setIsSuggestOpen(false)} />
       <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} onSuggest={() => { setIsContactOpen(false); setIsSuggestOpen(true); }} onChat={() => { setIsContactOpen(false); setIsConciergeOpen(true); }} />
       {isAdminOpen && <Admin onClose={() => setIsAdminOpen(false)} places={places} events={events} categories={categories} onUpdate={refreshData} />}
@@ -284,15 +286,12 @@ const MapApp: React.FC = () => {
 };
 
 // --- ROOT ROUTER COMPONENT ---
-// Robust router handling search params and hash changes
 const App: React.FC = () => {
   const [currentRoute, setCurrentRoute] = useState<'map' | 'suggest'>('map');
 
   useEffect(() => {
-    // Determine route based on URL
     const checkRoute = () => {
       if (typeof window === 'undefined') return;
-      
       const searchParams = new URLSearchParams(window.location.search);
       const hash = window.location.hash;
       const path = window.location.pathname;
@@ -303,14 +302,9 @@ const App: React.FC = () => {
         setCurrentRoute('map');
       }
     };
-
-    // Check immediately
     checkRoute();
-
-    // Listen for navigation changes
     window.addEventListener('popstate', checkRoute);
     window.addEventListener('hashchange', checkRoute);
-    
     return () => {
       window.removeEventListener('popstate', checkRoute);
       window.removeEventListener('hashchange', checkRoute);

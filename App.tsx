@@ -20,6 +20,7 @@ import SeoEngine from './components/SeoEngine';
 import { usePlacesData } from './hooks/usePlacesData';
 import { useMapEngine } from './hooks/useMapEngine';
 import { useRouter } from './hooks/useRouter';
+import { useWeather } from './hooks/useWeather';
 
 // --- MAIN COMPONENT ---
 
@@ -31,6 +32,7 @@ const MainApp: React.FC = () => {
   
   // Data State - Now includes categories
   const { places, events, categories, publishedPlaces, mappedEvents, loading, refreshData } = usePlacesData();
+  const weather = useWeather();
   
   // Favorites State
   const [savedIds, setSavedIds] = useState<string[]>(() => {
@@ -224,7 +226,7 @@ const MainApp: React.FC = () => {
       />
       
       <header className="absolute top-0 left-0 right-0 z-[1000] p-5 pointer-events-none flex justify-between items-start">
-        <WeatherWidget />
+        <WeatherWidget weather={weather} />
         <div className="pointer-events-auto flex flex-col gap-3 items-end">
             <button 
               onClick={() => setMapStyle(prev => prev === 'standard' ? 'satellite' : 'standard')}
@@ -314,6 +316,7 @@ const MainApp: React.FC = () => {
         events={events} 
         onNavigateToPlace={handleChatNavigation}
         userLocation={userLocation || undefined}
+        weather={weather}
       />
       
       <SuggestPlaceModal isOpen={isSuggestOpen} onClose={() => setIsSuggestOpen(false)} />

@@ -3,31 +3,60 @@ import { useState, useEffect } from 'react';
 import { Place, Event, ChatMessage, Coordinates } from '../types';
 import { sendConciergeMessage, identifyPlaceFromImage, generateTripItinerary } from '../services/aiService'; 
 import { logUserActivity } from '../services/supabase';
+import { WeatherState } from './useWeather';
 
-export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordinates) => {
+export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordinates, weatherState?: WeatherState) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [weatherContext, setWeatherContext] = useState<string>('');
   
-  // 1. Init Weather
-  useEffect(() => {
-    const fetchWeather = async () => {
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 2000);
-            
-            const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=18.0262&longitude=-67.1725&current=temperature_2m,weather_code&temperature_unit=fahrenheit&timezone=America%2FPuerto_Rico', { signal: controller.signal });
-            clearTimeout(timeoutId);
-            const data = await res.json();
-            setWeatherContext(`${Math.round(data.current.temperature_2m)}°F`);
-        } catch(e) { setWeatherContext("Tropical"); }
-    };
-    fetchWeather();
-  }, []);
+  // --- OFFICIAL TIME FETCHER ---
+  // Fetches atomic time for PR to prevent device-clock based hallucinations
+  const getPuertoRicoTime = async () => {
+      try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s Timeout
+          
+          // Free API: TimeAPI.io
+          const res = await fetch('https://timeapi.io/api/Time/current/zone?timeZone=America/Puerto_Rico', { 
+              signal: controller.signal 
+          });
+          clearTimeout(timeoutId);
+          
+          if (!res.ok) throw new Error("TimeAPI failed");
+          
+          const data = await res.json();
+          return {
+              year: data.year,
+              month: data.month,
+              day: data.day,
+              weekday: data.dayOfWeek, // e.g. "Monday"
+              time: data.time, // "14:30"
+              dateStr: data.date, // "10/24/2025"
+              success: true
+          };
+      } catch (e) {
+          console.warn("TimeAPI failed, falling back to system time", e);
+          // Fallback: Local System Time converted to PR
+          const now = new Date();
+          const prString = now.toLocaleString("en-US", { timeZone: "America/Puerto_Rico" });
+          const prDate = new Date(prString);
+          const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          
+          return {
+              year: prDate.getFullYear(),
+              month: prDate.getMonth() + 1,
+              day: prDate.getDate(),
+              weekday: days[prDate.getDay()],
+              time: `${prDate.getHours()}:${String(prDate.getMinutes()).padStart(2, '0')}`,
+              dateStr: `${prDate.getMonth() + 1}/${prDate.getDate()}/${prDate.getFullYear()}`,
+              success: false
+          };
+      }
+  };
 
-  // 2. Handlers
+  // Handlers
   const handleSend = async (overrideText?: string) => {
     const text = overrideText || input;
     if (!text.trim() || isLoading) return;
@@ -40,45 +69,31 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
     logUserActivity('USER_CHAT', text);
 
     try {
-        // --- STRICT DATE CONSTRUCTION ---
-        // Create a date object relative to PR time
-        const prFormatter = new Intl.DateTimeFormat('en-US', {
-            timeZone: 'America/Puerto_Rico',
-            year: 'numeric',
-            month: 'numeric',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric',
-            weekday: 'long',
-            hour12: false
-        });
-        
-        // This gives us parts we can trust relative to PR, regardless of user's local device time
-        const parts = prFormatter.formatToParts(new Date());
-        const getPart = (type: string) => parts.find(p => p.type === type)?.value || '';
-        
-        const year = getPart('year');
-        const month = getPart('month');
-        const day = getPart('day');
-        const weekday = getPart('weekday');
-        const hour = getPart('hour');
-        const minute = getPart('minute');
+        // 1. Get Absolute Truth Time
+        const timeData = await getPuertoRicoTime();
 
-        // Readable strings
-        const humanDate = `${weekday}, ${day}/${month}/${year}`;
-        const humanTime = `${hour}:${minute}`;
-        const isoShort = `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
+        // 2. Format Dates for AI Context
+        const humanDate = `${timeData.weekday}, ${timeData.day}/${timeData.month}/${timeData.year}`;
+        const isoShort = `${timeData.year}-${String(timeData.month).padStart(2,'0')}-${String(timeData.day).padStart(2,'0')}`;
+
+        // 3. Get Weather from Shared State (Centralized Source of Truth)
+        // If weatherState is missing (race condition), fallback to generic
+        const weatherString = weatherState 
+            ? `${weatherState.temp}°F, ${weatherState.condition} (Advice: ${weatherState.advice})` 
+            : 'Tropical (85°F)';
+        
+        const isRaining = weatherState?.condition?.toLowerCase().includes('rain') || weatherState?.condition?.toLowerCase().includes('lluvia') || false;
 
         const contextInfo = {
             date: humanDate, 
-            time: humanTime,
+            time: timeData.time,
             iso_date: isoShort, 
-            // Flat structure for easier AI parsing
-            current_day: weekday,
-            current_year: year,
-            current_month: month,
-            current_date_num: day,
-            weather: weatherContext || 'Tropical'
+            current_day: timeData.weekday,
+            current_year: timeData.year,
+            current_month: timeData.month,
+            current_date_num: timeData.day,
+            weather: weatherString,
+            is_raining: isRaining
         };
 
         const response = await sendConciergeMessage(

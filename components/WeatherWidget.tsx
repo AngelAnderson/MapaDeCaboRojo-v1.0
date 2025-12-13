@@ -2,114 +2,19 @@
 import React, { useEffect, useState } from 'react';
 import { getRecentEarthquakes, EarthQuake } from '../services/externalServices';
 import { useLanguage } from '../i18n/LanguageContext';
+import { WeatherState } from '../hooks/useWeather';
 
-interface WeatherState {
-  temp: number;
-  condition: string;
-  advice: string;
-  icon: string;
-  loading: boolean;
-  isSafe: boolean; 
+interface WeatherWidgetProps {
+  weather: WeatherState;
 }
 
-const WeatherWidget: React.FC = () => {
+const WeatherWidget: React.FC<WeatherWidgetProps> = ({ weather }) => {
   const { t } = useLanguage();
-  const [weather, setWeather] = useState<WeatherState>({
-    temp: 0,
-    condition: '',
-    advice: t('weather_loading'),
-    icon: 'fa-sun',
-    loading: true,
-    isSafe: true,
-  });
-  
   const [quake, setQuake] = useState<EarthQuake | null>(null);
-
-  const fetchWeather = async () => {
-      // Visibility Check
-      if (document.hidden) return;
-
-      try {
-        const LAT = 18.0262; 
-        const LNG = -67.1725;
-        const timestamp = new Date().getTime();
-        
-        const res = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LNG}&current=apparent_temperature,weather_code,wind_speed_10m,is_day&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FPuerto_Rico&t=${timestamp}`
-        );
-        const data = await res.json();
-        
-        const current = data.current;
-        const temp = Math.round(current.apparent_temperature);
-        const code = current.weather_code;
-        const wind = current.wind_speed_10m;
-        const isDay = current.is_day === 1;
-
-        let condition = t('weather_sunny');
-        let advice = t('weather_advice_beach');
-        let icon = isDay ? 'fa-sun' : 'fa-moon';
-        let isSafe = true;
-
-        if (code >= 95) {
-            condition = t('weather_storm');
-            advice = t('weather_advice_storm');
-            icon = 'fa-cloud-bolt';
-            isSafe = false;
-        } else if (code >= 61 || (code >= 80 && code <= 82)) {
-            condition = t('weather_rain');
-            advice = t('weather_advice_rain');
-            icon = 'fa-cloud-showers-heavy';
-            isSafe = false;
-        } else if (code >= 51) {
-            condition = t('weather_drizzle');
-            advice = t('weather_advice_drizzle');
-            icon = 'fa-cloud-rain';
-        } else if (code === 3) {
-            condition = t('weather_cloudy');
-            advice = t('weather_advice_cloudy');
-            icon = 'fa-cloud';
-        } else if (code === 2) {
-            condition = t('weather_partial_cloudy');
-            advice = t('weather_advice_partial_cloudy');
-            icon = isDay ? 'fa-cloud-sun' : 'fa-cloud-moon';
-        } else if (code === 1) {
-            condition = t('weather_clear'); 
-            advice = t('weather_advice_clear');
-            icon = isDay ? 'fa-sun' : 'fa-moon';
-        } else {
-            condition = isDay ? t('weather_sunny') : t('weather_clear');
-            advice = isDay ? t('weather_advice_hot') : t('weather_advice_stars');
-            icon = isDay ? 'fa-sun' : 'fa-moon';
-        }
-
-        if (temp > 100) {
-            advice = t('weather_advice_infernal_heat');
-            icon = 'fa-temperature-arrow-up';
-        }
-        if (wind > 18) {
-            advice = t('weather_advice_strong_wind');
-            icon = 'fa-wind';
-            isSafe = false;
-        }
-
-        setWeather({ temp, condition, advice, icon, loading: false, isSafe });
-
-      } catch (e) {
-        setWeather({
-            temp: 85,
-            condition: t('weather_tropical'),
-            advice: t('weather_advice_default'),
-            icon: 'fa-umbrella-beach',
-            loading: false,
-            isSafe: true
-        });
-      }
-  };
 
   const fetchQuakes = async () => {
       const q = await getRecentEarthquakes();
       // Only show if Magnitude is > 5.0 (Significant) AND happened in last 6 hours
-      // This reduces "noise" from minor tremors
       if (q && q.mag >= 5.0 && (Date.now() - q.time < 6 * 60 * 60 * 1000)) {
           setQuake(q);
       } else {
@@ -117,25 +22,10 @@ const WeatherWidget: React.FC = () => {
       }
   };
 
-  // 1. Data Fetching Effect (Runs once + Interval)
   useEffect(() => {
-    fetchWeather();
     fetchQuakes();
-    
-    const interval = setInterval(() => {
-        fetchWeather();
-        fetchQuakes();
-    }, 600000); // 10 mins
-    
-    const handleVisibilityChange = () => {
-        if (!document.hidden) fetchWeather();
-    };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-
-    return () => {
-        clearInterval(interval);
-        document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
+    const interval = setInterval(fetchQuakes, 600000); // 10 mins
+    return () => clearInterval(interval);
   }, []); 
 
   if (weather.loading) {
@@ -150,10 +40,8 @@ const WeatherWidget: React.FC = () => {
       );
   }
 
-  // Only show quake mode if a significant quake exists. No more cycling.
   const isAlertMode = !!quake;
 
-  // Use a stable container so the 'animate-float' class doesn't reset when content changes
   return (
     <div className={`backdrop-blur-md p-3 rounded-2xl shadow-xl border pointer-events-auto animate-float flex items-center gap-4 max-w-[280px] transition-colors duration-500 ${
         isAlertMode 

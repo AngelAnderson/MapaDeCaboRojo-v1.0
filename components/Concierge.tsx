@@ -4,6 +4,7 @@ import { ChatMessage, Place, Event, Coordinates } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useConcierge } from '../hooks/useConcierge';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
+import { WeatherState } from '../hooks/useWeather';
 
 interface ConciergeProps {
   isOpen: boolean;
@@ -12,15 +13,16 @@ interface ConciergeProps {
   events: Event[];
   onNavigateToPlace: (place: Place) => void;
   userLocation?: Coordinates;
+  weather?: WeatherState; // Added prop
 }
 
-const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, onNavigateToPlace, userLocation }) => {
+const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, onNavigateToPlace, userLocation, weather }) => {
   const { t, language } = useLanguage();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Use Custom Hook
-  const { messages, input, setInput, isLoading, isListening, handleSend, handleImageUpload, handlePlanTrip, setIsListening } = useConcierge(places, events, userLocation);
+  // Use Custom Hook with Weather State
+  const { messages, input, setInput, isLoading, isListening, handleSend, handleImageUpload, handlePlanTrip, setIsListening } = useConcierge(places, events, userLocation, weather);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
