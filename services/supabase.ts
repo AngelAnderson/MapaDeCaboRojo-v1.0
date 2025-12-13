@@ -264,6 +264,7 @@ const createMockClient = () => {
           order: () => chain,
           limit: () => chain,
           single: () => chain,
+          maybeSingle: () => chain, // Added for checkDataVersion
           upload: () => Promise.resolve({ data: { path: "mock_path" }, error: null }),
           getPublicUrl: () => ({ data: { publicUrl: "https://picsum.photos/seed/mock/800/600" } }),
           remove: () => Promise.resolve({ data: [], error: null }),
@@ -437,6 +438,57 @@ export const loginAdmin = async (email: string, password: string) => {
 export const checkSession = async () => {
     const { data } = await supabase.auth.getSession();
     return !!data.session;
+};
+
+// --- VERSION CHECK / HEARTBEAT ---
+export const checkDataVersion = async (): Promise<void> => {
+    try {
+        // 1. Get latest mutation log from server (High-water mark)
+        // We check for specific actions that imply data structure/content changes
+        const { data, error } = await supabase
+            .from('admin_logs')
+            .select('created_at')
+            .in('action', [
+                'CREATE', 'UPDATE', 'DELETE', 
+                'CREATE_EVENT', 'UPDATE_EVENT', 'DELETE_EVENT', 
+                'CREATE_CAT', 'UPDATE_CAT', 'DELETE_CAT',
+                'SYNC_G_PLACES', 'SYNC_VIBE', 'SYNC_WEATHER' // Include automated syncs
+            ])
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle(); 
+
+        if (error) {
+             console.warn("Heartbeat check failed (Offline?):", error.message);
+             return;
+        }
+
+        const serverTimeStr = data?.created_at;
+        if (!serverTimeStr) return; // No logs yet, assume fresh
+
+        // 2. Get local version
+        const localTimeStr = await get('cabo_data_version');
+        
+        const serverTime = new Date(serverTimeStr).getTime();
+        const localTime = localTimeStr ? new Date(localTimeStr).getTime() : 0;
+
+        // Tolerance: 2 seconds to avoid race conditions with own updates
+        if (serverTime > (localTime + 2000)) {
+            console.log(`♻️ Global Update Detected! Server: ${serverTimeStr} > Local: ${localTimeStr}`);
+            
+            // Invalidate all data caches
+            await invalidateCache('PLACES');
+            await invalidateCache('EVENTS');
+            await invalidateCache('CATEGORIES');
+            
+            // Update local version
+            await set('cabo_data_version', serverTimeStr);
+        } else {
+            console.log("✅ Data is up to date.");
+        }
+    } catch (e) {
+        console.warn("Version Check Error:", e);
+    }
 };
 
 // --- PUBLIC METHODS ---

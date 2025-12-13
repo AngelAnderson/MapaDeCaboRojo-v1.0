@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Place, Event, PlaceCategory, ParkingStatus, Category } from '../types';
-import { getPlaces, getEvents, getCategories } from '../services/supabase';
+import { getPlaces, getEvents, getCategories, checkDataVersion } from '../services/supabase';
 import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, DEFAULT_CATEGORIES } from '../constants';
 
 export const usePlacesData = () => {
@@ -14,6 +14,12 @@ export const usePlacesData = () => {
   useEffect(() => {
     const initData = async () => {
         try {
+            console.log("Syncing...");
+            
+            // 1. Heartbeat Check
+            await checkDataVersion();
+
+            // 2. Load Data (will hit network if cache was cleared, or cache if valid)
             console.log("Fetching real data...");
             const [realPlaces, realEvents, realCategories] = await Promise.all([
                 getPlaces(),
