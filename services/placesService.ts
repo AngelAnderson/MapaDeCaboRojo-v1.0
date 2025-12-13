@@ -3,6 +3,21 @@
 import { Place, PlaceCategory, ParkingStatus, Coordinates, DaySchedule } from "../types";
 import { escapeHTML } from './supabase'; // Import the HTML escaper
 
+// Helper to generate UUIDv4 for Google Session Tokens
+export const generateSessionToken = (): string => {
+    try {
+        if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+            return crypto.randomUUID();
+        }
+    } catch (e) {}
+    
+    // Fallback for older browsers
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+};
+
 // Helper to call our Places API Proxy
 const callPlacesProxy = async (action: string, params: Record<string, string>) => {
     const query = new URLSearchParams(params).toString();
@@ -46,10 +61,13 @@ interface AutocompletePrediction {
     };
 }
 
-export const autocompletePlace = async (query: string): Promise<AutocompletePrediction[]> => {
+export const autocompletePlace = async (query: string, sessionToken?: string): Promise<AutocompletePrediction[]> => {
     if (!query) return [];
     try {
-        const res = await callPlacesProxy('autocomplete', { query });
+        const params: any = { query };
+        if (sessionToken) params.session_token = sessionToken;
+        
+        const res = await callPlacesProxy('autocomplete', params);
         return res.predictions || [];
     } catch (e) {
         console.error("Autocomplete failed:", e);
@@ -59,12 +77,17 @@ export const autocompletePlace = async (query: string): Promise<AutocompletePred
 
 export const findCoordinates = async (query: string): Promise<{ lat: number, lng: number } | null> => {
     if (!query) return null;
+    
+    // Create a temporary session token for this specific lookup flow to save costs
+    // This groups the autocomplete search + details fetch into one transaction
+    const sessionToken = generateSessionToken();
+
     try {
         // First try to get a place_id via autocomplete
-        const predictions = await autocompletePlace(query);
+        const predictions = await autocompletePlace(query, sessionToken);
         if (predictions.length > 0) {
             const placeId = predictions[0].place_id;
-            const details = await fetchPlaceDetails(placeId); // Re-use fetchPlaceDetails
+            const details = await fetchPlaceDetails(placeId, sessionToken); // Use same token
             if (details?.coords) {
                 return details.coords;
             }
@@ -76,7 +99,7 @@ export const findCoordinates = async (query: string): Promise<{ lat: number, lng
     }
 };
 
-export const fetchPlaceDetails = async (queryOrPlaceId: string): Promise<Partial<Place> | null> => {
+export const fetchPlaceDetails = async (queryOrPlaceId: string, sessionToken?: string): Promise<Partial<Place> | null> => {
     if (!queryOrPlaceId) return null;
 
     let placeId: string | null = null;
@@ -92,7 +115,7 @@ export const fetchPlaceDetails = async (queryOrPlaceId: string): Promise<Partial
             // Or extract readable name from URL for autocomplete
             const nameFromUrl = decodeURIComponent(queryOrPlaceId.split('/').pop()?.split('?')[0] || '');
             if (nameFromUrl) {
-                const predictions = await autocompletePlace(nameFromUrl);
+                const predictions = await autocompletePlace(nameFromUrl, sessionToken);
                 if (predictions.length > 0) {
                     placeId = predictions[0].place_id;
                 }
@@ -101,7 +124,7 @@ export const fetchPlaceDetails = async (queryOrPlaceId: string): Promise<Partial
     } else if (queryOrPlaceId.startsWith('ChI')) { // Direct Place ID
         placeId = queryOrPlaceId;
     } else { // Assume it's a place name, try to autocomplete
-        const predictions = await autocompletePlace(queryOrPlaceId);
+        const predictions = await autocompletePlace(queryOrPlaceId, sessionToken);
         if (predictions.length > 0) {
             placeId = predictions[0].place_id;
         }
@@ -113,7 +136,10 @@ export const fetchPlaceDetails = async (queryOrPlaceId: string): Promise<Partial
     }
 
     try {
-        const res = await callPlacesProxy('details', { place_id: placeId });
+        const params: any = { place_id: placeId };
+        if (sessionToken) params.session_token = sessionToken;
+
+        const res = await callPlacesProxy('details', params);
         const data = res.result;
 
         if (!data || !data.name) return null;

@@ -8,7 +8,7 @@ export default async function handler(req: any, res: any) {
   }
 
   // Handle query params from req.query (Standard Node/Vercel)
-  const { action, query, place_id, reference } = req.query;
+  const { action, query, place_id, reference, session_token } = req.query;
   
   const apiKey = process.env.GOOGLE_PLACES_API_KEY || process.env.VITE_GOOGLE_PLACES_API_KEY;
 
@@ -21,10 +21,12 @@ export default async function handler(req: any, res: any) {
 
     if (action === 'autocomplete' && query) {
       googlePlacesUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query as string)}&components=country:pr&language=es&key=${apiKey}`;
+      if (session_token) googlePlacesUrl += `&sessiontoken=${encodeURIComponent(session_token as string)}`;
     } 
     else if (action === 'details' && place_id) {
       // Added 'reviews' to fields
       googlePlacesUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(place_id as string)}&fields=name,formatted_address,geometry,website,international_phone_number,opening_hours,price_level,rating,photos,editorial_summary,reviews&language=es&key=${apiKey}`;
+      if (session_token) googlePlacesUrl += `&sessiontoken=${encodeURIComponent(session_token as string)}`;
     } 
     else if (action === 'photo' && reference) {
       // 1. Construct the Google Photo URL

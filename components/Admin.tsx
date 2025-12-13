@@ -4,7 +4,7 @@ import html2canvas from 'html2canvas';
 import { Place, Event, PlaceCategory, ParkingStatus, EventCategory, AdminLog, DaySchedule, Category, InsightSnapshot } from '../types';
 import { updatePlace, deletePlace, createPlace, updateEvent, deleteEvent, createEvent, getAdminLogs, uploadImage, loginAdmin, checkSession, createCategory, updateCategory, deleteCategory, saveInsightSnapshot, getLatestInsights } from '../services/supabase';
 import { generateMarketingCopy, categorizeAndTagPlace, enhanceDescription, generateElVeciTip, generateImageAltText, generateSeoMetaTags, analyzeUserDemand, parsePlaceFromRawText, parseBulkPlaces } from '../services/aiService'; 
-import { fetchPlaceDetails, autocompletePlace } from '../services/placesService';
+import { fetchPlaceDetails, autocompletePlace, generateSessionToken } from '../services/placesService';
 import { useLanguage } from '../i18n/LanguageContext';
 import { translations } from '../i18n/translations';
 import { DEFAULT_PLACE_ZOOM, DEFAULT_CATEGORIES } from '../constants';
@@ -18,6 +18,7 @@ interface AdminProps {
   onUpdate: () => void;
 }
 
+// ... (Keep Section, InputGroup, StyledInput, StyledSelect, StyledTextArea, Toggle, Toast components unchanged)
 const Section = ({ title, icon, children }: { title: string, icon: string, children?: React.ReactNode }) => (
     <div className="bg-slate-800/50 rounded-2xl border border-slate-700 overflow-hidden mb-6">
         <div className="bg-slate-800/80 px-4 py-3 border-b border-slate-700 flex items-center gap-2">
@@ -157,6 +158,9 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
   const [importQuery, setImportQuery] = useState('');
   const [importLoading, setImportLoading] = useState(false);
   
+  // Google Maps Session Token (Cost optimization)
+  const [sessionToken, setSessionToken] = useState(() => generateSessionToken());
+  
   // Bulk & Magic State
   const [bulkMode, setBulkMode] = useState(false);
   const [bulkInput, setBulkInput] = useState('');
@@ -205,13 +209,16 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
 
   useEffect(() => {
     if ((activeTab === 'logs' || activeTab === 'insights') && isAuthenticated) {
+      // ... (Rest of logs logic)
       const limit = activeTab === 'insights' ? 500 : 50;
       getAdminLogs(limit).then(fetchedLogs => {
           setLogs(fetchedLogs);
+          // ...
           const uLogs = fetchedLogs.filter(l => ['USER_SEARCH', 'USER_CHAT'].includes(l.action));
           const sLogs = fetchedLogs.filter(l => !['USER_SEARCH', 'USER_CHAT'].includes(l.action));
           setUserLogs(uLogs);
           setSystemLogs(sLogs);
+          // ...
           const searchCounts: Record<string, number> = {};
           uLogs.filter(l => l.action === 'USER_SEARCH').forEach(l => {
               const term = l.place_name.trim().toLowerCase();
@@ -247,7 +254,8 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
     if (importQuery.length > 2) {
       autocompleteTimeoutRef.current = window.setTimeout(async () => {
         try {
-          const suggestions = await autocompletePlace(importQuery);
+          // Pass current session token
+          const suggestions = await autocompletePlace(importQuery, sessionToken);
           setAutocompleteSuggestions(suggestions);
         } catch (e) {
           console.error("Autocomplete fetch error:", e);
@@ -258,10 +266,9 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
       setAutocompleteSuggestions([]);
     }
     return () => { if (autocompleteTimeoutRef.current) clearTimeout(autocompleteTimeoutRef.current); };
-  }, [importQuery]);
+  }, [importQuery, sessionToken]); // Added sessionToken dependancy
 
-  // --- ACTIONS ---
-
+  // ... (ACTIONS methods like handleLogin, showToast, handleGetLocation, handleGoogleSync remain same)
   const handleLogin = async () => {
       if (!email || !password) return showToast(t('admin_enter_credentials'), 'error');
       setAuthLoading(true);
@@ -317,12 +324,12 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
   const handleSmartImport = async (text: string) => {
       if (!text) return;
       setImportLoading(true);
-      // Hide suggestions immediately upon selection
       setAutocompleteSuggestions([]); 
       try {
-          // Check if URL or Autocomplete result (usually text)
           if (text.includes('http') || text.includes('maps')) {
-              const details = await fetchPlaceDetails(text);
+              // Note: Google Maps URLs don't support session tokens directly for details in the same way autocomplete does
+              // but we pass it anyway in case it was a place_id reference
+              const details = await fetchPlaceDetails(text, sessionToken);
               if (details) {
                   setEditingPlace(prev => ({ ...prev, ...details }));
                   showToast("Imported from Google Maps!", 'success');
@@ -330,8 +337,8 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                   showToast("Could not resolve URL.", 'error');
               }
           } else {
-              // It might be a name from autocomplete or raw text
-              const details = await fetchPlaceDetails(text);
+              // Pass the session token to link with previous autocomplete
+              const details = await fetchPlaceDetails(text, sessionToken);
               if (details) {
                   setEditingPlace(prev => ({ ...prev, ...details }));
                   showToast("Imported from Google!", 'success');
@@ -351,9 +358,13 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
       } finally {
           setImportLoading(false);
           setImportQuery('');
+          // Regenerate token after successful use to start a new billing session
+          setSessionToken(generateSessionToken());
       }
   };
 
+  // ... (Rest of bulk magic, save logic, delete logic, ai helpers, schedule logic - unchanged)
+  
   const handleBulkMagic = async () => {
       if (!bulkInput) return;
       setBulkProcessing(true);
@@ -470,6 +481,28 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
           showToast("Failed to generate image. Check console.", 'error');
       } finally {
           setIsGeneratingCard(false);
+      }
+  };
+
+  // ADDED: Image Upload Handler
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      
+      setIsUploading(true);
+      try {
+          const res = await uploadImage(file);
+          if (res.success && res.url) {
+              setEditingPlace(prev => ({ ...prev!, imageUrl: res.url })); // Non-null assertion on prev since this is only active when editingPlace is set
+              showToast("Image uploaded successfully", 'success');
+          } else {
+              showToast(res.error || "Upload failed", 'error');
+          }
+      } catch (err) {
+          showToast("Upload error", 'error');
+      } finally {
+          setIsUploading(false);
+          if (fileInputRef.current) fileInputRef.current.value = '';
       }
   };
 
@@ -610,6 +643,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
 
   // --- AUTH UI ---
   if (!isAuthenticated) {
+    // ... (Login form unchanged)
     return (
         <div className="fixed inset-0 bg-slate-900/90 z-[5000] flex items-center justify-center p-4 backdrop-blur-md">
             {toast && <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
@@ -669,6 +703,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
       {toast && <Toast message={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
 
       <header className="bg-slate-900 border-b border-slate-700 p-3 flex justify-between items-center shadow-md z-20 h-16 shrink-0">
+        {/* ... (Header content mostly unchanged) ... */}
         {isEditing ? (
             <div className="flex items-center gap-3 w-full">
                 <button 
@@ -698,6 +733,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
             </div>
         ) : (
             <div className="flex items-center justify-between w-full">
+                {/* ... Main Header ... */}
                 <div className="flex items-center gap-3">
                     <div className="bg-teal-600 w-8 h-8 rounded-lg flex items-center justify-center shadow-lg shadow-teal-500/20"><i className="fa-solid fa-lock text-white text-xs"></i></div>
                     <span className="font-black text-lg tracking-tight">Admin</span>
@@ -721,7 +757,9 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
 
       {/* BODY CONTENT */}
       <div className="flex-1 overflow-hidden flex relative">
+        {/* ... (Sidebar logic unchanged) ... */}
         <div className={`w-full md:w-80 border-r border-slate-700 bg-slate-900 flex flex-col ${isEditing || bulkMode ? 'hidden md:flex' : 'flex'} ${activeTab === 'insights' || activeTab === 'logs' ? 'hidden md:hidden' : ''}`}>
+            {/* ... (Keep sidebar sections for places, inbox, events, categories) ... */}
             {activeTab === 'places' && (
                 <>
                     <div className="flex gap-2 p-2">
@@ -744,8 +782,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                     </div>
                 </>
             )}
-
-            {/* INBOX TAB SIDEBAR */}
+            {/* ... (Keep Inbox, Events, Categories sidebars same as existing) ... */}
             {activeTab === 'inbox' && (
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
                     {pendingPlaces.length === 0 && <div className="text-center p-8 text-slate-500 text-xs font-bold">No pending places</div>}
@@ -760,8 +797,6 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                     ))}
                 </div>
             )}
-
-            {/* EVENTS TAB SIDEBAR */}
             {activeTab === 'events' && (
                 <>
                     <div className="p-2">
@@ -782,8 +817,6 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                     </div>
                 </>
             )}
-
-            {/* CATEGORIES TAB SIDEBAR */}
             {activeTab === 'categories' && (
                 <>
                     <div className="p-2">
@@ -891,6 +924,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                         </div>
                     )}
 
+                    {/* ... (Keep all existing sections: basic info, location, media, operations, schedule, amenities, vibe, seo, marketing) ... */}
                     <div className="flex justify-between items-center mb-6 bg-slate-800 p-4 rounded-xl border border-slate-700">
                         <span className="font-mono text-xs text-slate-500">{editingPlace.id || 'NEW RECORD'}</span>
                         <div className="flex items-center gap-3">
@@ -970,8 +1004,17 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                         <InputGroup label="Image URL">
                             <div className="flex gap-2">
                                 <StyledInput value={editingPlace.imageUrl || ''} onChange={e => setEditingPlace({...editingPlace, imageUrl: e.target.value})} />
-                                <button onClick={() => window.open(editingPlace.imageUrl, '_blank')} disabled={!editingPlace.imageUrl} className="bg-slate-700 text-white px-4 rounded-xl"><i className="fa-solid fa-eye"></i></button>
+                                <button 
+                                    onClick={() => fileInputRef.current?.click()} 
+                                    disabled={isUploading}
+                                    className="bg-slate-700 text-white px-4 rounded-xl flex items-center justify-center min-w-[50px] hover:bg-slate-600 transition-colors"
+                                    title="Upload Image"
+                                >
+                                    {isUploading ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-upload"></i>}
+                                </button>
+                                <button onClick={() => window.open(editingPlace.imageUrl, '_blank')} disabled={!editingPlace.imageUrl} className="bg-slate-700 text-white px-4 rounded-xl hover:bg-slate-600 transition-colors"><i className="fa-solid fa-eye"></i></button>
                             </div>
+                            <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
                         </InputGroup>
                         {editingPlace.imageUrl && <img src={editingPlace.imageUrl} alt="Preview" className="w-full h-48 object-cover rounded-xl mt-2 mb-4 border border-slate-700" />}
                         <InputGroup label="Image Position (Object-Position)" description="Useful for cropping headers properly.">
@@ -1182,7 +1225,8 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                 </div>
             )}
 
-            {/* EVENT EDITOR */}
+            {/* EVENT EDITOR, CATEGORY EDITOR, LOGS, INSIGHTS views unchanged ... */}
+            {/* ... */}
             {activeTab === 'events' && editingEvent && (
                 <div className="p-4 md:p-8 max-w-3xl mx-auto pb-32 animate-slide-up">
                     <div className="flex justify-between items-center mb-6 bg-slate-800 p-4 rounded-xl border border-slate-700">
