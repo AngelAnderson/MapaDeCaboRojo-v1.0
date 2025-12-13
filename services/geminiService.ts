@@ -38,11 +38,16 @@ const getHoursString = (place: Place, dayIndex: number): string => {
 // Optimized for Token Economy: Sends only essential data for decision making
 const prepareAiContext = (places: Place[], events: Event[], userLoc: Coordinates | undefined, contextInfo: any) => {
     
-    // 1. Establish "NOW" in Puerto Rico Time
-    // contextInfo.iso is a string like "2023-12-25T14:30:00" representing wall-clock time in PR.
-    // We create a Date object from it. In many environments this treats it as Local/UTC, 
-    // but crucially, it establishes a comparable numeric timestamp for sorting.
-    const prNow = contextInfo.iso ? new Date(contextInfo.iso) : new Date();
+    // 1. Establish "NOW" (Two Concepts)
+    
+    // A) Absolute Now (For Filtering): Use system timestamp. 
+    // This compares UTC vs UTC. If an event ended 1 second ago, it is in the past.
+    const absoluteNow = new Date();
+
+    // B) PR Local Now (For Opening Hours & Chat Context):
+    // We explicitly format a date string in PR time to get the correct day of week.
+    const prTimeStr = new Date().toLocaleString("en-US", {timeZone: "America/Puerto_Rico"});
+    const prNow = new Date(prTimeStr); 
     const currentDayIndex = prNow.getDay();
 
     // 2. Enrich Places (Minified)
@@ -55,7 +60,7 @@ const prepareAiContext = (places: Place[], events: Event[], userLoc: Coordinates
         // Truncate description to save tokens, AI only needs the gist
         const shortDesc = p.description ? p.description.substring(0, 100) : "";
         
-        // Calculate Specific Hours for TODAY based on PR Time
+        // Calculate Specific Hours for TODAY based on PR Time Day Index
         const hoursToday = getHoursString(p, currentDayIndex);
 
         return {
@@ -72,11 +77,12 @@ const prepareAiContext = (places: Place[], events: Event[], userLoc: Coordinates
 
     // 3. Enrich Events (Strict Filtering)
     // We only want events that end AFTER "Now" (minus a 2 hour buffer for "just finished")
-    const activeThreshold = new Date(prNow.getTime() - (2 * 60 * 60 * 1000));
+    // Using absoluteNow ensures we don't get timezone confusion.
+    const activeThreshold = new Date(absoluteNow.getTime() - (2 * 60 * 60 * 1000));
     
     // Cap at 14 days into the future to focus the AI
-    const twoWeeksFromNow = new Date(prNow);
-    twoWeeksFromNow.setDate(prNow.getDate() + 14);
+    const twoWeeksFromNow = new Date(absoluteNow);
+    twoWeeksFromNow.setDate(absoluteNow.getDate() + 14);
 
     const enrichedEvents = events
         .filter(e => {
@@ -84,11 +90,11 @@ const prepareAiContext = (places: Place[], events: Event[], userLoc: Coordinates
             const eventEnd = new Date(e.endTime || e.startTime);
             const eventStart = new Date(e.startTime);
             
-            // FILTER 1: Is it in the past?
-            if (eventEnd < activeThreshold) return false;
+            // FILTER 1: Is it in the past? (Compare Absolute Timestamps)
+            if (eventEnd.getTime() < activeThreshold.getTime()) return false;
 
             // FILTER 2: Is it too far in the future?
-            if (eventStart > twoWeeksFromNow) return false;
+            if (eventStart.getTime() > twoWeeksFromNow.getTime()) return false;
 
             return true;
         })
@@ -96,7 +102,7 @@ const prepareAiContext = (places: Place[], events: Event[], userLoc: Coordinates
         .map(e => ({
             t: e.title,
             d: e.description?.substring(0, 100),
-            // Format strictly to ISO for AI logic, plus human readable
+            // Format strictly to ISO for AI logic, plus human readable for chat
             w: `${new Date(e.startTime).toLocaleString('es-PR', { timeZone: 'America/Puerto_Rico', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`,
             l: e.locationName
         }));
@@ -106,9 +112,9 @@ const prepareAiContext = (places: Place[], events: Event[], userLoc: Coordinates
         e: enrichedEvents, // e = events (Filtered strictly)
         ctx: { // User Context
             loc: userLoc ? "known" : "unknown",
-            time: contextInfo.time,
-            day: contextInfo.date,
-            iso: contextInfo.iso_date, // Machine readable date used for logic
+            time: contextInfo.time, // "4:30 PM" (PR)
+            day: contextInfo.date, // "Lunes, 24 de Octubre 2025" (PR)
+            iso: contextInfo.iso_date, // Machine readable PR date
             weather: contextInfo.weather
         }
     };
@@ -135,7 +141,8 @@ async function handleClientSideAI(action: string, payload: any) {
                 Ayudar a tus vecinos usando *exclusivamente* los apuntes de tu libreta (la data provista).
 
                 CONTEXTO CRÍTICO:
-                - Hora Actual (PR): ${context.ctx.time} del ${context.ctx.day}
+                - Fecha Actual (PR): ${context.ctx.day}
+                - Hora Actual (PR): ${context.ctx.time}
                 - Clima: ${context.ctx.weather}.
 
                 LA LIBRETA (Data Minified):
@@ -145,7 +152,7 @@ async function handleClientSideAI(action: string, payload: any) {
                 REGLAS DE ORO:
                 1. **Horarios Exactos:** Si preguntan "¿está abierto?" o "¿a qué hora cierra?", mira el campo 'h' (horario de hoy) y dilo exacto. Ej: "Sí, hoy cierran a las 5pm".
                 2. **Anti-Alucinación:** Si no está en 'p' o 'e', di: "Mala mía, no lo tengo anotado".
-                3. **Solo el Futuro:** La fecha actual es ${context.ctx.day}. Los eventos en la lista 'e' ya están filtrados para ser futuros. Si la lista 'e' está vacía, di que no hay eventos pronto.
+                3. **Solo el Futuro:** La lista 'e' (Eventos) YA HA SIDO FILTRADA. Contiene SOLO eventos futuros próximos. Si la lista está vacía, no hay eventos. NO MENCIONES eventos pasados que recuerdes de tu entrenamiento general.
             `;
             
             const formattedHistory = history.map((h: any) => ({
