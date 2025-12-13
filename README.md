@@ -7,6 +7,20 @@ This is not just a map. It is an **AI-First Progressive Web App (PWA)** that com
 
 ---
 
+## 🚨 Critical Technical Constraints (DO NOT CHANGE)
+
+These architectural decisions are fundamental to the app's correctness. Do not refactor without explicit approval.
+
+### 1. The "Absolute Truth" Time Source
+*   **Problem:** Users often have incorrect device clocks, different timezones on their phones, or privacy settings that block local time access. This caused "El Veci" to hallucinate that restaurants were closed when they were open.
+*   **Solution:** We use **TimeAPI.io** to fetch the atomic time for `America/Puerto_Rico`.
+*   **Rule:** Never rely solely on `new Date()` for business logic (Open/Closed status) or AI Context. Always fetch the "Absolute Truth" from the API or use the fallback logic provided in `useConcierge.ts`.
+
+### 2. Stateless AI Context
+*   We use a "RAG-Lite" approach. We inject the *entire* relevant database schema (minified) into the System Instruction on every turn. We do not use vector databases. This ensures the AI always has the latest "Live" data without synchronization lag.
+
+---
+
 ## 🌟 Key Features
 
 ### 🤖 For Travelers ("El Veci" Experience)

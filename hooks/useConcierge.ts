@@ -11,8 +11,10 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   
-  // --- OFFICIAL TIME FETCHER ---
-  // Fetches atomic time for PR to prevent device-clock based hallucinations
+  // --- OFFICIAL TIME FETCHER (CRITICAL: DO NOT REMOVE) ---
+  // We use TimeAPI.io to fetch the "Absolute Truth" time for Puerto Rico.
+  // Browsers often have wrong timezones or privacy settings that break "Open Now" logic.
+  // This ensures El Veci always knows the *actual* time in Cabo Rojo.
   const getPuertoRicoTime = async () => {
       try {
           const controller = new AbortController();
