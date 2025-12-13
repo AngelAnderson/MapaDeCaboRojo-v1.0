@@ -41,52 +41,43 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
     logUserActivity('USER_CHAT', text);
 
     try {
-        // FORCE PUERTO RICO TIMEZONE
-        // We use 'en-US' with PR timezone to get components, then build the string manually to avoid browser inconsistencies
+        // --- ROBUST DATE CONSTRUCTION ---
+        // We avoid Intl.DateTimeFormat for the "Truth" logic to prevent browser localization issues.
+        // We want the literal time in Puerto Rico.
         const now = new Date();
-        const prFormatter = new Intl.DateTimeFormat('en-US', {
-            timeZone: 'America/Puerto_Rico',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-        });
         
-        // Parts will be like: { type: 'month', value: '12' }, ...
-        const parts = prFormatter.formatToParts(now);
-        const part = (type: string) => parts.find(p => p.type === type)?.value;
+        // 1. Get PR Time Components manually
+        const prString = now.toLocaleString("en-US", { timeZone: "America/Puerto_Rico" });
+        const prDate = new Date(prString);
         
-        const isoDatePR = `${part('year')}-${part('month')}-${part('day')}T${part('hour')}:${part('minute')}:00`;
-        
-        // Human Readable Date (Spanish)
-        const humanFormatter = new Intl.DateTimeFormat('es-PR', { 
-            timeZone: 'America/Puerto_Rico', 
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric'
-        });
-        const prDate = humanFormatter.format(now);
-        
-        // Human Readable Time
-        const prTime = new Intl.DateTimeFormat('en-US', { 
-            timeZone: 'America/Puerto_Rico', 
-            hour: 'numeric', 
-            minute: 'numeric', 
-            hour12: true 
-        }).format(now);
+        const year = prDate.getFullYear();
+        const month = prDate.getMonth() + 1; // 1-12
+        const day = prDate.getDate();
+        const hours = prDate.getHours();
+        const minutes = prDate.getMinutes();
+        const weekday = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][prDate.getDay()];
+        const monthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][prDate.getMonth()];
+
+        // 2. Construct Strings
+        // "2025-12-13"
+        const isoShort = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        // "Sábado, 13 de Diciembre de 2025"
+        const humanDate = `${weekday}, ${day} de ${monthName} de ${year}`;
+        // "4:30 PM"
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const h12 = hours % 12 || 12;
+        const mStr = String(minutes).padStart(2, '0');
+        const humanTime = `${h12}:${mStr} ${ampm}`;
 
         const contextInfo = {
-            date: prDate, 
-            time: prTime,
-            iso_date: isoDatePR, 
+            date: humanDate, 
+            time: humanTime,
+            iso_date: isoShort, 
+            date_components: { year, month, day, weekday }, // Explicit components for AI
             weather: weatherContext || 'Tropical'
         };
 
         // Pass the CURRENT 'places' and 'events' props directly to the service
-        // Enriched context for smarter answers
         const response = await sendConciergeMessage(
             text, 
             newHistory, 
@@ -96,7 +87,6 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
             contextInfo
         );
         
-        // Response contains text and optional suggestedPlaceIds
         setMessages(prev => [...prev, { 
             role: 'model', 
             text: response.text, 

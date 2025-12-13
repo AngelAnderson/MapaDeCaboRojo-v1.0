@@ -17,7 +17,7 @@ const formatTimeShort = (timeStr: string) => {
 // --- HELPER: DYNAMIC STATUS CALCULATOR ---
 const analyzeStatus = (place: Place, prNow: Date): { text: string, isOpen: boolean } => {
     const oh = place.opening_hours;
-    if (!oh) return { text: "Horario no disp.", isOpen: true }; // Benefit of doubt
+    if (!oh) return { text: "Horario no disp.", isOpen: true }; 
     
     if (oh.type === '24_7') return { text: "Abierto 24/7", isOpen: true };
     if (oh.type === 'sunrise_sunset') {
@@ -59,10 +59,9 @@ const analyzeStatus = (place: Place, prNow: Date): { text: string, isOpen: boole
 const prepareAiContext = (places: Place[], events: Event[], userLoc: Coordinates | undefined, contextInfo: any) => {
     
     // 1. Establish "NOW"
-    const absoluteNow = new Date();
-    // PR Local Time for Logic
-    const prTimeStr = new Date().toLocaleString("en-US", {timeZone: "America/Puerto_Rico"});
-    const prNow = new Date(prTimeStr); 
+    // Use the Explicit ISO date provided by the client if available, otherwise fallback
+    const nowString = contextInfo.iso_date ? `${contextInfo.iso_date}T${new Date().toLocaleTimeString('en-US', {hour12:false, timeZone:'America/Puerto_Rico'})}` : new Date().toLocaleString("en-US", {timeZone: "America/Puerto_Rico"});
+    const prNow = new Date(nowString); 
 
     // 2. Weather Context Logic
     const weatherRaw = (contextInfo.weather || '').toLowerCase();
@@ -77,8 +76,6 @@ const prepareAiContext = (places: Place[], events: Event[], userLoc: Coordinates
         // Smart Status
         const status = analyzeStatus(p, prNow);
         
-        // Rain Safety Logic
-        // Outdoor categories are risky in rain
         const outdoorCats = ['BEACH', 'SIGHTS', 'ACTIVITY', 'PROJECT'];
         const isOutdoor = outdoorCats.includes(p.category);
         const isRainSafe = !isOutdoor || (p.tags && p.tags.includes('techo')); 
@@ -90,19 +87,15 @@ const prepareAiContext = (places: Place[], events: Event[], userLoc: Coordinates
             d: p.description ? p.description.substring(0, 100) : "",
             l: p.address ? p.address.split(',')[0] : 'Cabo Rojo',
             a: amenities.join(','),
-            // NEW FIELDS FOR AI LOGIC
-            st: status.text, // "Abierto hasta 5pm" or "Cerrado"
-            op: status.isOpen, // boolean for sorting
-            rs: isRainSafe // Rain Safe boolean
+            st: status.text, 
+            op: status.isOpen, 
+            rs: isRainSafe 
         };
     });
 
-    // 4. Smart Sort: Prioritize Open & Weather-Appropriate places
+    // 4. Smart Sort
     enrichedPlaces.sort((a, b) => {
-        // 1. Open places first
         if (a.op !== b.op) return a.op ? -1 : 1;
-        
-        // 2. If raining, RainSafe places first
         if (isRaining) {
             if (a.rs !== b.rs) return a.rs ? -1 : 1;
         }
@@ -110,6 +103,8 @@ const prepareAiContext = (places: Place[], events: Event[], userLoc: Coordinates
     });
 
     // 5. Enrich Events
+    // We use a safe relative window (2 hours ago to 14 days future)
+    const absoluteNow = new Date(); // Use system time for relative comparisons to be safe
     const activeThreshold = new Date(absoluteNow.getTime() - (2 * 60 * 60 * 1000));
     const twoWeeksFromNow = new Date(absoluteNow);
     twoWeeksFromNow.setDate(absoluteNow.getDate() + 14);
@@ -128,7 +123,7 @@ const prepareAiContext = (places: Place[], events: Event[], userLoc: Coordinates
             d: e.description?.substring(0, 100),
             w: `${new Date(e.startTime).toLocaleString('es-PR', { timeZone: 'America/Puerto_Rico', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`,
             l: e.locationName,
-            iso: e.startTime // Pass ISO for easy comparison
+            iso: e.startTime 
         }));
 
     return {
@@ -138,40 +133,37 @@ const prepareAiContext = (places: Place[], events: Event[], userLoc: Coordinates
             loc: userLoc ? "known" : "unknown",
             time: contextInfo.time,
             day: contextInfo.date,
-            iso: contextInfo.iso_date, // Re-added ISO field
+            iso: contextInfo.iso_date, 
+            components: contextInfo.date_components, // Pass detailed components
             weather: contextInfo.weather,
-            is_raining: isRaining // Explicit flag for AI
+            is_raining: isRaining 
         }
     };
 };
 
 // --- CLIENT-SIDE FALLBACK HANDLER ---
 async function handleClientSideAI(action: string, payload: any) {
-    console.log(`🤖 Switching to Client-Side AI for: ${action}`);
-    
     switch (action) {
         case 'chat': {
             const { message, history, context } = payload;
+            const c = context.ctx.components || {};
             
             const systemInstruction = `
-                Eres "El Veci", un señor amable, sabio y servicial que ha vivido en Cabo Rojo toda la vida.
+                Eres "El Veci", un señor amable, sabio y servicial de Cabo Rojo.
 
-                CONTEXTO CRÍTICO:
-                - Fecha: ${context.ctx.day} (ISO: ${context.ctx.iso})
-                - Hora: ${context.ctx.time}
-                - Clima: ${context.ctx.weather} (Lluvia: ${context.ctx.is_raining ? 'SÍ' : 'NO'})
+                HOY ES:
+                Día: ${c.day}
+                Mes: ${c.month}
+                Año: ${c.year}
+                (${context.ctx.day})
 
-                LA LIBRETA (Priorizada):
-                Los lugares ya están ordenados. Los primeros son los mejores para AHORA (están abiertos y convienen por el clima).
-                Key: n=Nombre, st=STATUS_REAL (¡Confía en esto!), rs=RainSafe (Apto Lluvia).
-                
+                TUS DATOS:
                 Lugares (p): ${JSON.stringify(context.p.slice(0, 50))} 
                 Eventos (e): ${JSON.stringify(context.e)}
 
-                REGLAS DE ORO:
-                1. **Usa 'st':** Si 'st' dice "Cerrado", dile al usuario que está cerrado. No adivines.
-                2. **Lluvia:** Si 'is_raining' es true, advierte sobre lugares al aire libre (donde rs=false). Recomienda los que tengan rs=true.
-                3. **Humor:** Boricua sano ("Ay bendito", "Wepa").
+                REGLAS:
+                1. La fecha de HOY es ABSOLUTA. No adivines.
+                2. Usa 'st' para saber si un lugar está abierto.
             `;
             
             const formattedHistory = history.map((h: any) => ({
@@ -182,10 +174,7 @@ async function handleClientSideAI(action: string, payload: any) {
             const chat = clientAI.chats.create({
                 model: 'gemini-2.5-flash',
                 history: formattedHistory,
-                config: { 
-                    systemInstruction,
-                    responseMimeType: 'application/json'
-                }
+                config: { systemInstruction, responseMimeType: 'application/json' }
             });
             
             try {
@@ -193,10 +182,10 @@ async function handleClientSideAI(action: string, payload: any) {
                 const json = JSON.parse(result.text || "{}");
                 return { text: json.text, suggestedPlaceIds: json.suggested_place_ids };
             } catch (e) {
-                return { text: "Mala mía, se me cayó la llamada. Intenta otra vez." };
+                return { text: "Mala mía, intenta otra vez." };
             }
         }
-        default: return { text: "Operación no soportada offline." };
+        default: return { text: "Offline." };
     }
 }
 
