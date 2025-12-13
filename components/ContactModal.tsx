@@ -6,10 +6,11 @@ interface ContactModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuggest: () => void; 
-  onChat?: () => void; 
+  onChat?: () => void;
+  onAbout?: () => void; // New prop
 }
 
-const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose, onSuggest }) => {
+const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose, onSuggest, onAbout }) => {
   const { t } = useLanguage();
   if (!isOpen) return null;
 
@@ -74,7 +75,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose, onSuggest 
           </button>
         </div>
 
-        <button onClick={() => window.location.href = '/?page=about'} className="w-full p-4 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-xs font-bold hover:text-teal-600 dark:hover:text-teal-400 transition-colors border-t border-slate-100 dark:border-slate-700">
+        <button onClick={onAbout} className="w-full p-4 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-xs font-bold hover:text-teal-600 dark:hover:text-teal-400 transition-colors border-t border-slate-100 dark:border-slate-700">
             {t('about_title')}
         </button>
       </div>

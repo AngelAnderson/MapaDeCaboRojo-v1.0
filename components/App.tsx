@@ -9,7 +9,7 @@ import Admin from './Admin';
 import ContactModal from './ContactModal';
 import SuggestPlaceModal from './SuggestPlaceModal'; 
 import SuggestPage from './SuggestPage'; 
-import AboutPage from './AboutPage'; // Import AboutPage
+import AboutPage from './AboutPage'; // Import Component
 import WeatherWidget from './WeatherWidget'; 
 import { getPlaces, getEvents } from '../services/supabase'; 
 import { LanguageProvider, useLanguage } from '../i18n/LanguageContext';
@@ -85,6 +85,7 @@ const MapApp: React.FC = () => {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [isSuggestOpen, setIsSuggestOpen] = useState(false); 
+  const [isAboutOpen, setIsAboutOpen] = useState(false); // NEW: About State
   
   // System State
   const [isVipUnlocked, setIsVipUnlocked] = useState(false);
@@ -162,7 +163,8 @@ const MapApp: React.FC = () => {
     (action) => {
       // 'suggest' action in map view opens the modal
       if (action === 'suggest') setIsSuggestOpen(true);
-      if (action === 'about') window.location.href = '/?page=about'; // Force reload for clean page state
+      // 'about' action opens the overlay
+      if (action === 'about') setIsAboutOpen(true);
     }
   );
 
@@ -226,7 +228,7 @@ const MapApp: React.FC = () => {
           case 'action_add': setIsSuggestOpen(true); break;
           case 'action_chat': setIsConciergeOpen(true); break;
           case 'action_contact': setIsContactOpen(true); break;
-          case 'action_about': window.location.href = '/?page=about'; break; // New Action
+          case 'action_about': setIsAboutOpen(true); break; // UPDATED
           case 'sys_theme': setIsDarkMode(!isDarkMode); break;
           case 'sys_lang': setLanguage(language === 'es' ? 'en' : 'es'); break;
           case 'sys_admin': setIsAdminOpen(true); break;
@@ -278,11 +280,27 @@ const MapApp: React.FC = () => {
 
       <ExplorerSheet places={filteredList} onSelect={(p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); handleTabChange('map', false); }} isVisible={activeTab === 'explore'} searchText={searchText} onSearchChange={setSearchText} resultCount={filteredList.length} activeGroup={activeGroup} onCategoryChange={setActiveGroup} focusTrigger={searchFocusTrigger} savedIds={savedIds} onToggleFavorite={toggleFavorite} onSelectCollection={setActiveCollection} activeCollectionId={activeCollection?.id} onCameraClick={() => { setIsConciergeOpen(true); }} userLocation={userLocation || undefined} onTabChange={handleTabChange} categories={categories} />
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} onAction={handleNavAction} />
+      
       {selectedPlace && <PlaceCard place={selectedPlace} allPlaces={publishedPlaces} onSelect={(p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); }} onClose={() => setSelectedPlace(null)} onNavigate={handleNavigate} onAskAi={() => setIsConciergeOpen(true)} onSuggestEdit={() => { setIsContactOpen(true); }} isFavorite={savedIds.includes(selectedPlace.id)} onToggleFavorite={() => toggleFavorite(selectedPlace.id)} userLocation={userLocation || undefined} />}
+      
       <Concierge isOpen={isConciergeOpen} onClose={() => setIsConciergeOpen(false)} places={publishedPlaces} events={events} onNavigateToPlace={handleChatNavigation} userLocation={userLocation || undefined} weather={weather} />
+      
       <SuggestPlaceModal isOpen={isSuggestOpen} onClose={() => setIsSuggestOpen(false)} />
-      <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} onSuggest={() => { setIsContactOpen(false); setIsSuggestOpen(true); }} onChat={() => { setIsContactOpen(false); setIsConciergeOpen(true); }} />
+      
+      {/* MODALS */}
+      <ContactModal 
+        isOpen={isContactOpen} 
+        onClose={() => setIsContactOpen(false)} 
+        onSuggest={() => { setIsContactOpen(false); setIsSuggestOpen(true); }} 
+        onChat={() => { setIsContactOpen(false); setIsConciergeOpen(true); }}
+        onAbout={() => { setIsContactOpen(false); setIsAboutOpen(true); }} // Added Handler
+      />
+      
       {isAdminOpen && <Admin onClose={() => setIsAdminOpen(false)} places={places} events={events} categories={categories} onUpdate={refreshData} />}
+      
+      {/* About Page Overlay */}
+      <AboutPage isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
+      
       <CommandMenu isOpen={isCommandMenuOpen} onClose={() => setIsCommandMenuOpen(false)} onSelect={handleCommandSelect} isDarkMode={isDarkMode} />
     </div>
   );
@@ -290,7 +308,7 @@ const MapApp: React.FC = () => {
 
 // --- ROOT ROUTER COMPONENT ---
 const App: React.FC = () => {
-  const [currentRoute, setCurrentRoute] = useState<'map' | 'suggest' | 'about'>('map');
+  const [currentRoute, setCurrentRoute] = useState<'map' | 'suggest'>('map');
 
   useEffect(() => {
     const checkRoute = () => {
@@ -301,8 +319,6 @@ const App: React.FC = () => {
 
       if (searchParams.get('page') === 'suggest' || hash.includes('page=suggest') || path === '/suggest') {
         setCurrentRoute('suggest');
-      } else if (searchParams.get('page') === 'about' || hash.includes('page=about') || path === '/about') {
-        setCurrentRoute('about');
       } else {
         setCurrentRoute('map');
       }
@@ -320,10 +336,6 @@ const App: React.FC = () => {
     return <SuggestPage />;
   }
   
-  if (currentRoute === 'about') {
-    return <AboutPage />;
-  }
-
   return <MapApp />;
 };
 
