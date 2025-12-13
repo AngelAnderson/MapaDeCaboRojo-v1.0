@@ -51,6 +51,12 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
       }
   };
 
+  const handleShareLink = () => {
+      const url = `${window.location.origin}/?page=suggest`;
+      navigator.clipboard.writeText(url);
+      alert(t('link_copied'));
+  };
+
   const handleSubmit = async () => {
     if (!name.trim()) {
       alert(t('suggest_name_required'));
@@ -134,7 +140,14 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
       <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh] transition-colors">
         <div className="bg-teal-600 dark:bg-teal-700 p-6 text-white flex justify-between items-center shrink-0 shadow-md z-10">
           <div><h2 className="text-2xl font-black">{t('suggest_title')}</h2><p className="text-teal-100 text-sm">{t('suggest_subtitle')}</p></div>
-          <button onClick={onClose} className="bg-teal-700/50 p-2 rounded-full hover:bg-teal-800 transition-colors"><i className="fa-solid fa-xmark text-xl"></i></button>
+          <div className="flex items-center gap-2">
+              <button onClick={handleShareLink} className="bg-teal-700/50 p-2 rounded-full hover:bg-teal-800 transition-colors" title={t('share')}>
+                  <i className="fa-solid fa-share-nodes text-lg"></i>
+              </button>
+              <button onClick={onClose} className="bg-teal-700/50 p-2 rounded-full hover:bg-teal-800 transition-colors">
+                  <i className="fa-solid fa-xmark text-xl"></i>
+              </button>
+          </div>
         </div>
         <div className="p-6 space-y-5 overflow-y-auto flex-1 bg-white dark:bg-slate-800">
           {step === 1 && (

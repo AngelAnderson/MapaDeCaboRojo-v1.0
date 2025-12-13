@@ -7,16 +7,27 @@ export const useRouter = (
   publishedPlaces: Place[], 
   selectedPlace: Place | null, 
   setSelectedPlace: (p: Place | null) => void,
-  onFlyTo: (coords: {lat: number, lng: number}, zoom?: number) => void
+  onFlyTo: (coords: {lat: number, lng: number}, zoom?: number) => void,
+  onAction?: (action: string) => void // New callback for actions/pages
 ) => {
   
   // 1. On Load: Check URL (Search Params OR Hash)
   useEffect(() => {
     if (typeof window === 'undefined') return;
+
+    // --- CHECK FOR STATIC PAGES/ACTIONS FIRST ---
+    const searchParams = new URLSearchParams(window.location.search);
+    const pageParam = searchParams.get('page');
+    
+    if (pageParam === 'suggest') {
+        if (onAction) onAction('suggest');
+        // We continue execution to load the map background, but the modal will overlay it.
+    }
+
     if (publishedPlaces.length === 0) return;
 
     try {
-        let placeSlug = new URLSearchParams(window.location.search).get('place');
+        let placeSlug = searchParams.get('place');
         
         // Fallback: Check Hash if search param is missing (common in some embedded views)
         if (!placeSlug && window.location.hash.includes('place=')) {
@@ -35,8 +46,8 @@ export const useRouter = (
             }
         } 
         
-        if (!targetPlace) {
-            // Priority 2: Find a designated 'isLanding' place if no URL place
+        if (!targetPlace && !pageParam) {
+            // Priority 2: Find a designated 'isLanding' place if no URL place AND no specific page requested
             const landingPlace = publishedPlaces.find(p => p.isLanding);
             if (landingPlace) {
                 targetPlace = landingPlace;
@@ -82,6 +93,8 @@ export const useRouter = (
         try {
             if (selectedPlace) {
                 url.searchParams.set('place', selectedPlace.slug || selectedPlace.id);
+                // Remove page param if selecting a place to clean up URL
+                url.searchParams.delete('page');
             } else {
                 url.searchParams.delete('place');
             }

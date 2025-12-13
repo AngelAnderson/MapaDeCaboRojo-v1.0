@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import L from 'leaflet';
 import { Place, PlaceCategory, Coordinates, Event, ParkingStatus, Collection } from '../types';
@@ -157,7 +158,15 @@ const MainApp: React.FC = () => {
   );
 
   // Initialize Router (Handles all URL state safely)
-  useRouter(publishedPlaces, selectedPlace, setSelectedPlace, flyTo);
+  useRouter(
+    publishedPlaces, 
+    selectedPlace, 
+    setSelectedPlace, 
+    flyTo,
+    (action) => {
+      if (action === 'suggest') setIsSuggestOpen(true);
+    }
+  );
 
   // Fix: Map Layout Invalidation
   useEffect(() => {
