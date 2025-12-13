@@ -15,7 +15,6 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
   useEffect(() => {
     const fetchWeather = async () => {
         try {
-            // Quick timeout for weather to not block chat
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 2000);
             
@@ -41,43 +40,47 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
     logUserActivity('USER_CHAT', text);
 
     try {
-        // --- ROBUST DATE CONSTRUCTION ---
-        // We avoid Intl.DateTimeFormat for the "Truth" logic to prevent browser localization issues.
-        // We want the literal time in Puerto Rico.
-        const now = new Date();
+        // --- STRICT DATE CONSTRUCTION ---
+        // Create a date object relative to PR time
+        const prFormatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'America/Puerto_Rico',
+            year: 'numeric',
+            month: 'numeric',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            weekday: 'long',
+            hour12: false
+        });
         
-        // 1. Get PR Time Components manually
-        const prString = now.toLocaleString("en-US", { timeZone: "America/Puerto_Rico" });
-        const prDate = new Date(prString);
+        // This gives us parts we can trust relative to PR, regardless of user's local device time
+        const parts = prFormatter.formatToParts(new Date());
+        const getPart = (type: string) => parts.find(p => p.type === type)?.value || '';
         
-        const year = prDate.getFullYear();
-        const month = prDate.getMonth() + 1; // 1-12
-        const day = prDate.getDate();
-        const hours = prDate.getHours();
-        const minutes = prDate.getMinutes();
-        const weekday = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'][prDate.getDay()];
-        const monthName = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'][prDate.getMonth()];
+        const year = getPart('year');
+        const month = getPart('month');
+        const day = getPart('day');
+        const weekday = getPart('weekday');
+        const hour = getPart('hour');
+        const minute = getPart('minute');
 
-        // 2. Construct Strings
-        // "2025-12-13"
-        const isoShort = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        // "Sábado, 13 de Diciembre de 2025"
-        const humanDate = `${weekday}, ${day} de ${monthName} de ${year}`;
-        // "4:30 PM"
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        const h12 = hours % 12 || 12;
-        const mStr = String(minutes).padStart(2, '0');
-        const humanTime = `${h12}:${mStr} ${ampm}`;
+        // Readable strings
+        const humanDate = `${weekday}, ${day}/${month}/${year}`;
+        const humanTime = `${hour}:${minute}`;
+        const isoShort = `${year}-${month.padStart(2,'0')}-${day.padStart(2,'0')}`;
 
         const contextInfo = {
             date: humanDate, 
             time: humanTime,
             iso_date: isoShort, 
-            date_components: { year, month, day, weekday }, // Explicit components for AI
+            // Flat structure for easier AI parsing
+            current_day: weekday,
+            current_year: year,
+            current_month: month,
+            current_date_num: day,
             weather: weatherContext || 'Tropical'
         };
 
-        // Pass the CURRENT 'places' and 'events' props directly to the service
         const response = await sendConciergeMessage(
             text, 
             newHistory, 

@@ -90,53 +90,35 @@ export default async function handler(req: any, res: any) {
 // --- HANDLERS ---
 
 async function handleChat({ message, history, context }: any) {
-  // Use the pre-processed context from the frontend
-  // context.ctx contains the optimized user context including time and ISO date
   const { ctx, p, e } = context;
   
-  // Robust Date Fallback if components are missing
-  const c = ctx.components || { year: 2025, month: 1, day: 1, weekday: 'Unknown' };
+  // Create a strict string representation of "NOW"
+  // If we rely on system prompt only, strict safety filters might ignore it.
+  // We will inject this into the user's message as a [SYSTEM CONTEXT] block.
+  const nowContext = `
+    [SYSTEM_DATA]
+    Current Date: ${ctx.date} (ISO: ${ctx.iso})
+    Current Time: ${ctx.time}
+    Day of Week: ${ctx.current_day}
+    Weather: ${ctx.weather} (Raining: ${ctx.is_raining})
+    [/SYSTEM_DATA]
+  `;
 
   const systemInstruction = `
     Eres "El Veci", un señor amable, sabio y servicial que ha vivido en Cabo Rojo toda la vida.
 
-    TU PERSONALIDAD Y TONO:
-    1. **La Regla de los 105 Años:** Habla tan claro, sencillo y respetuoso que una persona de 105 años te entienda perfectamente. Evita palabras complicadas.
-    2. **Vecino Bueno:** Eres servicial y alegre. Usas palabras como "Familia", "Mijo/a", "Saludos".
-    3. **Boricua Sano:** Usa expresiones de aquí pero sanas ("¡Wepa!", "Ay bendito", "La cosa está buena", "Dar una vuelta"). NADA de jerga callejera agresiva ni ofensiva.
-    4. **El Toque de Humor:** Si la conversación se presta, termina tu respuesta con un chiste "mongo" (bobo) y corto sobre: la suegra, los hoyos en la carretera, la falta de luz o el calor.
-
     TU MISIÓN:
     Ayudar a tus vecinos (los usuarios) a encontrar lugares y eventos usando *exclusivamente* los apuntes de tu libreta (la base de datos provista).
 
-    CONTEXTO CRÍTICO (VERDAD ABSOLUTA):
-    - **AÑO ACTUAL:** ${c.year}
-    - **MES ACTUAL:** ${c.month} (1-12)
-    - **DÍA ACTUAL:** ${c.day}
-    - **TEXTO FECHA:** ${ctx.day}
-    - **ISO FECHA:** ${ctx.iso}
-    - **HORA:** ${ctx.time}
-    - **CLIMA:** ${ctx.weather} (Lluvia: ${ctx.is_raining ? 'SÍ' : 'NO'})
+    REGLAS DE ORO:
+    1. **FECHA:** Usa el bloque [SYSTEM_DATA] que recibirás con el mensaje para saber la fecha exacta. NO adivines. Hoy es esa fecha. Confirma la fecha si te preguntan.
+    2. **STATUS:** En la lista de lugares 'p', el campo 'st' es la verdad absoluta sobre el horario AHORA. Si dice "Cerrado", está cerrado.
+    3. **CLIMA:** Si 'is_raining' es true, sugiere lugares con techo (rs=true).
+    4. **EVENTOS:** Compara siempre la fecha del evento con la "Current Date" del [SYSTEM_DATA]. Si ya pasó, IGNÓRALO.
 
-    REGLAS DE ORO (ANTI-ALUCINACIÓN):
-    1. **La Fecha es Ley:** Hoy es ${c.day}/${c.month}/${c.year}. NO ES ${c.day}/${c.month - 1} ni ninguna otra fecha. Si el usuario te porfía la fecha, dile amablemente: "Según mi reloj es ${ctx.day}, pero si tú dices otra cosa, te creo a ti".
-    2. **Prioridad "Status" (st):** En la lista de lugares 'p', el campo 'st' es la verdad absoluta sobre el horario AHORA. Si dice "Cerrado", dile al usuario que está cerrado. No intentes calcularlo tú. Confía en 'st'.
-    3. **Clima (rs):** Si el clima está lluvioso (is_raining=true), NO recomiendes playas o sitios abiertos a menos que te lo pidan. Busca lugares donde 'rs' (RainSafe) sea true.
-    4. **SOLO EL FUTURO:** Revisa la lista 'events' (e). La lista YA está filtrada. Si está vacía, es porque NO hay eventos. 
-       **CRÍTICO:** Compara siempre la fecha del evento con la FECHA ACTUAL (${ctx.iso}). Si el evento ya pasó, IGNÓRALO. Si la lista está vacía, di "No veo nada anotado".
-    5. **Seguridad:** Emergencias = 911.
-
-    LA LIBRETA (TUS DATOS):
-    La lista 'p' ya está ordenada poniendo primero los sitios ABIERTOS y MEJORES PARA EL CLIMA actual.
-    - Lugares (p) [Key: n=Name, c=Category, st=STATUS_NOW (USE THIS), rs=RainSafe]: ${JSON.stringify(p)}
-    - Eventos (e) [Key: t=Title, w=When(PR Time), l=Location, iso=ISO_DATE]: ${JSON.stringify(e)}
-
-    FORMATO DE RESPUESTA JSON:
-    Debes responder SIEMPRE con este objeto JSON exacto:
-    {
-      "text": "Tu respuesta amable y clara en Markdown...", 
-      "suggested_place_ids": ["id1", "id2"] // Array con los IDs de los lugares mencionados
-    }
+    DATOS:
+    Lugares: ${JSON.stringify(p)}
+    Eventos: ${JSON.stringify(e)}
   `;
 
   // Clean history
@@ -153,11 +135,14 @@ async function handleChat({ message, history, context }: any) {
     config: { 
       systemInstruction,
       responseMimeType: "application/json", 
-      // Note: Google Search tool removed to enforce local-only logic as requested
     }
   });
 
-  const result = await chat.sendMessage(message);
+  // INJECTION: We append the context to the user's message.
+  // This forces the model to "see" the date immediately as part of the current turn.
+  const augmentedMessage = `${message}\n\n${nowContext}`;
+
+  const result = await chat.sendMessage(augmentedMessage);
   
   try {
       const jsonResponse = JSON.parse(result.text || "{}");
