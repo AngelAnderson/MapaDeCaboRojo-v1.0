@@ -218,14 +218,14 @@ async function handleClientSideAI(action: string, payload: any) {
         case 'categorize-tags':
             return JSON.parse((await clientAI.models.generateContent({
                 model: 'gemini-2.5-flash',
-                contents: `Categorize "${payload.name}". Desc: "${payload.description}". Return JSON {category, tags[]}`,
+                contents: `Categorize "${payload.name}". Desc: "${payload.description}". Return structured JSON {category, tags[], amenities: {parking, hasRestroom, isPetFriendly...}}`,
                 config: { responseMimeType: 'application/json' }
             })).text || "{}");
 
         case 'enhance-description':
             return { text: (await clientAI.models.generateContent({
                 model: 'gemini-2.5-flash',
-                contents: `Improve description for "${payload.name}": "${payload.description}"`
+                contents: `Rewrite description for "${payload.name}": "${payload.description}". Tone: El Veci (Friendly, Boricua Sano, 105-year rule). Max 150 chars.`
             })).text };
 
         case 'generate-tips':
@@ -256,7 +256,14 @@ async function handleClientSideAI(action: string, payload: any) {
         case 'generate-seo-meta-tags':
             return JSON.parse((await clientAI.models.generateContent({
                 model: 'gemini-2.5-flash',
-                contents: `SEO Meta Tags for "${payload.name}". Return JSON {metaTitle, metaDescription}`,
+                contents: `Generate 3 SEO Options for "${payload.name}". Return JSON { options: [{metaTitle, metaDescription}] }`,
+                config: { responseMimeType: 'application/json' }
+            })).text || "{ options: [] }");
+
+        case 'parse-hours':
+            return JSON.parse((await clientAI.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: `Parse hours text "${payload.text}". Return JSON { structured: DaySchedule[], note: string }.`,
                 config: { responseMimeType: 'application/json' }
             })).text || "{}");
 
@@ -431,6 +438,11 @@ export const parsePlaceFromRawText = async (text: string) => {
 
 export const parseBulkPlaces = async (text: string) => {
     const res = await callAI('parse-bulk', { text });
+    return res;
+};
+
+export const parseHoursFromText = async (text: string) => {
+    const res = await callAI('parse-hours', { text });
     return res;
 };
 

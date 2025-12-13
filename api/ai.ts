@@ -68,6 +68,9 @@ export default async function handler(req: any, res: any) {
       case 'parse-bulk':
         result = await handleParseBulk(payload);
         break;
+      case 'parse-hours': // New Handler
+        result = await handleParseHours(payload);
+        break;
       default:
         return res.status(400).json({ error: "Unknown action" });
     }
@@ -250,7 +253,21 @@ async function handleScript({ placeName, description }: any) {
 }
 
 async function handleCategorizeAndTag({ name, description }: any) {
-  const prompt = `Place: "${name}". Desc: "${description}". Return JSON { "category": string, "tags": string[] }`;
+  const prompt = `
+    Analyze place: "${name}". Context: "${description}".
+    Return structured JSON:
+    { 
+      "category": string (One of: BEACH, FOOD, SIGHTS, LOGISTICS, LODGING, SHOPPING, HEALTH, NIGHTLIFE, ACTIVITY, SERVICE),
+      "tags": string[] (Max 5, lowercase, spanish),
+      "amenities": {
+         "parking": string (FREE, PAID, or NONE),
+         "isPetFriendly": boolean,
+         "hasRestroom": boolean,
+         "hasGenerator": boolean,
+         "isHandicapAccessible": boolean
+      }
+    }
+  `;
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
     contents: prompt,
@@ -260,9 +277,20 @@ async function handleCategorizeAndTag({ name, description }: any) {
 }
 
 async function handleEnhanceDescription({ name, description }: any) {
+  const prompt = `
+    Act as "El Veci", a local guide from Cabo Rojo, PR.
+    Rewrite this description for "${name}": "${description}".
+    
+    TONE:
+    - Boricua Sano: Use local phrases like "Familia", "La cosa está buena", but keep it respectful.
+    - 105-Year Rule: Simple, clear, easy to read. No tech jargon.
+    - Inviting: Make them want to visit.
+    - Length: Max 150 characters (concise).
+  `;
+  
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
-    contents: `Mejora descripción (max 150 palabras) para "${name}": "${description}".`
+    contents: prompt
   });
   return { text: response.text || "" };
 }
@@ -270,19 +298,16 @@ async function handleEnhanceDescription({ name, description }: any) {
 async function handleGenerateTips({ name, category, description }: any) {
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
-    contents: `Consejo local para "${name}" (${category}). Contexto: ${description}.`
+    contents: `Consejo local "El Veci" para "${name}" (${category}). Contexto: ${description}. Short & Helpful.`
   });
   return { text: response.text || "" };
 }
 
 async function handleGenerateAltText({ imageUrl }: any) {
   try {
-    // 1. Fetch the image
     const imageRes = await fetch(imageUrl);
     if (!imageRes.ok) throw new Error("Failed to fetch image");
     const arrayBuffer = await imageRes.arrayBuffer();
-    
-    // 2. Convert to Base64
     const base64Data = Buffer.from(arrayBuffer).toString('base64');
     const mimeType = imageRes.headers.get('content-type') || 'image/jpeg';
 
@@ -291,21 +316,65 @@ async function handleGenerateAltText({ imageUrl }: any) {
       contents: { 
         parts: [
           { inlineData: { mimeType: mimeType, data: base64Data } }, 
-          { text: "Generate SEO alt text (max 15 words) for this place image." }
+          { text: "Generate SEO alt text (max 15 words) for this place image. Spanish." }
         ] 
       }
     });
     return { text: response.text || "" };
   } catch (e) {
     console.error("Generate Alt Text Error:", e);
-    return { text: "Error generating alt text." };
+    return { text: "Vista de lugar en Cabo Rojo" };
   }
 }
 
 async function handleGenerateSeoMetaTags({ name, description, category }: any) {
+  const prompt = `
+    Generate 3 SEO Options for "${name}" (${category}).
+    Context: ${description}.
+    
+    Return JSON:
+    {
+      "options": [
+        { "metaTitle": "Title 1 (Max 60 chars)", "metaDescription": "Desc 1 (Max 160 chars)" },
+        { "metaTitle": "Title 2", "metaDescription": "Desc 2" },
+        { "metaTitle": "Title 3", "metaDescription": "Desc 3" }
+      ]
+    }
+  `;
+  
   const response = await ai.models.generateContent({
     model: 'gemini-2.5-flash',
-    contents: `SEO JSON { "metaTitle": string, "metaDescription": string } for "${name}" (${category}).`,
+    contents: prompt,
+    config: { responseMimeType: 'application/json' }
+  });
+  return JSON.parse(response.text || "{\"options\": []}");
+}
+
+async function handleParseHours({ text }: any) {
+  const prompt = `
+    Parse this opening hours text into a structured JSON array.
+    Text: "${text}"
+    
+    Return JSON format:
+    {
+      "structured": [
+        { "day": 0, "open": "09:00", "close": "17:00", "isClosed": boolean }, // Sunday
+        { "day": 1, "open": "09:00", "close": "17:00", "isClosed": boolean }, // Monday
+        ...
+        { "day": 6, "open": "09:00", "close": "17:00", "isClosed": boolean }  // Saturday
+      ],
+      "note": "Short summary string (e.g. Lunes a Viernes 8am-5pm)"
+    }
+    
+    Rules:
+    - If a day is missing or closed, set isClosed: true.
+    - Convert times to 24h format (HH:MM).
+    - Array MUST have 7 items (index 0=Sun to 6=Sat).
+  `;
+  
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: prompt,
     config: { responseMimeType: 'application/json' }
   });
   return JSON.parse(response.text || "{}");

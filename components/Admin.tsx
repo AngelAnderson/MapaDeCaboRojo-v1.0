@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas'; 
 import { Place, Event, PlaceCategory, ParkingStatus, EventCategory, AdminLog, DaySchedule, Category, InsightSnapshot, Person } from '../types';
 import { updatePlace, deletePlace, createPlace, updateEvent, deleteEvent, createEvent, getAdminLogs, uploadImage, loginAdmin, checkSession, createCategory, updateCategory, deleteCategory, saveInsightSnapshot, getLatestInsights, createPerson, updatePerson, deletePerson, getPeople } from '../services/supabase';
-import { generateMarketingCopy, categorizeAndTagPlace, enhanceDescription, generateElVeciTip, generateImageAltText, generateSeoMetaTags, analyzeUserDemand, parsePlaceFromRawText, parseBulkPlaces } from '../services/aiService'; 
+import { generateMarketingCopy, categorizeAndTagPlace, enhanceDescription, generateElVeciTip, generateImageAltText, generateSeoMetaTags, analyzeUserDemand, parsePlaceFromRawText, parseBulkPlaces, parseHoursFromText } from '../services/aiService'; 
 import { fetchPlaceDetails, autocompletePlace, generateSessionToken } from '../services/placesService';
 import { useLanguage } from '../i18n/LanguageContext';
 import { translations } from '../i18n/translations';
@@ -180,6 +180,8 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
   const [isAiGeneratingTip, setIsAiGeneratingTip] = useState(false);
   const [isAiGeneratingAltText, setIsAiGeneratingAltText] = useState(false);
   const [isAiGeneratingSeo, setIsAiGeneratingSeo] = useState(false);
+  const [isAiParsingHours, setIsAiParsingHours] = useState(false);
+  const [seoOptions, setSeoOptions] = useState<{metaTitle: string, metaDescription: string}[]>([]);
 
   const [userLogs, setUserLogs] = useState<AdminLog[]>([]);
   const [systemLogs, setSystemLogs] = useState<AdminLog[]>([]);
@@ -194,6 +196,10 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
   const socialCardRef = useRef<HTMLDivElement>(null); 
   const [isGeneratingCard, setIsGeneratingCard] = useState(false);
   
+  // Hours Parser State
+  const [hoursText, setHoursText] = useState('');
+  const [showHoursParser, setShowHoursParser] = useState(false);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const searchLower = searchTerm.toLowerCase();
@@ -269,6 +275,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
   useEffect(() => {
     if (editingPlace) {
         setJsonString(JSON.stringify(editingPlace.contact_info || {}, null, 2));
+        setSeoOptions([]);
     }
   }, [editingPlace?.id]);
 
@@ -278,7 +285,6 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
     if (importQuery.length > 2) {
       autocompleteTimeoutRef.current = window.setTimeout(async () => {
         try {
-          // Pass current session token
           const suggestions = await autocompletePlace(importQuery, sessionToken);
           setAutocompleteSuggestions(suggestions);
         } catch (e) {
@@ -290,7 +296,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
       setAutocompleteSuggestions([]);
     }
     return () => { if (autocompleteTimeoutRef.current) clearTimeout(autocompleteTimeoutRef.current); };
-  }, [importQuery, sessionToken]); // Added sessionToken dependancy
+  }, [importQuery, sessionToken]); 
 
   // ... (ACTIONS methods like handleLogin, showToast, handleGetLocation, handleGoogleSync remain same)
   const handleLogin = async () => {
@@ -351,8 +357,6 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
       setAutocompleteSuggestions([]); 
       try {
           if (text.includes('http') || text.includes('maps')) {
-              // Note: Google Maps URLs don't support session tokens directly for details in the same way autocomplete does
-              // but we pass it anyway in case it was a place_id reference
               const details = await fetchPlaceDetails(text, sessionToken);
               if (details) {
                   setEditingPlace(prev => ({ ...prev, ...details }));
@@ -361,13 +365,11 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                   showToast("Could not resolve URL.", 'error');
               }
           } else {
-              // Pass the session token to link with previous autocomplete
               const details = await fetchPlaceDetails(text, sessionToken);
               if (details) {
                   setEditingPlace(prev => ({ ...prev, ...details }));
                   showToast("Imported from Google!", 'success');
               } else {
-                  // Fallback: AI Parse
                   const parsed = await parsePlaceFromRawText(text);
                   if (parsed && parsed.name) {
                       setEditingPlace(prev => ({ ...prev, ...parsed, status: 'open', isVerified: true }));
@@ -382,13 +384,10 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
       } finally {
           setImportLoading(false);
           setImportQuery('');
-          // Regenerate token after successful use to start a new billing session
           setSessionToken(generateSessionToken());
       }
   };
 
-  // ... (Rest of bulk magic, save logic, delete logic, ai helpers, schedule logic - unchanged)
-  
   const handleBulkMagic = async () => {
       if (!bulkInput) return;
       setBulkProcessing(true);
@@ -467,7 +466,6 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
       setIsSaving(true);
       try {
           const exists = categories.find(c => c.id === editingCategory.id);
-          // If exists in local list, assume update, otherwise create.
           if (exists && categories.some(c => c.id === editingCategory.id)) {
               await updateCategory(editingCategory.id, editingCategory);
           } else {
@@ -529,7 +527,6 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
       }
   };
 
-  // ADDED: Image Upload Handler
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
@@ -579,8 +576,18 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
       try {
           const res = await categorizeAndTagPlace(editingPlace.name, editingPlace.description || "");
           if (res) {
-              setEditingPlace(prev => ({...prev, category: res.category, tags: res.tags}));
-              showToast("AI categorized successfully!", 'success');
+              setEditingPlace(prev => ({
+                  ...prev, 
+                  category: res.category, 
+                  tags: res.tags,
+                  // Auto-detect amenities
+                  parking: res.amenities?.parking as ParkingStatus || prev?.parking,
+                  hasRestroom: res.amenities?.hasRestroom ?? prev?.hasRestroom,
+                  isPetFriendly: res.amenities?.isPetFriendly ?? prev?.isPetFriendly,
+                  isHandicapAccessible: res.amenities?.isHandicapAccessible ?? prev?.isHandicapAccessible,
+                  hasGenerator: res.amenities?.hasGenerator ?? prev?.hasGenerator
+              }));
+              showToast("AI detected Category, Tags & Amenities!", 'success');
           } else {
               showToast("AI categorization failed", 'error');
           }
@@ -606,9 +613,9 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
       setIsAiGeneratingSeo(true);
       try {
           const seo = await generateSeoMetaTags(editingPlace.name, editingPlace.description || "", editingPlace.category);
-          if (seo) {
-              setEditingPlace(prev => ({...prev, metaTitle: seo.metaTitle, metaDescription: seo.metaDescription}));
-              showToast("AI SEO Generated!", 'success');
+          if (seo && seo.options && seo.options.length > 0) {
+              setSeoOptions(seo.options);
+              showToast("AI Generated 3 SEO Options!", 'success');
           } else {
               showToast("AI failed to generate SEO tags", 'error');
           }
@@ -626,6 +633,28 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
       } finally {
           setIsGeneratingMarketing(false);
       }
+  };
+
+  const handleParseHours = async () => {
+      if (!hoursText) return;
+      setIsAiParsingHours(true);
+      try {
+          const parsed = await parseHoursFromText(hoursText);
+          if (parsed && parsed.structured) {
+              setEditingPlace(prev => ({
+                  ...prev,
+                  opening_hours: {
+                      type: 'fixed',
+                      note: parsed.note || hoursText,
+                      structured: parsed.structured
+                  }
+              }));
+              showToast("Hours parsed & applied!", 'success');
+              setShowHoursParser(false);
+          } else {
+              showToast("AI couldn't parse hours.", 'error');
+          }
+      } catch(e) { showToast("Error parsing hours", 'error'); } finally { setIsAiParsingHours(false); }
   };
 
   // --- SCHEDULE LOGIC ---
@@ -1060,14 +1089,16 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                         <InputGroup label="Tags (comma separated)">
                             <div className="flex gap-2">
                                 <StyledInput value={editingPlace.tags?.join(', ') || ''} onChange={e => setEditingPlace({...editingPlace, tags: e.target.value.split(',').map(t=>t.trim())})} placeholder="beach, sunset, food" />
-                                <button onClick={handleAiSuggestCategoryAndTags} disabled={isAiGeneratingCategoryTags} className="bg-purple-600/20 text-purple-400 border border-purple-500/50 rounded-xl px-4 flex items-center justify-center shrink-0">
-                                    {isAiGeneratingCategoryTags ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-wand-magic-sparkles"></i>}
+                                <button onClick={handleAiSuggestCategoryAndTags} disabled={isAiGeneratingCategoryTags} className="bg-purple-600/20 text-purple-400 border border-purple-500/50 rounded-xl px-4 flex items-center justify-center shrink-0 font-bold text-[10px] whitespace-nowrap">
+                                    {isAiGeneratingCategoryTags ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <span><i className="fa-solid fa-wand-magic-sparkles"></i> Auto-Detect</span>}
                                 </button>
                             </div>
                         </InputGroup>
                         <InputGroup label={t('admin_description')}>
                             <StyledTextArea value={editingPlace.description || ''} onChange={e => setEditingPlace({...editingPlace, description: e.target.value})} />
-                            <button onClick={handleAiEnhanceDescription} className="w-full bg-blue-600/20 text-blue-400 border border-blue-500/50 font-bold text-sm py-2 rounded-xl mt-2 flex items-center justify-center gap-2">{t('admin_ai_enhance_description')}</button>
+                            <button onClick={handleAiEnhanceDescription} className="w-full bg-blue-600/20 text-blue-400 border border-blue-500/50 font-bold text-sm py-2 rounded-xl mt-2 flex items-center justify-center gap-2 hover:bg-blue-600/30 transition-colors">
+                                {isAiEnhancingDescription ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-pencil"></i>} {t('admin_ai_enhance_description')} (El Veci Style)
+                            </button>
                         </InputGroup>
                     </Section>
 
@@ -1201,19 +1232,42 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                                 </StyledSelect>
                             </InputGroup>
                             <InputGroup label="Display Note">
-                                <StyledInput 
-                                    value={editingPlace.opening_hours?.note || ''} 
-                                    onChange={e => setEditingPlace({
-                                        ...editingPlace, 
-                                        opening_hours: { 
-                                            ...(editingPlace.opening_hours || {}), 
-                                            note: e.target.value 
-                                        }
-                                    })} 
-                                    placeholder="e.g. Mon-Fri 9am-5pm" 
-                                />
+                                <div className="flex gap-2">
+                                    <StyledInput 
+                                        value={editingPlace.opening_hours?.note || ''} 
+                                        onChange={e => setEditingPlace({
+                                            ...editingPlace, 
+                                            opening_hours: { 
+                                                ...(editingPlace.opening_hours || {}), 
+                                                note: e.target.value 
+                                            }
+                                        })} 
+                                        placeholder="e.g. Mon-Fri 9am-5pm" 
+                                    />
+                                    <button onClick={() => setShowHoursParser(!showHoursParser)} className="bg-slate-700 text-white px-3 rounded-xl hover:bg-slate-600 transition-colors" title="Paste raw hours">
+                                        <i className="fa-solid fa-paste"></i>
+                                    </button>
+                                </div>
                             </InputGroup>
                         </div>
+                        
+                        {showHoursParser && (
+                            <div className="mt-3 bg-slate-900/50 p-3 rounded-xl border border-slate-600 animate-fade-in">
+                                <p className="text-[10px] text-slate-400 mb-1 font-bold uppercase">Paste raw hours text to parse:</p>
+                                <div className="flex gap-2">
+                                    <StyledInput 
+                                        value={hoursText} 
+                                        onChange={e => setHoursText(e.target.value)} 
+                                        placeholder="Lunes a Viernes 8am a 5pm, Sabados 9-2" 
+                                        className="text-xs"
+                                    />
+                                    <button onClick={handleParseHours} disabled={isAiParsingHours || !hoursText} className="bg-purple-600 text-white px-4 rounded-xl text-xs font-bold hover:bg-purple-500 whitespace-nowrap">
+                                        {isAiParsingHours ? <i className="fa-solid fa-circle-notch fa-spin"></i> : "Parse AI"}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                         {(editingPlace.opening_hours?.type === 'fixed' || !editingPlace.opening_hours?.type) && (
                             <div className="mt-4 bg-slate-900 rounded-xl p-3 border border-slate-700">
                                 <div className="flex justify-between items-center mb-2">
@@ -1277,9 +1331,22 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                     <Section title="SEO Optimization" icon="magnifying-glass">
                         <div className="flex justify-end mb-2">
                             <button onClick={handleAiGenerateSeo} disabled={isAiGeneratingSeo || !editingPlace.name} className="bg-emerald-600/20 text-emerald-400 border border-emerald-500/50 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
-                                {isAiGeneratingSeo ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-robot"></i>} Generate Meta Tags
+                                {isAiGeneratingSeo ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-robot"></i>} Generate 3 Options
                             </button>
                         </div>
+                        
+                        {seoOptions.length > 0 && (
+                            <div className="grid grid-cols-1 gap-3 mb-4">
+                                {seoOptions.map((opt, i) => (
+                                    <div key={i} onClick={() => setEditingPlace({...editingPlace, metaTitle: opt.metaTitle, metaDescription: opt.metaDescription})} className="bg-slate-900 border border-slate-700 p-3 rounded-xl cursor-pointer hover:bg-slate-800 hover:border-teal-500 transition-colors group">
+                                        <p className="text-xs font-bold text-teal-400 mb-1">Option {i + 1}</p>
+                                        <p className="text-sm font-bold text-white mb-1">{opt.metaTitle}</p>
+                                        <p className="text-xs text-slate-400">{opt.metaDescription}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+
                         <InputGroup label="Meta Title">
                             <StyledInput value={editingPlace.metaTitle || ''} onChange={e => setEditingPlace({...editingPlace, metaTitle: e.target.value})} placeholder="SEO Title" />
                         </InputGroup>
