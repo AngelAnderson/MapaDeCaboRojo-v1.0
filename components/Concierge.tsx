@@ -36,6 +36,43 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
     setIsListening(true);
   };
 
+  // Helper to determine if a place is actually open right now
+  const isOpenNow = (place: Place): boolean => {
+      // 1. Permanently Closed
+      if (place.status === 'closed') return false;
+      
+      // 2. 24/7 or Sunrise/Sunset (Assume open during day)
+      if (place.opening_hours?.type === '24_7') return true;
+      if (place.opening_hours?.type === 'sunrise_sunset') {
+          const h = new Date().getHours();
+          return h >= 6 && h < 19;
+      }
+
+      // 3. Structured Hours
+      if (place.opening_hours?.structured) {
+          const now = new Date();
+          const day = now.getDay();
+          const todaySchedule = place.opening_hours.structured.find(d => d.day === day);
+
+          if (!todaySchedule || todaySchedule.isClosed) return false;
+          if (!todaySchedule.open || !todaySchedule.close) return false;
+
+          const currentMins = now.getHours() * 60 + now.getMinutes();
+          const [openH, openM] = todaySchedule.open.split(':').map(Number);
+          const [closeH, closeM] = todaySchedule.close.split(':').map(Number);
+          
+          const openMins = openH * 60 + openM;
+          const closeMins = closeH * 60 + closeM;
+
+          return currentMins >= openMins && currentMins < closeMins;
+      }
+
+      // 4. Fallback: If status is 'open' but no hours, assume open? 
+      // Safe bet: If no hours data, show as open if general status is open, 
+      // effectively trusting the database 'open' flag.
+      return place.status === 'open';
+  };
+
   const renderSuggestedPlaces = (ids: string[]) => {
       const suggestions = places.filter(p => ids.includes(p.id));
       if (suggestions.length === 0) return null;
@@ -44,6 +81,8 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
           <div className="flex gap-2 overflow-x-auto no-scrollbar mt-3 pb-2 -ml-2 pl-2">
               {suggestions.map(place => {
                   const fallbackImage = `https://picsum.photos/seed/${place.id}/300/200`;
+                  const openNow = isOpenNow(place);
+
                   return (
                     <button 
                         key={place.id}
@@ -63,7 +102,13 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
                         </div>
                         <div className="p-2">
                             <h4 className="text-xs font-bold text-slate-800 dark:text-white truncate group-hover:text-teal-500 transition-colors">{place.name}</h4>
-                            <p className="text-[9px] text-slate-500 dark:text-slate-400 truncate">{place.status === 'closed' ? '🔴 Cerrado' : '🟢 Abierto'}</p>
+                            <p className="text-[9px] truncate flex items-center gap-1">
+                                {openNow ? (
+                                    <span className="text-green-600 font-bold">● Abierto</span>
+                                ) : (
+                                    <span className="text-red-500 font-bold">● Cerrado</span>
+                                )}
+                            </p>
                         </div>
                     </button>
                   );

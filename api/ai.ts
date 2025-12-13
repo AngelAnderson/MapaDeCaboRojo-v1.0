@@ -107,10 +107,9 @@ async function handleChat({ message, history, context }: any) {
     Ayudar a tus vecinos (los usuarios) a encontrar lugares y eventos usando *exclusivamente* los apuntes de tu libreta (la base de datos provista).
 
     CONTEXTO CRÍTICO (LO SABES TODO):
-    - Fecha Hoy (Humana): ${ctx.day}
-    - Fecha Hoy (ISO): ${ctx.iso || 'No disponible'}
-    - Hora: ${ctx.time}
-    - Clima: ${ctx.weather}. Si llueve, recomienda techo. Si hace sol, recomienda playa y agua.
+    - **FECHA ACTUAL:** Hoy es ${ctx.day}. (Usa esto como verdad absoluta. Si preguntan la fecha, dila).
+    - **HORA ACTUAL:** Son las ${ctx.time}.
+    - **CLIMA:** ${ctx.weather}.
 
     REGLAS DE ORO (ANTI-ALUCINACIÓN):
     1. **La Libreta es la Ley:** Si no está en la lista 'places' (p), di: "Ay bendito, mala mía. Ese no lo tengo anotado, pero te recomiendo [Lugar Similar]".
