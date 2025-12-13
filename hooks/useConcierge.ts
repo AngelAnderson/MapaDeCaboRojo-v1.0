@@ -18,7 +18,7 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s Timeout
           
-          // Free API: TimeAPI.io
+          // Free API: TimeAPI.io (No key required)
           const res = await fetch('https://timeapi.io/api/Time/current/zone?timeZone=America/Puerto_Rico', { 
               signal: controller.signal 
           });
@@ -27,13 +27,14 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
           if (!res.ok) throw new Error("TimeAPI failed");
           
           const data = await res.json();
+          // TimeAPI returns: { year: 2025, month: 12, day: 13, dayOfWeek: "Saturday", time: "16:30", ... }
           return {
               year: data.year,
               month: data.month,
               day: data.day,
-              weekday: data.dayOfWeek, // e.g. "Monday"
-              time: data.time, // "14:30"
-              dateStr: data.date, // "10/24/2025"
+              weekday: data.dayOfWeek, 
+              time: data.time, 
+              iso: data.dateTime?.split('T')[0] || `${data.year}-${data.month}-${data.day}`,
               success: true
           };
       } catch (e) {
@@ -50,7 +51,7 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
               day: prDate.getDate(),
               weekday: days[prDate.getDay()],
               time: `${prDate.getHours()}:${String(prDate.getMinutes()).padStart(2, '0')}`,
-              dateStr: `${prDate.getMonth() + 1}/${prDate.getDate()}/${prDate.getFullYear()}`,
+              iso: prDate.toISOString().split('T')[0],
               success: false
           };
       }
@@ -74,10 +75,8 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
 
         // 2. Format Dates for AI Context
         const humanDate = `${timeData.weekday}, ${timeData.day}/${timeData.month}/${timeData.year}`;
-        const isoShort = `${timeData.year}-${String(timeData.month).padStart(2,'0')}-${String(timeData.day).padStart(2,'0')}`;
-
+        
         // 3. Get Weather from Shared State (Centralized Source of Truth)
-        // If weatherState is missing (race condition), fallback to generic
         const weatherString = weatherState 
             ? `${weatherState.temp}°F, ${weatherState.condition} (Advice: ${weatherState.advice})` 
             : 'Tropical (85°F)';
@@ -87,7 +86,7 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
         const contextInfo = {
             date: humanDate, 
             time: timeData.time,
-            iso_date: isoShort, 
+            iso: timeData.iso, 
             current_day: timeData.weekday,
             current_year: timeData.year,
             current_month: timeData.month,

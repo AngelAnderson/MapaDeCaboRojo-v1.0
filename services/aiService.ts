@@ -337,8 +337,10 @@ export const sendConciergeMessage = async (
                 opening_hours: p.opening_hours // Passed so AI can check time
             })),
             events: events.map(e => ({ title: e.title, start: e.startTime })),
-            userLoc, 
-            ...contextInfo
+            userLoc,
+            // Pass all contextInfo properties directly (date, time, iso, current_day, weather, is_raining)
+            // This structure MUST match what api/ai.ts expects in `ctx`
+            ctx: { ...contextInfo }
         }
     };
 
