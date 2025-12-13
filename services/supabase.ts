@@ -61,6 +61,34 @@ const escapeHTML = (str: string | undefined): string => {
   return div.innerHTML;
 };
 
+// --- HELPER: DELETE IMAGE FROM STORAGE ---
+const deleteImageFromUrl = async (fullUrl: string) => {
+    if (!fullUrl || typeof fullUrl !== 'string') return;
+    
+    // Only attempt to delete if it matches our Supabase project/bucket pattern
+    // Pattern usually: .../storage/v1/object/public/places-images/filename.ext
+    const bucketName = 'places-images';
+    if (!fullUrl.includes(`${bucketName}/`)) return;
+
+    try {
+        // Extract the path after the bucket name
+        // Split by the bucket name and take the last part
+        const path = fullUrl.split(`${bucketName}/`).pop();
+        if (path) {
+            // Decoding URI component handles spaces or special chars in filename
+            const cleanPath = decodeURIComponent(path);
+            const { error } = await supabase.storage.from(bucketName).remove([cleanPath]);
+            if (error) {
+                console.warn("Failed to garbage collect old image:", error.message);
+            } else {
+                console.log("🗑️ Garbage collected old image:", cleanPath);
+            }
+        }
+    } catch (e) {
+        console.warn("Error parsing image URL for deletion:", e);
+    }
+};
+
 // --- FALLBACK MOCK CLIENT ---
 const createMockClient = () => {
   console.warn("⚠️  SUPABASE KEY MISSING: App running in Offline/Mock Mode. Write operations will be simulated.");
@@ -81,6 +109,7 @@ const createMockClient = () => {
           single: () => chain,
           upload: () => Promise.resolve({ data: { path: "mock_path" }, error: null }),
           getPublicUrl: () => ({ data: { publicUrl: "https://picsum.photos/seed/mock/800/600" } }),
+          remove: () => Promise.resolve({ data: [], error: null }),
           then: (onfulfilled: any) => Promise.resolve({ data, error }).then(onfulfilled)
       };
       return chain;
@@ -110,7 +139,8 @@ const createMockClient = () => {
     storage: {
       from: () => ({
         upload: () => Promise.resolve({ data: { path: "mock_path" }, error: null }),
-        getPublicUrl: () => ({ data: { publicUrl: "https://picsum.photos/seed/mock/800/600" } })
+        getPublicUrl: () => ({ data: { publicUrl: "https://picsum.photos/seed/mock/800/600" } }),
+        remove: () => Promise.resolve({ data: [], error: null })
       })
     }
   };
@@ -311,10 +341,22 @@ export const getLatestInsights = async (): Promise<InsightSnapshot[]> => {
 export const getCategories = async (): Promise<Category[]> => {
     try {
         const { data, error } = await supabase.from('categories').select('*').order('order_index', { ascending: true });
-        if (error || !data || data.length === 0) {
-            console.warn("Using Default Categories (DB Empty or Error)");
+        
+        if (error) {
+            // Suppress warnings for missing tables (42P01) OR specific schema cache errors
+            const isTableMissing = error.code === '42P01' || error.message.includes('Could not find the table');
+            
+            if (!isTableMissing) {
+                console.warn("Supabase category fetch:", error.message);
+            }
             return DEFAULT_CATEGORIES;
         }
+
+        if (!data || data.length === 0) {
+            // DB is empty, use defaults silently
+            return DEFAULT_CATEGORIES;
+        }
+
         return data as Category[];
     } catch (e) {
         console.error("Error fetching categories:", e);
@@ -488,6 +530,9 @@ export const updatePlace = async (id: string, place: Partial<Place>): Promise<{ 
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) throw new Error("Unauthorized: Please log in.");
         
+        // 1. Fetch current record BEFORE update to get old image URL
+        const { data: currentPlace } = await supabase.from('places').select('image_url').eq('id', id).single();
+
         const dbPayload = mapPlaceToDb(place);
         console.log("🚀 Updating Place ID:", id);
 
@@ -496,6 +541,12 @@ export const updatePlace = async (id: string, place: Partial<Place>): Promise<{ 
         if (error) throw error;
         if (!data || data.length === 0) {
             if (isLive) throw new Error("Update failed: No records modified. Check Permissions/RLS.");
+        }
+
+        // 2. Garbage Collect Old Image
+        // If update was successful, and we have a new image URL, delete the old one if it differs
+        if (currentPlace && currentPlace.image_url && dbPayload.image_url && currentPlace.image_url !== dbPayload.image_url) {
+            await deleteImageFromUrl(currentPlace.image_url);
         }
 
         await logAction('UPDATE', place.name || 'Unknown', 'Record updated');
@@ -511,11 +562,19 @@ export const deletePlace = async (id: string): Promise<{ success: boolean; error
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) throw new Error("Unauthorized");
 
+        // 1. Fetch current record to get image URL for cleanup later
+        const { data: currentPlace } = await supabase.from('places').select('image_url').eq('id', id).single();
+
         const { error: eventError } = await supabase.from('events').update({ place_id: null }).eq('place_id', id);
         if (eventError) console.warn("Failed to unlink events:", eventError);
 
         const { error } = await supabase.from('places').delete().eq('id', id);
         if (error) throw error;
+
+        // 2. Garbage collect the image
+        if (currentPlace && currentPlace.image_url) {
+            await deleteImageFromUrl(currentPlace.image_url);
+        }
 
         await logAction('DELETE', id, 'Record deleted');
         return { success: true };
