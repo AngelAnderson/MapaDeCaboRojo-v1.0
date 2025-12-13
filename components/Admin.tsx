@@ -9,8 +9,6 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { translations } from '../i18n/translations';
 import { DEFAULT_PLACE_ZOOM, DEFAULT_CATEGORIES } from '../constants';
 
-// ... (Interface and UI Component definitions remain unchanged: Section, InputGroup, StyledInput, etc.)
-
 interface AdminProps {
   onClose: () => void;
   places: Place[];
@@ -151,7 +149,6 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ... (useEffects and list filtering logic remain unchanged)
   // --- FILTER LISTS (Enhanced for Inbox) ---
   const pendingPlaces = places.filter(p => p.status === 'pending');
   const filteredPlaces = places.filter(p => 
@@ -266,23 +263,29 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
   const handleGoogleSync = async () => {
       if (!editingPlace?.id) return showToast("Save place first to get an ID.", 'error');
       
-      // Try to get Place ID from URL if not stored explicitly
+      setIsSyncing(true);
       let gId = '';
+
+      // 1. Try URL Extraction
       if (editingPlace.gmapsUrl && editingPlace.gmapsUrl.includes('place_id:')) {
           gId = editingPlace.gmapsUrl.split('place_id:')[1].split('&')[0];
-      } else if (editingPlace.gmapsUrl && editingPlace.gmapsUrl.includes('/place/')) {
-          // Fallback parsing for standard URLs
-          // This is rough; better to rely on smart import or autocomplete to set gmapsUrl correctly
+      }
+
+      // 2. Fallback: Search by Name if URL failed
+      if (!gId && editingPlace.name) {
+          try {
+              const suggestions = await autocompletePlace(editingPlace.name);
+              if (suggestions.length > 0) {
+                  gId = suggestions[0].place_id;
+              }
+          } catch(e) { console.error(e); }
       }
 
       if (!gId) {
-          // Ask user to provide one via autocomplete if missing?
-          // For now, assume if they used Smart Import, we might have the ID hidden or need to refetch
-          // Let's rely on finding it again if needed or erroring out.
-          return showToast("Cannot sync: No Google Place ID found in gmapsUrl.", 'error');
+          setIsSyncing(false);
+          return showToast("Cannot sync: Google Place ID not found via URL or Name.", 'error');
       }
 
-      setIsSyncing(true);
       try {
           const res = await fetch('/api/sync-place', {
               method: 'POST',
@@ -292,13 +295,23 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
           const data = await res.json();
           
           if (res.ok) {
-              // Merge updates into current view
+              const updates = data.data;
+              const newCoords = (updates.lat && updates.lon) ? { lat: updates.lat, lng: updates.lon } : editingPlace.coords;
+              
               setEditingPlace(prev => ({
                   ...prev,
-                  ...data.data
+                  address: updates.address,
+                  phone: updates.phone,
+                  website: updates.website,
+                  status: updates.status,
+                  rating: updates.rating,
+                  priceLevel: updates.price_level, // Map snake to camel
+                  coords: newCoords,
+                  // Ensure we save the resolved URL format for next time so it's faster
+                  gmapsUrl: `https://www.google.com/maps/place/?q=place_id:${gId}` 
               }));
               showToast("Sync Successful! Data updated.", 'success');
-              onUpdate(); // Refresh parent list
+              onUpdate(); 
           } else {
               showToast(data.error || "Sync Failed", 'error');
           }
@@ -310,7 +323,6 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
   };
 
   const handleSavePlace = async (autoApprove: boolean = false) => {
-    // ... (Existing save logic)
     if (!editingPlace || !editingPlace.name) return showToast(t('admin_name_required'), 'error');
     
     // Coordinate Validation
