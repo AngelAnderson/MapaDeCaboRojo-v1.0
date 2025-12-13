@@ -105,7 +105,7 @@ const SuggestPage: React.FC = () => {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans transition-colors">
       
       {/* Navbar */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 px-4 py-4 flex justify-between items-center">
+      <header className="sticky top-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200 dark:border-slate-700 px-4 py-4 flex justify-between items-center shadow-sm">
           <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-teal-600/20">
                   <i className="fa-solid fa-pen-nib"></i>

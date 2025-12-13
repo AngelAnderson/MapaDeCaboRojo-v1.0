@@ -23,6 +23,7 @@ import { useMapEngine } from '../hooks/useMapEngine';
 import { useRouter } from '../hooks/useRouter';
 
 // --- MAP APPLICATION COMPONENT ---
+// This contains the heavy logic for the map view
 const MapApp: React.FC = () => {
   const { language, setLanguage, t } = useLanguage();
   
@@ -103,6 +104,7 @@ const MapApp: React.FC = () => {
     } else if (activeGroup === 'ALL') {
         list = publishedPlaces;
     } else {
+        // Dynamic Filtering based on Category ID
         list = publishedPlaces.filter(p => p.category === activeGroup);
     }
     if (searchText) {
@@ -282,18 +284,17 @@ const MapApp: React.FC = () => {
 };
 
 // --- ROOT ROUTER COMPONENT ---
+// Simple router to switch between MapApp and SuggestPage based on URL
 const App: React.FC = () => {
-  const [isSuggestPage, setIsSuggestPage] = useState(false);
-
-  useEffect(() => {
-    // Check for "page=suggest" OR plain "/suggest" (if static server supports it)
-    const searchParams = new URLSearchParams(window.location.search);
-    if (searchParams.get('page') === 'suggest' || window.location.pathname === '/suggest') {
-      setIsSuggestPage(true);
+  // Use lazy initializer to check URL immediately on mount
+  const [isSuggestPage, setIsSuggestPage] = useState(() => {
+    if (typeof window !== 'undefined') {
+        const searchParams = new URLSearchParams(window.location.search);
+        return searchParams.get('page') === 'suggest' || window.location.pathname === '/suggest';
     }
-  }, []);
+    return false;
+  });
 
-  // Simple routing switch
   if (isSuggestPage) {
     return <SuggestPage />;
   }
