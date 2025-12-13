@@ -1,14 +1,48 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Place, Event, Coordinates, AdminLog, ItineraryItem, PlaceCategory, ChatMessage } from "../types";
+import { Place, Event, Coordinates, AdminLog, ItineraryItem, PlaceCategory, ChatMessage, DaySchedule } from "../types";
 
 // Initialize Client-Side AI (Fallback)
 const clientAI = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+
+// --- HELPER: TIME FORMATTER ---
+const formatTimeShort = (timeStr: string) => {
+    if (!timeStr) return '';
+    const [h, m] = timeStr.split(':').map(Number);
+    const ampm = h >= 12 ? 'pm' : 'am';
+    const h12 = h % 12 || 12;
+    // If minutes is 00, omit them (e.g., "5pm"). If not, show them ("5:30pm")
+    return m === 0 ? `${h12}${ampm}` : `${h12}:${m.toString().padStart(2,'0')}${ampm}`;
+};
+
+// --- HELPER: GET TODAY'S HOURS ---
+const getHoursString = (place: Place, dayIndex: number): string => {
+    const oh = place.opening_hours;
+    if (!oh) return "Horario no disp.";
+    
+    if (oh.type === '24_7') return "24/7";
+    if (oh.type === 'sunrise_sunset') return "Sol-a-Sol";
+    
+    if (oh.structured && Array.isArray(oh.structured)) {
+        const today = oh.structured.find((d: DaySchedule) => d.day === dayIndex);
+        if (today) {
+            if (today.isClosed) return "Cerrado hoy";
+            return `${formatTimeShort(today.open)} - ${formatTimeShort(today.close)}`;
+        }
+    }
+    
+    return oh.note || "Verificar horario";
+};
 
 // --- HELPER: CONTEXT PREPARATION ---
 // Optimized for Token Economy: Sends only essential data for decision making
 const prepareAiContext = (places: Place[], events: Event[], userLoc: Coordinates | undefined, contextInfo: any) => {
     
+    // Determine Day Index (0-6) based on the PR ISO Date string passed from useConcierge
+    // contextInfo.iso looks like "2023-10-27T10:30:00"
+    const prDate = new Date(contextInfo.iso); 
+    const currentDayIndex = isNaN(prDate.getDay()) ? new Date().getDay() : prDate.getDay();
+
     // 1. Enrich Places (Minified)
     const enrichedPlaces = places.map(p => {
         const amenities = [];
@@ -17,34 +51,48 @@ const prepareAiContext = (places: Place[], events: Event[], userLoc: Coordinates
         if (p.hasRestroom) amenities.push("Baños");
         
         // Truncate description to save tokens, AI only needs the gist
-        const shortDesc = p.description ? p.description.substring(0, 120) : "";
+        const shortDesc = p.description ? p.description.substring(0, 100) : "";
+        
+        // Calculate Specific Hours for TODAY
+        const hoursToday = getHoursString(p, currentDayIndex);
 
         return {
             id: p.id,
             n: p.name, // n = name
             c: p.category, // c = category
-            d: `${shortDesc}... ${p.vibe?.join(',') || ''}`, // d = description + vibe
+            d: `${shortDesc}...`, // d = desc
             l: p.address ? p.address.split(',')[0] : 'Cabo Rojo', // l = location zone
             a: amenities.join(','), // a = amenities
-            s: p.status === 'open' ? 'Open' : 'Closed' // s = status
+            s: p.status === 'open' ? 'Open' : 'Closed', // s = general status flag
+            h: hoursToday // h = exact hours for today (NEW)
         };
     });
 
     // 2. Enrich Events (Prioritize Next 7 Days only)
     const now = new Date();
+    // Safety buffer: Subtract 2 hours just in case an event is ending *right now* and we still want to show it
+    const activeThreshold = new Date(now.getTime() - (2 * 60 * 60 * 1000));
+    
     const oneWeekFromNow = new Date();
     oneWeekFromNow.setDate(now.getDate() + 7);
 
     const enrichedEvents = events
         .filter(e => {
-            const eDate = new Date(e.endTime || e.startTime);
-            return eDate >= now && eDate <= oneWeekFromNow;
+            // Logic: Is the event end time (or start time) in the future?
+            const endDate = new Date(e.endTime || e.startTime);
+            return endDate >= activeThreshold;
+        })
+        .filter(e => {
+            // Also cap it to 1-2 weeks so we don't overload context with events 6 months away
+            const startDate = new Date(e.startTime);
+            return startDate <= oneWeekFromNow;
         })
         .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
         .map(e => ({
             t: e.title,
             d: e.description?.substring(0, 100),
-            w: new Date(e.startTime).toLocaleString('es-PR', { weekday: 'short', hour: 'numeric', day: 'numeric' }),
+            // Format strictly to ISO for AI logic, plus human readable
+            w: `${new Date(e.startTime).toISOString()} (${new Date(e.startTime).toLocaleString('es-PR', { weekday: 'short', hour: 'numeric' })})`,
             l: e.locationName
         }));
 
@@ -55,6 +103,7 @@ const prepareAiContext = (places: Place[], events: Event[], userLoc: Coordinates
             loc: userLoc ? "known" : "unknown",
             time: contextInfo.time,
             day: contextInfo.date,
+            iso: contextInfo.iso_date, // Machine readable date
             weather: contextInfo.weather
         }
     };
@@ -81,17 +130,17 @@ async function handleClientSideAI(action: string, payload: any) {
                 Ayudar a tus vecinos usando *exclusivamente* los apuntes de tu libreta (la data provista).
 
                 CONTEXTO CRÍTICO:
-                - Hora/Día: ${context.ctx.day} ${context.ctx.time}. Úsalo para saber qué está abierto.
+                - Hora Actual (PR): ${context.ctx.iso || context.ctx.day}
                 - Clima: ${context.ctx.weather}.
 
                 LA LIBRETA (Data Minified):
-                p=Places(n=name,c=category,d=desc,l=loc,a=amenities,s=status), e=Events.
+                p=Places(n=name, c=cat, l=loc, h=HOY_HORARIO), e=Events.
                 ${JSON.stringify(context)}
 
                 REGLAS DE ORO:
-                1. **Anti-Alucinación:** Si no está en 'p' (Places) o 'e' (Events), di: "Ay bendito, ese no lo tengo, pero te recomiendo..." y sugiere algo de la lista.
-                2. **Dirección Clara:** Di qué está abierto ahora mismo.
-                3. **Seguridad:** Emergencias = 911.
+                1. **Horarios Exactos:** Si preguntan "¿está abierto?" o "¿a qué hora cierra?", mira el campo 'h' (horario de hoy) y dilo exacto. Ej: "Sí, hoy cierran a las 5pm".
+                2. **Anti-Alucinación:** Si no está en 'p' o 'e', di: "Mala mía, no lo tengo anotado".
+                3. **Solo el Futuro:** La fecha actual es ${context.ctx.day}. NUNCA menciones eventos pasados.
             `;
             
             const formattedHistory = history.map((h: any) => ({
@@ -176,7 +225,6 @@ export const sendConciergeMessage = async (
     return response || { text: "El Veci está durmiendo. Intenta más tarde." };
 };
 
-// ... (Rest of exports: identifyPlaceFromImage, generateTripItinerary, etc. remain unchanged)
 export const identifyPlaceFromImage = async (base64Image: string, places: Place[]) => {
     const res = await callAI('identify', { image: base64Image });
     return extractJson(res) || { matchedPlaceId: null, explanation: "No pude procesar la imagen." };
@@ -241,6 +289,11 @@ export const parsePlaceFromRawText = async (text: string) => {
 
 export const parseBulkPlaces = async (text: string) => {
     const res = await callAI('parse-bulk', { text });
+    return res;
+};
+
+export const parseHoursFromText = async (text: string) => {
+    const res = await callAI('parse-hours', { text });
     return res;
 };
 

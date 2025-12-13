@@ -43,11 +43,14 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
     try {
         // FORCE PUERTO RICO TIMEZONE
         const now = new Date();
+        
+        // Human Readable Date (e.g., "lunes, 24 de agosto")
         const prDate = new Intl.DateTimeFormat('es-PR', { 
             timeZone: 'America/Puerto_Rico', 
             dateStyle: 'full' 
         }).format(now);
         
+        // Human Readable Time (e.g., "4:30 PM")
         const prTime = new Intl.DateTimeFormat('en-US', { 
             timeZone: 'America/Puerto_Rico', 
             hour: 'numeric', 
@@ -55,9 +58,17 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
             hour12: true 
         }).format(now);
 
+        // Machine Readable ISO String for Math (YYYY-MM-DDTHH:mm:ss in PR Time)
+        // This ensures the AI can strictly compare "2023-10-25" vs "2023-10-24"
+        const isoDatePR = new Date().toLocaleString('en-CA', { 
+            timeZone: 'America/Puerto_Rico', 
+            hour12: false 
+        }).replace(', ', 'T');
+
         const contextInfo = {
-            date: prDate, // e.g., "lunes, 24 de agosto de 2025"
-            time: prTime, // e.g., "4:30 PM"
+            date: prDate, 
+            time: prTime,
+            iso_date: isoDatePR, // Strict comparison value
             weather: weatherContext || 'Tropical'
         };
 
