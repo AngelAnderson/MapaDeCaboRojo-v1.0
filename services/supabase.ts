@@ -77,6 +77,15 @@ const setCache = (key: string, data: any) => {
     }
 };
 
+const invalidateCache = (key: string) => {
+    delete memoryCache[key];
+    try {
+        localStorage.removeItem(CACHE_KEY_PREFIX + key);
+    } catch (e) {
+        console.warn("Signal Saver clear error:", e);
+    }
+};
+
 // --- HELPER: ERROR MESSAGE EXTRACTION ---
 const getErrorMessage = (error: any): string => {
   if (!error) return "Unknown error occurred";
@@ -523,6 +532,8 @@ export const createCategory = async (category: Category): Promise<{ success: boo
         const { error } = await supabase.from('categories').insert([category]);
         if (error) throw error;
         await logAction('CREATE_CAT', category.id, `Created category ${category.label_en}`);
+        
+        invalidateCache('CATEGORIES');
         return { success: true };
     } catch (e: any) {
         return { success: false, error: getErrorMessage(e) };
@@ -536,6 +547,8 @@ export const updateCategory = async (id: string, category: Partial<Category>): P
         const { error } = await supabase.from('categories').update(category).eq('id', id);
         if (error) throw error;
         await logAction('UPDATE_CAT', id, `Updated category`);
+        
+        invalidateCache('CATEGORIES');
         return { success: true };
     } catch (e: any) {
         return { success: false, error: getErrorMessage(e) };
@@ -549,6 +562,8 @@ export const deleteCategory = async (id: string): Promise<{ success: boolean; er
         const { error } = await supabase.from('categories').delete().eq('id', id);
         if (error) throw error;
         await logAction('DELETE_CAT', id, `Deleted category`);
+        
+        invalidateCache('CATEGORIES');
         return { success: true };
     } catch (e: any) {
         return { success: false, error: getErrorMessage(e) };
@@ -694,8 +709,8 @@ export const createPlace = async (place: Partial<Place>): Promise<{ success: boo
         if (error) throw error;
         await logAction('CREATE', place.name || 'Unknown', isAdmin ? 'Record created by Admin' : 'User Suggestion');
         
-        // Invalidate Cache
-        delete memoryCache['PLACES'];
+        // Invalidate Cache (both memory and persistent)
+        invalidateCache('PLACES');
         
         return { success: true };
     } catch (e: any) { 
@@ -730,8 +745,8 @@ export const updatePlace = async (id: string, place: Partial<Place>): Promise<{ 
 
         await logAction('UPDATE', place.name || 'Unknown', 'Record updated');
         
-        // Invalidate Cache
-        delete memoryCache['PLACES'];
+        // Invalidate Cache (both memory and persistent)
+        invalidateCache('PLACES');
 
         return { success: true };
     } catch (e: any) { 
@@ -761,8 +776,8 @@ export const deletePlace = async (id: string): Promise<{ success: boolean; error
 
         await logAction('DELETE', id, 'Record deleted');
         
-        // Invalidate Cache
-        delete memoryCache['PLACES'];
+        // Invalidate Cache (both memory and persistent)
+        invalidateCache('PLACES');
 
         return { success: true };
     } catch (e: any) { 
@@ -784,7 +799,7 @@ export const createEvent = async (event: Partial<Event>): Promise<{ success: boo
         await logAction('CREATE_EVENT', event.title || 'Unknown', 'Event created by Admin');
         
         // Invalidate Cache
-        delete memoryCache['EVENTS'];
+        invalidateCache('EVENTS');
 
         return { success: true };
     } catch (e: any) {
@@ -802,7 +817,7 @@ export const updateEvent = async (id: string, event: Partial<Event>): Promise<{ 
         await logAction('UPDATE_EVENT', event.title || 'Unknown', 'Event updated by Admin');
         
         // Invalidate Cache
-        delete memoryCache['EVENTS'];
+        invalidateCache('EVENTS');
 
         return { success: true };
     } catch (e: any) {
@@ -819,7 +834,7 @@ export const deleteEvent = async (id: string): Promise<{ success: boolean; error
         await logAction('DELETE_EVENT', id, 'Event deleted');
         
         // Invalidate Cache
-        delete memoryCache['EVENTS'];
+        invalidateCache('EVENTS');
 
         return { success: true };
     } catch (e: any) {
