@@ -13,19 +13,15 @@ async function handleClientSideAI(action: string, payload: any) {
         case 'chat': {
             const { message, history, context } = payload;
             const systemInstruction = `
-                Eres "El Veci", el guía local de Cabo Rojo, Puerto Rico.
+                Eres "El Veci", un señor amable y sabio que ha vivido en Cabo Rojo toda la vida.
                 
-                LANGUAGE / IDIOMA:
-                - DETECTA EL IDIOMA DEL USUARIO.
-                - English input -> English output (Friendly, helpful).
-                - Spanish input -> Spanish output (Boricua style, polite, local).
-
-                PERSONALIDAD:
-                - Amable, respetuoso.
-                - ¡IMPORTANTE!: Al final de tu respuesta (al menos 1 de cada 2 veces), cuenta un chiste corto y sano ("chiste mongu" / dad joke).
+                TU PERSONALIDAD:
+                - **Regla de los 105 Años:** Habla tan sencillo y claro que un abuelo de 105 años te entienda perfecto. Cero palabras raras.
+                - **Vecino:** Saluda como familia ("¡Wepa!", "Saludos", "Mijo/a").
+                - **Humor:** A veces suelta un chiste "mongo" (bobo) y sano sobre el calor o la playa para romper el hielo.
                 
                 DATOS EN TIEMPO REAL:
-                Aquí tienes la lista actualizada de lugares y eventos en Cabo Rojo:
+                Usa SOLO esta lista para recomendar (si no está aquí, di que no lo tienes):
                 ${JSON.stringify(context.places.map((p:any) => ({
                     id: p.id,
                     name: p.name, 
@@ -42,18 +38,13 @@ async function handleClientSideAI(action: string, payload: any) {
                 ${JSON.stringify(context.events || [])}
 
                 REGLAS DE BÚSQUEDA Y PRIORIDAD:
-                1. **EVENTOS (Prioridad Alta):** Si el usuario pregunta "¿Qué hay para hacer?" o "¿Eventos hoy?", revisa el array de EVENTOS primero.
-                2. **BARRIOS (Geografía):** Si mencionan "Puerto Real", "Boquerón", "Joyuda", "Combate", o "Pueblo", filtra lugares usando el campo 'address' o 'tags'.
-                3. **SERVICIOS:** Si preguntan por plomeros o mecánicos, busca en la categoría SERVICE.
-
-                CONTEXTO DE TIEMPO (PUERTO RICO):
-                - Fecha Actual: ${context.date}
-                - Hora Actual: ${context.time}
-                - Usa ESTA hora para chequear 'opening_hours'.
+                1. **EVENTOS (Prioridad Alta):** Si preguntan "¿Qué hay hoy?", revisa eventos.
+                2. **BARRIOS:** Si mencionan "Puerto Real", "Joyuda", "Combate", busca por dirección.
+                3. **CONTEXTO:** El clima es: ${context.weather || 'Tropical'}. Úsalo para dar consejos (agua, sombra, techo).
 
                 Instrucciones:
-                1. Usa SOLAMENTE esta información para responder sobre lugares.
-                2. Si recomiendas un lugar, trata de mencionar su nombre exacto.
+                1. Usa SOLAMENTE esta información. No inventes lugares.
+                2. Si fallas, di "Mala mía".
                 3. Responde siempre en JSON: { "text": "...", "suggested_place_ids": ["id"] }
             `;
             
@@ -243,11 +234,24 @@ async function handleClientSideAI(action: string, payload: any) {
                 contents: `Give a local tip for "${payload.name}" (${payload.category}).`
             })).text };
 
-        case 'generate-alt-text':
-            return { text: (await clientAI.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: { parts: [{ image: { url: payload.imageUrl } }, { text: "Generate alt text (max 15 words)." }] }
-            })).text };
+        case 'generate-alt-text': {
+            try {
+                const response = await fetch(payload.imageUrl);
+                const blob = await response.blob();
+                const base64 = await new Promise<string>((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve((reader.result as string).split(',')[1]);
+                    reader.readAsDataURL(blob);
+                });
+                
+                return { text: (await clientAI.models.generateContent({
+                    model: 'gemini-2.5-flash',
+                    contents: { parts: [{ inlineData: { mimeType: blob.type || 'image/jpeg', data: base64 } }, { text: "Generate alt text (max 15 words)." }] }
+                })).text };
+            } catch (e) {
+                return { text: "Error generating alt text." };
+            }
+        }
 
         case 'generate-seo-meta-tags':
             return JSON.parse((await clientAI.models.generateContent({
