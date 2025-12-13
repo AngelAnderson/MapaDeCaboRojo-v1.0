@@ -247,7 +247,7 @@ const MapApp: React.FC = () => {
         image={selectedPlace ? selectedPlace.imageUrl : undefined}
       />
       
-      <header className="absolute top-0 left-0 right-0 z-[1000] px-5 pt-10 pb-5 pointer-events-none flex justify-between items-start">
+      <header className="absolute top-0 left-0 right-0 z-[1000] px-5 pt-16 md:pt-10 pb-5 pointer-events-none flex justify-between items-start">
         <WeatherWidget />
         <div className="pointer-events-auto flex flex-col gap-3 items-end">
             {isOffline && (
