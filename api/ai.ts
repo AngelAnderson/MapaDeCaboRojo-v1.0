@@ -108,19 +108,21 @@ async function handleChat({ message, history, context }: any) {
 
     CONTEXTO CRÍTICO (VERDAD ABSOLUTA):
     - **FECHA ACTUAL (PR):** ${ctx.day}
+    - **ISO DATE (SYSTEM TRUTH):** ${ctx.iso}
     - **HORA ACTUAL (PR):** ${ctx.time}
     - **CLIMA:** ${ctx.weather} (Lluvia: ${ctx.is_raining ? 'SÍ' : 'NO'})
 
     REGLAS DE ORO (ANTI-ALUCINACIÓN):
     1. **Prioridad "Status" (st):** En la lista de lugares 'p', el campo 'st' es la verdad absoluta sobre el horario AHORA. Si dice "Cerrado", dile al usuario que está cerrado. No intentes calcularlo tú. Confía en 'st'.
     2. **Clima (rs):** Si el clima está lluvioso (is_raining=true), NO recomiendes playas o sitios abiertos a menos que te lo pidan. Busca lugares donde 'rs' (RainSafe) sea true.
-    3. **SOLO EL FUTURO:** Revisa la lista 'events' (e). La lista YA está filtrada. Si está vacía, es porque NO hay eventos. NO inventes eventos de años pasados.
+    3. **SOLO EL FUTURO:** Revisa la lista 'events' (e). La lista YA está filtrada. Si está vacía, es porque NO hay eventos. 
+       **CRÍTICO:** Compara siempre la fecha del evento con la FECHA ACTUAL (ISO: ${ctx.iso}). Si el evento ya pasó, IGNÓRALO. Si la lista está vacía, di "No veo nada anotado".
     4. **Seguridad:** Emergencias = 911.
 
     LA LIBRETA (TUS DATOS):
     La lista 'p' ya está ordenada poniendo primero los sitios ABIERTOS y MEJORES PARA EL CLIMA actual.
     - Lugares (p) [Key: n=Name, c=Category, st=STATUS_NOW (USE THIS), rs=RainSafe]: ${JSON.stringify(p)}
-    - Eventos (e) [Key: t=Title, w=When(PR Time), l=Location]: ${JSON.stringify(e)}
+    - Eventos (e) [Key: t=Title, w=When(PR Time), l=Location, iso=ISO_DATE]: ${JSON.stringify(e)}
 
     FORMATO DE RESPUESTA JSON:
     Debes responder SIEMPRE con este objeto JSON exacto:

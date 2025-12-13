@@ -42,31 +42,41 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
 
     try {
         // FORCE PUERTO RICO TIMEZONE
+        // We use 'en-US' with PR timezone to get components, then build the string manually to avoid browser inconsistencies
         const now = new Date();
+        const prFormatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'America/Puerto_Rico',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        });
         
-        // Human Readable Date (e.g., "lunes, 24 de agosto de 2025")
-        // EXPLICITLY INCLUDING YEAR to fix "Old Events" confusion
-        const prDate = new Intl.DateTimeFormat('es-PR', { 
+        // Parts will be like: { type: 'month', value: '12' }, ...
+        const parts = prFormatter.formatToParts(now);
+        const part = (type: string) => parts.find(p => p.type === type)?.value;
+        
+        const isoDatePR = `${part('year')}-${part('month')}-${part('day')}T${part('hour')}:${part('minute')}:00`;
+        
+        // Human Readable Date (Spanish)
+        const humanFormatter = new Intl.DateTimeFormat('es-PR', { 
             timeZone: 'America/Puerto_Rico', 
             weekday: 'long',
             day: 'numeric',
             month: 'long',
-            year: 'numeric' // Critical: Force year
-        }).format(now);
+            year: 'numeric'
+        });
+        const prDate = humanFormatter.format(now);
         
-        // Human Readable Time (e.g., "4:30 PM")
+        // Human Readable Time
         const prTime = new Intl.DateTimeFormat('en-US', { 
             timeZone: 'America/Puerto_Rico', 
             hour: 'numeric', 
             minute: 'numeric', 
             hour12: true 
         }).format(now);
-
-        // Machine Readable ISO String for Service Layer Logic
-        const isoDatePR = new Date().toLocaleString('en-CA', { 
-            timeZone: 'America/Puerto_Rico', 
-            hour12: false 
-        }).replace(', ', 'T');
 
         const contextInfo = {
             date: prDate, 

@@ -127,7 +127,8 @@ const prepareAiContext = (places: Place[], events: Event[], userLoc: Coordinates
             t: e.title,
             d: e.description?.substring(0, 100),
             w: `${new Date(e.startTime).toLocaleString('es-PR', { timeZone: 'America/Puerto_Rico', weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`,
-            l: e.locationName
+            l: e.locationName,
+            iso: e.startTime // Pass ISO for easy comparison
         }));
 
     return {
@@ -137,6 +138,7 @@ const prepareAiContext = (places: Place[], events: Event[], userLoc: Coordinates
             loc: userLoc ? "known" : "unknown",
             time: contextInfo.time,
             day: contextInfo.date,
+            iso: contextInfo.iso_date, // Re-added ISO field
             weather: contextInfo.weather,
             is_raining: isRaining // Explicit flag for AI
         }
@@ -155,7 +157,8 @@ async function handleClientSideAI(action: string, payload: any) {
                 Eres "El Veci", un señor amable, sabio y servicial que ha vivido en Cabo Rojo toda la vida.
 
                 CONTEXTO CRÍTICO:
-                - Fecha: ${context.ctx.day} | Hora: ${context.ctx.time}
+                - Fecha: ${context.ctx.day} (ISO: ${context.ctx.iso})
+                - Hora: ${context.ctx.time}
                 - Clima: ${context.ctx.weather} (Lluvia: ${context.ctx.is_raining ? 'SÍ' : 'NO'})
 
                 LA LIBRETA (Priorizada):
