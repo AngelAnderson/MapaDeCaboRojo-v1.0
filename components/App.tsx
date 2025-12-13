@@ -8,6 +8,7 @@ import Concierge from './Concierge';
 import Admin from './Admin';
 import ContactModal from './ContactModal';
 import SuggestPlaceModal from './SuggestPlaceModal'; 
+import SuggestPage from './SuggestPage'; // Import new page
 import WeatherWidget from './WeatherWidget'; 
 import { getPlaces, getEvents } from '../services/supabase'; 
 import { LanguageProvider, useLanguage } from '../i18n/LanguageContext';
@@ -21,15 +22,14 @@ import { usePlacesData } from '../hooks/usePlacesData';
 import { useMapEngine } from '../hooks/useMapEngine';
 import { useRouter } from '../hooks/useRouter';
 
-// --- MAIN COMPONENT ---
-
-const MainApp: React.FC = () => {
+// --- MAP APPLICATION COMPONENT ---
+const MapApp: React.FC = () => {
   const { language, setLanguage, t } = useLanguage();
   
   // Refs
   const mapContainer = useRef<HTMLDivElement>(null);
   
-  // Data State - Now includes categories
+  // Data State
   const { places, events, categories, publishedPlaces, mappedEvents, loading, refreshData } = usePlacesData();
   
   // Favorites State
@@ -43,11 +43,8 @@ const MainApp: React.FC = () => {
   // Smart Sorting Logic
   const getSmartCategory = () => {
       const h = new Date().getHours();
-      // Morning (5am - 11am): Food (Breakfast)
       if (h >= 5 && h < 11) return 'FOOD';
-      // Day (11am - 6pm): Beaches
       if (h >= 11 && h < 18) return 'BEACH';
-      // Night (6pm - 5am): Nightlife
       if (h >= 18 || h < 5) return 'NIGHTLIFE';
       return 'ALL';
   };
@@ -55,7 +52,6 @@ const MainApp: React.FC = () => {
   // UI State
   const [activeTab, setActiveTab] = useState('map');
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
-  // Initialize with Smart Category (Context-Aware Sorting)
   const [activeGroup, setActiveGroup] = useState<string>(() => getSmartCategory());
   const [activeCollection, setActiveCollection] = useState<Collection | null>(null);
   const [searchText, setSearchText] = useState(''); 
@@ -63,7 +59,7 @@ const MainApp: React.FC = () => {
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   
-  // Offline State (Signal Saver)
+  // Offline State
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
   useEffect(() => {
@@ -107,7 +103,6 @@ const MainApp: React.FC = () => {
     } else if (activeGroup === 'ALL') {
         list = publishedPlaces;
     } else {
-        // Dynamic Filtering based on Category ID
         list = publishedPlaces.filter(p => p.category === activeGroup);
     }
     if (searchText) {
@@ -118,14 +113,11 @@ const MainApp: React.FC = () => {
   }, [activeGroup, activeCollection, publishedPlaces, mappedEvents, savedIds, searchText]);
 
   // --- EFFECTS ---
-
-  // VIP Check
   useEffect(() => { 
     const vip = localStorage.getItem('cabo_vip_status'); 
     if (vip === 'unlocked') setIsVipUnlocked(true); 
   }, []);
 
-  // Theme Manager
   useEffect(() => {
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -135,7 +127,6 @@ const MainApp: React.FC = () => {
     localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
   }, [isDarkMode]);
 
-  // Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -147,33 +138,31 @@ const MainApp: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Initialize Map Engine (Pass categories for dynamic colors)
+  // Initialize Map Engine
   const { mapLoaded, flyTo, flyHome, showUserLocation, invalidateSize, zoomIn, zoomOut } = useMapEngine( 
     mapContainer,
     isDarkMode,
     mapStyle,
     filteredList,
     (p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); },
-    categories // NEW PROP
+    categories
   );
 
-  // Initialize Router (Handles all URL state safely)
+  // Initialize Router
   useRouter(
     publishedPlaces, 
     selectedPlace, 
     setSelectedPlace, 
     flyTo,
     (action) => {
+      // NOTE: 'suggest' action in map view opens the modal, not the page.
       if (action === 'suggest') setIsSuggestOpen(true);
     }
   );
 
-  // Fix: Map Layout Invalidation
   useEffect(() => {
     if (mapLoaded) invalidateSize();
   }, [mapLoaded, activeTab]);
-
-  // --- HANDLERS ---
 
   const handleNavigate = () => { 
     if (selectedPlace) window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedPlace.coords.lat},${selectedPlace.coords.lng}`, '_blank'); 
@@ -209,8 +198,6 @@ const MainApp: React.FC = () => {
       setActiveTab(tabId);
       if (tabId === 'map') {
           if (forceReset) {
-              // Note: We don't reset to 'ALL' anymore to respect Smart Sorting or User Choice
-              // We only clear collection/search/selection
               setActiveCollection(null);
               setSearchText('');
               setSelectedPlace(null);
@@ -251,7 +238,6 @@ const MainApp: React.FC = () => {
     <div className="h-screen w-screen flex flex-col overflow-hidden relative bg-slate-50 dark:bg-slate-900 font-sans transition-colors duration-500">
       <div className="noise-overlay"></div>
       
-      {/* SEO Engine */}
       <SeoEngine 
         place={selectedPlace} 
         title={selectedPlace ? `${selectedPlace.name} | Cabo Rojo` : undefined}
@@ -267,103 +253,52 @@ const MainApp: React.FC = () => {
                     <i className="fa-solid fa-wifi"></i>
                 </div>
             )}
-            <button 
-              onClick={() => setMapStyle(prev => prev === 'standard' ? 'satellite' : 'standard')}
-              className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-emerald-600 dark:text-emerald-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center mb-0"
-              title={mapStyle === 'standard' ? t('satellite_view') : t('map_view')}
-            >
+            <button onClick={() => setMapStyle(prev => prev === 'standard' ? 'satellite' : 'standard')} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-emerald-600 dark:text-emerald-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center mb-0">
               <i className={`fa-solid ${mapStyle === 'standard' ? 'fa-satellite' : 'fa-map'}`}></i>
             </button>
-            <button 
-              onClick={() => zoomIn()} 
-              className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-600 dark:text-slate-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"
-              title={t('zoom_in')}
-            >
-                <i className="fa-solid fa-plus"></i>
-            </button>
-            <button 
-              onClick={() => zoomOut()} 
-              className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-600 dark:text-slate-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"
-              title={t('zoom_out')}
-            >
-                <i className="fa-solid fa-minus"></i>
-            </button>
-            <button onClick={() => setIsDarkMode(!isDarkMode)} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-amber-500 dark:text-purple-300 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">
-              <i className={`fa-solid ${isDarkMode ? 'fa-moon' : 'fa-sun'}`}></i>
-            </button>
+            <button onClick={() => zoomIn()} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-600 dark:text-slate-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"><i className="fa-solid fa-plus"></i></button>
+            <button onClick={() => zoomOut()} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-600 dark:text-slate-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"><i className="fa-solid fa-minus"></i></button>
+            <button onClick={() => setIsDarkMode(!isDarkMode)} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-amber-500 dark:text-purple-300 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"><i className={`fa-solid ${isDarkMode ? 'fa-moon' : 'fa-sun'}`}></i></button>
             <button onClick={() => setLanguage(language === 'es' ? 'en' : 'es')} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-800 dark:text-white p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-[10px] uppercase hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">{language === 'es' ? 'EN' : 'ES'}</button>
-            <button onClick={() => setIsAdminOpen(true)} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-600 dark:text-slate-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">
-              <i className="fa-solid fa-lock"></i>
-            </button>
-            <button onClick={centerOnUser} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-blue-500 dark:text-blue-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">
-                <i className="fa-solid fa-location-crosshairs"></i>
-            </button>
+            <button onClick={() => setIsAdminOpen(true)} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-600 dark:text-slate-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"><i className="fa-solid fa-lock"></i></button>
+            <button onClick={centerOnUser} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-blue-500 dark:text-blue-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"><i className="fa-solid fa-location-crosshairs"></i></button>
         </div>
       </header>
 
-      {/* Main Content Area */}
       <main className="flex-1 relative w-full h-full">
         <div ref={mapContainer} className="absolute inset-0 z-0 bg-slate-200 dark:bg-slate-800 transition-colors" />
       </main>
 
-      {/* Sheets & Modals */}
-      <ExplorerSheet 
-        places={filteredList} 
-        onSelect={(p) => { 
-            setSelectedPlace(p); 
-            flyTo(p.coords, p.defaultZoom);
-            handleTabChange('map', false); // Switch to map tab, but DO NOT reset map position
-        }} 
-        isVisible={activeTab === 'explore'} 
-        searchText={searchText}
-        onSearchChange={setSearchText}
-        resultCount={filteredList.length}
-        activeGroup={activeGroup}
-        onCategoryChange={setActiveGroup}
-        focusTrigger={searchFocusTrigger}
-        savedIds={savedIds}
-        onToggleFavorite={toggleFavorite}
-        onSelectCollection={setActiveCollection}
-        activeCollectionId={activeCollection?.id}
-        onCameraClick={() => { setIsConciergeOpen(true); }}
-        userLocation={userLocation || undefined}
-        onTabChange={handleTabChange}
-        categories={categories} // NEW PROP
-      />
-
+      <ExplorerSheet places={filteredList} onSelect={(p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); handleTabChange('map', false); }} isVisible={activeTab === 'explore'} searchText={searchText} onSearchChange={setSearchText} resultCount={filteredList.length} activeGroup={activeGroup} onCategoryChange={setActiveGroup} focusTrigger={searchFocusTrigger} savedIds={savedIds} onToggleFavorite={toggleFavorite} onSelectCollection={setActiveCollection} activeCollectionId={activeCollection?.id} onCameraClick={() => { setIsConciergeOpen(true); }} userLocation={userLocation || undefined} onTabChange={handleTabChange} categories={categories} />
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} onAction={handleNavAction} />
-
-      {selectedPlace && (
-        <PlaceCard 
-            place={selectedPlace} 
-            allPlaces={publishedPlaces} 
-            onSelect={(p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); }} 
-            onClose={() => setSelectedPlace(null)} 
-            onNavigate={handleNavigate}
-            onAskAi={() => setIsConciergeOpen(true)}
-            onSuggestEdit={() => { setIsContactOpen(true); }}
-            isFavorite={savedIds.includes(selectedPlace.id)}
-            onToggleFavorite={() => toggleFavorite(selectedPlace.id)}
-            userLocation={userLocation || undefined}
-        />
-      )}
-
-      <Concierge 
-        isOpen={isConciergeOpen} 
-        onClose={() => setIsConciergeOpen(false)} 
-        places={publishedPlaces} 
-        events={events} 
-        onNavigateToPlace={handleChatNavigation}
-        userLocation={userLocation || undefined}
-      />
-      
+      {selectedPlace && <PlaceCard place={selectedPlace} allPlaces={publishedPlaces} onSelect={(p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); }} onClose={() => setSelectedPlace(null)} onNavigate={handleNavigate} onAskAi={() => setIsConciergeOpen(true)} onSuggestEdit={() => { setIsContactOpen(true); }} isFavorite={savedIds.includes(selectedPlace.id)} onToggleFavorite={() => toggleFavorite(selectedPlace.id)} userLocation={userLocation || undefined} />}
+      <Concierge isOpen={isConciergeOpen} onClose={() => setIsConciergeOpen(false)} places={publishedPlaces} events={events} onNavigateToPlace={handleChatNavigation} userLocation={userLocation || undefined} />
       <SuggestPlaceModal isOpen={isSuggestOpen} onClose={() => setIsSuggestOpen(false)} />
       <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} onSuggest={() => { setIsContactOpen(false); setIsSuggestOpen(true); }} onChat={() => { setIsContactOpen(false); setIsConciergeOpen(true); }} />
       {isAdminOpen && <Admin onClose={() => setIsAdminOpen(false)} places={places} events={events} categories={categories} onUpdate={refreshData} />}
       <CommandMenu isOpen={isCommandMenuOpen} onClose={() => setIsCommandMenuOpen(false)} onSelect={handleCommandSelect} isDarkMode={isDarkMode} />
-
     </div>
   );
 };
 
-export default MainApp;
+// --- ROOT ROUTER COMPONENT ---
+const App: React.FC = () => {
+  const [isSuggestPage, setIsSuggestPage] = useState(false);
+
+  useEffect(() => {
+    // Check for "page=suggest" OR plain "/suggest" (if static server supports it)
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('page') === 'suggest' || window.location.pathname === '/suggest') {
+      setIsSuggestPage(true);
+    }
+  }, []);
+
+  // Simple routing switch
+  if (isSuggestPage) {
+    return <SuggestPage />;
+  }
+
+  return <MapApp />;
+};
+
+export default App;
