@@ -17,6 +17,7 @@ interface AdminProps {
   onUpdate: () => void;
 }
 
+// ... (Rest of UI components unchanged)
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 // --- UI COMPONENTS ---
@@ -165,6 +166,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
       });
   }, []);
 
+  // ... (useEffect for logs/insights remains unchanged)
   useEffect(() => {
     if ((activeTab === 'logs' || activeTab === 'insights') && isAuthenticated) {
       // Fetch more logs for insights to get better statistical data
@@ -322,7 +324,85 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
       }
   };
 
+  // --- WEATHER SYNC HANDLER ---
+  const handleWeatherSync = async () => {
+      if (!editingPlace?.id) return showToast("Save place first.", 'error');
+      if (!editingPlace?.coords?.lat || !editingPlace?.coords?.lng) return showToast("Needs coordinates.", 'error');
+
+      setIsSyncing(true);
+      try {
+          const res = await fetch('/api/sync-weather', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ placeId: editingPlace.id, lat: editingPlace.coords.lat, lon: editingPlace.coords.lng })
+          });
+          const data = await res.json();
+          if (res.ok) {
+              // Update local state amenities
+              const newAmenities = {
+                  ...(editingPlace.amenities || {}),
+                  surf_report: data.data
+              };
+              setEditingPlace(prev => ({ ...prev, amenities: newAmenities }));
+              showToast(`🌊 Surf Report Synced: ${data.data.condition}`, 'success');
+              onUpdate();
+          } else {
+              showToast(data.error || "Weather Sync Failed", 'error');
+          }
+      } catch(e) {
+          showToast("Network Error", 'error');
+      } finally {
+          setIsSyncing(false);
+      }
+  };
+
+  // --- VIBE SYNC HANDLER (NEW) ---
+  const handleVibeSync = async () => {
+      if (!editingPlace?.id) return showToast("Save place first.", 'error');
+      
+      let gId = '';
+      if (editingPlace.gmapsUrl && editingPlace.gmapsUrl.includes('place_id:')) {
+          gId = editingPlace.gmapsUrl.split('place_id:')[1].split('&')[0];
+      }
+      
+      if (!gId) {
+          // Fallback search logic
+          if (editingPlace.name) {
+              const suggestions = await autocompletePlace(editingPlace.name);
+              if (suggestions.length > 0) gId = suggestions[0].place_id;
+          }
+      }
+
+      if (!gId) return showToast("Google Place ID required for Vibe Check.", 'error');
+
+      setIsSyncing(true);
+      try {
+          const res = await fetch('/api/sync-vibe', {
+              method: 'POST',
+              headers: {'Content-Type': 'application/json'},
+              body: JSON.stringify({ placeId: editingPlace.id, googlePlaceId: gId })
+          });
+          const data = await res.json();
+          if (res.ok) {
+              const newAmenities = {
+                  ...(editingPlace.amenities || {}),
+                  vibe_check: data.data
+              };
+              setEditingPlace(prev => ({ ...prev, amenities: newAmenities }));
+              showToast("✨ Vibe Check Complete!", 'success');
+              onUpdate();
+          } else {
+              showToast(data.error || "Vibe Check Failed", 'error');
+          }
+      } catch(e) {
+          showToast("Network Error", 'error');
+      } finally {
+          setIsSyncing(false);
+      }
+  };
+
   const handleSavePlace = async (autoApprove: boolean = false) => {
+    // ... (unchanged save logic)
     if (!editingPlace || !editingPlace.name) return showToast(t('admin_name_required'), 'error');
     
     // Coordinate Validation
@@ -364,8 +444,8 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
     }
   };
 
-  // ... (Bulk Import, Delete Place, Category, Event handlers remain unchanged)
-  // ... (Copy pasting all previous logic to maintain context)
+  // ... (Bulk Import, Delete, Categories logic unchanged)
+  // ... (Copying existing bulk logic for context)
   const handleBulkImport = async () => {
       setIsBulkProcessing(true);
       setBulkLogs([]);
@@ -834,7 +914,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                         ))}
                     </>
                 )}
-                {/* ... (Categories and Inbox lists unchanged) ... */}
+                {/* ... (Other sidebar tabs unchanged) ... */}
                 {activeTab === 'categories' && (
                     <>
                         <div className="flex gap-2">
@@ -862,18 +942,18 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
 
         {/* EDITOR AREA */}
         <div className={`flex-1 bg-slate-900 overflow-y-auto custom-scrollbar ${isEditing || bulkMode ? 'absolute inset-0 z-10 md:static' : ((activeTab === 'insights' || activeTab === 'logs') ? 'w-full' : 'hidden md:flex flex-col items-center justify-center')}`}>
-            
+            {/* ... (Editor Tabs for Insights/Logs/Categories unchanged) ... */}
             {activeTab === 'insights' ? (
-                // ... (Insights tab logic unchanged) ...
+                // ...
                 <div className="p-8 max-w-5xl mx-auto animate-slide-up space-y-8">
                     <div className="flex justify-between items-center">
                         <h2 className="text-2xl font-black text-white flex items-center gap-3"><i className="fa-solid fa-chart-line text-teal-500"></i> Strategic Intelligence</h2>
                         <button onClick={handleAnalyzeDemand} disabled={isAnalyzingDemand} className="bg-teal-600 hover:bg-teal-500 text-white px-4 py-2 rounded-xl font-bold shadow-lg flex items-center gap-2 transition-all">{isAnalyzingDemand ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-wand-magic-sparkles"></i>} <span>Run New Analysis</span></button>
                     </div>
-                    {/* ... (Charts logic unchanged) ... */}
+                    {/* ... */}
                 </div>
             ) : activeTab === 'logs' ? (
-                // ... (Logs tab logic unchanged) ...
+                // ...
                 <div className="p-8 max-w-6xl mx-auto animate-slide-up h-full flex flex-col">
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-2xl font-black text-white flex items-center gap-3"><i className="fa-solid fa-terminal text-slate-500"></i> System Logs</h2>
@@ -882,7 +962,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                     {/* ... */}
                 </div>
             ) : activeTab === 'categories' && editingCategory ? (
-                // ... (Category editor unchanged) ...
+                // ... (Category Editor)
                 <div className="p-8 max-w-2xl mx-auto animate-slide-up">
                     <div className="flex justify-between items-center mb-6 bg-slate-800 p-4 rounded-xl border border-slate-700">
                         <span className="font-mono text-xs text-slate-500">{editingCategory.id ? 'EDITING' : 'CREATING'}</span>
@@ -916,6 +996,30 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                         <div className="flex items-center gap-3">
                             {editingPlace.id && editingPlace.status !== 'pending' && <button onClick={() => handleDeletePlace(editingPlace.id!)} className="text-red-500 text-xs font-bold hover:bg-red-500/10 px-3 py-1.5 rounded-lg flex items-center gap-2"><i className="fa-solid fa-trash"></i> {t('admin_delete_record')}</button>}
                             
+                            {/* VIBE SYNC (New) */}
+                            {editingPlace.id && (
+                                <button 
+                                    onClick={handleVibeSync} 
+                                    disabled={isSyncing}
+                                    className="bg-fuchsia-600/20 hover:bg-fuchsia-600/30 text-fuchsia-400 border border-fuchsia-500/50 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-2 transition-colors"
+                                >
+                                    {isSyncing ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-bolt"></i>}
+                                    <span>Sync Vibe</span>
+                                </button>
+                            )}
+
+                            {/* WEATHER SYNC */}
+                            {editingPlace.id && editingPlace.category === 'BEACH' && (
+                                <button 
+                                    onClick={handleWeatherSync} 
+                                    disabled={isSyncing}
+                                    className="bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-400 border border-cyan-500/50 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-2 transition-colors"
+                                >
+                                    {isSyncing ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-water"></i>}
+                                    <span>Sync Surf</span>
+                                </button>
+                            )}
+
                             {/* GOOGLE SYNC BUTTON */}
                             {editingPlace.id && (
                                 <button 
@@ -924,14 +1028,16 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                                     className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 border border-blue-500/50 text-xs font-bold px-3 py-1.5 rounded-lg flex items-center gap-2 transition-colors"
                                 >
                                     {isSyncing ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-brands fa-google"></i>}
-                                    <span>Sync Google Data</span>
+                                    <span>Sync Data</span>
                                 </button>
                             )}
                         </div>
                     </div>
 
-                    {/* ... (Smart Import Section unchanged) ... */}
+                    {/* ... (Rest of Editor sections) ... */}
+                    {/* Smart Import Section */}
                     <div className="bg-gradient-to-r from-indigo-900/50 to-purple-900/50 p-4 rounded-2xl border border-indigo-500/30 mb-6 relative overflow-hidden">
+                        {/* ... */}
                         <div className="absolute top-0 right-0 p-4 opacity-10"><i className="fa-solid fa-wand-magic-sparkles text-6xl text-white"></i></div>
                         <h3 className="text-sm font-bold text-indigo-200 uppercase tracking-wide mb-3 flex items-center gap-2"><i className="fa-solid fa-bolt text-yellow-400"></i> {t('admin_smart_import')}</h3>
                         <div className="relative z-10 flex flex-col gap-3">
@@ -954,7 +1060,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                                 <StyledSelect value={editingPlace.category || 'SERVICE'} onChange={e => setEditingPlace({...editingPlace, category: e.target.value})}>
                                     {categories.length > 0 
                                         ? categories.map(c => <option key={c.id} value={c.id}>{c.label_en} ({c.id})</option>)
-                                        : DEFAULT_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label_en} ({c.id})</option>) // Fallback logic inside render
+                                        : DEFAULT_CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label_en} ({c.id})</option>)
                                     }
                                 </StyledSelect>
                             </InputGroup>
@@ -1082,6 +1188,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                     </Section>
 
                     <Section title={t('admin_ai_marketing_studio')} icon="bullhorn">
+                        {/* ... (Marketing UI unchanged) */}
                         <div className="grid grid-cols-2 gap-3 mb-3">
                             <InputGroup label={t('admin_platform')}>
                                 <StyledSelect value={marketingPlatform} onChange={e => setMarketingPlatform(e.target.value as any)}>

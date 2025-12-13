@@ -1,3 +1,4 @@
+
 import { Buffer } from 'buffer';
 
 export default async function handler(req: any, res: any) {
@@ -22,7 +23,8 @@ export default async function handler(req: any, res: any) {
       googlePlacesUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query as string)}&components=country:pr&language=es&key=${apiKey}`;
     } 
     else if (action === 'details' && place_id) {
-      googlePlacesUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(place_id as string)}&fields=name,formatted_address,geometry,website,international_phone_number,opening_hours,price_level,rating,photos,editorial_summary&language=es&key=${apiKey}`;
+      // Added 'reviews' to fields
+      googlePlacesUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${encodeURIComponent(place_id as string)}&fields=name,formatted_address,geometry,website,international_phone_number,opening_hours,price_level,rating,photos,editorial_summary,reviews&language=es&key=${apiKey}`;
     } 
     else if (action === 'photo' && reference) {
       // 1. Construct the Google Photo URL
