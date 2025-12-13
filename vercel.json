@@ -4,9 +4,14 @@
     {
       "path": "/api/cron-briefing",
       "schedule": "0 11 * * *"
+    },
+    {
+      "path": "/api/cron-maintenance",
+      "schedule": "0 3 * * 1"
     }
   ],
   "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],

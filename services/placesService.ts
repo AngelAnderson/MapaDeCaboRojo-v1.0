@@ -8,6 +8,13 @@ const callPlacesProxy = async (action: string, params: Record<string, string>) =
     const query = new URLSearchParams(params).toString();
     try {
         const res = await fetch(`/api/places-proxy?action=${action}&${query}`);
+        
+        // If action is photo, we can't parse as JSON
+        if (action === 'photo') {
+            if (!res.ok) throw new Error("Image fetch failed");
+            return res.blob();
+        }
+
         // Read response text once to avoid issues with stream consumption
         const responseText = await res.text(); 
         
@@ -62,10 +69,6 @@ export const findCoordinates = async (query: string): Promise<{ lat: number, lng
                 return details.coords;
             }
         }
-        // Fallback for cases where direct query might work or if details don't have coords
-        // For simple coord lookup, Places API is still better than general AI search.
-        // If a direct geocoding API was needed, it would be another proxy call.
-        // For now, if details don't yield coords, we return null.
         return null; 
     } catch (e) {
         console.error("Find Coordinates failed:", e);
@@ -81,16 +84,11 @@ export const fetchPlaceDetails = async (queryOrPlaceId: string): Promise<Partial
     // 1. Try to extract Place ID from Google Maps URL
     const gmapsUrlMatch = queryOrPlaceId.match(/place\/([^\/]+)\/data/);
     if (gmapsUrlMatch && gmapsUrlMatch[1]) {
-        // This is a rough extraction, Google Maps URLs can be complex.
-        // A more robust solution might involve parsing the full data string or using an external library.
-        // For now, we'll assume the main part after /place/ is often related to the place name/id.
         // More reliably, Place ID is in `place/ChIJ_...` format.
-        // Let's search for "ChIJ" pattern for actual place_id
         const placeIdMatch = queryOrPlaceId.match(/ChI[a-zA-Z0-9_-]+/);
         if (placeIdMatch) {
             placeId = placeIdMatch[0];
         } else {
-            // If no ChIJ found, try autocomplete with the URL itself (less ideal but might yield something)
             // Or extract readable name from URL for autocomplete
             const nameFromUrl = decodeURIComponent(queryOrPlaceId.split('/').pop()?.split('?')[0] || '');
             if (nameFromUrl) {
@@ -122,19 +120,18 @@ export const fetchPlaceDetails = async (queryOrPlaceId: string): Promise<Partial
 
         const openingHours = data.opening_hours?.weekday_text?.map((dayText: string, index: number) => {
             const parts = dayText.split(': ');
-            const dayName = parts[0]; // e.g., "Monday"
-            const hours = parts[1];   // e.g., "9:00 AM – 5:00 PM"
+            const dayName = parts[0]; 
+            const hours = parts[1]; 
 
             let open = '';
             let close = '';
             let isClosed = false;
 
-            if (hours.toLowerCase().includes('closed')) {
+            if (hours && hours.toLowerCase().includes('closed')) {
                 isClosed = true;
-            } else {
+            } else if (hours) {
                 const hourMatches = hours.match(/(\d{1,2}:\d{2}\s(?:AM|PM))\s–\s(\d{1,2}:\d{2}\s(?:AM|PM))/);
                 if (hourMatches) {
-                    // Convert 12-hour format to 24-hour for internal use
                     const convertTo24h = (time12h: string) => {
                         const [time, modifier] = time12h.split(' ');
                         let [hours, minutes] = time.split(':');
@@ -147,39 +144,40 @@ export const fetchPlaceDetails = async (queryOrPlaceId: string): Promise<Partial
                 }
             }
             return {
-                day: index, // Google's API returns Sunday as 0, etc. Our DaySchedule also uses 0 for Sunday
+                day: index,
                 open,
                 close,
                 isClosed
             };
         });
 
-        // Map Google Places data to our Place type
-        let parkingStatus = ParkingStatus.FREE; // Default
-        // Google Places API doesn't directly give 'free'/'paid' parking.
-        // This would require additional AI inference or manual input.
-        // For now, default to FREE or infer from description/keywords if possible (not implemented here).
-
-        // Removed direct Google Places photo URL construction to avoid exposing the API key on the frontend.
-        // The image URL will now rely on admin input or a fallback image.
-        const imageUrl = ''; 
+        // IMAGE EXTRACTION
+        let imageUrl = '';
+        if (data.photos && data.photos.length > 0) {
+            // Use the first photo reference
+            const ref = data.photos[0].photo_reference;
+            // Construct a proxy URL that the frontend can use securely
+            imageUrl = `/api/places-proxy?action=photo&reference=${ref}`;
+        } else {
+            imageUrl = `https://picsum.photos/600/400?random=${placeId?.substring(0,4)}`;
+        }
 
         const mappedPlace: Partial<Place> = {
             name: data.name,
-            description: data.editorial_summary?.overview || data.name, // Use overview if available
+            description: data.editorial_summary?.overview || data.name, 
             category: PlaceCategory.SERVICE, // Default, admin can change
             coords: data.geometry?.location ? { lat: data.geometry.location.lat, lng: data.geometry.location.lng } : undefined,
             address: data.formatted_address,
             phone: data.international_phone_number,
             website: data.website,
             priceLevel: data.price_level ? '$'.repeat(data.price_level) : '$',
-            tags: [], // Can infer from categories, but often manual
-            tips: '', // Manual
-            imageUrl: imageUrl || `https://picsum.photos/600/400?random=${placeId?.substring(0,4)}`,
-            parking: parkingStatus,
-            isPetFriendly: false, // Places API doesn't usually provide this directly
-            hasRestroom: false, // Places API doesn't usually provide this directly
-            hasGenerator: false, // Manual
+            tags: [], 
+            tips: '', 
+            imageUrl: imageUrl, // Now uses the proxy URL
+            parking: ParkingStatus.FREE,
+            isPetFriendly: false, 
+            hasRestroom: false, 
+            hasGenerator: false, 
             opening_hours: {
                 type: (data.opening_hours?.open_now === true && !data.opening_hours?.weekday_text) ? '24_7' : 'fixed',
                 note: data.opening_hours?.weekday_text?.join(', ') || '',
