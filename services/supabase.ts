@@ -790,9 +790,12 @@ export const updatePlace = async (id: string, place: Partial<Place>): Promise<{ 
         }
 
         // 2. Garbage Collect Old Image
-        // If update was successful, and we have a new image URL, delete the old one if it differs
-        if (currentPlace && currentPlace.image_url && dbPayload.image_url && currentPlace.image_url !== dbPayload.image_url) {
-            await deleteImageFromUrl(currentPlace.image_url);
+        // If the old image existed, AND it is different from the new one (or new one is empty), delete the old one.
+        if (currentPlace && currentPlace.image_url && currentPlace.image_url !== dbPayload.image_url) {
+            // Check if it looks like one of our bucket images before trying to delete
+            if (currentPlace.image_url.includes('places-images')) {
+                await deleteImageFromUrl(currentPlace.image_url);
+            }
         }
 
         await logAction('UPDATE', place.name || 'Unknown', 'Record updated');
@@ -822,7 +825,7 @@ export const deletePlace = async (id: string): Promise<{ success: boolean; error
         if (error) throw error;
 
         // 2. Garbage collect the image
-        if (currentPlace && currentPlace.image_url) {
+        if (currentPlace && currentPlace.image_url && currentPlace.image_url.includes('places-images')) {
             await deleteImageFromUrl(currentPlace.image_url);
         }
 
