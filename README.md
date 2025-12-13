@@ -153,3 +153,57 @@ Defined in `vercel.json`:
 1.  **Briefing (`/api/cron-briefing`):** Runs daily at 11 AM. Analyzes search logs and generates a business report.
 2.  **Maintenance (`/api/cron-maintenance`):** Runs weekly. Archives past events and prunes old logs.
 3.  **Vibe Check (`/api/cron-vibe`):** Runs Mon/Thu. Fetches new Google Reviews for random places and updates the "Vibe" summary using AI.
+
+---
+
+## 7. 🛠️ Contributor Workflow
+
+### A. How to Add a New Place
+1.  **Via Admin Panel (Preferred):**
+    *   Open Admin Panel (`Cmd+K` -> Login).
+    *   Go to **Places** tab -> Click **"Add New"**.
+    *   **Smart Way:** Paste a Google Maps link or raw text into the "Magic Fill" bar at the top. The system will auto-populate address, coordinates, hours, and photos.
+2.  **Via User Suggestion:**
+    *   Use the "Suggest Place" button in the main map UI.
+    *   The entry appears in the Admin **Inbox** as "Pending".
+    *   Admin reviews, approves, and publishes it.
+
+### B. How to Add an Event
+1.  **Via Admin UI:**
+    *   Go to **Events** tab -> Click **"Add Event"**.
+    *   Fill Title, Date, and Location.
+2.  **Via Supabase (SQL):**
+    *   Run an insert query directly in the SQL Editor:
+        ```sql
+        INSERT INTO events (title, start_time, category, location_name)
+        VALUES ('Jazz Night', '2025-10-20 19:00:00-04', 'music', 'Plaza Recreo');
+        ```
+
+### C. How to Upload Photos
+*   In the Admin **Place Editor** or **Person Editor**, click the **Upload Icon** (cloud arrow) next to the Image URL field.
+*   **Mechanism:** The app automatically compresses the image (client-side) to WebP format (< 800px width) before uploading to the Supabase Storage bucket (`places-images`) to save bandwidth and storage costs.
+
+### D. How to Run the Admin Panel
+1.  Open the app.
+2.  Press **`Cmd + K`** (Mac) or **`Ctrl + K`** (Windows) to open the Command Menu.
+3.  Select **"System Login"** (or click the Lock icon in the header).
+4.  Enter admin credentials (managed in Supabase Auth).
+
+### E. How to Deploy to Production (Vercel)
+The project uses Continuous Deployment (CD).
+1.  Commit changes to your local branch.
+2.  Push to the remote repository (`main` branch).
+    ```bash
+    git push origin main
+    ```
+3.  Vercel detects the commit and automatically triggers a build and deployment.
+4.  Check the Vercel Dashboard for build status.
+
+### F. Complete Admin Tools List
+*   **Magic Import:** Auto-fills place data from Google Maps links or raw text descriptions.
+*   **AI Marketing Studio:** Generates Instagram captions, emails, and radio scripts based on place data.
+*   **Social Card Generator:** Creates downloadable PNG images for Instagram Stories using `html2canvas`.
+*   **Bulk Ops:** AI parser to convert raw text lists into structured database entries.
+*   **SEO Generator:** Auto-creates `metaTitle` and `metaDescription` tags.
+*   **Vibe Sync:** (Cron/Manual) Analyzes Google Reviews to generate a "Vibe Check" summary.
+*   **Demand Analysis:** AI analyzes user search logs to predict missing categories or content gaps.
