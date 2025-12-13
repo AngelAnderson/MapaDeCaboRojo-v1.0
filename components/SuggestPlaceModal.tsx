@@ -1,8 +1,8 @@
 
 import React, { useState, useRef } from 'react';
 import { createPlace, uploadImage } from '../services/supabase';
-import { moderateUserContent } from '../services/aiService'; // Updated import
-import { findCoordinates } from '../services/placesService'; // Updated import
+import { moderateUserContent } from '../services/aiService'; 
+import { findCoordinates } from '../services/placesService'; 
 import { PlaceCategory, ParkingStatus } from '../types';
 import Button from './Button';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -16,14 +16,13 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
   const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
-  const [analyzing, setAnalyzing] = useState(false); // State for AI Bouncer
-  const [resolvingCoords, setResolvingCoords] = useState(false); // New state for AI coord resolution
+  const [analyzing, setAnalyzing] = useState(false); 
+  const [resolvingCoords, setResolvingCoords] = useState(false); 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState('');
   const [category, setCategory] = useState<PlaceCategory>(PlaceCategory.FOOD);
   const [gmapsUrl, setGmapsUrl] = useState('');
-  // Removed address from direct user input - to be resolved by AI or admin
   const [description, setDescription] = useState('');
   const [tips, setTips] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -43,7 +42,7 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (file) {
-          if (file.size > 5 * 1024 * 1024) { // 5MB Limit
+          if (file.size > 5 * 1024 * 1024) { 
               alert(t('suggest_image_too_large'));
               return;
           }
@@ -57,15 +56,17 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
       alert(t('link_copied'));
   };
 
+  const handleOpenPage = () => {
+      window.location.href = '/?page=suggest';
+  };
+
   const handleSubmit = async () => {
     if (!name.trim()) {
       alert(t('suggest_name_required'));
       return;
     }
     
-    // AI Bouncer Check
     setAnalyzing(true);
-    // These inputs will be sanitized by `moderateUserContent` and `createPlace`
     const moderation = await moderateUserContent(name, description);
     setAnalyzing(false);
 
@@ -90,7 +91,7 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
       let resolvedCoords;
       let resolvedAddress = '';
       if (gmapsUrl.trim()) {
-        setResolvingCoords(true); // Indicate that coords are being resolved
+        setResolvingCoords(true);
         const coordsResult = await findCoordinates(gmapsUrl);
         if (coordsResult) {
           resolvedCoords = coordsResult;
@@ -102,7 +103,7 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
         name, 
         category, 
         gmapsUrl, 
-        address: resolvedAddress, // Start with empty, admin can refine
+        address: resolvedAddress, 
         description, 
         tips, 
         imageUrl, 
@@ -111,15 +112,15 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
         parking, 
         hasRestroom, 
         isPetFriendly,
-        status: 'pending', // Always pending for user suggestions
-        coords: resolvedCoords, // Pass resolved coords or undefined
+        status: 'pending', 
+        coords: resolvedCoords, 
         is_featured: false, 
         sponsor_weight: 0, 
         isVerified: false,
         tags: ['User Suggestion', 'AI Verified'],
         opening_hours: {
             type: hoursType,
-            note: hoursNote // Simplest way for users to submit hours without complex UI
+            note: hoursNote 
         }
       });
 
@@ -141,6 +142,9 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
         <div className="bg-teal-600 dark:bg-teal-700 p-6 text-white flex justify-between items-center shrink-0 shadow-md z-10">
           <div><h2 className="text-2xl font-black">{t('suggest_title')}</h2><p className="text-teal-100 text-sm">{t('suggest_subtitle')}</p></div>
           <div className="flex items-center gap-2">
+              <button onClick={handleOpenPage} className="bg-teal-700/50 p-2 rounded-full hover:bg-teal-800 transition-colors" title="Open Full Page">
+                  <i className="fa-solid fa-up-right-from-square text-lg"></i>
+              </button>
               <button onClick={handleShareLink} className="bg-teal-700/50 p-2 rounded-full hover:bg-teal-800 transition-colors" title={t('share')}>
                   <i className="fa-solid fa-share-nodes text-lg"></i>
               </button>

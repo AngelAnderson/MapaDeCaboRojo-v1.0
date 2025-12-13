@@ -8,7 +8,7 @@ import Concierge from './Concierge';
 import Admin from './Admin';
 import ContactModal from './ContactModal';
 import SuggestPlaceModal from './SuggestPlaceModal'; 
-import SuggestPage from './SuggestPage'; // Import new page
+import SuggestPage from './SuggestPage'; 
 import WeatherWidget from './WeatherWidget'; 
 import { getPlaces, getEvents } from '../services/supabase'; 
 import { LanguageProvider, useLanguage } from '../i18n/LanguageContext';
@@ -157,7 +157,7 @@ const MapApp: React.FC = () => {
     setSelectedPlace, 
     flyTo,
     (action) => {
-      // NOTE: 'suggest' action in map view opens the modal, not the page.
+      // 'suggest' action in map view opens the modal
       if (action === 'suggest') setIsSuggestOpen(true);
     }
   );
@@ -284,18 +284,40 @@ const MapApp: React.FC = () => {
 };
 
 // --- ROOT ROUTER COMPONENT ---
-// Simple router to switch between MapApp and SuggestPage based on URL
+// Robust router handling search params and hash changes
 const App: React.FC = () => {
-  // Use lazy initializer to check URL immediately on mount
-  const [isSuggestPage, setIsSuggestPage] = useState(() => {
-    if (typeof window !== 'undefined') {
-        const searchParams = new URLSearchParams(window.location.search);
-        return searchParams.get('page') === 'suggest' || window.location.pathname === '/suggest';
-    }
-    return false;
-  });
+  const [currentRoute, setCurrentRoute] = useState<'map' | 'suggest'>('map');
 
-  if (isSuggestPage) {
+  useEffect(() => {
+    // Determine route based on URL
+    const checkRoute = () => {
+      if (typeof window === 'undefined') return;
+      
+      const searchParams = new URLSearchParams(window.location.search);
+      const hash = window.location.hash;
+      const path = window.location.pathname;
+
+      if (searchParams.get('page') === 'suggest' || hash.includes('page=suggest') || path === '/suggest') {
+        setCurrentRoute('suggest');
+      } else {
+        setCurrentRoute('map');
+      }
+    };
+
+    // Check immediately
+    checkRoute();
+
+    // Listen for navigation changes
+    window.addEventListener('popstate', checkRoute);
+    window.addEventListener('hashchange', checkRoute);
+    
+    return () => {
+      window.removeEventListener('popstate', checkRoute);
+      window.removeEventListener('hashchange', checkRoute);
+    };
+  }, []);
+
+  if (currentRoute === 'suggest') {
     return <SuggestPage />;
   }
 
