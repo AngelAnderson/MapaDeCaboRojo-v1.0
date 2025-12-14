@@ -196,10 +196,12 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
         {/* Header */}
         <div className="bg-teal-600 dark:bg-teal-900 p-4 flex justify-between items-center shadow-md z-10">
           <div className="flex items-center gap-3">
-            <div className="bg-white p-2 rounded-full border-2 border-teal-500"><i className="fa-solid fa-robot text-teal-600 text-2xl"></i></div>
+            <div className="bg-white p-2 rounded-full border-2 border-teal-500">
+                <i className="fa-solid fa-user-astronaut text-teal-600 text-2xl"></i>
+            </div>
             <div>
-              <h2 className="text-white font-black text-xl">{t('nav_help')}</h2>
-              <p className="text-teal-100 text-xs font-medium">AI Assistant</p>
+              <h2 className="text-white font-black text-xl">El Veci</h2>
+              <p className="text-teal-100 text-xs font-medium">Tu Copiloto</p>
             </div>
           </div>
           <button onClick={onClose} className="text-white bg-teal-700/50 hover:bg-teal-700 p-2 rounded-full w-10 h-10"><i className="fa-solid fa-xmark"></i></button>
