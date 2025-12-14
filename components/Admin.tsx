@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import html2canvas from 'html2canvas'; 
 import { Place, Event, PlaceCategory, ParkingStatus, EventCategory, AdminLog, DaySchedule, Category, InsightSnapshot, Person } from '../types';
 import { updatePlace, deletePlace, createPlace, updateEvent, deleteEvent, createEvent, getAdminLogs, uploadImage, loginAdmin, checkSession, createCategory, updateCategory, deleteCategory, saveInsightSnapshot, getLatestInsights, createPerson, updatePerson, deletePerson, getPeople } from '../services/supabase';
-import { generateMarketingCopy, categorizeAndTagPlace, enhanceDescription, generateElVeciTip, generateImageAltText, generateSeoMetaTags, analyzeUserDemand, parsePlaceFromRawText, parseBulkPlaces, parseHoursFromText } from '../services/aiService'; 
+import { generateMarketingCopy, categorizeAndTagPlace, enhanceDescription, generateElVeciTip, generateImageAltText, generateSeoMetaTags, analyzeUserDemand, parsePlaceFromRawText, parseBulkPlaces, parseHoursFromText, generateAdminReport } from '../services/aiService'; 
 import { fetchPlaceDetails, autocompletePlace, generateSessionToken } from '../services/placesService';
 import { useLanguage } from '../i18n/LanguageContext';
 import { translations } from '../i18n/translations';
@@ -198,6 +198,9 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
   
   const [hoursText, setHoursText] = useState('');
   const [showHoursParser, setShowHoursParser] = useState(false);
+  
+  const [reportText, setReportText] = useState('');
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -494,6 +497,20 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
               showToast(data.error, 'error');
           }
       } catch (e) { showToast("Error", 'error'); } finally { setBulkProcessing(false); }
+  };
+
+  const handleGenerateReport = async (range: 'weekly' | 'monthly') => {
+      setIsGeneratingReport(true);
+      setReportText('');
+      try {
+          const report = await generateAdminReport(range);
+          if (report) {
+              setReportText(report);
+              showToast("Report Generated", 'success');
+          } else {
+              showToast("Failed to generate report", 'error');
+          }
+      } catch (e) { showToast("Error", 'error'); } finally { setIsGeneratingReport(false); }
   };
 
   const saveBulkItem = async (index: number) => {
@@ -1265,7 +1282,50 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
             {activeTab === 'insights' && (
                 <div className="p-4 max-w-5xl mx-auto h-full overflow-y-auto">
                     <h2 className="text-2xl font-bold text-white mb-6">Insights</h2>
-                    {/* ... (Same layout as before) ... */}
+                    
+                    {/* Executive Reports Section */}
+                    <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 mb-8">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                <i className="fa-solid fa-file-contract text-blue-400"></i> Executive Reports
+                            </h3>
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={() => handleGenerateReport('weekly')} 
+                                    disabled={isGeneratingReport} 
+                                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                                >
+                                    Weekly Report
+                                </button>
+                                <button 
+                                    onClick={() => handleGenerateReport('monthly')} 
+                                    disabled={isGeneratingReport} 
+                                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                                >
+                                    Monthly Report
+                                </button>
+                            </div>
+                        </div>
+                        {isGeneratingReport && (
+                            <div className="text-center py-8 text-slate-400">
+                                <i className="fa-solid fa-circle-notch fa-spin text-2xl mb-2"></i>
+                                <p className="text-xs">Generating report...</p>
+                            </div>
+                        )}
+                        {reportText && !isGeneratingReport && (
+                            <div className="bg-slate-900 p-4 rounded-xl border border-slate-600 relative group max-h-96 overflow-y-auto custom-scrollbar">
+                                <pre className="whitespace-pre-wrap text-sm text-slate-300 font-mono leading-relaxed">{reportText}</pre>
+                                <button 
+                                    onClick={() => { navigator.clipboard.writeText(reportText); showToast("Copied to clipboard", 'success'); }} 
+                                    className="absolute top-2 right-2 bg-slate-800 text-slate-400 hover:text-white p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity border border-slate-700"
+                                    title="Copy Report"
+                                >
+                                    <i className="fa-regular fa-copy"></i>
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700"><h3 className="text-lg font-bold text-teal-400 mb-4">Top Searches</h3><div className="space-y-3">{topSearches.map((s, i) => (<div key={i} className="flex justify-between"><span className="text-slate-300">{s.term}</span><span className="text-slate-500">{s.count}</span></div>))}</div></div>
                         <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700"><h3 className="text-lg font-bold text-purple-400 mb-2">Demand Analysis</h3>{demandAnalysis ? <div><p className="text-sm text-slate-200">{demandAnalysis.recommendation}</p></div> : <button onClick={() => analyzeUserDemand(topSearches.map(s => s.term), categories.map(c => c.id))} className="bg-purple-600 px-4 py-2 rounded text-sm">Run Analysis</button>}</div>

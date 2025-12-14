@@ -387,6 +387,11 @@ export const generateMarketingCopy = async (name: string, platform: string, tone
     return res?.text || "Error generating copy.";
 };
 
+export const generateAdminReport = async (range: 'weekly' | 'monthly') => {
+    const res = await callAI('generate-report', { range });
+    return res?.text;
+};
+
 export const categorizeAndTagPlace = async (name: string, description: string) => {
     const res = await callAI('categorize-tags', { name, description });
     return res;

@@ -21,38 +21,6 @@ These architectural decisions are fundamental to the app's correctness. Do not r
 
 ---
 
-## 🌟 Key Features
-
-### 🤖 For Travelers ("El Veci" Experience)
-*   **AI Concierge Chat:** A RAG-powered chatbot that knows the time, weather, and open places. It speaks in a specific local dialect ("Boricua Sano") and follows the **"105-Year Rule"** (simple enough for a centenarian to understand).
-*   **Visual Search:** Snap a photo of a landmark, and El Veci identifies it and tells you how to get there.
-*   **Smart Itineraries:** Ask for a "Relaxed beach day" or "Foodie tour", and get a structured timeline generated on the fly.
-*   **Vibe Checks:** AI analyzes Google Reviews to summarize the *current* atmosphere of a place (e.g., "Crowded but worth it", "Chill sunset spot").
-*   **Signal Saver (Offline Mode):** A aggressive caching strategy ensures the map and directory work even when the signal dies at Playa Sucia.
-*   **Marine Weather Widget:** Real-time surf, wind, and UV data for beachgoers.
-
-### ⚡ For Admins (AI Productivity Suite)
-*   **Magic Import:** Paste a Google Maps link or raw text, and the system auto-fills address, coordinates, hours, and photos.
-*   **"El Veci" Rewrite:** AI rewrites dry descriptions into engaging, local-style copy with one click.
-*   **SEO Generator:** Auto-generates 3 variations of Meta Titles and Descriptions optimized for search engines.
-*   **Hours Parser:** Pasting "Mon-Fri 9-5" gets converted into structured machine-readable JSON schedules automatically.
-*   **Marketing Studio:** Generates Instagram captions, Email blasts, and Radio scripts tailored to specific tones (Hype, Chill, Professional).
-*   **Social Card Generator:** Instantly renders and downloads a branded PNG graphic for Instagram Stories using `html2canvas`.
-*   **Demand Analysis:** AI analyzes anonymized search logs to predict content gaps and trending topics.
-
----
-
-## 🧠 "El Veci" Intelligence Model
-
-The AI is prompt-engineered with a specific persona defined in `PERSONALITY.md`:
-
-1.  **The 105-Year Rule:** No tech jargon. Clear, respectful, and simple instructions.
-2.  **Boricua Sano:** Uses local slang ("Wepa", "Ay bendito") but remains family-friendly and respectful.
-3.  **Context Aware:** Knows if it's raining (recommends indoor spots) or if it's lunchtime (recommends food).
-4.  **Humor:** Cracks innocent jokes about common local struggles (potholes, heat, power outages) to build rapport.
-
----
-
 ## 🏗 Technical Architecture
 
 ### **Frontend (The Client)**
@@ -64,74 +32,124 @@ The AI is prompt-engineered with a specific persona defined in `PERSONALITY.md`:
 ### **Backend (The Data Layer)**
 *   **Database:** Supabase (PostgreSQL) with Row Level Security (RLS).
 *   **Storage:** Supabase Storage for optimized image hosting (`places-images` bucket).
-*   **Edge Functions:** Hosted on Vercel/Next.js API routes to proxy sensitive calls (Google Places, Gemini).
+*   **Edge Functions:** Hosted on Vercel/Next.js API routes (`/api/*`) to proxy sensitive calls (Google Places, Gemini).
 
 ### **AI Layer**
 *   **Model:** Google Gemini 2.5 Flash via `@google/genai` SDK.
-*   **Strategy:** Stateless "RAG-Lite". We inject a minified, token-optimized JSON index of places into the system prompt context on every request, ensuring the AI always has the latest database state without vector DB complexity.
+*   **Persona:** "El Veci" - A helpful, local 105-year-old neighbor.
 
 ---
 
-## 🚦 Getting Started
+## 👷 Contributor Workflow
 
-### Prerequisites
-*   Node.js 18+
-*   npm or yarn
-*   A Supabase Project
-*   Google AI Studio Key (Gemini)
-*   Google Cloud Console Key (Maps/Places API)
+This guide explains how to maintain the dataset, add events, and deploy changes.
 
-### Environment Variables
-Create a `.env` file in the root. **Do not commit this file.**
+### 1. Prerequisites
+*   **Node.js 18+** installed.
+*   Access to the **Supabase Project** (ask Admin for invite).
+*   Keys for **Google AI Studio** and **Google Maps Platform**.
+
+### 2. Environment Setup
+Create a `.env` file in the root directory:
 
 ```env
 # Client-Side Exposed (Vite)
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-public-anon-key
-VITE_GOOGLE_PLACES_API_KEY=your-google-places-key (Optional: for client-side autocomplete)
+VITE_GOOGLE_PLACES_API_KEY=your-google-places-key (For client-side autocomplete)
 
-# Server-Side Only (Vercel/Node)
+# Server-Side Only (Vercel/Node Functions)
 API_KEY=your-gemini-api-key
-GOOGLE_PLACES_API_KEY=your-google-places-key (For API proxies)
-CRON_SECRET=your-vercel-cron-secret (For automated maintenance)
+GOOGLE_PLACES_API_KEY=your-google-places-key (For server-side proxies)
+CRON_SECRET=your-vercel-cron-secret (Optional: for testing crons locally)
 ```
 
-### Installation & Run
+Run the development server:
+```bash
+npm install
+npm run dev
+```
 
-1.  **Install Dependencies:**
-    ```bash
-    npm install
-    ```
+### 3. Adding New Places
+We use a **"Magic Import"** workflow to minimize manual data entry.
 
-2.  **Run Development Server:**
-    ```bash
-    npm run dev
-    ```
-    *The app will launch at `http://localhost:3000`.*
+**Method A: The Admin Panel (Recommended)**
+1.  Open the App locally or in production.
+2.  Open the **Command Menu** (`Cmd+K` or `Ctrl+K`).
+3.  Select **"System Login"** and enter credentials.
+4.  Go to the **Places** tab.
+5.  Click **"Add New"**.
+6.  **✨ Magic Trick:** Paste a Google Maps link (e.g., `https://goo.gl/maps/...`) or the name of the place into the "Magic Fill" input at the top.
+7.  Click **"Magic Fill"**. The system will:
+    *   Fetch address, coordinates, and phone number from Google Places API.
+    *   Import photos via the secure proxy.
+    *   Parse opening hours.
+8.  **Review:** Ensure the category is correct.
+9.  **AI Enhancement:** Click "Auto-Detect" on Tags and "Enhance Description" to rewrite the copy in "El Veci" style.
+10. Click **Save**.
 
-3.  **Mock Mode:**
-    If Supabase keys are missing, the app automatically switches to **Mock Mode**, using hardcoded data from `constants.ts` to allow UI development without a backend connection.
+**Method B: Supabase Dashboard (Fallback)**
+1.  Go to the `places` table editor.
+2.  Insert a new row.
+3.  **Required fields:** `name`, `category`, `lat`, `lon`, `status`.
+4.  `slug` is auto-generated if left blank (handled by App logic, but manual entry requires care).
+
+### 4. Adding Events
+1.  Login to Admin Panel -> **Events** tab.
+2.  Click **"Add Event"**.
+3.  **Critical:** Ensure `startTime` and `endTime` are accurate.
+4.  **Auto-Archiving:** The `cron-maintenance` job runs weekly (Mondays at 3am) to mark past events as `archived`. You do not need to delete them manually.
+
+### 5. Managing Photos
+*   **Uploads:** Use the "Upload" button in the Admin Panel.
+*   **Compression:** The app automatically compresses images to WebP format *before* uploading to save bandwidth and storage.
+*   **Storage Bucket:** Images are stored in the `places-images` bucket in Supabase.
+*   **Cleanup:** When updating a place's image, the system attempts to garbage-collect the old image to keep the bucket clean.
 
 ---
 
-## 🔄 Automations (Cron Jobs)
-Defined in `vercel.json` and handled by `/api/cron-*.ts`:
+## 🧰 Admin Panel Tools
 
-1.  **Daily Briefing:** Analyzes user search logs to generate a business report for the admin.
-2.  **Weekly Maintenance:** Archives past events and cleans up old logs.
-3.  **Vibe Check Sync:** Periodically fetches fresh Google Reviews for places and uses AI to update their "Vibe" summary.
+The Admin Panel is a powerhouse of AI tools designed to make content management effortless.
+
+| Tool | Description | AI Model |
+| :--- | :--- | :--- |
+| **Magic Import** | Pasting a Google Maps link fetches all metadata, photos, and hours. | Google Places API |
+| **Enhance Description** | Rewrites dry text into engaging, "Boricua Sano" style copy following the 105-Year Rule. | Gemini 2.5 Flash |
+| **Generate Tips** | Creates a specific "El Veci Tip" based on the place category and description. | Gemini 2.5 Flash |
+| **Parse Hours** | Converts natural text (e.g., "Mon-Fri 9 to 5") into structured JSON for the database. | Gemini 2.5 Flash |
+| **SEO Generator** | Generates 3 options for Meta Title and Meta Description. | Gemini 2.5 Flash |
+| **Alt Text Gen** | Analyzes the image pixel data to generate accessibility descriptions. | Gemini 2.5 Flash |
+| **Marketing Studio** | Generates Instagram captions, Email blasts, or Radio scripts with selectable tones (Hype/Chill/Pro). | Gemini 2.5 Flash |
+| **Social Card** | Generates a downloadable `.png` graphic for Instagram Stories directly in the browser. | `html2canvas` |
+| **Demand Analysis** | Analyzes anonymous user search logs to recommend new content categories. | Gemini 2.5 Flash |
 
 ---
 
-## 🛠️ Admin Workflow
+## 🚀 Deployment (Vercel)
 
-To access the Admin Panel:
-1.  Open the app.
-2.  Press **`Cmd + K`** (Mac) or **`Ctrl + K`** (Windows) to open the Command Menu.
-3.  Select **"System Login"** (or click the Lock icon in the header).
-4.  Enter credentials.
+The project is optimized for Vercel.
 
-**Pro Tip:** Use the "Magic Import" bar at the top of the Place Editor to paste a Google Maps link. The AI will do 90% of the data entry work for you.
+1.  **Push to Git:**
+    ```bash
+    git add .
+    git commit -m "feat: added new places"
+    git push origin main
+    ```
+
+2.  **Vercel Auto-Build:**
+    Vercel detects the commit and triggers a build.
+    *   **Build Command:** `vite build`
+    *   **Output Directory:** `dist`
+
+3.  **Environment Variables:**
+    Ensure all variables from `.env` are added to the Vercel Project Settings.
+
+4.  **Cron Jobs:**
+    Cron jobs are defined in `vercel.json`. Vercel automatically schedules them upon deployment.
+    *   `/api/cron-briefing`: Daily at 11am (Admin Report).
+    *   `/api/cron-maintenance`: Mondays at 3am (Cleanup).
+    *   `/api/cron-vibe`: Periodically updates place vibes.
 
 ---
 
