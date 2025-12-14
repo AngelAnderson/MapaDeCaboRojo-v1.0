@@ -960,7 +960,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                         {filteredPeople.map(p => (
                             <div key={p.id} onClick={() => setEditingPerson(p)} className={`p-4 rounded-xl border cursor-pointer transition-all flex gap-3 items-center ${editingPerson?.id === p.id ? 'bg-emerald-900/20 border-emerald-500/50' : 'bg-slate-800 border-slate-700'}`}>
                                 <div className="w-10 h-10 rounded-full bg-slate-700 overflow-hidden shrink-0">
-                                    {p.imageUrl ? <img src={p.imageUrl} className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-slate-500"><i className="fa-solid fa-user"></i></div>
+                                    {p.imageUrl ? <img src={p.imageUrl} className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full text-slate-500"><i className="fa-solid fa-user"></i></div>}
                                 </div>
                                 <div className="min-w-0">
                                     <h4 className="font-bold text-sm text-slate-200 truncate">{p.name}</h4>
