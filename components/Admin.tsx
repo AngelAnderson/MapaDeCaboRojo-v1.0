@@ -441,13 +441,13 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
       const item = bulkResults[index];
       if (!item) return;
       try {
-          const res = await createPlace({ ...item, status: 'open', isVerified: true, defaultZoom: 16 });
+          const res = await createPlace({ ...item, status: 'pending', isVerified: false, defaultZoom: 16 });
           if (res.success) {
               const newResults = [...bulkResults];
               newResults.splice(index, 1);
               setBulkResults(newResults);
               onUpdate();
-              showToast(`Saved ${item.name}`, 'success');
+              showToast(`Saved ${item.name} to Pending Review`, 'success');
           } else {
               showToast("Error saving item", 'error');
           }
