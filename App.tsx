@@ -30,8 +30,8 @@ const MainApp: React.FC = () => {
   // Refs
   const mapContainer = useRef<HTMLDivElement>(null);
   
-  // Data State - Now includes categories
-  const { places, events, categories, publishedPlaces, mappedEvents, loading, refreshData } = usePlacesData();
+  // Data State - Now includes categories and people
+  const { places, events, categories, people, publishedPlaces, mappedEvents, loading, refreshData } = usePlacesData();
   const weather = useWeather();
   
   // Favorites State
@@ -314,6 +314,7 @@ const MainApp: React.FC = () => {
         onClose={() => setIsConciergeOpen(false)} 
         places={publishedPlaces} 
         events={events} 
+        people={people}
         onNavigateToPlace={handleChatNavigation}
         userLocation={userLocation || undefined}
         weather={weather}

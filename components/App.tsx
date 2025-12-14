@@ -33,7 +33,7 @@ const MapApp: React.FC = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   
   // Data State
-  const { places, events, categories, publishedPlaces, mappedEvents, loading, refreshData } = usePlacesData();
+  const { places, events, categories, people, publishedPlaces, mappedEvents, loading, refreshData } = usePlacesData();
   const weather = useWeather(); // Centralized Weather
   
   // Favorites State
@@ -283,7 +283,16 @@ const MapApp: React.FC = () => {
       
       {selectedPlace && <PlaceCard place={selectedPlace} allPlaces={publishedPlaces} onSelect={(p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); }} onClose={() => setSelectedPlace(null)} onNavigate={handleNavigate} onAskAi={() => setIsConciergeOpen(true)} onSuggestEdit={() => { setIsContactOpen(true); }} isFavorite={savedIds.includes(selectedPlace.id)} onToggleFavorite={() => toggleFavorite(selectedPlace.id)} userLocation={userLocation || undefined} />}
       
-      <Concierge isOpen={isConciergeOpen} onClose={() => setIsConciergeOpen(false)} places={publishedPlaces} events={events} onNavigateToPlace={handleChatNavigation} userLocation={userLocation || undefined} weather={weather} />
+      <Concierge 
+        isOpen={isConciergeOpen} 
+        onClose={() => setIsConciergeOpen(false)} 
+        places={publishedPlaces} 
+        events={events} 
+        people={people} // Pass people data to Concierge
+        onNavigateToPlace={handleChatNavigation}
+        userLocation={userLocation || undefined}
+        weather={weather}
+      />
       
       <SuggestPlaceModal isOpen={isSuggestOpen} onClose={() => setIsSuggestOpen(false)} />
       

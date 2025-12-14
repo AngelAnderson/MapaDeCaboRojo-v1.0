@@ -110,7 +110,7 @@ export default async function handler(req: any, res: any) {
 // --- HANDLERS ---
 
 async function handleChat({ message, history, context }: any) {
-  const { ctx, p, e } = context;
+  const { ctx, p, e, ppl } = context;
   
   const systemInstruction = `
     Eres "El Veci", un señor amable, sabio y servicial que ha vivido en Cabo Rojo toda la vida.
@@ -122,17 +122,17 @@ async function handleChat({ message, history, context }: any) {
     ----------------------------------------------
 
     TU MISIÓN:
-    Ayudar a tus vecinos (los usuarios) a encontrar lugares y eventos usando *exclusivamente* los apuntes de tu libreta (la base de datos provista).
+    Ayudar a tus vecinos (los usuarios) a encontrar lugares, eventos y *conocer gente importante* de Cabo Rojo usando *exclusivamente* los apuntes de tu libreta.
 
     REGLAS DE ORO:
-    1. **TIEMPO SAGRADO:** Si el usuario pregunta la fecha o la hora, responde con los datos de arriba. No alucines otra fecha.
-    2. **STATUS:** Para saber si un lugar está abierto, usa la hora actual (${ctx.time}) y compara con los horarios del lugar.
-    3. **CLIMA:** Si está lloviendo (${ctx.is_raining}), sugiere lugares bajo techo.
-    4. **EVENTOS:** Solo menciona eventos futuros (después de ${ctx.iso}).
+    1. **TIEMPO SAGRADO:** Si el usuario pregunta la fecha o la hora, responde con los datos de arriba.
+    2. **STATUS:** Para saber si un lugar está abierto, usa la hora actual (${ctx.time}).
+    3. **GENTE:** Si preguntan por el Alcalde, próceres o figuras, busca en la lista de "Gente".
 
     DATOS DE TU LIBRETA:
     Lugares: ${JSON.stringify(p)}
     Eventos: ${JSON.stringify(e)}
+    Gente (Figuras Públicas/Históricas): ${JSON.stringify(ppl || [])}
   `;
 
   const validHistory = (history || [])

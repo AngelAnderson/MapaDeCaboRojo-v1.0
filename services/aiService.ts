@@ -1,6 +1,6 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { Place, Event, Coordinates, AdminLog, ItineraryItem, PlaceCategory, ChatMessage } from "../types";
+import { Place, Event, Coordinates, AdminLog, ItineraryItem, PlaceCategory, ChatMessage, Person } from "../types";
 
 // Initialize Client-Side AI (Fallback)
 const clientAI = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
@@ -12,7 +12,7 @@ async function handleClientSideAI(action: string, payload: any) {
     switch (action) {
         case 'chat': {
             const { message, history, context } = payload;
-            const { ctx } = context;
+            const { ctx, ppl } = context;
 
             const systemInstruction = `
                 Eres "El Veci", un señor amable y sabio que ha vivido en Cabo Rojo toda la vida.
@@ -40,6 +40,9 @@ async function handleClientSideAI(action: string, payload: any) {
 
                 EVENTOS:
                 ${JSON.stringify(context.events || [])}
+
+                GENTE (Alcalde, Próceres):
+                ${JSON.stringify(ppl || [])}
 
                 REGLAS DE ORO:
                 1. **TIEMPO:** Si preguntan hora/fecha, usa los datos de arriba.
@@ -315,6 +318,7 @@ export const sendConciergeMessage = async (
     history: ChatMessage[], 
     places: Place[], 
     events: Event[], 
+    people: Person[], 
     userLoc: Coordinates | undefined, 
     contextInfo: any
 ) => {
@@ -335,6 +339,7 @@ export const sendConciergeMessage = async (
                 opening_hours: p.opening_hours 
             })),
             events: events.map(e => ({ title: e.title, start: e.startTime })),
+            ppl: people.map(p => ({ name: p.name, role: p.role, bio: p.bio, years: p.years })),
             userLoc,
             ctx: { ...contextInfo }
         }
@@ -344,11 +349,11 @@ export const sendConciergeMessage = async (
     return response || { text: "El Veci está durmiendo. Intenta más tarde." };
 };
 
-export const createConciergeChat = (places: Place[], events: Event[], userLoc: Coordinates | undefined, context: any) => {
+export const createConciergeChat = (places: Place[], events: Event[], people: Person[], userLoc: Coordinates | undefined, context: any) => {
     let history: any[] = [];
     return {
         sendMessage: async ({ message }: { message: string }) => {
-            const response = await sendConciergeMessage(message, history.map(h => ({ role: h.role, text: h.text })), places, events, userLoc, context);
+            const response = await sendConciergeMessage(message, history.map(h => ({ role: h.role, text: h.text })), places, events, people, userLoc, context);
             const text = response.text;
             history.push({ role: 'user', text: message });
             history.push({ role: 'model', text: text });

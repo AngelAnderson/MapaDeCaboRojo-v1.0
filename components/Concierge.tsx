@@ -1,6 +1,6 @@
 
 import React, { useRef, useEffect } from 'react';
-import { ChatMessage, Place, Event, Coordinates } from '../types';
+import { ChatMessage, Place, Event, Coordinates, Person } from '../types';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useConcierge } from '../hooks/useConcierge';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
@@ -11,18 +11,19 @@ interface ConciergeProps {
   onClose: () => void;
   places: Place[];
   events: Event[];
+  people: Person[]; // Add people prop
   onNavigateToPlace: (place: Place) => void;
   userLocation?: Coordinates;
-  weather?: WeatherState; // Added prop
+  weather?: WeatherState;
 }
 
-const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, onNavigateToPlace, userLocation, weather }) => {
+const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, people, onNavigateToPlace, userLocation, weather }) => {
   const { t, language } = useLanguage();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  // Use Custom Hook with Weather State
-  const { messages, input, setInput, isLoading, isListening, handleSend, handleImageUpload, handlePlanTrip, setIsListening } = useConcierge(places, events, userLocation, weather);
+  // Use Custom Hook with Weather State and People
+  const { messages, input, setInput, isLoading, isListening, handleSend, handleImageUpload, handlePlanTrip, setIsListening } = useConcierge(places, events, people, userLocation, weather);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
@@ -246,11 +247,11 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
                  🎉 Eventos Hoy
              </button>
              <button 
-                onClick={() => handleSend("¿Qué recomiendas en Puerto Real?")} 
+                onClick={() => handleSend("¿Quién es el alcalde?")} 
                 disabled={isLoading} 
                 className="whitespace-nowrap px-4 py-2.5 rounded-xl text-xs font-bold border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300 transition-colors"
              >
-                 ⚓ Puerto Real
+                 🏛️ Alcalde
              </button>
              <button 
                 onClick={() => handleSend("Necesito un servicio (plomero, mecánico, etc.)")} 

@@ -1,11 +1,11 @@
 
 import { useState, useEffect } from 'react';
-import { Place, Event, ChatMessage, Coordinates } from '../types';
+import { Place, Event, ChatMessage, Coordinates, Person } from '../types';
 import { sendConciergeMessage, identifyPlaceFromImage, generateTripItinerary } from '../services/aiService'; 
 import { logUserActivity } from '../services/supabase';
 import { WeatherState } from './useWeather';
 
-export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordinates, weatherState?: WeatherState) => {
+export const useConcierge = (places: Place[], events: Event[], people: Person[], userLoc?: Coordinates, weatherState?: WeatherState) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -102,6 +102,7 @@ export const useConcierge = (places: Place[], events: Event[], userLoc?: Coordin
             newHistory, 
             places, 
             events, 
+            people, // Pass people here
             userLoc, 
             contextInfo
         );
