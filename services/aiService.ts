@@ -1,6 +1,7 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 import { Place, Event, Coordinates, AdminLog, ItineraryItem, PlaceCategory, ChatMessage, Person } from "../types";
+import { getAdminLogs, getPlaces } from "./supabase"; // Import data fetchers for client-side report generation
 
 // Initialize Client-Side AI (Fallback)
 const clientAI = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
@@ -216,6 +217,58 @@ async function handleClientSideAI(action: string, payload: any) {
             return JSON.parse(res.text || "{}");
         }
 
+        // --- NEW: Client-Side Report Generation Fallback ---
+        case 'generate-report': {
+            const { range } = payload;
+            // 1. Fetch Data Manually since we can't use server logs directly easily
+            const logs = await getAdminLogs(100);
+            const places = await getPlaces();
+            
+            // Filter logs
+            const days = range === 'monthly' ? 30 : 7;
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - days);
+            const recentLogs = logs.filter((l: AdminLog) => new Date(l.created_at) >= startDate);
+            
+            const searchTerms = recentLogs.filter(l => l.action === 'USER_SEARCH').map(l => l.place_name);
+            const chatCount = recentLogs.filter(l => l.action === 'USER_CHAT').length;
+            const updatesCount = recentLogs.filter(l => ['CREATE', 'UPDATE', 'CREATE_EVENT'].includes(l.action)).length;
+
+            const prompt = `
+                Role: Business Intelligence Analyst for "El Veci" (Cabo Rojo Tourism App).
+                Task: Generate a ${range === 'monthly' ? 'Monthly' : 'Weekly'} Executive Report (CLIENT SIDE).
+                Period: Last ${days} days.
+                
+                DATA METRICS:
+                - Total Places: ${places.length}
+                - New User Searches: ${searchTerms.length}
+                - Chat Interactions: ${chatCount}
+                - Content Updates: ${updatesCount}
+                
+                SEARCH INTENT SAMPLES:
+                "${searchTerms.slice(0, 50).join('", "')}"...
+
+                OUTPUT FORMAT: Markdown.
+                
+                STRUCTURE:
+                # 📅 ${range === 'monthly' ? 'Monthly' : 'Weekly'} Executive Briefing
+                ## 🚀 Performance Pulse
+                (Summary of activity)
+                ## 🔍 User Intent Analysis
+                (What are people looking for?)
+                ## 🏗️ Operational Update
+                (Content changes)
+                ## 🎯 Action Items
+                (3 recommendations)
+            `;
+
+            const res = await clientAI.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: prompt
+            });
+            return { text: res.text };
+        }
+
         // Admin Helpers
         case 'categorize-tags':
             return JSON.parse((await clientAI.models.generateContent({
@@ -233,7 +286,7 @@ async function handleClientSideAI(action: string, payload: any) {
         case 'generate-tips':
             return { text: (await clientAI.models.generateContent({
                 model: 'gemini-2.5-flash',
-                contents: `Consejo local "El Veci" para "${name}" (${payload.category}). Contexto: ${payload.description}. Short & Helpful.`
+                contents: `Consejo local "El Veci" para "${payload.name}" (${payload.category}). Contexto: ${payload.description}. Short & Helpful.`
             })).text };
 
         case 'generate-alt-text': {
@@ -286,11 +339,13 @@ const callAI = async (action: string, payload: any) => {
         });
         
         const contentType = res.headers.get("content-type");
+        // Check for HTML response (often means 404 or Vercel error page)
         if (!res.ok || !contentType || !contentType.includes("application/json")) {
-            throw new Error("Backend unavailable");
+            throw new Error("Backend unavailable or returned non-JSON");
         }
         return await res.json();
     } catch (e) {
+        console.warn(`Backend AI failed for ${action}, falling back to Client-Side.`, e);
         // 2. Fallback to Client-Side
         if (!process.env.API_KEY) {
             console.error("Missing API_KEY for client fallback.");

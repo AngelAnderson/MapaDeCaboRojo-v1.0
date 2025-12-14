@@ -187,6 +187,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
   const [systemLogs, setSystemLogs] = useState<AdminLog[]>([]);
   const [topSearches, setTopSearches] = useState<{term: string, count: number}[]>([]);
   const [demandAnalysis, setDemandAnalysis] = useState<InsightSnapshot | null>(null);
+  const [isAnalyzingDemand, setIsAnalyzingDemand] = useState(false); // New state for loading
   const [insightHistory, setInsightHistory] = useState<InsightSnapshot[]>([]);
   
   const [marketingPlatform, setMarketingPlatform] = useState<'instagram' | 'radio' | 'email' | 'campaign_bundle'>('instagram'); 
@@ -510,7 +511,47 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
           } else {
               showToast("Failed to generate report", 'error');
           }
-      } catch (e) { showToast("Error", 'error'); } finally { setIsGeneratingReport(false); }
+      } catch (e) { showToast("Error generating report", 'error'); } finally { setIsGeneratingReport(false); }
+  };
+
+  const handleExportReport = () => {
+      if (!reportText) return;
+      const element = document.createElement("a");
+      const file = new Blob([reportText], {type: 'text/markdown'});
+      element.href = URL.createObjectURL(file);
+      element.download = `Executive_Report_${new Date().toISOString().split('T')[0]}.md`;
+      document.body.appendChild(element); // Required for this to work in FireFox
+      element.click();
+      document.body.removeChild(element);
+      showToast("Report Exported", 'success');
+  };
+
+  const handleRunDemandAnalysis = async () => {
+      setIsAnalyzingDemand(true);
+      try {
+          const searchTerms = topSearches.map(s => s.term);
+          const categoryIds = categories.map(c => c.id);
+          
+          if (searchTerms.length === 0) {
+              showToast("No search data available yet.", 'error');
+              setIsAnalyzingDemand(false);
+              return;
+          }
+
+          const analysis = await analyzeUserDemand(searchTerms, categoryIds);
+          if (analysis) {
+              setDemandAnalysis(analysis);
+              // Save snapshot
+              saveInsightSnapshot(analysis);
+              showToast("Analysis Complete", 'success');
+          } else {
+              showToast("Analysis Failed", 'error');
+          }
+      } catch(e) {
+          showToast("Error running analysis", 'error');
+      } finally {
+          setIsAnalyzingDemand(false);
+      }
   };
 
   const saveBulkItem = async (index: number) => {
@@ -1074,6 +1115,7 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
             {/* PLACE EDITOR */}
             {(activeTab === 'places' || activeTab === 'inbox') && editingPlace && (
                 <div className="p-4 md:p-8 max-w-3xl mx-auto pb-32 animate-slide-up">
+                    {/* ... Same Place Editor Code ... */}
                     {!editingPlace.id && (
                         <div className="mb-6 relative bg-gradient-to-r from-blue-900/40 to-purple-900/40 border border-blue-500/30 rounded-2xl p-4 flex gap-2 items-center shadow-lg">
                             <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-blue-500/30"><i className="fa-solid fa-wand-magic-sparkles"></i></div>
@@ -1293,16 +1335,16 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                                 <button 
                                     onClick={() => handleGenerateReport('weekly')} 
                                     disabled={isGeneratingReport} 
-                                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-2"
                                 >
-                                    Weekly Report
+                                    {isGeneratingReport ? <i className="fa-solid fa-circle-notch fa-spin"></i> : null} Weekly
                                 </button>
                                 <button 
                                     onClick={() => handleGenerateReport('monthly')} 
                                     disabled={isGeneratingReport} 
-                                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-bold transition-colors disabled:opacity-50"
+                                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg text-xs font-bold transition-colors disabled:opacity-50 flex items-center gap-2"
                                 >
-                                    Monthly Report
+                                    {isGeneratingReport ? <i className="fa-solid fa-circle-notch fa-spin"></i> : null} Monthly
                                 </button>
                             </div>
                         </div>
@@ -1315,20 +1357,29 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                         {reportText && !isGeneratingReport && (
                             <div className="bg-slate-900 p-4 rounded-xl border border-slate-600 relative group max-h-96 overflow-y-auto custom-scrollbar">
                                 <pre className="whitespace-pre-wrap text-sm text-slate-300 font-mono leading-relaxed">{reportText}</pre>
-                                <button 
-                                    onClick={() => { navigator.clipboard.writeText(reportText); showToast("Copied to clipboard", 'success'); }} 
-                                    className="absolute top-2 right-2 bg-slate-800 text-slate-400 hover:text-white p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity border border-slate-700"
-                                    title="Copy Report"
-                                >
-                                    <i className="fa-regular fa-copy"></i>
-                                </button>
+                                <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button 
+                                        onClick={() => { navigator.clipboard.writeText(reportText); showToast("Copied to clipboard", 'success'); }} 
+                                        className="bg-slate-800 text-slate-400 hover:text-white p-2 rounded-lg border border-slate-700"
+                                        title="Copy"
+                                    >
+                                        <i className="fa-regular fa-copy"></i>
+                                    </button>
+                                    <button 
+                                        onClick={handleExportReport} 
+                                        className="bg-slate-800 text-slate-400 hover:text-white p-2 rounded-lg border border-slate-700"
+                                        title="Download .md"
+                                    >
+                                        <i className="fa-solid fa-download"></i>
+                                    </button>
+                                </div>
                             </div>
                         )}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700"><h3 className="text-lg font-bold text-teal-400 mb-4">Top Searches</h3><div className="space-y-3">{topSearches.map((s, i) => (<div key={i} className="flex justify-between"><span className="text-slate-300">{s.term}</span><span className="text-slate-500">{s.count}</span></div>))}</div></div>
-                        <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700"><h3 className="text-lg font-bold text-purple-400 mb-2">Demand Analysis</h3>{demandAnalysis ? <div><p className="text-sm text-slate-200">{demandAnalysis.recommendation}</p></div> : <button onClick={() => analyzeUserDemand(topSearches.map(s => s.term), categories.map(c => c.id))} className="bg-purple-600 px-4 py-2 rounded text-sm">Run Analysis</button>}</div>
+                        <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700"><h3 className="text-lg font-bold text-purple-400 mb-2">Demand Analysis</h3>{demandAnalysis ? <div className="animate-fade-in"><p className="text-sm text-slate-200 mb-2">{demandAnalysis.recommendation}</p><p className="text-xs text-slate-400 italic">User Intent: {demandAnalysis.user_intent_prediction}</p></div> : <button onClick={handleRunDemandAnalysis} disabled={isAnalyzingDemand} className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded text-sm font-bold flex items-center gap-2 transition-colors disabled:opacity-50">{isAnalyzingDemand ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-wand-magic-sparkles"></i>} Run Analysis</button>}</div>
                     </div>
                 </div>
             )}
