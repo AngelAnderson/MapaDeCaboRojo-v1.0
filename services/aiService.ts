@@ -24,7 +24,7 @@ async function handleClientSideAI(action: string, payload: any) {
                 ------------------------------------------
 
                 TU PERSONALIDAD:
-                - **Regla de los 105 Años:** Habla tan sencillo y claro que un abuelo de 105 años te entienda perfecto.
+                - **Regla de los 105 Años:** Habla tan sencillo y claro que un abuelo de 105 años te entienda perfectamente.
                 - **Vecino:** Saluda como familia ("¡Wepa!", "Saludos", "Mijo/a").
                 
                 DATOS EN TIEMPO REAL:
@@ -230,7 +230,7 @@ async function handleClientSideAI(action: string, payload: any) {
         case 'generate-tips':
             return { text: (await clientAI.models.generateContent({
                 model: 'gemini-2.5-flash',
-                contents: `Give a local tip for "${payload.name}" (${payload.category}).`
+                contents: `Consejo local "El Veci" para "${name}" (${payload.category}). Contexto: ${payload.description}. Short & Helpful.`
             })).text };
 
         case 'generate-alt-text': {
@@ -274,11 +274,12 @@ async function handleClientSideAI(action: string, payload: any) {
 // --- MAIN CALLER ---
 const callAI = async (action: string, payload: any) => {
     try {
-        // 1. Try Backend API
-        const res = await fetch(action === 'marketing' ? '/api/marketing' : '/api/ai', {
+        // 1. Try Backend API (Consolidated Endpoint)
+        // Note: 'marketing' action is now handled by generic handler too
+        const res = await fetch('/api/ai', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(action === 'marketing' ? payload : { action, payload })
+            body: JSON.stringify({ action, payload })
         });
         
         const contentType = res.headers.get("content-type");
@@ -309,7 +310,6 @@ const extractJson = (data: any) => {
 
 // --- EXPORTS ---
 
-// REFACTORED: Stateless message sender to ensure fresh data on every turn
 export const sendConciergeMessage = async (
     message: string, 
     history: ChatMessage[], 
@@ -322,7 +322,6 @@ export const sendConciergeMessage = async (
         message,
         history: history.map(h => ({ role: h.role, text: h.text })),
         context: {
-            // We pass the Full Place Data here so the AI sees Supabase updates immediately
             places: places.map(p => ({ 
                 id: p.id, 
                 name: p.name, 
@@ -331,29 +330,24 @@ export const sendConciergeMessage = async (
                 tips: p.tips,
                 vibe: p.vibe,
                 address: p.address,
-                tags: p.tags, // Added for filtering
+                tags: p.tags, 
                 status: p.status,
-                opening_hours: p.opening_hours // Passed so AI can check time
+                opening_hours: p.opening_hours 
             })),
             events: events.map(e => ({ title: e.title, start: e.startTime })),
             userLoc,
-            // Pass all contextInfo properties directly (date, time, iso, current_day, weather, is_raining)
-            // This structure MUST match what api/ai.ts expects in `ctx`
             ctx: { ...contextInfo }
         }
     };
 
     const response = await callAI('chat', payload);
-    // Response object now contains { text, suggestedPlaceIds }
     return response || { text: "El Veci está durmiendo. Intenta más tarde." };
 };
 
-// Deprecated: Kept only if other files reference it, but `sendConciergeMessage` is preferred.
 export const createConciergeChat = (places: Place[], events: Event[], userLoc: Coordinates | undefined, context: any) => {
     let history: any[] = [];
     return {
         sendMessage: async ({ message }: { message: string }) => {
-            // This legacy wrapper now just calls the new stateless function
             const response = await sendConciergeMessage(message, history.map(h => ({ role: h.role, text: h.text })), places, events, userLoc, context);
             const text = response.text;
             history.push({ role: 'user', text: message });
@@ -375,25 +369,11 @@ export const generateTripItinerary = async (vibe: string, places: Place[]): Prom
 
 export const moderateUserContent = async (name: string, description: string): Promise<{ safe: boolean; reason?: string }> => {
     try {
-        const res = await fetch('/api/moderate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, description })
-        });
-        const contentType = res.headers.get("content-type");
-        if (res.ok && contentType && contentType.includes("application/json")) {
-             return await res.json();
-        }
+        const res = await callAI('moderate', { name, description });
+        if (res) return res;
     } catch (e) {
-        // Fallback handled below
+        // Fallback
     }
-
-    if (process.env.API_KEY) {
-        try {
-            return await handleClientSideAI('moderate', { name, description });
-        } catch(e) { console.error(e); }
-    }
-    
     return { safe: true }; 
 };
 

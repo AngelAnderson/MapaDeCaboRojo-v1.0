@@ -1,8 +1,15 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 import { Buffer } from "buffer";
+import { createClient } from '@supabase/supabase-js';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+
+// Initialize Supabase (Only needed for specific actions like JCA analysis)
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL || '',
+  process.env.VITE_SUPABASE_ANON_KEY || ''
+);
 
 // Node-safe HTML Escaper
 const escapeHTML = (str: string | undefined): string => {
@@ -68,8 +75,21 @@ export default async function handler(req: any, res: any) {
       case 'parse-bulk':
         result = await handleParseBulk(payload);
         break;
-      case 'parse-hours': // New Handler
+      case 'parse-hours':
         result = await handleParseHours(payload);
+        break;
+      // --- Merged Handlers ---
+      case 'marketing':
+        result = await handleMarketing(payload);
+        break;
+      case 'moderate':
+        result = await handleModerate(payload);
+        break;
+      case 'analyze-jca':
+        result = await handleAnalyzeJca(payload);
+        break;
+      case 'analyze-trends':
+        result = await handleAnalyzeTrends(payload);
         break;
       default:
         return res.status(400).json({ error: "Unknown action" });
@@ -78,7 +98,7 @@ export default async function handler(req: any, res: any) {
     return res.status(200).json(result);
 
   } catch (e: any) {
-    console.error(`AI API Error:`, e);
+    console.error(`AI API Error [${req.body?.action}]:`, e);
     return res.status(500).json({ 
       error: "Service Error", 
       details: e.message,
@@ -92,8 +112,6 @@ export default async function handler(req: any, res: any) {
 async function handleChat({ message, history, context }: any) {
   const { ctx, p, e } = context;
   
-  // FORCE TIME AWARENESS IN SYSTEM INSTRUCTION
-  // We explicitly tell the model "TODAY IS X" in the system prompt.
   const systemInstruction = `
     Eres "El Veci", un señor amable, sabio y servicial que ha vivido en Cabo Rojo toda la vida.
 
@@ -117,7 +135,6 @@ async function handleChat({ message, history, context }: any) {
     Eventos: ${JSON.stringify(e)}
   `;
 
-  // Clean history
   const validHistory = (history || [])
     .filter((h: any) => h.role && h.text)
     .map((h: any) => ({
@@ -163,7 +180,6 @@ async function handleItinerary({ vibe, places }: any) {
     }
   };
 
-  // Only pass names and IDs to save tokens
   const simplifiedPlaces = places.map((p: any) => `${p.name} (ID: ${p.id})`).join(', ');
 
   const prompt = `
@@ -229,6 +245,141 @@ async function handleAnalyzeDemand({ searchTerms, categories }: any) {
     config: { responseMimeType: 'application/json' }
   });
   return JSON.parse(response.text || "{}");
+}
+
+// --- NEW MERGED HANDLERS ---
+
+async function handleMarketing({ name, category, platform, tone = 'chill', language = 'spanglish' }: any) {
+  const sanitizedName = escapeHTML(name);
+  const sanitizedCategory = escapeHTML(category);
+  const toneDesc = tone === 'hype' ? 'Excited, High Energy' : tone === 'professional' ? 'Formal, Polite' : 'Relaxed, Friendly';
+  const langDesc = language === 'en' ? 'English' : language === 'es' ? 'Spanish' : 'Spanglish (PR Style)';
+
+  let prompt = "";
+  let isJson = false;
+
+  if (platform === 'campaign_bundle') {
+      isJson = true;
+      prompt = `Act as Social Media Manager for "${sanitizedName}" (${sanitizedCategory}) in Cabo Rojo. Tone: ${toneDesc}. Lang: ${langDesc}. Generate JSON Campaign Bundle: { "instagram_caption": "", "story_script": "", "email_subject": "", "email_body": "" }`;
+  } else {
+      prompt = `Generate ${platform} copy for "${sanitizedName}" (${sanitizedCategory}). Tone: ${toneDesc}. Lang: ${langDesc}. Max 150 words.`;
+  }
+
+  const res = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: isJson ? { responseMimeType: 'application/json' } : undefined
+  });
+
+  return { text: isJson ? res.text : escapeHTML(res.text), isJson };
+}
+
+async function handleModerate({ name, description }: any) {
+  const prompt = `Analiza el siguiente texto sugerido por un usuario.
+        Nombre: ${name}
+        Descripción: ${description}
+        Responde SOLAMENTE con un objeto JSON:
+        {"safe": boolean, "reason": "string (español boricua)"}`;
+  
+  const res = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: { responseMimeType: 'application/json' }
+  });
+  return JSON.parse(res.text || "{\"safe\": true}");
+}
+
+async function handleAnalyzeJca({ reportText }: any) {
+  const prompt = `
+    Act as a Data Analyst for the Puerto Rico Environmental Quality Board (JCA).
+    Analyze this Water Quality Report text:
+    "${reportText.substring(0, 5000)}"
+
+    Task: Identify the status of beaches in CABO ROJO (specifically: Buyé, Boquerón, Combate, La Playuela/Sucia).
+    
+    Output ONLY a JSON Array of objects:
+    [
+      { "name": "Name of Beach", "status": "SAFE" (Green Flag) or "UNSAFE" (Red/Yellow Flag/Enterococci), "details": "Bacteria levels or specific warning" }
+    ]
+    
+    If a beach is not mentioned, do not include it.
+  `;
+
+  const aiResponse = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: { responseMimeType: "application/json" }
+  });
+
+  const parsedResults = JSON.parse(aiResponse.text || "[]");
+  const updates = [];
+
+  // Update Database via Supabase
+  for (const result of parsedResults) {
+      const { data: places } = await supabase
+          .from('places')
+          .select('id, name, amenities')
+          .ilike('name', `%${result.name.split(' ')[0]}%`)
+          .eq('category', 'BEACH')
+          .limit(1);
+
+      if (places && places.length > 0) {
+          const place = places[0];
+          const newAmenities = {
+              ...(place.amenities || {}),
+              water_quality: {
+                  status: result.status,
+                  date: new Date().toISOString(),
+                  details: result.details,
+                  source: "JCA Report (AI Parsed)"
+              }
+          };
+
+          await supabase.from('places').update({ amenities: newAmenities }).eq('id', place.id);
+          updates.push(`${place.name}: ${result.status}`);
+      }
+  }
+
+  // Log
+  if (updates.length > 0) {
+      await supabase.from('admin_logs').insert([{
+          action: 'UPDATE',
+          place_name: 'JCA Sync',
+          details: `Updated ${updates.length} beaches: ${updates.join(', ')}`,
+          created_at: new Date().toISOString()
+      }]);
+  }
+
+  return { success: true, updates };
+}
+
+async function handleAnalyzeTrends({ socialText }: any) {
+  const prompt = `
+    You are a Social Media Trend Analyst for Cabo Rojo, PR.
+    Analyze this raw text from Instagram/TikTok:
+    "${socialText.substring(0, 3000)}"
+
+    Task: Extract places mentioned that seem to be "Trending", "Hidden Gems", or "New Openings".
+    
+    Return a JSON ARRAY of 'Place' objects ready for import:
+    [
+      {
+        "name": "Place Name",
+        "description": "Short description derived from the post (e.g. 'Viral spot for sunsets')",
+        "category": "FOOD" | "SIGHTS" | "BEACH" | "NIGHTLIFE",
+        "vibe": ["Viral", "Instagrammable"],
+        "tags": ["Social Find"]
+      }
+    ]
+  `;
+
+  const res = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: { responseMimeType: "application/json" }
+  });
+
+  return { success: true, results: JSON.parse(res.text || "[]") };
 }
 
 // --- HELPER FUNCTIONS ---
@@ -311,7 +462,6 @@ async function handleGenerateAltText({ imageUrl }: any) {
     });
     return { text: response.text || "" };
   } catch (e) {
-    console.error("Generate Alt Text Error:", e);
     return { text: "Vista de lugar en Cabo Rojo" };
   }
 }
