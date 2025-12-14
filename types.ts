@@ -89,7 +89,15 @@ export interface Place {
   hasShowers: boolean;
   hasGenerator: boolean; 
   tips: string;
-  amenities?: Record<string, any>;
+  amenities?: {
+    water_quality?: {
+      status: 'SAFE' | 'UNSAFE' | 'CAUTION';
+      date: string;
+      source?: string;
+      details?: string;
+    };
+    [key: string]: any;
+  };
   
   priceLevel: string;
   bestTimeToVisit: string;
