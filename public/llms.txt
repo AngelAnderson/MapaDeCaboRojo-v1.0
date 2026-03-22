@@ -1,0 +1,48 @@
+# El Veci — El Copiloto del Pueblo
+
+> Interactive map and AI-powered guide for Cabo Rojo, Puerto Rico. Find businesses, beaches, restaurants, and local adventures.
+
+## About
+
+El Veci is an interactive map and local guide for Cabo Rojo, Puerto Rico. It helps residents and visitors discover businesses, beaches, chinchorros, restaurants, and services. The app features an AI-powered WhatsApp assistant that answers questions about local businesses in real time.
+
+## Key Facts
+
+- Website: https://mapadecaborojo.com
+- WhatsApp Bot: +1-787-417-7711 (text "menu" to start)
+- Location: Cabo Rojo, Puerto Rico
+- Businesses listed: 158+
+- Language: Spanish
+- Parent site: https://caborojo.com
+- Creator: Angel Anderson (angel@caborojo.com)
+
+## Features
+
+- Interactive Leaflet map with all listed businesses
+- Category filtering: Beaches, Food, Lodging, Services, Health, Shopping
+- Individual place pages with hours, contact, location
+- AI WhatsApp assistant (El Veci) for natural language business search
+- PWA support (installable on mobile)
+- Daily briefings and business recommendations
+
+## Popular Places
+
+- Playa Sucia (La Playuela)
+- Faro Los Morrillos
+- Poblado de Boquerón
+- Joyuda (seafood strip)
+- Combate Beach
+- Salinas de Cabo Rojo
+
+## Related Properties
+
+- Directory: https://caborojo.com
+- Events: https://loquehayhoy.com
+- Community radar: https://radardepueblo.com
+- Book funnel: https://mastiempo.net
+- Author: https://angelanderson.com
+
+## Contact
+
+- Email: angel@caborojo.com
+- WhatsApp: +1-787-417-7711

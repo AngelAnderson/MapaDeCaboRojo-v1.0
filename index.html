@@ -22,6 +22,52 @@
     <link rel="canonical" href="https://mapadecaborojo.com/" />
     <meta name="robots" content="index, follow" />
     
+    <!-- Schema JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "name": "El Veci — El Copiloto del Pueblo",
+          "url": "https://mapadecaborojo.com",
+          "description": "Mapa interactivo y guía local inteligente para Cabo Rojo, Puerto Rico.",
+          "applicationCategory": "TravelApplication",
+          "operatingSystem": "Web",
+          "inLanguage": "es",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "author": {
+            "@type": "Person",
+            "name": "Angel Anderson",
+            "url": "https://angelanderson.com"
+          }
+        },
+        {
+          "@type": "Organization",
+          "name": "CaboRojo.com",
+          "url": "https://caborojo.com",
+          "description": "Guía local de negocios y recursos para Cabo Rojo, Puerto Rico.",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Cabo Rojo",
+            "addressRegion": "PR",
+            "addressCountry": "US"
+          },
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+1-787-417-7711",
+            "contactType": "customer support",
+            "availableLanguage": "Spanish"
+          }
+        }
+      ]
+    }
+    </script>
+
     <!-- PWA Configuration -->
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#374C8A" />
