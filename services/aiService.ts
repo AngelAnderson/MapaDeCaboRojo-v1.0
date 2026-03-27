@@ -402,30 +402,53 @@ const extractJson = (data: any) => {
 // --- EXPORTS ---
 
 export const sendConciergeMessage = async (
-    message: string, 
-    history: ChatMessage[], 
-    places: Place[], 
-    events: Event[], 
-    people: Person[], 
-    userLoc: Coordinates | undefined, 
+    message: string,
+    history: ChatMessage[],
+    places: Place[],
+    events: Event[],
+    people: Person[],
+    userLoc: Coordinates | undefined,
     contextInfo: any
 ) => {
+    // Smart search on client: try RPC first, fall back to top 20 places
+    let smartPlaces: any[] = [];
+    try {
+        const { data: searchResults } = await supabase.rpc('match_places_hybrid', {
+            query_text: message,
+            query_embedding: null,
+            match_threshold: 0.20,
+            match_count: 5,
+            zone_filter: ''
+        });
+        if (searchResults?.length) {
+            smartPlaces = searchResults.map((r: any) => ({
+                id: r.id, name: r.name, category: r.category, subcategory: r.subcategory,
+                description: r.one_liner || r.description, address: r.address, phone: r.phone,
+                tags: r.tags, opening_hours: r.opening_hours, tips: r.local_tip,
+                is_featured: r.is_featured
+            }));
+        }
+    } catch (err) {
+        console.warn('Client-side RPC failed, using top places fallback');
+    }
+
+    // Fallback: send top 20 places sorted by relevance (not all 200+)
+    if (!smartPlaces.length) {
+        smartPlaces = places
+            .sort((a: any, b: any) => (b.angelRating || 0) - (a.angelRating || 0))
+            .slice(0, 20)
+            .map(p => ({
+                id: p.id, name: p.name, category: p.category,
+                description: p.description, tips: p.tips, address: p.address,
+                tags: p.tags, status: p.status, opening_hours: p.opening_hours
+            }));
+    }
+
     const payload = {
         message,
         history: history.map(h => ({ role: h.role, text: h.text })),
         context: {
-            places: places.map(p => ({ 
-                id: p.id, 
-                name: p.name, 
-                category: p.category, 
-                description: p.description, 
-                tips: p.tips,
-                vibe: p.vibe,
-                address: p.address,
-                tags: p.tags, 
-                status: p.status,
-                opening_hours: p.opening_hours 
-            })),
+            places: smartPlaces,
             events: events.map(e => ({ title: e.title, start: e.startTime })),
             ppl: people.map(p => ({ name: p.name, role: p.role, bio: p.bio, years: p.years })),
             userLoc,

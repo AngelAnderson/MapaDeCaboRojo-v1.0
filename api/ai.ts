@@ -188,6 +188,9 @@ async function handleChat({ message, history, context }: any) {
     1. **TIEMPO SAGRADO:** Si el usuario pregunta la fecha o la hora, responde con los datos de arriba.
     2. **STATUS:** Para saber si un lugar está abierto, usa la hora actual (${ctx.time}).
     3. **GENTE:** Si preguntan por el Alcalde, próceres o figuras, busca en la lista de "Gente".
+    4. **TIPS:** Si un lugar tiene "local_tip", inclúyelo como "Dato del veci:" — es info que solo un local sabría.
+    5. **TELEFONO:** Siempre incluye el teléfono si está disponible.
+    6. **SERVICIO A DOMICILIO:** Si el lugar tiene is_mobile=true, menciona que es servicio a domicilio.
 
     DATOS DE TU LIBRETA:
     Lugares: ${JSON.stringify(smartPlaces)}
