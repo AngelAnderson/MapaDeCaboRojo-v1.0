@@ -134,6 +134,60 @@ const SocialCardTemplate = React.forwardRef<HTMLDivElement, { place: Partial<Pla
 
 // --- MAIN COMPONENT ---
 
+// --- BOT *7711 PERFORMANCE COMPONENT ---
+const BotPerformance = () => {
+    const [botData, setBotData] = useState<{name: string; count: number}[]>([]);
+    const [loading, setLoading] = useState(false);
+    const { data: supabaseData } = { data: null } as any; // placeholder
+
+    useEffect(() => {
+        setLoading(true);
+        import('../services/supabase').then(({ supabase }) => {
+            supabase.from('messages')
+                .select('context')
+                .eq('direction', 'outbound')
+                .eq('intent', 'ai_places')
+                .then(({ data }: any) => {
+                    if (!data) { setLoading(false); return; }
+                    const counts: Record<string, number> = {};
+                    for (const m of data) {
+                        const name = m.context?.recommended_name;
+                        if (name) counts[name] = (counts[name] || 0) + 1;
+                    }
+                    const sorted = Object.entries(counts)
+                        .map(([name, count]) => ({ name, count }))
+                        .sort((a, b) => b.count - a.count)
+                        .slice(0, 15);
+                    setBotData(sorted);
+                    setLoading(false);
+                });
+        });
+    }, []);
+
+    return (
+        <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700">
+            <h3 className="text-lg font-bold text-teal-400 mb-4 flex items-center gap-2">
+                <i className="fa-solid fa-robot"></i> Bot *7711 Performance
+            </h3>
+            {loading ? (
+                <div className="text-center py-4 text-slate-400"><i className="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>
+            ) : botData.length === 0 ? (
+                <p className="text-slate-500 text-sm">No recommendation data yet.</p>
+            ) : (
+                <div className="space-y-2">
+                    {botData.map((b, i) => (
+                        <div key={i} className="flex justify-between items-center py-1 border-b border-slate-700/50">
+                            <span className="text-slate-300 text-sm truncate flex-1">{b.name}</span>
+                            <span className="text-teal-400 font-bold text-sm ml-2">{b.count}x</span>
+                        </div>
+                    ))}
+                    <p className="text-[10px] text-slate-500 mt-2">Data from bot *7711 + website chat recommendations</p>
+                </div>
+            )}
+        </div>
+    );
+};
+
 const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [], onUpdate }) => {
   const { t } = useLanguage();
 
@@ -1381,6 +1435,9 @@ const Admin: React.FC<AdminProps> = ({ onClose, places, events, categories = [],
                         <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700"><h3 className="text-lg font-bold text-teal-400 mb-4">Top Searches</h3><div className="space-y-3">{topSearches.map((s, i) => (<div key={i} className="flex justify-between"><span className="text-slate-300">{s.term}</span><span className="text-slate-500">{s.count}</span></div>))}</div></div>
                         <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700"><h3 className="text-lg font-bold text-purple-400 mb-2">Demand Analysis</h3>{demandAnalysis ? <div className="animate-fade-in"><p className="text-sm text-slate-200 mb-2">{demandAnalysis.recommendation}</p><p className="text-xs text-slate-400 italic">User Intent: {demandAnalysis.user_intent_prediction}</p></div> : <button onClick={handleRunDemandAnalysis} disabled={isAnalyzingDemand} className="bg-purple-600 hover:bg-purple-500 text-white px-4 py-2 rounded text-sm font-bold flex items-center gap-2 transition-colors disabled:opacity-50">{isAnalyzingDemand ? <i className="fa-solid fa-circle-notch fa-spin"></i> : <i className="fa-solid fa-wand-magic-sparkles"></i>} Run Analysis</button>}</div>
                     </div>
+
+                    {/* BOT *7711 PERFORMANCE — Live metrics from messages table */}
+                    <BotPerformance />
                 </div>
             )}
 

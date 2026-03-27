@@ -152,6 +152,26 @@ async function handleChat({ message, history, context }: any) {
     return { text: localKnowledgeAnswer, suggestedPlaceIds: [] };
   }
 
+  // --- SMART SEARCH: Use RPC instead of dumping 100 places to Gemini ---
+  let smartPlaces = p; // fallback to full list
+  try {
+    const { data: searchResults } = await supabase.rpc('match_places_hybrid', {
+      query_text: message,
+      query_embedding: null,
+      match_threshold: 0.20,
+      match_count: 5,
+      zone_filter: ''
+    });
+    if (searchResults?.length) {
+      smartPlaces = searchResults.map((r: any) => ({
+        id: r.id, name: r.name, category: r.category, subcategory: r.subcategory,
+        description: r.one_liner || r.description, address: r.address, phone: r.phone,
+        tags: r.tags, opening_hours: r.opening_hours, local_tip: r.local_tip,
+        is_featured: r.is_featured, similarity: r.similarity
+      }));
+    }
+  } catch (err) { console.error('match_places_hybrid error (falling back to full list):', err); }
+
   const systemInstruction = `
     Eres "El Veci", un señor amable, sabio y servicial que ha vivido en Cabo Rojo toda la vida.
 
@@ -170,7 +190,7 @@ async function handleChat({ message, history, context }: any) {
     3. **GENTE:** Si preguntan por el Alcalde, próceres o figuras, busca en la lista de "Gente".
 
     DATOS DE TU LIBRETA:
-    Lugares: ${JSON.stringify(p)}
+    Lugares: ${JSON.stringify(smartPlaces)}
     Eventos: ${JSON.stringify(e)}
     Gente (Figuras Públicas/Históricas): ${JSON.stringify(ppl || [])}
   `;
@@ -195,9 +215,25 @@ async function handleChat({ message, history, context }: any) {
   
   try {
       const jsonResponse = JSON.parse(result.text || "{}");
-      return { 
+      const suggestedIds = jsonResponse.suggested_place_ids || [];
+
+      // --- LEAD TRACKING: Log recommendations to messages table (same as *7711 bot) ---
+      if (suggestedIds.length > 0) {
+        const recName = smartPlaces.find((sp: any) => sp.id === suggestedIds[0])?.name || suggestedIds[0];
+        supabase.from('messages').insert({
+          conversation_id: null, person_id: null,
+          direction: 'outbound', channel: 'web',
+          from: 'web-concierge', to: 'web-user',
+          body: (jsonResponse.text || '').slice(0, 500),
+          intent: 'ai_places',
+          context: { recommended_name: recName, recommended_id: suggestedIds[0], query: message, source: 'website' },
+          source: 'mapadecaborojo-web',
+        }).then(() => {}).catch((err: any) => console.error('lead tracking error:', err));
+      }
+
+      return {
           text: jsonResponse.text,
-          suggestedPlaceIds: jsonResponse.suggested_place_ids 
+          suggestedPlaceIds: suggestedIds
       };
   } catch (e) {
       return { text: result.text || "" };
