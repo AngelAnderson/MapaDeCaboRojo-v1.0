@@ -566,7 +566,7 @@ export const getCategories = async (): Promise<Category[]> => {
     if (cached) return cached;
 
     try {
-        const { data, error } = await supabase.from('categories').select('*').order('order_index', { ascending: true });
+        const { data, error } = await supabase.from('categories').select('id,label_en,label_es,icon,color,order_index').order('order_index', { ascending: true });
         
         if (error) {
             // Suppress warnings for missing tables (42P01) OR specific schema cache errors
@@ -641,8 +641,8 @@ export const getPlaces = async (): Promise<Place[]> => {
   if (cached) return cached;
 
   try {
-    // Select ALL records for Admin/Chat usage
-    const { data, error } = await supabase.from('places').select('*'); 
+    // Select only columns needed for map + cards (excludes embedding, one_liner, description heavy fields)
+    const { data, error } = await supabase.from('places').select('id,name,description,category,subcategory,lat,lon,image_url,tags,address,gmaps_url,video_url,website,phone,price_level,best_time_to_visit,vibe,is_pet_friendly,is_handicap_accessible,is_verified,verified_at,created_at,opening_hours,contact_info,custom_icon,amenities,slug,status,plan,sponsor_weight,default_zoom');
     
     if (error) {
         console.error("Supabase Fetch Error:", error.message);
@@ -709,7 +709,7 @@ export const getEvents = async (): Promise<Event[]> => {
 
     try {
         // Simple select first to ensure data access works, avoiding potential JOIN issues with RLS
-        const { data, error } = await supabase.from('events').select('*').order('start_time', { ascending: true });
+        const { data, error } = await supabase.from('events').select('id,title,description,category,start_time,end_time,location_name,coords,map_link,image_url,is_featured,status,family_friendly,discovery_source,created_at').order('start_time', { ascending: true });
         
         if (error) {
             console.error("Supabase Events Error:", error.message);

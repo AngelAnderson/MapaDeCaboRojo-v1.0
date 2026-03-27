@@ -6,10 +6,14 @@
  * NOTE: Currently disabled/bypassed to ensure image stability until Image Transformation service 
  * is confirmed active on the Supabase project. Returns original URL.
  */
-export const getOptimizedImageUrl = (url: string, width: number = 800, quality: number = 80): string => {
+export const getOptimizedImageUrl = (url: string, _width: number = 400, _quality: number = 75): string => {
     if (!url) return '';
-    
-    // Bypass optimization to ensure images load correctly
+    // Image transforms not available on current Supabase plan (returns 400)
+    // When upgrading to Pro, uncomment the render path below
+    // if (url.includes('supabase.co/storage/v1/object/public')) {
+    //     const optimized = url.replace('/object/public/', '/render/image/public/');
+    //     return `${optimized}${optimized.includes('?') ? '&' : '?'}width=${_width}&quality=${_quality}&format=webp`;
+    // }
     return url;
 
     /* 
