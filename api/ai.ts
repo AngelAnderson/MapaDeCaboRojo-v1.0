@@ -115,7 +115,43 @@ export default async function handler(req: any, res: any) {
 
 async function handleChat({ message, history, context }: any) {
   const { ctx, p, e, ppl } = context;
-  
+
+  // --- LOCAL KNOWLEDGE CHECK (from *7711 bot knowledge base) ---
+  // Query the 51 local_knowledge entries BEFORE calling Gemini
+  let localKnowledgeAnswer: string | null = null;
+  try {
+    const { data: knowledgeRows } = await supabase
+      .from('local_knowledge')
+      .select('answer, question_patterns');
+    if (knowledgeRows?.length) {
+      const lower = message.toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[¿?¡!.,;:'"()]/g, '').trim();
+      let bestScore = 0;
+      for (const row of knowledgeRows) {
+        for (const rawP of (row.question_patterns || [])) {
+          const pat = rawP.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          let score = 0;
+          if (lower === pat) score = 100;
+          else if (lower.includes(pat) && pat.length >= 6) score = 50 + pat.length;
+          else if (pat.includes(lower) && lower.length >= 4) score = 40 + lower.length;
+          else if (pat.includes(' ')) {
+            const pWords = pat.split(/\s+/);
+            if (pWords.every((w: string) => w.length < 3 || lower.includes(w)) && pWords.length >= 2)
+              score = 30 + pWords.length * 5;
+          }
+          if (score > bestScore) { bestScore = score; localKnowledgeAnswer = row.answer; }
+        }
+      }
+      if (bestScore < 30) localKnowledgeAnswer = null;
+    }
+  } catch (err) { console.error('local_knowledge query error:', err); }
+
+  // If local knowledge matched, return it directly (no Gemini needed)
+  if (localKnowledgeAnswer) {
+    return { text: localKnowledgeAnswer, suggestedPlaceIds: [] };
+  }
+
   const systemInstruction = `
     Eres "El Veci", un señor amable, sabio y servicial que ha vivido en Cabo Rojo toda la vida.
 
