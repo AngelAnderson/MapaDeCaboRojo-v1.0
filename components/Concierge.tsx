@@ -17,10 +17,18 @@ interface ConciergeProps {
   weather?: WeatherState;
 }
 
+const getTimeGreeting = (): string => {
+  const h = new Date().getHours();
+  if (h >= 5 && h < 12) return '¡Buenos días!';
+  if (h >= 12 && h < 18) return '¡Buenas tardes!';
+  return '¡Buenas noches!';
+};
+
 const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, people, onNavigateToPlace, userLocation, weather }) => {
   const { t, language } = useLanguage();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const greeting = getTimeGreeting();
   
   // Use Custom Hook with Weather State and People
   const { messages, input, setInput, isLoading, isListening, handleSend, handleImageUpload, handlePlanTrip, setIsListening } = useConcierge(places, events, people, userLocation, weather);
@@ -194,24 +202,24 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
       <div className="bg-white dark:bg-slate-800 w-full max-w-md h-[80vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-fade-in border border-slate-200 dark:border-slate-700">
         
         {/* Header */}
-        <div className="bg-teal-600 dark:bg-teal-900 p-4 flex justify-between items-center shadow-md z-10">
+        <div className="bg-emerald-600 dark:bg-emerald-900 p-4 flex justify-between items-center shadow-md z-10">
           <div className="flex items-center gap-3">
-            <div className="bg-white p-2 rounded-full border-2 border-teal-500">
-                <i className="fa-solid fa-user-astronaut text-teal-600 text-2xl"></i>
+            <div className="bg-white p-2 rounded-full border-2 border-emerald-500 shadow-md">
+                <i className="fa-solid fa-user-astronaut text-emerald-600 text-2xl"></i>
             </div>
             <div>
               <h2 className="text-white font-black text-xl">El Veci</h2>
-              <p className="text-teal-100 text-xs font-medium">Tu Copiloto</p>
+              <p className="text-emerald-100 text-xs font-medium">{greeting} ¿Qué buscas en Cabo Rojo?</p>
             </div>
           </div>
-          <button onClick={onClose} className="text-white bg-teal-700/50 hover:bg-teal-700 p-2 rounded-full w-10 h-10"><i className="fa-solid fa-xmark"></i></button>
+          <button onClick={onClose} className="text-white bg-emerald-700/50 hover:bg-emerald-700 p-2 rounded-full w-10 h-10"><i className="fa-solid fa-xmark"></i></button>
         </div>
 
         {/* Chat */}
         <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-slate-50 dark:bg-slate-900">
           {messages.map((msg, idx) => (
             <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up`}>
-              <div className={`max-w-[90%] p-4 rounded-2xl text-[15px] shadow-sm ${msg.role === 'user' ? 'bg-teal-600 text-white rounded-br-none' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none border dark:border-slate-700'}`}>
+              <div className={`max-w-[90%] p-4 rounded-2xl text-[15px] shadow-sm ${msg.role === 'user' ? 'bg-emerald-600 text-white rounded-br-none' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none border dark:border-slate-700'}`}>
                 {renderMessageContent(msg)}
               </div>
             </div>
@@ -237,7 +245,7 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
                 <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder={t('search')} className="w-full bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white p-4 pr-12 rounded-2xl outline-none border border-transparent focus:border-teal-500 transition-colors" />
                 <button onClick={handleMicClick} className={`absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors ${isListening ? 'text-red-500 animate-pulse' : 'text-slate-400'}`}><i className="fa-solid fa-microphone"></i></button>
             </div>
-            <button onClick={() => handleSend()} disabled={isLoading} className="bg-teal-600 text-white p-4 rounded-2xl w-14 hover:bg-teal-700 transition-colors shadow-lg shadow-teal-500/30 disabled:opacity-50 disabled:shadow-none"><i className="fa-solid fa-paper-plane"></i></button>
+            <button onClick={() => handleSend()} disabled={isLoading} className="bg-emerald-500 text-white p-4 rounded-2xl w-14 hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/30 disabled:opacity-50 disabled:shadow-none"><i className="fa-solid fa-paper-plane"></i></button>
           </div>
           
           <div className="mt-3 flex gap-2 overflow-x-auto no-scrollbar pb-1">

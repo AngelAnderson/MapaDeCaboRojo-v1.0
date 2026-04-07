@@ -146,6 +146,8 @@ const HoursDisplay = ({ hours }: { hours: { note?: string, structured?: DaySched
 
 const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClose, onNavigate, onAskAi, onSuggestEdit, isFavorite, onToggleFavorite, userLocation }) => {
   const { t } = useLanguage();
+  const [expanded, setExpanded] = React.useState(false);
+  const [startY, setStartY] = React.useState<number | null>(null);
   
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): string => {
     const R = 6371; 
@@ -205,62 +207,129 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
   // Fallback Logic: Seeded random based on ID for consistency
   const fallbackImage = `https://picsum.photos/seed/${place.id}/800/600`;
 
-  return (
-    <article className="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.3)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.6)] z-[2000] animate-slide-up max-h-[90vh] overflow-y-auto flex flex-col transition-colors duration-300" role="dialog" aria-modal="true" aria-labelledby="place-name">
-      <button className="sticky top-0 z-20 w-full flex justify-center pt-3 pb-1 bg-gradient-to-b from-black/40 to-transparent focus:outline-none" onClick={onClose} aria-label={t('close')}>
-        <div className="w-16 h-1.5 bg-white/80 rounded-full backdrop-blur-md"></div>
-      </button>
+  // Swipe gesture handlers
+  const handleTouchStart = (e: React.TouchEvent) => setStartY(e.touches[0].clientY);
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (startY === null) return;
+    const delta = startY - e.changedTouches[0].clientY;
+    if (delta > 40) setExpanded(true);   // swipe up
+    if (delta < -40) { if (expanded) setExpanded(false); else onClose(); }
+    setStartY(null);
+  };
 
-      {/* Semantic Header */}
-      <header className="relative w-full h-72 shrink-0 group bg-slate-900">
-        <img 
-            src={getPlaceHeaderImage(place.imageUrl) || fallbackImage} 
-            alt={place.name} 
-            className={`w-full h-full object-cover transition-all ${isClosed ? 'grayscale opacity-60' : ''}`} 
+  // Category pill color
+  const getCategoryColor = (cat: string) => {
+    const map: Record<string, string> = {
+      Restaurante: 'bg-orange-500', Playa: 'bg-cyan-500', Hotel: 'bg-purple-500',
+      Farmacia: 'bg-red-500', Supermercado: 'bg-emerald-600', Bar: 'bg-amber-500',
+      Banco: 'bg-blue-600', Gasolinera: 'bg-yellow-500', Médico: 'bg-rose-500',
+    };
+    return map[cat] || 'bg-emerald-500';
+  };
+
+  return (
+    <article
+      className={`fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-800 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.3)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.6)] z-[2000] animate-slide-up flex flex-col transition-all duration-300 ${expanded ? 'max-h-[90vh] overflow-y-auto' : 'max-h-[200px] overflow-hidden'}`}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="place-name"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Drag handle + peek row */}
+      <div
+        className="sticky top-0 z-20 bg-white dark:bg-slate-800 pt-3 pb-3 px-5 flex flex-col gap-3 cursor-pointer"
+        onClick={() => setExpanded(!expanded)}
+        aria-label={expanded ? 'Colapsar' : 'Expandir'}
+      >
+        {/* Handle */}
+        <div className="flex justify-center">
+          <div className="w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full"></div>
+        </div>
+
+        {/* Peek content */}
+        <div className="flex items-center gap-3">
+          <div className="flex-1 min-w-0">
+            <h1 id="place-name" className="text-xl font-black text-slate-900 dark:text-white leading-tight truncate">{place.name}</h1>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <span className={`text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${getCategoryColor(place.category)}`}>{place.category}</span>
+              {userLocation && place.coords && (
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+                  <i className="fa-solid fa-location-arrow text-[9px]"></i>
+                  {calculateDistance(userLocation.lat, userLocation.lng, place.coords.lat, place.coords.lng)}
+                </span>
+              )}
+              {place.opening_hours?.type === '24_7' && (
+                <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span> Abierto
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {onToggleFavorite && (
+              <button onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }} className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${isFavorite ? 'bg-pink-500 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-400'}`}>
+                <i className={`fa-${isFavorite ? 'solid' : 'regular'} fa-heart text-sm`}></i>
+              </button>
+            )}
+            <button onClick={(e) => { e.stopPropagation(); onClose(); }} aria-label={t('close')} className="bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 w-9 h-9 rounded-full flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors focus:outline-none">
+              <i className="fa-solid fa-xmark text-sm" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+
+        {/* Swipe up hint */}
+        {!expanded && (
+          <div className="flex justify-center pb-1">
+            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium flex items-center gap-1">
+              <i className="fa-solid fa-chevron-up text-[8px]"></i> Desliza para más
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Expanded content — only visible when expanded */}
+      <div className={`transition-all duration-300 ${expanded ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+
+        {/* Hero image */}
+        <header className="relative w-full h-56 shrink-0 bg-slate-900">
+          <img
+            src={getPlaceHeaderImage(place.imageUrl) || fallbackImage}
+            alt={place.name}
+            className={`w-full h-full object-cover transition-all ${isClosed ? 'grayscale opacity-60' : ''}`}
             style={{ objectPosition: place.imagePosition || 'center' }}
             loading="eager"
             onError={(e) => { e.currentTarget.src = fallbackImage; }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
-        
-        {isClosed && (
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
+          {isClosed && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="bg-red-600/90 backdrop-blur-sm text-white px-6 py-2 rounded-xl border-2 border-white/20 shadow-2xl transform -rotate-6">
-                    <span className="text-xl font-black uppercase tracking-widest">{t('status_closed')}</span>
-                </div>
+              <div className="bg-red-600/90 backdrop-blur-sm text-white px-6 py-2 rounded-xl border-2 border-white/20 shadow-2xl transform -rotate-6">
+                <span className="text-xl font-black uppercase tracking-widest">{t('status_closed')}</span>
+              </div>
             </div>
-        )}
+          )}
+          {place.vibe && place.vibe.length > 0 && (
+            <div className="absolute bottom-3 left-4 flex gap-2 overflow-x-auto no-scrollbar">
+              {place.vibe.map((v, i) => (
+                <span key={i} className="text-xs font-medium text-slate-200 border border-white/20 px-2 py-0.5 rounded-full whitespace-nowrap bg-black/30 backdrop-blur-sm">✨ {v}</span>
+              ))}
+            </div>
+          )}
+        </header>
 
-        <div className="absolute top-4 right-4 flex gap-3 z-30">
-             {onToggleFavorite && (
-                <button onClick={onToggleFavorite} className={`w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md transition-colors ${isFavorite ? 'bg-pink-500 text-white' : 'bg-black/30 text-white hover:bg-black/50'}`}>
-                    <i className={`fa-${isFavorite ? 'solid' : 'regular'} fa-heart text-lg`}></i>
-                </button>
-             )}
-            <button onClick={onClose} aria-label={t('close')} className="bg-black/30 backdrop-blur-md text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-black/50 transition-colors focus:outline-none focus:ring-2 focus:ring-white">
-                <i className="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
-            </button>
-        </div>
-
-        <div className="absolute bottom-0 left-0 p-6 text-white w-full">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="bg-teal-500/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide shadow-sm">{place.category}</span>
-            {place.isMobile && <span className="bg-purple-600/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide shadow-sm flex items-center gap-1"><i className="fa-solid fa-truck-fast"></i> {t('delivery')}</span>}
-            {place.hasGenerator && <span className="bg-yellow-500/90 text-black backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide shadow-sm flex items-center gap-1"><i className="fa-solid fa-bolt"></i> {t('generator')}</span>}
-            {userLocation && place.coords && <span className="bg-slate-700/80 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold flex items-center gap-1"><i className="fa-solid fa-location-arrow text-[10px]"></i>{calculateDistance(userLocation.lat, userLocation.lng, place.coords.lat, place.coords.lng)}</span>}
-            {isClosed ? <span className="bg-red-500/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide shadow-sm">{t('status_closed')}</span> : <>{place.priceLevel && !isEvent && <span className="bg-slate-800/60 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold">{place.priceLevel}</span>}{isEvent && <span className="bg-purple-600/90 backdrop-blur-sm px-2 py-0.5 rounded-md text-xs font-bold uppercase">📅 {place.priceLevel}</span>}</>}
-            {place.isVerified && <span className="text-blue-400 text-xs flex items-center gap-1"><i className="fa-solid fa-circle-check" aria-hidden="true"></i></span>}
-          </div>
-          <h1 id="place-name" className="text-3xl font-black leading-tight shadow-black drop-shadow-md">{place.name}</h1>
-          {place.vibe && place.vibe.length > 0 && <div className="flex gap-2 mt-2 overflow-x-auto no-scrollbar" role="list">{place.vibe.map((v, i) => <span key={i} className="text-xs font-medium text-slate-200 border border-white/20 px-2 py-0.5 rounded-full whitespace-nowrap" role="listitem">✨ {v}</span>)}</div>}
-        </div>
-      </header>
-
-      <div className="p-6 space-y-6 bg-white dark:bg-slate-800 -mt-4 rounded-t-3xl relative z-10 flex-1 transition-colors duration-300">
-        <nav className="grid grid-cols-2 gap-3"> {/* Changed from grid-cols-4 to grid-cols-2 */}
-          {place.isMobile ? <ActionButton icon="phone" label={t('call')} onClick={() => window.open(`tel:${place.phone}`)} primary disabled={!place.phone} /> : <ActionButton icon="location-arrow" label={t('directions')} onClick={navigationHandler} primary />}
-          <ActionButton icon="share-nodes" label={t('share')} onClick={handleShare} />
-        </nav>
+        <div className="p-5 space-y-5 bg-white dark:bg-slate-800 flex-1 transition-colors duration-300">
+          {/* 4-button action row */}
+          <nav className="grid grid-cols-4 gap-2">
+            {place.isMobile
+              ? <ActionButton icon="phone" label={t('call')} onClick={() => window.open(`tel:${place.phone}`)} primary disabled={!place.phone} />
+              : <ActionButton icon="location-arrow" label={t('directions')} onClick={navigationHandler} primary />
+            }
+            {place.phone && !place.isMobile && <ActionButton icon="phone" label={t('call')} onClick={() => window.open(`tel:${place.phone}`)} />}
+            <ActionButton icon="share-nodes" label={t('share')} onClick={handleShare} />
+            <ActionButton icon="robot" label="El Veci" onClick={() => onAskAi('')} color="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300" />
+          </nav>
         
         {isClosed && <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 p-4 rounded-2xl flex items-center gap-4"><i className="fa-solid fa-store-slash text-red-500 text-2xl"></i><div><h4 className="font-bold text-red-600 dark:text-red-400">{t('place_closed_title')}</h4><p className="text-xs text-red-500/80 dark:text-red-400/80">{t('place_closed_info')}</p></div></div>}
 
@@ -400,7 +469,8 @@ const PlaceCard: React.FC<PlaceCardProps> = ({ place, allPlaces, onSelect, onClo
            </button>
         </footer>
         <div className="h-6"></div>
-      </div>
+      </div>{/* end expanded content div */}
+      </div>{/* end expanded wrapper div */}
     </article>
   );
 };

@@ -172,7 +172,21 @@ const MainApp: React.FC = () => {
     if (action === 'contact') setIsContactOpen(true);
   };
 
+  // Floating search pill: shows current context on map
+  const floatingSearchLabel = React.useMemo(() => {
+    if (activeCollection) return activeCollection.title;
+    if (activeGroup === 'ALL') return 'Todos los negocios';
+    if (activeGroup === 'EVENTS') return 'Eventos';
+    if (activeGroup === 'FAVORITES') return 'Favoritos';
+    return activeGroup;
+  }, [activeGroup, activeCollection]);
+
   const handleTabChange = (tabId: string, forceReset: boolean = true) => {
+      // 'concierge' is a modal, not a real tab
+      if (tabId === 'concierge') {
+          setIsConciergeOpen(true);
+          return;
+      }
       setActiveTab(tabId);
       if (tabId === 'map') {
           if (forceReset) {
@@ -256,15 +270,36 @@ const MainApp: React.FC = () => {
             <button onClick={() => setIsAdminOpen(true)} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-600 dark:text-slate-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">
               <i className="fa-solid fa-lock"></i>
             </button>
-            <button onClick={centerOnUser} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-blue-500 dark:text-blue-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">
-                <i className="fa-solid fa-location-crosshairs"></i>
-            </button>
         </div>
       </header>
 
       {/* Main Content Area */}
       <main className="flex-1 relative w-full h-full">
         <div ref={mapContainer} className="absolute inset-0 z-0 bg-slate-200 dark:bg-slate-800 transition-colors" />
+
+        {/* Floating Search Pill — map view only */}
+        {activeTab === 'map' && (
+          <button
+            onClick={() => { handleTabChange('explore', false); setSearchFocusTrigger(prev => prev + 1); }}
+            className="absolute top-20 left-1/2 -translate-x-1/2 z-[1500] flex items-center gap-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-white/60 dark:border-slate-700/50 shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] rounded-full px-5 py-3 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-all active:scale-95 max-w-[220px]"
+            aria-label="Buscar en el mapa"
+          >
+            <i className="fa-solid fa-magnifying-glass text-sm text-slate-400 dark:text-slate-500 shrink-0"></i>
+            <span className="text-sm font-semibold truncate">{floatingSearchLabel}</span>
+          </button>
+        )}
+
+        {/* GPS button — map view only */}
+        {activeTab === 'map' && (
+          <button
+            onClick={centerOnUser}
+            className={`absolute bottom-36 right-4 z-[1500] w-12 h-12 flex items-center justify-center rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-white/60 dark:border-slate-700 shadow-lg text-blue-500 dark:text-blue-400 hover:scale-105 transition-transform ${!userLocation ? 'animate-pulse-dot' : ''}`}
+            title="Mi ubicación"
+            aria-label="Centrar en mi ubicación"
+          >
+            <i className="fa-solid fa-location-crosshairs text-lg"></i>
+          </button>
+        )}
       </main>
 
       {/* Sheets & Modals */}

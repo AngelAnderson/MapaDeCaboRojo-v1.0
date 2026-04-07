@@ -192,9 +192,16 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
 
       <div className="flex-1 overflow-y-auto px-4 py-2 space-y-3 pb-32 mask-image-b">
         {sortedPlaces.length === 0 ? (
-            <div className="text-center py-16 opacity-40">
-                <i className="fa-solid fa-map-location-dot text-5xl mb-3 text-slate-300 dark:text-slate-500"></i>
+            <div className="text-center py-16 flex flex-col items-center gap-4">
+                <i className="fa-solid fa-map-location-dot text-5xl text-slate-200 dark:text-slate-600"></i>
                 <p className="text-base font-bold text-slate-400 dark:text-slate-500">{t('no_results')}</p>
+                <button
+                    onClick={() => onTabChange('concierge')}
+                    className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold px-5 py-3 rounded-full shadow-lg shadow-emerald-500/30 transition-all active:scale-95"
+                >
+                    <i className="fa-solid fa-comments"></i>
+                    Pregúntale a El Veci
+                </button>
             </div>
         ) : (
             sortedPlaces.map(place => {
