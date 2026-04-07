@@ -58,11 +58,12 @@ const MapApp: React.FC = () => {
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [activeGroup, setActiveGroup] = useState<string>(() => getSmartCategory());
   const [activeCollection, setActiveCollection] = useState<Collection | null>(null);
-  const [searchText, setSearchText] = useState(''); 
+  const [searchText, setSearchText] = useState('');
   const [searchFocusTrigger, setSearchFocusTrigger] = useState(0);
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
-  
+  const [isMapMenuOpen, setIsMapMenuOpen] = useState(false);
+
   // Offline State
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
@@ -143,6 +144,17 @@ const MapApp: React.FC = () => {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  // Close 3-dot menu on outside click
+  useEffect(() => {
+    if (!isMapMenuOpen) return;
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.relative')) setIsMapMenuOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [isMapMenuOpen]);
 
   // Initialize Map Engine
   const { mapLoaded, flyTo, flyHome, showUserLocation, invalidateSize, zoomIn, zoomOut } = useMapEngine( 
@@ -258,19 +270,32 @@ const MapApp: React.FC = () => {
         <WeatherWidget weather={weather} />
         <div className="pointer-events-auto flex flex-col gap-3 items-end">
             {isOffline && (
-                <div className="bg-amber-500 text-white p-2.5 rounded-full shadow-lg border border-white/40 font-bold text-xl w-10 h-10 flex items-center justify-center animate-pulse" title="Signal Saver Mode (Offline)">
-                    <i className="fa-solid fa-wifi"></i>
+                <div className="bg-amber-500/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg border border-white/40 animate-pulse" title="Signal Saver Mode (Offline)">
+                    OFFLINE
                 </div>
             )}
-            <button onClick={() => setMapStyle(prev => prev === 'standard' ? 'satellite' : 'standard')} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-emerald-600 dark:text-emerald-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center mb-0">
-              <i className={`fa-solid ${mapStyle === 'standard' ? 'fa-satellite' : 'fa-map'}`}></i>
-            </button>
-            <button onClick={() => zoomIn()} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-600 dark:text-slate-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"><i className="fa-solid fa-plus"></i></button>
-            <button onClick={() => zoomOut()} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-600 dark:text-slate-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"><i className="fa-solid fa-minus"></i></button>
-            <button onClick={() => setIsDarkMode(!isDarkMode)} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-amber-500 dark:text-purple-300 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"><i className={`fa-solid ${isDarkMode ? 'fa-moon' : 'fa-sun'}`}></i></button>
-            <button onClick={() => setLanguage(language === 'es' ? 'en' : 'es')} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-800 dark:text-white p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-[10px] uppercase hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">{language === 'es' ? 'EN' : 'ES'}</button>
-            <button onClick={() => setIsAdminOpen(true)} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-600 dark:text-slate-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"><i className="fa-solid fa-lock"></i></button>
-            <button onClick={centerOnUser} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-blue-500 dark:text-blue-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"><i className="fa-solid fa-location-crosshairs"></i></button>
+            {/* GPS location button */}
+            <button onClick={centerOnUser} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-blue-500 dark:text-blue-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center" title="Mi ubicación"><i className="fa-solid fa-location-crosshairs"></i></button>
+            {/* 3-dot menu button */}
+            <div className="relative">
+              <button onClick={() => setIsMapMenuOpen(prev => !prev)} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-600 dark:text-slate-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center" title="Opciones"><i className="fa-solid fa-ellipsis-vertical"></i></button>
+              {isMapMenuOpen && (
+                <div className="absolute right-0 top-12 bg-white/90 dark:bg-slate-800/90 backdrop-blur-md rounded-2xl shadow-xl border border-white/40 dark:border-slate-700 py-2 min-w-[160px] z-50 animate-fade-in">
+                  <button onClick={() => { setMapStyle(prev => prev === 'standard' ? 'satellite' : 'standard'); setIsMapMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                    <i className={`fa-solid ${mapStyle === 'standard' ? 'fa-satellite' : 'fa-map'} text-emerald-600 dark:text-emerald-400 w-4`}></i>
+                    <span>{mapStyle === 'standard' ? 'Vista satélite' : 'Vista mapa'}</span>
+                  </button>
+                  <button onClick={() => { setIsDarkMode(!isDarkMode); setIsMapMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                    <i className={`fa-solid ${isDarkMode ? 'fa-sun' : 'fa-moon'} text-amber-500 dark:text-purple-300 w-4`}></i>
+                    <span>{isDarkMode ? 'Modo claro' : 'Modo oscuro'}</span>
+                  </button>
+                  <button onClick={() => { setLanguage(language === 'es' ? 'en' : 'es'); setIsMapMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                    <i className="fa-solid fa-language text-slate-500 dark:text-slate-400 w-4"></i>
+                    <span>{language === 'es' ? 'Switch to English' : 'Cambiar a español'}</span>
+                  </button>
+                </div>
+              )}
+            </div>
         </div>
       </header>
 
