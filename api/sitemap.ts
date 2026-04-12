@@ -2,17 +2,25 @@
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
-  process.env.VITE_SUPABASE_URL || '',
-  process.env.VITE_SUPABASE_ANON_KEY || ''
+  process.env.VITE_SUPABASE_URL || 'https://vprjteqgmanntvisjrvp.supabase.co',
+  process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwcmp0ZXFnbWFubnR2aXNqcnZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0NDAwODgsImV4cCI6MjA4MDAxNjA4OH0.JBRyroLWbjh6Ow9un24c77mbr_zl9P7hdd6YUzt8LgY'
 );
 
 export default async function handler(req: any, res: any) {
   try {
-    // 1. Fetch Data
-    const { data: places } = await supabase
-      .from('places')
-      .select('slug, id, verified_at, category')
-      .eq('status', 'open');
+    // 1. Fetch Data — paginate to bypass PostgREST 1000-row cap
+    const allPlaces: any[] = [];
+    for (let page = 0; page < 10; page++) {
+      const { data } = await supabase
+        .from('places')
+        .select('slug, id, verified_at, category')
+        .eq('status', 'open')
+        .range(page * 1000, (page + 1) * 1000 - 1);
+      if (!data || data.length === 0) break;
+      allPlaces.push(...data);
+      if (data.length < 1000) break;
+    }
+    const places = allPlaces;
 
     const { data: events } = await supabase
       .from('events')

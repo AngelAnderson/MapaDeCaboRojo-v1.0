@@ -31,15 +31,20 @@ function getAmenity(amenities: any, key: string): string {
 }
 
 export default async function handler(req: any, res: any) {
-  const { data: places, error } = await supabase
-    .from('places')
-    .select('id,name,slug,category,subcategory,description,address,phone,website,opening_hours,amenities,status,google_rating')
-    .order('category', { ascending: true });
-
-  if (error) {
-    res.status(500).send('# Error loading directory');
-    return;
+  // Paginate to bypass PostgREST 1000-row cap
+  const allPlaces: any[] = [];
+  for (let page = 0; page < 10; page++) {
+    const { data, error } = await supabase
+      .from('places')
+      .select('id,name,slug,category,subcategory,description,address,phone,website,opening_hours,amenities,status,google_rating')
+      .order('category', { ascending: true })
+      .range(page * 1000, (page + 1) * 1000 - 1);
+    if (error) { res.status(500).send('# Error loading directory'); return; }
+    if (!data || data.length === 0) break;
+    allPlaces.push(...data);
+    if (data.length < 1000) break;
   }
+  const places = allPlaces;
 
   const lines: string[] = [
     '# MapaDeCaboRojo.com — Directorio Completo de Cabo Rojo, Puerto Rico',
