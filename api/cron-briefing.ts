@@ -9,6 +9,12 @@ const supabase = createClient(
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 export default async function handler(req: any, res: any) {
+  // Security: Vercel Cron requests include this header
+  const authHeader = req.headers.authorization;
+  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
   const { data: logs } = await supabase.from('admin_logs').select('*').order('created_at', { ascending: false }).limit(50);
   const { data: places } = await supabase.from('places').select('name');
 

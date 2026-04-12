@@ -25,7 +25,7 @@ const getEnvVar = (key: string): string => {
   return '';
 };
 
-// HARDCODED FALLBACKS (To fix "Fake Data" issue if env vars fail)
+// Client-side anon key fallback (anon keys are public by Supabase design — RLS enforces access)
 const DEFAULT_URL = 'https://vprjteqgmanntvisjrvp.supabase.co';
 const DEFAULT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwcmp0ZXFnbWFubnR2aXNqcnZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0NDAwODgsImV4cCI6MjA4MDAxNjA4OH0.JBRyroLWbjh6Ow9un24c77mbr_zl9P7hdd6YUzt8LgY';
 

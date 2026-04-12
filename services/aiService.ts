@@ -3,8 +3,9 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { Place, Event, Coordinates, AdminLog, ItineraryItem, PlaceCategory, ChatMessage, Person } from "../types";
 import { getAdminLogs, getMapPlaces, supabase } from "./supabase";
 
-// Initialize Client-Side AI (Fallback)
-const clientAI = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// Client-side AI fallback — NEVER set a VITE_-prefixed API key for this.
+// All AI calls should go through /api/ai. This is a dead-code fallback.
+const clientAI = new GoogleGenAI({ apiKey: '' });
 
 // --- LOCAL KNOWLEDGE CHECK (shared between server and client fallback) ---
 async function checkLocalKnowledgeClient(query: string): Promise<string | null> {

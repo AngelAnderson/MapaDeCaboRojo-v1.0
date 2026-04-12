@@ -11,16 +11,20 @@ const supabase = createClient(
 // Admin client (service role) — only initialized for user management actions
 function getAdminClient() {
   return createClient(
-    process.env.VITE_SUPABASE_URL || 'https://vprjteqgmanntvisjrvp.supabase.co',
+    process.env.VITE_SUPABASE_URL || '',
     process.env.SUPABASE_SERVICE_ROLE_KEY || ''
   );
 }
 
-const CORS_HEADERS_OPS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-};
+const ALLOWED_ORIGINS = ['https://mapadecaborojo.com', 'https://www.mapadecaborojo.com', 'http://localhost:5173'];
+function getCorsHeaders(origin: string | undefined) {
+  const allowed = ALLOWED_ORIGINS.includes(origin || '') ? origin! : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin': allowed,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+}
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -30,7 +34,8 @@ const WIKIDATA_ENDPOINT = 'https://query.wikidata.org/sparql';
 
 export default async function handler(req: any, res: any) {
   // CORS preflight
-  Object.entries(CORS_HEADERS_OPS).forEach(([k, v]) => res.setHeader(k, v));
+  const corsHeaders = getCorsHeaders(req.headers.origin);
+  Object.entries(corsHeaders).forEach(([k, v]) => res.setHeader(k, v));
   if (req.method === 'OPTIONS') return res.status(204).end();
 
   // Action can come from query string (user management) or body (ops actions)
@@ -45,8 +50,15 @@ export default async function handler(req: any, res: any) {
     return await handleUserAction(action, req, res);
   }
 
-  // ── Ops actions (original) ──────────────────────────────────────────────────
+  // ── Ops actions (original) — REQUIRE AUTH ────────────────────────────────────
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+
+  // Auth gate: ops mutations require a valid Supabase JWT
+  const opsToken = req.headers.authorization?.replace('Bearer ', '');
+  if (!opsToken) return res.status(401).json({ error: 'Unauthorized' });
+  const supabaseAdmin = getAdminClient();
+  const { data: { user: opsUser }, error: opsAuthErr } = await supabaseAdmin.auth.getUser(opsToken);
+  if (opsAuthErr || !opsUser) return res.status(401).json({ error: 'Unauthorized' });
 
   try {
     switch (action) {
@@ -80,6 +92,10 @@ async function handleUserAction(action: string, req: any, res: any) {
 
   const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
   if (authError || !user) return res.status(401).json({ error: 'Unauthorized' });
+
+  // Role check: only admin users can manage other users
+  const role = user.user_metadata?.role || user.app_metadata?.role;
+  if (role !== 'admin') return res.status(403).json({ error: 'Forbidden — admin role required' });
 
   try {
     switch (action) {

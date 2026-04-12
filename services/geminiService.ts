@@ -2,8 +2,9 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Place, Event, Coordinates, AdminLog, ItineraryItem, PlaceCategory, ChatMessage, DaySchedule } from "../types";
 
-// Initialize Client-Side AI (Fallback)
-const clientAI = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// Client-side AI fallback — NEVER set a VITE_-prefixed API key for this.
+// All AI calls should go through /api/ai. This is a dead-code fallback.
+const clientAI = new GoogleGenAI({ apiKey: '' });
 
 // --- HELPER: TIME FORMATTER ---
 const formatTimeShort = (timeStr: string) => {
