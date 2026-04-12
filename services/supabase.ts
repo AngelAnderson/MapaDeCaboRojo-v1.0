@@ -35,8 +35,8 @@ const SUPABASE_ANON_KEY = getEnvVar('VITE_SUPABASE_ANON_KEY') || DEFAULT_KEY;
 
 // --- SIGNAL SAVER CACHE SYSTEM ---
 const memoryCache: Record<string, { data: any; timestamp: number }> = {};
-// v5: fix deeplink race + force fresh cache on all clients after slug sanitization + dedup
-const CACHE_KEY_PREFIX = 'cabo_signal_saver_v5_';
+// v6: RPC returns SETOF json now (bypasses PostgREST 1000-row cap). All 1134 places load.
+const CACHE_KEY_PREFIX = 'cabo_signal_saver_v6_';
 const MEMORY_TTL = 5 * 60 * 1000; // 5 Minutes for RAM
 const PERSISTENT_TTL = 24 * 60 * 60 * 1000; // 24 Hours for Disk (Signal Saver)
 
@@ -740,9 +740,8 @@ export const getMapPlaces = async (): Promise<Place[]> => {
   if (cached) return cached;
 
   try {
-    // PostgREST applies its db-max-rows cap even to RPC results. The function has LIMIT 5000
-    // but the server clips to 1000 unless we request a wider Range header via .range().
-    const { data, error } = await supabase.rpc('get_map_places_minimal').range(0, 4999);
+    // RPC now returns SETOF json which bypasses the PostgREST db-max-rows cap.
+    const { data, error } = await supabase.rpc('get_map_places_minimal');
     if (error) {
       console.error('getMapPlaces RPC Error:', error.message);
       // Fall back to legacy paginated fetch so the map still works
