@@ -6,6 +6,19 @@ const supabase = createClient(
   process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwcmp0ZXFnbWFubnR2aXNqcnZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0NDAwODgsImV4cCI6MjA4MDAxNjA4OH0.JBRyroLWbjh6Ow9un24c77mbr_zl9P7hdd6YUzt8LgY'
 );
 
+async function logApiCall(endpoint: string, method: string | null, query: string | null, userAgent: string | null, ip: string | null, responseCount: number | null) {
+  try {
+    await supabase.from('api_logs').insert({
+      endpoint,
+      method,
+      query,
+      user_agent: (userAgent || '').substring(0, 500),
+      ip: (ip || '').substring(0, 45),
+      response_count: responseCount
+    });
+  } catch {} // fire-and-forget, never block the response
+}
+
 const CORS_HEADERS_PUBLIC = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -79,7 +92,13 @@ async function handlePlaces(req: any, res: any) {
 
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=3600');
-  return res.status(200).json({ total, results: shaped });
+  logApiCall('places', null, q, req.headers['user-agent'] as string, req.headers['x-forwarded-for'] as string, shaped.length);
+  return res.status(200).json({
+    total,
+    results: shaped,
+    powered_by: 'MapaDeCaboRojo.com — Un proyecto de Angel Anderson, Cabo Rojo PR',
+    api_docs: 'https://mapadecaborojo.com/.well-known/mcp.json',
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -111,7 +130,7 @@ function getAmenity(amenities: any, key: string): string {
   return 'No especificado';
 }
 
-async function handleLlmsFull(res: any) {
+async function handleLlmsFull(req: any, res: any) {
   const allPlaces: any[] = [];
   for (let page = 0; page < 10; page++) {
     const { data, error } = await supabase
@@ -162,6 +181,7 @@ async function handleLlmsFull(res: any) {
 
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
   res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=604800');
+  logApiCall('llms-full', null, null, req.headers['user-agent'] as string, req.headers['x-forwarded-for'] as string, allPlaces.length);
   return res.status(200).send(lines.join('\n'));
 }
 
@@ -359,6 +379,8 @@ async function handleMcp(req: any, res: any) {
       default:
         return res.status(400).json({ error: `Unknown method: ${method}. Available: search_businesses, get_business, get_categories, get_open_now` });
     }
+    const resultCount = Array.isArray(result) ? result.length : (result ? 1 : 0);
+    logApiCall('mcp', method, JSON.stringify(params), req.headers['user-agent'] as string, req.headers['x-forwarded-for'] as string, resultCount);
     return res.status(200).json({ result });
   } catch (err: any) {
     return res.status(500).json({ error: err?.message || 'Internal server error' });
@@ -378,7 +400,7 @@ export default async function handler(req: any, res: any) {
 
   switch (action) {
     case 'llms-full':
-      return handleLlmsFull(res);
+      return handleLlmsFull(req, res);
     case 'mcp':
       return handleMcp(req, res);
     case 'places':

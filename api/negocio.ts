@@ -5,6 +5,19 @@ const supabase = createClient(
   process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwcmp0ZXFnbWFubnR2aXNqcnZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0NDAwODgsImV4cCI6MjA4MDAxNjA4OH0.JBRyroLWbjh6Ow9un24c77mbr_zl9P7hdd6YUzt8LgY'
 );
 
+async function logApiCall(endpoint: string, method: string | null, query: string | null, userAgent: string | null, ip: string | null, responseCount: number | null) {
+  try {
+    await supabase.from('api_logs').insert({
+      endpoint,
+      method,
+      query,
+      user_agent: (userAgent || '').substring(0, 500),
+      ip: (ip || '').substring(0, 45),
+      response_count: responseCount
+    });
+  } catch {} // fire-and-forget, never block the response
+}
+
 function esc(str: string | null | undefined): string {
   if (!str) return '';
   return str
@@ -282,9 +295,14 @@ export default async function handler(req: any, res: any) {
       <p style="color: rgba(255,255,255,0.75); font-size: 0.8rem; margin-top: 0.75rem; margin-bottom: 0;">Responde El Veci, nuestro vecino digital — disponible 24/7 por mensaje de texto.</p>
     </div>
 
-    <footer>
-      <p>MapaDeCaboRojo.com · El directorio de Cabo Rojo, Puerto Rico</p>
-      <p><a href="${baseUrl}" style="color:#0d9488;">mapadecaborojo.com</a></p>
+    <footer style="margin-top: 48px; padding: 24px 0; border-top: 1px solid #e2e8f0; text-align: center;">
+      <p style="color: #94a3b8; font-size: 12px; margin: 0;">
+        Hecho con orgullo en Cabo Rojo, Puerto Rico
+      </p>
+      <p style="color: #94a3b8; font-size: 11px; margin: 4px 0 0 0;">
+        <a href="https://mapadecaborojo.com" style="color: #0d9488; text-decoration: none;">MapaDeCaboRojo.com</a>
+        · Un proyecto de <a href="https://angelanderson.com" style="color: #0d9488; text-decoration: none;">Angel Anderson</a>
+      </p>
       <p style="margin-top: 0.5rem;"><a href="sms:+17874177711?body=ERROR%20${encodeURIComponent(place.name)}%3A%20" style="color:#94a3b8; font-size:0.75rem; text-decoration:none;">Reportar error en esta página</a></p>
     </footer>
   </div>
@@ -293,5 +311,6 @@ export default async function handler(req: any, res: any) {
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=604800');
+  logApiCall('negocio', null, slug, req.headers['user-agent'] as string, req.headers['x-forwarded-for'] as string, 1);
   return res.status(200).send(html);
 }
