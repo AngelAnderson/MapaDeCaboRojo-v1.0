@@ -59,10 +59,13 @@ export const useRouter = (
 
         // Apply logic
         if (targetPlace && targetPlace.coords) {
-            // Only fly to the place, DO NOT set selectedPlace on initial load.
-            // The PlaceCard will not pop up automatically.
             setTimeout(() => onFlyTo(targetPlace!.coords, targetZoom), 1000);
-            setSelectedPlace(null); // Ensure no place card is open
+            // If URL has ?place=, open the card. Landing place just centers the map.
+            if (placeSlug) {
+                setSelectedPlace(targetPlace);
+            } else {
+                setSelectedPlace(null);
+            }
         } else {
             // Fallback: Fly to default center if no specific place is targeted
             setTimeout(() => onFlyTo(CABO_ROJO_CENTER, 13), 1000); // Default zoom 13 for home view
