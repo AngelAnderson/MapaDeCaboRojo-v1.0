@@ -35,10 +35,9 @@ const SUPABASE_ANON_KEY = getEnvVar('VITE_SUPABASE_ANON_KEY') || DEFAULT_KEY;
 
 // --- SIGNAL SAVER CACHE SYSTEM ---
 const memoryCache: Record<string, { data: any; timestamp: number }> = {};
-// v3: bumped Apr 11 2026 — v2 still cached the truncated 1000-row payload because PostgREST
-// ignored the client-side .range(0, 1999). v3 paginates past the server cap and picks up the
-// 2 newly-nulled picsum rows in the DB. Safe to bump again whenever mapper shape changes.
-const CACHE_KEY_PREFIX = 'cabo_signal_saver_v3_';
+// v4: Phase 3 — switched to RPC-based minimal fetch (~230KB instead of ~1.5MB paginated).
+// Shape change: minimal Place objects without description/hours/amenities.
+const CACHE_KEY_PREFIX = 'cabo_signal_saver_v4_';
 const MEMORY_TTL = 5 * 60 * 1000; // 5 Minutes for RAM
 const PERSISTENT_TTL = 24 * 60 * 60 * 1000; // 24 Hours for Disk (Signal Saver)
 
@@ -727,6 +726,134 @@ export const getPlaces = async (): Promise<Place[]> => {
   } catch (err) { 
     console.error("Unexpected Error in getPlaces:", err);
     return []; 
+  }
+};
+
+// ============================================================================
+// Phase 3 RPCs: minimal list + detail-on-click.
+// getMapPlaces()  → ~230 KB payload (was 1.5 MB from getPlaces pagination)
+// getPlaceDetail() → ~2 KB per click, fetched lazily
+// ============================================================================
+
+/** Minimal Place fields for map pins + explorer list — ~85% smaller than full fetch. */
+export const getMapPlaces = async (): Promise<Place[]> => {
+  const cached = await getFromCache('PLACES');
+  if (cached) return cached;
+
+  try {
+    const { data, error } = await supabase.rpc('get_map_places_minimal');
+    if (error) {
+      console.error('getMapPlaces RPC Error:', error.message);
+      // Fall back to legacy paginated fetch so the map still works
+      return getPlaces();
+    }
+    if (!data || data.length === 0) return [];
+
+    const mapped: Place[] = data.map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      slug: row.slug || '',
+      description: '', // deferred to detail
+      category: mapCategory(row.category, row.subcategory),
+      coords: (row.lat != null && row.lon != null) ? { lat: row.lat, lng: row.lon } : undefined,
+      parking: ParkingStatus.FREE, // deferred
+      hasRestroom: false, // deferred
+      hasShowers: false,
+      hasGenerator: false,
+      imageUrl: row.image_url || '',
+      imagePosition: 'center',
+      imageAlt: '',
+      tips: '', // deferred
+      is_featured: (row.sponsor_weight && row.sponsor_weight > 80) || false,
+      sponsor_weight: row.sponsor_weight || 0,
+      plan: row.plan || 'free',
+      status: (row.status || 'open') as Place['status'],
+      tags: row.tags || [],
+      address: '', // deferred
+      gmapsUrl: '', // deferred
+      videoUrl: '',
+      website: '',
+      phone: '', // deferred
+      priceLevel: '$',
+      bestTimeToVisit: '',
+      vibe: [], // deferred
+      isPetFriendly: false,
+      isHandicapAccessible: false,
+      isVerified: row.is_verified || false,
+      // opening_hours minimal: just the type so the status pill can show 24/7
+      opening_hours: row.hours_type ? { type: row.hours_type } : undefined,
+      contact_info: {},
+      customIcon: row.custom_icon || '',
+      isMobile: row.is_mobile || false,
+      isLanding: row.is_landing || false,
+      amenities: {},
+      defaultZoom: row.default_zoom ?? undefined,
+      rating: row.google_rating ?? undefined,
+      _detailLoaded: false, // sentinel: detail not yet fetched
+    } as Place & { _detailLoaded?: boolean }));
+
+    await setCache('PLACES', mapped);
+    return mapped;
+  } catch (err) {
+    console.error('getMapPlaces Error:', err);
+    return getPlaces(); // fallback
+  }
+};
+
+/** Full detail for a single place — lazy-loaded when user taps a pin. */
+export const getPlaceDetail = async (placeId: string): Promise<Partial<Place> | null> => {
+  try {
+    const { data, error } = await supabase.rpc('get_place_detail', { p_id: placeId });
+    if (error || !data || data.length === 0) {
+      console.error('getPlaceDetail RPC Error:', error?.message);
+      return null;
+    }
+    const row = data[0];
+    return {
+      id: row.id,
+      name: row.name,
+      slug: row.slug || '',
+      description: row.description || '',
+      category: mapCategory(row.category, row.subcategory),
+      coords: (row.lat != null && row.lon != null) ? { lat: row.lat, lng: row.lon } : undefined,
+      parking: mapParking(row.amenities),
+      hasRestroom: row.amenities?.restrooms || false,
+      hasShowers: row.amenities?.showers || false,
+      hasGenerator: row.amenities?.has_generator || false,
+      imageUrl: row.image_url || '',
+      imagePosition: row.amenities?.image_position || 'center',
+      imageAlt: row.amenities?.image_alt || '',
+      tips: row.amenities?.tips || '',
+      is_featured: (row.sponsor_weight && row.sponsor_weight > 80) || false,
+      sponsor_weight: row.sponsor_weight || 0,
+      plan: row.plan || 'free',
+      status: (row.status || 'open') as Place['status'],
+      tags: row.tags || [],
+      address: row.address || '',
+      gmapsUrl: row.gmaps_url || '',
+      videoUrl: row.video_url || '',
+      website: row.website || '',
+      phone: row.phone || '',
+      priceLevel: row.price_level || '$',
+      bestTimeToVisit: row.best_time_to_visit || '',
+      vibe: row.vibe || [],
+      isPetFriendly: row.is_pet_friendly || false,
+      isHandicapAccessible: row.is_handicap_accessible || false,
+      isVerified: row.is_verified || false,
+      verified_at: row.verified_at,
+      created_at: row.created_at,
+      opening_hours: row.opening_hours || { note: '' },
+      contact_info: row.contact_info || {},
+      customIcon: row.custom_icon || '',
+      isMobile: row.amenities?.is_mobile || false,
+      isLanding: row.amenities?.is_landing === true,
+      amenities: row.amenities || {},
+      defaultZoom: row.default_zoom ?? undefined,
+      rating: row.google_rating ?? undefined,
+    } as Place;
+  } catch (err) {
+    console.error('getPlaceDetail Error:', err);
+    return null;
   }
 };
 

@@ -31,7 +31,7 @@ const MainApp: React.FC = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   
   // Data State - Now includes categories and people
-  const { places, events, categories, people, publishedPlaces, mappedEvents, loading, refreshData } = usePlacesData();
+  const { places, events, categories, people, publishedPlaces, mappedEvents, loading, refreshData, fetchDetail } = usePlacesData();
   const weather = useWeather();
   
   // Favorites State
@@ -123,11 +123,15 @@ const MainApp: React.FC = () => {
   }, []);
 
   // Initialize Map Engine (Pass categories for dynamic colors)
-  // Handler is stable via useCallback so marker re-registration doesn't thrash.
-  const handleMarkerSelect = React.useCallback((p: Place) => {
-    setSelectedPlace(p);
+  // On pin click: set the minimal place immediately (instant card open), then fetch detail
+  // in the background. PlaceCard shows a skeleton for deferred fields until detail arrives.
+  const handleMarkerSelect = React.useCallback(async (p: Place) => {
+    setSelectedPlace(p); // instant card with minimal data
     if (p.coords) flyTo(p.coords, p.defaultZoom);
-  }, []); // flyTo is from a hook below; closure captures latest via ref pattern inside useMapEngine
+    // Fetch full detail in background — merged into state by fetchDetail
+    const full = await fetchDetail(p.id);
+    if (full) setSelectedPlace(full);
+  }, []); // fetchDetail is stable from hook
   const { mapLoaded, flyTo, flyHome, showUserLocation, invalidateSize, zoomIn, zoomOut } = useMapEngine(
     mapContainer,
     isDarkMode,
@@ -312,10 +316,12 @@ const MainApp: React.FC = () => {
       {/* Sheets & Modals */}
       <ExplorerSheet
         places={filteredList}
-        onSelect={(p) => {
+        onSelect={async (p) => {
             setSelectedPlace(p);
             if (p.coords) flyTo(p.coords, p.defaultZoom);
-            handleTabChange('map', false); // Switch to map tab, but DO NOT reset map position
+            handleTabChange('map', false);
+            const full = await fetchDetail(p.id);
+            if (full) setSelectedPlace(full);
         }}
         isVisible={activeTab === 'explore'} 
         searchText={searchText}
@@ -340,7 +346,7 @@ const MainApp: React.FC = () => {
         <PlaceCard
             place={selectedPlace}
             allPlaces={publishedPlaces}
-            onSelect={(p) => { setSelectedPlace(p); if (p.coords) flyTo(p.coords, p.defaultZoom); }}
+            onSelect={async (p) => { setSelectedPlace(p); if (p.coords) flyTo(p.coords, p.defaultZoom); const full = await fetchDetail(p.id); if (full) setSelectedPlace(full); }}
             onClose={() => setSelectedPlace(null)}
             onNavigate={handleNavigate}
             onAskAi={() => setIsConciergeOpen(true)}

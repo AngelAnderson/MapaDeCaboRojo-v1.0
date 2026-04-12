@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Place, Event, PlaceCategory, ParkingStatus, Category, Person } from '../types';
-import { getPlaces, getEvents, getCategories, getPeople, checkDataVersion } from '../services/supabase';
+import { getMapPlaces, getPlaceDetail, getEvents, getCategories, getPeople, checkDataVersion } from '../services/supabase';
 import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, DEFAULT_CATEGORIES } from '../constants';
 
 export const usePlacesData = () => {
@@ -20,10 +20,11 @@ export const usePlacesData = () => {
             // 1. Heartbeat Check
             await checkDataVersion();
 
-            // 2. Load Data (will hit network if cache was cleared, or cache if valid)
-            console.log("Fetching real data...");
+            // 2. Load Data — use the Phase 3 minimal RPC (~230KB) instead of the full
+            // paginated getPlaces (~1.5MB). Detail is fetched lazily when user taps a pin.
+            console.log("Fetching real data (minimal)...");
             const [realPlaces, realEvents, realCategories, realPeople] = await Promise.all([
-                getPlaces(),
+                getMapPlaces(),
                 getEvents(),
                 getCategories(),
                 getPeople()
@@ -129,9 +130,8 @@ export const usePlacesData = () => {
   }, [events]);
 
   const refreshData = async () => {
-      // Re-fetch everything to ensure hydration is correct
       const [realPlaces, realEvents, realCategories, realPeople] = await Promise.all([
-          getPlaces(),
+          getMapPlaces(),
           getEvents(),
           getCategories(),
           getPeople()
@@ -149,5 +149,23 @@ export const usePlacesData = () => {
       if(realPeople.length > 0) setPeople(realPeople);
   };
 
-  return { places, events, categories, people, publishedPlaces, mappedEvents, loading, refreshData };
+  // Lazy-fetch full detail for a single place. Merges into the places array
+  // so subsequent renders don't re-fetch. Returns the hydrated Place.
+  const fetchDetail = async (placeId: string): Promise<Place | null> => {
+    // Already loaded?
+    const existing = places.find(p => p.id === placeId);
+    if (existing && (existing as any)._detailLoaded) return existing;
+
+    const detail = await getPlaceDetail(placeId);
+    if (!detail) return existing ?? null;
+
+    // Merge: detail overrides minimal fields; keep relatedPeople from hydration
+    const merged = { ...existing, ...detail, relatedPeople: existing?.relatedPeople, _detailLoaded: true } as Place;
+
+    // Update in-memory array so the card doesn't re-fetch if closed + reopened
+    setPlaces(prev => prev.map(p => p.id === placeId ? merged : p));
+    return merged;
+  };
+
+  return { places, events, categories, people, publishedPlaces, mappedEvents, loading, refreshData, fetchDetail };
 };

@@ -30,6 +30,16 @@ interface PlaceCardProps {
   userLocation?: Coordinates;
 }
 
+// ---------- Skeleton for lazy-loaded detail ---------------------------------
+const Skeleton = memo(({ lines = 3, className = '' }: { lines?: number; className?: string }) => (
+  <div className={`animate-pulse space-y-2 ${className}`}>
+    {Array.from({ length: lines }).map((_, i) => (
+      <div key={i} className={`h-3 bg-slate-200 dark:bg-slate-700 rounded ${i === lines - 1 ? 'w-2/3' : 'w-full'}`}></div>
+    ))}
+  </div>
+));
+Skeleton.displayName = 'Skeleton';
+
 // ---------- Small sub-components (memoized to avoid re-render storms) --------
 
 const InfoBadge = memo(({ icon, label, active, colorClass, darkColorClass }: any) => (
@@ -245,6 +255,9 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
   // Mobile-only dismiss gesture state
   const [dragY, setDragY] = useState<number | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
+
+  // ---- Detail loaded sentinel (Phase 3 lazy loading) ----------------------
+  const detailLoaded = !!(place as any)?._detailLoaded || !!place?.description;
 
   // ---- Null-guarded derived values --------------------------------------
   const placeName = place?.name ?? 'Negocio';
@@ -578,13 +591,15 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
             </section>
           )}
 
-          {/* Description */}
-          {placeDescription && (
-            <section>
-              <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-2 tracking-wider">{t('the_scoop')}</h3>
-              <p className="text-slate-700 dark:text-slate-200 text-lg leading-relaxed">{placeDescription}</p>
-            </section>
-          )}
+          {/* Description — skeleton while detail loads */}
+          <section>
+            <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-2 tracking-wider">{t('the_scoop')}</h3>
+            {detailLoaded ? (
+              placeDescription ? <p className="text-slate-700 dark:text-slate-200 text-lg leading-relaxed">{placeDescription}</p> : null
+            ) : (
+              <Skeleton lines={3} />
+            )}
+          </section>
 
           {/* Related people */}
           {place.relatedPeople && place.relatedPeople.length > 0 && (
@@ -618,15 +633,21 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
             </section>
           )}
 
-          {/* Hours */}
-          {!isClosed && place.opening_hours && (
+          {/* Hours — full schedule only available after detail load */}
+          {!isClosed && (
             <section>
-              <HoursDisplay hours={place.opening_hours} />
+              {detailLoaded && place.opening_hours ? (
+                <HoursDisplay hours={place.opening_hours} />
+              ) : !detailLoaded ? (
+                <div className="bg-slate-50 dark:bg-slate-700/50 rounded-2xl border border-slate-100 dark:border-slate-600 p-4">
+                  <Skeleton lines={2} />
+                </div>
+              ) : null}
             </section>
           )}
 
-          {/* Contact block */}
-          {(placeAddress || placePhone || place.gmapsUrl) && (
+          {/* Contact block — deferred until detail loads */}
+          {detailLoaded && (placeAddress || placePhone || place.gmapsUrl) && (
             <section className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-600 space-y-3 transition-colors">
               {placeAddress && (
                 <div className="flex items-start gap-3">
@@ -684,8 +705,8 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
             </section>
           )}
 
-          {/* Logistics badges */}
-          <section>
+          {/* Logistics badges — deferred until detail */}
+          {detailLoaded && <section>
             <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-3 tracking-wider">{t('logistics')}</h3>
             <div className="grid grid-cols-4 gap-2">
               {!isMobileBiz && (
@@ -719,10 +740,10 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
               <InfoBadge icon="dog" label={t('pet_friendly_label')} active={place.isPetFriendly} colorClass="bg-orange-50 border-orange-200 text-orange-700" darkColorClass="dark:bg-orange-900/30 dark:border-orange-800/30 dark:text-orange-300" />
               <InfoBadge icon="wheelchair" label={t('accessibility_label')} active={place.isHandicapAccessible} colorClass="bg-purple-50 border-purple-200 text-purple-700" darkColorClass="dark:bg-purple-900/30 dark:border-purple-800/30 dark:text-purple-300" />
             </div>
-          </section>
+          </section>}
 
-          {/* Insider tip */}
-          {placeTips && (
+          {/* Insider tip — deferred */}
+          {detailLoaded && placeTips && (
             <div className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950/40 dark:to-orange-900/40 p-5 rounded-2xl border border-orange-200 dark:border-orange-800/30 relative overflow-hidden transition-colors">
               <i className="fa-solid fa-lightbulb absolute -right-4 -bottom-4 text-8xl text-orange-200 dark:text-orange-900/50 opacity-50" aria-hidden="true"></i>
               <h3 className="text-orange-800 dark:text-orange-300 font-bold uppercase mb-2 text-sm flex items-center gap-2">
