@@ -123,12 +123,17 @@ const MainApp: React.FC = () => {
   }, []);
 
   // Initialize Map Engine (Pass categories for dynamic colors)
-  const { mapLoaded, flyTo, flyHome, showUserLocation, invalidateSize, zoomIn, zoomOut } = useMapEngine( 
+  // Handler is stable via useCallback so marker re-registration doesn't thrash.
+  const handleMarkerSelect = React.useCallback((p: Place) => {
+    setSelectedPlace(p);
+    if (p.coords) flyTo(p.coords, p.defaultZoom);
+  }, []); // flyTo is from a hook below; closure captures latest via ref pattern inside useMapEngine
+  const { mapLoaded, flyTo, flyHome, showUserLocation, invalidateSize, zoomIn, zoomOut } = useMapEngine(
     mapContainer,
     isDarkMode,
     mapStyle,
     filteredList,
-    (p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); },
+    handleMarkerSelect,
     categories // NEW PROP
   );
 
@@ -142,8 +147,10 @@ const MainApp: React.FC = () => {
 
   // --- HANDLERS ---
 
-  const handleNavigate = () => { 
-    if (selectedPlace) window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedPlace.coords.lat},${selectedPlace.coords.lng}`, '_blank'); 
+  const handleNavigate = () => {
+    if (selectedPlace?.coords) {
+      window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedPlace.coords.lat},${selectedPlace.coords.lng}`, '_blank');
+    }
   };
 
   const centerOnUser = () => { 
@@ -303,13 +310,13 @@ const MainApp: React.FC = () => {
       </main>
 
       {/* Sheets & Modals */}
-      <ExplorerSheet 
-        places={filteredList} 
-        onSelect={(p) => { 
-            setSelectedPlace(p); 
-            flyTo(p.coords, p.defaultZoom);
+      <ExplorerSheet
+        places={filteredList}
+        onSelect={(p) => {
+            setSelectedPlace(p);
+            if (p.coords) flyTo(p.coords, p.defaultZoom);
             handleTabChange('map', false); // Switch to map tab, but DO NOT reset map position
-        }} 
+        }}
         isVisible={activeTab === 'explore'} 
         searchText={searchText}
         onSearchChange={setSearchText}
@@ -330,11 +337,11 @@ const MainApp: React.FC = () => {
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} onAction={handleNavAction} />
 
       {selectedPlace && (
-        <PlaceCard 
-            place={selectedPlace} 
-            allPlaces={publishedPlaces} 
-            onSelect={(p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); }} 
-            onClose={() => setSelectedPlace(null)} 
+        <PlaceCard
+            place={selectedPlace}
+            allPlaces={publishedPlaces}
+            onSelect={(p) => { setSelectedPlace(p); if (p.coords) flyTo(p.coords, p.defaultZoom); }}
+            onClose={() => setSelectedPlace(null)}
             onNavigate={handleNavigate}
             onAskAi={() => setIsConciergeOpen(true)}
             onSuggestEdit={() => { setIsContactOpen(true); }}

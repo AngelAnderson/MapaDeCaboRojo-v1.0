@@ -182,7 +182,11 @@ export const useMapEngine = (
                 </div>
             `;
             marker.bindTooltip(tooltipHtml, { direction: 'top', offset: [0, -50], className: 'custom-tooltip', opacity: 1 });
-            marker.on('click', (e) => { L.DomEvent.stopPropagation(e); onPlaceSelect(place); });
+            // Bind BOTH 'click' and 'tap' — Leaflet's touch→click conversion can be eaten by map drag detection on mobile.
+            // This was the root cause of "pin tap does nothing on iPhone" (Apr 11 2026).
+            const handleSelect = (e: L.LeafletEvent) => { L.DomEvent.stopPropagation(e as any); onPlaceSelect(place); };
+            marker.on('click', handleSelect);
+            marker.on('tap' as any, handleSelect);
             markersRef.current.push(marker);
         });
 

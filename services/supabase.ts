@@ -708,8 +708,9 @@ export const getEvents = async (): Promise<Event[]> => {
     if (cached) return cached;
 
     try {
-        // Simple select first to ensure data access works, avoiding potential JOIN issues with RLS
-        const { data, error } = await supabase.from('events').select('id,title,description,category,start_time,end_time,location_name,coords,map_link,image_url,is_featured,status,family_friendly,discovery_source,created_at').order('start_time', { ascending: true });
+        // Schema drift: the `events` table does not have a `coords` column. Requesting it caused a silent
+        // 400 error in the console on every page load. The mapper below already discards coords anyway.
+        const { data, error } = await supabase.from('events').select('id,title,description,category,start_time,end_time,location_name,map_link,image_url,is_featured,status,family_friendly,discovery_source,created_at').order('start_time', { ascending: true });
         
         if (error) {
             console.error("Supabase Events Error:", error.message);

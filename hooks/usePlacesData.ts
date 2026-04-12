@@ -53,11 +53,17 @@ export const usePlacesData = () => {
     initData();
   }, []);
 
-  // Strict Filtering for Public View
+  // Public filter — aligned with the bot *7711 rule in CLAUDE.md:
+  // "visibility = 'published' for any status = 'open' business — or the keyword search silently hides it."
+  // Previously this required `isVerified=true` AND `status!=='pending'`, which was too aggressive and
+  // silently hid hundreds of real businesses from the map. Now: render anything that isn't explicitly
+  // closed or hidden. The badge in the card still surfaces verification state if needed later.
   const publishedPlaces = useMemo(() => {
     return places.filter(p => {
-       if (p.status === 'pending') return false;
-       if (!p.isVerified) return false;
+       if (p.status === 'closed') return false;
+       // Respect explicit hiding via a visibility flag if it exists on the row
+       const vis = (p as any).visibility;
+       if (vis && vis !== 'published') return false;
        return true;
     });
   }, [places]);
