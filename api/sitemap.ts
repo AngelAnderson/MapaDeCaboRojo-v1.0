@@ -28,7 +28,7 @@ export default async function handler(req: any, res: any) {
       .gte('start_time', new Date().toISOString());
 
     // 2. Base URL
-    const baseUrl = 'https://mapadecaborojo.com';
+    const baseUrl = 'https://www.mapadecaborojo.com';
     
     // 3. Build XML
     const urls = [];

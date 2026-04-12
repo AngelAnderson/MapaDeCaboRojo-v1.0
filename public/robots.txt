@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
-Sitemap: https://mapadecaborojo.com/sitemap.xml
-Host: https://mapadecaborojo.com
+Sitemap: https://www.mapadecaborojo.com/api/sitemap
+Host: https://www.mapadecaborojo.com
