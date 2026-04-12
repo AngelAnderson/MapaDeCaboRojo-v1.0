@@ -34,14 +34,42 @@ export default async function handler(req: any, res: any) {
       </url>
     `);
 
-    // Dynamic Places
+    // LLM discovery files
+    urls.push(`
+      <url>
+        <loc>${baseUrl}/llms.txt</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+      </url>
+    `);
+    urls.push(`
+      <url>
+        <loc>${baseUrl}/llms-full.txt</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.5</priority>
+      </url>
+    `);
+
+    // Category pages
+    const categories = ['restaurantes', 'playas', 'salud', 'hospedaje', 'servicios', 'compras', 'entretenimiento', 'turismo', 'deportes', 'belleza', 'automotriz', 'marina', 'educacion', 'gobierno'];
+    categories.forEach((cat) => {
+      urls.push(`
+        <url>
+          <loc>${baseUrl}/categoria/${cat}</loc>
+          <changefreq>weekly</changefreq>
+          <priority>0.7</priority>
+        </url>
+      `);
+    });
+
+    // Dynamic Places — SEO pages at /negocio/[slug]
     if (places) {
       places.forEach((p: any) => {
         const lastMod = p.verified_at ? p.verified_at.split('T')[0] : new Date().toISOString().split('T')[0];
         const slug = p.slug || p.id;
         urls.push(`
           <url>
-            <loc>${baseUrl}/?place=${slug}</loc>
+            <loc>${baseUrl}/negocio/${slug}</loc>
             <lastmod>${lastMod}</lastmod>
             <changefreq>weekly</changefreq>
             <priority>0.8</priority>

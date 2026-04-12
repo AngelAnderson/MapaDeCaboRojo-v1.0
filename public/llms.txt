@@ -1,48 +1,72 @@
-# El Veci — El Copiloto del Pueblo
+# MapaDeCaboRojo.com — Directorio de Cabo Rojo, Puerto Rico
 
-> Interactive map and AI-powered guide for Cabo Rojo, Puerto Rico. Find businesses, beaches, restaurants, and local adventures.
+> Mapa interactivo y guía local para Cabo Rojo, Puerto Rico. Más de 1,134 negocios, playas, restaurantes y servicios indexados.
 
-## About
+## Sobre este sitio
 
-El Veci is an interactive map and local guide for Cabo Rojo, Puerto Rico. It helps residents and visitors discover businesses, beaches, chinchorros, restaurants, and services. The app features an AI-powered WhatsApp assistant that answers questions about local businesses in real time.
+MapaDeCaboRojo.com es el directorio local más completo de Cabo Rojo, Puerto Rico. Incluye mapa interactivo Leaflet, páginas individuales por negocio con JSON-LD LocalBusiness schema, y El Veci — un asistente por SMS/WhatsApp que responde preguntas sobre negocios locales en tiempo real.
 
-## Key Facts
+## Datos para LLMs
 
-- Website: https://mapadecaborojo.com
-- WhatsApp Bot: +1-787-417-7711 (text "menu" to start)
-- Location: Cabo Rojo, Puerto Rico
-- Businesses listed: 158+
-- Language: Spanish
-- Parent site: https://caborojo.com
-- Creator: Angel Anderson (angel@caborojo.com)
+- **Dump completo (texto plano):** https://mapadecaborojo.com/llms-full.txt
+- **API JSON pública:** https://mapadecaborojo.com/api/places
+- **Parámetros API:** `?q=pizza`, `?category=restaurante`, `?open=true`, `?limit=50`
 
-## Features
+## Estadísticas
 
-- Interactive Leaflet map with all listed businesses
-- Category filtering: Beaches, Food, Lodging, Services, Health, Shopping
-- Individual place pages with hours, contact, location
-- AI WhatsApp assistant (El Veci) for natural language business search
-- PWA support (installable on mobile)
-- Daily briefings and business recommendations
+- Negocios listados: 1,134+
+- Municipio: Cabo Rojo, Puerto Rico (PR)
+- Idioma principal: Español
+- Sitio: https://mapadecaborojo.com
+- Creador: Angel Anderson (angel@caborojo.com)
 
-## Popular Places
+## Categorías disponibles
+
+| Categoría | URL |
+|-----------|-----|
+| Restaurantes | https://mapadecaborojo.com/categoria/restaurantes |
+| Playas | https://mapadecaborojo.com/categoria/playas |
+| Salud & Farmacias | https://mapadecaborojo.com/categoria/salud |
+| Hospedaje | https://mapadecaborojo.com/categoria/hospedaje |
+| Servicios | https://mapadecaborojo.com/categoria/servicios |
+| Compras | https://mapadecaborojo.com/categoria/compras |
+| Entretenimiento | https://mapadecaborojo.com/categoria/entretenimiento |
+| Turismo | https://mapadecaborojo.com/categoria/turismo |
+| Deportes | https://mapadecaborojo.com/categoria/deportes |
+| Belleza & Spa | https://mapadecaborojo.com/categoria/belleza |
+| Automotriz | https://mapadecaborojo.com/categoria/automotriz |
+| Marina & Náutico | https://mapadecaborojo.com/categoria/marina |
+
+## Páginas de negocio
+
+Cada negocio tiene su propia URL con JSON-LD LocalBusiness schema, Open Graph, meta description y FAQ:
+`https://mapadecaborojo.com/negocio/{slug}`
+
+## Asistente local — El Veci
+
+El Veci es el copiloto digital de Cabo Rojo. Responde preguntas sobre negocios, horarios y recomendaciones vía SMS/WhatsApp.
+
+- Número: 787-417-7711
+- SMS deep link: sms:+17874177711?body=menu
+- Cobertura: Cabo Rojo, Puerto Rico
+
+## Lugares destacados
 
 - Playa Sucia (La Playuela)
 - Faro Los Morrillos
 - Poblado de Boquerón
-- Joyuda (seafood strip)
-- Combate Beach
+- Joyuda (franja de mariscos)
+- Playa Combate
 - Salinas de Cabo Rojo
 
-## Related Properties
+## Propiedades relacionadas
 
-- Directory: https://caborojo.com
-- Events: https://loquehayhoy.com
-- Community radar: https://radardepueblo.com
-- Book funnel: https://mastiempo.net
-- Author: https://angelanderson.com
+- Directorio editorial: https://caborojo.com
+- Eventos: https://loquehayhoy.com
+- Radar comunitario: https://radardepueblo.com
+- Autor: https://angelanderson.com
 
-## Contact
+## Contacto
 
 - Email: angel@caborojo.com
 - WhatsApp: +1-787-417-7711

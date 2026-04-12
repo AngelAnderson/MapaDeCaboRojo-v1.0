@@ -1,0 +1,35 @@
+{
+  "name": "MapaDeCaboRojo",
+  "description": "Business directory for Cabo Rojo, Puerto Rico. Search 1,134 local businesses.",
+  "url": "https://mapadecaborojo.com/api/mcp",
+  "methods": [
+    {
+      "name": "search_businesses",
+      "description": "Search businesses by name or keyword",
+      "params": {
+        "query": "string",
+        "category": "string (optional)",
+        "limit": "number (optional, default 20)"
+      }
+    },
+    {
+      "name": "get_business",
+      "description": "Get full details for a business by slug",
+      "params": {
+        "slug": "string"
+      }
+    },
+    {
+      "name": "get_categories",
+      "description": "List all business categories with counts"
+    },
+    {
+      "name": "get_open_now",
+      "description": "List businesses open right now",
+      "params": {
+        "category": "string (optional)"
+      }
+    }
+  ],
+  "contact": "angel@caborojo.com"
+}
