@@ -142,7 +142,12 @@ const MainApp: React.FC = () => {
   );
 
   // Initialize Router (Handles all URL state safely)
-  useRouter(publishedPlaces, selectedPlace, setSelectedPlace, flyTo);
+  // onDeepLinkSelect: when ?place=slug opens a card, fetch full detail so the card isn't stuck on minimal data
+  const handleDeepLink = React.useCallback(async (p: Place) => {
+    const full = await fetchDetail(p.id);
+    if (full) setSelectedPlace(full);
+  }, [fetchDetail]);
+  useRouter(publishedPlaces, selectedPlace, setSelectedPlace, flyTo, undefined, handleDeepLink);
 
   // Fix: Map Layout Invalidation
   useEffect(() => {

@@ -4,11 +4,12 @@ import { Place } from '../types';
 import { DEFAULT_PLACE_ZOOM, CABO_ROJO_CENTER } from '../constants'; // Import CABO_ROJO_CENTER
 
 export const useRouter = (
-  publishedPlaces: Place[], 
-  selectedPlace: Place | null, 
+  publishedPlaces: Place[],
+  selectedPlace: Place | null,
   setSelectedPlace: (p: Place | null) => void,
   onFlyTo: (coords: {lat: number, lng: number}, zoom?: number) => void,
-  onAction?: (action: string) => void // New callback for actions/pages
+  onAction?: (action: string) => void, // New callback for actions/pages
+  onDeepLinkSelect?: (p: Place) => void // Phase 3: called when a ?place= URL opens a card so caller can fetchDetail
 ) => {
   
   // 1. On Load: Check URL (Search Params OR Hash)
@@ -60,9 +61,11 @@ export const useRouter = (
         // Apply logic
         if (targetPlace && targetPlace.coords) {
             setTimeout(() => onFlyTo(targetPlace!.coords, targetZoom), 1000);
-            // If URL has ?place=, open the card. Landing place just centers the map.
+            // If URL has ?place=, open the card and fetch full detail.
+            // Landing place (no param) just centers the map.
             if (placeSlug) {
                 setSelectedPlace(targetPlace);
+                if (onDeepLinkSelect) onDeepLinkSelect(targetPlace);
             } else {
                 setSelectedPlace(null);
             }
