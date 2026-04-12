@@ -1,7 +1,16 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Place } from '../types';
-import { DEFAULT_PLACE_ZOOM, CABO_ROJO_CENTER } from '../constants'; // Import CABO_ROJO_CENTER
+import { DEFAULT_PLACE_ZOOM, CABO_ROJO_CENTER } from '../constants';
+
+// Capture the initial ?place= param ONCE at module load time, before any useEffect
+// can wipe it via pushState. This prevents the race condition where the URL-sync
+// effect (which runs on selectedPlace=null at mount) deletes the param before the
+// data-load effect can read it.
+const INITIAL_PLACE_PARAM = typeof window !== 'undefined'
+  ? new URLSearchParams(window.location.search).get('place')
+    || (window.location.hash.includes('place=') ? new URLSearchParams(window.location.hash.substring(1)).get('place') : null)
+  : null;
 
 export const useRouter = (
   publishedPlaces: Place[],
@@ -28,13 +37,9 @@ export const useRouter = (
     if (publishedPlaces.length === 0) return;
 
     try {
-        let placeSlug = searchParams.get('place');
-        
-        // Fallback: Check Hash if search param is missing (common in some embedded views)
-        if (!placeSlug && window.location.hash.includes('place=')) {
-            const hashParams = new URLSearchParams(window.location.hash.substring(1)); // Remove #
-            placeSlug = hashParams.get('place');
-        }
+        // Use the param captured at module load time — immune to the race condition
+        // where the URL-sync effect wipes ?place= before this effect runs.
+        let placeSlug = INITIAL_PLACE_PARAM;
 
         let targetPlace: Place | null = null;
         let targetZoom: number | undefined = undefined;
@@ -66,8 +71,10 @@ export const useRouter = (
             if (placeSlug) {
                 setSelectedPlace(targetPlace);
                 if (onDeepLinkSelect) onDeepLinkSelect(targetPlace);
+                deepLinkProcessed.current = true; // allow URL-sync effect to run normally
             } else {
                 setSelectedPlace(null);
+                deepLinkProcessed.current = true;
             }
         } else {
             // Fallback: Fly to default center if no specific place is targeted
@@ -83,23 +90,23 @@ export const useRouter = (
     }
   }, [publishedPlaces.length]); // Re-run when places data is loaded
 
+  // Track whether the deep-link effect has run (data loaded + card opened).
+  // Until it has, the URL-sync effect must NOT wipe the ?place= param.
+  const deepLinkProcessed = useRef(!INITIAL_PLACE_PARAM); // true if no deep link to process
+
   // 2. On Selection: Update URL safely
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    if (window.location.protocol === 'blob:' || window.location.href.startsWith('blob:') || window.location.protocol === 'data:') return;
 
-    // Critical Sandbox Check: If we are in a blob URL (CodeSandbox preview), abort history API to prevent crash
-    if (window.location.protocol === 'blob:' || window.location.href.startsWith('blob:') || window.location.protocol === 'data:') {
-        return;
-    }
+    // Don't wipe ?place= until the deep-link effect has had a chance to read it
+    if (!selectedPlace && !deepLinkProcessed.current) return;
 
     try {
         const url = new URL(window.location.href);
-        
-        // Strategy 1: Try Standard History API
         try {
             if (selectedPlace) {
                 url.searchParams.set('place', selectedPlace.slug || selectedPlace.id);
-                // Remove page param if selecting a place to clean up URL
                 url.searchParams.delete('page');
             } else {
                 url.searchParams.delete('place');

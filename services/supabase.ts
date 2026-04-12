@@ -35,9 +35,8 @@ const SUPABASE_ANON_KEY = getEnvVar('VITE_SUPABASE_ANON_KEY') || DEFAULT_KEY;
 
 // --- SIGNAL SAVER CACHE SYSTEM ---
 const memoryCache: Record<string, { data: any; timestamp: number }> = {};
-// v4: Phase 3 — switched to RPC-based minimal fetch (~230KB instead of ~1.5MB paginated).
-// Shape change: minimal Place objects without description/hours/amenities.
-const CACHE_KEY_PREFIX = 'cabo_signal_saver_v4_';
+// v5: fix deeplink race + force fresh cache on all clients after slug sanitization + dedup
+const CACHE_KEY_PREFIX = 'cabo_signal_saver_v5_';
 const MEMORY_TTL = 5 * 60 * 1000; // 5 Minutes for RAM
 const PERSISTENT_TTL = 24 * 60 * 60 * 1000; // 24 Hours for Disk (Signal Saver)
 
