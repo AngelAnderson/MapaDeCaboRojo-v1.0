@@ -9,7 +9,7 @@ import Admin from './components/Admin';
 import ContactModal from './components/ContactModal';
 import SuggestPlaceModal from './components/SuggestPlaceModal'; 
 import WeatherWidget from './components/WeatherWidget'; 
-import { getPlaces, getEvents } from './services/supabase'; 
+import { getEvents } from './services/supabase';
 import { LanguageProvider, useLanguage } from './i18n/LanguageContext';
 import ExplorerSheet from './components/ExplorerSheet';
 import BottomNav from './components/BottomNav';

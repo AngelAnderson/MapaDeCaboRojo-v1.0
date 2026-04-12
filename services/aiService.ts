@@ -1,7 +1,7 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 import { Place, Event, Coordinates, AdminLog, ItineraryItem, PlaceCategory, ChatMessage, Person } from "../types";
-import { getAdminLogs, getPlaces, supabase } from "./supabase"; // Import data fetchers + supabase client
+import { getAdminLogs, getMapPlaces, supabase } from "./supabase";
 
 // Initialize Client-Side AI (Fallback)
 const clientAI = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
@@ -255,7 +255,7 @@ async function handleClientSideAI(action: string, payload: any) {
             const { range } = payload;
             // 1. Fetch Data Manually since we can't use server logs directly easily
             const logs = await getAdminLogs(100);
-            const places = await getPlaces();
+            const places = await getMapPlaces();
             
             // Filter logs
             const days = range === 'monthly' ? 30 : 7;

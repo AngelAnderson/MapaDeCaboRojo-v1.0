@@ -741,7 +741,9 @@ export const getMapPlaces = async (): Promise<Place[]> => {
   if (cached) return cached;
 
   try {
-    const { data, error } = await supabase.rpc('get_map_places_minimal');
+    // PostgREST applies its db-max-rows cap even to RPC results. The function has LIMIT 5000
+    // but the server clips to 1000 unless we request a wider Range header via .range().
+    const { data, error } = await supabase.rpc('get_map_places_minimal').range(0, 4999);
     if (error) {
       console.error('getMapPlaces RPC Error:', error.message);
       // Fall back to legacy paginated fetch so the map still works
