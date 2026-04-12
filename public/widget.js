@@ -14,7 +14,7 @@
   'use strict';
 
   var BASE_URL = 'https://mapadecaborojo.com';
-  var API_URL  = BASE_URL + '/api/mcp';
+  var API_URL  = BASE_URL + '/api/public?action=mcp';
 
   /* ─── CSS injected into Shadow DOM ─── */
   var STYLES = [

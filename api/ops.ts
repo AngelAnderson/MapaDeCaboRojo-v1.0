@@ -8,6 +8,20 @@ const supabase = createClient(
   process.env.VITE_SUPABASE_ANON_KEY || ''
 );
 
+// Admin client (service role) — only initialized for user management actions
+function getAdminClient() {
+  return createClient(
+    process.env.VITE_SUPABASE_URL || 'https://vprjteqgmanntvisjrvp.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  );
+}
+
+const CORS_HEADERS_OPS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 // Constants
@@ -15,9 +29,24 @@ const BBOX = "17.85,-67.25,18.15,-67.10"; // Cabo Rojo Bounding Box
 const WIKIDATA_ENDPOINT = 'https://query.wikidata.org/sparql';
 
 export default async function handler(req: any, res: any) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+  // CORS preflight
+  Object.entries(CORS_HEADERS_OPS).forEach(([k, v]) => res.setHeader(k, v));
+  if (req.method === 'OPTIONS') return res.status(204).end();
 
-  const { action, ...payload } = req.body;
+  // Action can come from query string (user management) or body (ops actions)
+  const queryAction = req.query?.action as string | undefined;
+  const bodyData = req.body || {};
+  const action = queryAction || bodyData.action;
+  const payload = queryAction ? bodyData : (() => { const { action: _a, ...rest } = bodyData; return rest; })();
+
+  // ── User management actions (formerly api/admin-users.ts) ──────────────────
+  const userActions = new Set(['list', 'create', 'reset-password', 'delete', 'update-profile']);
+  if (userActions.has(action)) {
+    return await handleUserAction(action, req, res);
+  }
+
+  // ── Ops actions (original) ──────────────────────────────────────────────────
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   try {
     switch (action) {
@@ -37,6 +66,86 @@ export default async function handler(req: any, res: any) {
   } catch (e: any) {
     console.error(`Ops API Error [${action}]:`, e);
     return res.status(500).json({ error: e.message });
+  }
+}
+
+// ── User management handler (from admin-users.ts) ────────────────────────────
+
+async function handleUserAction(action: string, req: any, res: any) {
+  const supabaseAdmin = getAdminClient();
+
+  // Auth check
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+  const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+  if (authError || !user) return res.status(401).json({ error: 'Unauthorized' });
+
+  try {
+    switch (action) {
+      case 'list': {
+        if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+        const { data, error } = await supabaseAdmin.auth.admin.listUsers();
+        if (error) throw error;
+        const users = data.users.map((u) => ({
+          id: u.id,
+          email: u.email,
+          name: u.user_metadata?.name || '',
+          created_at: u.created_at,
+          last_sign_in_at: u.last_sign_in_at,
+        }));
+        return res.status(200).json({ users });
+      }
+
+      case 'create': {
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+        const { email, password, name } = req.body || {};
+        if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
+        const { data, error } = await supabaseAdmin.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: true,
+          user_metadata: { name: name || '' },
+        });
+        if (error) throw error;
+        return res.status(200).json({ user: data.user });
+      }
+
+      case 'reset-password': {
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+        const { userId, newPassword } = req.body || {};
+        if (!userId || !newPassword) return res.status(400).json({ error: 'userId and newPassword required' });
+        const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, { password: newPassword });
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
+      case 'delete': {
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+        const { userId } = req.body || {};
+        if (!userId) return res.status(400).json({ error: 'userId required' });
+        if (userId === user.id) return res.status(400).json({ error: 'Cannot delete your own account' });
+        const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
+      case 'update-profile': {
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+        const { name } = req.body || {};
+        const { error } = await supabaseAdmin.auth.admin.updateUserById(user.id, {
+          user_metadata: { name: name || '' },
+        });
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
+      default:
+        return res.status(400).json({ error: 'Unknown action' });
+    }
+  } catch (err: any) {
+    console.error('[ops/user-action]', err);
+    return res.status(500).json({ error: err.message || 'Internal server error' });
   }
 }
 

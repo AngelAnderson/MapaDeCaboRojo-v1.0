@@ -15,7 +15,7 @@ interface TeamManagerProps {
 
 async function apiCall(action: string, method: 'GET' | 'POST', body?: object): Promise<any> {
   const { data: { session } } = await supabase.auth.getSession();
-  const res = await fetch(`/api/admin-users?action=${action}`, {
+  const res = await fetch(`/api/ops?action=${action}`, {
     method,
     headers: {
       'Content-Type': 'application/json',

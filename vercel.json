@@ -14,7 +14,7 @@
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/negocio/:slug", "destination": "/api/negocio?slug=:slug" },
     { "source": "/categoria/:cat", "destination": "/api/categoria?cat=:cat" },
-    { "source": "/llms-full.txt", "destination": "/api/llms-full" },
+    { "source": "/llms-full.txt", "destination": "/api/public?action=llms-full" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
