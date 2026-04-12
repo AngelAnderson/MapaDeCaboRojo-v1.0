@@ -29,6 +29,8 @@ import { PeopleManager } from './PeopleManager';
 import { BulkTools } from './BulkTools';
 import { InsightsDashboard } from './InsightsDashboard';
 import { AdminLogs } from './AdminLogs';
+import { TeamManager } from './TeamManager';
+import { HelpCenter } from './HelpCenter';
 import { useRef } from 'react';
 
 interface AdminShellProps {
@@ -39,7 +41,7 @@ interface AdminShellProps {
   onUpdate: () => void;
 }
 
-type Tab = 'dashboard' | 'inbox' | 'places' | 'events' | 'logs' | 'categories' | 'people';
+type Tab = 'dashboard' | 'inbox' | 'places' | 'events' | 'logs' | 'categories' | 'people' | 'team' | 'help';
 
 export const AdminShell: React.FC<AdminShellProps> = ({
   onClose,
@@ -351,7 +353,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
   const showSearchBar =
     !isEditing &&
     (activeTab === 'places' || activeTab === 'inbox' || activeTab === 'events' || activeTab === 'categories' || activeTab === 'people');
-  const showSidebar = activeTab !== 'logs' && activeTab !== 'dashboard';
+  const showSidebar = activeTab !== 'logs' && activeTab !== 'dashboard' && activeTab !== 'team' && activeTab !== 'help';
 
   // ─── Login screen ─────────────────────────────────────────────────────────────
   if (!isAuthenticated) {
@@ -475,7 +477,9 @@ export const AdminShell: React.FC<AdminShellProps> = ({
                   { id: 'events', label: t('admin_events') },
                   { id: 'people', label: 'People' },
                   { id: 'categories', label: 'Cats' },
+                  { id: 'team', label: 'Equipo', icon: 'users' },
                   { id: 'logs', label: t('admin_logs') },
+                  { id: 'help', label: 'Ayuda', icon: 'circle-question' },
                 ] as { id: Tab; label: string; icon?: string; badge?: number }[]
               ).map((tab) => (
                 <button
@@ -701,14 +705,22 @@ export const AdminShell: React.FC<AdminShellProps> = ({
             />
           )}
 
+          {/* Team */}
+          {activeTab === 'team' && <TeamManager showToast={showToast} />}
+
           {/* Logs */}
           {activeTab === 'logs' && <AdminLogs logs={logs} />}
+
+          {/* Help */}
+          {activeTab === 'help' && <HelpCenter />}
 
           {/* Empty state */}
           {!isEditing &&
             !bulkMode &&
             activeTab !== 'logs' &&
-            activeTab !== 'dashboard' && (
+            activeTab !== 'dashboard' &&
+            activeTab !== 'team' &&
+            activeTab !== 'help' && (
               <div className="hidden md:flex flex-col items-center justify-center h-full text-center text-slate-500 opacity-50">
                 <i className="fa-solid fa-hand-pointer text-4xl mb-4"></i>
                 <p>{t('admin_select_item')}</p>
