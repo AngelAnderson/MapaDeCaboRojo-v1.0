@@ -35,10 +35,10 @@ const SUPABASE_ANON_KEY = getEnvVar('VITE_SUPABASE_ANON_KEY') || DEFAULT_KEY;
 
 // --- SIGNAL SAVER CACHE SYSTEM ---
 const memoryCache: Record<string, { data: any; timestamp: number }> = {};
-// v2: bumped Apr 11 2026 to force-invalidate clients that cached the picsum-fallback
-// mapping and the truncated 1000-row payload. Safe to bump again whenever the mapper
-// shape changes — every client picks up the new prefix on first visit and refetches.
-const CACHE_KEY_PREFIX = 'cabo_signal_saver_v2_';
+// v3: bumped Apr 11 2026 — v2 still cached the truncated 1000-row payload because PostgREST
+// ignored the client-side .range(0, 1999). v3 paginates past the server cap and picks up the
+// 2 newly-nulled picsum rows in the DB. Safe to bump again whenever mapper shape changes.
+const CACHE_KEY_PREFIX = 'cabo_signal_saver_v3_';
 const MEMORY_TTL = 5 * 60 * 1000; // 5 Minutes for RAM
 const PERSISTENT_TTL = 24 * 60 * 60 * 1000; // 24 Hours for Disk (Signal Saver)
 
@@ -648,17 +648,32 @@ export const getPlaces = async (): Promise<Place[]> => {
     // .range(0, 1999) bypasses the default Supabase REST 1000-row limit. The places table has ~1170 rows
     // today; at 2000 rows this query still fits well under the row-level cost ceiling. When the table
     // grows past ~1500 rows we should migrate to a bounding-box RPC (see plan Phase 3.1).
-    const { data, error } = await supabase
-      .from('places')
-      .select('id,name,description,category,subcategory,lat,lon,image_url,tags,address,gmaps_url,video_url,website,phone,price_level,best_time_to_visit,vibe,is_pet_friendly,is_handicap_accessible,is_verified,verified_at,created_at,opening_hours,contact_info,custom_icon,amenities,slug,status,plan,sponsor_weight,default_zoom')
-      .range(0, 1999);
-    
-    if (error) {
-        console.error("Supabase Fetch Error:", error.message);
-        return [];
+    // PostgREST enforces a server-side db-max-rows cap (1000 on this project). A client-side
+    // .range(0, 1999) gets silently clipped, so we paginate in 1000-row pages until the server
+    // returns a short page. Places table has ~1170 rows today → 2 HTTP calls, ~1.5 MB total.
+    // Migrate to a bounding-box RPC (plan Phase 3.1) once the table exceeds ~2000 rows.
+    const SELECT_COLS = 'id,name,description,category,subcategory,lat,lon,image_url,tags,address,gmaps_url,video_url,website,phone,price_level,best_time_to_visit,vibe,is_pet_friendly,is_handicap_accessible,is_verified,verified_at,created_at,opening_hours,contact_info,custom_icon,amenities,slug,status,plan,sponsor_weight,default_zoom';
+    const PAGE_SIZE = 1000;
+    const MAX_PAGES = 10;
+    const allRows: any[] = [];
+    for (let page = 0; page < MAX_PAGES; page++) {
+      const from = page * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+      const { data: pageData, error } = await supabase
+        .from('places')
+        .select(SELECT_COLS)
+        .range(from, to);
+      if (error) {
+        console.error(`Supabase Fetch Error (page ${page}):`, error.message);
+        if (allRows.length === 0) return [];
+        break; // return partial rather than nothing
+      }
+      if (!pageData || pageData.length === 0) break;
+      allRows.push(...pageData);
+      if (pageData.length < PAGE_SIZE) break; // last page
     }
-    
-    if (!data) return [];
+    if (allRows.length === 0) return [];
+    const data = allRows;
 
     const mapped = data.map((row: any) => ({
       id: row.id,
