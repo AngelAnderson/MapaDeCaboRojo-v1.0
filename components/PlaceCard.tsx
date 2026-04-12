@@ -279,8 +279,10 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
   const vibeCheck = place?.amenities?.vibe_check;
   const isVibeFresh = !!vibeCheck?.text;
 
-  const fallbackImage = useMemo(() => `https://picsum.photos/seed/${place?.id ?? 'default'}/800/600`, [place?.id]);
-  const heroSrc = getPlaceHeaderImage(place?.imageUrl) || fallbackImage;
+  // Real image URL only — no more random picsum placeholders. If the business has no photo
+  // uploaded, we render the gradient hero below with no <img> at all.
+  const heroSrc = getPlaceHeaderImage(place?.imageUrl || '');
+  const hasRealImage = !!heroSrc;
 
   const relatedPlaces = useMemo(() => {
     if (!allPlaces || !place) return [];
@@ -469,19 +471,26 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
 
       {/* Scrollable body */}
       <div className="flex-1 overflow-y-auto overscroll-contain">
-        {/* Hero image */}
-        <header className="relative w-full h-56 shrink-0 bg-gradient-to-br from-teal-400 via-cyan-500 to-orange-400">
-          <img
-            src={heroSrc}
-            alt={placeName}
-            className={`w-full h-full object-cover transition-all ${isClosed ? 'grayscale opacity-60' : ''}`}
-            style={{ objectPosition: place.imagePosition || 'center' }}
-            loading="lazy"
-            decoding="async"
-            onError={(e) => {
-              (e.currentTarget as HTMLImageElement).src = fallbackImage;
-            }}
-          />
+        {/* Hero image — real photo if we have one, otherwise a branded gradient with category icon */}
+        <header className="relative w-full h-56 shrink-0 bg-gradient-to-br from-teal-500 via-cyan-500 to-orange-400 overflow-hidden">
+          {hasRealImage ? (
+            <img
+              src={heroSrc}
+              alt={placeName}
+              className={`w-full h-full object-cover transition-all ${isClosed ? 'grayscale opacity-60' : ''}`}
+              style={{ objectPosition: place.imagePosition || 'center' }}
+              loading="eager"
+              decoding="async"
+              onError={(e) => {
+                // Image URL is dead — hide the broken img and fall through to the gradient.
+                (e.currentTarget as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <i className="fa-solid fa-map-location-dot text-white/40 text-8xl" aria-hidden="true"></i>
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
           {isClosed && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -740,16 +749,20 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
                     onClick={() => onSelect(rp)}
                     className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors text-left group"
                   >
-                    <div className="w-12 h-12 rounded-lg bg-slate-200 overflow-hidden shrink-0">
-                      <img
-                        src={getPlaceHeaderImage(rp.imageUrl) || `https://picsum.photos/seed/${rp.id}/200/200`}
-                        alt={rp.name}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = `https://picsum.photos/seed/${rp.id}/200/200`;
-                        }}
-                      />
+                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-500 overflow-hidden shrink-0 flex items-center justify-center">
+                      {rp.imageUrl ? (
+                        <img
+                          src={getPlaceHeaderImage(rp.imageUrl)}
+                          alt={rp.name}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        <i className="fa-solid fa-map-pin text-white/60 text-sm" aria-hidden="true"></i>
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm truncate group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">

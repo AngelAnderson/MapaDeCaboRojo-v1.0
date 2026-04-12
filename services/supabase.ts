@@ -35,7 +35,10 @@ const SUPABASE_ANON_KEY = getEnvVar('VITE_SUPABASE_ANON_KEY') || DEFAULT_KEY;
 
 // --- SIGNAL SAVER CACHE SYSTEM ---
 const memoryCache: Record<string, { data: any; timestamp: number }> = {};
-const CACHE_KEY_PREFIX = 'cabo_signal_saver_';
+// v2: bumped Apr 11 2026 to force-invalidate clients that cached the picsum-fallback
+// mapping and the truncated 1000-row payload. Safe to bump again whenever the mapper
+// shape changes — every client picks up the new prefix on first visit and refetches.
+const CACHE_KEY_PREFIX = 'cabo_signal_saver_v2_';
 const MEMORY_TTL = 5 * 60 * 1000; // 5 Minutes for RAM
 const PERSISTENT_TTL = 24 * 60 * 60 * 1000; // 24 Hours for Disk (Signal Saver)
 
@@ -641,8 +644,14 @@ export const getPlaces = async (): Promise<Place[]> => {
   if (cached) return cached;
 
   try {
-    // Select only columns needed for map + cards (excludes embedding, one_liner, description heavy fields)
-    const { data, error } = await supabase.from('places').select('id,name,description,category,subcategory,lat,lon,image_url,tags,address,gmaps_url,video_url,website,phone,price_level,best_time_to_visit,vibe,is_pet_friendly,is_handicap_accessible,is_verified,verified_at,created_at,opening_hours,contact_info,custom_icon,amenities,slug,status,plan,sponsor_weight,default_zoom');
+    // Select only columns needed for map + cards (excludes embedding, one_liner, description heavy fields).
+    // .range(0, 1999) bypasses the default Supabase REST 1000-row limit. The places table has ~1170 rows
+    // today; at 2000 rows this query still fits well under the row-level cost ceiling. When the table
+    // grows past ~1500 rows we should migrate to a bounding-box RPC (see plan Phase 3.1).
+    const { data, error } = await supabase
+      .from('places')
+      .select('id,name,description,category,subcategory,lat,lon,image_url,tags,address,gmaps_url,video_url,website,phone,price_level,best_time_to_visit,vibe,is_pet_friendly,is_handicap_accessible,is_verified,verified_at,created_at,opening_hours,contact_info,custom_icon,amenities,slug,status,plan,sponsor_weight,default_zoom')
+      .range(0, 1999);
     
     if (error) {
         console.error("Supabase Fetch Error:", error.message);
@@ -661,7 +670,11 @@ export const getPlaces = async (): Promise<Place[]> => {
       hasRestroom: row.amenities?.restrooms || false,
       hasShowers: row.amenities?.showers || false,
       hasGenerator: row.amenities?.has_generator || false,
-      imageUrl: row.image_url || `https://picsum.photos/600/400?random=${row.id.substring(0,4)}`,
+      // Leave empty if the DB has no image. The PlaceCard handles missing images by
+      // rendering a branded teal/cyan/orange gradient instead of a fake picsum photo.
+      // Previously the mapper injected picsum URLs which LOOKED like real photos but
+      // were random placeholders — confusing users who expected actual business photos.
+      imageUrl: row.image_url || '',
       imagePosition: row.amenities?.image_position || 'center',
       imageAlt: row.amenities?.image_alt || '',
       tips: row.amenities?.tips || '',
