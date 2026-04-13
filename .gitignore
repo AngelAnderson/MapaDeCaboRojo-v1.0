@@ -124,3 +124,6 @@ dist
 # Vite build output
 dist/
 dist-ssr/
+.gstack/
+.vercel
+.env*.local
