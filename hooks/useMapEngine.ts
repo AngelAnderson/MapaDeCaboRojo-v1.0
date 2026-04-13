@@ -1,9 +1,10 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import L from 'leaflet';
+import 'leaflet.markercluster';
 import { Place, PlaceCategory, Coordinates, Category } from '../types';
 import { CABO_ROJO_CENTER, DEFAULT_PLACE_ID, CATEGORY_COLORS, DEFAULT_PLACE_ZOOM } from '../constants';
-import { escapeHTML } from '../services/supabase'; 
+import { escapeHTML } from '../services/supabase';
 
 // --- INTERNAL HELPERS ---
 
@@ -14,7 +15,7 @@ const getSmartIcon = (place: Place, categories?: Category[]): string => {
     if (place.customIcon) {
         icon = place.customIcon;
     }
-    
+
     // 2. Dynamic Category from DB
     else if (categories) {
         const cat = categories.find(c => c.id === place.category);
@@ -23,7 +24,7 @@ const getSmartIcon = (place: Place, categories?: Category[]): string => {
         }
     }
 
-    // 3. Keyword Match (Smart Fallback if no specific category icon found yet)
+    // 3. Keyword Match (Smart Fallback)
     if (!icon) {
         const lowerName = place.name.toLowerCase();
         const iconMap: Record<string, string> = {
@@ -43,7 +44,6 @@ const getSmartIcon = (place: Place, categories?: Category[]): string => {
             'bar': 'fa-martini-glass-citrus',
             'faro': 'fa-lighthouse'
         };
-
         for (const key in iconMap) {
             if (lowerName.includes(key)) {
                 icon = iconMap[key];
@@ -51,53 +51,103 @@ const getSmartIcon = (place: Place, categories?: Category[]): string => {
             }
         }
     }
-    
-    // 4. Static Category Fallback (Last Resort)
+
+    // 4. Static Category Fallback
     if (!icon) {
-        switch (place.category) { 
-            case 'BEACH': icon = 'fa-umbrella-beach'; break;
-            case 'FOOD': icon = 'fa-utensils'; break;
-            case 'SIGHTS': icon = 'fa-binoculars'; break;
-            case 'LOGISTICS': icon = 'fa-gas-pump'; break;
-            case 'LODGING': icon = 'fa-bed'; break;
-            case 'NIGHTLIFE': icon = 'fa-champagne-glasses'; break;
-            case 'HEALTH': icon = 'fa-staff-snake'; break;
+        switch (place.category) {
+            case 'BEACH':    icon = 'fa-umbrella-beach'; break;
+            case 'FOOD':     icon = 'fa-utensils'; break;
+            case 'SIGHTS':   icon = 'fa-binoculars'; break;
+            case 'LOGISTICS':icon = 'fa-gas-pump'; break;
+            case 'LODGING':  icon = 'fa-bed'; break;
+            case 'NIGHTLIFE':icon = 'fa-champagne-glasses'; break;
+            case 'HEALTH':   icon = 'fa-staff-snake'; break;
             case 'SHOPPING': icon = 'fa-bag-shopping'; break;
             case 'ACTIVITY': icon = 'fa-person-hiking'; break;
-            case 'CULTURE': icon = 'fa-masks-theater'; break;
-            case 'SERVICE': icon = 'fa-bell-concierge'; break;
-            default: icon = 'fa-location-dot'; break;
+            case 'CULTURE':  icon = 'fa-masks-theater'; break;
+            case 'SERVICE':  icon = 'fa-bell-concierge'; break;
+            default:         icon = 'fa-location-dot'; break;
         }
     }
 
-    // Ensure FontAwesome prefix
     return icon.startsWith('fa-') ? icon : `fa-${icon}`;
 };
 
-const generateMarkerHtml = (place: Place, categories?: Category[]): string => { 
-  const isClosed = place.status === 'closed';
-  
-  // 1. Start with the static fallback color
-  let catColor = CATEGORY_COLORS[place.category] || CATEGORY_COLORS.DEFAULT;
-  
-  // 2. Try to find a dynamic color from the database list
-  if (categories && categories.length > 0) {
-      const cat = categories.find(c => c.id === place.category);
-      if (cat) catColor = cat.color;
-  }
+/**
+ * Returns a lighter tint of a hex color for use as the gradient start.
+ * Blends toward white by the given factor (0=same, 1=white).
+ */
+const lightenColor = (hex: string, factor = 0.4): string => {
+    const h = hex.replace('#', '');
+    const num = parseInt(h.length === 3
+        ? h.split('').map(c => c + c).join('')
+        : h, 16);
+    const r = (num >> 16) & 255;
+    const g = (num >> 8) & 255;
+    const b = num & 255;
+    const lr = Math.round(r + (255 - r) * factor);
+    const lg = Math.round(g + (255 - g) * factor);
+    const lb = Math.round(b + (255 - b) * factor);
+    return `rgb(${lr},${lg},${lb})`;
+};
 
-  // 3. Override if closed
-  if (isClosed) {
-      catColor = '#64748b'; // Slate 500
-  }
+const generateMarkerHtml = (place: Place, categories?: Category[]): string => {
+    const isClosed  = place.status === 'closed';
+    const isSponsor = place.is_featured === true || place.plan === 'vitrina';
 
-  const iconClass = getSmartIcon(place, categories); 
+    // Resolve color
+    let catColor = CATEGORY_COLORS[place.category] || CATEGORY_COLORS.DEFAULT;
+    if (categories && categories.length > 0) {
+        const cat = categories.find(c => c.id === place.category);
+        if (cat) catColor = cat.color;
+    }
 
-  return `
-    <div style="width: 36px; height: 36px; background: ${catColor}; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 2px solid white; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,0,0,0.2); cursor: pointer; transition: transform 0.2s ease;">
-      <i class="fa-solid ${iconClass} text-white" style="transform: rotate(45deg); font-size: 15px; opacity: ${isClosed ? '0.7' : '1'};"></i>
-    </div>
-  `;
+    // Size hierarchy
+    const size   = isSponsor ? 44 : isClosed ? 24 : 32;
+    const border = isSponsor ? 3  : 2;
+    const fontSize = isSponsor ? 18 : isClosed ? 11 : 14;
+
+    // Visual states
+    const opacity  = isClosed ? '0.6' : '1';
+    const filter   = isClosed ? 'grayscale(1)' : 'none';
+    const gradient = isClosed
+        ? 'linear-gradient(135deg,#94a3b8,#64748b)'
+        : `linear-gradient(135deg,${lightenColor(catColor, 0.35)},${catColor})`;
+    const shadow   = isSponsor
+        ? '0 3px 12px rgba(0,0,0,0.35)'
+        : '0 2px 8px rgba(0,0,0,0.3)';
+
+    // Pulse ring for sponsors (color matches category)
+    const pulseRing = isSponsor
+        ? `<div class="sponsor-pulse-ring" style="color:${catColor};"></div>`
+        : '';
+
+    // Photo avatar or icon
+    const innerContent = (place as any).photo_url
+        ? `<div style="width:${size - border * 2 - 6}px;height:${size - border * 2 - 6}px;border-radius:50%;background-image:url('${escapeHTML((place as any).photo_url)}');background-size:cover;background-position:center;"></div>`
+        : `<i class="fa-solid ${getSmartIcon(place, categories)}" style="font-size:${fontSize}px;color:white;"></i>`;
+
+    return `
+      <div style="
+        position:relative;
+        width:${size}px;
+        height:${size}px;
+        background:${gradient};
+        border-radius:50%;
+        border:${border}px solid white;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow:${shadow};
+        cursor:pointer;
+        opacity:${opacity};
+        filter:${filter};
+        transition:transform 0.2s ease, box-shadow 0.2s ease;
+      ">
+        ${pulseRing}
+        ${innerContent}
+      </div>
+    `;
 };
 
 // --- HOOK ---
@@ -108,11 +158,12 @@ export const useMapEngine = (
     mapStyle: 'standard' | 'satellite',
     placesToRender: Place[],
     onPlaceSelect: (p: Place) => void,
-    categories?: Category[] // NEW
+    categories?: Category[]
 ) => {
-    const map = useRef<L.Map | null>(null);
-    const tileLayer = useRef<L.TileLayer | null>(null);
-    const markersRef = useRef<L.Marker[]>([]);
+    const map             = useRef<L.Map | null>(null);
+    const tileLayer       = useRef<L.TileLayer | null>(null);
+    const clusterGroup    = useRef<L.MarkerClusterGroup | null>(null);
+    const markersRef      = useRef<L.Marker[]>([]);
     const userLocMarkerRef = useRef<L.Marker | null>(null);
     const [mapLoaded, setMapLoaded] = useState(false);
 
@@ -120,13 +171,14 @@ export const useMapEngine = (
     useEffect(() => {
         if (map.current || !mapContainerRef.current) return;
         try {
-            map.current = L.map(mapContainerRef.current, { 
-                center: [CABO_ROJO_CENTER.lat, CABO_ROJO_CENTER.lng], 
-                zoom: 13, zoomControl: false, attributionControl: false, zoomSnap: 0.1, zoomDelta: 0.5 
+            map.current = L.map(mapContainerRef.current, {
+                center: [CABO_ROJO_CENTER.lat, CABO_ROJO_CENTER.lng],
+                zoom: 13, zoomControl: false, attributionControl: false,
+                zoomSnap: 0.1, zoomDelta: 0.5
             });
-            map.current.on('moveend', () => { /* Optional: Update bounds state if needed */ });
+            map.current.on('moveend', () => { /* bounds update if needed */ });
             setMapLoaded(true);
-        } catch (error) { console.error("Map Init failed", error); }
+        } catch (error) { console.error('Map Init failed', error); }
         return () => { map.current?.remove(); map.current = null; };
     }, []);
 
@@ -139,65 +191,135 @@ export const useMapEngine = (
 
         if (mapStyle === 'satellite') {
             tileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-            attribution = 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community';
+            attribution = 'Tiles &copy; Esri';
         } else {
             const lightTiles = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-            const darkTiles = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
-            tileUrl = isDarkMode ? darkTiles : lightTiles;
-            attribution = '&copy; OpenStreetMap and CARTO'; 
+            const darkTiles  = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+            tileUrl      = isDarkMode ? darkTiles : lightTiles;
+            attribution  = '&copy; OpenStreetMap and CARTO';
         }
-        tileLayer.current = L.tileLayer(tileUrl, { 
-            attribution,
-            maxZoom: 19 
-        }).addTo(map.current);
+        tileLayer.current = L.tileLayer(tileUrl, { attribution, maxZoom: 19 }).addTo(map.current);
     }, [isDarkMode, mapLoaded, mapStyle]);
 
-    // 3. Render Markers
+    // 3. Render Markers with Clustering
     useEffect(() => {
         if (!map.current || !mapLoaded) return;
 
-        markersRef.current.forEach(marker => marker.remove());
+        // Clear previous cluster group
+        if (clusterGroup.current) {
+            map.current.removeLayer(clusterGroup.current);
+            clusterGroup.current = null;
+        }
         markersRef.current = [];
-        const bounds = L.latLngBounds([]);
+
+        // Build cluster group with custom cluster icon using dominant category color
+        clusterGroup.current = (L as any).markerClusterGroup({
+            maxClusterRadius: 50,
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+            zoomToBoundsOnClick: true,
+            iconCreateFunction: (cluster: any) => {
+                const markers: L.Marker[] = cluster.getAllChildMarkers();
+                // Dominant color: pick from first sponsor, else first marker
+                const domColor = (() => {
+                    for (const m of markers) {
+                        const p: Place = (m as any)._placeData;
+                        if (!p) continue;
+                        if (p.is_featured || (p as any).plan === 'vitrina') {
+                            let c = CATEGORY_COLORS[p.category] || CATEGORY_COLORS.DEFAULT;
+                            if (categories) {
+                                const cat = categories.find(cc => cc.id === p.category);
+                                if (cat) c = cat.color;
+                            }
+                            return c;
+                        }
+                    }
+                    const first: Place = (markers[0] as any)?._placeData;
+                    if (first) {
+                        let c = CATEGORY_COLORS[first.category] || CATEGORY_COLORS.DEFAULT;
+                        if (categories) {
+                            const cat = categories.find(cc => cc.id === first.category);
+                            if (cat) c = cat.color;
+                        }
+                        return c;
+                    }
+                    return '#4f46e5';
+                })();
+                const count = cluster.getChildCount();
+                const size  = count < 10 ? 36 : count < 50 ? 44 : 52;
+                return L.divIcon({
+                    html: `<div class="marker-cluster-custom" style="width:${size}px;height:${size}px;background:linear-gradient(135deg,${lightenColor(domColor, 0.3)},${domColor});">${count}</div>`,
+                    className: '',
+                    iconSize: L.point(size, size, true)
+                });
+            }
+        });
 
         placesToRender.forEach(place => {
-            // Only render marker if both lat and lng are defined
             if (!place.coords?.lat || !place.coords?.lng) return;
-            
-            bounds.extend([place.coords.lat, place.coords.lng]);
 
-            const html = generateMarkerHtml(place, categories); 
-            const icon = L.divIcon({ className: 'custom-pin group', html: html, iconSize: [40, 40], iconAnchor: [20, 40] });
-            
-            const marker = L.marker([place.coords.lat, place.coords.lng], { icon: icon, zIndexOffset: place.id === DEFAULT_PLACE_ID ? 1000 : 0 }) // Keep zIndex for DEFAULT_PLACE_ID if it needs to be on top
-                .addTo(map.current!);
-            
-            // Tooltip Logic
+            const isSponsor = place.is_featured === true || (place as any).plan === 'vitrina';
+            const size = isSponsor ? 44 : place.status === 'closed' ? 24 : 32;
+
+            const html = generateMarkerHtml(place, categories);
+            const icon = L.divIcon({
+                className: 'custom-pin',
+                html,
+                iconSize:   [size + 8, size + 8],
+                iconAnchor: [(size + 8) / 2, (size + 8) / 2]
+            });
+
+            const marker = L.marker([place.coords.lat, place.coords.lng], {
+                icon,
+                zIndexOffset: isSponsor ? 1500 : place.id === DEFAULT_PLACE_ID ? 1000 : 0
+            });
+
+            // Attach place data for cluster color resolution
+            (marker as any)._placeData = place;
+
+            // Tooltip
             const tooltipHtml = `
                 <div class="relative bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-2xl rounded-xl px-4 py-2 text-center transform transition-all min-w-[140px] -translate-y-1">
-                <div class="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight mb-1">${escapeHTML(place.name)}</div>
-                <div class="flex items-center justify-center gap-2 text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">
+                  <div class="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight mb-1">${escapeHTML(place.name)}</div>
+                  <div class="flex items-center justify-center gap-2 text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">
                     <span>${escapeHTML(place.category)}</span>
-                </div>
+                  </div>
                 </div>
             `;
-            marker.bindTooltip(tooltipHtml, { direction: 'top', offset: [0, -50], className: 'custom-tooltip', opacity: 1 });
-            // Bind BOTH 'click' and 'tap' — Leaflet's touch→click conversion can be eaten by map drag detection on mobile.
-            // This was the root cause of "pin tap does nothing on iPhone" (Apr 11 2026).
-            const handleSelect = (e: L.LeafletEvent) => { L.DomEvent.stopPropagation(e as any); onPlaceSelect(place); };
+            marker.bindTooltip(tooltipHtml, {
+                direction: 'top',
+                offset: [0, -(size / 2 + 12)],
+                className: 'custom-tooltip',
+                opacity: 1
+            });
+
+            // Hover scale effect via DOM
+            marker.on('mouseover', () => {
+                const el = marker.getElement()?.querySelector('div') as HTMLElement | null;
+                if (el) el.style.transform = 'scale(1.15)';
+            });
+            marker.on('mouseout', () => {
+                const el = marker.getElement()?.querySelector('div') as HTMLElement | null;
+                if (el) el.style.transform = 'scale(1)';
+            });
+
+            // Click/tap
+            const handleSelect = (e: L.LeafletEvent) => {
+                L.DomEvent.stopPropagation(e as any);
+                onPlaceSelect(place);
+            };
             marker.on('click', handleSelect);
             marker.on('tap' as any, handleSelect);
+
+            clusterGroup.current!.addLayer(marker);
             markersRef.current.push(marker);
         });
 
-        // Smart Zoom (Only if we have points and they changed significantly)
-        if (placesToRender.length > 0 && map.current && placesToRender.length < 50) {
-             // Optional: map.current.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
-        }
-    }, [placesToRender, mapLoaded, categories]); // Re-render when categories change
+        map.current.addLayer(clusterGroup.current);
+    }, [placesToRender, mapLoaded, categories]);
 
     // Public Methods
-    const flyTo = (coords: Coordinates, zoom: number | undefined = DEFAULT_PLACE_ZOOM) => { // Default to DEFAULT_PLACE_ZOOM
+    const flyTo = (coords: Coordinates, zoom: number | undefined = DEFAULT_PLACE_ZOOM) => {
         map.current?.flyTo([coords.lat, coords.lng], zoom, { duration: 1.5, easeLinearity: 0.2 });
     };
 
@@ -217,8 +339,8 @@ export const useMapEngine = (
     };
 
     const invalidateSize = () => map.current?.invalidateSize();
-    const zoomIn = () => map.current?.zoomIn(); 
-    const zoomOut = () => map.current?.zoomOut(); 
+    const zoomIn  = () => map.current?.zoomIn();
+    const zoomOut = () => map.current?.zoomOut();
 
     return { mapLoaded, flyTo, flyHome, showUserLocation, invalidateSize, zoomIn, zoomOut };
 };
