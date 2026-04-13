@@ -11,7 +11,7 @@ interface PeopleManagerProps {
   onSave: () => void;
   onDelete: (id: string) => void;
   onImageUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  fileInputRef: React.RefObject<HTMLInputElement>;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
   isUploading: boolean;
   isSaving: boolean;
 }

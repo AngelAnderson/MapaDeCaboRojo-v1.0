@@ -65,7 +65,7 @@ export const useRouter = (
 
         // Apply logic
         if (targetPlace && targetPlace.coords) {
-            setTimeout(() => onFlyTo(targetPlace!.coords, targetZoom), 1000);
+            setTimeout(() => onFlyTo(targetPlace!.coords!, targetZoom), 1000);
             // If URL has ?place=, open the card and fetch full detail.
             // Landing place (no param) just centers the map.
             if (placeSlug) {
@@ -151,7 +151,7 @@ export const useRouter = (
                     setSelectedPlace(found);
                     // Also fly to the place when navigating back to it
                     if (found.coords) {
-                        setTimeout(() => onFlyTo(found.coords, found.defaultZoom || DEFAULT_PLACE_ZOOM), 100);
+                        setTimeout(() => onFlyTo(found.coords!, found.defaultZoom || DEFAULT_PLACE_ZOOM), 100);
                     }
                 } else {
                     setSelectedPlace(null); // Place not found, clear selection

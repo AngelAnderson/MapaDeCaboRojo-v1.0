@@ -162,7 +162,7 @@ const MapApp: React.FC = () => {
     isDarkMode,
     mapStyle,
     filteredList,
-    (p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); },
+    (p) => { setSelectedPlace(p); if (p.coords) flyTo(p.coords, p.defaultZoom); },
     categories
   );
 
@@ -185,7 +185,7 @@ const MapApp: React.FC = () => {
   }, [mapLoaded, activeTab]);
 
   const handleNavigate = () => { 
-    if (selectedPlace) window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedPlace.coords.lat},${selectedPlace.coords.lng}`, '_blank'); 
+    if (selectedPlace && selectedPlace.coords) window.open(`https://www.google.com/maps/dir/?api=1&destination=${selectedPlace.coords.lat},${selectedPlace.coords.lng}`, '_blank');
   };
 
   const centerOnUser = () => { 
@@ -303,10 +303,10 @@ const MapApp: React.FC = () => {
         <div ref={mapContainer} className="absolute inset-0 z-0 bg-slate-200 dark:bg-slate-800 transition-colors" />
       </main>
 
-      <ExplorerSheet places={filteredList} onSelect={(p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); handleTabChange('map', false); }} isVisible={activeTab === 'explore'} searchText={searchText} onSearchChange={setSearchText} resultCount={filteredList.length} activeGroup={activeGroup} onCategoryChange={setActiveGroup} focusTrigger={searchFocusTrigger} savedIds={savedIds} onToggleFavorite={toggleFavorite} onSelectCollection={setActiveCollection} activeCollectionId={activeCollection?.id} onCameraClick={() => { setIsConciergeOpen(true); }} userLocation={userLocation || undefined} onTabChange={handleTabChange} categories={categories} />
+      <ExplorerSheet places={filteredList} onSelect={(p) => { setSelectedPlace(p); if (p.coords) flyTo(p.coords, p.defaultZoom); handleTabChange('map', false); }} isVisible={activeTab === 'explore'} searchText={searchText} onSearchChange={setSearchText} resultCount={filteredList.length} activeGroup={activeGroup} onCategoryChange={setActiveGroup} focusTrigger={searchFocusTrigger} savedIds={savedIds} onToggleFavorite={toggleFavorite} onSelectCollection={setActiveCollection} activeCollectionId={activeCollection?.id} onCameraClick={() => { setIsConciergeOpen(true); }} userLocation={userLocation || undefined} onTabChange={handleTabChange} categories={categories} />
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} onAction={handleNavAction} />
       
-      {selectedPlace && <PlaceCard place={selectedPlace} allPlaces={publishedPlaces} onSelect={(p) => { setSelectedPlace(p); flyTo(p.coords, p.defaultZoom); }} onClose={() => setSelectedPlace(null)} onNavigate={handleNavigate} onAskAi={() => setIsConciergeOpen(true)} onSuggestEdit={() => { setIsContactOpen(true); }} isFavorite={savedIds.includes(selectedPlace.id)} onToggleFavorite={() => toggleFavorite(selectedPlace.id)} userLocation={userLocation || undefined} />}
+      {selectedPlace && <PlaceCard place={selectedPlace} allPlaces={publishedPlaces} onSelect={(p) => { setSelectedPlace(p); if (p.coords) flyTo(p.coords, p.defaultZoom); }} onClose={() => setSelectedPlace(null)} onNavigate={handleNavigate} onAskAi={() => setIsConciergeOpen(true)} onSuggestEdit={() => { setIsContactOpen(true); }} isFavorite={savedIds.includes(selectedPlace.id)} onToggleFavorite={() => toggleFavorite(selectedPlace.id)} userLocation={userLocation || undefined} />}
       
       <Concierge 
         isOpen={isConciergeOpen} 

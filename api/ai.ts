@@ -261,7 +261,7 @@ async function handleChat({ message, history, context }: any) {
       // --- LEAD TRACKING: Log recommendations to messages table (same as *7711 bot) ---
       if (suggestedIds.length > 0) {
         const recName = smartPlaces.find((sp: any) => sp.id === suggestedIds[0])?.name || suggestedIds[0];
-        supabase.from('messages').insert({
+        Promise.resolve(supabase.from('messages').insert({
           conversation_id: null, person_id: null,
           direction: 'outbound', channel: 'web',
           from: 'web-concierge', to: 'web-user',
@@ -269,7 +269,7 @@ async function handleChat({ message, history, context }: any) {
           intent: 'ai_places',
           context: { recommended_name: recName, recommended_id: suggestedIds[0], query: message, source: 'website' },
           source: 'mapadecaborojo-web',
-        }).then(() => {}).catch((err: any) => console.error('lead tracking error:', err));
+        })).then(() => {}).catch((err: any) => console.error('lead tracking error:', err));
       }
 
       return {
