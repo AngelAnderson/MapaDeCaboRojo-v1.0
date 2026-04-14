@@ -69,25 +69,38 @@ export default async function handler(req: any, res: any) {
   const emoji = mapping ? mapping.emoji : '📍';
   const matchTerms = mapping ? mapping.match : [cat];
 
+  // Build an OR filter to push filtering to Postgres instead of fetching all 3900+ rows
+  // Uses ilike for category (enum-like, e.g. SHOPPING), exact match via cs for tags array
+  const orClauses = matchTerms.flatMap(term => [
+    `category.ilike.%${term}%`,
+    `subcategory.ilike.%${term}%`,
+    `tags.cs.{${term}}`,
+  ]).join(',');
+
   const { data: places, error } = await supabase
     .from('places')
     .select('id,name,slug,category,subcategory,image_url,phone,address,google_rating,status,plan,sponsor_weight,tags')
     .eq('status', 'open')
-    .order('sponsor_weight', { ascending: false });
+    .or(orClauses)
+    .order('sponsor_weight', { ascending: false })
+    .limit(500);
 
   if (error) {
     res.status(500).send('<h1>Error cargando negocios</h1>');
     return;
   }
 
-  // Filter by category, subcategory, or tags match (case-insensitive)
+  // Secondary JS filter to remove false positives (e.g. "Naturopatía" matching "ropa")
   const filtered = (places || []).filter((p: any) => {
     const pCat = (p.category || '').toLowerCase();
     const pSub = (p.subcategory || '').toLowerCase();
     const pTags = Array.isArray(p.tags) ? p.tags.map((t: string) => t.toLowerCase()) : [];
     return matchTerms.some(term => {
       const t = term.toLowerCase();
-      return pCat.includes(t) || pSub.includes(t) || pTags.some((tag: string) => tag.includes(t));
+      // Exact word match for category/subcategory (avoid substring false positives)
+      const catWords = pCat.split(/[\s\/,]+/);
+      const subWords = pSub.split(/[\s\/,]+/);
+      return catWords.includes(t) || subWords.includes(t) || pSub === t || pTags.some((tag: string) => tag === t || tag.includes(t));
     });
   });
 
