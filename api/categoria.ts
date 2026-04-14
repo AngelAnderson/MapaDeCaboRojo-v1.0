@@ -52,8 +52,8 @@ const CATEGORY_MAP: Record<string, { match: string[]; display: string; emoji: st
   spa:            { match: ['belleza', 'beauty', 'BEAUTY', 'BELLEZA', 'salon', 'salón', 'spa'], display: 'Belleza & Spa', emoji: '💅' },
   automotriz:     { match: ['automotriz', 'automotive', 'AUTOMOTIVE', 'AUTOMOTRIZ', 'taller', 'auto'], display: 'Automotriz', emoji: '🚗' },
   marina:         { match: ['marina', 'MARINA', 'naútico', 'nautico', 'boat'], display: 'Marina & Náutico', emoji: '⛵' },
-  ropa:           { match: ['ropa', 'clothing', 'boutique', 'moda', 'fashion', 'sastrería', 'zapatos', 'thrift_shop', 'thrift'], display: 'Tiendas de Ropa', emoji: '👗' },
-  'tiendas-de-ropa': { match: ['ropa', 'clothing', 'boutique', 'moda', 'fashion', 'sastrería', 'zapatos', 'thrift_shop', 'thrift'], display: 'Tiendas de Ropa', emoji: '👗' },
+  ropa:           { match: ['ropa', 'clothing', 'moda', 'fashion', 'zapatos', 'thrift_shop'], display: 'Tiendas de Ropa', emoji: '👗' },
+  'tiendas-de-ropa': { match: ['ropa', 'clothing', 'moda', 'fashion', 'zapatos', 'thrift_shop'], display: 'Tiendas de Ropa', emoji: '👗' },
 };
 
 export default async function handler(req: any, res: any) {
