@@ -52,8 +52,8 @@ const CATEGORY_MAP: Record<string, { match: string[]; display: string; emoji: st
   spa:            { match: ['belleza', 'beauty', 'BEAUTY', 'BELLEZA', 'salon', 'salón', 'spa'], display: 'Belleza & Spa', emoji: '💅' },
   automotriz:     { match: ['automotriz', 'automotive', 'AUTOMOTIVE', 'AUTOMOTRIZ', 'taller', 'auto'], display: 'Automotriz', emoji: '🚗' },
   marina:         { match: ['marina', 'MARINA', 'naútico', 'nautico', 'boat'], display: 'Marina & Náutico', emoji: '⛵' },
-  ropa:           { match: ['ropa', 'clothing', 'Ropa', 'boutique', 'moda', 'fashion', 'sastrería', 'Sastrería'], display: 'Tiendas de Ropa', emoji: '👗' },
-  'tiendas-de-ropa': { match: ['ropa', 'clothing', 'Ropa', 'boutique', 'moda', 'fashion', 'sastrería', 'Sastrería'], display: 'Tiendas de Ropa', emoji: '👗' },
+  ropa:           { match: ['ropa', 'clothing', 'boutique', 'moda', 'fashion', 'sastrería', 'zapatos', 'thrift_shop', 'thrift'], display: 'Tiendas de Ropa', emoji: '👗' },
+  'tiendas-de-ropa': { match: ['ropa', 'clothing', 'boutique', 'moda', 'fashion', 'sastrería', 'zapatos', 'thrift_shop', 'thrift'], display: 'Tiendas de Ropa', emoji: '👗' },
 };
 
 export default async function handler(req: any, res: any) {
@@ -71,7 +71,7 @@ export default async function handler(req: any, res: any) {
 
   const { data: places, error } = await supabase
     .from('places')
-    .select('id,name,slug,category,subcategory,image_url,phone,address,google_rating,status,plan,sponsor_weight')
+    .select('id,name,slug,category,subcategory,image_url,phone,address,google_rating,status,plan,sponsor_weight,tags')
     .eq('status', 'open')
     .order('sponsor_weight', { ascending: false });
 
@@ -80,13 +80,15 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
-  // Filter by category match (case-insensitive)
+  // Filter by category, subcategory, or tags match (case-insensitive)
   const filtered = (places || []).filter((p: any) => {
     const pCat = (p.category || '').toLowerCase();
     const pSub = (p.subcategory || '').toLowerCase();
-    return matchTerms.some(term =>
-      pCat.includes(term.toLowerCase()) || pSub.includes(term.toLowerCase())
-    );
+    const pTags = Array.isArray(p.tags) ? p.tags.map((t: string) => t.toLowerCase()) : [];
+    return matchTerms.some(term => {
+      const t = term.toLowerCase();
+      return pCat.includes(t) || pSub.includes(t) || pTags.some((tag: string) => tag.includes(t));
+    });
   });
 
   const baseUrl = 'https://mapadecaborojo.com';
