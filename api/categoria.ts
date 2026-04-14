@@ -90,17 +90,20 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
-  // Secondary JS filter to remove false positives (e.g. "Naturopatía" matching "ropa")
+  // Secondary JS filter to remove false positives from the broad Postgres query
   const filtered = (places || []).filter((p: any) => {
     const pCat = (p.category || '').toLowerCase();
     const pSub = (p.subcategory || '').toLowerCase();
     const pTags = Array.isArray(p.tags) ? p.tags.map((t: string) => t.toLowerCase()) : [];
     return matchTerms.some(term => {
       const t = term.toLowerCase();
-      // Exact word match for category/subcategory (avoid substring false positives)
-      const catWords = pCat.split(/[\s\/,]+/);
-      const subWords = pSub.split(/[\s\/,]+/);
-      return catWords.includes(t) || subWords.includes(t) || pSub === t || pTags.some((tag: string) => tag === t || tag.includes(t));
+      // Exact match on subcategory (e.g. "Ropa" = "ropa", not "Naturopatía" containing "ropa")
+      if (pSub === t) return true;
+      // Exact word match on category
+      if (pCat.split(/[\s\/,]+/).includes(t)) return true;
+      // Exact match on tags (tag must equal the term, not just contain it as substring)
+      if (pTags.includes(t)) return true;
+      return false;
     });
   });
 
