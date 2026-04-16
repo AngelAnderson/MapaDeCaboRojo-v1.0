@@ -134,6 +134,34 @@ export default async function handler(req: any, res: any) {
     (place.amenities && place.amenities.npi) ||
     null;
 
+  // Data quality (cross-referenced against Google Places)
+  // See scripts/verify-pharmacies.mjs and Outbox/PharmaAPI/nppes-quality-audit.md
+  const qualityScore: number | null = place.data_quality_score ?? null;
+  const businessStatus: string | null = place.business_status ?? null;
+  const verifiedPhone: string | null = place.verified_phone ?? null;
+  const lastVerifiedAt: string | null = place.last_verified_at ?? null;
+  const verificationIssues: string[] = Array.isArray(place.verification_issues)
+    ? place.verification_issues
+    : [];
+
+  // Display phone: prefer Google-verified phone if present, fall back to NPPES phone.
+  const displayPhone = verifiedPhone || place.phone || null;
+  const phoneCorrected = !!(
+    verifiedPhone &&
+    place.phone &&
+    verifiedPhone.replace(/\D/g, '').slice(-10) !== place.phone.replace(/\D/g, '').slice(-10)
+  );
+
+  let qualityBadge = '';
+  if (businessStatus === 'CLOSED_PERMANENTLY') {
+    qualityBadge = `<span class="badge" style="background:#ef4444;" title="Google reporta esta farmacia como cerrada permanentemente">Cerrado según Google</span>`;
+  } else if (qualityScore !== null && qualityScore >= 90) {
+    const dateStr = lastVerifiedAt ? lastVerifiedAt.slice(0, 10) : '';
+    qualityBadge = `<span class="badge" style="background:#10b981;" title="Verificado contra Google Places el ${dateStr}">&#10003; Verificado ${dateStr}</span>`;
+  } else if (qualityScore !== null && qualityScore >= 50) {
+    qualityBadge = `<span class="badge" style="background:#f59e0b;" title="Datos posiblemente desactualizados: ${esc(verificationIssues.join(', '))}">&#9888; Posiblemente desactualizado</span>`;
+  }
+
   // Google Maps embed — uses coordinates if available, falls back to address search
   const mapsEmbedSrc = (place.lat && place.lon)
     ? `https://maps.google.com/maps?q=${place.lat},${place.lon}&z=16&output=embed`
@@ -146,7 +174,7 @@ export default async function handler(req: any, res: any) {
     name: place.name,
     description: place.description || undefined,
     image: place.image_url || undefined,
-    telephone: place.phone || undefined,
+    telephone: displayPhone || undefined,
     url: place.website || pageUrl,
     address: {
       '@type': 'PostalAddress',
@@ -257,7 +285,8 @@ export default async function handler(req: any, res: any) {
         <div>
           <span class="badge">Farmacia</span>
           <span class="badge ${isOpen ? 'badge-open' : 'badge-closed'}">${isOpen ? 'Abierta' : 'Cerrada'}</span>
-          ${npi ? `<span class="badge badge-npi" title="Número NPI: ${esc(npi)}">&#10003; Verificado NPPES</span>` : ''}
+          ${npi ? `<span class="badge badge-npi" title="Número NPI: ${esc(npi)}">&#10003; NPPES</span>` : ''}
+          ${qualityBadge}
         </div>
         <h1>${placeName}</h1>
         ${place.google_rating ? `<div class="rating">&#11088; ${place.google_rating}/5</div>` : ''}
@@ -268,7 +297,7 @@ export default async function handler(req: any, res: any) {
     <div class="info-card">
       <h2>Información</h2>
       ${place.address ? `<div class="info-row"><span class="info-label">&#128205; Dirección</span><span class="info-value">${esc(place.address)}, Cabo Rojo, PR</span></div>` : ''}
-      ${place.phone ? `<div class="info-row"><span class="info-label">&#128222; Teléfono</span><span class="info-value"><a href="tel:${esc(place.phone)}">${esc(place.phone)}</a></span></div>` : ''}
+      ${displayPhone ? `<div class="info-row"><span class="info-label">&#128222; Teléfono</span><span class="info-value"><a href="tel:${esc(displayPhone)}">${esc(displayPhone)}</a>${phoneCorrected ? ` <small style="color:#92400e;">(corregido vs NPPES: ${esc(place.phone)})</small>` : ''}</span></div>` : ''}
       <div class="info-row"><span class="info-label">&#128336; Horario</span><span class="info-value">${hoursText}</span></div>
       ${place.website ? `<div class="info-row"><span class="info-label">&#127758; Web</span><span class="info-value"><a href="${esc(place.website)}" target="_blank" rel="noopener">${esc(place.website)}</a></span></div>` : ''}
       ${place.gmaps_url ? `<div class="info-row"><span class="info-label">&#128507; Google Maps</span><span class="info-value"><a href="${esc(place.gmaps_url)}" target="_blank" rel="noopener">Ver en Maps</a></span></div>` : ''}
