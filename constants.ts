@@ -20,7 +20,7 @@ export const DEFAULT_CATEGORIES: Category[] = [
   { id: 'CULTURE', label_es: 'Cultura', label_en: 'Culture', icon: 'masks-theater', color: '#5856D6', order_index: 6 }, // Indigo
   { id: 'LODGING', label_es: 'Hospedaje', label_en: 'Lodging', icon: 'bed', color: '#5AC8FA', order_index: 7 }, // Teal
   { id: 'SHOPPING', label_es: 'Compras', label_en: 'Shopping', icon: 'bag-shopping', color: '#FF2D55', order_index: 8 }, // Pink
-  { id: 'HEALTH', label_es: 'Salud', label_en: 'Health', icon: 'staff-snake', color: '#FF3B30', order_index: 9 }, // Red
+  { id: 'HEALTH', label_es: 'Salud', label_en: 'Health', icon: 'staff-snake', color: '#10b981', order_index: 9 }, // Medical green
   { id: 'SERVICE', label_es: 'Servicios', label_en: 'Services', icon: 'bell-concierge', color: '#8E8E93', order_index: 10 }, // Gray
   { id: 'LOGISTICS', label_es: 'Transporte', label_en: 'Transport', icon: 'gas-pump', color: '#FFCC00', order_index: 11 }, // Yellow
   { id: 'EMERGENCY', label_es: 'Emergencia', label_en: 'Emergency', icon: 'truck-medical', color: '#D22B2B', order_index: 12 }, // Dark Red
@@ -36,7 +36,7 @@ export const CATEGORY_COLORS: Record<string, string> = {
   CULTURE: '#5856D6',
   LODGING: '#5AC8FA',
   SHOPPING: '#FF2D55',
-  HEALTH: '#FF3B30',
+  HEALTH: '#10b981', // Medical green — matches farmacia/salud marker pins
   SERVICE: '#8E8E93',
   LOGISTICS: '#FFCC00',
   EMERGENCY: '#D22B2B',
