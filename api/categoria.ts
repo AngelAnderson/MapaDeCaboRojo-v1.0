@@ -34,8 +34,10 @@ const CATEGORY_MAP: Record<string, { match: string[]; display: string; emoji: st
   restaurantes:   { match: ['restaurante', 'restaurant', 'food', 'comida', 'FOOD', 'RESTAURANTE'], display: 'Restaurantes', emoji: '🍽️' },
   playa:          { match: ['playa', 'beach', 'BEACH', 'PLAYA'], display: 'Playas', emoji: '🏖️' },
   playas:         { match: ['playa', 'beach', 'BEACH', 'PLAYA'], display: 'Playas', emoji: '🏖️' },
-  salud:          { match: ['salud', 'health', 'HEALTH', 'SALUD', 'farmacia', 'medico', 'médico'], display: 'Salud', emoji: '🏥' },
-  farmacia:       { match: ['farmacia', 'salud', 'health', 'HEALTH', 'SALUD'], display: 'Farmacias & Salud', emoji: '💊' },
+  salud:          { match: ['salud', 'health', 'HEALTH', 'SALUD', 'farmacia', 'medico', 'médico', 'dentista', 'laboratorio'], display: 'Salud', emoji: '🏥' },
+  // PHASE 2: add medico, dentista, lab entries here once imports complete
+  farmacia:       { match: ['farmacia', 'pharmacy', 'FARMACIA', 'salud', 'health', 'HEALTH', 'SALUD'], display: 'Farmacias en Cabo Rojo', emoji: '💊' },
+  farmacias:      { match: ['farmacia', 'pharmacy', 'FARMACIA', 'salud', 'health', 'HEALTH', 'SALUD'], display: 'Farmacias en Cabo Rojo', emoji: '💊' },
   hospedaje:      { match: ['hospedaje', 'lodging', 'hotel', 'LODGING', 'HOSPEDAJE', 'alojamiento'], display: 'Hospedaje', emoji: '🏨' },
   hotel:          { match: ['hospedaje', 'lodging', 'hotel', 'LODGING', 'HOSPEDAJE', 'alojamiento'], display: 'Hospedaje', emoji: '🏨' },
   servicio:       { match: ['servicio', 'service', 'SERVICE', 'SERVICIO', 'servicios'], display: 'Servicios', emoji: '🔧' },
@@ -128,14 +130,22 @@ export default async function handler(req: any, res: any) {
     itemListElement: itemListElements,
   };
 
+  // For pharmacy/health category pages, link to /farmacia/[slug] (Pharmacy schema page)
+  // PHASE 2: route medico→/medico/, dentista→/dentista/, etc.
+  const isFarmaciaPage = ['farmacia', 'farmacias', 'salud'].includes(cat);
+
   const cardsHtml = filtered.length === 0
     ? `<p style="color:#64748b;text-align:center;padding:2rem;">No encontramos negocios en esta categoría todavía.</p>`
     : filtered.map((p: any) => {
         const slug = p.slug || p.id;
         const stars = p.google_rating ? `⭐ ${p.google_rating}` : '';
         const planBadge = p.plan === 'vip' ? '<span style="background:#f97316;color:white;font-size:0.65rem;padding:0.15rem 0.4rem;border-radius:999px;text-transform:uppercase;margin-left:0.4rem;">VIP</span>' : '';
+        const pCatLower = (p.category || '').toLowerCase();
+        const pSubLower = (p.subcategory || '').toLowerCase();
+        const isFarmacia = pCatLower === 'farmacia' || pSubLower === 'farmacia' || pCatLower === 'health' || pCatLower === 'salud';
+        const detailPath = (isFarmaciaPage && isFarmacia) ? `${baseUrl}/farmacia/${esc(slug)}` : `${baseUrl}/negocio/${esc(slug)}`;
         return `
-        <a href="${baseUrl}/negocio/${esc(slug)}" style="display:block;text-decoration:none;color:inherit;">
+        <a href="${detailPath}" style="display:block;text-decoration:none;color:inherit;">
           <div style="background:white;border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.07);transition:box-shadow 0.2s;">
             ${p.image_url
               ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" style="width:100%;height:160px;object-fit:cover;display:block;" loading="lazy">`

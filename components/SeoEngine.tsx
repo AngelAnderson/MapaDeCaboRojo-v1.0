@@ -163,7 +163,7 @@ const mapCategoryToSchema = (cat: string) => {
         'LODGING': 'Hotel',
         'BEACH': 'Beach',
         'SIGHTS': 'TouristAttraction',
-        'HEALTH': 'MedicalClinic',
+        'HEALTH': 'Pharmacy', // Salud layer — primarily farmacias; PHASE 2: refine per subcategory (medico→Physician, dentista→Dentist)
         'SHOPPING': 'Store',
         'NIGHTLIFE': 'BarOrPub'
     };

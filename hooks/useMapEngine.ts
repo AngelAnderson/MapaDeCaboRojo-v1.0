@@ -52,6 +52,16 @@ const getSmartIcon = (place: Place, categories?: Category[]): string => {
         }
     }
 
+    // 3b. Subcategory-specific icon (e.g. farmacia within HEALTH)
+    // PHASE 2: extend this for medico, dentista, lab, hospital
+    if (!icon && place.subcategory) {
+        const sub = place.subcategory.toLowerCase();
+        if (sub === 'farmacia') icon = 'fa-pills';
+        // else if (sub === 'medico' || sub === 'médico') icon = 'fa-user-doctor';
+        // else if (sub === 'dentista') icon = 'fa-tooth';
+        // else if (sub === 'lab' || sub === 'laboratorio') icon = 'fa-flask';
+    }
+
     // 4. Static Category Fallback
     if (!icon) {
         switch (place.category) {
@@ -61,7 +71,7 @@ const getSmartIcon = (place: Place, categories?: Category[]): string => {
             case 'LOGISTICS':icon = 'fa-gas-pump'; break;
             case 'LODGING':  icon = 'fa-bed'; break;
             case 'NIGHTLIFE':icon = 'fa-champagne-glasses'; break;
-            case 'HEALTH':   icon = 'fa-staff-snake'; break;
+            case 'HEALTH':   icon = 'fa-pills'; break; // Salud layer — pills for farmacia (most common HEALTH subcategory)
             case 'SHOPPING': icon = 'fa-bag-shopping'; break;
             case 'ACTIVITY': icon = 'fa-person-hiking'; break;
             case 'CULTURE':  icon = 'fa-masks-theater'; break;

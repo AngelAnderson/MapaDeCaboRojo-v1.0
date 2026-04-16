@@ -71,10 +71,13 @@ export default async function handler(req: any, res: any) {
     });
 
     // Dynamic Places — SEO pages at /negocio/[slug]
+    // Pharmacy places also get dedicated /farmacia/[slug] pages (Salud layer)
     if (places) {
       places.forEach((p: any) => {
         const lastMod = p.verified_at ? p.verified_at.split('T')[0] : new Date().toISOString().split('T')[0];
         const slug = p.slug || p.id;
+
+        // All businesses get the canonical /negocio/ page
         urls.push(`
           <url>
             <loc>${baseUrl}/negocio/${slug}</loc>
@@ -83,6 +86,26 @@ export default async function handler(req: any, res: any) {
             <priority>0.8</priority>
           </url>
         `);
+
+        // Pharmacy-specific page with Pharmacy schema — higher priority for health searches
+        // PHASE 2: Extend this block for 'medico', 'dentista', 'lab', 'hospital' categories
+        const catLower = (p.category || '').toLowerCase();
+        const subcatLower = (p.subcategory || '').toLowerCase();
+        const isFarmacia =
+          catLower === 'farmacia' ||
+          catLower === 'health' ||
+          catLower === 'salud' ||
+          subcatLower === 'farmacia';
+        if (isFarmacia) {
+          urls.push(`
+            <url>
+              <loc>${baseUrl}/farmacia/${slug}</loc>
+              <lastmod>${lastMod}</lastmod>
+              <changefreq>weekly</changefreq>
+              <priority>0.9</priority>
+            </url>
+          `);
+        }
       });
     }
 
