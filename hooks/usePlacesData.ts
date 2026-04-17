@@ -23,31 +23,28 @@ export const usePlacesData = () => {
             // 2. Load Data — use the Phase 3 minimal RPC (~230KB) instead of the full
             // paginated getPlaces (~1.5MB). Detail is fetched lazily when user taps a pin.
             console.log("Fetching real data (minimal)...");
-            const [realPlaces, realEvents, realCategories, realPeople] = await Promise.all([
-                getMapPlaces(),
-                getEvents(),
-                getCategories(),
-                getPeople()
-            ]);
 
-            // Hydrate Places with People
-            const hydratedPlaces = realPlaces.map(p => {
-                // Find people linked to this place
-                const linkedPeople = realPeople.filter(person => person.placeId === p.id);
-                if (linkedPeople.length > 0) {
-                    return { ...p, relatedPeople: linkedPeople };
+            // Load places FIRST (critical path) — set loading=false as soon as pins are ready
+            const realPlaces = await getMapPlaces();
+            if (realPlaces.length > 0) setPlaces(realPlaces);
+            setLoading(false);
+
+            // Load secondary data in parallel (non-blocking)
+            Promise.all([getEvents(), getCategories(), getPeople()]).then(([realEvents, realCategories, realPeople]) => {
+                // Hydrate places with people links
+                if (realPeople.length > 0) {
+                    setPlaces(prev => prev.map(p => {
+                        const linked = realPeople.filter(person => person.placeId === p.id);
+                        return linked.length > 0 ? { ...p, relatedPeople: linked } : p;
+                    }));
+                    setPeople(realPeople);
                 }
-                return p;
-            });
+                if (realEvents.length > 0) setEvents(realEvents);
+                if (realCategories.length > 0) setCategories(realCategories);
+            }).catch(e => console.warn("Secondary data load failed:", e));
 
-            if (hydratedPlaces.length > 0) setPlaces(hydratedPlaces);
-            if (realEvents.length > 0) setEvents(realEvents);
-            if (realCategories.length > 0) setCategories(realCategories);
-            if (realPeople.length > 0) setPeople(realPeople);
-            
         } catch (e) {
             console.error("Data load failed, using fallbacks", e);
-        } finally {
             setLoading(false);
         }
     };
