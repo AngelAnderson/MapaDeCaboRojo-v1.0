@@ -125,7 +125,7 @@ const HoursDisplay = memo(({ hours }: { hours: { note?: string; structured?: Day
       status = { text: t('status_caution_night'), color: 'text-orange-600', bg: 'bg-orange-100 dark:bg-orange-900/30', icon: 'triangle-exclamation' };
     }
   } else if (hours?.structured) {
-    const today = hours.structured[todayIdx];
+    const today = hours.structured.find((d: any) => d.day === todayIdx) || hours.structured[todayIdx];
     if (!today) {
       status = { text: t('hours_not_available'), color: 'text-slate-400', bg: 'bg-slate-100', icon: 'clock' };
     } else if (today.isClosed) {
@@ -259,7 +259,10 @@ const ReviewsSection: React.FC<{ placeId: string }> = memo(({ placeId }) => {
       setSubmitted(true);
       setShowForm(false);
       getPlaceReviews(placeId).then(setData);
-    } catch {}
+    } catch (e) {
+      console.warn('Review submit failed:', e);
+      setComment('Error al enviar. Intenta de nuevo.');
+    }
     setSubmitting(false);
   };
 

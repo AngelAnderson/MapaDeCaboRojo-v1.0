@@ -191,7 +191,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
           {/* Filter pills: Abierto + View toggle */}
           <div className="flex items-center gap-2 mt-1">
             <button
-              onClick={onToggleOpenOnly}
+              onClick={() => onToggleOpenOnly?.()}
               className={`flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full border transition-all ${
                 showOpenOnly
                   ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/30'

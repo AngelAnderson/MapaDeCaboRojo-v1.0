@@ -77,7 +77,7 @@ export default async function handler(req: any, res: any) {
     }
   } catch (e: any) {
     console.error(`Ops API Error [${action}]:`, e);
-    return res.status(500).json({ error: e.message });
+    console.error("Server error:", e.message); return res.status(500).json({ error: "Internal server error" });
   }
 }
 

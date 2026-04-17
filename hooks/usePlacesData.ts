@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Place, Event, PlaceCategory, ParkingStatus, Category, Person } from '../types';
 import { getMapPlaces, getPlaceDetail, getEvents, getCategories, getPeople, checkDataVersion } from '../services/supabase';
 import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, DEFAULT_CATEGORIES } from '../constants';
@@ -146,23 +146,25 @@ export const usePlacesData = () => {
       if(realPeople.length > 0) setPeople(realPeople);
   };
 
-  // Lazy-fetch full detail for a single place. Merges into the places array
-  // so subsequent renders don't re-fetch. Returns the hydrated Place.
-  const fetchDetail = async (placeId: string): Promise<Place | null> => {
-    // Already loaded?
-    const existing = places.find(p => p.id === placeId);
+  // F3 fix: use functional state access to avoid stale closure
+  const fetchDetail = React.useCallback(async (placeId: string): Promise<Place | null> => {
+    // Read current places from ref-like pattern via setState trick
+    let existing: Place | undefined;
+    setPlaces(prev => {
+      existing = prev.find(p => p.id === placeId);
+      return prev; // no-op update, just reading
+    });
+
     if (existing && (existing as any)._detailLoaded) return existing;
 
     const detail = await getPlaceDetail(placeId);
     if (!detail) return existing ?? null;
 
-    // Merge: detail overrides minimal fields; keep relatedPeople from hydration
-    const merged = { ...existing, ...detail, relatedPeople: existing?.relatedPeople, _detailLoaded: true } as Place;
+    const merged = { ...existing, ...detail, relatedPeople: (existing as any)?.relatedPeople, _detailLoaded: true } as Place;
 
-    // Update in-memory array so the card doesn't re-fetch if closed + reopened
     setPlaces(prev => prev.map(p => p.id === placeId ? merged : p));
     return merged;
-  };
+  }, []);
 
   return { places, events, categories, people, publishedPlaces, mappedEvents, loading, refreshData, fetchDetail };
 };

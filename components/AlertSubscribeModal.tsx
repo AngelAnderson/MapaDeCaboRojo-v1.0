@@ -14,6 +14,11 @@ const AlertSubscribeModal: React.FC<AlertSubscribeModalProps> = ({ isOpen, onClo
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
+  // F7 fix: reset state when modal re-opens
+  React.useEffect(() => {
+    if (isOpen) { setPhone(''); setBarrio(''); setStatus('idle'); setErrorMsg(''); }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleSubmit = async () => {

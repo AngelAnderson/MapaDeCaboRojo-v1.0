@@ -103,7 +103,7 @@ const lightenColor = (hex: string, factor = 0.4): string => {
 
 const generateMarkerHtml = (place: Place, categories?: Category[]): string => {
     const isClosed  = place.status === 'closed';
-    const isSponsor = place.is_featured === true || place.plan === 'vitrina';
+    const isSponsor = place.is_featured === true;
 
     // Resolve color
     let catColor = CATEGORY_COLORS[place.category] || CATEGORY_COLORS.DEFAULT;
@@ -170,6 +170,10 @@ export const useMapEngine = (
     onPlaceSelect: (p: Place) => void,
     categories?: Category[]
 ) => {
+    // F1 fix: stable ref for onPlaceSelect to avoid stale closures in markers
+    const onPlaceSelectRef = useRef(onPlaceSelect);
+    useEffect(() => { onPlaceSelectRef.current = onPlaceSelect; }, [onPlaceSelect]);
+
     const map             = useRef<L.Map | null>(null);
     const tileLayer       = useRef<L.TileLayer | null>(null);
     const clusterGroup    = useRef<L.MarkerClusterGroup | null>(null);
@@ -238,7 +242,7 @@ export const useMapEngine = (
                     for (const m of markers) {
                         const p: Place = (m as any)._placeData;
                         if (!p) continue;
-                        if (p.is_featured || (p as any).plan === 'vitrina') {
+                        if (p.is_featured) {
                             let c = CATEGORY_COLORS[p.category] || CATEGORY_COLORS.DEFAULT;
                             if (categories) {
                                 const cat = categories.find(cc => cc.id === p.category);
@@ -272,7 +276,7 @@ export const useMapEngine = (
         const createMarker = (place: Place): L.Marker | null => {
             if (!place.coords?.lat || !place.coords?.lng) return null;
 
-            const isSponsor = place.is_featured === true || (place as any).plan === 'vitrina';
+            const isSponsor = place.is_featured === true;
             const size = isSponsor ? 44 : place.status === 'closed' ? 24 : 32;
 
             const html = generateMarkerHtml(place, categories);
@@ -321,7 +325,7 @@ export const useMapEngine = (
 
             const handleSelect = (e: L.LeafletEvent) => {
                 L.DomEvent.stopPropagation(e as any);
-                onPlaceSelect(place);
+                onPlaceSelectRef.current(place);
             };
             marker.on('click', handleSelect);
             marker.on('tap' as any, handleSelect);
@@ -329,12 +333,14 @@ export const useMapEngine = (
             return marker;
         };
 
-        // --- Batched marker creation: first 200 appear instantly, rest in background frames ---
+        // --- Batched marker creation with cancellation (F2 fix) ---
         const BATCH_SIZE = 200;
         const allMarkers: L.Marker[] = [];
         let batchIndex = 0;
+        let cancelled = false;
 
         const processBatch = () => {
+            if (cancelled || !clusterGroup.current) return;
             const start = batchIndex * BATCH_SIZE;
             const end = Math.min(start + BATCH_SIZE, placesToRender.length);
             const batchMarkers: L.Marker[] = [];
@@ -347,17 +353,16 @@ export const useMapEngine = (
                 }
             }
 
-            if (batchMarkers.length > 0) {
-                clusterGroup.current!.addLayers(batchMarkers);
+            if (batchMarkers.length > 0 && clusterGroup.current) {
+                clusterGroup.current.addLayers(batchMarkers);
             }
 
-            // Show map after first batch
-            if (batchIndex === 0 && clusterGroup.current) {
-                map.current!.addLayer(clusterGroup.current!);
+            if (batchIndex === 0 && clusterGroup.current && map.current) {
+                map.current.addLayer(clusterGroup.current);
             }
 
             batchIndex++;
-            if (batchIndex * BATCH_SIZE < placesToRender.length) {
+            if (!cancelled && batchIndex * BATCH_SIZE < placesToRender.length) {
                 requestAnimationFrame(processBatch);
             } else {
                 markersRef.current = allMarkers;
@@ -365,6 +370,8 @@ export const useMapEngine = (
         };
 
         processBatch();
+
+        return () => { cancelled = true; };
     }, [placesToRender, mapLoaded, categories]);
 
     // Public Methods

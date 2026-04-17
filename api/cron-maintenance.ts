@@ -64,6 +64,6 @@ export default async function handler(req: any, res: any) {
 
   } catch (error: any) {
     console.error("Maintenance Cron Failed:", error);
-    return res.status(500).json({ error: error.message });
+    console.error("Server error:", error.message); return res.status(500).json({ error: "Internal server error" });
   }
 }
