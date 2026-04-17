@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Place, Collection, Coordinates, Category } from '../types';
 import SearchBar from './SearchBar';
 import CategoryPills from './CategoryPills';
@@ -55,6 +55,20 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
   const [expanded, setExpanded] = useState(false);
   const [sortBy, setSortBy] = useState<'recommended' | 'distance'>('recommended');
   const [activeNeighborhood, setActiveNeighborhood] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(50);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Reset visible count when filters change
+  useEffect(() => { setVisibleCount(50); }, [searchText, activeGroup, activeCollectionId, activeNeighborhood]);
+
+  // Load more on scroll near bottom
+  const handleScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 300) {
+      setVisibleCount(prev => prev + 50);
+    }
+  }, []);
 
   // Debounced Logging for Search
   useEffect(() => {
@@ -190,7 +204,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto px-4 py-2 space-y-3 pb-32 mask-image-b">
+      <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-4 py-2 space-y-3 pb-32 mask-image-b">
         {sortedPlaces.length === 0 ? (
             <div className="text-center py-16 flex flex-col items-center gap-4">
                 <i className="fa-solid fa-map-location-dot text-5xl text-slate-200 dark:text-slate-600"></i>
@@ -204,7 +218,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                 </button>
             </div>
         ) : (
-            sortedPlaces.map(place => {
+            sortedPlaces.slice(0, visibleCount).map(place => {
                 const isEvent = place.contact_info?.isEvent === true;
                 const isFavorite = savedIds.includes(place.id);
                 const isClosed = place.status === 'closed';
@@ -221,11 +235,12 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                 return (
                     <div key={place.id} onClick={() => onSelect(place)} className="flex items-center gap-4 p-3 pr-4 rounded-[24px] bg-white/50 dark:bg-slate-700/40 hover:bg-white dark:hover:bg-slate-700 active:scale-[0.98] transition-all cursor-pointer border border-white/60 dark:border-slate-600/50 shadow-sm group backdrop-blur-sm relative">
                         <div className="relative w-20 h-20 shrink-0">
-                            <img 
+                            <img
                                 src={getOptimizedImageUrl(place.imageUrl, 200)}
                                 className={`w-full h-full rounded-[18px] object-cover bg-gradient-to-br from-teal-500 to-cyan-500 shadow-inner ${isClosed ? 'grayscale opacity-70' : ''}`}
                                 style={{ objectPosition: place.imagePosition || 'center', display: place.imageUrl ? 'block' : 'none' }}
                                 alt={place.name}
+                                loading="lazy"
                                 decoding="async"
                                 onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                             />
