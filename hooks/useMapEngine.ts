@@ -268,8 +268,9 @@ export const useMapEngine = (
             }
         });
 
-        placesToRender.forEach(place => {
-            if (!place.coords?.lat || !place.coords?.lng) return;
+        // --- Helper: create a single marker ---
+        const createMarker = (place: Place): L.Marker | null => {
+            if (!place.coords?.lat || !place.coords?.lng) return null;
 
             const isSponsor = place.is_featured === true || (place as any).plan === 'vitrina';
             const size = isSponsor ? 44 : place.status === 'closed' ? 24 : 32;
@@ -287,27 +288,29 @@ export const useMapEngine = (
                 zIndexOffset: isSponsor ? 1500 : place.id === DEFAULT_PLACE_ID ? 1000 : 0
             });
 
-            // Attach place data for cluster color resolution
             (marker as any)._placeData = place;
 
-            // Tooltip
-            const tooltipHtml = `
-                <div class="relative bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-2xl rounded-xl px-4 py-2 text-center transform transition-all min-w-[140px] -translate-y-1">
-                  <div class="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight mb-1">${escapeHTML(place.name)}</div>
-                  <div class="flex items-center justify-center gap-2 text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">
-                    <span>${escapeHTML(place.category)}</span>
-                  </div>
-                </div>
-            `;
-            marker.bindTooltip(tooltipHtml, {
-                direction: 'top',
-                offset: [0, -(size / 2 + 12)],
-                className: 'custom-tooltip',
-                opacity: 1
-            });
-
-            // Hover scale effect via DOM
+            // Lazy tooltip — only created on first hover (saves ~3,700 DOM nodes)
+            let tooltipBound = false;
             marker.on('mouseover', () => {
+                if (!tooltipBound) {
+                    const tooltipHtml = `
+                        <div class="relative bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-slate-700 shadow-2xl rounded-xl px-4 py-2 text-center transform transition-all min-w-[140px] -translate-y-1">
+                          <div class="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight mb-1">${escapeHTML(place.name)}</div>
+                          <div class="flex items-center justify-center gap-2 text-[10px] uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">
+                            <span>${escapeHTML(place.category)}</span>
+                          </div>
+                        </div>
+                    `;
+                    marker.bindTooltip(tooltipHtml, {
+                        direction: 'top',
+                        offset: [0, -(size / 2 + 12)],
+                        className: 'custom-tooltip',
+                        opacity: 1
+                    });
+                    marker.openTooltip();
+                    tooltipBound = true;
+                }
                 const el = marker.getElement()?.querySelector('div') as HTMLElement | null;
                 if (el) el.style.transform = 'scale(1.15)';
             });
@@ -316,7 +319,6 @@ export const useMapEngine = (
                 if (el) el.style.transform = 'scale(1)';
             });
 
-            // Click/tap
             const handleSelect = (e: L.LeafletEvent) => {
                 L.DomEvent.stopPropagation(e as any);
                 onPlaceSelect(place);
@@ -324,13 +326,45 @@ export const useMapEngine = (
             marker.on('click', handleSelect);
             marker.on('tap' as any, handleSelect);
 
-            markersRef.current.push(marker);
-        });
+            return marker;
+        };
 
-        // Batch-add all markers at once — MarkerCluster's chunkedLoading
-        // will split them into non-blocking frames automatically
-        clusterGroup.current!.addLayers(markersRef.current);
-        map.current.addLayer(clusterGroup.current!);
+        // --- Batched marker creation: first 200 appear instantly, rest in background frames ---
+        const BATCH_SIZE = 200;
+        const allMarkers: L.Marker[] = [];
+        let batchIndex = 0;
+
+        const processBatch = () => {
+            const start = batchIndex * BATCH_SIZE;
+            const end = Math.min(start + BATCH_SIZE, placesToRender.length);
+            const batchMarkers: L.Marker[] = [];
+
+            for (let i = start; i < end; i++) {
+                const m = createMarker(placesToRender[i]);
+                if (m) {
+                    batchMarkers.push(m);
+                    allMarkers.push(m);
+                }
+            }
+
+            if (batchMarkers.length > 0) {
+                clusterGroup.current!.addLayers(batchMarkers);
+            }
+
+            // Show map after first batch
+            if (batchIndex === 0 && clusterGroup.current) {
+                map.current!.addLayer(clusterGroup.current!);
+            }
+
+            batchIndex++;
+            if (batchIndex * BATCH_SIZE < placesToRender.length) {
+                requestAnimationFrame(processBatch);
+            } else {
+                markersRef.current = allMarkers;
+            }
+        };
+
+        processBatch();
     }, [placesToRender, mapLoaded, categories]);
 
     // Public Methods

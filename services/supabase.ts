@@ -40,7 +40,7 @@ const CACHE_KEY_PREFIX = 'cabo_signal_saver_v6_';
 const MEMORY_TTL = 5 * 60 * 1000; // 5 Minutes for RAM
 const PERSISTENT_TTL = 24 * 60 * 60 * 1000; // 24 Hours for Disk (Signal Saver)
 
-const getFromCache = async (key: string) => {
+const getFromCache = async (key: string, staleOk = false): Promise<any> => {
     // 1. Try Memory first (Fastest)
     if (memoryCache[key] && (Date.now() - memoryCache[key].timestamp < MEMORY_TTL)) {
         return memoryCache[key].data;
@@ -50,18 +50,18 @@ const getFromCache = async (key: string) => {
     try {
         const stored = await get(CACHE_KEY_PREFIX + key);
         if (stored) {
-            // stored is { data, timestamp }
-            if (Date.now() - stored.timestamp < PERSISTENT_TTL) {
+            const isFresh = Date.now() - stored.timestamp < PERSISTENT_TTL;
+            if (isFresh || staleOk) {
                 // Hydrate memory cache for this session
                 memoryCache[key] = { data: stored.data, timestamp: Date.now() };
-                console.log(`🔌 Signal Saver: Loaded ${key} from offline cache (IDB).`);
+                console.log(`🔌 Signal Saver: Loaded ${key} from ${isFresh ? 'fresh' : 'stale'} cache (IDB).`);
                 return stored.data;
             }
         }
-    } catch(e) { 
-        console.warn("Signal Saver read error:", e); 
+    } catch(e) {
+        console.warn("Signal Saver read error:", e);
     }
-    
+
     return null;
 };
 
@@ -735,21 +735,8 @@ export const getPlaces = async (): Promise<Place[]> => {
 // ============================================================================
 
 /** Minimal Place fields for map pins + explorer list — ~85% smaller than full fetch. */
-export const getMapPlaces = async (): Promise<Place[]> => {
-  const cached = await getFromCache('PLACES');
-  if (cached) return cached;
-
-  try {
-    // RPC now returns SETOF json which bypasses the PostgREST db-max-rows cap.
-    const { data, error } = await supabase.rpc('get_map_places_minimal');
-    if (error) {
-      console.error('getMapPlaces RPC Error:', error.message);
-      // Fall back to legacy paginated fetch so the map still works
-      return getPlaces();
-    }
-    if (!data || data.length === 0) return [];
-
-    const mapped: Place[] = data.map((row: any) => ({
+// Internal: map raw RPC rows to Place objects
+const mapRpcToPlaces = (data: any[]): Place[] => data.map((row: any) => ({
       id: row.id,
       name: row.name,
       slug: row.slug || '',
@@ -790,14 +777,42 @@ export const getMapPlaces = async (): Promise<Place[]> => {
       defaultZoom: row.default_zoom ?? undefined,
       rating: row.google_rating ?? undefined,
       _detailLoaded: false, // sentinel: detail not yet fetched
-    } as Place & { _detailLoaded?: boolean }));
+} as Place & { _detailLoaded?: boolean }));
 
+// Fetch fresh places from Supabase, cache result
+const fetchFreshPlaces = async (): Promise<Place[]> => {
+  try {
+    const { data, error } = await supabase.rpc('get_map_places_minimal');
+    if (error) {
+      console.error('getMapPlaces RPC Error:', error.message);
+      return getPlaces();
+    }
+    if (!data || data.length === 0) return [];
+    const mapped = mapRpcToPlaces(data);
     await setCache('PLACES', mapped);
     return mapped;
   } catch (err) {
     console.error('getMapPlaces Error:', err);
-    return getPlaces(); // fallback
+    return getPlaces();
   }
+};
+
+export const getMapPlaces = async (): Promise<Place[]> => {
+  // 1. Fresh cache — return immediately
+  const fresh = await getFromCache('PLACES');
+  if (fresh) return fresh;
+
+  // 2. Stale cache — return instantly, revalidate in background
+  const stale = await getFromCache('PLACES', true);
+  if (stale) {
+    fetchFreshPlaces().then(updated => {
+      if (updated.length > 0) setCache('PLACES', updated);
+    });
+    return stale;
+  }
+
+  // 3. No cache at all — must wait for network
+  return fetchFreshPlaces();
 };
 
 /** Full detail for a single place — lazy-loaded when user taps a pin. */

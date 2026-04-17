@@ -16,9 +16,9 @@ export const usePlacesData = () => {
     const initData = async () => {
         try {
             console.log("Syncing...");
-            
-            // 1. Heartbeat Check
-            await checkDataVersion();
+
+            // 1. Heartbeat Check (fire-and-forget — don't block data fetch)
+            checkDataVersion();
 
             // 2. Load Data — use the Phase 3 minimal RPC (~230KB) instead of the full
             // paginated getPlaces (~1.5MB). Detail is fetched lazily when user taps a pin.
