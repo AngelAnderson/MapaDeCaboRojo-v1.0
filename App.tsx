@@ -293,6 +293,16 @@ const MainApp: React.FC = () => {
       <main className="flex-1 relative w-full h-full">
         <div ref={mapContainer} className="absolute inset-0 z-0 bg-slate-200 dark:bg-slate-800 transition-colors" />
 
+        {/* Loading overlay while places fetch */}
+        {loading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+            <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl px-6 py-4 shadow-xl flex items-center gap-3">
+              <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Cargando negocios…</span>
+            </div>
+          </div>
+        )}
+
         {/* Floating Search Pill — map view only */}
         {activeTab === 'map' && (
           <button

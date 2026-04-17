@@ -228,6 +228,9 @@ export const useMapEngine = (
             spiderfyOnMaxZoom: true,
             showCoverageOnHover: false,
             zoomToBoundsOnClick: true,
+            chunkedLoading: true,
+            chunkInterval: 100,
+            chunkDelay: 10,
             iconCreateFunction: (cluster: any) => {
                 const markers: L.Marker[] = cluster.getAllChildMarkers();
                 // Dominant color: pick from first sponsor, else first marker
@@ -321,11 +324,13 @@ export const useMapEngine = (
             marker.on('click', handleSelect);
             marker.on('tap' as any, handleSelect);
 
-            clusterGroup.current!.addLayer(marker);
             markersRef.current.push(marker);
         });
 
-        map.current.addLayer(clusterGroup.current);
+        // Batch-add all markers at once — MarkerCluster's chunkedLoading
+        // will split them into non-blocking frames automatically
+        clusterGroup.current!.addLayers(markersRef.current);
+        map.current.addLayer(clusterGroup.current!);
     }, [placesToRender, mapLoaded, categories]);
 
     // Public Methods
