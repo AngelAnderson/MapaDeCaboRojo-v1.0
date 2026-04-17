@@ -1,7 +1,7 @@
-import municipioHandler from '../lib/municipio';
-import turismoHandler from '../lib/turismo';
-import demandaHandler from '../lib/demanda';
-import intelligenceHandler from '../lib/intelligence';
+import municipioHandler from './_lib/municipio';
+import turismoHandler from './_lib/turismo';
+import demandaHandler from './_lib/demanda';
+import intelligenceHandler from './_lib/intelligence';
 
 export default async function handler(req: any, res: any) {
   const page = req.query?.page || '';
