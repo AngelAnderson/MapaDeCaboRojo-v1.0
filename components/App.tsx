@@ -11,7 +11,7 @@ import SuggestPlaceModal from './SuggestPlaceModal';
 import SuggestPage from './SuggestPage'; 
 import AboutPage from './AboutPage'; // Import Component
 import WeatherWidget from './WeatherWidget'; 
-import { getPlaces, getEvents } from '../services/supabase'; 
+import { getPlaces, getEvents, checkEmergencyMode, getEmergencyPlaces } from '../services/supabase';
 import { LanguageProvider, useLanguage } from '../i18n/LanguageContext';
 import ExplorerSheet from './ExplorerSheet';
 import BottomNav from './BottomNav';
@@ -64,6 +64,26 @@ const MapApp: React.FC = () => {
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
   const [isMapMenuOpen, setIsMapMenuOpen] = useState(false);
 
+  // Emergency Mode State
+  const [emergencyMode, setEmergencyMode] = useState(false);
+  const [emergencyMessage, setEmergencyMessage] = useState('Modo de Emergencia Activo');
+
+  useEffect(() => {
+    // Check URL param first (?emergency=on activates locally)
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('emergency') === 'on') {
+      setEmergencyMode(true);
+      return;
+    }
+    // Then check Supabase config
+    checkEmergencyMode().then(cfg => {
+      if (cfg.is_active) {
+        setEmergencyMode(true);
+        setEmergencyMessage(cfg.message || 'Modo de Emergencia Activo');
+      }
+    });
+  }, []);
+
   // Offline State
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
@@ -99,6 +119,10 @@ const MapApp: React.FC = () => {
 
   // --- DERIVED STATE ---
   const filteredList = React.useMemo(() => {
+    // Emergency mode: only show essential services
+    if (emergencyMode) {
+      return getEmergencyPlaces(publishedPlaces);
+    }
     let list: Place[] = [];
     if (activeCollection) {
         list = [...publishedPlaces, ...mappedEvents].filter(p => activeCollection.placeIds.includes(p.id));
@@ -117,7 +141,7 @@ const MapApp: React.FC = () => {
         list = list.filter(p => p.name.toLowerCase().includes(lower) || p.tags?.some(t => t.toLowerCase().includes(lower)));
     }
     return list;
-  }, [activeGroup, activeCollection, publishedPlaces, mappedEvents, savedIds, searchText]);
+  }, [emergencyMode, activeGroup, activeCollection, publishedPlaces, mappedEvents, savedIds, searchText]);
 
   // --- EFFECTS ---
   useEffect(() => { 
@@ -258,15 +282,37 @@ const MapApp: React.FC = () => {
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden relative bg-slate-50 dark:bg-slate-900 font-sans transition-colors duration-500">
       <div className="noise-overlay"></div>
-      
-      <SeoEngine 
+
+      {/* Emergency Mode Banner */}
+      {emergencyMode && (
+        <div className="absolute top-0 left-0 right-0 z-[2000] bg-red-600 text-white px-4 py-2 flex flex-col items-center gap-1 shadow-lg">
+          <div className="flex items-center gap-2 font-bold text-sm">
+            <i className="fa-solid fa-triangle-exclamation animate-pulse"></i>
+            <span>🚨 {emergencyMessage} — Solo servicios esenciales</span>
+            <button
+              onClick={() => setEmergencyMode(false)}
+              className="ml-2 text-white/70 hover:text-white text-xs underline"
+              title="Salir del modo emergencia"
+            >
+              Salir
+            </button>
+          </div>
+          <div className="flex gap-4 text-xs font-medium">
+            <a href="tel:911" className="flex items-center gap-1 hover:underline"><i className="fa-solid fa-phone"></i> 911 Emergencias</a>
+            <a href="tel:18006247420" className="flex items-center gap-1 hover:underline"><i className="fa-solid fa-house-flood-water"></i> FEMA 1-800-621-3362</a>
+            <a href="tel:7872598520" className="flex items-center gap-1 hover:underline"><i className="fa-solid fa-heart-pulse"></i> Cruz Roja PR 787-259-8520</a>
+          </div>
+        </div>
+      )}
+
+      <SeoEngine
         place={selectedPlace} 
         title={selectedPlace ? `${selectedPlace.name} | Cabo Rojo` : undefined}
         description={selectedPlace ? selectedPlace.description : undefined}
         image={selectedPlace ? selectedPlace.imageUrl : undefined}
       />
       
-      <header className="absolute top-0 left-0 right-0 z-[1000] px-5 pt-20 md:pt-10 pb-5 pointer-events-none flex justify-between items-start">
+      <header className={`absolute left-0 right-0 z-[1000] px-5 pb-5 pointer-events-none flex justify-between items-start ${emergencyMode ? 'top-[72px] pt-4' : 'top-0 pt-20 md:pt-10'}`}>
         <WeatherWidget weather={weather} />
         <div className="pointer-events-auto flex flex-col gap-3 items-end">
             {isOffline && (

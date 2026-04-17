@@ -776,6 +776,8 @@ const mapRpcToPlaces = (data: any[]): Place[] => data.map((row: any) => ({
       amenities: {},
       defaultZoom: row.default_zoom ?? undefined,
       rating: row.google_rating ?? undefined,
+      is_emergency_resource: row.is_emergency_resource || false,
+      emergency_type: row.emergency_type || '',
       _detailLoaded: false, // sentinel: detail not yet fetched
 } as Place & { _detailLoaded?: boolean }));
 
@@ -1225,6 +1227,22 @@ export const subscribeToAlerts = async (phone: string, barrio?: string) => {
   }
 };
 
+// --- DEMAND SURGES ---
+export interface DemandSurge {
+  term: string;
+  this_week: number;
+  last_week: number;
+  surge_pct: number;
+}
+
+export const getDemandSurges = async (): Promise<DemandSurge[]> => {
+  try {
+    const { data, error } = await supabase.rpc('get_demand_surges');
+    if (error || !data) return [];
+    return Array.isArray(data) ? data as DemandSurge[] : [];
+  } catch { return []; }
+};
+
 // --- SEARCH TRENDS ---
 export const getSearchTrends = async (daysBack: number = 7): Promise<{term: string; searches: number; unique_users: number}[]> => {
   try {
@@ -1232,6 +1250,36 @@ export const getSearchTrends = async (daysBack: number = 7): Promise<{term: stri
     if (error || !data) return [];
     return data as any[];
   } catch { return []; }
+};
+
+// --- EMERGENCY MODE ---
+
+export interface EmergencyConfig {
+  is_active: boolean;
+  message: string;
+  activated_at?: string;
+}
+
+/** Check if emergency mode is active. Returns config object. */
+export const checkEmergencyMode = async (): Promise<EmergencyConfig> => {
+  const DEFAULT: EmergencyConfig = { is_active: false, message: 'Modo de Emergencia Activo' };
+  try {
+    const { data, error } = await supabase
+      .from('emergency_config')
+      .select('is_active,message,activated_at')
+      .eq('id', 1)
+      .maybeSingle();
+    if (error || !data) return DEFAULT;
+    return data as EmergencyConfig;
+  } catch (e) {
+    console.warn('Emergency config check failed:', e);
+    return DEFAULT;
+  }
+};
+
+/** Returns only is_emergency_resource=true places from the already-loaded places list. */
+export const getEmergencyPlaces = (places: Place[]): Place[] => {
+  return places.filter(p => p.is_emergency_resource === true);
 };
 
 export { escapeHTML };

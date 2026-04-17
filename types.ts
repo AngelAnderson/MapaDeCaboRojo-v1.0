@@ -117,6 +117,8 @@ export interface Place {
 
   rating?: number;
   crowdLevel?: 'LOW' | 'MEDIUM' | 'HIGH';
+  is_emergency_resource?: boolean;
+  emergency_type?: string;
 
   metaTitle?: string; 
   metaDescription?: string; 
