@@ -12,14 +12,13 @@
   ],
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
-    { "source": "/demanda", "destination": "/api/demanda" },
-    { "source": "/demanda", "destination": "/api/demanda" },
+    { "source": "/municipio", "destination": "/api/pages?page=municipio" },
+    { "source": "/turismo", "destination": "/api/pages?page=turismo" },
+    { "source": "/demanda", "destination": "/api/pages?page=demanda" },
+    { "source": "/api/intelligence", "destination": "/api/pages?page=intelligence" },
     { "source": "/negocio/:slug", "destination": "/api/negocio?slug=:slug" },
     { "source": "/farmacia/:slug", "destination": "/api/farmacia?slug=:slug" },
     { "source": "/categoria/:cat", "destination": "/api/categoria?cat=:cat" },
-    { "source": "/municipio", "destination": "/api/municipio" },
-    { "source": "/turismo", "destination": "/api/turismo" },
-    { "source": "/api/intelligence", "destination": "/api/intelligence" },
     { "source": "/llms-full.txt", "destination": "/api/public?action=llms-full" },
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
