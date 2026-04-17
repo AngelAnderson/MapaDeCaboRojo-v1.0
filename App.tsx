@@ -13,6 +13,9 @@ import { getEvents } from './services/supabase';
 import { LanguageProvider, useLanguage } from './i18n/LanguageContext';
 import ExplorerSheet from './components/ExplorerSheet';
 import BottomNav from './components/BottomNav';
+import SponsorCarousel from './components/SponsorCarousel';
+import RoutePlanner from './components/RoutePlanner';
+import AlertSubscribeModal from './components/AlertSubscribeModal';
 import CommandMenu from './components/CommandMenu';
 import SeoEngine from './components/SeoEngine';
 
@@ -47,7 +50,10 @@ const MainApp: React.FC = () => {
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
   const [activeGroup, setActiveGroup] = useState<string>('ALL');
   const [activeCollection, setActiveCollection] = useState<Collection | null>(null);
-  const [searchText, setSearchText] = useState(''); 
+  const [searchText, setSearchText] = useState('');
+  const [showOpenOnly, setShowOpenOnly] = useState(false);
+  const [routeMode, setRouteMode] = useState(false);
+  const [routeStops, setRouteStops] = useState<Place[]>([]);
   const [searchFocusTrigger, setSearchFocusTrigger] = useState(0);
   const [isCommandMenuOpen, setIsCommandMenuOpen] = useState(false);
   const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
@@ -59,7 +65,9 @@ const MainApp: React.FC = () => {
   const [isConciergeOpen, setIsConciergeOpen] = useState(false);
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
-  const [isSuggestOpen, setIsSuggestOpen] = useState(false); 
+  const [isSuggestOpen, setIsSuggestOpen] = useState(false);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   
   // System State
   const [isVipUnlocked, setIsVipUnlocked] = useState(false);
@@ -89,8 +97,16 @@ const MainApp: React.FC = () => {
         const lower = searchText.toLowerCase();
         list = list.filter(p => p.name.toLowerCase().includes(lower) || p.tags?.some(t => t.toLowerCase().includes(lower)));
     }
+    if (showOpenOnly) {
+        list = list.filter(p => {
+            const ht = p.opening_hours?.type?.toLowerCase();
+            if (ht === '24/7' || ht === 'always_open') return true;
+            if (!ht) return true; // unknown hours = show
+            return true; // MVP: show all with any hours data (full schedule check in v2)
+        });
+    }
     return list;
-  }, [activeGroup, activeCollection, publishedPlaces, mappedEvents, savedIds, searchText]);
+  }, [activeGroup, activeCollection, publishedPlaces, mappedEvents, savedIds, searchText, showOpenOnly]);
 
   // --- EFFECTS ---
 
@@ -110,6 +126,15 @@ const MainApp: React.FC = () => {
     localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
   }, [isDarkMode]);
 
+  // Online/Offline detection
+  useEffect(() => {
+    const goOnline = () => setIsOnline(true);
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener('online', goOnline);
+    window.addEventListener('offline', goOffline);
+    return () => { window.removeEventListener('online', goOnline); window.removeEventListener('offline', goOffline); };
+  }, []);
+
   // Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -126,12 +151,20 @@ const MainApp: React.FC = () => {
   // On pin click: set the minimal place immediately (instant card open), then fetch detail
   // in the background. PlaceCard shows a skeleton for deferred fields until detail arrives.
   const handleMarkerSelect = React.useCallback(async (p: Place) => {
-    setSelectedPlace(p); // instant card with minimal data
+    // Route mode: add stop instead of opening card
+    if (routeMode) {
+      setRouteStops(prev => {
+        if (prev.length >= 5) return prev;
+        if (prev.find(s => s.id === p.id)) return prev;
+        return [...prev, p];
+      });
+      return;
+    }
+    setSelectedPlace(p);
     if (p.coords) flyTo(p.coords, p.defaultZoom);
-    // Fetch full detail in background — merged into state by fetchDetail
     const full = await fetchDetail(p.id);
     if (full) setSelectedPlace(full);
-  }, []); // fetchDetail is stable from hook
+  }, [routeMode]);
   const { mapLoaded, flyTo, flyHome, showUserLocation, invalidateSize, zoomIn, zoomOut } = useMapEngine(
     mapContainer,
     isDarkMode,
@@ -315,16 +348,54 @@ const MainApp: React.FC = () => {
           </button>
         )}
 
-        {/* GPS button — map view only */}
+        {/* Sponsor Carousel — map view only */}
         {activeTab === 'map' && (
-          <button
-            onClick={centerOnUser}
-            className={`absolute bottom-36 right-4 z-[1500] w-12 h-12 flex items-center justify-center rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-white/60 dark:border-slate-700 shadow-lg text-blue-500 dark:text-blue-400 hover:scale-105 transition-transform ${!userLocation ? 'animate-pulse-dot' : ''}`}
-            title="Mi ubicación"
-            aria-label="Centrar en mi ubicación"
-          >
-            <i className="fa-solid fa-location-crosshairs text-lg"></i>
-          </button>
+          <SponsorCarousel places={publishedPlaces} onSelect={handleMarkerSelect} />
+        )}
+
+        {/* GPS + Route buttons — map view only */}
+        {activeTab === 'map' && (
+          <div className="absolute bottom-36 right-4 z-[1500] flex flex-col gap-2">
+            <button
+              onClick={() => { setRouteMode(!routeMode); if (routeMode) setRouteStops([]); }}
+              className={`w-12 h-12 flex items-center justify-center rounded-full backdrop-blur-md border shadow-lg hover:scale-105 transition-all ${routeMode ? 'bg-teal-500 text-white border-teal-400' : 'bg-white/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border-white/60 dark:border-slate-700'}`}
+              title="Planificar ruta"
+            >
+              <i className="fa-solid fa-route text-lg"></i>
+              {routeStops.length > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{routeStops.length}</span>}
+            </button>
+            <button
+              onClick={() => setIsAlertOpen(true)}
+              className="w-12 h-12 flex items-center justify-center rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-white/60 dark:border-slate-700 shadow-lg text-amber-500 hover:scale-105 transition-transform"
+              title="Alertas de negocios nuevos"
+            >
+              <i className="fa-solid fa-bell text-lg"></i>
+            </button>
+            <button
+              onClick={centerOnUser}
+              className={`w-12 h-12 flex items-center justify-center rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-white/60 dark:border-slate-700 shadow-lg text-blue-500 dark:text-blue-400 hover:scale-105 transition-transform ${!userLocation ? 'animate-pulse-dot' : ''}`}
+              title="Mi ubicación"
+            >
+              <i className="fa-solid fa-location-crosshairs text-lg"></i>
+            </button>
+          </div>
+        )}
+
+        {/* Route Planner panel */}
+        {routeMode && (
+          <RoutePlanner
+            stops={routeStops}
+            onRemoveStop={(id) => setRouteStops(prev => prev.filter(s => s.id !== id))}
+            onClear={() => { setRouteStops([]); setRouteMode(false); }}
+            onClose={() => { setRouteMode(false); setRouteStops([]); }}
+          />
+        )}
+
+        {/* Offline banner */}
+        {!isOnline && (
+          <div className="absolute top-14 left-4 right-4 z-[2000] bg-amber-500/90 backdrop-blur-md text-white text-xs font-bold px-4 py-2 rounded-xl text-center shadow-lg">
+            📡 Sin conexión — datos guardados
+          </div>
         )}
       </main>
 
@@ -352,7 +423,9 @@ const MainApp: React.FC = () => {
         onCameraClick={() => { setIsConciergeOpen(true); }}
         userLocation={userLocation || undefined}
         onTabChange={handleTabChange}
-        categories={categories} // NEW PROP
+        categories={categories}
+        showOpenOnly={showOpenOnly}
+        onToggleOpenOnly={() => setShowOpenOnly(prev => !prev)}
       />
 
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} onAction={handleNavAction} />
@@ -385,6 +458,7 @@ const MainApp: React.FC = () => {
       
       <SuggestPlaceModal isOpen={isSuggestOpen} onClose={() => setIsSuggestOpen(false)} />
       <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} onSuggest={() => { setIsContactOpen(false); setIsSuggestOpen(true); }} onChat={() => { setIsContactOpen(false); setIsConciergeOpen(true); }} />
+      <AlertSubscribeModal isOpen={isAlertOpen} onClose={() => setIsAlertOpen(false)} />
       {isAdminOpen && <Admin onClose={() => setIsAdminOpen(false)} places={places} events={events} categories={categories} onUpdate={refreshData} />}
       <CommandMenu isOpen={isCommandMenuOpen} onClose={() => setIsCommandMenuOpen(false)} onSelect={handleCommandSelect} isDarkMode={isDarkMode} />
 

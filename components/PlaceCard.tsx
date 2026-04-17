@@ -4,6 +4,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { checkPublicHolidays, PublicHoliday } from '../services/externalServices';
 import { getPlaceHeaderImage } from '../utils/imageOptimizer';
 import { formatOpenStatus, isOpenNow } from '../utils/timeUtils';
+import { getPlaceReviews, submitReview, PlaceReviewSummary } from '../services/supabase';
 
 // ============================================================================
 // PlaceCard — responsive detail view
@@ -237,6 +238,88 @@ const distanceKm = (a: Coordinates, b: Coordinates): string => {
 // Normalize a PR phone number for tel: / sms: links (strip non-digits).
 const digitsOnly = (phone?: string) => (phone || '').replace(/\D/g, '');
 
+// --- Reviews Sub-Component ---
+const ReviewsSection: React.FC<{ placeId: string }> = memo(({ placeId }) => {
+  const [data, setData] = useState<PlaceReviewSummary | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [authorName, setAuthorName] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => { getPlaceReviews(placeId).then(setData); }, [placeId]);
+
+  const handleSubmit = async () => {
+    if (rating === 0) return;
+    setSubmitting(true);
+    try {
+      await submitReview(placeId, rating, comment, authorName);
+      setSubmitted(true);
+      setShowForm(false);
+      getPlaceReviews(placeId).then(setData);
+    } catch {}
+    setSubmitting(false);
+  };
+
+  if (!data) return null;
+
+  return (
+    <section className="pt-4 border-t border-slate-100 dark:border-slate-700">
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="font-bold text-sm text-slate-800 dark:text-white flex items-center gap-2">
+          <i className="fa-solid fa-star text-amber-400"></i>
+          Reseñas
+          {data.count > 0 && <span className="text-xs font-normal text-slate-500">({data.avg_rating} · {data.count})</span>}
+        </h4>
+        {!showForm && !submitted && (
+          <button onClick={() => setShowForm(true)} className="text-xs font-bold text-teal-500 hover:text-teal-600">
+            Dejar reseña
+          </button>
+        )}
+      </div>
+
+      {showForm && (
+        <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 mb-3 space-y-2">
+          <div className="flex gap-1">
+            {[1,2,3,4,5].map(s => (
+              <button key={s} onMouseEnter={() => setHoverRating(s)} onMouseLeave={() => setHoverRating(0)} onClick={() => setRating(s)} className="text-xl transition-colors">
+                <i className={`fa-${(hoverRating || rating) >= s ? 'solid' : 'regular'} fa-star text-amber-400`}></i>
+              </button>
+            ))}
+          </div>
+          <textarea value={comment} onChange={e => setComment(e.target.value)} placeholder="¿Cómo fue tu experiencia?" className="w-full text-sm p-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 resize-none" rows={2} />
+          <input value={authorName} onChange={e => setAuthorName(e.target.value)} placeholder="Tu nombre (opcional)" className="w-full text-sm p-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700" />
+          <div className="flex gap-2">
+            <button onClick={() => setShowForm(false)} className="flex-1 text-xs font-bold text-slate-500 py-2">Cancelar</button>
+            <button onClick={handleSubmit} disabled={rating === 0 || submitting} className="flex-1 text-xs font-bold text-white py-2 bg-teal-500 rounded-lg disabled:opacity-40">
+              {submitting ? '...' : 'Enviar'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {submitted && <p className="text-xs text-emerald-600 dark:text-emerald-400 mb-2">¡Gracias por tu reseña!</p>}
+
+      {data.reviews.length > 0 && (
+        <div className="space-y-2">
+          {data.reviews.slice(0, 5).map(r => (
+            <div key={r.id} className="text-xs">
+              <div className="flex items-center gap-1 mb-0.5">
+                <span className="font-bold text-slate-700 dark:text-slate-200">{r.author_name}</span>
+                <span className="text-amber-400">{'★'.repeat(r.rating)}</span>
+                <span className="text-slate-400 ml-auto">{new Date(r.created_at).toLocaleDateString('es-PR', { month: 'short', day: 'numeric' })}</span>
+              </div>
+              {r.comment && <p className="text-slate-500 dark:text-slate-400">{r.comment}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+});
+
 const PlaceCard: React.FC<PlaceCardProps> = ({
   place,
   allPlaces,
@@ -255,6 +338,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
   // Mobile-only dismiss gesture state
   const [dragY, setDragY] = useState<number | null>(null);
   const [dragOffset, setDragOffset] = useState(0);
+  const [shareToast, setShareToast] = useState('');
 
   // ---- Detail loaded sentinel (Phase 3 lazy loading) ----------------------
   const detailLoaded = !!(place as any)?._detailLoaded || !!place?.description;
@@ -320,13 +404,15 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
         } catch {}
       } else {
         await navigator.clipboard.writeText(shareUrl);
-        alert(`${t('link_copied')}: ${shareUrl}`);
+        setShareToast('¡Link copiado!');
+        setTimeout(() => setShareToast(''), 2500);
       }
     } catch (e) {
       console.warn('share failed', e);
       try {
         await navigator.clipboard.writeText(placeName + ' in Cabo Rojo');
-        alert(t('link_copied'));
+        setShareToast('¡Link copiado!');
+        setTimeout(() => setShareToast(''), 2500);
       } catch {}
     }
   }, [place?.id, place?.slug, placeName, t]);
@@ -798,6 +884,9 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
             </section>
           )}
 
+          {/* Reviews Section */}
+          <ReviewsSection placeId={place.id} />
+
           <footer className="pt-4 border-t border-slate-100 dark:border-slate-700 flex flex-col gap-2">
             <button
               onClick={onSuggestEdit}
@@ -809,6 +898,11 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
           <div className="h-6"></div>
         </div>
       </div>
+      {shareToast && (
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg z-50 animate-bounce-in">
+          {shareToast}
+        </div>
+      )}
     </article>
   );
 };

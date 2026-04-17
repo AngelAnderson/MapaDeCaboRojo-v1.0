@@ -1193,4 +1193,45 @@ export const uploadImage = async (file: File): Promise<{ success: boolean; url?:
     }
 };
 
+// --- REVIEWS ---
+export interface PlaceReview { id: string; rating: number; comment: string; author_name: string; created_at: string; }
+export interface PlaceReviewSummary { avg_rating: number; count: number; reviews: PlaceReview[]; }
+
+export const getPlaceReviews = async (placeId: string): Promise<PlaceReviewSummary> => {
+  try {
+    const { data, error } = await supabase.rpc('get_place_reviews', { p_place_id: placeId });
+    if (error || !data) return { avg_rating: 0, count: 0, reviews: [] };
+    return data as PlaceReviewSummary;
+  } catch { return { avg_rating: 0, count: 0, reviews: [] }; }
+};
+
+export const submitReview = async (placeId: string, rating: number, comment: string, authorName: string) => {
+  const { error } = await supabase.from('reviews').insert({
+    place_id: placeId,
+    rating,
+    comment: comment || null,
+    author_name: authorName || 'Anónimo',
+  });
+  if (error) throw error;
+};
+
+// --- ALERTS ---
+export const subscribeToAlerts = async (phone: string, barrio?: string) => {
+  const digits = phone.replace(/\D/g, '');
+  const { error } = await supabase.from('map_subscribers').insert({ phone: digits, barrio: barrio || null });
+  if (error) {
+    if (error.code === '23505') throw new Error('Ya estás suscrito');
+    throw error;
+  }
+};
+
+// --- SEARCH TRENDS ---
+export const getSearchTrends = async (daysBack: number = 7): Promise<{term: string; searches: number; unique_users: number}[]> => {
+  try {
+    const { data, error } = await supabase.rpc('get_search_trends', { days_back: daysBack });
+    if (error || !data) return [];
+    return data as any[];
+  } catch { return []; }
+};
+
 export { escapeHTML };

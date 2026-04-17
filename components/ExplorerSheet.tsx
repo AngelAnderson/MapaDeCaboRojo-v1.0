@@ -7,6 +7,7 @@ import { logUserActivity } from '../services/supabase';
 import { COLLECTIONS } from '../constants';
 import { useLanguage } from '../i18n/LanguageContext';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
+import SearchTrends from './SearchTrends';
 
 interface ExplorerSheetProps {
   places: Place[];
@@ -25,7 +26,9 @@ interface ExplorerSheetProps {
   onCameraClick?: () => void; 
   userLocation?: Coordinates;
   onTabChange: (tabId: string, forceReset?: boolean) => void;
-  categories?: Category[]; 
+  categories?: Category[];
+  showOpenOnly?: boolean;
+  onToggleOpenOnly?: () => void;
 }
 
 const NEIGHBORHOODS = [
@@ -49,17 +52,29 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
   onCameraClick,
   userLocation,
   onTabChange,
-  categories 
+  categories,
+  showOpenOnly,
+  onToggleOpenOnly,
 }) => {
   const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const [sortBy, setSortBy] = useState<'recommended' | 'distance'>('recommended');
   const [activeNeighborhood, setActiveNeighborhood] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(50);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const hasAutoSorted = useRef(false);
 
   // Reset visible count when filters change
-  useEffect(() => { setVisibleCount(50); }, [searchText, activeGroup, activeCollectionId, activeNeighborhood]);
+  useEffect(() => { setVisibleCount(50); }, [searchText, activeGroup, activeCollectionId, activeNeighborhood, showOpenOnly]);
+
+  // Auto-sort by distance when location becomes available
+  useEffect(() => {
+    if (userLocation && !hasAutoSorted.current) {
+      setSortBy('distance');
+      hasAutoSorted.current = true;
+    }
+  }, [userLocation]);
 
   // Load more on scroll near bottom
   const handleScroll = useCallback(() => {
@@ -173,9 +188,37 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                     {hood}
                 </button>
             ))}
+          {/* Filter pills: Abierto + View toggle */}
+          <div className="flex items-center gap-2 mt-1">
+            <button
+              onClick={onToggleOpenOnly}
+              className={`flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full border transition-all ${
+                showOpenOnly
+                  ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/30'
+                  : 'bg-transparent text-slate-500 border-slate-300 dark:border-slate-600 hover:border-emerald-400'
+              }`}
+            >
+              {showOpenOnly ? '🟢' : '⏰'} Abierto
+            </button>
+            <div className="ml-auto flex gap-1">
+              <button onClick={() => setViewMode('list')} className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs ${viewMode === 'list' ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900' : 'text-slate-400'}`}>
+                <i className="fa-solid fa-list"></i>
+              </button>
+              <button onClick={() => setViewMode('grid')} className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs ${viewMode === 'grid' ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900' : 'text-slate-400'}`}>
+                <i className="fa-solid fa-grip"></i>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-      
+
+      {/* Search Trends */}
+      {activeGroup === 'ALL' && !searchText && !activeNeighborhood && (
+        <div className="px-4 shrink-0">
+          <SearchTrends onSelectTerm={(term) => onSearchChange(term)} />
+        </div>
+      )}
+
       {activeGroup === 'ALL' && !searchText && !activeNeighborhood && (
         <div className="pl-5 pb-2 shrink-0 overflow-x-auto no-scrollbar">
             <div className="flex gap-3 w-max pr-5">
@@ -217,20 +260,47 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                     Pregúntale a El Veci
                 </button>
             </div>
+        ) : viewMode === 'grid' ? (
+            <div className="grid grid-cols-2 gap-3">
+              {sortedPlaces.slice(0, visibleCount).map(place => {
+                const isClosed = place.status === 'closed';
+                let dist = '';
+                if (userLocation && place.coords) {
+                  dist = calculateDistance(userLocation.lat, userLocation.lng, place.coords.lat, place.coords.lng).toFixed(1) + ' km';
+                }
+                return (
+                  <button key={place.id} onClick={() => onSelect(place)} className="relative aspect-square rounded-2xl overflow-hidden shadow-sm active:scale-95 transition-transform group">
+                    <div className={`absolute inset-0 bg-gradient-to-br from-teal-500 to-cyan-500 ${isClosed ? 'grayscale opacity-70' : ''}`}>
+                      {place.imageUrl && (
+                        <img src={getOptimizedImageUrl(place.imageUrl, 300)} alt={place.name} className="w-full h-full object-cover" loading="lazy" decoding="async" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+                      )}
+                    </div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                    <div className="absolute bottom-0 left-0 right-0 p-2.5">
+                      <h4 className="font-bold text-white text-sm leading-tight truncate">{place.name}</h4>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[10px] text-white/70 font-medium">{place.category}</span>
+                        {dist && <span className="text-[10px] text-teal-300 font-bold">• {dist}</span>}
+                      </div>
+                    </div>
+                    {place.is_featured && <div className="absolute top-2 left-2 w-2.5 h-2.5 bg-yellow-400 rounded-full border-2 border-white shadow-sm" />}
+                  </button>
+                );
+              })}
+            </div>
         ) : (
             sortedPlaces.slice(0, visibleCount).map(place => {
                 const isEvent = place.contact_info?.isEvent === true;
                 const isFavorite = savedIds.includes(place.id);
                 const isClosed = place.status === 'closed';
-                
+
                 let dist = '';
                 if (userLocation && place.coords) {
                     const d = calculateDistance(userLocation.lat, userLocation.lng, place.coords.lat, place.coords.lng);
                     dist = d.toFixed(1) + ' km';
                 }
 
-                // Fallback Logic: Use a seeded random image based on the Place ID.
-                const fallbackImage = ''; // No more fake picsum photos — show gradient bg instead
+                const fallbackImage = '';
 
                 return (
                     <div key={place.id} onClick={() => onSelect(place)} className="flex items-center gap-4 p-3 pr-4 rounded-[24px] bg-white/50 dark:bg-slate-700/40 hover:bg-white dark:hover:bg-slate-700 active:scale-[0.98] transition-all cursor-pointer border border-white/60 dark:border-slate-600/50 shadow-sm group backdrop-blur-sm relative">
