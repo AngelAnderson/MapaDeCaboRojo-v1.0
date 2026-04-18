@@ -508,7 +508,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
 
         <div className="flex items-start gap-3">
           <div className="flex-1 min-w-0">
-            <h1 id="place-name" className="text-xl font-black text-slate-900 dark:text-white leading-tight truncate">
+            <h1 id="place-name" className="text-xl font-black text-slate-900 dark:text-white leading-tight truncate" style={{fontFamily: 'Fraunces, serif'}}>
               {placeName}
             </h1>
             <div className="flex items-center gap-2 mt-1 flex-wrap">

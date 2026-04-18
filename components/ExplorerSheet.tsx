@@ -56,8 +56,16 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
   showOpenOnly,
   onToggleOpenOnly,
 }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [expanded, setExpanded] = useState(false);
+
+  // Build category label lookup
+  const categoryLabel = (id: string) => {
+    if (!categories) return id;
+    const cat = categories.find(c => c.id === id);
+    if (!cat) return id;
+    return language === 'es' ? cat.label_es : (cat.label_en || cat.label_es);
+  };
   const [sortBy, setSortBy] = useState<'recommended' | 'distance'>('recommended');
   const [activeNeighborhood, setActiveNeighborhood] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(50);
@@ -137,7 +145,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
 
       <div className="px-5 pb-2 space-y-4 shrink-0">
         <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Explorar</h2>
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight" style={{fontFamily: 'Fraunces, serif'}}>Explorar</h2>
             <div className="flex items-center gap-3">
                 {userLocation && (
                     <button 
@@ -278,7 +286,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                     <div className="absolute bottom-0 left-0 right-0 p-2.5">
                       <h4 className="font-bold text-white text-sm leading-tight truncate">{place.name}</h4>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[10px] text-white/70 font-medium">{place.category}</span>
+                        <span className="text-[10px] text-white/70 font-medium">{categoryLabel(place.category)}</span>
                         {dist && <span className="text-[10px] text-teal-300 font-bold">• {dist}</span>}
                       </div>
                     </div>
@@ -329,7 +337,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                                 </p>
                             ) : (
                                 <p className="text-xs text-slate-500 dark:text-slate-300 font-medium truncate mb-2 flex items-center gap-2">
-                                    <span>{place.category} • {place.priceLevel || '$'}</span>
+                                    <span>{categoryLabel(place.category)} • {place.priceLevel || '$'}</span>
                                     {dist && <span className="text-teal-600 dark:text-teal-400 font-bold">• {dist}</span>}
                                 </p>
                             )}
