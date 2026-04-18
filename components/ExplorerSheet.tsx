@@ -212,42 +212,41 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
         </div>
       </div>
 
-      {/* Search Trends */}
-      {activeGroup === 'ALL' && !searchText && !activeNeighborhood && (
-        <div className="px-4 shrink-0">
-          <SearchTrends onSelectTerm={(term) => onSearchChange(term)} />
-        </div>
-      )}
-
-      {activeGroup === 'ALL' && !searchText && !activeNeighborhood && (
-        <div className="pl-5 pb-2 shrink-0 overflow-x-auto no-scrollbar">
-            <div className="flex gap-3 w-max pr-5">
-                {COLLECTIONS
-                    .filter(col => 
-                        !['col-sunset', 'col-foodie', 'col-photo', 'col-family'].includes(col.id)
-                    )
-                    .map(col => {
-                    const isActive = activeCollectionId === col.id;
-                    return (
-                        <button 
-                            key={col.id}
-                            onClick={() => onSelectCollection && onSelectCollection(isActive ? null : col)}
-                            className={`relative w-40 h-24 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-3 text-left transition-all active:scale-95 border ${isActive ? 'ring-2 ring-teal-500 border-transparent' : 'border-white/20'}`}
-                        >
-                            <div className={`absolute inset-0 bg-gradient-to-br ${col.color} opacity-90`}></div>
-                            <div className="absolute top-2 right-2 text-white/30"><i className={`fa-solid fa-${col.icon} text-3xl`}></i></div>
-                            <div className="relative z-10 text-white">
-                                <p className="text-[10px] font-bold opacity-80 uppercase tracking-wide">Guía</p>
-                                <h3 className="font-bold text-sm leading-tight">{col.title}</h3>
-                            </div>
-                        </button>
-                    );
-                })}
-            </div>
-        </div>
-      )}
-
       <div ref={scrollRef} onScroll={handleScroll} className="flex-1 overflow-y-auto px-4 py-2 space-y-3 pb-32 mask-image-b">
+        {/* Search Trends */}
+        {activeGroup === 'ALL' && !searchText && !activeNeighborhood && (
+          <div className="px-0">
+            <SearchTrends onSelectTerm={(term) => onSearchChange(term)} />
+          </div>
+        )}
+
+        {activeGroup === 'ALL' && !searchText && !activeNeighborhood && (
+          <div className="-mx-4 pl-5 pb-2 overflow-x-auto no-scrollbar">
+              <div className="flex gap-3 w-max pr-5">
+                  {COLLECTIONS
+                      .filter(col =>
+                          !['col-sunset', 'col-foodie', 'col-photo', 'col-family'].includes(col.id)
+                      )
+                      .map(col => {
+                      const isActive = activeCollectionId === col.id;
+                      return (
+                          <button
+                              key={col.id}
+                              onClick={() => onSelectCollection && onSelectCollection(isActive ? null : col)}
+                              className={`relative w-40 h-24 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-3 text-left transition-all active:scale-95 border ${isActive ? 'ring-2 ring-teal-500 border-transparent' : 'border-white/20'}`}
+                          >
+                              <div className={`absolute inset-0 bg-gradient-to-br ${col.color} opacity-90`}></div>
+                              <div className="absolute top-2 right-2 text-white/30"><i className={`fa-solid fa-${col.icon} text-3xl`}></i></div>
+                              <div className="relative z-10 text-white">
+                                  <p className="text-[10px] font-bold opacity-80 uppercase tracking-wide">Guía</p>
+                                  <h3 className="font-bold text-sm leading-tight">{col.title}</h3>
+                              </div>
+                          </button>
+                      );
+                  })}
+              </div>
+          </div>
+        )}
         {sortedPlaces.length === 0 ? (
             <div className="text-center py-16 flex flex-col items-center gap-4">
                 <i className="fa-solid fa-map-location-dot text-5xl text-slate-200 dark:text-slate-600"></i>
