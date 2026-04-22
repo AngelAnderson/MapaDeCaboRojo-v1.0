@@ -59,7 +59,7 @@ export default async function handler(req: any, res: any) {
     `);
 
     // Category pages
-    const categories = ['restaurantes', 'playas', 'salud', 'hospedaje', 'servicios', 'compras', 'entretenimiento', 'turismo', 'deportes', 'belleza', 'automotriz', 'marina', 'educacion', 'gobierno'];
+    const categories = ['restaurantes', 'playas', 'salud', 'farmacia', 'dentista', 'veterinario', 'medico', 'hospital', 'laboratorio', 'optica', 'salud-mental', 'quiropractico', 'gimnasio', 'hospedaje', 'servicios', 'compras', 'entretenimiento', 'turismo', 'deportes', 'belleza', 'automotriz', 'marina', 'educacion', 'gobierno'];
     categories.forEach((cat) => {
       urls.push(`
         <url>
@@ -87,19 +87,39 @@ export default async function handler(req: any, res: any) {
           </url>
         `);
 
-        // Pharmacy-specific page with Pharmacy schema — higher priority for health searches
-        // PHASE 2: Extend this block for 'medico', 'dentista', 'lab', 'hospital' categories
+        // Health detail pages — route based on category/subcategory
         const catLower = (p.category || '').toLowerCase();
         const subcatLower = (p.subcategory || '').toLowerCase();
-        const isFarmacia =
-          catLower === 'farmacia' ||
-          catLower === 'health' ||
-          catLower === 'salud' ||
-          subcatLower === 'farmacia';
-        if (isFarmacia) {
+        const nameLower = (p.name || '').toLowerCase();
+
+        // Determine health detail route
+        let healthRoute: string | null = null;
+        if (catLower === 'farmacia' || subcatLower.includes('pharmacy') || subcatLower.includes('farmacia') || nameLower.includes('farmacia') || nameLower.includes('pharmacy')) {
+          healthRoute = 'farmacia';
+        } else if (subcatLower.includes('dentist') || subcatLower.includes('dentista') || nameLower.includes('dental') || nameLower.includes('dentist')) {
+          healthRoute = 'dentista';
+        } else if (subcatLower.includes('veterinar') || nameLower.includes('veterinar')) {
+          healthRoute = 'veterinario';
+        } else if (subcatLower.includes('hospital') || nameLower.includes('hospital') || nameLower.includes('clínica') || nameLower.includes('clinica') || nameLower.includes('cdt')) {
+          healthRoute = 'hospital';
+        } else if (subcatLower.includes('optom') || subcatLower.includes('óptica') || nameLower.includes('óptica') || nameLower.includes('optica') || nameLower.includes('vision')) {
+          healthRoute = 'optica';
+        } else if (subcatLower.includes('laboratorio') || nameLower.includes('laboratorio')) {
+          healthRoute = 'laboratorio';
+        } else if (subcatLower.includes('salud mental') || subcatLower.includes('psicólog') || nameLower.includes('psicólog') || nameLower.includes('psiquiatr')) {
+          healthRoute = 'salud-mental';
+        } else if (subcatLower.includes('chiropract') || nameLower.includes('quiropract')) {
+          healthRoute = 'quiropractico';
+        } else if (nameLower.includes('fitness') || nameLower.includes('gym') || nameLower.includes('crossfit')) {
+          healthRoute = 'gimnasio';
+        } else if (subcatLower.includes('doctor') || nameLower.includes('dr.') || nameLower.includes('dra.')) {
+          healthRoute = 'medico';
+        }
+
+        if (healthRoute) {
           urls.push(`
             <url>
-              <loc>${baseUrl}/farmacia/${slug}</loc>
+              <loc>${baseUrl}/${healthRoute}/${slug}</loc>
               <lastmod>${lastMod}</lastmod>
               <changefreq>weekly</changefreq>
               <priority>0.9</priority>

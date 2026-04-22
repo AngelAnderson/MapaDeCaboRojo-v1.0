@@ -110,6 +110,21 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
+  // Redirect HEALTH businesses to their enriched route (schema Dentist, Pharmacy, etc.)
+  const HEALTH_ROUTES: Record<string, string> = {
+    farmacia: 'farmacia', dentista: 'dentista', veterinario: 'veterinario',
+    medico: 'medico', hospital: 'hospital', laboratorio: 'laboratorio',
+    optica: 'optica', 'salud-mental': 'salud-mental', quiropractico: 'quiropractico',
+    gimnasio: 'gimnasio',
+  };
+  const sub = (place.subcategory || '').toLowerCase();
+  const cat = (place.category || '').toUpperCase();
+  if (cat === 'HEALTH' && HEALTH_ROUTES[sub]) {
+    const healthSlug = place.slug || place.id;
+    res.writeHead(301, { Location: `https://mapadecaborojo.com/${HEALTH_ROUTES[sub]}/${healthSlug}` });
+    return res.end();
+  }
+
   const baseUrl = 'https://mapadecaborojo.com';
   const pageUrl = `${baseUrl}/negocio/${esc(place.slug || place.id)}`;
   const title = `${esc(place.name)} | Cabo Rojo, Puerto Rico`;
@@ -254,12 +269,12 @@ export default async function handler(req: any, res: any) {
       ${place.gmaps_url ? `<div class="info-row"><span class="info-label">🗺️ Google Maps</span><span class="info-value"><a href="${esc(place.gmaps_url)}" target="_blank" rel="noopener">Ver en Maps</a></span></div>` : ''}
     </div>
 
-    <div class="info-card">
+    ${(parking !== 'No especificado' || petFriendly !== 'No especificado' || wifi !== 'No especificado') ? `<div class="info-card">
       <h2>Amenidades</h2>
-      <div class="info-row"><span class="info-label">🅿️ Estacionamiento</span><span class="info-value">${parking}</span></div>
-      <div class="info-row"><span class="info-label">🐾 Pet-friendly</span><span class="info-value">${petFriendly}</span></div>
-      <div class="info-row"><span class="info-label">📶 WiFi</span><span class="info-value">${wifi}</span></div>
-    </div>
+      ${parking !== 'No especificado' ? `<div class="info-row"><span class="info-label">🅿️ Estacionamiento</span><span class="info-value">${parking}</span></div>` : ''}
+      ${petFriendly !== 'No especificado' ? `<div class="info-row"><span class="info-label">🐾 Pet-friendly</span><span class="info-value">${petFriendly}</span></div>` : ''}
+      ${wifi !== 'No especificado' ? `<div class="info-row"><span class="info-label">📶 WiFi</span><span class="info-value">${wifi}</span></div>` : ''}
+    </div>` : ''}
 
     <div class="cta">
       <p>¿Tienes preguntas sobre ${esc(place.name)}? Textea a El Veci y te ayudamos.</p>
@@ -291,8 +306,8 @@ export default async function handler(req: any, res: any) {
       <p style="color: rgba(255,255,255,0.9); font-size: 0.95rem; margin-bottom: 1.25rem;">Verifica tu información, actualiza horarios, y aparece primero cuando busquen tu categoría.</p>
       <a href="sms:+17874177711?body=RECLAMAR%20${encodeURIComponent(place.name)}" style="display: inline-block; background: white; color: #0d9488; text-decoration: none; padding: 0.75rem 1.75rem; border-radius: 8px; font-weight: 700; font-size: 1rem; margin-bottom: 1rem;">Verificar mi información</a>
       <br>
-      <a href="https://mapadecaborojo.com/?page=contact" style="color: rgba(255,255,255,0.9); font-size: 0.875rem; text-decoration: underline;">¿Quieres aparecer primero? Conoce La Vitrina →</a>
-      <p style="color: rgba(255,255,255,0.75); font-size: 0.8rem; margin-top: 0.75rem; margin-bottom: 0;">Responde El Veci, nuestro vecino digital — disponible 24/7 por mensaje de texto.</p>
+      <a href="sms:+17874177711?body=VITRINA%20${encodeURIComponent(place.name)}" style="color: rgba(255,255,255,0.9); font-size: 0.875rem; text-decoration: underline;">Destaca tu negocio con La Vitrina — $799/año →</a>
+      <p style="color: rgba(255,255,255,0.75); font-size: 0.8rem; margin-top: 0.75rem; margin-bottom: 0;">Textea al 787-417-7711 y El Veci te guía paso a paso.</p>
     </div>
 
     <footer style="margin-top: 48px; padding: 24px 0; border-top: 1px solid #e2e8f0; text-align: center;">

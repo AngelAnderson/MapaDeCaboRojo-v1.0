@@ -30,6 +30,20 @@ const supabase = createClient(
 const MEDICAL_GREEN = '#10b981';
 const MEDICAL_DARK  = '#059669';
 
+// Multi-type health detail config — farmacia.ts handles ALL health subcategories
+const HEALTH_CONFIG: Record<string, { schemaType: string; label: string; labelPlural: string; emoji: string; color: string; colorDark: string }> = {
+  farmacia:       { schemaType: 'Pharmacy',            label: 'Farmacia',           labelPlural: 'Farmacias',             emoji: '💊', color: MEDICAL_GREEN, colorDark: MEDICAL_DARK },
+  dentista:       { schemaType: 'Dentist',             label: 'Dentista',           labelPlural: 'Dentistas',             emoji: '🦷', color: '#0ea5e9', colorDark: '#0284c7' },
+  veterinario:    { schemaType: 'VeterinaryCare',      label: 'Veterinario',        labelPlural: 'Veterinarios',          emoji: '🐾', color: '#8b5cf6', colorDark: '#7c3aed' },
+  medico:         { schemaType: 'Physician',           label: 'Médico',             labelPlural: 'Médicos',               emoji: '👨‍⚕️', color: MEDICAL_GREEN, colorDark: MEDICAL_DARK },
+  hospital:       { schemaType: 'Hospital',            label: 'Hospital / Clínica', labelPlural: 'Hospitales y Clínicas', emoji: '🏥', color: '#ef4444', colorDark: '#dc2626' },
+  laboratorio:    { schemaType: 'MedicalClinic',       label: 'Laboratorio',        labelPlural: 'Laboratorios',          emoji: '🔬', color: '#f59e0b', colorDark: '#d97706' },
+  optica:         { schemaType: 'Optician',            label: 'Óptica',             labelPlural: 'Ópticas',               emoji: '👓', color: '#6366f1', colorDark: '#4f46e5' },
+  'salud-mental': { schemaType: 'Physician',           label: 'Salud Mental',       labelPlural: 'Salud Mental',          emoji: '🧠', color: '#ec4899', colorDark: '#db2777' },
+  quiropractico:  { schemaType: 'Physician',           label: 'Quiropráctico',      labelPlural: 'Quiroprácticos',        emoji: '🦴', color: '#14b8a6', colorDark: '#0d9488' },
+  gimnasio:       { schemaType: 'ExerciseGym',         label: 'Gimnasio',           labelPlural: 'Gimnasios & Fitness',   emoji: '💪', color: '#f97316', colorDark: '#ea580c' },
+};
+
 function esc(str: string | null | undefined): string {
   if (!str) return '';
   return str
@@ -40,35 +54,61 @@ function esc(str: string | null | undefined): string {
     .replace(/'/g, '&#39;');
 }
 
+const DAY_NAMES_ES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
 function formatHours(opening_hours: any): string {
   if (!opening_hours) return 'No disponible';
   if (opening_hours.note) return esc(opening_hours.note);
   if (opening_hours.type === 'always_open') return 'Abierto 24 horas';
-  if (opening_hours.structured) {
-    const days: string[] = [];
-    for (const [day, hours] of Object.entries(opening_hours.structured)) {
-      if (hours && typeof hours === 'object' && (hours as any).open) {
-        days.push(`${day}: ${(hours as any).open} – ${(hours as any).close}`);
+  if (opening_hours.formatted && typeof opening_hours.formatted === 'string') return esc(opening_hours.formatted);
+  if (Array.isArray(opening_hours.structured)) {
+    const lines: string[] = [];
+    for (const entry of opening_hours.structured) {
+      const dayName = DAY_NAMES_ES[entry.day] || `Día ${entry.day}`;
+      if (entry.isClosed) {
+        lines.push(`${dayName}: Cerrado`);
+      } else if (entry.open) {
+        lines.push(`${dayName}: ${entry.open} – ${entry.close}`);
       }
     }
-    return days.length > 0 ? days.join(', ') : 'No disponible';
+    return lines.length > 0 ? lines.join(' · ') : 'No disponible';
   }
   return 'No disponible';
 }
 
+/** Check if the business is currently open based on structured hours */
+function isCurrentlyOpen(opening_hours: any): boolean | null {
+  if (!opening_hours || !Array.isArray(opening_hours.structured)) return null;
+  const now = new Date();
+  // Puerto Rico is UTC-4 (AST, no daylight saving)
+  const prOffset = -4 * 60;
+  const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+  const prNow = new Date(utcMs + prOffset * 60000);
+  const dayOfWeek = prNow.getDay(); // 0=Sun
+  const currentTime = `${String(prNow.getHours()).padStart(2, '0')}:${String(prNow.getMinutes()).padStart(2, '0')}`;
+  const todayEntry = opening_hours.structured.find((e: any) => e.day === dayOfWeek);
+  if (!todayEntry) return null;
+  if (todayEntry.isClosed) return false;
+  if (!todayEntry.open || !todayEntry.close) return null;
+  return currentTime >= todayEntry.open && currentTime <= todayEntry.close;
+}
+
+/** Format date to human-readable Spanish */
+function formatDateES(dateStr: string): string {
+  const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
+
 function jsonLdOpeningHours(opening_hours: any): string[] {
-  if (!opening_hours || !opening_hours.structured) return [];
-  const dayMap: Record<string, string> = {
-    lunes: 'Mo', martes: 'Tu', miercoles: 'We', jueves: 'Th',
-    viernes: 'Fr', sabado: 'Sa', domingo: 'Su',
-    monday: 'Mo', tuesday: 'Tu', wednesday: 'We', thursday: 'Th',
-    friday: 'Fr', saturday: 'Sa', sunday: 'Su',
-  };
+  if (!opening_hours || !Array.isArray(opening_hours.structured)) return [];
+  const dayAbbr = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
   const specs: string[] = [];
-  for (const [day, hours] of Object.entries(opening_hours.structured)) {
-    if (hours && typeof hours === 'object' && (hours as any).open) {
-      const abbr = dayMap[day.toLowerCase()] || day;
-      specs.push(`${abbr} ${(hours as any).open}-${(hours as any).close}`);
+  for (const entry of opening_hours.structured) {
+    if (!entry.isClosed && entry.open && entry.close) {
+      const abbr = dayAbbr[entry.day] || `D${entry.day}`;
+      specs.push(`${abbr} ${entry.open}-${entry.close}`);
     }
   }
   return specs;
@@ -76,6 +116,9 @@ function jsonLdOpeningHours(opening_hours: any): string[] {
 
 export default async function handler(req: any, res: any) {
   const slug = req.query.slug as string;
+  const type = (req.query.type as string || 'farmacia').toLowerCase();
+  const config = HEALTH_CONFIG[type] || HEALTH_CONFIG['farmacia'];
+  const isFarmaciaType = type === 'farmacia';
 
   if (!slug) {
     res.status(400).send('<h1>400 – Slug requerido</h1>');
@@ -105,25 +148,28 @@ export default async function handler(req: any, res: any) {
   if (!place) {
     res.status(404).send(`<!DOCTYPE html>
 <html lang="es">
-<head><meta charset="UTF-8"><title>Farmacia no encontrada | MapaDeCaboRojo.com</title></head>
+<head><meta charset="UTF-8"><title>${config.label} no encontrado | MapaDeCaboRojo.com</title></head>
 <body>
-  <h1>404 – Farmacia no encontrada</h1>
-  <p><a href="https://mapadecaborojo.com/categoria/farmacia">Ver todas las farmacias</a></p>
+  <h1>404 – ${config.label} no encontrado</h1>
+  <p><a href="https://mapadecaborojo.com/categoria/${type}">Ver todos</a></p>
 </body>
 </html>`);
     return;
   }
 
   const baseUrl     = 'https://mapadecaborojo.com';
-  const pageUrl     = `${baseUrl}/farmacia/${esc(place.slug || place.id)}`;
+  const pageUrl     = `${baseUrl}/${type}/${esc(place.slug || place.id)}`;
   const placeName   = esc(place.name);
-  const title       = `Farmacia ${placeName} — Cabo Rojo | MapaDeCaboRojo`;
+  const nameAlreadyHasLabel = place.name.toLowerCase().includes(config.label.toLowerCase());
+  const title       = nameAlreadyHasLabel ? `${placeName} — Cabo Rojo | MapaDeCaboRojo` : `${placeName} — ${config.label} en Cabo Rojo | MapaDeCaboRojo`;
   const description = place.description
     ? esc(place.description).slice(0, 160)
-    : `Farmacia ${placeName} en Cabo Rojo, Puerto Rico. Horarios, dirección, teléfono y más.`;
+    : `${placeName} — ${config.label} en Cabo Rojo, Puerto Rico. Horarios, dirección, teléfono y más.`;
   const image       = place.image_url || 'https://mapadecaborojo.com/og-default.png';
   const hoursText   = formatHours(place.opening_hours);
-  const isOpen      = place.status === 'open';
+  const openNow     = isCurrentlyOpen(place.opening_hours);
+  // If we can determine real-time status, use it; otherwise fall back to DB status
+  const isOpen      = openNow !== null ? openNow : place.status === 'open';
   const ldHours     = jsonLdOpeningHours(place.opening_hours);
   const smsBody     = encodeURIComponent(place.name);
 
@@ -156,11 +202,41 @@ export default async function handler(req: any, res: any) {
   if (businessStatus === 'CLOSED_PERMANENTLY') {
     qualityBadge = `<span class="badge" style="background:#ef4444;" title="Google reporta esta farmacia como cerrada permanentemente">Cerrado según Google</span>`;
   } else if (qualityScore !== null && qualityScore >= 90) {
-    const dateStr = lastVerifiedAt ? lastVerifiedAt.slice(0, 10) : '';
+    const dateStr = lastVerifiedAt ? formatDateES(lastVerifiedAt) : '';
     qualityBadge = `<span class="badge" style="background:#10b981;" title="Verificado contra Google Places el ${dateStr}">&#10003; Verificado ${dateStr}</span>`;
   } else if (qualityScore !== null && qualityScore >= 50) {
     qualityBadge = `<span class="badge" style="background:#f59e0b;" title="Datos posiblemente desactualizados: ${esc(verificationIssues.join(', '))}">&#9888; Posiblemente desactualizado</span>`;
   }
+
+  // Service badges — from DB `services` column first, then fallback to description parsing
+  const dbServices: string[] = Array.isArray(place.services) ? place.services : [];
+  const services: { icon: string; label: string }[] = [];
+
+  if (dbServices.length > 0) {
+    // Use DB services directly
+    dbServices.forEach(s => services.push({ icon: '✓', label: s }));
+  } else {
+    // Fallback: parse from description/tags
+    const descLower = (place.description || '').toLowerCase();
+    const tagsLower = (Array.isArray(place.tags) ? place.tags : []).map((t: string) => t.toLowerCase());
+    const allText = descLower + ' ' + tagsLower.join(' ');
+    if (allText.includes('delivery') || allText.includes('entrega')) services.push({ icon: '🚗', label: 'Delivery gratis' });
+    if (allText.includes('scriptalk') || allText.includes('no videntes') || allText.includes('accesib')) services.push({ icon: '♿', label: 'ScripTalk / Accesible' });
+    if (allText.includes('vacuna') || allText.includes('vaccine')) services.push({ icon: '💉', label: 'Vacunas' });
+    if (allText.includes('24 hora') || allText.includes('24/7') || allText.includes('always_open')) services.push({ icon: '🌙', label: 'Abierta 24 horas' });
+    if (allText.includes('drive') || allText.includes('farmacia express')) services.push({ icon: '🚘', label: 'Drive-thru' });
+    if (allText.includes('laboratorio') || allText.includes('lab')) services.push({ icon: '🔬', label: 'Laboratorio' });
+    if (allText.includes('naturista') || allText.includes('natural')) services.push({ icon: '🌿', label: 'Productos naturales' });
+  }
+
+  // WhatsApp direct link for the business (if phone available)
+  const waPhone = (displayPhone || '').replace(/\D/g, '');
+  const waLink = waPhone.length >= 10 ? `https://wa.me/1${waPhone.slice(-10)}` : null;
+
+  // Street View fallback when no image
+  const streetViewSrc = (place.lat && place.lon)
+    ? `https://maps.googleapis.com/maps/api/streetview?size=720x300&location=${place.lat},${place.lon}&fov=90&key=${process.env.VITE_GOOGLE_API_KEY || ''}`
+    : null;
 
   // Google Maps embed — uses coordinates if available, falls back to address search
   const mapsEmbedSrc = (place.lat && place.lon)
@@ -170,17 +246,18 @@ export default async function handler(req: any, res: any) {
   // JSON-LD — Pharmacy type (more specific than LocalBusiness)
   const jsonLd: any = {
     '@context': 'https://schema.org',
-    '@type': 'Pharmacy',
+    '@type': config.schemaType,
     name: place.name,
     description: place.description || undefined,
     image: place.image_url || undefined,
     telephone: displayPhone || undefined,
-    url: place.website || pageUrl,
+    url: pageUrl,
     address: {
       '@type': 'PostalAddress',
       streetAddress: place.address || undefined,
       addressLocality: 'Cabo Rojo',
       addressRegion: 'Puerto Rico',
+      postalCode: (place.address || '').match(/\b006\d{2}\b/)?.[0] || '00623',
       addressCountry: 'PR',
     },
     geo: (place.lat && place.lon) ? {
@@ -188,15 +265,17 @@ export default async function handler(req: any, res: any) {
       latitude: place.lat,
       longitude: place.lon,
     } : undefined,
+    areaServed: { '@type': 'City', name: 'Cabo Rojo' },
     openingHours: ldHours.length > 0 ? ldHours : undefined,
-    aggregateRating: place.google_rating ? {
+    aggregateRating: (place.google_rating && place.google_review_count > 1) ? {
       '@type': 'AggregateRating',
       ratingValue: place.google_rating,
       bestRating: 5,
       worstRating: 1,
-      ratingCount: 1,
+      ratingCount: place.google_review_count,
     } : undefined,
     hasMap: place.gmaps_url || undefined,
+    sameAs: [place.website, place.gmaps_url].filter(Boolean),
     // NPPES identifier when available
     ...(npi ? { identifier: { '@type': 'PropertyValue', name: 'NPI', value: npi } } : {}),
   };
@@ -237,8 +316,8 @@ export default async function handler(req: any, res: any) {
     .back { display: inline-block; margin-bottom: 1rem; color: ${MEDICAL_GREEN}; text-decoration: none; font-size: 0.9rem; }
     .back:hover { text-decoration: underline; }
     .hero { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 1.5rem; }
-    .hero-img { width: 100%; height: 220px; object-fit: cover; display: block; }
-    .hero-img-placeholder { width: 100%; height: 220px; background: linear-gradient(135deg, ${MEDICAL_GREEN} 0%, ${MEDICAL_DARK} 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 3.5rem; }
+    .hero-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; object-position: center 30%; display: block; }
+    .hero-img-placeholder { width: 100%; aspect-ratio: 16/9; background: linear-gradient(135deg, ${MEDICAL_GREEN} 0%, ${MEDICAL_DARK} 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 3.5rem; }
     .hero-body { padding: 1.5rem; }
     .badge { display: inline-block; background: ${MEDICAL_GREEN}; color: white; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; margin-right: 0.4rem; }
     .badge-npi { background: #1d4ed8; }
@@ -270,27 +349,35 @@ export default async function handler(req: any, res: any) {
     .reclaim-btn { display: inline-block; background: white; color: ${MEDICAL_DARK}; text-decoration: none; padding: 0.75rem 1.75rem; border-radius: 8px; font-weight: 700; font-size: 1rem; }
     footer { text-align: center; padding: 1.5rem 0 2rem; color: #94a3b8; font-size: 0.8rem; border-top: 1px solid #e2e8f0; margin-top: 2rem; }
     footer a { color: ${MEDICAL_GREEN}; text-decoration: none; }
-    @media (max-width: 480px) { h1 { font-size: 1.4rem; } .hero-img, .hero-img-placeholder { height: 160px; } .map-embed { height: 180px; } }
+    .services { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+    .service-badge { display: inline-flex; align-items: center; gap: 0.3rem; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; font-size: 0.8rem; padding: 0.3rem 0.7rem; border-radius: 999px; font-weight: 500; }
+    .wa-btn { display: inline-flex; align-items: center; gap: 0.5rem; background: #25D366; color: white; text-decoration: none; padding: 0.65rem 1.5rem; border-radius: 8px; font-weight: 600; font-size: 0.95rem; margin-right: 0.5rem; }
+    .wa-btn:hover { background: #1da851; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 0.75rem; }
+    @media (max-width: 480px) { h1 { font-size: 1.4rem; } .map-embed { height: 180px; } }
   </style>
 </head>
 <body>
   <div class="container">
-    <a class="back" href="${baseUrl}/categoria/farmacia">← Farmacias en Cabo Rojo</a>
+    <a class="back" href="${baseUrl}/categoria/${type}">&larr; ${config.labelPlural} en Cabo Rojo</a>
 
     <div class="hero">
       ${place.image_url
         ? `<img class="hero-img" src="${esc(place.image_url)}" alt="${placeName}" loading="lazy">`
-        : `<div class="hero-img-placeholder">💊</div>`}
+        : (streetViewSrc
+          ? `<img class="hero-img" src="${esc(streetViewSrc)}" alt="Vista exterior de ${placeName}" loading="lazy" onerror="this.outerHTML='<div class=\\'hero-img-placeholder\\'>💊</div>'">`
+          : `<div class="hero-img-placeholder">💊</div>`)}
       <div class="hero-body">
         <div>
-          <span class="badge">Farmacia</span>
-          <span class="badge ${isOpen ? 'badge-open' : 'badge-closed'}">${isOpen ? 'Abierta' : 'Cerrada'}</span>
-          ${npi ? `<span class="badge badge-npi" title="Número NPI: ${esc(npi)}">&#10003; NPPES</span>` : ''}
+          <span class="badge">${config.label}</span>
+          <span class="badge ${isOpen ? 'badge-open' : 'badge-closed'}">${isOpen ? 'Abierta ahora' : 'Cerrada ahora'}</span>
+          ${npi && isFarmaciaType ? `<span class="badge badge-npi" title="Número NPI: ${esc(npi)}">&#10003; NPPES</span>` : ''}
           ${qualityBadge}
         </div>
         <h1>${placeName}</h1>
         ${place.google_rating ? `<div class="rating">&#11088; ${place.google_rating}/5</div>` : ''}
         ${place.description ? `<p class="description">${esc(place.description)}</p>` : ''}
+        ${services.length > 0 ? `<div class="services">${services.map(s => `<span class="service-badge">${s.icon} ${s.label}</span>`).join('')}</div>` : ''}
       </div>
     </div>
 
@@ -302,6 +389,7 @@ export default async function handler(req: any, res: any) {
       ${place.website ? `<div class="info-row"><span class="info-label">&#127758; Web</span><span class="info-value"><a href="${esc(place.website)}" target="_blank" rel="noopener">${esc(place.website)}</a></span></div>` : ''}
       ${place.gmaps_url ? `<div class="info-row"><span class="info-label">&#128507; Google Maps</span><span class="info-value"><a href="${esc(place.gmaps_url)}" target="_blank" rel="noopener">Ver en Maps</a></span></div>` : ''}
       ${npi ? `<div class="info-row"><span class="info-label">&#10003; NPI</span><span class="info-value">${esc(npi)} &mdash; Registro NPPES verificado</span></div>` : ''}
+      ${lastVerifiedAt ? `<div class="info-row"><span class="info-label">&#128260; Verificado</span><span class="info-value">${formatDateES(lastVerifiedAt)} — datos confirmados contra Google</span></div>` : ''}
     </div>
 
     <!-- Google Maps Embed -->
@@ -315,8 +403,12 @@ export default async function handler(req: any, res: any) {
     ></iframe>
 
     <div class="cta">
-      <p>&#128140; ¿Tienes preguntas sobre ${placeName}? Textea a El Veci.</p>
-      <a href="sms:+17874177711?body=${smsBody}">Textea ${placeName} al 787-417-7711</a>
+      <p>&#128140; ¿Necesitas algo de ${placeName}?</p>
+      <div class="btn-row">
+        ${waLink ? `<a class="wa-btn" href="${waLink}" target="_blank" rel="noopener">WhatsApp directo</a>` : ''}
+        <a href="sms:+17874177711?body=${smsBody}" style="display:inline-flex;align-items:center;gap:0.5rem;background:#f97316;color:white;text-decoration:none;padding:0.65rem 1.5rem;border-radius:8px;font-weight:600;font-size:0.95rem;">Textea a El Veci</a>
+      </div>
+      ${displayPhone ? `<p style="margin-top:0.5rem;font-size:0.85rem;"><a href="tel:${esc(displayPhone)}" style="color:rgba(255,255,255,0.9);">&#128222; Llamar al ${esc(displayPhone)}</a></p>` : ''}
     </div>
 
     <div class="faq">
@@ -343,11 +435,17 @@ export default async function handler(req: any, res: any) {
     </div>
 
     <div class="reclaim-card">
-      <h2>¿Es tu farmacia?</h2>
-      <p>Verifica tu información, actualiza horarios y aparece primero en búsquedas de salud.</p>
-      <a class="reclaim-btn" href="sms:+17874177711?body=RECLAMAR%20${encodeURIComponent(place.name)}">Reclamar este perfil</a>
-      <br><br>
-      <a href="${baseUrl}/?page=contact" style="color:rgba(255,255,255,0.85);font-size:0.875rem;text-decoration:underline;">¿Quieres aparecer primero? Conoce La Vitrina &rarr;</a>
+      <h2>¿Es tu negocio?</h2>
+      <p>Destaca tu ${config.label.toLowerCase()} con La Vitrina — fotos, servicios, horarios verificados, y apareces primero cuando busquen ${config.labelPlural.toLowerCase()} en Cabo Rojo. $799/año.</p>
+      <a class="reclaim-btn" href="sms:+17874177711?body=VITRINA%20${encodeURIComponent(place.name)}">Conoce La Vitrina</a>
+      <a href="sms:+17874177711?body=RECLAMAR%20${encodeURIComponent(place.name)}" style="display:inline-block;background:transparent;color:white;text-decoration:underline;padding:0.4rem 1rem;font-size:0.85rem;margin-top:0.5rem;">Solo verificar mi info (gratis)</a>
+      <p style="color:rgba(255,255,255,0.75);font-size:0.8rem;margin-top:0.75rem;">Textea al 787-417-7711 y El Veci te guía paso a paso.</p>
+    </div>
+
+    <div style="background:white;border-radius:12px;padding:1.25rem 1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:1rem;">
+      <h2 style="font-size:1rem;font-weight:600;color:${MEDICAL_GREEN};margin-bottom:0.5rem;">&#129302; Pregúntale a El Veci sobre ${placeName}</h2>
+      <p style="font-size:0.875rem;color:#475569;margin-bottom:0.75rem;">El Veci es tu vecino digital. Pregúntale lo que quieras — horarios, servicios, cómo llegar, o qué ${config.labelPlural.toLowerCase()} están disponibles ahora.</p>
+      <a href="sms:+17874177711?body=${encodeURIComponent(`¿Está abierta ${place.name}?`)}" style="display:inline-block;background:${MEDICAL_GREEN};color:white;text-decoration:none;padding:0.6rem 1.25rem;border-radius:8px;font-weight:600;font-size:0.9rem;">Textea a El Veci</a>
     </div>
 
     <div style="text-align:center;margin-bottom:1.5rem;">
@@ -364,6 +462,6 @@ export default async function handler(req: any, res: any) {
 </html>`;
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=604800');
+  res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=3600');
   return res.status(200).send(html);
 }
