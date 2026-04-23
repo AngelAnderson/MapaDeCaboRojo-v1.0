@@ -43,6 +43,22 @@ export default async function handler(req: any, res: any) {
     `);
 
     // LLM discovery files
+    // Feed URLs
+    urls.push(`
+      <url>
+        <loc>${baseUrl}/api/feed</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.4</priority>
+      </url>
+    `);
+    urls.push(`
+      <url>
+        <loc>${baseUrl}/api/feed.json</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.4</priority>
+      </url>
+    `);
+
     urls.push(`
       <url>
         <loc>${baseUrl}/llms.txt</loc>
