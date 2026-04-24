@@ -10,25 +10,25 @@ export default defineConfig(({ mode }) => {
   // @ts-ignore
   const env = loadEnv(mode, process.cwd(), '');
 
-  // Fallback to process.env for system variables (important for Vercel/Netlify CI/CD)
-  // CHECK ALL POSSIBLE KEY NAMES: VITE_API_KEY, API_KEY, VITE_GOOGLE_API_KEY
-  const apiKey = env.VITE_API_KEY || env.API_KEY || env.VITE_GOOGLE_API_KEY || 
-                 process.env.VITE_API_KEY || process.env.API_KEY || process.env.VITE_GOOGLE_API_KEY || '';
-  
+  // SECURITY: Only expose PUBLIC-SAFE keys to the browser bundle.
+  // - Supabase anon key is public by design (protected by RLS)
+  // - Google Maps JS key MUST be HTTP-referrer-restricted in Google Console
+  // - NEVER put server-side keys (Places, Geocoding, service_role) here
+  //
+  // 2026-04-22: Removed VITE_GOOGLE_PLACES_API_KEY — was root cause of $1,869 incident.
+  // Places API calls must go through a server-side proxy, not the browser.
   const supabaseUrl = env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
   const supabaseKey = env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
-  const googlePlacesApiKey = env.VITE_GOOGLE_PLACES_API_KEY || process.env.VITE_GOOGLE_PLACES_API_KEY || '';
+  // Maps JS key — MUST be referrer-restricted in Google Console before use
+  const mapsJsKey = env.VITE_GOOGLE_MAPS_JS_KEY || process.env.VITE_GOOGLE_MAPS_JS_KEY || '';
 
   return {
     plugins: [react()],
     define: {
-      // Shims for process.env variables to work in browser
-      'process.env.API_KEY': JSON.stringify(apiKey),
       'process.env.VITE_SUPABASE_URL': JSON.stringify(supabaseUrl),
       'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(supabaseKey),
-      'process.env.VITE_GOOGLE_PLACES_API_KEY': JSON.stringify(googlePlacesApiKey),
-      // Global process.env fallback to empty object to prevent "process is not defined" errors
-      'process.env': {} 
+      'process.env.VITE_GOOGLE_MAPS_JS_KEY': JSON.stringify(mapsJsKey),
+      'process.env': {}
     },
     build: {
       outDir: 'dist',
