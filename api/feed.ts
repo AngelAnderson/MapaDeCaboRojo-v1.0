@@ -13,16 +13,23 @@ const supabase = createClient(
 );
 
 export default async function handler(req: any, res: any) {
+  const format = req.query.format as string;
+
   try {
     const { data: places } = await supabase
       .from('places')
-      .select('name, slug, id, description, category, address, updated_at')
+      .select('name, slug, id, description, category, address, phone, website, updated_at, image_url')
       .eq('status', 'open')
       .eq('visibility', 'published')
       .order('updated_at', { ascending: false })
       .limit(50);
 
     const baseUrl = 'https://www.mapadecaborojo.com';
+
+    if (format === 'json') {
+      return serveJsonFeed(res, places || [], baseUrl);
+    }
+
     const now = new Date().toUTCString();
 
     const items = (places || []).map((p: any) => {
@@ -66,4 +73,39 @@ ${items.join('\n')}
 function escapeXml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+}
+
+function serveJsonFeed(res: any, places: any[], baseUrl: string) {
+  const items = places.map((p: any) => {
+    const slug = p.slug || p.id;
+    return {
+      id: `${baseUrl}/negocio/${slug}`,
+      url: `${baseUrl}/negocio/${slug}`,
+      title: p.name,
+      content_text: p.description || `Negocio en ${p.category || 'Cabo Rojo'}`,
+      date_modified: p.updated_at || new Date().toISOString(),
+      tags: [p.category].filter(Boolean),
+      ...(p.image_url ? { image: p.image_url } : {}),
+      _directory: {
+        address: p.address,
+        phone: p.phone,
+        website: p.website,
+        category: p.category,
+      },
+    };
+  });
+
+  const feed = {
+    version: 'https://jsonfeed.org/version/1.1',
+    title: 'Mapa de Cabo Rojo — Directorio de Negocios',
+    home_page_url: baseUrl,
+    feed_url: `${baseUrl}/api/feed?format=json`,
+    description: 'Los negocios de Cabo Rojo, Puerto Rico. Actualizado diariamente.',
+    language: 'es',
+    items,
+  };
+
+  res.setHeader('Content-Type', 'application/feed+json; charset=utf-8');
+  res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate');
+  return res.status(200).send(JSON.stringify(feed, null, 2));
 }

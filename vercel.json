@@ -2,11 +2,11 @@
 {
   "crons": [
     {
-      "path": "/api/cron-briefing",
+      "path": "/api/cron?job=briefing",
       "schedule": "0 11 * * *"
     },
     {
-      "path": "/api/cron-maintenance",
+      "path": "/api/cron?job=maintenance",
       "schedule": "0 3 * * 1"
     }
   ],
