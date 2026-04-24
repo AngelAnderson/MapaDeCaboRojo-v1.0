@@ -357,6 +357,11 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
             })
         )}
       </div>
+
+      {/* Footer — cross-property SEO link */}
+      <div className="px-4 py-6 text-center text-xs text-slate-400 dark:text-slate-500">
+        Directorio editorial: <a href="https://caborojo.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">caborojo.com</a>
+      </div>
     </div>
   );
 };

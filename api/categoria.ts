@@ -277,7 +277,7 @@ export default async function handler(req: any, res: any) {
 
     <div class="cta-bar">
       <p>¿Buscas algo específico? Pregúntale a El Veci.</p>
-      <a href="sms:+17874177711?body=${encodeURIComponent(displayName)}">Textea al 787-417-7711</a>
+      <a href="https://wa.me/17874177711?text=${encodeURIComponent(displayName)}">Textea al 787-417-7711</a>
     </div>
 
     <div class="grid">
@@ -297,7 +297,7 @@ export default async function handler(req: any, res: any) {
     <div style="background:linear-gradient(135deg,#0d9488 0%,#f97316 100%);border-radius:12px;padding:1.75rem 1.5rem;text-align:center;margin-bottom:2rem;">
       <h2 style="color:white;font-size:1.2rem;font-weight:700;margin-bottom:0.5rem;">¿Tienes ${detailRoute ? 'una ' + displayName.toLowerCase().replace(/s$/, '') : 'un negocio'} en Cabo Rojo?</h2>
       <p style="color:rgba(255,255,255,0.9);font-size:0.9rem;margin-bottom:1rem;">Destaca con La Vitrina — servicios, fotos, reviews, y apareces primero. $799/año.</p>
-      <a href="sms:+17874177711?body=${encodeURIComponent('VITRINA ' + displayName)}" style="display:inline-block;background:white;color:#0d9488;text-decoration:none;padding:0.65rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.95rem;">Textea VITRINA al 787-417-7711</a>
+      <a href="https://wa.me/17874177711?text=${encodeURIComponent('VITRINA ' + displayName)}" style="display:inline-block;background:white;color:#0d9488;text-decoration:none;padding:0.65rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.95rem;">Textea VITRINA al 787-417-7711</a>
     </div>
 
     <footer style="margin-top: 48px; padding: 24px 0; border-top: 1px solid #e2e8f0; text-align: center;">

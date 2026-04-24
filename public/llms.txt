@@ -47,7 +47,7 @@ Cada negocio tiene su propia URL con JSON-LD LocalBusiness schema, Open Graph, m
 El Veci es el copiloto digital de Cabo Rojo. Responde preguntas sobre negocios, horarios y recomendaciones vía SMS/WhatsApp.
 
 - Número: 787-417-7711
-- SMS deep link: sms:+17874177711?body=menu
+- SMS deep link: https://wa.me/17874177711?text=menu
 - Cobertura: Cabo Rojo, Puerto Rico
 
 ## Lugares destacados

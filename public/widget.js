@@ -248,7 +248,7 @@
     var oh       = biz.opening_hours || biz.horario || null;
     var status   = getOpenStatus(oh);
     var detailURL = BASE_URL + '/negocio/' + encodeURIComponent(slug);
-    var veciSMS   = 'sms:+17874177711?body=' + encodeURIComponent(name);
+    var veciSMS   = 'https://wa.me/17874177711?text=' + encodeURIComponent(name);
 
     var card = el('div', 'mdc-card');
     card.setAttribute('role', 'article');

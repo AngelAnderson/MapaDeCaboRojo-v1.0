@@ -323,7 +323,7 @@ async function handle_municipio(req: any, res: any) {
       Cabo Rojo OS conecta datos ciudadanos reales con la gestión municipal. Licencias disponibles para municipios de Puerto Rico.
     </div>
     <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-      <a href="sms:7874177711?body=Quiero info sobre Cabo Rojo OS" style="background:#0d9488;color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;">Textea al 787-417-7711</a>
+      <a href="https://wa.me/17874177711?text=Quiero info sobre Cabo Rojo OS" style="background:#0d9488;color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;">Textea al 787-417-7711</a>
       <a href="https://mapadecaborojo.com" style="background:#334155;color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;">Ver directorio completo</a>
     </div>
   </div>
@@ -468,7 +468,7 @@ async function handle_turismo(req: any, res: any) {
       <h1 style="font-size:2.4rem;font-weight:800;margin:0 0 16px;line-height:1.2;">Tourism Intelligence API<br><span style="color:#5eead4;">Cabo Rojo</span></h1>
       <p style="font-size:1.2rem;color:rgba(255,255,255,0.85);margin:0 0 32px;max-width:560px;margin-left:auto;margin-right:auto;">Sabe qué buscan los turistas en Cabo Rojo — en tiempo real. Datos reales del bot El Veci, sin encuestas, sin suposiciones.</p>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
-        <a href="sms:7874177711?body=TURISMO" style="background:#f97316;color:white;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:700;font-size:1rem;">Comienza gratis →</a>
+        <a href="https://wa.me/17874177711?text=TURISMO" style="background:#f97316;color:white;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:700;font-size:1rem;">Comienza gratis →</a>
         <a href="#pricing" style="background:rgba(255,255,255,0.15);color:white;text-decoration:none;padding:14px 28px;border-radius:8px;font-weight:600;font-size:1rem;border:1px solid rgba(255,255,255,0.3);">Ver precios</a>
       </div>
     </div>
@@ -594,7 +594,7 @@ Ejemplo de respuesta:
               <li style="padding:6px 0;border-bottom:1px solid #f1f5f9;">✅ JSON + CSV</li>
               <li style="padding:6px 0;">✅ Top 20 términos</li>
             </ul>
-            <a href="sms:7874177711?body=TURISMO" style="display:block;background:#0d9488;color:white;text-decoration:none;padding:12px;border-radius:8px;font-weight:600;font-size:0.9rem;">Comienza gratis</a>
+            <a href="https://wa.me/17874177711?text=TURISMO" style="display:block;background:#0d9488;color:white;text-decoration:none;padding:12px;border-radius:8px;font-weight:600;font-size:0.9rem;">Comienza gratis</a>
           </div>
         </td>
         <td style="width:33%;padding:8px;">
@@ -610,7 +610,7 @@ Ejemplo de respuesta:
               <li style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.15);">✅ Gaps de mercado</li>
               <li style="padding:6px 0;">✅ Soporte prioritario</li>
             </ul>
-            <a href="sms:7874177711?body=TURISMO PRO" style="display:block;background:white;color:#0d9488;text-decoration:none;padding:12px;border-radius:8px;font-weight:700;font-size:0.9rem;">Textea TURISMO PRO</a>
+            <a href="https://wa.me/17874177711?text=TURISMO PRO" style="display:block;background:white;color:#0d9488;text-decoration:none;padding:12px;border-radius:8px;font-weight:700;font-size:0.9rem;">Textea TURISMO PRO</a>
           </div>
         </td>
         <td style="width:33%;padding:8px;">
@@ -625,7 +625,7 @@ Ejemplo de respuesta:
               <li style="padding:6px 0;border-bottom:1px solid #f1f5f9;">✅ Dashboard privado</li>
               <li style="padding:6px 0;">✅ SLA + factura</li>
             </ul>
-            <a href="sms:7874177711?body=TURISMO ENTERPRISE" style="display:block;background:#0f172a;color:white;text-decoration:none;padding:12px;border-radius:8px;font-weight:600;font-size:0.9rem;">Contactar</a>
+            <a href="https://wa.me/17874177711?text=TURISMO ENTERPRISE" style="display:block;background:#0f172a;color:white;text-decoration:none;padding:12px;border-radius:8px;font-weight:600;font-size:0.9rem;">Contactar</a>
           </div>
         </td>
       </tr>
@@ -635,7 +635,7 @@ Ejemplo de respuesta:
     <div style="background:linear-gradient(135deg,#f97316,#ea580c);border-radius:12px;padding:40px 32px;text-align:center;margin-bottom:48px;">
       <h2 style="color:white;font-size:1.5rem;font-weight:700;margin:0 0 12px;">¿Listo para saber qué buscan los turistas?</h2>
       <p style="color:rgba(255,255,255,0.85);margin:0 0 24px;font-size:1rem;">Textea TURISMO al 787-417-7711 y tu API key llega en minutos.</p>
-      <a href="sms:7874177711?body=TURISMO" style="background:white;color:#ea580c;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:700;font-size:1rem;display:inline-block;">Textea TURISMO al 787-417-7711</a>
+      <a href="https://wa.me/17874177711?text=TURISMO" style="background:white;color:#ea580c;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:700;font-size:1rem;display:inline-block;">Textea TURISMO al 787-417-7711</a>
     </div>
 
     <footer style="border-top:1px solid #e2e8f0;padding:24px 0;text-align:center;">

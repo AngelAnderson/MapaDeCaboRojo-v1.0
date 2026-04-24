@@ -406,7 +406,7 @@ export default async function handler(req: any, res: any) {
       <p>&#128140; ¿Necesitas algo de ${placeName}?</p>
       <div class="btn-row">
         ${waLink ? `<a class="wa-btn" href="${waLink}" target="_blank" rel="noopener">WhatsApp directo</a>` : ''}
-        <a href="sms:+17874177711?body=${smsBody}" style="display:inline-flex;align-items:center;gap:0.5rem;background:#f97316;color:white;text-decoration:none;padding:0.65rem 1.5rem;border-radius:8px;font-weight:600;font-size:0.95rem;">Textea a El Veci</a>
+        <a href="https://wa.me/17874177711?text=${smsBody}" style="display:inline-flex;align-items:center;gap:0.5rem;background:#f97316;color:white;text-decoration:none;padding:0.65rem 1.5rem;border-radius:8px;font-weight:600;font-size:0.95rem;">Textea a El Veci</a>
       </div>
       ${displayPhone ? `<p style="margin-top:0.5rem;font-size:0.85rem;"><a href="tel:${esc(displayPhone)}" style="color:rgba(255,255,255,0.9);">&#128222; Llamar al ${esc(displayPhone)}</a></p>` : ''}
     </div>
@@ -437,15 +437,15 @@ export default async function handler(req: any, res: any) {
     <div class="reclaim-card">
       <h2>¿Es tu negocio?</h2>
       <p>Destaca tu ${config.label.toLowerCase()} con La Vitrina — fotos, servicios, horarios verificados, y apareces primero cuando busquen ${config.labelPlural.toLowerCase()} en Cabo Rojo. $799/año.</p>
-      <a class="reclaim-btn" href="sms:+17874177711?body=VITRINA%20${encodeURIComponent(place.name)}">Conoce La Vitrina</a>
-      <a href="sms:+17874177711?body=RECLAMAR%20${encodeURIComponent(place.name)}" style="display:inline-block;background:transparent;color:white;text-decoration:underline;padding:0.4rem 1rem;font-size:0.85rem;margin-top:0.5rem;">Solo verificar mi info (gratis)</a>
+      <a class="reclaim-btn" href="https://wa.me/17874177711?text=VITRINA%20${encodeURIComponent(place.name)}">Conoce La Vitrina</a>
+      <a href="https://wa.me/17874177711?text=RECLAMAR%20${encodeURIComponent(place.name)}" style="display:inline-block;background:transparent;color:white;text-decoration:underline;padding:0.4rem 1rem;font-size:0.85rem;margin-top:0.5rem;">Solo verificar mi info (gratis)</a>
       <p style="color:rgba(255,255,255,0.75);font-size:0.8rem;margin-top:0.75rem;">Textea al 787-417-7711 y El Veci te guía paso a paso.</p>
     </div>
 
     <div style="background:white;border-radius:12px;padding:1.25rem 1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:1rem;">
       <h2 style="font-size:1rem;font-weight:600;color:${MEDICAL_GREEN};margin-bottom:0.5rem;">&#129302; Pregúntale a El Veci sobre ${placeName}</h2>
       <p style="font-size:0.875rem;color:#475569;margin-bottom:0.75rem;">El Veci es tu vecino digital. Pregúntale lo que quieras — horarios, servicios, cómo llegar, o qué ${config.labelPlural.toLowerCase()} están disponibles ahora.</p>
-      <a href="sms:+17874177711?body=${encodeURIComponent(`¿Está abierta ${place.name}?`)}" style="display:inline-block;background:${MEDICAL_GREEN};color:white;text-decoration:none;padding:0.6rem 1.25rem;border-radius:8px;font-weight:600;font-size:0.9rem;">Textea a El Veci</a>
+      <a href="https://wa.me/17874177711?text=${encodeURIComponent(`¿Está abierta ${place.name}?`)}" style="display:inline-block;background:${MEDICAL_GREEN};color:white;text-decoration:none;padding:0.6rem 1.25rem;border-radius:8px;font-weight:600;font-size:0.9rem;">Textea a El Veci</a>
     </div>
 
     <div style="text-align:center;margin-bottom:1.5rem;">
@@ -455,7 +455,7 @@ export default async function handler(req: any, res: any) {
     <footer>
       <p>Hecho con orgullo en Cabo Rojo, Puerto Rico</p>
       <p style="margin-top:4px;"><a href="${baseUrl}">MapaDeCaboRojo.com</a> &middot; Un proyecto de <a href="https://angelanderson.com">Angel Anderson</a></p>
-      <p style="margin-top:0.5rem;"><a href="sms:+17874177711?body=ERROR%20${encodeURIComponent(place.name)}%3A%20" style="color:#94a3b8;font-size:0.75rem;text-decoration:none;">Reportar error en esta página</a></p>
+      <p style="margin-top:0.5rem;"><a href="https://wa.me/17874177711?text=ERROR%20${encodeURIComponent(place.name)}%3A%20" style="color:#94a3b8;font-size:0.75rem;text-decoration:none;">Reportar error en esta página</a></p>
     </footer>
   </div>
 </body>

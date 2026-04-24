@@ -175,7 +175,7 @@ async function handleLlmsFull(req: any, res: any) {
     lines.push(`- Pet-friendly: ${petFriendly}`);
     if (p.website) lines.push(`- Web: ${p.website}`);
     lines.push(`- Más info: https://mapadecaborojo.com/negocio/${slug}`);
-    lines.push(`- Pregunta a El Veci: sms:+17874177711?body=${encodeURIComponent(p.name)}`);
+    lines.push(`- Pregunta a El Veci: https://wa.me/17874177711?text=${encodeURIComponent(p.name)}`);
     lines.push('');
   }
 

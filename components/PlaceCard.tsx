@@ -445,7 +445,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
   // El Veci SMS deeplink — lockfile rule: full number 787-417-7711, SMS preferred.
   const handleElVeciSMS = useCallback(() => {
     const body = encodeURIComponent(placeName || '');
-    window.open(`sms:+17874177711?body=${body}`, '_self');
+    window.open(`https://wa.me/17874177711?text=${body}`, '_self');
   }, [placeName]);
 
   // Mobile swipe-down to close (only active on mobile bottom-sheet layout)

@@ -278,7 +278,7 @@ export default async function handler(req: any, res: any) {
 
     <div class="cta">
       <p>¿Tienes preguntas sobre ${esc(place.name)}? Textea a El Veci y te ayudamos.</p>
-      <a href="sms:+17874177711?body=${smsBody}">Textea ${esc(place.name)} al 787-417-7711</a>
+      <a href="https://wa.me/17874177711?text=${smsBody}">Textea ${esc(place.name)} al 787-417-7711</a>
     </div>
 
     <div class="faq">
@@ -304,9 +304,9 @@ export default async function handler(req: any, res: any) {
     <div style="background: linear-gradient(135deg, #0d9488 0%, #f97316 100%); border-radius: 12px; padding: 1.75rem 1.5rem; text-align: center; margin-bottom: 1rem;">
       <h2 style="color: white; font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem;">¿Es tu negocio?</h2>
       <p style="color: rgba(255,255,255,0.9); font-size: 0.95rem; margin-bottom: 1.25rem;">Verifica tu información, actualiza horarios, y aparece primero cuando busquen tu categoría.</p>
-      <a href="sms:+17874177711?body=RECLAMAR%20${encodeURIComponent(place.name)}" style="display: inline-block; background: white; color: #0d9488; text-decoration: none; padding: 0.75rem 1.75rem; border-radius: 8px; font-weight: 700; font-size: 1rem; margin-bottom: 1rem;">Verificar mi información</a>
+      <a href="https://wa.me/17874177711?text=RECLAMAR%20${encodeURIComponent(place.name)}" style="display: inline-block; background: white; color: #0d9488; text-decoration: none; padding: 0.75rem 1.75rem; border-radius: 8px; font-weight: 700; font-size: 1rem; margin-bottom: 1rem;">Verificar mi información</a>
       <br>
-      <a href="sms:+17874177711?body=VITRINA%20${encodeURIComponent(place.name)}" style="color: rgba(255,255,255,0.9); font-size: 0.875rem; text-decoration: underline;">Destaca tu negocio con La Vitrina — $799/año →</a>
+      <a href="https://wa.me/17874177711?text=VITRINA%20${encodeURIComponent(place.name)}" style="color: rgba(255,255,255,0.9); font-size: 0.875rem; text-decoration: underline;">Destaca tu negocio con La Vitrina — $799/año →</a>
       <p style="color: rgba(255,255,255,0.75); font-size: 0.8rem; margin-top: 0.75rem; margin-bottom: 0;">Textea al 787-417-7711 y El Veci te guía paso a paso.</p>
     </div>
 
@@ -318,7 +318,7 @@ export default async function handler(req: any, res: any) {
         <a href="https://mapadecaborojo.com" style="color: #0d9488; text-decoration: none;">MapaDeCaboRojo.com</a>
         · Un proyecto de <a href="https://angelanderson.com" style="color: #0d9488; text-decoration: none;">Angel Anderson</a>
       </p>
-      <p style="margin-top: 0.5rem;"><a href="sms:+17874177711?body=ERROR%20${encodeURIComponent(place.name)}%3A%20" style="color:#94a3b8; font-size:0.75rem; text-decoration:none;">Reportar error en esta página</a></p>
+      <p style="margin-top: 0.5rem;"><a href="https://wa.me/17874177711?text=ERROR%20${encodeURIComponent(place.name)}%3A%20" style="color:#94a3b8; font-size:0.75rem; text-decoration:none;">Reportar error en esta página</a></p>
     </footer>
   </div>
 </body>
