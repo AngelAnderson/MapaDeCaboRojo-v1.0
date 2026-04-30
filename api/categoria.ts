@@ -243,6 +243,29 @@ export default async function handler(req: any, res: any) {
     })),
   } : null;
 
+  // Memoria del Pueblo — verified anecdotes per place, only on health categories
+  // (10 health subcats share `farmacia.ts` detail route → detailRoute is the gate).
+  // Day 1: zero linked entries → every card shows DATO CTA. Cards swap to blockquote
+  // as crowdsourced contributions (DATO Negocio: ...) get verified via MEMORIA admin.
+  type MemoriaRow = { place_id: string; answer: string; voice_style: string | null };
+  const memoriaByPlace = new Map<string, MemoriaRow>();
+  if (detailRoute && filtered.length > 0) {
+    try {
+      const placeIds = filtered.map((p: any) => p.id).filter(Boolean);
+      const { data: memorias } = await supabase
+        .from('local_knowledge')
+        .select('place_id, answer, voice_style, created_at')
+        .in('place_id', placeIds)
+        .eq('verified', true)
+        .order('created_at', { ascending: false });
+      for (const m of (memorias || []) as any[]) {
+        if (m.place_id && !memoriaByPlace.has(m.place_id)) {
+          memoriaByPlace.set(m.place_id, m as MemoriaRow);
+        }
+      }
+    } catch { /* fail open */ }
+  }
+
   const cardsHtml = filtered.length === 0
     ? `<p style="color:#64748b;text-align:center;padding:2rem;">No encontramos negocios en esta categoría todavía.</p>`
     : filtered.map((p: any) => {
@@ -250,9 +273,23 @@ export default async function handler(req: any, res: any) {
         const stars = p.google_rating ? `⭐ ${p.google_rating}` : '';
         const planBadge = p.plan === 'vip' ? '<span style="background:#f97316;color:white;font-size:0.65rem;padding:0.15rem 0.4rem;border-radius:999px;text-transform:uppercase;margin-left:0.4rem;">VIP</span>' : '';
         const detailPath = detailRoute ? `${baseUrl}/${detailRoute}/${esc(slug)}` : `${baseUrl}/negocio/${esc(slug)}`;
+        const memoria = memoriaByPlace.get(p.id) || null;
+        const memoriaSig = memoria?.voice_style === 'collective' ? 'Dato compartido por vecinos' : 'De la memoria del pueblo';
+        const memoriaBlock = memoria
+          ? `<div style="border-top:1px solid #f1f5f9;padding:0.65rem 1rem 0.75rem;background:#fefce8;">
+               <p style="font-size:0.78rem;color:#713f12;line-height:1.45;margin:0;">
+                 <span style="font-size:0.85rem;">📜</span> ${esc(memoria.answer.slice(0, 200))}${memoria.answer.length > 200 ? '…' : ''}
+               </p>
+               <p style="font-size:0.65rem;color:#a16207;margin:0.3rem 0 0;font-style:italic;">— ${memoriaSig}</p>
+             </div>`
+          : (detailRoute
+            ? `<a href="https://wa.me/17874177711?text=${encodeURIComponent('DATO ' + p.name + ': ')}" style="display:block;border-top:1px solid #f1f5f9;padding:0.55rem 1rem;background:#f8fafc;color:#475569;text-decoration:none;font-size:0.75rem;text-align:center;">
+                 ¿Sabes algo de ${esc(p.name)}? Cuéntale a El Veci →
+               </a>`
+            : '');
         return `
-        <a href="${detailPath}" style="display:block;text-decoration:none;color:inherit;">
-          <div style="background:white;border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.07);transition:box-shadow 0.2s;">
+        <div style="background:white;border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.07);transition:box-shadow 0.2s;">
+          <a href="${detailPath}" style="display:block;text-decoration:none;color:inherit;">
             ${p.image_url
               ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" style="width:100%;height:160px;object-fit:cover;display:block;" loading="lazy">`
               : `<div style="width:100%;height:160px;background:linear-gradient(135deg,#0d9488,#f97316);display:flex;align-items:center;justify-content:center;font-size:2.5rem;">${emoji}</div>`}
@@ -262,8 +299,9 @@ export default async function handler(req: any, res: any) {
               ${p.address ? `<p style="font-size:0.8rem;color:#64748b;margin-bottom:0.4rem;">📍 ${esc(p.address)}</p>` : ''}
               ${Array.isArray(p.services) && p.services.length > 0 ? `<div style="display:flex;flex-wrap:wrap;gap:0.25rem;">${p.services.slice(0, 4).map((s: string) => `<span style="font-size:0.65rem;background:#f0fdf4;color:#166534;padding:0.15rem 0.4rem;border-radius:999px;">${esc(s)}</span>`).join('')}${p.services.length > 4 ? `<span style="font-size:0.65rem;color:#94a3b8;">+${p.services.length - 4}</span>` : ''}</div>` : ''}
             </div>
-          </div>
-        </a>`;
+          </a>
+          ${memoriaBlock}
+        </div>`;
       }).join('');
 
   const html = `<!DOCTYPE html>
