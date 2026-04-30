@@ -184,6 +184,30 @@ export default async function handler(req: any, res: any) {
   };
   const detailRoute = HEALTH_DETAIL_ROUTES[cat] || null;
 
+  // Singular noun + article for the Vitrina CTA ("¿Tienes <article> <noun> en Cabo Rojo?").
+  // Replaces the old `'una ' + displayName.toLowerCase().replace(/s$/,'')` which broke for
+  // masculine nouns (un veterinario) and compound display names (Hospitales y Clínicas).
+  const HEALTH_CTA_NOUN: Record<string, { article: string; noun: string }> = {
+    farmacia:       { article: 'una', noun: 'farmacia' },
+    farmacias:      { article: 'una', noun: 'farmacia' },
+    dentista:       { article: 'un',  noun: 'dentista' },
+    dentistas:      { article: 'un',  noun: 'dentista' },
+    veterinario:    { article: 'un',  noun: 'veterinario' },
+    veterinarios:   { article: 'un',  noun: 'veterinario' },
+    medico:         { article: 'un',  noun: 'médico' },
+    medicos:        { article: 'un',  noun: 'médico' },
+    hospital:       { article: 'un',  noun: 'hospital o clínica' },
+    hospitales:     { article: 'un',  noun: 'hospital o clínica' },
+    laboratorio:    { article: 'un',  noun: 'laboratorio' },
+    laboratorios:   { article: 'un',  noun: 'laboratorio' },
+    optica:         { article: 'una', noun: 'óptica' },
+    opticas:        { article: 'una', noun: 'óptica' },
+    'salud-mental': { article: 'un',  noun: 'centro de salud mental' },
+    quiropractico:  { article: 'un',  noun: 'quiropráctico' },
+    gimnasio:       { article: 'un',  noun: 'gimnasio' },
+    gimnasios:      { article: 'un',  noun: 'gimnasio' },
+  };
+
   const itemListElements = filtered.map((p: any, i: number) => ({
     '@type': 'ListItem',
     position: i + 1,
@@ -327,7 +351,7 @@ export default async function handler(req: any, res: any) {
     })() : ''}
 
     <div style="background:linear-gradient(135deg,#0d9488 0%,#f97316 100%);border-radius:12px;padding:1.75rem 1.5rem;text-align:center;margin-bottom:2rem;">
-      <h2 style="color:white;font-size:1.2rem;font-weight:700;margin-bottom:0.5rem;">¿Tienes ${detailRoute ? 'una ' + displayName.toLowerCase().replace(/s$/, '') : 'un negocio'} en Cabo Rojo?</h2>
+      <h2 style="color:white;font-size:1.2rem;font-weight:700;margin-bottom:0.5rem;">¿Tienes ${detailRoute && HEALTH_CTA_NOUN[cat] ? `${HEALTH_CTA_NOUN[cat].article} ${HEALTH_CTA_NOUN[cat].noun}` : 'un negocio'} en Cabo Rojo?</h2>
       <p style="color:rgba(255,255,255,0.9);font-size:0.9rem;margin-bottom:1rem;">${(() => {
         const totalUsers = demandRows.reduce((s, r) => s + r.users, 0);
         const totalFailed = demandRows.reduce((s, r) => s + r.failed, 0);
