@@ -116,6 +116,18 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
+  // Demand signals — what vecinos searched for in this category (last 90 days, test phones excluded)
+  // RPC: get_demand_for_keywords (Vecinoai migration 20260430000000_get_demand_for_keywords)
+  // Fail-open: never block render if demand fetch errors
+  type DemandRow = { query_normalized: string; users: number; queries: number; failed: number };
+  let demandRows: DemandRow[] = [];
+  try {
+    const demandKeywords = matchTerms.map(t => `%${t.toLowerCase()}%`);
+    const { data: demandData } = await supabase
+      .rpc('get_demand_for_keywords', { p_keywords: demandKeywords, p_days: 90 });
+    if (Array.isArray(demandData)) demandRows = demandData as DemandRow[];
+  } catch { /* fail open */ }
+
   // Secondary JS filter to remove false positives from the broad Postgres query
   const filtered = (places || []).filter((p: any) => {
     const pCat = (p.category || '').toLowerCase();
@@ -294,9 +306,35 @@ export default async function handler(req: any, res: any) {
         </div>`).join('')}
     </div>` : ''}
 
+    ${demandRows.length > 0 ? (() => {
+      const totalUsers = demandRows.reduce((s, r) => s + r.users, 0);
+      const totalFailed = demandRows.reduce((s, r) => s + r.failed, 0);
+      const subtitle = `Últimos 90 días en El Veci (*7711) · ${totalUsers} ${totalUsers === 1 ? 'persona' : 'personas'}${totalFailed > 0 ? ` · ${totalFailed} sin resultado` : ''}`;
+      const items = demandRows.map(r => {
+        const failBadge = r.failed > 0 ? '<span style="font-size:0.7rem;color:#dc2626;background:#fee2e2;padding:0.1rem 0.45rem;border-radius:999px;margin-left:0.5rem;font-weight:600;">sin resultado</span>' : '';
+        return `<li style="padding:0.55rem 0;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:0.5rem;font-size:0.9rem;color:#334155;">
+          <strong style="color:#0d9488;min-width:2.5rem;font-variant-numeric:tabular-nums;">${r.users}×</strong>
+          <span>"${esc(r.query_normalized)}"</span>
+          ${failBadge}
+        </li>`;
+      }).join('');
+      return `
+    <div style="background:white;border-radius:12px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:2rem;border-left:4px solid #0d9488;">
+      <h2 style="font-size:1.1rem;font-weight:700;color:#0f172a;margin-bottom:0.35rem;">📊 Lo que vecinos están buscando</h2>
+      <p style="font-size:0.8rem;color:#64748b;margin-bottom:1rem;">${esc(subtitle)}</p>
+      <ul style="list-style:none;padding:0;margin:0;">${items}</ul>
+    </div>`;
+    })() : ''}
+
     <div style="background:linear-gradient(135deg,#0d9488 0%,#f97316 100%);border-radius:12px;padding:1.75rem 1.5rem;text-align:center;margin-bottom:2rem;">
       <h2 style="color:white;font-size:1.2rem;font-weight:700;margin-bottom:0.5rem;">¿Tienes ${detailRoute ? 'una ' + displayName.toLowerCase().replace(/s$/, '') : 'un negocio'} en Cabo Rojo?</h2>
-      <p style="color:rgba(255,255,255,0.9);font-size:0.9rem;margin-bottom:1rem;">Destaca con La Vitrina — servicios, fotos, reviews, y apareces primero. $799/año.</p>
+      <p style="color:rgba(255,255,255,0.9);font-size:0.9rem;margin-bottom:1rem;">${(() => {
+        const totalUsers = demandRows.reduce((s, r) => s + r.users, 0);
+        const totalFailed = demandRows.reduce((s, r) => s + r.failed, 0);
+        if (totalFailed >= 2) return `${totalFailed} vecinos buscaron y NO encontraron resultado este trimestre. Destaca con La Vitrina — apareces primero, servicios y fotos visibles. $799/año.`;
+        if (totalUsers >= 3) return `${totalUsers} vecinos buscaron ${displayName.toLowerCase()} en El Veci este trimestre. Destaca con La Vitrina — apareces primero. $799/año.`;
+        return `Destaca con La Vitrina — servicios, fotos, reviews, y apareces primero. $799/año.`;
+      })()}</p>
       <a href="https://wa.me/17874177711?text=${encodeURIComponent('VITRINA ' + displayName)}" style="display:inline-block;background:white;color:#0d9488;text-decoration:none;padding:0.65rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.95rem;">Textea VITRINA al 787-417-7711</a>
     </div>
 
