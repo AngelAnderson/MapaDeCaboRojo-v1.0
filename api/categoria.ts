@@ -38,6 +38,52 @@ function normalizePhone(raw: string | null | undefined): { digits10: string; dis
   return { digits10: last10, display: `${last10.slice(0, 3)}-${last10.slice(3, 6)}-${last10.slice(6)}` };
 }
 
+function formatTime12h(hhmm: string): string {
+  const [hStr, mStr] = hhmm.split(':');
+  const h = parseInt(hStr, 10);
+  const m = parseInt(mStr, 10);
+  if (isNaN(h)) return hhmm;
+  const period = h >= 12 ? 'pm' : 'am';
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return m === 0 ? `${h12}${period}` : `${h12}:${String(m).padStart(2, '0')}${period}`;
+}
+
+// Open/closed status label. Returns null when no usable hours data.
+// Note: page is cached 1h (s-maxage=3600), so badge can lag by up to 1h —
+// trade-off accepted for SSR. If accuracy needed, recompute client-side.
+// deno-lint-ignore no-explicit-any
+function getOpenStatusLabel(opening_hours: any): string | null {
+  if (!opening_hours || typeof opening_hours !== 'object') return null;
+  if (opening_hours.type === 'always_open') return '🟢 Abierto 24h';
+  if (!Array.isArray(opening_hours.structured) || opening_hours.structured.length === 0) return null;
+
+  // Puerto Rico = UTC-4 (no DST)
+  const prNow = new Date(Date.now() - 4 * 3600_000);
+  const dayOfWeek = prNow.getUTCDay();
+  const currentTime = `${String(prNow.getUTCHours()).padStart(2, '0')}:${String(prNow.getUTCMinutes()).padStart(2, '0')}`;
+
+  // deno-lint-ignore no-explicit-any
+  const byDay = new Map<number, any>();
+  for (const e of opening_hours.structured) byDay.set(e.day, e);
+
+  const today = byDay.get(dayOfWeek);
+  if (today && !today.isClosed && today.open && today.close) {
+    if (currentTime >= today.open && currentTime <= today.close) return '🟢 Abierto';
+    if (currentTime < today.open) return `🔴 Cerrado · abre ${formatTime12h(today.open)}`;
+  }
+
+  const dayNames = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+  for (let i = 1; i <= 7; i++) {
+    const d = (dayOfWeek + i) % 7;
+    const entry = byDay.get(d);
+    if (entry && !entry.isClosed && entry.open) {
+      const dayLabel = i === 1 ? 'mañana' : dayNames[d];
+      return `🔴 Cerrado · abre ${dayLabel} ${formatTime12h(entry.open)}`;
+    }
+  }
+  return '🔴 Cerrado';
+}
+
 // Maps URL slug / search term → canonical category values in DB + display name
 const CATEGORY_MAP: Record<string, { match: string[]; display: string; emoji: string; nameMatch?: boolean }> = {
   restaurante:    { match: ['restaurante', 'restaurant', 'food', 'comida', 'FOOD', 'RESTAURANTE'], display: 'Restaurantes', emoji: '🍽️' },
@@ -114,7 +160,7 @@ export default async function handler(req: any, res: any) {
 
   const { data: places, error } = await supabase
     .from('places')
-    .select('id,name,slug,category,subcategory,image_url,phone,address,google_rating,google_review_count,status,plan,sponsor_weight,tags,services')
+    .select('id,name,slug,category,subcategory,image_url,phone,address,google_rating,google_review_count,status,plan,sponsor_weight,tags,services,opening_hours')
     .eq('status', 'open')
     .ilike('address', '%Cabo Rojo%')
     .or(orClauses)
@@ -313,6 +359,12 @@ export default async function handler(req: any, res: any) {
             <div style="padding:1rem;">
               <h2 style="font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:0.25rem;">${esc(p.name)}${planBadge}</h2>
               ${stars ? `<div style="color:#f59e0b;font-size:0.85rem;margin-bottom:0.25rem;">${stars}</div>` : ''}
+              ${(() => {
+                const openLabel = getOpenStatusLabel(p.opening_hours);
+                if (!openLabel) return '';
+                const isOpen = openLabel.startsWith('🟢');
+                return `<div style="font-size:0.78rem;font-weight:600;margin-bottom:0.4rem;color:${isOpen ? '#16a34a' : '#dc2626'};">${esc(openLabel)}</div>`;
+              })()}
               ${p.address ? `<p style="font-size:0.8rem;color:#64748b;margin-bottom:0.4rem;">📍 ${esc(p.address)}</p>` : ''}
               ${Array.isArray(p.services) && p.services.length > 0 ? `<div style="display:flex;flex-wrap:wrap;gap:0.25rem;">${p.services.slice(0, 4).map((s: string) => `<span style="font-size:0.65rem;background:#f0fdf4;color:#166534;padding:0.15rem 0.4rem;border-radius:999px;">${esc(s)}</span>`).join('')}${p.services.length > 4 ? `<span style="font-size:0.65rem;color:#94a3b8;">+${p.services.length - 4}</span>` : ''}</div>` : ''}
             </div>
