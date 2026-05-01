@@ -28,6 +28,16 @@ function esc(str: string | null | undefined): string {
     .replace(/'/g, '&#39;');
 }
 
+// Normalize messy phone formats in `places.phone` ("+1 787-899-1686", "(787) 892-0944",
+// "+19393470111") to a single 10-digit string + display form. Returns null if unusable.
+function normalizePhone(raw: string | null | undefined): { digits10: string; display: string } | null {
+  if (!raw) return null;
+  const digits = raw.replace(/\D/g, '');
+  if (digits.length < 10) return null;
+  const last10 = digits.slice(-10);
+  return { digits10: last10, display: `${last10.slice(0, 3)}-${last10.slice(3, 6)}-${last10.slice(6)}` };
+}
+
 // Maps URL slug / search term → canonical category values in DB + display name
 const CATEGORY_MAP: Record<string, { match: string[]; display: string; emoji: string; nameMatch?: boolean }> = {
   restaurante:    { match: ['restaurante', 'restaurant', 'food', 'comida', 'FOOD', 'RESTAURANTE'], display: 'Restaurantes', emoji: '🍽️' },
@@ -273,6 +283,13 @@ export default async function handler(req: any, res: any) {
         const stars = p.google_rating ? `⭐ ${p.google_rating}` : '';
         const planBadge = p.plan === 'vip' ? '<span style="background:#f97316;color:white;font-size:0.65rem;padding:0.15rem 0.4rem;border-radius:999px;text-transform:uppercase;margin-left:0.4rem;">VIP</span>' : '';
         const detailPath = detailRoute ? `${baseUrl}/${detailRoute}/${esc(slug)}` : `${baseUrl}/negocio/${esc(slug)}`;
+        const phoneInfo = normalizePhone(p.phone);
+        const contactBlock = phoneInfo
+          ? `<div style="display:flex;gap:0.4rem;padding:0.55rem 1rem 0.65rem;border-top:1px solid #f1f5f9;">
+               <a href="tel:+1${phoneInfo.digits10}" style="flex:1;background:#0d9488;color:white;text-decoration:none;padding:0.45rem;border-radius:6px;font-size:0.78rem;text-align:center;font-weight:600;">📞 ${phoneInfo.display}</a>
+               <a href="https://wa.me/1${phoneInfo.digits10}" style="flex:1;background:#22c55e;color:white;text-decoration:none;padding:0.45rem;border-radius:6px;font-size:0.78rem;text-align:center;font-weight:600;">💬 WhatsApp</a>
+             </div>`
+          : '';
         const memoria = memoriaByPlace.get(p.id) || null;
         const memoriaSig = memoria?.voice_style === 'collective' ? 'Dato compartido por vecinos' : 'De la memoria del pueblo';
         const memoriaBlock = memoria
@@ -300,6 +317,7 @@ export default async function handler(req: any, res: any) {
               ${Array.isArray(p.services) && p.services.length > 0 ? `<div style="display:flex;flex-wrap:wrap;gap:0.25rem;">${p.services.slice(0, 4).map((s: string) => `<span style="font-size:0.65rem;background:#f0fdf4;color:#166534;padding:0.15rem 0.4rem;border-radius:999px;">${esc(s)}</span>`).join('')}${p.services.length > 4 ? `<span style="font-size:0.65rem;color:#94a3b8;">+${p.services.length - 4}</span>` : ''}</div>` : ''}
             </div>
           </a>
+          ${contactBlock}
           ${memoriaBlock}
         </div>`;
       }).join('');
