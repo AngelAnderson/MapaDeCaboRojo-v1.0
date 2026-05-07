@@ -160,7 +160,7 @@ export default async function handler(req: any, res: any) {
 
   const { data: places, error } = await supabase
     .from('places')
-    .select('id,name,slug,category,subcategory,image_url,phone,address,google_rating,google_review_count,status,plan,sponsor_weight,tags,services,opening_hours')
+    .select('id,name,slug,category,subcategory,image_url,phone,address,google_rating,google_review_count,status,plan,sponsor_weight,tags,services,opening_hours,lat,lon')
     .eq('status', 'open')
     .ilike('address', '%Cabo Rojo%')
     .or(orClauses)
@@ -393,13 +393,15 @@ export default async function handler(req: any, res: any) {
   <meta name="twitter:description" content="${esc(description)}">
   <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
   ${faqSchema ? `<script type="application/ld+json">${JSON.stringify(faqSchema)}</script>` : ''}
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; }
     .container { max-width: 960px; margin: 0 auto; padding: 1rem; }
-    header { background: linear-gradient(135deg, #0d9488, #0f766e); color: white; padding: 2rem 1rem; text-align: center; margin-bottom: 1.5rem; }
+    header { background: linear-gradient(135deg, #0d9488, #0f766e); color: white; padding: 2rem 1rem; text-align: center; margin-bottom: 0; }
     header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
     header p { opacity: 0.85; font-size: 0.95rem; }
+    #cat-map { width: 100%; height: 55vw; max-height: 380px; min-height: 240px; background: #e2e8f0; }
     .back { display: inline-block; margin-bottom: 1.25rem; color: #0d9488; text-decoration: none; font-size: 0.9rem; }
     .back:hover { text-decoration: underline; }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
@@ -407,6 +409,12 @@ export default async function handler(req: any, res: any) {
     .cta-bar p { margin-bottom: 0.5rem; font-size: 0.9rem; opacity: 0.9; }
     .cta-bar a { display: inline-block; background: #f97316; color: white; text-decoration: none; padding: 0.6rem 1.5rem; border-radius: 8px; font-weight: 600; }
     footer { text-align: center; padding: 1.5rem 0; color: #94a3b8; font-size: 0.8rem; }
+    /* Leaflet popup override for dark branding */
+    .leaflet-popup-content-wrapper { border-radius: 8px; }
+    .leaflet-popup-content { margin: 10px 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; line-height: 1.45; }
+    .leaflet-popup-content a { color: #0d9488; text-decoration: none; font-weight: 600; }
+    .leaflet-popup-content a:hover { text-decoration: underline; }
+    .map-section-label { font-size: 0.7rem; text-align: center; color: #94a3b8; padding: 0.35rem 0; background: #f1f5f9; margin-bottom: 1.5rem; letter-spacing: 0.03em; }
   </style>
 </head>
 <body>
@@ -414,6 +422,10 @@ export default async function handler(req: any, res: any) {
     <h1>${emoji} ${alreadyHasCaboRojo ? esc(displayName) : `${esc(displayName)} en Cabo Rojo`}</h1>
     <p>${filtered.length} negocio${filtered.length !== 1 ? 's' : ''} encontrado${filtered.length !== 1 ? 's' : ''} · Cabo Rojo, Puerto Rico</p>
   </header>
+
+  <!-- Leaflet map embedded at top of category page -->
+  <div id="cat-map" aria-label="Mapa de ${esc(displayName)} en Cabo Rojo"></div>
+  <p class="map-section-label">📍 ${filtered.filter((p: any) => p.lat && p.lon).length} ubicaciones en el mapa</p>
 
   <div class="container">
     ${catSeo?.intro ? `<p style="font-size:1.05rem;line-height:1.6;color:#475569;margin-bottom:1.5rem;max-width:720px">${esc(catSeo.intro)}</p>` : ''}
@@ -480,6 +492,86 @@ export default async function handler(req: any, res: any) {
       </p>
     </footer>
   </div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+  <script>
+    (function() {
+      var places = ${JSON.stringify(
+        filtered
+          .filter((p: any) => p.lat && p.lon)
+          .map((p: any) => ({
+            lat: p.lat,
+            lon: p.lon,
+            name: p.name,
+            slug: p.slug || p.id,
+            rating: p.google_rating || null,
+            phone: (() => {
+              const ph = p.phone ? p.phone.replace(/\D/g, '').slice(-10) : null;
+              return ph && ph.length === 10 ? ph : null;
+            })(),
+            detailPath: (HEALTH_DETAIL_ROUTES[cat] || null)
+              ? `/${HEALTH_DETAIL_ROUTES[cat]}/${p.slug || p.id}`
+              : `/negocio/${p.slug || p.id}`,
+          }))
+      )};
+
+      if (!places.length) return; // no coords → skip map init
+
+      function escHtml(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      var map = L.map('cat-map', { scrollWheelZoom: false, tap: false });
+
+      // OpenStreetMap tiles — free, no key needed
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      }).addTo(map);
+
+      var markers = [];
+      var teal = '#0d9488';
+
+      places.forEach(function(p) {
+        var popupParts = [
+          '<strong>' + escHtml(p.name) + '</strong>',
+          p.rating ? '⭐ ' + escHtml(p.rating) : '',
+          p.phone
+            ? '<a href="tel:+1' + p.phone + '">📞 ' + p.phone.slice(0,3) + '-' + p.phone.slice(3,6) + '-' + p.phone.slice(6) + '</a>'
+            : '',
+          '<a href="' + escHtml(p.detailPath) + '">Ver perfil →</a>',
+        ].filter(Boolean).join('<br>');
+
+        var icon = L.divIcon({
+          className: '',
+          html: '<div style="width:28px;height:28px;background:' + teal + ';border:2.5px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;font-size:12px;">📍</div>',
+          iconSize: [28, 28],
+          iconAnchor: [14, 14],
+          popupAnchor: [0, -16],
+        });
+
+        var marker = L.marker([p.lat, p.lon], { icon: icon })
+          .bindPopup(popupParts, { maxWidth: 200 });
+        marker.addTo(map);
+        markers.push(marker);
+      });
+
+      // Fit map to show all markers, with padding; fallback to CR center
+      if (markers.length === 1) {
+        map.setView([places[0].lat, places[0].lon], 15);
+      } else {
+        var group = L.featureGroup(markers);
+        map.fitBounds(group.getBounds().pad(0.15));
+        // Cap zoom so we don't zoom out to entire PR
+        if (map.getZoom() > 16) map.setZoom(16);
+        if (map.getZoom() < 11) map.setView([17.9620, -67.1650], 12);
+      }
+    })();
+  </script>
 </body>
 </html>`;
 
