@@ -434,13 +434,19 @@ export default async function handler(req: any, res: any) {
       </div>
     </div>
 
-    <div class="reclaim-card">
+    ${(place.plan && place.plan !== 'free')
+      ? `<div class="reclaim-card">
+      <h2>★ Eres parte de La Vitrina</h2>
+      <p>Para actualizar tu información, fotos u horarios, textea al 787-417-7711.</p>
+      <a class="reclaim-btn" href="https://wa.me/17874177711?text=ACTUALIZAR%20${encodeURIComponent(place.name)}">Actualizar mi información</a>
+    </div>`
+      : `<div class="reclaim-card">
       <h2>¿Es tu negocio?</h2>
       <p>Destaca tu ${config.label.toLowerCase()} con La Vitrina — fotos, servicios, horarios verificados, y apareces primero cuando busquen ${config.labelPlural.toLowerCase()} en Cabo Rojo. $799/año.</p>
       <a class="reclaim-btn" href="https://wa.me/17874177711?text=VITRINA%20${encodeURIComponent(place.name)}">Conoce La Vitrina</a>
       <a href="https://wa.me/17874177711?text=RECLAMAR%20${encodeURIComponent(place.name)}" style="display:inline-block;background:transparent;color:white;text-decoration:underline;padding:0.4rem 1rem;font-size:0.85rem;margin-top:0.5rem;">Solo verificar mi info (gratis)</a>
       <p style="color:rgba(255,255,255,0.75);font-size:0.8rem;margin-top:0.75rem;">Textea al 787-417-7711 y El Veci te guía paso a paso.</p>
-    </div>
+    </div>`}
 
     <div style="background:white;border-radius:12px;padding:1.25rem 1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:1rem;">
       <h2 style="font-size:1rem;font-weight:600;color:${MEDICAL_GREEN};margin-bottom:0.5rem;">&#129302; Pregúntale a El Veci sobre ${placeName}</h2>

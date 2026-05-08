@@ -301,14 +301,20 @@ export default async function handler(req: any, res: any) {
       <a href="${baseUrl}/?place=${esc(place.slug || place.id)}">Ver ${esc(place.name)} en el mapa interactivo →</a>
     </div>
 
-    <div style="background: linear-gradient(135deg, #0d9488 0%, #f97316 100%); border-radius: 12px; padding: 1.75rem 1.5rem; text-align: center; margin-bottom: 1rem;">
+    ${(place.plan && place.plan !== 'free')
+      ? `<div style="background: linear-gradient(135deg, #0d9488 0%, #f97316 100%); border-radius: 12px; padding: 1.75rem 1.5rem; text-align: center; margin-bottom: 1rem;">
+      <h2 style="color: white; font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem;">★ Eres parte de La Vitrina</h2>
+      <p style="color: rgba(255,255,255,0.95); font-size: 0.95rem; margin-bottom: 1.25rem;">Para actualizar tu información, fotos u horarios, textea al 787-417-7711.</p>
+      <a href="https://wa.me/17874177711?text=ACTUALIZAR%20${encodeURIComponent(place.name)}" style="display: inline-block; background: white; color: #0d9488; text-decoration: none; padding: 0.75rem 1.75rem; border-radius: 8px; font-weight: 700; font-size: 1rem;">Actualizar mi información</a>
+    </div>`
+      : `<div style="background: linear-gradient(135deg, #0d9488 0%, #f97316 100%); border-radius: 12px; padding: 1.75rem 1.5rem; text-align: center; margin-bottom: 1rem;">
       <h2 style="color: white; font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem;">¿Es tu negocio?</h2>
       <p style="color: rgba(255,255,255,0.9); font-size: 0.95rem; margin-bottom: 1.25rem;">Verifica tu información, actualiza horarios, y aparece primero cuando busquen tu categoría.</p>
       <a href="https://wa.me/17874177711?text=RECLAMAR%20${encodeURIComponent(place.name)}" style="display: inline-block; background: white; color: #0d9488; text-decoration: none; padding: 0.75rem 1.75rem; border-radius: 8px; font-weight: 700; font-size: 1rem; margin-bottom: 1rem;">Verificar mi información</a>
       <br>
       <a href="https://wa.me/17874177711?text=VITRINA%20${encodeURIComponent(place.name)}" style="color: rgba(255,255,255,0.9); font-size: 0.875rem; text-decoration: underline;">Destaca tu negocio con La Vitrina — $799/año →</a>
       <p style="color: rgba(255,255,255,0.75); font-size: 0.8rem; margin-top: 0.75rem; margin-bottom: 0;">Textea al 787-417-7711 y El Veci te guía paso a paso.</p>
-    </div>
+    </div>`}
 
     <footer style="margin-top: 48px; padding: 24px 0; border-top: 1px solid #e2e8f0; text-align: center;">
       <p style="color: #94a3b8; font-size: 12px; margin: 0;">
