@@ -693,10 +693,11 @@ export const CATEGORY_SUPPLY_MATCHERS: Record<string, (p: any) => boolean> = {
     if (!['HEALTH', 'Salud', 'salud'].includes(cat)) return false;
     const sub = (p.subcategory || '').toLowerCase().trim();
     const name = (p.name || '').toLowerCase();
-    // Exclude by subcategory (these are NOT médicos generales/especialistas)
-    if (/^(dent|veterin|optic|optom|pharmac|farmac|botica|quiro|chiro|psic|psych|salud\s*mental|laborator|diagnos|radiol|ambulan|terap|fisic|fisio|audiol|nutric|cannabis)/i.test(sub)) return false;
+    // Exclude by subcategory (these are NOT médicos generales/especialistas).
+    // No anchor — match anywhere in the subcategory string (e.g. "Centro de Diagnostico" caught via "diagnos").
+    if (/(dent|veterin|óptic|optic|optom|pharmac|farmac|botica|quiro|chiro|psic|psych|mental|laborator|diagnos|radiol|ambulan|terap|fisic|fisio|audiol|nutric|cannabis)/i.test(sub)) return false;
     // Exclude by name (English/variant names the simple regex misses)
-    if (/(dental|veterinari|optica|óptica|pharmacy|farmacia|botica|chiropract|chiroprac|laundr|cannabis|animal medical|ambulance|ambulancia)/i.test(name)) return false;
+    if (/(dental|veterinari|óptica|optica|pharmacy|farmacia|botica|chiropract|chiroprac|laundr|cannabis|animal medical|ambulance|ambulancia|laboratorio|laboratorios|radiology|radiología|odontolog)/i.test(name)) return false;
     return true;
   },
   bar: (p) => /\bbar\b|cantina|nightclub|club nocturno|nocturn/i.test(p.name || '') || ['Bares y Vida Nocturna', 'NIGHTLIFE'].includes(p.category || ''),
@@ -768,15 +769,15 @@ La decisión "abrir un food truck más" se toma con cero data sobre saturación.
 
 ## cabo-rojo:density-50pct
 📊 **Cabo Rojo tiene 50% más negocios per cápita que la mediana PR.**
-1 negocio cada 53 personas en CR vs ~1 cada 90 en el resto del archipiélago. No es "el pueblo emprendedor" — es estructural: low-friction categories sin feedback loop = saturación replicada generación tras generación.
+1 negocio por cada 53 personas en CR vs ~1 cada 90 en el resto del archipiélago. No es "el pueblo emprendedor" — es estructural: low-friction categories sin feedback loop = saturación replicada generación tras generación.
 
 ## medico:paradox-overdemand
-🩺 **Hay 52 médicos + 29 dentistas. El problema es la concentración + insurance scheduling.**
-30 médicos generales + 13 pediatras + 9 especialistas (cardiólogos, ginecólogos, dermatólogos, oftalmólogos) + 29 dentistas. Mayoría concentrados en pueblo. Panel típico 1,500-2,000 pacientes (PR avg) + insurance-driven scheduling = 30-90 días pa cita. No es lack of doctors — es estructural + geográfico. Más 559 places de salud sin subcategoría asignada (data quality gap, Phase 2 clasifica).
+🩺 **Hay ~59 médicos + 9 dentistas en CR (no 191 como decía el chart antes). El problema es estructural, no de cantidad.**
+44 médicos generales/pediatras + 15 especialistas verificados (cardiólogos, ginecólogos, dermatólogos, oncólogos, neurólogos, etc.). Mayoría concentrados en pueblo. Panel típico 1,500-2,000 pacientes (PR avg) + insurance-driven scheduling = 30-90 días pa cita. Más gente no abre más slots: abre más espera. El chart anterior contaba 191 porque metía a la cuenta laboratorios, ambulancias, ópticos, quiroprácticos y clínicas con "Pharmacy" en inglés. **Honestidad operativa:** lo arreglamos.
 
 ## farmacia:concentration-paradox
-💊 **CR tiene casi 4× más densidad de farmacias que la mediana PR.**
-43 farmacias para 50,798 personas = 1 cada 1,181. Mediana PR ~1 cada 4,500. Mayoría concentradas en pueblo (15+ en mismo radio de Calle Comercio). Chains (Walgreens, Walmart Pharmacy, CVS) absorben 70% del gasto vía Plan Médico/PBM. Las 43 sobreviven porque el TAM está holgado ($46M/yr en farmacia), pero margen pisado.
+💊 **CR tiene casi 2× más densidad de farmacias que la mediana PR.**
+18 farmacias verificadas open para 50,798 personas = 1 por cada 2,820. Mediana PR ~1 cada 4,500. Mayoría concentradas en pueblo (varias en mismo radio de Calle Comercio). Chains (Walgreens, Walmart Pharmacy, CVS) absorben 70% del gasto vía Plan Médico/PBM. Las 18 sobreviven porque el TAM está holgado, pero margen pisado. El número 43 anterior contaba farmacias de toda la región oeste — corregido hoy.
 
 ## electricista:invisible-supply
 ⚡ **El bot recibió 48 búsquedas de electricista en 90 días. El directorio tiene 0.**
@@ -995,14 +996,14 @@ async function handle_municipio(req: any, res: any) {
   <!-- STAT CARDS — corrected counts from views -->
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:32px;">
     ${[
-      { label: 'Negocios totales', value: total.toLocaleString('es-PR'), icon: '🏢', color: '#0d9488' },
-      { label: 'Abiertos hoy', value: openCount.toLocaleString('es-PR'), icon: '✅', color: '#16a34a' },
-      { label: 'Verif. en 90 días', value: `${fresh90d.toLocaleString('es-PR')} · ${freshnessPct}%`, icon: '🛡️', color: freshnessPct >= 80 ? '#16a34a' : freshnessPct >= 60 ? '#ca8a04' : '#dc2626' },
-      { label: 'Búsq. reales (30d)', value: totalSearches30d.toLocaleString('es-PR'), icon: '🔍', color: '#0369a1' },
-      { label: 'Eventos próximos', value: upcomingEvents.length.toString(), icon: '📅', color: '#ea580c' },
-      { label: 'Negocios sponsor', value: sponsorCount.toString(), icon: '⭐', color: '#7c3aed' },
+      { label: 'Negocios totales', value: total.toLocaleString('es-PR'), icon: '🏢', color: '#0d9488', tooltip: 'Todos los places de Cabo Rojo en nuestra base de datos (visibles al público). Algunos pueden estar cerrados temporalmente.' },
+      { label: 'Abiertos hoy', value: openCount.toLocaleString('es-PR'), icon: '✅', color: '#16a34a', tooltip: 'Negocios con status=open en Cabo Rojo. La diferencia con "totales" son places cerrados o de estado dudoso.' },
+      { label: 'Verif. en 90 días', value: `${fresh90d.toLocaleString('es-PR')} · ${freshnessPct}%`, icon: '🛡️', color: freshnessPct >= 80 ? '#16a34a' : freshnessPct >= 60 ? '#ca8a04' : '#dc2626', tooltip: 'Negocios que Angel verificó en persona en los últimos 90 días — caminó la calle, entró, confirmó que sigue abierto. Sin Google Places, sin AI: ojos humanos.' },
+      { label: 'Top 10 búsq. (30d)', value: totalSearches30d.toLocaleString('es-PR'), icon: '🔍', color: '#0369a1', tooltip: 'Suma de las 10 categorías más buscadas al *7711 en los últimos 30 días. El total absoluto es mayor — esto es la concentración de demanda en lo más pedido.' },
+      { label: 'Eventos próximos', value: upcomingEvents.length.toString(), icon: '📅', color: '#ea580c', tooltip: 'Eventos públicos en CR con fecha futura, mostrando los 6 más cercanos. Click en cada uno para detalles + cómo llegar.' },
+      { label: 'Negocios sponsor', value: sponsorCount.toString(), icon: '⭐', color: '#7c3aed', tooltip: 'Negocios con Vitrina pagada o featured manualmente. Por hoy: Luis David Refrigeración (sponsor activo $700/año saldado) + Marina Puerto Real. Modelo: $799/año.' },
     ].map((c) => `
-    <div style="background:#fff;border-radius:12px;padding:20px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.08);border-top:3px solid ${c.color};">
+    <div title="${esc(c.tooltip)}" style="background:#fff;border-radius:12px;padding:20px 16px;box-shadow:0 1px 3px rgba(0,0,0,0.08);border-top:3px solid ${c.color};cursor:help;">
       <div style="font-size:24px;margin-bottom:8px;">${c.icon}</div>
       <div style="font-size:24px;font-weight:700;color:#1e293b;">${c.value}</div>
       <div style="font-size:12px;color:#64748b;margin-top:4px;font-weight:500;">${c.label}</div>
@@ -1014,8 +1015,8 @@ async function handle_municipio(req: any, res: any) {
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
       <div style="flex:1;min-width:280px;">
         <div style="font-size:11px;color:#5eead4;letter-spacing:0.15em;text-transform:uppercase;font-weight:700;margin-bottom:6px;">📊 Cabo Rojo en Números</div>
-        <div style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.3px;line-height:1.3;">1 negocio cada 53 personas. <span style="color:#5eead4;">50% más denso que PR.</span></div>
-        <div style="font-size:13px;color:#fbbf24;margin-top:8px;font-weight:600;">💊 Ej: 43 farmacias para 50,798 personas = 1 cada 1,181. PR avg ~1 cada 4,500. <span style="color:#fff;">Casi 4× más densa que el resto.</span></div>
+        <div style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.3px;line-height:1.3;">1 negocio por cada 53 personas. <span style="color:#5eead4;">50% más denso que PR.</span></div>
+        <div style="font-size:13px;color:#fbbf24;margin-top:8px;font-weight:600;">💊 Ej: 18 farmacias en Cabo Rojo verificadas open = 1 por cada 2,820 personas. Mediana PR ~1 cada 4,500. <span style="color:#fff;">Casi 2× más densa que el resto.</span></div>
         <div style="font-size:12px;color:#cbd5e1;margin-top:6px;">TAM/SAM/SOM por categoría · sobreoferta visible · ajá moments que nadie publica.</div>
       </div>
       <div style="background:#0d9488;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;white-space:nowrap;">Ver el pueblo en números →</div>
@@ -1152,9 +1153,9 @@ async function handle_municipio(req: any, res: any) {
         <div style="font-size:32px;font-weight:800;color:#5eead4;">${total.toLocaleString('es-PR')}</div>
         <div style="font-size:11px;color:#94a3b8;margin-top:4px;text-transform:uppercase;letter-spacing:0.05em;">Negocios indexados</div>
       </div>
-      <div style="text-align:center;padding:16px;background:#0f172a;border-radius:10px;">
+      <div title="Búsquedas reales que llegaron al bot *7711 en los últimos 90 días desde toda la región oeste (CR + Lajas + Hormigueros + San Germán + Mayagüez). Toda demanda local conectada al ecosistema CaboRojo.com." style="text-align:center;padding:16px;background:#0f172a;border-radius:10px;cursor:help;">
         <div style="font-size:32px;font-weight:800;color:#5eead4;">${total90dReal.toLocaleString('es-PR')}</div>
-        <div style="font-size:11px;color:#94a3b8;margin-top:4px;text-transform:uppercase;letter-spacing:0.05em;">Búsquedas reales 90d</div>
+        <div style="font-size:11px;color:#94a3b8;margin-top:4px;text-transform:uppercase;letter-spacing:0.05em;">Búsquedas regionales 90d</div>
       </div>
       <div style="text-align:center;padding:16px;background:#0f172a;border-radius:10px;">
         <div style="font-size:32px;font-weight:800;color:#5eead4;">$0</div>
@@ -2658,7 +2659,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
   <!-- SECTION 1.5: TL;DR ABUELA (plain-language summary) -->
   <div class="card" style="background:#ecfdf5;border-left:4px solid #0d9488;">
     <div style="font-size:11px;color:#0f766e;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:8px;">Lo que esta página dice, en una línea</div>
-    <p style="font-size:16px;color:#134e4a;line-height:1.6;margin:0;">En Cabo Rojo hay muchísimos negocios para tan poca gente — <strong>sobran de algunas cosas</strong> (food truck, boutique, gimnasio) y <strong>faltan de otras</strong> (plomero, electricista, cardiólogo). Si tú o alguien tuyo está pensando en abrir negocio, busca tu categoría en la tabla y léela antes de firmar nada.</p>
+    <p style="font-size:16px;color:#134e4a;line-height:1.6;margin:0;">En Cabo Rojo hay 937 negocios verificados abiertos para 50,798 personas — más negocios de los que el pueblo solo puede sostener. <strong>Sobran de unas cosas</strong> (food trucks, boutiques, restaurantes — porque entrar es barato y rápido). <strong>Faltan de otras</strong> (plomero, electricista, cardiólogo — porque entrar requiere licencia, años de estudio o capital alto). El por qué de cada uno está abajo. Si tú o alguien tuyo está pensando en abrir negocio, busca tu categoría en la tabla y léela antes de firmar nada.</p>
   </div>
 
   <!-- SECTION 2: BASELINE STAT CARDS -->
@@ -2698,8 +2699,8 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
   <!-- SECTION 3.5: GLOSSARY — "Cómo leer este reporte" -->
   <div class="card" style="background:#fffbeb;border-left:4px solid #f59e0b;">
     <div class="kicker" style="color:#b45309;">📖 Cómo leer este reporte</div>
-    <h2 style="font-size:20px;font-weight:800;color:#1e293b;margin-bottom:6px;">Diccionario a prueba de bruto</h2>
-    <p style="font-size:13px;color:#78350f;margin-bottom:18px;">Antes de la tabla de números: qué significa cada término en español de calle.</p>
+    <h2 style="font-size:20px;font-weight:800;color:#1e293b;margin-bottom:6px;">Las palabras antes de los números</h2>
+    <p style="font-size:13px;color:#78350f;margin-bottom:18px;">Diccionario fácil — qué significa cada término, sin jerga técnica. Léelo una vez y la tabla de abajo cobra sentido.</p>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;">
       <div style="padding:14px;background:#fff;border-radius:8px;">
         <div style="font-size:13px;font-weight:700;color:#1e293b;">TAM <span style="color:#94a3b8;font-weight:400;font-size:11px;">Total Addressable Market</span></div>
@@ -2724,6 +2725,26 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
       <div style="padding:14px;background:#fff;border-radius:8px;">
         <div style="font-size:13px;font-weight:700;color:#1e293b;">Supply</div>
         <div style="font-size:12px;color:#475569;margin-top:6px;line-height:1.5;"><strong>Cuántos negocios open hay.</strong> Live del directorio mapadecaborojo.com — solo places verificados como abiertos.</div>
+      </div>
+      <div style="padding:14px;background:#fff;border-radius:8px;">
+        <div style="font-size:13px;font-weight:700;color:#1e293b;">Demanda</div>
+        <div style="font-size:12px;color:#475569;margin-top:6px;line-height:1.5;"><strong>Qué pide la gente.</strong> Cuántas veces alguien texteó al *7711 buscando esa categoría en los últimos 90 días. La voz del pueblo, en números.</div>
+      </div>
+      <div style="padding:14px;background:#fff;border-radius:8px;">
+        <div style="font-size:13px;font-weight:700;color:#1e293b;">Sobreoferta</div>
+        <div style="font-size:12px;color:#475569;margin-top:6px;line-height:1.5;"><strong>Más negocios que aguante.</strong> Cuando hay más places ofreciendo lo mismo de lo que la matemática del pueblo puede sostener. SOM &lt; breakeven = sobreoferta real.</div>
+      </div>
+      <div style="padding:14px;background:#fff;border-radius:8px;">
+        <div style="font-size:13px;font-weight:700;color:#1e293b;">Heat index</div>
+        <div style="font-size:12px;color:#475569;margin-top:6px;line-height:1.5;"><strong>Demanda ÷ Supply.</strong> &gt;5× = caliente (oportunidad). 1-5× = sano. &lt;1× = saturado (muchos persiguiendo poca gente).</div>
+      </div>
+      <div style="padding:14px;background:#fff;border-radius:8px;">
+        <div style="font-size:13px;font-weight:700;color:#1e293b;">Margen pisado</div>
+        <div style="font-size:12px;color:#475569;margin-top:6px;line-height:1.5;"><strong>Sobreviven pero ganan poquito.</strong> Cuando SOM apenas pasa breakeven. No quiebran, pero tampoco crecen. Vulnerables a cualquier shock (huracán, recesión, gas).</div>
+      </div>
+      <div style="padding:14px;background:#fff;border-radius:8px;">
+        <div style="font-size:13px;font-weight:700;color:#1e293b;">Verificado</div>
+        <div style="font-size:12px;color:#475569;margin-top:6px;line-height:1.5;"><strong>Lo confirmé yo, no Google.</strong> Angel caminó la calle, entró al negocio, vio que estaba operando. Es el moat — nadie más en PR verifica directorios en persona.</div>
       </div>
     </div>
     <div style="margin-top:14px;padding:14px;background:#fff;border-radius:8px;border-left:3px solid #f59e0b;">
