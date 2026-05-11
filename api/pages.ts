@@ -683,7 +683,12 @@ export const CATEGORY_SUPPLY_MATCHERS: Record<string, (p: any) => boolean> = {
   gasolinera: (p) => /gasolinera|gulf|texaco|shell|esso/i.test(p.name || '') || /gasolinera/i.test(p.subcategory || ''),
   farmacia: (p) => /farmacia|botica/i.test(p.name || '') || (p.subcategory || '').toLowerCase() === 'farmacia',
   gimnasio: (p) => /gimnasio|gym|crossfit/i.test(p.name || '') || (p.subcategory || '').toLowerCase() === 'gimnasio',
-  car_wash: (p) => /car\s*wash|carwash|lavado.*auto|auto\s*detailing|auto\s*spa/i.test(p.name || '') || /car\s*wash|car_wash|auto\s*detail|detailing/i.test(p.subcategory || '') || ((p.tags||[]) as string[]).some(t=>/car.wash|car_wash|auto.detail/i.test(t)),
+  car_wash: (p) => {
+    // Exclude gasolineras (they often have car wash tag but are gas stations, not car washes)
+    if ((p.category || '') === 'LOGISTICS' || /gasolinera|gulf|texaco|shell|esso/i.test(p.name || '')) return false;
+    return /car\s*wash|carwash|lavado.*auto|auto\s*detailing|auto\s*spa/i.test(p.name || '')
+      || /car\s*wash|car_wash|auto\s*detail|detailing/i.test(p.subcategory || '');
+  },
   dentista: (p) => /dentista|dental|odontolog/i.test(p.name || '') || /dentista/i.test(p.subcategory || ''),
   restaurante: (p) => ['FOOD', 'Restaurantes', 'RESTAURANTE'].includes(p.category || '') && !/food truck|kiosko|pinchos/i.test(p.name || ''),
   hospedaje: (p) => ['LODGING', 'Hospedaje'].includes(p.category || ''),
@@ -708,7 +713,16 @@ export const CATEGORY_SUPPLY_MATCHERS: Record<string, (p: any) => boolean> = {
   pizzeria: (p) => /pizz/i.test(p.name || '') || /pizz/i.test(p.subcategory || ''),
   lavanderia: (p) => /lavander|laundr/i.test(p.name || '') || /lavander/i.test(p.subcategory || ''),
   ferreteria: (p) => /ferreter|hardware/i.test(p.name || '') || (p.category || '') === 'Ferretería',
-  heladeria: (p) => /heladeri|ice\s*cream|gelato|baskin|rex\s*cream/i.test(p.name || '') || /heladeri|ice\s*cream|gelato/i.test(p.subcategory || '') || (p.category || '') === 'Helados' || ((p.tags||[]) as string[]).some(t=>/helader|ice.cream|mantecado/i.test(t)),
+  heladeria: (p) => {
+    // Strict: must be primarily a heladería (subcategory OR category match) OR named brand/explicit ice cream shop
+    // Excludes food trucks/sandwich shops that just SELL helado as side item via tags
+    const subcatMatch = /heladeri|ice\s*cream|gelato|creamer/i.test(p.subcategory || '');
+    const catMatch = (p.category || '') === 'Helados';
+    const nameMatch = /heladeri|ice\s*cream|gelato|baskin|rex\s*cream/i.test(p.name || '');
+    // For name match, also require it's NOT a food truck or restaurant primarily
+    if (nameMatch && /food\s*truck/i.test(p.subcategory || '')) return false;
+    return subcatMatch || catMatch || nameMatch;
+  },
   veterinario: (p) => /veterinari/i.test(p.name || '') || /veterinari/i.test(p.subcategory || ''),
   reposteria: (p) => /reposteri|panader.*dulce|cake|bizcoch/i.test(p.name || '') || (p.subcategory || '').toLowerCase().includes('reposter'),
   tatuajes: (p) => /tatua|tattoo|piercing/i.test(p.name || '') || (p.category || '') === 'Tatuajes',
