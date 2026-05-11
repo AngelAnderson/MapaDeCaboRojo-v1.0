@@ -830,7 +830,16 @@ const HEAT_BUCKETS_DEF: Array<{
     matches:(p)=>/farmacia|botica/i.test(p.name||'') || (p.subcategory||'').toLowerCase()==='farmacia' },
   { key:'medico', label:'Médico', emoji:'🩺', categorySlug:'medico',
     qRegex:/(pediatr|\bmedic|doctor|\bdr\.|cita medic|\bekg\b|cardio)/i,
-    matches:(p)=>['HEALTH','Salud','salud'].includes(p.category||'') && !/farmacia|botica|dentista|veterinari|optica|laboratorio/i.test(p.name||'') },
+    matches:(p) => {
+      if (!['HEALTH','Salud','salud'].includes(p.category||'')) return false;
+      const sub = (p.subcategory||'').toLowerCase().trim();
+      const name = (p.name||'').toLowerCase();
+      // Exclude by subcategory anywhere in string (catches "Centro de Diagnostico" via "diagnos", "Centro Audiológico" via "audiol", etc.)
+      if (/(dent|veterin|óptic|optic|optom|pharmac|farmac|botica|quiro|chiro|psic|psych|mental|laborator|diagnos|radiol|ambulan|terap|fisic|fisio|audiol|nutric|cannabis)/i.test(sub)) return false;
+      // Exclude by name (English/variant names)
+      if (/(dental|veterinari|óptica|optica|pharmacy|farmacia|botica|chiropract|chiroprac|laundr|cannabis|animal medical|ambulance|ambulancia|laboratorio|radiology|radiología|odontolog)/i.test(name)) return false;
+      return true;
+    } },
   { key:'dentista', label:'Dentista', emoji:'🦷', categorySlug:'dentista',
     qRegex:/(dentista|odontolog|dental)/i,
     matches:(p)=>/dentista|dental|odontolog/i.test(p.name||'') || /dentista/i.test(p.subcategory||'') },
@@ -2323,7 +2332,14 @@ async function handle_admin_municipio(req: any, res: any) {
       { key:'electricista', label:'Electricista', emoji:'⚡', qRegex:/(electricis|\belectric)/i, matches:(p)=>/electric/i.test(p.name||'') },
       { key:'aire', label:'Aire/Refrig.', emoji:'❄️', qRegex:/(aire acond|frigo|refriger)/i, matches:(p)=>/(aire|refriger)/i.test(p.name||'') },
       { key:'farmacia', label:'Farmacia', emoji:'💊', qRegex:/(farmacia|botica)/i, matches:(p)=>/farmacia|botica/i.test(p.name||'') },
-      { key:'medico', label:'Médico', emoji:'🩺', qRegex:/(pediatr|medic|doctor|\bdr\.)/i, matches:(p)=>['HEALTH','Salud'].includes(p.category||'') && !/farmacia|dentista|veterinari/i.test(p.name||'') },
+      { key:'medico', label:'Médico', emoji:'🩺', qRegex:/(pediatr|medic|doctor|\bdr\.)/i, matches:(p) => {
+        if (!['HEALTH','Salud','salud'].includes(p.category||'')) return false;
+        const sub = (p.subcategory||'').toLowerCase().trim();
+        const name = (p.name||'').toLowerCase();
+        if (/(dent|veterin|óptic|optic|optom|pharmac|farmac|botica|quiro|chiro|psic|psych|mental|laborator|diagnos|radiol|ambulan|terap|fisic|fisio|audiol|nutric|cannabis)/i.test(sub)) return false;
+        if (/(dental|veterinari|óptica|optica|pharmacy|farmacia|botica|chiropract|chiroprac|laundr|cannabis|animal medical|ambulance|ambulancia|laboratorio|radiology|radiología|odontolog)/i.test(name)) return false;
+        return true;
+      } },
       { key:'dentista', label:'Dentista', emoji:'🦷', qRegex:/(dentista|odontolog|dental)/i, matches:(p)=>/dentista|dental/i.test(p.name||'') },
       { key:'restaurante', label:'Restaurante', emoji:'🍽️', qRegex:/(restauran|comer|comida)/i, matches:(p)=>['FOOD','Restaurantes'].includes(p.category||'') },
       { key:'belleza', label:'Belleza', emoji:'💇', qRegex:/(barber|peluqu|estetic|salon)/i, matches:(p)=>['BEAUTY','Belleza','Belleza y Bienestar'].includes(p.category||'') },
