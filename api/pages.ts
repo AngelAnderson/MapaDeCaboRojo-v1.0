@@ -688,7 +688,17 @@ export const CATEGORY_SUPPLY_MATCHERS: Record<string, (p: any) => boolean> = {
   restaurante: (p) => ['FOOD', 'Restaurantes', 'RESTAURANTE'].includes(p.category || '') && !/food truck|kiosko|pinchos/i.test(p.name || ''),
   hospedaje: (p) => ['LODGING', 'Hospedaje'].includes(p.category || ''),
   food_truck: (p) => /food truck|kiosko|kiosco/i.test(p.name || '') || /food.truck/i.test(p.subcategory || ''),
-  medico: (p) => ['HEALTH', 'Salud', 'salud'].includes(p.category || '') && !/farmacia|botica|dentista|veterinari|optica|laboratorio|fisica|terapia/i.test(p.name || ''),
+  medico: (p) => {
+    const cat = p.category || '';
+    if (!['HEALTH', 'Salud', 'salud'].includes(cat)) return false;
+    const sub = (p.subcategory || '').toLowerCase().trim();
+    const name = (p.name || '').toLowerCase();
+    // Exclude by subcategory (these are NOT médicos generales/especialistas)
+    if (/^(dent|veterin|optic|optom|pharmac|farmac|botica|quiro|chiro|psic|psych|salud\s*mental|laborator|diagnos|radiol|ambulan|terap|fisic|fisio|audiol|nutric|cannabis)/i.test(sub)) return false;
+    // Exclude by name (English/variant names the simple regex misses)
+    if (/(dental|veterinari|optica|óptica|pharmacy|farmacia|botica|chiropract|chiroprac|laundr|cannabis|animal medical|ambulance|ambulancia)/i.test(name)) return false;
+    return true;
+  },
   bar: (p) => /\bbar\b|cantina|nightclub|club nocturno|nocturn/i.test(p.name || '') || ['Bares y Vida Nocturna', 'NIGHTLIFE'].includes(p.category || ''),
   mecanico: (p) => ['AUTO', 'Automotriz'].includes(p.category || '') && !/car wash|gomera|llanteria/i.test(p.name || ''),
   bienes_raices: (p) => /bienes.*raic|real.estate|realty/i.test(p.name || '') || (p.category || '') === 'Bienes Raíces',
@@ -912,6 +922,7 @@ async function handle_municipio(req: any, res: any) {
         .select('name, category, subcategory, tags')
         .eq('visibility', 'published')
         .eq('status', 'open')
+        .eq('municipality', 'Cabo Rojo')
         .range(0, 4999)
         .then((r: any) => r.data || []),
     ]);
@@ -2218,6 +2229,7 @@ async function handle_admin_municipio(req: any, res: any) {
         .select('id, name, slug, plan, is_featured, last_verified_at')
         .eq('visibility', 'published')
         .eq('status', 'open')
+        .eq('municipality', 'Cabo Rojo')
         .or('plan.neq.free,is_featured.eq.true')
         .then((r: any) => r.data || []),
       supabase
@@ -2241,6 +2253,7 @@ async function handle_admin_municipio(req: any, res: any) {
         .select('id, name, category, subcategory, tags, plan, is_featured')
         .eq('visibility', 'published')
         .eq('status', 'open')
+        .eq('municipality', 'Cabo Rojo')
         .range(0, 4999)
         .then((r: any) => r.data || []),
       supabase.from('mv_category_breakdown').select('*').limit(15).then((r: any) => r.data || []),
@@ -2513,6 +2526,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
         .select('name, slug, category, subcategory, tags, last_verified_at, lat, lon')
         .eq('visibility', 'published')
         .eq('status', 'open')
+        .eq('municipality', 'Cabo Rojo')
         .range(0, 4999)
         .then((r: any) => r.data || []),
     ]);
