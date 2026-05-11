@@ -12,6 +12,9 @@
   ],
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
+    { "source": "/admin/municipio", "destination": "/api/pages?page=admin-municipio" },
+    { "source": "/evento/:slug", "destination": "/api/pages?page=evento&slug=:slug" },
+    { "source": "/pueblo-en-numeros", "destination": "/api/pages?page=pueblo-en-numeros" },
     { "source": "/municipio", "destination": "/api/pages?page=municipio" },
     { "source": "/turismo", "destination": "/api/pages?page=turismo" },
     { "source": "/demanda", "destination": "/api/pages?page=demanda" },
