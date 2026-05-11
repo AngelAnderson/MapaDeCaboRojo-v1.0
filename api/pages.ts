@@ -2626,11 +2626,13 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
       const accent = isZero ? '#dc2626' : isDenser ? '#dc2626' : r.verdict === 'parity' ? '#0d9488' : '#16a34a';
       const linkUrl = r.categorySlug ? `/categoria/${r.categorySlug}` : `https://wa.me/17874177711?text=${encodeURIComponent(r.label)}`;
       const tag = isZero ? `🔥 cero supply, demanda real` : isDenser ? `${r.multiplier.toFixed(1)}× más denso que PR` : r.verdict === 'parity' ? 'paridad con PR' : `${(1 / r.multiplier).toFixed(1)}× menos denso`;
+      const audienceLabel = r.audienceCr === CABO_ROJO_BASELINE.regional_pull ? 'audiencia regional' : 'residentes CR';
       return `<a href="${linkUrl}" style="display:block;text-decoration:none;color:inherit;padding:10px 12px;background:#f8fafc;border-radius:8px;margin-bottom:8px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;">
           <span style="font-size:13px;font-weight:600;color:#1e293b;">${r.emoji} ${esc(r.label)} · ${r.supplyCr}</span>
           <span style="font-size:11px;color:${accent};font-weight:700;">${tag}</span>
         </div>
+        ${!isZero ? `<div style="font-family:'SF Mono',Monaco,Menlo,monospace;font-size:10px;color:#64748b;margin-bottom:6px;">${fmt(r.audienceCr)} ${audienceLabel} ÷ ${r.supplyCr} negocios = 1 cada ${fmt(r.perCapitaCr)}</div>` : `<div style="font-size:10px;color:#dc2626;margin-bottom:6px;">0 negocios listed · demanda existe en bot *7711</div>`}
         <div style="display:grid;grid-template-columns:48px 1fr;gap:6px;font-size:10px;align-items:center;">
           <span style="color:#475569;font-weight:600;">CR</span>
           <div style="background:#e2e8f0;height:10px;border-radius:3px;position:relative;">
@@ -2681,7 +2683,8 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
 <div style="background:#0f172a;color:#fff;padding:60px 24px 50px;">
   <div style="max-width:780px;margin:0 auto;text-align:center;">
     <div style="font-size:13px;color:#5eead4;letter-spacing:0.15em;text-transform:uppercase;font-weight:700;margin-bottom:18px;">📊 Cabo Rojo en Números</div>
-    <h1 style="font-size:42px;font-weight:800;letter-spacing:-1px;line-height:1.15;margin-bottom:20px;">1 negocio por cada <span style="color:#5eead4;">50 personas</span> en Cabo Rojo.</h1>
+    <h1 style="font-size:42px;font-weight:800;letter-spacing:-1px;line-height:1.15;margin-bottom:14px;">1 negocio por cada <span style="color:#5eead4;">50 personas</span> en Cabo Rojo.</h1>
+    <div style="font-family:'SF Mono',Monaco,Menlo,monospace;font-size:14px;color:#94a3b8;background:rgba(255,255,255,0.06);padding:8px 14px;border-radius:6px;display:inline-block;margin-bottom:18px;letter-spacing:0;">47,158 personas ÷ 937 negocios abiertos = 1 cada 50.3 (redondeado a 50)</div>
     <p style="font-size:20px;color:#cbd5e1;line-height:1.5;margin-bottom:8px;">La mediana en Puerto Rico: 1 cada ~90.</p>
     <p style="font-size:16px;color:#94a3b8;font-style:italic;">Casi igual a Hormigueros (1/47) y San Germán (1/50). Casi 2× más denso que Mayagüez (1/87). Esto es lo que esa cifra significa.</p>
   </div>
@@ -2698,7 +2701,34 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
   <!-- SECTION 1.5: TL;DR ABUELA (plain-language summary) -->
   <div class="card" style="background:#ecfdf5;border-left:4px solid #0d9488;">
     <div style="font-size:11px;color:#0f766e;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:8px;">Lo que esta página dice, en una línea</div>
-    <p style="font-size:16px;color:#134e4a;line-height:1.6;margin:0;">En Cabo Rojo hay 937 negocios verificados abiertos para 47,158 personas — más negocios de los que el pueblo solo puede sostener. <strong>Sobran de unas cosas</strong> (food trucks, boutiques, restaurantes — porque entrar es barato y rápido). <strong>Faltan de otras</strong> (plomero, electricista, cardiólogo — porque entrar requiere licencia, años de estudio o capital alto). El por qué de cada uno está abajo. Si tú o alguien tuyo está pensando en abrir negocio, busca tu categoría en la tabla y léela antes de firmar nada.</p>
+    <p style="font-size:16px;color:#134e4a;line-height:1.6;margin:0 0 10px 0;">En Cabo Rojo hay <strong>946 negocios en el directorio · 937 abiertos hoy · 4 cerrados · 5 dudosos</strong>. Para 47,158 personas. Usamos los <strong>937 abiertos</strong> para calcular densidad porque los cerrados ya no compiten. Más negocios de los que el pueblo solo puede sostener — <strong>sobran de unas cosas</strong> (food trucks, boutiques, restaurantes — entrar es barato y rápido), <strong>faltan de otras</strong> (plomero, electricista, cardiólogo — entrar requiere licencia, años de estudio o capital alto). El por qué de cada uno está abajo. Si tú o alguien tuyo está pensando en abrir negocio, busca tu categoría en la tabla y léela antes de firmar nada.</p>
+  </div>
+
+  <!-- SECTION 1.6: WIIFM MASTER CALLOUT — ¿Y AHORA QUÉ? -->
+  <div class="card" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:#fff;border-left:4px solid #5eead4;padding:24px 28px;">
+    <div style="font-size:11px;color:#5eead4;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:14px;">🎯 ¿Y AHORA QUÉ?</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;">
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#fbbf24;margin-bottom:6px;">¿Por qué leer esto HOY?</div>
+        <div style="font-size:13px;color:#cbd5e1;line-height:1.6;">Mayo/junio es temporada "abrir negocio para verano". La gente decide AHORA dónde poner $20-50K. Una página leída a tiempo evita un quiebre a fin de año.</div>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#5eead4;margin-bottom:6px;">¿Qué haces con esto?</div>
+        <ul style="font-size:13px;color:#cbd5e1;line-height:1.6;padding-left:18px;margin:0;">
+          <li>Si vas a abrir: busca tu categoría → mira veredicto → lee Acción</li>
+          <li>Si ya tienes: mira si tu categoría está 🟡 o ⚪ → cambia ángulo (B2B, nicho)</li>
+          <li>Si solo lees: comparte con quien esté pensando en algo</li>
+        </ul>
+      </div>
+      <div>
+        <div style="font-size:13px;font-weight:700;color:#fb923c;margin-bottom:6px;">¿Qué viene next?</div>
+        <ul style="font-size:13px;color:#cbd5e1;line-height:1.6;padding-left:18px;margin:0;">
+          <li>Esta página vive — vuelve cada mes</li>
+          <li>Phase 2 agrega BLS QCEW + PRTC counters</li>
+          <li>¿Error? Textea <a href="https://wa.me/17874177711" target="_blank" rel="noopener" style="color:#5eead4;font-weight:700;">787-417-7711</a> · lo arreglamos hoy citado</li>
+        </ul>
+      </div>
+    </div>
   </div>
 
   <!-- SECTION 2: BASELINE STAT CARDS -->
@@ -2707,12 +2737,12 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
     <p style="font-size:13px;color:#64748b;margin-bottom:20px;">La base que define todo lo demás. Sources citadas inline.</p>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;">
       ${[
-        { lbl: 'Población', val: fmt(CABO_ROJO_BASELINE.residents), sub: 'Census ACS 5-year 2019-23', subUrl: 'https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico', icon: '👥', color: '#0d9488' },
-        { lbl: 'Hogares', val: '~' + fmt(CABO_ROJO_BASELINE.household_count), sub: 'Census ACS · 2.55/hogar', subUrl: 'https://www.census.gov/programs-surveys/acs', icon: '🏠', color: '#7c3aed' },
+        { lbl: 'Población', val: fmt(CABO_ROJO_BASELINE.residents), sub: 'Census ACS 5-year 2019-23 (más reciente)', subUrl: 'https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico', icon: '👥', color: '#0d9488' },
+        { lbl: 'Hogares', val: '~' + fmt(CABO_ROJO_BASELINE.household_count), sub: '47,158 ÷ 2.55 = ' + fmt(CABO_ROJO_BASELINE.household_count) + ' hogares', subUrl: 'https://www.census.gov/programs-surveys/acs', icon: '🏠', color: '#7c3aed' },
         { lbl: 'Mediana income', val: '$' + fmt(CABO_ROJO_BASELINE.median_income), sub: 'Census ACS 2019-23', subUrl: 'https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico', icon: '💵', color: '#16a34a' },
-        { lbl: 'Pull regional', val: '~' + fmt(CABO_ROJO_BASELINE.regional_pull), sub: 'CR + Hormigueros + Lajas + S.Germán (estimate)', subUrl: 'https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico', icon: '🌐', color: '#0369a1' },
+        { lbl: 'Pull regional', val: '~' + fmt(CABO_ROJO_BASELINE.regional_pull), sub: '47K CR + 15K Hormigueros + 23K Lajas + 30K S.Germán (estimate)', subUrl: 'https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico', icon: '🌐', color: '#0369a1' },
         { lbl: 'Visitantes/año', val: '~' + fmt(CABO_ROJO_BASELINE.visitors_annual), sub: '⚠️ PRTC estimate · NO verificado', subUrl: 'https://www.tourism.pr.gov/', icon: '🏖️', color: '#ea580c' },
-        { lbl: 'Negocios open', val: fmt(openCount), sub: 'Live · directorio', subUrl: 'https://mapadecaborojo.com', icon: '🏢', color: '#dc2626' },
+        { lbl: 'Negocios open hoy', val: fmt(openCount), sub: '946 directorio · 937 open · 4 cerrados · 5 dudosos', subUrl: 'https://mapadecaborojo.com', icon: '🏢', color: '#dc2626' },
       ].map(s => `
         <div style="padding:16px 14px;background:#f8fafc;border-radius:10px;border-left:3px solid ${s.color};">
           <div style="font-size:20px;margin-bottom:4px;">${s.icon}</div>
@@ -2811,8 +2841,19 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
     <div class="kicker">La matemática en dólares</div>
     <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:6px;">TAM · SAM · SOM por categoría</h2>
     <p style="font-size:13px;color:#64748b;margin-bottom:14px;">Cada columna explicada arriba en el diccionario. <strong>Si SOM &lt; breakeven, hay sobreoferta económica real.</strong> Pasa el cursor sobre cada header para refresh rápido.</p>
-    <div style="background:#ecfdf5;border-left:3px solid #0d9488;padding:12px 14px;border-radius:6px;margin-bottom:18px;font-size:13px;color:#134e4a;line-height:1.55;">
+    <div style="background:#ecfdf5;border-left:3px solid #0d9488;padding:12px 14px;border-radius:6px;margin-bottom:14px;font-size:13px;color:#134e4a;line-height:1.55;">
       <strong>¿Tu negocio está aquí? ¿La categoría que está pensando tu hijo está aquí?</strong> Busca la fila. Mira la columna <strong>Veredicto</strong> (🟢 sano · 🟡 al filo · ⚪ debajo breakeven · 🔥 hace falta). La columna <strong>Acción</strong> te dice qué pensar antes de decidir.
+    </div>
+    <div style="background:#f1f5f9;border-left:3px solid #475569;padding:12px 14px;border-radius:6px;margin-bottom:18px;font-size:12px;color:#1e293b;line-height:1.6;">
+      <div style="font-weight:700;margin-bottom:6px;">📐 Cómo se calcula una fila (ejemplo: Restaurante casual)</div>
+      <div style="font-family:'SF Mono',Monaco,Menlo,monospace;font-size:11px;color:#475569;background:#fff;padding:8px 10px;border-radius:4px;">
+        TAM = 47,158 personas × $1,400/yr (NRA spend) + 250K visitor × $40/visit = <strong>$80M</strong><br>
+        SAM = $80M × 75% capture local = <strong>$60M</strong><br>
+        SOM por negocio = $60M ÷ 157 restaurantes = <strong>$382K/biz/yr</strong><br>
+        Breakeven categoría: $600K–$1M/yr<br>
+        Veredicto: SOM $382K &lt; $600K breakeven_low = <strong>⚪ debajo breakeven</strong> · sobreoferta real
+      </div>
+      <div style="font-size:11px;color:#64748b;margin-top:6px;font-style:italic;">Hover sobre cada column header para refresh rápido de su fórmula.</div>
     </div>
     <div style="background:#fef3c7;border-left:3px solid #ca8a04;padding:12px 14px;border-radius:6px;margin-bottom:18px;font-size:12px;color:#78350f;line-height:1.55;">
       ⚠️ <strong>Caveat honesto:</strong> per-cápita spend y local capture rate son benchmarks de industria (<a href="https://www.bls.gov/cex/tables.htm" target="_blank" style="color:#92400e;text-decoration:underline;">BLS CES</a>, <a href="https://restaurant.org/research-and-media/research/economic-impact/" target="_blank" style="color:#92400e;text-decoration:underline;">NRA</a>, <a href="https://www.convenience.org/Research" target="_blank" style="color:#92400e;text-decoration:underline;">NACS</a>, <a href="https://www.ncpdp.org/" target="_blank" style="color:#92400e;text-decoration:underline;">NCPDP</a>, <a href="https://www.ihrsa.org/" target="_blank" style="color:#92400e;text-decoration:underline;">IHRSA</a>, <a href="https://www.ada.org/resources/research" target="_blank" style="color:#92400e;text-decoration:underline;">ADA</a>, <a href="https://www.tourism.pr.gov/" target="_blank" style="color:#92400e;text-decoration:underline;">PRTC</a>). Phase 2 sources cada uno individualmente. <strong>SOM es matemática live</strong> = SAM ÷ supply en directorio.
@@ -3075,7 +3116,11 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
         <div style="font-size:13px;color:#1e293b;font-weight:600;margin-bottom:6px;">Categorías a EVITAR:</div>
         <p style="font-size:12px;color:#475569;line-height:1.6;margin-bottom:10px;">Restaurante casual, food truck, salón de belleza, boutique, car wash, gimnasio, abogado nuevo, gasolinera. La matemática dice que la próxima abre en mercado ya pisado.</p>
         <div style="font-size:13px;color:#1e293b;font-weight:600;margin-bottom:6px;">Donde el pueblo TE NECESITA:</div>
-        <p style="font-size:12px;color:#475569;line-height:1.6;">Plomero, electricista, AC tech, cardiólogo, ginecólogo, especialistas médicos, nursing home, repostería con licencia, terapia física. Si tienes la habilidad — esa apertura paga rápido.</p>
+        <p style="font-size:12px;color:#475569;line-height:1.6;margin-bottom:10px;">Plomero, electricista, AC tech, cardiólogo, ginecólogo, especialistas médicos, nursing home, repostería con licencia, terapia física. Si tienes la habilidad — esa apertura paga rápido.</p>
+        <div style="margin-top:12px;padding:10px 12px;background:#fff;border-radius:6px;border-top:2px solid #16a34a;">
+          <div style="font-size:11px;color:#16a34a;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">📅 Tu próximo paso ESTA semana</div>
+          <p style="font-size:12px;color:#1e293b;line-height:1.55;margin:0;">Textea <strong>ABRIR + tu categoría</strong> al <a href="https://wa.me/17874177711?text=ABRIR%20" target="_blank" rel="noopener" style="color:#16a34a;font-weight:700;">787-417-7711</a>. Te mando la fila exacta + las 5 banderas pre-firmar contrato. Gratis. Sin agendas.</p>
+        </div>
       </div>
 
       <div style="padding:18px;background:#fef3c7;border-radius:10px;border-left:3px solid #ca8a04;">
@@ -3087,13 +3132,21 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
           <li><strong>Especializarte en UN tipo de cliente.</strong> No "todo el mundo." El bar de los músicos locales con bookings semanales. La barbería de los hombres que cortan corto y rápido en el almuerzo.</li>
         </ol>
         <p style="font-size:11px;color:#92400e;margin-top:8px;font-style:italic;">"Mejor servicio" o "renovamos imagen" es ilusión en mercado oversupplied.</p>
+        <div style="margin-top:12px;padding:10px 12px;background:#fff;border-radius:6px;border-top:2px solid #ca8a04;">
+          <div style="font-size:11px;color:#ca8a04;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">📅 Tu próximo paso ESTA semana</div>
+          <p style="font-size:12px;color:#1e293b;line-height:1.55;margin:0;">Textea <strong>ANGULO + tu categoría</strong> al <a href="https://wa.me/17874177711?text=ANGULO%20" target="_blank" rel="noopener" style="color:#ca8a04;font-weight:700;">787-417-7711</a>. Te mando 3 movidas concretas pa' tu caso: 1 B2B + 1 nicho + 1 specialization angle.</p>
+        </div>
       </div>
 
       <div style="padding:18px;background:#eff6ff;border-radius:10px;border-left:3px solid #0369a1;">
         <div style="font-size:13px;font-weight:700;color:#0369a1;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">🏛️ Si eres alcalde / Cámara Comercio</div>
-        <p style="font-size:12px;color:#475569;line-height:1.6;margin-bottom:10px;"><strong>El argumento:</strong> Cabo Rojo aprueba patentes sin data de saturación. 1 negocio por cada 50 personas — entre los más densos del oeste (comparable a Hormigueros 1/47 y San Germán 1/50). 5+ categorías oversupplied confirmadas con matemática SOM < breakeven. Phase 2 compara con BLS QCEW data PR-wide.</p>
+        <p style="font-size:12px;color:#475569;line-height:1.6;margin-bottom:10px;"><strong>El argumento:</strong> Cabo Rojo aprueba patentes sin data de saturación. 1 negocio por cada 50 personas — entre los más densos del oeste (comparable a Hormigueros 1/47 y San Germán 1/50). 5+ categorías oversupplied confirmadas con matemática SOM &lt; breakeven. Phase 2 compara con BLS QCEW data PR-wide.</p>
         <p style="font-size:12px;color:#475569;line-height:1.6;"><strong>Política propuesta:</strong> dashboard público de density por categoría (este) + freeze suave a aprobaciones en categorías con search_per_biz &lt; 1.0 + incentivos a categorías ZERO_SUPPLY.</p>
         <p style="font-size:11px;color:#1e40af;margin-top:8px;font-style:italic;">Esto es lo que hace política basada en data en vez de en política.</p>
+        <div style="margin-top:12px;padding:10px 12px;background:#fff;border-radius:6px;border-top:2px solid #0369a1;">
+          <div style="font-size:11px;color:#0369a1;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">📅 Tu próximo paso ESTA semana</div>
+          <p style="font-size:12px;color:#1e293b;line-height:1.55;margin:0;">Textea <strong>MUNICIPIO + tu pueblo</strong> al <a href="https://wa.me/17874177711?text=MUNICIPIO%20" target="_blank" rel="noopener" style="color:#0369a1;font-weight:700;">787-417-7711</a>. Te encuentro el patrón de saturación de tu municipio en 2 semanas. Costo $0 al pueblo (sponsors locales pagan).</p>
+        </div>
       </div>
     </div>
   </div>
