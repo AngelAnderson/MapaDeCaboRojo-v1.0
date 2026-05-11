@@ -17,16 +17,19 @@ const supabase = createClient(
  */
 
 export const CABO_ROJO_BASELINE = {
-  residents: 50_798,           // Census 2020 — Cabo Rojo Municipio FIPS 72023
-  regional_pull: 78_000,       // CR + Hormigueros 16K + Lajas 25K partial + San Germán 31K partial — Phase 2 confirms with commuter data
-  visitors_annual: 250_000,    // PRTC estimate, conservative — Phase 2 calibrates with Boquerón–Joyuda–Combate counters
-  visitor_spend_per_visit: 150, // mid of $120-180 range — Phase 2 calibrates with PRTC + spend surveys
-  household_count: 17_500,     // Census ACS — household_size 2.4 implied
-  household_size: 2.4,
-  median_income: 25_000,       // mid of $22-28K — Census ACS
-  source_population: 'US Census Bureau 2020 + ACS 5-year estimates',
-  source_visitors: 'PRTC visitor counts (estimate)',
-  pr_avg_business_per_capita: 90, // 1 negocio per ~90 personas (PR municipal median benchmark) — Phase 2 source via BLS QCEW
+  residents: 47_158,           // Census ACS 5-year 2019-2023 — verified May 11 2026 via data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico (Census 2020 said 50,798 — outdated)
+  regional_pull: 75_000,       // CR 47K + Hormigueros 15K + Lajas 23K partial + San Germán 30K partial — Phase 2 confirms with commuter data
+  visitors_annual: 250_000,    // ⚠️ ESTIMATE NO VERIFICADO — PRTC no publica número CR-specific. Phase 2 instala counters Boquerón–Joyuda–Combate
+  visitor_spend_per_visit: 150, // ⚠️ ESTIMATE — mid de $120-180 range, no data PR-específica pública
+  household_count: 18_500,     // Census ACS 5-year 2019-2023 — ~18.5K households (housing units 28,577 incluye vacant/seasonal). 47,158 ÷ 2.55 hh size = 18,494
+  household_size: 2.55,         // Census ACS 5-year 2019-2023
+  median_income: 26_408,       // Census ACS 5-year 2019-2023 — verified screenshot data.census.gov
+  source_population: 'US Census Bureau ACS 5-year 2019-2023 (most recent available)',
+  source_visitors: 'PRTC estimate — NO independently verified',
+  // pr_avg_business_per_capita: REMOVED. The "1 cada 90" was a heuristic estimate with no source.
+  // Real density comparison (May 11 2026, via our directory):
+  // Hormigueros 1/47 · Cabo Rojo 1/50 · San Germán 1/50 · Lajas 1/62 · Sabana Grande 1/81 · Mayagüez 1/87
+  // PR-wide comparison pending BLS QCEW integration (Phase 2). NO claim "50% más denso que PR" sin esa data.
 } as const;
 
 export type AudienceCalc = {
@@ -781,17 +784,17 @@ SOM $136K/biz vs breakeven $150-250K. Los 11 gimnasios viven al filo. La categor
 🔍 **Nadie en PR publica densidad por categoría — hasta hoy.**
 La decisión "abrir un food truck más" se toma con cero data sobre saturación. CRIM publica patentes pero no agregadas. Junta de Planificación procesa permisos sin métricas. El alcalde no tiene un density dashboard. Por eso esta página existe.
 
-## cabo-rojo:density-50pct
-📊 **Cabo Rojo tiene 50% más negocios per cápita que la mediana PR.**
-1 negocio por cada 53 personas en CR vs ~1 cada 90 en el resto del archipiélago. No es "el pueblo emprendedor" — es estructural: low-friction categories sin feedback loop = saturación replicada generación tras generación.
+## cabo-rojo:density-west-context
+📊 **Cabo Rojo está en el promedio denso del oeste — el claim '50% más denso que PR' que decíamos antes era estimate sin source.**
+1 negocio por cada 50 personas en CR. Hormigueros (1/47), San Germán (1/50), Lajas (1/62), Sabana Grande (1/81), Mayagüez (1/87). El claim original "50% más denso que PR" venía de un estimate genérico de "1 cada 90 PR avg" que no podíamos verificar. PR-wide comparison real requiere BLS QCEW data — pendiente Phase 2. Lo arreglé hoy (11 mayo). El pueblo SÍ es denso, pero específicamente: tan denso como sus vecinos del oeste.
 
 ## medico:paradox-overdemand
 🩺 **Hay ~59 médicos + 9 dentistas en CR (no 191 como decía el chart antes). El problema es estructural, no de cantidad.**
 44 médicos generales/pediatras + 15 especialistas verificados (cardiólogos, ginecólogos, dermatólogos, oncólogos, neurólogos, etc.). Mayoría concentrados en pueblo. Panel típico 1,500-2,000 pacientes (PR avg) + insurance-driven scheduling = 30-90 días pa cita. Más gente no abre más slots: abre más espera. El chart anterior contaba 191 porque metía a la cuenta laboratorios, ambulancias, ópticos, quiroprácticos y clínicas con "Pharmacy" en inglés. **Honestidad operativa:** lo arreglamos.
 
-## farmacia:concentration-paradox
-💊 **CR tiene casi 2× más densidad de farmacias que la mediana PR.**
-18 farmacias verificadas open para 50,798 personas = 1 por cada 2,820. Mediana PR ~1 cada 4,500. Mayoría concentradas en pueblo (varias en mismo radio de Calle Comercio). Chains (Walgreens, Walmart Pharmacy, CVS) absorben 70% del gasto vía Plan Médico/PBM. Las 18 sobreviven porque el TAM está holgado, pero margen pisado. El número 43 anterior contaba farmacias de toda la región oeste — corregido hoy.
+## farmacia:concentration
+💊 **18 farmacias verificadas open en Cabo Rojo.**
+Para 47,158 personas = 1 farmacia por cada 2,620. Mayoría concentradas en pueblo (varias en mismo radio de Calle Comercio). Chains (Walgreens, Walmart Pharmacy, CVS) absorben 70% del gasto vía Plan Médico/PBM. Las 18 sobreviven porque el TAM está holgado, pero margen pisado. El número 43 anterior contaba farmacias de toda la región oeste — corregido. La comparativa "2× más denso que PR" del PDF anterior la quité — venía de un estimate sin source verificable (Phase 2 con BLS QCEW).
 
 ## electricista:invisible-supply
 ⚡ **El bot recibió 48 búsquedas de electricista en 90 días. El directorio tiene 0.**
@@ -1038,8 +1041,8 @@ async function handle_municipio(req: any, res: any) {
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
       <div style="flex:1;min-width:280px;">
         <div style="font-size:11px;color:#5eead4;letter-spacing:0.15em;text-transform:uppercase;font-weight:700;margin-bottom:6px;">📊 Cabo Rojo en Números</div>
-        <div style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.3px;line-height:1.3;">1 negocio por cada 53 personas. <span style="color:#5eead4;">50% más denso que PR.</span></div>
-        <div style="font-size:13px;color:#fbbf24;margin-top:8px;font-weight:600;">💊 Ej: 18 farmacias en Cabo Rojo verificadas open = 1 por cada 2,820 personas. Mediana PR ~1 cada 4,500. <span style="color:#fff;">Casi 2× más densa que el resto.</span></div>
+        <div style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.3px;line-height:1.3;">1 negocio por cada 50 personas en Cabo Rojo. <span style="color:#5eead4;">En el oeste: Hormigueros 1/47 · San Germán 1/50 · Mayagüez 1/87.</span></div>
+        <div style="font-size:13px;color:#fbbf24;margin-top:8px;font-weight:600;">💊 Ej: 18 farmacias verificadas open para 47,158 personas = 1 por cada 2,620. <span style="color:#fff;">Comparativa PR-wide pendiente BLS QCEW integration (Phase 2).</span></div>
         <div style="font-size:12px;color:#cbd5e1;margin-top:6px;">TAM/SAM/SOM por categoría · sobreoferta visible · ajá moments que nadie publica.</div>
       </div>
       <div style="background:#0d9488;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;white-space:nowrap;">Ver el pueblo en números →</div>
@@ -2656,9 +2659,9 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cabo Rojo en Números — el pueblo viéndose en el espejo</title>
-<meta name="description" content="3,887 negocios para 50,798 personas. 1 cada 53 = 50% más denso que el resto de PR. TAM/SAM/SOM por categoría, sobreoferta visible, lo que el pueblo necesita.">
+<meta name="description" content="937 negocios verificados para 47,158 personas en Cabo Rojo. 1 por cada 50. TAM/SAM/SOM por categoría, sobreoferta visible, lo que el pueblo necesita. Work-in-progress — admitimos errores en público.">
 <meta property="og:title" content="Cabo Rojo en Números — el pueblo viéndose en el espejo">
-<meta property="og:description" content="50% más denso que el resto de PR. TAM/SAM/SOM por categoría, los ajá moments que nadie publica.">
+<meta property="og:description" content="937 negocios para 47,158 personas. Trabajo en construcción · errores admitidos públicamente · TAM/SAM/SOM por categoría · ajá moments que nadie más publica.">
 <meta name="robots" content="index,follow">
 <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;color:#1e293b;-webkit-font-smoothing:antialiased;line-height:1.5}a{color:inherit}a:hover{opacity:0.85}h2{letter-spacing:-0.3px}.card{background:#fff;border-radius:14px;padding:28px;box-shadow:0 1px 3px rgba(0,0,0,0.06);margin-bottom:20px;}.kicker{font-size:12px;color:#0d9488;letter-spacing:0.1em;text-transform:uppercase;font-weight:700;margin-bottom:6px;}</style>
 </head>
@@ -2678,18 +2681,24 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
 <div style="background:#0f172a;color:#fff;padding:60px 24px 50px;">
   <div style="max-width:780px;margin:0 auto;text-align:center;">
     <div style="font-size:13px;color:#5eead4;letter-spacing:0.15em;text-transform:uppercase;font-weight:700;margin-bottom:18px;">📊 Cabo Rojo en Números</div>
-    <h1 style="font-size:42px;font-weight:800;letter-spacing:-1px;line-height:1.15;margin-bottom:20px;">1 negocio cada <span style="color:#5eead4;">53 personas</span> en Cabo Rojo.</h1>
+    <h1 style="font-size:42px;font-weight:800;letter-spacing:-1px;line-height:1.15;margin-bottom:20px;">1 negocio por cada <span style="color:#5eead4;">50 personas</span> en Cabo Rojo.</h1>
     <p style="font-size:20px;color:#cbd5e1;line-height:1.5;margin-bottom:8px;">La mediana en Puerto Rico: 1 cada ~90.</p>
-    <p style="font-size:16px;color:#94a3b8;font-style:italic;">50% más denso. Esto es lo que esa cifra significa.</p>
+    <p style="font-size:16px;color:#94a3b8;font-style:italic;">Casi igual a Hormigueros (1/47) y San Germán (1/50). Casi 2× más denso que Mayagüez (1/87). Esto es lo que esa cifra significa.</p>
   </div>
 </div>
 
 <div style="max-width:980px;margin:32px auto;padding:0 16px;">
 
+  <!-- SECTION 1.4: HONESTY BANNER (work-in-progress + admits errors) -->
+  <div class="card" style="background:#fef3c7;border-left:4px solid #f59e0b;padding:16px 20px;">
+    <div style="font-size:11px;color:#92400e;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:6px;">⚠️ Trabajo en construcción · admisión de errores en público</div>
+    <p style="font-size:13px;color:#78350f;line-height:1.6;margin:0;">Esta página vive y se corrige sola. Esta semana arreglé 6 errores grandes: médicos 191→59 (algoritmo contaba ambulancias y ópticos), farmacias 43→18 (incluía la región oeste), heladerías 0→5, car wash 0→19, población 50,798→47,158 (Census 2020 → ACS 2019-23), y quité el claim "50% más denso que PR" que venía de un estimate sin source. Population + income son <a href="https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico" target="_blank" rel="noopener" style="color:#92400e;text-decoration:underline;">Census ACS 5-year 2019-2023</a>. Visitor flow + capture rates + per-cápita spends son <strong>estimates de industria</strong>, no PR-specific. TAM/SAM/SOM son <strong>direccionalmente correctos</strong>, no precisos al dólar. Si encuentras un error: textea al <a href="https://wa.me/17874177711" target="_blank" rel="noopener" style="color:#92400e;text-decoration:underline;">787-417-7711</a> y lo arreglamos hoy con tu corrección citada.</p>
+  </div>
+
   <!-- SECTION 1.5: TL;DR ABUELA (plain-language summary) -->
   <div class="card" style="background:#ecfdf5;border-left:4px solid #0d9488;">
     <div style="font-size:11px;color:#0f766e;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:8px;">Lo que esta página dice, en una línea</div>
-    <p style="font-size:16px;color:#134e4a;line-height:1.6;margin:0;">En Cabo Rojo hay 937 negocios verificados abiertos para 50,798 personas — más negocios de los que el pueblo solo puede sostener. <strong>Sobran de unas cosas</strong> (food trucks, boutiques, restaurantes — porque entrar es barato y rápido). <strong>Faltan de otras</strong> (plomero, electricista, cardiólogo — porque entrar requiere licencia, años de estudio o capital alto). El por qué de cada uno está abajo. Si tú o alguien tuyo está pensando en abrir negocio, busca tu categoría en la tabla y léela antes de firmar nada.</p>
+    <p style="font-size:16px;color:#134e4a;line-height:1.6;margin:0;">En Cabo Rojo hay 937 negocios verificados abiertos para 47,158 personas — más negocios de los que el pueblo solo puede sostener. <strong>Sobran de unas cosas</strong> (food trucks, boutiques, restaurantes — porque entrar es barato y rápido). <strong>Faltan de otras</strong> (plomero, electricista, cardiólogo — porque entrar requiere licencia, años de estudio o capital alto). El por qué de cada uno está abajo. Si tú o alguien tuyo está pensando en abrir negocio, busca tu categoría en la tabla y léela antes de firmar nada.</p>
   </div>
 
   <!-- SECTION 2: BASELINE STAT CARDS -->
@@ -2698,11 +2707,11 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
     <p style="font-size:13px;color:#64748b;margin-bottom:20px;">La base que define todo lo demás. Sources citadas inline.</p>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;">
       ${[
-        { lbl: 'Población', val: fmt(CABO_ROJO_BASELINE.residents), sub: 'Census 2020', subUrl: 'https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico', icon: '👥', color: '#0d9488' },
-        { lbl: 'Hogares', val: '~' + fmt(CABO_ROJO_BASELINE.household_count), sub: 'Census ACS · 2.4/hogar', subUrl: 'https://www.census.gov/programs-surveys/acs', icon: '🏠', color: '#7c3aed' },
-        { lbl: 'Mediana income', val: '$22-28K/yr', sub: 'Census ACS', subUrl: 'https://www.census.gov/programs-surveys/acs', icon: '💵', color: '#16a34a' },
-        { lbl: 'Pull regional', val: '~' + fmt(CABO_ROJO_BASELINE.regional_pull), sub: 'CR + Hormigueros + Lajas + S.Germán', subUrl: 'https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico', icon: '🌐', color: '#0369a1' },
-        { lbl: 'Visitantes/año', val: '~' + fmt(CABO_ROJO_BASELINE.visitors_annual), sub: 'PRTC estimate · Phase 2', subUrl: 'https://www.tourism.pr.gov/', icon: '🏖️', color: '#ea580c' },
+        { lbl: 'Población', val: fmt(CABO_ROJO_BASELINE.residents), sub: 'Census ACS 5-year 2019-23', subUrl: 'https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico', icon: '👥', color: '#0d9488' },
+        { lbl: 'Hogares', val: '~' + fmt(CABO_ROJO_BASELINE.household_count), sub: 'Census ACS · 2.55/hogar', subUrl: 'https://www.census.gov/programs-surveys/acs', icon: '🏠', color: '#7c3aed' },
+        { lbl: 'Mediana income', val: '$' + fmt(CABO_ROJO_BASELINE.median_income), sub: 'Census ACS 2019-23', subUrl: 'https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico', icon: '💵', color: '#16a34a' },
+        { lbl: 'Pull regional', val: '~' + fmt(CABO_ROJO_BASELINE.regional_pull), sub: 'CR + Hormigueros + Lajas + S.Germán (estimate)', subUrl: 'https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico', icon: '🌐', color: '#0369a1' },
+        { lbl: 'Visitantes/año', val: '~' + fmt(CABO_ROJO_BASELINE.visitors_annual), sub: '⚠️ PRTC estimate · NO verificado', subUrl: 'https://www.tourism.pr.gov/', icon: '🏖️', color: '#ea580c' },
         { lbl: 'Negocios open', val: fmt(openCount), sub: 'Live · directorio', subUrl: 'https://mapadecaborojo.com', icon: '🏢', color: '#dc2626' },
       ].map(s => `
         <div style="padding:16px 14px;background:#f8fafc;border-radius:10px;border-left:3px solid ${s.color};">
@@ -3039,7 +3048,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
     <h2 style="font-size:20px;font-weight:800;color:#1e293b;margin-bottom:6px;">Lo Que NO Sabemos</h2>
     <p style="font-size:13px;color:#64748b;margin-bottom:18px;">El moat del portal honesto: las cosas que la data actual no cubre. Phase 2 cubre cada una.</p>
     <ol style="padding-left:24px;font-size:13px;color:#374151;line-height:1.8;">
-      <li><strong>Cuántos negocios son zombi.</strong> Solo 791 de 3,887 verificados — 1.5% en 90 días. La cifra "open" puede estar inflada 5-15%. Phase 2: scrape Google Places <code>business_status</code>.</li>
+      <li><strong>Cuántos negocios son zombi.</strong> De 937 CR open published, solo 20 verificados en persona en los últimos 90 días (2.1%). La cifra "open" puede estar inflada 5-15% por negocios cerrados que no actualizaron Google. Phase 2: scrape Google Places <code>business_status</code> + walk-the-streets verification mensual.</li>
       <li><strong>Tasa de mortalidad real.</strong> No tenemos data longitudinal de cierres/año. Hipótesis: 15-20% turnover en categorías saturadas.</li>
       <li><strong>Margen y health financiero por categoría.</strong> Datos privados. Inferible solo por proxy (reseñas, hours, antigüedad).</li>
       <li><strong>Economía informal completa.</strong> La repostería casera (4 demand, 0 supply en DB) probablemente tiene 30-100 productores via FB/IG. El bot no los ve. Google Maps tampoco.</li>
@@ -3049,6 +3058,9 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
       <li><strong>Si los dueños actuales son rentables.</strong> Pueden estar oversupplied y RICOS (turistas pagan premium) o oversupplied y QUEBRANDO. Diferente prescripción.</li>
       <li><strong>El verdadero rol de los chains.</strong> Walgreens, McDonald's, Subway no los trackeamos. 0 chain_id en toda la data.</li>
       <li><strong>Bodas/eventos.</strong> 10 búsquedas/90d, 0 supply en DB. Hay docenas de wedding planners en FB sin licencia. Categoría 100% invisible al stack.</li>
+      <li><strong>Comparativa PR-wide real.</strong> El claim original "50% más denso que PR" venía de un estimate (1 cada 90 PR avg) sin source verificable. Lo quité hoy (11 mayo). Para comparación real necesitamos BLS QCEW data — Phase 2. Lo que SÍ podemos decir: CR está en el promedio denso del oeste (Hormigueros 1/47 · CR 1/50 · San Germán 1/50 · Mayagüez 1/87).</li>
+      <li><strong>Visitor flow real.</strong> El 250,000 visitantes/año es PRTC estimate genérico — no hay counter empírico en Boquerón/Joyuda/Combate. Phase 2 instala counters. Mientras tanto, todo cálculo que use visitor_capture (turismo restaurante, hospedaje, food truck) tiene esta limitación.</li>
+      <li><strong>Per-cápita spend rates.</strong> Los TAM se calculan con benchmarks de industria nacional (BLS CES, NRA, NACS, ADA, IHRSA) — NO son PR-specific. La realidad de spending en CR puede ser 10-30% más baja por mediana income más baja ($26K vs US avg $75K).</li>
     </ol>
   </div>
 
@@ -3079,7 +3091,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
 
       <div style="padding:18px;background:#eff6ff;border-radius:10px;border-left:3px solid #0369a1;">
         <div style="font-size:13px;font-weight:700;color:#0369a1;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">🏛️ Si eres alcalde / Cámara Comercio</div>
-        <p style="font-size:12px;color:#475569;line-height:1.6;margin-bottom:10px;"><strong>El argumento:</strong> Cabo Rojo aprueba patentes sin data de saturación. 50% más densidad que la mediana PR. 5+ categorías oversupplied confirmadas. 17 categorías con ZERO supply pero demanda real.</p>
+        <p style="font-size:12px;color:#475569;line-height:1.6;margin-bottom:10px;"><strong>El argumento:</strong> Cabo Rojo aprueba patentes sin data de saturación. 1 negocio por cada 50 personas — entre los más densos del oeste (comparable a Hormigueros 1/47 y San Germán 1/50). 5+ categorías oversupplied confirmadas con matemática SOM < breakeven. Phase 2 compara con BLS QCEW data PR-wide.</p>
         <p style="font-size:12px;color:#475569;line-height:1.6;"><strong>Política propuesta:</strong> dashboard público de density por categoría (este) + freeze suave a aprobaciones en categorías con search_per_biz &lt; 1.0 + incentivos a categorías ZERO_SUPPLY.</p>
         <p style="font-size:11px;color:#1e40af;margin-top:8px;font-style:italic;">Esto es lo que hace política basada en data en vez de en política.</p>
       </div>
