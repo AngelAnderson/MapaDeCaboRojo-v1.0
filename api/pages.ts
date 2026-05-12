@@ -324,6 +324,18 @@ export const PR_AVG_PER_CAPITA: Record<string, number> = {
   plomero: 2500,
   electricista: 2500,
   aire: 4500,
+  // New buckets added 2026-05-12 — Phase 2 calibration with BLS QCEW
+  handyman: 2000,
+  pintor: 4000,
+  carpintero: 6000,
+  costurera: 5000,
+  catering: 8000,
+  wedding: 15000,
+  spa: 5000,
+  trainer: 6000,
+  tour: 10000,
+  bicicleta: 12000,
+  tatuajes: 8000,
 };
 
 /**
