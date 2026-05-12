@@ -728,7 +728,13 @@ export const CATEGORY_SUPPLY_MATCHERS: Record<string, (p: any) => boolean> = {
   },
   veterinario: (p) => /veterinari/i.test(p.name || '') || /veterinari/i.test(p.subcategory || ''),
   reposteria: (p) => /reposteri|panader.*dulce|cake|bizcoch/i.test(p.name || '') || (p.subcategory || '').toLowerCase().includes('reposter'),
-  tatuajes: (p) => /tatua|tattoo|piercing/i.test(p.name || '') || (p.category || '') === 'Tatuajes',
+  tatuajes: (p) => {
+    if (['FOOD', 'Restaurantes'].includes(p.category || '')) return false;
+    if (/\bsupply\b/i.test(p.name || '')) return false;
+    return /tatuaj|tattoo|piercing/i.test(p.name || '')
+      || (p.category || '') === 'Tatuajes'
+      || /tatua|tattoo/i.test(p.subcategory || '');
+  },
   colmado: (p) => /colmado|mini.*mark|min(i|í).*super/i.test(p.name || '') || (p.category || '') === 'Colmado',
   barberia: (p) => /barber/i.test(p.name || '') || /barber/i.test(p.subcategory || ''),
 };
@@ -773,8 +779,8 @@ Cuando el bot dice "0.47 búsquedas por abogado" suena oversupply. Pero los abog
 20 de 41 negocios de hospedaje en una sola playa. No admite el 21vo. Si el visitor flow baja 15%, default mass — sin colchón. La concentración no es "vibe del pueblo," es geografía pura.
 
 ## aire:zero-supply
-🔧 **El pueblo necesita oficios, no más food trucks.**
-Plomero, electricista, AC tech, cardiólogo, ginecólogo: 0 detectados en directorio, 100+ búsquedas/90d. La barrera no es dinero — es tiempo + certificación gubernamental. Un boricua puede abrir food truck en 3 meses con $25K. No puede ser cardiólogo en 3 meses con ningún capital.
+🔧 **3 AC techs verificados pa' el pueblo entero — Luis David es el único con visibilidad consistente.**
+CR Air Conditioning, EAS Air Conditioning, Luis David Refrigeración. Las otras dos no postean en FB ni tienen Google Profile mantenido. Cuando se rompe el AC un sábado 8pm, no hay 3 opciones reales — hay 1. La barrera no es dinero — es certificación HVAC + tiempo. Plomero, electricista, propano, handyman: mismo patrón. Si tienes la habilidad y entras al directorio, eres el primero que el bot recomienda.
 
 ## gimnasio:below-breakeven
 ⚪ **Los gimnasios están bajo breakeven.**
@@ -841,7 +847,17 @@ const HEAT_BUCKETS_DEF: Array<{
     matches:(p)=>/electric/i.test(p.name||'') || /electric/i.test(p.subcategory||'') || ((p.tags||[]) as string[]).some(t=>/electric/i.test(t)) },
   { key:'aire', label:'Aire/Refrigeración', emoji:'❄️',
     qRegex:/(aire acond|frigo|nevera|refriger)/i,
-    matches:(p)=>/(aire\s|refriger|\bac\b|frigo)/i.test(p.name||'') || ((p.tags||[]) as string[]).some(t=>/refriger|aire/i.test(t)) },
+    matches:(p)=>{
+      // Exclude clothing boutiques with "Aire" in name (e.g. "Aire Gypsy Boho Boutique")
+      if ((p.category||'') === 'SHOPPING') return false;
+      if (/boutique|\bropa\b|clothing|moda/i.test(p.subcategory||'')) return false;
+      if (((p.tags||[]) as string[]).some(t=>/boutique|ropa|moda|clothing/i.test(t))) return false;
+      // Strict name match: explicit AC/refrigeración terms only (no bare "aire" word)
+      const nameMatch = /(refrigerac|aire\s+acond|\bhvac\b|\bac\s+repair\b|air\s+condition)/i.test(p.name||'');
+      const subMatch = /aire|refriger|hvac/i.test(p.subcategory||'');
+      const tagMatch = ((p.tags||[]) as string[]).some(t=>/refriger|aire_acond|hvac/i.test(t));
+      return nameMatch || subMatch || tagMatch;
+    } },
   { key:'farmacia', label:'Farmacia', emoji:'💊', categorySlug:'farmacia',
     qRegex:/(farmacia|botica|medicament|recet)/i,
     matches:(p)=>/farmacia|botica/i.test(p.name||'') || (p.subcategory||'').toLowerCase()==='farmacia' },
@@ -880,13 +896,51 @@ const HEAT_BUCKETS_DEF: Array<{
     matches:(p)=>['LODGING','Hospedaje'].includes(p.category||'') },
   { key:'handyman', label:'Handyman', emoji:'🛠️',
     qRegex:/(handyman|albañil|reparacion|porton)/i,
-    matches:(p)=>/handyman|albañil|reparac/i.test(p.name||'') },
+    matches:(p)=>/handyman|albañil|reparac/i.test(p.name||'') || /handyman|albañil|reparac/i.test(p.subcategory||'') || ((p.tags||[]) as string[]).some(t=>/handyman|albanil|reparac/i.test(t)) },
+  { key:'pintor', label:'Pintor', emoji:'🎨',
+    qRegex:/(pintor|pintura)/i,
+    matches:(p)=>/pintor|pintura/i.test(p.name||'') || /pintor|pintura/i.test(p.subcategory||'') || ((p.tags||[]) as string[]).some(t=>/pintor|pintura/i.test(t)) },
+  { key:'carpintero', label:'Carpintero', emoji:'🪵',
+    qRegex:/(carpinter|ebanist)/i,
+    matches:(p)=>/carpinter|ebanist/i.test(p.name||'') || /carpinter|ebanist/i.test(p.subcategory||'') || ((p.tags||[]) as string[]).some(t=>/carpinter|ebanist/i.test(t)) },
+  { key:'costurera', label:'Costurera/Sastre', emoji:'🪡',
+    qRegex:/(costurer|sastre|sastreria)/i,
+    matches:(p)=>/costurer|sastre/i.test(p.name||'') || /costurer|sastre/i.test(p.subcategory||'') || ((p.tags||[]) as string[]).some(t=>/costurer|sastre/i.test(t)) },
+  { key:'catering', label:'Catering', emoji:'🥘',
+    qRegex:/(catering)/i,
+    matches:(p)=>{
+      // Exclude restaurants — catering is a separate service unless explicit in name
+      if (['FOOD','Restaurantes'].includes(p.category||'') && !/catering/i.test(p.name||'')) return false;
+      return /catering/i.test(p.name||'') || /catering/i.test(p.subcategory||'') || ((p.tags||[]) as string[]).some(t=>/catering/i.test(t));
+    } },
+  { key:'wedding', label:'Bodas/Eventos', emoji:'💍',
+    qRegex:/(wedding|boda|matrimonio|planificador)/i,
+    matches:(p)=>/wedding|\bboda|planificador.*evento/i.test(p.name||'') || /wedding|boda|eventos|planificador/i.test(p.subcategory||'') || ((p.tags||[]) as string[]).some(t=>/wedding|boda|evento/i.test(t)) },
+  { key:'spa', label:'Spa/Masaje', emoji:'💆',
+    qRegex:/(\bspa\b|masaj)/i,
+    matches:(p)=>/\bspa\b|masaj/i.test(p.name||'') || /spa|masaj/i.test(p.subcategory||'') || ((p.tags||[]) as string[]).some(t=>/spa|masaj/i.test(t)) },
+  { key:'trainer', label:'Personal Trainer', emoji:'💪',
+    qRegex:/(personal training|trainer|entrenador)/i,
+    matches:(p)=>/personal training|trainer|entrenador/i.test(p.name||'') || /trainer|entrenador|coach/i.test(p.subcategory||'') || ((p.tags||[]) as string[]).some(t=>/trainer|entrenador|coach/i.test(t)) },
+  { key:'tour', label:'Tour Operator', emoji:'🗺️',
+    qRegex:/(\btour\b|excursion)/i,
+    matches:(p)=>/\btour|excursion/i.test(p.name||'') || /tour|excursion/i.test(p.subcategory||'') || ((p.tags||[]) as string[]).some(t=>/tour|excursion/i.test(t)) },
+  { key:'bicicleta', label:'Bicicleta/eBike', emoji:'🚲',
+    qRegex:/(bicicl|\bbike\b|ebike|e-bike)/i,
+    matches:(p)=>/bicicl|\bbike|ebike/i.test(p.name||'') || /bike|bicicl/i.test(p.subcategory||'') || ((p.tags||[]) as string[]).some(t=>/bike|bicicl/i.test(t)) },
   { key:'boutique', label:'Boutique', emoji:'👗', categorySlug:'tiendas-de-ropa',
     qRegex:/(boutique|tienda\s+ropa)/i,
     matches:(p)=>/boutique/i.test(p.name||'') },
   { key:'gimnasio', label:'Gimnasio', emoji:'🏋️', categorySlug:'gimnasio',
     qRegex:/(gimnasio|\bgym\b|crossfit)/i,
     matches:(p)=>/gimnasio|\bgym\b/i.test(p.name||'') || (p.subcategory||'').toLowerCase()==='gimnasio' },
+  { key:'tatuajes', label:'Tatuajes', emoji:'💉',
+    qRegex:/(tatuaj|tattoo|piercing)/i,
+    matches:(p)=>{
+      if (['FOOD','Restaurantes'].includes(p.category||'')) return false;
+      if (/\bsupply\b/i.test(p.name||'')) return false;
+      return /tatuaj|tattoo|piercing/i.test(p.name||'') || (p.category||'') === 'Tatuajes' || /tatua|tattoo/i.test(p.subcategory||'');
+    } },
 ];
 
 type HeatBucket = {
@@ -2347,7 +2401,11 @@ async function handle_admin_municipio(req: any, res: any) {
     const HEAT_BUCKETS_DEF: Array<{ key: string; label: string; emoji: string; qRegex: RegExp; matches: (p: any) => boolean }> = [
       { key:'plomeria', label:'Plomería', emoji:'🔧', qRegex:/(plomer|tuberi)/i, matches:(p)=>/plomer/i.test(p.name||'') || ((p.tags||[]) as string[]).some(t=>/plomer/i.test(t)) },
       { key:'electricista', label:'Electricista', emoji:'⚡', qRegex:/(electricis|\belectric)/i, matches:(p)=>/electric/i.test(p.name||'') },
-      { key:'aire', label:'Aire/Refrig.', emoji:'❄️', qRegex:/(aire acond|frigo|refriger)/i, matches:(p)=>/(aire|refriger)/i.test(p.name||'') },
+      { key:'aire', label:'Aire/Refrig.', emoji:'❄️', qRegex:/(aire acond|frigo|refriger)/i, matches:(p)=>{
+        if ((p.category||'') === 'SHOPPING') return false;
+        if (/boutique|\bropa\b|clothing|moda/i.test(p.subcategory||'')) return false;
+        return /(refrigerac|aire\s+acond|\bhvac\b|\bac\s+repair\b|air\s+condition)/i.test(p.name||'') || /aire|refriger|hvac/i.test(p.subcategory||'');
+      } },
       { key:'farmacia', label:'Farmacia', emoji:'💊', qRegex:/(farmacia|botica)/i, matches:(p)=>/farmacia|botica/i.test(p.name||'') },
       { key:'medico', label:'Médico', emoji:'🩺', qRegex:/(pediatr|medic|doctor|\bdr\.)/i, matches:(p) => {
         if (!['HEALTH','Salud','salud'].includes(p.category||'')) return false;
@@ -2362,6 +2420,24 @@ async function handle_admin_municipio(req: any, res: any) {
       { key:'belleza', label:'Belleza', emoji:'💇', qRegex:/(barber|peluqu|estetic|salon)/i, matches:(p)=>['BEAUTY','Belleza','Belleza y Bienestar'].includes(p.category||'') },
       { key:'auto', label:'Auto', emoji:'🔩', qRegex:/(mecanic|automovil|carro|llanta)/i, matches:(p)=>['AUTO','Automotriz'].includes(p.category||'') },
       { key:'hotel', label:'Hospedaje', emoji:'🏨', qRegex:/(hotel|hospedaje|airbnb)/i, matches:(p)=>['LODGING','Hospedaje'].includes(p.category||'') },
+      { key:'handyman', label:'Handyman', emoji:'🛠️', qRegex:/(handyman|albañil|reparacion)/i, matches:(p)=>/handyman|albañil|reparac/i.test(p.name||'') || /handyman|albañil|reparac/i.test(p.subcategory||'') },
+      { key:'pintor', label:'Pintor', emoji:'🎨', qRegex:/(pintor|pintura)/i, matches:(p)=>/pintor|pintura/i.test(p.name||'') || /pintor|pintura/i.test(p.subcategory||'') },
+      { key:'carpintero', label:'Carpintero', emoji:'🪵', qRegex:/(carpinter|ebanist)/i, matches:(p)=>/carpinter|ebanist/i.test(p.name||'') || /carpinter|ebanist/i.test(p.subcategory||'') },
+      { key:'costurera', label:'Costurera/Sastre', emoji:'🪡', qRegex:/(costurer|sastre)/i, matches:(p)=>/costurer|sastre/i.test(p.name||'') || /costurer|sastre/i.test(p.subcategory||'') },
+      { key:'catering', label:'Catering', emoji:'🥘', qRegex:/(catering)/i, matches:(p)=>{
+        if (['FOOD','Restaurantes'].includes(p.category||'') && !/catering/i.test(p.name||'')) return false;
+        return /catering/i.test(p.name||'') || /catering/i.test(p.subcategory||'');
+      } },
+      { key:'wedding', label:'Bodas/Eventos', emoji:'💍', qRegex:/(wedding|boda|matrimonio|planificador)/i, matches:(p)=>/wedding|\bboda|planificador.*evento/i.test(p.name||'') || /wedding|boda|eventos|planificador/i.test(p.subcategory||'') },
+      { key:'spa', label:'Spa/Masaje', emoji:'💆', qRegex:/(\bspa\b|masaj)/i, matches:(p)=>/\bspa\b|masaj/i.test(p.name||'') || /spa|masaj/i.test(p.subcategory||'') },
+      { key:'trainer', label:'Personal Trainer', emoji:'💪', qRegex:/(trainer|entrenador)/i, matches:(p)=>/trainer|entrenador/i.test(p.name||'') || /trainer|entrenador|coach/i.test(p.subcategory||'') },
+      { key:'tour', label:'Tour Operator', emoji:'🗺️', qRegex:/(\btour\b|excursion)/i, matches:(p)=>/\btour|excursion/i.test(p.name||'') || /tour|excursion/i.test(p.subcategory||'') },
+      { key:'bicicleta', label:'Bicicleta/eBike', emoji:'🚲', qRegex:/(bicicl|\bbike\b|ebike)/i, matches:(p)=>/bicicl|\bbike|ebike/i.test(p.name||'') || /bike|bicicl/i.test(p.subcategory||'') },
+      { key:'tatuajes', label:'Tatuajes', emoji:'💉', qRegex:/(tatuaj|tattoo|piercing)/i, matches:(p)=>{
+        if (['FOOD','Restaurantes'].includes(p.category||'')) return false;
+        if (/\bsupply\b/i.test(p.name||'')) return false;
+        return /tatuaj|tattoo|piercing/i.test(p.name||'') || (p.category||'') === 'Tatuajes';
+      } },
     ];
 
     const cprBuckets = HEAT_BUCKETS_DEF.map(b => {
