@@ -2691,11 +2691,12 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
     const ajaMoments = mergeAjaMoments(autoAjas, overrides, 9);
 
     // Density chart sort: most denser to thinnest
+    // Bumped from 12→24 (2026-05-12) to fit 10 new buckets added that day
     const densitySorted = [...densityRows].sort((a, b) => {
       if (a.verdict === 'zero' && b.verdict !== 'zero') return -1;
       if (b.verdict === 'zero' && a.verdict !== 'zero') return 1;
       return b.multiplier - a.multiplier;
-    }).slice(0, 12);
+    }).slice(0, 24);
 
     const generatedAt = new Date().toLocaleString('es-PR', { timeZone: 'America/Puerto_Rico' });
 
