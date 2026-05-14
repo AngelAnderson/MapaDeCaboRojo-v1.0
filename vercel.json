@@ -15,7 +15,7 @@
     { "source": "/admin/municipio", "destination": "/api/pages?page=admin-municipio" },
     { "source": "/admin/lifecycle-queue", "destination": "/api/pages?page=admin-lifecycle-queue" },
     { "source": "/evento/:slug", "destination": "/api/pages?page=evento&slug=:slug" },
-    { "source": "/me-conviene", "destination": "/api/me-conviene" },
+    { "source": "/me-conviene", "destination": "/api/pages?page=me-conviene" },
     { "source": "/pueblo-en-numeros", "destination": "/api/pages?page=pueblo-en-numeros" },
     { "source": "/municipio", "destination": "/api/pages?page=municipio" },
     { "source": "/turismo", "destination": "/api/pages?page=turismo" },
