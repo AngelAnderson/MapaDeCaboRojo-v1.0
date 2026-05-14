@@ -2793,6 +2793,18 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
     <p style="font-size:16px;color:#134e4a;line-height:1.6;margin:0 0 10px 0;">En Cabo Rojo hay <strong>946 negocios en el directorio · 937 abiertos hoy · 4 cerrados · 5 dudosos</strong>. Para 47,158 personas. Usamos los <strong>937 abiertos</strong> para calcular densidad porque los cerrados ya no compiten. Más negocios de los que el pueblo solo puede sostener — <strong>sobran de unas cosas</strong> (food trucks, boutiques, restaurantes — entrar es barato y rápido), <strong>faltan de otras</strong> (plomero, electricista, cardiólogo — entrar requiere licencia, años de estudio o capital alto). El por qué de cada uno está abajo. Si tú o alguien tuyo está pensando en abrir negocio, busca tu categoría en la tabla y léela antes de firmar nada.</p>
   </div>
 
+  <!-- BANNER: ¿Piensas abrir negocio? → /me-conviene -->
+  <a href="/me-conviene" style="display:block;text-decoration:none;color:inherit;background:linear-gradient(135deg,#0f766e 0%,#0d9488 100%);border-radius:14px;padding:20px 24px;margin-bottom:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;">
+      <div style="flex:1;min-width:240px;">
+        <div style="font-size:11px;color:#a7f3d0;letter-spacing:0.15em;text-transform:uppercase;font-weight:700;margin-bottom:6px;">🧭 Herramienta nueva</div>
+        <div style="font-size:18px;font-weight:800;color:#fff;line-height:1.3;">¿Estás pensando abrir un negocio?<br><span style="color:#a7f3d0;">Prueba /me-conviene en 60 segundos.</span></div>
+        <div style="font-size:13px;color:#ccfbf1;margin-top:6px;">Te dice si la categoría que piensas tiene espacio — o si la matemática no da. Gratis, sin registro.</div>
+      </div>
+      <div style="background:#fff;color:#0d9488;padding:10px 18px;border-radius:8px;font-size:14px;font-weight:700;white-space:nowrap;">Chequear ahora →</div>
+    </div>
+  </a>
+
   <!-- SECTION 1.6: WIIFM MASTER CALLOUT — ¿Y AHORA QUÉ? -->
   <div class="card" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:#fff;border-left:4px solid #5eead4;padding:24px 28px;">
     <div style="font-size:11px;color:#5eead4;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:14px;">🎯 ¿Y AHORA QUÉ?</div>
@@ -3298,6 +3310,221 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
 }
 
 
+// ============ admin-lifecycle-queue ============
+// Approval queue for place_lifecycle_events from the daily Google Places sync daemon.
+// Reuses ADMIN_MUNICIPIO_SECRET + cookie pattern from /admin/municipio.
+
+interface LifecyclePendingEvent {
+  id: string;
+  place_id: string;
+  place_name: string;
+  place_slug: string | null;
+  address: string | null;
+  current_status: string;
+  event_type: string;
+  source: string;
+  prev_value: Record<string, unknown> | null;
+  new_value: Record<string, unknown> | null;
+  confidence_score: number;
+  detected_at: string;
+  notes: string | null;
+  hours_pending: number;
+}
+
+const STATUS_ENUM_MAP: Record<string, string> = {
+  'OPERATIONAL': 'open',
+  'CLOSED_TEMPORARILY': 'closed',
+  'CLOSED_PERMANENTLY': 'permanently_closed',
+};
+
+async function applyLifecycleEvent(eventId: string): Promise<{ ok: boolean; error?: string; effect?: string }> {
+  // Fetch event + place
+  const { data: ev, error: evErr } = await supabase
+    .from('place_lifecycle_events')
+    .select('*, places!inner(id, name, slug, status, municipality, address, lat, lon)')
+    .eq('id', eventId)
+    .eq('status', 'pending')
+    .single();
+
+  if (evErr || !ev) return { ok: false, error: 'event not found or not pending' };
+
+  const place = (ev as any).places;
+  let effect = '';
+
+  // Type-specific mutation
+  if (ev.event_type === 'google_status_change') {
+    const newStatus = (ev.new_value as any)?.status as string;
+    const mapped = STATUS_ENUM_MAP[newStatus];
+    if (mapped && mapped !== place.status) {
+      const { error: upErr } = await supabase
+        .from('places')
+        .update({ status: mapped, last_verified_at: new Date().toISOString() })
+        .eq('id', place.id);
+      if (upErr) return { ok: false, error: `places update failed: ${upErr.message}` };
+      effect = `places.status: ${place.status} → ${mapped}`;
+
+      // Auto-insert local_knowledge for permanent closures (Rock N Go pattern)
+      if (mapped === 'permanently_closed') {
+        const closureDate = new Date().toISOString().slice(0, 10);
+        const altLine = ''; // TODO: query nearest 3 alternatives by category + proximity
+        const { error: lkErr } = await supabase.from('local_knowledge').insert({
+          topic: `${place.name} cerrado`,
+          question_patterns: [place.name.toLowerCase(), place.slug || place.name.toLowerCase()],
+          answer: `${place.name} cerró permanentemente alrededor del ${closureDate}. Source: Google Business Profile change detected by daily sync.${altLine}`,
+          source: 'lifecycle_auto',
+          memory_type: 'business',
+          voice_style: 'direct',
+          verified: true,
+          place_id: place.id,
+        });
+        if (!lkErr) effect += ` + local_knowledge inserted`;
+      }
+    } else {
+      effect = 'no places mutation (already matches)';
+    }
+  } else if (ev.event_type === 'place_id_resolved') {
+    effect = 'already auto-applied by daemon';
+  } else if (ev.event_type === 'rating_drop') {
+    effect = 'rating logged, no mutation';
+  } else {
+    effect = `${ev.event_type}: no mutation defined`;
+  }
+
+  // Mark event approved
+  const { error: markErr } = await supabase
+    .from('place_lifecycle_events')
+    .update({ status: 'approved', approved_at: new Date().toISOString(), approved_by: 'angel', notes: effect })
+    .eq('id', eventId);
+
+  if (markErr) return { ok: false, error: `mark approved failed: ${markErr.message}` };
+  return { ok: true, effect };
+}
+
+async function rejectLifecycleEvent(eventId: string): Promise<{ ok: boolean; error?: string }> {
+  const { error } = await supabase
+    .from('place_lifecycle_events')
+    .update({ status: 'rejected', approved_at: new Date().toISOString(), approved_by: 'angel' })
+    .eq('id', eventId)
+    .eq('status', 'pending');
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+async function handle_admin_lifecycle_queue(req: any, res: any) {
+  // ============ AUTH (same pattern as admin-municipio) ============
+  if (!ADMIN_SECRET) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.status(500).send(loginPage('ADMIN_MUNICIPIO_SECRET no está configurado.'));
+    return;
+  }
+
+  const queryKey = (req.query?.key as string) || '';
+  const cookieKey = readCookie(req, COOKIE_NAME) || '';
+
+  if (queryKey && queryKey === ADMIN_SECRET) {
+    res.setHeader('Set-Cookie', `${COOKIE_NAME}=${encodeURIComponent(queryKey)}; HttpOnly; Secure; SameSite=Lax; Path=/admin; Max-Age=2592000`);
+    res.setHeader('Location', '/admin/lifecycle-queue');
+    res.status(302).end();
+    return;
+  }
+
+  if (cookieKey !== ADMIN_SECRET) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.status(401).send(loginPage(queryKey ? 'Secret incorrecto.' : 'Entra el secret administrativo para continuar.'));
+    return;
+  }
+
+  // ============ ACTION HANDLING ============
+  const action = (req.query?.action as string) || '';
+  const eventId = (req.query?.id as string) || '';
+  let toast = '';
+  if (eventId && action) {
+    if (action === 'approve') {
+      const r = await applyLifecycleEvent(eventId);
+      toast = r.ok ? `✓ Approved · ${r.effect}` : `⚠ Approve failed: ${r.error}`;
+    } else if (action === 'reject') {
+      const r = await rejectLifecycleEvent(eventId);
+      toast = r.ok ? '✗ Rejected' : `⚠ Reject failed: ${r.error}`;
+    }
+  }
+
+  // ============ FETCH PENDING ============
+  try {
+    const { data: events, error } = await supabase
+      .from('lifecycle_pending_summary')
+      .select('*')
+      .order('detected_at', { ascending: false })
+      .limit(100);
+
+    if (error) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.status(500).send(`<html><body><h1>500</h1><pre>${esc(error.message)}</pre></body></html>`);
+      return;
+    }
+
+    const list = (events || []) as LifecyclePendingEvent[];
+
+    const rows = list.map(ev => {
+      const days = Math.floor(ev.hours_pending / 24);
+      const ageColor = days >= 7 ? '#dc2626' : days >= 3 ? '#f59e0b' : '#64748b';
+      const prevText = ev.prev_value ? Object.entries(ev.prev_value).map(([k, v]) => `<code>${esc(k)}=${esc(String(v))}</code>`).join(' ') : '—';
+      const newText = ev.new_value ? Object.entries(ev.new_value).map(([k, v]) => `<code>${esc(k)}=${esc(String(v))}</code>`).join(' ') : '—';
+      return `<tr style="border-bottom:1px solid #334155;">
+        <td style="padding:12px 8px;font-size:13px;">
+          <div style="font-weight:600;color:#e2e8f0;">${esc(ev.place_name)}</div>
+          <div style="font-size:11px;color:#64748b;margin-top:2px;">${esc(ev.address || '')}</div>
+          ${ev.place_slug ? `<a href="/negocio/${esc(ev.place_slug)}" target="_blank" rel="noopener" style="font-size:11px;color:#0d9488;text-decoration:none;">/negocio/${esc(ev.place_slug)} →</a>` : ''}
+        </td>
+        <td style="padding:12px 8px;font-size:12px;color:#cbd5e1;">
+          <div style="font-weight:600;">${esc(ev.event_type)}</div>
+          <div style="font-size:11px;margin-top:4px;">${prevText} → ${newText}</div>
+        </td>
+        <td style="padding:12px 8px;font-size:12px;color:${ageColor};white-space:nowrap;">${days}d</td>
+        <td style="padding:12px 8px;text-align:right;white-space:nowrap;">
+          <a href="/admin/lifecycle-queue?id=${esc(ev.id)}&action=approve" style="background:#10b981;color:#fff;padding:6px 12px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600;margin-right:4px;">✓ Approve</a>
+          <a href="/admin/lifecycle-queue?id=${esc(ev.id)}&action=reject" style="background:#ef4444;color:#fff;padding:6px 12px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:600;">✗ Reject</a>
+        </td>
+      </tr>`;
+    }).join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><title>Lifecycle Queue · Cabo Rojo OS</title><meta name="robots" content="noindex">
+<style>body{font-family:-apple-system,sans-serif;background:#0f172a;color:#e2e8f0;margin:0;padding:0;}a{color:inherit;}table{border-collapse:collapse;width:100%;}</style>
+</head><body>
+<div style="background:#1e293b;border-bottom:1px solid #334155;padding:14px 24px;">
+  <div style="max-width:1200px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;">
+    <div>
+      <div style="font-size:11px;color:#94a3b8;letter-spacing:0.1em;text-transform:uppercase;font-weight:600;">🔔 Lifecycle Queue</div>
+      <div style="font-size:14px;font-weight:600;color:#fff;">${list.length} pending</div>
+    </div>
+    <a href="/admin/municipio" style="font-size:12px;color:#5eead4;text-decoration:none;">← /admin/municipio</a>
+  </div>
+</div>
+${toast ? `<div style="max-width:1200px;margin:12px auto 0;padding:12px 16px;background:${toast.startsWith('⚠') ? '#7f1d1d' : toast.startsWith('✓') ? '#064e3b' : '#1e293b'};border-radius:8px;font-size:13px;color:#fff;">${esc(toast)}</div>` : ''}
+<div style="max-width:1200px;margin:0 auto;padding:20px 24px;">
+  <table>
+    <thead><tr style="background:#1e293b;">
+      <th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Place</th>
+      <th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Change</th>
+      <th style="padding:10px 8px;text-align:left;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Age</th>
+      <th style="padding:10px 8px;text-align:right;font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;">Actions</th>
+    </tr></thead>
+    <tbody>${rows || '<tr><td colspan="4" style="padding:48px;text-align:center;color:#16a34a;font-size:14px;">✓ Cero cambios pendientes hoy.</td></tr>'}</tbody>
+  </table>
+  <div style="margin-top:24px;font-size:11px;color:#64748b;text-align:center;">Source: places-status-sync daily · Approval inserts local_knowledge auto for permanent closures.</div>
+</div>
+</body></html>`;
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-store');
+    res.status(200).send(html);
+  } catch (err: any) {
+    console.error('handle_admin_lifecycle_queue error:', err);
+    res.status(500).send(`<html><body><h1>500</h1><pre>${esc(err?.message || 'Unknown')}</pre></body></html>`);
+  }
+}
+
+
 // ============ ROUTER ============
 export default async function handler(req: any, res: any) {
   const page = req.query?.page || '';
@@ -3308,6 +3535,7 @@ export default async function handler(req: any, res: any) {
     case 'intelligence': return handle_intelligence(req, res);
     case 'evento': return handle_evento(req, res);
     case 'admin-municipio': return handle_admin_municipio(req, res);
+    case 'admin-lifecycle-queue': return handle_admin_lifecycle_queue(req, res);
     case 'pueblo-en-numeros': return handle_pueblo_en_numeros(req, res);
     default: return res.status(404).json({ error: 'Page not found' });
   }
