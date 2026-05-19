@@ -3191,13 +3191,21 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
 
   <!-- SECTION 4.7: DENSITY COMPARISON (contexto — qué tan denso es CR vs PR) -->
   <div class="card">
-    <div class="kicker">Contexto · densidad per cápita</div>
-    <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:6px;">CR vs PR — categoría por categoría</h2>
-    <p style="font-size:13px;color:#64748b;margin-bottom:18px;">Cuántas personas necesitas para tener 1 negocio de cada tipo. Mientras más bajo el número CR vs el promedio de PR, más denso (y posiblemente saturado) está Cabo Rojo.</p>
+    <div class="kicker">Contexto · cuántas personas pa' cada negocio</div>
+    <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:10px;">CR vs el promedio de PR — categoría por categoría</h2>
+
+    <div style="background:#f1f5f9;border-left:3px solid #475569;padding:12px 14px;border-radius:6px;margin-bottom:14px;font-size:13px;color:#1e293b;line-height:1.6;">
+      <strong>¿Qué estás mirando aquí?</strong> Cuántas personas hace falta en CR pa' sostener 1 negocio de esa categoría — comparado contra cuántas hace falta en el promedio del resto de PR.
+    </div>
+
+    <div style="background:#fffbeb;border-left:3px solid #ca8a04;padding:12px 14px;border-radius:6px;margin-bottom:18px;font-size:13px;color:#78350f;line-height:1.6;">
+      <strong>Cómo leer una barra:</strong> Si CR dice "1 cada 1,500 personas" y PR dice "1 cada 3,000", quiere decir que CR tiene <strong>el doble</strong> de negocios de esa categoría por persona que un pueblo típico de PR. Eso puede significar oportunidad (mucha demanda) o sobreoferta (mucha competencia). La tabla TAM/SAM/SOM arriba te dice cuál de las dos.
+    </div>
+
     ${densitySorted.length === 0
       ? '<p style="color:#64748b;font-size:13px;">Sin data suficiente.</p>'
       : densitySorted.map(renderDensityBar).join('')}
-    <p style="font-size:11px;color:#94a3b8;margin-top:14px;">Click una categoría → te lleva al directorio o WhatsApp con el bot. PR promedio = estimate basado en data oficial del gobierno (próxima versión la calibra).</p>
+    <p style="font-size:11px;color:#94a3b8;margin-top:14px;">Click una categoría → te lleva al directorio o al WhatsApp con el bot. El promedio de PR es estimate basado en data oficial del gobierno (próxima versión lo calibra fino).</p>
   </div>
 
   <!-- SECTION 5: GEOGRAPHIC CONCENTRATION -->
