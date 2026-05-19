@@ -1252,6 +1252,49 @@ export const getSearchTrends = async (daysBack: number = 7): Promise<{term: stri
   } catch { return []; }
 };
 
+// --- RECENT DEMAND (live feed for DemandFeed sidebar) ---
+// Pulls the most recent anonymized search terms — frontend USER_SEARCH first,
+// optionally augmented with bot inbound via RPC if present. Falls back to admin_logs.
+export interface DemandSignal {
+  term: string;
+  created_at: string;
+  result_count?: number;
+  channel?: 'web' | 'bot';
+}
+
+export const getRecentDemand = async (limit: number = 10): Promise<DemandSignal[]> => {
+  // Try a unified RPC first (may not exist in older deployments)
+  try {
+    const { data, error } = await supabase.rpc('get_recent_demand', { p_limit: limit });
+    if (!error && Array.isArray(data) && data.length > 0) {
+      return data as DemandSignal[];
+    }
+  } catch {}
+
+  // Fallback: read recent USER_SEARCH entries from admin_logs
+  try {
+    const { data, error } = await supabase
+      .from('admin_logs')
+      .select('place_name, created_at')
+      .eq('action', 'USER_SEARCH')
+      .order('created_at', { ascending: false })
+      .limit(limit * 2); // de-dupe headroom
+    if (error || !data) return [];
+    const seen = new Set<string>();
+    const out: DemandSignal[] = [];
+    for (const row of data as any[]) {
+      const term = (row.place_name || '').toString().trim();
+      if (!term || term.length < 2) continue;
+      const key = term.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push({ term, created_at: row.created_at, channel: 'web' });
+      if (out.length >= limit) break;
+    }
+    return out;
+  } catch { return []; }
+};
+
 // --- EMERGENCY MODE ---
 
 export interface EmergencyConfig {

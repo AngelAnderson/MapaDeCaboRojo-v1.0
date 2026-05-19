@@ -1,23 +1,33 @@
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react';
 import L from 'leaflet';
 import { Place, PlaceCategory, Coordinates, Event, ParkingStatus, Collection } from './types';
 import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, COLLECTIONS, CABO_ROJO_CENTER, DEFAULT_PLACE_ID, DEFAULT_PLACE_ZOOM } from './constants';
 import PlaceCard from './components/PlaceCard';
-import Concierge from './components/Concierge';
-import Admin from './components/Admin';
-import ContactModal from './components/ContactModal';
-import SuggestPlaceModal from './components/SuggestPlaceModal'; 
-import WeatherWidget from './components/WeatherWidget'; 
+import WeatherWidget from './components/WeatherWidget';
 import { getEvents } from './services/supabase';
 import { LanguageProvider, useLanguage } from './i18n/LanguageContext';
 import ExplorerSheet from './components/ExplorerSheet';
 import BottomNav from './components/BottomNav';
 import SponsorCarousel from './components/SponsorCarousel';
 import RoutePlanner from './components/RoutePlanner';
-import AlertSubscribeModal from './components/AlertSubscribeModal';
-import CommandMenu from './components/CommandMenu';
 import SeoEngine from './components/SeoEngine';
+
+// Sugg #8: heavy modals lazy-loaded — they never render at first paint.
+// This pulls ~200KB+ of code (Concierge with @google/genai, Admin sub-components,
+// Command Menu fuzzy search, etc.) off the critical path.
+const Concierge = lazy(() => import('./components/Concierge'));
+const Admin = lazy(() => import('./components/Admin'));
+const ContactModal = lazy(() => import('./components/ContactModal'));
+const SuggestPlaceModal = lazy(() => import('./components/SuggestPlaceModal'));
+const AlertSubscribeModal = lazy(() => import('./components/AlertSubscribeModal'));
+const CommandMenu = lazy(() => import('./components/CommandMenu'));
+import PuebloEnNumeros from './components/PuebloEnNumeros';
+import DemandFeed from './components/DemandFeed';
+import AudienceToggle from './components/AudienceToggle';
+import { isFresh } from './utils/freshness';
+import { isOpenNow } from './utils/timeUtils';
+import { AudienceMode, getAudienceMode, setAudienceMode } from './utils/audience';
 
 // --- CUSTOM HOOKS (Logic Extraction) ---
 import { usePlacesData } from './hooks/usePlacesData';
@@ -52,6 +62,19 @@ const MainApp: React.FC = () => {
   const [activeCollection, setActiveCollection] = useState<Collection | null>(null);
   const [searchText, setSearchText] = useState('');
   const [showOpenOnly, setShowOpenOnly] = useState(false);
+  const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
+  const [showHero, setShowHero] = useState<boolean>(() => {
+    try { return localStorage.getItem('cabo_hero_dismissed') !== '1'; } catch { return true; }
+  });
+  const [audienceMode, setAudienceModeState] = useState<AudienceMode>(() => getAudienceMode());
+  const handleAudienceChange = React.useCallback((m: AudienceMode) => {
+    setAudienceModeState(m);
+    setAudienceMode(m);
+  }, []);
+  const dismissHero = React.useCallback(() => {
+    setShowHero(false);
+    try { localStorage.setItem('cabo_hero_dismissed', '1'); } catch {}
+  }, []);
   const [routeMode, setRouteMode] = useState(false);
   const [routeStops, setRouteStops] = useState<Place[]>([]);
   const [searchFocusTrigger, setSearchFocusTrigger] = useState(0);
@@ -99,14 +122,21 @@ const MainApp: React.FC = () => {
     }
     if (showOpenOnly) {
         list = list.filter(p => {
-            const ht = p.opening_hours?.type?.toLowerCase();
-            if (ht === '24/7' || ht === 'always_open') return true;
-            if (!ht) return true; // unknown hours = show
-            return true; // MVP: show all with any hours data (full schedule check in v2)
+            const oh = p.opening_hours;
+            if (!oh) return false;
+            if (oh.type === '24_7') return true;
+            if (oh.type === 'sunrise_sunset') {
+                const h = new Date().getHours();
+                return h >= 6 && h < 19;
+            }
+            return isOpenNow(oh);
         });
     }
+    if (showVerifiedOnly) {
+        list = list.filter(p => isFresh(p.verified_at));
+    }
     return list;
-  }, [activeGroup, activeCollection, publishedPlaces, mappedEvents, savedIds, searchText, showOpenOnly]);
+  }, [activeGroup, activeCollection, publishedPlaces, mappedEvents, savedIds, searchText, showOpenOnly, showVerifiedOnly]);
 
   // --- EFFECTS ---
 
@@ -289,7 +319,12 @@ const MainApp: React.FC = () => {
       />
       
       <header className="absolute top-0 left-0 right-0 z-[1000] p-5 pointer-events-none flex justify-between items-start">
-        <WeatherWidget weather={weather} />
+        <div className="pointer-events-auto flex flex-col gap-2 items-start">
+          <WeatherWidget weather={weather} />
+          {activeTab === 'map' && (
+            <AudienceToggle mode={audienceMode} onChange={handleAudienceChange} />
+          )}
+        </div>
         <div className="pointer-events-auto flex flex-col gap-3 items-end">
             <button 
               onClick={() => setMapStyle(prev => prev === 'standard' ? 'satellite' : 'standard')}
@@ -351,6 +386,22 @@ const MainApp: React.FC = () => {
         {/* Sponsor Carousel — map view only */}
         {activeTab === 'map' && (
           <SponsorCarousel places={publishedPlaces} onSelect={handleMarkerSelect} />
+        )}
+
+        {/* Pueblo en Números — first-visit hero, dismissible (preserves map UX) */}
+        {activeTab === 'map' && showHero && !loading && publishedPlaces.length > 0 && (
+          <div className="absolute inset-x-3 md:left-1/2 md:right-auto md:-translate-x-1/2 top-44 md:top-32 z-[1450] md:w-[640px] max-w-[calc(100vw-1.5rem)] pointer-events-auto animate-slide-up">
+            <PuebloEnNumeros
+              places={publishedPlaces}
+              onClose={dismissHero}
+              onJumpToCategory={(catId) => { setActiveGroup(catId); handleTabChange('explore', false); dismissHero(); }}
+            />
+          </div>
+        )}
+
+        {/* Live demand feed — desktop sidebar, fed from bot + frontend search logs */}
+        {activeTab === 'map' && (
+          <DemandFeed onSelectTerm={(term) => { setSearchText(term); handleTabChange('explore', false); setSearchFocusTrigger(prev => prev + 1); }} />
         )}
 
         {/* GPS + Route buttons — map view only */}
@@ -426,6 +477,10 @@ const MainApp: React.FC = () => {
         categories={categories}
         showOpenOnly={showOpenOnly}
         onToggleOpenOnly={() => setShowOpenOnly(prev => !prev)}
+        showVerifiedOnly={showVerifiedOnly}
+        onToggleVerifiedOnly={() => setShowVerifiedOnly(prev => !prev)}
+        audienceMode={audienceMode}
+        onAudienceChange={handleAudienceChange}
       />
 
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} onAction={handleNavAction} />
@@ -445,22 +500,40 @@ const MainApp: React.FC = () => {
         />
       )}
 
-      <Concierge 
-        isOpen={isConciergeOpen} 
-        onClose={() => setIsConciergeOpen(false)} 
-        places={publishedPlaces} 
-        events={events} 
-        people={people}
-        onNavigateToPlace={handleChatNavigation}
-        userLocation={userLocation || undefined}
-        weather={weather}
-      />
-      
-      <SuggestPlaceModal isOpen={isSuggestOpen} onClose={() => setIsSuggestOpen(false)} />
-      <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} onSuggest={() => { setIsContactOpen(false); setIsSuggestOpen(true); }} onChat={() => { setIsContactOpen(false); setIsConciergeOpen(true); }} />
-      <AlertSubscribeModal isOpen={isAlertOpen} onClose={() => setIsAlertOpen(false)} />
-      {isAdminOpen && <Admin onClose={() => setIsAdminOpen(false)} places={places} events={events} categories={categories} onUpdate={refreshData} />}
-      <CommandMenu isOpen={isCommandMenuOpen} onClose={() => setIsCommandMenuOpen(false)} onSelect={handleCommandSelect} isDarkMode={isDarkMode} />
+      <Suspense fallback={null}>
+        {isConciergeOpen && (
+          <Concierge
+            isOpen={isConciergeOpen}
+            onClose={() => setIsConciergeOpen(false)}
+            places={publishedPlaces}
+            events={events}
+            people={people}
+            onNavigateToPlace={handleChatNavigation}
+            userLocation={userLocation || undefined}
+            weather={weather}
+          />
+        )}
+        {isSuggestOpen && (
+          <SuggestPlaceModal isOpen={isSuggestOpen} onClose={() => setIsSuggestOpen(false)} />
+        )}
+        {isContactOpen && (
+          <ContactModal
+            isOpen={isContactOpen}
+            onClose={() => setIsContactOpen(false)}
+            onSuggest={() => { setIsContactOpen(false); setIsSuggestOpen(true); }}
+            onChat={() => { setIsContactOpen(false); setIsConciergeOpen(true); }}
+          />
+        )}
+        {isAlertOpen && (
+          <AlertSubscribeModal isOpen={isAlertOpen} onClose={() => setIsAlertOpen(false)} />
+        )}
+        {isAdminOpen && (
+          <Admin onClose={() => setIsAdminOpen(false)} places={places} events={events} categories={categories} onUpdate={refreshData} />
+        )}
+        {isCommandMenuOpen && (
+          <CommandMenu isOpen={isCommandMenuOpen} onClose={() => setIsCommandMenuOpen(false)} onSelect={handleCommandSelect} isDarkMode={isDarkMode} />
+        )}
+      </Suspense>
 
     </div>
   );

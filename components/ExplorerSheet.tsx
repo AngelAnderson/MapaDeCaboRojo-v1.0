@@ -8,6 +8,11 @@ import { COLLECTIONS } from '../constants';
 import { useLanguage } from '../i18n/LanguageContext';
 import { getOptimizedImageUrl } from '../utils/imageOptimizer';
 import SearchTrends from './SearchTrends';
+import FreshnessBadge from './FreshnessBadge';
+import PlaceCardSponsorBadge from './PlaceCardSponsorBadge';
+import AudienceToggle from './AudienceToggle';
+import { isFresh } from '../utils/freshness';
+import { AudienceMode, sortCategoriesByAudience } from '../utils/audience';
 
 interface ExplorerSheetProps {
   places: Place[];
@@ -29,6 +34,10 @@ interface ExplorerSheetProps {
   categories?: Category[];
   showOpenOnly?: boolean;
   onToggleOpenOnly?: () => void;
+  showVerifiedOnly?: boolean;
+  onToggleVerifiedOnly?: () => void;
+  audienceMode?: AudienceMode;
+  onAudienceChange?: (m: AudienceMode) => void;
 }
 
 const NEIGHBORHOODS = [
@@ -55,6 +64,10 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
   categories,
   showOpenOnly,
   onToggleOpenOnly,
+  showVerifiedOnly,
+  onToggleVerifiedOnly,
+  audienceMode = 'vecino',
+  onAudienceChange,
 }) => {
   const { t, language } = useLanguage();
   const [expanded, setExpanded] = useState(false);
@@ -74,7 +87,13 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
   const hasAutoSorted = useRef(false);
 
   // Reset visible count when filters change
-  useEffect(() => { setVisibleCount(50); }, [searchText, activeGroup, activeCollectionId, activeNeighborhood, showOpenOnly]);
+  useEffect(() => { setVisibleCount(50); }, [searchText, activeGroup, activeCollectionId, activeNeighborhood, showOpenOnly, showVerifiedOnly]);
+
+  // Reorder categories by audience lens (vecino prioritizes services, turista prioritizes beach/food)
+  const orderedCategories = React.useMemo(() => {
+    if (!categories) return categories;
+    return sortCategoriesByAudience(categories, audienceMode);
+  }, [categories, audienceMode]);
 
   // Auto-sort by distance when location becomes available
   useEffect(() => {
@@ -145,7 +164,12 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
 
       <div className="px-5 pb-2 space-y-4 shrink-0">
         <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight" style={{fontFamily: 'Fraunces, serif'}}>Explorar</h2>
+            <div className="flex items-center gap-3 min-w-0">
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight" style={{fontFamily: 'Fraunces, serif'}}>Explorar</h2>
+              {onAudienceChange && (
+                <AudienceToggle mode={audienceMode} onChange={onAudienceChange} />
+              )}
+            </div>
             <div className="flex items-center gap-3">
                 {userLocation && (
                     <button 
@@ -175,10 +199,10 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
             focusTrigger={focusTrigger}
             onCameraClick={onCameraClick}
         />
-        <CategoryPills 
-            activeGroup={activeGroup} 
-            onSelect={(g) => { onCategoryChange(g); if(onSelectCollection) onSelectCollection(null); }} 
-            categories={categories} 
+        <CategoryPills
+            activeGroup={activeGroup}
+            onSelect={(g) => { onCategoryChange(g); if(onSelectCollection) onSelectCollection(null); }}
+            categories={orderedCategories}
         />
         
         {/* Neighborhood Chips */}
@@ -196,8 +220,8 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                     {hood}
                 </button>
             ))}
-          {/* Filter pills: Abierto + View toggle */}
-          <div className="flex items-center gap-2 mt-1">
+          {/* Filter pills: Abierto + Verificado + View toggle */}
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
             <button
               onClick={() => onToggleOpenOnly?.()}
               className={`flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full border transition-all ${
@@ -206,8 +230,21 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                   : 'bg-transparent text-slate-500 border-slate-300 dark:border-slate-600 hover:border-emerald-400'
               }`}
             >
-              {showOpenOnly ? '🟢' : '⏰'} Abierto
+              {showOpenOnly ? '🟢' : '⏰'} Abierto ahora
             </button>
+            {onToggleVerifiedOnly && (
+              <button
+                onClick={() => onToggleVerifiedOnly?.()}
+                title="Verificado a pie en los últimos 90 días"
+                className={`flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full border transition-all ${
+                  showVerifiedOnly
+                    ? 'bg-teal-600 text-white border-teal-600 shadow-md shadow-teal-500/30'
+                    : 'bg-transparent text-slate-500 border-slate-300 dark:border-slate-600 hover:border-teal-400'
+                }`}
+              >
+                <i className="fa-solid fa-circle-check text-[10px]"></i> Verificado &lt;90d
+              </button>
+            )}
             <div className="ml-auto flex gap-1">
               <button onClick={() => setViewMode('list')} className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs ${viewMode === 'list' ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900' : 'text-slate-400'}`}>
                 <i className="fa-solid fa-list"></i>
@@ -256,16 +293,32 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
           </div>
         )}
         {sortedPlaces.length === 0 ? (
-            <div className="text-center py-16 flex flex-col items-center gap-4">
+            <div className="text-center py-16 flex flex-col items-center gap-4 px-6">
                 <i className="fa-solid fa-map-location-dot text-5xl text-slate-200 dark:text-slate-600"></i>
                 <p className="text-base font-bold text-slate-400 dark:text-slate-500">{t('no_results')}</p>
-                <button
-                    onClick={() => onTabChange('concierge')}
-                    className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold px-5 py-3 rounded-full shadow-lg shadow-emerald-500/30 transition-all active:scale-95"
-                >
-                    <i className="fa-solid fa-comments"></i>
-                    Pregúntale a El Veci
-                </button>
+                {searchText && (
+                  <p className="text-xs text-slate-400 dark:text-slate-500 max-w-xs">
+                    Si "{searchText}" debería existir en Cabo Rojo y no está, pregúntale al Veci. Cada búsqueda fallida es data para mejorar el mapa.
+                  </p>
+                )}
+                <div className="flex flex-col sm:flex-row gap-2 items-center">
+                  <button
+                      onClick={() => onTabChange('concierge')}
+                      className="flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-bold px-5 py-3 rounded-full shadow-lg shadow-emerald-500/30 transition-all active:scale-95"
+                  >
+                      <i className="fa-solid fa-comments"></i>
+                      Pregúntale a El Veci aquí
+                  </button>
+                  <a
+                    href={`https://wa.me/17874177711?text=${encodeURIComponent(searchText || 'Hola Veci')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 bg-white dark:bg-slate-700 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 text-sm font-bold px-5 py-3 rounded-full shadow-sm transition-all active:scale-95 hover:bg-emerald-50 dark:hover:bg-slate-600"
+                  >
+                    <i className="fa-brands fa-whatsapp"></i>
+                    Textea al *7711
+                  </a>
+                </div>
             </div>
         ) : viewMode === 'grid' ? (
             <div className="grid grid-cols-2 gap-3">
@@ -342,10 +395,11 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                                 </p>
                             )}
                             
-                            <div className="flex flex-wrap gap-1.5">
+                            <div className="flex flex-wrap gap-1.5 items-center">
+                                <PlaceCardSponsorBadge place={place} />
+                                <FreshnessBadge verified_at={place.verified_at} isVerified={place.isVerified} />
                                 {isClosed && <span className="text-[9px] bg-red-100/50 dark:bg-red-900/30 text-red-800 dark:text-red-300 px-2 py-0.5 rounded-md font-bold uppercase tracking-wide border border-red-100/50 dark:border-red-800/30">{t('status_closed')}</span>}
                                 {place.parking === 'FREE' && <span className="text-[9px] bg-emerald-100/50 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-md font-bold uppercase tracking-wide border border-emerald-100/50 dark:border-emerald-800/30">{t('free_parking_label')}</span>}
-                                {place.is_featured && <span className="text-[9px] bg-amber-100/50 dark:bg-amber-900/30 text-amber-800 dark:text-amber-300 px-2 py-0.5 rounded-md font-bold uppercase tracking-wide border border-amber-100/50 dark:border-amber-800/30">{t('top_pick')}</span>}
                                 {place.hasGenerator && <span className="text-[9px] bg-yellow-100/50 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 px-2 py-0.5 rounded-md font-bold uppercase tracking-wide border border-yellow-100/50 dark:border-yellow-800/30"><i className="fa-solid fa-bolt mr-0.5"></i> {t('generator')}</span>}
                             </div>
                         </div>
