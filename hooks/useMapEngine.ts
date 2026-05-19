@@ -395,8 +395,20 @@ export const useMapEngine = (
     };
 
     const invalidateSize = () => map.current?.invalidateSize();
-    const zoomIn  = () => map.current?.zoomIn();
-    const zoomOut = () => map.current?.zoomOut();
+    // Explicit setZoom ±1 — bypasses Leaflet's zoomIn()/zoomOut() which respect zoomDelta (0.5 here).
+    // Angel reported + works but − doesn't; defensive rewrite + min/max clamp guarantees both fire.
+    const zoomIn = () => {
+        const m = map.current;
+        if (!m) return;
+        const next = Math.min((m.getMaxZoom?.() ?? 19), Math.round(m.getZoom()) + 1);
+        m.setZoom(next, { animate: true });
+    };
+    const zoomOut = () => {
+        const m = map.current;
+        if (!m) return;
+        const next = Math.max((m.getMinZoom?.() ?? 1), Math.round(m.getZoom()) - 1);
+        m.setZoom(next, { animate: true });
+    };
 
     return { mapLoaded, flyTo, flyHome, showUserLocation, invalidateSize, zoomIn, zoomOut };
 };
