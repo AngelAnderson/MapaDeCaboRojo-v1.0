@@ -4,7 +4,7 @@ import L from 'leaflet';
 import { Place, PlaceCategory, Coordinates, Event, ParkingStatus, Collection } from './types';
 import { PLACES as FALLBACK_PLACES, FALLBACK_EVENTS, COLLECTIONS, CABO_ROJO_CENTER, DEFAULT_PLACE_ID, DEFAULT_PLACE_ZOOM } from './constants';
 import PlaceCard from './components/PlaceCard';
-import WeatherWidget from './components/WeatherWidget';
+// WeatherWidget no longer rendered (Angel May 19) but useWeather() still feeds Concierge
 import { getEvents } from './services/supabase';
 import { LanguageProvider, useLanguage } from './i18n/LanguageContext';
 import ExplorerSheet from './components/ExplorerSheet';
@@ -63,9 +63,9 @@ const MainApp: React.FC = () => {
   const [searchText, setSearchText] = useState('');
   const [showOpenOnly, setShowOpenOnly] = useState(false);
   const [showVerifiedOnly, setShowVerifiedOnly] = useState(false);
-  const [showHero, setShowHero] = useState<boolean>(() => {
-    try { return localStorage.getItem('cabo_hero_dismissed') !== '1'; } catch { return true; }
-  });
+  // Hero "Cabo Rojo en Números": session-only dismiss (no localStorage).
+  // Refresh brings it back — Angel flagged that persisting dismiss hid the moat data permanently.
+  const [showHero, setShowHero] = useState<boolean>(true);
   const [audienceMode, setAudienceModeState] = useState<AudienceMode>(() => getAudienceMode());
   const handleAudienceChange = React.useCallback((m: AudienceMode) => {
     setAudienceModeState(m);
@@ -73,7 +73,6 @@ const MainApp: React.FC = () => {
   }, []);
   const dismissHero = React.useCallback(() => {
     setShowHero(false);
-    try { localStorage.setItem('cabo_hero_dismissed', '1'); } catch {}
   }, []);
   const [routeMode, setRouteMode] = useState(false);
   const [routeStops, setRouteStops] = useState<Place[]>([]);
@@ -320,7 +319,7 @@ const MainApp: React.FC = () => {
       
       <header className="absolute top-0 left-0 right-0 z-[1000] p-5 pointer-events-none flex justify-between items-start">
         <div className="pointer-events-auto flex flex-col gap-2 items-start">
-          <WeatherWidget weather={weather} />
+          {/* WeatherWidget removed — todo el mundo lo tiene en el teléfono (Angel feedback May 19) */}
           {activeTab === 'map' && (
             <AudienceToggle mode={audienceMode} onChange={handleAudienceChange} />
           )}
@@ -394,7 +393,7 @@ const MainApp: React.FC = () => {
             <PuebloEnNumeros
               places={publishedPlaces}
               onClose={dismissHero}
-              onJumpToCategory={(catId) => { setActiveGroup(catId); handleTabChange('explore', false); dismissHero(); }}
+              onJumpToCategory={(catId) => { setActiveGroup(catId); handleTabChange('explore', false); }}
             />
           </div>
         )}

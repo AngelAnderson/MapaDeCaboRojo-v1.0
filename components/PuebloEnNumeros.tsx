@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Place } from '../types';
-import { getFreshnessTier } from '../utils/freshness';
+import { isInCaboRojo } from '../utils/inCaboRojo';
 
 interface Props {
   places: Place[];
@@ -8,19 +8,15 @@ interface Props {
   onJumpToCategory?: (categoryId: string) => void;
 }
 
-// "Cabo Rojo en Números" — homepage hero that proves the substrate.
-// Computed in-memory from publishedPlaces; no extra fetch needed.
-// Counters answer: "Is this thing real and maintained, or another dead directory?"
+// "Cabo Rojo en Números" — solo cuenta lo que ESTÁ en Cabo Rojo.
+// La DB del Mapa cubre todo PR; este panel filtra por bbox + barrios.
+// Tiles drilldownables sin auto-dismiss del panel.
 const PuebloEnNumeros: React.FC<Props> = ({ places, onClose, onJumpToCategory }) => {
   const stats = useMemo(() => {
-    const total = places.length;
-    const verified = places.filter((p) => p.isVerified || p.verified_at).length;
-    const freshCount = places.filter((p) => getFreshnessTier(p.verified_at, p.isVerified).tier === 'fresh').length;
-    const sponsorCount = places.filter((p) => p.plan && p.plan !== 'free').length;
-    const featuredFree = places.filter((p) => p.is_featured && (!p.plan || p.plan === 'free')).length;
+    const cr = places.filter(isInCaboRojo);
+    const total = cr.length;
 
-    // Category counts
-    const byCategory = places.reduce<Record<string, number>>((acc, p) => {
+    const byCategory = cr.reduce<Record<string, number>>((acc, p) => {
       acc[p.category] = (acc[p.category] || 0) + 1;
       return acc;
     }, {});
@@ -29,56 +25,38 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose, onJumpToCategory })
     const food = byCategory['FOOD'] || 0;
     const lodging = byCategory['LODGING'] || 0;
     const beach = byCategory['BEACH'] || 0;
+    const sights = byCategory['SIGHTS'] || 0;
+    const shopping = byCategory['SHOPPING'] || 0;
+    const service = byCategory['SERVICE'] || 0;
+    const nightlife = byCategory['NIGHTLIFE'] || 0;
 
-    const verifiedPct = total > 0 ? Math.round((verified / total) * 100) : 0;
-    const freshPct = total > 0 ? Math.round((freshCount / total) * 100) : 0;
+    const sponsorCount = cr.filter((p) => p.plan && p.plan !== 'free').length;
+    const featuredFree = cr.filter((p) => p.is_featured && (!p.plan || p.plan === 'free')).length;
 
     return {
       total,
-      verified,
-      verifiedPct,
-      freshCount,
-      freshPct,
       sponsorCount,
       featuredFree,
       pharmacies,
       food,
       lodging,
       beach,
+      sights,
+      shopping,
+      service,
+      nightlife,
     };
   }, [places]);
 
   if (stats.total === 0) return null;
 
-  const tiles: { label: string; value: string | number; sub: string; icon: string; color: string; categoryId?: string }[] = [
+  const tiles: { label: string; value: number; sub: string; icon: string; color: string; categoryId?: string }[] = [
     {
-      label: 'Negocios',
-      value: stats.total.toLocaleString(),
+      label: 'Negocios en CR',
+      value: stats.total,
       sub: 'mapeados en el pueblo',
       icon: 'shop',
       color: 'from-teal-500 to-cyan-500',
-    },
-    {
-      label: 'Verificados',
-      value: `${stats.verifiedPct}%`,
-      sub: `${stats.verified.toLocaleString()} a pie, no scraped`,
-      icon: 'circle-check',
-      color: 'from-emerald-500 to-green-500',
-    },
-    {
-      label: 'Frescos <90d',
-      value: stats.freshCount.toLocaleString(),
-      sub: `${stats.freshPct}% revisados últimos 3 meses`,
-      icon: 'sparkles',
-      color: 'from-lime-500 to-emerald-500',
-    },
-    {
-      label: 'Farmacias',
-      value: stats.pharmacies,
-      sub: 'NPI federal cleaned',
-      icon: 'pills',
-      color: 'from-rose-500 to-pink-500',
-      categoryId: 'HEALTH',
     },
     {
       label: 'Comer',
@@ -91,7 +69,7 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose, onJumpToCategory })
     {
       label: 'Hospedaje',
       value: stats.lodging,
-      sub: 'casas + Airbnb verificados',
+      sub: 'casas + Airbnb',
       icon: 'bed',
       color: 'from-indigo-500 to-purple-500',
       categoryId: 'LODGING',
@@ -105,11 +83,36 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose, onJumpToCategory })
       categoryId: 'BEACH',
     },
     {
-      label: 'Sponsors',
-      value: stats.sponsorCount + stats.featuredFree,
-      sub: `${stats.sponsorCount} Vitrina + ${stats.featuredFree} comp`,
-      icon: 'star',
-      color: 'from-yellow-500 to-amber-500',
+      label: 'Salud',
+      value: stats.pharmacies,
+      sub: 'farmacias, dentistas, médicos',
+      icon: 'pills',
+      color: 'from-rose-500 to-pink-500',
+      categoryId: 'HEALTH',
+    },
+    {
+      label: 'Compras',
+      value: stats.shopping,
+      sub: 'boutiques + tiendas',
+      icon: 'bag-shopping',
+      color: 'from-fuchsia-500 to-pink-500',
+      categoryId: 'SHOPPING',
+    },
+    {
+      label: 'Atracciones',
+      value: stats.sights,
+      sub: 'Faro, Esencia, Cofresí',
+      icon: 'binoculars',
+      color: 'from-emerald-500 to-teal-500',
+      categoryId: 'SIGHTS',
+    },
+    {
+      label: 'Servicios',
+      value: stats.service,
+      sub: 'plomero, AC, mecánico, notario',
+      icon: 'screwdriver-wrench',
+      color: 'from-slate-500 to-zinc-500',
+      categoryId: 'SERVICE',
     },
   ];
 
@@ -121,7 +124,7 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose, onJumpToCategory })
       <div className="flex items-start justify-between mb-3">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest text-teal-600 dark:text-teal-400">
-            Substrate cívico verificado
+            Solo lo que está en Cabo Rojo
           </p>
           <h2
             id="pueblo-numeros-title"
@@ -131,7 +134,7 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose, onJumpToCategory })
             Cabo Rojo en números reales
           </h2>
           <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
-            Verificados a pie. Math, no chismes.
+            Math, no chismes. Toca un número pa' ver la lista.
           </p>
         </div>
         {onClose && (
@@ -160,7 +163,7 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose, onJumpToCategory })
               <div className={`absolute -top-2 -right-2 w-12 h-12 rounded-full bg-gradient-to-br ${tile.color} opacity-20`} />
               <i className={`fa-solid fa-${tile.icon} text-base text-slate-400 dark:text-slate-500 mb-1`} aria-hidden="true"></i>
               <div className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white leading-none" style={{ fontFamily: 'Fraunces, serif' }}>
-                {tile.value}
+                {tile.value.toLocaleString()}
               </div>
               <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300 mt-1">{tile.label}</div>
               <div className="text-[10px] text-slate-400 dark:text-slate-500 leading-snug mt-0.5">{tile.sub}</div>
@@ -170,7 +173,12 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose, onJumpToCategory })
       </div>
 
       <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-3 text-center">
-        Cada número se revisa a pie. <span className="underline">/errores</span> documenta lo que sale mal.
+        {stats.sponsorCount + stats.featuredFree > 0 && (
+          <span className="mr-2">
+            <i className="fa-solid fa-star text-amber-500"></i> {stats.sponsorCount} Vitrina · {stats.featuredFree} recomendados ·{' '}
+          </span>
+        )}
+        Cada número se cuenta solo si está en Cabo Rojo.
       </p>
     </section>
   );
