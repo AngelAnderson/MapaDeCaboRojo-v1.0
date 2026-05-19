@@ -332,19 +332,21 @@ const MainApp: React.FC = () => {
             >
               <i className={`fa-solid ${mapStyle === 'standard' ? 'fa-satellite' : 'fa-map'}`}></i>
             </button>
-            <button 
-              onClick={() => zoomIn()} 
-              className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-600 dark:text-slate-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"
+            <button
+              onClick={() => zoomIn()}
+              className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-700 dark:text-slate-100 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-black text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"
               title={t('zoom_in')}
+              aria-label="Acercar"
             >
-                <i className="fa-solid fa-plus"></i>
+                <i className="fa-solid fa-plus" style={{ fontWeight: 900 }}></i>
             </button>
-            <button 
-              onClick={() => zoomOut()} 
-              className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-600 dark:text-slate-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"
+            <button
+              onClick={() => zoomOut()}
+              className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-700 dark:text-slate-100 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-black text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"
               title={t('zoom_out')}
+              aria-label="Alejar"
             >
-                <i className="fa-solid fa-minus"></i>
+                <i className="fa-solid fa-minus" style={{ fontWeight: 900 }}></i>
             </button>
             <button onClick={() => setIsDarkMode(!isDarkMode)} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-amber-500 dark:text-purple-300 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">
               <i className={`fa-solid ${isDarkMode ? 'fa-moon' : 'fa-sun'}`}></i>
@@ -393,7 +395,6 @@ const MainApp: React.FC = () => {
             <PuebloEnNumeros
               places={publishedPlaces}
               onClose={dismissHero}
-              onJumpToCategory={(catId) => { setActiveGroup(catId); handleTabChange('explore', false); }}
             />
           </div>
         )}
