@@ -2906,7 +2906,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
       </div>
       <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:16px 18px;">
         <div style="font-size:11px;color:#fbbf24;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:8px;">¿Por qué importa?</div>
-        <div style="font-size:14px;color:#e2e8f0;line-height:1.55;">Cuando hay 2 veces más negocios pa' la misma gente, la ganancia se divide entre más manos. Más quiebres, menos margen.</div>
+        <div style="font-size:14px;color:#e2e8f0;line-height:1.55;">Cuando hay 2 veces más negocios pa' la misma gente, la ganancia se divide entre más manos. Más quiebras, menos margen.</div>
       </div>
       <div style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);border-radius:10px;padding:16px 18px;">
         <div style="font-size:11px;color:#60a5fa;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:8px;">¿Qué hago con esto?</div>
