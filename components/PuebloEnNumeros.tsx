@@ -134,9 +134,11 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose }) => {
 
   return (
     <section
-      className="relative bg-gradient-to-br from-white via-slate-50 to-teal-50/40 dark:from-slate-900 dark:via-slate-900 dark:to-teal-950/30 border border-white/60 dark:border-slate-700/50 rounded-3xl shadow-xl p-5 md:p-6"
+      className="relative bg-gradient-to-br from-white via-slate-50 to-teal-50/40 dark:from-slate-900 dark:via-slate-900 dark:to-teal-950/30 border border-white/60 dark:border-slate-700/50 rounded-3xl shadow-xl flex flex-col min-h-0 max-h-full overflow-hidden"
       aria-labelledby="pueblo-numeros-title"
     >
+      {/* Inner scroll container — header + content scroll together, close button stays accessible */}
+      <div className="overflow-y-auto overscroll-contain p-5 md:p-6 min-h-0">
       <div className="flex items-start justify-between mb-3">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest text-teal-600 dark:text-teal-400">
@@ -216,6 +218,7 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose }) => {
         )}
         Cada número se cuenta solo si está en Cabo Rojo.
       </p>
+      </div>
     </section>
   );
 };

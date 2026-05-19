@@ -390,8 +390,9 @@ const MainApp: React.FC = () => {
         )}
 
         {/* Pueblo en Números — first-visit hero, dismissible (preserves map UX) */}
+        {/* Constrained between top floating pill and the BottomNav (~6rem). Section scrolls internally if content overflows. */}
         {activeTab === 'map' && showHero && !loading && publishedPlaces.length > 0 && (
-          <div className="absolute inset-x-3 md:left-1/2 md:right-auto md:-translate-x-1/2 top-44 md:top-32 z-[1450] md:w-[640px] max-w-[calc(100vw-1.5rem)] pointer-events-auto animate-slide-up">
+          <div className="absolute inset-x-3 md:left-1/2 md:right-auto md:-translate-x-1/2 top-44 md:top-32 bottom-28 md:bottom-24 z-[1450] md:w-[640px] max-w-[calc(100vw-1.5rem)] pointer-events-auto animate-slide-up flex flex-col">
             <PuebloEnNumeros
               places={publishedPlaces}
               onClose={dismissHero}
