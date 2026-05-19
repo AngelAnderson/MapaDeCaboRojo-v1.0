@@ -280,6 +280,44 @@ export const CATEGORY_TAM_PARAMS: CategoryParams[] = [
     breakeven_low: 80_000, breakeven_high: 150_000,
     source_per_capita: 'PBA barbershop services',
   },
+
+  // === E. Servicios pueblo te necesita (v4 expansion 2026-05-19) ===
+  {
+    key: 'aire_acondicionado', label: 'Aire acondicionado (AC tech)',
+    per_capita_spend: 180,
+    audience_calc: { regional: 1.0 }, // 115K — service pa' hogares de toda la región
+    local_capture_rate: 0.80,
+    breakeven_low: 150_000, breakeven_high: 300_000,
+    source_per_capita: 'estimate — BLS HVAC service PR avg + clima caribeño · próxima versión calibra',
+    source_capture: 'servicio físico local',
+  },
+  {
+    key: 'plomero', label: 'Plomero',
+    per_capita_spend: 120,
+    audience_calc: { regional: 1.0 },
+    local_capture_rate: 0.85,
+    breakeven_low: 100_000, breakeven_high: 200_000,
+    source_per_capita: 'estimate — BLS plumbing repair PR · próxima versión calibra',
+    source_capture: 'high — emergencia local',
+  },
+  {
+    key: 'electricista', label: 'Electricista',
+    per_capita_spend: 90,
+    audience_calc: { regional: 1.0 },
+    local_capture_rate: 0.85,
+    breakeven_low: 100_000, breakeven_high: 200_000,
+    source_per_capita: 'estimate — BLS electrical contractor PR · próxima versión calibra',
+    source_capture: 'high — emergencia local',
+  },
+  {
+    key: 'marina', label: 'Marina / náutico',
+    tam_yr_override: 8_000_000,
+    tam_explanation: '250K visitantes × ~5% náuticos × $640 servicios + slip rentals + chárter',
+    local_capture_rate: 0.75,
+    breakeven_low: 500_000, breakeven_high: 1_500_000,
+    source_per_capita: 'PRTC nautical tourism + Marina Puerto Real benchmark · próxima versión calibra',
+    fuga_target: 'Salinas + Fajardo (marinas más grandes)',
+  },
 ];
 
 /**
@@ -324,6 +362,8 @@ export const PR_AVG_PER_CAPITA: Record<string, number> = {
   plomero: 2500,
   electricista: 2500,
   aire: 4500,
+  aire_acondicionado: 4500, // v4 add
+  marina: 12000, // v4 add — muy pocas marinas por persona PR-wide
   // New buckets added 2026-05-12 — Phase 2 calibration with BLS QCEW
   handyman: 2000,
   pintor: 4000,
@@ -749,6 +789,11 @@ export const CATEGORY_SUPPLY_MATCHERS: Record<string, (p: any) => boolean> = {
   },
   colmado: (p) => /colmado|mini.*mark|min(i|í).*super/i.test(p.name || '') || (p.category || '') === 'Colmado',
   barberia: (p) => /barber/i.test(p.name || '') || /barber/i.test(p.subcategory || ''),
+  // v4 additions (2026-05-19) — pueblo te necesita
+  aire_acondicionado: (p) => /aire.*acond|\bAC\b|HVAC|refriger/i.test(p.name || '') || /aire.*acond|hvac|refriger/i.test(p.subcategory || ''),
+  plomero: (p) => /plomer|plumb/i.test(p.name || '') || /plomer/i.test(p.subcategory || ''),
+  electricista: (p) => /electricist|electric.*contractor|electric.*service/i.test(p.name || '') || /electricist/i.test(p.subcategory || ''),
+  marina: (p) => /marina|n[áa]utic|yacht|boat|chárter|charter|slip/i.test(p.name || '') || /marina|n[áa]utic/i.test(p.subcategory || ''),
 };
 
 /**
@@ -2844,21 +2889,40 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
 
 <!-- SECTION 1: HERO PUNCH -->
 <div style="background:#0f172a;color:#fff;padding:60px 24px 50px;">
-  <div style="max-width:780px;margin:0 auto;text-align:center;">
-    <div style="font-size:13px;color:#5eead4;letter-spacing:0.15em;text-transform:uppercase;font-weight:700;margin-bottom:18px;">📊 Cabo Rojo en Números</div>
-    <h1 style="font-size:clamp(28px, 6.5vw, 42px);font-weight:800;letter-spacing:-1px;line-height:1.15;margin-bottom:14px;">1 negocio por cada <span style="color:#5eead4;">50 personas</span> en Cabo Rojo.</h1>
-    <div style="font-family:'SF Mono',Monaco,Menlo,monospace;font-size:14px;color:#94a3b8;background:rgba(255,255,255,0.06);padding:8px 14px;border-radius:6px;display:inline-block;margin-bottom:18px;letter-spacing:0;">47,158 personas ÷ 937 negocios abiertos = 1 cada 50.3 (redondeado a 50)</div>
-    <p style="font-size:20px;color:#cbd5e1;line-height:1.5;margin-bottom:8px;">La mediana en Puerto Rico: 1 cada ~90.</p>
-    <p style="font-size:16px;color:#94a3b8;font-style:italic;">Casi igual a Hormigueros (1/47) y San Germán (1/50). Casi 2× más denso que Mayagüez (1/87). Esto es lo que esa cifra significa.</p>
+  <div style="max-width:980px;margin:0 auto;">
+    <div style="text-align:center;max-width:780px;margin:0 auto 28px;">
+      <div style="font-size:13px;color:#5eead4;letter-spacing:0.15em;text-transform:uppercase;font-weight:700;margin-bottom:18px;">📊 Cabo Rojo en Números</div>
+      <h1 style="font-size:clamp(28px, 6.5vw, 42px);font-weight:800;letter-spacing:-1px;line-height:1.15;margin-bottom:14px;">1 negocio por cada <span style="color:#5eead4;">50 personas</span> en Cabo Rojo.</h1>
+      <div style="font-family:'SF Mono',Monaco,Menlo,monospace;font-size:14px;color:#94a3b8;background:rgba(255,255,255,0.06);padding:8px 14px;border-radius:6px;display:inline-block;margin-bottom:18px;letter-spacing:0;">47,158 personas ÷ 937 negocios abiertos = 1 cada 50</div>
+      <p style="font-size:20px;color:#cbd5e1;line-height:1.5;margin-bottom:8px;">El promedio en Puerto Rico: 1 negocio cada 90 personas. <strong style="color:#fff;">O sea: Cabo Rojo tiene casi el doble de negocios por habitante.</strong></p>
+      <p style="font-size:15px;color:#94a3b8;line-height:1.5;">Hormigueros y San Germán están igual de apretados. Mayagüez tiene la mitad de negocios por persona que nosotros — esa es la comparación que importa.</p>
+    </div>
+
+    <!-- WIIFM micro-stack (3 chips: qué significa / por qué importa / qué hago) -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;max-width:920px;margin:0 auto;">
+      <div style="background:rgba(94,234,212,0.08);border:1px solid rgba(94,234,212,0.2);border-radius:10px;padding:16px 18px;">
+        <div style="font-size:11px;color:#5eead4;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:8px;">¿Qué significa?</div>
+        <div style="font-size:14px;color:#e2e8f0;line-height:1.55;">Hay casi el doble de negocios por persona que en un pueblo típico de PR.</div>
+      </div>
+      <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:16px 18px;">
+        <div style="font-size:11px;color:#fbbf24;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:8px;">¿Por qué importa?</div>
+        <div style="font-size:14px;color:#e2e8f0;line-height:1.55;">Cuando hay 2 veces más negocios pa' la misma gente, la ganancia se divide entre más manos. Más quiebres, menos margen.</div>
+      </div>
+      <div style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);border-radius:10px;padding:16px 18px;">
+        <div style="font-size:11px;color:#60a5fa;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:8px;">¿Qué hago con esto?</div>
+        <div style="font-size:14px;color:#e2e8f0;line-height:1.55;">Si vas a abrir → <a href="#tabla-categorias" style="color:#60a5fa;text-decoration:underline;">busca tu categoría en la tabla</a>. Si ya tienes y va lento → <a href="#3-movidas" style="color:#60a5fa;text-decoration:underline;">mira las 3 movidas</a>.</div>
+      </div>
+    </div>
   </div>
 </div>
 
 <div style="max-width:980px;margin:32px auto;padding:0 16px;">
 
-  <!-- SECTION 1.4: HONESTY BANNER (work-in-progress + admits errors) -->
+  <!-- SECTION 1.4: HONESTY BANNER (trimmed v4 — only principio + autoridad + contacto) -->
   <div class="card" style="background:#fef3c7;border-left:4px solid #f59e0b;padding:16px 20px;">
-    <div style="font-size:11px;color:#92400e;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:6px;">⚠️ Trabajo en construcción · admisión de errores en público</div>
-    <p style="font-size:13px;color:#78350f;line-height:1.6;margin:0;">Esta página vive y se corrige sola. Esta semana arreglé 6 errores grandes: médicos 191→59 (algoritmo contaba ambulancias y ópticos), farmacias 43→18 (incluía la región oeste), heladerías 0→5, car wash 0→19, población 50,798→47,158 (Census 2020 → ACS 2019-23), y quité el claim "50% más denso que PR" que venía de un estimate sin source. Population + income son <a href="https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico" target="_blank" rel="noopener" style="color:#92400e;text-decoration:underline;">Census ACS 5-year 2019-2023</a>. Visitor flow + capture rates + per-cápita spends son <strong>estimates de industria</strong>, no PR-specific. TAM/SAM/SOM son <strong>direccionalmente correctos</strong>, no precisos al dólar. Si encuentras un error: textea al <a href="https://wa.me/17874177711" target="_blank" rel="noopener" style="color:#92400e;text-decoration:underline;">787-417-7711</a> y lo arreglamos hoy con tu corrección citada.</p>
+    <div style="font-size:11px;color:#92400e;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:6px;">⚠️ Trabajo en construcción · esta página vive y se corrige sola</div>
+    <p style="font-size:13px;color:#78350f;line-height:1.65;margin:0 0 8px 0;">La data viene de <a href="https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico" target="_blank" rel="noopener" style="color:#92400e;text-decoration:underline;">Census ACS 2019-23</a> (Cabo Rojo, FIPS 72023) + verificación a pie + bot *7711. Es <strong>direccionalmente correcta</strong>, no precisa al dólar.</p>
+    <p style="font-size:13px;color:#78350f;line-height:1.65;margin:0;"><strong>¿Encontraste un error?</strong> Textea al <a href="https://wa.me/17874177711?text=Encontr%C3%A9%20un%20error%20en%20pueblo-en-numeros" target="_blank" rel="noopener" style="color:#92400e;text-decoration:underline;font-weight:700;">787-417-7711</a> — lo arreglamos hoy con tu corrección citada.</p>
   </div>
 
   <!-- SECTION 1.5: TL;DR ABUELA (plain-language summary) -->
@@ -2870,28 +2934,28 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
   <!-- SECTION 1.6: PRIMER PASO UNIVERSAL — 2 caminos claros -->
   <div class="card" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:#fff;border-left:4px solid #5eead4;padding:24px 28px;">
     <div style="font-size:11px;color:#5eead4;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:14px;">👇 Empieza aquí</div>
-    <div style="font-size:15px;color:#cbd5e1;line-height:1.55;margin-bottom:18px;">Esta página vive pa' dos personas. Mira cuál eres tú:</div>
+    <div style="font-size:15px;color:#cbd5e1;line-height:1.55;margin-bottom:18px;">Esta página es pa' dos personas. Tú eres una de las dos:</div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;">
       <a href="#tabla-categorias" style="display:block;text-decoration:none;color:inherit;background:rgba(94,234,212,0.08);border:1px solid rgba(94,234,212,0.25);border-radius:10px;padding:18px 18px 16px;">
-        <div style="font-size:13px;font-weight:700;color:#5eead4;margin-bottom:8px;">🎯 Voy a abrir negocio</div>
+        <div style="font-size:13px;font-weight:700;color:#5eead4;margin-bottom:8px;">🎯 Voy a abrir un negocio nuevo</div>
         <ol style="font-size:13px;color:#e2e8f0;line-height:1.7;padding-left:18px;margin:0 0 12px 0;">
           <li>Busca tu categoría en la tabla</li>
           <li>Mira la <strong>BANDERA</strong> (🟢 sano · 🟡 al filo · ⚪ no alcanza · 🔥 te necesitan)</li>
-          <li>Lee la columna <strong>"Qué hacer"</strong> — esa fila es pa' ti</li>
+          <li>Mira la columna <strong>"Qué hacer"</strong> — te dice si dale o párate</li>
         </ol>
         <div style="font-size:12px;color:#5eead4;font-weight:600;">Saltar a la tabla →</div>
       </a>
       <a href="#3-movidas" style="display:block;text-decoration:none;color:inherit;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:10px;padding:18px 18px 16px;">
-        <div style="font-size:13px;font-weight:700;color:#fbbf24;margin-bottom:8px;">⚙️ Ya tengo negocio y va lento</div>
+        <div style="font-size:13px;font-weight:700;color:#fbbf24;margin-bottom:8px;">⚙️ Ya tengo negocio y no rinde como antes</div>
         <ol style="font-size:13px;color:#e2e8f0;line-height:1.7;padding-left:18px;margin:0 0 12px 0;">
           <li>Busca <strong>tu</strong> categoría en la tabla</li>
           <li>Si está 🟡 o ⚪, las 3 movidas son pa' ti</li>
-          <li>Una de las 3 te aplica. Empieza por esa</li>
+          <li>Una de las 3 movidas te aplica. Empieza esta semana con esa</li>
         </ol>
         <div style="font-size:12px;color:#fbbf24;font-weight:600;">Saltar a las 3 movidas →</div>
       </a>
     </div>
-    <div style="margin-top:14px;font-size:12px;color:#94a3b8;line-height:1.55;">¿Solo curioso? Sigue leyendo de arriba pa' abajo — pero la decisión vive en la tabla.</div>
+    <div style="margin-top:14px;font-size:12px;color:#94a3b8;line-height:1.55;">¿Solo de chisme? Sigue bajando — pero la decisión real vive en la tabla.</div>
   </div>
 
   <!-- SECTION 2: BASELINE STAT CARDS -->
@@ -2900,18 +2964,19 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
     <p style="font-size:13px;color:#64748b;margin-bottom:20px;">La base que define todo lo demás. Sources citadas inline.</p>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;">
       ${[
-        { lbl: 'Población', val: fmt(CABO_ROJO_BASELINE.residents), sub: 'Census ACS 5-year 2019-23 (más reciente)', subUrl: 'https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico', icon: '👥', color: '#0d9488' },
-        { lbl: 'Hogares', val: '~' + fmt(CABO_ROJO_BASELINE.household_count), sub: '47,158 ÷ 2.55 = ' + fmt(CABO_ROJO_BASELINE.household_count) + ' hogares', subUrl: 'https://www.census.gov/programs-surveys/acs', icon: '🏠', color: '#7c3aed' },
-        { lbl: 'Mediana income', val: '$' + fmt(CABO_ROJO_BASELINE.median_income), sub: 'Census ACS 2019-23', subUrl: 'https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico', icon: '💵', color: '#16a34a' },
-        { lbl: 'Pull regional', val: '~' + fmt(CABO_ROJO_BASELINE.regional_pull), sub: '47K CR + 15K Hormigueros + 23K Lajas + 30K S.Germán (estimate)', subUrl: 'https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico', icon: '🌐', color: '#0369a1' },
-        { lbl: 'Visitantes/año', val: '~' + fmt(CABO_ROJO_BASELINE.visitors_annual), sub: '⚠️ PRTC estimate · NO verificado', subUrl: 'https://www.tourism.pr.gov/', icon: '🏖️', color: '#ea580c' },
-        { lbl: 'Negocios open hoy', val: fmt(openCount), sub: '946 directorio · 937 open · 4 cerrados · 5 dudosos', subUrl: 'https://mapadecaborojo.com', icon: '🏢', color: '#dc2626' },
+        { lbl: 'Población', val: fmt(CABO_ROJO_BASELINE.residents), sub: 'Census ACS 5-year 2019-23', subUrl: 'https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico', icon: '👥', color: '#0d9488', wiifm: 'Casi todos votan, compran, comen aquí. Esa es tu base de clientes residentes.' },
+        { lbl: 'Hogares', val: '~' + fmt(CABO_ROJO_BASELINE.household_count), sub: '47,158 ÷ 2.55 = ' + fmt(CABO_ROJO_BASELINE.household_count) + ' hogares', subUrl: 'https://www.census.gov/programs-surveys/acs', icon: '🏠', color: '#7c3aed', wiifm: 'Si vendes algo de casa (limpieza, AC, plomero), tienes ~18,500 puertas pa\' tocar.' },
+        { lbl: 'Ingreso típico', val: '$' + fmt(CABO_ROJO_BASELINE.median_income), sub: 'Census ACS 2019-23 (mediana)', subUrl: 'https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico', icon: '💵', color: '#16a34a', wiifm: 'Es la mitad del promedio US ($75K). O sea: precio bajo gana, premium pierde.' },
+        { lbl: 'Pull regional', val: '~' + fmt(CABO_ROJO_BASELINE.regional_pull), sub: '47K CR + 15K Hormigueros + 23K Lajas + 30K S.Germán', subUrl: 'https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico', icon: '🌐', color: '#0369a1', wiifm: 'Servicios (salud, mecánico, abogado) — tu cliente puede venir de pueblo vecino.' },
+        { lbl: 'Visitantes/año', val: '~' + fmt(CABO_ROJO_BASELINE.visitors_annual), sub: '⚠️ PRTC estimate · pendiente verificar', subUrl: 'https://www.tourism.pr.gov/', icon: '🏖️', color: '#ea580c', wiifm: '3 meses pico (verano + diciembre). Restaurante + hospedaje viven de aquí.' },
+        { lbl: 'Negocios abiertos hoy', val: fmt(openCount), sub: '946 directorio · 937 abiertos · 4 cerrados · 5 dudosos', subUrl: 'https://mapadecaborojo.com', icon: '🏢', color: '#dc2626', wiifm: 'Casi 2× lo que aguanta el pueblo solo. El resto compite por turistas o se exporta.' },
       ].map(s => `
         <div style="padding:16px 14px;background:#f8fafc;border-radius:10px;border-left:3px solid ${s.color};">
           <div style="font-size:20px;margin-bottom:4px;">${s.icon}</div>
           <div style="font-size:18px;font-weight:800;color:#1e293b;">${s.val}</div>
           <div style="font-size:11px;color:#475569;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-top:6px;">${s.lbl}</div>
           <div style="font-size:10px;color:#94a3b8;margin-top:2px;"><a href="${s.subUrl}" target="_blank" rel="noopener" style="color:#0d9488;text-decoration:none;border-bottom:1px dotted #0d9488;">${s.sub} →</a></div>
+          <div style="font-size:11px;color:#64748b;font-style:italic;line-height:1.45;margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">${s.wiifm}</div>
         </div>`).join('')}
     </div>
     <p style="font-size:11px;color:#94a3b8;margin-top:14px;font-style:italic;">Click en cada source pa' verificar tú mismo. Las cifras de visitantes y pull regional son estimates conservadores — la próxima versión las reemplaza con <a href="https://www.bls.gov/cew/" target="_blank" rel="noopener" style="color:#94a3b8;">data oficial del gobierno</a> + <a href="https://www.tourism.pr.gov/" target="_blank" rel="noopener" style="color:#94a3b8;">PRTC</a> + data de movimiento entre pueblos.</p>
@@ -2996,16 +3061,29 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
     <div style="background:#ecfdf5;border-left:3px solid #0d9488;padding:12px 14px;border-radius:6px;margin-bottom:14px;font-size:13px;color:#134e4a;line-height:1.55;">
       <strong>¿Tu negocio está aquí? ¿La categoría que está pensando tu hijo está aquí?</strong> Busca la fila. Mira la columna <strong>Veredicto</strong> (🟢 sano · 🟡 al filo · ⚪ debajo breakeven · 🔥 hace falta). La columna <strong>Acción</strong> te dice qué pensar antes de decidir.
     </div>
-    <div style="background:#f1f5f9;border-left:3px solid #475569;padding:12px 14px;border-radius:6px;margin-bottom:18px;font-size:12px;color:#1e293b;line-height:1.6;">
-      <div style="font-weight:700;margin-bottom:6px;">📐 Cómo se calcula una fila (ejemplo: Restaurante casual)</div>
-      <div style="font-family:'SF Mono',Monaco,Menlo,monospace;font-size:11px;color:#475569;background:#fff;padding:8px 10px;border-radius:4px;">
-        TAM = 47,158 personas × $1,400/yr (NRA spend) + 250K visitor × $40/visit = <strong>$80M</strong><br>
-        SAM = $80M × 75% capture local = <strong>$60M</strong><br>
-        SOM por negocio = $60M ÷ 157 restaurantes = <strong>$382K/biz/yr</strong><br>
-        Breakeven categoría: $600K–$1M/yr<br>
-        Veredicto: SOM $382K &lt; $600K breakeven_low = <strong>⚪ debajo breakeven</strong> · sobreoferta real
-      </div>
-      <div style="font-size:11px;color:#64748b;margin-top:6px;font-style:italic;">Hover sobre cada column header para refresh rápido de su fórmula.</div>
+    <div style="background:#f1f5f9;border-left:3px solid #475569;padding:14px 16px;border-radius:6px;margin-bottom:18px;font-size:13px;color:#1e293b;line-height:1.6;">
+      <div style="font-weight:700;margin-bottom:10px;font-size:14px;">📖 Cómo leer una fila — ejemplo: <span style="color:#0d9488;">Farmacia</span></div>
+      <ul style="list-style:none;padding:0;margin:0;display:grid;gap:6px;">
+        <li><strong>Dinero total / año</strong> — todo lo que el pueblo + región gasta en farmacia al año (incluye Walgreens, delivery, tu farmacia, todo).</li>
+        <li><strong>% que se queda</strong> — de ese dinero, cuánto se queda en farmacias locales de CR. El resto se va pa' las cadenas grandes o Mayagüez.</li>
+        <li><strong>Plato local</strong> — el pedazo que se queda. Esa es la torta que se reparten las farmacias de aquí.</li>
+        <li><strong>Negocios</strong> — cuántas farmacias hay abiertas en CR hoy.</li>
+        <li><strong>Por negocio</strong> — el plato dividido entre las farmacias = lo que le toca a cada una al año <em>en promedio</em>.</li>
+        <li><strong>Pa' no quebrar</strong> — lo mínimo que necesita una farmacia pa' sobrevivir (según data de la industria).</li>
+        <li><strong>Bandera</strong> — compara "Por negocio" contra "Pa' no quebrar". 🟢 sano · 🟡 al filo · ⚪ no alcanza · 🔥 te necesitan.</li>
+        <li><strong>Qué hacer</strong> — la última columna te dice qué movida tomar según tu situación.</li>
+      </ul>
+      <details style="margin-top:12px;border-top:1px dashed #cbd5e1;padding-top:10px;">
+        <summary style="cursor:pointer;font-size:11px;color:#64748b;font-weight:600;">📐 Quiero ver la matemática exacta (pa' los curiosos)</summary>
+        <div style="font-family:'SF Mono',Monaco,Menlo,monospace;font-size:11px;color:#475569;background:#fff;padding:10px 12px;border-radius:4px;margin-top:8px;">
+          Ejemplo restaurante:<br>
+          TAM = 47,158 personas × $1,400/año + 250K visitantes × $40/visita = <strong>$80M</strong><br>
+          Plato local = $80M × 75% que se queda = <strong>$60M</strong><br>
+          Por negocio = $60M ÷ 157 restaurantes = <strong>$382K/biz/año</strong><br>
+          Pa' no quebrar (restaurante): $600K–$1M/año<br>
+          Bandera: $382K &lt; $600K = <strong>⚪ no alcanza</strong> · sobreoferta real.
+        </div>
+      </details>
     </div>
     <div style="background:#fef3c7;border-left:3px solid #ca8a04;padding:12px 14px;border-radius:6px;margin-bottom:18px;font-size:12px;color:#78350f;line-height:1.55;">
       ⚠️ <strong>Lo honesto:</strong> el gasto por persona y el % que se queda local salen de benchmarks nacionales de cada industria (<a href="https://www.bls.gov/cex/tables.htm" target="_blank" style="color:#92400e;text-decoration:underline;">BLS</a>, <a href="https://restaurant.org/research-and-media/research/economic-impact/" target="_blank" style="color:#92400e;text-decoration:underline;">restaurantes</a>, <a href="https://www.convenience.org/Research" target="_blank" style="color:#92400e;text-decoration:underline;">gasolineras</a>, <a href="https://www.ncpdp.org/" target="_blank" style="color:#92400e;text-decoration:underline;">farmacias</a>, <a href="https://www.ihrsa.org/" target="_blank" style="color:#92400e;text-decoration:underline;">gimnasios</a>, <a href="https://www.ada.org/resources/research" target="_blank" style="color:#92400e;text-decoration:underline;">dentistas</a>, <a href="https://www.tourism.pr.gov/" target="_blank" style="color:#92400e;text-decoration:underline;">turismo PR</a>). La próxima versión los calibra uno por uno con data local. <strong>El "Por negocio" SÍ es live</strong> — sale de dividir el plato local entre los negocios abiertos del directorio.
