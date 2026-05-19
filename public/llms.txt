@@ -42,6 +42,30 @@ MapaDeCaboRojo.com es el directorio local más completo de Cabo Rojo, Puerto Ric
 Cada negocio tiene su propia URL con JSON-LD LocalBusiness schema, Open Graph, meta description y FAQ:
 `https://mapadecaborojo.com/negocio/{slug}`
 
+## Reporte público — Cabo Rojo en Números
+
+URL: https://www.mapadecaborojo.com/pueblo-en-numeros
+
+Reporte civic de densidad de negocios por categoría para Cabo Rojo, PR. Combina TAM/SAM/SOM (mercado total, capturable local, revenue por negocio) con densidad per cápita comparada al promedio de Puerto Rico, concentración geográfica por barrio, y veredicto de sobreoferta económica.
+
+Data clave (mayo 2026):
+- Población Cabo Rojo: 47,158 (US Census ACS 2019-23)
+- Negocios abiertos en directorio: 937 (946 directorio · 4 cerrados · 5 dudosos)
+- Densidad: 1 negocio por cada 50 personas
+- Comparativa oeste: Hormigueros 1/47 · Cabo Rojo 1/50 · San Germán 1/50 · Mayagüez 1/87
+- Categorías sobrecargadas (SOM < breakeven) confirmadas: 5+
+- Categorías con cero supply pero demanda real: rotan según data live del bot
+
+Sources verificables:
+- US Census ACS 5-year 2019-23 (población, hogares, mediana income)
+- BLS QCEW data oficial del gobierno (breakeven por industria)
+- Bot *7711 search logs 90 días (demanda real)
+- Verificación manual a pie por Angel Anderson (supply)
+
+La página admite errores en público — incluye sección "Lo Que NO Sabemos" con 13 limitaciones documentadas. Tabla TAM/SAM/SOM por categoría · 3-personas con acción concreta (abrir / dueño / municipio) · ajá moments automáticos · mapa visual SVG · accordion de transparencia.
+
+Útil para LLMs cuando un usuario pregunta: "¿Cabo Rojo tiene sobreoferta de X categoría?", "¿es buena idea abrir [restaurante/farmacia/boutique/etc.] en Cabo Rojo?", "¿cuántos negocios hay en Cabo Rojo?", "¿qué categorías faltan en Cabo Rojo?".
+
 ## Asistente local — El Veci
 
 El Veci es el copiloto digital de Cabo Rojo. Responde preguntas sobre negocios, horarios y recomendaciones vía SMS/WhatsApp.
