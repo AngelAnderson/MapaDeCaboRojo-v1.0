@@ -23,7 +23,7 @@ const SuggestPlaceModal = lazy(() => import('./components/SuggestPlaceModal'));
 const AlertSubscribeModal = lazy(() => import('./components/AlertSubscribeModal'));
 const CommandMenu = lazy(() => import('./components/CommandMenu'));
 import PuebloEnNumeros from './components/PuebloEnNumeros';
-import DemandFeed from './components/DemandFeed';
+// DemandFeed removed from homepage May 19 (Angel: not useful). Component still in /components.
 import AudienceToggle from './components/AudienceToggle';
 import { isFresh } from './utils/freshness';
 import { isOpenNow } from './utils/timeUtils';
@@ -400,10 +400,9 @@ const MainApp: React.FC = () => {
           </div>
         )}
 
-        {/* Live demand feed — desktop sidebar, fed from bot + frontend search logs */}
-        {activeTab === 'map' && (
-          <DemandFeed onSelectTerm={(term) => { setSearchText(term); handleTabChange('explore', false); setSearchFocusTrigger(prev => prev + 1); }} />
-        )}
+        {/* DemandFeed sidebar removed from homepage May 19 (Angel feedback: stale + truncated
+            terms aren't useful for public-facing UI). Component file kept at
+            components/DemandFeed.tsx in case we want it later in admin context. */}
 
         {/* GPS + Route buttons — map view only */}
         {activeTab === 'map' && (
