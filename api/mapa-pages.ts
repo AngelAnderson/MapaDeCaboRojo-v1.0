@@ -202,6 +202,7 @@ ${opts.bodyHtml}
 <a href="/senales-del-pueblo" class="hover:text-teal-600">Señales del pueblo</a>
 <a href="/transparencia" class="hover:text-teal-600">Transparencia</a>
 <a href="/equipo" class="hover:text-teal-600">Equipo</a>
+<a href="/historia" class="hover:text-teal-600">Historia</a>
 <a href="/vision" class="hover:text-teal-600">Visión</a>
 <a href="/preguntas" class="hover:text-teal-600">Preguntas</a>
 <a href="/moonshots" class="hover:text-teal-600">Moonshots</a>
@@ -1544,6 +1545,119 @@ ${faqHtml}
   }))
 }
 
+// =============== /historia ===============
+// Origin story · how a single vecino + AI ended up building a civic-tech
+// substrate. First-person narrative · build-in-public posture · honest about
+// what wasn't planned vs what was deliberate.
+
+function handleHistoria(_req: any, res: any) {
+  const body = `
+<h1>Cómo empezó esto.</h1>
+
+<p class="text-lg text-slate-600 mt-4">No empezó como "voy a construir el mapa civic-tech de Cabo Rojo." Empezó como una pregunta que no podía contestar.</p>
+
+<!-- WIIFM 3-chip -->
+<div class="grid sm:grid-cols-3 gap-3 mt-6 not-prose">
+  <div class="bg-teal-50 border border-teal-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-2">¿Qué significa?</div>
+    <p class="text-sm text-slate-700 leading-snug">Esta página es la historia real de cómo un vecino acabó manteniendo un directorio de 3,900 negocios — sin equipo, sin VC.</p>
+  </div>
+  <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">¿Por qué importa?</div>
+    <p class="text-sm text-slate-700 leading-snug">Porque el método es replicable. Si te enseña algo pa' tu pueblo, llégate. Si no, sigue tu camino.</p>
+  </div>
+  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-blue-700 uppercase tracking-wide mb-2">¿Qué hago con esto?</div>
+    <p class="text-sm text-slate-700 leading-snug">Si eres dev/periodista/alcalde que quiere replicar — escribe a <strong>angel@angelanderson.com</strong>. El código es abierto.</p>
+  </div>
+</div>
+
+<h2>2024 · La pregunta</h2>
+<p>Un domingo se rompió algo en casa. Necesitaba un plomero rápido. Pregunté en Google — me salieron números de gente que cerró en 2019. Pregunté en Facebook — un grupo de WhatsApp me mandó 4 nombres, todos sin teléfono activo. Acabé llamando a familia.</p>
+<p>No era el primer domingo así. Pero ese día me senté y dije: <strong>"Esto es ridículo. Mi pueblo tiene como 4,000 negocios. Y nadie sabe cuáles están al día."</strong></p>
+<p>Esa fue la pregunta que abrió todo.</p>
+
+<h2>2025 enero-abril · El experimento</h2>
+<p>Empecé llamando negocios uno por uno. Llamada · ¿siguen abiertos? · ¿cambió horario? · ¿se mudaron? · ¿quién contesta el teléfono ahora?</p>
+<p>Después de 50 llamadas me di cuenta de algo: <strong>no soy escalable solo.</strong> Si quiero mantener un directorio de 3,900 negocios al día, necesito ayuda. Y como no quería empleados ni VC, la ayuda tenía que ser AI.</p>
+<p>Empecé a construir programas pequeños que corrieran solos: uno que escanea Google Maps · uno que vigila el sitio · uno que escribe drafts de posts cuando algo cambia · uno que llama mi atención cuando el bot recibe demanda que no podemos servir.</p>
+<p>Para abril 2026 tenía 13 programas — los "empleados invisibles" que ahora cuidan el mapa cuando yo no estoy frente a la computadora. Eso es lo que está en <a href="/equipo" class="text-teal-600 hover:underline">/equipo</a>.</p>
+
+<h2>2025 mayo · El bot *7711</h2>
+<p>El mapa tenía data, pero la gente no buscaba en una página web. Buscaban en su teléfono — texteando preguntas. Así que monté el bot *7711.</p>
+<p>El bot vive en SMS y WhatsApp. Le textea cualquiera: <em>"¿quién tiene farmacia abierta domingo?"</em> y contesta con los negocios verificados más cerca. Funciona 24/7.</p>
+<p>Y aquí pasó algo que NO planeé: cada vez que alguien le pregunta al bot algo que no podemos contestar bien, eso es una <strong>señal de demanda</strong>. Si 40 personas en un mes preguntan por plomero y el directorio tiene 2, eso quiere decir que el pueblo necesita plomeros con presencia digital.</p>
+<p>Esa señal acabó siendo el activo más valioso. La pagina <a href="/senales-del-pueblo" class="text-teal-600 hover:underline">/señales-del-pueblo</a> publica esto en vivo.</p>
+
+<h2>2025 mayo-julio · El primer Vitrina</h2>
+<p>Un día llegó un dueño de negocio (Luis David Refrigeración) y dijo: <em>"Quiero que tu mapa me ayude a aparecer cuando alguien busque AC un domingo a las 9 de la noche."</em></p>
+<p>Le dije: <em>"Verificado es gratis. Pero si quieres aparecer #1 en tu categoría + post mensual + recomendación del bot, son $799 al año."</em></p>
+<p>Aceptó. Ese fue el primer Vitrina. Eso pagó el costo de mantener todo el resto andando. La hipótesis se confirmó: <strong>servir bien al pueblo crea valor que algunos negocios pagan voluntariamente.</strong> Sin VC. Sin "monetizar la atención."</p>
+
+<h2>2026 abril · La pregunta del alcalde</h2>
+<p>Un alcalde de otro municipio me escribió: <em>"¿Cómo replico esto en mi pueblo?"</em></p>
+<p>Esa fue la confirmación de que la cosa funcionaba más allá de Cabo Rojo. Lo que empezó como "necesito un plomero un domingo" se había convertido en algo replicable.</p>
+<p>Por eso el código es <strong>open-source</strong>. El moat NO es la tecnología — es la verificación humana sostenida. Eso no se copia con código, solo con disciplina.</p>
+
+<h2>2026 mayo · Lo que aprendí</h2>
+<p>Cinco cosas:</p>
+<ol>
+<li><strong>El problema NO era falta de información — era información regada.</strong> Google tenía datos pero estaban desactualizados. Facebook tenía ruido pero sin verificación. La solución era contexto local sostenido, no más data.</li>
+<li><strong>Un vecino + AI puede sostener algo que ciudades de millones no logran.</strong> No porque sea más listo. Porque corre el sistema todos los días con disciplina sin tener que coordinar con un equipo.</li>
+<li><strong>La demanda emerge — no se inventa.</strong> Vitrina no se vende con cold email. La gente llega porque el bot ya les sirve bien. La pregunta es "¿cómo aparezco yo?" — no "¿por qué pagaría?"</li>
+<li><strong>Honestidad pública es ventaja competitiva.</strong> Páginas como <a href="/transparencia" class="text-teal-600 hover:underline">/transparencia</a> y <a href="/vision" class="text-teal-600 hover:underline">/vision</a> (con kill criteria explícitos) construyen credibilidad que el marketing no compra.</li>
+<li><strong>El método importa más que el resultado.</strong> Si esto funciona en CR pero el método no es replicable, no importa. Lo que importa es que cualquier pueblo pueda copiarlo.</li>
+</ol>
+
+<h2>Lo que NO planeé</h2>
+<p>Pa' ser honesto:</p>
+<ul>
+<li>NO planeé que el bot sería el insight más valioso del sistema</li>
+<li>NO planeé construir una "plataforma de inteligencia local"</li>
+<li>NO planeé que alcaldes de otros municipios me iban a escribir</li>
+<li>NO planeé hacer build-in-public extremo (eso vino después · ahora vive en <a href="/moonshots" class="text-teal-600 hover:underline">/moonshots</a>)</li>
+</ul>
+<p>Lo que SÍ planeé desde el día uno: el directorio se mantiene con verificación humana sostenida. Ese fue el bet inicial. Todo lo demás emergió.</p>
+
+<h2>Hacia dónde va</h2>
+<p>El plan a 12 meses vive en <a href="/vision" class="text-teal-600 hover:underline font-semibold">/vision</a> · con kill criteria explícitos · sin spin.</p>
+<p>Si pasa esto, el proyecto muere o pivota:</p>
+<ul>
+<li>Sem 6 (Jun 23 2026): freshness top 200 < 60% → automation falló</li>
+<li>Mes 4: el sistema no se auto-construye → Casa Digital no escala</li>
+<li>Mes 8: < $10K ingresos anuales → hobby con dominio bonito</li>
+</ul>
+<p>Eso es lo que aprendí del experimento: <strong>los proyectos que duran son los que dicen en voz alta cuándo se mueren.</strong></p>
+
+<div class="bg-teal-50 border border-teal-200 rounded-lg p-6 mt-10 text-center">
+<p class="text-lg font-semibold">¿Quieres replicar este modelo en tu pueblo?</p>
+<p class="mt-2">Escríbeme: <a href="mailto:angel@angelanderson.com" class="text-teal-600 font-bold underline">angel@angelanderson.com</a></p>
+<p class="text-sm text-slate-600 mt-2 italic">El código es abierto. El método se enseña. Si te sirve, llégate.</p>
+</div>
+`
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600')
+  res.status(200).send(layout({
+    title: 'Historia · Cómo empezó MapaDeCaboRojo.com',
+    description: 'La historia real de cómo un vecino + AI acabó manteniendo un directorio de 3,900 negocios en Cabo Rojo, PR. Sin equipo · sin VC · open-source. 2024-2026.',
+    slug: 'historia',
+    ogImage: '/og/historia.png',
+    bodyHtml: body,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: 'Cómo empezó MapaDeCaboRojo.com',
+      author: { '@type': 'Person', name: 'Angel Anderson', url: 'https://www.angelanderson.com' },
+      publisher: { '@type': 'Organization', name: 'MapaDeCaboRojo.com', url: SITE_URL },
+      datePublished: '2026-05-20',
+      url: `${SITE_URL}/historia`,
+      description: 'Origin story of MapaDeCaboRojo.com — 2024-2026 build-in-public.',
+      inLanguage: 'es-PR',
+    },
+  }))
+}
+
 // =============== subscribe (POST) ===============
 // Newsletter capture flow — Supabase newsletter_subscribers + Resend welcome email.
 // Routed via /api/subscribe (vercel.json rewrite).
@@ -1715,6 +1829,7 @@ export default async function handler(req: any, res: any) {
     case 'senales-del-pueblo': return await handleSenalesDelPueblo(req, res)
     case 'menos-revolu': return handleMenosRevolu(req, res)
     case 'preguntas': return handlePreguntas(req, res)
+    case 'historia': return handleHistoria(req, res)
     case 'subscribe': return await handleSubscribe(req, res)
     default:
       res.status(404).send('Page not found')

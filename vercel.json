@@ -47,6 +47,7 @@
     { "source": "/menos-revolú", "destination": "/api/mapa-pages?page=menos-revolu" },
     { "source": "/preguntas", "destination": "/api/mapa-pages?page=preguntas" },
     { "source": "/faq", "destination": "/api/mapa-pages?page=preguntas" },
+    { "source": "/historia", "destination": "/api/mapa-pages?page=historia" },
     { "source": "/api/subscribe", "destination": "/api/mapa-pages?page=subscribe" },
     { "source": "/llms.txt", "destination": "/api/public?action=llms" },
     { "source": "/llms-full.txt", "destination": "/api/public?action=llms-full" },
