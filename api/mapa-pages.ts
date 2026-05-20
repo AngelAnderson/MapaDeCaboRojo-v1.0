@@ -98,9 +98,10 @@ ${opts.bodyHtml}
 </main>
 
 <footer class="border-t border-slate-200 mt-12 py-8 bg-white">
-<div class="max-w-4xl mx-auto px-4 text-center text-sm text-slate-500">
-<p>— Angel | Menos revolú, más tiempo, más claridad.</p>
-<div class="mt-3 flex justify-center gap-4 text-xs">
+<div class="max-w-4xl mx-auto px-4 text-center">
+<p class="text-base font-semibold text-teal-700">Menos revolú. Mejores decisiones. Mejor vida.</p>
+<p class="text-xs text-slate-500 mt-1">El mapa vivo pa' poner orden en el revolú de Cabo Rojo.</p>
+<div class="mt-4 flex justify-center gap-4 text-xs text-slate-500">
 <a href="/mision" class="hover:text-teal-600">Misión</a>
 <a href="/transparencia" class="hover:text-teal-600">Transparencia</a>
 <a href="/equipo" class="hover:text-teal-600">Equipo</a>

@@ -142,17 +142,17 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose }) => {
       <div className="flex items-start justify-between mb-3">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest text-teal-600 dark:text-teal-400">
-            Solo lo que está en Cabo Rojo
+            El mapa vivo
           </p>
           <h2
             id="pueblo-numeros-title"
             className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white leading-tight"
             style={{ fontFamily: 'Fraunces, serif' }}
           >
-            Cabo Rojo en números reales
+            Pa' poner orden en el revolú de Cabo Rojo
           </h2>
           <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
-            Math, no chismes. Toca un número pa' ver la lista.
+            Encuentra lugares, negocios, servicios y oportunidades sin perder el día buscando entre screenshots, posts viejos y recomendaciones sueltas.
           </p>
         </div>
         {onClose && (
@@ -217,6 +217,9 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose }) => {
           </span>
         )}
         Cada número se cuenta solo si está en Cabo Rojo.
+      </p>
+      <p className="text-[10px] italic text-slate-500 dark:text-slate-400 mt-1 text-center">
+        Google tiene datos. Facebook tiene ruido. Nosotros tenemos contexto local.
       </p>
       </div>
     </section>
