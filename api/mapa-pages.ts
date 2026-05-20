@@ -30,6 +30,75 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
+// Newsletter subscribe form — reusable across pages.
+// Native form submission with progressive enhancement via inline JS for fetch + inline status.
+function subscribeForm(source: string, opts?: { compact?: boolean; audience?: string }): string {
+  const compact = opts?.compact ?? false
+  const formId = `nl-${source.replace(/[^a-z0-9]/gi, '-')}-${Math.random().toString(36).slice(2, 7)}`
+  const audienceTag = opts?.audience ? `<input type="hidden" name="audience" value="${escapeHtml(opts.audience)}">` : ''
+
+  if (compact) {
+    return `<form id="${formId}" class="not-prose flex flex-col sm:flex-row gap-2 max-w-md" data-subscribe-form>
+  <input type="hidden" name="source" value="${escapeHtml(source)}">
+  ${audienceTag}
+  <input type="text" name="company" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" aria-hidden="true">
+  <input type="email" name="email" required placeholder="tu@correo.com" class="flex-1 px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" autocomplete="email">
+  <button type="submit" class="px-4 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold whitespace-nowrap">Suscríbete</button>
+  <div class="text-xs text-slate-500 mt-1 hidden" data-subscribe-status></div>
+</form>`
+  }
+
+  return `<form id="${formId}" class="not-prose bg-white border border-slate-200 rounded-xl p-5 mt-3" data-subscribe-form>
+  <p class="text-base font-bold text-slate-900 mb-1">📬 Recibe el espejo del pueblo · mensual</p>
+  <p class="text-sm text-slate-600 mb-3">Updates de qué busca Cabo Rojo, verificaciones, oportunidades — directo a tu correo. Sin spam.</p>
+  <input type="hidden" name="source" value="${escapeHtml(source)}">
+  ${audienceTag}
+  <input type="text" name="company" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" aria-hidden="true">
+  <div class="flex flex-col sm:flex-row gap-2">
+    <input type="email" name="email" required placeholder="tu@correo.com" class="flex-1 px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" autocomplete="email">
+    <button type="submit" class="px-5 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold whitespace-nowrap">Suscríbete</button>
+  </div>
+  <div class="text-xs text-slate-500 mt-2 hidden" data-subscribe-status></div>
+  <p class="text-[10px] text-slate-400 mt-2 italic">Si te sirve, llégate. Si no, "Unsubscribe" un click y listo.</p>
+</form>`
+}
+
+// JS handler injected once per page — handles all data-subscribe-form elements.
+const SUBSCRIBE_FORM_SCRIPT = `
+<script>
+document.addEventListener('submit', async function(e) {
+  var form = e.target;
+  if (!form.matches('[data-subscribe-form]')) return;
+  e.preventDefault();
+  var btn = form.querySelector('button[type="submit"]');
+  var status = form.querySelector('[data-subscribe-status]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Enviando…'; }
+  if (status) { status.classList.remove('hidden'); status.className = 'text-xs text-slate-500 mt-2'; status.textContent = ''; }
+  try {
+    var fd = new FormData(form);
+    var body = {};
+    fd.forEach(function(v, k) { body[k] = v; });
+    var r = await fetch('/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    var data = await r.json();
+    if (r.ok && data.ok) {
+      if (status) { status.className = 'text-sm text-teal-700 mt-2 font-semibold'; status.textContent = '✓ ' + (data.message || 'Listo. Te enviamos un correo de bienvenida.'); }
+      form.querySelector('input[name="email"]').value = '';
+    } else {
+      if (status) { status.className = 'text-sm text-red-600 mt-2'; status.textContent = '✗ ' + (data.error || 'Error · intenta de nuevo o textea al 787-417-7711'); }
+    }
+  } catch (err) {
+    if (status) { status.className = 'text-sm text-red-600 mt-2'; status.textContent = '✗ Error de red · intenta de nuevo'; }
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Suscríbete'; }
+  }
+});
+</script>
+`
+
 function layout(opts: {
   title: string
   description: string
@@ -115,7 +184,13 @@ ${opts.bodyHtml}
 <div class="max-w-4xl mx-auto px-4 text-center">
 <p class="text-base font-semibold text-teal-700">Menos revolú. Mejores decisiones. Mejor vida.</p>
 <p class="text-xs text-slate-500 mt-1">El mapa vivo pa' poner orden en el revolú de Cabo Rojo.</p>
-<div class="mt-4 flex justify-center gap-4 text-xs text-slate-500 flex-wrap">
+
+<div class="mt-5 mx-auto max-w-md">
+  <p class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">📬 Recibe el espejo del pueblo · mensual</p>
+  ${subscribeForm(`footer-${opts.slug}`, { compact: true })}
+</div>
+
+<div class="mt-6 flex justify-center gap-4 text-xs text-slate-500 flex-wrap">
 <a href="/menos-revolu" class="hover:text-teal-600 font-semibold">Menos Revolú</a>
 <a href="/mision" class="hover:text-teal-600">Misión</a>
 <a href="/pon-tu-negocio-en-el-mapa" class="hover:text-teal-600">Pon tu negocio</a>
@@ -130,6 +205,8 @@ ${opts.bodyHtml}
 <p class="mt-4 text-xs text-slate-400">Textea al <strong>${PHONE_CTA}</strong> · El Veci te contesta. Si te sirve, llégate. Si no, sigue tu camino.</p>
 </div>
 </footer>
+
+${SUBSCRIBE_FORM_SCRIPT}
 
 </body>
 </html>`
@@ -775,6 +852,10 @@ ${liveBlock}
 
 <p>Cada búsqueda, clic, mensaje y pregunta puede convertirse en señal — pa' negocios, pa' emprendedores, pa' inversionistas, pa' mejorar el pueblo.</p>
 
+<h2>Recibe el Reporte de Oportunidades · mensual</h2>
+<p>Compilamos las señales del mes en un correo — top demanda, categorías 🔥, zonas calientes. Sin spam. Pa' emprendedores e inversionistas que prefieren leer antes de moverse.</p>
+${subscribeForm('mira-la-vuelta', { audience: 'emprendedor' })}
+
 <!-- §17 share block — comparte el espejo -->
 <h2>Comparte el espejo</h2>
 <p>Si conoces a alguien que está pensando abrir negocio (o ya abrió y va lento) — mándale este espejo. Si lo lee antes de firmar el préstamo, le ahorra meses de pérdida.</p>
@@ -1055,6 +1136,10 @@ ${failBanner}
 
 <p>Pa' ver la matemática completa de oferta + demanda (TAM/SAM/SOM por categoría · densidad per cápita · zonas concentradas), abre <a href="/pueblo-en-numeros" class="text-teal-600 hover:underline font-semibold">/pueblo-en-numeros</a>.</p>
 
+<h2>Recibe estas señales en tu correo · mensual</h2>
+<p>Compilamos el espejo del mes — top búsquedas, categorías saturadas, oportunidades pre-supply. Una vez al mes. Sin spam.</p>
+${subscribeForm('senales-del-pueblo', { audience: 'general' })}
+
 <h2>Comparte el espejo del pueblo</h2>
 <p>Esto es lo que la gente está buscando esta semana. Si conoces a alguien con un negocio que podría servir lo que el pueblo pide — mándaselo. Si conoces alguien pensando en abrir — más todavía.</p>
 <div class="flex flex-col sm:flex-row gap-2 not-prose">
@@ -1207,6 +1292,11 @@ function handleMenosRevolu(_req: any, res: any) {
 <li>No todo progreso empieza con cemento. A veces empieza poniendo orden.</li>
 <li>La claridad también es desarrollo económico.</li>
 </ul>
+
+<!-- Newsletter capture pre-cierre -->
+<h2>Recibe el espejo mensual</h2>
+<p>Una vez al mes — qué se busca, qué falta, qué oportunidades aparecen. Sin spam.</p>
+${subscribeForm('menos-revolu', { audience: 'general' })}
 
 <!-- §18: Bloque maestro final -->
 <div class="bg-slate-900 text-white rounded-2xl p-8 mt-10 not-prose">
