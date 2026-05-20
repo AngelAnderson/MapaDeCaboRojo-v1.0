@@ -74,6 +74,32 @@ export default async function handler(req: any, res: any) {
       </url>
     `);
 
+    // Narrative public pages (SSR · positioning + sales + transparency)
+    // Priority order matches conversion path: entry → sales → trust → data
+    const narrativePages: Array<{ slug: string; priority: number; changefreq: string }> = [
+      { slug: 'menos-revolu', priority: 0.9, changefreq: 'weekly' },           // §20 consolidated landing
+      { slug: 'pon-tu-negocio-en-el-mapa', priority: 0.9, changefreq: 'weekly' }, // §13 revenue CTA
+      { slug: 'mira-la-vuelta', priority: 0.9, changefreq: 'daily' },          // §14 with live demand data
+      { slug: 'senales-del-pueblo', priority: 0.8, changefreq: 'daily' },      // live demand signals
+      { slug: 'pueblo-en-numeros', priority: 0.8, changefreq: 'daily' },       // math anchor (TAM/SAM/SOM)
+      { slug: 'transparencia', priority: 0.7, changefreq: 'daily' },           // live supply metrics
+      { slug: 'mision', priority: 0.7, changefreq: 'weekly' },
+      { slug: 'vision', priority: 0.6, changefreq: 'weekly' },
+      { slug: 'equipo', priority: 0.6, changefreq: 'weekly' },
+      { slug: 'moonshots', priority: 0.5, changefreq: 'weekly' },
+      { slug: 'me-conviene', priority: 0.7, changefreq: 'monthly' },
+      { slug: 'municipio', priority: 0.6, changefreq: 'weekly' },
+    ]
+    narrativePages.forEach(({ slug, priority, changefreq }) => {
+      urls.push(`
+        <url>
+          <loc>${baseUrl}/${slug}</loc>
+          <changefreq>${changefreq}</changefreq>
+          <priority>${priority}</priority>
+        </url>
+      `)
+    })
+
     // Category pages
     const categories = ['restaurantes', 'playas', 'salud', 'farmacia', 'dentista', 'veterinario', 'medico', 'hospital', 'laboratorio', 'optica', 'salud-mental', 'quiropractico', 'gimnasio', 'hospedaje', 'servicios', 'compras', 'entretenimiento', 'turismo', 'deportes', 'belleza', 'automotriz', 'marina', 'educacion', 'gobierno'];
     categories.forEach((cat) => {
