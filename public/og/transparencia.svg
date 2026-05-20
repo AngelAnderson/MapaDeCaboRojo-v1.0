@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <text x="80" y="110" font-family="-apple-system, system-ui, sans-serif" font-size="22" font-weight="700" fill="#5eead4" letter-spacing="3">📋 TRANSPARENCIA · MÉTRICAS EN VIVO</text>
+
+  <text x="80" y="225" font-family="-apple-system, system-ui, sans-serif" font-size="68" font-weight="800" fill="#ffffff" letter-spacing="-1">Lo que sí está al día</text>
+  <text x="80" y="305" font-family="-apple-system, system-ui, sans-serif" font-size="68" font-weight="800" fill="#5eead4" letter-spacing="-1">— y lo que falta.</text>
+
+  <text x="80" y="390" font-family="-apple-system, system-ui, sans-serif" font-size="24" font-weight="500" fill="#cbd5e1">Honestidad antes que números bonitos.</text>
+  <text x="80" y="425" font-family="-apple-system, system-ui, sans-serif" font-size="24" font-weight="500" fill="#cbd5e1">Update diario · sin filtros · sin spin.</text>
+
+  <rect x="80" y="465" width="640" height="60" rx="10" fill="rgba(94,234,212,0.15)"/>
+  <text x="100" y="503" font-family="ui-monospace, 'SF Mono', monospace" font-size="20" font-weight="700" fill="#5eead4">Si la métrica baja, lo dice. Si subimos, lo dice. Si fallamos, lo dice.</text>
+
+  <text x="80" y="585" font-family="-apple-system, system-ui, sans-serif" font-size="20" font-weight="600" fill="#94a3b8">mapadecaborojo.com/transparencia</text>
+</svg>

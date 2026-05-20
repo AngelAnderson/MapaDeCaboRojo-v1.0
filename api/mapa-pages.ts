@@ -213,6 +213,7 @@ function handleMision(_req: any, res: any) {
     title: 'Misión · El mapa vivo pa\' poner orden en el revolú',
     description: 'Menos revolú. Mejores decisiones. Mejor vida. Un mapa vivo con los negocios, servicios y oportunidades reales de Cabo Rojo — verificados a mano, no copiados de Google.',
     slug: 'mision',
+    ogImage: '/og/mision.png',
     bodyHtml: body,
     jsonLd: {
       '@context': 'https://schema.org',
@@ -344,6 +345,7 @@ ${failBanner}
     title: 'Transparencia · Receipts diarios',
     description: 'Receipts en vivo del mapa: verification freshness top 200, total verificado, gaps. Update diario sin filtros.',
     slug: 'transparencia',
+    ogImage: '/og/transparencia.png',
     bodyHtml: body,
     jsonLd: {
       '@context': 'https://schema.org',
@@ -433,6 +435,7 @@ function handleEquipo(_req: any, res: any) {
   res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600')
   res.status(200).send(layout({
     title: 'Equipo · 13 empleados invisibles · 1 vecino + AI',
+    ogImage: '/og/equipo.png',
     description: 'Cómo 1 persona + 13 empleados invisibles mantienen al día un mapa de 3,900 negocios. Open-source, replicable.',
     slug: 'equipo',
     bodyHtml: body,
@@ -558,6 +561,7 @@ function handleVision(_req: any, res: any) {
   res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600')
   res.status(200).send(layout({
     title: 'Visión · Hacia dónde camina el mapa que pone orden en el revolú',
+    ogImage: '/og/vision.png',
     description: 'Visión pública 12 meses · qué nos mata (kill criteria) · cómo nos medimos · por qué importa más allá de Cabo Rojo. Menos revolú. Mejores decisiones. Mejor vida.',
     slug: 'vision',
     bodyHtml: body,
@@ -655,6 +659,7 @@ function handleMoonshots(_req: any, res: any) {
   res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=1800')
   res.status(200).send(layout({
     title: 'Moonshots · Lo que estamos considerando',
+    ogImage: '/og/moonshots.png',
     description: '4 ideas bold que estamos considerando para mapadecaborojo.com. Build-in-public. Decision deadlines visibles.',
     slug: 'moonshots',
     bodyHtml: body,

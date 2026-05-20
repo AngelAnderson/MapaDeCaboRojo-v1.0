@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <text x="80" y="110" font-family="-apple-system, system-ui, sans-serif" font-size="22" font-weight="700" fill="#d946ef" letter-spacing="3">🚀 MOONSHOTS · BUILD-IN-PUBLIC</text>
+
+  <text x="80" y="225" font-family="-apple-system, system-ui, sans-serif" font-size="68" font-weight="800" fill="#ffffff" letter-spacing="-1">Lo que estamos</text>
+  <text x="80" y="305" font-family="-apple-system, system-ui, sans-serif" font-size="68" font-weight="800" fill="#d946ef" letter-spacing="-1">considerando</text>
+  <text x="80" y="385" font-family="-apple-system, system-ui, sans-serif" font-size="68" font-weight="800" fill="#ffffff" letter-spacing="-1">ahora mismo.</text>
+
+  <text x="80" y="465" font-family="-apple-system, system-ui, sans-serif" font-size="22" font-weight="500" fill="#cbd5e1">Cada lunes 3 ideas Tier 3 bold.</text>
+  <text x="80" y="500" font-family="-apple-system, system-ui, sans-serif" font-size="22" font-weight="700" fill="#fbbf24">Una debe asustarme.</text>
+
+  <text x="80" y="585" font-family="-apple-system, system-ui, sans-serif" font-size="20" font-weight="600" fill="#94a3b8">mapadecaborojo.com/moonshots</text>
+</svg>
