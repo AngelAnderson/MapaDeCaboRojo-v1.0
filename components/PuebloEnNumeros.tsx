@@ -210,6 +210,24 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose }) => {
         </div>
       </div>
 
+      {/* CTA buttons — drive visitors from map exploration to sales pages */}
+      <div className="mt-4 flex flex-col sm:flex-row gap-2">
+        <a
+          href="/pon-tu-negocio-en-el-mapa"
+          className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold no-underline transition-colors"
+        >
+          <i className="fa-solid fa-store text-xs" aria-hidden="true"></i>
+          Pon tu negocio en el mapa
+        </a>
+        <a
+          href="/mira-la-vuelta"
+          className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 border-2 border-teal-600 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-slate-700 text-sm font-bold no-underline transition-colors"
+        >
+          <i className="fa-solid fa-eye text-xs" aria-hidden="true"></i>
+          Antes de abrir, mira la vuelta
+        </a>
+      </div>
+
       <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-3 text-center">
         {stats.sponsorCount + stats.featuredFree > 0 && (
           <span className="mr-2">

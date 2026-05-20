@@ -247,8 +247,9 @@ async function handleTransparencia(_req: any, res: any) {
   const body = `
 <h1>Lo que sí está al día — y lo que falta.</h1>
 
-<p class="text-lg text-slate-600 mt-4">Honestidad antes que números bonitos. Aquí ves exactamente cómo va el mapa — el subset crítico, el total, los gaps, las acciones de la semana. <strong>Las señales del pueblo en vivo.</strong></p>
+<p class="text-lg text-slate-600 mt-4">Honestidad antes que números bonitos. Aquí ves exactamente cómo va el mapa por <strong>el lado de oferta</strong> — el subset crítico, el total, los gaps, las acciones de la semana.</p>
 <p class="text-sm text-slate-500">Update diario · automático · sin filtros. Si la métrica baja, lo dice. Si subimos, lo dice. Si fallamos, lo dice.</p>
+<p class="text-sm text-slate-600 mt-2">¿Buscas el otro lado — <strong>la demanda en vivo</strong> (qué busca la gente hoy, qué falta encontrar)? Mira <a href="/senales-del-pueblo" class="text-teal-600 hover:underline font-semibold">/señales-del-pueblo</a>.</p>
 ${failBanner}
 
 <h2>📊 Métrica madre</h2>
@@ -916,7 +917,8 @@ async function handleSenalesDelPueblo(_req: any, res: any) {
   const body = `
 <h1>Las señales del pueblo, en vivo.</h1>
 
-<p class="text-lg text-slate-600 mt-4">Cada búsqueda, clic, mensaje y pregunta al bot *7711 deja una pista. <strong>El mapa convierte esas pistas en señales reales de demanda local.</strong> Esta página muestra esas señales actualizadas todos los días.</p>
+<p class="text-lg text-slate-600 mt-4">Cada búsqueda, clic, mensaje y pregunta al bot *7711 deja una pista. <strong>El mapa convierte esas pistas en señales reales de demanda local.</strong> Esta página muestra esas señales actualizadas todos los días — el lado de <em>demanda</em>.</p>
+<p class="text-sm text-slate-600">¿Buscas el otro lado — <strong>la oferta</strong> (qué está verificado, qué falta verificar)? Mira <a href="/transparencia" class="text-teal-600 hover:underline font-semibold">/transparencia</a>.</p>
 ${failBanner}
 
 <!-- WIIFM 3-chip -->
