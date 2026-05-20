@@ -39,6 +39,8 @@
     { "source": "/equipo", "destination": "/api/mapa-pages?page=equipo" },
     { "source": "/vision", "destination": "/api/mapa-pages?page=vision" },
     { "source": "/moonshots", "destination": "/api/mapa-pages?page=moonshots" },
+    { "source": "/mira-la-vuelta", "destination": "/api/mapa-pages?page=mira-la-vuelta" },
+    { "source": "/pon-tu-negocio-en-el-mapa", "destination": "/api/mapa-pages?page=pon-tu-negocio-en-el-mapa" },
     { "source": "/llms.txt", "destination": "/api/public?action=llms" },
     { "source": "/llms-full.txt", "destination": "/api/public?action=llms-full" },
     { "source": "/api/(.*)", "destination": "/api/$1" },

@@ -83,12 +83,13 @@ ${jsonLd}
 </div>
 <span class="font-black tracking-tight">Mapa de Cabo Rojo</span>
 </a>
-<nav class="hidden md:flex gap-4 text-sm text-slate-600">
+<nav class="hidden md:flex gap-4 text-sm text-slate-600 flex-wrap">
 <a href="/mision" class="hover:text-teal-600">Misión</a>
+<a href="/pon-tu-negocio-en-el-mapa" class="hover:text-teal-600 font-semibold text-teal-700">Pon tu negocio</a>
+<a href="/mira-la-vuelta" class="hover:text-teal-600">Mira la vuelta</a>
 <a href="/transparencia" class="hover:text-teal-600">Transparencia</a>
 <a href="/equipo" class="hover:text-teal-600">Equipo</a>
 <a href="/vision" class="hover:text-teal-600">Visión</a>
-<a href="/moonshots" class="hover:text-teal-600">Moonshots</a>
 </nav>
 </div>
 </header>
@@ -101,8 +102,10 @@ ${opts.bodyHtml}
 <div class="max-w-4xl mx-auto px-4 text-center">
 <p class="text-base font-semibold text-teal-700">Menos revolú. Mejores decisiones. Mejor vida.</p>
 <p class="text-xs text-slate-500 mt-1">El mapa vivo pa' poner orden en el revolú de Cabo Rojo.</p>
-<div class="mt-4 flex justify-center gap-4 text-xs text-slate-500">
+<div class="mt-4 flex justify-center gap-4 text-xs text-slate-500 flex-wrap">
 <a href="/mision" class="hover:text-teal-600">Misión</a>
+<a href="/pon-tu-negocio-en-el-mapa" class="hover:text-teal-600">Pon tu negocio</a>
+<a href="/mira-la-vuelta" class="hover:text-teal-600">Mira la vuelta</a>
 <a href="/transparencia" class="hover:text-teal-600">Transparencia</a>
 <a href="/equipo" class="hover:text-teal-600">Equipo</a>
 <a href="/vision" class="hover:text-teal-600">Visión</a>
@@ -649,6 +652,222 @@ function handleMoonshots(_req: any, res: any) {
   }))
 }
 
+// =============== /mira-la-vuelta ===============
+
+function handleMiraLaVuelta(_req: any, res: any) {
+  const body = `
+<h1>Antes de meter chavos, mira la vuelta.</h1>
+
+<p class="text-lg text-slate-600 mt-4">Pa' emprendedores e inversionistas — la página vive pa' que veas demanda <em>antes</em> de copiar lo que ya existe o firmar el préstamo.</p>
+
+<!-- WIIFM 3-chip -->
+<div class="grid sm:grid-cols-3 gap-3 mt-6 not-prose">
+  <div class="bg-teal-50 border border-teal-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-2">¿Qué significa?</div>
+    <p class="text-sm text-slate-700 leading-snug">Cada búsqueda, clic, mensaje y pregunta al bot deja una pista. El mapa convierte esas pistas en señales de demanda real.</p>
+  </div>
+  <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">¿Por qué importa?</div>
+    <p class="text-sm text-slate-700 leading-snug">Abrir negocio en una categoría saturada cuesta $20K-$50K y 8 meses de vida. Abrirlo donde el pueblo te necesita paga rápido. La diferencia se ve en el data.</p>
+  </div>
+  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-blue-700 uppercase tracking-wide mb-2">¿Qué hago con esto?</div>
+    <p class="text-sm text-slate-700 leading-snug">Mira la matemática del pueblo en <a href="/pueblo-en-numeros" class="text-blue-700 underline font-semibold">/pueblo-en-numeros</a>. Textea <strong>VUELTA + tu categoría</strong> al <strong>${PHONE_CTA}</strong> pa' un reporte específico.</p>
+  </div>
+</div>
+
+<h2>El problema</h2>
+<p>En Cabo Rojo, 7 de cada 10 negocios nuevos son comida — food truck o restaurante. La gente copia lo que ve. Y la mayoría cierra a los 8 meses porque la matemática del pueblo no aguanta tantos en la misma categoría.</p>
+
+<p><strong>El revolú local cuesta tiempo, dinero y oportunidades.</strong> No por mala suerte — por física del pueblo.</p>
+
+<h2>Reporte de Oportunidades Locales</h2>
+<p>Producto que estamos construyendo pa' emprendedores e inversionistas que quieren <em>leer la vuelta</em> antes de firmar.</p>
+
+<p>Qué incluye:</p>
+<ul>
+<li><strong>Qué se busca</strong> — top categorías más consultadas al bot *7711 en los últimos 90 días</li>
+<li><strong>Qué falta</strong> — categorías con demanda alta + supply en directorio &lt; 3 negocios (el pueblo te necesita 🔥)</li>
+<li><strong>Qué se repite</strong> — categorías saturadas confirmadas por matemática TAM/SAM/SOM</li>
+<li><strong>Qué zona se mueve</strong> — concentración geográfica por barrio · dónde hay competencia · dónde hay vacío</li>
+<li><strong>Qué negocios reciben atención</strong> — patterns de búsqueda + clic dentro del directorio</li>
+<li><strong>Qué preguntas hace la gente</strong> — queries del bot que el sistema no entiende todavía (señal pre-supply de demanda no servida)</li>
+<li><strong>Qué oportunidades parecen invisibles</strong> — categorías con búsqueda alta pero zero presencia en Google/Yelp/FB</li>
+</ul>
+
+<h2>La línea de dinero</h2>
+<blockquote>Cuando alguien busca, pregunta o toca, ahí hay una pista de demanda.</blockquote>
+
+<p>El mapa convierte intención local en oportunidad económica. Cada búsqueda, clic y pregunta puede revelar demanda real.</p>
+
+<h2>Ejemplos vivos hoy (mayo 2026)</h2>
+<p>Categorías que el bot *7711 está recibiendo demanda pero el directorio tiene casi nadie listed:</p>
+<ul>
+<li>🔥 <strong>Plomero</strong> — decenas de búsquedas/mes · directorio casi vacío</li>
+<li>🔥 <strong>Aire acondicionado / AC tech</strong> — domingos con 90 grados afuera, demanda emergencia</li>
+<li>🔥 <strong>Electricista</strong> — backups después de cortes de luz · sin opciones visibles</li>
+<li>🔥 <strong>Cardiólogo / ginecólogo / especialistas médicos</strong> — gente viaja a SJ por falta local</li>
+<li>🔥 <strong>Nursing home / cuidado de envejeciente</strong> — demanda demográfica creciente</li>
+<li>🔥 <strong>Repostería con licencia</strong> — economía informal grande, opciones visibles casi cero</li>
+</ul>
+
+<p>La tabla completa con bandera 🟢/🟡/⚪/🔥 vive en <a href="/pueblo-en-numeros" class="text-teal-600 hover:underline font-semibold">/pueblo-en-numeros</a>. Es la matemática del pueblo entero — categoría por categoría.</p>
+
+<h2>Pa' inversionistas</h2>
+<p>Si vas a meter $50K-$500K en un negocio local, vas a querer leer el mapa antes de firmar. Movimiento real · zonas calientes · demanda pre-supply · señales de saturación.</p>
+
+<p>Esto no es bolsa. No es predicciones. Son <strong>señales reales de comportamiento local</strong> medidas todos los días.</p>
+
+<p>El producto formal "Reporte de Oportunidades Locales" está en construcción Q3 2026. Si quieres el preview manual antes, textea <strong>INVERSION</strong> al ${PHONE_CTA}.</p>
+
+<h2>Versión estratégica</h2>
+<p><strong>El mapa convierte intención local en oportunidad económica.</strong></p>
+
+<p>Cada búsqueda, clic, mensaje y pregunta puede convertirse en señal — pa' negocios, pa' emprendedores, pa' inversionistas, pa' mejorar el pueblo.</p>
+
+<div class="bg-teal-50 border border-teal-200 rounded-lg p-6 mt-8 text-center">
+<p class="text-lg font-semibold">Antes de abrir otro negocio igual, mira la vuelta.</p>
+<p class="mt-2"><a href="sms:+17874177711?body=VUELTA" class="text-teal-600 font-bold underline">Textea VUELTA + tu categoría al ${PHONE_CTA}</a></p>
+<p class="text-sm text-slate-600 mt-2 italic">Te mando la matemática específica de tu categoría + las 3 banderas pa' revisar antes de firmar contrato. Gratis. Sin agendas.</p>
+</div>
+`
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600')
+  res.status(200).send(layout({
+    title: 'Mira la vuelta · Reporte de Oportunidades Locales',
+    description: 'Antes de meter chavos, mira la vuelta. Demanda real, zonas calientes, categorías saturadas. Pa\' emprendedores e inversionistas que leen el mapa antes de firmar.',
+    slug: 'mira-la-vuelta',
+    bodyHtml: body,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'AboutPage',
+      name: 'Mira la vuelta · Mapa de Cabo Rojo',
+      description: 'Reporte de Oportunidades Locales pa\' emprendedores e inversionistas en Cabo Rojo.',
+      url: `${SITE_URL}/mira-la-vuelta`,
+    },
+  }))
+}
+
+// =============== /pon-tu-negocio-en-el-mapa ===============
+
+function handlePonTuNegocio(_req: any, res: any) {
+  const body = `
+<h1>Pon tu negocio donde la gente ya está buscando.</h1>
+
+<p class="text-lg text-slate-600 mt-4">Si tu negocio no aparece cuando alguien lo está buscando — estás perdiendo oportunidades. El mapa pone tu nombre frente a personas con intención.</p>
+
+<!-- WIIFM 3-chip -->
+<div class="grid sm:grid-cols-3 gap-3 mt-6 not-prose">
+  <div class="bg-teal-50 border border-teal-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-2">¿Qué significa?</div>
+    <p class="text-sm text-slate-700 leading-snug">Cuando alguien busca lo que tú vendes — apareces. No es solo "estar en un mapa". Es aparecer en el momento correcto.</p>
+  </div>
+  <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">¿Por qué importa?</div>
+    <p class="text-sm text-slate-700 leading-snug">El boca a boca + el algoritmo + la suerte no son sistema. La gente que ya está buscando algo es la que más cerca está de comprar.</p>
+  </div>
+  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-blue-700 uppercase tracking-wide mb-2">¿Qué hago con esto?</div>
+    <p class="text-sm text-slate-700 leading-snug">Textea <strong>NEGOCIO</strong> al <strong>${PHONE_CTA}</strong> con tu nombre + categoría. Te entramos al directorio. El badge "verificado" es gratis.</p>
+  </div>
+</div>
+
+<h2>Cómo funciona</h2>
+<p>El mapa ayuda a que residentes y visitantes encuentren negocios locales por:</p>
+<ul>
+<li><strong>Ubicación</strong> — qué queda cerca de donde están</li>
+<li><strong>Categoría</strong> — qué tipo de servicio necesitan</li>
+<li><strong>Intención</strong> — qué problema están tratando de resolver ahora mismo</li>
+</ul>
+
+<p>No es solo "estar en un mapa". Es aparecer en el momento correcto: cuando alguien quiere comer, comprar, visitar, llamar, llegar o resolver algo específico.</p>
+
+<h2>La frase de venta</h2>
+<blockquote>No es pagar por aparecer. Es pagar por no seguir escondido.</blockquote>
+
+<p>El badge "verificado" es gratis si alguien (Angel o Noelia) llama a tu negocio y confirma que sigue abierto. La Vitrina es opcional — pa' los que quieren más visibilidad y aparecer primero en su categoría.</p>
+
+<h2>Qué incluye tu ficha de negocio</h2>
+<ul>
+<li>Nombre del negocio + categoría correcta</li>
+<li>Ubicación + dirección</li>
+<li>Horario actualizado</li>
+<li>Teléfono + botón de llamada directo</li>
+<li>Botón de WhatsApp</li>
+<li>Link a tu website o redes (si tienes)</li>
+<li>Fotos (opcional)</li>
+<li>Descripción corta</li>
+<li>Servicios principales que ofreces</li>
+<li>Métricas básicas de cuántas veces aparece tu negocio en búsquedas</li>
+<li>Opción de Vitrina destacada ($799/año, opcional)</li>
+</ul>
+
+<h2>Las 2 opciones</h2>
+<div class="grid sm:grid-cols-2 gap-4 mt-3 not-prose">
+  <div class="bg-white border border-slate-200 rounded-lg p-5">
+    <div class="text-xs font-bold text-slate-500 uppercase tracking-wide">Gratis</div>
+    <h3 class="text-xl font-bold mt-1">Verificado</h3>
+    <p class="text-sm text-slate-600 mt-2">Tu negocio aparece en el directorio + en el mapa + en las búsquedas del bot. Badge "verificado" si confirmamos que está abierto.</p>
+    <p class="text-xs text-slate-500 mt-3">Gratis · pa' siempre · sin trampa.</p>
+    <p class="mt-4"><a href="sms:+17874177711?body=NEGOCIO" class="text-teal-600 font-bold underline">Textea NEGOCIO al ${PHONE_CTA}</a></p>
+  </div>
+  <div class="bg-teal-50 border-2 border-teal-400 rounded-lg p-5">
+    <div class="text-xs font-bold text-teal-700 uppercase tracking-wide">$799/año · Opcional</div>
+    <h3 class="text-xl font-bold mt-1">Vitrina</h3>
+    <p class="text-sm text-slate-600 mt-2">Todo lo de Verificado + apareces primero en tu categoría + post mensual en FB · email mention · perfil destacado · El Veci recomienda tu negocio cuando matchea.</p>
+    <p class="text-xs text-teal-700 mt-3">Garantía 60 días · upfront.</p>
+    <p class="mt-4"><a href="sms:+17874177711?body=VITRINA" class="text-teal-700 font-bold underline">Textea VITRINA al ${PHONE_CTA}</a></p>
+  </div>
+</div>
+
+<h2>Por qué este mapa y no Google</h2>
+<p><strong>Google tiene datos. Facebook tiene ruido. Nosotros tenemos contexto local.</strong></p>
+<p>No somos visitantes mirando un mapa — somos vecinos leyendo la vuelta. La verificación humana sostenida es lo que diferencia este directorio: cada negocio se confirma a mano, no se copia automático.</p>
+<p>Lee más: <a href="/equipo" class="text-teal-600 hover:underline">cómo funciona el equipo</a> · <a href="/transparencia" class="text-teal-600 hover:underline">los números en vivo</a> · <a href="/mision" class="text-teal-600 hover:underline">por qué existe</a>.</p>
+
+<div class="bg-teal-50 border border-teal-200 rounded-lg p-6 mt-8 text-center">
+<p class="text-lg font-semibold">¿Listo pa' que la gente que ya busca te encuentre?</p>
+<p class="mt-2"><a href="sms:+17874177711?body=NEGOCIO" class="text-teal-600 font-bold underline">Textea NEGOCIO + tu nombre al ${PHONE_CTA}</a></p>
+<p class="text-sm text-slate-600 mt-2 italic">Si te sirve, llégate. Si no, sigue tu camino — el directorio sigue funcionando con o sin ti.</p>
+</div>
+`
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600')
+  res.status(200).send(layout({
+    title: 'Pon tu negocio en el mapa · Verificado gratis · Vitrina $799/año',
+    description: 'Pon tu negocio donde la gente ya está buscando. Verificación gratis. Vitrina opcional pa\' visibilidad premium. Aparece en el momento correcto, no solo "estás en un mapa".',
+    slug: 'pon-tu-negocio-en-el-mapa',
+    bodyHtml: body,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Service',
+      name: 'Pon tu negocio en el mapa · MapaDeCaboRojo.com',
+      description: 'Listing gratis + Vitrina opcional ($799/año) pa\' negocios locales de Cabo Rojo PR.',
+      url: `${SITE_URL}/pon-tu-negocio-en-el-mapa`,
+      provider: {
+        '@type': 'Organization',
+        name: 'MapaDeCaboRojo.com',
+      },
+      offers: [
+        {
+          '@type': 'Offer',
+          name: 'Verificado',
+          price: '0',
+          priceCurrency: 'USD',
+        },
+        {
+          '@type': 'Offer',
+          name: 'Vitrina',
+          price: '799',
+          priceCurrency: 'USD',
+        },
+      ],
+    },
+  }))
+}
+
 // =============== HANDLER ===============
 
 export default async function handler(req: any, res: any) {
@@ -660,6 +879,8 @@ export default async function handler(req: any, res: any) {
     case 'equipo': return handleEquipo(req, res)
     case 'vision': return handleVision(req, res)
     case 'moonshots': return handleMoonshots(req, res)
+    case 'mira-la-vuelta': return handleMiraLaVuelta(req, res)
+    case 'pon-tu-negocio-en-el-mapa': return handlePonTuNegocio(req, res)
     default:
       res.status(404).send('Page not found')
   }
