@@ -124,6 +124,7 @@ ${opts.bodyHtml}
 <a href="/transparencia" class="hover:text-teal-600">Transparencia</a>
 <a href="/equipo" class="hover:text-teal-600">Equipo</a>
 <a href="/vision" class="hover:text-teal-600">Visión</a>
+<a href="/preguntas" class="hover:text-teal-600">Preguntas</a>
 <a href="/moonshots" class="hover:text-teal-600">Moonshots</a>
 </div>
 <p class="mt-4 text-xs text-slate-400">Textea al <strong>${PHONE_CTA}</strong> · El Veci te contesta. Si te sirve, llégate. Si no, sigue tu camino.</p>
@@ -1253,6 +1254,120 @@ function handleMenosRevolu(_req: any, res: any) {
   }))
 }
 
+// =============== /preguntas ===============
+// FAQ page with FAQPage schema.org — drives LLM citability + Google rich
+// results. Each Q&A is independently citable and indexable.
+
+const FAQ_ENTRIES: Array<{ q: string; a: string }> = [
+  {
+    q: '¿Qué es MapaDeCaboRojo.com?',
+    a: 'Un mapa vivo pa\' poner orden en el revolú de Cabo Rojo. Es un directorio de los negocios reales del pueblo — verificados a mano, llamando al dueño — más un panel de matemática del pueblo (TAM/SAM/SOM por categoría) y señales de demanda en vivo del bot *7711. No es Google Maps · no es Yelp · no es Facebook. Es lo que el pueblo le falta: un mapa que sí está al día.',
+  },
+  {
+    q: '¿Cuánto cuesta poner mi negocio en el mapa?',
+    a: 'Verificado: gratis pa\' siempre. Si alguien (Angel o Noelia) llama a tu número y confirma que sigues abierto, te entra el badge "verificado" sin costo. Vitrina: $799/año (opcional) — apareces primero en tu categoría, El Veci te recomienda en el bot, post mensual en Facebook, perfil destacado. Garantía 60 días. Detalles en /pon-tu-negocio-en-el-mapa.',
+  },
+  {
+    q: '¿Cómo se diferencia de Google Maps o Yelp?',
+    a: 'Google tiene datos. Facebook tiene ruido. Nosotros tenemos contexto local. Cada negocio se verifica a mano — alguien llama, confirma que sigue abierto, anota si cambió horario, si se mudó, si cerró. Si la última verificación tiene más de 90 días, no cuenta como verificado. Sin scraping. Sin AI inventando data. Sin "aproximaciones". Esa verificación humana sostenida es el moat.',
+  },
+  {
+    q: '¿Cómo verifican los negocios uno por uno?',
+    a: 'Cada lunes el sistema cuenta cuántos del subset crítico (top 200 más buscados) están al día. Marca los 20 más urgentes. Angel y Noelia llaman 4-5 al día durante la semana. Si nadie contesta después de 2 intentos, se marca para visita en persona. Los números viven en /transparencia · updated diario sin filtros.',
+  },
+  {
+    q: '¿Qué es la Vitrina y vale los $799?',
+    a: 'Es la opción premium pa\' negocios que quieren más visibilidad. Incluye: aparición #1 en tu categoría, recomendación del bot *7711, post mensual en la página Facebook (~15K alcance/mes), badge especial, garantía 60 días. La frase: "No es pagar por aparecer. Es pagar por no seguir escondido." Si tu negocio depende de que la gente te encuentre primero — sí, vale. Si tu boca-a-boca ya te llena la agenda, gratis verificado es suficiente.',
+  },
+  {
+    q: '¿Qué es el bot *7711 (El Veci)?',
+    a: 'El Veci es el asistente de Cabo Rojo via SMS/WhatsApp. Le texteas y te contesta — recomendaciones de negocios, horarios, direcciones, lo que sea sobre el pueblo. Número: 787-417-7711. WhatsApp: wa.me/17874177711. Funciona 24/7. Cada búsqueda alimenta /senales-del-pueblo (la página de demanda en vivo) — por eso es señal valiosa pa\' emprendedores e inversionistas.',
+  },
+  {
+    q: '¿Cómo puedo ayudar al proyecto?',
+    a: 'Textea al *7711 con "MEMORIA: [negocio] [info]" pa\' contribuir data verificable. Si conoces a alguien con un negocio en CR que no aparece, recomiéndale reclamar perfil gratis. Comparte páginas como /senales-del-pueblo y /mira-la-vuelta cuando le sirvan a alguien. Si eres dev/periodista/agencia, escribe a angel@angelanderson.com — hay acceso programático via api.vecinoai.com.',
+  },
+  {
+    q: '¿Es gratis usar el mapa?',
+    a: 'Sí, gratis pa\' siempre. Buscar negocios · ver listings · usar el bot *7711 · leer /transparencia · /senales-del-pueblo · /pueblo-en-numeros · /mira-la-vuelta · todo gratis. La única cosa de pago es la Vitrina opcional pa\' dueños de negocio que quieran promocionarse ($799/año).',
+  },
+  {
+    q: '¿Cuántos negocios tienen?',
+    a: 'Más de 1,134 negocios indexados a fecha actualizada. El subset crítico (top 200 más buscados) target: 80% verificado en los últimos 90 días pa\' junio 23 2026. Métricas en vivo siempre en /transparencia. Cubre: restaurantes, farmacias, médicos, dentistas, hospedaje, servicios (plomero, AC, electricista, mecánico), compras, turismo, deportes, automotriz, marina náutico, educación, gobierno — 24 categorías mayores.',
+  },
+  {
+    q: '¿Quién está detrás del proyecto?',
+    a: 'Angel Anderson — vecino de Cabo Rojo. Mi esposa Noelia me ayuda algunos lunes llamando negocios. El resto del trabajo lo hacen 13 empleados invisibles — programas pequeños que corren solos en horarios fijos. Sin empleados humanos. Sin VC. La idea: si funciona con 1 persona + AI en CR (50,000 hab), funciona en cualquier pueblo. Detalles en /equipo.',
+  },
+  {
+    q: '¿Tienen política de privacidad? ¿Qué hacen con los datos del bot?',
+    a: 'Las búsquedas del bot se guardan agregadas (qué se busca, cuántas veces) — eso alimenta /senales-del-pueblo. NO compartimos números de teléfono individuales con terceros · NO vendemos datos personales · NO usamos las búsquedas pa\' identificar usuarios. Si quieres que borremos tu historial, textea "BORRAR" al 787-417-7711. Privacy policy formal en construcción.',
+  },
+  {
+    q: '¿Por qué algunas categorías están "saturadas" o "te necesitan"?',
+    a: 'La página /pueblo-en-numeros calcula TAM/SAM/SOM por categoría. Si el revenue promedio por negocio es menor que lo mínimo para no quebrar, la categoría se marca ⚪ (saturada). Si nadie tiene supply pero el bot recibe demanda real, se marca 🔥 (te necesitan). Ejemplos crónicos 🔥: plomero, electricista, aire acondicionado, cardiólogo, ginecólogo. Si tienes habilidad en una de esas, abrir paga rápido.',
+  },
+  {
+    q: '¿Puedo replicar este modelo pa\' mi pueblo o municipio?',
+    a: 'Sí. El método es open-source. Cada uno de los 13 empleados invisibles es un programa pequeño (~150-400 líneas) que cualquier dev puede clonar. El moat NO es el código — es la verificación humana sostenida. Si eres alcalde, periodista o dev que quiere construir el mapa de tu pueblo, escribe a angel@angelanderson.com.',
+  },
+]
+
+function handlePreguntas(_req: any, res: any) {
+  const faqHtml = FAQ_ENTRIES.map((entry, i) => `
+<details class="not-prose bg-white border border-slate-200 rounded-lg p-5 mt-3 group" ${i < 3 ? 'open' : ''}>
+  <summary class="font-bold text-slate-900 cursor-pointer flex items-start justify-between gap-3 list-none">
+    <span class="flex-1">${escapeHtml(entry.q)}</span>
+    <span class="text-teal-600 group-open:rotate-180 transition-transform text-sm">▾</span>
+  </summary>
+  <p class="mt-3 text-slate-700 leading-relaxed text-sm">${entry.a}</p>
+</details>
+`).join('')
+
+  const body = `
+<h1>Preguntas frecuentes</h1>
+
+<p class="text-lg text-slate-600 mt-4">Las preguntas que más nos hacen sobre MapaDeCaboRojo.com. Si la tuya no está aquí, textea al <strong>${PHONE_CTA}</strong> y la respondemos — y si vale la pena, se agrega a esta lista.</p>
+
+<div class="mt-6">
+${faqHtml}
+</div>
+
+<h2 class="mt-10">¿No encontraste la tuya?</h2>
+<p>Textea <strong>PREGUNTA</strong> + lo que quieres saber al <strong>${PHONE_CTA}</strong>. Si la respuesta interesa a más gente, la agregamos aquí.</p>
+
+<div class="bg-teal-50 border border-teal-200 rounded-lg p-6 mt-8 text-center">
+<p class="text-lg font-semibold">¿Listo pa' empezar?</p>
+<div class="mt-3 flex flex-col sm:flex-row gap-2 justify-center">
+  <a href="/" class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold no-underline">Mira el mapa</a>
+  <a href="/pon-tu-negocio-en-el-mapa" class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white border-2 border-teal-600 text-teal-700 hover:bg-teal-50 font-bold no-underline">Pon tu negocio</a>
+  <a href="/menos-revolu" class="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-white border-2 border-slate-300 text-slate-700 hover:bg-slate-100 font-bold no-underline">¿Qué es esto?</a>
+</div>
+</div>
+`
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600')
+  res.status(200).send(layout({
+    title: 'Preguntas frecuentes · MapaDeCaboRojo.com',
+    description: 'Respuestas a las preguntas que más nos hacen sobre MapaDeCaboRojo.com: cuánto cuesta poner tu negocio, cómo verificamos, qué es la Vitrina, qué hace el bot *7711, cómo replicar el modelo. Updated continuo.',
+    slug: 'preguntas',
+    bodyHtml: body,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: FAQ_ENTRIES.map(entry => ({
+        '@type': 'Question',
+        name: entry.q,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: entry.a,
+        },
+      })),
+    },
+  }))
+}
+
 // =============== HANDLER ===============
 
 export default async function handler(req: any, res: any) {
@@ -1268,6 +1383,7 @@ export default async function handler(req: any, res: any) {
     case 'pon-tu-negocio-en-el-mapa': return handlePonTuNegocio(req, res)
     case 'senales-del-pueblo': return await handleSenalesDelPueblo(req, res)
     case 'menos-revolu': return handleMenosRevolu(req, res)
+    case 'preguntas': return handlePreguntas(req, res)
     default:
       res.status(404).send('Page not found')
   }

@@ -69,6 +69,7 @@ Las páginas siguientes explican qué es el mapa, hacia dónde va, y cómo funci
 | https://mapadecaborojo.com/mira-la-vuelta | AboutPage (live data) | Emprendedores · inversionistas | "Antes de meter chavos, mira la vuelta." Reporte de Oportunidades Locales. Top búsquedas live + categorías zero-supply. |
 | https://mapadecaborojo.com/pon-tu-negocio-en-el-mapa | Service (2 Offers) | Dueños de negocio CR | Verificado gratis · Vitrina $799/año. Cómo aparecer cuando alguien ya está buscando. |
 | https://mapadecaborojo.com/moonshots | AboutPage | Build-in-public | Ideas Tier 3 considerando ship próximos 6-12 meses. Decision deadlines explícitos. |
+| https://mapadecaborojo.com/preguntas | FAQPage | Todas las audiencias | 13 Q&A: qué es el sitio, cuánto cuesta Vitrina, diferencia vs Google Maps, cómo se verifican negocios, qué es el bot *7711, política de datos, replicabilidad. Schema.org FAQPage pa' rich results + LLM citability. |
 | https://mapadecaborojo.com/pueblo-en-numeros | Article + Dataset | Lectores decisor (abrir/dueño/alcalde) | Densidad de negocios por categoría · TAM/SAM/SOM · bandera 🟢🟡⚪🔥 · 3 movidas pa' dueños · "Cómo leer una fila" plain-talk. |
 | https://mapadecaborojo.com/municipio | Dashboard | Funcionarios municipales | Panel ciudadano con métricas del pueblo. |
 | https://mapadecaborojo.com/me-conviene | Tool | Emprendedores | ¿Conviene abrir negocio en X categoría? Calculadora 60-seg. |

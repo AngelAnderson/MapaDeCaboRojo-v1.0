@@ -87,6 +87,7 @@ export default async function handler(req: any, res: any) {
       { slug: 'vision', priority: 0.6, changefreq: 'weekly' },
       { slug: 'equipo', priority: 0.6, changefreq: 'weekly' },
       { slug: 'moonshots', priority: 0.5, changefreq: 'weekly' },
+      { slug: 'preguntas', priority: 0.7, changefreq: 'monthly' },             // FAQPage schema · LLM citability
       { slug: 'me-conviene', priority: 0.7, changefreq: 'monthly' },
       { slug: 'municipio', priority: 0.6, changefreq: 'weekly' },
     ]
