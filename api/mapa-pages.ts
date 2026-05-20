@@ -87,9 +87,9 @@ ${jsonLd}
 <a href="/mision" class="hover:text-teal-600">Misión</a>
 <a href="/pon-tu-negocio-en-el-mapa" class="hover:text-teal-600 font-semibold text-teal-700">Pon tu negocio</a>
 <a href="/mira-la-vuelta" class="hover:text-teal-600">Mira la vuelta</a>
+<a href="/senales-del-pueblo" class="hover:text-teal-600">Señales</a>
 <a href="/transparencia" class="hover:text-teal-600">Transparencia</a>
 <a href="/equipo" class="hover:text-teal-600">Equipo</a>
-<a href="/vision" class="hover:text-teal-600">Visión</a>
 </nav>
 </div>
 </header>
@@ -106,6 +106,7 @@ ${opts.bodyHtml}
 <a href="/mision" class="hover:text-teal-600">Misión</a>
 <a href="/pon-tu-negocio-en-el-mapa" class="hover:text-teal-600">Pon tu negocio</a>
 <a href="/mira-la-vuelta" class="hover:text-teal-600">Mira la vuelta</a>
+<a href="/senales-del-pueblo" class="hover:text-teal-600">Señales del pueblo</a>
 <a href="/transparencia" class="hover:text-teal-600">Transparencia</a>
 <a href="/equipo" class="hover:text-teal-600">Equipo</a>
 <a href="/vision" class="hover:text-teal-600">Visión</a>
@@ -868,6 +869,151 @@ function handlePonTuNegocio(_req: any, res: any) {
   }))
 }
 
+// =============== /señales-del-pueblo ===============
+
+async function handleSenalesDelPueblo(_req: any, res: any) {
+  // Live data binding — pull demand signals from materialized views
+  let topSearches: any[] = []
+  let recentVerifs: any[] = []
+  let dataFailed = false
+  try {
+    const [topRes, verifRes] = await Promise.all([
+      supabase.from('mv_top_searches_30d').select('*').limit(15),
+      supabase.from('mv_recent_verifications').select('*').limit(10),
+    ])
+    topSearches = topRes.data || []
+    recentVerifs = verifRes.data || []
+    if (topRes.error && verifRes.error) dataFailed = true
+  } catch (e) {
+    dataFailed = true
+  }
+
+  const failBanner = dataFailed
+    ? `<div class="bg-amber-50 border-l-4 border-amber-400 p-4 my-4 rounded-r-lg">
+  <p class="font-semibold text-amber-900">⚠️ Los números no están actualizando ahora mismo.</p>
+  <p class="text-sm text-amber-800 mt-1">El sistema que mide está temporal con problema. Vuelve en 10-15 minutos. Si persiste, textea al <strong>${PHONE_CTA}</strong>.</p>
+</div>`
+    : ''
+
+  const topSearchesRows = topSearches.length > 0
+    ? topSearches.map((s: any, i: number) => `
+        <tr>
+          <td class="text-right text-slate-400 pr-2">${i + 1}.</td>
+          <td class="font-semibold">${escapeHtml(s.q_norm || s.query || s.term || '—')}</td>
+          <td class="text-right text-teal-600 font-bold">${s.cnt || s.count || s.searches || '?'}</td>
+        </tr>`).join('')
+    : `<tr><td colspan="3" class="text-center text-slate-500 italic py-4">Cargando señales en vivo…</td></tr>`
+
+  const recentVerifsRows = recentVerifs.length > 0
+    ? recentVerifs.slice(0, 8).map((v: any) => `
+        <tr>
+          <td class="font-semibold">${escapeHtml(v.name || '—')}</td>
+          <td class="text-sm text-slate-500">${escapeHtml(v.category || v.subcategory || '—')}</td>
+          <td class="text-xs text-slate-400 text-right">${v.last_verified_at ? new Date(v.last_verified_at).toLocaleDateString('es-PR', { month: 'short', day: 'numeric' }) : '—'}</td>
+        </tr>`).join('')
+    : `<tr><td colspan="3" class="text-center text-slate-500 italic py-4">Cargando verificaciones recientes…</td></tr>`
+
+  const body = `
+<h1>Las señales del pueblo, en vivo.</h1>
+
+<p class="text-lg text-slate-600 mt-4">Cada búsqueda, clic, mensaje y pregunta al bot *7711 deja una pista. <strong>El mapa convierte esas pistas en señales reales de demanda local.</strong> Esta página muestra esas señales actualizadas todos los días.</p>
+${failBanner}
+
+<!-- WIIFM 3-chip -->
+<div class="grid sm:grid-cols-3 gap-3 mt-6 not-prose">
+  <div class="bg-teal-50 border border-teal-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-2">¿Qué significa?</div>
+    <p class="text-sm text-slate-700 leading-snug">Son las búsquedas y preguntas reales que la gente le hace al directorio + al bot *7711. Sin filtros. Sin top picks subjetivos.</p>
+  </div>
+  <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">¿Por qué importa?</div>
+    <p class="text-sm text-slate-700 leading-snug">Esto te dice qué busca Cabo Rojo HOY — no qué decía la gente hace 5 años, no qué crees que pide la gente, no qué quisieras que pidieran.</p>
+  </div>
+  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-blue-700 uppercase tracking-wide mb-2">¿Qué hago con esto?</div>
+    <p class="text-sm text-slate-700 leading-snug">Si tienes negocio en una de estas categorías — <a href="/pon-tu-negocio-en-el-mapa" class="text-blue-700 underline font-semibold">reclama tu perfil</a>. Si vas a abrir — <a href="/mira-la-vuelta" class="text-blue-700 underline font-semibold">mira la vuelta</a> primero.</p>
+  </div>
+</div>
+
+<h2>🔍 Top 15 búsquedas del bot · últimos 30 días</h2>
+<p class="text-sm text-slate-600">Estas son las preguntas reales que la gente le textea al *7711 — qué buscan, qué necesitan resolver. Updated diario.</p>
+<table class="text-sm">
+<thead><tr><th class="text-right">#</th><th>Búsqueda</th><th class="text-right">Veces</th></tr></thead>
+<tbody>${topSearchesRows}</tbody>
+</table>
+
+<p class="text-xs text-slate-500 mt-2 italic">Cada fila = una pista de demanda. Si tu categoría aparece arriba, hay gente buscando lo que tú ofreces. Si NO aparece nadie de tu categoría — quizás están buscando con otra palabra. Textea al ${PHONE_CTA} y lo investigamos.</p>
+
+<h2>✅ Verificaciones recientes</h2>
+<p class="text-sm text-slate-600">Los últimos negocios que se confirmaron a mano (llamada · visita · email). Esto es la prueba de que el mapa vive.</p>
+<table class="text-sm">
+<thead><tr><th>Negocio</th><th>Categoría</th><th class="text-right">Verificado</th></tr></thead>
+<tbody>${recentVerifsRows}</tbody>
+</table>
+
+<h2>💡 Cómo se convierte demanda en oportunidad</h2>
+<p>Cada vez que alguien busca algo en el directorio o textea al bot y NO encuentra resultado — eso es <strong>señal pre-supply</strong>. Demanda sin oferta visible.</p>
+
+<p>Si esa categoría se repite (10+ búsquedas / mes con 0-2 negocios listed), aparece con bandera 🔥 en <a href="/pueblo-en-numeros" class="text-teal-600 hover:underline font-semibold">la tabla del pueblo</a>. Eso quiere decir: <strong>el pueblo te necesita.</strong></p>
+
+<p>Ejemplos vivos hoy (mayo 2026):</p>
+<ul>
+<li>🔥 <strong>Plomero</strong> — decenas de búsquedas, directorio casi vacío. Demanda emergencia (sábado 6pm, fugas, etc.)</li>
+<li>🔥 <strong>Aire acondicionado / AC tech</strong> — domingos con 90 grados afuera, demanda emergencia</li>
+<li>🔥 <strong>Electricista</strong> — cortes de luz, breakers tripped, demanda emergencia</li>
+<li>🔥 <strong>Cardiólogo · ginecólogo · especialistas médicos</strong> — gente viaja a SJ por falta local</li>
+<li>🔥 <strong>Repostería con licencia</strong> — economía informal grande, opciones visibles casi cero</li>
+</ul>
+
+<p>Si tienes la habilidad y entras al directorio, eres el primero que el bot recomienda. Cero competencia visible.</p>
+
+<h2>🗺️ Qué hace el mapa con estas señales</h2>
+<p>Estas señales no se quedan en una pantalla. Se convierten en:</p>
+<ol class="list-decimal pl-5">
+<li><strong>Acciones de verificación</strong> — si una categoría se busca mucho pero el directorio tiene pocos, esos negocios suben al subset crítico (top 200 que verificamos cada 90 días)</li>
+<li><strong>Pitches a sponsors</strong> — el agente <em>Sponsor Pipeline Filler</em> mira estas señales cada lunes y arma propuestas pa' negocios con alta demanda</li>
+<li><strong>Insights pa' emprendedores e inversionistas</strong> — base del <a href="/mira-la-vuelta" class="text-teal-600 hover:underline font-semibold">Reporte de Oportunidades Locales</a></li>
+<li><strong>Contenido editorial</strong> — la página Facebook publica los hallazgos cuando importan</li>
+<li><strong>Nuevos sub-categorías</strong> — si la gente busca "plomero" mucho, agregamos sub-página /categoria/plomero (ya pasó)</li>
+</ol>
+
+<h2>📊 Qué NO está aquí (todavía)</h2>
+<p>Honestidad sobre los límites:</p>
+<ul>
+<li><strong>Gráfica de tendencias por semana</strong> — pendiente Phase 2 (charts visuales)</li>
+<li><strong>Heat map por barrio</strong> — pendiente Phase 2 (señales geo-localizadas)</li>
+<li><strong>Categorías cross-tabuladas con audiencias</strong> — pendiente Phase 3 (turista vs residente)</li>
+<li><strong>Conversión búsqueda → contacto</strong> — pendiente Phase 3 (privacy: requiere consentimiento)</li>
+</ul>
+
+<p>Pa' ver la matemática completa de oferta + demanda (TAM/SAM/SOM por categoría · densidad per cápita · zonas concentradas), abre <a href="/pueblo-en-numeros" class="text-teal-600 hover:underline font-semibold">/pueblo-en-numeros</a>.</p>
+
+<div class="bg-teal-50 border border-teal-200 rounded-lg p-6 mt-8 text-center">
+<p class="text-lg font-semibold">¿Vas a abrir negocio? ¿Tienes negocio que no aparece aquí?</p>
+<p class="mt-2"><a href="sms:+17874177711" class="text-teal-600 font-bold underline">Textea al ${PHONE_CTA}</a></p>
+<p class="text-sm text-slate-600 mt-2 italic">Si tu categoría sale arriba en las búsquedas — el pueblo te está pidiendo. Si no sale — quizás están buscando con otra palabra. Lo investigamos juntos.</p>
+</div>
+`
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600') // shorter cache — data updates daily
+  res.status(200).send(layout({
+    title: 'Señales del pueblo · Demanda local en vivo',
+    description: 'Las búsquedas reales del pueblo de Cabo Rojo, en vivo. Top categorías buscadas, verificaciones recientes, demanda pre-supply. Updated diario, sin filtros.',
+    slug: 'senales-del-pueblo',
+    bodyHtml: body,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Dataset',
+      name: 'Señales del pueblo · Demanda local Cabo Rojo',
+      description: 'Live demand signals from bot searches + directory queries for Cabo Rojo, PR. Top searches, recent verifications, demand-supply gaps.',
+      url: `${SITE_URL}/senales-del-pueblo`,
+      keywords: ['cabo rojo', 'demand signals', 'civic-tech', 'local market data'],
+      isAccessibleForFree: true,
+    },
+  }))
+}
+
 // =============== HANDLER ===============
 
 export default async function handler(req: any, res: any) {
@@ -881,6 +1027,7 @@ export default async function handler(req: any, res: any) {
     case 'moonshots': return handleMoonshots(req, res)
     case 'mira-la-vuelta': return handleMiraLaVuelta(req, res)
     case 'pon-tu-negocio-en-el-mapa': return handlePonTuNegocio(req, res)
+    case 'senales-del-pueblo': return await handleSenalesDelPueblo(req, res)
     default:
       res.status(404).send('Page not found')
   }
