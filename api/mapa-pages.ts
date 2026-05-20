@@ -756,6 +756,20 @@ ${liveBlock}
 
 <p>Cada búsqueda, clic, mensaje y pregunta puede convertirse en señal — pa' negocios, pa' emprendedores, pa' inversionistas, pa' mejorar el pueblo.</p>
 
+<!-- §17 share block — comparte el espejo -->
+<h2>Comparte el espejo</h2>
+<p>Si conoces a alguien que está pensando abrir negocio (o ya abrió y va lento) — mándale este espejo. Si lo lee antes de firmar el préstamo, le ahorra meses de pérdida.</p>
+<div class="flex flex-col sm:flex-row gap-2 not-prose">
+  <a href="https://wa.me/?text=${encodeURIComponent('Mira la vuelta antes de abrir negocio en Cabo Rojo — el bot *7711 mide qué busca la gente y dónde no hay competencia: https://www.mapadecaborojo.com/mira-la-vuelta')}" target="_blank" rel="noopener" class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-bold no-underline">
+    <i class="fa-brands fa-whatsapp text-lg"></i>
+    Compartir por WhatsApp
+  </a>
+  <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://www.mapadecaborojo.com/mira-la-vuelta')}" target="_blank" rel="noopener" class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold no-underline">
+    <i class="fa-brands fa-facebook-f text-lg"></i>
+    Compartir en Facebook
+  </a>
+</div>
+
 <div class="bg-teal-50 border border-teal-200 rounded-lg p-6 mt-8 text-center">
 <p class="text-lg font-semibold">Antes de abrir otro negocio igual, mira la vuelta.</p>
 <p class="mt-2"><a href="sms:+17874177711?body=VUELTA" class="text-teal-600 font-bold underline">Textea VUELTA + tu categoría al ${PHONE_CTA}</a></p>
@@ -1019,6 +1033,19 @@ ${failBanner}
 </ul>
 
 <p>Pa' ver la matemática completa de oferta + demanda (TAM/SAM/SOM por categoría · densidad per cápita · zonas concentradas), abre <a href="/pueblo-en-numeros" class="text-teal-600 hover:underline font-semibold">/pueblo-en-numeros</a>.</p>
+
+<h2>Comparte el espejo del pueblo</h2>
+<p>Esto es lo que la gente está buscando esta semana. Si conoces a alguien con un negocio que podría servir lo que el pueblo pide — mándaselo. Si conoces alguien pensando en abrir — más todavía.</p>
+<div class="flex flex-col sm:flex-row gap-2 not-prose">
+  <a href="https://wa.me/?text=${encodeURIComponent('El espejo del pueblo: qué busca Cabo Rojo esta semana, en vivo del bot *7711. Si lo que vendes está aquí — el pueblo te necesita: https://www.mapadecaborojo.com/senales-del-pueblo')}" target="_blank" rel="noopener" class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-green-500 hover:bg-green-600 text-white font-bold no-underline">
+    <i class="fa-brands fa-whatsapp text-lg"></i>
+    Compartir por WhatsApp
+  </a>
+  <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://www.mapadecaborojo.com/senales-del-pueblo')}" target="_blank" rel="noopener" class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold no-underline">
+    <i class="fa-brands fa-facebook-f text-lg"></i>
+    Compartir en Facebook
+  </a>
+</div>
 
 <div class="bg-teal-50 border border-teal-200 rounded-lg p-6 mt-8 text-center">
 <p class="text-lg font-semibold">¿Vas a abrir negocio? ¿Tienes negocio que no aparece aquí?</p>

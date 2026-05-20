@@ -239,6 +239,11 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose }) => {
       <p className="text-[10px] italic text-slate-500 dark:text-slate-400 mt-1 text-center">
         Google tiene datos. Facebook tiene ruido. Nosotros tenemos contexto local.
       </p>
+      <p className="text-[11px] text-center mt-2">
+        <a href="/menos-revolu" className="text-teal-600 dark:text-teal-400 hover:underline font-semibold">
+          ¿Qué es esto? Lee la versión corta →
+        </a>
+      </p>
       </div>
     </section>
   );
