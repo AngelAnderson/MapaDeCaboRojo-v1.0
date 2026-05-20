@@ -1026,17 +1026,76 @@ async function handleSenalesDelPueblo(_req: any, res: any) {
   // Live data binding — pull demand signals from materialized views
   let topSearches: any[] = []
   let recentVerifs: any[] = []
+  let weeklyTrends: any[] = []
   let dataFailed = false
   try {
-    const [topRes, verifRes] = await Promise.all([
+    const [topRes, verifRes, weeklyRes] = await Promise.all([
       supabase.from('mv_top_searches_30d').select('*').limit(15),
       supabase.from('mv_recent_verifications').select('*').limit(10),
+      // Last 12 weeks of demand_weekly — for trend sparklines
+      supabase
+        .from('demand_weekly')
+        .select('category, week_start, total_searches')
+        .gte('week_start', new Date(Date.now() - 84 * 86400000).toISOString().slice(0, 10))
+        .order('week_start', { ascending: true }),
     ])
     topSearches = topRes.data || []
     recentVerifs = verifRes.data || []
+    weeklyTrends = weeklyRes.data || []
     if (topRes.error && verifRes.error) dataFailed = true
   } catch (e) {
     dataFailed = true
+  }
+
+  // Aggregate weekly trends by category — get top 8 by total volume + their 12-week series
+  type TrendPoint = { week: string; count: number }
+  const trendsByCategory: Record<string, TrendPoint[]> = {}
+  for (const row of weeklyTrends) {
+    const cat = row.category as string
+    if (!cat) continue
+    if (!trendsByCategory[cat]) trendsByCategory[cat] = []
+    trendsByCategory[cat].push({ week: row.week_start, count: row.total_searches })
+  }
+  const topTrends = Object.entries(trendsByCategory)
+    .map(([cat, series]) => ({
+      cat,
+      series,
+      total: series.reduce((s, p) => s + p.count, 0),
+    }))
+    .filter(t => t.series.length >= 2 && t.total >= 5)  // need at least 2 data points + 5 total
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 8)
+
+  // SVG sparkline generator
+  const renderSparkline = (series: TrendPoint[], total: number) => {
+    if (series.length < 2) return ''
+    const W = 160
+    const H = 36
+    const PAD = 2
+    const values = series.map(p => p.count)
+    const maxV = Math.max(...values, 1)
+    const minV = Math.min(...values, 0)
+    const range = maxV - minV || 1
+    const stepX = (W - PAD * 2) / (series.length - 1)
+    const points = series.map((p, i) => {
+      const x = PAD + i * stepX
+      const y = H - PAD - ((p.count - minV) / range) * (H - PAD * 2)
+      return `${x.toFixed(1)},${y.toFixed(1)}`
+    }).join(' ')
+    // Last point dot
+    const lastP = series[series.length - 1]
+    const lastX = PAD + (series.length - 1) * stepX
+    const lastY = H - PAD - ((lastP.count - minV) / range) * (H - PAD * 2)
+    // Trend direction: compare last week vs avg of prior
+    const lastVal = series[series.length - 1].count
+    const priorAvg = series.slice(0, -1).reduce((s, p) => s + p.count, 0) / Math.max(series.length - 1, 1)
+    const trend = lastVal > priorAvg * 1.15 ? '↑' : lastVal < priorAvg * 0.85 ? '↓' : '→'
+    const trendColor = trend === '↑' ? '#0d9488' : trend === '↓' ? '#dc2626' : '#64748b'
+    return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" aria-label="Tendencia ${series.length} semanas">
+  <polyline points="${points}" fill="none" stroke="#0d9488" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="${lastX.toFixed(1)}" cy="${lastY.toFixed(1)}" r="2.5" fill="#0d9488"/>
+</svg>
+<span style="font-size:13px;font-weight:700;color:${trendColor};margin-left:6px;">${trend}</span>`
   }
 
   const failBanner = dataFailed
@@ -1086,6 +1145,24 @@ ${failBanner}
     <p class="text-sm text-slate-700 leading-snug">Si tienes negocio en una de estas categorías — <a href="/pon-tu-negocio-en-el-mapa" class="text-blue-700 underline font-semibold">reclama tu perfil</a>. Si vas a abrir — <a href="/mira-la-vuelta" class="text-blue-700 underline font-semibold">mira la vuelta</a> primero.</p>
   </div>
 </div>
+
+${topTrends.length > 0 ? `
+<h2>📈 Tendencia por categoría · últimas 12 semanas</h2>
+<p class="text-sm text-slate-600">Sparklines de búsquedas semanales del bot por categoría. ↑ subiendo · ↓ bajando · → estable. Compara semana vs promedio.</p>
+<div class="grid sm:grid-cols-2 gap-3 not-prose mt-3">
+${topTrends.map(t => `
+<div class="bg-white border border-slate-200 rounded-lg p-3 flex items-center justify-between gap-3">
+  <div class="flex-1 min-w-0">
+    <p class="font-bold text-sm text-slate-900 truncate">${escapeHtml(t.cat)}</p>
+    <p class="text-xs text-slate-500">${t.total} búsquedas · ${t.series.length} sem</p>
+  </div>
+  <div class="flex items-center shrink-0">
+    ${renderSparkline(t.series, t.total)}
+  </div>
+</div>`).join('')}
+</div>
+<p class="text-xs text-slate-500 mt-3 italic">Tendencia = última semana vs promedio anterior. Updated semanal. Sin spin: si una categoría sube por un evento puntual, la sparkline lo muestra. La data está fría hasta que se acumula.</p>
+` : ''}
 
 <h2>🔍 Top 15 búsquedas del bot · últimos 30 días</h2>
 <p class="text-sm text-slate-600">Estas son las preguntas reales que la gente le textea al *7711 — qué buscan, qué necesitan resolver. Updated diario.</p>
