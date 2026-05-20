@@ -656,7 +656,33 @@ function handleMoonshots(_req: any, res: any) {
 
 // =============== /mira-la-vuelta ===============
 
-function handleMiraLaVuelta(_req: any, res: any) {
+async function handleMiraLaVuelta(_req: any, res: any) {
+  // Live demand data — top searches last 30 days
+  let topSearches: any[] = []
+  try {
+    const { data } = await supabase.from('mv_top_searches_30d').select('*').limit(8)
+    topSearches = data || []
+  } catch (e) {
+    topSearches = []
+  }
+
+  const liveBlock = topSearches.length > 0
+    ? `
+<h2>🔥 Demanda real · últimos 30 días (live)</h2>
+<p class="text-sm text-slate-600">Lo que la gente le está texteando al bot *7711 esta semana. Si tu categoría sale aquí, hay demanda real esperando supply.</p>
+<table class="text-sm">
+<thead><tr><th class="text-right">#</th><th>Categoría buscada</th><th class="text-right">Veces (30d)</th></tr></thead>
+<tbody>${topSearches.map((s: any, i: number) => `
+<tr>
+  <td class="text-right text-slate-400 pr-2">${i + 1}.</td>
+  <td class="font-semibold">${escapeHtml(s.q_norm || s.query || s.term || '—')}</td>
+  <td class="text-right text-teal-600 font-bold">${s.cnt || s.count || s.searches || '?'}</td>
+</tr>`).join('')}</tbody>
+</table>
+<p class="text-xs text-slate-500 mt-2 italic">Updated diario. Pa' ver matemática completa categoría por categoría → <a href="/pueblo-en-numeros" class="text-teal-600 hover:underline font-semibold">/pueblo-en-numeros</a>. Pa' ver todas las señales → <a href="/senales-del-pueblo" class="text-teal-600 hover:underline font-semibold">/señales-del-pueblo</a>.</p>
+`
+    : ''
+
   const body = `
 <h1>Antes de meter chavos, mira la vuelta.</h1>
 
@@ -702,8 +728,10 @@ function handleMiraLaVuelta(_req: any, res: any) {
 
 <p>El mapa convierte intención local en oportunidad económica. Cada búsqueda, clic y pregunta puede revelar demanda real.</p>
 
-<h2>Ejemplos vivos hoy (mayo 2026)</h2>
-<p>Categorías que el bot *7711 está recibiendo demanda pero el directorio tiene casi nadie listed:</p>
+${liveBlock}
+
+<h2>Ejemplos editoriales — categorías con demanda crónica</h2>
+<p>Categorías que el bot *7711 recibe consistentemente pero el directorio tiene casi nadie listed:</p>
 <ul>
 <li>🔥 <strong>Plomero</strong> — decenas de búsquedas/mes · directorio casi vacío</li>
 <li>🔥 <strong>Aire acondicionado / AC tech</strong> — domingos con 90 grados afuera, demanda emergencia</li>
@@ -735,7 +763,8 @@ function handleMiraLaVuelta(_req: any, res: any) {
 `
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
-  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600')
+  // Shorter cache because live demand data updates daily
+  res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=600')
   res.status(200).send(layout({
     title: 'Mira la vuelta · Reporte de Oportunidades Locales',
     description: 'Antes de meter chavos, mira la vuelta. Demanda real, zonas calientes, categorías saturadas. Pa\' emprendedores e inversionistas que leen el mapa antes de firmar.',
@@ -1027,7 +1056,7 @@ export default async function handler(req: any, res: any) {
     case 'equipo': return handleEquipo(req, res)
     case 'vision': return handleVision(req, res)
     case 'moonshots': return handleMoonshots(req, res)
-    case 'mira-la-vuelta': return handleMiraLaVuelta(req, res)
+    case 'mira-la-vuelta': return await handleMiraLaVuelta(req, res)
     case 'pon-tu-negocio-en-el-mapa': return handlePonTuNegocio(req, res)
     case 'senales-del-pueblo': return await handleSenalesDelPueblo(req, res)
     default:

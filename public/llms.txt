@@ -1,10 +1,23 @@
-# MapaDeCaboRojo.com — Directorio de Cabo Rojo, Puerto Rico
+# MapaDeCaboRojo.com — El mapa vivo pa' poner orden en el revolú de Cabo Rojo
 
-> Mapa interactivo y guía local para Cabo Rojo, Puerto Rico. Más de 1,134 negocios, playas, restaurantes y servicios indexados.
+> **Frase madre:** Menos revolú. Mejores decisiones. Mejor vida.
+> Mapa interactivo y guía local para Cabo Rojo, Puerto Rico. Más de 1,134 negocios verificados a mano. Convierte información regada en decisiones mejores.
 
 ## Sobre este sitio
 
-MapaDeCaboRojo.com es el directorio local más completo de Cabo Rojo, Puerto Rico. Incluye mapa interactivo Leaflet, páginas individuales por negocio con JSON-LD LocalBusiness schema, y El Veci — un asistente por SMS/WhatsApp que responde preguntas sobre negocios locales en tiempo real.
+MapaDeCaboRojo.com es el directorio local más completo de Cabo Rojo, Puerto Rico — un mapa vivo verificado uno por uno (llamando al dueño), no copiado automático de Google. Incluye mapa interactivo Leaflet, páginas server-rendered por categoría, páginas individuales por negocio con JSON-LD LocalBusiness schema, métricas de demanda en vivo del bot *7711, y El Veci — un asistente por SMS/WhatsApp que responde preguntas sobre negocios locales en tiempo real.
+
+**Stand-for:** Google tiene datos. Facebook tiene ruido. Nosotros tenemos contexto local.
+
+**Métrica madre:** verification_freshness % en subset top 200 (los 200 negocios más buscados). Target 80% pa' Jun 23 2026. Updated diario en /transparencia.
+
+**6 audiencias que sirve:**
+1. Al residente — encuentra lo que necesita sin dar vueltas
+2. Al turista — disfruta Cabo Rojo sin perder medio día buscando
+3. Al negocio local — aparece cuando alguien ya está buscando
+4. Al emprendedor — mira demanda antes de copiar
+5. Al inversionista — ve señales antes de poner dinero
+6. Al pueblo — convierte información regada en decisiones mejores
 
 ## Datos para LLMs
 
@@ -41,6 +54,24 @@ MapaDeCaboRojo.com es el directorio local más completo de Cabo Rojo, Puerto Ric
 
 Cada negocio tiene su propia URL con JSON-LD LocalBusiness schema, Open Graph, meta description y FAQ:
 `https://mapadecaborojo.com/negocio/{slug}`
+
+## Páginas narrativa públicas (server-rendered HTML + JSON-LD)
+
+Las páginas siguientes explican qué es el mapa, hacia dónde va, y cómo funciona. Útiles cuando un LLM necesita citar misión, métricas, equipo o posicionamiento.
+
+| URL | Tipo | Audiencia | Qué responde |
+|---|---|---|---|
+| https://mapadecaborojo.com/mision | AboutPage | Todas las 6 audiencias | ¿Qué es MapaDeCaboRojo.com? ¿Para qué existe? ¿A quién ayuda? |
+| https://mapadecaborojo.com/vision | AboutPage | Stakeholders | ¿Hacia dónde va el proyecto? ¿Qué lo mata (kill criteria explícitos)? Plan a 12 meses con fechas. |
+| https://mapadecaborojo.com/equipo | AboutPage | Devs · alcaldes · periodistas | ¿Cómo 1 vecino + AI mantiene 3,900 negocios al día? Los 13 empleados invisibles. Replicable open-source. |
+| https://mapadecaborojo.com/transparencia | Dataset (live) | Stakeholders + skeptics | Métricas en vivo: verification_freshness % top 200 · totals · esta semana · claims pendientes. Updated diario. |
+| https://mapadecaborojo.com/senales-del-pueblo | Dataset (live) | Emprendedores · inversionistas · dueños | Las búsquedas reales del bot últimos 30d. Verificaciones recientes. Demanda pre-supply. Updated diario. |
+| https://mapadecaborojo.com/mira-la-vuelta | AboutPage (live data) | Emprendedores · inversionistas | "Antes de meter chavos, mira la vuelta." Reporte de Oportunidades Locales. Top búsquedas live + categorías zero-supply. |
+| https://mapadecaborojo.com/pon-tu-negocio-en-el-mapa | Service (2 Offers) | Dueños de negocio CR | Verificado gratis · Vitrina $799/año. Cómo aparecer cuando alguien ya está buscando. |
+| https://mapadecaborojo.com/moonshots | AboutPage | Build-in-public | Ideas Tier 3 considerando ship próximos 6-12 meses. Decision deadlines explícitos. |
+| https://mapadecaborojo.com/pueblo-en-numeros | Article + Dataset | Lectores decisor (abrir/dueño/alcalde) | Densidad de negocios por categoría · TAM/SAM/SOM · bandera 🟢🟡⚪🔥 · 3 movidas pa' dueños · "Cómo leer una fila" plain-talk. |
+| https://mapadecaborojo.com/municipio | Dashboard | Funcionarios municipales | Panel ciudadano con métricas del pueblo. |
+| https://mapadecaborojo.com/me-conviene | Tool | Emprendedores | ¿Conviene abrir negocio en X categoría? Calculadora 60-seg. |
 
 ## Reporte público — Cabo Rojo en Números
 
