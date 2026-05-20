@@ -120,47 +120,57 @@ ${opts.bodyHtml}
 
 function handleMision(_req: any, res: any) {
   const body = `
-<h1>Un pueblo de 50,000 puede tener mejor data que ciudades de millones.</h1>
+<h1>El mapa vivo pa' poner orden en el revolú de Cabo Rojo.</h1>
 
-<p class="text-lg text-slate-600 mt-4">Mapa de Cabo Rojo es un directorio de los negocios reales del pueblo — verificados uno por uno, llamando al dueño. No es Google Maps. No es Yelp. No es Facebook. Es lo que el pueblo le falta: <strong>un mapa que sí está al día</strong>.</p>
+<p class="text-lg text-slate-600 mt-4">Cabo Rojo tiene valor, pero mucho está regao: negocios buenos que no se encuentran, turistas preguntando lo mismo, residentes dando vueltas, emprendedores copiando sin mirar demanda, e información escondida en screenshots, posts viejos y recomendaciones sueltas. <strong>MapaDeCaboRojo.com organiza ese revolú</strong> para que la gente encuentre mejor, decida mejor y apoye mejor lo local.</p>
 
 <!-- WIIFM 3-chip — qué significa / por qué importa / qué hago -->
 <div class="grid sm:grid-cols-3 gap-3 mt-6 not-prose">
   <div class="bg-teal-50 border border-teal-200 rounded-lg p-4">
     <div class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-2">¿Qué significa?</div>
-    <p class="text-sm text-slate-700 leading-snug">Cada negocio del mapa fue verificado a mano. Si la fecha tiene más de 90 días, no cuenta.</p>
+    <p class="text-sm text-slate-700 leading-snug">Un mapa vivo con los negocios, servicios y oportunidades reales del pueblo — verificados a mano, no copiados de Google.</p>
   </div>
   <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
     <div class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">¿Por qué importa?</div>
-    <p class="text-sm text-slate-700 leading-snug">Cuando se rompe el AC un domingo a las 9pm, Google te da el número del que cerró en 2019. Nosotros te damos el que SÍ contesta.</p>
+    <p class="text-sm text-slate-700 leading-snug">La gente no quiere más información. Quiere menos vueltas. El revolú local cuesta tiempo, dinero y oportunidades.</p>
   </div>
   <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
     <div class="text-xs font-bold text-blue-700 uppercase tracking-wide mb-2">¿Qué hago con esto?</div>
-    <p class="text-sm text-slate-700 leading-snug">Usa el mapa <a href="/" class="text-blue-700 underline font-semibold">aquí</a> o textea al <strong>${PHONE_CTA}</strong>. Si eres dueño, reclama tu perfil gratis.</p>
+    <p class="text-sm text-slate-700 leading-snug">Mira el mapa <a href="/" class="text-blue-700 underline font-semibold">aquí</a> antes de dar vueltas. O textea al <strong>${PHONE_CTA}</strong>. Si tienes negocio, reclama tu perfil gratis.</p>
   </div>
 </div>
 
 <h2>El problema que resuelve</h2>
-<p>Cuando buscas un plomero en Cabo Rojo a las 9 de la noche, Google te muestra negocios que cerraron en 2019. Yelp tiene 3 reviews mexicanos. Facebook te muestra una página de un vecino que vendía tornillos.</p>
-<p>Tú necesitas el número del plomero que SÍ contesta.</p>
-<p>Eso es lo que falta. Y eso es lo que el Mapa de Cabo Rojo entrega.</p>
+<p>Cabo Rojo tiene valor — pero mucho está regao.</p>
+<ul>
+<li>Negocios buenos que no se encuentran.</li>
+<li>Turistas preguntando lo mismo todos los meses.</li>
+<li>Residentes dando vueltas buscando un plomero, una farmacia abierta, un mecánico de confianza.</li>
+<li>Emprendedores copiando sin mirar demanda.</li>
+<li>Información escondida en screenshots, posts viejos, comentarios y recomendaciones sueltas.</li>
+</ul>
+<p><strong>El enemigo no es la falta de información. Es la información regada.</strong></p>
 
 <h2>Cómo funciona</h2>
-<p>Cada negocio del directorio tiene un campo: <code>last_verified_at</code>. Si la fecha es de hace más de 90 días, no cuenta como verificado.</p>
-<p>Verificar significa: alguien (Angel o Noelia) llamó al número, confirmó que sigue abierto, anotó si el horario cambió, si el dueño se mudó, si cerró.</p>
-<p>Si nadie contestó después de 2 intentos, el negocio se marca para visita en persona.</p>
+<p>Cada negocio del directorio se verifica a mano — llamando al dueño, confirmando que sigue abierto, anotando si cambió horario o se mudó.</p>
+<p>Si la última verificación tiene más de 90 días, no cuenta como verificado. Si nadie contestó después de 2 intentos, se marca para visita en persona.</p>
 <p>Esto se hace UNO POR UNO. Sin robots que copian data de Google. Sin AI inventando números. Sin "aproximaciones".</p>
 
 <p>¿Quieres ver la matemática del pueblo — cuántos negocios hay por persona, qué categorías están sobrecargadas, dónde te necesitan? Mira <a href="/pueblo-en-numeros" class="text-teal-600 hover:underline font-semibold">/pueblo-en-numeros</a>. Cada número con su source.</p>
 
-<h2>Para quién es</h2>
+<h2>A quién ayuda</h2>
 <ul>
-<li><strong>Si vives aquí</strong> — domingo 9pm se rompió algo, necesitas un plomero ahora. El mapa te da el número que contesta.</li>
-<li><strong>Si vienes de visita</strong> — laundromat · farmacia que abra los domingos · plomero porque la casa alquilada tiene un goteo.</li>
-<li><strong>Si estás de regreso después de 10 años fuera</strong> — el pueblo cambió. ¿Qué sigue abierto? ¿Quién es nuevo?</li>
-<li><strong>Si tienes un negocio aquí</strong> — el badge "verificado" es gratis. La Vitrina ($799/año) es opcional.</li>
-<li><strong>Si eres dev / periodista / agencia</strong> — <code>api.vecinoai.com</code> Pro $99/mes para PBMs, journalists, civic-tech researchers.</li>
+<li><strong>Al residente</strong> — encuentra lo que necesita sin dar vueltas. Domingo 9pm se rompió algo, ahí está el plomero que contesta.</li>
+<li><strong>Al turista</strong> — disfruta Cabo Rojo sin perder medio día buscando. Laundromat · farmacia que abra los domingos · plomero pa'l goteo de la casa alquilada.</li>
+<li><strong>Al negocio local</strong> — aparece cuando alguien ya está buscando. El badge "verificado" es gratis. La Vitrina ($799/año) es opcional.</li>
+<li><strong>Al emprendedor</strong> — mira demanda antes de copiar. Qué se busca, qué falta, qué zona se mueve, qué categoría puede estar saturada.</li>
+<li><strong>Al inversionista</strong> — ve señales antes de poner dinero. Movimiento real, zonas calientes, demanda local antes de firmar.</li>
+<li><strong>Al pueblo</strong> — convierte información regada en decisiones mejores. Cabo Rojo más fácil de vivir, visitar, apoyar e invertir.</li>
 </ul>
+
+<h2>Nuestra diferencia</h2>
+<p><strong>Google tiene datos. Facebook tiene ruido. Nosotros tenemos contexto local.</strong></p>
+<p>No somos visitantes mirando un mapa. Somos vecinos leyendo la vuelta.</p>
 
 <h2>La promesa pública</h2>
 <p>No esconder los números. Por eso existe <a href="/transparencia" class="text-teal-600 hover:underline">/transparencia</a>.</p>
@@ -172,7 +182,7 @@ function handleMision(_req: any, res: any) {
 <p>Lee <a href="/equipo" class="text-teal-600 hover:underline">/equipo</a> para ver cómo funciona.</p>
 
 <div class="bg-teal-50 border border-teal-200 rounded-lg p-6 mt-8 text-center">
-<p class="text-lg font-semibold">¿Buscas algo específico en Cabo Rojo?</p>
+<p class="text-lg font-semibold">Mira el mapa antes de dar vueltas.</p>
 <p class="mt-2"><a href="sms:+17874177711" class="text-teal-600 font-bold underline">Textea al ${PHONE_CTA}</a> · El Veci te contesta.</p>
 <p class="text-sm text-slate-600 mt-2 italic">Si te sirve, llégate. Si no, sigue tu camino — todos vamos pa' diferentes sitios.</p>
 </div>
@@ -181,8 +191,8 @@ function handleMision(_req: any, res: any) {
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600')
   res.status(200).send(layout({
-    title: 'Misión · Un pueblo de 50,000 puede tener mejor data',
-    description: 'Directorio verificado de negocios reales de Cabo Rojo PR. Verificación humana uno por uno. El mapa que sí está al día.',
+    title: 'Misión · El mapa vivo pa\' poner orden en el revolú',
+    description: 'Menos revolú. Mejores decisiones. Mejor vida. Un mapa vivo con los negocios, servicios y oportunidades reales de Cabo Rojo — verificados a mano, no copiados de Google.',
     slug: 'mision',
     bodyHtml: body,
     jsonLd: {
@@ -190,7 +200,7 @@ function handleMision(_req: any, res: any) {
       '@type': 'AboutPage',
       url: `${SITE_URL}/mision`,
       name: 'Misión · Mapa de Cabo Rojo',
-      description: 'Directorio verificado de negocios reales de Cabo Rojo PR.',
+      description: 'El mapa vivo pa\' poner orden en el revolú de Cabo Rojo. Menos revolú. Mejores decisiones. Mejor vida.',
     },
   }))
 }
@@ -233,8 +243,8 @@ async function handleTransparencia(_req: any, res: any) {
   const body = `
 <h1>Lo que sí está al día — y lo que falta.</h1>
 
-<p class="text-lg text-slate-600 mt-4">Honestidad antes que números bonitos. Aquí ves exactamente cómo va el directorio — el subset crítico, el total, los gaps, las acciones de la semana.</p>
-<p class="text-sm text-slate-500">Update diario · automático · sin filtros.</p>
+<p class="text-lg text-slate-600 mt-4">Honestidad antes que números bonitos. Aquí ves exactamente cómo va el mapa — el subset crítico, el total, los gaps, las acciones de la semana. <strong>Las señales del pueblo en vivo.</strong></p>
+<p class="text-sm text-slate-500">Update diario · automático · sin filtros. Si la métrica baja, lo dice. Si subimos, lo dice. Si fallamos, lo dice.</p>
 ${failBanner}
 
 <h2>📊 Métrica madre</h2>
@@ -381,7 +391,9 @@ function handleEquipo(_req: any, res: any) {
 <h2>Por qué esto es replicable</h2>
 <p>Cada uno de los 13 empleados es un programa pequeño (150-400 líneas de código) que corre solo en horarios fijos. Cuesta centavos por mes. El código vive en un repo abierto pa' que cualquiera lo copie.</p>
 <p>Si eres alcalde de Aguada, Aguadilla, Mayagüez, Ponce — puedes clonarlo. Si eres dev que quiere construir el mapa de su pueblo — puedes clonarlo.</p>
-<p>El moat NO es el código. Es <strong>la verificación humana sostenida</strong>. 5 años de Angel y Noelia caminando y llamando es lo que diferencia este mapa de Google Maps. El código es la infraestructura que mantiene esa verificación al día sin que Angel sea el chokehold.</p>
+<p>El moat NO es el código. Es <strong>la verificación humana sostenida + el contexto local</strong>. 5 años de Angel y Noelia caminando y llamando es lo que diferencia este mapa de Google Maps. El código es la infraestructura que mantiene esa verificación al día sin que Angel sea el chokehold.</p>
+
+<p><strong>Google tiene datos. Facebook tiene ruido. Nosotros tenemos contexto local.</strong> No somos visitantes mirando un mapa — somos vecinos leyendo la vuelta.</p>
 
 <p>¿Quieres ver el output de ese trabajo en números — cuántos negocios por persona, qué categorías están sobrecargadas, dónde el pueblo necesita más? Mira <a href="/pueblo-en-numeros" class="text-teal-600 hover:underline font-semibold">/pueblo-en-numeros</a>.</p>
 
@@ -439,13 +451,9 @@ function handleVision(_req: any, res: any) {
 </div>
 
 <h2>Por qué existe el mapa</h2>
-<p>Tres frases:</p>
-<ol class="list-decimal pl-5">
-<li>Cabo Rojo tiene ~50,000 habitantes y ~3,900 negocios.</li>
-<li>Google Maps tiene 60% de esos datos desactualizados o equivocados.</li>
-<li>Si una persona en CR a las 9pm un domingo necesita un plomero, Google le da el número de un plomero que cerró en 2019.</li>
-</ol>
-<p>Eso es el problema. Este mapa es la solución · hecha por una sola persona con AI como único empleado.</p>
+<p>Cabo Rojo tiene valor, pero mucho está regao. Negocios buenos que no se encuentran. Turistas preguntando lo mismo. Residentes dando vueltas. Emprendedores copiando sin mirar demanda. Información perdida entre posts viejos, screenshots, comentarios y recomendaciones sueltas.</p>
+<p><strong>El enemigo no es la falta de información. Es la información regada.</strong> El revolú local cuesta tiempo, dinero y oportunidades.</p>
+<p>El mapa existe pa' poner orden en ese revolú · hecho por una sola persona con AI como único empleado.</p>
 
 <h2>Hacia dónde vamos (12 meses)</h2>
 <table>
@@ -458,16 +466,17 @@ function handleVision(_req: any, res: any) {
 <tr><td>Mayo 2027</td><td>1-año retrospective público (build-in-public)</td></tr>
 </table>
 
-<h2>Las 5 personas que sirvo</h2>
+<h2>A quién sirve el mapa</h2>
 <p>Sin esta gente, el mapa no tiene razón de existir.</p>
 <ol class="list-decimal pl-5">
-<li><strong>La vecina con un problema doméstico a las 9 PM</strong> — necesita el plomero que SÍ contesta. No los 12 que aparecen en Google.</li>
-<li><strong>El turista que se queda 4 días en una casa alquilada</strong> — laundromat · farmacia domingo · plomero por un goteo. NO necesita "los 10 mejores restaurantes" — eso lo encuentra solo.</li>
-<li><strong>La persona que vuelve después de 10 años fuera</strong> — qué sigue abierto · qué cerró · dónde queda lo que era de su abuela.</li>
-<li><strong>El dueño de negocio en Cabo Rojo</strong> — badge "verificado" gratis si alguien llama y confirma. Vitrina ($799/año) opcional.</li>
-<li><strong>El dev / periodista / agencia</strong> — <code>api.vecinoai.com</code> Pro $99/mes para acceso programático.</li>
+<li><strong>Al residente</strong> — encuentra lo que necesita sin dar vueltas. La vecina con goteo a las 9 PM necesita el plomero que SÍ contesta. No los 12 que aparecen en Google.</li>
+<li><strong>Al turista</strong> — disfruta Cabo Rojo sin perder medio día buscando. Laundromat · farmacia domingo · plomero por un goteo. NO necesita "los 10 mejores restaurantes" — eso lo encuentra solo.</li>
+<li><strong>Al negocio local</strong> — aparece cuando alguien ya está buscando. Badge "verificado" gratis si alguien llama y confirma. Vitrina ($799/año) opcional.</li>
+<li><strong>Al emprendedor</strong> — mira demanda antes de copiar. Qué se busca, qué falta, qué zona se mueve, qué categoría puede estar saturada.</li>
+<li><strong>Al inversionista</strong> — ve señales antes de poner dinero. Movimiento real, zonas calientes, demanda local antes de firmar contrato.</li>
+<li><strong>Al pueblo</strong> — convierte información regada en decisiones mejores. Cabo Rojo más fácil de vivir, visitar, apoyar e invertir.</li>
 </ol>
-<p>Más allá: cualquier alcalde o municipalidad que quiera replicar este modelo en SU pueblo. Open-source. Replicable.</p>
+<p>Más allá: cualquier alcalde o municipalidad que quiera replicar este modelo en SU pueblo. La diáspora que vuelve después de 10 años fuera. El dev / periodista / agencia con acceso programático via <code>api.vecinoai.com</code> Pro ($99/mes). Open-source. Replicable.</p>
 
 <h2>Lo que NO hace el mapa</h2>
 <p>Honestidad sobre los límites:</p>
@@ -528,8 +537,8 @@ function handleVision(_req: any, res: any) {
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600')
   res.status(200).send(layout({
-    title: 'Visión · Hacia dónde camina el mapa',
-    description: 'Visión pública: hacia dónde camina · qué nos mata · cómo nos medimos · por qué importa más allá de Cabo Rojo.',
+    title: 'Visión · Hacia dónde camina el mapa que pone orden en el revolú',
+    description: 'Visión pública 12 meses · qué nos mata (kill criteria) · cómo nos medimos · por qué importa más allá de Cabo Rojo. Menos revolú. Mejores decisiones. Mejor vida.',
     slug: 'vision',
     bodyHtml: body,
     jsonLd: {
@@ -548,7 +557,7 @@ function handleMoonshots(_req: any, res: any) {
   const body = `
 <h1>Lo que estamos considerando ahora mismo.</h1>
 
-<p class="text-lg text-slate-600 mt-4">Build-in-public. Estas son las ideas Tier 3 que estamos pensando construir en los próximos 6-12 meses. Algunas se van a hacer. Otras se van a matar. Si una te resuena (o te asusta), escríbeme.</p>
+<p class="text-lg text-slate-600 mt-4">Build-in-public extremo. Estas son las ideas Tier 3 que estamos pensando construir en los próximos 6-12 meses para que el mapa siga poniendo orden en el revolú de Cabo Rojo. Algunas se van a hacer. Otras se van a matar. Si una te resuena (o te asusta), escríbeme.</p>
 
 <h2>Cómo funciona esto</h2>
 <p>Cada lunes un sistema interno (MoonshotEngine) genera 3 ideas bold. 1 debe asustarme. La mayoría quedan privadas. Las que aparecen aquí son las que ya decidí considerar seriamente.</p>
