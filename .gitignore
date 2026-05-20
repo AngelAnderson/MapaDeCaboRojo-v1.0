@@ -127,3 +127,7 @@ dist-ssr/
 .gstack/
 .vercel
 .env*.local
+
+# Personal workspace (not code)
+.claude/
+Outbox/
