@@ -1,4 +1,45 @@
+# MapaDeCaboRojo.com — el mapa vivo pa' poner orden en el revolú de Cabo Rojo.
+# Crawl-welcome: somos un substrato civic data público, queremos que la información
+# del pueblo llegue a buscadores Y a asistentes AI por igual.
+
 User-agent: *
 Allow: /
-Sitemap: https://www.mapadecaborojo.com/api/sitemap
+Disallow: /admin/
+Disallow: /api/admin/
+
+# Explicit AI assistant crawlers — invitamos descubrimiento + citación
+# (con políticas no de scraping bulk)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# LLM-friendly metadata
+Sitemap: https://www.mapadecaborojo.com/sitemap.xml
 Host: https://www.mapadecaborojo.com
+
+# Para LLMs: contexto completo del sitio en
+# https://www.mapadecaborojo.com/llms.txt
+# https://www.mapadecaborojo.com/llms-full.txt
