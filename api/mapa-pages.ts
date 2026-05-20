@@ -123,6 +123,22 @@ function handleMision(_req: any, res: any) {
 
 <p class="text-lg text-slate-600 mt-4">Mapa de Cabo Rojo es un directorio de los negocios reales del pueblo — verificados uno por uno, llamando al dueño. No es Google Maps. No es Yelp. No es Facebook. Es lo que el pueblo le falta: <strong>un mapa que sí está al día</strong>.</p>
 
+<!-- WIIFM 3-chip — qué significa / por qué importa / qué hago -->
+<div class="grid sm:grid-cols-3 gap-3 mt-6 not-prose">
+  <div class="bg-teal-50 border border-teal-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-2">¿Qué significa?</div>
+    <p class="text-sm text-slate-700 leading-snug">Cada negocio del mapa fue verificado a mano. Si la fecha tiene más de 90 días, no cuenta.</p>
+  </div>
+  <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">¿Por qué importa?</div>
+    <p class="text-sm text-slate-700 leading-snug">Cuando se rompe el AC un domingo a las 9pm, Google te da el número del que cerró en 2019. Nosotros te damos el que SÍ contesta.</p>
+  </div>
+  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-blue-700 uppercase tracking-wide mb-2">¿Qué hago con esto?</div>
+    <p class="text-sm text-slate-700 leading-snug">Usa el mapa <a href="/" class="text-blue-700 underline font-semibold">aquí</a> o textea al <strong>${PHONE_CTA}</strong>. Si eres dueño, reclama tu perfil gratis.</p>
+  </div>
+</div>
+
 <h2>El problema que resuelve</h2>
 <p>Cuando buscas un plomero en Cabo Rojo a las 9 de la noche, Google te muestra negocios que cerraron en 2019. Yelp tiene 3 reviews mexicanos. Facebook te muestra una página de un vecino que vendía tornillos.</p>
 <p>Tú necesitas el número del plomero que SÍ contesta.</p>
@@ -132,7 +148,9 @@ function handleMision(_req: any, res: any) {
 <p>Cada negocio del directorio tiene un campo: <code>last_verified_at</code>. Si la fecha es de hace más de 90 días, no cuenta como verificado.</p>
 <p>Verificar significa: alguien (Angel o Noelia) llamó al número, confirmó que sigue abierto, anotó si el horario cambió, si el dueño se mudó, si cerró.</p>
 <p>Si nadie contestó después de 2 intentos, el negocio se marca para visita en persona.</p>
-<p>Esto se hace UNO POR UNO. Sin scraping. Sin AI inventando data. Sin "aproximaciones".</p>
+<p>Esto se hace UNO POR UNO. Sin robots que copian data de Google. Sin AI inventando números. Sin "aproximaciones".</p>
+
+<p>¿Quieres ver la matemática del pueblo — cuántos negocios hay por persona, qué categorías están sobrecargadas, dónde te necesitan? Mira <a href="/pueblo-en-numeros" class="text-teal-600 hover:underline font-semibold">/pueblo-en-numeros</a>. Cada número con su source.</p>
 
 <h2>Para quién es</h2>
 <ul>
@@ -181,29 +199,42 @@ function handleMision(_req: any, res: any) {
 async function handleTransparencia(_req: any, res: any) {
   // Live RPC binding
   let metrics: any = {}
+  let metricsFailed = false
   try {
-    const { data } = await supabase.rpc('get_transparencia_metrics')
+    const { data, error } = await supabase.rpc('get_transparencia_metrics')
+    if (error) throw error
     metrics = data || {}
   } catch (e) {
+    metricsFailed = true
     metrics = { error: 'metrics_unavailable' }
   }
 
-  const freshness = metrics.freshness_pct_top_200 ?? 0
-  const totalIndexed = metrics.total_indexed ?? '?'
-  const totalVerified90d = metrics.total_verified_90d ?? '?'
-  const totalNeverVerified = metrics.total_never_verified ?? '?'
-  const weekVerified = metrics.week_verified ?? '?'
-  const weekNew = metrics.week_new_places ?? '?'
-  const weekClosed = metrics.week_closed ?? '?'
+  // Graceful fallback: "midiendo" en vez de "?"  — más vecino-friendly
+  const ph = metricsFailed ? '<span class="text-slate-400 italic">midiendo…</span>' : '?'
+  const freshness = metrics.freshness_pct_top_200 ?? (metricsFailed ? '—' : 0)
+  const totalIndexed = metrics.total_indexed ?? ph
+  const totalVerified90d = metrics.total_verified_90d ?? ph
+  const totalNeverVerified = metrics.total_never_verified ?? ph
+  const weekVerified = metrics.week_verified ?? ph
+  const weekNew = metrics.week_new_places ?? ph
+  const weekClosed = metrics.week_closed ?? ph
   const claimsPending = metrics.claims_pending ?? 0
   const claimsStuck30 = metrics.claims_stuck_30 ?? 0
   const lastMeasure = metrics.last_measurement_at ?? new Date().toISOString()
+
+  const failBanner = metricsFailed
+    ? `<div class="bg-amber-50 border-l-4 border-amber-400 p-4 my-4 rounded-r-lg">
+  <p class="font-semibold text-amber-900">⚠️ Los números no están actualizando ahora mismo.</p>
+  <p class="text-sm text-amber-800 mt-1">El sistema que mide está temporal con problema. La página se queda visible (la verdad es que falló — no la escondemos). Vuelve en 10-15 minutos. Si persiste, textea al <strong>${PHONE_CTA}</strong>.</p>
+</div>`
+    : ''
 
   const body = `
 <h1>Lo que sí está al día — y lo que falta.</h1>
 
 <p class="text-lg text-slate-600 mt-4">Honestidad antes que números bonitos. Aquí ves exactamente cómo va el directorio — el subset crítico, el total, los gaps, las acciones de la semana.</p>
 <p class="text-sm text-slate-500">Update diario · automático · sin filtros.</p>
+${failBanner}
 
 <h2>📊 Métrica madre</h2>
 <div class="bg-white border border-slate-200 rounded-lg p-6 mt-3">
@@ -223,7 +254,7 @@ async function handleTransparencia(_req: any, res: any) {
 <tr><td>Marcados cerrados</td><td class="text-right">${metrics.total_closed ?? '?'}</td></tr>
 </table>
 
-<p class="text-sm text-slate-600 mt-3"><strong>¿Por qué tantos sin verificar?</strong> El directorio es de 5+ años de scraping y collection inicial. Verificación humana uno por uno empezó como prioridad mayo 2026.</p>
+<p class="text-sm text-slate-600 mt-3"><strong>¿Por qué tantos sin verificar?</strong> El directorio lleva 5+ años creciendo con data inicial recopilada automática. La verificación humana uno por uno empezó como prioridad en mayo 2026.</p>
 
 <p class="text-sm text-slate-600 mt-2"><strong>¿Qué hago si veo uno "nunca verificado"?</strong> Textea al <strong>${PHONE_CTA}</strong> y dile <code>MEMORIA: [negocio] sigue abierto</code> — eso lo entra al queue de verificación.</p>
 
@@ -330,7 +361,7 @@ function handleEquipo(_req: any, res: any) {
 <p><strong>🚀 MoonshotEngine — El que asusta.</strong> 3 ideas Tier 3 Heretical · 1 debe asustar a Angel. 1-año bets · open-source · YC application · etc.</p>
 
 <h3>Los lunes a las 9:30:</h3>
-<p><strong>🔍 SearchQuality — El motor de búsqueda.</strong> Mide latencia del search RPC + identifica synonym gaps.</p>
+<p><strong>🔍 SearchQuality — El motor de búsqueda.</strong> Mide qué tan rápido contesta el buscador del mapa + detecta palabras que la gente busca pero el sistema no entiende.</p>
 
 <p><strong>📈 DemandSignals — El traductor de demanda.</strong> Lee queries del bot que fallaron · agrupa en clusters · dice "esto pide la gente y no tenemos".</p>
 
@@ -347,9 +378,11 @@ function handleEquipo(_req: any, res: any) {
 <p><strong>🏷️ CategoryCurator — El bibliotecario.</strong> Revisa la taxonomía. Detecta duplicados EN/ES · propone merges con SQL listo. Detecta sub-categorías demandadas pero faltantes.</p>
 
 <h2>Por qué esto es replicable</h2>
-<p>Cada uno de los 13 empleados es un Supabase Edge Function (TypeScript, ~150-400 líneas) corriendo en pg_cron. Cuesta centavos por mes. El código vive en un repo abierto.</p>
+<p>Cada uno de los 13 empleados es un programa pequeño (150-400 líneas de código) que corre solo en horarios fijos. Cuesta centavos por mes. El código vive en un repo abierto pa' que cualquiera lo copie.</p>
 <p>Si eres alcalde de Aguada, Aguadilla, Mayagüez, Ponce — puedes clonarlo. Si eres dev que quiere construir el mapa de su pueblo — puedes clonarlo.</p>
 <p>El moat NO es el código. Es <strong>la verificación humana sostenida</strong>. 5 años de Angel y Noelia caminando y llamando es lo que diferencia este mapa de Google Maps. El código es la infraestructura que mantiene esa verificación al día sin que Angel sea el chokehold.</p>
+
+<p>¿Quieres ver el output de ese trabajo en números — cuántos negocios por persona, qué categorías están sobrecargadas, dónde el pueblo necesita más? Mira <a href="/pueblo-en-numeros" class="text-teal-600 hover:underline font-semibold">/pueblo-en-numeros</a>.</p>
 
 <h2>La filosofía</h2>
 <blockquote>"No estamos en el negocio de contenido como producto. La demanda de Vitrina emerge de la operación, no de perseguir clientes. No buscamos a nadie."</blockquote>
@@ -387,6 +420,22 @@ function handleVision(_req: any, res: any) {
 <h1>Hacia dónde camina el mapa.</h1>
 
 <p class="text-lg text-slate-600 mt-4">Visión pública del proyecto. Por qué existe. Hacia dónde vamos. <strong>Qué nos mata.</strong> Por qué importa que Doña Hilda llegue a saber el horario actualizado de la farmacia que abre los domingos.</p>
+
+<!-- WIIFM 3-chip — qué significa / por qué importa / qué hago -->
+<div class="grid sm:grid-cols-3 gap-3 mt-6 not-prose">
+  <div class="bg-teal-50 border border-teal-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-2">¿Qué significa?</div>
+    <p class="text-sm text-slate-700 leading-snug">Tenemos un plan a 12 meses con fechas concretas. Y 5 condiciones que matan el proyecto si pasan.</p>
+  </div>
+  <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">¿Por qué importa?</div>
+    <p class="text-sm text-slate-700 leading-snug">Los proyectos que duran son los que dicen en voz alta cuándo se mueren. Sin esas reglas, esto se convierte en hobby con dominio bonito.</p>
+  </div>
+  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-blue-700 uppercase tracking-wide mb-2">¿Qué hago con esto?</div>
+    <p class="text-sm text-slate-700 leading-snug">Mira los números en vivo en <a href="/transparencia" class="text-blue-700 underline font-semibold">/transparencia</a>. Si bajan, lo dice la página. Sin spin.</p>
+  </div>
+</div>
 
 <h2>Por qué existe el mapa</h2>
 <p>Tres frases:</p>
@@ -434,7 +483,7 @@ function handleVision(_req: any, res: any) {
 <ol class="list-decimal pl-5 text-sm">
 <li>Mes 2 sin interés de sponsors → la tesis "Vitrina encaja con dueños CR" es falsa</li>
 <li>Mes 4 sin que el sistema se auto-construya → el pattern Casa Digital no escala</li>
-<li>Mes 8 sin $10K ARR → este es lifestyle business · no Tier S asset</li>
+<li>Mes 8 sin $10K en ingresos anuales recurrentes → es un proyecto de hobby, no algo que aguante solo</li>
 <li>Semana 6 freshness top 200 <60% → 25 verifications/sem no es realista</li>
 <li>Angel tiempo operativo >3h/sem → la automation no funcionó · refactor</li>
 </ol>
@@ -444,6 +493,8 @@ function handleVision(_req: any, res: any) {
 <p>Una métrica madre + 11 métricas auxiliares.</p>
 <p><strong>Métrica madre:</strong> <code>verification_freshness % en subset top 200</code></p>
 <p>Si esto baja del 80% durante 2 meses consecutivos, todo el proyecto se cuestiona.</p>
+
+<p class="text-sm text-slate-600 mt-3">Pa' ver la matemática del pueblo en vivo — cuántos negocios hay por persona, qué categorías están sobrecargadas, dónde te necesitan — abre <a href="/pueblo-en-numeros" class="text-teal-600 hover:underline font-semibold">/pueblo-en-numeros</a>.</p>
 
 <h2>Cómo se mejora a sí mismo</h2>
 <p>Cada decisión que tomo (apruebo · rechazo · parking) se anota en un ledger interno. El sistema lee ese ledger semanalmente y se ajusta:</p>
@@ -532,7 +583,7 @@ function handleMoonshots(_req: any, res: any) {
 <p class="mt-2"><strong>El bet:</strong> Ofrecer Vitrina GRATIS a dueños que texteen weekly a *7711 confirmando datos. Trade $799/yr revenue por verification velocity.</p>
 <ul class="text-sm mt-2">
 <li><strong>Shipping requires:</strong> opt-in flow + tracking + 30-day pilot con 5 dueños</li>
-<li><strong>Downside:</strong> -$15,980 ARR si 20 sign up · sponsors actuales molestos</li>
+<li><strong>Downside:</strong> -$15,980 al año si 20 dueños toman gratis · sponsors actuales molestos</li>
 <li><strong>Upside:</strong> top 200 freshness 80% en 4 sem (no 8) · community ownership</li>
 </ul>
 </div>
