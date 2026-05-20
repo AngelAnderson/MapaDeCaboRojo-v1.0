@@ -36,11 +36,19 @@ function layout(opts: {
   slug: string
   bodyHtml: string
   jsonLd?: object
+  ogImage?: string  // custom OG image path (relative or absolute); falls back to menos-revolu canonical OG
 }): string {
   const canonical = `${SITE_URL}/${opts.slug}`
   const jsonLd = opts.jsonLd
     ? `<script type="application/ld+json">${JSON.stringify(opts.jsonLd)}</script>`
     : ''
+
+  // OG image — per-page if provided, else fall back to canonical /menos-revolu OG
+  // (which is the universal site image with frase madre + tagline).
+  const ogImagePath = opts.ogImage || '/og/menos-revolu.png'
+  const ogImageUrl = ogImagePath.startsWith('http')
+    ? ogImagePath
+    : `${SITE_URL}${ogImagePath}`
 
   return `<!DOCTYPE html>
 <html lang="es-PR">
@@ -54,7 +62,12 @@ function layout(opts: {
 <meta property="og:description" content="${escapeHtml(opts.description)}">
 <meta property="og:url" content="${canonical}">
 <meta property="og:type" content="website">
+<meta property="og:image" content="${ogImageUrl}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="es_PR">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${ogImageUrl}">
 <link rel="icon" href="/favicon.ico">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -784,6 +797,7 @@ ${liveBlock}
     title: 'Mira la vuelta · Reporte de Oportunidades Locales',
     description: 'Antes de meter chavos, mira la vuelta. Demanda real, zonas calientes, categorías saturadas. Pa\' emprendedores e inversionistas que leen el mapa antes de firmar.',
     slug: 'mira-la-vuelta',
+    ogImage: '/og/mira-la-vuelta.png',
     bodyHtml: body,
     jsonLd: {
       '@context': 'https://schema.org',
@@ -885,6 +899,7 @@ function handlePonTuNegocio(_req: any, res: any) {
     title: 'Pon tu negocio en el mapa · Verificado gratis · Vitrina $799/año',
     description: 'Pon tu negocio donde la gente ya está buscando. Verificación gratis. Vitrina opcional pa\' visibilidad premium. Aparece en el momento correcto, no solo "estás en un mapa".',
     slug: 'pon-tu-negocio-en-el-mapa',
+    ogImage: '/og/pon-tu-negocio-en-el-mapa.png',
     bodyHtml: body,
     jsonLd: {
       '@context': 'https://schema.org',
@@ -1060,6 +1075,7 @@ ${failBanner}
     title: 'Señales del pueblo · Demanda local en vivo',
     description: 'Las búsquedas reales del pueblo de Cabo Rojo, en vivo. Top categorías buscadas, verificaciones recientes, demanda pre-supply. Updated diario, sin filtros.',
     slug: 'senales-del-pueblo',
+    ogImage: '/og/senales-del-pueblo.png',
     bodyHtml: body,
     jsonLd: {
       '@context': 'https://schema.org',
@@ -1215,6 +1231,7 @@ function handleMenosRevolu(_req: any, res: any) {
     title: 'Menos Revolú · El mapa vivo de Cabo Rojo',
     description: 'Menos revolú. Mejores decisiones. Mejor vida. Un mapa vivo pa\' poner orden en el revolú de Cabo Rojo — para residentes, turistas, negocios, emprendedores e inversionistas.',
     slug: 'menos-revolu',
+    ogImage: '/og/menos-revolu.png',
     bodyHtml: body,
     jsonLd: {
       '@context': 'https://schema.org',

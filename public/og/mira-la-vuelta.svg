@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <text x="80" y="110" font-family="-apple-system, system-ui, sans-serif" font-size="22" font-weight="700" fill="#fbbf24" letter-spacing="3">🧭 PARA EMPRENDEDORES + INVERSIONISTAS</text>
+
+  <text x="80" y="225" font-family="-apple-system, system-ui, sans-serif" font-size="76" font-weight="800" fill="#ffffff" letter-spacing="-1">Antes de meter chavos,</text>
+  <text x="80" y="315" font-family="-apple-system, system-ui, sans-serif" font-size="76" font-weight="800" fill="#fbbf24" letter-spacing="-1">mira la vuelta.</text>
+
+  <text x="80" y="400" font-family="-apple-system, system-ui, sans-serif" font-size="26" font-weight="500" fill="#cbd5e1" letter-spacing="0">Cuando alguien busca, pregunta o toca,</text>
+  <text x="80" y="438" font-family="-apple-system, system-ui, sans-serif" font-size="26" font-weight="500" fill="#cbd5e1" letter-spacing="0">ahí hay una pista de demanda.</text>
+
+  <rect x="80" y="480" width="660" height="60" rx="10" fill="rgba(251,191,36,0.12)"/>
+  <text x="100" y="520" font-family="-apple-system, system-ui, sans-serif" font-size="22" font-weight="700" fill="#fbbf24">Reporte de Oportunidades Locales · live demand data</text>
+
+  <text x="80" y="585" font-family="-apple-system, system-ui, sans-serif" font-size="20" font-weight="600" fill="#94a3b8">mapadecaborojo.com/mira-la-vuelta</text>
+</svg>

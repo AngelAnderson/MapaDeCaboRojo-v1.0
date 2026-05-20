@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <text x="80" y="110" font-family="-apple-system, system-ui, sans-serif" font-size="22" font-weight="700" fill="#5eead4" letter-spacing="3">📡 DATA EN VIVO · BOT *7711</text>
+
+  <text x="80" y="225" font-family="-apple-system, system-ui, sans-serif" font-size="80" font-weight="800" fill="#ffffff" letter-spacing="-1">Las señales del</text>
+  <text x="80" y="315" font-family="-apple-system, system-ui, sans-serif" font-size="80" font-weight="800" fill="#5eead4" letter-spacing="-1">pueblo, en vivo.</text>
+
+  <text x="80" y="400" font-family="-apple-system, system-ui, sans-serif" font-size="26" font-weight="500" fill="#cbd5e1">Cada búsqueda · clic · pregunta deja una pista.</text>
+  <text x="80" y="438" font-family="-apple-system, system-ui, sans-serif" font-size="26" font-weight="500" fill="#cbd5e1">Aquí están las señales actualizadas todos los días.</text>
+
+  <rect x="80" y="480" width="540" height="60" rx="10" fill="rgba(94,234,212,0.12)"/>
+  <text x="100" y="520" font-family="ui-monospace, 'SF Mono', monospace" font-size="22" font-weight="700" fill="#5eead4">Top búsquedas · sin filtros · sin spin</text>
+
+  <text x="80" y="585" font-family="-apple-system, system-ui, sans-serif" font-size="20" font-weight="600" fill="#94a3b8">mapadecaborojo.com/senales-del-pueblo</text>
+</svg>
