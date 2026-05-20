@@ -43,6 +43,8 @@
     { "source": "/pon-tu-negocio-en-el-mapa", "destination": "/api/mapa-pages?page=pon-tu-negocio-en-el-mapa" },
     { "source": "/senales-del-pueblo", "destination": "/api/mapa-pages?page=senales-del-pueblo" },
     { "source": "/señales-del-pueblo", "destination": "/api/mapa-pages?page=senales-del-pueblo" },
+    { "source": "/menos-revolu", "destination": "/api/mapa-pages?page=menos-revolu" },
+    { "source": "/menos-revolú", "destination": "/api/mapa-pages?page=menos-revolu" },
     { "source": "/llms.txt", "destination": "/api/public?action=llms" },
     { "source": "/llms-full.txt", "destination": "/api/public?action=llms-full" },
     { "source": "/api/(.*)", "destination": "/api/$1" },

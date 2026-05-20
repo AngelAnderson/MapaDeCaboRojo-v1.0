@@ -84,7 +84,7 @@ ${jsonLd}
 <span class="font-black tracking-tight">Mapa de Cabo Rojo</span>
 </a>
 <nav class="hidden md:flex gap-4 text-sm text-slate-600 flex-wrap">
-<a href="/mision" class="hover:text-teal-600">Misión</a>
+<a href="/menos-revolu" class="hover:text-teal-600">Menos Revolú</a>
 <a href="/pon-tu-negocio-en-el-mapa" class="hover:text-teal-600 font-semibold text-teal-700">Pon tu negocio</a>
 <a href="/mira-la-vuelta" class="hover:text-teal-600">Mira la vuelta</a>
 <a href="/senales-del-pueblo" class="hover:text-teal-600">Señales</a>
@@ -103,6 +103,7 @@ ${opts.bodyHtml}
 <p class="text-base font-semibold text-teal-700">Menos revolú. Mejores decisiones. Mejor vida.</p>
 <p class="text-xs text-slate-500 mt-1">El mapa vivo pa' poner orden en el revolú de Cabo Rojo.</p>
 <div class="mt-4 flex justify-center gap-4 text-xs text-slate-500 flex-wrap">
+<a href="/menos-revolu" class="hover:text-teal-600 font-semibold">Menos Revolú</a>
 <a href="/mision" class="hover:text-teal-600">Misión</a>
 <a href="/pon-tu-negocio-en-el-mapa" class="hover:text-teal-600">Pon tu negocio</a>
 <a href="/mira-la-vuelta" class="hover:text-teal-600">Mira la vuelta</a>
@@ -1045,6 +1046,169 @@ ${failBanner}
   }))
 }
 
+// =============== /menos-revolu ===============
+// Consolidated landing — the package §18 bloque maestro + §20 8-block layout.
+// Single-URL pitch. Entry point for "what is this site?" with deep-links out
+// to the 8+ dedicated pages.
+
+function handleMenosRevolu(_req: any, res: any) {
+  const body = `
+<!-- Hero -->
+<div class="not-prose -mt-2 mb-8">
+  <p class="text-xs font-bold uppercase tracking-widest text-teal-600 mb-3">MapaDeCaboRojo.com</p>
+  <h1 class="text-4xl md:text-5xl font-black text-slate-900 leading-tight">El mapa vivo pa' poner orden en el revolú de Cabo Rojo.</h1>
+  <p class="text-lg text-slate-600 mt-4 leading-relaxed">Encuentra lugares, negocios, servicios y oportunidades sin perder el día buscando entre screenshots, posts viejos y recomendaciones sueltas.</p>
+  <div class="mt-6 flex flex-col sm:flex-row gap-3">
+    <a href="/" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold no-underline">
+      Mira el mapa antes de dar vueltas →
+    </a>
+    <a href="/pon-tu-negocio-en-el-mapa" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white border-2 border-teal-600 text-teal-700 hover:bg-teal-50 font-bold no-underline">
+      Pon tu negocio en el mapa
+    </a>
+  </div>
+</div>
+
+<!-- §5: Por qué existe -->
+<h2>¿Por qué existe?</h2>
+<p>Cabo Rojo tiene valor, pero mucho está regao:</p>
+<ul>
+<li>Negocios buenos que no se encuentran.</li>
+<li>Turistas preguntando lo mismo todos los meses.</li>
+<li>Residentes dando vueltas.</li>
+<li>Emprendedores copiando sin mirar demanda.</li>
+<li>Información escondida en screenshots, posts viejos, comentarios y recomendaciones sueltas.</li>
+<li>Gente tomando decisiones por costumbre, emoción o corazonada.</li>
+<li>Oportunidades que existen, pero no se ven con claridad.</li>
+</ul>
+<p><strong>El enemigo no es la falta de información. Es la información regada.</strong> El revolú local cuesta tiempo, dinero y oportunidades.</p>
+
+<!-- §6: A quién ayuda -->
+<h2>¿A quién ayuda?</h2>
+<div class="grid sm:grid-cols-2 gap-4 not-prose">
+  <a href="/" class="block bg-white border border-slate-200 hover:border-teal-400 rounded-lg p-4 no-underline">
+    <div class="text-xs font-bold text-teal-700 uppercase">Al residente</div>
+    <p class="text-sm text-slate-700 mt-1">Encuentra lo que necesita sin dar vueltas. Domingo 9pm se rompió algo — el plomero que SÍ contesta.</p>
+  </a>
+  <a href="/" class="block bg-white border border-slate-200 hover:border-teal-400 rounded-lg p-4 no-underline">
+    <div class="text-xs font-bold text-teal-700 uppercase">Al turista</div>
+    <p class="text-sm text-slate-700 mt-1">Disfruta Cabo Rojo sin perder medio día buscando. Laundromat · farmacia domingo · plomero pa'l goteo.</p>
+  </a>
+  <a href="/pon-tu-negocio-en-el-mapa" class="block bg-white border border-slate-200 hover:border-teal-400 rounded-lg p-4 no-underline">
+    <div class="text-xs font-bold text-teal-700 uppercase">Al negocio local</div>
+    <p class="text-sm text-slate-700 mt-1">Aparece cuando alguien ya está buscando. Badge "verificado" gratis. Vitrina ($799/año) opcional. <span class="text-teal-700 font-semibold">→ Ver oferta</span></p>
+  </a>
+  <a href="/mira-la-vuelta" class="block bg-white border border-slate-200 hover:border-teal-400 rounded-lg p-4 no-underline">
+    <div class="text-xs font-bold text-teal-700 uppercase">Al emprendedor</div>
+    <p class="text-sm text-slate-700 mt-1">Mira demanda antes de copiar. Qué se busca, qué falta, qué zona se mueve, qué categoría puede estar saturada. <span class="text-teal-700 font-semibold">→ Mira la vuelta</span></p>
+  </a>
+  <a href="/mira-la-vuelta" class="block bg-white border border-slate-200 hover:border-teal-400 rounded-lg p-4 no-underline">
+    <div class="text-xs font-bold text-teal-700 uppercase">Al inversionista</div>
+    <p class="text-sm text-slate-700 mt-1">Ve señales antes de poner dinero. Movimiento real, zonas calientes, demanda local antes de firmar. <span class="text-teal-700 font-semibold">→ Reporte de oportunidades</span></p>
+  </a>
+  <a href="/senales-del-pueblo" class="block bg-white border border-slate-200 hover:border-teal-400 rounded-lg p-4 no-underline">
+    <div class="text-xs font-bold text-teal-700 uppercase">Al pueblo</div>
+    <p class="text-sm text-slate-700 mt-1">Convierte información regada en decisiones mejores. Cabo Rojo más fácil de vivir, visitar, apoyar e invertir. <span class="text-teal-700 font-semibold">→ Señales en vivo</span></p>
+  </a>
+</div>
+
+<!-- §4: Nuestra diferencia -->
+<h2>Nuestra diferencia</h2>
+<p><strong>Google tiene datos. Facebook tiene ruido. Nosotros tenemos contexto local.</strong></p>
+<p>No somos visitantes mirando un mapa. Somos vecinos leyendo la vuelta.</p>
+<p>El moat no es la tecnología. Es la confianza local, el contexto, la data propietaria, la relación con la comunidad y la capacidad de leer lo que está pasando en Cabo Rojo mejor que una plataforma genérica. <a href="/equipo" class="text-teal-600 hover:underline">Cómo funciona el equipo →</a></p>
+
+<!-- §19: Mapa público -->
+<h2>El mapa público</h2>
+<p>Más de 1,134 lugares, negocios, servicios y eventos verificados a mano — un negocio a la vez, llamando al dueño.</p>
+<div class="grid sm:grid-cols-3 gap-3 not-prose">
+  <a href="/" class="block bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-lg p-3 text-center no-underline">
+    <div class="text-2xl font-black text-teal-700">🗺️</div>
+    <div class="text-sm font-semibold text-slate-700 mt-1">Mira el mapa</div>
+  </a>
+  <a href="/pueblo-en-numeros" class="block bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-lg p-3 text-center no-underline">
+    <div class="text-2xl font-black text-teal-700">📊</div>
+    <div class="text-sm font-semibold text-slate-700 mt-1">La matemática</div>
+  </a>
+  <a href="/transparencia" class="block bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-lg p-3 text-center no-underline">
+    <div class="text-2xl font-black text-teal-700">📋</div>
+    <div class="text-sm font-semibold text-slate-700 mt-1">Métricas en vivo</div>
+  </a>
+</div>
+
+<!-- §13: Pon tu negocio -->
+<h2>Pon tu negocio en el mapa</h2>
+<p>Si tu negocio no aparece cuando la gente está buscando, estás perdiendo oportunidades.</p>
+<blockquote>No es pagar por aparecer. Es pagar por no seguir escondido.</blockquote>
+<p>Dos opciones: <strong>Verificado gratis</strong> (badge si confirmamos que estás abierto) · <strong>Vitrina $799/año</strong> (apareces primero en tu categoría + el bot te recomienda + post mensual en FB).</p>
+<p><a href="/pon-tu-negocio-en-el-mapa" class="text-teal-600 hover:underline font-semibold">→ Ver detalles + reclamar perfil gratis</a></p>
+
+<!-- §14: Mira la vuelta -->
+<h2>Mira la vuelta — pa' emprendedores e inversionistas</h2>
+<p>Antes de abrir otro negocio igual o de meter chavos, lee el mapa. Las señales del pueblo te dicen qué se busca y dónde no hay competencia visible.</p>
+<blockquote>Cuando alguien busca, pregunta o toca, ahí hay una pista de demanda.</blockquote>
+<p><a href="/mira-la-vuelta" class="text-teal-600 hover:underline font-semibold">→ Reporte de Oportunidades Locales</a> · <a href="/senales-del-pueblo" class="text-teal-600 hover:underline font-semibold">→ Señales del pueblo en vivo</a></p>
+
+<!-- §9: Verdad base -->
+<h2>La verdad base</h2>
+<p>Un pueblo no mejora solo por tener más información. Mejora cuando esa información ayuda a decidir mejor.</p>
+<ul>
+<li>Lo que está regao, se pierde.</li>
+<li>Lo que no se encuentra, no se apoya.</li>
+<li>Lo que no se entiende, se decide mal.</li>
+<li>No todo progreso empieza con cemento. A veces empieza poniendo orden.</li>
+<li>La claridad también es desarrollo económico.</li>
+</ul>
+
+<!-- §18: Bloque maestro final -->
+<div class="bg-slate-900 text-white rounded-2xl p-8 mt-10 not-prose">
+  <p class="text-xs font-bold uppercase tracking-widest text-teal-400 mb-3">Resumen</p>
+  <h2 class="text-2xl md:text-3xl font-black leading-tight mb-4">Menos revolú. Mejores decisiones. Mejor vida.</h2>
+  <p class="text-slate-300 leading-relaxed">MapaDeCaboRojo.com organiza el revolú local para que residentes, turistas, negocios, emprendedores e inversionistas encuentren mejor, decidan mejor y apoyen mejor lo local.</p>
+  <div class="mt-6 flex flex-col sm:flex-row gap-3">
+    <a href="/" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-teal-500 hover:bg-teal-400 text-white font-bold no-underline">
+      Mira el mapa →
+    </a>
+    <a href="/pon-tu-negocio-en-el-mapa" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-transparent border-2 border-teal-400 text-teal-300 hover:bg-teal-900 font-bold no-underline">
+      Pon tu negocio
+    </a>
+  </div>
+</div>
+
+<!-- CTA final -->
+<div class="bg-teal-50 border border-teal-200 rounded-lg p-6 mt-8 text-center">
+<p class="text-lg font-semibold">Antes de dar vueltas, mira el mapa. Antes de meter chavos, mira la vuelta.</p>
+<p class="mt-2"><a href="sms:+17874177711" class="text-teal-600 font-bold underline">Textea al ${PHONE_CTA}</a> · El Veci te contesta.</p>
+<p class="text-sm text-slate-600 mt-2 italic">Si te sirve, llégate. Si no, sigue tu camino — todos vamos pa' diferentes sitios.</p>
+</div>
+`
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600')
+  res.status(200).send(layout({
+    title: 'Menos Revolú · El mapa vivo de Cabo Rojo',
+    description: 'Menos revolú. Mejores decisiones. Mejor vida. Un mapa vivo pa\' poner orden en el revolú de Cabo Rojo — para residentes, turistas, negocios, emprendedores e inversionistas.',
+    slug: 'menos-revolu',
+    bodyHtml: body,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'MapaDeCaboRojo.com',
+      alternateName: 'Menos Revolú · Mapa de Cabo Rojo',
+      url: SITE_URL,
+      description: 'El mapa vivo pa\' poner orden en el revolú de Cabo Rojo. Menos revolú. Mejores decisiones. Mejor vida.',
+      inLanguage: 'es-PR',
+      audience: [
+        { '@type': 'Audience', audienceType: 'Residente' },
+        { '@type': 'Audience', audienceType: 'Turista' },
+        { '@type': 'Audience', audienceType: 'Negocio local' },
+        { '@type': 'Audience', audienceType: 'Emprendedor' },
+        { '@type': 'Audience', audienceType: 'Inversionista' },
+        { '@type': 'Audience', audienceType: 'Pueblo' },
+      ],
+    },
+  }))
+}
+
 // =============== HANDLER ===============
 
 export default async function handler(req: any, res: any) {
@@ -1059,6 +1223,7 @@ export default async function handler(req: any, res: any) {
     case 'mira-la-vuelta': return await handleMiraLaVuelta(req, res)
     case 'pon-tu-negocio-en-el-mapa': return handlePonTuNegocio(req, res)
     case 'senales-del-pueblo': return await handleSenalesDelPueblo(req, res)
+    case 'menos-revolu': return handleMenosRevolu(req, res)
     default:
       res.status(404).send('Page not found')
   }
