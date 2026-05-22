@@ -1813,6 +1813,302 @@ async function handleSubscribe(req: any, res: any) {
   }
 }
 
+// =============== /playas/defensa-y-limpieza ===============
+// Utility guide for Defensa y Limpieza beach cleanup event — May 30, 2026
+// 4 beaches × 5 categories (food, gas, farmacia, clinica, notes)
+// Data sourced from places table, verified against Supabase 2026-05-22
+
+function handleDefensaYLimpieza(_req: any, res: any) {
+
+  // ─── DATA ────────────────────────────────────────────────────────────────────
+  // Each place: { name, slug, phone, address, rating, dist, note? }
+  // slug null = no profile page yet; link omitted
+
+  const beaches = [
+    {
+      id: 'combate',
+      name: 'Playa El Combate',
+      slug: 'playa-el-combate',
+      coords: 'Carr. 3301, Bo. El Combate',
+      gmaps: 'https://maps.google.com/?q=17.9766404,-67.2127867',
+      color: 'teal',
+      food: [
+        { name: 'Sunsets 3301', slug: 'sunsets-3301', phone: '+17879605597', address: 'Carr. 3301 KM 2.1, El Combate', rating: 4.8, dist: '0.2 km' },
+        { name: 'I Love Combate', slug: 'i-love-combate', phone: null, address: 'PR-3301 Km 2.8, El Combate', rating: 4.7, dist: '0.2 km' },
+        { name: 'Santos Bar & Restaurant', slug: 'santos-bar-amp-restaurant', phone: '+17878518300', address: 'Calle 2, El Combate', rating: 4.6, dist: '0.3 km' },
+      ],
+      gas: [
+        { name: 'Gulf Pole Ojea', slug: 'gulf-pole-ojea', phone: null, address: 'Pole Ojea, Cabo Rojo', rating: 4.5, dist: '2.9 km' },
+      ],
+      salud: [
+        { name: 'El Combate Drug Store', slug: 'el-combate-drug', phone: '+17878518123', address: 'XQHW+MG4, El Combate', rating: 4.4, dist: '0.4 km', tipo: 'Farmacia' },
+      ],
+      notas: 'El Combate Drug Store también funciona como punto de referencia si necesitas orientación. No hay CDT en el área — la clínica más cercana es en Boquerón (~7 km por Carr 301).',
+    },
+    {
+      id: 'buye',
+      name: 'Playa Buyé',
+      slug: 'playa-buy',
+      coords: 'Carr. 307, Bo. Guaniquilla',
+      gmaps: 'https://maps.google.com/?q=18.0402393,-67.2060134',
+      color: 'amber',
+      food: [
+        { name: 'Criollisimo Coffee Market', slug: 'criollisimo-coffee-market', phone: null, address: 'Carr. 307 km 4.9, Guaniquilla', rating: 4.9, dist: '2.1 km' },
+        { name: 'Pizzería Cofresí', slug: 'pizzeria-cofresi', phone: null, address: 'PR-307 km 5.2, Cabo Rojo', rating: 4.4, dist: '2.1 km' },
+      ],
+      gas: [
+        { name: 'Gasolinera Texaco', slug: 'gasolinera-texaco', phone: '+17878515781', address: 'Calle Carbonell 86, Boquerón', rating: 4.4, dist: '6.7 km (camino a Boquerón)' },
+      ],
+      salud: [
+        { name: "Ed's Pharmacy", slug: 'eds-pharmacy', phone: '+17872550485', address: 'PR-307, Cabo Rojo', rating: 4.8, dist: '1.2 km', tipo: 'Farmacia' },
+      ],
+      notas: "Buyé está entre dos tramos de playa; Criollisimo es una excelente parada para café y comida real. Ed's Pharmacy en la misma Carr. 307 es la opción más próxima pa' primeros auxilios y medicamentos básicos.",
+    },
+    {
+      id: 'tres-tubos',
+      name: 'Tres Tubos (Boquerón)',
+      slug: 'balneario-de-boqueron',
+      coords: 'Área del Balneario, Boquerón',
+      gmaps: 'https://maps.google.com/?q=17.9987,-67.1726',
+      color: 'blue',
+      food: [
+        { name: 'El Tiburon Bar & Grill', slug: 'el-tiburon-bar', phone: null, address: 'PR-101, Cabo Rojo', rating: 4.7, dist: '0.3 km' },
+        { name: 'El Wey Ese', slug: 'el-wey-ese', phone: '+17876283776', address: 'PR-100, Cabo Rojo', rating: 5.0, dist: '1.5 km' },
+        { name: 'Imperio Pizza', slug: 'imperio', phone: '+19393504960', address: 'Boquerón, Cabo Rojo', rating: 4.9, dist: '1.9 km' },
+      ],
+      gas: [
+        { name: 'Gasolinera Texaco', slug: 'gasolinera-texaco', phone: '+17878515781', address: 'Calle Carbonell 86, Boquerón', rating: 4.4, dist: '1.8 km' },
+        { name: 'Sunoco Boquerón', slug: 'sunoco-boqueron', phone: '+17873577313', address: 'PR-101, Cabo Rojo', rating: 4.4, dist: '3.2 km' },
+      ],
+      salud: [
+        { name: 'Caldas Pharmacy', slug: 'caldas-pharmacy', phone: '+17878512079', address: 'PR-101 km 18.1, Boquerón', rating: 4.7, dist: '0.5 km', tipo: 'Farmacia' },
+        { name: 'Farmacia Cuquimar', slug: 'farmacia-cuquimar', phone: '+17872556551', address: 'Carr 101 km 16.2, Las Arenas, Boquerón', rating: 4.4, dist: '1.8 km', tipo: 'Farmacia' },
+        { name: 'Clínica Dr. Mariani', slug: 'clinica-dr-mariani', phone: '+17872552775', address: 'Carr 101 km 16.2, Boquerón', rating: 3.8, dist: '1.9 km', tipo: 'Clínica' },
+      ],
+      notas: 'La zona más servida de las cuatro: dos farmacias y una clínica a menos de 2 km. El Centro Vacacional tiene baños públicos dentro del balneario durante horario de operación.',
+    },
+    {
+      id: 'playuela',
+      name: 'La Playuela (Playa Sucia)',
+      slug: 'playa-playuela-cabo-rojo',
+      coords: 'Bo. Cabo Rojo (cerca del Faro)',
+      gmaps: 'https://maps.google.com/?q=17.9360306,-67.1890376',
+      color: 'rose',
+      food: [
+        { name: 'La Casita del Dulce Desayuno', slug: 'la-casita-del-dulce-desayuno-', phone: '+17876271394', address: 'Carr 3301 km 1.5 int, El Combate', rating: 4.7, dist: '5.0 km (camino de regreso)' },
+        { name: 'Calle 4 Food Truck', slug: 'calle-4-food', phone: '+17876186702', address: 'Calle Cielomar, El Combate', rating: 4.8, dist: '5.5 km' },
+      ],
+      gas: [
+        { name: 'Gulf Pole Ojea', slug: 'gulf-pole-ojea', phone: null, address: 'Pole Ojea, Cabo Rojo', rating: 4.5, dist: '5.5 km (Carr 301)' },
+      ],
+      salud: [
+        { name: 'El Combate Drug Store', slug: 'el-combate-drug', phone: '+17878518123', address: 'XQHW+MG4, El Combate', rating: 4.4, dist: '4.7 km', tipo: 'Farmacia' },
+      ],
+      notas: 'La Playuela es la playa más remota — camino no pavimentado los últimos 3 km. No hay servicios en el área inmediata. Lleva agua y comida. El punto de ayuda más cercano es El Combate (~5 km de regreso).',
+    },
+  ]
+
+  // ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+  const colorMap: Record<string, { bg: string; border: string; badge: string; heading: string; icon: string }> = {
+    teal:  { bg: 'bg-teal-50',  border: 'border-teal-200',  badge: 'bg-teal-600 text-white',  heading: 'text-teal-800',  icon: 'text-teal-600' },
+    amber: { bg: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-600 text-white',  heading: 'text-amber-800', icon: 'text-amber-600' },
+    blue:  { bg: 'bg-blue-50',  border: 'border-blue-200',  badge: 'bg-blue-600 text-white',   heading: 'text-blue-800',  icon: 'text-blue-600' },
+    rose:  { bg: 'bg-rose-50',  border: 'border-rose-200',  badge: 'bg-rose-600 text-white',   heading: 'text-rose-800',  icon: 'text-rose-600' },
+  }
+
+  function phoneLink(phone: string | null, display?: string): string {
+    if (!phone) return ''
+    const digits = phone.replace(/\D/g, '')
+    const wa = `https://wa.me/1${digits.replace(/^1/, '')}`
+    const disp = display || phone.replace(/^\+1/, '').replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3')
+    return `<a href="${wa}" class="text-teal-700 font-semibold hover:underline">${escapeHtml(disp)}</a>`
+  }
+
+  function stars(rating: number): string {
+    const full = Math.round(rating)
+    return `<span class="text-amber-500 text-xs">${'★'.repeat(full)}${'☆'.repeat(5 - full)}</span> <span class="text-slate-500 text-xs">${rating.toFixed(1)}</span>`
+  }
+
+  function placeCard(p: { name: string; slug: string | null; phone: string | null; address: string; rating: number; dist: string; tipo?: string }, siteUrl: string): string {
+    const nameEl = p.slug
+      ? `<a href="${siteUrl}/negocio/${p.slug}" class="font-semibold text-slate-900 hover:text-teal-700">${escapeHtml(p.name)}</a>`
+      : `<span class="font-semibold text-slate-900">${escapeHtml(p.name)}</span>`
+
+    const tipoEl = p.tipo ? `<span class="ml-1 text-xs bg-teal-100 text-teal-700 rounded px-1.5 py-0.5 font-medium">${escapeHtml(p.tipo)}</span>` : ''
+    const phoneLine = p.phone ? `<div class="mt-1 text-sm">${phoneLink(p.phone)}</div>` : ''
+    const addrLine = p.address ? `<div class="text-xs text-slate-500 mt-0.5">${escapeHtml(p.address)}</div>` : ''
+
+    return `<div class="bg-white rounded-lg border border-slate-200 p-3 flex items-start gap-3 shadow-sm">
+  <div class="flex-1 min-w-0">
+    <div class="flex flex-wrap items-baseline gap-1">${nameEl}${tipoEl}</div>
+    ${phoneLine}
+    ${addrLine}
+    <div class="flex items-center gap-2 mt-1.5 flex-wrap">
+      ${stars(p.rating)}
+      <span class="text-xs text-slate-400">· ${escapeHtml(p.dist)}</span>
+    </div>
+  </div>
+</div>`
+  }
+
+  function beachSection(b: typeof beaches[0]): string {
+    const c = colorMap[b.color]
+    const foodCards = b.food.map(p => placeCard(p, SITE_URL)).join('\n')
+    const gasCards = b.gas.map(p => placeCard(p, SITE_URL)).join('\n')
+    const saludCards = b.salud.map(p => placeCard(p, SITE_URL)).join('\n')
+
+    const beachNameEl = b.slug
+      ? `<a href="${SITE_URL}/negocio/${b.slug}" class="hover:underline">${escapeHtml(b.name)}</a>`
+      : `<span>${escapeHtml(b.name)}</span>`
+
+    return `
+<div id="${b.id}" class="not-prose mt-10 ${c.bg} border ${c.border} rounded-xl p-5 scroll-mt-20">
+  <!-- beach header -->
+  <div class="flex items-start justify-between gap-3 flex-wrap">
+    <div>
+      <h2 class="text-xl font-bold ${c.heading} leading-tight">${beachNameEl}</h2>
+      <p class="text-sm text-slate-600 mt-0.5">${escapeHtml(b.coords)}</p>
+    </div>
+    <a href="${b.gmaps}" target="_blank" rel="noopener"
+       class="${c.badge} text-xs font-semibold px-3 py-1.5 rounded-full whitespace-nowrap">
+      <i class="fa-solid fa-diamond-turn-right mr-1"></i>Ver en mapa
+    </a>
+  </div>
+
+  <!-- grid: food + utilities -->
+  <div class="mt-5 grid md:grid-cols-2 gap-5">
+
+    <!-- comida -->
+    <div>
+      <div class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">🍔 Comida cercana</div>
+      <div class="flex flex-col gap-2">
+        ${foodCards}
+      </div>
+    </div>
+
+    <!-- gas + salud -->
+    <div class="flex flex-col gap-5">
+      <div>
+        <div class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">⛽ Gasolinera</div>
+        <div class="flex flex-col gap-2">${gasCards}</div>
+      </div>
+      <div>
+        <div class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">🏥 Farmacia / Clínica</div>
+        <div class="flex flex-col gap-2">${saludCards}</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- nota -->
+  <div class="mt-4 bg-white/70 border border-white rounded-lg p-3 text-sm text-slate-600 leading-relaxed">
+    <span class="font-semibold text-slate-700">Nota: </span>${escapeHtml(b.notas)}
+  </div>
+</div>`
+  }
+
+  // ─── JSON-LD ─────────────────────────────────────────────────────────────────
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'WebPage',
+        '@id': `${SITE_URL}/playas/defensa-y-limpieza`,
+        url: `${SITE_URL}/playas/defensa-y-limpieza`,
+        name: 'Defensa y Limpieza — Guía de playas · 30 mayo 2026',
+        description: 'Lo que necesitas cerca de cada playa: comida, gas, farmacia y clínica — compilado por caborojo.com pa\' los voluntarios del evento Defensa y Limpieza.',
+        inLanguage: 'es-PR',
+        publisher: { '@type': 'Organization', name: 'MapaDeCaboRojo.com', url: SITE_URL },
+        datePublished: '2026-05-22',
+      },
+      ...beaches.flatMap(b =>
+        b.salud.map(p => ({
+          '@type': 'LocalBusiness',
+          name: p.name,
+          address: { '@type': 'PostalAddress', streetAddress: p.address, addressLocality: 'Cabo Rojo', addressRegion: 'PR', addressCountry: 'US' },
+          ...(p.phone ? { telephone: p.phone } : {}),
+          ...(p.rating ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: p.rating, bestRating: 5, reviewCount: 1 } } : {}),
+          url: p.slug ? `${SITE_URL}/negocio/${p.slug}` : undefined,
+        }))
+      ),
+      ...beaches.flatMap(b =>
+        b.food.map(p => ({
+          '@type': 'FoodEstablishment',
+          name: p.name,
+          address: { '@type': 'PostalAddress', streetAddress: p.address, addressLocality: 'Cabo Rojo', addressRegion: 'PR', addressCountry: 'US' },
+          ...(p.phone ? { telephone: p.phone } : {}),
+          ...(p.rating ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: p.rating, bestRating: 5, reviewCount: 1 } } : {}),
+          url: p.slug ? `${SITE_URL}/negocio/${p.slug}` : undefined,
+        }))
+      ),
+    ],
+  }
+
+  // ─── BODY ────────────────────────────────────────────────────────────────────
+
+  // Jump nav
+  const jumpNav = beaches.map(b => {
+    const c = colorMap[b.color]
+    return `<a href="#${b.id}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-semibold border ${c.border} ${c.bg} ${c.heading} hover:opacity-80 transition-opacity">${escapeHtml(b.name.split(' (')[0])}</a>`
+  }).join('\n')
+
+  const allSections = beaches.map(beachSection).join('\n')
+
+  const body = `
+<div class="not-prose mb-8">
+  <div class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-teal-700 bg-teal-50 border border-teal-200 rounded-full px-3 py-1 mb-4">
+    <i class="fa-solid fa-water"></i> Defensa y Limpieza · 30 mayo 2026
+  </div>
+  <h1 class="text-3xl font-black text-slate-900 leading-tight mt-2">
+    Lo que necesitas cerca de cada playa
+  </h1>
+  <p class="text-lg text-slate-600 mt-3 leading-relaxed">
+    Compilado por <strong>caborojo.com</strong> pa' los voluntarios y visitantes del evento. Si no encuentras algo, escríbele al Veci.
+  </p>
+
+  <!-- quick jump nav -->
+  <div class="flex flex-wrap gap-2 mt-5">
+    ${jumpNav}
+  </div>
+
+  <!-- event note -->
+  <div class="mt-5 bg-slate-100 border border-slate-200 rounded-xl p-4 flex gap-3 items-start">
+    <span class="text-2xl">🧹</span>
+    <div class="text-sm text-slate-700 leading-relaxed">
+      <strong>Sábado 30 de mayo · 4 playas de Cabo Rojo.</strong>
+      Esta guía muestra qué hay disponible cerca de cada punto de limpieza — baños, comida, gasolina, y dónde ir si algo pasa. Los datos vienen del directorio verificado de mapadecaborojo.com. Si algo está desactualizado, textea <strong>787-417-7711</strong>.
+    </div>
+  </div>
+</div>
+
+${allSections}
+
+<!-- footer CTA -->
+<div class="not-prose mt-12 bg-teal-700 rounded-2xl p-6 text-center text-white">
+  <p class="text-lg font-bold mb-1">¿Necesitas algo en vivo el día del evento?</p>
+  <p class="text-sm text-teal-100 mb-4">El Veci contesta preguntas sobre Cabo Rojo las 24 horas.</p>
+  <a href="https://wa.me/17874177711?text=PLAYA"
+     class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50 transition-colors">
+    <i class="fa-brands fa-whatsapp text-lg"></i>
+    Textea PLAYA al 787-417-7711
+  </a>
+  <p class="text-xs text-teal-200 mt-3">— caborojo.com | Menos revolú, más sistema, mejor vida.</p>
+</div>
+`
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=300')
+  res.status(200).send(layout({
+    title: 'Defensa y Limpieza — Guía de playas · 30 mayo 2026',
+    description: "Lo que necesitas cerca de cada playa de Cabo Rojo el 30 de mayo: comida, gasolina, farmacia y clínica. Compilado por caborojo.com pa' los voluntarios del evento Defensa y Limpieza.",
+    slug: 'playas/defensa-y-limpieza',
+    bodyHtml: body,
+    jsonLd,
+  }))
+}
+
 // =============== HANDLER ===============
 
 export default async function handler(req: any, res: any) {
@@ -1831,6 +2127,7 @@ export default async function handler(req: any, res: any) {
     case 'preguntas': return handlePreguntas(req, res)
     case 'historia': return handleHistoria(req, res)
     case 'subscribe': return await handleSubscribe(req, res)
+    case 'defensa-y-limpieza': return handleDefensaYLimpieza(req, res)
     default:
       res.status(404).send('Page not found')
   }
