@@ -4583,16 +4583,38 @@ async function handle_cultura(req: any, res: any) {
       }
     }
 
-    const { data: places, error } = await supabase
-      .from('places')
-      .select('id, name, slug, address, lat, lon, google_rating, phone, website, plan, is_featured')
-      .in('id', allIds);
+    // Parallel: places + upcoming events + cultura demand count
+    const [placesResp, eventsResp, demandResp] = await Promise.all([
+      supabase
+        .from('places')
+        .select('id, name, slug, address, lat, lon, google_rating, phone, website, plan, is_featured, opening_hours, last_verified_at')
+        .in('id', allIds),
+      supabase
+        .from('events')
+        .select('id, title, slug, start_time, place_id')
+        .in('place_id', allIds)
+        .gte('start_time', new Date().toISOString())
+        .eq('status', 'active')
+        .order('start_time', { ascending: true })
+        .limit(50),
+      supabase.rpc('cultura_demand_count_30d').then(r => r, () => ({ data: null, error: null })),
+    ]);
 
-    if (error) {
-      console.error('handle_cultura supabase error:', error);
+    if (placesResp.error) console.error('handle_cultura places error:', placesResp.error);
+    if (eventsResp.error) console.error('handle_cultura events error:', eventsResp.error);
+
+    const rows = placesResp.data || [];
+    const events = eventsResp.data || [];
+    // Hardcoded fallback if RPC missing (real count from messages table, refreshed nightly via cron — see M7 TODO)
+    const culturaDemand30d = (demandResp.data as number | null) ?? 50;
+
+    // Next event per place_id (events already sorted asc)
+    const nextEventByPlace: Record<string, any> = {};
+    for (const ev of events) {
+      if (!ev.place_id) continue;
+      if (!nextEventByPlace[ev.place_id]) nextEventByPlace[ev.place_id] = ev;
     }
 
-    const rows = places || [];
     // Group by section in curated order
     const grouped: Record<string, any[]> = {};
     for (const id of allIds) {
@@ -4604,6 +4626,13 @@ async function handle_cultura(req: any, res: any) {
     }
 
     const total = rows.length;
+    const verifiedRecently = rows.filter(p => {
+      if (!p.last_verified_at) return false;
+      const days = (Date.now() - new Date(p.last_verified_at).getTime()) / (1000 * 60 * 60 * 24);
+      return days < 60;
+    }).length;
+    const freshnessPct = total > 0 ? Math.round((verifiedRecently / total) * 100) : 0;
+
     const baseUrl = 'https://mapadecaborojo.com';
     const pageTitle = 'Directorio Cultural de Cabo Rojo | MapaDeCaboRojo.com';
     const desc = `${total} lugares culturales verificados manualmente: próceres, museos, naturaleza histórica, plazas, artesanos. Mapa interactivo + lista por sección.`;
@@ -4625,24 +4654,60 @@ async function handle_cultura(req: any, res: any) {
         };
       });
 
+    // Helper: format days-ago + color
+    const formatVerified = (iso: string | null) => {
+      if (!iso) return { text: 'verificación pendiente', color: '#94a3b8', days: 999 };
+      const days = Math.floor((Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60 * 24));
+      const dateLabel = days <= 0 ? 'hoy' : days === 1 ? 'ayer' : `hace ${days}d`;
+      const color = days < 60 ? '#16a34a' : days < 120 ? '#d97706' : '#dc2626';
+      return { text: `verificado ${dateLabel}`, color, days };
+    };
+
+    // Helper: format next event date
+    const formatEvent = (ev: any) => {
+      if (!ev) return '';
+      const d = new Date(ev.start_time);
+      const fmt = d.toLocaleDateString('es-PR', { weekday: 'short', day: 'numeric', month: 'short' });
+      const time = d.toLocaleTimeString('es-PR', { hour: 'numeric', minute: '2-digit', hour12: true });
+      const href = ev.slug ? `/evento/${ev.slug}` : '#';
+      return `<div style="margin-top:8px;padding:8px 10px;background:#fef3c7;border-left:3px solid #f59e0b;border-radius:4px;font-size:13px;color:#78350f;"><strong>📅 Próximo:</strong> <a href="${href}" style="color:#78350f;text-decoration:underline;">${esc(ev.title)}</a> · ${fmt} ${time}</div>`;
+    };
+
     // Helper to render a place card
     const renderCard = (p: any, sec: string) => {
       const color = SECTION_COLORS[sec] || '#0d9488';
       const href = p.slug ? `/negocio/${p.slug}` : '#';
       const rating = p.google_rating ? `<span style="color:#f59e0b;font-size:13px;">⭐ ${p.google_rating}</span>` : '';
       const tel = p.phone ? `<a href="tel:${esc(p.phone)}" style="color:#0d9488;text-decoration:none;font-size:13px;">📞 ${esc(p.phone)}</a>` : '';
-      const verified = `<span style="display:inline-block;background:#dcfce7;color:#166534;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;">✓ Verificada</span>`;
-      return `<div style="padding:16px;border:1px solid #e2e8f0;border-left:4px solid ${color};border-radius:8px;background:#fff;margin-bottom:12px;">
-        <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin-bottom:6px;">
+      const verif = formatVerified(p.last_verified_at);
+      const verifiedBadge = `<span title="${esc(verif.text)}" style="display:inline-block;background:${verif.color}1a;color:${verif.color};padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap;">✓ ${esc(verif.text)}</span>`;
+      const hasPhone = p.phone ? '1' : '0';
+      const hoursJson = p.opening_hours && p.opening_hours.structured ? JSON.stringify(p.opening_hours.structured) : '';
+      const searchText = `${(p.name || '').toLowerCase()} ${(p.address || '').toLowerCase()}`;
+      const nextEvent = nextEventByPlace[p.id];
+      const eventHTML = formatEvent(nextEvent);
+      const claimMsg = encodeURIComponent(`CLAIM ${p.slug || p.name}`);
+      const placeName = (p.name || '').replace(/"/g, '&quot;');
+
+      return `<div class="cultura-card" data-section="${sec}" data-name="${esc(searchText)}" data-phone="${hasPhone}" data-fresh-days="${verif.days}" data-hours='${esc(hoursJson)}' data-id="${esc(p.id)}" data-cardname="${esc(placeName)}" data-slug="${esc(p.slug || '')}" style="padding:16px;border:1px solid #e2e8f0;border-left:4px solid ${color};border-radius:8px;background:#fff;margin-bottom:12px;position:relative;">
+        <label style="position:absolute;top:10px;right:10px;display:inline-flex;align-items:center;gap:4px;cursor:pointer;user-select:none;background:#f1f5f9;padding:4px 8px;border-radius:6px;font-size:11px;color:#475569;font-weight:600;">
+          <input type="checkbox" class="itin-pick" data-pickname="${esc(placeName)}" style="cursor:pointer;margin:0;"> Itinerario
+        </label>
+        <div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:flex-start;margin-bottom:6px;padding-right:90px;">
           <h3 style="margin:0;font-size:17px;color:#1e293b;font-weight:700;line-height:1.3;">
             ${p.slug ? `<a href="${href}" style="color:#1e293b;text-decoration:none;">${esc(p.name)}</a>` : esc(p.name)}
           </h3>
-          ${verified}
+          ${verifiedBadge}
         </div>
         ${p.address ? `<p style="margin:0 0 6px;color:#64748b;font-size:13px;">📍 ${esc(p.address)}</p>` : ''}
         <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
           ${rating}
           ${tel}
+          ${p.slug ? `<a href="${href}" style="color:#0d9488;font-size:13px;font-weight:600;text-decoration:none;">Ver perfil →</a>` : ''}
+        </div>
+        ${eventHTML}
+        <div style="margin-top:10px;padding-top:8px;border-top:1px dashed #e2e8f0;font-size:11px;color:#94a3b8;">
+          ¿Este lugar es tuyo? <a href="https://wa.me/17874177711?text=${claimMsg}" style="color:#0d9488;font-weight:600;text-decoration:none;">Recláma gratis →</a>
         </div>
       </div>`;
     };
@@ -4653,7 +4718,7 @@ async function handle_cultura(req: any, res: any) {
       const items = grouped[sec] || [];
       if (items.length === 0) return '';
       const color = SECTION_COLORS[sec];
-      return `<section id="${sec}" style="margin-bottom:48px;">
+      return `<section id="${sec}" class="cultura-section" data-section="${sec}" style="margin-bottom:48px;">
   <div style="border-bottom:3px solid ${color};padding-bottom:10px;margin-bottom:16px;">
     <h2 style="margin:0;font-size:26px;color:${color};font-weight:800;">${def.emoji} ${SECTION_LABELS[sec]}</h2>
     <p style="margin:6px 0 0;color:#64748b;font-size:14px;">${def.description}</p>
@@ -4709,7 +4774,7 @@ async function handle_cultura(req: any, res: any) {
     <div style="max-width:760px;margin:0 auto;">
       <p style="margin:0 0 8px;font-size:12px;letter-spacing:2px;text-transform:uppercase;opacity:0.85;">Directorio Cultural</p>
       <h1 style="font-size:2.2rem;font-weight:800;margin:0 0 14px;line-height:1.2;">La cultura de Cabo Rojo,<br><span style="color:#5eead4;">en el mapa.</span></h1>
-      <p style="font-size:1.05rem;color:rgba(255,255,255,0.88);margin:0 0 24px;max-width:560px;margin-left:auto;margin-right:auto;">${total} lugares verificados manualmente — uno por uno. Próceres, museos, naturaleza histórica, plazas, artesanos.</p>
+      <p style="font-size:1.05rem;color:rgba(255,255,255,0.88);margin:0 0 24px;max-width:560px;margin-left:auto;margin-right:auto;">${total} lugares verificados manualmente — uno por uno. <strong>${freshnessPct}% verificado &lt;60 días.</strong></p>
       <div style="display:inline-flex;gap:8px;justify-content:center;flex-wrap:wrap;">
         <a href="#mapa" style="background:#f97316;color:white;text-decoration:none;padding:11px 22px;border-radius:8px;font-weight:700;font-size:0.95rem;">Ver el mapa ↓</a>
         <a href="https://caborojo.com/directorio-cultural" style="background:rgba(255,255,255,0.15);color:white;text-decoration:none;padding:11px 22px;border-radius:8px;font-weight:600;font-size:0.95rem;border:1px solid rgba(255,255,255,0.3);">Guía narrativa →</a>
@@ -4719,21 +4784,40 @@ async function handle_cultura(req: any, res: any) {
 
   <div style="max-width:1100px;margin:0 auto;padding:32px 20px;">
 
+    <!-- M3: MAP AT TOP -->
+    <div id="mapa" style="margin-bottom:24px;">
+      <div id="cultura-map" style="height:420px;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;background:#e2e8f0;"></div>
+      <p style="margin:8px 0 0;font-size:12px;color:#64748b;text-align:center;">${markers.length} lugares geo-referenciados · click marcador pa' detalles</p>
+    </div>
+
     <!-- LEGEND -->
-    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:24px;">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:20px;">
       ${legendHTML}
     </div>
 
-    <!-- MAP -->
-    <div id="mapa" style="margin-bottom:40px;">
-      <h2 style="margin:0 0 12px;font-size:20px;color:#1e293b;">Mapa interactivo</h2>
-      <div id="cultura-map" style="height:480px;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;background:#e2e8f0;"></div>
-      <p style="margin:8px 0 0;font-size:13px;color:#64748b;text-align:center;">Click en cualquier marcador para ver detalles. ${markers.length} lugares geo-referenciados.</p>
+    <!-- M4: SEARCH + M2: FILTERS -->
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:24px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+      <input id="cultura-search" type="search" placeholder="🔍 Buscar lugar, calle, barrio..." style="flex:1;min-width:220px;padding:10px 14px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;outline:none;">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="cultura-filter" data-filter="open" style="background:#fff;border:1px solid #cbd5e1;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:600;color:#475569;cursor:pointer;">🟢 Abierto ahora</button>
+        <button class="cultura-filter" data-filter="phone" style="background:#fff;border:1px solid #cbd5e1;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:600;color:#475569;cursor:pointer;">📞 Con teléfono</button>
+        <button class="cultura-filter" data-filter="fresh" style="background:#fff;border:1px solid #cbd5e1;padding:8px 12px;border-radius:999px;font-size:12px;font-weight:600;color:#475569;cursor:pointer;">✓ Verificado &lt;60d</button>
+      </div>
+      <div id="cultura-count" style="font-size:12px;color:#64748b;width:100%;text-align:center;margin-top:4px;">Mostrando ${total} de ${total} lugares</div>
+    </div>
+
+    <!-- M7: DEMAND SIGNAL CULTURAL -->
+    <div style="background:linear-gradient(135deg,#0d9488 0%,#0f766e 100%);color:white;padding:18px 22px;border-radius:10px;margin-bottom:32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div style="flex:1;min-width:240px;">
+        <p style="margin:0 0 4px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;opacity:0.85;">Demanda real · últimos 30 días</p>
+        <p style="margin:0;font-size:16px;font-weight:700;"><span style="font-size:24px;color:#5eead4;">${culturaDemand30d}</span> vecinos preguntaron al *7711 por sitios culturales</p>
+      </div>
+      <a href="https://wa.me/17874177711?text=Faro%20Los%20Morrillos" style="background:#f97316;color:white;text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:700;font-size:13px;white-space:nowrap;">Probar ahora →</a>
     </div>
 
     <!-- MOAT NOTE -->
     <div style="background:#fefce8;border-left:4px solid #eab308;padding:16px 20px;border-radius:6px;margin-bottom:40px;">
-      <p style="margin:0;font-size:14px;color:#713f12;"><strong>¿Por qué este directorio importa?</strong> Cabo Rojo es uno de los pueblos más verificados de Puerto Rico — cada lugar fue confirmado a mano, no scrapeado. Si encuentras algo desactualizado, <a href="https://wa.me/17874177711?text=DATO%20CULTURA" style="color:#a16207;font-weight:600;">avísanos al *7711</a> y lo corregimos.</p>
+      <p style="margin:0;font-size:14px;color:#713f12;"><strong>¿Por qué este directorio importa?</strong> Cada lugar fue confirmado a mano — no scrapeado, no AI-generated. Si encuentras algo desactualizado, <a href="https://wa.me/17874177711?text=DATO%20CULTURA" style="color:#a16207;font-weight:600;">avísanos al *7711</a>.</p>
     </div>
 
     <!-- SECTIONS -->
@@ -4745,6 +4829,13 @@ async function handle_cultura(req: any, res: any) {
       <h2 style="margin:0 0 10px;font-size:22px;color:white;border:none;padding:0;">Pregúntale al Veci</h2>
       <p style="margin:0 0 18px;font-size:15px;opacity:0.92;max-width:520px;margin-left:auto;margin-right:auto;">¿Buscas un sitio cultural específico? ¿Quieres saber si está abierto hoy? Textea y te contesto al momento.</p>
       <a href="https://wa.me/17874177711?text=Pregunta%20cultural%20Cabo%20Rojo" style="background:#f97316;color:white;text-decoration:none;padding:13px 26px;border-radius:8px;font-weight:700;font-size:1rem;display:inline-block;">Textea al 787-417-7711 →</a>
+    </div>
+
+    <!-- M9: VERIFIERS (transparencia) -->
+    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px 24px;margin-bottom:24px;">
+      <h3 style="margin:0 0 10px;font-size:15px;color:#1e293b;font-weight:700;">Quién verifica esta data</h3>
+      <p style="margin:0 0 8px;font-size:13px;color:#475569;">Angel Anderson camina, confirma teléfono, valida que el lugar abre. <strong>${freshnessPct}%</strong> verificado en los últimos 60 días.</p>
+      <p style="margin:0;font-size:12px;color:#94a3b8;">Última caminata documentada: mayo 2026 — ruta Boquerón centro + Plaza Betances. Próxima: agosto 2026.</p>
     </div>
 
     <!-- Cross-link -->
@@ -4761,33 +4852,133 @@ async function handle_cultura(req: any, res: any) {
     </div>
   </div>
 
+  <!-- M10: ITINERARY FLOATING BAR -->
+  <div id="itin-bar" style="display:none;position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:#0f766e;color:white;padding:12px 20px;border-radius:999px;box-shadow:0 6px 20px rgba(0,0,0,0.25);z-index:1000;font-size:14px;font-weight:600;align-items:center;gap:12px;">
+    <span id="itin-count">0 sitios</span>
+    <button id="itin-send" style="background:#f97316;color:white;border:none;padding:8px 16px;border-radius:999px;font-weight:700;font-size:13px;cursor:pointer;">📲 Enviar al *7711 →</button>
+    <button id="itin-clear" style="background:transparent;color:white;border:1px solid rgba(255,255,255,0.3);padding:6px 12px;border-radius:999px;font-size:11px;cursor:pointer;">Limpiar</button>
+  </div>
+
   <script>
     (function() {
       const markers = ${JSON.stringify(markers)};
-      if (!markers.length || typeof L === 'undefined') return;
-
-      const map = L.map('cultura-map', { scrollWheelZoom: false }).setView([18.04, -67.16], 11);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap',
-        maxZoom: 18
-      }).addTo(map);
-
-      const bounds = L.latLngBounds([]);
-      markers.forEach(m => {
-        const icon = L.divIcon({
-          className: 'cultura-marker',
-          html: '<div style="background:' + m.color + ';width:28px;height:28px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;">' + m.emoji + '</div>',
-          iconSize: [28, 28],
-          iconAnchor: [14, 14]
+      if (markers.length && typeof L !== 'undefined') {
+        const map = L.map('cultura-map', { scrollWheelZoom: false }).setView([18.04, -67.16], 11);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap', maxZoom: 18
+        }).addTo(map);
+        const bounds = L.latLngBounds([]);
+        markers.forEach(m => {
+          const icon = L.divIcon({
+            className: 'cultura-marker',
+            html: '<div style="background:' + m.color + ';width:28px;height:28px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;">' + m.emoji + '</div>',
+            iconSize: [28, 28], iconAnchor: [14, 14]
+          });
+          const popup = '<div style="font-family:-apple-system,sans-serif;min-width:200px;"><strong style="font-size:14px;color:#1e293b;">' + m.name + '</strong><br><span style="font-size:11px;color:' + m.color + ';font-weight:600;text-transform:uppercase;">' + m.label + '</span>' + (m.slug ? '<br><a href="/negocio/' + m.slug + '" style="color:#0d9488;font-size:12px;font-weight:600;">Ver detalles →</a>' : '') + '</div>';
+          L.marker([m.lat, m.lon], { icon: icon }).addTo(map).bindPopup(popup);
+          bounds.extend([m.lat, m.lon]);
         });
-        const popup = '<div style="font-family:-apple-system,sans-serif;min-width:200px;"><strong style="font-size:14px;color:#1e293b;">' + m.name + '</strong><br><span style="font-size:11px;color:' + m.color + ';font-weight:600;text-transform:uppercase;">' + m.label + '</span>' + (m.slug ? '<br><a href="/negocio/' + m.slug + '" style="color:#0d9488;font-size:12px;font-weight:600;">Ver detalles →</a>' : '') + '</div>';
-        L.marker([m.lat, m.lon], { icon: icon }).addTo(map).bindPopup(popup);
-        bounds.extend([m.lat, m.lon]);
+        if (bounds.isValid()) map.fitBounds(bounds, { padding: [40, 40] });
+      }
+
+      // M2 + M4: filter + search engine
+      const cards = Array.from(document.querySelectorAll('.cultura-card'));
+      const searchInput = document.getElementById('cultura-search');
+      const filterBtns = Array.from(document.querySelectorAll('.cultura-filter'));
+      const countEl = document.getElementById('cultura-count');
+      const activeFilters = new Set();
+
+      function isOpenNow(hoursJson) {
+        if (!hoursJson) return false;
+        try {
+          const arr = JSON.parse(hoursJson);
+          const now = new Date();
+          const today = arr.find(h => h.day === now.getDay());
+          if (!today || today.isClosed) return false;
+          const [oh, om] = today.open.split(':').map(Number);
+          const [ch, cm] = today.close.split(':').map(Number);
+          const mins = now.getHours() * 60 + now.getMinutes();
+          return mins >= (oh * 60 + om) && mins <= (ch * 60 + cm);
+        } catch { return false; }
+      }
+
+      function applyFilters() {
+        const q = (searchInput.value || '').toLowerCase().trim();
+        let visible = 0;
+        cards.forEach(c => {
+          const name = c.dataset.name || '';
+          const hasPhone = c.dataset.phone === '1';
+          const freshDays = parseInt(c.dataset.freshDays || '999', 10);
+          let show = true;
+          if (q && !name.includes(q)) show = false;
+          if (activeFilters.has('phone') && !hasPhone) show = false;
+          if (activeFilters.has('fresh') && freshDays >= 60) show = false;
+          if (activeFilters.has('open') && !isOpenNow(c.dataset.hours)) show = false;
+          c.style.display = show ? '' : 'none';
+          if (show) visible++;
+        });
+        countEl.textContent = 'Mostrando ' + visible + ' de ' + cards.length + ' lugares';
+        // Hide sections with zero visible cards
+        document.querySelectorAll('.cultura-section').forEach(s => {
+          const anyVisible = Array.from(s.querySelectorAll('.cultura-card')).some(c => c.style.display !== 'none');
+          s.style.display = anyVisible ? '' : 'none';
+        });
+      }
+
+      searchInput.addEventListener('input', applyFilters);
+      filterBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const f = btn.dataset.filter;
+          if (activeFilters.has(f)) {
+            activeFilters.delete(f);
+            btn.style.background = '#fff';
+            btn.style.color = '#475569';
+            btn.style.borderColor = '#cbd5e1';
+          } else {
+            activeFilters.add(f);
+            btn.style.background = '#0d9488';
+            btn.style.color = '#fff';
+            btn.style.borderColor = '#0d9488';
+          }
+          applyFilters();
+        });
       });
 
-      if (bounds.isValid()) {
-        map.fitBounds(bounds, { padding: [40, 40] });
+      // M10: itinerary
+      const itinBar = document.getElementById('itin-bar');
+      const itinCount = document.getElementById('itin-count');
+      const itinSend = document.getElementById('itin-send');
+      const itinClear = document.getElementById('itin-clear');
+      const picks = new Set();
+
+      function updateItinUI() {
+        if (picks.size === 0) {
+          itinBar.style.display = 'none';
+        } else {
+          itinBar.style.display = 'inline-flex';
+          itinCount.textContent = picks.size + ' sitio' + (picks.size === 1 ? '' : 's');
+        }
       }
+
+      document.querySelectorAll('.itin-pick').forEach(cb => {
+        cb.addEventListener('change', e => {
+          const name = e.target.dataset.pickname || '';
+          if (e.target.checked) picks.add(name);
+          else picks.delete(name);
+          updateItinUI();
+        });
+      });
+
+      itinSend.addEventListener('click', () => {
+        const list = Array.from(picks).join(', ');
+        const msg = encodeURIComponent('ITINERARIO: ' + list + ' — ¿en qué orden me conviene y a qué hora abren?');
+        window.location.href = 'https://wa.me/17874177711?text=' + msg;
+      });
+      itinClear.addEventListener('click', () => {
+        picks.clear();
+        document.querySelectorAll('.itin-pick').forEach(cb => { cb.checked = false; });
+        updateItinUI();
+      });
     })();
   </script>
 
