@@ -20,6 +20,7 @@
     { "source": "/pueblo-en-numeros", "destination": "/api/pages?page=pueblo-en-numeros" },
     { "source": "/municipio", "destination": "/api/pages?page=municipio" },
     { "source": "/turismo", "destination": "/api/pages?page=turismo" },
+    { "source": "/cultura", "destination": "/api/pages?page=cultura" },
     { "source": "/demanda", "destination": "/api/pages?page=demanda" },
     { "source": "/api/intelligence", "destination": "/api/pages?page=intelligence" },
     { "source": "/negocio/:slug", "destination": "/api/negocio?slug=:slug" },

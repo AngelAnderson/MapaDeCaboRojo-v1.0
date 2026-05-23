@@ -91,6 +91,7 @@ export default async function handler(req: any, res: any) {
       { slug: 'historia', priority: 0.6, changefreq: 'monthly' },              // Origin story · build-in-public
       { slug: 'me-conviene', priority: 0.7, changefreq: 'monthly' },
       { slug: 'municipio', priority: 0.6, changefreq: 'weekly' },
+      { slug: 'cultura', priority: 0.8, changefreq: 'monthly' },               // curated cultural directory · 30 verified places
     ]
     narrativePages.forEach(({ slug, priority, changefreq }) => {
       urls.push(`

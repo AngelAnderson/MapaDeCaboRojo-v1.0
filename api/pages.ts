@@ -4479,6 +4479,330 @@ async function handle_me_conviene(req: any, res: any) {
 }
 
 
+// ============ cultura ============
+// Directorio cultural curado — companion mapa-native a caborojo.com/directorio-cultural
+// Lugares verificados manualmente. Mapa Leaflet interactivo + lista por sección.
+
+const CULTURA_CURATED: Record<string, { ids: string[]; emoji: string; description: string }> = {
+  proceres: {
+    emoji: '🏛️',
+    description: 'Padre de la Patria, historiador, pirata legendario, fundador. Un pueblo de 50,000 que parió historia grande.',
+    ids: [
+      '745e4c0e-a78b-4f8c-b052-74081a273bb0', // Mausoleo Betances
+      'ea3bd120-7526-4864-8c91-48811481e388', // Monumento Betances
+      '32605bbd-13fb-486a-aecb-1456a8ee2d58', // Monumento Salvador Brau
+      'fa09d6f0-e503-4ef4-bfaf-1ddd2a529fdb', // Estatua Roberto Cofresí
+      'b88ae5c9-2c64-4439-b754-289b27933799', // Obelisco Fundadores
+      '433a6a09-3ce3-4830-8715-e60b53b2e7f9', // Soldado Caborrojeño
+      'aecb4fa4-7538-4903-b8ee-9f866d9fe0fa', // Esposas Rotas (abolición)
+      'c091c525-3602-411c-8b5d-c5dbb7de9bc1', // Mata con Hacha
+    ],
+  },
+  museos: {
+    emoji: '🎨',
+    description: 'Museos, galerías, teatro restaurado y biblioteca. Pequeños pero honestos — espacios vivos del pueblo.',
+    ids: [
+      'be727263-bdde-4b2f-a2c9-f30a1c1c53e2', // Museo de los Próceres
+      'db5d883f-fcf3-4f92-931a-d0bde003ca69', // Teatro Excelsior
+      '86433ee0-c8fe-406f-bc97-a13ecd3614d2', // Biblioteca Blanca E. Colberg
+      '1543429f-6e58-4206-8ae4-49c5f2e32b7e', // Kenny Enriquez Gallery
+      '9c03475c-a3f3-4668-aa48-9940cae16299', // Centro de Convenciones Betances
+      'f31ad3fb-6ff7-4a4f-b075-ddc265940faf', // Santuario Schoenstatt
+    ],
+  },
+  naturaleza: {
+    emoji: '🏞️',
+    description: 'Faro 1882, salinas trabajadas desde tiempo taíno, cueva del pirata. La geografía de Cabo Rojo es histórica.',
+    ids: [
+      '7d0c0844-63c4-4124-be0a-529222573b6c', // Faro Los Morrillos
+      '31368036-a23b-49af-81ed-2050d968260d', // Las Salinas
+      '11ef2963-23f9-4f5b-8fc0-38a5e5d76c43', // Centro Interpretativo Salinas
+      'c30bcf7f-46e2-4e34-a92c-a39820fb3551', // Refugio Nacional Vida Silvestre
+      'cabf0c3e-a3d4-4cce-a89d-387b2d671b89', // Cueva del Pirata Cofresí
+      '9f0547e6-c075-4e60-801e-ac23b5b03bf2', // Mirador Laguna Guaniquilla
+      '46a82be2-37b6-4cd5-9f14-81622b61b920', // Puente de Piedra
+      '62ec5414-908a-4f6a-8550-0ddcb86ea9f6', // Bosque Estatal Boquerón
+    ],
+  },
+  casco: {
+    emoji: '🏘️',
+    description: 'El centro histórico. Plaza, alcaldía, calles que se llaman como los próceres. Todo en 6 cuadras.',
+    ids: [
+      '1ab53444-2f8e-48c1-872e-808ad1dadb37', // Plaza Betances
+      'd19bc7fb-e778-4644-832b-2195406b9dc3', // Casa Alcaldía
+      '1a8cf8d6-c815-4923-9e23-ee2f9238f760', // Logia Cuna de Betances
+      '397cebc6-8acd-4f35-8c28-174591402936', // Escuela María Civico
+    ],
+  },
+  pueblos: {
+    emoji: '⛵',
+    description: 'Cinco pueblos costeros con personalidad propia. Cada uno cuenta una parte distinta.',
+    ids: [
+      '963cadaf-eb68-4c5d-9050-04bdbc0f9ad2', // Poblado de Boquerón
+      'f0603c38-4d2a-48b7-a320-e9aee28f8dbb', // Puerto Real Fishing Village
+      'fc8bde63-015e-4c4f-a2cf-1906f1cfe3cb', // Mirador Puerto Real
+    ],
+  },
+  artesanos: {
+    emoji: '🎭',
+    description: 'Lo hecho a mano por gente del pueblo. No souvenirs de aeropuerto — oficio.',
+    ids: [
+      '2f665786-3502-4e24-a495-d0906c5e4e6e', // Plaza Artesana Rolando Ortiz
+      'fa4a9dd9-fe00-48cc-bf59-6b4f8d19e87e', // Artesanías Sakal Shalom
+    ],
+  },
+};
+
+const SECTION_LABELS: Record<string, string> = {
+  proceres: 'Próceres y Memoria',
+  museos: 'Museos y Espacios Culturales',
+  naturaleza: 'Naturaleza con Historia',
+  casco: 'Casco Urbano Histórico',
+  pueblos: 'Pueblos Costeros',
+  artesanos: 'Artesanos y Arte',
+};
+
+const SECTION_COLORS: Record<string, string> = {
+  proceres: '#dc2626',     // rojo (memoria)
+  museos: '#7c3aed',       // morado (cultura)
+  naturaleza: '#16a34a',   // verde (naturaleza)
+  casco: '#0d9488',        // teal (centro)
+  pueblos: '#0284c7',      // azul (mar)
+  artesanos: '#f97316',    // naranja (artesanía)
+};
+
+async function handle_cultura(req: any, res: any) {
+  try {
+    // Flatten all curated IDs
+    const allIds: string[] = [];
+    const idToSection: Record<string, string> = {};
+    for (const [section, def] of Object.entries(CULTURA_CURATED)) {
+      for (const id of def.ids) {
+        allIds.push(id);
+        idToSection[id] = section;
+      }
+    }
+
+    const { data: places, error } = await supabase
+      .from('places')
+      .select('id, name, slug, address, lat, lon, google_rating, phone, website, plan, is_featured')
+      .in('id', allIds);
+
+    if (error) {
+      console.error('handle_cultura supabase error:', error);
+    }
+
+    const rows = places || [];
+    // Group by section in curated order
+    const grouped: Record<string, any[]> = {};
+    for (const id of allIds) {
+      const p = rows.find(r => r.id === id);
+      if (!p) continue;
+      const sec = idToSection[id];
+      if (!grouped[sec]) grouped[sec] = [];
+      grouped[sec].push(p);
+    }
+
+    const total = rows.length;
+    const baseUrl = 'https://mapadecaborojo.com';
+    const pageTitle = 'Directorio Cultural de Cabo Rojo | MapaDeCaboRojo.com';
+    const desc = `${total} lugares culturales verificados manualmente: próceres, museos, naturaleza histórica, plazas, artesanos. Mapa interactivo + lista por sección.`;
+
+    // Build marker JSON for Leaflet
+    const markers = rows
+      .filter(p => p.lat && p.lon)
+      .map(p => {
+        const sec = idToSection[p.id];
+        return {
+          lat: p.lat,
+          lon: p.lon,
+          name: p.name,
+          slug: p.slug || '',
+          section: sec,
+          label: SECTION_LABELS[sec] || sec,
+          color: SECTION_COLORS[sec] || '#0d9488',
+          emoji: CULTURA_CURATED[sec]?.emoji || '📍',
+        };
+      });
+
+    // Helper to render a place card
+    const renderCard = (p: any, sec: string) => {
+      const color = SECTION_COLORS[sec] || '#0d9488';
+      const href = p.slug ? `/negocio/${p.slug}` : '#';
+      const rating = p.google_rating ? `<span style="color:#f59e0b;font-size:13px;">⭐ ${p.google_rating}</span>` : '';
+      const tel = p.phone ? `<a href="tel:${esc(p.phone)}" style="color:#0d9488;text-decoration:none;font-size:13px;">📞 ${esc(p.phone)}</a>` : '';
+      const verified = `<span style="display:inline-block;background:#dcfce7;color:#166534;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;">✓ Verificada</span>`;
+      return `<div style="padding:16px;border:1px solid #e2e8f0;border-left:4px solid ${color};border-radius:8px;background:#fff;margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin-bottom:6px;">
+          <h3 style="margin:0;font-size:17px;color:#1e293b;font-weight:700;line-height:1.3;">
+            ${p.slug ? `<a href="${href}" style="color:#1e293b;text-decoration:none;">${esc(p.name)}</a>` : esc(p.name)}
+          </h3>
+          ${verified}
+        </div>
+        ${p.address ? `<p style="margin:0 0 6px;color:#64748b;font-size:13px;">📍 ${esc(p.address)}</p>` : ''}
+        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+          ${rating}
+          ${tel}
+        </div>
+      </div>`;
+    };
+
+    // Build sections HTML
+    const sectionsHTML = Object.keys(CULTURA_CURATED).map(sec => {
+      const def = CULTURA_CURATED[sec];
+      const items = grouped[sec] || [];
+      if (items.length === 0) return '';
+      const color = SECTION_COLORS[sec];
+      return `<section id="${sec}" style="margin-bottom:48px;">
+  <div style="border-bottom:3px solid ${color};padding-bottom:10px;margin-bottom:16px;">
+    <h2 style="margin:0;font-size:26px;color:${color};font-weight:800;">${def.emoji} ${SECTION_LABELS[sec]}</h2>
+    <p style="margin:6px 0 0;color:#64748b;font-size:14px;">${def.description}</p>
+  </div>
+  ${items.map(p => renderCard(p, sec)).join('')}
+</section>`;
+    }).join('');
+
+    const legendHTML = Object.entries(SECTION_COLORS).map(([sec, color]) => {
+      const def = CULTURA_CURATED[sec];
+      return `<a href="#${sec}" style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;border:1px solid #e2e8f0;border-radius:999px;text-decoration:none;color:#1e293b;font-size:13px;font-weight:600;">
+        <span style="width:12px;height:12px;border-radius:50%;background:${color};display:inline-block;"></span>
+        ${def?.emoji || ''} ${SECTION_LABELS[sec]}
+      </a>`;
+    }).join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${pageTitle}</title>
+  <meta name="description" content="${desc}">
+  <link rel="canonical" href="${baseUrl}/cultura">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="${pageTitle}">
+  <meta property="og:description" content="${desc}">
+  <meta property="og:url" content="${baseUrl}/cultura">
+  <meta property="og:site_name" content="MapaDeCaboRojo.com">
+  <meta property="og:locale" content="es_PR">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script type="application/ld+json">${JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Directorio Cultural de Cabo Rojo",
+    "description": desc,
+    "url": `${baseUrl}/cultura`,
+    "numberOfItems": total,
+    "itemListElement": rows.map((p, i) => ({
+      "@type": "ListItem",
+      "position": i + 1,
+      "name": p.name,
+      "url": p.slug ? `${baseUrl}/negocio/${p.slug}` : `${baseUrl}/cultura`
+    }))
+  })}</script>
+</head>
+<body style="margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;color:#1e293b;line-height:1.6;">
+
+  <!-- HERO -->
+  <div style="background:linear-gradient(135deg,#0d9488 0%,#0f766e 50%,#134e4a 100%);color:white;padding:56px 24px;text-align:center;">
+    <div style="max-width:760px;margin:0 auto;">
+      <p style="margin:0 0 8px;font-size:12px;letter-spacing:2px;text-transform:uppercase;opacity:0.85;">Directorio Cultural</p>
+      <h1 style="font-size:2.2rem;font-weight:800;margin:0 0 14px;line-height:1.2;">La cultura de Cabo Rojo,<br><span style="color:#5eead4;">en el mapa.</span></h1>
+      <p style="font-size:1.05rem;color:rgba(255,255,255,0.88);margin:0 0 24px;max-width:560px;margin-left:auto;margin-right:auto;">${total} lugares verificados manualmente — uno por uno. Próceres, museos, naturaleza histórica, plazas, artesanos.</p>
+      <div style="display:inline-flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+        <a href="#mapa" style="background:#f97316;color:white;text-decoration:none;padding:11px 22px;border-radius:8px;font-weight:700;font-size:0.95rem;">Ver el mapa ↓</a>
+        <a href="https://caborojo.com/directorio-cultural" style="background:rgba(255,255,255,0.15);color:white;text-decoration:none;padding:11px 22px;border-radius:8px;font-weight:600;font-size:0.95rem;border:1px solid rgba(255,255,255,0.3);">Guía narrativa →</a>
+      </div>
+    </div>
+  </div>
+
+  <div style="max-width:1100px;margin:0 auto;padding:32px 20px;">
+
+    <!-- LEGEND -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-bottom:24px;">
+      ${legendHTML}
+    </div>
+
+    <!-- MAP -->
+    <div id="mapa" style="margin-bottom:40px;">
+      <h2 style="margin:0 0 12px;font-size:20px;color:#1e293b;">Mapa interactivo</h2>
+      <div id="cultura-map" style="height:480px;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;background:#e2e8f0;"></div>
+      <p style="margin:8px 0 0;font-size:13px;color:#64748b;text-align:center;">Click en cualquier marcador para ver detalles. ${markers.length} lugares geo-referenciados.</p>
+    </div>
+
+    <!-- MOAT NOTE -->
+    <div style="background:#fefce8;border-left:4px solid #eab308;padding:16px 20px;border-radius:6px;margin-bottom:40px;">
+      <p style="margin:0;font-size:14px;color:#713f12;"><strong>¿Por qué este directorio importa?</strong> Cabo Rojo es uno de los pueblos más verificados de Puerto Rico — cada lugar fue confirmado a mano, no scrapeado. Si encuentras algo desactualizado, <a href="https://wa.me/17874177711?text=DATO%20CULTURA" style="color:#a16207;font-weight:600;">avísanos al *7711</a> y lo corregimos.</p>
+    </div>
+
+    <!-- SECTIONS -->
+    ${sectionsHTML}
+
+    <!-- CTA Veci -->
+    <div style="background:#0f766e;color:white;padding:32px 24px;border-radius:12px;text-align:center;margin:40px 0;">
+      <p style="margin:0 0 8px;font-size:12px;letter-spacing:2px;text-transform:uppercase;opacity:0.85;">Antes de dar vueltas</p>
+      <h2 style="margin:0 0 10px;font-size:22px;color:white;border:none;padding:0;">Pregúntale al Veci</h2>
+      <p style="margin:0 0 18px;font-size:15px;opacity:0.92;max-width:520px;margin-left:auto;margin-right:auto;">¿Buscas un sitio cultural específico? ¿Quieres saber si está abierto hoy? Textea y te contesto al momento.</p>
+      <a href="https://wa.me/17874177711?text=Pregunta%20cultural%20Cabo%20Rojo" style="background:#f97316;color:white;text-decoration:none;padding:13px 26px;border-radius:8px;font-weight:700;font-size:1rem;display:inline-block;">Textea al 787-417-7711 →</a>
+    </div>
+
+    <!-- Cross-link -->
+    <div style="background:#f1f5f9;border:1px solid #e2e8f0;padding:20px 24px;border-radius:8px;margin-top:32px;">
+      <h3 style="margin:0 0 8px;font-size:16px;color:#1e293b;">¿Quieres la guía cultural con narrativa completa?</h3>
+      <p style="margin:0 0 10px;font-size:14px;color:#475569;">Próceres con bio, festivales con fechas, cocina con identidad — todo contado para leer despacio.</p>
+      <a href="https://caborojo.com/directorio-cultural" style="color:#0d9488;font-weight:600;text-decoration:none;">caborojo.com/directorio-cultural →</a>
+    </div>
+
+    <!-- Footer -->
+    <div style="margin-top:48px;padding-top:24px;border-top:1px solid #e2e8f0;text-align:center;color:#64748b;font-size:13px;">
+      <p style="margin:0 0 6px;">Verificado uno por uno · actualizado mayo 2026 · próxima revisión agosto 2026</p>
+      <p style="margin:0;font-style:italic;">— Angel | Menos revolú, más sistema, mejor vida.</p>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const markers = ${JSON.stringify(markers)};
+      if (!markers.length || typeof L === 'undefined') return;
+
+      const map = L.map('cultura-map', { scrollWheelZoom: false }).setView([18.04, -67.16], 11);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap',
+        maxZoom: 18
+      }).addTo(map);
+
+      const bounds = L.latLngBounds([]);
+      markers.forEach(m => {
+        const icon = L.divIcon({
+          className: 'cultura-marker',
+          html: '<div style="background:' + m.color + ';width:28px;height:28px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;font-size:14px;">' + m.emoji + '</div>',
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
+        });
+        const popup = '<div style="font-family:-apple-system,sans-serif;min-width:200px;"><strong style="font-size:14px;color:#1e293b;">' + m.name + '</strong><br><span style="font-size:11px;color:' + m.color + ';font-weight:600;text-transform:uppercase;">' + m.label + '</span>' + (m.slug ? '<br><a href="/negocio/' + m.slug + '" style="color:#0d9488;font-size:12px;font-weight:600;">Ver detalles →</a>' : '') + '</div>';
+        L.marker([m.lat, m.lon], { icon: icon }).addTo(map).bindPopup(popup);
+        bounds.extend([m.lat, m.lon]);
+      });
+
+      if (bounds.isValid()) {
+        map.fitBounds(bounds, { padding: [40, 40] });
+      }
+    })();
+  </script>
+
+</body></html>`;
+
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600');
+    res.status(200).send(html);
+  } catch (err: any) {
+    console.error('handle_cultura error:', err);
+    res.status(500).send(`<html><body><h1>Error</h1><pre>${esc(err?.message || 'Unknown error')}</pre></body></html>`);
+  }
+}
+
+
 // ============ ROUTER ============
 export default async function handler(req: any, res: any) {
   const page = req.query?.page || '';
@@ -4492,6 +4816,7 @@ export default async function handler(req: any, res: any) {
     case 'admin-lifecycle-queue': return handle_admin_lifecycle_queue(req, res);
     case 'pueblo-en-numeros': return handle_pueblo_en_numeros(req, res);
     case 'me-conviene': return handle_me_conviene(req, res);
+    case 'cultura': return handle_cultura(req, res);
     default: return res.status(404).json({ error: 'Page not found' });
   }
 }
