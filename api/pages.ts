@@ -4774,7 +4774,7 @@ async function handle_cultura(req: any, res: any) {
     <div style="max-width:760px;margin:0 auto;">
       <p style="margin:0 0 8px;font-size:12px;letter-spacing:2px;text-transform:uppercase;opacity:0.85;">Directorio Cultural</p>
       <h1 style="font-size:2.2rem;font-weight:800;margin:0 0 14px;line-height:1.2;">La cultura de Cabo Rojo,<br><span style="color:#5eead4;">en el mapa.</span></h1>
-      <p style="font-size:1.05rem;color:rgba(255,255,255,0.88);margin:0 0 24px;max-width:560px;margin-left:auto;margin-right:auto;">${total} lugares verificados manualmente — uno por uno. <strong>${freshnessPct}% verificado &lt;60 días.</strong></p>
+      <p style="font-size:1.05rem;color:rgba(255,255,255,0.88);margin:0 0 24px;max-width:560px;margin-left:auto;margin-right:auto;">${total} lugares verificados manualmente — uno por uno. Próceres, museos, naturaleza histórica, plazas, artesanos.</p>
       <div style="display:inline-flex;gap:8px;justify-content:center;flex-wrap:wrap;">
         <a href="#mapa" style="background:#f97316;color:white;text-decoration:none;padding:11px 22px;border-radius:8px;font-weight:700;font-size:0.95rem;">Ver el mapa ↓</a>
         <a href="https://caborojo.com/directorio-cultural" style="background:rgba(255,255,255,0.15);color:white;text-decoration:none;padding:11px 22px;border-radius:8px;font-weight:600;font-size:0.95rem;border:1px solid rgba(255,255,255,0.3);">Guía narrativa →</a>
@@ -4834,7 +4834,7 @@ async function handle_cultura(req: any, res: any) {
     <!-- M9: VERIFIERS (transparencia) -->
     <div style="background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px 24px;margin-bottom:24px;">
       <h3 style="margin:0 0 10px;font-size:15px;color:#1e293b;font-weight:700;">Quién verifica esta data</h3>
-      <p style="margin:0 0 8px;font-size:13px;color:#475569;">Angel Anderson camina, confirma teléfono, valida que el lugar abre. <strong>${freshnessPct}%</strong> verificado en los últimos 60 días.</p>
+      <p style="margin:0 0 8px;font-size:13px;color:#475569;">Angel Anderson camina, confirma teléfono, valida que el lugar abre. Cada uno fue confirmado a mano — no scrapeado, no AI-generated.</p>
       <p style="margin:0;font-size:12px;color:#94a3b8;">Última caminata documentada: mayo 2026 — ruta Boquerón centro + Plaza Betances. Próxima: agosto 2026.</p>
     </div>
 
