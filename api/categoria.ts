@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { correctButtonHtml } from './lib/correct-button.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -107,6 +108,8 @@ const CATEGORY_MAP: Record<string, { match: string[]; display: string; emoji: st
   opticas:        { match: ['óptica', 'optica', 'optometry', 'oftalmología', 'oftalmologia', 'optometrista', 'Óptica'], display: 'Ópticas', emoji: '👓', nameMatch: true },
   'salud-mental': { match: ['salud mental', 'Salud Mental', 'psicólogo', 'psicología', 'psychologist', 'psychiatrist', 'psiquiatra', 'terapeuta'], display: 'Salud Mental', emoji: '🧠', nameMatch: true },
   quiropractico:  { match: ['quiropractico', 'quiropráctico', 'chiropractor', 'chiropractic', 'quiropráctica'], display: 'Quiroprácticos', emoji: '🦴', nameMatch: true },
+  fisiatra:       { match: ['fisiatra', 'fisiatría', 'fisiatria', 'medicina física', 'medicina fisica', 'rehabilitación', 'rehabilitacion', 'physiatrist', 'physical medicine'], display: 'Fisiatras en Cabo Rojo', emoji: '🩺', nameMatch: true },
+  fisiatras:      { match: ['fisiatra', 'fisiatría', 'fisiatria', 'medicina física', 'medicina fisica', 'rehabilitación', 'rehabilitacion', 'physiatrist', 'physical medicine'], display: 'Fisiatras en Cabo Rojo', emoji: '🩺', nameMatch: true },
   gimnasio:       { match: ['fitness', 'gym', 'gimnasio', 'crossfit', 'training', 'ejercicio', 'boxeo', 'boxing', 'yoga', 'pilates', 'cardio', 'pesas', 'zumba', 'spinning', 'runner', 'running'], display: 'Gimnasios & Fitness', emoji: '💪', nameMatch: true },
   gimnasios:      { match: ['fitness', 'gym', 'gimnasio', 'crossfit', 'training', 'ejercicio', 'boxeo', 'boxing', 'yoga', 'pilates', 'cardio', 'pesas', 'zumba', 'spinning', 'runner', 'running'], display: 'Gimnasios & Fitness', emoji: '💪', nameMatch: true },
   hospedaje:      { match: ['hospedaje', 'lodging', 'hotel', 'LODGING', 'HOSPEDAJE', 'alojamiento'], display: 'Hospedaje', emoji: '🏨' },
@@ -251,6 +254,7 @@ export default async function handler(req: any, res: any) {
     'salud-mental': 'salud-mental',
     quiropractico: 'quiropractico',
     gimnasio: 'gimnasio', gimnasios: 'gimnasio',
+    fisiatra: 'fisiatra', fisiatras: 'fisiatra',
   };
   const detailRoute = HEALTH_DETAIL_ROUTES[cat] || null;
 
@@ -276,6 +280,8 @@ export default async function handler(req: any, res: any) {
     quiropractico:  { article: 'un',  noun: 'quiropráctico' },
     gimnasio:       { article: 'un',  noun: 'gimnasio' },
     gimnasios:      { article: 'un',  noun: 'gimnasio' },
+    fisiatra:       { article: 'un',  noun: 'fisiatra' },
+    fisiatras:      { article: 'un',  noun: 'fisiatra' },
   };
 
   const itemListElements = filtered.map((p: any, i: number) => ({
@@ -586,6 +592,7 @@ export default async function handler(req: any, res: any) {
       }
     })();
   </script>
+  ${correctButtonHtml({ pageType: 'categoria' })}
 </body>
 </html>`;
 

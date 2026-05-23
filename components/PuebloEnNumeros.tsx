@@ -118,6 +118,7 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose }) => {
     { label: 'Ópticas', href: '/categoria/optica' },
     { label: 'Salud mental', href: '/categoria/salud-mental' },
     { label: 'Quiroprácticos', href: '/categoria/quiropractico' },
+    { label: 'Fisiatras', href: '/categoria/fisiatra' },
   ];
 
   const serviciosChips: { label: string; href: string }[] = [

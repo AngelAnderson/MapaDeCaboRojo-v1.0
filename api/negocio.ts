@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { correctButtonHtml } from './lib/correct-button.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -324,9 +325,9 @@ export default async function handler(req: any, res: any) {
         <a href="https://mapadecaborojo.com" style="color: #0d9488; text-decoration: none;">MapaDeCaboRojo.com</a>
         · Un proyecto de <a href="https://angelanderson.com" style="color: #0d9488; text-decoration: none;">Angel Anderson</a>
       </p>
-      <p style="margin-top: 0.5rem;"><a href="https://wa.me/17874177711?text=ERROR%20${encodeURIComponent(place.name)}%3A%20" style="color:#94a3b8; font-size:0.75rem; text-decoration:none;">Reportar error en esta página</a></p>
     </footer>
   </div>
+  ${correctButtonHtml({ pageType: 'negocio', placeId: place.id })}
 </body>
 </html>`;
 

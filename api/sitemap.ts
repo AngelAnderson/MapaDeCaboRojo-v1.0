@@ -104,7 +104,7 @@ export default async function handler(req: any, res: any) {
     })
 
     // Category pages
-    const categories = ['restaurantes', 'playas', 'salud', 'farmacia', 'dentista', 'veterinario', 'medico', 'hospital', 'laboratorio', 'optica', 'salud-mental', 'quiropractico', 'gimnasio', 'hospedaje', 'servicios', 'compras', 'entretenimiento', 'turismo', 'deportes', 'belleza', 'automotriz', 'marina', 'educacion', 'gobierno'];
+    const categories = ['restaurantes', 'playas', 'salud', 'farmacia', 'dentista', 'veterinario', 'medico', 'hospital', 'laboratorio', 'optica', 'salud-mental', 'quiropractico', 'gimnasio', 'fisiatra', 'hospedaje', 'servicios', 'compras', 'entretenimiento', 'turismo', 'deportes', 'belleza', 'automotriz', 'marina', 'educacion', 'gobierno'];
     categories.forEach((cat) => {
       urls.push(`
         <url>
@@ -157,6 +157,8 @@ export default async function handler(req: any, res: any) {
           healthRoute = 'quiropractico';
         } else if (nameLower.includes('fitness') || nameLower.includes('gym') || nameLower.includes('crossfit')) {
           healthRoute = 'gimnasio';
+        } else if (subcatLower === 'fisiatra' || subcatLower.includes('fisiatr') || nameLower.includes('fisiatr')) {
+          healthRoute = 'fisiatra';
         } else if (subcatLower.includes('doctor') || nameLower.includes('dr.') || nameLower.includes('dra.')) {
           healthRoute = 'medico';
         }

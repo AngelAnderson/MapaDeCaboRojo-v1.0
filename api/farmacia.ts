@@ -20,6 +20,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js';
+import { correctButtonHtml } from './lib/correct-button.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -42,6 +43,7 @@ const HEALTH_CONFIG: Record<string, { schemaType: string; label: string; labelPl
   'salud-mental': { schemaType: 'Physician',           label: 'Salud Mental',       labelPlural: 'Salud Mental',          emoji: '🧠', color: '#ec4899', colorDark: '#db2777' },
   quiropractico:  { schemaType: 'Physician',           label: 'Quiropráctico',      labelPlural: 'Quiroprácticos',        emoji: '🦴', color: '#14b8a6', colorDark: '#0d9488' },
   gimnasio:       { schemaType: 'ExerciseGym',         label: 'Gimnasio',           labelPlural: 'Gimnasios & Fitness',   emoji: '💪', color: '#f97316', colorDark: '#ea580c' },
+  fisiatra:       { schemaType: 'Physician',           label: 'Fisiatra',           labelPlural: 'Fisiatras',             emoji: '🩺', color: '#0891b2', colorDark: '#0e7490' },
 };
 
 function esc(str: string | null | undefined): string {
@@ -461,9 +463,9 @@ export default async function handler(req: any, res: any) {
     <footer>
       <p>Hecho con orgullo en Cabo Rojo, Puerto Rico</p>
       <p style="margin-top:4px;"><a href="${baseUrl}">MapaDeCaboRojo.com</a> &middot; Un proyecto de <a href="https://angelanderson.com">Angel Anderson</a></p>
-      <p style="margin-top:0.5rem;"><a href="https://wa.me/17874177711?text=ERROR%20${encodeURIComponent(place.name)}%3A%20" style="color:#94a3b8;font-size:0.75rem;text-decoration:none;">Reportar error en esta página</a></p>
     </footer>
   </div>
+  ${correctButtonHtml({ pageType: 'farmacia', placeId: place.id })}
 </body>
 </html>`;
 
