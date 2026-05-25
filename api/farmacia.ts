@@ -147,6 +147,18 @@ export default async function handler(req: any, res: any) {
     if (byId) place = byId;
   }
 
+  // #7 Fetch native reviews (approved only) + stats
+  let reviews: any[] = [];
+  let reviewStats: { count: number; avg_rating: number | null; recommend_pct: number | null } = { count: 0, avg_rating: null, recommend_pct: null };
+  if (place) {
+    const [{ data: revData }, { data: statsData }] = await Promise.all([
+      supabase.from('place_reviews_approved').select('*').eq('place_id', place.id).order('created_at', { ascending: false }).limit(3),
+      supabase.rpc('place_review_stats', { p_place_id: place.id }),
+    ]);
+    if (revData) reviews = revData;
+    if (statsData && statsData[0]) reviewStats = statsData[0];
+  }
+
   if (!place) {
     res.status(404).send(`<!DOCTYPE html>
 <html lang="es">
@@ -522,6 +534,56 @@ export default async function handler(req: any, res: any) {
     <div style="background:white;border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
       <h2 style="font-size:1.05rem;font-weight:700;color:${config.color};margin-bottom:0.5rem;">${lang==='en'?headerEn:headerEs}</h2>
       ${table}
+    </div>`;
+    })()}
+
+    ${(() => {
+      // #7 Native reviews section — moderated, plan-specific, via bot *7711
+      if (!['fisiatra','medico','dentista','laboratorio','optica','salud-mental','quiropractico','hospital','farmacia'].includes(type)) return '';
+      const heading = lang === 'en' ? '⭐ What vecinos say' : '⭐ Lo que dicen los vecinos';
+      const empty = lang === 'en'
+        ? `<p style="color:#475569;font-size:0.9rem;margin-bottom:0.75rem;">No reviews yet for ${placeName}.</p>
+           <div style="background:#dbeafe;border-left:3px solid #3b82f6;padding:0.75rem 1rem;border-radius:6px;font-size:0.85rem;color:#1e3a8a;">
+             <strong>Been here? Help other vecinos.</strong> Text <strong>REVIEW ${esc(place.name)} [1-5] [your experience]</strong> to 787-417-7711. Approved within 24h. Plan-specific reviews = trust signal for diáspora.
+           </div>`
+        : `<p style="color:#475569;font-size:0.9rem;margin-bottom:0.75rem;">Aún no hay reseñas de vecinos para ${placeName}.</p>
+           <div style="background:#dbeafe;border-left:3px solid #3b82f6;padding:0.75rem 1rem;border-radius:6px;font-size:0.85rem;color:#1e3a8a;">
+             <strong>¿Has ido? Ayuda a otros vecinos.</strong> Textea <strong>REVIEW ${esc(place.name)} [1-5] [tu experiencia]</strong> al 787-417-7711. Aprobamos en 24h. Reseñas con tu plan médico = señal de confianza pa' diáspora.
+           </div>`;
+      const renderReview = (r: any) => {
+        const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+        const planChip = r.plan_medico ? `<span style="background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:10px;font-size:0.7rem;margin-left:6px;">${esc(r.plan_medico)}</span>` : '';
+        const recBadge = r.recommends ? (lang === 'en' ? '👍 Recommends' : '👍 Recomienda') : '';
+        const dateStr = new Date(r.created_at).toLocaleDateString(lang === 'en' ? 'en-US' : 'es-PR', { year: 'numeric', month: 'short' });
+        return `
+          <div style="padding:0.9rem 0;border-bottom:1px solid #f1f5f9;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <span style="color:#f59e0b;font-size:0.95rem;">${stars}</span>
+              ${planChip}
+              <span style="margin-left:auto;font-size:0.75rem;color:#94a3b8;">${esc(r.phone_last4)} · ${dateStr}</span>
+            </div>
+            <p style="font-size:0.9rem;color:#1e293b;line-height:1.55;margin-bottom:6px;">${esc(r.body)}</p>
+            ${recBadge ? `<p style="font-size:0.75rem;color:#16a34a;font-weight:600;">${recBadge}${r.condition_treated ? ` · ${esc(r.condition_treated)}` : ''}</p>` : ''}
+          </div>`;
+      };
+      const statsHtml = reviewStats.count > 0 && reviewStats.avg_rating
+        ? `<div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:1px solid #e2e8f0;">
+            <div style="display:flex;align-items:baseline;gap:6px;">
+              <span style="font-size:1.6rem;font-weight:800;color:${config.color};">${reviewStats.avg_rating}</span>
+              <span style="font-size:0.85rem;color:#64748b;">/5</span>
+            </div>
+            <div style="font-size:0.8rem;color:#64748b;">
+              ${reviewStats.count} ${lang === 'en' ? (reviewStats.count === 1 ? 'review' : 'reviews') : 'reseña' + (reviewStats.count === 1 ? '' : 's')}
+              ${reviewStats.recommend_pct !== null ? ` · ${reviewStats.recommend_pct}% ${lang === 'en' ? 'recommend' : 'recomienda'}` : ''}
+            </div>
+          </div>`
+        : '';
+      const list = reviews.length > 0 ? reviews.map(renderReview).join('') : empty;
+      return `
+    <div style="background:white;border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+      <h2 style="font-size:1.05rem;font-weight:700;color:${config.color};margin-bottom:0.75rem;">${heading}</h2>
+      ${statsHtml}
+      ${list}
     </div>`;
     })()}
 
