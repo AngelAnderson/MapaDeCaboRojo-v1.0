@@ -159,14 +159,56 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
+  // #6 EN/ES toggle — ?lang=en triggers English variant for diáspora audience
+  const lang: 'es' | 'en' = (req.query.lang as string) === 'en' ? 'en' : 'es';
+  const T = lang === 'en' ? {
+    labelEn: { farmacia:'Pharmacy', dentista:'Dentist', veterinario:'Veterinarian', medico:'Physician', hospital:'Hospital/Clinic', laboratorio:'Lab', optica:'Optician', 'salud-mental':'Mental Health', quiropractico:'Chiropractor', gimnasio:'Gym', fisiatra:'Physiatrist' } as Record<string,string>,
+    labelPluralEn: { farmacia:'Pharmacies', dentista:'Dentists', veterinario:'Veterinarians', medico:'Physicians', hospital:'Hospitals & Clinics', laboratorio:'Labs', optica:'Opticians', 'salud-mental':'Mental Health', quiropractico:'Chiropractors', gimnasio:'Gyms & Fitness', fisiatra:'Physiatrists' } as Record<string,string>,
+    inCaboRojo: 'in Cabo Rojo', address: 'Address', phone: 'Phone', hours: 'Hours', website: 'Website',
+    info: 'Information', faq: 'Frequently asked questions',
+    openNow: 'Open now', closedNow: 'Closed now', open24h: 'Open 24 hours',
+    callNow: 'Call now', waDirect: 'WhatsApp directly', textVeci: 'Text El Veci',
+    needSomething: 'Need something from', verified: 'Verified',
+    relatedSearches: 'Related searches in Cabo Rojo',
+    viewOnMap: (n: string) => `See ${n} on the interactive map`,
+    isYourBusiness: 'Is this your business?',
+    standOut: (l: string) => `Feature your ${l.toLowerCase()} with La Vitrina — photos, services, verified hours, and rank first when people search ${l.toLowerCase()}s in Cabo Rojo. $799/year.`,
+    learnVitrina: 'Learn about La Vitrina',
+    waPreText: (n: string) => `Hello, I found ${n} on MapaDeCaboRojo.com — I'd like to make an appointment / ask a question.`,
+    ctaSubtitle: (n: string) => `Need something from ${n}?`,
+    locale: 'en_US',
+    titleSuffix: (l: string) => `${l} in Cabo Rojo | MapaDeCaboRojo`,
+    descFallback: (n: string, l: string) => `${n} — ${l} in Cabo Rojo, Puerto Rico. Hours, address, phone and more.`,
+  } : {
+    inCaboRojo: 'en Cabo Rojo', address: 'Dirección', phone: 'Teléfono', hours: 'Horario', website: 'Web',
+    info: 'Información', faq: 'Preguntas frecuentes',
+    openNow: 'Abierta ahora', closedNow: 'Cerrada ahora', open24h: 'Abierto 24 horas',
+    callNow: 'Llamar ahora', waDirect: 'WhatsApp directo', textVeci: 'Textea a El Veci',
+    needSomething: '¿Necesitas algo de', verified: 'Verificado',
+    relatedSearches: 'Búsquedas relacionadas en Cabo Rojo',
+    viewOnMap: (n: string) => `Ver ${n} en el mapa interactivo`,
+    isYourBusiness: '¿Es tu negocio?',
+    standOut: (l: string) => `Destaca tu ${l.toLowerCase()} con La Vitrina — fotos, servicios, horarios verificados, y apareces primero cuando busquen ${l.toLowerCase()}s en Cabo Rojo. $799/año.`,
+    learnVitrina: 'Conoce La Vitrina',
+    waPreText: (n: string) => `Hola, encontré ${n} en MapaDeCaboRojo.com — quisiera agendar cita / hacer una pregunta.`,
+    ctaSubtitle: (n: string) => `¿Necesitas algo de ${n}?`,
+    locale: 'es_PR',
+    titleSuffix: (l: string) => `${l} en Cabo Rojo | MapaDeCaboRojo`,
+    descFallback: (n: string, l: string) => `${n} — ${l} en Cabo Rojo, Puerto Rico. Horarios, dirección, teléfono y más.`,
+    labelEn: undefined as any, labelPluralEn: undefined as any,
+  };
   const baseUrl     = 'https://mapadecaborojo.com';
   const pageUrl     = `${baseUrl}/${type}/${esc(place.slug || place.id)}`;
+  const pageUrlEs   = pageUrl;
+  const pageUrlEn   = `${pageUrl}?lang=en`;
   const placeName   = esc(place.name);
-  const nameAlreadyHasLabel = place.name.toLowerCase().includes(config.label.toLowerCase());
-  const title       = nameAlreadyHasLabel ? `${placeName} — Cabo Rojo | MapaDeCaboRojo` : `${placeName} — ${config.label} en Cabo Rojo | MapaDeCaboRojo`;
+  const localizedLabel       = (lang === 'en' && T.labelEn?.[type]) ? T.labelEn[type] : config.label;
+  const localizedLabelPlural = (lang === 'en' && T.labelPluralEn?.[type]) ? T.labelPluralEn[type] : config.labelPlural;
+  const nameAlreadyHasLabel = place.name.toLowerCase().includes(localizedLabel.toLowerCase());
+  const title       = nameAlreadyHasLabel ? `${placeName} — Cabo Rojo | MapaDeCaboRojo` : `${placeName} — ${T.titleSuffix(localizedLabel)}`;
   const description = place.description
     ? esc(place.description).slice(0, 160)
-    : `${placeName} — ${config.label} en Cabo Rojo, Puerto Rico. Horarios, dirección, teléfono y más.`;
+    : T.descFallback(placeName, localizedLabel);
   const image       = place.image_url || 'https://mapadecaborojo.com/og-default.png';
   const hoursText   = formatHours(place.opening_hours);
   const openNow     = isCurrentlyOpen(place.opening_hours);
@@ -231,9 +273,9 @@ export default async function handler(req: any, res: any) {
     if (allText.includes('naturista') || allText.includes('natural')) services.push({ icon: '🌿', label: 'Productos naturales' });
   }
 
-  // WhatsApp direct link for the business (if phone available) — pre-filled w/ context
+  // WhatsApp direct link for the business (if phone available) — pre-filled w/ context (lang-aware)
   const waPhone = (displayPhone || '').replace(/\D/g, '');
-  const waPreText = encodeURIComponent(`Hola, encontré ${place.name} en MapaDeCaboRojo.com — quisiera agendar cita / hacer una pregunta.`);
+  const waPreText = encodeURIComponent(T.waPreText(place.name));
   const waLink = waPhone.length >= 10 ? `https://wa.me/1${waPhone.slice(-10)}?text=${waPreText}` : null;
   const telLink = displayPhone ? `tel:${esc(displayPhone)}` : null;
   // gtag tracking — fires events when vecino clicks call/WA. Pitch ammo for Vitrina.
@@ -290,13 +332,16 @@ export default async function handler(req: any, res: any) {
   const cleanJsonLd = JSON.parse(JSON.stringify(jsonLd));
 
   const html = `<!DOCTYPE html>
-<html lang="es">
+<html lang="${lang}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${esc(title)}</title>
   <meta name="description" content="${description}">
   <link rel="canonical" href="${pageUrl}">
+  <link rel="alternate" hreflang="es-PR" href="${pageUrlEs}">
+  <link rel="alternate" hreflang="en-US" href="${pageUrlEn}">
+  <link rel="alternate" hreflang="x-default" href="${pageUrlEs}">
 
   <!-- Open Graph -->
   <meta property="og:type" content="business.business">
@@ -305,7 +350,7 @@ export default async function handler(req: any, res: any) {
   <meta property="og:image" content="${esc(image)}">
   <meta property="og:url" content="${pageUrl}">
   <meta property="og:site_name" content="MapaDeCaboRojo.com">
-  <meta property="og:locale" content="es_PR">
+  <meta property="og:locale" content="${T.locale}">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
@@ -377,7 +422,7 @@ export default async function handler(req: any, res: any) {
       <div class="hero-body">
         <div>
           <span class="badge">${config.label}</span>
-          <span class="badge ${isOpen ? 'badge-open' : 'badge-closed'}">${isOpen ? 'Abierta ahora' : 'Cerrada ahora'}</span>
+          <span class="badge ${isOpen ? 'badge-open' : 'badge-closed'}">${isOpen ? T.openNow : T.closedNow}</span>
           ${npi && isFarmaciaType ? `<span class="badge badge-npi" title="Número NPI: ${esc(npi)}">&#10003; NPPES</span>` : ''}
           ${qualityBadge}
         </div>
@@ -388,12 +433,19 @@ export default async function handler(req: any, res: any) {
       </div>
     </div>
 
+    <!-- #6 Language toggle -->
+    <div style="text-align:right;margin-bottom:8px;font-size:0.85rem;">
+      ${lang === 'es'
+        ? `<a href="${pageUrlEn}" style="color:${config.color};text-decoration:none;">🇺🇸 English version</a>`
+        : `<a href="${pageUrlEs}" style="color:${config.color};text-decoration:none;">🇵🇷 Versión en español</a>`}
+    </div>
+
     <div class="info-card">
-      <h2>Información</h2>
-      ${place.address ? `<div class="info-row"><span class="info-label">&#128205; Dirección</span><span class="info-value">${esc(place.address)}, Cabo Rojo, PR</span></div>` : ''}
-      ${displayPhone ? `<div class="info-row"><span class="info-label">&#128222; Teléfono</span><span class="info-value"><a href="tel:${esc(displayPhone)}">${esc(displayPhone)}</a>${phoneCorrected ? ` <small style="color:#92400e;">(corregido vs NPPES: ${esc(place.phone)})</small>` : ''}</span></div>` : ''}
-      <div class="info-row"><span class="info-label">&#128336; Horario</span><span class="info-value">${hoursText}</span></div>
-      ${place.website ? `<div class="info-row"><span class="info-label">&#127758; Web</span><span class="info-value"><a href="${esc(place.website)}" target="_blank" rel="noopener">${esc(place.website)}</a></span></div>` : ''}
+      <h2>${T.info}</h2>
+      ${place.address ? `<div class="info-row"><span class="info-label">&#128205; ${T.address}</span><span class="info-value">${esc(place.address)}, Cabo Rojo, PR</span></div>` : ''}
+      ${displayPhone ? `<div class="info-row"><span class="info-label">&#128222; ${T.phone}</span><span class="info-value"><a href="tel:${esc(displayPhone)}">${esc(displayPhone)}</a>${phoneCorrected ? ` <small style="color:#92400e;">(corregido vs NPPES: ${esc(place.phone)})</small>` : ''}</span></div>` : ''}
+      <div class="info-row"><span class="info-label">&#128336; ${T.hours}</span><span class="info-value">${hoursText}</span></div>
+      ${place.website ? `<div class="info-row"><span class="info-label">&#127758; ${T.website}</span><span class="info-value"><a href="${esc(place.website)}" target="_blank" rel="noopener">${esc(place.website)}</a></span></div>` : ''}
       ${place.gmaps_url ? `<div class="info-row"><span class="info-label">&#128507; Google Maps</span><span class="info-value"><a href="${esc(place.gmaps_url)}" target="_blank" rel="noopener">Ver en Maps</a></span></div>` : ''}
       ${npi ? `<div class="info-row"><span class="info-label">&#10003; NPI</span><span class="info-value">${esc(npi)} &mdash; Registro NPPES verificado</span></div>` : ''}
       ${lastVerifiedAt ? `<div class="info-row"><span class="info-label">&#128260; Verificado</span><span class="info-value">${formatDateES(lastVerifiedAt)} — datos confirmados contra Google</span></div>` : ''}
@@ -402,8 +454,8 @@ export default async function handler(req: any, res: any) {
     ${telLink || waLink ? `
     <!-- Primary CTA: direct contact (gtag tracked — pitch ammo for Vitrina) -->
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 20px;">
-      ${telLink ? `<a href="${telLink}" ${trackCall} style="flex:1 1 200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:${config.color};color:white;text-decoration:none;padding:14px 20px;border-radius:10px;font-weight:700;font-size:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.12);">&#128222; Llamar ahora</a>` : ''}
-      ${waLink ? `<a href="${waLink}" target="_blank" rel="noopener" ${trackWa} style="flex:1 1 200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#25D366;color:white;text-decoration:none;padding:14px 20px;border-radius:10px;font-weight:700;font-size:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.12);">&#128241; WhatsApp directo</a>` : ''}
+      ${telLink ? `<a href="${telLink}" ${trackCall} style="flex:1 1 200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:${config.color};color:white;text-decoration:none;padding:14px 20px;border-radius:10px;font-weight:700;font-size:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.12);">&#128222; ${T.callNow}</a>` : ''}
+      ${waLink ? `<a href="${waLink}" target="_blank" rel="noopener" ${trackWa} style="flex:1 1 200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#25D366;color:white;text-decoration:none;padding:14px 20px;border-radius:10px;font-weight:700;font-size:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.12);">&#128241; ${T.waDirect}</a>` : ''}
     </div>
     ` : ''}
 
@@ -418,7 +470,7 @@ export default async function handler(req: any, res: any) {
     ></iframe>
 
     <div class="cta">
-      <p>&#128140; ¿Necesitas algo de ${placeName}?</p>
+      <p>&#128140; ${T.ctaSubtitle(placeName)}</p>
       <div class="btn-row">
         ${waLink ? `<a class="wa-btn" href="${waLink}" target="_blank" rel="noopener">WhatsApp directo</a>` : ''}
         <a href="https://wa.me/17874177711?text=${smsBody}" style="display:inline-flex;align-items:center;gap:0.5rem;background:#f97316;color:white;text-decoration:none;padding:0.65rem 1.5rem;border-radius:8px;font-weight:600;font-size:0.95rem;">Textea a El Veci</a>
@@ -456,9 +508,9 @@ export default async function handler(req: any, res: any) {
       <a class="reclaim-btn" href="https://wa.me/17874177711?text=ACTUALIZAR%20${encodeURIComponent(place.name)}">Actualizar mi información</a>
     </div>`
       : `<div class="reclaim-card">
-      <h2>¿Es tu negocio?</h2>
-      <p>Destaca tu ${config.label.toLowerCase()} con La Vitrina — fotos, servicios, horarios verificados, y apareces primero cuando busquen ${config.labelPlural.toLowerCase()} en Cabo Rojo. $799/año.</p>
-      <a class="reclaim-btn" href="https://wa.me/17874177711?text=VITRINA%20${encodeURIComponent(place.name)}">Conoce La Vitrina</a>
+      <h2>${T.isYourBusiness}</h2>
+      <p>${T.standOut(localizedLabel)}</p>
+      <a class="reclaim-btn" href="https://wa.me/17874177711?text=VITRINA%20${encodeURIComponent(place.name)}">${T.learnVitrina}</a>
       <a href="https://wa.me/17874177711?text=RECLAMAR%20${encodeURIComponent(place.name)}" style="display:inline-block;background:transparent;color:white;text-decoration:underline;padding:0.4rem 1rem;font-size:0.85rem;margin-top:0.5rem;">Solo verificar mi info (gratis)</a>
       <p style="color:rgba(255,255,255,0.75);font-size:0.8rem;margin-top:0.75rem;">Textea al 787-417-7711 y El Veci te guía paso a paso.</p>
     </div>`}
@@ -486,17 +538,18 @@ export default async function handler(req: any, res: any) {
       };
       const links = related[type] || [];
       if (!links.length) return '';
+      const labelsEn: Record<string,string> = { farmacias:'pharmacies', médicos:'physicians', quiroprácticos:'chiropractors', laboratorios:'labs', hospitales:'hospitals', fisiatras:'physiatrists' };
       return `
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;">
-      <p style="font-size:0.85rem;color:#64748b;margin:0 0 0.5rem;font-weight:600;">Búsquedas relacionadas en Cabo Rojo:</p>
+      <p style="font-size:0.85rem;color:#64748b;margin:0 0 0.5rem;font-weight:600;">${T.relatedSearches}:</p>
       <div style="display:flex;flex-wrap:wrap;gap:8px;">
-        ${links.map(l => `<a href="${baseUrl}/categoria/${l.slug}" style="display:inline-flex;align-items:center;gap:6px;background:white;border:1px solid #cbd5e1;border-radius:20px;padding:6px 14px;font-size:0.85rem;color:#334155;text-decoration:none;">${l.emoji} ${l.label}</a>`).join('')}
+        ${links.map(l => `<a href="${baseUrl}/categoria/${l.slug}${lang==='en'?'?lang=en':''}" style="display:inline-flex;align-items:center;gap:6px;background:white;border:1px solid #cbd5e1;border-radius:20px;padding:6px 14px;font-size:0.85rem;color:#334155;text-decoration:none;">${l.emoji} ${lang==='en' && labelsEn[l.label] ? labelsEn[l.label] : l.label}</a>`).join('')}
       </div>
     </div>`;
     })()}
 
     <div style="text-align:center;margin-bottom:1.5rem;">
-      <a href="${baseUrl}/?place=${esc(place.slug || place.id)}" style="color:${MEDICAL_GREEN};text-decoration:none;font-size:0.9rem;">Ver ${placeName} en el mapa interactivo &rarr;</a>
+      <a href="${baseUrl}/?place=${esc(place.slug || place.id)}" style="color:${MEDICAL_GREEN};text-decoration:none;font-size:0.9rem;">${T.viewOnMap(placeName)} &rarr;</a>
     </div>
 
     <footer>
