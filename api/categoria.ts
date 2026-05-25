@@ -449,6 +449,139 @@ export default async function handler(req: any, res: any) {
 
   <div class="container">
     ${catSeo?.intro ? `<p style="font-size:1.05rem;line-height:1.6;color:#475569;margin-bottom:1.5rem;max-width:720px">${esc(catSeo.intro)}</p>` : ''}
+
+    ${(cat === 'fisiatra' || cat === 'fisiatras') && filtered.length > 0 ? `
+    <!-- #1 Quiz: "¿Cuál fisiatra te conviene?" -->
+    <div id="fis-quiz" style="background:linear-gradient(135deg,#ecfeff,#f0fdfa);border:1px solid #67e8f9;border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;max-width:720px;">
+      <h2 style="font-size:1.15rem;font-weight:700;color:#0e7490;margin-bottom:0.5rem;">🩺 ¿Cuál fisiatra te conviene?</h2>
+      <p style="font-size:0.9rem;color:#475569;margin-bottom:1rem;">3 preguntas. Te recomendamos la mejor opción según tu zona, plan médico y necesidad.</p>
+      <div id="fis-quiz-step-1">
+        <p style="font-weight:600;color:#0f172a;margin-bottom:0.5rem;font-size:0.95rem;">1. ¿Por qué necesitas fisiatra?</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
+          <button data-need="postop" class="fis-q-btn">🩹 Post-cirugía / lesión</button>
+          <button data-need="sport" class="fis-q-btn">🏃 Lesión deportiva</button>
+          <button data-need="chronic" class="fis-q-btn">😣 Dolor crónico</button>
+          <button data-need="emg" class="fis-q-btn">⚡ EMG / NCV</button>
+          <button data-need="other" class="fis-q-btn">❓ Otra</button>
+        </div>
+      </div>
+      <div id="fis-quiz-step-2" style="display:none;">
+        <p style="font-weight:600;color:#0f172a;margin-bottom:0.5rem;font-size:0.95rem;">2. ¿En qué zona te queda mejor?</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
+          <button data-zone="cr_pueblo" class="fis-q-btn">📍 Cabo Rojo (pueblo / Santos Ortiz)</button>
+          <button data-zone="cr_joyuda" class="fis-q-btn">🌊 Cabo Rojo (Joyuda / Carr 102)</button>
+          <button data-zone="san_german" class="fis-q-btn">🏥 San Germán</button>
+          <button data-zone="mayaguez" class="fis-q-btn">🌆 Mayagüez</button>
+          <button data-zone="any" class="fis-q-btn">🤷 Cualquiera me sirve</button>
+        </div>
+      </div>
+      <div id="fis-quiz-step-3" style="display:none;">
+        <p style="font-weight:600;color:#0f172a;margin-bottom:0.5rem;font-size:0.95rem;">3. ¿Tienes preferencia de horario?</p>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
+          <button data-time="weekday_am" class="fis-q-btn">🌅 L-V mañana</button>
+          <button data-time="weekday_pm" class="fis-q-btn">🌇 L-V tarde</button>
+          <button data-time="any" class="fis-q-btn">⏰ Cualquiera</button>
+        </div>
+      </div>
+      <div id="fis-quiz-result" style="display:none;background:white;border-radius:10px;padding:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);"></div>
+      <div id="fis-quiz-reset" style="display:none;margin-top:0.75rem;text-align:right;">
+        <a href="#" id="fis-quiz-restart" style="color:#0e7490;font-size:0.85rem;text-decoration:underline;">↺ Empezar de nuevo</a>
+      </div>
+    </div>
+    <style>
+      .fis-q-btn { background:white; border:1.5px solid #67e8f9; color:#0e7490; padding:8px 14px; border-radius:20px; font-size:0.85rem; cursor:pointer; transition:all 0.15s; font-weight:500; }
+      .fis-q-btn:hover { background:#0e7490; color:white; border-color:#0e7490; }
+    </style>
+    <script>
+      (function() {
+        var state = { need: null, zone: null, time: null };
+        // Practices: pre-loaded from server-rendered filtered list (only fisiatras shown)
+        var practices = ${JSON.stringify(filtered.map((p: any) => ({
+          name: p.name,
+          slug: p.slug || p.id,
+          municipality: p.municipality || '',
+          phone: p.phone || '',
+          address: p.address || '',
+          lat: p.lat, lon: p.lon,
+        })))};
+
+        function esc(s) {
+          return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function show(stepId) {
+          ['fis-quiz-step-1','fis-quiz-step-2','fis-quiz-step-3','fis-quiz-result'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.style.display = id === stepId ? 'block' : 'none';
+          });
+        }
+
+        function score() {
+          var scored = practices.map(function(p) {
+            var s = 50, reasons = [];
+            var nameL = (p.name || '').toLowerCase();
+            var addrL = (p.address || '').toLowerCase();
+            var muniL = (p.municipality || '').toLowerCase();
+
+            if (state.zone === 'cr_pueblo' && (addrL.indexOf('santos ortiz') !== -1 || addrL.indexOf('san jos') !== -1)) { s += 30; reasons.push('queda en Cabo Rojo pueblo, Santos Ortiz'); }
+            else if (state.zone === 'cr_joyuda' && (addrL.indexOf('joyuda') !== -1 || addrL.indexOf('102') !== -1)) { s += 30; reasons.push('queda en el corredor Joyuda / Carr 102'); }
+            else if (state.zone === 'san_german' && muniL.indexOf('germ') !== -1) { s += 35; reasons.push('queda en San Germán'); }
+            else if (state.zone === 'mayaguez' && muniL.indexOf('may') !== -1) { s += 35; reasons.push('queda en Mayagüez'); }
+            else if (state.zone === 'any') { s += 5; }
+            else if (state.zone && state.zone !== 'any' && muniL.indexOf('cabo rojo') !== -1) { s -= 15; }
+
+            if (state.need === 'emg' && nameL.indexOf('quiñones') !== -1) { s += 25; reasons.push('hacen EMG / NCV in-house'); }
+            if (state.need === 'sport' && nameL.indexOf('quiñones') !== -1) { s += 20; reasons.push('sub-especialidad medicina deportiva'); }
+            if (state.need === 'postop') { s += 10; reasons.push('manejan post-cirugía'); }
+            if (state.need === 'chronic') { s += 10; reasons.push('manejan dolor crónico'); }
+
+            return { p: p, score: s, reasons: reasons };
+          });
+          scored.sort(function(a,b) { return b.score - a.score; });
+          return scored[0];
+        }
+
+        function renderResult() {
+          var winner = score();
+          var p = winner.p;
+          var reasons = winner.reasons.length ? winner.reasons.slice(0,2).join(' · ') : 'mejor match disponible para tu búsqueda';
+          var fmtPhone = (p.phone || '').replace(/\\D/g, '');
+          var telLink = fmtPhone ? '<a href="tel:+1' + esc(fmtPhone) + '" style="display:inline-block;background:#0e7490;color:white;text-decoration:none;padding:10px 16px;border-radius:8px;font-weight:700;font-size:0.95rem;margin-right:6px;margin-top:6px;">📞 Llamar ' + esc(p.phone || '') + '</a>' : '';
+          var waLink = fmtPhone.length >= 10 ? '<a href="https://wa.me/1' + esc(fmtPhone.slice(-10)) + '?text=' + encodeURIComponent('Hola, mapadecaborojo.com me recomendó su práctica — quisiera agendar') + '" target="_blank" rel="noopener" style="display:inline-block;background:#25D366;color:white;text-decoration:none;padding:10px 16px;border-radius:8px;font-weight:700;font-size:0.95rem;margin-top:6px;">💬 WhatsApp</a>' : '';
+          var detail = '<a href="/fisiatra/' + esc(p.slug) + '" style="color:#0e7490;font-size:0.9rem;text-decoration:underline;display:inline-block;margin-top:10px;">Ver perfil completo →</a>';
+          // All dynamic strings escaped (name, address, municipality, phone, slug, reasons) — XSS-safe
+          document.getElementById('fis-quiz-result').innerHTML =
+            '<p style="font-size:0.85rem;color:#64748b;margin-bottom:0.25rem;">Te conviene:</p>' +
+            '<h3 style="font-size:1.2rem;font-weight:700;color:#0e7490;margin-bottom:0.5rem;">🩺 ' + esc(p.name) + '</h3>' +
+            '<p style="font-size:0.9rem;color:#475569;margin-bottom:1rem;">📍 ' + esc(p.address || p.municipality) + '</p>' +
+            '<p style="font-size:0.9rem;color:#0f172a;margin-bottom:1rem;"><strong>Por qué:</strong> ' + esc(reasons) + '.</p>' +
+            telLink + waLink + '<br>' + detail;
+          show('fis-quiz-result');
+          document.getElementById('fis-quiz-reset').style.display = 'block';
+          try { gtag('event', 'fisiatra_quiz_complete', { need: state.need, zone: state.zone, time: state.time, recommended: p.slug }); } catch(e) {}
+        }
+
+        document.querySelectorAll('#fis-quiz-step-1 .fis-q-btn').forEach(function(b) {
+          b.addEventListener('click', function() { state.need = b.dataset.need; show('fis-quiz-step-2'); });
+        });
+        document.querySelectorAll('#fis-quiz-step-2 .fis-q-btn').forEach(function(b) {
+          b.addEventListener('click', function() { state.zone = b.dataset.zone; show('fis-quiz-step-3'); });
+        });
+        document.querySelectorAll('#fis-quiz-step-3 .fis-q-btn').forEach(function(b) {
+          b.addEventListener('click', function() { state.time = b.dataset.time; renderResult(); });
+        });
+        document.getElementById('fis-quiz-restart').addEventListener('click', function(e) {
+          e.preventDefault();
+          state = { need: null, zone: null, time: null };
+          document.getElementById('fis-quiz-reset').style.display = 'none';
+          show('fis-quiz-step-1');
+        });
+      })();
+    </script>
+    ` : ''}
+
     <a class="back" href="${baseUrl}">← Volver al mapa</a>
 
     <div class="cta-bar">
