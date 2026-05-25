@@ -231,9 +231,14 @@ export default async function handler(req: any, res: any) {
     if (allText.includes('naturista') || allText.includes('natural')) services.push({ icon: '🌿', label: 'Productos naturales' });
   }
 
-  // WhatsApp direct link for the business (if phone available)
+  // WhatsApp direct link for the business (if phone available) — pre-filled w/ context
   const waPhone = (displayPhone || '').replace(/\D/g, '');
-  const waLink = waPhone.length >= 10 ? `https://wa.me/1${waPhone.slice(-10)}` : null;
+  const waPreText = encodeURIComponent(`Hola, encontré ${place.name} en MapaDeCaboRojo.com — quisiera agendar cita / hacer una pregunta.`);
+  const waLink = waPhone.length >= 10 ? `https://wa.me/1${waPhone.slice(-10)}?text=${waPreText}` : null;
+  const telLink = displayPhone ? `tel:${esc(displayPhone)}` : null;
+  // gtag tracking — fires events when vecino clicks call/WA. Pitch ammo for Vitrina.
+  const trackCall = `onclick="try{gtag('event','click_call_practice',{place:'${esc(place.slug || place.id)}',type:'${type}'})}catch(e){}"`;
+  const trackWa   = `onclick="try{gtag('event','click_whatsapp_practice',{place:'${esc(place.slug || place.id)}',type:'${type}'})}catch(e){}"`;
 
   // Street View fallback when no image
   const streetViewSrc = (place.lat && place.lon)
@@ -394,6 +399,14 @@ export default async function handler(req: any, res: any) {
       ${lastVerifiedAt ? `<div class="info-row"><span class="info-label">&#128260; Verificado</span><span class="info-value">${formatDateES(lastVerifiedAt)} — datos confirmados contra Google</span></div>` : ''}
     </div>
 
+    ${telLink || waLink ? `
+    <!-- Primary CTA: direct contact (gtag tracked — pitch ammo for Vitrina) -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 20px;">
+      ${telLink ? `<a href="${telLink}" ${trackCall} style="flex:1 1 200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:${config.color};color:white;text-decoration:none;padding:14px 20px;border-radius:10px;font-weight:700;font-size:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.12);">&#128222; Llamar ahora</a>` : ''}
+      ${waLink ? `<a href="${waLink}" target="_blank" rel="noopener" ${trackWa} style="flex:1 1 200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#25D366;color:white;text-decoration:none;padding:14px 20px;border-radius:10px;font-weight:700;font-size:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.12);">&#128241; WhatsApp directo</a>` : ''}
+    </div>
+    ` : ''}
+
     <!-- Google Maps Embed -->
     <iframe
       class="map-embed"
@@ -455,6 +468,32 @@ export default async function handler(req: any, res: any) {
       <p style="font-size:0.875rem;color:#475569;margin-bottom:0.75rem;">El Veci es tu vecino digital. Pregúntale lo que quieras — horarios, servicios, cómo llegar, o qué ${config.labelPlural.toLowerCase()} están disponibles ahora.</p>
       <a href="https://wa.me/17874177711?text=${encodeURIComponent(`¿Está abierta ${place.name}?`)}" style="display:inline-block;background:${MEDICAL_GREEN};color:white;text-decoration:none;padding:0.6rem 1.25rem;border-radius:8px;font-weight:600;font-size:0.9rem;">Textea a El Veci</a>
     </div>
+
+    ${(() => {
+      // #9 Cross-link health verticals — surface complementary categories per type
+      const related: Record<string, Array<{slug:string;label:string;emoji:string}>> = {
+        fisiatra:      [{slug:'farmacia',label:'farmacias',emoji:'💊'},{slug:'medico',label:'médicos',emoji:'👨‍⚕️'},{slug:'quiropractico',label:'quiroprácticos',emoji:'🦴'}],
+        medico:        [{slug:'farmacia',label:'farmacias',emoji:'💊'},{slug:'laboratorio',label:'laboratorios',emoji:'🔬'},{slug:'fisiatra',label:'fisiatras',emoji:'🩺'}],
+        farmacia:      [{slug:'medico',label:'médicos',emoji:'👨‍⚕️'},{slug:'laboratorio',label:'laboratorios',emoji:'🔬'},{slug:'hospital',label:'hospitales',emoji:'🏥'}],
+        dentista:      [{slug:'farmacia',label:'farmacias',emoji:'💊'},{slug:'medico',label:'médicos',emoji:'👨‍⚕️'}],
+        hospital:      [{slug:'farmacia',label:'farmacias',emoji:'💊'},{slug:'laboratorio',label:'laboratorios',emoji:'🔬'},{slug:'medico',label:'médicos',emoji:'👨‍⚕️'}],
+        laboratorio:   [{slug:'farmacia',label:'farmacias',emoji:'💊'},{slug:'medico',label:'médicos',emoji:'👨‍⚕️'}],
+        optica:        [{slug:'medico',label:'médicos',emoji:'👨‍⚕️'},{slug:'farmacia',label:'farmacias',emoji:'💊'}],
+        'salud-mental':[{slug:'medico',label:'médicos',emoji:'👨‍⚕️'},{slug:'farmacia',label:'farmacias',emoji:'💊'}],
+        quiropractico: [{slug:'fisiatra',label:'fisiatras',emoji:'🩺'},{slug:'farmacia',label:'farmacias',emoji:'💊'}],
+        veterinario:   [{slug:'farmacia',label:'farmacias',emoji:'💊'}],
+        gimnasio:      [{slug:'fisiatra',label:'fisiatras',emoji:'🩺'},{slug:'quiropractico',label:'quiroprácticos',emoji:'🦴'}],
+      };
+      const links = related[type] || [];
+      if (!links.length) return '';
+      return `
+    <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;">
+      <p style="font-size:0.85rem;color:#64748b;margin:0 0 0.5rem;font-weight:600;">Búsquedas relacionadas en Cabo Rojo:</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;">
+        ${links.map(l => `<a href="${baseUrl}/categoria/${l.slug}" style="display:inline-flex;align-items:center;gap:6px;background:white;border:1px solid #cbd5e1;border-radius:20px;padding:6px 14px;font-size:0.85rem;color:#334155;text-decoration:none;">${l.emoji} ${l.label}</a>`).join('')}
+      </div>
+    </div>`;
+    })()}
 
     <div style="text-align:center;margin-bottom:1.5rem;">
       <a href="${baseUrl}/?place=${esc(place.slug || place.id)}" style="color:${MEDICAL_GREEN};text-decoration:none;font-size:0.9rem;">Ver ${placeName} en el mapa interactivo &rarr;</a>
