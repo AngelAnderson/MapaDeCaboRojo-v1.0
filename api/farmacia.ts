@@ -469,6 +469,62 @@ export default async function handler(req: any, res: any) {
       title="Mapa de ${placeName}"
     ></iframe>
 
+    ${(() => {
+      // #3 Plan médico coverage table — show only on health categories (not gyms/spa)
+      if (!['fisiatra','medico','dentista','laboratorio','optica','salud-mental','quiropractico','hospital'].includes(type)) return '';
+      const plans = place.accepted_plans as Record<string, any> | null;
+      const PLAN_LABELS: Array<{key:string;es:string;en:string}> = [
+        {key:'mmm',                es:'MMM',                en:'MMM'},
+        {key:'triple_s',           es:'Triple-S',           en:'Triple-S'},
+        {key:'first_medical',      es:'First Medical',      en:'First Medical'},
+        {key:'humana',             es:'Humana',             en:'Humana'},
+        {key:'medicare',           es:'Medicare',           en:'Medicare'},
+        {key:'medicare_advantage', es:'Medicare Advantage', en:'Medicare Advantage'},
+        {key:'mcs',                es:'MCS',                en:'MCS'},
+        {key:'plan_vital',         es:'Plan Vital',         en:'Plan Vital'},
+        {key:'reforma',            es:'Reforma',            en:'Reforma'},
+        {key:'private_pay',        es:'Pago privado',       en:'Private pay'},
+      ];
+      const hasData = plans && PLAN_LABELS.some(p => plans[p.key] === true || plans[p.key] === false);
+      const headerEs = '💳 Planes médicos aceptados';
+      const headerEn = '💳 Insurance plans accepted';
+      const updatedEs = plans?.updated_at ? `<p style="font-size:0.75rem;color:#94a3b8;margin-top:0.5rem;">Actualizado: ${esc(String(plans.updated_at))} · siempre confirma con tu plan antes de la cita.</p>` : '';
+      const updatedEn = plans?.updated_at ? `<p style="font-size:0.75rem;color:#94a3b8;margin-top:0.5rem;">Updated: ${esc(String(plans.updated_at))} · always confirm with your insurance before your appointment.</p>` : '';
+      const noteEs = '<p style="font-size:0.8rem;color:#64748b;margin-top:0.75rem;">Los datos vienen de la práctica. Si ves algo desactualizado, textea <strong>PLANES ' + esc(place.name) + '</strong> al 787-417-7711.</p>';
+      const noteEn = '<p style="font-size:0.8rem;color:#64748b;margin-top:0.75rem;">Data provided by the practice. See something outdated? Text <strong>PLANES ' + esc(place.name) + '</strong> to 787-417-7711.</p>';
+      const emptyEs = `
+        <p style="color:#475569;font-size:0.9rem;margin-bottom:0.75rem;">Aún no tenemos los planes médicos confirmados de ${placeName}.</p>
+        <div style="background:#fef3c7;border-left:3px solid #f59e0b;padding:0.75rem 1rem;border-radius:6px;font-size:0.85rem;color:#78350f;">
+          <strong>¿Eres dueño o trabajas aquí?</strong> Textea <strong>PLANES ${esc(place.name)}</strong> al 787-417-7711 con los planes que aceptan — actualizamos esto en 24h. Pacientes con tu plan te encuentran primero.
+        </div>`;
+      const emptyEn = `
+        <p style="color:#475569;font-size:0.9rem;margin-bottom:0.75rem;">We don't yet have confirmed insurance data for ${placeName}.</p>
+        <div style="background:#fef3c7;border-left:3px solid #f59e0b;padding:0.75rem 1rem;border-radius:6px;font-size:0.85rem;color:#78350f;">
+          <strong>Are you the owner or staff?</strong> Text <strong>PLANES ${esc(place.name)}</strong> to 787-417-7711 with the plans you accept — we update within 24h. Patients with your insurance find you first.
+        </div>`;
+      const table = hasData ? `
+        <table style="width:100%;border-collapse:collapse;margin-top:0.5rem;">
+          <thead><tr style="background:#f8fafc;text-align:left;">
+            <th style="padding:8px 12px;font-size:0.85rem;color:#334155;font-weight:600;">${lang==='en'?'Plan':'Plan médico'}</th>
+            <th style="padding:8px 12px;font-size:0.85rem;color:#334155;font-weight:600;text-align:center;">${lang==='en'?'Accepted':'Acepta'}</th>
+          </tr></thead>
+          <tbody>
+          ${PLAN_LABELS.map(p => {
+            const v = plans![p.key];
+            const cell = v === true ? '<span style="color:#16a34a;font-weight:700;font-size:1.1rem;">✓</span>' : v === false ? '<span style="color:#dc2626;font-weight:700;font-size:1.1rem;">✗</span>' : '<span style="color:#94a3b8;font-size:1.1rem;">—</span>';
+            return `<tr style="border-top:1px solid #f1f5f9;"><td style="padding:8px 12px;font-size:0.9rem;color:#1e293b;">${lang==='en'?p.en:p.es}</td><td style="padding:8px 12px;text-align:center;">${cell}</td></tr>`;
+          }).join('')}
+          </tbody>
+        </table>
+        ${lang === 'en' ? updatedEn : updatedEs}
+        ${lang === 'en' ? noteEn : noteEs}` : (lang === 'en' ? emptyEn : emptyEs);
+      return `
+    <div style="background:white;border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+      <h2 style="font-size:1.05rem;font-weight:700;color:${config.color};margin-bottom:0.5rem;">${lang==='en'?headerEn:headerEs}</h2>
+      ${table}
+    </div>`;
+    })()}
+
     <div class="cta">
       <p>&#128140; ${T.ctaSubtitle(placeName)}</p>
       <div class="btn-row">
