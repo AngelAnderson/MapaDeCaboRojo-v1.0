@@ -2099,13 +2099,20 @@ ${allSections}
 <!-- footer CTA -->
 <div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
   <p class="text-lg font-bold mb-1">¿Necesitas algo en vivo el día del evento?</p>
-  <p class="text-sm text-teal-100 mb-4">El Veci contesta preguntas sobre Cabo Rojo las 24 horas.</p>
-  <a href="https://wa.me/17874177711?text=PLAYA"
-     class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50 transition-colors">
-    <i class="fa-brands fa-whatsapp text-lg"></i>
-    Textea PLAYA al 787-417-7711
-  </a>
-  <p class="text-xs text-teal-200 mt-3">— caborojo.com | Menos revolú, más sistema, mejor vida.</p>
+  <p class="text-sm text-teal-100 mb-4">El Veci contesta sobre Cabo Rojo las 24 horas. Textea al <strong>787-417-7711</strong>:</p>
+  <div class="flex flex-wrap gap-3 justify-center">
+    <a href="https://wa.me/17874177711?text=EVENTOS"
+       class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50 transition-colors">
+      <i class="fa-brands fa-whatsapp text-lg"></i>
+      EVENTOS — qué hay este fin
+    </a>
+    <a href="https://wa.me/17874177711?text=PLAYA"
+       class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50 transition-colors">
+      <i class="fa-brands fa-whatsapp text-lg"></i>
+      PLAYA — playas de CR
+    </a>
+  </div>
+  <p class="text-xs text-teal-200 mt-4">— caborojo.com | Menos revolú, más sistema, mejor vida.</p>
 </div>
 `
 
