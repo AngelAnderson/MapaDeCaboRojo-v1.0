@@ -2142,6 +2142,7 @@ ${allSections}
     title: 'Defensa y Limpieza — Guía de playas · 30 mayo 2026',
     description: "Lo que necesitas cerca de cada playa de Cabo Rojo el 30 de mayo: comida, gasolina, farmacia y clínica. Compilado por caborojo.com pa' los voluntarios del evento Defensa y Limpieza.",
     slug: 'playas/defensa-y-limpieza',
+    ogImage: '/og/defensa-y-limpieza.png',
     bodyHtml: body,
     jsonLd,
   }))
