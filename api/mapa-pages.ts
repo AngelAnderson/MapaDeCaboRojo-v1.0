@@ -1833,7 +1833,6 @@ function handleDefensaYLimpieza(_req: any, res: any) {
       gmaps: 'https://maps.google.com/?q=17.9766404,-67.2127867',
       color: 'teal',
       food: [
-        { name: 'Sunsets 3301', slug: 'sunsets-3301', phone: '+17879605597', address: 'Carr. 3301 KM 2.1, El Combate', rating: 4.8, dist: '0.2 km' },
         { name: 'I Love Combate', slug: 'i-love-combate', phone: null, address: 'PR-3301 Km 2.8, El Combate', rating: 4.7, dist: '0.2 km' },
         { name: 'Santos Bar & Restaurant', slug: 'santos-bar-amp-restaurant', phone: '+17878518300', address: 'Calle 2, El Combate', rating: 4.6, dist: '0.3 km' },
       ],
@@ -1866,45 +1865,39 @@ function handleDefensaYLimpieza(_req: any, res: any) {
     },
     {
       id: 'tres-tubos',
-      name: 'Tres Tubos (Boquerón)',
-      slug: 'balneario-de-boqueron',
-      coords: 'Área del Balneario, Boquerón',
-      gmaps: 'https://maps.google.com/?q=17.9987,-67.1726',
+      name: 'Tres Tubos (Playita Azul, Joyuda)',
+      slug: 'playita-azul',
+      coords: 'Carr. 102, Bo. Joyuda',
+      gmaps: 'https://maps.google.com/?q=18.1353462,-67.1864615',
       color: 'blue',
       food: [
-        { name: 'El Tiburon Bar & Grill', slug: 'el-tiburon-bar', phone: null, address: 'PR-101, Cabo Rojo', rating: 4.7, dist: '0.3 km' },
-        { name: 'El Wey Ese', slug: 'el-wey-ese', phone: '+17876283776', address: 'PR-100, Cabo Rojo', rating: 5.0, dist: '1.5 km' },
-        { name: 'Imperio Pizza', slug: 'imperio', phone: '+19393504960', address: 'Boquerón, Cabo Rojo', rating: 4.9, dist: '1.9 km' },
+        { name: 'Rest Acosta', slug: 'rest-acosta', phone: null, address: 'PR-102, Joyuda', rating: 4.6, dist: 'sobre la Carr. 102' },
+        { name: 'Bamboleio', slug: 'bamboleio', phone: '+17873577250', address: 'Joyuda, Cabo Rojo', rating: 4.5, dist: 'sobre la Carr. 102' },
+        { name: "Dongo's", slug: 'dongo-s', phone: null, address: 'Joyuda, Cabo Rojo', rating: 4.5, dist: 'sobre la Carr. 102' },
       ],
       gas: [
-        { name: 'Gasolinera Texaco', slug: 'gasolinera-texaco', phone: '+17878515781', address: 'Calle Carbonell 86, Boquerón', rating: 4.4, dist: '1.8 km' },
-        { name: 'Sunoco Boquerón', slug: 'sunoco-boqueron', phone: '+17873577313', address: 'PR-101, Cabo Rojo', rating: 4.4, dist: '3.2 km' },
+        { name: 'Total Energies', slug: 'total', phone: '+17873570052', address: 'Carr. 102 KM 14.1, Cabo Rojo', rating: 4.6, dist: '~2 km' },
       ],
       salud: [
-        { name: 'Caldas Pharmacy', slug: 'caldas-pharmacy', phone: '+17878512079', address: 'PR-101 km 18.1, Boquerón', rating: 4.7, dist: '0.5 km', tipo: 'Farmacia' },
-        { name: 'Farmacia Cuquimar', slug: 'farmacia-cuquimar', phone: '+17872556551', address: 'Carr 101 km 16.2, Las Arenas, Boquerón', rating: 4.4, dist: '1.8 km', tipo: 'Farmacia' },
-        { name: 'Clínica Dr. Mariani', slug: 'clinica-dr-mariani', phone: '+17872552775', address: 'Carr 101 km 16.2, Boquerón', rating: 3.8, dist: '1.9 km', tipo: 'Clínica' },
+        { name: 'Walgreens', slug: 'walgreens-cabo-rojo', phone: '+17878513363', address: 'Carr 308 #80, Cabo Rojo', rating: 4.3, dist: 'la más cercana a Joyuda', tipo: 'Farmacia' },
       ],
-      notas: 'La zona más servida de las cuatro: dos farmacias y una clínica a menos de 2 km. El Centro Vacacional tiene baños públicos dentro del balneario durante horario de operación.',
+      notas: 'Tres Tubos / Playita Azul está en Joyuda, sobre la Carr. 102 (no en Boquerón). Los restaurantes y la gasolinera quedan a lo largo de la 102. La farmacia más cercana es la Walgreens de Cabo Rojo.',
     },
     {
       id: 'playuela',
       name: 'La Playuela (Playa Sucia)',
       slug: 'playa-playuela-cabo-rojo',
-      coords: 'Bo. Cabo Rojo (cerca del Faro)',
+      coords: 'Faro Los Morrillos, Bo. Llanos Costa',
       gmaps: 'https://maps.google.com/?q=17.9360306,-67.1890376',
       color: 'rose',
-      food: [
-        { name: 'La Casita del Dulce Desayuno', slug: 'la-casita-del-dulce-desayuno-', phone: '+17876271394', address: 'Carr 3301 km 1.5 int, El Combate', rating: 4.7, dist: '5.0 km (camino de regreso)' },
-        { name: 'Calle 4 Food Truck', slug: 'calle-4-food', phone: '+17876186702', address: 'Calle Cielomar, El Combate', rating: 4.8, dist: '5.5 km' },
-      ],
+      food: [],
       gas: [
-        { name: 'Gulf Pole Ojea', slug: 'gulf-pole-ojea', phone: null, address: 'Pole Ojea, Cabo Rojo', rating: 4.5, dist: '5.5 km (Carr 301)' },
+        { name: 'Gulf Pole Ojea', slug: 'gulf-pole-ojea', phone: null, address: 'Pole Ojea, Cabo Rojo', rating: 4.5, dist: 'la más cercana de regreso (verificar)' },
       ],
       salud: [
-        { name: 'El Combate Drug Store', slug: 'el-combate-drug', phone: '+17878518123', address: 'XQHW+MG4, El Combate', rating: 4.4, dist: '4.7 km', tipo: 'Farmacia' },
+        { name: 'El Combate Drug Store', slug: 'el-combate-drug', phone: '+17878518123', address: 'XQHW+MG4, El Combate', rating: 4.4, dist: 'la más cercana (verificar)', tipo: 'Farmacia' },
       ],
-      notas: 'La Playuela es la playa más remota — camino no pavimentado los últimos 3 km. No hay servicios en el área inmediata. Lleva agua y comida. El punto de ayuda más cercano es El Combate (~5 km de regreso).',
+      notas: 'La Playuela está al lado del Faro Los Morrillos — la playa más remota de las cuatro. Camino no pavimentado los últimos 3 km y SIN servicios en el área (no hay comida, baños ni food trucks). Lleva todo contigo: agua, comida, sombra y protector. El punto de ayuda más cercano es El Combate (~5 km de regreso).',
     },
   ]
 
@@ -1954,9 +1947,10 @@ function handleDefensaYLimpieza(_req: any, res: any) {
 
   function beachSection(b: typeof beaches[0]): string {
     const c = colorMap[b.color]
-    const foodCards = b.food.map(p => placeCard(p, SITE_URL)).join('\n')
-    const gasCards = b.gas.map(p => placeCard(p, SITE_URL)).join('\n')
-    const saludCards = b.salud.map(p => placeCard(p, SITE_URL)).join('\n')
+    const emptyMsg = '<div class="text-sm text-slate-400 italic">No hay opciones cercanas verificadas. ¿Conoces una? Textéala al 787-417-7711.</div>'
+    const foodCards = b.food.length ? b.food.map(p => placeCard(p, SITE_URL)).join('\n') : emptyMsg
+    const gasCards = b.gas.length ? b.gas.map(p => placeCard(p, SITE_URL)).join('\n') : emptyMsg
+    const saludCards = b.salud.length ? b.salud.map(p => placeCard(p, SITE_URL)).join('\n') : emptyMsg
 
     const beachNameEl = b.slug
       ? `<a href="${SITE_URL}/negocio/${b.slug}" class="hover:underline">${escapeHtml(b.name)}</a>`
@@ -2090,8 +2084,20 @@ function handleDefensaYLimpieza(_req: any, res: any) {
 
 ${allSections}
 
+<!-- crowdsource -->
+<div class="not-prose mt-10 bg-amber-50 border border-amber-200 rounded-xl p-5 flex gap-3 items-start">
+  <span class="text-2xl">✍️</span>
+  <div>
+    <p class="font-bold text-amber-900">¿Falta un negocio o ves un error?</p>
+    <p class="text-sm text-slate-700 mt-1 leading-relaxed">Esta guía la mantiene el pueblo. Si conoces un baño, una comida, una gasolinera o una farmacia cerca de alguna playa — o si algo aquí está mal — díselo al Veci y lo arreglamos.</p>
+    <a href="https://wa.me/17874177711?text=Defensa%20y%20Limpieza%3A%20" class="inline-flex items-center gap-2 mt-3 bg-amber-600 text-white font-semibold px-4 py-2 rounded-full text-sm hover:bg-amber-700 transition-colors">
+      <i class="fa-brands fa-whatsapp"></i>Aportar o corregir · 787-417-7711
+    </a>
+  </div>
+</div>
+
 <!-- footer CTA -->
-<div class="not-prose mt-12 bg-teal-700 rounded-2xl p-6 text-center text-white">
+<div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
   <p class="text-lg font-bold mb-1">¿Necesitas algo en vivo el día del evento?</p>
   <p class="text-sm text-teal-100 mb-4">El Veci contesta preguntas sobre Cabo Rojo las 24 horas.</p>
   <a href="https://wa.me/17874177711?text=PLAYA"
