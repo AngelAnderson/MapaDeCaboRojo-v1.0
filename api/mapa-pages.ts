@@ -2061,6 +2061,9 @@ function handleDefensaYLimpieza(_req: any, res: any) {
   <div class="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-teal-700 bg-teal-50 border border-teal-200 rounded-full px-3 py-1 mb-4">
     <i class="fa-solid fa-water"></i> Defensa y Limpieza · 30 mayo 2026
   </div>
+  <div class="inline-flex items-center gap-2 text-sm font-bold text-white bg-coral-600 rounded-full px-4 py-1.5 mb-4" style="background:#e0533d">
+    <i class="fa-solid fa-clock"></i> Mañana — sábado 30, de 11am a 2pm
+  </div>
   <h1 class="text-3xl font-black text-slate-900 leading-tight mt-2">
     Lo que necesitas cerca de cada playa
   </h1>
@@ -2079,6 +2082,8 @@ function handleDefensaYLimpieza(_req: any, res: any) {
     <div class="text-sm text-slate-700 leading-relaxed">
       <strong>Sábado 30 de mayo · 4 playas de Cabo Rojo.</strong>
       Esta guía muestra qué hay disponible cerca de cada punto de limpieza — baños, comida, gasolina, y dónde ir si algo pasa. Los datos vienen del directorio verificado de mapadecaborojo.com. Si algo está desactualizado, textea <strong>787-417-7711</strong>.
+      <br><br>
+      <strong>Lo que conviene llevar:</strong> agua, protector solar, gorra, y una bolsa o zafacón extra. En cada playa reparten guantes, pero si tienes los tuyos, mejor.
     </div>
   </div>
 </div>
