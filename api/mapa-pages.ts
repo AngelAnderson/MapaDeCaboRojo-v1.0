@@ -2016,6 +2016,26 @@ function handleDefensaYLimpieza(_req: any, res: any) {
         inLanguage: 'es-PR',
         publisher: { '@type': 'Organization', name: 'MapaDeCaboRojo.com', url: SITE_URL },
         datePublished: '2026-05-22',
+        dateModified: '2026-05-29',
+      },
+      {
+        '@type': 'Event',
+        name: 'Defensa y Limpieza — Cabo Rojo (2da Edición)',
+        description: 'Limpieza simultánea de 4 playas de Cabo Rojo: El Combate, Buyé, Tres Tubos (Joyuda) y La Playuela (Playa Sucia). Voluntarios recogen basura para proteger las costas.',
+        startDate: '2026-05-30T11:00:00-04:00',
+        endDate: '2026-05-30T14:00:00-04:00',
+        eventStatus: 'https://schema.org/EventScheduled',
+        eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+        isAccessibleForFree: true,
+        inLanguage: 'es-PR',
+        image: [`${SITE_URL}/og/menos-revolu.png`],
+        location: {
+          '@type': 'Place',
+          name: 'Playas de Cabo Rojo — El Combate, Buyé, Tres Tubos (Joyuda), La Playuela',
+          address: { '@type': 'PostalAddress', addressLocality: 'Cabo Rojo', addressRegion: 'PR', addressCountry: 'US' },
+        },
+        organizer: { '@type': 'Organization', name: 'MapaDeCaboRojo.com', url: SITE_URL },
+        url: `${SITE_URL}/playas/defensa-y-limpieza`,
       },
       ...beaches.flatMap(b =>
         b.salud.map(p => ({

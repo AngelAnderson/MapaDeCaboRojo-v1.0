@@ -74,6 +74,7 @@ Las páginas siguientes explican qué es el mapa, hacia dónde va, y cómo funci
 | https://mapadecaborojo.com/pueblo-en-numeros | Article + Dataset | Lectores decisor (abrir/dueño/alcalde) | Densidad de negocios por categoría · TAM/SAM/SOM · bandera 🟢🟡⚪🔥 · 3 movidas pa' dueños · "Cómo leer una fila" plain-talk. |
 | https://mapadecaborojo.com/municipio | Dashboard | Funcionarios municipales | Panel ciudadano con métricas del pueblo. |
 | https://mapadecaborojo.com/me-conviene | Tool | Emprendedores | ¿Conviene abrir negocio en X categoría? Calculadora 60-seg. |
+| https://mapadecaborojo.com/playas/defensa-y-limpieza | Event guide (Event + LocalBusiness JSON-LD) | Voluntarios · turistas · residentes | Guía de servicios para el evento Defensa y Limpieza (limpieza de playas, sábado 30 mayo 2026, 11am-2pm). Por cada playa (El Combate, Buyé, Tres Tubos/Joyuda, La Playuela/El Faro): comida, gasolinera, farmacia y clínica más cercanas, verificadas. Qué llevar. |
 
 ## Reporte público — Cabo Rojo en Números
 

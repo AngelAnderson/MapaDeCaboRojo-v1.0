@@ -73,6 +73,13 @@ export default async function handler(req: any, res: any) {
         <priority>0.5</priority>
       </url>
     `);
+    urls.push(`
+      <url>
+        <loc>${baseUrl}/playas/defensa-y-limpieza</loc>
+        <changefreq>daily</changefreq>
+        <priority>0.7</priority>
+      </url>
+    `);
 
     // Narrative public pages (SSR · positioning + sales + transparency)
     // Priority order matches conversion path: entry → sales → trust → data
