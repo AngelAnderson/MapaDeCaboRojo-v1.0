@@ -1049,7 +1049,7 @@ async function handle_municipio(req: any, res: any) {
       supabase
         .from('events')
         .select('id, title, slug, start_time, location_name, image_url, category')
-        .eq('status', 'active')
+        .eq('status', 'published')
         .gte('start_time', new Date().toISOString())
         .order('start_time', { ascending: true })
         .limit(6)
@@ -1734,7 +1734,7 @@ async function handle_demanda(req: any, res: any) {
     : '<p style="color:#64748b;font-size:14px;">No hay términos sin cobertura esta semana.</p>';
 
   const baseUrl = 'https://mapadecaborojo.com';
-  const waLink = `https://wa.me/17874177711?text=${encodeURIComponent('Hola, quiero suscribirme a las alertas de demanda para mi negocio')}`;
+  const waLink = `https://wa.me/17874177711?text=${encodeURIComponent('Hola, vi el radar de demanda y quiero que mi negocio aparezca en Cabo Rojo')}`;
 
   const html = `<!DOCTYPE html>
 <html lang="es">
@@ -1811,42 +1811,32 @@ async function handle_demanda(req: any, res: any) {
       ${opportunityCards}
     </div>
 
-    <!-- CTA Banner -->
-    <div style="background:linear-gradient(135deg,#0d9488,#0f766e);border-radius:16px;padding:32px 28px;text-align:center;margin-bottom:24px;">
-      <h2 style="color:white;font-size:22px;font-weight:800;margin:0 0 8px;">Suscríbete a alertas de demanda</h2>
-      <p style="color:rgba(255,255,255,0.9);font-size:15px;margin:0 0 20px;">Recibe un aviso cuando alguien busque algo relacionado con tu negocio. Sé el primero en responder.</p>
-      <div style="background:rgba(255,255,255,0.15);border-radius:12px;padding:16px;margin-bottom:20px;text-align:left;">
-        <div style="color:rgba(255,255,255,0.9);font-size:14px;margin-bottom:8px;">✓ Alertas semanales por WhatsApp</div>
-        <div style="color:rgba(255,255,255,0.9);font-size:14px;margin-bottom:8px;">✓ Términos personalizados para tu negocio</div>
-        <div style="color:rgba(255,255,255,0.9);font-size:14px;">✓ Datos exclusivos de Cabo Rojo</div>
+    <!-- CTA: Listing gratis + Vitrina (modelo real, supersede $49/mes) -->
+    <div style="background:white;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);padding:28px 24px;margin-bottom:16px;">
+      <h2 style="margin:0 0 6px;font-size:18px;font-weight:700;color:#0f172a;">¿Tu negocio sale en estas búsquedas?</h2>
+      <p style="margin:0 0 18px;color:#64748b;font-size:14px;">Cada semana el pueblo busca lo que tú vendes. Aquí está cómo aparecer.</p>
+
+      <div style="border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:14px;">
+        <div style="display:inline-block;background:#dcfce7;color:#15803d;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;margin-bottom:8px;">GRATIS</div>
+        <h3 style="margin:0 0 4px;font-size:16px;color:#0f172a;">Aparece en el directorio</h3>
+        <p style="margin:0 0 12px;color:#64748b;font-size:14px;">Que te encuentren en el mapa y en el Veci *7711. No cuesta nada — solo verificamos que existes.</p>
+        <a href="${baseUrl}/pon-tu-negocio-en-el-mapa" style="display:inline-block;background:#0d9488;color:white;text-decoration:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:14px;">Pon tu negocio →</a>
       </div>
-      <div style="font-size:28px;font-weight:800;color:#fcd34d;margin-bottom:16px;">$49/mes</div>
-      <a href="${waLink}" style="display:inline-block;background:#f97316;color:white;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:700;font-size:16px;">Textea al 787-417-7711</a>
-      <p style="color:rgba(255,255,255,0.7);font-size:13px;margin:12px 0 0;">O escríbenos por WhatsApp — respondemos en minutos</p>
+
+      <div style="border:1px solid #fcd34d;border-radius:12px;padding:18px 20px;background:#fffbeb;">
+        <div style="display:inline-block;background:#fef3c7;color:#92400e;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;margin-bottom:8px;">LA VITRINA · desde $40</div>
+        <h3 style="margin:0 0 4px;font-size:16px;color:#0f172a;">Que el pueblo te vea cada semana</h3>
+        <p style="margin:0 0 6px;color:#64748b;font-size:14px;">No te vendo un anuncio — te ayudo a aparecer con intención. Tú das el contenido, nosotros lo publicamos:</p>
+        <ul style="margin:0 0 14px;padding-left:18px;color:#475569;font-size:13.5px;">
+          <li><strong>$40</strong> — una publicación esta semana + listing en el Veci</li>
+          <li><strong>$150</strong> — 4 publicaciones (una por semana) + prioridad en el Veci</li>
+          <li><strong>$799/año</strong> — una semanal todo el año + exclusividad de categoría</li>
+        </ul>
+        <a href="https://caborojo.com/patrocina" style="display:inline-block;background:#d4603a;color:white;text-decoration:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:14px;">Ver La Vitrina →</a>
+      </div>
     </div>
 
-    <!-- Subscribe Form -->
-    <div style="background:white;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);padding:28px 24px;margin-bottom:24px;">
-      <h2 style="margin:0 0 6px;font-size:18px;font-weight:700;color:#0f172a;">Registra tu negocio</h2>
-      <p style="margin:0 0 20px;color:#64748b;font-size:14px;">Dinos qué términos quieres monitorear y te avisamos cuando suban.</p>
-      <form id="alertForm" onsubmit="handleSubmit(event)">
-        <div style="margin-bottom:14px;">
-          <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Nombre del negocio *</label>
-          <input id="business_name" type="text" required placeholder="Ej: Farmacia Encarnación" style="width:100%;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;font-size:15px;box-sizing:border-box;outline:none;">
-        </div>
-        <div style="margin-bottom:14px;">
-          <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Teléfono (WhatsApp) *</label>
-          <input id="phone" type="tel" required placeholder="787-000-0000" style="width:100%;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;font-size:15px;box-sizing:border-box;outline:none;">
-        </div>
-        <div style="margin-bottom:20px;">
-          <label style="display:block;font-size:13px;font-weight:600;color:#374151;margin-bottom:6px;">Palabras clave a monitorear *</label>
-          <input id="keywords" type="text" required placeholder="Ej: farmacia, medicamentos, pastillas" style="width:100%;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;font-size:15px;box-sizing:border-box;outline:none;">
-          <div style="color:#94a3b8;font-size:12px;margin-top:4px;">Separadas por coma</div>
-        </div>
-        <button type="submit" style="width:100%;background:#0d9488;color:white;border:none;padding:14px;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;">Registrarme — $49/mes</button>
-        <div id="formMsg" style="margin-top:12px;text-align:center;font-size:14px;display:none;"></div>
-      </form>
-    </div>
+    <p style="text-align:center;color:#94a3b8;font-size:13px;margin:0 0 24px;">¿Preguntas? Textea al <a href="${waLink}" style="color:#0d9488;text-decoration:none;font-weight:600;">787-417-7711</a> — te contesta el Veci.</p>
 
     <footer style="text-align:center;padding:16px 0;border-top:1px solid #e2e8f0;">
       <p style="color:#94a3b8;font-size:12px;margin:0;">Hecho con orgullo en Cabo Rojo, Puerto Rico</p>
@@ -1856,43 +1846,6 @@ async function handle_demanda(req: any, res: any) {
       </p>
     </footer>
   </div>
-
-  <script>
-    async function handleSubmit(e) {
-      e.preventDefault();
-      const msg = document.getElementById('formMsg');
-      const btn = e.target.querySelector('button[type=submit]');
-      btn.disabled = true;
-      btn.textContent = 'Enviando...';
-      try {
-        const res = await fetch('/api/demanda', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            business_name: document.getElementById('business_name').value,
-            phone: document.getElementById('phone').value,
-            keywords: document.getElementById('keywords').value,
-          })
-        });
-        const json = await res.json();
-        if (json.success) {
-          msg.style.display = 'block';
-          msg.style.color = '#10b981';
-          msg.textContent = '¡Listo! Te contactaremos para activar tu suscripción.';
-          e.target.reset();
-        } else {
-          throw new Error(json.error || 'Error desconocido');
-        }
-      } catch(err) {
-        msg.style.display = 'block';
-        msg.style.color = '#ef4444';
-        msg.textContent = 'Error al enviar. Escríbenos al 787-417-7711.';
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Registrarme — $49/mes';
-      }
-    }
-  </script>
 </body>
 </html>`;
 
@@ -4594,7 +4547,7 @@ async function handle_cultura(req: any, res: any) {
         .select('id, title, slug, start_time, place_id')
         .in('place_id', allIds)
         .gte('start_time', new Date().toISOString())
-        .eq('status', 'active')
+        .eq('status', 'published')
         .order('start_time', { ascending: true })
         .limit(50),
       supabase.rpc('cultura_demand_count_30d').then(r => r, () => ({ data: null, error: null })),
