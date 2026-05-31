@@ -1704,15 +1704,31 @@ async function handle_demanda(req: any, res: any) {
   const { data: surges, error } = await supabase.rpc('get_demand_surges');
   const rawSurge: SurgeRow[] = Array.isArray(surges) ? surges : [];
 
-  // [PII 2026-05-31] Public page shows ONLY generic topic terms — never a person's
-  // name, phone, or personal message. Mirrors the /patrocina allowlist approach.
-  // A raw term like "viviana ortiz santiago" must never surface here.
-  const SAFE_TOPIC = /(nevera|refriger|aire|acondicion|\ba\/?c\b|plomer|electricist|cerrajer|carne|carnicer|comida|china|pizza|pincho|marisco|seafood|restaurant|comer|desayuno|almuerzo|cena|joyuda|boquer|combate|pastel|bizcocho|reposter|\bpan\b|panader|sobao|cake|caf[eé]|helad|farmacia|botica|medicament|receta|dentist|dental|m[eé]dico|doctor|pediatr|cardiolog|endocrin|veterinari|mascota|\bgas\b|gasolina|combustible|lavo|lavado|car wash|\bcarro\b|\bauto\b|mec[aá]nic|pieza|goma|hotel|hospedaje|alojamiento|caba|playa|laguna|gym|gimnasio|barber|sal[oó]n|belleza|u[ñn]as|notari|abogad|contab|ferreter|tienda|ropa|supermercado|colmado|food truck|evento|m[uú]sica|\bbar\b|tatto|tatua|flores|funeraria)/i;
+  // [PII 2026-05-31] Public page shows ONLY generic topic searches — never a
+  // person's name, phone, or personal message. Token-validated allowlist:
+  // EVERY token must be a known topic word OR a safe connector; any unknown
+  // token (likely a proper name) rejects the whole term. At least one real
+  // topic word required. Substring matching was insufficient (a name beside a
+  // topic word — "viviana ortiz endocrinologa" — would have leaked).
+  const TOPIC_WORD = /^(neveras?|refriger\w*|aire|acondicion\w*|ac|plomer\w*|electricist\w*|cerrajer\w*|carnes?|carnicer\w*|comidas?|china|chino|pizzas?|pinchos?|mariscos?|seafood|restaurant\w*|comer|desayunos?|almuerzos?|cenas?|pastel(?:es)?|bizcochos?|reposter\w*|pan|panader\w*|sobao|cake|caf[eé]s?|helad\w*|farmacias?|botica|medicament\w*|recetas?|dentist\w*|dental|m[eé]dicos?|doctora?|pediatr\w*|cardiolog\w*|endocrin\w*|veterinari\w*|mascotas?|gas|gasolina|combustible|lavados?|carwash|carros?|autos?|mec[aá]nic\w*|piezas?|gomas?|hotel\w*|hospedaje|alojamiento|caba[ñn]as?|playas?|lagunas?|gym|gimnasio|barber\w*|sal[oó]n|belleza|[oó]ptica|notar\w*|abogad\w*|contab\w*|ferreter\w*|tiendas?|ropa|supermercados?|colmados?|evento\w*|m[uú]sica|bar|tatua\w*|flor(?:es)?|funerarias?|panaderias?|reposterias?)$/i;
+  const PLACES = new Set(['joyuda','boqueron','boquerón','combate','pedernales','buye','pueblo','parguera','lajas','mayaguez','mayagüez']);
+  const STOP = new Set(['donde','dónde','como','cómo','quien','quién','en','el','la','los','las','de','del','un','una','unos','unas','para','pa','cerca','mejor','bueno','buena','buenos','buenas','hay','me','te','se','que','qué','cual','cuál','y','o','a','con','sin','mas','más','algun','algún','alguna','hoy','aqui','aquí','cabo','rojo','abierto','abierta','ahora','barato','barata','economico','económico','horario','horarios','precio','precios','servicio','servicios','recomiendan','recomienda','recomiendas','arregla','arreglan','arreglar','repara','reparan','reparar','vende','venden','vender','vendan','compro','compra','comprar','lavo','lava','lavan','lavar','necesito','busco','buscar','quiero','hace','hacen','hacer','cumpleanos','cumpleaños','fiesta','familiar','local','tiene','tienen']);
   function isSafePublicTerm(t: string): boolean {
     const s = (t || '').toLowerCase().trim();
-    if (/\d{3}/.test(s)) return false;          // phone-ish
+    if (/\d/.test(s)) return false;                    // any digit → phones/addresses
     if (s.length < 3 || s.length > 40) return false;
-    return SAFE_TOPIC.test(s);
+    const tokens = s.split(/\s+/).filter(Boolean);
+    if (tokens.length === 0 || tokens.length > 6) return false;
+    let anchored = false;                              // ≥1 real topic or known place
+    for (const tok of tokens) {
+      const w = tok.replace(/[^a-záéíóúñü]/gi, '');
+      if (!w) continue;
+      if (STOP.has(w)) continue;
+      if (PLACES.has(w)) { anchored = true; continue; }
+      if (TOPIC_WORD.test(w)) { anchored = true; continue; }
+      return false;                                    // unknown token → likely a name
+    }
+    return anchored;
   }
   const surgeList: SurgeRow[] = rawSurge.filter(r => isSafePublicTerm(r.term));
 
