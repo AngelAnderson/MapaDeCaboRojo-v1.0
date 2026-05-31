@@ -1702,7 +1702,31 @@ async function handle_demanda(req: any, res: any) {
 
   // Fetch surge data
   const { data: surges, error } = await supabase.rpc('get_demand_surges');
-  const surgeList: SurgeRow[] = Array.isArray(surges) ? surges : [];
+  const rawSurge: SurgeRow[] = Array.isArray(surges) ? surges : [];
+
+  // [PII 2026-05-31] Public page shows ONLY generic topic terms — never a person's
+  // name, phone, or personal message. Mirrors the /patrocina allowlist approach.
+  // A raw term like "viviana ortiz santiago" must never surface here.
+  const SAFE_TOPIC = /(nevera|refriger|aire|acondicion|\ba\/?c\b|plomer|electricist|cerrajer|carne|carnicer|comida|china|pizza|pincho|marisco|seafood|restaurant|comer|desayuno|almuerzo|cena|joyuda|boquer|combate|pastel|bizcocho|reposter|\bpan\b|panader|sobao|cake|caf[eé]|helad|farmacia|botica|medicament|receta|dentist|dental|m[eé]dico|doctor|pediatr|cardiolog|endocrin|veterinari|mascota|\bgas\b|gasolina|combustible|lavo|lavado|car wash|\bcarro\b|\bauto\b|mec[aá]nic|pieza|goma|hotel|hospedaje|alojamiento|caba|playa|laguna|gym|gimnasio|barber|sal[oó]n|belleza|u[ñn]as|notari|abogad|contab|ferreter|tienda|ropa|supermercado|colmado|food truck|evento|m[uú]sica|\bbar\b|tatto|tatua|flores|funeraria)/i;
+  function isSafePublicTerm(t: string): boolean {
+    const s = (t || '').toLowerCase().trim();
+    if (/\d{3}/.test(s)) return false;          // phone-ish
+    if (s.length < 3 || s.length > 40) return false;
+    return SAFE_TOPIC.test(s);
+  }
+  const surgeList: SurgeRow[] = rawSurge.filter(r => isSafePublicTerm(r.term));
+
+  // All-time accumulated searches — true and big (vs the small weekly count).
+  const { count: allTimeCount } = await supabase
+    .from('demand_signals')
+    .select('*', { count: 'exact', head: true });
+  const accumulated = allTimeCount || 0;
+
+  // Headline insight (biggest mover this week, min 4) — lead with the story, not the raw count.
+  const movers = [...surgeList]
+    .filter(r => (r.this_week || 0) >= 4)
+    .sort((a, b) => ((b.this_week || 0) - (b.last_week || 0)) - ((a.this_week || 0) - (a.last_week || 0)));
+  const headline = movers[0] || surgeList[0] || null;
 
   // Stats
   const totalSearches = surgeList.reduce((s, r) => s + (r.this_week || 0), 0);
@@ -1762,21 +1786,23 @@ async function handle_demanda(req: any, res: any) {
 
   <div style="max-width:720px;margin:-24px auto 0;padding:0 16px 48px;">
 
-    <!-- Hero stat -->
-    <div style="background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.1);padding:28px 32px;margin-bottom:24px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
-      <div style="flex:1;min-width:180px;">
-        <div style="font-size:48px;font-weight:800;color:#0d9488;line-height:1;">${totalSearches}</div>
-        <div style="color:#64748b;font-size:15px;margin-top:4px;">búsquedas esta semana</div>
+    <!-- Hero: insight first, not the raw weekly count -->
+    ${headline ? `<div style="background:linear-gradient(135deg,#0f766e,#0d9488);border-radius:16px;padding:24px 28px;margin-bottom:16px;color:white;">
+      <div style="font-size:13px;text-transform:uppercase;letter-spacing:0.08em;opacity:0.85;margin-bottom:6px;">🔥 Lo que más subió esta semana</div>
+      <div style="font-size:26px;font-weight:800;text-transform:capitalize;line-height:1.2;">${esc(headline.term)}</div>
+      <div style="font-size:15px;opacity:0.9;margin-top:4px;">${headline.this_week} búsquedas${headline.last_week > 0 ? ` — ${Math.round((headline.this_week / Math.max(headline.last_week,1)))}x más que la semana pasada` : ' (tema nuevo)'}</div>
+    </div>` : ''}
+
+    <div style="background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.1);padding:24px 32px;margin-bottom:24px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:160px;">
+        <div style="font-size:42px;font-weight:800;color:#0d9488;line-height:1;">${accumulated.toLocaleString('es-PR')}</div>
+        <div style="color:#64748b;font-size:15px;margin-top:4px;">búsquedas al Veci desde que empezamos</div>
       </div>
-      <div style="flex:1;min-width:180px;border-left:2px solid #e2e8f0;padding-left:24px;">
-        <div style="font-size:36px;font-weight:800;line-height:1;color:${overallPct >= 0 ? '#10b981' : '#ef4444'};">
+      <div style="flex:1;min-width:160px;border-left:2px solid #e2e8f0;padding-left:24px;">
+        <div style="font-size:32px;font-weight:800;line-height:1;color:${overallPct >= 0 ? '#10b981' : '#ef4444'};">
           ${overallPct >= 0 ? '+' : ''}${overallPct}%
         </div>
-        <div style="color:#64748b;font-size:15px;margin-top:4px;">vs semana pasada</div>
-      </div>
-      <div style="flex:1;min-width:180px;border-left:2px solid #e2e8f0;padding-left:24px;">
-        <div style="font-size:36px;font-weight:800;line-height:1;color:#8b5cf6;">${surgeList.filter(r => r.last_week === 0).length}</div>
-        <div style="color:#64748b;font-size:15px;margin-top:4px;">términos nuevos</div>
+        <div style="color:#64748b;font-size:15px;margin-top:4px;">demanda vs semana pasada</div>
       </div>
     </div>
 
