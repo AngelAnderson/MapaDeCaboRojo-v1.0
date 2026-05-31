@@ -1811,7 +1811,7 @@ async function handle_demanda(req: any, res: any) {
       ${opportunityCards}
     </div>
 
-    <!-- CTA: Listing gratis + Vitrina (modelo real, supersede $49/mes) -->
+    <!-- CTA: Listing gratis + La Vitrina (modelo de pricing real) -->
     <div style="background:white;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);padding:28px 24px;margin-bottom:16px;">
       <h2 style="margin:0 0 6px;font-size:18px;font-weight:700;color:#0f172a;">¿Tu negocio sale en estas búsquedas?</h2>
       <p style="margin:0 0 18px;color:#64748b;font-size:14px;">Cada semana el pueblo busca lo que tú vendes. Aquí está cómo aparecer.</p>
