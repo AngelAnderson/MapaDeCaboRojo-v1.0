@@ -1817,6 +1817,7 @@ async function handle_demanda(req: any, res: any) {
   }).join('');
 
   const oppWa = (term: string) => `https://wa.me/17874177711?text=${encodeURIComponent(`Hola, vi que en Cabo Rojo buscaron "${term}" esta semana. Mi negocio resuelve eso y quiero aparecer de primero.`)}`;
+  const recoWa = (term: string) => `https://wa.me/17874177711?text=${encodeURIComponent(`RECOMIENDO para "${term}": `)}`;
   const opportunityCards = opportunities.length > 0
     ? opportunities.map(row => {
       const tag = intentTag(row.term);
@@ -1828,7 +1829,10 @@ async function handle_demanda(req: any, res: any) {
         </div>
         <div style="color:#78350f;font-size:14px;margin:0 0 6px;"><strong>${row.this_week} búsquedas esta semana.</strong></div>
         <div style="color:#78350f;font-size:13.5px;margin:0 0 12px;">${tag.sell}</div>
-        <a href="${oppWa(row.term)}" style="display:inline-block;background:#d4603a;color:white;text-decoration:none;padding:9px 18px;border-radius:8px;font-weight:700;font-size:13.5px;">¿Tú resuelves esto? Aparece de primero →</a>
+        <div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap;">
+          <a href="${oppWa(row.term)}" style="display:inline-block;background:#d4603a;color:white;text-decoration:none;padding:9px 18px;border-radius:8px;font-weight:700;font-size:13.5px;">¿Tú resuelves esto? Aparece de primero →</a>
+          <a href="${recoWa(row.term)}" style="color:#0f766e;text-decoration:none;font-weight:700;font-size:13px;">¿Conoces uno bueno? Recomiéndalo →</a>
+        </div>
       </div>`;
     }).join('')
     : '<p style="color:#64748b;font-size:14px;">Esta semana no apareció una categoría nueva sin cubrir. Vuelve el lunes — el radar cambia cada semana.</p>';
