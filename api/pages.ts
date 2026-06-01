@@ -1806,23 +1806,61 @@ async function handle_demanda(req: any, res: any) {
     .filter(c => c.terms.length > 0)
     .sort((a, b) => b.total - a.total);
 
+  // 12-week trend per category (item 10) — aggregated server-side via RPC (≤48 rows,
+  // avoids the 1000-row client limit that would undercount high-volume categories).
+  const { data: catWeeksRaw } = await supabase.rpc('get_demand_category_weeks');
+  const weeksByKey: Record<string, number[]> = {};
+  for (const c of DEMAND_CATEGORIES) weeksByKey[c.key] = new Array(12).fill(0);
+  for (const row of (Array.isArray(catWeeksRaw) ? catWeeksRaw : [])) {
+    const k = (row as any).category_key as string;
+    const wi = Number((row as any).week_idx);
+    if (weeksByKey[k] && wi >= 0 && wi < 12) weeksByKey[k][wi] = Number((row as any).cnt) || 0;
+  }
+  function sparkSvg(vals: number[], color: string): string {
+    const w = 88, h = 24, max = Math.max(1, ...vals);
+    const pts = vals.map((v, i) => {
+      const x = (i / (vals.length - 1)) * (w - 2) + 1;
+      const y = h - (v / max) * (h - 4) - 2;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(' ');
+    return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true" style="display:block;"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round" opacity="0.9"/></svg>`;
+  }
+  function trendWord(vals: number[]): string {
+    const last = vals[vals.length - 1];
+    const prior = vals.slice(-5, -1);
+    const avgPrior = prior.length ? prior.reduce((s, v) => s + v, 0) / prior.length : 0;
+    if (last > avgPrior * 1.3 && last >= 2) return '<span style="color:#10b981;font-weight:700;">↑ subiendo</span>';
+    if (avgPrior > 0 && last < avgPrior * 0.7) return '<span style="color:#f97316;font-weight:700;">↓ bajando</span>';
+    return '<span style="color:#94a3b8;">estable</span>';
+  }
+
   const hotCategoriesHtml = categorized.length > 0
-    ? categorized.map(c => `
-      <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 0;border-bottom:1px solid #f1f5f9;">
+    ? categorized.map(c => {
+        const wk = weeksByKey[c.cat.key] || new Array(12).fill(0);
+        return `
+      <div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid #f1f5f9;">
         <div style="font-size:22px;">${c.cat.icon}</div>
-        <div style="flex:1;">
-          <div style="font-weight:700;color:#0f172a;font-size:15px;">${c.cat.label} <span style="color:#0d9488;font-weight:800;">· ${c.total}</span></div>
-          <div style="color:#64748b;font-size:13px;text-transform:capitalize;">${c.terms.map(t => esc(t.term)).join(' · ')}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;color:#0f172a;font-size:15px;">${c.cat.label} <span style="color:#0d9488;font-weight:800;">· ${c.total}</span> <span style="font-size:12px;">${trendWord(wk)}</span></div>
+          <div style="color:#64748b;font-size:13px;text-transform:capitalize;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.terms.map(t => esc(t.term)).join(' · ')}</div>
         </div>
-      </div>`).join('')
+        <div style="flex-shrink:0;" title="Últimas 12 semanas">${sparkSvg(wk, '#0d9488')}</div>
+      </div>`;
+      }).join('')
     : '<p style="color:#64748b;font-size:14px;">Aún no hay suficiente data para agrupar esta semana.</p>';
 
-  const publishTips = categorized.map(c => c.cat).filter(c => c.publishTip);
-  const publishHtml = publishTips.map(c => `
+  // Qué publicar (item 8) — auto-generado del término REAL más buscado de cada categoría esta semana.
+  const publishHtml = categorized
+    .filter(c => c.cat.publishTip)
+    .map(c => {
+      const top = c.terms[0];
+      const verb = top.this_week === 1 ? 'persona buscó' : 'personas buscaron';
+      return `
       <div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:14px 16px;margin-bottom:10px;">
-        <div style="font-weight:700;color:#0f766e;font-size:14px;margin-bottom:4px;">${c.publishTip!.who}, publica esto hoy:</div>
-        <div style="color:#134e4a;font-size:14px;font-style:italic;">"${c.publishTip!.post}"</div>
-      </div>`).join('');
+        <div style="font-size:12.5px;color:#0f766e;margin-bottom:6px;">Esta semana ${top.this_week} ${verb} «<span style="text-transform:capitalize;">${esc(top.term)}</span>». ${c.cat.publishTip!.who}, este post te sirve:</div>
+        <div style="color:#134e4a;font-size:14px;font-style:italic;">"${c.cat.publishTip!.post}"</div>
+      </div>`;
+    }).join('');
 
   const baseUrl = 'https://mapadecaborojo.com';
   const waLink = `https://wa.me/17874177711?text=${encodeURIComponent('Hola, vi el radar de demanda y quiero que mi negocio aparezca en Cabo Rojo')}`;
@@ -1840,6 +1878,23 @@ async function handle_demanda(req: any, res: any) {
   <meta property="og:url" content="${baseUrl}/demanda">
   <meta property="og:site_name" content="MapaDeCaboRojo.com">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Radar de Demanda — Cabo Rojo","url":"${baseUrl}/demanda","description":"Análisis de demanda local semanal para negocios en Cabo Rojo, Puerto Rico."}</script>
+  <script type="application/ld+json">${JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Dataset',
+    name: 'Demanda local de Cabo Rojo',
+    description: `Búsquedas reales de residentes, visitantes y diáspora al asistente *7711 y al directorio MapaDeCaboRojo.com. ${accumulated} búsquedas acumuladas. Actualizado cada semana. Datos agregados, sin información personal.`,
+    url: `${baseUrl}/demanda`,
+    keywords: ['Cabo Rojo', 'Puerto Rico', 'demanda local', 'búsquedas de negocios', 'intención de compra'],
+    temporalCoverage: '2026/..',
+    isAccessibleForFree: true,
+    creativeWorkStatus: 'Published',
+    creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
+    publisher: { '@type': 'Organization', name: 'MapaDeCaboRojo.com', url: baseUrl },
+    spatialCoverage: { '@type': 'Place', name: 'Cabo Rojo, Puerto Rico' },
+    variableMeasured: 'Volumen de búsquedas por categoría y término',
+    measurementTechnique: 'Conteo de consultas reales al asistente *7711 y al buscador del directorio, normalizadas y filtradas de datos personales',
+    distribution: { '@type': 'DataDownload', encodingFormat: 'application/json', contentUrl: `${baseUrl}/api/intelligence` },
+  })}</script>
 </head>
 <body style="margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;color:#1e293b;line-height:1.6;">
 
@@ -1935,8 +1990,37 @@ async function handle_demanda(req: any, res: any) {
       ${publishHtml}
     </div>` : ''}
 
+    <!-- Captura de lead inbound (item 9) — tabla demand_alerts existente, el Veci avisa -->
+    <div id="tu-negocio" style="background:linear-gradient(135deg,#0d9488,#0f766e);border-radius:16px;padding:26px 24px;margin-bottom:16px;color:white;scroll-margin-top:16px;">
+      <h2 style="margin:0 0 6px;font-size:20px;font-weight:800;">Avísame cuando te busquen</h2>
+      <p style="margin:0 0 16px;font-size:14px;opacity:0.92;">Déjame tu negocio. Cuando alguien busque lo que tú resuelves en el Veci, te aviso por WhatsApp. Gratis.</p>
+      <form id="alertForm" style="display:flex;flex-direction:column;gap:10px;">
+        <input name="business_name" required maxlength="120" placeholder="Nombre de tu negocio" style="padding:12px 14px;border:none;border-radius:9px;font-size:15px;">
+        <input name="phone" required maxlength="20" inputmode="tel" placeholder="Tu WhatsApp (787...)" style="padding:12px 14px;border:none;border-radius:9px;font-size:15px;">
+        <input name="keywords" required maxlength="120" placeholder="¿Qué resuelves? ej: plomero, neveras, comida" style="padding:12px 14px;border:none;border-radius:9px;font-size:15px;">
+        <button type="submit" style="background:#d4603a;color:white;border:none;padding:13px;border-radius:9px;font-weight:800;font-size:15px;cursor:pointer;">Avísame →</button>
+      </form>
+      <div id="alertOk" style="display:none;background:rgba(255,255,255,0.15);border-radius:10px;padding:16px;text-align:center;font-weight:700;">✓ Listo. Te aviso cuando el pueblo te busque.</div>
+      <p style="margin:12px 0 0;font-size:12px;opacity:0.8;">Sin compromiso. Es el primer paso — si después quieres salir cada semana, ahí abajo está La Vitrina.</p>
+    </div>
+    <script>
+      (function(){
+        var f=document.getElementById('alertForm');
+        if(!f) return;
+        f.addEventListener('submit',function(e){
+          e.preventDefault();
+          var btn=f.querySelector('button');
+          btn.disabled=true; btn.textContent='Enviando...';
+          fetch('/demanda',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({business_name:f.business_name.value,phone:f.phone.value,keywords:f.keywords.value})})
+            .then(function(r){ if(!r.ok) throw new Error('bad'); return r.json(); })
+            .then(function(){ f.style.display='none'; document.getElementById('alertOk').style.display='block'; })
+            .catch(function(){ btn.disabled=false; btn.textContent='Avísame →'; alert('Hubo un error. Escríbeme al 787-417-7711.'); });
+        });
+      })();
+    </script>
+
     <!-- CTA: Listing gratis + La Vitrina (modelo de pricing real) -->
-    <div id="tu-negocio" style="background:white;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);padding:28px 24px;margin-bottom:16px;scroll-margin-top:16px;">
+    <div style="background:white;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);padding:28px 24px;margin-bottom:16px;">
       <h2 style="margin:0 0 6px;font-size:20px;font-weight:800;color:#0f172a;">Aparece donde ya te están buscando</h2>
       <p style="margin:0 0 18px;color:#64748b;font-size:14px;">Cuánto cuesta, qué recibes, qué haces:</p>
 
@@ -1964,6 +2048,14 @@ async function handle_demanda(req: any, res: any) {
     <div style="background:#0f172a;border-radius:16px;padding:22px 24px;margin-bottom:16px;text-align:center;">
       <p style="margin:0;color:white;font-size:16px;font-weight:700;line-height:1.5;">Este radar cambia cada semana.</p>
       <p style="margin:6px 0 0;color:#cbd5e1;font-size:14px;">Si tu categoría aparece hoy, muévete hoy. La demanda no espera.</p>
+    </div>
+
+    <!-- Metodología y fuente (item 7) — lo que la hace citable por AI y prensa -->
+    <div style="background:white;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);padding:24px;margin-bottom:24px;">
+      <h2 style="margin:0 0 10px;font-size:16px;font-weight:700;color:#0f172a;">Metodología y fuente</h2>
+      <p style="margin:0 0 8px;color:#475569;font-size:13.5px;">Cada número viene de <strong>búsquedas reales</strong> que vecinos, visitantes y diáspora le hacen al asistente *7711 y al buscador de MapaDeCaboRojo.com — no de encuestas ni estimados. Total acumulado: <strong>${accumulated.toLocaleString('es-PR')}</strong> búsquedas. Se actualiza cada semana.</p>
+      <p style="margin:0 0 8px;color:#475569;font-size:13.5px;">Los datos se muestran <strong>agregados por categoría y término genérico</strong>. Nunca publicamos nombres de personas, teléfonos ni mensajes privados.</p>
+      <p style="margin:0;color:#94a3b8;font-size:12.5px;">Fuente citable: <em>Radar de Demanda — MapaDeCaboRojo.com</em>. Datos abiertos en <a href="${baseUrl}/api/intelligence" style="color:#0d9488;text-decoration:none;">/api/intelligence</a>. Prensa e investigadores: escriban al 787-417-7711.</p>
     </div>
 
     <p style="text-align:center;color:#94a3b8;font-size:13px;margin:0 0 24px;">¿Preguntas? Textea al <a href="${waLink}" style="color:#0d9488;text-decoration:none;font-weight:600;">787-417-7711</a> — te contesta el Veci.</p>
