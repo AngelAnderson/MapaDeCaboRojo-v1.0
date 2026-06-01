@@ -1675,6 +1675,27 @@ function getSurgeBadge(pct: number, lastWeek: number): string {
   return '<span style="background:#cbd5e1;color:#475569;font-size:11px;padding:2px 8px;border-radius:999px;font-weight:600;">' + pct + '%</span>';
 }
 
+interface DemandCategory {
+  key: string;
+  label: string;
+  icon: string;
+  match: RegExp;
+  publishTip?: { who: string; post: string };
+}
+const DEMAND_CATEGORIES: DemandCategory[] = [
+  { key: 'hogar', label: 'Hogar y reparaciones', icon: '🔧',
+    match: /nevera|refriger|aire|acondicion|\bac\b|plomer|electricist/i,
+    publishTip: { who: 'Si arreglas neveras, aires o eres plomero', post: '¿Se te dañó la nevera o el aire? Lo reviso aquí en Cabo Rojo. Escríbeme por WhatsApp.' } },
+  { key: 'comida', label: 'Comida', icon: '🍽️',
+    match: /comida|china|chino|pizza|pincho|marisco|seafood|restaurant|comer|desayuno|almuerzo|cena|carne|carnicer|panader|repos|pastel|bizcocho|helad/i,
+    publishTip: { who: 'Si vendes comida en Joyuda', post: 'Hoy en Joyuda: comida buena, vista linda y servicio rápido. Te esperamos.' } },
+  { key: 'servicios', label: 'Servicios rápidos', icon: '⚡',
+    match: /cerrajer|lavado|carwash|carro|auto|mecanic|goma|notar|abogad|gas|gasolina|combustible/i,
+    publishTip: { who: 'Si lavas carros', post: 'Carwash en Cabo Rojo — tu carro brillando hoy mismo. Pasa o escríbeme por WhatsApp.' } },
+  { key: 'salud', label: 'Salud y farmacia', icon: '💊',
+    match: /farmacia|botica|medicament|receta|dentist|medico|médico|doctor|pediatr|veterinari|mascota|optica|óptica/i },
+];
+
 async function handle_demanda(req: any, res: any) {
   // Handle subscribe POST
   if (req.method === 'POST') {
@@ -1765,13 +1786,43 @@ async function handle_demanda(req: any, res: any) {
     </tr>`;
   }).join('');
 
+  const oppWa = (term: string) => `https://wa.me/17874177711?text=${encodeURIComponent(`Hola, vi que en Cabo Rojo buscaron "${term}" esta semana. Mi negocio resuelve eso y quiero aparecer de primero.`)}`;
   const opportunityCards = opportunities.length > 0
     ? opportunities.map(row => `
-      <div style="background:#fef3c7;border:1px solid #fcd34d;border-radius:8px;padding:12px 16px;margin-bottom:8px;">
-        <span style="font-weight:700;color:#92400e;text-transform:capitalize;">${esc(row.term)}</span>
-        <span style="color:#78350f;font-size:13px;margin-left:8px;">${row.this_week} búsquedas esta semana — sin negocio asociado</span>
+      <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:16px 18px;margin-bottom:10px;">
+        <div style="font-weight:800;color:#92400e;text-transform:capitalize;font-size:16px;">${esc(row.term)}</div>
+        <div style="color:#78350f;font-size:14px;margin:2px 0 12px;">${row.this_week} personas buscaron esto esta semana.</div>
+        <a href="${oppWa(row.term)}" style="display:inline-block;background:#d4603a;color:white;text-decoration:none;padding:9px 18px;border-radius:8px;font-weight:700;font-size:13.5px;">¿Tú resuelves esto? Aparece de primero →</a>
       </div>`).join('')
-    : '<p style="color:#64748b;font-size:14px;">No hay términos sin cobertura esta semana.</p>';
+    : '<p style="color:#64748b;font-size:14px;">Esta semana no apareció una categoría nueva sin cubrir. Vuelve el lunes — el radar cambia cada semana.</p>';
+
+  // Hot categories (item 8) + publish tips (item 7)
+  const categorized = DEMAND_CATEGORIES
+    .map(cat => {
+      const terms = surgeList.filter(r => cat.match.test(r.term));
+      const total = terms.reduce((s, r) => s + (r.this_week || 0), 0);
+      return { cat, terms, total };
+    })
+    .filter(c => c.terms.length > 0)
+    .sort((a, b) => b.total - a.total);
+
+  const hotCategoriesHtml = categorized.length > 0
+    ? categorized.map(c => `
+      <div style="display:flex;align-items:flex-start;gap:10px;padding:12px 0;border-bottom:1px solid #f1f5f9;">
+        <div style="font-size:22px;">${c.cat.icon}</div>
+        <div style="flex:1;">
+          <div style="font-weight:700;color:#0f172a;font-size:15px;">${c.cat.label} <span style="color:#0d9488;font-weight:800;">· ${c.total}</span></div>
+          <div style="color:#64748b;font-size:13px;text-transform:capitalize;">${c.terms.map(t => esc(t.term)).join(' · ')}</div>
+        </div>
+      </div>`).join('')
+    : '<p style="color:#64748b;font-size:14px;">Aún no hay suficiente data para agrupar esta semana.</p>';
+
+  const publishTips = categorized.map(c => c.cat).filter(c => c.publishTip);
+  const publishHtml = publishTips.map(c => `
+      <div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:14px 16px;margin-bottom:10px;">
+        <div style="font-weight:700;color:#0f766e;font-size:14px;margin-bottom:4px;">${c.publishTip!.who}, publica esto hoy:</div>
+        <div style="color:#134e4a;font-size:14px;font-style:italic;">"${c.publishTip!.post}"</div>
+      </div>`).join('');
 
   const baseUrl = 'https://mapadecaborojo.com';
   const waLink = `https://wa.me/17874177711?text=${encodeURIComponent('Hola, vi el radar de demanda y quiero que mi negocio aparezca en Cabo Rojo')}`;
@@ -1785,7 +1836,7 @@ async function handle_demanda(req: any, res: any) {
   <meta name="description" content="Descubre qué buscan los residentes y visitantes de Cabo Rojo en tiempo real. Análisis semanal de demanda local para negocios.">
   <link rel="canonical" href="${baseUrl}/demanda">
   <meta property="og:title" content="Radar de Demanda — Cabo Rojo">
-  <meta property="og:description" content="Lo que Cabo Rojo está buscando esta semana.">
+  <meta property="og:description" content="La gente ya está buscando. La pregunta es si encuentra tu negocio.">
   <meta property="og:url" content="${baseUrl}/demanda">
   <meta property="og:site_name" content="MapaDeCaboRojo.com">
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Radar de Demanda — Cabo Rojo","url":"${baseUrl}/demanda","description":"Análisis de demanda local semanal para negocios en Cabo Rojo, Puerto Rico."}</script>
@@ -1797,10 +1848,27 @@ async function handle_demanda(req: any, res: any) {
     <a href="${baseUrl}" style="color:rgba(255,255,255,0.8);text-decoration:none;font-size:13px;display:inline-block;margin-bottom:16px;">← MapaDeCaboRojo.com</a>
     <div style="font-size:40px;margin-bottom:8px;">📈</div>
     <h1 style="color:white;font-size:28px;font-weight:800;margin:0 0 8px 0;">Radar de Demanda</h1>
-    <p style="color:rgba(255,255,255,0.85);font-size:16px;margin:0;">Lo que Cabo Rojo está buscando esta semana</p>
+    <p style="color:rgba(255,255,255,0.92);font-size:16px;margin:0 auto;max-width:480px;">La gente ya está buscando. La pregunta es si encuentra tu negocio.</p>
   </div>
 
   <div style="max-width:720px;margin:-24px auto 0;padding:0 16px 48px;">
+
+    <!-- Abuelita-friendly explainer (item 2) -->
+    <div style="background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);padding:20px 24px;margin-bottom:16px;">
+      <p style="margin:0;color:#334155;font-size:15px;">Este radar muestra las <strong>búsquedas reales</strong> que la gente hace en el Veci *7711 y en el mapa. Si muchas personas buscan plomero, comida, neveras o cerrajero, eso es <strong>demanda</strong>. Si tu negocio resuelve eso, debe aparecer aquí.</p>
+    </div>
+
+    <!-- Two paths (item 3) -->
+    <div style="display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;">
+      <a href="${baseUrl}" style="flex:1;min-width:200px;text-decoration:none;background:#0d9488;color:white;border-radius:12px;padding:16px 18px;">
+        <div style="font-size:15px;font-weight:800;">Soy residente / turista</div>
+        <div style="font-size:13px;opacity:0.9;margin-top:2px;">Encuentra lo que necesitas →</div>
+      </a>
+      <a href="#tu-negocio" style="flex:1;min-width:200px;text-decoration:none;background:#d4603a;color:white;border-radius:12px;padding:16px 18px;">
+        <div style="font-size:15px;font-weight:800;">Tengo un negocio</div>
+        <div style="font-size:13px;opacity:0.9;margin-top:2px;">Haz que te encuentren →</div>
+      </a>
+    </div>
 
     <!-- Hero: insight first, not the raw weekly count -->
     ${headline ? `<div style="background:linear-gradient(135deg,#0f766e,#0d9488);border-radius:16px;padding:24px 28px;margin-bottom:16px;color:white;">
@@ -1820,6 +1888,14 @@ async function handle_demanda(req: any, res: any) {
         </div>
         <div style="color:#64748b;font-size:15px;margin-top:4px;">demanda vs semana pasada</div>
       </div>
+    </div>
+
+    <!-- Dinero buscando dueño (items 4 + 5 + 6) — la sección que vende sola -->
+    <div style="background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.12);padding:24px;margin-bottom:24px;border-top:4px solid #d4603a;">
+      <h2 style="margin:0 0 4px;font-size:20px;font-weight:800;color:#0f172a;">💰 Dinero buscando dueño</h2>
+      <p style="margin:0 0 6px;color:#475569;font-size:14px;">Esto se buscó esta semana en Cabo Rojo. Si tu negocio lo resuelve, aquí es donde apareces.</p>
+      <p style="margin:0 0 16px;color:#94a3b8;font-size:12.5px;">Estas no son opiniones. Son búsquedas reales — alguien escribió esto porque necesitaba resolver algo.</p>
+      ${opportunityCards}
     </div>
 
     <!-- Surge Table -->
@@ -1846,17 +1922,23 @@ async function handle_demanda(req: any, res: any) {
       </div>`}
     </div>
 
-    <!-- Opportunities -->
+    <!-- Categorías calientes (item 8) -->
     <div style="background:white;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);padding:24px;margin-bottom:24px;">
-      <h2 style="margin:0 0 6px;font-size:18px;font-weight:700;color:#0f172a;">⚡ Oportunidades sin cubrir</h2>
-      <p style="margin:0 0 16px;color:#64748b;font-size:13px;">Términos con demanda activa pero sin negocio que los satisfaga directamente.</p>
-      ${opportunityCards}
+      <h2 style="margin:0 0 12px;font-size:18px;font-weight:700;color:#0f172a;">🔥 Categorías calientes</h2>
+      ${hotCategoriesHtml}
     </div>
 
+    ${publishHtml ? `<!-- Qué publicar esta semana (item 7) -->
+    <div style="background:white;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);padding:24px;margin-bottom:24px;">
+      <h2 style="margin:0 0 4px;font-size:18px;font-weight:700;color:#0f172a;">📣 Qué publicar esta semana</h2>
+      <p style="margin:0 0 14px;color:#64748b;font-size:13px;">La gente está buscando esto. Copia, pega y publica — no inventes.</p>
+      ${publishHtml}
+    </div>` : ''}
+
     <!-- CTA: Listing gratis + La Vitrina (modelo de pricing real) -->
-    <div style="background:white;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);padding:28px 24px;margin-bottom:16px;">
-      <h2 style="margin:0 0 6px;font-size:18px;font-weight:700;color:#0f172a;">¿Tu negocio sale en estas búsquedas?</h2>
-      <p style="margin:0 0 18px;color:#64748b;font-size:14px;">Cada semana el pueblo busca lo que tú vendes. Aquí está cómo aparecer.</p>
+    <div id="tu-negocio" style="background:white;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);padding:28px 24px;margin-bottom:16px;scroll-margin-top:16px;">
+      <h2 style="margin:0 0 6px;font-size:20px;font-weight:800;color:#0f172a;">Aparece donde ya te están buscando</h2>
+      <p style="margin:0 0 18px;color:#64748b;font-size:14px;">Cuánto cuesta, qué recibes, qué haces:</p>
 
       <div style="border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:14px;">
         <div style="display:inline-block;background:#dcfce7;color:#15803d;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;margin-bottom:8px;">GRATIS</div>
@@ -1870,12 +1952,18 @@ async function handle_demanda(req: any, res: any) {
         <h3 style="margin:0 0 4px;font-size:16px;color:#0f172a;">Que el pueblo te vea cada semana</h3>
         <p style="margin:0 0 6px;color:#64748b;font-size:14px;">No te vendo un anuncio — te ayudo a aparecer con intención. Tú das el contenido, nosotros lo publicamos:</p>
         <ul style="margin:0 0 14px;padding-left:18px;color:#475569;font-size:13.5px;">
-          <li><strong>$40</strong> — una publicación esta semana + listing en el Veci</li>
-          <li><strong>$150</strong> — 4 publicaciones (una por semana) + prioridad en el Veci</li>
-          <li><strong>$799/año</strong> — una semanal todo el año + exclusividad de categoría</li>
+          <li><strong>$40</strong> — sal esta semana con una publicación</li>
+          <li><strong>$150</strong> — sal 4 semanas corridas (una por semana)</li>
+          <li><strong>$799/año</strong> — domina tu categoría: una semanal todo el año + exclusividad</li>
         </ul>
         <a href="https://caborojo.com/patrocina" style="display:inline-block;background:#d4603a;color:white;text-decoration:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:14px;">Ver La Vitrina →</a>
       </div>
+    </div>
+
+    <!-- Cierre con urgencia semanal (item 10) -->
+    <div style="background:#0f172a;border-radius:16px;padding:22px 24px;margin-bottom:16px;text-align:center;">
+      <p style="margin:0;color:white;font-size:16px;font-weight:700;line-height:1.5;">Este radar cambia cada semana.</p>
+      <p style="margin:6px 0 0;color:#cbd5e1;font-size:14px;">Si tu categoría aparece hoy, muévete hoy. La demanda no espera.</p>
     </div>
 
     <p style="text-align:center;color:#94a3b8;font-size:13px;margin:0 0 24px;">¿Preguntas? Textea al <a href="${waLink}" style="color:#0d9488;text-decoration:none;font-weight:600;">787-417-7711</a> — te contesta el Veci.</p>
