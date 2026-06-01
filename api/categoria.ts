@@ -178,11 +178,20 @@ export default async function handler(req: any, res: any) {
   }
   const orClauses = orParts.join(',');
 
-  const { data: places, error } = await supabase
+  // High-LTV service categories serve a region, not just one town — include businesses
+  // tagged 'sirve-cabo-rojo' even when their HQ/address is elsewhere (e.g. a solar installer
+  // in Manatí that serves the suroeste). All other categories stay strictly local-by-address.
+  const CAPTURE_CATS = new Set(['electrico', 'electricista', 'electricistas', 'plomero', 'plomeros', 'ac', 'aire-acondicionado', 'solar', 'solares', 'placas']);
+  const isCaptureCat = CAPTURE_CATS.has(cat);
+
+  let placesQuery = supabase
     .from('places')
-    .select('id,name,slug,category,subcategory,image_url,phone,address,google_rating,google_review_count,status,plan,sponsor_weight,tags,services,opening_hours,lat,lon')
-    .eq('status', 'open')
-    .ilike('address', '%Cabo Rojo%')
+    .select('id,name,slug,category,subcategory,image_url,phone,address,municipality,google_rating,google_review_count,status,plan,sponsor_weight,tags,services,opening_hours,lat,lon')
+    .eq('status', 'open');
+  placesQuery = isCaptureCat
+    ? placesQuery.or('address.ilike.%Cabo Rojo%,tags.cs.{sirve-cabo-rojo}')
+    : placesQuery.ilike('address', '%Cabo Rojo%');
+  const { data: places, error } = await placesQuery
     .or(orClauses)
     .order('sponsor_weight', { ascending: false })
     .limit(500);
@@ -223,6 +232,11 @@ export default async function handler(req: any, res: any) {
       return false;
     });
   });
+
+  // Map pins: physically-in-CR businesses only. Service-area businesses (tagged
+  // sirve-cabo-rojo but located elsewhere, e.g. Manatí) are listed but NOT pinned,
+  // so the map doesn't zoom out across the island to show a far-away HQ.
+  const mapPlaces = filtered.filter((p: any) => p.lat && p.lon && (p.address || '').toLowerCase().includes('cabo rojo'));
 
   // Category-specific SEO content
   const CATEGORY_SEO: Record<string, { title?: string; description: string; intro: string }> = {
@@ -432,6 +446,11 @@ export default async function handler(req: any, res: any) {
     : filtered.map((p: any) => {
         const slug = p.slug || p.id;
         const stars = p.google_rating ? `⭐ ${p.google_rating}` : '';
+        const servesCR = Array.isArray(p.tags) && p.tags.includes('sirve-cabo-rojo');
+        const inCR = (p.address || '').toLowerCase().includes('cabo rojo');
+        const locHtml = (servesCR && !inCR)
+          ? `<p style="font-size:0.8rem;color:#64748b;margin-bottom:0.4rem;">📍 ${esc(p.municipality || '')}${p.municipality ? ' · ' : ''}<span style="color:#0d9488;font-weight:600;">sirve Cabo Rojo</span></p>`
+          : (p.address ? `<p style="font-size:0.8rem;color:#64748b;margin-bottom:0.4rem;">📍 ${esc(p.address)}</p>` : '');
         const planBadge = p.plan === 'vip' ? '<span style="background:#f97316;color:white;font-size:0.65rem;padding:0.15rem 0.4rem;border-radius:999px;text-transform:uppercase;margin-left:0.4rem;">VIP</span>' : '';
         const detailPath = detailRoute ? `${baseUrl}/${detailRoute}/${esc(slug)}` : `${baseUrl}/negocio/${esc(slug)}`;
         const phoneInfo = normalizePhone(p.phone);
@@ -470,7 +489,7 @@ export default async function handler(req: any, res: any) {
                 const isOpen = openLabel.startsWith('🟢');
                 return `<div style="font-size:0.78rem;font-weight:600;margin-bottom:0.4rem;color:${isOpen ? '#16a34a' : '#dc2626'};">${esc(openLabel)}</div>`;
               })()}
-              ${p.address ? `<p style="font-size:0.8rem;color:#64748b;margin-bottom:0.4rem;">📍 ${esc(p.address)}</p>` : ''}
+              ${locHtml}
               ${Array.isArray(p.services) && p.services.length > 0 ? `<div style="display:flex;flex-wrap:wrap;gap:0.25rem;">${p.services.slice(0, 4).map((s: string) => `<span style="font-size:0.65rem;background:#f0fdf4;color:#166534;padding:0.15rem 0.4rem;border-radius:999px;">${esc(s)}</span>`).join('')}${p.services.length > 4 ? `<span style="font-size:0.65rem;color:#94a3b8;">+${p.services.length - 4}</span>` : ''}</div>` : ''}
             </div>
           </a>
@@ -540,7 +559,7 @@ export default async function handler(req: any, res: any) {
 
   <!-- Leaflet map embedded at top of category page -->
   <div id="cat-map" aria-label="Mapa de ${esc(displayName)} en Cabo Rojo"></div>
-  <p class="map-section-label">📍 ${filtered.filter((p: any) => p.lat && p.lon).length} ubicaciones en el mapa</p>
+  <p class="map-section-label">📍 ${mapPlaces.length} ubicaciones en el mapa</p>
 
   <div class="container">
     ${urgentBanner}
@@ -745,8 +764,7 @@ export default async function handler(req: any, res: any) {
   <script>
     (function() {
       var places = ${JSON.stringify(
-        filtered
-          .filter((p: any) => p.lat && p.lon)
+        mapPlaces
           .map((p: any) => ({
             lat: p.lat,
             lon: p.lon,
