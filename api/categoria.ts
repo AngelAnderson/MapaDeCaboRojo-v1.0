@@ -126,6 +126,9 @@ const CATEGORY_MAP: Record<string, { match: string[]; display: string; emoji: st
   electrico:      { match: ['eléctrico', 'electrico', 'electrician', 'electricista', 'electricidad'], display: 'Electricistas', emoji: '⚡', nameMatch: true },
   electricista:   { match: ['eléctrico', 'electrico', 'electrician', 'electricista', 'electricidad'], display: 'Electricistas', emoji: '⚡', nameMatch: true },
   electricistas:  { match: ['eléctrico', 'electrico', 'electrician', 'electricista', 'electricidad'], display: 'Electricistas', emoji: '⚡', nameMatch: true },
+  solar:          { match: ['solar', 'placas solares', 'placa solar', 'fotovoltaic', 'paneles solares', 'energía solar', 'energia solar'], display: 'Instaladores de Placas Solares', emoji: '☀️', nameMatch: true },
+  solares:        { match: ['solar', 'placas solares', 'placa solar', 'fotovoltaic', 'paneles solares', 'energía solar', 'energia solar'], display: 'Instaladores de Placas Solares', emoji: '☀️', nameMatch: true },
+  placas:         { match: ['solar', 'placas solares', 'placa solar', 'fotovoltaic', 'paneles solares', 'energía solar', 'energia solar'], display: 'Instaladores de Placas Solares', emoji: '☀️', nameMatch: true },
   notario:        { match: ['notario', 'notary', 'notaría', 'notaria', 'abogado', 'lawyer', 'law firm', 'lcdo', 'lcda'], display: 'Notarios y Abogados', emoji: '⚖️', nameMatch: true },
   notarios:       { match: ['notario', 'notary', 'notaría', 'notaria', 'abogado', 'lawyer', 'law firm', 'lcdo', 'lcda'], display: 'Notarios y Abogados', emoji: '⚖️', nameMatch: true },
   abogado:        { match: ['notario', 'notary', 'notaría', 'notaria', 'abogado', 'lawyer', 'law firm', 'lcdo', 'lcda'], display: 'Notarios y Abogados', emoji: '⚖️', nameMatch: true },
@@ -233,6 +236,57 @@ export default async function handler(req: any, res: any) {
       description: `${filtered.length} gimnasios y centros fitness en Cabo Rojo, PR — boxing, CrossFit, yoga, pesas, running y más. Horarios, direcciones y contacto.`,
       intro: `Cabo Rojo tiene ${filtered.length} opciones para ponerte en forma — desde gimnasios tradicionales hasta estudios de boxeo, fitness por cita y clubes de running. Encuentra el que mejor te quede.`,
     },
+    // High-LTV service categories — capture-optimized SEO (demand-driven, 2026-06)
+    electrico: {
+      title: 'Electricistas en Cabo Rojo',
+      description: `Electricistas en Cabo Rojo, PR — instalación, breakers, emergencias eléctricas post-apagón. ${filtered.length} opciones locales con teléfono, rating y WhatsApp.`,
+      intro: `Cuando se va la luz o un breaker no para de saltar, necesitas un electricista de confianza en Cabo Rojo — no el primer resultado de Google que queda en San Juan. Aquí tienes ${filtered.length} opciones locales con teléfono y rating real. Si no sabes a quién llamar, El Veci te lo dice al momento.`,
+    },
+    electricista: {
+      title: 'Electricistas en Cabo Rojo',
+      description: `Electricistas en Cabo Rojo, PR — instalación, breakers, emergencias eléctricas post-apagón. ${filtered.length} opciones locales con teléfono, rating y WhatsApp.`,
+      intro: `Cuando se va la luz o un breaker no para de saltar, necesitas un electricista de confianza en Cabo Rojo — no el primer resultado de Google que queda en San Juan. Aquí tienes ${filtered.length} opciones locales con teléfono y rating real. Si no sabes a quién llamar, El Veci te lo dice al momento.`,
+    },
+    electricistas: {
+      title: 'Electricistas en Cabo Rojo',
+      description: `Electricistas en Cabo Rojo, PR — instalación, breakers, emergencias eléctricas post-apagón. ${filtered.length} opciones locales con teléfono, rating y WhatsApp.`,
+      intro: `Cuando se va la luz o un breaker no para de saltar, necesitas un electricista de confianza en Cabo Rojo — no el primer resultado de Google que queda en San Juan. Aquí tienes ${filtered.length} opciones locales con teléfono y rating real. Si no sabes a quién llamar, El Veci te lo dice al momento.`,
+    },
+    plomero: {
+      title: 'Plomeros en Cabo Rojo',
+      description: `Plomeros en Cabo Rojo, PR — emergencias, salideros, calentadores, sistemas sépticos. ${filtered.length} plomeros locales con teléfono y rating real.`,
+      intro: `Un salidero a las 11pm no espera. Aquí tienes ${filtered.length} opciones de plomeros de Cabo Rojo con su teléfono directo y rating real — pa' que llames al que resuelve, no al que te roba. Si no sabes por dónde empezar, pregúntale a El Veci.`,
+    },
+    plomeros: {
+      title: 'Plomeros en Cabo Rojo',
+      description: `Plomeros en Cabo Rojo, PR — emergencias, salideros, calentadores, sistemas sépticos. ${filtered.length} plomeros locales con teléfono y rating real.`,
+      intro: `Un salidero a las 11pm no espera. Aquí tienes ${filtered.length} opciones de plomeros de Cabo Rojo con su teléfono directo y rating real — pa' que llames al que resuelve, no al que te roba. Si no sabes por dónde empezar, pregúntale a El Veci.`,
+    },
+    ac: {
+      title: 'AC y Refrigeración en Cabo Rojo',
+      description: `Técnicos de aire acondicionado y refrigeración en Cabo Rojo, PR — instalación, mantenimiento y reparación. ${filtered.length} opciones con teléfono y rating.`,
+      intro: `En el calor de Cabo Rojo, un AC dañado es emergencia. Aquí tienes ${filtered.length} opciones de técnicos de aire acondicionado y refrigeración locales, con teléfono y rating real. El Veci te ayuda a escoger si no sabes a quién llamar.`,
+    },
+    'aire-acondicionado': {
+      title: 'AC y Refrigeración en Cabo Rojo',
+      description: `Técnicos de aire acondicionado y refrigeración en Cabo Rojo, PR — instalación, mantenimiento y reparación. ${filtered.length} opciones con teléfono y rating.`,
+      intro: `En el calor de Cabo Rojo, un AC dañado es emergencia. Aquí tienes ${filtered.length} opciones de técnicos de aire acondicionado y refrigeración locales, con teléfono y rating real. El Veci te ayuda a escoger si no sabes a quién llamar.`,
+    },
+    solar: {
+      title: 'Instaladores de Placas Solares en Cabo Rojo',
+      description: `Instaladores de placas solares en Cabo Rojo, PR — baja tu factura de LUMA, baterías, financiamiento. ${filtered.length} instaladores que sirven Cabo Rojo, con teléfono y rating.`,
+      intro: `Con la luz subiendo cada año, las placas solares dejaron de ser lujo. Aquí tienes ${filtered.length} opciones de instaladores de placas solares que sirven Cabo Rojo, con teléfono y rating real — pa' que compares antes de firmar nada. Si quieres orientación primero, pregúntale a El Veci.`,
+    },
+    solares: {
+      title: 'Instaladores de Placas Solares en Cabo Rojo',
+      description: `Instaladores de placas solares en Cabo Rojo, PR — baja tu factura de LUMA, baterías, financiamiento. ${filtered.length} instaladores que sirven Cabo Rojo, con teléfono y rating.`,
+      intro: `Con la luz subiendo cada año, las placas solares dejaron de ser lujo. Aquí tienes ${filtered.length} opciones de instaladores de placas solares que sirven Cabo Rojo, con teléfono y rating real — pa' que compares antes de firmar nada. Si quieres orientación primero, pregúntale a El Veci.`,
+    },
+    placas: {
+      title: 'Instaladores de Placas Solares en Cabo Rojo',
+      description: `Instaladores de placas solares en Cabo Rojo, PR — baja tu factura de LUMA, baterías, financiamiento. ${filtered.length} instaladores que sirven Cabo Rojo, con teléfono y rating.`,
+      intro: `Con la luz subiendo cada año, las placas solares dejaron de ser lujo. Aquí tienes ${filtered.length} opciones de instaladores de placas solares que sirven Cabo Rojo, con teléfono y rating real — pa' que compares antes de firmar nada. Si quieres orientación primero, pregúntale a El Veci.`,
+    },
   };
   const catSeo = CATEGORY_SEO[cat];
 
@@ -300,14 +354,45 @@ export default async function handler(req: any, res: any) {
     itemListElement: itemListElements,
   };
 
-  // FAQ for health categories
+  // FAQ — health categories + high-LTV capture categories (electricista/plomero/ac/solar)
   const isHealthCat = !!detailRoute;
   const topRated = filtered.filter((p: any) => p.google_rating).sort((a: any, b: any) => Number(b.google_rating) - Number(a.google_rating))[0];
-  const faqItems = isHealthCat ? [
-    { q: `¿Cuántos ${displayName.toLowerCase()} hay en Cabo Rojo?`, a: `Actualmente hay ${filtered.length} ${displayName.toLowerCase()} registrados en Cabo Rojo, Puerto Rico en MapaDeCaboRojo.com.` },
-    ...(topRated ? [{ q: `¿Cuál es el ${displayName.toLowerCase().replace(/s$/, '')} con mejor rating en Cabo Rojo?`, a: `${topRated.name} tiene la mejor valoración con ${topRated.google_rating}/5 estrellas${topRated.google_review_count ? ` basado en ${topRated.google_review_count} reseñas` : ''}.` }] : []),
-    { q: `¿Cómo encuentro ${displayName.toLowerCase()} cerca de mí en Cabo Rojo?`, a: `Puedes explorar todos los ${displayName.toLowerCase()} aquí en MapaDeCaboRojo.com o textear "${displayName}" al 787-417-7711 para que El Veci te recomiende.` },
-  ] : [];
+
+  // Resolve capture-category key + singular noun for FAQ + urgency banner
+  const CAPTURE_KEY: Record<string, string> = {
+    electrico: 'electricista', electricista: 'electricista', electricistas: 'electricista',
+    plomero: 'plomero', plomeros: 'plomero',
+    ac: 'ac', 'aire-acondicionado': 'ac',
+    solar: 'solar', solares: 'solar', placas: 'solar',
+  };
+  const captureKey = CAPTURE_KEY[cat] || null;
+  const CAPTURE_SINGULAR: Record<string, string> = {
+    electricista: 'electricista', plomero: 'plomero', ac: 'técnico de AC', solar: 'instalador de placas solares',
+  };
+  // Emergency / intent-first FAQ (the money question — what someone with the problem types)
+  const CAPTURE_URGENT_FAQ: Record<string, { q: string; a: string }> = {
+    electricista: { q: '¿A quién llamo si se va la luz o un breaker no para de saltar en Cabo Rojo?', a: `Textea ELECTRICISTA al 787-417-7711 y El Veci te dice qué electricista local de Cabo Rojo está disponible, con su teléfono. Aquí tienes ${filtered.length} electricistas listados con rating real.` },
+    plomero: { q: '¿A quién llamo para una emergencia de plomería en Cabo Rojo?', a: `Textea PLOMERO al 787-417-7711 y El Veci te recomienda un plomero local de confianza. Aquí tienes ${filtered.length} plomeros de Cabo Rojo con teléfono y rating.` },
+    ac: { q: '¿Quién repara aire acondicionado en Cabo Rojo?', a: `Textea AC al 787-417-7711 y El Veci te dice qué técnico de refrigeración está disponible. Aquí tienes ${filtered.length} opciones locales con teléfono y rating.` },
+    solar: { q: '¿Quién instala placas solares en Cabo Rojo?', a: `Aquí tienes ${filtered.length} instaladores de placas solares que sirven Cabo Rojo. Textea SOLAR al 787-417-7711 si quieres que El Veci te oriente antes de pedir cotización.` },
+  };
+
+  let faqItems: { q: string; a: string }[] = [];
+  if (isHealthCat) {
+    faqItems = [
+      { q: `¿Cuántos ${displayName.toLowerCase()} hay en Cabo Rojo?`, a: `Actualmente hay ${filtered.length} ${displayName.toLowerCase()} registrados en Cabo Rojo, Puerto Rico en MapaDeCaboRojo.com.` },
+      ...(topRated ? [{ q: `¿Cuál es el ${displayName.toLowerCase().replace(/s$/, '')} con mejor rating en Cabo Rojo?`, a: `${topRated.name} tiene la mejor valoración con ${topRated.google_rating}/5 estrellas${topRated.google_review_count ? ` basado en ${topRated.google_review_count} reseñas` : ''}.` }] : []),
+      { q: `¿Cómo encuentro ${displayName.toLowerCase()} cerca de mí en Cabo Rojo?`, a: `Puedes explorar todos los ${displayName.toLowerCase()} aquí en MapaDeCaboRojo.com o textear "${displayName}" al 787-417-7711 para que El Veci te recomiende.` },
+    ];
+  } else if (captureKey) {
+    const singular = CAPTURE_SINGULAR[captureKey];
+    faqItems = [
+      CAPTURE_URGENT_FAQ[captureKey],
+      { q: `¿Cuántos ${displayName.toLowerCase()} hay en Cabo Rojo?`, a: `Hay ${filtered.length} ${displayName.toLowerCase()} listados en Cabo Rojo en MapaDeCaboRojo.com, con teléfono y rating verificados.` },
+      ...(topRated ? [{ q: `¿Cuál es el ${singular} mejor evaluado en Cabo Rojo?`, a: `${topRated.name} tiene ${topRated.google_rating}/5 estrellas${topRated.google_review_count ? ` (${topRated.google_review_count} reseñas)` : ''}.` }] : []),
+      { q: `¿Cómo encuentro un ${singular} cerca de mí en Cabo Rojo?`, a: `Explora la lista aquí en MapaDeCaboRojo.com o textea "${displayName}" al 787-417-7711 para que El Veci te recomiende al momento.` },
+    ];
+  }
 
   const faqSchema = faqItems.length > 0 ? {
     '@context': 'https://schema.org',
@@ -394,6 +479,16 @@ export default async function handler(req: any, res: any) {
         </div>`;
       }).join('');
 
+  // Emergency banner for urgent service categories (solar excluded — not an emergency)
+  const URGENT_BANNER: Record<string, string> = {
+    electricista: '⚡ ¿Se fue la luz o un breaker no para de saltar? Textea <strong>ELECTRICISTA</strong> al 787-417-7711 y El Veci te dice a quién llamar — al momento.',
+    plomero: '🔧 ¿Salidero o emergencia de plomería ahora? Textea <strong>PLOMERO</strong> al 787-417-7711 y El Veci te recomienda al que resuelve.',
+    ac: '❄️ ¿AC dañado en pleno calor? Textea <strong>AC</strong> al 787-417-7711 y El Veci te dice qué técnico está disponible.',
+  };
+  const urgentBanner = captureKey && URGENT_BANNER[captureKey]
+    ? `<a href="https://wa.me/17874177711?text=${encodeURIComponent(displayName)}" style="display:block;background:#fef2f2;border:1px solid #fecaca;border-left:4px solid #dc2626;border-radius:10px;padding:0.9rem 1.1rem;margin-bottom:1.25rem;color:#7f1d1d;text-decoration:none;font-size:0.92rem;line-height:1.5;">${URGENT_BANNER[captureKey]}</a>`
+    : '';
+
   const html = `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -448,6 +543,7 @@ export default async function handler(req: any, res: any) {
   <p class="map-section-label">📍 ${filtered.filter((p: any) => p.lat && p.lon).length} ubicaciones en el mapa</p>
 
   <div class="container">
+    ${urgentBanner}
     ${catSeo?.intro ? `<p style="font-size:1.05rem;line-height:1.6;color:#475569;margin-bottom:1.5rem;max-width:720px">${esc(catSeo.intro)}</p>` : ''}
 
     ${(cat === 'fisiatra' || cat === 'fisiatras') && filtered.length > 0 ? `
