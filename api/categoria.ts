@@ -697,6 +697,70 @@ export default async function handler(req: any, res: any) {
     </script>
     ` : ''}
 
+    ${captureKey === 'solar' ? `
+    <!-- Solar capture: savings calculator + why-now + pre-sign checklist -->
+    <div style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fcd34d;border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;">
+      <h2 style="font-size:1.2rem;font-weight:700;color:#92400e;margin-bottom:0.4rem;">☀️ ¿Te conviene solar? Calcula en 10 segundos</h2>
+      <p style="font-size:0.9rem;color:#78350f;margin-bottom:1rem;">Dinos cuánto pagas de luz al mes y te decimos cuánto podrías ahorrar.</p>
+      <p style="font-weight:600;color:#1f2937;margin-bottom:0.5rem;font-size:0.92rem;">¿Cuánto pagas de luz al mes?</p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:0.5rem;">
+        <button class="solar-bill-btn" data-bill="75">$50–100</button>
+        <button class="solar-bill-btn" data-bill="125">$100–150</button>
+        <button class="solar-bill-btn" data-bill="175">$150–200</button>
+        <button class="solar-bill-btn" data-bill="250">$200+</button>
+      </div>
+      <div id="solar-calc-result" style="display:none;background:white;border-radius:10px;padding:1.1rem;margin-top:0.75rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);"></div>
+    </div>
+    <style>
+      .solar-bill-btn { background:white; border:1.5px solid #f59e0b; color:#92400e; padding:8px 16px; border-radius:20px; font-size:0.9rem; cursor:pointer; font-weight:600; transition:all 0.15s; }
+      .solar-bill-btn:hover { background:#f59e0b; color:white; }
+    </style>
+    <script>
+      (function(){
+        var WA = 'https://wa.me/17874177711?text=';
+        var rec = ${JSON.stringify(filtered[0]?.name || 'POS Depot (Power On Solar)')};
+        function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+        document.querySelectorAll('.solar-bill-btn').forEach(function(b){
+          b.addEventListener('click', function(){
+            var bill = parseInt(b.dataset.bill, 10);
+            var newLow = Math.round(bill*0.2), newHigh = Math.round(bill*0.5);
+            var saveLow = Math.round(bill*0.5)*12, saveHigh = Math.round(bill*0.8)*12;
+            var msg = 'SOLAR — pago como $' + bill + ' al mes de luz, quiero una cotización';
+            var res = document.getElementById('solar-calc-result');
+            res.innerHTML =
+              '<p style="font-size:0.9rem;color:#374151;margin-bottom:0.5rem;">Con un sistema bien diseñado, una factura de ~$'+bill+'/mes podría bajar a <strong>$'+newLow+'–$'+newHigh+'</strong> al mes.</p>'+
+              '<p style="font-size:1.05rem;color:#92400e;font-weight:700;margin-bottom:0.5rem;">Ahorro estimado: $'+saveLow+'–$'+saveHigh+' al año</p>'+
+              '<p style="font-size:0.72rem;color:#9ca3af;margin-bottom:0.9rem;font-style:italic;">Estimado — depende de tu techo, tu consumo real y el sistema. La cotización exacta es gratis.</p>'+
+              '<a href="'+WA+encodeURIComponent(msg)+'" style="display:inline-block;background:#f59e0b;color:white;text-decoration:none;padding:0.6rem 1.2rem;border-radius:8px;font-weight:700;font-size:0.9rem;">Textea tu factura al 787-417-7711 → '+esc(rec)+' te cotiza</a>';
+            res.style.display='block';
+            try { gtag('event','solar_calc',{ bill: bill }); } catch(e) {}
+          });
+        });
+      })();
+    </script>
+
+    <div style="background:white;border-radius:12px;padding:1.4rem 1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:1.5rem;border-left:4px solid #f59e0b;">
+      <h2 style="font-size:1.1rem;font-weight:700;color:#0f172a;margin-bottom:0.6rem;">¿Por qué ahora?</h2>
+      <p style="font-size:0.9rem;color:#475569;line-height:1.6;margin-bottom:0.6rem;">La luz en Puerto Rico solo sube — LUMA pasó de $0.27 a $0.33 el kWh, y va a seguir. Mi mamá pasó de pagar <strong>$90 a $42 al mes</strong> con un programa que casi nadie conoce.</p>
+      <p style="font-size:0.9rem;color:#475569;line-height:1.6;margin:0;">Además hay fondos federales (HUD, FEMA) ayudando con la instalación — pero cierran, y mucha gente ni sabe que existen. Por eso vale preguntar ahora, no cuando ya cerraron.</p>
+    </div>
+
+    <div style="background:white;border-radius:12px;padding:1.4rem 1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:1.5rem;">
+      <h2 style="font-size:1.1rem;font-weight:700;color:#0f172a;margin-bottom:0.3rem;">Antes de firmar, pregunta esto</h2>
+      <p style="font-size:0.8rem;color:#64748b;margin-bottom:0.9rem;">Pa' que no te cojan de bobo. Un buen instalador contesta las 6 sin rodeos.</p>
+      <ul style="list-style:none;padding:0;margin:0;">
+        ${[
+          '¿Cuánto de mi consumo real cubre el sistema — no el promedio del pueblo, el mío?',
+          '¿Incluye baterías o solo placas? ¿Qué pasa cuando se va la luz?',
+          '¿La garantía cubre placas, inversor Y mano de obra? ¿Por cuántos años?',
+          '¿Están certificados? ¿Cuántas instalaciones llevan en la zona?',
+          '¿El financiamiento es préstamo, lease o PPA? ¿A nombre de quién queda el sistema?',
+          '¿Qué pasa con el sistema si vendo la casa?',
+        ].map(q => `<li style="padding:0.5rem 0;border-bottom:1px solid #f1f5f9;font-size:0.9rem;color:#334155;line-height:1.45;"><span style="color:#f59e0b;font-weight:700;margin-right:0.4rem;">✓</span>${q}</li>`).join('')}
+      </ul>
+    </div>
+    ` : ''}
+
     <a class="back" href="${baseUrl}">← Volver al mapa</a>
 
     <div class="cta-bar">
