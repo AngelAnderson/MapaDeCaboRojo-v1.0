@@ -1696,6 +1696,31 @@ const DEMAND_CATEGORIES: DemandCategory[] = [
     match: /farmacia|botica|medicament|receta|dentist|medico|médico|doctor|pediatr|veterinari|mascota|optica|óptica/i },
 ];
 
+// Intent tag — separates "intención de compra" from "curiosidad" so a business owner
+// sees himself inside the report and feels the urgency. One tag per term (ordered).
+interface IntentTag { label: string; bg: string; fg: string; sell: string }
+const INTENT_RULES: { re: RegExp; tag: IntentTag }[] = [
+  { re: /arregla|repara|cerrajer|plomer|electricist|emergencia|urgente|tapad|fuga|no\s*enfr|no\s*prend|se\s*da[nñ]/i,
+    tag: { label: 'Urgente', bg: '#fee2e2', fg: '#b91c1c', sell: 'Esto es un problema urgente. Si lo resuelves en Cabo Rojo, esta gente no necesita entretenimiento — necesita encontrarte ya.' } },
+  { re: /pastel|bizcocho|cake|cumplea|compr|carnicer|\bcarne\b|tienda|ropa|mueble|piezas|farmacia|botica/i,
+    tag: { label: 'Compra local', bg: '#e0e7ff', fg: '#4338ca', sell: 'Compra lista. Si vendes esto en Cabo Rojo, que te encuentren a ti — antes que al de afuera.' } },
+  { re: /nevera|refriger|aire|acondicion|lavad|carwash|lavo\s*el\s*carro|mecanic|goma|notar|abogad/i,
+    tag: { label: 'Servicio del hogar', bg: '#fef3c7', fg: '#92400e', sell: 'Alguien con un problema que quiere resolver hoy. Si haces esto en Cabo Rojo, necesita encontrarte.' } },
+  { re: /comida|comer|restaurant|joyuda|chin|pizza|pincho|marisco|seafood|desayuno|almuerzo|cena|panader|repos|helad|caf[eé]/i,
+    tag: { label: 'Comida', bg: '#dcfce7', fg: '#15803d', sell: 'Hambre y decisión ahora mismo. Si das de comer en Cabo Rojo y no apareces, comen en otro sitio.' } },
+  { re: /playa|hotel|hospedaje|tour|visitar|que\s*hacer|faro|boquer|combate|parguera|caba[ñn]a/i,
+    tag: { label: 'Turismo / salir', bg: '#cffafe', fg: '#0e7490', sell: 'Alguien decidiendo a dónde ir. Si esto es lo tuyo, aparece en el mapa antes de que decidan.' } },
+];
+const DEFAULT_INTENT: IntentTag = { label: 'Compra local', bg: '#e0e7ff', fg: '#4338ca', sell: 'Si tu negocio resuelve esto en Cabo Rojo, esta gente necesita encontrarte.' };
+function intentTag(term: string): IntentTag {
+  const t = (term || '').toLowerCase();
+  for (const r of INTENT_RULES) if (r.re.test(t)) return r.tag;
+  return DEFAULT_INTENT;
+}
+function intentChip(tag: IntentTag): string {
+  return `<span style="background:${tag.bg};color:${tag.fg};font-size:11px;padding:2px 9px;border-radius:999px;font-weight:700;white-space:nowrap;">${tag.label}</span>`;
+}
+
 async function handle_demanda(req: any, res: any) {
   // Handle subscribe POST
   if (req.method === 'POST') {
@@ -1781,7 +1806,10 @@ async function handle_demanda(req: any, res: any) {
     const color = getSurgeColor(row.surge_pct, row.last_week);
     const badge = getSurgeBadge(row.surge_pct, row.last_week);
     return `<tr style="border-bottom:1px solid #f1f5f9;">
-      <td style="padding:10px 12px;font-weight:600;color:#0f172a;text-transform:capitalize;">${esc(row.term)}</td>
+      <td style="padding:10px 12px;font-weight:600;color:#0f172a;">
+        <span style="text-transform:capitalize;">${esc(row.term)}</span>
+        <div style="margin-top:4px;">${intentChip(intentTag(row.term))}</div>
+      </td>
       <td style="padding:10px 12px;text-align:center;font-weight:700;color:${color};">${row.this_week}</td>
       <td style="padding:10px 12px;text-align:center;color:#94a3b8;">${row.last_week}</td>
       <td style="padding:10px 12px;text-align:center;">${badge}</td>
@@ -1790,12 +1818,19 @@ async function handle_demanda(req: any, res: any) {
 
   const oppWa = (term: string) => `https://wa.me/17874177711?text=${encodeURIComponent(`Hola, vi que en Cabo Rojo buscaron "${term}" esta semana. Mi negocio resuelve eso y quiero aparecer de primero.`)}`;
   const opportunityCards = opportunities.length > 0
-    ? opportunities.map(row => `
+    ? opportunities.map(row => {
+      const tag = intentTag(row.term);
+      return `
       <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:12px;padding:16px 18px;margin-bottom:10px;">
-        <div style="font-weight:800;color:#92400e;text-transform:capitalize;font-size:16px;">${esc(row.term)}</div>
-        <div style="color:#78350f;font-size:14px;margin:2px 0 12px;">${row.this_week} personas buscaron esto esta semana.</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px;">
+          <span style="font-weight:800;color:#92400e;text-transform:capitalize;font-size:16px;">${esc(row.term)}</span>
+          ${intentChip(tag)}
+        </div>
+        <div style="color:#78350f;font-size:14px;margin:0 0 6px;"><strong>${row.this_week} búsquedas esta semana.</strong></div>
+        <div style="color:#78350f;font-size:13.5px;margin:0 0 12px;">${tag.sell}</div>
         <a href="${oppWa(row.term)}" style="display:inline-block;background:#d4603a;color:white;text-decoration:none;padding:9px 18px;border-radius:8px;font-weight:700;font-size:13.5px;">¿Tú resuelves esto? Aparece de primero →</a>
-      </div>`).join('')
+      </div>`;
+    }).join('')
     : '<p style="color:#64748b;font-size:14px;">Esta semana no apareció una categoría nueva sin cubrir. Vuelve el lunes — el radar cambia cada semana.</p>';
 
   // Hot categories (item 8) + publish tips (item 7)
@@ -1904,8 +1939,9 @@ async function handle_demanda(req: any, res: any) {
   <div style="background:linear-gradient(135deg,#0d9488 0%,#0f766e 50%,#1d4ed8 100%);padding:48px 24px 56px;text-align:center;">
     <a href="${baseUrl}" style="color:rgba(255,255,255,0.8);text-decoration:none;font-size:13px;display:inline-block;margin-bottom:16px;">← MapaDeCaboRojo.com</a>
     <div style="font-size:40px;margin-bottom:8px;">📈</div>
-    <h1 style="color:white;font-size:28px;font-weight:800;margin:0 0 8px 0;">Radar de Demanda</h1>
-    <p style="color:rgba(255,255,255,0.92);font-size:16px;margin:0 auto;max-width:480px;">La gente ya está buscando. La pregunta es si encuentra tu negocio.</p>
+    <h1 style="color:white;font-size:28px;font-weight:800;margin:0 0 10px 0;">Radar de Demanda</h1>
+    <p style="color:white;font-size:17px;font-weight:600;margin:0 auto 8px;max-width:500px;line-height:1.4;">La gente ya está buscando.<br>El problema es que no siempre encuentra a quién comprarle.</p>
+    <p style="color:rgba(255,255,255,0.8);font-size:13px;margin:0 auto;max-width:480px;">Términos reales buscados en el Veci *7711 y el Mapa de Cabo Rojo durante los últimos 7 días.</p>
   </div>
 
   <div style="max-width:720px;margin:-24px auto 0;padding:0 16px 48px;">
@@ -1946,6 +1982,11 @@ async function handle_demanda(req: any, res: any) {
         </div>
         <div style="color:#64748b;font-size:15px;margin-top:4px;">demanda vs semana pasada</div>
       </div>
+    </div>
+
+    <!-- La frase que manda la página -->
+    <div style="background:#7f1d1d;border-radius:16px;padding:22px 24px;margin-bottom:24px;">
+      <p style="margin:0;color:white;font-size:17px;font-weight:700;line-height:1.45;">Si tu negocio resuelve una de estas búsquedas y no apareces aquí, estás invisible donde hay intención de compra.</p>
     </div>
 
     <!-- Dinero buscando dueño (items 4 + 5 + 6) — la sección que vende sola -->
@@ -2024,14 +2065,14 @@ async function handle_demanda(req: any, res: any) {
 
     <!-- CTA: Listing gratis + La Vitrina (modelo de pricing real) -->
     <div style="background:white;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);padding:28px 24px;margin-bottom:16px;">
-      <h2 style="margin:0 0 6px;font-size:20px;font-weight:800;color:#0f172a;">Aparece donde ya te están buscando</h2>
-      <p style="margin:0 0 18px;color:#64748b;font-size:14px;">Cuánto cuesta, qué recibes, qué haces:</p>
+      <h2 style="margin:0 0 6px;font-size:20px;font-weight:800;color:#0f172a;">¿Vendes algo que la gente ya está buscando?</h2>
+      <p style="margin:0 0 18px;color:#475569;font-size:14px;font-weight:600;">Aparece antes de que compren en otro sitio.</p>
 
       <div style="border:1px solid #e2e8f0;border-radius:12px;padding:18px 20px;margin-bottom:14px;">
         <div style="display:inline-block;background:#dcfce7;color:#15803d;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;margin-bottom:8px;">GRATIS</div>
         <h3 style="margin:0 0 4px;font-size:16px;color:#0f172a;">Aparece en el directorio</h3>
         <p style="margin:0 0 12px;color:#64748b;font-size:14px;">Que te encuentren en el mapa y en el Veci *7711. No cuesta nada — solo verificamos que existes.</p>
-        <a href="${baseUrl}/pon-tu-negocio-en-el-mapa" style="display:inline-block;background:#0d9488;color:white;text-decoration:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:14px;">Pon tu negocio →</a>
+        <a href="${baseUrl}/pon-tu-negocio-en-el-mapa" style="display:inline-block;background:#0d9488;color:white;text-decoration:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:14px;">Poner mi negocio gratis →</a>
       </div>
 
       <div style="border:1px solid #fcd34d;border-radius:12px;padding:18px 20px;background:#fffbeb;">
@@ -2043,8 +2084,10 @@ async function handle_demanda(req: any, res: any) {
           <li><strong>$150</strong> — sal 4 semanas corridas (una por semana)</li>
           <li><strong>$799/año</strong> — domina tu categoría: una semanal todo el año + exclusividad</li>
         </ul>
-        <a href="https://caborojo.com/patrocina" style="display:inline-block;background:#d4603a;color:white;text-decoration:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:14px;">Ver La Vitrina →</a>
+        <a href="https://caborojo.com/patrocina" style="display:inline-block;background:#d4603a;color:white;text-decoration:none;padding:10px 22px;border-radius:8px;font-weight:700;font-size:14px;">Quiero salir en La Vitrina →</a>
       </div>
+
+      <a href="${waLink}" style="display:block;text-align:center;margin-top:14px;background:#f1f5f9;color:#0f766e;text-decoration:none;padding:12px;border-radius:8px;font-weight:700;font-size:14px;">💬 Textear al Veci · 787-417-7711</a>
     </div>
 
     <!-- Cierre con urgencia semanal (item 10) -->
