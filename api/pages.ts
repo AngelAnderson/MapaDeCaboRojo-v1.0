@@ -1753,11 +1753,13 @@ async function handle_demanda(req: any, res: any) {
   }
   const surgeList: SurgeRow[] = rawSurge.filter(r => isSafePublicTerm(r.term));
 
-  // All-time accumulated searches — true and big (vs the small weekly count).
-  const { count: allTimeCount } = await supabase
-    .from('demand_signals')
-    .select('*', { count: 'exact', head: true });
-  const accumulated = allTimeCount || 0;
+  // Headline stats via RPC: total searches (big, true) + unique vecinos (the honest
+  // people count) + vecinos in the last 7d (proves "y siguen viniendo").
+  const { data: vstatRaw } = await supabase.rpc('get_demand_vecino_stats');
+  const vstat = (Array.isArray(vstatRaw) ? vstatRaw[0] : vstatRaw) as { busquedas?: number; vecinos?: number; vecinos_7d?: number } | null;
+  const accumulated = Number(vstat?.busquedas || 0);   // searches — true and big
+  const vecinos = Number(vstat?.vecinos || 0);          // distinct people — NOT the search count
+  const vecinos7d = Number(vstat?.vecinos_7d || 0);
 
   // Headline insight (biggest mover this week, min 4) — lead with the story, not the raw count.
   const movers = [...surgeList]
@@ -1934,8 +1936,9 @@ async function handle_demanda(req: any, res: any) {
 
     <div style="background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.1);padding:24px 32px;margin-bottom:24px;display:flex;align-items:center;gap:24px;flex-wrap:wrap;">
       <div style="flex:1;min-width:160px;">
-        <div style="font-size:42px;font-weight:800;color:#0d9488;line-height:1;">${accumulated.toLocaleString('es-PR')}</div>
-        <div style="color:#64748b;font-size:15px;margin-top:4px;">búsquedas al Veci desde que empezamos</div>
+        <div style="font-size:42px;font-weight:800;color:#0d9488;line-height:1;">${vecinos.toLocaleString('es-PR')}</div>
+        <div style="color:#334155;font-size:15px;font-weight:600;margin-top:4px;">vecinos ya preguntaron — y siguen viniendo</div>
+        <div style="color:#94a3b8;font-size:12.5px;margin-top:3px;">${vecinos7d.toLocaleString('es-PR')} esta semana · ${accumulated.toLocaleString('es-PR')} búsquedas en total</div>
       </div>
       <div style="flex:1;min-width:160px;border-left:2px solid #e2e8f0;padding-left:24px;">
         <div style="font-size:32px;font-weight:800;line-height:1;color:${overallPct >= 0 ? '#10b981' : '#ef4444'};">
