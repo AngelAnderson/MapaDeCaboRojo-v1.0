@@ -186,7 +186,7 @@ export default async function handler(req: any, res: any) {
 
   let placesQuery = supabase
     .from('places')
-    .select('id,name,slug,category,subcategory,image_url,phone,address,municipality,google_rating,google_review_count,status,plan,sponsor_weight,tags,services,opening_hours,lat,lon')
+    .select('id,name,slug,category,subcategory,image_url,phone,address,municipality,google_rating,google_review_count,status,plan,sponsor_weight,tags,services,opening_hours,lat,lon,npi,one_liner,is_emergency_resource')
     .eq('status', 'open');
   placesQuery = isCaptureCat
     ? placesQuery.or('address.ilike.%Cabo Rojo%,tags.cs.{sirve-cabo-rojo}')
@@ -249,6 +249,11 @@ export default async function handler(req: any, res: any) {
 
   // Category-specific SEO content
   const CATEGORY_SEO: Record<string, { title?: string; description: string; intro: string }> = {
+    salud: {
+      title: 'Salud en Cabo Rojo — Médicos, Farmacias, Dentistas y más',
+      description: `Directorio de salud en Cabo Rojo, PR: ${filtered.length} médicos, farmacias, dentistas, laboratorios y especialistas — con teléfono, horario y verificación en el registro federal de salud (NPPES).`,
+      intro: `Todo lo de salud en Cabo Rojo en un solo sitio: médicos, farmacias, dentistas, laboratorios, ópticas, salud mental y especialistas. Filtra por lo que necesitas, mira quién está abierto, y si no sabes a quién ir, dile tu síntoma a El Veci.`,
+    },
     gimnasio: {
       title: 'Gimnasios y Fitness en Cabo Rojo',
       description: `${filtered.length} gimnasios y centros fitness en Cabo Rojo, PR — boxing, CrossFit, yoga, pesas, running y más. Horarios, direcciones y contacto.`,
@@ -334,6 +339,61 @@ export default async function handler(req: any, res: any) {
     fisiatra: 'fisiatra', fisiatras: 'fisiatra',
   };
   const detailRoute = HEALTH_DETAIL_ROUTES[cat] || null;
+
+  // ── Salud umbrella (Tier 3): normalize messy subcategories into clean specialty groups ──
+  // The DB has dozens of duplicate/case/language variants (pharmacy/farmacia/Farmacia,
+  // dentist/Dentista, salud mental/Salud Mental/salud-mental). Collapse them so the flat
+  // 137-card list becomes a triage page filterable by what a sick vecino actually needs.
+  const isSaludUmbrella = cat === 'salud';
+  const isHealth = isSaludUmbrella || !!detailRoute;
+  type Spec = { key: string; label: string; emoji: string };
+  function specialtyOf(p: any): Spec {
+    const hay = `${(p.subcategory || '').toLowerCase()} ${(p.name || '').toLowerCase()}`;
+    const has = (...xs: string[]) => xs.some(x => hay.includes(x));
+    // NOTE: do NOT use is_emergency_resource here — it's a near-universal flag on health
+    // rows (124/134), not "this is an ambulance". Classify by actual name/subcategory only.
+    if (has('ambulanc', 'paramedic', '911', 'emergencias medicas', 'emergencias médicas')) return { key: 'emergencia', label: 'Emergencia / Ambulancia', emoji: '🚑' };
+    if (has('farmac', 'pharmac', 'botica')) return { key: 'farmacia', label: 'Farmacias', emoji: '💊' };
+    if (has('pediatr')) return { key: 'pediatria', label: 'Pediatría', emoji: '🧒' };
+    if (has('dentist', 'dental', 'odontolog', 'ortodonc')) return { key: 'dentista', label: 'Dentistas', emoji: '🦷' };
+    if (has('laboratorio', 'clinical lab', 'radiolog', 'diagnostic', 'imagen')) return { key: 'laboratorio', label: 'Laboratorios y Diagnóstico', emoji: '🔬' };
+    if (has('óptica', 'optica', 'oftalmolog', 'optometr', 'audiolog')) return { key: 'optica', label: 'Ópticas y Audición', emoji: '👓' };
+    if (has('psicolog', 'psicólog', 'psiquiatr', 'psycholog', 'psychiatr', 'salud mental', 'salud-mental', 'social_worker', 'terapeuta', 'mental')) return { key: 'salud-mental', label: 'Salud Mental', emoji: '🧠' };
+    if (has('veterinari')) return { key: 'veterinario', label: 'Veterinarios', emoji: '🐾' };
+    if (has('quiropr', 'chiropract')) return { key: 'quiropractico', label: 'Quiroprácticos', emoji: '🦴' };
+    if (has('nutricion', 'nutrición', 'nutrition', 'dietist')) return { key: 'nutricion', label: 'Nutrición', emoji: '🥗' };
+    if (has('fisiatr', 'physical_therapy', 'fisioterap', 'terapia fisica', 'terapia física', 'rehabilit')) return { key: 'fisiatra', label: 'Fisiatría y Terapia', emoji: '🩺' };
+    if (has('cardiolog', 'cardiólog', 'dermatolog', 'dermatólog', 'ginecolog', 'ginecólog', 'neurolog', 'neurólog', 'nefrolog', 'nefrólog', 'gastroenter', 'oncolog', 'oncólog', 'infectolog', 'urolog', 'urólog', 'endocrin', 'reumatolog', 'neumolog', 'cirug', 'cirujano', 'plástic', 'plastic', 'otorrino', 'internista', 'medicina interna', 'especialista')) return { key: 'especialista', label: 'Especialistas', emoji: '🩺' };
+    if (has('doctor', 'medico', 'médico', 'physician', 'medicina general', 'clinica', 'clínica', 'cdt', 'centro de salud')) return { key: 'medico', label: 'Médicos generales', emoji: '👨‍⚕️' };
+    return { key: 'otros', label: 'Otros servicios de salud', emoji: '🏥' };
+  }
+  const specMap = new Map<string, Spec>();
+  if (isHealth) for (const p of filtered) specMap.set(p.id, specialtyOf(p));
+  // Order groups by triage priority, drop empties; build pill metadata with counts.
+  const SPEC_ORDER = ['emergencia', 'farmacia', 'medico', 'especialista', 'pediatria', 'dentista', 'laboratorio', 'optica', 'salud-mental', 'fisiatra', 'quiropractico', 'nutricion', 'veterinario', 'otros'];
+  const specCounts = new Map<string, { label: string; emoji: string; n: number }>();
+  if (isSaludUmbrella) {
+    for (const p of filtered) {
+      const s = specMap.get(p.id)!;
+      const cur = specCounts.get(s.key);
+      if (cur) cur.n++; else specCounts.set(s.key, { label: s.label, emoji: s.emoji, n: 1 });
+    }
+  }
+  const specGroups = SPEC_ORDER.filter(k => specCounts.has(k)).map(k => ({ key: k, ...specCounts.get(k)! }));
+
+  // Trust-first ordering for the salud umbrella: NPI-verified + well-reviewed surface first.
+  // Other categories keep the DB ordering (sponsor_weight → rating → reviews).
+  if (isSaludUmbrella) {
+    filtered.sort((a: any, b: any) => {
+      const sw = (Number(b.sponsor_weight) || 0) - (Number(a.sponsor_weight) || 0);
+      if (sw) return sw;
+      const npi = (b.npi ? 1 : 0) - (a.npi ? 1 : 0);
+      if (npi) return npi;
+      const rc = (Number(b.google_review_count) || 0) - (Number(a.google_review_count) || 0);
+      if (rc) return rc;
+      return (Number(b.google_rating) || 0) - (Number(a.google_rating) || 0);
+    });
+  }
 
   // Singular noun + article for the Vitrina CTA ("¿Tienes <article> <noun> en Cabo Rojo?").
   // Replaces the old `'una ' + displayName.toLowerCase().replace(/s$/,'')` which broke for
@@ -454,7 +514,21 @@ export default async function handler(req: any, res: any) {
     ? `<p style="color:#64748b;text-align:center;padding:2rem;">No encontramos negocios en esta categoría todavía.</p>`
     : filtered.map((p: any) => {
         const slug = p.slug || p.id;
-        const stars = p.google_rating ? `⭐ ${p.google_rating}` : '';
+        const rc = Number(p.google_review_count) || 0;
+        // On health pages a bare "⭐5" with 0–1 reviews is misleading (number needs a source).
+        // Require ≥3 reviews to show the rating, and always show the count when we do.
+        const stars = p.google_rating
+          ? (isHealth
+              ? (rc >= 3 ? `⭐ ${p.google_rating} <span style="color:#94a3b8;font-weight:400;">(${rc})</span>` : '')
+              : `⭐ ${p.google_rating}`)
+          : '';
+        const npiBadge = (isHealth && p.npi)
+          ? `<div style="display:inline-flex;align-items:center;gap:0.25rem;font-size:0.68rem;font-weight:700;color:#0369a1;background:#e0f2fe;padding:0.15rem 0.5rem;border-radius:999px;margin-bottom:0.4rem;" title="Verificado en el registro federal de salud (NPPES)">✅ Verificado · registro federal</div>`
+          : '';
+        const oneLinerHtml = (isHealth && p.one_liner)
+          ? `<p style="font-size:0.8rem;color:#475569;margin:0 0 0.45rem;line-height:1.4;">${esc(p.one_liner)}</p>`
+          : '';
+        const dataSpec = isHealth ? ` data-specialty="${esc((specMap.get(p.id) || { key: 'otros' }).key)}"` : '';
         const servesCR = Array.isArray(p.tags) && p.tags.includes('sirve-cabo-rojo');
         const inCR = (p.address || '').toLowerCase().includes('cabo rojo');
         const locHtml = (servesCR && !inCR)
@@ -484,14 +558,16 @@ export default async function handler(req: any, res: any) {
                </a>`
             : '');
         return `
-        <div style="background:white;border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.07);transition:box-shadow 0.2s;">
+        <div${dataSpec} style="background:white;border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.07);transition:box-shadow 0.2s;">
           <a href="${detailPath}" style="display:block;text-decoration:none;color:inherit;">
             ${p.image_url
               ? `<div style="width:100%;height:160px;background:linear-gradient(135deg,#0d9488,#f97316);display:flex;align-items:center;justify-content:center;font-size:2.5rem;" data-emoji="${esc(emoji)}"><img src="${esc(p.image_url)}" alt="${esc(p.name)}" style="width:100%;height:160px;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none';this.parentElement.textContent=this.parentElement.dataset.emoji"></div>`
               : `<div style="width:100%;height:160px;background:linear-gradient(135deg,#0d9488,#f97316);display:flex;align-items:center;justify-content:center;font-size:2.5rem;">${emoji}</div>`}
             <div style="padding:1rem;">
               <h2 style="font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:0.25rem;">${esc(p.name)}${planBadge}</h2>
+              ${npiBadge}
               ${stars ? `<div style="color:#f59e0b;font-size:0.85rem;margin-bottom:0.25rem;">${stars}</div>` : ''}
+              ${oneLinerHtml}
               ${(() => {
                 const openLabel = getOpenStatusLabel(p.opening_hours);
                 if (!openLabel) return '';
@@ -527,6 +603,48 @@ export default async function handler(req: any, res: any) {
   const urgentBanner = captureKey && URGENT_BANNER[captureKey]
     ? `<a href="https://wa.me/17874177711?text=${encodeURIComponent(displayName)}" style="display:block;background:#fef2f2;border:1px solid #fecaca;border-left:4px solid #dc2626;border-radius:10px;padding:0.9rem 1.1rem;margin-bottom:1.25rem;color:#7f1d1d;text-decoration:none;font-size:0.92rem;line-height:1.5;">${URGENT_BANNER[captureKey]}</a>`
     : '';
+
+  // ── Salud umbrella: triage band ("¿Necesitas algo ahora?") + specialty filter pills ──
+  const TRIAGE_KEYS = ['emergencia', 'farmacia', 'medico', 'laboratorio', 'dentista'];
+  const triageBtns = specGroups
+    .filter(g => TRIAGE_KEYS.includes(g.key))
+    .sort((a, b) => TRIAGE_KEYS.indexOf(a.key) - TRIAGE_KEYS.indexOf(b.key))
+    .map(g => `<button type="button" class="sb-pill" data-filter="${g.key}">${g.emoji} ${esc(g.label)}</button>`)
+    .join('');
+  const saludTriageHtml = (isSaludUmbrella && filtered.length > 0) ? `
+    <div class="triage">
+      <h2>🩺 ¿Necesitas algo ahora?</h2>
+      ${triageBtns ? `<div class="triage-row">${triageBtns}</div>` : ''}
+      <a class="triage-veci" href="https://wa.me/17874177711?text=${encodeURIComponent('SALUD: ')}">¿No sabes a quién ir? Dile tu síntoma a El Veci → 787-417-7711</a>
+    </div>
+    ${specGroups.length > 1 ? `
+    <div class="pills" id="spec-pills">
+      <button type="button" class="sb-pill active" data-filter="all">Todos (${filtered.length})</button>
+      ${specGroups.map(g => `<button type="button" class="sb-pill" data-filter="${g.key}">${g.emoji} ${esc(g.label)} (${g.n})</button>`).join('')}
+    </div>` : ''}
+    <style>
+      .triage { background:linear-gradient(135deg,#ecfeff,#f0fdfa); border:1px solid #99f6e4; border-radius:14px; padding:1.1rem 1.25rem; margin-bottom:1.1rem; }
+      .triage h2 { font-size:1.05rem; font-weight:700; color:#0f766e; margin-bottom:0.7rem; }
+      .triage-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:0.85rem; }
+      .triage-veci { display:block; background:#0d9488; color:white; text-decoration:none; text-align:center; padding:0.7rem 1rem; border-radius:10px; font-weight:600; font-size:0.9rem; }
+      .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:1.25rem; }
+      .sb-pill { background:white; border:1.5px solid #5eead4; color:#0f766e; padding:7px 14px; border-radius:999px; font-size:0.85rem; cursor:pointer; font-weight:600; transition:all 0.15s; }
+      .sb-pill:hover { background:#ccfbf1; }
+      .sb-pill.active { background:#0d9488; color:white; border-color:#0d9488; }
+    </style>
+    <script>
+    (function(){
+      var cards = Array.prototype.slice.call(document.querySelectorAll('.grid [data-specialty]'));
+      var pillWrap = document.getElementById('spec-pills');
+      function apply(key){
+        cards.forEach(function(c){ c.style.display = (key==='all' || c.getAttribute('data-specialty')===key) ? '' : 'none'; });
+        if (pillWrap) Array.prototype.slice.call(pillWrap.querySelectorAll('.sb-pill')).forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-filter')===key); });
+      }
+      document.querySelectorAll('[data-filter]').forEach(function(b){
+        b.addEventListener('click', function(e){ e.preventDefault(); var k=b.getAttribute('data-filter'); apply(k); var g=document.querySelector('.grid'); if(g) g.scrollIntoView({behavior:'smooth',block:'start'}); });
+      });
+    })();
+    </script>` : '';
 
   const html = `<!DOCTYPE html>
 <html lang="es">
@@ -783,10 +901,10 @@ export default async function handler(req: any, res: any) {
 
     <a class="back" href="${baseUrl}">← Volver al mapa</a>
 
-    <div class="cta-bar">
+    ${isSaludUmbrella ? saludTriageHtml : `<div class="cta-bar">
       <p>¿Buscas algo específico? Pregúntale a El Veci.</p>
       <a href="https://wa.me/17874177711?text=${encodeURIComponent(displayName)}">Textea al 787-417-7711</a>
-    </div>
+    </div>`}
 
     <div class="grid">
       ${cardsHtml}
