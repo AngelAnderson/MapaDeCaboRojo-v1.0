@@ -178,7 +178,7 @@ export default async function handler(req: any, res: any) {
     labelPluralEn: { farmacia:'Pharmacies', dentista:'Dentists', veterinario:'Veterinarians', medico:'Physicians', hospital:'Hospitals & Clinics', laboratorio:'Labs', optica:'Opticians', 'salud-mental':'Mental Health', quiropractico:'Chiropractors', gimnasio:'Gyms & Fitness', fisiatra:'Physiatrists' } as Record<string,string>,
     inCaboRojo: 'in Cabo Rojo', address: 'Address', phone: 'Phone', hours: 'Hours', website: 'Website',
     info: 'Information', faq: 'Frequently asked questions',
-    openNow: 'Open now', closedNow: 'Closed now', open24h: 'Open 24 hours',
+    openNow: 'Open now', closedNow: 'Closed now', open24h: 'Open 24 hours', hoursUnknown: 'Hours not confirmed',
     callNow: 'Call now', waDirect: 'WhatsApp directly', textVeci: 'Text El Veci',
     needSomething: 'Need something from', verified: 'Verified',
     relatedSearches: 'Related searches in Cabo Rojo',
@@ -194,7 +194,7 @@ export default async function handler(req: any, res: any) {
   } : {
     inCaboRojo: 'en Cabo Rojo', address: 'Dirección', phone: 'Teléfono', hours: 'Horario', website: 'Web',
     info: 'Información', faq: 'Preguntas frecuentes',
-    openNow: 'Abierta ahora', closedNow: 'Cerrada ahora', open24h: 'Abierto 24 horas',
+    openNow: 'Abierta ahora', closedNow: 'Cerrada ahora', open24h: 'Abierto 24 horas', hoursUnknown: 'Horario no confirmado',
     callNow: 'Llamar ahora', waDirect: 'WhatsApp directo', textVeci: 'Textea a El Veci',
     needSomething: '¿Necesitas algo de', verified: 'Verificado',
     relatedSearches: 'Búsquedas relacionadas en Cabo Rojo',
@@ -224,8 +224,12 @@ export default async function handler(req: any, res: any) {
   const image       = place.image_url || 'https://mapadecaborojo.com/og-default.png';
   const hoursText   = formatHours(place.opening_hours);
   const openNow     = isCurrentlyOpen(place.opening_hours);
-  // If we can determine real-time status, use it; otherwise fall back to DB status
-  const isOpen      = openNow !== null ? openNow : place.status === 'open';
+  // Three-state status. We only claim "open"/"closed" when we actually have
+  // confirmed structured hours. When openNow is null we show a neutral
+  // "Horario no confirmado" instead of falsely defaulting to the stale DB
+  // status flag (which made 5/21 farmacias show "Abierta ahora" at 3am).
+  const realtimeKnown = openNow !== null;
+  const isOpen        = openNow === true;
   const ldHours     = jsonLdOpeningHours(place.opening_hours);
   const smsBody     = encodeURIComponent(place.name);
 
@@ -387,6 +391,7 @@ export default async function handler(req: any, res: any) {
     .badge-npi { background: #1d4ed8; }
     .badge-open { background: #10b981; }
     .badge-closed { background: #ef4444; }
+    .badge-unknown { background: #94a3b8; }
     h1 { font-size: 1.75rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem; margin-top: 0.5rem; }
     .rating { color: #f59e0b; font-size: 1rem; margin-bottom: 0.75rem; }
     .description { color: #475569; font-size: 0.95rem; }
@@ -434,7 +439,9 @@ export default async function handler(req: any, res: any) {
       <div class="hero-body">
         <div>
           <span class="badge">${config.label}</span>
-          <span class="badge ${isOpen ? 'badge-open' : 'badge-closed'}">${isOpen ? T.openNow : T.closedNow}</span>
+          ${realtimeKnown
+            ? `<span class="badge ${isOpen ? 'badge-open' : 'badge-closed'}">${isOpen ? T.openNow : T.closedNow}</span>`
+            : `<span class="badge badge-unknown" title="No tenemos horario confirmado — verifica antes de visitar">${T.hoursUnknown}</span>`}
           ${npi && isFarmaciaType ? `<span class="badge badge-npi" title="Número NPI: ${esc(npi)}">&#10003; NPPES</span>` : ''}
           ${qualityBadge}
         </div>
@@ -607,9 +614,11 @@ export default async function handler(req: any, res: any) {
       </div>
       <div class="faq-item">
         <h3>¿Está abierta ${placeName} hoy?</h3>
-        <p>${isOpen
-          ? `${placeName} aparece como abierta. Horario: ${hoursText}. Verifica directamente antes de visitar.`
-          : `${placeName} aparece como cerrada. Llama al ${place.phone || '787-417-7711'} para confirmar.`}</p>
+        <p>${!realtimeKnown
+          ? `No tenemos el horario confirmado de ${placeName}. Llama al ${place.phone || '787-417-7711'} para confirmar antes de visitar.`
+          : isOpen
+            ? `${placeName} aparece como abierta. Horario: ${hoursText}. Verifica directamente antes de visitar.`
+            : `${placeName} aparece como cerrada. Llama al ${place.phone || '787-417-7711'} para confirmar.`}</p>
       </div>
       <div class="faq-item">
         <h3>¿Cuál es el teléfono de ${placeName}?</h3>

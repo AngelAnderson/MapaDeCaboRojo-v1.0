@@ -494,7 +494,18 @@ export default async function handler(req: any, res: any) {
                 const openLabel = getOpenStatusLabel(p.opening_hours);
                 if (!openLabel) return '';
                 const isOpen = openLabel.startsWith('🟢');
-                return `<div style="font-size:0.78rem;font-weight:600;margin-bottom:0.4rem;color:${isOpen ? '#16a34a' : '#dc2626'};">${esc(openLabel)}</div>`;
+                // Emit structured hours so the badge recomputes client-side on
+                // every view (PR time). SSR HTML is cached up to 24h via
+                // stale-while-revalidate, so the baked-in label can lie — the
+                // client script below rewrites it against the real current time.
+                const oh: any = p.opening_hours || {};
+                const payload = esc(JSON.stringify({
+                  type: oh.type === 'always_open' ? 'always_open' : 'fixed',
+                  structured: Array.isArray(oh.structured)
+                    ? oh.structured.map((e: any) => ({ day: e.day, open: e.open, close: e.close, isClosed: !!e.isClosed }))
+                    : [],
+                }));
+                return `<div class="open-status" data-oh="${payload}" style="font-size:0.78rem;font-weight:600;margin-bottom:0.4rem;color:${isOpen ? '#16a34a' : '#dc2626'};">${esc(openLabel)}</div>`;
               })()}
               ${locHtml}
               ${Array.isArray(p.services) && p.services.length > 0 ? `<div style="display:flex;flex-wrap:wrap;gap:0.25rem;">${p.services.slice(0, 4).map((s: string) => `<span style="font-size:0.65rem;background:#f0fdf4;color:#166534;padding:0.15rem 0.4rem;border-radius:999px;">${esc(s)}</span>`).join('')}${p.services.length > 4 ? `<span style="font-size:0.65rem;color:#94a3b8;">+${p.services.length - 4}</span>` : ''}</div>` : ''}
@@ -911,6 +922,50 @@ export default async function handler(req: any, res: any) {
     })();
   </script>
   ${correctButtonHtml({ pageType: 'categoria' })}
+  <!-- Open/closed badges recompute client-side in PR time so cached HTML never lies -->
+  <script>
+  (function () {
+    function prParts() {
+      var p = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Puerto_Rico', weekday: 'short', hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date());
+      var o = {}; p.forEach(function (x) { o[x.type] = x.value; });
+      var days = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+      var hh = (o.hour === '24' ? '00' : o.hour);
+      return { day: days[o.weekday], time: ('0' + hh).slice(-2) + ':' + o.minute };
+    }
+    function t12(hhmm) {
+      var a = String(hhmm).split(':'), h = parseInt(a[0], 10), m = parseInt(a[1], 10);
+      if (isNaN(h)) return hhmm;
+      var pd = h >= 12 ? 'pm' : 'am', h12 = h === 0 ? 12 : (h > 12 ? h - 12 : h);
+      return m === 0 ? h12 + pd : h12 + ':' + ('0' + m).slice(-2) + pd;
+    }
+    function label(oh) {
+      if (!oh) return null;
+      if (oh.type === 'always_open') return '🟢 Abierto 24h';
+      if (!oh.structured || !oh.structured.length) return null;
+      var n = prParts(), byDay = {};
+      oh.structured.forEach(function (e) { byDay[e.day] = e; });
+      var today = byDay[n.day];
+      if (today && !today.isClosed && today.open && today.close) {
+        if (n.time >= today.open && n.time <= today.close) return '🟢 Abierto';
+        if (n.time < today.open) return '🔴 Cerrado · abre ' + t12(today.open);
+      }
+      var dn = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb'];
+      for (var i = 1; i <= 7; i++) {
+        var d = (n.day + i) % 7, e = byDay[d];
+        if (e && !e.isClosed && e.open) { return '🔴 Cerrado · abre ' + (i === 1 ? 'mañana' : dn[d]) + ' ' + t12(e.open); }
+      }
+      return '🔴 Cerrado';
+    }
+    try {
+      document.querySelectorAll('.open-status').forEach(function (el) {
+        var oh; try { oh = JSON.parse(el.getAttribute('data-oh')); } catch (e) { return; }
+        var lbl = label(oh); if (!lbl) return;
+        el.textContent = lbl;
+        el.style.color = lbl.indexOf('🟢') === 0 ? '#16a34a' : '#dc2626';
+      });
+    } catch (e) {}
+  })();
+  </script>
 </body>
 </html>`;
 
