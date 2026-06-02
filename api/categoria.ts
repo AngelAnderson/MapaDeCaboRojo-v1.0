@@ -219,6 +219,13 @@ export default async function handler(req: any, res: any) {
     const pSub = (p.subcategory || '').toLowerCase();
     const pName = (p.name || '').toLowerCase();
     const pTags = Array.isArray(p.tags) ? p.tags.map((t: string) => t.toLowerCase()) : [];
+    // Service capture pages (plomero/electricista/ac/solar) list service PROVIDERS, not
+    // product sellers. A ferretería/lumber yard sells plomería + electrical supplies (and
+    // is tagged as such) but isn't a plumber/electrician — exclude it here. It still appears
+    // under Compras/Ferretería. Catches Comercial Toro, National Lumber, etc.
+    if (isCaptureCat && (pSub.includes('ferret') || pSub === 'hardware' || /ferreter|lumber/.test(pName))) {
+      return false;
+    }
     return matchTerms.some(term => {
       const t = term.toLowerCase();
       // Exact match on subcategory (e.g. "Ropa" = "ropa", not "Naturopatía" containing "ropa")
