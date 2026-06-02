@@ -634,15 +634,21 @@ export default async function handler(req: any, res: any) {
     </style>
     <script>
     (function(){
-      var cards = Array.prototype.slice.call(document.querySelectorAll('.grid [data-specialty]'));
-      var pillWrap = document.getElementById('spec-pills');
-      function apply(key){
-        cards.forEach(function(c){ c.style.display = (key==='all' || c.getAttribute('data-specialty')===key) ? '' : 'none'; });
-        if (pillWrap) Array.prototype.slice.call(pillWrap.querySelectorAll('.sb-pill')).forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-filter')===key); });
+      // Defer until the .grid (rendered after this script) exists, and query cards
+      // live inside apply() so we never cache an empty list at parse time.
+      function init(){
+        var pillWrap = document.getElementById('spec-pills');
+        function apply(key){
+          var cards = document.querySelectorAll('.grid [data-specialty]');
+          for (var i=0;i<cards.length;i++){ cards[i].style.display = (key==='all' || cards[i].getAttribute('data-specialty')===key) ? '' : 'none'; }
+          if (pillWrap){ var ps=pillWrap.querySelectorAll('.sb-pill'); for (var j=0;j<ps.length;j++){ ps[j].classList.toggle('active', ps[j].getAttribute('data-filter')===key); } }
+        }
+        var btns = document.querySelectorAll('[data-filter]');
+        for (var k=0;k<btns.length;k++){
+          btns[k].addEventListener('click', function(e){ e.preventDefault(); apply(this.getAttribute('data-filter')); var g=document.querySelector('.grid'); if(g) g.scrollIntoView({behavior:'smooth',block:'start'}); });
+        }
       }
-      document.querySelectorAll('[data-filter]').forEach(function(b){
-        b.addEventListener('click', function(e){ e.preventDefault(); var k=b.getAttribute('data-filter'); apply(k); var g=document.querySelector('.grid'); if(g) g.scrollIntoView({behavior:'smooth',block:'start'}); });
-      });
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
     })();
     </script>` : '';
 
