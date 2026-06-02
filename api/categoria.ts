@@ -194,6 +194,8 @@ export default async function handler(req: any, res: any) {
   const { data: places, error } = await placesQuery
     .or(orClauses)
     .order('sponsor_weight', { ascending: false })
+    .order('google_rating', { ascending: false, nullsFirst: false })
+    .order('google_review_count', { ascending: false, nullsFirst: false })
     .limit(500);
 
   if (error) {
