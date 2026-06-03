@@ -24,7 +24,8 @@ export default async function handler(req: any, res: any) {
 
     const { data: events } = await supabase
       .from('events')
-      .select('id, start_time')
+      .select('id, slug, start_time')
+      .eq('status', 'published')
       .gte('start_time', new Date().toISOString());
 
     // 2. Base URL
@@ -183,12 +184,14 @@ export default async function handler(req: any, res: any) {
       });
     }
 
-    // Dynamic Events
+    // Dynamic Events — canonical detail pages at /evento/[slug]
+    // (Only events with a slug get an indexable page; skip the rest.)
     if (events) {
       events.forEach((e: any) => {
+        if (!e.slug) return;
         urls.push(`
           <url>
-            <loc>${baseUrl}/?event=${e.id}</loc>
+            <loc>${baseUrl}/evento/${e.slug}</loc>
             <lastmod>${e.start_time.split('T')[0]}</lastmod>
             <changefreq>daily</changefreq>
             <priority>0.7</priority>
