@@ -152,7 +152,7 @@ export default async function handler(req: any, res: any) {
 // --- HANDLERS ---
 
 async function handleChat({ message, history, context }: any) {
-  const { ctx, p, e, ppl } = context;
+  const { ctx = {}, places: p, events: e, ppl } = context || {};
 
   // --- LOCAL KNOWLEDGE CHECK (from *7711 bot knowledge base) ---
   // Query the 51 local_knowledge entries BEFORE calling Gemini
@@ -252,7 +252,7 @@ async function handleChat({ message, history, context }: any) {
     }
   });
 
-  const result = await chat.sendMessage(message);
+  const result = await chat.sendMessage({ message });
   
   try {
       const jsonResponse = JSON.parse(result.text || "{}");
