@@ -2303,6 +2303,10 @@ async function handle_intelligence(req: any, res: any) {
     .slice(0, 15)
     .map(([term]) => term);
 
+  // Opportunities (demand÷supply) — the paid intelligence: where to open / where to appear.
+  const { data: oppsRawApi } = await supa.rpc('get_demand_opportunities');
+  const opportunities = Array.isArray(oppsRawApi) ? oppsRawApi : [];
+
   const payload = {
     period,
     generated_at: nowISO,
@@ -2310,6 +2314,7 @@ async function handle_intelligence(req: any, res: any) {
     unique_users: uniqueUsers,
     top_terms: topTerms,
     categories_demand: categoriesDemand,
+    opportunities,
     hourly_distribution: hourlyDistribution,
     gaps
   };
