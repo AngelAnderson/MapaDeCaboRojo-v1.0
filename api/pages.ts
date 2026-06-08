@@ -1906,6 +1906,35 @@ async function handle_demanda(req: any, res: any) {
   const baseUrl = 'https://mapadecaborojo.com';
   const waLink = `https://wa.me/17874177711?text=${encodeURIComponent('Hola, vi el radar de demanda y quiero que mi negocio aparezca en Cabo Rojo')}`;
 
+  // "El negocio que le falta" — demand ÷ supply opportunity engine (get_demand_opportunities RPC).
+  // Turns the dashboard into ONE decision at the top: what business to open / where to appear #1.
+  const { data: oppsRaw } = await supabase.rpc('get_demand_opportunities');
+  // deno-lint-ignore no-explicit-any
+  const allOpps: any[] = Array.isArray(oppsRaw) ? oppsRaw : [];
+  const opps = allOpps.filter(o => o && o.is_opportunity);
+  const heroOpp = opps[0] || null;
+  const oppOpenWa = (label: string) => `https://wa.me/17874177711?text=${encodeURIComponent(`Vi en el Radar de MapaDeCaboRojo que en Cabo Rojo falta "${label}". Quiero montar/abrir esto. ¿Me orientas?`)}`;
+  const oppOwnWa = (label: string) => `https://wa.me/17874177711?text=${encodeURIComponent(`Yo hago "${label}" en Cabo Rojo. Vi que lo buscan y no hay suficiente. Quiero aparecer #1 cuando lo busquen.`)}`;
+  const heroOppHtml = heroOpp ? `
+    <div style="background:linear-gradient(135deg,#d4603a,#b91c1c);border-radius:18px;padding:28px 26px;margin-bottom:20px;color:white;box-shadow:0 8px 30px rgba(180,30,30,0.22);">
+      <div style="font-size:13px;text-transform:uppercase;letter-spacing:0.1em;opacity:0.92;margin-bottom:8px;">🎯 El negocio que le falta a Cabo Rojo</div>
+      <div style="font-size:30px;font-weight:900;line-height:1.1;text-transform:capitalize;">${esc(heroOpp.label)}</div>
+      <div style="font-size:16px;opacity:0.96;margin:10px 0 6px;line-height:1.45;">
+        <strong>${heroOpp.demand_30d}</strong> vecino${Number(heroOpp.demand_30d) === 1 ? '' : 's'} lo buscaron este mes.
+        ${Number(heroOpp.supply) === 0 ? 'Y <strong>nadie</strong> en el directorio lo resuelve.' : `Solo <strong>${heroOpp.supply}</strong> negocio${Number(heroOpp.supply) === 1 ? '' : 's'} lo resuelve${Number(heroOpp.supply) === 1 ? '' : 'n'}.`}
+        Si abres esto, ya tienes clientes esperando.
+      </div>
+      <div style="display:inline-block;background:rgba(255,255,255,0.2);border-radius:999px;padding:4px 12px;font-size:13px;font-weight:700;margin-bottom:18px;">${esc(heroOpp.verdict)}</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <a href="${oppOpenWa(heroOpp.label)}" style="flex:1;min-width:170px;text-align:center;background:white;color:#b91c1c;text-decoration:none;padding:12px 16px;border-radius:10px;font-weight:800;font-size:14px;">Quiero abrir esto →</a>
+        <a href="${oppOwnWa(heroOpp.label)}" style="flex:1;min-width:170px;text-align:center;background:rgba(0,0,0,0.28);color:white;text-decoration:none;padding:12px 16px;border-radius:10px;font-weight:800;font-size:14px;">Ya lo hago, ponme #1 →</a>
+      </div>
+      ${opps.length > 1 ? `<details style="margin-top:16px;"><summary style="cursor:pointer;font-size:13px;opacity:0.92;list-style:none;">Ver las ${opps.length} oportunidades del mes ▾</summary>
+        <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
+          ${opps.map(o => `<div style="display:flex;justify-content:space-between;gap:10px;background:rgba(255,255,255,0.12);border-radius:8px;padding:8px 12px;font-size:13px;"><span style="text-transform:capitalize;font-weight:700;">${esc(o.label)}</span><span style="opacity:0.92;white-space:nowrap;">${o.demand_30d} buscan · ${o.supply} ofrecen</span></div>`).join('')}
+        </div></details>` : ''}
+    </div>` : '';
+
   const html = `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -1945,7 +1974,7 @@ async function handle_demanda(req: any, res: any) {
     <div style="font-size:40px;margin-bottom:8px;">📈</div>
     <h1 style="color:white;font-size:28px;font-weight:800;margin:0 0 10px 0;">Radar de Demanda</h1>
     <p style="color:white;font-size:17px;font-weight:600;margin:0 auto 8px;max-width:500px;line-height:1.4;">La gente ya está buscando.<br>El problema es que no siempre encuentra a quién comprarle.</p>
-    <p style="color:rgba(255,255,255,0.8);font-size:13px;margin:0 auto;max-width:480px;">Términos reales buscados en el Veci *7711 y el Mapa de Cabo Rojo durante los últimos 7 días.</p>
+    <p style="color:rgba(255,255,255,0.8);font-size:13px;margin:0 auto;max-width:480px;">Demanda real del Veci *7711 y el Mapa de Cabo Rojo, cruzada con lo que ya existe en el directorio. Lo que la gente busca y nadie resuelve = el negocio que falta.</p>
   </div>
 
   <div style="max-width:720px;margin:-24px auto 0;padding:0 16px 48px;">
@@ -1966,6 +1995,9 @@ async function handle_demanda(req: any, res: any) {
         <div style="font-size:13px;opacity:0.9;margin-top:2px;">Haz que te encuentren →</div>
       </a>
     </div>
+
+    <!-- 🎯 El negocio que le falta — la UNA decisión arriba de todo (demanda ÷ oferta) -->
+    ${heroOppHtml}
 
     <!-- Hero: insight first, not the raw weekly count -->
     ${headline ? `<div style="background:linear-gradient(135deg,#0f766e,#0d9488);border-radius:16px;padding:24px 28px;margin-bottom:16px;color:white;">
@@ -1996,24 +2028,29 @@ async function handle_demanda(req: any, res: any) {
     <!-- Dinero buscando dueño (items 4 + 5 + 6) — la sección que vende sola -->
     <div style="background:white;border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.12);padding:24px;margin-bottom:24px;border-top:4px solid #d4603a;">
       <h2 style="margin:0 0 4px;font-size:20px;font-weight:800;color:#0f172a;">💰 Dinero buscando dueño</h2>
-      <p style="margin:0 0 6px;color:#475569;font-size:14px;">Esto se buscó esta semana en Cabo Rojo. Si tu negocio lo resuelve, aquí es donde apareces.</p>
+      <p style="margin:0 0 6px;color:#475569;font-size:14px;">Esto se buscó este mes en Cabo Rojo. Si tu negocio lo resuelve, aquí es donde apareces.</p>
       <p style="margin:0 0 16px;color:#94a3b8;font-size:12.5px;">Estas no son opiniones. Son búsquedas reales — alguien escribió esto porque necesitaba resolver algo.</p>
       ${opportunityCards}
     </div>
+
+    <!-- Dashboard completo (colapsado) — los números detrás de la decisión de arriba -->
+    <details style="margin-bottom:24px;">
+    <summary style="cursor:pointer;list-style:none;background:white;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);padding:16px 20px;font-weight:700;color:#0f172a;font-size:15px;">📊 Ver todos los números (tendencias, categorías, qué publicar) ▾</summary>
+    <div style="margin-top:16px;">
 
     <!-- Surge Table -->
     <div style="background:white;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:24px;overflow:hidden;">
       <div style="padding:20px 24px;border-bottom:2px solid #e2e8f0;">
         <h2 style="margin:0;font-size:18px;font-weight:700;color:#0f172a;">Tendencias de búsqueda</h2>
-        <p style="margin:4px 0 0;color:#64748b;font-size:13px;">Últimos 7 días vs semana anterior · Mínimo 3 búsquedas</p>
+        <p style="margin:4px 0 0;color:#64748b;font-size:13px;">Últimos 30 días vs mes anterior · por categoría</p>
       </div>
       ${surgeList.length > 0 ? `
       <table style="width:100%;border-collapse:collapse;">
         <thead>
           <tr style="background:#f8fafc;">
             <th style="padding:10px 12px;text-align:left;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Término</th>
-            <th style="padding:10px 12px;text-align:center;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Esta semana</th>
-            <th style="padding:10px 12px;text-align:center;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Sem. anterior</th>
+            <th style="padding:10px 12px;text-align:center;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Este mes</th>
+            <th style="padding:10px 12px;text-align:center;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Mes anterior</th>
             <th style="padding:10px 12px;text-align:center;font-size:12px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Cambio</th>
           </tr>
         </thead>
@@ -2037,6 +2074,10 @@ async function handle_demanda(req: any, res: any) {
       <p style="margin:0 0 14px;color:#64748b;font-size:13px;">La gente está buscando esto. Copia, pega y publica — no inventes.</p>
       ${publishHtml}
     </div>` : ''}
+
+    </div>
+    </details>
+    <!-- /dashboard colapsado -->
 
     <!-- Captura de lead inbound (item 9) — tabla demand_alerts existente, el Veci avisa -->
     <div id="tu-negocio" style="background:linear-gradient(135deg,#0d9488,#0f766e);border-radius:16px;padding:26px 24px;margin-bottom:16px;color:white;scroll-margin-top:16px;">
