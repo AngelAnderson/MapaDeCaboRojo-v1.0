@@ -2966,6 +2966,20 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
 
     const c: any = censusResult;
 
+    // "El negocio que le falta" — top live demand÷supply opportunity (links to /demanda).
+    const { data: oppsRawP } = await supabase.rpc('get_demand_opportunities');
+    // deno-lint-ignore no-explicit-any
+    const oppsP: any[] = Array.isArray(oppsRawP) ? oppsRawP.filter((o: any) => o && o.is_opportunity) : [];
+    const topOppP = oppsP[0] || null;
+    const oppBanner = topOppP ? `
+  <!-- SECTION 1.55: EL NEGOCIO QUE LE FALTA (live, links to /demanda) -->
+  <a href="/demanda" class="card" style="display:block;text-decoration:none;background:linear-gradient(135deg,#d4603a,#b91c1c);color:#fff;border-left:4px solid #fca5a5;padding:22px 26px;">
+    <div style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;opacity:0.92;margin-bottom:8px;">🎯 El negocio que le falta a Cabo Rojo · este mes</div>
+    <div style="font-size:24px;font-weight:900;text-transform:capitalize;line-height:1.15;">${esc(topOppP.label)}</div>
+    <div style="font-size:14px;opacity:0.96;margin:8px 0 14px;line-height:1.5;">${topOppP.demand_30d} vecino${Number(topOppP.demand_30d) === 1 ? '' : 's'} lo buscaron este mes · ${Number(topOppP.supply) === 0 ? 'nadie lo resuelve' : `solo ${topOppP.supply} lo resuelve${Number(topOppP.supply) === 1 ? '' : 'n'}`} · ${esc(topOppP.verdict)}</div>
+    <span style="display:inline-block;background:#fff;color:#b91c1c;padding:10px 20px;border-radius:9px;font-weight:800;font-size:14px;">Ver todas las oportunidades del pueblo →</span>
+  </a>` : '';
+
     // Compute supply per TAM category
     const supplyByCat = computeSupplyByCategory(allPlaces);
 
@@ -3196,6 +3210,8 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
     <div style="font-size:11px;color:#0f766e;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:8px;">Lo que esta página dice, en una línea</div>
     <p style="font-size:16px;color:#134e4a;line-height:1.6;margin:0 0 10px 0;">En Cabo Rojo hay <strong>946 negocios en el directorio · 937 abiertos hoy · 4 cerrados · 5 dudosos</strong>. Para 47,158 personas. Usamos los <strong>937 abiertos</strong> para calcular densidad porque los cerrados ya no compiten. Más negocios de los que el pueblo solo puede sostener — <strong>sobran de unas cosas</strong> (food trucks, boutiques, restaurantes — entrar es barato y rápido), <strong>faltan de otras</strong> (plomero, electricista, cardiólogo — entrar requiere licencia, años de estudio o capital alto). El por qué de cada uno está abajo. Si tú o alguien tuyo está pensando en abrir negocio, busca tu categoría en la tabla y léela antes de firmar nada.</p>
   </div>
+
+  ${oppBanner}
 
   <!-- SECTION 1.6: PRIMER PASO UNIVERSAL — 2 caminos claros -->
   <div class="card" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:#fff;border-left:4px solid #5eead4;padding:24px 28px;">
