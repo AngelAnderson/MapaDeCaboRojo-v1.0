@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { correctButtonHtml } from './lib/correct-button.js';
+import { correctButtonHtml } from './_lib/correct-button.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
