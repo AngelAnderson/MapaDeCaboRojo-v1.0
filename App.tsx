@@ -325,6 +325,13 @@ const MainApp: React.FC = () => {
           )}
         </div>
         <div className="pointer-events-auto flex flex-col gap-3 items-end">
+            <a
+              href="/3d"
+              className="bg-gradient-to-br from-teal-500 to-emerald-600 text-white px-3 h-10 rounded-full shadow-lg border border-white/40 font-extrabold text-sm hover:scale-105 transition-transform flex items-center justify-center gap-1.5"
+              title="Mapa 3D de Cabo Rojo"
+            >
+              <i className="fa-solid fa-mountain-sun text-xs"></i>3D
+            </a>
             <button 
               onClick={() => setMapStyle(prev => prev === 'standard' ? 'satellite' : 'standard')}
               className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-emerald-600 dark:text-emerald-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center mb-0"
