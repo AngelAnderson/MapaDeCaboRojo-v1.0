@@ -5,11 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#374C8A">
 <meta name="description" content="El mapa 3D de Cabo Rojo: 3,432 lugares verificados uno a uno. Busca, mira qué está abierto ahora, y pregúntale al Veci al 787-417-7711.">
-<link rel="canonical" href="https://www.mapadecaborojo.com/3d">
+<link rel="canonical" href="https://www.mapadecaborojo.com/">
 <meta property="og:title" content="Mapa de Cabo Rojo · 3D">
 <meta property="og:description" content="El directorio del pueblo en 3D, verificado uno a uno.">
-<meta property="og:url" content="https://www.mapadecaborojo.com/3d">
+<meta property="og:url" content="https://www.mapadecaborojo.com/">
 <title>Mapa de Cabo Rojo · 3D · El Veci</title>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-6KBMV0LKQ4"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-6KBMV0LKQ4');</script>
 <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
@@ -170,6 +172,7 @@
   <button id="b-3d" class="on">⛰ 3D</button>
   <button id="b-style">☾ Noche</button>
   <button id="b-reset">⌂ Reset</button>
+  <button onclick="location.href='/clasico'" title="Directorio clásico con búsqueda avanzada">🗂 Clásico</button>
 </div>
 
 <div id="tcard"><h2></h2><p></p></div>
@@ -256,7 +259,7 @@ if(!webglOK()){
   document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0f172a;color:#f1f5f9;font-family:Inter,sans-serif;text-align:center;padding:24px">
     <div><h1 style="font-size:22px">El mapa 3D necesita un navegador más nuevo</h1>
     <p style="color:#94a3b8;font-size:14px;max-width:340px;margin:10px auto">Tu teléfono o navegador no soporta mapas 3D. Pero el directorio completo está aquí:</p>
-    <a href="https://www.mapadecaborojo.com" style="display:inline-block;margin-top:8px;background:#14b8a6;color:#06281f;font-weight:800;padding:11px 22px;border-radius:11px;text-decoration:none">Ir al mapa clásico →</a>
+    <a href="https://www.mapadecaborojo.com/clasico" style="display:inline-block;margin-top:8px;background:#14b8a6;color:#06281f;font-weight:800;padding:11px 22px;border-radius:11px;text-decoration:none">Ir al mapa clásico →</a>
     <p style="margin-top:14px;font-size:13px"><a href="https://wa.me/17874177711" style="color:#25D366;font-weight:700;text-decoration:none">O pregúntale al Veci: 787-417-7711</a></p></div></div>`;
   throw new Error('no-webgl');
 }
