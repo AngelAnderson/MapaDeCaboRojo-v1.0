@@ -103,10 +103,13 @@
   .pp-actions a.dis{background:#33415566;color:#64748b;pointer-events:none}
   .maplibregl-popup-close-button{color:#fff;font-size:18px;right:4px;top:2px;text-shadow:0 1px 4px #000;z-index:2}
   #toast{position:absolute;top:84px;left:50%;transform:translateX(-50%);background:var(--card2);backdrop-filter:blur(14px);border:1px solid var(--line);padding:9px 18px;border-radius:99px;font-size:12px;z-index:9;opacity:0;transition:opacity .3s;pointer-events:none;font-weight:600;max-width:84vw;text-align:center}
+  #b-pulso{display:none}
   @media(max-width:780px){
     #brand{left:10px;right:10px;width:auto;top:10px;padding:10px 13px}
     #stats{display:none}
     #pulso{display:none}
+    #b-pulso{display:block}
+    #pulso.mob{display:block;top:auto;bottom:118px;left:10px;right:10px;width:auto;max-height:46vh;overflow-y:auto;z-index:8}
     #info{left:10px;right:10px;width:auto;top:auto;bottom:118px;max-height:46vh;border-radius:16px 16px 12px 12px}
     #chips{bottom:62px;left:10px;right:10px;transform:none;max-width:none;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;-webkit-overflow-scrolling:touch}
     #ctrls{flex-direction:row;bottom:10px;left:10px;right:10px;overflow-x:auto}
@@ -160,6 +163,8 @@
 </div>
 
 <div id="ctrls" class="panel">
+  <button id="b-near">📍 Cerca de mí</button>
+  <button id="b-pulso">📡 Pulso</button>
   <button id="b-tour">▶ Tour</button>
   <button id="b-rec" style="display:none">🎥 Grabar tour completo</button>
   <button id="b-3d" class="on">⛰ 3D</button>
@@ -212,14 +217,15 @@ const cleanAddr = a => (a||'').replace(/^[A-Z0-9]{4,8}\+[A-Z0-9]{2,4},?\s*/,'').
 const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
 const VECI = n => `https://wa.me/17874177711?text=${encodeURIComponent('info '+n)}`;
 
-// ===== horarios =====
+// ===== horarios (siempre hora de Puerto Rico, no la del browser del visitante) =====
+function astDate(){ try{ return new Date(new Date().toLocaleString('en-US',{timeZone:'America/Puerto_Rico'})); }catch(e){ return new Date(); } }
 function openState(h){
   if(!h) return null;
-  const seg=h.split('|')[new Date().getDay()];
+  const seg=h.split('|')[astDate().getDay()];
   if(seg===undefined||seg==='') return {open:false,label:'Cerrado hoy'};
   if(seg==='24') return {open:true,label:'Abierto 24 horas'};
   const m=seg.match(/^(\d{2})(\d{2})-(\d{2})(\d{2})$/); if(!m) return null;
-  const now=new Date(), nm=now.getHours()*60+now.getMinutes();
+  const now=astDate(), nm=now.getHours()*60+now.getMinutes();
   const om=(+m[1])*60+(+m[2]), cm=(+m[3])*60+(+m[4]);
   const fmt=mm=>{let H=Math.floor(mm/60),M=mm%60,ap=H>=12?'pm':'am';H=H%12||12;return H+(M?':'+String(M).padStart(2,'0'):'')+ap};
   let open = cm<om ? (nm>=om||nm<cm) : (nm>=om&&nm<cm);
@@ -380,6 +386,7 @@ function openPlace(p,coords,setHash=true){
   if(p.a) html += `<br>📍 ${cleanAddr(p.a)}`;
   html += `</div>`;
   if(p.t) html += `<div class="pp-tip">💡 ${p.t}</div>`;
+  if(!p.i) html += `<div class="pp-tip">📷 ¿Tienes una foto de aquí? <a href="https://wa.me/17874177711?text=${encodeURIComponent('FOTO de '+p.n+': ')}" target="_blank" style="color:#25D366;font-weight:700;text-decoration:none">mándala al Veci</a> y sale en el mapa.</div>`;
   const dir=`https://www.google.com/maps/dir/?api=1&destination=${coords[1]},${coords[0]}`;
   html += `<div class="pp-actions">
     ${p.p?`<a class="pa-call" href="tel:${p.p.replace(/[^+\d]/g,'')}">📞 Llamar</a>`:`<a class="pa-call dis">📞 Llamar</a>`}
@@ -508,25 +515,92 @@ document.getElementById('close').onclick=()=>selectIntent(null);
 
 // ===== pulso =====
 const termsEl=document.getElementById('terms');
-const maxN=Math.max(...DEMAND.map(d=>d.n));
-DEMAND.forEach(d=>{
-  const el=document.createElement('div'); el.className='term';
-  el.innerHTML=`<div class="row"><span>${d.t}</span><span>${d.n} vecinos</span></div><div class="bar"><i></i></div>`;
-  setTimeout(()=>el.querySelector('i').style.width=(d.n/maxN*100)+'%',400);
-  el.onclick=()=>{
-    document.querySelectorAll('.term').forEach(x=>x.classList.remove('active'));
-    el.classList.add('active');
-    const feats=FEATS.filter(f=>d.rx.test(f.properties.n));
-    map.getSource('match').setData({type:'FeatureCollection',features:feats});
-    if(feats.length){
-      const b=new maplibregl.LngLatBounds();
-      feats.forEach(f=>b.extend(f.geometry.coordinates));
-      map.fitBounds(b,{padding:140,pitch:55,duration:2200,maxZoom:14.5});
-      toast(`${feats.length} ${feats.length===1?'lugar resuelve':'lugares resuelven'} "${d.t}". ${d.n} vecinos lo buscaron este mes.`);
-    } else toast(`Nadie registrado pa' "${d.t}" todavía. Oportunidad de negocio.`);
-  };
-  termsEl.appendChild(el);
-});
+function renderPulso(list){
+  termsEl.innerHTML='';
+  const maxN=Math.max(...list.map(d=>d.n));
+  list.forEach(d=>{
+    const el=document.createElement('div'); el.className='term';
+    el.innerHTML=`<div class="row"><span>${d.t}</span><span>${d.n} vecinos</span></div><div class="bar"><i></i></div>`;
+    setTimeout(()=>el.querySelector('i').style.width=(d.n/maxN*100)+'%',400);
+    el.onclick=()=>{
+      document.querySelectorAll('.term').forEach(x=>x.classList.remove('active'));
+      el.classList.add('active');
+      const feats=FEATS.filter(f=>d.rx.test(f.properties._s||f.properties.n));
+      map.getSource('match').setData({type:'FeatureCollection',features:feats});
+      document.getElementById('pulso').classList.remove('mob');
+      if(feats.length){
+        const b=new maplibregl.LngLatBounds();
+        feats.forEach(f=>b.extend(f.geometry.coordinates));
+        map.fitBounds(b,{padding:140,pitch:55,duration:2200,maxZoom:14.5});
+        toast(`${feats.length} ${feats.length===1?'lugar resuelve':'lugares resuelven'} "${d.t}". ${d.n} vecinos lo buscaron este mes.`);
+      } else toast(`Nadie registrado pa' "${d.t}" todavía. Oportunidad de negocio.`);
+    };
+    termsEl.appendChild(el);
+  });
+}
+renderPulso(DEMAND);
+document.getElementById('b-pulso').onclick=()=>document.getElementById('pulso').classList.toggle('mob');
+
+// ===== data viva (refresca demanda + cierres + sponsors desde el directorio) =====
+fetch('/api/public?action=live3d').then(r=>r.ok?r.json():null).then(d=>{
+  if(!d) return;
+  if(Array.isArray(d.open) && d.open.length>1000){
+    const openSet=new Set(d.open), fSet=new Set(d.featured||[]);
+    let hid=0;
+    for(let i=FEATS.length-1;i>=0;i--){
+      const u=FEATS[i].properties.u;
+      if(u && !openSet.has(u)){ FEATS.splice(i,1); hid++; continue; }
+      if(u){ if(fSet.has(u)) FEATS[i].properties.f=1; else if(FEATS[i].properties.f && !fSet.has(u)) delete FEATS[i].properties.f; }
+    }
+    if(hid) document.getElementById('st-n').textContent=FEATS.length.toLocaleString();
+    map.getSource('places') ? map.getSource('places').setData(PLACES) : map.once('load',()=>map.getSource('places')&&map.getSource('places').setData(PLACES));
+  }
+  if(Array.isArray(d.demand) && d.demand.length){
+    renderPulso(d.demand.map(x=>{
+      let rx; try{ rx=new RegExp(x.rx||x.t,'i'); }catch(e){ rx=new RegExp(x.t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'i'); }
+      return {t:String(x.t).toLowerCase(), n:x.n, rx};
+    }));
+  }
+}).catch(()=>{});
+
+// ===== cerca de mí =====
+let userMarker=null;
+function renderNearList(items){
+  document.getElementById('i-ico').textContent='';
+  document.getElementById('i-title').textContent='📍 Cerca de ti';
+  document.getElementById('i-sum').textContent=`${items.length} lugares a menos de 3 km${openOnly?' · abiertos ahora':''}`;
+  document.getElementById('typechips').innerHTML='';
+  document.getElementById('list').innerHTML = items.map(x=>{
+    const p=x.f.properties, st=openState(p.h);
+    const min=Math.max(1,Math.round(x.d/80));
+    return `<div class="item ${p.f?'feat':''}" data-i="${FEATS.indexOf(x.f)}">
+      ${p.i?`<img class="thumb" src="${p.i}" loading="lazy" onerror="this.classList.add('ph')">`:`<div class="thumb ph">📷</div>`}
+      <div class="bd">
+      <div class="nm"><span>${p.n}</span><span class="rt">${p.r>0?'★ '+p.r:''}</span></div>
+      <div class="ol">🚶 a ${min} min a pie (${x.d<1000?Math.round(x.d)+' m':(x.d/1000).toFixed(1)+' km'})</div>
+      <div class="mt">${st?`<span class="${st.open?'op':'cl'}">${st.open?'Abierto':'Cerrado'}</span>`:''}${p.a?`<span>📍 ${cleanAddr(p.a).slice(0,38)}</span>`:''}</div>
+      </div></div>`;
+  }).join('') || '<div style="padding:14px;font-size:12px;color:#94a3b8">Nada cerca con los filtros activos. Quita "Abierto ahora" o textea al Veci: 787-417-7711.</div>';
+  document.getElementById('info').style.display='flex';
+}
+document.getElementById('b-near').onclick=function(){
+  const btn=this;
+  if(!navigator.geolocation){ toast('Tu navegador no comparte ubicación.'); return; }
+  btn.textContent='📍 Buscando…';
+  navigator.geolocation.getCurrentPosition(pos=>{
+    btn.textContent='📍 Cerca de mí';
+    const lon=pos.coords.longitude, lat=pos.coords.latitude;
+    if(lon<-67.6||lon>-66.6||lat<17.7||lat>18.5){ toast('Estás fuera del área del mapa — pero explóralo igual 🗺️'); return; }
+    if(userMarker) userMarker.remove();
+    userMarker=new maplibregl.Marker({color:'#2563eb'}).setLngLat([lon,lat]).addTo(map);
+    const KX=111320*Math.cos(lat*Math.PI/180), KY=110570;
+    const items=FEATS.map(f=>{const c=f.geometry.coordinates; return {f, d:Math.hypot((c[0]-lon)*KX,(c[1]-lat)*KY)};})
+      .filter(x=>x.d<3000 && (!openOnly||x.f.properties._op===1) && intentMatch(x.f))
+      .sort((a,b)=>a.d-b.d).slice(0,15);
+    renderNearList(items);
+    map.flyTo({center:[lon,lat],zoom:15.2,pitch:55,duration:2000});
+  },()=>{ btn.textContent='📍 Cerca de mí'; toast('No pude leer tu ubicación. Activa el GPS y dale otra vez.'); },{enableHighAccuracy:true,timeout:9000,maximumAge:60000});
+};
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.style.opacity=1; clearTimeout(t._h); t._h=setTimeout(()=>t.style.opacity=0,4200); }
 
 // ===== tour =====
@@ -634,6 +708,8 @@ document.getElementById('b-style').onclick=function(){
 };
 document.getElementById('b-reset').onclick=()=>{
   clearTour(); selectIntent(null); closePopup();
+  if(userMarker){ userMarker.remove(); userMarker=null; }
+  document.getElementById('pulso').classList.remove('mob');
   openOnly=false; document.getElementById('c-open').classList.remove('sel'); applyFilters();
   map.getSource('match')&&map.getSource('match').setData({type:'FeatureCollection',features:[]});
   document.querySelectorAll('.term').forEach(x=>x.classList.remove('active'));

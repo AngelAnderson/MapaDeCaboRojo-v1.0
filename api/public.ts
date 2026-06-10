@@ -388,6 +388,51 @@ async function handleMcp(req: any, res: any) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// ACTION: live3d  (feeds the /3d map — live demand pulse + open/featured slugs)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function handleLive3d(req: any, res: any) {
+  // demand needs service role (demand_signals is not anon-readable); slugs work with anon
+  const svc = createClient(
+    process.env.VITE_SUPABASE_URL || '',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''
+  );
+  const [oppsRes, rxRes] = await Promise.all([
+    svc.rpc('get_demand_opportunities'),
+    supabase.from('demand_supply_map').select('label,supply_rx').eq('active', true),
+  ]);
+  const rxByLabel: Record<string, string> = {};
+  (rxRes.data || []).forEach((r: any) => { rxByLabel[r.label] = r.supply_rx; });
+  const opps: any[] = Array.isArray(oppsRes.data) ? oppsRes.data : [];
+  const demand = opps
+    .filter((o: any) => Number(o.demand_30d) > 0)
+    .sort((a: any, b: any) => Number(b.demand_30d) - Number(a.demand_30d))
+    .slice(0, 7)
+    .map((o: any) => ({ t: o.label, n: Number(o.demand_30d), rx: rxByLabel[o.label] || null, supply: Number(o.supply) }));
+
+  // all open+published slugs (paginated past the 1000-row default) + featured
+  const open: string[] = [];
+  const featured: string[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase
+      .from('places')
+      .select('slug,is_featured')
+      .eq('status', 'open')
+      .eq('visibility', 'published')
+      .range(from, from + 999);
+    if (error || !data || data.length === 0) break;
+    data.forEach((pl: any) => {
+      if (pl.slug) { open.push(pl.slug); if (pl.is_featured) featured.push(pl.slug); }
+    });
+    if (data.length < 1000) break;
+  }
+
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+  res.setHeader('Content-Type', 'application/json');
+  return res.status(200).json({ demand, open, featured, generated: new Date().toISOString() });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Main handler — route by ?action=
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -405,6 +450,8 @@ export default async function handler(req: any, res: any) {
       return handleLlmsFull(req, res);
     case 'mcp':
       return handleMcp(req, res);
+    case 'live3d':
+      return handleLive3d(req, res);
     case 'places':
     default:
       return handlePlaces(req, res);
