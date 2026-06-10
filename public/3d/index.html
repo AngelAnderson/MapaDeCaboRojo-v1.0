@@ -9,6 +9,11 @@
 <meta property="og:title" content="Mapa de Cabo Rojo · 3D">
 <meta property="og:description" content="El directorio del pueblo en 3D, verificado uno a uno.">
 <meta property="og:url" content="https://www.mapadecaborojo.com/">
+<meta property="og:image" content="https://www.mapadecaborojo.com/og/mapa-3d.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://www.mapadecaborojo.com/og/mapa-3d.png">
 <title>Mapa de Cabo Rojo · 3D · El Veci</title>
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-6KBMV0LKQ4"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-6KBMV0LKQ4');</script>
@@ -118,10 +123,12 @@
     #ctrls button{white-space:nowrap;font-size:11px;padding:7px 10px}
     #tcard h2{font-size:22px} #tcard{bottom:130px}
   }
+  body.noui .panel,body.noui #chips,body.noui #tcard,body.noui #toast,body.noui .maplibregl-ctrl-group{display:none!important}
 </style>
 </head>
 <body>
 <div id="map"></div>
+<script>if(new URLSearchParams(location.search).get('ui')==='0')document.body.classList.add('noui');</script>
 
 <div id="brand" class="panel">
   <h1>Mapa de <b>Cabo Rojo</b> · 3D</h1>
@@ -185,7 +192,11 @@ const EVENTS={"type":"FeatureCollection","features":[{"type":"Feature","geometry
 
 </script>
 <script>
-const ADMIN = new URLSearchParams(location.search).has('admin');
+const QS = new URLSearchParams(location.search);
+const ADMIN = QS.has('admin');
+// Fábrica de fotos (docs/HOMEPAGE-3D.md): ?cam=lon,lat,zoom,pitch,bearing&style=noche&ui=0
+// pa' generar tomas aéreas limpias de cualquier punto con headless Chrome.
+const SHOT = QS.has('cam') ? QS.get('cam').split(',').map(Number) : null;
 const CATS = {
   comida:{l:'Comida',c:'#f97316'}, salud:{l:'Salud',c:'#0d9488'}, servicios:{l:'Servicios',c:'#3b82f6'},
   compras:{l:'Compras',c:'#a855f7'}, belleza:{l:'Belleza',c:'#ec4899'}, cultura:{l:'Cultura',c:'#d4a017'},
@@ -253,7 +264,7 @@ document.getElementById('st-v').textContent = FEATS.filter(f=>f.properties.v).le
 
 // ===== mapa =====
 const STYLES = {dia:'https://tiles.openfreemap.org/styles/liberty', noche:'https://tiles.openfreemap.org/styles/dark'};
-let curStyle='dia';
+let curStyle = QS.get('style')==='noche' ? 'noche' : 'dia';
 function webglOK(){ try{ const c=document.createElement('canvas'); return !!(c.getContext('webgl2')||c.getContext('webgl')); }catch(e){ return false; } }
 if(!webglOK()){
   document.body.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#0f172a;color:#f1f5f9;font-family:Inter,sans-serif;text-align:center;padding:24px">
@@ -264,8 +275,8 @@ if(!webglOK()){
   throw new Error('no-webgl');
 }
 const map = new maplibregl.Map({
-  container:'map', style:STYLES.dia,
-  center:[-66.9,18.18], zoom:8.2, pitch:0, bearing:0,
+  container:'map', style:STYLES[curStyle],
+  center: SHOT?[SHOT[0],SHOT[1]]:[-66.9,18.18], zoom: SHOT?(SHOT[2]||14):8.2, pitch: SHOT?(SHOT[3]??62):0, bearing: SHOT?(SHOT[4]||0):0,
   attributionControl:{compact:true}, antialias:true, preserveDrawingBuffer:ADMIN
 });
 map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'bottom-right');
@@ -367,7 +378,8 @@ map.on('load',()=>{
     }}catch(e){}
     requestAnimationFrame(pulse);
   })(t0);
-  setTimeout(()=>{ map.flyTo({...CR,duration:6000,essential:true,curve:1.4}); setTimeout(routeFromHash,800); },500);
+  if(SHOT){ map.once('idle',()=>{ document.title='SHOT-READY'; }); setInterval(()=>{ try{map.triggerRepaint()}catch(e){} },250); }
+  else setTimeout(()=>{ map.flyTo({...CR,duration:6000,essential:true,curve:1.4}); setTimeout(routeFromHash,800); },500);
 });
 map.on('styledata',()=>{ if(!map.getSource('places') && map.isStyleLoaded()) try{setupLayers()}catch(e){} });
 
