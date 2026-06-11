@@ -2955,6 +2955,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
       realSearches90d,
       geoConcRows,
       allPlaces,
+      westHealth,
     ] = await Promise.all([
       supabase.from('mv_places_census').select('*').single().then((r: any) => r.data || {}),
       supabase.from('mv_real_searches_90d').select('*').then((r: any) => r.data || []),
@@ -2965,6 +2966,15 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
         .eq('visibility', 'published')
         .eq('status', 'open')
         .eq('municipality', 'Cabo Rojo')
+        .range(0, 4999)
+        .then((r: any) => r.data || []),
+      supabase
+        .from('places')
+        .select('name, municipality, tags, subcategory')
+        .eq('visibility', 'published')
+        .eq('status', 'open')
+        .in('category', ['HEALTH', 'Salud'])
+        .in('municipality', ['Cabo Rojo', 'Mayagüez', 'San Germán', 'Lajas', 'Hormigueros', 'Sabana Grande', 'Añasco'])
         .range(0, 4999)
         .then((r: any) => r.data || []),
     ]);
@@ -3073,6 +3083,52 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
       const total = entries.reduce((s, [, n]) => s + n, 0);
       return { cat, total, entries: entries.sort((a, b) => b[1] - a[1]).slice(0, 5) };
     }).filter(g => g.total >= 5).sort((a, b) => b.total - a.total).slice(0, 8);
+
+    // SECTION 5.7 data: Censo de Especialistas del Oeste (live desde places, 7 municipios)
+    // Orden importa: el primer match gana (pediátrico antes que neurólogo general, etc.)
+    const SPECIALIST_DEFS: Array<{ label: string; match: RegExp; demandRe: RegExp }> = [
+      { label: 'Neurólogo pediátrico', match: /neurología pediátrica|neuropediatra/i, demandRe: /neuro\s*pedi|neuropediatra/i },
+      { label: 'Neurocirujano', match: /neurocirujano/i, demandRe: /neurociru/i },
+      { label: 'Neurólogo', match: /neurólog|neurolog/i, demandRe: /neurolog/i },
+      { label: 'Cardiólogo', match: /cardiólog|cardiolog/i, demandRe: /cardiolog/i },
+      { label: 'Dermatólogo', match: /dermatólog|dermatolog/i, demandRe: /dermatolog/i },
+      { label: 'Endocrinólogo', match: /endocrinólog|endocrinolog/i, demandRe: /endocrin/i },
+      { label: 'Gastroenterólogo', match: /gastroenterólog|gastroenterolog/i, demandRe: /gastro/i },
+      { label: 'Nefrólogo', match: /nefrólog|nefrolog/i, demandRe: /nefrolog|rinon|riñon/i },
+      { label: 'Neumólogo', match: /neumólog|neumolog/i, demandRe: /neumolog|pulmon/i },
+      { label: 'Oncólogo', match: /oncólog|oncolog/i, demandRe: /oncolog|cancer/i },
+      { label: 'Psiquiatra', match: /psiquiatr/i, demandRe: /p?siquiatr/i },
+      { label: 'Urólogo', match: /urólog|urolog/i, demandRe: /urolog/i },
+      { label: 'Oftalmólogo', match: /oftalmólog|oftalmolog/i, demandRe: /oftalmolog/i },
+      { label: 'Reumatólogo', match: /reumatólog|reumatolog/i, demandRe: /reumatolog/i },
+      { label: 'Ginecólogo-Obstetra', match: /ginecólog|ginecolog|obstetr/i, demandRe: /ginecolog|obstetr/i },
+      { label: 'Ortopeda', match: /ortopeda|cirugía ortopédica/i, demandRe: /ortopeda|ortoped/i },
+      { label: 'Fisiatra', match: /fisiatr/i, demandRe: /fisiatr/i },
+      { label: 'Geriatra', match: /geriatr/i, demandRe: /geriatr/i },
+      { label: 'Alergista', match: /alergista|alergolog/i, demandRe: /alerg/i },
+      { label: 'Cirujano general', match: /cirujano|cirugía general/i, demandRe: /cirujano/i },
+      { label: 'Pediatra', match: /pediatr/i, demandRe: /pediatra/i },
+      { label: 'Internista', match: /internista|medicina interna/i, demandRe: /internista/i },
+      { label: 'Generalista', match: /medicina general|médico general|medicina familiar|general practice/i, demandRe: /medico general|doctor general/i },
+    ];
+    const specialistCensus = SPECIALIST_DEFS.map(def => {
+      const matched = (westHealth as any[]).filter(p => {
+        const blob = `${(p.tags || []).join(',')} ${p.subcategory || ''} ${p.name || ''}`;
+        // primer-match-gana: excluir si ya matchea una def anterior con prioridad más alta
+        const idx = SPECIALIST_DEFS.indexOf(def);
+        for (let i = 0; i < idx; i++) if (SPECIALIST_DEFS[i].match.test(blob)) return false;
+        return def.match.test(blob);
+      });
+      const demand = (realSearches90d as any[]).filter((rq: any) => def.demandRe.test(rq.q_norm || '')).reduce((s: number, rq: any) => s + (rq.cnt || 0), 0);
+      return {
+        label: def.label,
+        oeste: matched.length,
+        cr: matched.filter(p => p.municipality === 'Cabo Rojo').length,
+        demand,
+      };
+    }).filter(r => r.oeste > 0 || r.demand > 0);
+    const specialistSolitarios = specialistCensus.filter(r => r.oeste === 1 && !['Internista', 'Generalista', 'Pediatra'].includes(r.label));
+    const specialistCeroCr = specialistCensus.filter(r => r.cr === 0 && r.oeste > 0 && !['Internista', 'Generalista'].includes(r.label));
 
     const html = `<!DOCTYPE html>
 <html lang="es">
@@ -3637,6 +3693,44 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
     </p>
   </div>`;
   })()}
+
+  <!-- SECTION 5.7: ESPECIALISTAS MÉDICOS DEL OESTE (live, crowdsource-first) -->
+  <div class="card" style="border-left:4px solid #0d9488;">
+    <div class="kicker" style="color:#0d9488;">Salud · región oeste</div>
+    <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:6px;">¿Cuántos especialistas tenemos? Esto es lo que sabemos.</h2>
+    <p style="font-size:13px;color:#475569;margin-bottom:8px;">Conteo en vivo de nuestro directorio verificado: Cabo Rojo + Mayagüez + San Germán + Lajas + Hormigueros + Sabana Grande + Añasco. <strong>No es la lista oficial de nadie — es la que estamos construyendo entre todos.</strong> Si sabes de un especialista que falta (¿uno en Ponce que esté cogiendo citas?), dínoslo y lo agregamos.</p>
+    <div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#134e4a;">
+      📲 <strong>¿Falta uno?</strong> Textea <strong>ESPECIALISTA + nombre y pueblo</strong> al <a href="https://wa.me/17874177711?text=ESPECIALISTA%20" style="color:#0d9488;font-weight:700;">787-417-7711</a> y lo verificamos. Así se mantiene viva esta tabla.
+    </div>
+    <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead><tr style="border-bottom:2px solid #e2e8f0;text-align:left;">
+        <th style="padding:6px 8px;color:#475569;">Especialidad</th>
+        <th style="padding:6px 8px;color:#475569;text-align:center;">Oeste</th>
+        <th style="padding:6px 8px;color:#475569;text-align:center;">Cabo Rojo</th>
+        <th style="padding:6px 8px;color:#475569;text-align:center;">Búsquedas *7711 (90d)</th>
+      </tr></thead>
+      <tbody>
+      ${specialistCensus.map(r => {
+        const flag = r.oeste === 1 ? ' 🔴' : r.cr === 0 && r.demand > 0 ? ' 🟡' : '';
+        const rowBg = r.oeste === 1 ? 'background:#fef2f2;' : '';
+        return `<tr style="border-bottom:1px solid #f1f5f9;${rowBg}">
+        <td style="padding:6px 8px;font-weight:600;color:#1e293b;">${esc(r.label)}${flag}</td>
+        <td style="padding:6px 8px;text-align:center;font-weight:700;color:${r.oeste <= 1 ? '#dc2626' : '#1e293b'};">${r.oeste}</td>
+        <td style="padding:6px 8px;text-align:center;color:${r.cr === 0 ? '#dc2626' : '#1e293b'};">${r.cr === 0 ? '0' : r.cr}</td>
+        <td style="padding:6px 8px;text-align:center;color:#64748b;">${r.demand > 0 ? r.demand : '—'}</td>
+      </tr>`;
+      }).join('')}
+      </tbody>
+    </table>
+    </div>
+    <p style="font-size:11px;color:#64748b;margin-top:10px;line-height:1.6;">
+      🔴 = uno solo en toda la región según nuestro directorio · 🟡 = cero en Cabo Rojo con gente buscándolo en el *7711.
+      ${specialistSolitarios.length > 0 ? `Hoy: ${specialistSolitarios.map(s => esc(s.label.toLowerCase())).join(', ')} — si ese profesional se muda o se retira, la región queda en cero.` : ''}
+      ${specialistCeroCr.length > 0 ? ` Cabo Rojo no tiene: ${specialistCeroCr.map(s => esc(s.label.toLowerCase())).join(', ')} — pa' eso se viaja a Mayagüez o más lejos.` : ''}
+    </p>
+    <p style="font-size:11px;color:#94a3b8;margin-top:6px;font-style:italic;">Este conteo sale de lo que hemos verificado a mano + registros federales NPI. Seguro falta gente. Por eso la tabla pide ayuda en vez de pretender que está completa. Cada corrección de un vecino la mejora pa'l próximo.</p>
+  </div>
 
   <!-- SECTION 6: AJÁ MOMENTS -->
   <div class="card" style="border-left:4px solid #ca8a04;">
