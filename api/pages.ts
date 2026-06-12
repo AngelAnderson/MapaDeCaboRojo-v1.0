@@ -2956,6 +2956,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
       geoConcRows,
       allPlaces,
       westHealth,
+      westYouth,
     ] = await Promise.all([
       supabase.from('mv_places_census').select('*').single().then((r: any) => r.data || {}),
       supabase.from('mv_real_searches_90d').select('*').then((r: any) => r.data || []),
@@ -2976,6 +2977,15 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
         .in('category', ['HEALTH', 'Salud'])
         .in('municipality', ['Cabo Rojo', 'Mayagüez', 'San Germán', 'Lajas', 'Hormigueros', 'Sabana Grande', 'Añasco'])
         .range(0, 4999)
+        .then((r: any) => r.data || []),
+      supabase
+        .from('places')
+        .select('name, municipality, tags, subcategory')
+        .eq('visibility', 'published')
+        .eq('status', 'open')
+        .overlaps('tags', ['taekwondo', 'tae kwon do', 'artes marciales', 'karate', 'judo', 'jiu jitsu', 'bjj', 'mma', 'defensa personal', 'boxeo', 'boxing', 'kickboxing', 'ballet', 'danza', 'baile', 'musica', 'piano', 'guitarra', 'tutoria', 'tutorías', 'scouts', 'cub-scouts', 'organizacion-juvenil', 'natacion', 'natación', 'gimnasia'])
+        .in('municipality', ['Cabo Rojo', 'Mayagüez', 'San Germán', 'Lajas', 'Hormigueros', 'Sabana Grande', 'Añasco'])
+        .range(0, 999)
         .then((r: any) => r.data || []),
     ]);
 
@@ -3129,6 +3139,37 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
     }).filter(r => r.oeste > 0 || r.demand > 0);
     const specialistSolitarios = specialistCensus.filter(r => r.oeste === 1 && !['Internista', 'Generalista', 'Pediatra'].includes(r.label));
     const specialistCeroCr = specialistCensus.filter(r => r.cr === 0 && r.oeste > 0 && !['Internista', 'Generalista'].includes(r.label));
+
+    // SECTION 5.8 data: Lo Que Hay Pa' Los Nenes (actividades juveniles del oeste, live)
+    // alwaysShow: los CEROS son el punto — pueblo de playa sin escuela de natación registrada.
+    const YOUTH_DEFS: Array<{ label: string; match: RegExp; demandRe: RegExp; alwaysShow?: boolean }> = [
+      { label: 'Artes marciales', match: /taekwondo|tae kwon do|artes marciales|karate|judo|jiu ?jitsu|bjj|\bmma\b|defensa personal/i, demandRe: /artes marciales|taekwondo|karate|judo|jiu/i },
+      { label: 'Boxeo / kickboxing', match: /boxeo|boxing|kickbox/i, demandRe: /boxeo|kickbox/i },
+      { label: 'Ballet / danza', match: /ballet|danza|danzart|\bbaile\b/i, demandRe: /ballet|danza|clases de baile/i },
+      { label: 'Música (clases)', match: /musik|escuela de m[uú]sica|academia de m[uú]sica|clases de m[uú]sica|piano|guitarra|violin/i, demandRe: /clases de m[uú]sica|piano|guitarra|violin/i },
+      { label: 'Tutorías', match: /tutor[ií]a|tutoring|\btutor\b/i, demandRe: /tutor/i },
+      { label: 'Scouts', match: /\bscouts\b|cub-scouts|organizacion-juvenil/i, demandRe: /\bscouts?\b/i },
+      { label: 'Natación (clases)', match: /nataci[oó]n|swim lessons|clases de nado/i, demandRe: /nataci|clases de nado|aprender a nadar/i, alwaysShow: true },
+      { label: 'Gimnasia', match: /\bgimnasia\b/i, demandRe: /gimnasia/i, alwaysShow: true },
+    ];
+    const youthCensus = YOUTH_DEFS.map(def => {
+      const idx = YOUTH_DEFS.indexOf(def);
+      const matched = (westYouth as any[]).filter(p => {
+        const blob = `${(p.tags || []).join(',')} ${p.subcategory || ''} ${p.name || ''}`;
+        for (let i = 0; i < idx; i++) if (YOUTH_DEFS[i].match.test(blob)) return false;
+        return def.match.test(blob);
+      });
+      const demand = (realSearches90d as any[]).filter((rq: any) => def.demandRe.test(rq.q_norm || '')).reduce((s: number, rq: any) => s + (rq.cnt || 0), 0);
+      return {
+        label: def.label,
+        oeste: matched.length,
+        cr: matched.filter(p => p.municipality === 'Cabo Rojo').length,
+        demand,
+        alwaysShow: !!def.alwaysShow,
+      };
+    }).filter(r => r.oeste > 0 || r.demand > 0 || r.alwaysShow);
+    const youthCeroOeste = youthCensus.filter(r => r.oeste === 0);
+    const youthCeroCr = youthCensus.filter(r => r.cr === 0 && r.oeste > 0);
 
     const html = `<!DOCTYPE html>
 <html lang="es">
@@ -3730,6 +3771,44 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
       ${specialistCeroCr.length > 0 ? ` Cabo Rojo no tiene: ${specialistCeroCr.map(s => esc(s.label.toLowerCase())).join(', ')} — pa' eso se viaja a Mayagüez o más lejos.` : ''}
     </p>
     <p style="font-size:11px;color:#94a3b8;margin-top:6px;font-style:italic;">Este conteo sale de lo que hemos verificado a mano + registros federales NPI. Seguro falta gente. Por eso la tabla pide ayuda en vez de pretender que está completa. Cada corrección de un vecino la mejora pa'l próximo.</p>
+  </div>
+
+  <!-- SECTION 5.8: LO QUE HAY PA' LOS NENES (actividades juveniles, live, crowdsource-first) -->
+  <div class="card" style="border-left:4px solid #7c3aed;">
+    <div class="kicker" style="color:#7c3aed;">Niños y jóvenes · región oeste</div>
+    <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:6px;">¿Qué hay pa' los nenes después de la escuela? Esto es lo que sabemos.</h2>
+    <p style="font-size:13px;color:#475569;margin-bottom:8px;">Conteo en vivo de actividades extracurriculares en el directorio: Cabo Rojo + Mayagüez + San Germán + Lajas + Hormigueros + Sabana Grande + Añasco. <strong>No es la lista oficial de nadie — es la que estamos construyendo entre todos.</strong> Si tu nene va a una academia, liga o clase que no aparece aquí, dínoslo y la agregamos.</p>
+    <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-size:12px;color:#4c1d95;">
+      📲 <strong>¿Falta una?</strong> Textea <strong>SUGERIR + nombre y pueblo</strong> al <a href="https://wa.me/17874177711?text=SUGERIR%20" style="color:#7c3aed;font-weight:700;">787-417-7711</a> y la verificamos. Así se mantiene viva esta tabla.
+    </div>
+    <div style="overflow-x:auto;">
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead><tr style="border-bottom:2px solid #e2e8f0;text-align:left;">
+        <th style="padding:6px 8px;color:#475569;">Actividad</th>
+        <th style="padding:6px 8px;color:#475569;text-align:center;">Oeste</th>
+        <th style="padding:6px 8px;color:#475569;text-align:center;">Cabo Rojo</th>
+        <th style="padding:6px 8px;color:#475569;text-align:center;">Búsquedas *7711 (90d)</th>
+      </tr></thead>
+      <tbody>
+      ${youthCensus.map(r => {
+        const flag = r.oeste === 0 ? ' 🔴' : r.oeste === 1 ? ' 🔴' : r.cr === 0 ? ' 🟡' : '';
+        const rowBg = r.oeste <= 1 ? 'background:#fef2f2;' : '';
+        return `<tr style="border-bottom:1px solid #f1f5f9;${rowBg}">
+        <td style="padding:6px 8px;font-weight:600;color:#1e293b;">${esc(r.label)}${flag}</td>
+        <td style="padding:6px 8px;text-align:center;font-weight:700;color:${r.oeste <= 1 ? '#dc2626' : '#1e293b'};">${r.oeste}</td>
+        <td style="padding:6px 8px;text-align:center;color:${r.cr === 0 ? '#dc2626' : '#1e293b'};">${r.cr === 0 ? '0' : r.cr}</td>
+        <td style="padding:6px 8px;text-align:center;color:#64748b;">${r.demand > 0 ? r.demand : '—'}</td>
+      </tr>`;
+      }).join('')}
+      </tbody>
+    </table>
+    </div>
+    <p style="font-size:11px;color:#64748b;margin-top:10px;line-height:1.6;">
+      🔴 = cero o uno solo en toda la región según nuestro directorio · 🟡 = cero en Cabo Rojo.
+      ${youthCeroOeste.length > 0 ? `Hoy el oeste entero no tiene registrado: ${youthCeroOeste.map(s => esc(s.label.toLowerCase())).join(', ')} — en un pueblo con tres playas bandera, cero escuelas de natación registradas. Si existe una, nadie la puede encontrar. Ese es el problema que esta tabla arregla.` : ''}
+      ${youthCeroCr.length > 0 ? ` Cabo Rojo no tiene: ${youthCeroCr.map(s => esc(s.label.toLowerCase())).join(', ')} — pa' eso se viaja.` : ''}
+    </p>
+    <p style="font-size:11px;color:#94a3b8;margin-top:6px;font-style:italic;">Mismo método que el censo de especialistas: directorio verificado a mano + búsquedas reales del *7711. Seguro faltan ligas, clubes y maestros independientes — por eso la tabla pide ayuda en vez de pretender que está completa.</p>
   </div>
 
   <!-- SECTION 6: AJÁ MOMENTS -->
