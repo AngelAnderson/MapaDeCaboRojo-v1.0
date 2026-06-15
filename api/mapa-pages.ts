@@ -2153,22 +2153,29 @@ ${allSections}
 // Source reports: Outbox/Salud/<Specialty>-PR/ (NPPES/CMS + U.S. Census 2020).
 function handleAcceso(_req: any, res: any) {
   const body = `
-<h1>Acceso a salud en el oeste. La data, sin spin.</h1>
+<h1>Acceso a salud en el oeste. La data que nadie te daba.</h1>
 
-<p class="text-lg text-slate-600 mt-4">El mapa no solo te dice <strong>quién hay</strong>. Te dice <strong>quién falta</strong>. Reportes verificados por especialidad: cuántos especialistas hay en Puerto Rico, dónde están, y qué tan lejos te queda uno. Registro federal de salud (NPPES/CMS) cruzado con el Censo 2020. Número con fuente, no opinión.</p>
+<p class="text-lg text-slate-600 mt-4">Cuando necesitas un especialista, no sabes cuántos hay cerca ni si te toca viajar. Lo descubres tarde: con la cita a tres meses, o cuando ya te mandaron pa'l área metro. <strong>Esta página te lo dice antes.</strong></p>
 
-<div class="grid sm:grid-cols-3 gap-3 mt-6 not-prose">
-  <div class="bg-teal-50 border border-teal-200 rounded-lg p-4">
-    <div class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-2">¿Qué significa?</div>
-    <p class="text-sm text-slate-700 leading-snug">Por cada especialidad medimos cuántos médicos hay y por cuánta gente. Lo que la lista no te dice: si te toca viajar.</p>
-  </div>
-  <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
-    <div class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">¿Por qué importa?</div>
-    <p class="text-sm text-slate-700 leading-snug">Cuando hay pocos, la cita se va a meses y el referido se vuelve un muro. Saberlo antes te ahorra tiempo y vueltas.</p>
-  </div>
-  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-    <div class="text-xs font-bold text-blue-700 uppercase tracking-wide mb-2">¿Qué hago con esto?</div>
-    <p class="text-sm text-slate-700 leading-snug">Abre el reporte de tu especialidad, busca al de tu zona en el directorio, y si no sabes navegarlo, lee el manual del paciente.</p>
+<div class="not-prose mt-6 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
+  <div class="text-xs font-bold uppercase tracking-widest text-teal-700 mb-4">Por qué existe esta página</div>
+  <div class="grid sm:grid-cols-2 gap-x-8 gap-y-5">
+    <div>
+      <div class="font-bold text-slate-900 mb-1 flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-amber-500"></i> El problema</div>
+      <p class="text-sm text-slate-600 leading-snug">En Puerto Rico los especialistas se concentran en San Juan. Si vives en el oeste, muchas veces hay uno o ninguno en tu pueblo — y nadie te lo dice hasta que ya estás esperando meses o manejando dos horas.</p>
+    </div>
+    <div>
+      <div class="font-bold text-slate-900 mb-1 flex items-center gap-2"><i class="fa-solid fa-magnifying-glass text-teal-600"></i> Lo que no existía antes</div>
+      <p class="text-sm text-slate-600 leading-snug">Esa cuenta existe, pero enterrada en un registro federal en inglés que nadie del pueblo abre. Nunca la habían cruzado con el censo, por especialidad y por pueblo, en español. La hicimos a mano. Es la primera vez que está en un solo sitio, clara.</p>
+    </div>
+    <div>
+      <div class="font-bold text-slate-900 mb-1 flex items-center gap-2"><i class="fa-solid fa-users text-teal-600"></i> Para quién</div>
+      <p class="text-sm text-slate-600 leading-snug">El que necesita un especialista. El que cuida a un familiar mayor. Y la diáspora que coordina la salud de sus padres en la isla desde lejos.</p>
+    </div>
+    <div>
+      <div class="font-bold text-slate-900 mb-1 flex items-center gap-2"><i class="fa-solid fa-circle-check text-emerald-600"></i> Qué haces con esto</div>
+      <p class="text-sm text-slate-600 leading-snug">Ves cuántos hay y qué tan lejos te queda uno, pides el referido temprano, y sabes desde antes si vas a viajar — en vez de descubrirlo en la urgencia. Cada número tiene fuente; si ves un dato viejo, dínoslo y se corrige.</p>
+    </div>
   </div>
 </div>
 
@@ -2233,9 +2240,25 @@ function handleAcceso(_req: any, res: any) {
   </div>
 </div>
 
+<div class="not-prose border border-slate-200 rounded-2xl overflow-hidden mt-4 shadow-sm">
+  <div class="bg-gradient-to-br from-teal-600 to-teal-800 text-white p-5">
+    <div class="text-xs font-bold uppercase tracking-widest text-teal-100">🩺 Neurólogos · Cerebro, Nervios, Derrame</div>
+    <div class="text-2xl font-black mt-1 leading-tight">166 en Puerto Rico · 0 en el pueblo de Cabo Rojo</div>
+  </div>
+  <div class="p-5 grid sm:grid-cols-3 gap-3 text-center">
+    <div><div class="text-3xl font-black text-amber-600">2.5x</div><div class="text-xs text-slate-600 mt-1">más acceso en el metro · la disparidad más alta</div></div>
+    <div><div class="text-3xl font-black text-red-600">0</div><div class="text-xs text-slate-600 mt-1">en Cabo Rojo · el más cerca en Mayagüez (8)</div></div>
+    <div><div class="text-3xl font-black text-slate-800">62%</div><div class="text-xs text-slate-600 mt-1">de los neurólogos de PR están en el metro</div></div>
+  </div>
+  <div class="px-5 pb-5 flex flex-wrap gap-2">
+    <a href="/categoria/neurologo" class="inline-flex items-center gap-2 bg-teal-600 text-white font-bold px-4 py-2 rounded-full text-sm hover:bg-teal-700"><i class="fa-solid fa-list"></i> Ver el directorio</a>
+    <a href="/reportes/acceso-neurologos.pdf" class="inline-flex items-center gap-2 bg-slate-100 text-slate-800 font-bold px-4 py-2 rounded-full text-sm hover:bg-slate-200"><i class="fa-solid fa-file-pdf"></i> Bajar el reporte (1 pág)</a>
+  </div>
+</div>
+
 <div class="not-prose border border-dashed border-slate-300 rounded-2xl p-5 mt-4 bg-slate-50">
   <div class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Próximamente</div>
-  <p class="text-sm text-slate-600">Neurólogos · Ortopedas · Ginecólogos · Gastroenterólogos. Cada uno con su reporte verificado. ¿Cuál te urge? Escríbele <strong>SALUD</strong> al ${PHONE_CTA}.</p>
+  <p class="text-sm text-slate-600">Ortopedas · Ginecólogos · Gastroenterólogos · Dermatólogos. Cada uno con su reporte verificado. ¿Cuál te urge? Escríbele <strong>SALUD</strong> al ${PHONE_CTA}.</p>
 </div>
 
 <h2>Cómo lo medimos</h2>

@@ -117,6 +117,8 @@ const CATEGORY_MAP: Record<string, { match: string[]; display: string; emoji: st
   nefrologos:     { match: ['nefrolog', 'nefrólog', 'nephrolog', 'riñón', 'rinon', 'riñones', 'renal', 'diálisis', 'dialisis'], display: 'Nefrólogos del Oeste', emoji: '🩺', nameMatch: true },
   endocrinologo:  { match: ['endocrin', 'endocrinólog', 'endocrinology', 'diabetes', 'tiroides', 'thyroid', 'hormona'], display: 'Endocrinólogos del Oeste', emoji: '🩺', nameMatch: true },
   endocrinologos: { match: ['endocrin', 'endocrinólog', 'endocrinology', 'diabetes', 'tiroides', 'thyroid', 'hormona'], display: 'Endocrinólogos del Oeste', emoji: '🩺', nameMatch: true },
+  neurologo:      { match: ['neurolog', 'neurólog', 'neurology', 'derrame', 'epilepsia', 'migraña', 'migrana', 'parkinson', 'neuropat'], display: 'Neurólogos del Oeste', emoji: '🧠', nameMatch: true },
+  neurologos:     { match: ['neurolog', 'neurólog', 'neurology', 'derrame', 'epilepsia', 'migraña', 'migrana', 'parkinson', 'neuropat'], display: 'Neurólogos del Oeste', emoji: '🧠', nameMatch: true },
   'cardiología':  { match: ['cardiolog', 'cardiólog', 'Cardiología', 'cardiology', 'cardiovascular'], display: 'Cardiólogos del Oeste', emoji: '❤️', nameMatch: true },
   gimnasio:       { match: ['fitness', 'gym', 'gimnasio', 'crossfit', 'training', 'ejercicio', 'boxeo', 'boxing', 'yoga', 'pilates', 'cardio', 'pesas', 'zumba', 'spinning', 'runner', 'running'], display: 'Gimnasios & Fitness', emoji: '💪', nameMatch: true },
   gimnasios:      { match: ['fitness', 'gym', 'gimnasio', 'crossfit', 'training', 'ejercicio', 'boxeo', 'boxing', 'yoga', 'pilates', 'cardio', 'pesas', 'zumba', 'spinning', 'runner', 'running'], display: 'Gimnasios & Fitness', emoji: '💪', nameMatch: true },
@@ -196,7 +198,7 @@ export default async function handler(req: any, res: any) {
   // For these we serve the whole oeste by municipality instead of restricting to a Cabo Rojo
   // address (which would surface only the lone CR cardiologist). The full island-wide directory
   // lives on the standalone health property; the bot serves all of PR via *7711.
-  const REGION_HEALTH_CATS = new Set(['cardiologo', 'cardiologos', 'cardiologia', 'cardiología', 'fisiatra', 'fisiatras', 'nefrologo', 'nefrologos', 'endocrinologo', 'endocrinologos']);
+  const REGION_HEALTH_CATS = new Set(['cardiologo', 'cardiologos', 'cardiologia', 'cardiología', 'fisiatra', 'fisiatras', 'nefrologo', 'nefrologos', 'endocrinologo', 'endocrinologos', 'neurologo', 'neurologos']);
   const isRegionHealth = REGION_HEALTH_CATS.has(cat);
   const OESTE_MUNIS = ['Cabo Rojo', 'Mayagüez', 'San Germán', 'Sabana Grande', 'Añasco', 'Aguada', 'Aguadilla', 'Moca', 'San Sebastián', 'Lajas', 'Hormigueros', 'Las Marías', 'Maricao', 'Rincón', 'Isabela', 'Camuy', 'Quebradillas', 'Guánica', 'Yauco'];
 
@@ -370,6 +372,7 @@ export default async function handler(req: any, res: any) {
     fisiatra: 'fisiatras', fisiatras: 'fisiatras',
     nefrologo: 'nefrologos', nefrologos: 'nefrologos',
     endocrinologo: 'endocrinologos', endocrinologos: 'endocrinologos',
+    neurologo: 'neurologos', neurologos: 'neurologos',
   };
   const ogImage = CATEGORY_OG[cat] ? `${baseUrl}/og/${CATEGORY_OG[cat]}.png` : '';
 
