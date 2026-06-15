@@ -270,6 +270,26 @@ export default async function handler(req: any, res: any) {
       description: `Directorio de salud en Cabo Rojo, PR: ${filtered.length} médicos, farmacias, dentistas, laboratorios y especialistas — con teléfono, horario y verificación en el registro federal de salud (NPPES).`,
       intro: `Todo lo de salud en Cabo Rojo en un solo sitio: médicos, farmacias, dentistas, laboratorios, ópticas, salud mental y especialistas. Filtra por lo que necesitas, mira quién está abierto, y si no sabes a quién ir, dile tu síntoma a El Veci.`,
     },
+    cardiologo: {
+      title: 'Cardiólogos en Cabo Rojo y el Oeste de PR — Verificados, con teléfono',
+      description: `Cardiólogos en Cabo Rojo, Mayagüez, San Germán, Aguadilla y todo el oeste de Puerto Rico — ${filtered.length} verificados en el registro federal NPPES, con nombre, pueblo y teléfono. PR tiene 339 cardiólogos y más de la mitad están en San Juan; aquí están los del oeste.`,
+      intro: `El corazón no espera, y en el oeste hay pocos cardiólogos — por eso casi todos hay que buscarlos por teléfono. Aquí tienes ${filtered.length} cardiólogos del oeste (Cabo Rojo, Mayagüez, San Germán, Aguadilla, Añasco y más), verificados uno por uno, con su teléfono. Llama antes de ir para confirmar tu plan médico. ¿Buscas en otro pueblo? Escríbele CARDIOLOGO a El Veci al 787-417-7711.`,
+    },
+    cardiologos: {
+      title: 'Cardiólogos en Cabo Rojo y el Oeste de PR — Verificados, con teléfono',
+      description: `Cardiólogos en Cabo Rojo, Mayagüez, San Germán, Aguadilla y todo el oeste de Puerto Rico — ${filtered.length} verificados en el registro federal NPPES, con nombre, pueblo y teléfono. PR tiene 339 cardiólogos y más de la mitad están en San Juan; aquí están los del oeste.`,
+      intro: `El corazón no espera, y en el oeste hay pocos cardiólogos — por eso casi todos hay que buscarlos por teléfono. Aquí tienes ${filtered.length} cardiólogos del oeste (Cabo Rojo, Mayagüez, San Germán, Aguadilla, Añasco y más), verificados uno por uno, con su teléfono. Llama antes de ir para confirmar tu plan médico. ¿Buscas en otro pueblo? Escríbele CARDIOLOGO a El Veci al 787-417-7711.`,
+    },
+    cardiologia: {
+      title: 'Cardiólogos en Cabo Rojo y el Oeste de PR — Verificados, con teléfono',
+      description: `Cardiólogos en Cabo Rojo, Mayagüez, San Germán, Aguadilla y todo el oeste de Puerto Rico — ${filtered.length} verificados en el registro federal NPPES, con nombre, pueblo y teléfono. PR tiene 339 cardiólogos y más de la mitad están en San Juan; aquí están los del oeste.`,
+      intro: `El corazón no espera, y en el oeste hay pocos cardiólogos — por eso casi todos hay que buscarlos por teléfono. Aquí tienes ${filtered.length} cardiólogos del oeste (Cabo Rojo, Mayagüez, San Germán, Aguadilla, Añasco y más), verificados uno por uno, con su teléfono. Llama antes de ir para confirmar tu plan médico. ¿Buscas en otro pueblo? Escríbele CARDIOLOGO a El Veci al 787-417-7711.`,
+    },
+    'cardiología': {
+      title: 'Cardiólogos en Cabo Rojo y el Oeste de PR — Verificados, con teléfono',
+      description: `Cardiólogos en Cabo Rojo, Mayagüez, San Germán, Aguadilla y todo el oeste de Puerto Rico — ${filtered.length} verificados en el registro federal NPPES, con nombre, pueblo y teléfono. PR tiene 339 cardiólogos y más de la mitad están en San Juan; aquí están los del oeste.`,
+      intro: `El corazón no espera, y en el oeste hay pocos cardiólogos — por eso casi todos hay que buscarlos por teléfono. Aquí tienes ${filtered.length} cardiólogos del oeste (Cabo Rojo, Mayagüez, San Germán, Aguadilla, Añasco y más), verificados uno por uno, con su teléfono. Llama antes de ir para confirmar tu plan médico. ¿Buscas en otro pueblo? Escríbele CARDIOLOGO a El Veci al 787-417-7711.`,
+    },
     gimnasio: {
       title: 'Gimnasios y Fitness en Cabo Rojo',
       description: `${filtered.length} gimnasios y centros fitness en Cabo Rojo, PR — boxing, CrossFit, yoga, pesas, running y más. Horarios, direcciones y contacto.`,
@@ -340,12 +360,19 @@ export default async function handler(req: any, res: any) {
   const title = catSeo?.title ? `${catSeo.title} | MapaDeCaboRojo.com` : (alreadyHasCaboRojo ? `${displayName} | MapaDeCaboRojo.com` : `${displayName} en Cabo Rojo | MapaDeCaboRojo.com`);
   const description = catSeo?.description || `Descubre los mejores ${displayName.toLowerCase()} en Cabo Rojo, Puerto Rico. ${filtered.length} negocios listados con dirección, teléfono y horarios.`;
 
+  // Per-category social share image (1200×630). Falls back to no og:image.
+  const CATEGORY_OG: Record<string, string> = {
+    cardiologo: 'cardiologos', cardiologos: 'cardiologos', cardiologia: 'cardiologos', 'cardiología': 'cardiologos',
+  };
+  const ogImage = CATEGORY_OG[cat] ? `${baseUrl}/og/${CATEGORY_OG[cat]}.png` : '';
+
   // Route health categories to their dedicated detail pages
   const HEALTH_DETAIL_ROUTES: Record<string, string> = {
     farmacia: 'farmacia', farmacias: 'farmacia',
     dentista: 'dentista', dentistas: 'dentista',
     veterinario: 'veterinario', veterinarios: 'veterinario',
     medico: 'medico', medicos: 'medico',
+    cardiologo: 'medico', cardiologos: 'medico', cardiologia: 'medico', 'cardiología': 'medico',
     hospital: 'hospital', hospitales: 'hospital',
     laboratorio: 'laboratorio', laboratorios: 'laboratorio',
     optica: 'optica', opticas: 'optica',
@@ -682,9 +709,14 @@ export default async function handler(req: any, res: any) {
   <meta property="og:url" content="${pageUrl}">
   <meta property="og:site_name" content="MapaDeCaboRojo.com">
   <meta property="og:locale" content="es_PR">
-  <meta name="twitter:card" content="summary">
+  ${ogImage ? `<meta property="og:image" content="${ogImage}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="${esc(displayName)} en MapaDeCaboRojo.com">` : ''}
+  <meta name="twitter:card" content="${ogImage ? 'summary_large_image' : 'summary'}">
   <meta name="twitter:title" content="${esc(title)}">
   <meta name="twitter:description" content="${esc(description)}">
+  ${ogImage ? `<meta name="twitter:image" content="${ogImage}">` : ''}
   <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
   ${faqSchema ? `<script type="application/ld+json">${JSON.stringify(faqSchema)}</script>` : ''}
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
