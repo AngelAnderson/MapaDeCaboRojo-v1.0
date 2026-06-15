@@ -37,6 +37,7 @@
     { "source": "/fisiatra/:slug", "destination": "/api/farmacia?slug=:slug&type=fisiatra" },
     { "source": "/categoria/:cat", "destination": "/api/categoria?cat=:cat" },
     { "source": "/playas/defensa-y-limpieza", "destination": "/api/mapa-pages?page=defensa-y-limpieza" },
+    { "source": "/acceso", "destination": "/api/mapa-pages?page=acceso" },
     { "source": "/mision", "destination": "/api/mapa-pages?page=mision" },
     { "source": "/transparencia", "destination": "/api/mapa-pages?page=transparencia" },
     { "source": "/equipo", "destination": "/api/mapa-pages?page=equipo" },

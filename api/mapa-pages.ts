@@ -2148,12 +2148,107 @@ ${allSections}
   }))
 }
 
+// =============== /acceso ===============
+// Health-access "radar": verified provider-density reports per specialty.
+// Source reports: Outbox/Salud/<Specialty>-PR/ (NPPES/CMS + U.S. Census 2020).
+function handleAcceso(_req: any, res: any) {
+  const body = `
+<h1>Acceso a salud en el oeste. La data, sin spin.</h1>
+
+<p class="text-lg text-slate-600 mt-4">El mapa no solo te dice <strong>quién hay</strong>. Te dice <strong>quién falta</strong>. Reportes verificados por especialidad: cuántos especialistas hay en Puerto Rico, dónde están, y qué tan lejos te queda uno. Registro federal de salud (NPPES/CMS) cruzado con el Censo 2020. Número con fuente, no opinión.</p>
+
+<div class="grid sm:grid-cols-3 gap-3 mt-6 not-prose">
+  <div class="bg-teal-50 border border-teal-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-2">¿Qué significa?</div>
+    <p class="text-sm text-slate-700 leading-snug">Por cada especialidad medimos cuántos médicos hay y por cuánta gente. Lo que la lista no te dice: si te toca viajar.</p>
+  </div>
+  <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">¿Por qué importa?</div>
+    <p class="text-sm text-slate-700 leading-snug">Cuando hay pocos, la cita se va a meses y el referido se vuelve un muro. Saberlo antes te ahorra tiempo y vueltas.</p>
+  </div>
+  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-blue-700 uppercase tracking-wide mb-2">¿Qué hago con esto?</div>
+    <p class="text-sm text-slate-700 leading-snug">Abre el reporte de tu especialidad, busca al de tu zona en el directorio, y si no sabes navegarlo, lee el manual del paciente.</p>
+  </div>
+</div>
+
+<h2>Reportes de acceso por especialidad</h2>
+
+<div class="not-prose border border-slate-200 rounded-2xl overflow-hidden mt-4 shadow-sm">
+  <div class="bg-gradient-to-br from-teal-600 to-teal-800 text-white p-5">
+    <div class="text-xs font-bold uppercase tracking-widest text-teal-100">🩺 Fisiatras · Medicina Física y Rehabilitación</div>
+    <div class="text-2xl font-black mt-1 leading-tight">252 en Puerto Rico · 1 por cada 46,665 personas en Cabo Rojo</div>
+  </div>
+  <div class="p-5 grid sm:grid-cols-3 gap-3 text-center">
+    <div><div class="text-3xl font-black text-teal-700">53%</div><div class="text-xs text-slate-600 mt-1">en el metro de San Juan (26% de la población)</div></div>
+    <div><div class="text-3xl font-black text-slate-800">2x</div><div class="text-xs text-slate-600 mt-1">más acceso en el metro que en el resto de la isla</div></div>
+    <div><div class="text-3xl font-black text-red-600">1 : 46,665</div><div class="text-xs text-slate-600 mt-1">en Cabo Rojo · ~7x menos que el metro</div></div>
+  </div>
+  <div class="px-5 pb-5 flex flex-wrap gap-2">
+    <a href="/categoria/fisiatra" class="inline-flex items-center gap-2 bg-teal-600 text-white font-bold px-4 py-2 rounded-full text-sm hover:bg-teal-700"><i class="fa-solid fa-list"></i> Ver el directorio</a>
+    <a href="/reportes/acceso-fisiatras.pdf" class="inline-flex items-center gap-2 bg-slate-100 text-slate-800 font-bold px-4 py-2 rounded-full text-sm hover:bg-slate-200"><i class="fa-solid fa-file-pdf"></i> Bajar el reporte (1 pág)</a>
+    <a href="https://caborojo.com/manual-paciente-fisiatra-puerto-rico/" class="inline-flex items-center gap-2 bg-slate-100 text-slate-800 font-bold px-4 py-2 rounded-full text-sm hover:bg-slate-200"><i class="fa-solid fa-book-medical"></i> El manual del paciente</a>
+  </div>
+</div>
+
+<div class="not-prose border border-slate-200 rounded-2xl overflow-hidden mt-4 shadow-sm">
+  <div class="bg-gradient-to-br from-teal-600 to-teal-800 text-white p-5">
+    <div class="text-xs font-bold uppercase tracking-widest text-teal-100">&hearts; Cardiólogos</div>
+    <div class="text-2xl font-black mt-1 leading-tight">339 en Puerto Rico · 27 en todo el oeste</div>
+  </div>
+  <div class="p-5 flex flex-wrap gap-2">
+    <a href="/categoria/cardiologos" class="inline-flex items-center gap-2 bg-teal-600 text-white font-bold px-4 py-2 rounded-full text-sm hover:bg-teal-700"><i class="fa-solid fa-list"></i> Ver el directorio</a>
+  </div>
+</div>
+
+<div class="not-prose border border-dashed border-slate-300 rounded-2xl p-5 mt-4 bg-slate-50">
+  <div class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Próximamente</div>
+  <p class="text-sm text-slate-600">Nefrólogos · Endocrinólogos · Pediatras · Neurólogos. Cada uno con su reporte verificado. ¿Cuál te urge? Escríbele <strong>SALUD</strong> al ${PHONE_CTA}.</p>
+</div>
+
+<h2>Cómo lo medimos</h2>
+<p>Conteo de médicos: registro federal <strong>NPPES / CMS</strong> (board-certificados, por código de taxonomía, individuos con práctica en Puerto Rico, junio 2026). Cada NPI es público y verificable. Población: <strong>Censo Decenal 2020 (U.S. Census Bureau)</strong>. Mantenido a mano, uno por uno. Si encuentras un dato viejo, dínoslo y se corrige.</p>
+<p class="text-sm text-slate-600">¿Periodista o plan médico? Esta data es citable. <a href="mailto:angel@angelanderson.com" class="text-teal-600 hover:underline">angel@angelanderson.com</a>.</p>
+
+<div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
+  <p class="text-lg font-bold mb-1">¿Buscas un especialista cerca?</p>
+  <p class="text-sm text-teal-100 mb-4">El Veci te dice quién resuelve, sin dar vueltas. Textea al <strong>${PHONE_CTA}</strong>:</p>
+  <div class="flex flex-wrap gap-3 justify-center">
+    <a href="https://wa.me/17874177711?text=FISIATRA" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50 transition-colors"><i class="fa-brands fa-whatsapp text-lg"></i> FISIATRA</a>
+    <a href="https://wa.me/17874177711?text=CARDIOLOGO" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50 transition-colors"><i class="fa-brands fa-whatsapp text-lg"></i> CARDIOLOGO</a>
+  </div>
+  <p class="text-xs text-teal-200 mt-4">— Menos revolú, más sistema, mejor vida.</p>
+</div>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Acceso a Salud en Puerto Rico — Reportes verificados por especialidad',
+    description: 'Reportes de densidad de proveedores de salud en Puerto Rico por especialidad, con fuente federal NPPES/CMS y Censo 2020.',
+    inLanguage: 'es',
+    url: `${SITE_URL}/acceso`,
+    isPartOf: { '@type': 'WebSite', name: 'Mapa de Cabo Rojo', url: SITE_URL },
+  }
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=300')
+  res.status(200).send(layout({
+    title: 'Acceso a Salud en el Oeste — La data, sin spin',
+    description: 'Reportes verificados de acceso a salud en Puerto Rico por especialidad: cuántos especialistas hay, dónde, y qué tan lejos te queda. NPPES/CMS + Censo 2020.',
+    slug: 'acceso',
+    ogImage: '/og/fisiatras.png',
+    bodyHtml: body,
+    jsonLd,
+  }))
+}
+
 // =============== HANDLER ===============
 
 export default async function handler(req: any, res: any) {
   const page = String(req.query.page || '')
 
   switch (page) {
+    case 'acceso': return handleAcceso(req, res)
     case 'mision': return handleMision(req, res)
     case 'transparencia': return await handleTransparencia(req, res)
     case 'equipo': return handleEquipo(req, res)
