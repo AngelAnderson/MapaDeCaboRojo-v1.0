@@ -110,6 +110,10 @@ const CATEGORY_MAP: Record<string, { match: string[]; display: string; emoji: st
   quiropractico:  { match: ['quiropractico', 'quiropráctico', 'chiropractor', 'chiropractic', 'quiropráctica'], display: 'Quiroprácticos', emoji: '🦴', nameMatch: true },
   fisiatra:       { match: ['fisiatra', 'fisiatría', 'fisiatria', 'medicina física', 'medicina fisica', 'rehabilitación', 'rehabilitacion', 'physiatrist', 'physical medicine'], display: 'Fisiatras en Cabo Rojo', emoji: '🩺', nameMatch: true },
   fisiatras:      { match: ['fisiatra', 'fisiatría', 'fisiatria', 'medicina física', 'medicina fisica', 'rehabilitación', 'rehabilitacion', 'physiatrist', 'physical medicine'], display: 'Fisiatras en Cabo Rojo', emoji: '🩺', nameMatch: true },
+  cardiologo:     { match: ['cardiolog', 'cardiólog', 'Cardiología', 'cardiology', 'cardiovascular'], display: 'Cardiólogos del Oeste', emoji: '❤️', nameMatch: true },
+  cardiologos:    { match: ['cardiolog', 'cardiólog', 'Cardiología', 'cardiology', 'cardiovascular'], display: 'Cardiólogos del Oeste', emoji: '❤️', nameMatch: true },
+  cardiologia:    { match: ['cardiolog', 'cardiólog', 'Cardiología', 'cardiology', 'cardiovascular'], display: 'Cardiólogos del Oeste', emoji: '❤️', nameMatch: true },
+  'cardiología':  { match: ['cardiolog', 'cardiólog', 'Cardiología', 'cardiology', 'cardiovascular'], display: 'Cardiólogos del Oeste', emoji: '❤️', nameMatch: true },
   gimnasio:       { match: ['fitness', 'gym', 'gimnasio', 'crossfit', 'training', 'ejercicio', 'boxeo', 'boxing', 'yoga', 'pilates', 'cardio', 'pesas', 'zumba', 'spinning', 'runner', 'running'], display: 'Gimnasios & Fitness', emoji: '💪', nameMatch: true },
   gimnasios:      { match: ['fitness', 'gym', 'gimnasio', 'crossfit', 'training', 'ejercicio', 'boxeo', 'boxing', 'yoga', 'pilates', 'cardio', 'pesas', 'zumba', 'spinning', 'runner', 'running'], display: 'Gimnasios & Fitness', emoji: '💪', nameMatch: true },
   hospedaje:      { match: ['hospedaje', 'lodging', 'hotel', 'LODGING', 'HOSPEDAJE', 'alojamiento'], display: 'Hospedaje', emoji: '🏨' },
@@ -184,13 +188,25 @@ export default async function handler(req: any, res: any) {
   const CAPTURE_CATS = new Set(['electrico', 'electricista', 'electricistas', 'plomero', 'plomeros', 'ac', 'aire-acondicionado', 'solar', 'solares', 'placas']);
   const isCaptureCat = CAPTURE_CATS.has(cat);
 
+  // Scarce specialties (e.g. cardiología) barely exist in Cabo Rojo — the vecino HAS to travel.
+  // For these we serve the whole oeste by municipality instead of restricting to a Cabo Rojo
+  // address (which would surface only the lone CR cardiologist). The full island-wide directory
+  // lives on the standalone health property; the bot serves all of PR via *7711.
+  const REGION_HEALTH_CATS = new Set(['cardiologo', 'cardiologos', 'cardiologia', 'cardiología']);
+  const isRegionHealth = REGION_HEALTH_CATS.has(cat);
+  const OESTE_MUNIS = ['Cabo Rojo', 'Mayagüez', 'San Germán', 'Sabana Grande', 'Añasco', 'Aguada', 'Aguadilla', 'Moca', 'San Sebastián', 'Lajas', 'Hormigueros', 'Las Marías', 'Maricao', 'Rincón', 'Isabela', 'Camuy', 'Quebradillas', 'Guánica', 'Yauco'];
+
   let placesQuery = supabase
     .from('places')
     .select('id,name,slug,category,subcategory,image_url,phone,address,municipality,google_rating,google_review_count,status,plan,sponsor_weight,tags,services,opening_hours,lat,lon,npi,one_liner,is_emergency_resource')
     .eq('status', 'open');
-  placesQuery = isCaptureCat
-    ? placesQuery.or('address.ilike.%Cabo Rojo%,tags.cs.{sirve-cabo-rojo}')
-    : placesQuery.ilike('address', '%Cabo Rojo%');
+  if (isRegionHealth) {
+    placesQuery = placesQuery.in('municipality', OESTE_MUNIS);
+  } else if (isCaptureCat) {
+    placesQuery = placesQuery.or('address.ilike.%Cabo Rojo%,tags.cs.{sirve-cabo-rojo}');
+  } else {
+    placesQuery = placesQuery.ilike('address', '%Cabo Rojo%');
+  }
   const { data: places, error } = await placesQuery
     .or(orClauses)
     .order('sponsor_weight', { ascending: false })
