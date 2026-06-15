@@ -1068,6 +1068,9 @@ async function handle_municipio(req: any, res: any) {
     const c: any = censusResult;
     const heat = computeHeatIndex(realSearches90d, placesForHeat);
     const calientes = heat.filter((h) => h.status === 'caliente' && h.demand > 0).sort((a, b) => b.ratio - a.ratio).slice(0, 6);
+    // For the "Lo escondido" hero band: rank by real demand (búsquedas), not by ratio —
+    // so a category with 843 searches / 5 negocios leads, not "1 búsqueda / 0 negocios" (ratio ∞).
+    const calientesHero = heat.filter((h) => h.status === 'caliente' && h.demand > 0).sort((a, b) => b.demand - a.demand).slice(0, 6);
     const sanas = heat.filter((h) => h.status === 'sana' && h.demand > 0).sort((a, b) => b.ratio - a.ratio).slice(0, 6);
     const saturadas = heat.filter((h) => h.status === 'saturada' && h.supply > 0).sort((a, b) => b.supply - a.supply).slice(0, 6);
 
@@ -1134,14 +1137,14 @@ async function handle_municipio(req: any, res: any) {
   <div style="background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);border-radius:14px;padding:26px 28px;margin-bottom:28px;box-shadow:0 4px 14px rgba(0,0,0,0.15);border:1px solid #334155;">
     <div style="font-size:12px;color:#fbbf24;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:10px;">💎 Lo escondido — lo que solo se ve aquí</div>
     <div style="font-size:17px;color:#fff;font-weight:600;line-height:1.45;">Cada vez que un vecino le escribe al *7711, queda registrado. Esto es la demanda real del pueblo: la que Google no enseña y ningún negocio sabe que existe.</div>
-    ${calientes.length > 0 ? `
+    ${calientesHero.length > 0 ? `
     <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:16px 18px;margin-top:16px;">
       <div style="font-size:12px;color:#fdba74;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">🔥 La oportunidad más caliente ahora mismo</div>
-      <a href="${calientes[0].categorySlug ? `/categoria/${calientes[0].categorySlug}` : `https://wa.me/17874177711?text=${encodeURIComponent(calientes[0].label.toLowerCase())}`}" style="display:block;text-decoration:none;color:inherit;">
-        <div style="font-size:22px;font-weight:800;color:#fff;">${calientes[0].emoji} ${esc(calientes[0].label)}</div>
-        <div style="font-size:14px;color:#fed7aa;margin-top:4px;line-height:1.5;">${calientes[0].demand} búsquedas en 90 días · solo ${calientes[0].supply} negocio${calientes[0].supply === 1 ? '' : 's'} en el directorio. <span style="color:#fff;font-weight:600;">El que abra aquí, atiende demanda que ya existe.</span></div>
+      <a href="${calientesHero[0].categorySlug ? `/categoria/${calientesHero[0].categorySlug}` : `https://wa.me/17874177711?text=${encodeURIComponent(calientesHero[0].label.toLowerCase())}`}" style="display:block;text-decoration:none;color:inherit;">
+        <div style="font-size:22px;font-weight:800;color:#fff;">${calientesHero[0].emoji} ${esc(calientesHero[0].label)}</div>
+        <div style="font-size:14px;color:#fed7aa;margin-top:4px;line-height:1.5;">${calientesHero[0].demand} búsquedas en 90 días · solo ${calientesHero[0].supply} negocio${calientesHero[0].supply === 1 ? '' : 's'} en el directorio. <span style="color:#fff;font-weight:600;">El que abra aquí, atiende demanda que ya existe.</span></div>
       </a>
-      ${calientes.length > 1 ? `<div style="font-size:13px;color:#fed7aa;margin-top:12px;border-top:1px solid rgba(255,255,255,0.15);padding-top:10px;">Otras calientes: ${calientes.slice(1, 4).map(h => `<strong style="color:#fff;">${esc(h.label)}</strong> (${h.demand} búsq. / ${h.supply} neg.)`).join(' · ')}</div>` : ''}
+      ${calientesHero.length > 1 ? `<div style="font-size:13px;color:#fed7aa;margin-top:12px;border-top:1px solid rgba(255,255,255,0.15);padding-top:10px;">Otras calientes: ${calientesHero.slice(1, 4).map(h => `<strong style="color:#fff;">${esc(h.label)}</strong> (${h.demand} búsq. / ${h.supply} neg.)`).join(' · ')}</div>` : ''}
     </div>
     <div style="font-size:12px;color:#94a3b8;margin-top:12px;">El mapa completo de demanda vs oferta está más abajo. 👇</div>
     ` : `<div style="font-size:13px;color:#94a3b8;margin-top:12px;">Esta semana la oferta está cubriendo la demanda — sin huecos calientes detectados. Mira el mapa económico completo más abajo.</div>`}
