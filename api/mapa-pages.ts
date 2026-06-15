@@ -2217,9 +2217,25 @@ function handleAcceso(_req: any, res: any) {
   </div>
 </div>
 
+<div class="not-prose border border-slate-200 rounded-2xl overflow-hidden mt-4 shadow-sm">
+  <div class="bg-gradient-to-br from-teal-600 to-teal-800 text-white p-5">
+    <div class="text-xs font-bold uppercase tracking-widest text-teal-100">🩺 Endocrinólogos · Diabetes y Tiroides</div>
+    <div class="text-2xl font-black mt-1 leading-tight">158 en Puerto Rico · el pueblo más diabético de EE.UU.</div>
+  </div>
+  <div class="p-5 grid sm:grid-cols-3 gap-3 text-center">
+    <div><div class="text-3xl font-black text-amber-600">2.2x</div><div class="text-xs text-slate-600 mt-1">más acceso en el metro que en el oeste</div></div>
+    <div><div class="text-3xl font-black text-red-600">1 : 46,665</div><div class="text-xs text-slate-600 mt-1">en Cabo Rojo · un solo endocrinólogo</div></div>
+    <div><div class="text-3xl font-black text-slate-800">~1 de 6</div><div class="text-xs text-slate-600 mt-1">adultos en PR con diabetes · el que más falta</div></div>
+  </div>
+  <div class="px-5 pb-5 flex flex-wrap gap-2">
+    <a href="/categoria/endocrinologo" class="inline-flex items-center gap-2 bg-teal-600 text-white font-bold px-4 py-2 rounded-full text-sm hover:bg-teal-700"><i class="fa-solid fa-list"></i> Ver el directorio</a>
+    <a href="/reportes/acceso-endocrinologos.pdf" class="inline-flex items-center gap-2 bg-slate-100 text-slate-800 font-bold px-4 py-2 rounded-full text-sm hover:bg-slate-200"><i class="fa-solid fa-file-pdf"></i> Bajar el reporte (1 pág)</a>
+  </div>
+</div>
+
 <div class="not-prose border border-dashed border-slate-300 rounded-2xl p-5 mt-4 bg-slate-50">
   <div class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Próximamente</div>
-  <p class="text-sm text-slate-600">Endocrinólogos · Pediatras · Neurólogos · Ortopedas. Cada uno con su reporte verificado. ¿Cuál te urge? Escríbele <strong>SALUD</strong> al ${PHONE_CTA}.</p>
+  <p class="text-sm text-slate-600">Neurólogos · Ortopedas · Ginecólogos · Gastroenterólogos. Cada uno con su reporte verificado. ¿Cuál te urge? Escríbele <strong>SALUD</strong> al ${PHONE_CTA}.</p>
 </div>
 
 <h2>Cómo lo medimos</h2>
