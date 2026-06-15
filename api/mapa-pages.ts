@@ -2153,9 +2153,78 @@ ${allSections}
 // Source reports: Outbox/Salud/<Specialty>-PR/ (NPPES/CMS + U.S. Census 2020).
 function handleAcceso(_req: any, res: any) {
   const body = `
-<h1>Acceso a salud en el oeste. La data que nadie te daba.</h1>
+<h1>¿Tienes que viajar para ver a tu especialista?</h1>
 
-<p class="text-lg text-slate-600 mt-4">Cuando necesitas un especialista, no sabes cuántos hay cerca ni si te toca viajar. Lo descubres tarde: con la cita a tres meses, o cuando ya te mandaron pa'l área metro. <strong>Esta página te lo dice antes.</strong></p>
+<p class="text-lg text-slate-600 mt-3">Escoge el especialista y tu pueblo. Te decimos <strong>cuántos hay cerca, si te toca viajar, y qué pedirle a tu médico</strong> — antes de que sea una urgencia.</p>
+
+<div class="not-prose mt-6 bg-white border-2 border-teal-300 rounded-2xl p-6 shadow-sm">
+  <div class="grid sm:grid-cols-2 gap-4">
+    <label class="block">
+      <span class="text-sm font-bold text-slate-700">1. ¿Qué especialista necesitas?</span>
+      <select id="ac-spec" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-base bg-white">
+        <option value="">Escoge...</option>
+        <option value="fisiatra">Fisiatra — dolor, espalda, rehabilitación</option>
+        <option value="cardiologo">Cardiólogo — corazón</option>
+        <option value="nefrologo">Nefrólogo — riñón, diálisis</option>
+        <option value="endocrinologo">Endocrinólogo — diabetes, tiroides</option>
+        <option value="neurologo">Neurólogo — cerebro, nervios, derrame</option>
+        <option value="ortopeda">Ortopeda — huesos, fracturas, rodilla</option>
+      </select>
+    </label>
+    <label class="block">
+      <span class="text-sm font-bold text-slate-700">2. ¿De qué pueblo eres?</span>
+      <select id="ac-town" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-base bg-white">
+        <option value="">Escoge...</option>
+        <option>Cabo Rojo</option><option>San Germán</option><option>Mayagüez</option>
+        <option>Lajas</option><option>Hormigueros</option><option>Sabana Grande</option>
+        <option>Añasco</option><option>Aguadilla</option>
+        <option value="oeste-otro">Otro pueblo del oeste</option>
+        <option value="metro">Área metro (San Juan y alrededores)</option>
+      </select>
+    </label>
+  </div>
+  <div id="ac-result" class="mt-5"></div>
+  <p id="ac-hint" class="mt-4 text-sm text-slate-400 text-center">Escoge los dos y te decimos qué hacer.</p>
+</div>
+
+<script>
+(function(){
+  var SPEC={
+    fisiatra:{label:'fisiatra',ref:'fisiatría',kw:'FISIATRA',slug:'fisiatra',total:252,towns:{'Cabo Rojo':3,'Mayagüez':11,'San Germán':5,'Añasco':2,'Hormigueros':1}},
+    cardiologo:{label:'cardiólogo',ref:'cardiología',kw:'CARDIOLOGO',slug:'cardiologos',total:339,towns:{'Mayagüez':13,'Aguadilla':5,'San Germán':4,'Cabo Rojo':2,'Sabana Grande':1,'Añasco':1}},
+    nefrologo:{label:'nefrólogo',ref:'nefrología',kw:'NEFROLOGO',slug:'nefrologo',total:154,towns:{'Mayagüez':19,'Aguadilla':4,'Cabo Rojo':3,'Añasco':1,'San Germán':1}},
+    endocrinologo:{label:'endocrinólogo',ref:'endocrinología',kw:'ENDOCRINOLOGO',slug:'endocrinologo',total:158,towns:{'Mayagüez':14,'San Germán':4,'Aguadilla':3,'Cabo Rojo':1}},
+    neurologo:{label:'neurólogo',ref:'neurología',kw:'NEUROLOGO',slug:'neurologo',total:166,towns:{'Mayagüez':7,'Aguadilla':4,'San Germán':2}},
+    ortopeda:{label:'ortopeda',ref:'ortopedia',kw:'ORTOPEDA',slug:'ortopeda',total:152,towns:{'Mayagüez':8,'Aguadilla':3,'San Germán':3}}
+  };
+  var DIST={'Cabo Rojo':25,'San Germán':20,'Mayagüez':0,'Lajas':30,'Hormigueros':12,'Sabana Grande':25,'Añasco':18,'Aguadilla':40};
+  var sp=document.getElementById('ac-spec'),tw=document.getElementById('ac-town'),out=document.getElementById('ac-result'),hint=document.getElementById('ac-hint');
+  function render(){
+    if(!sp.value||!tw.value){out.innerHTML='';hint.style.display='block';return;}
+    hint.style.display='none';
+    var s=SPEC[sp.value],town=tw.value,hubN=s.towns['Mayagüez']||0,msg='',tone='';
+    if(town==='metro'){
+      msg='<b>En el área metro hay de sobra.</b> De los '+s.total+' '+s.label+'s de PR, la mayoría están en San Juan y alrededores. No te toca viajar lejos.';tone='ok';
+    } else if(town==='Mayagüez'){
+      msg='<b>En Mayagüez hay '+hubN+'.</b> Estás en el centro de especialistas del oeste — aquí es donde el resto del oeste viene.';tone='ok';
+    } else {
+      var name=(town==='oeste-otro')?'tu pueblo':town;
+      var here=(town==='oeste-otro')?0:(s.towns[town]||0);
+      var dist=(town==='oeste-otro')?30:(DIST[town]!=null?DIST[town]:30);
+      if(here>0){msg='<b>En '+name+' hay '+here+'.</b> Son pocos, así que la cita puede tardar. El grupo más grande cerca es <b>Mayagüez ('+hubN+')</b>, a ~'+dist+' min.';tone='warn';}
+      else{msg='<b>En '+name+' no hay '+s.label+' en el directorio.</b> El más cercano queda en <b>Mayagüez ('+hubN+')</b>, a ~'+dist+' min. Cuenta con viajar.';tone='bad';}
+    }
+    var bg=tone==='ok'?'#ecfdf5':tone==='warn'?'#fffbeb':'#fef2f2',bd=tone==='ok'?'#6ee7b7':tone==='warn'?'#fcd34d':'#fca5a5';
+    out.innerHTML='<div style="background:'+bg+';border:2px solid '+bd+';border-radius:14px;padding:18px 20px;">'
+      +'<p style="font-size:17px;line-height:1.5;color:#0f172a;margin:0 0 14px;">'+msg+'</p>'
+      +'<div style="font-size:14px;color:#334155;line-height:1.6;">'
+      +'<div style="margin-bottom:8px;"><b>👉 Qué pedir:</b> dile a tu médico primario un <b>"referido a '+s.ref+'"</b>. Y pregunta si está en tu plan médico.</div>'
+      +'<div><b>📞 Los teléfonos:</b> <a href="/categoria/'+s.slug+'" style="color:#0f766e;font-weight:700;text-decoration:underline;">ver la lista</a> &middot; o escríbele <b>'+s.kw+'</b> al <b>787-417-7711</b></div>'
+      +'</div></div>';
+  }
+  sp.addEventListener('change',render);tw.addEventListener('change',render);
+})();
+</script>
 
 <div class="not-prose mt-6 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
   <div class="text-xs font-bold uppercase tracking-widest text-teal-700 mb-4">Por qué existe esta página</div>
@@ -2179,7 +2248,8 @@ function handleAcceso(_req: any, res: any) {
   </div>
 </div>
 
-<h2>Reportes de acceso por especialidad</h2>
+<h2>¿Quieres la data completa? Reportes por especialidad</h2>
+<p class="text-slate-600">Cada especialidad, con el número exacto y la fuente. Para el que quiere el detalle (y para periodistas y planes médicos).</p>
 
 <div class="not-prose border border-slate-200 rounded-2xl overflow-hidden mt-4 shadow-sm">
   <div class="bg-gradient-to-br from-teal-600 to-teal-800 text-white p-5">
@@ -2256,9 +2326,25 @@ function handleAcceso(_req: any, res: any) {
   </div>
 </div>
 
+<div class="not-prose border border-slate-200 rounded-2xl overflow-hidden mt-4 shadow-sm">
+  <div class="bg-gradient-to-br from-teal-600 to-teal-800 text-white p-5">
+    <div class="text-xs font-bold uppercase tracking-widest text-teal-100">🦴 Ortopedas · Huesos, Fracturas, Rodilla</div>
+    <div class="text-2xl font-black mt-1 leading-tight">152 en Puerto Rico · 0 en el pueblo de Cabo Rojo</div>
+  </div>
+  <div class="p-5 grid sm:grid-cols-3 gap-3 text-center">
+    <div><div class="text-3xl font-black text-amber-600">2.3x</div><div class="text-xs text-slate-600 mt-1">más acceso en el metro que en el oeste</div></div>
+    <div><div class="text-3xl font-black text-red-600">0</div><div class="text-xs text-slate-600 mt-1">en Cabo Rojo · el más cerca en Mayagüez (8)</div></div>
+    <div><div class="text-3xl font-black text-slate-800">61%</div><div class="text-xs text-slate-600 mt-1">de los ortopedas de PR están en el metro</div></div>
+  </div>
+  <div class="px-5 pb-5 flex flex-wrap gap-2">
+    <a href="/categoria/ortopeda" class="inline-flex items-center gap-2 bg-teal-600 text-white font-bold px-4 py-2 rounded-full text-sm hover:bg-teal-700"><i class="fa-solid fa-list"></i> Ver el directorio</a>
+    <a href="/reportes/acceso-ortopedas.pdf" class="inline-flex items-center gap-2 bg-slate-100 text-slate-800 font-bold px-4 py-2 rounded-full text-sm hover:bg-slate-200"><i class="fa-solid fa-file-pdf"></i> Bajar el reporte (1 pág)</a>
+  </div>
+</div>
+
 <div class="not-prose border border-dashed border-slate-300 rounded-2xl p-5 mt-4 bg-slate-50">
   <div class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Próximamente</div>
-  <p class="text-sm text-slate-600">Ortopedas · Ginecólogos · Gastroenterólogos · Dermatólogos. Cada uno con su reporte verificado. ¿Cuál te urge? Escríbele <strong>SALUD</strong> al ${PHONE_CTA}.</p>
+  <p class="text-sm text-slate-600">Ginecólogos · Gastroenterólogos · Dermatólogos · Urólogos. Cada uno con su reporte verificado. ¿Cuál te urge? Escríbele <strong>SALUD</strong> al ${PHONE_CTA}.</p>
 </div>
 
 <h2>Cómo lo medimos</h2>
