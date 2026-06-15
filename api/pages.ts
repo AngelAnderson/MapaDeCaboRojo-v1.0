@@ -1101,28 +1101,28 @@ async function handle_municipio(req: any, res: any) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cabo Rojo OS — Panel Ciudadano</title>
-<meta name="description" content="Panel público de Cabo Rojo: 3,900+ negocios verificados, búsquedas en tiempo real del bot *7711, eventos próximos, y oportunidades para nuevos negocios.">
-<meta property="og:title" content="Cabo Rojo OS — Panel Ciudadano">
-<meta property="og:description" content="Lo que el pueblo está buscando, los negocios verificados a mano, y el mapa económico real.">
+<title>El Pulso de Cabo Rojo — lo que el pueblo busca, lo que existe, lo que falta</title>
+<meta name="description" content="En vivo: qué está buscando la gente de Cabo Rojo por el *7711, cuáles negocios están verificados a mano, y dónde hay demanda que nadie está llenando. El pueblo de verdad, no Google.">
+<meta property="og:title" content="El Pulso de Cabo Rojo — en vivo">
+<meta property="og:description" content="Lo que el pueblo busca, lo que existe, y dónde hay oportunidad que nadie está llenando todavía. Datos reales del *7711.">
 <meta name="robots" content="index,follow">
 <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f1f5f9;color:#1e293b;-webkit-font-smoothing:antialiased}a{color:inherit}a:hover{opacity:0.85}</style>
 </head>
 <body>
 
 <!-- HEADER -->
-<div style="background:#1e293b;color:#fff;padding:24px 32px;">
-  <div style="max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-    <div>
-      <div style="font-size:13px;color:#94a3b8;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:4px;">📊 Panel Ciudadano</div>
-      <h1 style="font-size:28px;font-weight:700;letter-spacing:-0.5px;">Cabo Rojo OS</h1>
-      <div style="font-size:14px;color:#94a3b8;margin-top:4px;">Lo que el pueblo está buscando, lo que está verificado, lo que falta.</div>
+<div style="background:#1e293b;color:#fff;padding:28px 32px;">
+  <div style="max-width:1100px;margin:0 auto;display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+    <div style="flex:1;min-width:280px;">
+      <div style="font-size:12px;color:#5eead4;letter-spacing:0.15em;text-transform:uppercase;font-weight:700;margin-bottom:8px;">📡 El Pulso de Cabo Rojo · en vivo</div>
+      <h1 style="font-size:30px;font-weight:800;letter-spacing:-0.6px;line-height:1.2;">Lo que el pueblo busca, lo que existe, y lo que falta.</h1>
+      <p style="font-size:15px;color:#cbd5e1;margin-top:12px;max-width:640px;line-height:1.55;">Esta página te enseña, en tiempo real, qué está buscando la gente de Cabo Rojo cuando le escribe al <strong style="color:#fff;">*7711</strong>, cuáles negocios verifiqué a mano, y <strong style="color:#fbbf24;">dónde hay demanda que nadie está llenando todavía</strong>. Sin Google, sin invento: el pueblo de verdad.</p>
     </div>
-    <div style="text-align:right;">
-      <div style="font-size:12px;color:#64748b;">Última actualización</div>
+    <div style="text-align:right;flex-shrink:0;">
+      <div style="font-size:11px;color:#64748b;">Datos en vivo · actualizado</div>
       <div style="font-size:13px;font-weight:600;color:#cbd5e1;">${esc(generatedAt)}</div>
-      <div style="margin-top:8px;">
-        <a href="https://mapadecaborojo.com" style="background:#0d9488;color:#fff;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;">Ver directorio →</a>
+      <div style="margin-top:10px;">
+        <a href="https://mapadecaborojo.com" style="background:#0d9488;color:#fff;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;display:inline-block;">Ver el directorio →</a>
       </div>
     </div>
   </div>
@@ -1130,13 +1130,30 @@ async function handle_municipio(req: any, res: any) {
 
 <div style="max-width:1100px;margin:32px auto;padding:0 16px;">
 
+  <!-- LO ESCONDIDO — the hidden demand only this page sees -->
+  <div style="background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);border-radius:14px;padding:26px 28px;margin-bottom:28px;box-shadow:0 4px 14px rgba(0,0,0,0.15);border:1px solid #334155;">
+    <div style="font-size:12px;color:#fbbf24;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:10px;">💎 Lo escondido — lo que solo se ve aquí</div>
+    <div style="font-size:17px;color:#fff;font-weight:600;line-height:1.45;">Cada vez que un vecino le escribe al *7711, queda registrado. Esto es la demanda real del pueblo: la que Google no enseña y ningún negocio sabe que existe.</div>
+    ${calientes.length > 0 ? `
+    <div style="background:rgba(0,0,0,0.25);border-radius:10px;padding:16px 18px;margin-top:16px;">
+      <div style="font-size:12px;color:#fdba74;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">🔥 La oportunidad más caliente ahora mismo</div>
+      <a href="${calientes[0].categorySlug ? `/categoria/${calientes[0].categorySlug}` : `https://wa.me/17874177711?text=${encodeURIComponent(calientes[0].label.toLowerCase())}`}" style="display:block;text-decoration:none;color:inherit;">
+        <div style="font-size:22px;font-weight:800;color:#fff;">${calientes[0].emoji} ${esc(calientes[0].label)}</div>
+        <div style="font-size:14px;color:#fed7aa;margin-top:4px;line-height:1.5;">${calientes[0].demand} búsquedas en 90 días · solo ${calientes[0].supply} negocio${calientes[0].supply === 1 ? '' : 's'} en el directorio. <span style="color:#fff;font-weight:600;">El que abra aquí, atiende demanda que ya existe.</span></div>
+      </a>
+      ${calientes.length > 1 ? `<div style="font-size:13px;color:#fed7aa;margin-top:12px;border-top:1px solid rgba(255,255,255,0.15);padding-top:10px;">Otras calientes: ${calientes.slice(1, 4).map(h => `<strong style="color:#fff;">${esc(h.label)}</strong> (${h.demand} búsq. / ${h.supply} neg.)`).join(' · ')}</div>` : ''}
+    </div>
+    <div style="font-size:12px;color:#94a3b8;margin-top:12px;">El mapa completo de demanda vs oferta está más abajo. 👇</div>
+    ` : `<div style="font-size:13px;color:#94a3b8;margin-top:12px;">Esta semana la oferta está cubriendo la demanda — sin huecos calientes detectados. Mira el mapa económico completo más abajo.</div>`}
+  </div>
+
   <!-- STAT CARDS — corrected counts from views -->
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:32px;">
     ${[
       { label: 'Negocios totales', value: total.toLocaleString('es-PR'), icon: '🏢', color: '#0d9488', tooltip: 'Todos los places de Cabo Rojo en nuestra base de datos (visibles al público). Algunos pueden estar cerrados temporalmente.' },
       { label: 'Abiertos hoy', value: openCount.toLocaleString('es-PR'), icon: '✅', color: '#16a34a', tooltip: 'Negocios con status=open en Cabo Rojo. La diferencia con "totales" son places cerrados o de estado dudoso.' },
       { label: 'Verif. en 90 días', value: `${fresh90d.toLocaleString('es-PR')} · ${freshnessPct}%`, icon: '🛡️', color: freshnessPct >= 80 ? '#16a34a' : freshnessPct >= 60 ? '#ca8a04' : '#dc2626', tooltip: 'Negocios que Angel verificó en persona en los últimos 90 días — caminó la calle, entró, confirmó que sigue abierto. Sin Google Places, sin AI: ojos humanos.' },
-      { label: 'Top 10 búsq. (30d)', value: totalSearches30d.toLocaleString('es-PR'), icon: '🔍', color: '#0369a1', tooltip: 'Suma de las 10 categorías más buscadas al *7711 en los últimos 30 días. El total absoluto es mayor — esto es la concentración de demanda en lo más pedido.' },
+      { label: 'Búsquedas al *7711 (30d)', value: totalSearches30d.toLocaleString('es-PR'), icon: '🔍', color: '#0369a1', tooltip: 'Suma de las 10 categorías más buscadas al *7711 en los últimos 30 días. El total absoluto es mayor — esto es la concentración de demanda en lo más pedido.' },
       { label: 'Eventos próximos', value: upcomingEvents.length.toString(), icon: '📅', color: '#ea580c', tooltip: 'Eventos públicos en CR con fecha futura, mostrando los 6 más cercanos. Click en cada uno para detalles + cómo llegar.' },
       { label: 'Negocios sponsor', value: sponsorCount.toString(), icon: '⭐', color: '#7c3aed', tooltip: 'Negocios con Vitrina pagada o featured manualmente. Por hoy: Luis David Refrigeración (sponsor activo $700/año saldado) + Marina Puerto Real. Modelo: $799/año.' },
     ].map((c) => `
@@ -1189,8 +1206,8 @@ async function handle_municipio(req: any, res: any) {
 
   <!-- SUGERENCIA 2: HEAT INDEX — DEMANDA VS OFERTA -->
   <div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.08);margin-bottom:24px;">
-    <h2 style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:4px;">🌡️ Demanda vs Oferta — el mapa económico real</h2>
-    <p style="font-size:13px;color:#64748b;margin-bottom:18px;">Búsquedas en 90 días dividido entre negocios en el directorio. <strong>Calientes</strong> = oportunidad de nuevo negocio. <strong>Saturadas</strong> = mucha oferta, baja demanda.</p>
+    <h2 style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:4px;">🌡️ Dónde hay oportunidad — demanda vs oferta</h2>
+    <p style="font-size:13px;color:#64748b;margin-bottom:18px;">Cuánto se busca cada cosa (en 90 días) comparado con cuántos negocios la ofrecen. <strong style="color:#dc2626;">Calientes</strong> = mucha gente lo busca, pocos lo ofrecen (oportunidad de abrir). <strong style="color:#64748b;">Saturadas</strong> = ya hay de sobra.</p>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
 
       <div>

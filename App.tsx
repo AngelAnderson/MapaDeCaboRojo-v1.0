@@ -21,6 +21,7 @@ const Admin = lazy(() => import('./components/Admin'));
 const ContactModal = lazy(() => import('./components/ContactModal'));
 const SuggestPlaceModal = lazy(() => import('./components/SuggestPlaceModal'));
 const AlertSubscribeModal = lazy(() => import('./components/AlertSubscribeModal'));
+const SubmitEventModal = lazy(() => import('./components/SubmitEventModal'));
 const CommandMenu = lazy(() => import('./components/CommandMenu'));
 import PuebloEnNumeros from './components/PuebloEnNumeros';
 // DemandFeed removed from homepage May 19 (Angel: not useful). Component still in /components.
@@ -88,6 +89,7 @@ const MainApp: React.FC = () => {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [isSuggestOpen, setIsSuggestOpen] = useState(false);
+  const [isSubmitEventOpen, setIsSubmitEventOpen] = useState(false);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   
@@ -246,6 +248,7 @@ const MainApp: React.FC = () => {
 
   const handleNavAction = (action: string) => {
     if (action === 'add') setIsSuggestOpen(true);
+    if (action === 'submit_event') setIsSubmitEventOpen(true);
     if (action === 'help') setIsConciergeOpen(true);
     if (action === 'contact') setIsContactOpen(true);
   };
@@ -522,6 +525,9 @@ const MainApp: React.FC = () => {
         )}
         {isSuggestOpen && (
           <SuggestPlaceModal isOpen={isSuggestOpen} onClose={() => setIsSuggestOpen(false)} />
+        )}
+        {isSubmitEventOpen && (
+          <SubmitEventModal isOpen={isSubmitEventOpen} onClose={() => setIsSubmitEventOpen(false)} />
         )}
         {isContactOpen && (
           <ContactModal

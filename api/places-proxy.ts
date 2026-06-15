@@ -7,6 +7,17 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
+  // Cost guard (CSO 2026-06-02): only serve requests originating from our own site.
+  // This is a billed Google Places proxy — without this anyone can run up the bill.
+  // Partial mitigation (headers are forgeable); pair with a Vercel Firewall rate-limit rule.
+  const ALLOWED_HOSTS = ['mapadecaborojo.com', 'www.mapadecaborojo.com', 'localhost:3000', 'localhost:5173'];
+  const ref = (req.headers.referer || req.headers.origin || '') as string;
+  let refHost = '';
+  try { refHost = ref ? new URL(ref).host : ''; } catch { refHost = ''; }
+  if (!ALLOWED_HOSTS.includes(refHost)) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+
   // Handle query params from req.query (Standard Node/Vercel)
   const { action, query, place_id, reference, session_token } = req.query;
   

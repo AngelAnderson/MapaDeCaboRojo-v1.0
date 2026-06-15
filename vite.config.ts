@@ -32,7 +32,7 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: 'dist',
-      sourcemap: true,
+      sourcemap: false, // CSO 2026-06-02: do not ship readable source to production
     },
     server: {
       port: 3000,

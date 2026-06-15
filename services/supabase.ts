@@ -412,7 +412,7 @@ const mapEventToDb = (event: Partial<Event>) => {
         location_name: escapeHTML(event.locationName) || '',
         place_id: event.placeId || null,
         image_url: escapeHTML(event.imageUrl) || '',
-        status: event.status || 'pending', // Default to pending as per schema
+        status: event.status || 'pending_verification', // Default to pending as per schema
         is_recurring: event.isRecurring || false,
         is_featured: event.isFeatured || false,
         map_link: escapeHTML(event.mapLink) || ''

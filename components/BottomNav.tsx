@@ -11,9 +11,10 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange, onAction 
   const { t } = useLanguage();
 
   const navItems = [
-    { id: 'map',     label: t('nav_map'),  icon: 'map',      isTab: true  },
-    { id: 'explore', label: 'Explorar',    icon: 'compass',  isTab: true  },
-    { id: 'concierge', label: 'El Veci',   icon: 'comments', isTab: false },
+    { id: 'map',     label: t('nav_map'),  icon: 'map',           isTab: true,  action: ''             },
+    { id: 'explore', label: 'Explorar',    icon: 'compass',       isTab: true,  action: ''             },
+    { id: 'event',   label: 'Evento',      icon: 'calendar-plus', isTab: false, action: 'submit_event' },
+    { id: 'concierge', label: 'El Veci',   icon: 'comments',      isTab: false, action: 'help'         },
   ];
 
   return (
@@ -27,7 +28,7 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange, onAction 
           return (
             <button
               key={item.id}
-              onClick={() => item.isTab ? onTabChange(item.id) : onAction('help')}
+              onClick={() => item.isTab ? onTabChange(item.id) : onAction(item.action)}
               className="flex flex-col items-center justify-center gap-1 w-16 transition-all active:scale-90 group relative"
               aria-label={item.label}
               aria-current={isActive ? 'page' : undefined}
