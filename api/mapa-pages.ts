@@ -2199,7 +2199,7 @@ function handleAcceso(_req: any, res: any) {
   };
   var DIST={'Cabo Rojo':25,'San Germán':20,'Mayagüez':0,'Lajas':30,'Hormigueros':12,'Sabana Grande':25,'Añasco':18,'Aguadilla':40};
   var sp=document.getElementById('ac-spec'),tw=document.getElementById('ac-town'),out=document.getElementById('ac-result'),hint=document.getElementById('ac-hint');
-  function track(ev,spec,town){try{fetch('/api/acceso-log',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({event:ev,specialty:spec,town:town})});}catch(e){}}
+  function track(ev,spec,town){try{fetch('/api/mapa-pages?page=acceso-log',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({event:ev,specialty:spec,town:town})});}catch(e){}}
   function render(){
     if(!sp.value||!tw.value){out.innerHTML='';hint.style.display='block';return;}
     hint.style.display='none';
@@ -2387,6 +2387,26 @@ function handleAcceso(_req: any, res: any) {
   }))
 }
 
+// =============== /acceso usage logger (folded in to stay under Vercel's 12-fn limit) ===============
+const ACCESO_EVENTS = new Set(['lookup', 'click_directory', 'click_bot'])
+async function handleAccesoLog(req: any, res: any) {
+  try {
+    let body: any = req.body
+    if (typeof body === 'string') { try { body = JSON.parse(body) } catch { body = {} } }
+    body = body || {}
+    const event = String(body.event || '').slice(0, 40)
+    if (ACCESO_EVENTS.has(event)) {
+      await supabase.from('acceso_events').insert({
+        event,
+        specialty: body.specialty ? String(body.specialty).slice(0, 40) : null,
+        town: body.town ? String(body.town).slice(0, 60) : null,
+        ua: String(req.headers['user-agent'] || '').slice(0, 300),
+      })
+    }
+  } catch { /* analytics must never break the page */ }
+  res.status(204).end()
+}
+
 // =============== HANDLER ===============
 
 export default async function handler(req: any, res: any) {
@@ -2394,6 +2414,7 @@ export default async function handler(req: any, res: any) {
 
   switch (page) {
     case 'acceso': return handleAcceso(req, res)
+    case 'acceso-log': return await handleAccesoLog(req, res)
     case 'mision': return handleMision(req, res)
     case 'transparencia': return await handleTransparencia(req, res)
     case 'equipo': return handleEquipo(req, res)
