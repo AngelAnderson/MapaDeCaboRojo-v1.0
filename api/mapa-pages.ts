@@ -2199,6 +2199,7 @@ function handleAcceso(_req: any, res: any) {
   };
   var DIST={'Cabo Rojo':25,'San Germán':20,'Mayagüez':0,'Lajas':30,'Hormigueros':12,'Sabana Grande':25,'Añasco':18,'Aguadilla':40};
   var sp=document.getElementById('ac-spec'),tw=document.getElementById('ac-town'),out=document.getElementById('ac-result'),hint=document.getElementById('ac-hint');
+  function track(ev,spec,town){try{fetch('/api/acceso-log',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({event:ev,specialty:spec,town:town})});}catch(e){}}
   function render(){
     if(!sp.value||!tw.value){out.innerHTML='';hint.style.display='block';return;}
     hint.style.display='none';
@@ -2219,8 +2220,11 @@ function handleAcceso(_req: any, res: any) {
       +'<p style="font-size:17px;line-height:1.5;color:#0f172a;margin:0 0 14px;">'+msg+'</p>'
       +'<div style="font-size:14px;color:#334155;line-height:1.6;">'
       +'<div style="margin-bottom:8px;"><b>👉 Qué pedir:</b> dile a tu médico primario un <b>"referido a '+s.ref+'"</b>. Y pregunta si está en tu plan médico.</div>'
-      +'<div><b>📞 Los teléfonos:</b> <a href="/categoria/'+s.slug+'" style="color:#0f766e;font-weight:700;text-decoration:underline;">ver la lista</a> &middot; o escríbele <b>'+s.kw+'</b> al <b>787-417-7711</b></div>'
+      +'<div><b>📞 Los teléfonos:</b> <a id="ac-dir" href="/categoria/'+s.slug+'" style="color:#0f766e;font-weight:700;text-decoration:underline;">ver la lista</a> &middot; o escríbele <a id="ac-bot" href="https://wa.me/17874177711?text='+s.kw+'" style="color:#0f766e;font-weight:700;text-decoration:underline;">'+s.kw+' al 787-417-7711</a></div>'
       +'</div></div>';
+    var d=document.getElementById('ac-dir');if(d)d.addEventListener('click',function(){track('click_directory',sp.value,tw.value);});
+    var b=document.getElementById('ac-bot');if(b)b.addEventListener('click',function(){track('click_bot',sp.value,tw.value);});
+    track('lookup',sp.value,tw.value);
   }
   sp.addEventListener('change',render);tw.addEventListener('change',render);
 })();
