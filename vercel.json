@@ -38,6 +38,8 @@
     { "source": "/categoria/:cat", "destination": "/api/categoria?cat=:cat" },
     { "source": "/playas/defensa-y-limpieza", "destination": "/api/mapa-pages?page=defensa-y-limpieza" },
     { "source": "/acceso", "destination": "/api/mapa-pages?page=acceso" },
+    { "source": "/registro", "destination": "/api/mapa-pages?page=registro" },
+    { "source": "/observatorio", "destination": "/api/mapa-pages?page=observatorio" },
     { "source": "/mision", "destination": "/api/mapa-pages?page=mision" },
     { "source": "/transparencia", "destination": "/api/mapa-pages?page=transparencia" },
     { "source": "/equipo", "destination": "/api/mapa-pages?page=equipo" },

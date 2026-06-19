@@ -1180,6 +1180,18 @@ async function handle_municipio(req: any, res: any) {
     </div>
   </a>
 
+  <!-- BANNER: Promesómetro — prometido vs pasó (link a /observatorio) -->
+  <a href="/observatorio" style="display:block;text-decoration:none;color:inherit;background:#fff;border:1px solid #e2e8f0;border-left:4px solid #dc2626;border-radius:12px;padding:24px 28px;margin-bottom:24px;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+    <div style="font-size:11px;color:#dc2626;letter-spacing:0.15em;text-transform:uppercase;font-weight:700;margin-bottom:6px;">📋 El Promesómetro · prometido vs lo que pasó</div>
+    <div style="font-size:18px;font-weight:800;color:#1e293b;letter-spacing:-0.3px;line-height:1.35;">Lo que el alcalde dijo en cámara, con fecha y fuente. No lo dijo un periódico: lo dijo él.</div>
+    <ul style="margin:12px 0 0;padding-left:18px;color:#475569;font-size:14px;line-height:1.7;">
+      <li><strong>Faro Los Morrillos:</strong> prometió reabrir "en unos meses" (2024). Sigue cerrado.</li>
+      <li><strong>Coliseo Rebekah Colberg:</strong> $5.2M de FEMA, límite 20 sept 2026. Obras empezaron feb 2026.</li>
+      <li><strong>Sueldo de la policía:</strong> prometió ~$2,000 (2023). Sin confirmación pública.</li>
+    </ul>
+    <div style="margin-top:14px;color:#0d9488;font-size:13px;font-weight:700;">Ver el Promesómetro completo →</div>
+  </a>
+
   <!-- SUGERENCIA 1: LO QUE CABO ROJO ESTÁ BUSCANDO -->
   <div style="background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.08);margin-bottom:24px;">
     <h2 style="font-size:18px;font-weight:700;color:#1e293b;margin-bottom:4px;">🔍 Lo Que Cabo Rojo Está Buscando</h2>
@@ -3334,6 +3346,14 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
   </div>
 
   ${oppBanner}
+
+  <!-- SECTION 1.56: EL DINERO FEDERAL DORMIDO (link a /observatorio) -->
+  <a href="/observatorio" class="card" style="display:block;text-decoration:none;color:inherit;background:#fff;border-left:4px solid #dc2626;padding:22px 26px;">
+    <div style="font-size:11px;color:#dc2626;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:8px;">💰 El dinero federal dormido</div>
+    <div style="font-size:clamp(24px,5vw,34px);font-weight:900;color:#1e293b;line-height:1.1;">~$5.9M en fondos federales <span style="color:#dc2626;">obligados a Cabo Rojo y sin moverse.</span></div>
+    <div style="font-size:14px;color:#475569;margin-top:10px;line-height:1.55;">$5.2M de FEMA para el Coliseo Rebekah Colberg (límite 20 sept 2026) + ~$735K para Isla Ratones (devueltos). El problema casi nunca es que no haya dinero: está obligado y sentado. Cada activo cerrado es un motor económico apagado.</div>
+    <div style="margin-top:12px;color:#0d9488;font-size:13px;font-weight:700;">Ver el récord completo en el Observatorio →</div>
+  </a>
 
   <!-- SECTION 1.6: PRIMER PASO UNIVERSAL — 2 caminos claros -->
   <div class="card" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:#fff;border-left:4px solid #5eead4;padding:24px 28px;">

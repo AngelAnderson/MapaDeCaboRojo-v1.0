@@ -89,6 +89,7 @@ export default async function handler(req: any, res: any) {
       { slug: 'pon-tu-negocio-en-el-mapa', priority: 0.9, changefreq: 'weekly' }, // §13 revenue CTA
       { slug: 'mira-la-vuelta', priority: 0.9, changefreq: 'daily' },          // §14 with live demand data
       { slug: 'senales-del-pueblo', priority: 0.8, changefreq: 'daily' },      // live demand signals
+      { slug: 'observatorio', priority: 0.9, changefreq: 'weekly' },           // civic accountability · Esencia/vertedero · FAQPage schema
       { slug: 'pueblo-en-numeros', priority: 0.8, changefreq: 'daily' },       // math anchor (TAM/SAM/SOM)
       { slug: 'transparencia', priority: 0.7, changefreq: 'daily' },           // live supply metrics
       { slug: 'mision', priority: 0.7, changefreq: 'weekly' },

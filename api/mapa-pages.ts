@@ -2407,6 +2407,555 @@ async function handleAccesoLog(req: any, res: any) {
   res.status(204).end()
 }
 
+// =============== /registro — Registro de Especialistas Médicos de PR ===============
+// The only plain-Spanish, federally-verified (NPPES/CMS) registry of PR medical
+// specialists a normal person can read. Counts embedded (updated at ingest);
+// provider lists are LIVE from the DB via ?page=registro-data.
+// Matrix order: [total, Oeste, Norte, Centro, Sur, Este, Metro]
+const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:number;r:Record<string,number>}> = [
+  {s:'cardiólogo',l:'Cardiólogo',e:'❤️',kw:'CARDIOLOGO',md:true,t:339,r:{Oeste:27,Norte:30,Centro:3,Sur:39,Este:46,Metro:180}},
+  {s:'psiquiatra',l:'Psiquiatra',e:'🧠',kw:'PSIQUIATRA',md:true,t:474,r:{Oeste:46,Norte:20,Centro:7,Sur:37,Este:61,Metro:303}},
+  {s:'fisiatra',l:'Fisiatra',e:'🩺',kw:'FISIATRA',md:true,t:251,r:{Oeste:21,Norte:16,Centro:3,Sur:20,Este:41,Metro:150}},
+  {s:'ginecólogo',l:'Ginecólogo / Obstetra',e:'🤰',kw:'GINECOLOGO',md:true,t:110,r:{Oeste:15,Norte:10,Centro:1,Sur:9,Este:11,Metro:64}},
+  {s:'pediatra',l:'Pediatra',e:'🧒',kw:'PEDIATRA',md:true,t:76,r:{Oeste:7,Norte:4,Centro:2,Sur:12,Este:11,Metro:40}},
+  {s:'dermatólogo',l:'Dermatólogo',e:'🧴',kw:'DERMATOLOGO',md:true,t:123,r:{Oeste:10,Norte:6,Centro:1,Sur:10,Este:12,Metro:84}},
+  {s:'gastroenterólogo',l:'Gastroenterólogo',e:'🩺',kw:'GASTRO',md:true,t:203,r:{Oeste:19,Norte:23,Centro:3,Sur:15,Este:22,Metro:121}},
+  {s:'oftalmólogo',l:'Oftalmólogo (ojos)',e:'👁️',kw:'OFTALMOLOGO',md:true,t:239,r:{Oeste:27,Norte:18,Centro:2,Sur:18,Este:24,Metro:150}},
+  {s:'ortopeda',l:'Ortopeda',e:'🦴',kw:'ORTOPEDA',md:true,t:151,r:{Oeste:14,Norte:9,Centro:2,Sur:11,Este:20,Metro:95}},
+  {s:'neurologo',l:'Neurólogo',e:'🧠',kw:'NEUROLOGO',md:true,t:165,r:{Oeste:15,Norte:6,Centro:1,Sur:7,Este:28,Metro:108}},
+  {s:'urólogo',l:'Urólogo',e:'🩺',kw:'UROLOGO',md:true,t:120,r:{Oeste:10,Norte:7,Centro:3,Sur:17,Este:18,Metro:65}},
+  {s:'endocrinologo',l:'Endocrinólogo (diabetes)',e:'🩺',kw:'ENDOCRINOLOGO',md:true,t:158,r:{Oeste:16,Norte:11,Centro:1,Sur:14,Este:21,Metro:95}},
+  {s:'nefrólogo',l:'Nefrólogo (riñón)',e:'🫘',kw:'NEFROLOGO',md:true,t:155,r:{Oeste:24,Norte:14,Centro:2,Sur:24,Este:24,Metro:67}},
+  {s:'neumólogo',l:'Neumólogo (pulmones)',e:'🫁',kw:'NEUMOLOGO',md:true,t:146,r:{Oeste:15,Norte:8,Centro:0,Sur:19,Este:20,Metro:84}},
+  {s:'oncólogo',l:'Oncólogo / Hematólogo',e:'🎗️',kw:'ONCOLOGO',md:true,t:143,r:{Oeste:12,Norte:7,Centro:1,Sur:14,Este:23,Metro:85}},
+  {s:'reumatólogo',l:'Reumatólogo (artritis)',e:'🦴',kw:'REUMATOLOGO',md:true,t:87,r:{Oeste:9,Norte:3,Centro:1,Sur:5,Este:13,Metro:56}},
+  {s:'geriatra',l:'Geriatra (adultos mayores)',e:'👵',kw:'GERIATRA',md:true,t:105,r:{Oeste:4,Norte:5,Centro:0,Sur:7,Este:15,Metro:73}},
+  {s:'otorrinolaringólogo',l:'Otorrino (oído/nariz/garganta)',e:'👂',kw:'OTORRINO',md:true,t:75,r:{Oeste:7,Norte:6,Centro:0,Sur:7,Este:5,Metro:50}},
+  {s:'infectólogo',l:'Infectólogo',e:'🦠',kw:'INFECTOLOGO',md:true,t:122,r:{Oeste:9,Norte:9,Centro:2,Sur:11,Este:14,Metro:77}},
+  {s:'alergista',l:'Alergista / Inmunólogo',e:'🤧',kw:'ALERGISTA',md:true,t:28,r:{Oeste:2,Norte:3,Centro:0,Sur:2,Este:1,Metro:20}},
+  {s:'medicina de emergencia',l:'Medicina de Emergencia',e:'🚑',kw:'EMERGENCIA',md:true,t:342,r:{Oeste:24,Norte:9,Centro:5,Sur:61,Este:50,Metro:193}},
+  {s:'cirujano general',l:'Cirujano General',e:'🔪',kw:'CIRUJANO',md:true,t:334,r:{Oeste:40,Norte:19,Centro:6,Sur:55,Este:31,Metro:182}},
+  {s:'anestesiólogo',l:'Anestesiólogo',e:'💉',kw:'ANESTESIOLOGO',md:true,t:226,r:{Oeste:28,Norte:10,Centro:2,Sur:23,Este:23,Metro:140}},
+  {s:'radiólogo',l:'Radiólogo (imágenes)',e:'🩻',kw:'RADIOLOGO',md:true,t:255,r:{Oeste:19,Norte:12,Centro:1,Sur:17,Este:30,Metro:176}},
+  {s:'neurocirujano',l:'Neurocirujano',e:'🧠',kw:'NEUROCIRUJANO',md:true,t:44,r:{Oeste:1,Norte:4,Centro:0,Sur:2,Este:6,Metro:31}},
+  {s:'cirujano plástico',l:'Cirujano Plástico',e:'✨',kw:'PLASTICO',md:true,t:19,r:{Oeste:1,Norte:0,Centro:0,Sur:1,Este:4,Metro:13}},
+  {s:'cirujano torácico',l:'Cirujano Torácico',e:'🫁',kw:'TORACICO',md:true,t:15,r:{Oeste:1,Norte:1,Centro:0,Sur:2,Este:1,Metro:10}},
+  {s:'coloproctólogo',l:'Coloproctólogo (colon/recto)',e:'🩺',kw:'COLOPROCTOLOGO',md:true,t:4,r:{Oeste:0,Norte:0,Centro:0,Sur:0,Este:0,Metro:4}},
+  {s:'manejo de dolor',l:'Manejo de Dolor',e:'💢',kw:'DOLOR',md:true,t:5,r:{Oeste:0,Norte:0,Centro:0,Sur:1,Este:0,Metro:4}},
+  {s:'psicólogo',l:'Psicólogo (terapia)',e:'🧠',kw:'PSICOLOGO',md:false,t:1170,r:{Oeste:162,Norte:99,Centro:21,Sur:140,Este:159,Metro:588}},
+  {s:'optómetra',l:'Optómetra (examen de vista)',e:'👓',kw:'OPTOMETRA',md:false,t:530,r:{Oeste:76,Norte:41,Centro:10,Sur:59,Este:82,Metro:262}},
+  {s:'podiatra',l:'Podiatra (pies)',e:'🦶',kw:'PODIATRA',md:false,t:57,r:{Oeste:6,Norte:2,Centro:1,Sur:6,Este:9,Metro:33}},
+]
+
+async function handleRegistro(_req: any, res: any) {
+  const md = REGISTRY_SPECS.filter(x => x.md)
+  const allied = REGISTRY_SPECS.filter(x => !x.md)
+  const totalVerified = '6,370'
+
+  const optionsHtml = REGISTRY_SPECS.map(x =>
+    `<option value="${escapeHtml(x.s)}">${x.e} ${escapeHtml(x.l)} (${x.t})</option>`).join('')
+
+  function card(x: typeof REGISTRY_SPECS[number]) {
+    return `<button type="button" data-spec="${escapeHtml(x.s)}" class="reg-card text-left bg-white border border-slate-200 rounded-xl p-4 hover:border-teal-400 hover:shadow-sm transition">
+      <div class="flex items-baseline justify-between gap-2">
+        <span class="font-bold text-slate-900 text-sm leading-tight">${x.e} ${escapeHtml(x.l)}</span>
+        <span class="text-teal-700 font-black text-lg">${x.t}</span>
+      </div>
+      <div class="text-xs text-slate-500 mt-1">verificados en PR · toca pa' ver dónde</div>
+    </button>`
+  }
+
+  const body = `
+<h1>Registro de Especialistas Médicos de Puerto Rico</h1>
+
+<p class="text-lg text-slate-600 mt-3"><strong>${totalVerified} especialistas y proveedores de salud</strong>, cada uno verificado contra el <strong>registro federal NPPES/CMS</strong> del gobierno de EE.UU. En español, por especialidad y por región. El único que puedes leer sin ser doctor ni saber inglés.</p>
+
+<div class="not-prose mt-4 flex flex-wrap gap-3 text-sm">
+  <span class="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1.5 rounded-full"><i class="fa-solid fa-shield-halved"></i> Cada nombre tiene NPI federal público</span>
+  <span class="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1.5 rounded-full"><i class="fa-solid fa-list-check"></i> ${REGISTRY_SPECS.length} especialidades</span>
+  <span class="inline-flex items-center gap-2 bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full"><i class="fa-solid fa-calendar-check"></i> Actualizado junio 2026</span>
+</div>
+
+<div id="reg-tool" class="not-prose mt-6 bg-white border-2 border-teal-300 rounded-2xl p-6 shadow-sm scroll-mt-24">
+  <label class="block">
+    <span class="text-sm font-bold text-slate-700"><i class="fa-solid fa-magnifying-glass text-teal-600"></i> Busca por nombre o especialidad</span>
+    <input id="rg-search" type="search" autocomplete="off" placeholder="Ej: el nombre de tu médico, o 'cardiólogo'…" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-base">
+  </label>
+  <div id="rg-search-result" class="mt-3"></div>
+  <div class="flex items-center gap-3 my-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
+    <span class="flex-1 h-px bg-slate-200"></span>o escoge especialidad y región<span class="flex-1 h-px bg-slate-200"></span>
+  </div>
+  <div class="grid sm:grid-cols-2 gap-4">
+    <label class="block">
+      <span class="text-sm font-bold text-slate-700">1. ¿Qué especialista buscas?</span>
+      <select id="rg-spec" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-base bg-white">
+        <option value="">Escoge...</option>
+        ${optionsHtml}
+      </select>
+    </label>
+    <label class="block">
+      <span class="text-sm font-bold text-slate-700">2. ¿En qué región estás?</span>
+      <select id="rg-region" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-base bg-white">
+        <option value="">Escoge...</option>
+        <option value="Oeste">Oeste (Mayagüez, Cabo Rojo, Aguadilla...)</option>
+        <option value="Metro">Área Metro (San Juan y alrededores)</option>
+        <option value="Norte">Norte (Arecibo, Manatí, Hatillo...)</option>
+        <option value="Sur">Sur (Ponce, Yauco, Guayama...)</option>
+        <option value="Este">Este (Caguas, Humacao, Fajardo...)</option>
+        <option value="Centro">Centro (Aibonito, Barranquitas...)</option>
+      </select>
+    </label>
+  </div>
+  <div id="rg-result" class="mt-5"></div>
+  <p id="rg-hint" class="mt-4 text-sm text-slate-400 text-center">Escoge los dos y te decimos cuántos hay cerca, cuáles, y sus teléfonos.</p>
+</div>
+
+<h2>Las ${REGISTRY_SPECS.length} especialidades del registro</h2>
+<p class="text-slate-600 -mt-2">El número es cuántos hay <strong>en toda la isla</strong>, verificados contra el registro federal. Toca cualquiera pa' ver dónde están y sus teléfonos.</p>
+
+<div class="not-prose mt-4 text-xs font-bold uppercase tracking-widest text-teal-700 mb-3">Médicos especialistas</div>
+<div class="not-prose grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+  ${md.map(card).join('')}
+</div>
+
+<div class="not-prose mt-8 text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">Otros proveedores de salud licenciados (no son médicos MD)</div>
+<p class="not-prose text-sm text-slate-500 mb-3">Psicólogos, optómetras y podiatras tienen licencia y NPI federal, pero no son médicos. Los separamos pa' que sepas exactamente a quién vas.</p>
+<div class="not-prose grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+  ${allied.map(card).join('')}
+</div>
+
+<script>
+(function(){
+  var SPECS=${JSON.stringify(REGISTRY_SPECS)};
+  var BYID={}; SPECS.forEach(function(x){BYID[x.s]=x;});
+  var sp=document.getElementById('rg-spec'),rg=document.getElementById('rg-region'),
+      out=document.getElementById('rg-result'),hint=document.getElementById('rg-hint');
+  function esc(s){return String(s||'').replace(/[<>&"]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];});}
+  function regionLabel(r){return r==='Metro'?'el área metro':'el '+r;}
+  function loadList(spec,region){
+    var box=document.getElementById('rg-list');if(!box)return;
+    box.innerHTML='<div style="color:#64748b;font-size:14px;padding:8px 0;">Cargando los teléfonos...</div>';
+    fetch('/api/mapa-pages?page=registro-data&spec='+encodeURIComponent(spec)+'&region='+encodeURIComponent(region))
+      .then(function(r){return r.json();})
+      .then(function(d){
+        var list=(d&&d.providers)||[];
+        if(!list.length){box.innerHTML='<div style="color:#64748b;font-size:14px;">No hay teléfonos cargados pa\\'esta combinación todavía. Escríbele al Veci abajo.</div>';return;}
+        var rows=list.map(function(p){
+          var tel=p.phone?('<a href="tel:'+esc(p.phone.replace(/[^0-9]/g,''))+'" style="color:#0f766e;font-weight:700;white-space:nowrap;">'+esc(p.phone)+'</a>'):'<span style="color:#94a3b8;">sin teléfono</span>';
+          return '<tr style="border-top:1px solid #e2e8f0;"><td style="padding:7px 8px;font-weight:600;color:#0f172a;">'+esc(p.name)+'</td><td style="padding:7px 8px;color:#475569;">'+esc(p.municipality||'—')+'</td><td style="padding:7px 8px;text-align:right;">'+tel+'</td></tr>';
+        }).join('');
+        box.innerHTML='<div style="font-size:12px;color:#64748b;margin:4px 0 6px;">'+list.length+' en '+regionLabel(region)+(d.capped?'+ (mostrando los primeros '+list.length+')':'')+' · fuente NPPES federal</div>'
+          +'<div style="max-height:340px;overflow:auto;border:1px solid #e2e8f0;border-radius:10px;"><table style="width:100%;border-collapse:collapse;font-size:14px;"><tbody>'+rows+'</tbody></table></div>';
+      })
+      .catch(function(){box.innerHTML='<div style="color:#dc2626;font-size:14px;">No se pudo cargar la lista. Intenta de nuevo.</div>';});
+  }
+  function render(){
+    if(!sp.value||!rg.value){out.innerHTML='';hint.style.display='block';return;}
+    hint.style.display='none';
+    var x=BYID[sp.value],region=rg.value,n=x.r[region]||0,M=x.r.Metro||0,tone,msg;
+    if(region==='Metro'){
+      msg='<b>En el área metro hay '+M+' '+esc(x.l)+'.</b> Es donde se concentran los especialistas de la isla — aquí no te toca viajar lejos.';tone='ok';
+    } else if(n>=5){
+      msg='<b>En el '+region+' hay '+n+'.</b> Hay con quién bregar cerca. El concentrado mayor sigue en el área metro ('+M+').';tone='ok';
+    } else if(n>0){
+      msg='<b>En el '+region+' solo hay '+n+'.</b> Son pocos — la cita puede tardar. El grupo grande está en el área metro ('+M+'). Pide el referido temprano.';tone='warn';
+    } else {
+      msg='<b>En el '+region+' el registro federal no muestra ninguno.</b> Te va a tocar viajar — el grupo más grande está en el área metro ('+M+').';tone='bad';
+    }
+    var bg=tone==='ok'?'#ecfdf5':tone==='warn'?'#fffbeb':'#fef2f2',bd=tone==='ok'?'#6ee7b7':tone==='warn'?'#fcd34d':'#fca5a5';
+    out.innerHTML='<div style="background:'+bg+';border:2px solid '+bd+';border-radius:14px;padding:18px 20px;">'
+      +'<p style="font-size:17px;line-height:1.5;color:#0f172a;margin:0 0 14px;">'+msg+'</p>'
+      +'<div style="font-size:14px;color:#334155;line-height:1.6;margin-bottom:12px;">'
+      +'<b>👉 Qué hacer:</b> pídele a tu médico primario un <b>referido</b> y pregunta si está en tu plan. ¿Buscas rápido? Escríbele <a href="https://wa.me/17874177711?text='+x.kw+'" style="color:#0f766e;font-weight:700;text-decoration:underline;">'+x.kw+' al 787-417-7711</a>.'
+      +'</div>'
+      +'<div id="rg-list"></div></div>';
+    var lr=(n>0||region==='Metro')?region:'Metro';
+    loadList(sp.value,lr);
+  }
+  sp.addEventListener('change',render);rg.addEventListener('change',render);
+  function jumpToSpec(spec){
+    sp.value=spec;
+    if(!rg.value)rg.value='Oeste';
+    document.getElementById('reg-tool').scrollIntoView({behavior:'smooth',block:'start'});
+    render();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll('.reg-card'),function(b){
+    b.addEventListener('click',function(){jumpToSpec(b.getAttribute('data-spec'));});
+  });
+
+  // --- Free-text search: specialty chips (instant) + provider names (debounced) ---
+  var srch=document.getElementById('rg-search'),srchOut=document.getElementById('rg-search-result');
+  function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');}
+  function specChips(qn){
+    var hits=SPECS.filter(function(x){return norm(x.l).indexOf(qn)>=0||norm(x.s).indexOf(qn)>=0;}).slice(0,8);
+    if(!hits.length)return '';
+    return '<div style="margin-bottom:10px;"><div style="font-size:12px;color:#64748b;margin-bottom:6px;">Especialidades:</div><div style="display:flex;flex-wrap:wrap;gap:6px;">'
+      +hits.map(function(x){return '<button type="button" data-jump="'+esc(x.s)+'" style="background:#f0fdfa;border:1px solid #99f6e4;color:#0f766e;font-weight:700;font-size:13px;padding:5px 11px;border-radius:999px;cursor:pointer;">'+x.e+' '+esc(x.l)+' ('+x.t+')</button>';}).join('')
+      +'</div></div>';
+  }
+  function bindJumps(){
+    Array.prototype.forEach.call(srchOut.querySelectorAll('[data-jump]'),function(b){
+      b.addEventListener('click',function(){jumpToSpec(b.getAttribute('data-jump'));});
+    });
+  }
+  function renderProviders(list,capped,q){
+    if(!list.length)return '<div style="color:#64748b;font-size:14px;padding:6px 0;">No hay nadie con ese nombre en el registro. Prueba con el apellido, o escoge la especialidad abajo.</div>';
+    var rows=list.map(function(p){
+      var lab=(BYID[p.subcategory]&&BYID[p.subcategory].l)||p.subcategory;
+      var tel=p.phone?('<a href="tel:'+esc(p.phone.replace(/[^0-9]/g,''))+'" style="color:#0f766e;font-weight:700;white-space:nowrap;">'+esc(p.phone)+'</a>'):'<span style="color:#94a3b8;">sin teléfono</span>';
+      return '<tr style="border-top:1px solid #e2e8f0;"><td style="padding:7px 8px;font-weight:600;color:#0f172a;">'+esc(p.name)+'</td><td style="padding:7px 8px;color:#475569;">'+esc(lab)+'</td><td style="padding:7px 8px;color:#475569;">'+esc(p.municipality||'—')+'</td><td style="padding:7px 8px;text-align:right;">'+tel+'</td></tr>';
+    }).join('');
+    return '<div style="font-size:12px;color:#64748b;margin:4px 0 6px;">'+list.length+(capped?'+':'')+' con "'+esc(q)+'" en el nombre · fuente NPPES federal</div>'
+      +'<div style="max-height:340px;overflow:auto;border:1px solid #e2e8f0;border-radius:10px;"><table style="width:100%;border-collapse:collapse;font-size:14px;"><tbody>'+rows+'</tbody></table></div>';
+  }
+  var st;
+  srch.addEventListener('input',function(){
+    var q=srch.value.trim(),qn=norm(q);
+    clearTimeout(st);
+    if(qn.length<2){srchOut.innerHTML='';return;}
+    var chips=specChips(qn);
+    srchOut.innerHTML=chips+(q.length>=3?'<div style="color:#64748b;font-size:14px;padding:6px 0;">Buscando "'+esc(q)+'"…</div>':'');
+    bindJumps();
+    if(q.length<3)return;
+    st=setTimeout(function(){
+      fetch('/api/mapa-pages?page=registro-search&q='+encodeURIComponent(q))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(srch.value.trim()!==q)return; // stale response
+          srchOut.innerHTML=specChips(qn)+renderProviders((d&&d.providers)||[],d&&d.capped,q);
+          bindJumps();
+        })
+        .catch(function(){srchOut.innerHTML=specChips(qn)+'<div style="color:#dc2626;font-size:14px;">No se pudo buscar. Intenta de nuevo.</div>';bindJumps();});
+    },280);
+  });
+})();
+</script>
+
+<h2>Cómo se hizo (y por qué puedes confiar)</h2>
+<p>Cada persona en este registro existe en el <strong>NPPES</strong> (National Plan and Provider Enumeration System), el registro oficial del gobierno federal de EE.UU. — el mismo que usan Medicare y los planes médicos. Tomamos solo <strong>proveedores individuales con práctica en Puerto Rico</strong>, por código de taxonomía (la especialidad oficial), y lo pusimos en español, por región. El <strong>NPI</strong> de cada uno es un número público que cualquiera puede verificar.</p>
+<p class="text-sm text-slate-600">Lo que no encontrarás en ningún otro sitio: el gobierno tiene la data, pero enterrada, en inglés, sin organizar por pueblo. La pusimos clara, en un solo sitio, a mano. Si ves un dato viejo o un especialista que ya no ejerce, dínoslo y se corrige — <a href="mailto:angel@angelanderson.com" class="text-teal-600 hover:underline">angel@angelanderson.com</a>.</p>
+<p class="text-sm text-slate-600"><strong>¿Periodista, plan médico, o investigador?</strong> Esta data es citable y hay acceso programático. Escríbenos.</p>
+
+<div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
+  <p class="text-lg font-bold mb-1">¿No sabes por dónde empezar?</p>
+  <p class="text-sm text-teal-100 mb-4">Antes de dar vueltas, escríbele al Veci. Te dice quién resuelve, sin enredos. Al <strong>${PHONE_CTA}</strong>:</p>
+  <div class="flex flex-wrap gap-3 justify-center">
+    <a href="https://wa.me/17874177711?text=ESPECIALISTA" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ESPECIALISTA</a>
+    <a href="/acceso" class="inline-flex items-center gap-2 bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-900"><i class="fa-solid fa-chart-simple"></i> Ver el reporte de acceso</a>
+  </div>
+  <p class="text-xs text-teal-200 mt-4">— Menos revolú, más sistema, mejor vida.</p>
+</div>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'MedicalWebPage',
+    name: 'Registro de Especialistas Médicos de Puerto Rico',
+    description: `Registro verificado de ${totalVerified} especialistas y proveedores de salud de Puerto Rico, por especialidad y región, con fuente federal NPPES/CMS. En español.`,
+    inLanguage: 'es',
+    url: `${SITE_URL}/registro`,
+    isPartOf: { '@type': 'WebSite', name: 'Mapa de Cabo Rojo', url: SITE_URL },
+    medicalAudience: 'Patient',
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=300')
+  res.status(200).send(layout({
+    title: 'Registro de Especialistas Médicos de Puerto Rico — verificado, en español',
+    description: `${totalVerified} especialistas de PR verificados contra el registro federal NPPES/CMS. Por especialidad y región, en español. El único que puedes leer.`,
+    slug: 'registro',
+    bodyHtml: body,
+    jsonLd,
+  }))
+}
+
+// =============== /registro live provider lookup (folded in, stays under 12-fn limit) ===============
+const REGISTRY_SUBS = new Set(REGISTRY_SPECS.map(x => x.s))
+async function handleRegistroData(req: any, res: any) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8')
+  try {
+    const spec = String(req.query.spec || '')
+    const region = String(req.query.region || '')
+    if (!REGISTRY_SUBS.has(spec)) { res.status(200).send(JSON.stringify({ providers: [] })); return }
+    let q = supabase
+      .from('places')
+      .select('name,municipality,phone,npi')
+      .eq('category', 'HEALTH').eq('subcategory', spec).not('npi', 'is', null)
+      .order('municipality', { ascending: true }).limit(120)
+    if (region) q = q.eq('region', region)
+    const { data } = await q
+    const providers = (data || []).map((p: any) => ({ name: p.name, municipality: p.municipality, phone: p.phone }))
+    res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=300')
+    res.status(200).send(JSON.stringify({ providers, capped: providers.length >= 120 }))
+  } catch {
+    res.status(200).send(JSON.stringify({ providers: [] }))
+  }
+}
+
+// =============== /registro free-text name search (folded in, stays under 12-fn limit) ===============
+async function handleRegistroSearch(req: any, res: any) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8')
+  try {
+    const q = String(req.query.q || '').trim()
+    if (q.length < 3) { res.status(200).send(JSON.stringify({ providers: [] })); return }
+    // strip PostgREST/ilike metacharacters so the pattern stays a literal substring
+    const safe = q.replace(/[%,()*]/g, ' ').trim()
+    const { data } = await supabase
+      .from('places')
+      .select('name,subcategory,municipality,phone,region')
+      .eq('category', 'HEALTH').not('npi', 'is', null)
+      .ilike('name', `%${safe}%`)
+      .order('name', { ascending: true }).limit(40)
+    const providers = (data || [])
+      .filter((p: any) => REGISTRY_SUBS.has(p.subcategory))
+      .map((p: any) => ({ name: p.name, subcategory: p.subcategory, municipality: p.municipality, phone: p.phone, region: p.region }))
+    res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=300')
+    res.status(200).send(JSON.stringify({ providers, capped: providers.length >= 40 }))
+  } catch {
+    res.status(200).send(JSON.stringify({ providers: [] }))
+  }
+}
+
+// =============== /observatorio — Observatorio Cívico de Cabo Rojo ===============
+// Lista verificada de problemas reales del pueblo (demanda real *7711 + récord público)
+// + el examen que todo aspirante debe contestar + herramientas ciudadanas. No-partidista.
+function handleObservatorio(_req: any, res: any) {
+  const body = `
+<span class="not-prose inline-block bg-teal-100 text-teal-800 text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full">Observatorio Cívico · No-partidista · Cabo Rojo y el Distrito 20</span>
+
+<h1 class="mt-4">La lista de problemas de Cabo Rojo.</h1>
+
+<p class="text-lg text-slate-600 mt-3"><strong>¿Qué es esto?</strong> Es lo que está pasando en Cabo Rojo, puesto en un solo sitio. Cada cosa trae su video, su fecha y de dónde sale. Tú lo ves. Tú decides.</p>
+
+<p class="text-lg text-slate-600 mt-2"><strong>¿Para qué?</strong> Para que el que manda tenga que contestar. Si algo ya se hizo, que lo diga y lo enseñe. Si no, que diga cuándo. Aquí no escogemos a nadie. Solo ponemos todo donde todos lo vean.</p>
+
+<p class="text-slate-600 italic mt-3">Cabo Rojo no es de ningún partido. Es de la gente que vive aquí. Un pueblo de 50,000 puede tener mejor información que una ciudad de millones, si alguien se sienta a verificarla, una por una.</p>
+
+<div class="not-prose mt-5 bg-white border border-slate-200 border-l-4 border-l-amber-500 rounded-lg p-4">
+  <p class="text-sm text-slate-700"><strong class="text-teal-700">Nuestra posición es Suiza.</strong> No somos candidatos, no endosamos a nadie, y ninguna campaña nos paga por cobertura. Mismas preguntas, misma data, mismo trato para todos. Lo que ves aquí ya es público; solo lo pusimos en un solo sitio.</p>
+</div>
+
+<div class="not-prose mt-5 bg-teal-900 text-white rounded-xl p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+  <div>
+    <p class="font-bold text-base">Este observatorio está vivo. Pregúntale al Veci.</p>
+    <p class="text-sm text-teal-100 mt-1">El vecino digital contesta 24/7: quién resuelve qué, qué hay hoy, dónde queda algo. Antes de dar vueltas, escríbele.</p>
+  </div>
+  <a href="https://wa.me/17874177711?text=CABOROJO" class="shrink-0 bg-coral-500 bg-rose-500 hover:bg-rose-600 text-white font-bold px-5 py-3 rounded-lg text-center">Textea CABOROJO<br><span class="text-xs font-medium opacity-90">al ${PHONE_CTA}</span></a>
+</div>
+
+<h2>El tema que manda hoy: Esencia</h2>
+<p>No es la elección de 2028. Es el megaproyecto que decide qué clase de pueblo va a ser Cabo Rojo. Toda campaña que no tenga una postura clara sobre esto, está corriendo con los ojos cerrados.</p>
+<div class="not-prose grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+  <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-center"><div class="text-2xl font-black text-rose-700">$2,000M</div><div class="text-xs text-slate-600 mt-1">inversión propuesta</div></div>
+  <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-center"><div class="text-2xl font-black text-rose-700">~$498M</div><div class="text-xs text-slate-600 mt-1">en créditos contributivos al hotel</div></div>
+  <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-center"><div class="text-2xl font-black text-rose-700">~3 MGD</div><div class="text-xs text-slate-600 mt-1">de agua: más de 1/3 del consumo del municipio</div></div>
+  <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-center"><div class="text-2xl font-black text-rose-700">+30 ton</div><div class="text-xs text-slate-600 mt-1">de basura al día (testimonio en vistas)</div></div>
+</div>
+<ul class="mt-4">
+<li><strong>Mar 2025:</strong> vistas públicas, protestas. Expertos advierten que no está resuelto el agua, la basura ni la energía.</li>
+<li><strong>Sept 2025:</strong> el DRNA <strong>rechaza</strong> el diseño por daño irreversible a especies protegidas y obstrucción del acceso a la playa.</li>
+<li><strong>24 dic 2025 (Nochebuena):</strong> OGPe aprueba la Declaración de Impacto Ambiental con 46 condiciones.</li>
+<li><strong>2026:</strong> querellas por tala, investigación en el Senado, coalición pide al alcalde retirar su endoso condicionado de 2024.</li>
+</ul>
+<div class="not-prose mt-4 bg-slate-900 rounded-lg p-4">
+  <div class="text-xs font-bold text-teal-300 uppercase tracking-wide mb-2">🎬 Míralo tú mismo · no nos creas a nosotros</div>
+  <div class="flex flex-col gap-2 text-sm">
+    <a href="https://youtu.be/Fv8WCuov9lA" target="_blank" rel="noopener" class="text-white hover:text-teal-300">▶ El geólogo que se atrevió a decir la verdad sobre Esencia</a>
+    <a href="https://youtu.be/UGyOSEhGRsU" target="_blank" rel="noopener" class="text-white hover:text-teal-300">▶ Proyecto Esencia: ¿Progreso o Peligro para Cabo Rojo?</a>
+    <a href="https://youtu.be/NFeo3v07rHA" target="_blank" rel="noopener" class="text-white hover:text-teal-300">▶ Por qué la AAA no contesta sobre el agua de Esencia</a>
+  </div>
+</div>
+<p class="text-xs text-slate-500 mt-3">Fuentes: Centro de Periodismo Investigativo (2025) · El Nuevo Día (dic 2025) · Marea Ecologista (sept 2025) · NotiCel (may 2026) · entrevistas en video de CaboRojo.com.</p>
+
+<h2>Las preguntas del vertedero que nadie ha contestado</h2>
+<p>Esto salió en las vistas públicas y sigue sin respuesta. Los números son de récord público.</p>
+<div class="not-prose grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+  <div class="bg-slate-100 border border-slate-200 rounded-lg p-3 text-center"><div class="text-xl font-black text-teal-700">$2.2M</div><div class="text-xs text-slate-600 mt-1">préstamo 2020 → ~10 años de vida (vence cerca de 2030)</div></div>
+  <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-center"><div class="text-xl font-black text-rose-700">-2 años</div><div class="text-xs text-slate-600 mt-1">que el huracán María ya le quitó</div></div>
+  <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-center"><div class="text-xl font-black text-rose-700">+30 ton/día</div><div class="text-xs text-slate-600 mt-1">la basura nueva de Esencia encima</div></div>
+  <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-center"><div class="text-xl font-black text-rose-700">12</div><div class="text-xs text-slate-600 mt-1">vertederos que el DRNA cierra en PR (2025-2027)</div></div>
+</div>
+<div class="not-prose mt-4 bg-white border border-slate-200 border-l-4 border-l-rose-500 rounded-lg p-4">
+  <p class="font-bold text-slate-900 mb-2">Las 4 preguntas que el pueblo merece que le contesten, por escrito:</p>
+  <ol class="list-decimal pl-5 text-sm text-slate-700 space-y-2">
+    <li>Si al vertedero le quedan unos 10 años, <strong>¿cuántos se come Esencia</strong> con sus 30+ toneladas diarias?</li>
+    <li>Cuando se llene o lo cierren, <strong>¿quién paga para sacar la basura del pueblo</strong> y cuánto nos cuesta a nosotros?</li>
+    <li><strong>¿Ya hay un plan?</strong> ¿Se quema basura, se recicla de verdad (vidrio incluido), o se tapa el hoyo hasta que reviente?</li>
+    <li>El agua y la luz tampoco están resueltas (la AAA no confirmó capacidad, la AEE/LUMA no evaluó la demanda). <strong>¿Por qué se aprueba algo cuyos servicios básicos nadie ha garantizado?</strong></li>
+  </ol>
+</div>
+<p class="text-xs text-slate-500">Fuentes: El Vocero / Metro (préstamo $2.2M, 2020) · El Diario / DRNA (cierre de 12 vertederos) · CaboRojo.com y CPI (testimonio en vistas).</p>
+
+<h2>La lista de problemas de Cabo Rojo</h2>
+<p>Cruce de dos fuentes: lo que la gente le busca al Veci *7711 (9,016 búsquedas reales, dic 2025-jun 2026) y el récord público de fondos e infraestructura.</p>
+<div class="not-prose grid md:grid-cols-2 gap-4 mt-4">
+  <div class="bg-white border border-slate-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-rose-700 uppercase tracking-wide mb-2">Infraestructura y dinero público</div>
+    <ul class="text-sm text-slate-700 space-y-2">
+      <li><strong>Agua:</strong> el suroeste es la región más seca; el municipio consume 4.4 MGD. <span class="text-rose-600 font-semibold">crítico</span></li>
+      <li><strong>Coliseo Rebekah Colberg:</strong> $5.2M de FEMA, límite de uso 20 sept 2026.</li>
+      <li><strong>Isla Ratones:</strong> ~$735K de FEMA se devuelven; el cayo se hundió en 2020.</li>
+      <li><strong>Faro Los Morrillos:</strong> cerrado "hasta nuevo aviso" por María y Fiona.</li>
+      <li><strong>Sargazo</strong> recurrente en Combate, Boquerón y Playa Sucia.</li>
+      <li><strong>Recuperación federal:</strong> índice de ejecución sobre 96%.</li>
+    </ul>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-2">Lo que el vecino busca y no encuentra</div>
+    <ul class="text-sm text-slate-700 space-y-2">
+      <li>"¿Quién es el alcalde?" · "número de la policía municipal" <span class="text-rose-600 font-semibold">sin respuesta</span></li>
+      <li>"¿Cuándo recogen la basura?" (Joyuda, Las Ramírez, Villa del Carmen)</li>
+      <li>"Se fue el agua" · "se fue la luz" · "carretera de Reparto Samán"</li>
+      <li>"¿Cómo saco un permiso de construcción?"</li>
+      <li>Servicios sin suficiente oferta: lavandería, dentista, plomero, grúa</li>
+      <li>Categoría GOBIERNO: <strong>80%</strong> de las búsquedas sin contestar</li>
+    </ul>
+  </div>
+</div>
+<blockquote class="text-sm">Nota de integridad: tres búsquedas cívicas aparecían con 89 cada una; al auditar resultaron ser data de prueba (2 usuarios, ventana cerrada). Las excluimos. Si un dato no se puede verificar, no entra.</blockquote>
+
+<h2>La pregunta incómoda: ¿de quién es la lealtad?</h2>
+<p>No acusamos a nadie. Pero hay una pregunta que un pueblo despierto tiene derecho a hacer, y a verificar por récord público: en Puerto Rico, los mismos nombres aparecen en todos los partidos. Los abogados, cabilderos y contratistas que representan a los grandes intereses a menudo trabajan con candidatos de partidos distintos a la vez. No es ilegal. Pero el pueblo merece saberlo.</p>
+<p><strong>Lo que sí puedes verificar tú mismo:</strong> quién es el representante legal de un proyecto es récord público (consta en los documentos del caso). Quién le hace campaña a quién, también. Cruza esos dos datos y verás los conflictos de interés sin que nadie te los tenga que señalar. No señalamos a nadie: te enseñamos a buscar.</p>
+
+<h2>El examen de Cabo Rojo</h2>
+<p>Estas preguntas salen de la data, no de un partido. Cualquiera que aspire a la alcaldía o a representarnos en el Distrito 20 las va a tener que contestar, en sus propias palabras. Las mismas para todos. El que conteste, queda en récord. El que no, también.</p>
+<ol>
+<li>¿Apoyas a Esencia como está, lo rechazas, o bajo qué condiciones? Sé específico.</li>
+<li>¿De dónde sale el agua para Cabo Rojo en los próximos 10 años?</li>
+<li>El vertedero tiene los años contados. ¿Cuál es tu plan de basura, reciclaje y costos?</li>
+<li>¿Qué pasa con los $5.2M del Coliseo si no se usan antes del 20 de septiembre de 2026?</li>
+<li>El Faro lleva años cerrado. ¿Plan concreto y fecha para reabrirlo?</li>
+<li>¿Cómo vas a publicar el presupuesto y los contratos para que cualquier vecino los vea sin pedir permiso?</li>
+<li>¿Qué haces con el sargazo en Combate, Boquerón y Playa Sucia?</li>
+<li>¿Cómo evitas que la familia caborrojeña se quede sin poder comprar casa en su propio pueblo?</li>
+</ol>
+
+<h2>Quién nos representa hoy</h2>
+<p class="text-sm text-slate-600">Ficha neutral, récord público. Aún no hay candidatos declarados para 2028: cuando los haya, reciben la misma ficha y el mismo examen.</p>
+<div class="not-prose grid sm:grid-cols-3 gap-3 mt-3">
+  <div class="bg-white border border-slate-200 rounded-lg p-4">
+    <div class="text-xs text-slate-500 uppercase font-bold">Alcalde · Cabo Rojo</div>
+    <div class="font-bold text-slate-900 mt-1">Jorge A. Morales Wiscovitch</div>
+    <span class="inline-block text-xs font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded mt-1">PNP</span>
+    <p class="text-xs text-slate-600 mt-2">Desde ene 2021 · 2 términos · hasta ene 2029.</p>
+    <a href="https://consultacontratos.ocpr.gov.pr/" target="_blank" rel="noopener" class="text-xs text-teal-700 font-semibold mt-2 inline-block">Ver contratos del municipio →</a>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-lg p-4">
+    <div class="text-xs text-slate-500 uppercase font-bold">Representante · Distrito 20</div>
+    <div class="font-bold text-slate-900 mt-1">Emilio Carlo Acosta</div>
+    <span class="inline-block text-xs font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded mt-1">PNP</span>
+    <p class="text-xs text-slate-600 mt-2">Desde ene 2025. Distrito 20 = Cabo Rojo + Hormigueros + San Germán.</p>
+    <a href="https://www.camara.pr.gov/representante/" target="_blank" rel="noopener" class="text-xs text-teal-700 font-semibold mt-2 inline-block">Cámara de Representantes →</a>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-lg p-4">
+    <div class="text-xs text-slate-500 uppercase font-bold">Senadores · Distrito IV</div>
+    <div class="font-bold text-slate-900 mt-1">Jeison Rosa Ramos · Karen M. Román Rodríguez</div>
+    <span class="inline-block text-xs font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded mt-1">PNP</span>
+    <p class="text-xs text-slate-600 mt-2">2025-2029. El distrito senatorial cubre 12 pueblos, incluido Cabo Rojo.</p>
+    <a href="https://senado.pr.gov/" target="_blank" rel="noopener" class="text-xs text-teal-700 font-semibold mt-2 inline-block">Senado de PR →</a>
+  </div>
+</div>
+
+<h2>El Promesómetro</h2>
+<p><strong>Esto no lo dijo un periódico. Lo dijo el alcalde, él mismo, en cámara.</strong> Lo guardamos con fecha y video. No se borra. Aquí se ve qué prometió y qué pasó.</p>
+
+<div class="not-prose mt-4 bg-white border border-slate-200 border-l-4 border-l-teal-600 rounded-lg p-4">
+  <p class="text-sm text-slate-700"><strong class="text-teal-700">¿Alcalde, esto ya está hecho?</strong> Dilo, con prueba, y lo marcamos <strong>HECHO</strong> el mismo día. ¿No se ha hecho? Dinos cuándo. Esto no es para pelear. Es para que el pueblo sepa. La pelota está en tu cancha.</p>
+</div>
+
+<p class="text-sm text-slate-600 mt-4">Cómo leer la última columna: <span class="font-bold text-emerald-700">✅ HECHO</span> · <span class="font-bold text-amber-600">🟡 EMPEZÓ</span> · <span class="font-bold text-rose-600">❌ NO</span> · <span class="font-bold text-slate-500">⏳ SIN CONTESTAR</span></p>
+<table>
+<thead><tr><th>Lo que se prometió o se dijo</th><th>Quién · cuándo</th><th>Míralo tú mismo</th><th>¿Y?</th></tr></thead>
+<tbody>
+<tr><td><strong>Reabrir el Faro Los Morrillos</strong> "en unos meses". Admitió que el municipio dejó vencer el acuerdo de manejo y que parte del dinero de María "se perdió y lo tenemos que poner nosotros".</td><td>Alcalde Morales · mar 2024</td><td>En cámara · <a href="https://youtu.be/-HKfFUfE9nk" target="_blank" rel="noopener">CaboRojo.com</a></td><td><strong style="color:#e11d48">❌ NO</strong> · cerrado a 2026</td></tr>
+<tr><td>Usar los <strong>$5.2M de FEMA del Coliseo</strong> Rebekah Colberg antes del límite. El alcalde explicó la disputa con el asegurado.</td><td>Municipio · límite 20 sept 2026</td><td>FEMA/NotiCel + <a href="https://youtu.be/WpizUMfP3rc" target="_blank" rel="noopener">alcalde en cámara</a></td><td><strong style="color:#d97706">🟡 EMPEZÓ</strong> feb 2026 · reloj corriendo</td></tr>
+<tr><td>Nueva <strong>celda del vertedero</strong> "con capacidad de diez años": "ya se celebró la presubasta".</td><td>Alcalde Morales · mar 2024</td><td>En cámara · <a href="https://youtu.be/-HKfFUfE9nk" target="_blank" rel="noopener">CaboRojo.com</a></td><td><strong style="color:#64748b">⏳ SIN CONTESTAR</strong></td></tr>
+<tr><td>Subir el <strong>sueldo de la policía municipal</strong>: "no llega a los $1,800 ... llevarlo cerca de los $2,000, y el año que viene un poco más".</td><td>Alcalde Morales · jun 2023</td><td>En cámara · <a href="https://youtu.be/x7LX3y4otNQ" target="_blank" rel="noopener">CaboRojo.com</a></td><td><strong style="color:#64748b">⏳ SIN CONTESTAR</strong></td></tr>
+<tr><td><strong>Policía municipal:</strong> "estuvo en sesenta y pico, ya está en veintipico" efectivos. Prometió 3 cadetes nuevos, "seis patrullas" y chalecos nuevos.</td><td>Alcalde Morales · 2024</td><td>En cámara · <a href="https://youtu.be/-HKfFUfE9nk" target="_blank" rel="noopener">CaboRojo.com</a></td><td>Récord del propio alcalde</td></tr>
+<tr><td><strong>Asfalto:</strong> "el 90% de los caminos municipales estaban destruidos, ya llevamos un 60% mejorado". La tonelada subió de $99 a $129.</td><td>Alcalde Morales · mar 2024</td><td>En cámara · <a href="https://youtu.be/-HKfFUfE9nk" target="_blank" rel="noopener">CaboRojo.com</a></td><td><strong style="color:#d97706">🟡 DICE 60%</strong> · verifícalo en tu calle</td></tr>
+<tr><td><strong>Sistema de bombeo de $8M</strong> para Boquerón: "asignó ocho millones de dólares ... que va a proteger de por vida la Bahía de Boquerón".</td><td>Alcalde Morales · mar 2024</td><td>En cámara · <a href="https://youtu.be/-HKfFUfE9nk" target="_blank" rel="noopener">CaboRojo.com</a></td><td><strong style="color:#64748b">⏳ SIN CONTESTAR</strong></td></tr>
+<tr><td>Endoso condicionado a <strong>Esencia</strong> (condición: que tenga agua propia).</td><td>Alcaldía · 2024</td><td>En cámara · <a href="https://youtu.be/85V_v2cBj1s" target="_blank" rel="noopener">CaboRojo.com</a> + NotiCel</td><td><strong style="color:#64748b">⏳ SIN CONTESTAR</strong></td></tr>
+<tr><td>~<strong>$735K de FEMA para Isla Ratones</strong> — proyecto retirado; el cayo se hundió en 2020.</td><td>DRNA / Municipio · 2025-2026</td><td><a href="https://www.primerahora.com/noticias/puerto-rico/notas/a-la-deriva-isla-ratones-se-ahoga-su-reconstruccion/" target="_blank" rel="noopener">Primera Hora</a></td><td><strong style="color:#e11d48">❌ SE PERDIÓ</strong> · devuelto a FEMA</td></tr>
+</tbody>
+</table>
+<p class="text-xs text-slate-500">Las citas en cámara salen de entrevistas públicas de CaboRojo.com con el alcalde (2023-2024). El video y el minuto exacto están en el archivo; se enlazan a medida que se confirman. Récord, no acusación: cada quien puede ver la entrevista completa y juzgar.</p>
+
+<h2>Verifícalo tú mismo</h2>
+<p>No tienes que creernos a nosotros ni a ningún político. El gobierno ya tiene estas herramientas públicas y gratuitas. Casi nadie sabe que existen.</p>
+<div class="not-prose grid md:grid-cols-2 gap-4 mt-3">
+  <div class="bg-teal-50 border border-teal-200 rounded-lg p-4">
+    <div class="font-bold text-teal-900">¿A quién le paga el municipio?</div>
+    <p class="text-sm text-slate-700 mt-1">El Registro de Contratos del Contralor te deja buscar todos los contratos del Municipio de Cabo Rojo: a quién, cuánto, por qué, y si fue a subasta o "de emergencia".</p>
+    <a href="https://consultacontratos.ocpr.gov.pr/" target="_blank" rel="noopener" class="inline-block mt-2 bg-teal-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Buscar contratos →</a>
+    <p class="text-xs text-slate-500 mt-2">Entra → "Entidad" → "Municipio de Cabo Rojo" → filtra por monto, fecha o método de compra.</p>
+  </div>
+  <div class="bg-teal-50 border border-teal-200 rounded-lg p-4">
+    <div class="font-bold text-teal-900">¿Viste algo que no cuadra?</div>
+    <p class="text-sm text-slate-700 mt-1">El sistema "Queréllese" del Contralor recibe querellas sobre mal uso de fondos, compras irregulares o empleados fantasma. Hay protección al que informa.</p>
+    <a href="https://querellas.ocpr.gov.pr/" target="_blank" rel="noopener" class="inline-block mt-2 bg-teal-700 text-white text-sm font-semibold px-4 py-2 rounded-lg">Presentar querella →</a>
+    <p class="text-xs text-slate-500 mt-2">querellas@ocpr.gov.pr · 1-877-771-3133. El Contralor ya auditó a Cabo Rojo (OC-24-04, OC-24-29).</p>
+  </div>
+</div>
+<div class="not-prose mt-4 bg-white border border-slate-200 border-l-4 border-l-rose-500 rounded-lg p-4">
+  <div class="text-xs font-bold text-rose-700 uppercase tracking-wide mb-2">Lo que el Contralor ya encontró · récord público</div>
+  <ul class="text-sm text-slate-700 space-y-2">
+    <li><strong>Vertedero sin plan ni seguro:</strong> el informe <strong>OC-24-04</strong> halló que el vertedero operaba sin plan operacional, sin procedimientos de emergencia y sin seguro de responsabilidad pública. El contrato se terminó luego de que el presidente del operador se declarara culpable de delitos federales.</li>
+    <li><strong>$149,431</strong> en un proyecto "smart city" que se abandonó (OC-24-04).</li>
+    <li><strong>$17,625</strong> en pago de vacaciones a un exalcalde por días que, por ley, debieron perderse (OC-24-04).</li>
+    <li>¿Quieres el detalle completo, incluido lo que el Contralor encontró sobre pagos y demandas? Busca los informes <strong>OC-24-04</strong> y <strong>OC-24-29</strong> en <a href="https://www.ocpr.gov.pr/" target="_blank" rel="noopener">ocpr.gov.pr</a>. Todo es récord público.</li>
+  </ul>
+</div>
+<blockquote class="text-sm">"Opinión cualificada" no es lo peor (eso sería "adversa"): el Contralor encontró incumplimientos importantes pero no generalizados. Récord público, no acusación, con el número de informe para que lo verifiques tú. El nepotismo y la empleomanía política son un patrón de todo Puerto Rico, no de un pueblo ni de una persona.</blockquote>
+
+<h2>¿Quién arregla qué? Para que no le grites al que no es.</h2>
+<p>Mucha gente se molesta con el alcalde por algo que le toca a LUMA. O con el representante por algo del municipio. Aquí está, fácil, a quién le toca cada cosa.</p>
+<p class="text-sm text-slate-600 mt-1">Y debajo de cada uno, <strong>cómo hacerlo</strong>: el número o la página donde se reporta. Guárdalo.</p>
+<div class="not-prose grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
+  <div class="bg-white border border-slate-200 rounded-lg p-4"><div class="text-2xl">🗑️</div><div class="font-bold text-slate-900 mt-1">Basura, calles del pueblo, permisos, vertedero</div><div class="text-sm text-teal-700 font-semibold mt-1">→ La Alcaldía</div><div class="text-xs text-slate-500 mt-1">El que recoge y arregla dentro del pueblo.</div><div class="mt-2 text-xs bg-teal-50 border border-teal-200 rounded p-2"><strong>Cómo:</strong> querellavirtual en el municipio · o llama al <a href="tel:7878511025">787-851-1025</a></div></div>
+  <div class="bg-white border border-slate-200 rounded-lg p-4"><div class="text-2xl">💧</div><div class="font-bold text-slate-900 mt-1">"Se fue el agua", tubería, baja presión</div><div class="text-sm text-teal-700 font-semibold mt-1">→ La AAA</div><div class="text-xs text-slate-500 mt-1">NO es el alcalde. Es la Autoridad de Acueductos.</div><div class="mt-2 text-xs bg-teal-50 border border-teal-200 rounded p-2"><strong>Cómo:</strong> reporta la avería al <a href="tel:7876202482">787-620-2482</a> (6am-11pm) o en <a href="https://www.acueductos.pr.gov" target="_blank" rel="noopener">acueductos.pr.gov</a></div></div>
+  <div class="bg-white border border-slate-200 rounded-lg p-4"><div class="text-2xl">💡</div><div class="font-bold text-slate-900 mt-1">"Se fue la luz", postes, alumbrado</div><div class="text-sm text-teal-700 font-semibold mt-1">→ LUMA</div><div class="text-xs text-slate-500 mt-1">NO es el alcalde. Es LUMA y el gobierno central.</div><div class="mt-2 text-xs bg-teal-50 border border-teal-200 rounded p-2"><strong>Cómo:</strong> reporta a LUMA al <a href="tel:18448885862">1-844-888-5862</a></div></div>
+  <div class="bg-white border border-slate-200 rounded-lg p-4"><div class="text-2xl">🛣️</div><div class="font-bold text-slate-900 mt-1">Carreteras grandes (PR-100, PR-307)</div><div class="text-sm text-teal-700 font-semibold mt-1">→ DTOP</div><div class="text-xs text-slate-500 mt-1">Las del estado. Las calles chiquitas sí son del pueblo.</div><div class="mt-2 text-xs bg-teal-50 border border-teal-200 rounded p-2"><strong>Cómo:</strong> línea de gobierno <a href="tel:311">311</a> · o pregúntale al Veci cuál carretera es de quién</div></div>
+  <div class="bg-white border border-slate-200 rounded-lg p-4"><div class="text-2xl">💵</div><div class="font-bold text-slate-900 mt-1">Fondos y leyes para el distrito</div><div class="text-sm text-teal-700 font-semibold mt-1">→ Representante y Senadores</div><div class="text-xs text-slate-500 mt-1">Los que consiguen dinero en San Juan para acá.</div><div class="mt-2 text-xs bg-teal-50 border border-teal-200 rounded p-2"><strong>Cómo:</strong> <a href="https://www.camara.pr.gov" target="_blank" rel="noopener">camara.pr.gov</a> · <a href="https://senado.pr.gov" target="_blank" rel="noopener">senado.pr.gov</a></div></div>
+  <div class="bg-white border border-slate-200 rounded-lg p-4"><div class="text-2xl">🌊</div><div class="font-bold text-slate-900 mt-1">Permisos de ambiente y costa (Esencia)</div><div class="text-sm text-teal-700 font-semibold mt-1">→ OGPe · DRNA · Junta de Planificación</div><div class="text-xs text-slate-500 mt-1">Agencias del estado. El municipio opina, pero no decide solo.</div><div class="mt-2 text-xs bg-teal-50 border border-teal-200 rounded p-2"><strong>Cómo:</strong> mira o comenta el caso en <a href="https://ogpe.pr.gov" target="_blank" rel="noopener">ogpe.pr.gov</a></div></div>
+</div>
+<p class="mt-4">¿No sabes a quién le toca tu caso? Pregúntale al Veci: textea <strong>CABOROJO al ${PHONE_CTA}</strong> y te dice quién resuelve.</p>
+
+<blockquote>Yo no escojo. Yo organizo. Le doy a todos el mismo espejo, con número, fecha y fuente. Si esto te ayuda a entender mejor tu pueblo, llégate. Si no, sigue tu camino. Pero que nadie diga que no había dónde mirar.</blockquote>
+
+<h3>Fuentes principales</h3>
+<p class="text-xs text-slate-500">
+<a href="https://periodismoinvestigativo.com/2025/10/esencia-residential-project-tax-breaks-puerto-rico/" target="_blank" rel="noopener">CPI — créditos contributivos Esencia</a> ·
+<a href="https://www.elnuevodia.com/noticias/locales/notas/avanza-esencia-ogpe-aprueba-declaracion-de-impacto-ambiental-del-megaproyecto-en-cabo-rojo/" target="_blank" rel="noopener">El Nuevo Día — OGPe aprueba DIA</a> ·
+<a href="https://mareaecologista.com/2025/04/cabo-rojo-el-proyecto-esencia-y-la-crisis-del-agua-en-el-suroeste/" target="_blank" rel="noopener">Marea Ecologista — crisis del agua</a> ·
+<a href="https://noticel.com/en/ultima-hora/20260505/fema-aprueba-extension-de-tiempo-para-ejecucion-de-mas-de-570-proyectos/" target="_blank" rel="noopener">NotiCel — Coliseo $5.2M / FEMA</a> ·
+<a href="https://www.primerahora.com/noticias/puerto-rico/notas/a-la-deriva-isla-ratones-se-ahoga-su-reconstruccion/" target="_blank" rel="noopener">Primera Hora — Isla Ratones</a> ·
+<a href="https://www.camara.pr.gov/representante/" target="_blank" rel="noopener">Cámara — Distrito 20</a> ·
+<a href="https://consultacontratos.ocpr.gov.pr/" target="_blank" rel="noopener">Contralor — Registro de Contratos</a>
+</p>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      { '@type': 'Dataset', name: 'Lista de problemas reales de Cabo Rojo', description: 'Demanda ciudadana real (9,016 búsquedas al asistente vecinal *7711) cruzada con el récord público de fondos, recuperación e infraestructura del municipio de Cabo Rojo.', creator: { '@type': 'Organization', name: 'mapadecaborojo.com' }, spatialCoverage: { '@type': 'Place', name: 'Cabo Rojo, Puerto Rico' }, isAccessibleForFree: true },
+      { '@type': 'FAQPage', mainEntity: [
+        { '@type': 'Question', name: '¿En qué distrito representativo está Cabo Rojo?', acceptedAnswer: { '@type': 'Answer', text: 'Cabo Rojo está en el Distrito Representativo 20, junto a Hormigueros y San Germán. El representante actual es Emilio Carlo Acosta (PNP), desde enero de 2025.' } },
+        { '@type': 'Question', name: '¿Quién es el alcalde de Cabo Rojo?', acceptedAnswer: { '@type': 'Answer', text: 'Jorge A. Morales Wiscovitch (PNP), en el cargo desde enero de 2021, con término hasta enero de 2029.' } },
+        { '@type': 'Question', name: '¿Qué es el proyecto Esencia en Cabo Rojo?', acceptedAnswer: { '@type': 'Answer', text: 'Un megaproyecto turístico-residencial de unos $2,000 millones en la costa entre Boquerón y Combate, con ~$498 millones en créditos contributivos. El DRNA lo rechazó en septiembre de 2025; OGPe aprobó su Declaración de Impacto Ambiental con 46 condiciones el 24 de diciembre de 2025.' } },
+        { '@type': 'Question', name: '¿Cómo puedo ver los contratos del municipio de Cabo Rojo?', acceptedAnswer: { '@type': 'Answer', text: 'En el Registro de Contratos del Contralor de Puerto Rico (consultacontratos.ocpr.gov.pr), gratis y sin cuenta. Busca por la entidad Municipio de Cabo Rojo.' } }
+      ] }
+    ]
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=1800')
+  res.status(200).send(layout({
+    title: 'Observatorio Cívico de Cabo Rojo',
+    description: 'La lista verificada de los problemas reales de Cabo Rojo: Esencia, el agua, el vertedero, el Coliseo, el Faro. Con número, fecha y fuente. Para que el que aspire a representarnos conteste lo que el pueblo necesita. No-partidista.',
+    slug: 'observatorio',
+    bodyHtml: body,
+    jsonLd,
+    ogImage: '/og/observatorio.png',
+  }))
+}
+
 // =============== HANDLER ===============
 
 export default async function handler(req: any, res: any) {
@@ -2415,6 +2964,10 @@ export default async function handler(req: any, res: any) {
   switch (page) {
     case 'acceso': return handleAcceso(req, res)
     case 'acceso-log': return await handleAccesoLog(req, res)
+    case 'registro': return await handleRegistro(req, res)
+    case 'registro-data': return await handleRegistroData(req, res)
+    case 'registro-search': return await handleRegistroSearch(req, res)
+    case 'observatorio': return handleObservatorio(req, res)
     case 'mision': return handleMision(req, res)
     case 'transparencia': return await handleTransparencia(req, res)
     case 'equipo': return handleEquipo(req, res)
