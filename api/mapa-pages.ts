@@ -2773,7 +2773,7 @@ ${row('Una guagua de rescate (400 galones de agua, 75 de espuma).', ...ESP)}
 
 <h2>💧 Agua</h2>
 <table><thead><tr><th>Lo que dijo</th><th>¿Y?</th></tr></thead><tbody>
-${row('Un sistema de bombeo de $8 millones que "va a proteger de por vida la Bahía de Boquerón".', ...ESP)}
+${row('Un sistema de bombeo de $8 millones que "va a proteger de por vida la Bahía de Boquerón". El gobernador asignó $7.8M; a marzo 2026 iba cerca del 70% hecho.', ...MED)}
 ${row('Llevar las aguas a las plantas de Villataína y de ahí a Lajas.', ...ESP)}
 ${row('Una guagua de rescate con 500 galones de agua (en 4 meses).', ...ESP)}
 </tbody></table>
@@ -2781,7 +2781,7 @@ ${row('Una guagua de rescate con 500 galones de agua (en 4 meses).', ...ESP)}
 <h2>🏖️ Faro, playas y balneario</h2>
 <table><thead><tr><th>Lo que dijo</th><th>¿Y?</th></tr></thead><tbody>
 ${row('Reabrir el Faro Los Morrillos "en unos meses", con fondos de Fiona. Sigue cerrado.', ...NO)}
-${row('Hacer el Balneario de Boquerón "uno de los lugares más icónicos de Puerto Rico".', ...ESP)}
+${row('Hacer el Balneario de Boquerón "uno de los lugares más icónicos de Puerto Rico". El traspaso al municipio va en proceso (ordenanza 2024-25) y ya hay un centro de información turística.', ...MED)}
 ${row('En el Combate: el desvío de Polo Gea, un proyecto de $3-4 millones.', ...ESP)}
 ${row('Cunetones frente a las casas del Camino Hernández.', ...ESP)}
 ${row('Aduana Federal construye un edificio de $18M en Boquerón (proyecto federal, ya comenzó).', ...SI)}
@@ -2998,7 +2998,7 @@ function handleObservatorio(_req: any, res: any) {
 <tr><td>Subir el <strong>sueldo de la policía municipal</strong>: "no llega a los $1,800 ... llevarlo cerca de los $2,000, y el año que viene un poco más".</td><td>Alcalde Morales · jun 2023</td><td>En cámara · <a href="https://youtu.be/x7LX3y4otNQ" target="_blank" rel="noopener">CaboRojo.com</a></td><td><strong style="color:#64748b">⏳ SIN CONTESTAR</strong></td></tr>
 <tr><td><strong>Policía municipal:</strong> "estuvo en sesenta y pico, ya está en veintipico" efectivos. Prometió 3 cadetes nuevos, "seis patrullas" y chalecos nuevos.</td><td>Alcalde Morales · 2024</td><td>En cámara · <a href="https://youtu.be/-HKfFUfE9nk" target="_blank" rel="noopener">CaboRojo.com</a></td><td>Récord del propio alcalde</td></tr>
 <tr><td><strong>Asfalto:</strong> "el 90% de los caminos municipales estaban destruidos, ya llevamos un 60% mejorado". La tonelada subió de $99 a $129.</td><td>Alcalde Morales · mar 2024</td><td>En cámara · <a href="https://youtu.be/-HKfFUfE9nk" target="_blank" rel="noopener">CaboRojo.com</a></td><td><strong style="color:#d97706">🟡 DICE 60%</strong> · verifícalo en tu calle</td></tr>
-<tr><td><strong>Sistema de bombeo de $8M</strong> para Boquerón: "asignó ocho millones de dólares ... que va a proteger de por vida la Bahía de Boquerón".</td><td>Alcalde Morales · mar 2024</td><td>En cámara · <a href="https://youtu.be/-HKfFUfE9nk" target="_blank" rel="noopener">CaboRojo.com</a></td><td><strong style="color:#64748b">⏳ SIN CONTESTAR</strong></td></tr>
+<tr><td><strong>Sistema de bombeo de $8M</strong> para Boquerón: "asignó ocho millones de dólares ... que va a proteger de por vida la Bahía de Boquerón".</td><td>Alcalde Morales · mar 2024</td><td>En cámara · <a href="https://youtu.be/-HKfFUfE9nk" target="_blank" rel="noopener">CaboRojo.com</a> + <a href="https://www.primerahora.com/noticias/gobierno-politica/notas/cabo-rojo-espera-por-el-traspaso-del-centro-vacacional-de-boqueron/" target="_blank" rel="noopener">Primera Hora</a></td><td><strong style="color:#d97706">🟡 EMPEZÓ</strong> · $7.8M asignados, ~70% a mar 2026</td></tr>
 <tr><td>Endoso condicionado a <strong>Esencia</strong> (condición: que tenga agua propia).</td><td>Alcaldía · 2024</td><td>En cámara · <a href="https://youtu.be/85V_v2cBj1s" target="_blank" rel="noopener">CaboRojo.com</a> + NotiCel</td><td><strong style="color:#64748b">⏳ SIN CONTESTAR</strong></td></tr>
 <tr><td>~<strong>$735K de FEMA para Isla Ratones</strong> — proyecto retirado; el cayo se hundió en 2020.</td><td>DRNA / Municipio · 2025-2026</td><td><a href="https://www.primerahora.com/noticias/puerto-rico/notas/a-la-deriva-isla-ratones-se-ahoga-su-reconstruccion/" target="_blank" rel="noopener">Primera Hora</a></td><td><strong style="color:#e11d48">❌ SE PERDIÓ</strong> · devuelto a FEMA</td></tr>
 </tbody>
