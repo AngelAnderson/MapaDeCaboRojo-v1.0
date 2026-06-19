@@ -40,6 +40,7 @@
     { "source": "/acceso", "destination": "/api/mapa-pages?page=acceso" },
     { "source": "/registro", "destination": "/api/mapa-pages?page=registro" },
     { "source": "/observatorio", "destination": "/api/mapa-pages?page=observatorio" },
+    { "source": "/promesas", "destination": "/api/mapa-pages?page=promesas" },
     { "source": "/mision", "destination": "/api/mapa-pages?page=mision" },
     { "source": "/transparencia", "destination": "/api/mapa-pages?page=transparencia" },
     { "source": "/equipo", "destination": "/api/mapa-pages?page=equipo" },

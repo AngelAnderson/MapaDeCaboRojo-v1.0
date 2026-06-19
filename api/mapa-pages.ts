@@ -2714,6 +2714,129 @@ async function handleRegistroSearch(req: any, res: any) {
   }
 }
 
+// =============== /promesas — Todo lo que el alcalde dijo en cámara ===============
+// Banco completo de promesas extraído de las entrevistas (archivo CaboRojo.com 2023-2024).
+// Fuente: El Cerebro pozo 'civico'. Organizado por tema, a lectura de 2do grado.
+function handlePromesas(_req: any, res: any) {
+  const row = (que: string, status: string, color: string) =>
+    `<tr><td>${que}</td><td><strong style="color:${color}">${status}</strong></td></tr>`
+  const NO = ['❌ NO', '#e11d48']
+  const SI = ['✅ HECHO', '#059669']
+  const MED = ['🟡 EMPEZÓ', '#d97706']
+  const ESP = ['⏳ SIN CONTESTAR', '#64748b']
+  const body = `
+<span class="not-prose inline-block bg-teal-100 text-teal-800 text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full">Observatorio Cívico · No-partidista · Cabo Rojo</span>
+
+<h1 class="mt-4">Todo lo que el alcalde dijo en cámara.</h1>
+
+<p class="text-lg text-slate-600 mt-3"><strong>¿Qué es esto?</strong> Es la lista de lo que el alcalde de Cabo Rojo prometió o dijo en sus entrevistas con nosotros (2023-2024). Lo guardamos con su video. Aquí está, una por una. Tú decides cuál se hizo y cuál no.</p>
+
+<div class="not-prose mt-4 bg-white border border-slate-200 border-l-4 border-l-teal-600 rounded-lg p-4">
+  <p class="text-sm text-slate-700"><strong class="text-teal-700">Para la alcaldía:</strong> esto no es para pelear. Es una lista de trabajo. Lo que ya esté hecho, dilo con prueba y lo marcamos <strong>HECHO</strong> el mismo día. Lo que falta, dinos cuándo. El pueblo solo quiere saber.</p>
+</div>
+
+<p class="text-sm text-slate-600 mt-4">Cómo leer: <span class="font-bold text-emerald-700">✅ HECHO</span> · <span class="font-bold text-amber-600">🟡 EMPEZÓ</span> · <span class="font-bold text-rose-600">❌ NO</span> · <span class="font-bold text-slate-500">⏳ SIN CONTESTAR</span>. La mayoría dice "sin contestar" porque falta que la alcaldía responda con prueba.</p>
+
+<p class="text-sm text-slate-500 mt-2"><a href="/observatorio" class="text-teal-700 font-semibold">← Volver al Observatorio</a> · Cada cosa salió de entrevistas en video de CaboRojo.com con el alcalde.</p>
+
+<h2>🗑️ Basura y vertedero</h2>
+<table><thead><tr><th>Lo que dijo</th><th>¿Y?</th></tr></thead><tbody>
+${row('Nueva celda del vertedero "con capacidad de diez años". Dijo que ya se celebró la presubasta.', ...ESP)}
+${row('El vertedero ya no es vertedero: ahora es "centro de transbordo" que lleva la basura a Mayagüez.', ...MED)}
+${row('Tres excavadoras, una siempre en el vertedero montando la basura para Mayagüez.', ...ESP)}
+${row('querellavirtual del municipio para reportar escombros que no recogieron.', ...ESP)}
+${row('Limpieza "2.0": sacaron 4,000 yardas de escombro con 450 voluntarios.', ...SI)}
+${row('Ordenanza de un fee de $250 al año (escombros/manejo).', ...ESP)}
+</tbody></table>
+
+<h2>🕳️ Hoyos, asfalto y carreteras</h2>
+<table><thead><tr><th>Lo que dijo</th><th>¿Y?</th></tr></thead><tbody>
+${row('"El 90% de los caminos del pueblo estaban destruidos, ya llevamos un 60% mejorado."', ...MED)}
+${row('La tonelada de asfalto subió de $99 a $129.', ...SI)}
+${row('Asfaltaron la carretera 308 (parte) y la de Bajajá (completa).', ...MED)}
+${row('Repavimentar la carretera de Sabana Alta (esperando los fondos).', ...ESP)}
+${row('Próximamente el camino a Masín, en Las Palmas.', ...ESP)}
+${row('Cerca de $9 millones invertidos en caminos.', ...ESP)}
+${row('Un camión de bacheo para tapar hoyos.', ...ESP)}
+</tbody></table>
+
+<h2>👮 Policía y seguridad</h2>
+<table><thead><tr><th>Lo que dijo</th><th>¿Y?</th></tr></thead><tbody>
+${row('Subir el sueldo de la policía de ~$1,800 a cerca de $2,000, "y el año que viene un poco más".', ...ESP)}
+${row('"La policía estuvo en 60 y pico, ya está en 20 y pico" efectivos.', ...ESP)}
+${row('3 cadetes nuevos listos para marzo, y otra academia de 10 más.', ...ESP)}
+${row('Comprar tasers y cámaras en el pecho (body cams) para los policías.', ...ESP)}
+${row('Cámaras de vigilancia 24 horas en Boquerón y en el sector del vertedero.', ...ESP)}
+${row('Seis patrullas nuevas y chalecos nuevos.', ...ESP)}
+${row('Una guagua de rescate (400 galones de agua, 75 de espuma).', ...ESP)}
+</tbody></table>
+
+<h2>💧 Agua</h2>
+<table><thead><tr><th>Lo que dijo</th><th>¿Y?</th></tr></thead><tbody>
+${row('Un sistema de bombeo de $8 millones que "va a proteger de por vida la Bahía de Boquerón".', ...ESP)}
+${row('Llevar las aguas a las plantas de Villataína y de ahí a Lajas.', ...ESP)}
+${row('Una guagua de rescate con 500 galones de agua (en 4 meses).', ...ESP)}
+</tbody></table>
+
+<h2>🏖️ Faro, playas y balneario</h2>
+<table><thead><tr><th>Lo que dijo</th><th>¿Y?</th></tr></thead><tbody>
+${row('Reabrir el Faro Los Morrillos "en unos meses", con fondos de Fiona. Sigue cerrado.', ...NO)}
+${row('Hacer el Balneario de Boquerón "uno de los lugares más icónicos de Puerto Rico".', ...ESP)}
+${row('En el Combate: el desvío de Polo Gea, un proyecto de $3-4 millones.', ...ESP)}
+${row('Cunetones frente a las casas del Camino Hernández.', ...ESP)}
+${row('Aduana Federal construye un edificio de $18M en Boquerón (proyecto federal, ya comenzó).', ...SI)}
+</tbody></table>
+
+<h2>🏀 Deporte, escuelas y plaza</h2>
+<table><thead><tr><th>Lo que dijo</th><th>¿Y?</th></tr></thead><tbody>
+${row('Usar los $5.2M de FEMA del Coliseo Rebekah Colberg antes del 20 de septiembre de 2026.', ...MED)}
+${row('Canchas profesionales en la Rebeca Colberg + 2 bleachers para 400 fanáticos.', ...ESP)}
+${row('Pequeñas ligas: 200+ niños con una inversión de $22,000.', ...SI)}
+${row('Techo nuevo en la cancha de Betances y obra en Puerto Real.', ...ESP)}
+${row('$20 millones para la escuela Inés María Mendoza.', ...ESP)}
+${row('Sistema profesional de voleibol ($5,000) que "ya llegó".', ...SI)}
+${row('Un mini estadio de fútbol: 300 butacas y camerinos para dos equipos.', ...ESP)}
+${row('La plaza "va a quedar preciosa" (faltan los permisos ambientales).', ...ESP)}
+${row('Damas de llaves (ayuda a personas): de 22 que había, ya cerca de 90.', ...MED)}
+</tbody></table>
+
+<h2>💰 Dinero y presupuesto</h2>
+<table><thead><tr><th>Lo que dijo</th><th>¿Y?</th></tr></thead><tbody>
+${row('"Cuando saque del medio el pago de esos préstamos, nos va a sobrar mucho más."', ...ESP)}
+${row('"En dos años la Junta debe estar diciendo adiós" (salir del control fiscal).', ...ESP)}
+${row('Endoso condicionado a Esencia: la condición es que el proyecto tenga su propia agua.', ...ESP)}
+</tbody></table>
+
+<div class="not-prose mt-6 bg-teal-900 text-white rounded-xl p-5">
+  <p class="font-bold text-base">¿Falta alguna? ¿Alguna ya está hecha?</p>
+  <p class="text-sm text-teal-100 mt-1">Escríbele al Veci: textea <strong>OBSERVATORIO al ${PHONE_CTA}</strong>. Si tienes prueba de que algo se hizo, la añadimos. Esto se mantiene vivo.</p>
+</div>
+
+<blockquote>No escogemos a nadie. Organizamos lo que se dijo y lo ponemos donde todos lo vean. Si esto te ayuda a entender mejor tu pueblo, llégate. Si no, sigue tu camino.</blockquote>
+
+<p class="text-xs text-slate-500 mt-4">Todas estas frases salen de entrevistas públicas en video de CaboRojo.com con el alcalde Jorge Morales (2023-2024), guardadas en el archivo del pueblo. Récord, no acusación. El video completo está en cada caso; se enlaza a medida que se confirma. <a href="/observatorio" class="text-teal-700 font-semibold">Ver el Observatorio →</a></p>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Dataset',
+    name: 'Promesas del alcalde de Cabo Rojo en cámara',
+    description: 'Lista de compromisos y declaraciones del alcalde de Cabo Rojo en entrevistas públicas de video (2023-2024), organizada por tema con su estado. No-partidista.',
+    creator: { '@type': 'Organization', name: 'mapadecaborojo.com' },
+    spatialCoverage: { '@type': 'Place', name: 'Cabo Rojo, Puerto Rico' },
+    isAccessibleForFree: true,
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=1800')
+  res.status(200).send(layout({
+    title: 'Las promesas del alcalde de Cabo Rojo, en cámara',
+    description: 'Todo lo que el alcalde de Cabo Rojo dijo o prometió en sus entrevistas (2023-2024), tema por tema, con su estado. Récord público, no-partidista.',
+    slug: 'promesas',
+    bodyHtml: body,
+    jsonLd,
+    ogImage: '/og/observatorio.png',
+  }))
+}
+
 // =============== /observatorio — Observatorio Cívico de Cabo Rojo ===============
 // Lista verificada de problemas reales del pueblo (demanda real *7711 + récord público)
 // + el examen que todo aspirante debe contestar + herramientas ciudadanas. No-partidista.
@@ -2829,14 +2952,15 @@ function handleObservatorio(_req: any, res: any) {
 <li>¿Cómo evitas que la familia caborrojeña se quede sin poder comprar casa en su propio pueblo?</li>
 </ol>
 
-<h2>Quién nos representa hoy</h2>
-<p class="text-sm text-slate-600">Ficha neutral, récord público. Aún no hay candidatos declarados para 2028: cuando los haya, reciben la misma ficha y el mismo examen.</p>
+<h2>¿Quién nos representa? ¿Y qué le toca a cada uno?</h2>
+<p class="text-sm text-slate-600">Ficha neutral, récord público. Cada uno tiene su trabajo. Si sabes qué le toca a cada quién, sabes a quién pedirle cuentas. Aún no hay candidatos declarados para 2028: cuando los haya, reciben la misma ficha y el mismo examen.</p>
 <div class="not-prose grid sm:grid-cols-3 gap-3 mt-3">
   <div class="bg-white border border-slate-200 rounded-lg p-4">
     <div class="text-xs text-slate-500 uppercase font-bold">Alcalde · Cabo Rojo</div>
     <div class="font-bold text-slate-900 mt-1">Jorge A. Morales Wiscovitch</div>
     <span class="inline-block text-xs font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded mt-1">PNP</span>
     <p class="text-xs text-slate-600 mt-2">Desde ene 2021 · 2 términos · hasta ene 2029.</p>
+    <div class="mt-2 text-xs bg-slate-50 border border-slate-200 rounded p-2"><strong class="text-teal-700">Qué le toca:</strong> lo de adentro del pueblo. Basura, calles del pueblo, permisos, vertedero, policía municipal y el presupuesto del municipio.</div>
     <a href="https://consultacontratos.ocpr.gov.pr/" target="_blank" rel="noopener" class="text-xs text-teal-700 font-semibold mt-2 inline-block">Ver contratos del municipio →</a>
   </div>
   <div class="bg-white border border-slate-200 rounded-lg p-4">
@@ -2844,14 +2968,16 @@ function handleObservatorio(_req: any, res: any) {
     <div class="font-bold text-slate-900 mt-1">Emilio Carlo Acosta</div>
     <span class="inline-block text-xs font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded mt-1">PNP</span>
     <p class="text-xs text-slate-600 mt-2">Desde ene 2025. Distrito 20 = Cabo Rojo + Hormigueros + San Germán.</p>
-    <a href="https://www.camara.pr.gov/representante/" target="_blank" rel="noopener" class="text-xs text-teal-700 font-semibold mt-2 inline-block">Cámara de Representantes →</a>
+    <div class="mt-2 text-xs bg-slate-50 border border-slate-200 rounded p-2"><strong class="text-teal-700">Qué le toca:</strong> hacer leyes y conseguir dinero (asignaciones) para el distrito desde la Cámara, en San Juan. No recoge basura: eso es del alcalde.</div>
+    <a href="https://www.camara.pr.gov/team/emilio-carlo/" target="_blank" rel="noopener" class="text-xs text-teal-700 font-semibold mt-2 inline-block">Su página en la Cámara →</a>
   </div>
   <div class="bg-white border border-slate-200 rounded-lg p-4">
     <div class="text-xs text-slate-500 uppercase font-bold">Senadores · Distrito IV</div>
     <div class="font-bold text-slate-900 mt-1">Jeison Rosa Ramos · Karen M. Román Rodríguez</div>
     <span class="inline-block text-xs font-bold bg-slate-100 text-slate-700 px-2 py-0.5 rounded mt-1">PNP</span>
-    <p class="text-xs text-slate-600 mt-2">2025-2029. El distrito senatorial cubre 12 pueblos, incluido Cabo Rojo.</p>
-    <a href="https://senado.pr.gov/" target="_blank" rel="noopener" class="text-xs text-teal-700 font-semibold mt-2 inline-block">Senado de PR →</a>
+    <p class="text-xs text-slate-600 mt-2">Juramentaron ene 2025 · hasta ene 2029. El distrito cubre 12 pueblos del oeste, incluido Cabo Rojo.</p>
+    <div class="mt-2 text-xs bg-slate-50 border border-slate-200 rounded p-2"><strong class="text-teal-700">Qué le toca:</strong> lo mismo que el representante, pero en el Senado: leyes y fondos para los 12 pueblos del oeste.</div>
+    <a href="https://senado.pr.gov/index.cfm?module=senadores" target="_blank" rel="noopener" class="text-xs text-teal-700 font-semibold mt-2 inline-block">Directorio del Senado →</a>
   </div>
 </div>
 
@@ -2878,6 +3004,10 @@ function handleObservatorio(_req: any, res: any) {
 </tbody>
 </table>
 <p class="text-xs text-slate-500">Las citas en cámara salen de entrevistas públicas de CaboRojo.com con el alcalde (2023-2024). El video y el minuto exacto están en el archivo; se enlazan a medida que se confirman. Récord, no acusación: cada quien puede ver la entrevista completa y juzgar.</p>
+
+<div class="not-prose mt-4">
+  <a href="/promesas" class="inline-block bg-teal-700 hover:bg-teal-800 text-white font-bold px-5 py-3 rounded-lg">Ver las 60+ cosas que el alcalde dijo en cámara, tema por tema →</a>
+</div>
 
 <h2>Verifícalo tú mismo</h2>
 <p>No tienes que creernos a nosotros ni a ningún político. El gobierno ya tiene estas herramientas públicas y gratuitas. Casi nadie sabe que existen.</p>
@@ -2968,6 +3098,7 @@ export default async function handler(req: any, res: any) {
     case 'registro-data': return await handleRegistroData(req, res)
     case 'registro-search': return await handleRegistroSearch(req, res)
     case 'observatorio': return handleObservatorio(req, res)
+    case 'promesas': return handlePromesas(req, res)
     case 'mision': return handleMision(req, res)
     case 'transparencia': return await handleTransparencia(req, res)
     case 'equipo': return handleEquipo(req, res)
