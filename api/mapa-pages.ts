@@ -3036,6 +3036,45 @@ function handleObservatorio(_req: any, res: any) {
 </div>
 <blockquote class="text-sm">"Opinión cualificada" no es lo peor (eso sería "adversa"): el Contralor encontró incumplimientos importantes pero no generalizados. Récord público, no acusación, con el número de informe para que lo verifiques tú. El nepotismo y la empleomanía política son un patrón de todo Puerto Rico, no de un pueblo ni de una persona.</blockquote>
 
+<h2>Los problemas de todos los días</h2>
+<p>No todo es Esencia y millones. Estos son los que tocan al vecino cada día. Cada uno con la verdad de fondo y a quién se le reporta. No es para pelear: es para resolver.</p>
+<div class="not-prose grid sm:grid-cols-2 gap-3 mt-4">
+  <div class="bg-white border border-slate-200 rounded-lg p-4">
+    <div class="text-2xl">🔊</div>
+    <div class="font-bold text-slate-900 mt-1">Ruido y música a todo volumen</div>
+    <div class="text-sm text-slate-600 mt-1">La paz también es un derecho. Hay ordenanza municipal de ruido.</div>
+    <div class="mt-2 text-xs bg-teal-50 border border-teal-200 rounded p-2"><strong>Reporta a:</strong> Policía Municipal · <a href="tel:7878511025">787-851-1025</a></div>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-lg p-4">
+    <div class="text-2xl">🐕</div>
+    <div class="font-bold text-slate-900 mt-1">Animales realengos en la calle</div>
+    <div class="text-sm text-slate-600 mt-1">No es culpa del perro. Es de quien lo suelta. La solución de fondo es esterilizar.</div>
+    <div class="mt-2 text-xs bg-teal-50 border border-teal-200 rounded p-2"><strong>Reporta a:</strong> el municipio · <a href="tel:7878511025">787-851-1025</a> · o pregúntale al Veci quién esteriliza</div>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-lg p-4">
+    <div class="text-2xl">🗑️</div>
+    <div class="font-bold text-slate-900 mt-1">Vertederos clandestinos (basura tirada)</div>
+    <div class="text-sm text-slate-600 mt-1">El que ensucia y el que limpia viven en el mismo pueblo. Tiene quién lo recoja.</div>
+    <div class="mt-2 text-xs bg-teal-50 border border-teal-200 rounded p-2"><strong>Reporta a:</strong> Control Ambiental del municipio (querellavirtual) · daño grande al ambiente: DRNA</div>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-lg p-4">
+    <div class="text-2xl">🕳️</div>
+    <div class="font-bold text-slate-900 mt-1">Hoyos y poca luz en las calles</div>
+    <div class="text-sm text-slate-600 mt-1">Calles del pueblo: las arregla Obras Públicas. Carreteras grandes (PR-100, 307): el estado.</div>
+    <div class="mt-2 text-xs bg-teal-50 border border-teal-200 rounded p-2"><strong>Reporta a:</strong> calle del pueblo → municipio <a href="tel:7878511025">787-851-1025</a> · carretera grande → <a href="tel:311">311</a></div>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-lg p-4">
+    <div class="text-2xl">🚗</div>
+    <div class="font-bold text-slate-900 mt-1">Carros abandonados en sitios públicos</div>
+    <div class="text-sm text-slate-600 mt-1">Es espacio de todos que se pierde. Se puede remover.</div>
+    <div class="mt-2 text-xs bg-teal-50 border border-teal-200 rounded p-2"><strong>Reporta a:</strong> Policía Municipal · <a href="tel:7878511025">787-851-1025</a> (toma foto y anota dónde)</div>
+  </div>
+  <div class="bg-slate-900 text-white rounded-lg p-4 flex flex-col justify-center">
+    <div class="text-sm font-bold">¿No sabes a quién se reporta lo tuyo?</div>
+    <div class="text-sm text-slate-300 mt-1">Pregúntale al Veci: textea <strong>CABOROJO al ${PHONE_CTA}</strong> y te dice quién resuelve.</div>
+  </div>
+</div>
+
 <h2>¿Quién arregla qué? Para que no le grites al que no es.</h2>
 <p>Mucha gente se molesta con el alcalde por algo que le toca a LUMA. O con el representante por algo del municipio. Aquí está, fácil, a quién le toca cada cosa.</p>
 <p class="text-sm text-slate-600 mt-1">Y debajo de cada uno, <strong>cómo hacerlo</strong>: el número o la página donde se reporta. Guárdalo.</p>
