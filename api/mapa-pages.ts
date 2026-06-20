@@ -2719,16 +2719,95 @@ async function handleRegistroSearch(req: any, res: any) {
   }
 }
 
+// =============== CAPA DE DATOS CÍVICA — promesas (drive /observatorio + /promesas + pueblos futuros) ===============
+// Editar UN status aquí actualiza ambas páginas. Replicable: otro pueblo = otro array.
+// Un updater autónomo puede editar 'status'/'detail' sin tocar HTML.
+const CIVIC_STATUS: Record<string, [string, string]> = {
+  HECHO:     ['✅ HECHO', '#059669'],
+  EMPEZO:    ['🟡 EMPEZÓ', '#d97706'],
+  NO:        ['❌ NO', '#e11d48'],
+  ESPERANDO: ['⏳ SIN CONTESTAR', '#64748b'],
+}
+// promesa: { topic, text, quien, fecha, src:[url,label]|null, status, detail, feat? }
+type Promesa = { topic: string; text: string; quien: string; src: [string, string] | null; status: string; detail: string; feat?: boolean }
+const PROMESAS_CABOROJO: Promesa[] = [
+  // 🗑️ BASURA Y VERTEDERO
+  { topic: '🗑️ Basura y vertedero', text: 'Nueva celda del vertedero "con capacidad de diez años". Dijo que ya se celebró la presubasta.', quien: 'Alcalde Morales · mar 2024', src: ['https://youtu.be/-HKfFUfE9nk', 'CaboRojo.com'], status: 'ESPERANDO', detail: '', feat: true },
+  { topic: '🗑️ Basura y vertedero', text: 'El vertedero ya no es vertedero: ahora es "centro de transbordo" que lleva la basura a Mayagüez.', quien: 'Alcalde Morales · 2024', src: null, status: 'EMPEZO', detail: '' },
+  { topic: '🗑️ Basura y vertedero', text: 'Tres excavadoras, una siempre en el vertedero montando la basura para Mayagüez.', quien: 'Alcalde Morales · 2023', src: null, status: 'ESPERANDO', detail: '' },
+  { topic: '🗑️ Basura y vertedero', text: 'querellavirtual del municipio para reportar escombros que no recogieron.', quien: 'Alcalde Morales · 2023', src: null, status: 'ESPERANDO', detail: '' },
+  { topic: '🗑️ Basura y vertedero', text: 'Limpieza "2.0": sacaron 4,000 yardas de escombro con 450 voluntarios.', quien: 'Alcalde Morales · 2024', src: null, status: 'HECHO', detail: '' },
+  { topic: '🗑️ Basura y vertedero', text: 'Ordenanza de un fee de $250 al año (escombros/manejo).', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
+  // 🕳️ HOYOS, ASFALTO Y CARRETERAS
+  { topic: '🕳️ Hoyos, asfalto y carreteras', text: '"El 90% de los caminos del pueblo estaban destruidos, ya llevamos un 60% mejorado." La tonelada subió de $99 a $129.', quien: 'Alcalde Morales · mar 2024', src: ['https://youtu.be/-HKfFUfE9nk', 'CaboRojo.com'], status: 'EMPEZO', detail: 'dice 60% · verifícalo en tu calle', feat: true },
+  { topic: '🕳️ Hoyos, asfalto y carreteras', text: 'Asfaltaron la carretera 308 (parte) y la de Bajajá (completa).', quien: 'Alcalde Morales · 2024', src: null, status: 'EMPEZO', detail: '' },
+  { topic: '🕳️ Hoyos, asfalto y carreteras', text: 'Repavimentar la carretera de Sabana Alta (esperando los fondos).', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
+  { topic: '🕳️ Hoyos, asfalto y carreteras', text: 'Próximamente el camino a Masín, en Las Palmas.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
+  { topic: '🕳️ Hoyos, asfalto y carreteras', text: 'Cerca de $9 millones invertidos en caminos + un camión de bacheo.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
+  // 👮 POLICÍA Y SEGURIDAD
+  { topic: '👮 Policía y seguridad', text: 'Subir el sueldo de la policía de ~$1,800 a cerca de $2,000, "y el año que viene un poco más".', quien: 'Alcalde Morales · jun 2023', src: ['https://youtu.be/x7LX3y4otNQ', 'CaboRojo.com'], status: 'HECHO', detail: 'presupuesto 2025-26 lo pone en $2,180/mes', feat: true },
+  { topic: '👮 Policía y seguridad', text: '"La policía estuvo en 60 y pico, ya está en 20 y pico." Prometió 6 patrullas y chalecos nuevos.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: 'récord del propio alcalde', feat: true },
+  { topic: '👮 Policía y seguridad', text: '3 cadetes nuevos listos para marzo, y otra academia de 10 más.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
+  { topic: '👮 Policía y seguridad', text: 'Comprar tasers y cámaras en el pecho (body cams) para los policías.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
+  { topic: '👮 Policía y seguridad', text: 'Cámaras de vigilancia 24 horas en Boquerón y en el sector del vertedero.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
+  { topic: '👮 Policía y seguridad', text: 'Una guagua de rescate (400 galones de agua, 75 de espuma).', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
+  // 💧 AGUA
+  { topic: '💧 Agua', text: 'Un sistema de bombeo de $8 millones que "va a proteger de por vida la Bahía de Boquerón".', quien: 'Alcalde Morales · mar 2024', src: ['https://youtu.be/-HKfFUfE9nk', 'CaboRojo.com'], status: 'EMPEZO', detail: '$7.8M asignados, ~70% a mar 2026', feat: true },
+  { topic: '💧 Agua', text: 'Llevar las aguas a las plantas de Villataína y de ahí a Lajas.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
+  // 🏖️ FARO, PLAYAS Y BALNEARIO
+  { topic: '🏖️ Faro, playas y balneario', text: 'Reabrir el Faro Los Morrillos "en unos meses", con fondos de Fiona. Admitió que el municipio dejó vencer el acuerdo de manejo en 2016.', quien: 'Alcalde Morales · 2024', src: ['https://youtu.be/-HKfFUfE9nk', 'CaboRojo.com'], status: 'NO', detail: 'cerrado a 2026', feat: true },
+  { topic: '🏖️ Faro, playas y balneario', text: 'Hacer el Balneario de Boquerón "uno de los lugares más icónicos de Puerto Rico".', quien: 'Alcalde Morales · 2024', src: null, status: 'EMPEZO', detail: 'traspaso al municipio en proceso (ordenanza 2024-25)', feat: true },
+  { topic: '🏖️ Faro, playas y balneario', text: 'Aduana Federal construye un edificio de $18M en Boquerón (proyecto federal, ya comenzó).', quien: 'Alcalde Morales · 2024', src: null, status: 'HECHO', detail: 'proyecto federal de CBP, no municipal', feat: true },
+  { topic: '🏖️ Faro, playas y balneario', text: 'En el Combate: el desvío de Polo Gea, un proyecto de $3-4 millones.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
+  { topic: '🏖️ Faro, playas y balneario', text: 'Cunetones frente a las casas del Camino Hernández.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
+  // 🏀 DEPORTE, ESCUELAS Y PLAZA
+  { topic: '🏀 Deporte, escuelas y plaza', text: 'Usar los $5.2M de FEMA del Coliseo Rebekah Colberg antes del 20 de septiembre de 2026.', quien: 'Municipio · límite 20 sept 2026', src: ['https://youtu.be/WpizUMfP3rc', 'alcalde en cámara'], status: 'EMPEZO', detail: 'obras empezaron feb 2026 · reloj corriendo', feat: true },
+  { topic: '🏀 Deporte, escuelas y plaza', text: 'Canchas profesionales en la Rebeca Colberg + 2 bleachers para 400 fanáticos.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
+  { topic: '🏀 Deporte, escuelas y plaza', text: 'Pequeñas ligas: 200+ niños con una inversión de $22,000. Sistema profesional de voleibol ($5,000) "ya llegó".', quien: 'Alcalde Morales · 2024', src: null, status: 'HECHO', detail: '' },
+  { topic: '🏀 Deporte, escuelas y plaza', text: '$20 millones para la escuela Inés María Mendoza.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
+  { topic: '🏀 Deporte, escuelas y plaza', text: 'Un mini estadio de fútbol: 300 butacas y camerinos. La plaza "va a quedar preciosa" (faltan permisos).', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
+  { topic: '🏀 Deporte, escuelas y plaza', text: 'Damas de llaves (ayuda a personas): de 22 que había, ya cerca de 90.', quien: 'Alcalde Morales · 2024', src: null, status: 'EMPEZO', detail: '' },
+  // 💰 DINERO Y PRESUPUESTO
+  { topic: '💰 Dinero y presupuesto', text: 'Endoso condicionado a Esencia: la condición es que el proyecto tenga su propia agua.', quien: 'Alcaldía · 2024', src: ['https://youtu.be/85V_v2cBj1s', 'CaboRojo.com'], status: 'ESPERANDO', detail: '', feat: true },
+  { topic: '💰 Dinero y presupuesto', text: '~$735K de FEMA para Isla Ratones — proyecto retirado; el cayo se hundió en 2020.', quien: 'DRNA / Municipio · 2025-2026', src: ['https://www.primerahora.com/noticias/puerto-rico/notas/a-la-deriva-isla-ratones-se-ahoga-su-reconstruccion/', 'Primera Hora'], status: 'NO', detail: 'devuelto a FEMA', feat: true },
+  { topic: '💰 Dinero y presupuesto', text: '"Cuando saque del medio el pago de esos préstamos, nos va a sobrar mucho más." "En dos años la Junta debe estar diciendo adiós."', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
+]
+
+function civicBadge(status: string, detail: string): string {
+  const [label, color] = CIVIC_STATUS[status] || CIVIC_STATUS.ESPERANDO
+  return `<strong style="color:${color}">${label}</strong>${detail ? ' · ' + detail : ''}`
+}
+function civicSrcCell(p: Promesa): string {
+  if (!p.src) return 'En cámara · CaboRojo.com'
+  return `En cámara · <a href="${p.src[0]}" target="_blank" rel="noopener">${p.src[1]}</a>`
+}
+// Promesómetro (observatorio): solo featured, formato tabla
+function renderPromesometroRows(promesas: Promesa[]): string {
+  return promesas.filter(p => p.feat).map(p =>
+    `<tr><td>${p.text}</td><td>${p.quien}</td><td>${civicSrcCell(p)}</td><td>${civicBadge(p.status, p.detail)}</td></tr>`
+  ).join('\n')
+}
+// /promesas: todas, agrupadas por tema
+function renderPromesasByTopic(promesas: Promesa[]): string {
+  const topics: string[] = []
+  for (const p of promesas) if (!topics.includes(p.topic)) topics.push(p.topic)
+  return topics.map(t => {
+    const rows = promesas.filter(p => p.topic === t).map(p =>
+      `<tr><td>${p.text}</td><td>${civicBadge(p.status, p.detail)}</td></tr>`
+    ).join('\n')
+    return `<h2>${t}</h2>\n<table><thead><tr><th>Lo que dijo</th><th>¿Y?</th></tr></thead><tbody>\n${rows}\n</tbody></table>`
+  }).join('\n\n')
+}
+function civicCounts(promesas: Promesa[]): Record<string, number> {
+  const c: Record<string, number> = { HECHO: 0, EMPEZO: 0, NO: 0, ESPERANDO: 0 }
+  for (const p of promesas) c[p.status] = (c[p.status] || 0) + 1
+  return c
+}
+
 // =============== /promesas — Todo lo que el alcalde dijo en cámara ===============
 // Banco completo de promesas extraído de las entrevistas (archivo CaboRojo.com 2023-2024).
 // Fuente: El Cerebro pozo 'civico'. Organizado por tema, a lectura de 2do grado.
 function handlePromesas(_req: any, res: any) {
-  const row = (que: string, status: string, color: string) =>
-    `<tr><td>${que}</td><td><strong style="color:${color}">${status}</strong></td></tr>`
-  const NO = ['❌ NO', '#e11d48']
-  const SI = ['✅ HECHO', '#059669']
-  const MED = ['🟡 EMPEZÓ', '#d97706']
-  const ESP = ['⏳ SIN CONTESTAR', '#64748b']
   const body = `
 <span class="not-prose inline-block bg-teal-100 text-teal-800 text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full">Observatorio Cívico · No-partidista · Cabo Rojo</span>
 
@@ -2744,73 +2823,7 @@ function handlePromesas(_req: any, res: any) {
 
 <p class="text-sm text-slate-500 mt-2"><a href="/observatorio" class="text-teal-700 font-semibold">← Volver al Observatorio</a> · Cada cosa salió de entrevistas en video de CaboRojo.com con el alcalde.</p>
 
-<h2>🗑️ Basura y vertedero</h2>
-<table><thead><tr><th>Lo que dijo</th><th>¿Y?</th></tr></thead><tbody>
-${row('Nueva celda del vertedero "con capacidad de diez años". Dijo que ya se celebró la presubasta.', ...ESP)}
-${row('El vertedero ya no es vertedero: ahora es "centro de transbordo" que lleva la basura a Mayagüez.', ...MED)}
-${row('Tres excavadoras, una siempre en el vertedero montando la basura para Mayagüez.', ...ESP)}
-${row('querellavirtual del municipio para reportar escombros que no recogieron.', ...ESP)}
-${row('Limpieza "2.0": sacaron 4,000 yardas de escombro con 450 voluntarios.', ...SI)}
-${row('Ordenanza de un fee de $250 al año (escombros/manejo).', ...ESP)}
-</tbody></table>
-
-<h2>🕳️ Hoyos, asfalto y carreteras</h2>
-<table><thead><tr><th>Lo que dijo</th><th>¿Y?</th></tr></thead><tbody>
-${row('"El 90% de los caminos del pueblo estaban destruidos, ya llevamos un 60% mejorado."', ...MED)}
-${row('La tonelada de asfalto subió de $99 a $129.', ...SI)}
-${row('Asfaltaron la carretera 308 (parte) y la de Bajajá (completa).', ...MED)}
-${row('Repavimentar la carretera de Sabana Alta (esperando los fondos).', ...ESP)}
-${row('Próximamente el camino a Masín, en Las Palmas.', ...ESP)}
-${row('Cerca de $9 millones invertidos en caminos.', ...ESP)}
-${row('Un camión de bacheo para tapar hoyos.', ...ESP)}
-</tbody></table>
-
-<h2>👮 Policía y seguridad</h2>
-<table><thead><tr><th>Lo que dijo</th><th>¿Y?</th></tr></thead><tbody>
-${row('Subir el sueldo de la policía de ~$1,800 a cerca de $2,000, "y el año que viene un poco más". El presupuesto 2025-26 lo pone en $2,180/mes (sargento $2,380, teniente $2,630).', ...SI)}
-${row('"La policía estuvo en 60 y pico, ya está en 20 y pico" efectivos.', ...ESP)}
-${row('3 cadetes nuevos listos para marzo, y otra academia de 10 más.', ...ESP)}
-${row('Comprar tasers y cámaras en el pecho (body cams) para los policías.', ...ESP)}
-${row('Cámaras de vigilancia 24 horas en Boquerón y en el sector del vertedero.', ...ESP)}
-${row('Seis patrullas nuevas y chalecos nuevos.', ...ESP)}
-${row('Una guagua de rescate (400 galones de agua, 75 de espuma).', ...ESP)}
-</tbody></table>
-
-<h2>💧 Agua</h2>
-<table><thead><tr><th>Lo que dijo</th><th>¿Y?</th></tr></thead><tbody>
-${row('Un sistema de bombeo de $8 millones que "va a proteger de por vida la Bahía de Boquerón". El gobernador asignó $7.8M; a marzo 2026 iba cerca del 70% hecho.', ...MED)}
-${row('Llevar las aguas a las plantas de Villataína y de ahí a Lajas.', ...ESP)}
-${row('Una guagua de rescate con 500 galones de agua (en 4 meses).', ...ESP)}
-</tbody></table>
-
-<h2>🏖️ Faro, playas y balneario</h2>
-<table><thead><tr><th>Lo que dijo</th><th>¿Y?</th></tr></thead><tbody>
-${row('Reabrir el Faro Los Morrillos "en unos meses", con fondos de Fiona. Sigue cerrado.', ...NO)}
-${row('Hacer el Balneario de Boquerón "uno de los lugares más icónicos de Puerto Rico". El traspaso al municipio va en proceso (ordenanza 2024-25) y ya hay un centro de información turística.', ...MED)}
-${row('En el Combate: el desvío de Polo Gea, un proyecto de $3-4 millones.', ...ESP)}
-${row('Cunetones frente a las casas del Camino Hernández.', ...ESP)}
-${row('Aduana Federal construye un edificio de $18M en Boquerón (proyecto federal, ya comenzó).', ...SI)}
-</tbody></table>
-
-<h2>🏀 Deporte, escuelas y plaza</h2>
-<table><thead><tr><th>Lo que dijo</th><th>¿Y?</th></tr></thead><tbody>
-${row('Usar los $5.2M de FEMA del Coliseo Rebekah Colberg antes del 20 de septiembre de 2026.', ...MED)}
-${row('Canchas profesionales en la Rebeca Colberg + 2 bleachers para 400 fanáticos.', ...ESP)}
-${row('Pequeñas ligas: 200+ niños con una inversión de $22,000.', ...SI)}
-${row('Techo nuevo en la cancha de Betances y obra en Puerto Real.', ...ESP)}
-${row('$20 millones para la escuela Inés María Mendoza.', ...ESP)}
-${row('Sistema profesional de voleibol ($5,000) que "ya llegó".', ...SI)}
-${row('Un mini estadio de fútbol: 300 butacas y camerinos para dos equipos.', ...ESP)}
-${row('La plaza "va a quedar preciosa" (faltan los permisos ambientales).', ...ESP)}
-${row('Damas de llaves (ayuda a personas): de 22 que había, ya cerca de 90.', ...MED)}
-</tbody></table>
-
-<h2>💰 Dinero y presupuesto</h2>
-<table><thead><tr><th>Lo que dijo</th><th>¿Y?</th></tr></thead><tbody>
-${row('"Cuando saque del medio el pago de esos préstamos, nos va a sobrar mucho más."', ...ESP)}
-${row('"En dos años la Junta debe estar diciendo adiós" (salir del control fiscal).', ...ESP)}
-${row('Endoso condicionado a Esencia: la condición es que el proyecto tenga su propia agua.', ...ESP)}
-</tbody></table>
+${renderPromesasByTopic(PROMESAS_CABOROJO)}
 
 <div class="not-prose mt-6 bg-teal-900 text-white rounded-xl p-5">
   <p class="font-bold text-base">¿Falta alguna? ¿Alguna ya está hecha?</p>
@@ -2997,15 +3010,7 @@ function handleObservatorio(_req: any, res: any) {
 <table>
 <thead><tr><th>Lo que se prometió o se dijo</th><th>Quién · cuándo</th><th>Míralo tú mismo</th><th>¿Y?</th></tr></thead>
 <tbody>
-<tr><td><strong>Reabrir el Faro Los Morrillos</strong> "en unos meses". Admitió que el municipio dejó vencer el acuerdo de manejo y que parte del dinero de María "se perdió y lo tenemos que poner nosotros".</td><td>Alcalde Morales · mar 2024</td><td>En cámara · <a href="https://youtu.be/-HKfFUfE9nk" target="_blank" rel="noopener">CaboRojo.com</a></td><td><strong style="color:#e11d48">❌ NO</strong> · cerrado a 2026</td></tr>
-<tr><td>Usar los <strong>$5.2M de FEMA del Coliseo</strong> Rebekah Colberg antes del límite. El alcalde explicó la disputa con el asegurado.</td><td>Municipio · límite 20 sept 2026</td><td>FEMA/NotiCel + <a href="https://youtu.be/WpizUMfP3rc" target="_blank" rel="noopener">alcalde en cámara</a></td><td><strong style="color:#d97706">🟡 EMPEZÓ</strong> feb 2026 · reloj corriendo</td></tr>
-<tr><td>Nueva <strong>celda del vertedero</strong> "con capacidad de diez años": "ya se celebró la presubasta".</td><td>Alcalde Morales · mar 2024</td><td>En cámara · <a href="https://youtu.be/-HKfFUfE9nk" target="_blank" rel="noopener">CaboRojo.com</a></td><td><strong style="color:#64748b">⏳ SIN CONTESTAR</strong></td></tr>
-<tr><td>Subir el <strong>sueldo de la policía municipal</strong>: "no llega a los $1,800 ... llevarlo cerca de los $2,000, y el año que viene un poco más".</td><td>Alcalde Morales · jun 2023</td><td>En cámara · <a href="https://youtu.be/x7LX3y4otNQ" target="_blank" rel="noopener">CaboRojo.com</a> + Presupuesto municipal 2025-26</td><td><strong style="color:#059669">✅ HECHO</strong> · el presupuesto 2025-26 lo pone en $2,180/mes</td></tr>
-<tr><td><strong>Policía municipal:</strong> "estuvo en sesenta y pico, ya está en veintipico" efectivos. Prometió 3 cadetes nuevos, "seis patrullas" y chalecos nuevos.</td><td>Alcalde Morales · 2024</td><td>En cámara · <a href="https://youtu.be/-HKfFUfE9nk" target="_blank" rel="noopener">CaboRojo.com</a></td><td>Récord del propio alcalde</td></tr>
-<tr><td><strong>Asfalto:</strong> "el 90% de los caminos municipales estaban destruidos, ya llevamos un 60% mejorado". La tonelada subió de $99 a $129.</td><td>Alcalde Morales · mar 2024</td><td>En cámara · <a href="https://youtu.be/-HKfFUfE9nk" target="_blank" rel="noopener">CaboRojo.com</a></td><td><strong style="color:#d97706">🟡 DICE 60%</strong> · verifícalo en tu calle</td></tr>
-<tr><td><strong>Sistema de bombeo de $8M</strong> para Boquerón: "asignó ocho millones de dólares ... que va a proteger de por vida la Bahía de Boquerón".</td><td>Alcalde Morales · mar 2024</td><td>En cámara · <a href="https://youtu.be/-HKfFUfE9nk" target="_blank" rel="noopener">CaboRojo.com</a> + <a href="https://www.primerahora.com/noticias/gobierno-politica/notas/cabo-rojo-espera-por-el-traspaso-del-centro-vacacional-de-boqueron/" target="_blank" rel="noopener">Primera Hora</a></td><td><strong style="color:#d97706">🟡 EMPEZÓ</strong> · $7.8M asignados, ~70% a mar 2026</td></tr>
-<tr><td>Endoso condicionado a <strong>Esencia</strong> (condición: que tenga agua propia).</td><td>Alcaldía · 2024</td><td>En cámara · <a href="https://youtu.be/85V_v2cBj1s" target="_blank" rel="noopener">CaboRojo.com</a> + NotiCel</td><td><strong style="color:#64748b">⏳ SIN CONTESTAR</strong></td></tr>
-<tr><td>~<strong>$735K de FEMA para Isla Ratones</strong> — proyecto retirado; el cayo se hundió en 2020.</td><td>DRNA / Municipio · 2025-2026</td><td><a href="https://www.primerahora.com/noticias/puerto-rico/notas/a-la-deriva-isla-ratones-se-ahoga-su-reconstruccion/" target="_blank" rel="noopener">Primera Hora</a></td><td><strong style="color:#e11d48">❌ SE PERDIÓ</strong> · devuelto a FEMA</td></tr>
+${renderPromesometroRows(PROMESAS_CABOROJO)}
 </tbody>
 </table>
 <p class="text-xs text-slate-500">Las citas en cámara salen de entrevistas públicas de CaboRojo.com con el alcalde (2023-2024). El video y el minuto exacto están en el archivo; se enlazan a medida que se confirman. Récord, no acusación: cada quien puede ver la entrevista completa y juzgar.</p>
