@@ -2729,7 +2729,7 @@ const CIVIC_STATUS: Record<string, [string, string]> = {
   ESPERANDO: ['⏳ SIN CONTESTAR', '#64748b'],
 }
 // promesa: { topic, text, quien, fecha, src:[url,label]|null, status, detail, feat? }
-type Promesa = { topic: string; text: string; quien: string; src: [string, string] | null; status: string; detail: string; feat?: boolean }
+type Promesa = { topic: string; text: string; quien: string; src: [string, string] | null; status: string; detail: string; feat?: boolean; deadline?: string }
 const PROMESAS_CABOROJO: Promesa[] = [
   // 🗑️ BASURA Y VERTEDERO
   { topic: '🗑️ Basura y vertedero', text: 'Nueva celda del vertedero "con capacidad de diez años". Dijo que ya se celebró la presubasta.', quien: 'Alcalde Morales · mar 2024', src: ['https://youtu.be/-HKfFUfE9nk', 'CaboRojo.com'], status: 'ESPERANDO', detail: '', feat: true },
@@ -2761,7 +2761,7 @@ const PROMESAS_CABOROJO: Promesa[] = [
   { topic: '🏖️ Faro, playas y balneario', text: 'En el Combate: el desvío de Polo Gea, un proyecto de $3-4 millones.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
   { topic: '🏖️ Faro, playas y balneario', text: 'Cunetones frente a las casas del Camino Hernández.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
   // 🏀 DEPORTE, ESCUELAS Y PLAZA
-  { topic: '🏀 Deporte, escuelas y plaza', text: 'Usar los $5.2M de FEMA del Coliseo Rebekah Colberg antes del 20 de septiembre de 2026.', quien: 'Municipio · límite 20 sept 2026', src: ['https://youtu.be/WpizUMfP3rc', 'alcalde en cámara'], status: 'EMPEZO', detail: 'obras empezaron feb 2026 · reloj corriendo', feat: true },
+  { topic: '🏀 Deporte, escuelas y plaza', text: 'Usar los $5.2M de FEMA del Coliseo Rebekah Colberg antes del 20 de septiembre de 2026.', quien: 'Municipio · límite 20 sept 2026', src: ['https://youtu.be/WpizUMfP3rc', 'alcalde en cámara'], status: 'EMPEZO', detail: 'obras empezaron feb 2026 · reloj corriendo', feat: true , deadline: '2026-09-20' },
   { topic: '🏀 Deporte, escuelas y plaza', text: 'Canchas profesionales en la Rebeca Colberg + 2 bleachers para 400 fanáticos.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
   { topic: '🏀 Deporte, escuelas y plaza', text: 'Pequeñas ligas: 200+ niños con una inversión de $22,000. Sistema profesional de voleibol ($5,000) "ya llegó".', quien: 'Alcalde Morales · 2024', src: null, status: 'HECHO', detail: '' },
   { topic: '🏀 Deporte, escuelas y plaza', text: '$20 millones para la escuela Inés María Mendoza.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
@@ -2802,6 +2802,28 @@ function civicCounts(promesas: Promesa[]): Record<string, number> {
   const c: Record<string, number> = { HECHO: 0, EMPEZO: 0, NO: 0, ESPERANDO: 0 }
   for (const p of promesas) c[p.status] = (c[p.status] || 0) + 1
   return c
+}
+
+// =============== /civico.json — data cívica machine-readable (updater + bot/Veci + IA) ===============
+function handleCivicoJson(_req: any, res: any) {
+  const promesas = PROMESAS_CABOROJO
+  const out = {
+    municipio: 'Cabo Rojo',
+    alcalde: 'Jorge A. Morales Wiscovitch',
+    fuente: 'https://www.mapadecaborojo.com/observatorio',
+    nota: 'Record publico no-partidista. Promesas y declaraciones del alcalde en entrevistas de video (2023-2024).',
+    leyenda: { HECHO: 'cumplido', EMPEZO: 'en proceso', NO: 'no cumplido', ESPERANDO: 'sin verificar / falta respuesta del municipio' },
+    counts: civicCounts(promesas),
+    promesas: promesas.map(p => ({
+      tema: p.topic, texto: p.text, quien: p.quien,
+      video: p.src ? p.src[0] : null, status: p.status, detalle: p.detail || null,
+      deadline: p.deadline || null,
+    })),
+  }
+  res.setHeader('Content-Type', 'application/json; charset=utf-8')
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Cache-Control', 'public, max-age=900, s-maxage=900')
+  res.status(200).send(JSON.stringify(out, null, 2))
 }
 
 // =============== /promesas — Todo lo que el alcalde dijo en cámara ===============
@@ -3148,6 +3170,7 @@ export default async function handler(req: any, res: any) {
     case 'registro-search': return await handleRegistroSearch(req, res)
     case 'observatorio': return handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)
+    case 'civico-json': return handleCivicoJson(req, res)
     case 'mision': return handleMision(req, res)
     case 'transparencia': return await handleTransparencia(req, res)
     case 'equipo': return handleEquipo(req, res)
