@@ -154,8 +154,13 @@ function layout(opts: {
   .prose-narrative li { margin: 0.35rem 0; line-height: 1.55; }
   .prose-narrative blockquote { border-left: 4px solid #14b8a6; padding-left: 1rem; margin: 1rem 0; color: #475569; font-style: italic; }
   .prose-narrative table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
-  .prose-narrative th, .prose-narrative td { border: 1px solid #e2e8f0; padding: 0.5rem 0.75rem; text-align: left; }
+  .prose-narrative th, .prose-narrative td { border: 1px solid #e2e8f0; padding: 0.5rem 0.75rem; text-align: left; vertical-align: top; }
   .prose-narrative th { background: #f1f5f9; font-weight: 600; }
+  @media (max-width: 640px) {
+    .prose-narrative table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; font-size: 0.82rem; }
+    .prose-narrative th, .prose-narrative td { padding: 0.4rem 0.5rem; min-width: 7.5rem; }
+    .prose-narrative td:first-child, .prose-narrative th:first-child { min-width: 12rem; }
+  }
 </style>
 ${jsonLd}
 </head>
