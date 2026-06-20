@@ -362,7 +362,7 @@ export default async function handler(req: any, res: any) {
   };
   const catSeo = CATEGORY_SEO[cat];
 
-  const baseUrl = 'https://mapadecaborojo.com';
+  const baseUrl = 'https://www.mapadecaborojo.com';
   const pageUrl = `${baseUrl}/categoria/${esc(cat)}`;
   const alreadyHasCaboRojo = displayName.toLowerCase().includes('cabo rojo');
   const title = catSeo?.title ? `${catSeo.title} | MapaDeCaboRojo.com` : (alreadyHasCaboRojo ? `${displayName} | MapaDeCaboRojo.com` : `${displayName} en Cabo Rojo | MapaDeCaboRojo.com`);
@@ -376,6 +376,7 @@ export default async function handler(req: any, res: any) {
     endocrinologo: 'endocrinologos', endocrinologos: 'endocrinologos',
     neurologo: 'neurologos', neurologos: 'neurologos',
     ortopeda: 'ortopedas', ortopedas: 'ortopedas',
+    restaurante: 'restaurantes', restaurantes: 'restaurantes',
   };
   const ogImage = CATEGORY_OG[cat] ? `${baseUrl}/og/${CATEGORY_OG[cat]}.png` : '';
 

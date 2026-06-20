@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <text x="80" y="110" font-family="-apple-system, system-ui, sans-serif" font-size="22" font-weight="700" fill="#5eead4" letter-spacing="3">🍽️ DÓNDE COMER EN CABO ROJO</text>
+
+  <text x="80" y="235" font-family="-apple-system, system-ui, sans-serif" font-size="92" font-weight="800" fill="#ffffff" letter-spacing="-2">202 lugares</text>
+  <text x="80" y="335" font-family="-apple-system, system-ui, sans-serif" font-size="92" font-weight="800" fill="#5eead4" letter-spacing="-2">para comer.</text>
+
+  <rect x="80" y="378" width="700" height="56" rx="10" fill="rgba(255,255,255,0.08)"/>
+  <text x="100" y="415" font-family="ui-monospace, 'SF Mono', monospace" font-size="24" fill="#cbd5e1">Casi todos vamos a los mismos 3.</text>
+
+  <text x="80" y="490" font-family="-apple-system, system-ui, sans-serif" font-size="26" font-weight="500" fill="#cbd5e1">Abre la lista. Escoge uno que no conozcas. Dale.</text>
+
+  <text x="80" y="585" font-family="-apple-system, system-ui, sans-serif" font-size="20" font-weight="600" fill="#94a3b8">mapadecaborojo.com/categoria/restaurantes</text>
+
+  <text x="1150" y="395" font-family="-apple-system, system-ui, sans-serif" font-size="300" font-weight="900" fill="rgba(94,234,212,0.08)" text-anchor="end" letter-spacing="-10">202</text>
+</svg>
