@@ -2826,6 +2826,156 @@ function handleCivicoJson(_req: any, res: any) {
   res.status(200).send(JSON.stringify(out, null, 2))
 }
 
+// =============== Observatorio interactivo — submit + moderación de un clic ===============
+const CIVIC_KINDS = new Set(['problema', 'me_pasa', 'feedback_promesa', 'promesa_hecha', 'feedback_quien'])
+const CIVIC_TOPICS = new Set(['agua', 'basura', 'luz', 'oportunidades', 'otro'])
+const CIVIC_TOPIC_LABEL: Record<string, string> = { agua: '💧 Agua', basura: '🗑️ Basura', luz: '💡 Luz', oportunidades: '🌱 Lo que falta', otro: 'Otro' }
+
+function civicModToken(id: string): string {
+  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || 'x'
+  return createHash('sha256').update(id + ':' + secret).digest('hex').slice(0, 20)
+}
+
+async function notifyCivicSubmission(row: any, id: string): Promise<void> {
+  if (!RESEND_API_KEY) return
+  const base = `${SITE_URL}/api/mapa-pages?page=civico-moderate&id=${id}&t=${civicModToken(id)}`
+  const kindLabel: Record<string, string> = {
+    problema: '🆕 Problema nuevo', me_pasa: '🙋 "Me pasa a mí"',
+    feedback_promesa: '💬 Feedback de promesa', promesa_hecha: '✅ "Esto ya se hizo"',
+  }
+  const html = `<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto">
+    <h2 style="color:#0f766e">${kindLabel[row.kind] || row.kind}</h2>
+    <p style="font-size:15px;color:#334155;white-space:pre-wrap;background:#f8fafc;border-left:3px solid #0f766e;padding:12px 16px;border-radius:6px">${escapeHtml(row.body || '')}</p>
+    ${row.topic ? `<p style="font-size:13px;color:#64748b">Tema: <strong>${escapeHtml(row.topic)}</strong></p>` : ''}
+    ${row.ref ? `<p style="font-size:13px;color:#64748b">Sobre: <strong>${escapeHtml(row.ref)}</strong></p>` : ''}
+    ${row.contact ? `<p style="font-size:13px;color:#64748b">Contacto: <strong>${escapeHtml(row.contact)}</strong></p>` : ''}
+    ${row.proof_url ? `<p style="font-size:13px"><a href="${escapeHtml(row.proof_url)}">Ver prueba →</a></p>` : ''}
+    <div style="margin-top:20px">
+      <a href="${base}&action=approve" style="display:inline-block;background:#059669;color:#fff;font-weight:700;padding:12px 22px;border-radius:8px;text-decoration:none;margin-right:8px">✅ Aprobar y publicar</a>
+      <a href="${base}&action=reject" style="display:inline-block;background:#e11d48;color:#fff;font-weight:700;padding:12px 22px;border-radius:8px;text-decoration:none">❌ Rechazar</a>
+    </div>
+    <p style="font-size:12px;color:#94a3b8;margin-top:18px">Nada se publica hasta que aprietes Aprobar. Observatorio Cívico · mapadecaborojo.com/observatorio</p>
+  </div>`
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: FROM_EMAIL, to: REPLY_TO, reply_to: REPLY_TO, subject: `Observatorio: ${kindLabel[row.kind] || 'nueva entrada'}`, html }),
+    })
+  } catch { /* notify es best-effort, nunca rompe el submit */ }
+}
+
+async function handleCivicoSubmit(req: any, res: any) {
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  if (req.method === 'OPTIONS') { res.status(204).end(); return }
+  if (req.method !== 'POST') { res.status(405).json({ ok: false, error: 'POST only' }); return }
+  try {
+    let body: any = req.body
+    if (typeof body === 'string') { try { body = JSON.parse(body) } catch { body = {} } }
+    body = body || {}
+    const kind = String(body.kind || '')
+    if (!CIVIC_KINDS.has(kind)) { res.status(400).json({ ok: false, error: 'Tipo inválido.' }); return }
+    const text = String(body.body || '').trim().slice(0, 1200)
+    if (kind !== 'me_pasa' && text.length < 4) { res.status(400).json({ ok: false, error: 'Escribe un poco más para poder entenderlo.' }); return }
+    const topic = CIVIC_TOPICS.has(String(body.topic)) ? String(body.topic) : null
+    const ref = body.ref ? String(body.ref).slice(0, 120) : null
+    const contact = body.contact ? String(body.contact).slice(0, 160) : null
+    // Solo aceptar http/https para el link de prueba (bloquea javascript:/data:/etc. antes de guardar).
+    const proof = (() => {
+      if (!body.proof_url) return null
+      try {
+        const u = new URL(String(body.proof_url))
+        return (u.protocol === 'https:' || u.protocol === 'http:') ? u.toString().slice(0, 400) : null
+      } catch { return null }
+    })()
+    const ipRaw = (String(req.headers['x-forwarded-for'] || '').split(',')[0].trim()) || (req.socket && req.socket.remoteAddress) || ''
+    const row = {
+      kind, ref, topic,
+      body: text || '(reacción: me pasa a mí)',
+      contact, proof_url: proof,
+      source: 'web', ip_hash: hashIp(ipRaw), ua: String(req.headers['user-agent'] || '').slice(0, 300),
+    }
+    const { data, error } = await supabase.from('civic_submissions').insert(row).select('id').single()
+    if (error) { res.status(500).json({ ok: false, error: 'No se pudo guardar. Intenta luego.' }); return }
+    notifyCivicSubmission(row, data.id).catch(() => {})
+    res.status(200).json({ ok: true })
+  } catch { res.status(500).json({ ok: false, error: 'Error inesperado.' }) }
+}
+
+async function handleCivicoModerate(req: any, res: any) {
+  const id = String(req.query.id || '')
+  const action = String(req.query.action || '')
+  const t = String(req.query.t || '')
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  if (!id || (action !== 'approve' && action !== 'reject') || t !== civicModToken(id)) {
+    res.status(403).send('<body style="font-family:system-ui;padding:48px;text-align:center"><h2>No autorizado</h2><p>El enlace no es válido o ya expiró.</p></body>')
+    return
+  }
+  const status = action === 'approve' ? 'approved' : 'rejected'
+  await supabase.from('civic_submissions').update({ status, reviewed_at: new Date().toISOString() }).eq('id', id)
+  res.status(200).send(`<body style="font-family:system-ui,sans-serif;padding:48px;text-align:center;color:#0f172a"><h2>${action === 'approve' ? '✅ Aprobado y publicado' : '❌ Rechazado'}</h2><p style="color:#475569">Entrada ${id.slice(0, 8)} marcada como <strong>${status}</strong>.</p><a href="/observatorio" style="color:#0f766e;font-weight:700">← Ver el Observatorio</a></body>`)
+}
+
+// Formulario de submission reusable. El script cliente se incluye una vez por página vía CIVIC_FORM_SCRIPT.
+function civicSubmitForm(opts: { kind: string; ref?: string; showTopic?: boolean; showProof?: boolean; title: string; sub?: string; placeholder: string; cta: string; tone?: string }): string {
+  const tone = opts.tone || 'teal'
+  const border = tone === 'rose' ? 'border-l-rose-500' : 'border-l-teal-600'
+  const btn = tone === 'rose' ? 'bg-rose-600 hover:bg-rose-700' : 'bg-teal-700 hover:bg-teal-800'
+  const topicSel = opts.showTopic ? `<select name="topic" class="w-full mt-2 text-sm border border-slate-300 rounded-lg px-3 py-2"><option value="">¿De qué es? (opcional)</option><option value="agua">💧 Agua</option><option value="basura">🗑️ Basura / reciclaje</option><option value="luz">💡 Luz</option><option value="oportunidades">🌱 Algo que falta / oportunidad</option><option value="otro">Otro</option></select>` : ''
+  const proof = opts.showProof ? `<input name="proof_url" type="url" placeholder="Link a una foto o documento (opcional)" class="w-full mt-2 text-sm border border-slate-300 rounded-lg px-3 py-2">` : ''
+  return `<form class="civic-form not-prose bg-white border border-slate-200 border-l-4 ${border} rounded-lg p-4 mt-4" data-kind="${opts.kind}" data-ref="${opts.ref || ''}" onsubmit="return civicSubmit(this)">
+  <p class="font-bold text-slate-900">${opts.title}</p>
+  ${opts.sub ? `<p class="text-sm text-slate-600 mt-1">${opts.sub}</p>` : ''}
+  <textarea name="body" rows="3" placeholder="${opts.placeholder}" class="w-full mt-2 text-sm border border-slate-300 rounded-lg px-3 py-2"></textarea>
+  ${topicSel}
+  ${proof}
+  <input name="contact" placeholder="Tu WhatsApp o email (opcional, por si hay que confirmar)" class="w-full mt-2 text-sm border border-slate-300 rounded-lg px-3 py-2">
+  <button type="submit" class="mt-3 ${btn} text-white font-bold text-sm px-5 py-2.5 rounded-lg">${opts.cta}</button>
+  <p class="civic-msg text-sm mt-2"></p>
+  <p class="text-xs text-slate-400 mt-2">Un humano lo revisa antes de publicarlo. Aquí no se publica nada automático.</p>
+</form>`
+}
+
+function mePasaBtn(ref: string): string {
+  return `<button type="button" data-ref="${ref}" onclick="return civicMePasa(this)" class="mt-2 text-xs font-semibold text-teal-700 border border-teal-300 rounded-full px-3 py-1 hover:bg-teal-50">🙋 Esto me pasa a mí</button>`
+}
+
+// Renderiza lo que el pueblo añadió y Angel aprobó (live desde civic_submissions)
+function renderPuebloAdd(rows: Array<{ topic: string | null; body: string; created_at: string }>): string {
+  if (!rows.length) {
+    return `<p class="text-sm text-slate-500 italic">Todavía nadie ha añadido nada por aquí. Sé el primero: usa el botón de arriba. Lo que pase el filtro de un humano aparece en esta lista, con tu palabra, no la nuestra.</p>`
+  }
+  const items = rows.map(r => {
+    const tag = r.topic && CIVIC_TOPIC_LABEL[r.topic] ? `<span class="inline-block text-xs font-bold bg-slate-100 text-slate-600 px-2 py-0.5 rounded mr-2">${CIVIC_TOPIC_LABEL[r.topic]}</span>` : ''
+    return `<li class="bg-white border border-slate-200 rounded-lg p-3 text-sm text-slate-700">${tag}${escapeHtml(r.body)}</li>`
+  }).join('\n')
+  return `<ul class="not-prose space-y-2 mt-3">${items}</ul>`
+}
+
+const CIVIC_FORM_SCRIPT = `<script>
+function civicSubmit(f){
+  var msg=f.querySelector('.civic-msg'), btn=f.querySelector('button');
+  var p={kind:f.dataset.kind, ref:f.dataset.ref||null};
+  ['body','topic','contact','proof_url'].forEach(function(n){var el=f.querySelector('[name="'+n+'"]'); if(el&&el.value) p[n]=el.value;});
+  if(f.dataset.kind!=='me_pasa' && (!p.body||p.body.trim().length<4)){ msg.style.color='#e11d48'; msg.textContent='Escribe un poco más.'; return false; }
+  btn.disabled=true; var o=btn.textContent; btn.textContent='Enviando...';
+  fetch('/api/mapa-pages?page=civico-submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)})
+   .then(function(r){return r.json()}).then(function(d){
+     if(d&&d.ok){ f.reset(); msg.style.color='#059669'; msg.textContent='✅ Recibido. Un humano lo revisa antes de publicarlo. Gracias por construir el pueblo.'; btn.textContent='Enviado ✓'; }
+     else { msg.style.color='#e11d48'; msg.textContent=(d&&d.error)||'No se pudo enviar.'; btn.disabled=false; btn.textContent=o; }
+   }).catch(function(){ msg.style.color='#e11d48'; msg.textContent='Falló el envío. Intenta luego o textea al 787-417-7711.'; btn.disabled=false; btn.textContent=o; });
+  return false;
+}
+function civicMePasa(b){
+  b.disabled=true;
+  fetch('/api/mapa-pages?page=civico-submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kind:'me_pasa',ref:b.dataset.ref||''})})
+   .then(function(r){return r.json()}).then(function(){ b.textContent='✓ A mí también'; b.classList.add('opacity-60'); }).catch(function(){ b.disabled=false; });
+  return false;
+}
+</script>`
+
 // =============== /promesas — Todo lo que el alcalde dijo en cámara ===============
 // Banco completo de promesas extraído de las entrevistas (archivo CaboRojo.com 2023-2024).
 // Fuente: El Cerebro pozo 'civico'. Organizado por tema, a lectura de 2do grado.
@@ -2843,18 +2993,23 @@ function handlePromesas(_req: any, res: any) {
 
 <p class="text-sm text-slate-600 mt-4">Cómo leer: <span class="font-bold text-emerald-700">✅ HECHO</span> · <span class="font-bold text-amber-600">🟡 EMPEZÓ</span> · <span class="font-bold text-rose-600">❌ NO</span> · <span class="font-bold text-slate-500">⏳ SIN CONTESTAR</span>. La mayoría dice "sin contestar" porque falta que la alcaldía responda con prueba.</p>
 
-<p class="text-sm text-slate-500 mt-2"><a href="/observatorio" class="text-teal-700 font-semibold">← Volver al Observatorio</a> · Cada cosa salió de entrevistas en video de CaboRojo.com con el alcalde.</p>
+<p class="text-sm text-slate-500 mt-2"><a href="/observatorio" class="text-teal-700 font-semibold">← Volver al Observatorio</a> · <a href="/quien-responde" class="text-teal-700 font-semibold">¿Quién responde por esto? →</a> · Cada cosa salió de entrevistas en video de CaboRojo.com con el alcalde.</p>
 
 ${renderPromesasByTopic(PROMESAS_CABOROJO)}
 
 <div class="not-prose mt-6 bg-teal-900 text-white rounded-xl p-5">
   <p class="font-bold text-base">¿Falta alguna? ¿Alguna ya está hecha?</p>
-  <p class="text-sm text-teal-100 mt-1">Escríbele al Veci: textea <strong>OBSERVATORIO al ${PHONE_CTA}</strong>. Si tienes prueba de que algo se hizo, la añadimos. Esto se mantiene vivo.</p>
+  <p class="text-sm text-teal-100 mt-1">Lo puedes decir aquí mismo (abajo), o textea <strong>OBSERVATORIO al ${PHONE_CTA}</strong>. Lo revisa un humano antes de cambiar nada. Esto se mantiene vivo.</p>
 </div>
+
+${civicSubmitForm({ kind: 'promesa_hecha', showProof: true, tone: 'teal', title: '✅ "Esto ya se hizo"', sub: 'Si sabes que algo de esta lista ya está cumplido, dilo. Si tienes prueba (una foto, un link, un documento), mejor: lo marcamos HECHO el mismo día.', placeholder: '¿Cuál promesa, y cómo sabes que ya se hizo?', cta: 'Avisar que ya se hizo' })}
+
+${civicSubmitForm({ kind: 'feedback_promesa', tone: 'rose', title: '💬 Falta una, o algo no cuadra', sub: 'Si el alcalde dijo algo en cámara que no está en esta lista, o si crees que un estado está mal, escríbelo.', placeholder: 'Cuéntanos qué falta o qué corregir.', cta: 'Enviar feedback' })}
 
 <blockquote>No escogemos a nadie. Organizamos lo que se dijo y lo ponemos donde todos lo vean. Si esto te ayuda a entender mejor tu pueblo, llégate. Si no, sigue tu camino.</blockquote>
 
 <p class="text-xs text-slate-500 mt-4">Todas estas frases salen de entrevistas públicas en video de CaboRojo.com con el alcalde Jorge Morales (2023-2024), guardadas en el archivo del pueblo. Récord, no acusación. El video completo está en cada caso; se enlaza a medida que se confirma. <a href="/observatorio" class="text-teal-700 font-semibold">Ver el Observatorio →</a></p>
+${CIVIC_FORM_SCRIPT}
 `
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -2880,13 +3035,20 @@ ${renderPromesasByTopic(PROMESAS_CABOROJO)}
 // =============== /observatorio — Observatorio Cívico de Cabo Rojo ===============
 // Lista verificada de problemas reales del pueblo (demanda real *7711 + récord público)
 // + el examen que todo aspirante debe contestar + herramientas ciudadanas. No-partidista.
-function handleObservatorio(_req: any, res: any) {
+// Reanclado 2026-06-20: arranca por agua/basura/luz/oportunidades. Esencia parqueada (solo por su
+// impacto en servicios). Interactivo: el vecino añade y reacciona (moderado, civic_submissions).
+async function handleObservatorio(_req: any, res: any) {
+  const { data: puebloAddRows } = await supabase
+    .from('civic_submissions')
+    .select('topic,body,created_at')
+    .eq('status', 'approved').eq('kind', 'problema')
+    .order('created_at', { ascending: false }).limit(40)
   const body = `
 <span class="not-prose inline-block bg-teal-100 text-teal-800 text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full">Observatorio Cívico · No-partidista · Cabo Rojo y el Distrito 20</span>
 
 <h1 class="mt-4">La lista de problemas de Cabo Rojo.</h1>
 
-<p class="text-lg text-slate-600 mt-3"><strong>¿Qué es esto?</strong> Es lo que está pasando en Cabo Rojo, puesto en un solo sitio. Cada cosa trae su video, su fecha y de dónde sale. Tú lo ves. Tú decides.</p>
+<p class="text-lg text-slate-600 mt-3"><strong>¿Qué es esto?</strong> Es lo que está pasando en Cabo Rojo, puesto en un solo sitio. Cada cosa trae su número, su fecha y de dónde sale. Tú lo ves. Tú decides. Y si falta algo, lo añades tú.</p>
 
 <p class="text-lg text-slate-600 mt-2"><strong>¿Para qué?</strong> Para que el que manda tenga que contestar. Si algo ya se hizo, que lo diga y lo enseñe. Si no, que diga cuándo. Aquí no escogemos a nadie. Solo ponemos todo donde todos lo vean.</p>
 
@@ -2904,54 +3066,80 @@ function handleObservatorio(_req: any, res: any) {
   <a href="https://wa.me/17874177711?text=CABOROJO" class="shrink-0 bg-coral-500 bg-rose-500 hover:bg-rose-600 text-white font-bold px-5 py-3 rounded-lg text-center">Textea CABOROJO<br><span class="text-xs font-medium opacity-90">al ${PHONE_CTA}</span></a>
 </div>
 
-<h2>El tema que manda hoy: Esencia</h2>
-<p>No es la elección de 2028. Es el megaproyecto que decide qué clase de pueblo va a ser Cabo Rojo. Toda campaña que no tenga una postura clara sobre esto, está corriendo con los ojos cerrados.</p>
-<div class="not-prose grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
-  <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-center"><div class="text-2xl font-black text-rose-700">$2,000M</div><div class="text-xs text-slate-600 mt-1">inversión propuesta</div></div>
-  <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-center"><div class="text-2xl font-black text-rose-700">~$498M</div><div class="text-xs text-slate-600 mt-1">en créditos contributivos al hotel</div></div>
-  <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-center"><div class="text-2xl font-black text-rose-700">~3 MGD</div><div class="text-xs text-slate-600 mt-1">de agua: más de 1/3 del consumo del municipio</div></div>
-  <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-center"><div class="text-2xl font-black text-rose-700">+30 ton</div><div class="text-xs text-slate-600 mt-1">de basura al día (testimonio en vistas)</div></div>
-</div>
-<ul class="mt-4">
-<li><strong>Mar 2025:</strong> vistas públicas, protestas. Expertos advierten que no está resuelto el agua, la basura ni la energía.</li>
-<li><strong>Sept 2025:</strong> el DRNA <strong>rechaza</strong> el diseño por daño irreversible a especies protegidas y obstrucción del acceso a la playa.</li>
-<li><strong>24 dic 2025 (Nochebuena):</strong> OGPe aprueba la Declaración de Impacto Ambiental con 46 condiciones.</li>
-<li><strong>2026:</strong> querellas por tala, investigación en el Senado, coalición pide al alcalde retirar su endoso condicionado de 2024.</li>
-</ul>
-<div class="not-prose mt-4 bg-slate-900 rounded-lg p-4">
-  <div class="text-xs font-bold text-teal-300 uppercase tracking-wide mb-2">🎬 Míralo tú mismo · no nos creas a nosotros</div>
-  <div class="flex flex-col gap-2 text-sm">
-    <a href="https://youtu.be/Fv8WCuov9lA" target="_blank" rel="noopener" class="text-white hover:text-teal-300">▶ El geólogo que se atrevió a decir la verdad sobre Esencia</a>
-    <a href="https://youtu.be/UGyOSEhGRsU" target="_blank" rel="noopener" class="text-white hover:text-teal-300">▶ Proyecto Esencia: ¿Progreso o Peligro para Cabo Rojo?</a>
-    <a href="https://youtu.be/NFeo3v07rHA" target="_blank" rel="noopener" class="text-white hover:text-teal-300">▶ Por qué la AAA no contesta sobre el agua de Esencia</a>
+<h2>Lo que de verdad decide cómo se vive aquí: agua, basura, luz, y lo que falta.</h2>
+<p>No empezamos por la política ni por los millones. Empezamos por lo que tú vives cada día. Estos cuatro deciden si se vive bien en Cabo Rojo. Lo demás viene después.</p>
+<div class="not-prose grid sm:grid-cols-2 gap-3 mt-4">
+  <div class="bg-white border border-slate-200 border-l-4 border-l-sky-500 rounded-lg p-4">
+    <div class="text-2xl">💧</div>
+    <div class="font-bold text-slate-900 mt-1">El agua</div>
+    <p class="text-sm text-slate-600 mt-1">El suroeste es la región más seca de PR. El municipio consume 4.4 MGD y nadie ha dicho, por escrito, de dónde sale el agua de Cabo Rojo en los próximos 10 años.</p>
+    <p class="text-xs text-teal-700 font-semibold mt-2">¿Se fue el agua? No es el alcalde. Es la AAA: 787-620-2482.</p>
+    ${mePasaBtn('agua')}
+  </div>
+  <div class="bg-white border border-slate-200 border-l-4 border-l-rose-500 rounded-lg p-4">
+    <div class="text-2xl">🗑️</div>
+    <div class="font-bold text-slate-900 mt-1">La basura</div>
+    <p class="text-sm text-slate-600 mt-1">El vertedero tiene los años contados (préstamo de 2020, vida útil de ~10 años). No hay un programa real de reciclaje. La basura se manda a Mayagüez. Hay preguntas de dinero sin contestar (más abajo).</p>
+    <p class="text-xs text-teal-700 font-semibold mt-2">Calles, recogido, vertedero: eso sí es la Alcaldía.</p>
+    ${mePasaBtn('basura')}
+  </div>
+  <div class="bg-white border border-slate-200 border-l-4 border-l-amber-500 rounded-lg p-4">
+    <div class="text-2xl">💡</div>
+    <div class="font-bold text-slate-900 mt-1">La luz</div>
+    <p class="text-sm text-slate-600 mt-1">Se va la luz y la gente se molesta con el alcalde. No es él. Es LUMA y el gobierno central. Saber a quién reclamarle es la mitad de resolver.</p>
+    <p class="text-xs text-teal-700 font-semibold mt-2">Reporta a LUMA: 1-844-888-5862.</p>
+    ${mePasaBtn('luz')}
+  </div>
+  <div class="bg-white border border-slate-200 border-l-4 border-l-emerald-500 rounded-lg p-4">
+    <div class="text-2xl">🌱</div>
+    <div class="font-bold text-slate-900 mt-1">Lo que falta</div>
+    <p class="text-sm text-slate-600 mt-1">Cosas que el pueblo busca y no encuentra: lavandería, dentista, plomero, grúa. Cada búsqueda sin respuesta es una necesidad real, y muchas veces una oportunidad de negocio que hoy no existe aquí.</p>
+    <p class="text-xs text-teal-700 font-semibold mt-2">¿Te falta algo? Dilo aquí abajo.</p>
+    ${mePasaBtn('oportunidades')}
   </div>
 </div>
-<p class="text-xs text-slate-500 mt-3">Fuentes: Centro de Periodismo Investigativo (2025) · El Nuevo Día (dic 2025) · Marea Ecologista (sept 2025) · NotiCel (may 2026) · entrevistas en video de CaboRojo.com.</p>
+${civicSubmitForm({ kind: 'problema', showTopic: true, title: '¿Te falta un problema en esta lista? Añádelo.', sub: 'Tú vives aquí. Si hay algo que duele cada día y no está, escríbelo. Lo revisamos y, si pasa, aparece más abajo con tu palabra.', placeholder: 'Ejemplo: "En mi calle de Joyuda no recogen la basura hace 3 semanas" o "Hace falta una lavandería por el casco".', cta: 'Añadir al observatorio' })}
 
 <h2>Las preguntas del vertedero que nadie ha contestado</h2>
 <p>Esto salió en las vistas públicas y sigue sin respuesta. Los números son de récord público.</p>
 <div class="not-prose grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
   <div class="bg-slate-100 border border-slate-200 rounded-lg p-3 text-center"><div class="text-xl font-black text-teal-700">$2.2M</div><div class="text-xs text-slate-600 mt-1">préstamo 2020 → ~10 años de vida (vence cerca de 2030)</div></div>
   <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-center"><div class="text-xl font-black text-rose-700">-2 años</div><div class="text-xs text-slate-600 mt-1">que el huracán María ya le quitó</div></div>
-  <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-center"><div class="text-xl font-black text-rose-700">+30 ton/día</div><div class="text-xs text-slate-600 mt-1">la basura nueva de Esencia encima</div></div>
+  <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-center"><div class="text-xl font-black text-rose-700">$149K</div><div class="text-xs text-slate-600 mt-1">en un "smart city" abandonado (Contralor OC-24-04)</div></div>
   <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-center"><div class="text-xl font-black text-rose-700">12</div><div class="text-xs text-slate-600 mt-1">vertederos que el DRNA cierra en PR (2025-2027)</div></div>
 </div>
 <div class="not-prose mt-4 bg-white border border-slate-200 border-l-4 border-l-rose-500 rounded-lg p-4">
   <p class="font-bold text-slate-900 mb-2">Las 4 preguntas que el pueblo merece que le contesten, por escrito:</p>
   <ol class="list-decimal pl-5 text-sm text-slate-700 space-y-2">
-    <li>Si al vertedero le quedan unos 10 años, <strong>¿cuántos se come Esencia</strong> con sus 30+ toneladas diarias?</li>
+    <li>Si al vertedero le quedan unos 10 años, <strong>¿cuántos años de vida le quita</strong> la basura nueva que se le sume encima?</li>
     <li>Cuando se llene o lo cierren, <strong>¿quién paga para sacar la basura del pueblo</strong> y cuánto nos cuesta a nosotros?</li>
     <li><strong>¿Ya hay un plan?</strong> ¿Se quema basura, se recicla de verdad (vidrio incluido), o se tapa el hoyo hasta que reviente?</li>
     <li>El agua y la luz tampoco están resueltas (la AAA no confirmó capacidad, la AEE/LUMA no evaluó la demanda). <strong>¿Por qué se aprueba algo cuyos servicios básicos nadie ha garantizado?</strong></li>
   </ol>
 </div>
-<p class="text-xs text-slate-500">Fuentes: El Vocero / Metro (préstamo $2.2M, 2020) · El Diario / DRNA (cierre de 12 vertederos) · CaboRojo.com y CPI (testimonio en vistas).</p>
+
+<h3>Tres cosas más del vertedero que casi nadie explica</h3>
+<div class="not-prose grid sm:grid-cols-3 gap-3 mt-3">
+  <div class="bg-white border border-slate-200 rounded-lg p-4">
+    <div class="font-bold text-slate-900">El reciclaje</div>
+    <p class="text-sm text-slate-600 mt-1">No hay un programa real. El vidrio, sobre todo, no tiene a dónde ir. La pregunta no es "¿reciclamos?", es "¿dónde está el plan escrito, con fechas?".</p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-lg p-4">
+    <div class="font-bold text-slate-900">El doble gasto</div>
+    <p class="text-sm text-slate-600 mt-1">El municipio tiene sus propias guaguas y excavadoras, Y manda la basura a Mayagüez como "centro de transbordo". ¿Cuánto cuesta cada parte, y por qué se paga dos veces por mover la misma basura? Es récord público. Se pide.</p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-lg p-4">
+    <div class="font-bold text-slate-900">El patrón</div>
+    <p class="text-sm text-slate-600 mt-1">En PR, la basura es donde más fraude ha hallado el Contralor en muchos municipios. En Cabo Rojo, el informe OC-24-04 ya halló el vertedero operando sin plan, sin emergencia y sin seguro; el contrato terminó tras declararse culpable el presidente del operador de delitos federales. Récord, no acusación.</p>
+  </div>
+</div>
+<p class="text-xs text-slate-500 mt-3">Fuentes: El Vocero / Metro (préstamo $2.2M, 2020) · El Diario / DRNA (cierre de 12 vertederos) · Contralor de PR (OC-24-04) · CaboRojo.com y CPI (testimonio en vistas).</p>
 
 <h2>La lista de problemas de Cabo Rojo</h2>
-<p>Cruce de dos fuentes: lo que la gente le busca al Veci *7711 (9,016 búsquedas reales, dic 2025-jun 2026) y el récord público de fondos e infraestructura.</p>
+<p><strong>Esto es el cruce de dos fuentes.</strong> A la izquierda, el récord público: fondos, FEMA, infraestructura. A la derecha, lo que la gente le busca de verdad al Veci *7711 (9,016 búsquedas reales, dic 2025 a jun 2026). Un periódico tiene la primera. Casi nadie tiene la segunda. Juntas dan la foto completa: el problema no es que alguien lo diga, es que el pueblo lo busca Y consta en récord.</p>
 <div class="not-prose grid md:grid-cols-2 gap-4 mt-4">
   <div class="bg-white border border-slate-200 rounded-lg p-4">
-    <div class="text-xs font-bold text-rose-700 uppercase tracking-wide mb-2">Infraestructura y dinero público</div>
+    <div class="text-xs font-bold text-rose-700 uppercase tracking-wide mb-2">Fuente 1 · Récord público (infraestructura y dinero)</div>
     <ul class="text-sm text-slate-700 space-y-2">
       <li><strong>Agua:</strong> el suroeste es la región más seca; el municipio consume 4.4 MGD. <span class="text-rose-600 font-semibold">crítico</span></li>
       <li><strong>Coliseo Rebekah Colberg:</strong> $5.2M de FEMA, límite de uso 20 sept 2026.</li>
@@ -2962,7 +3150,7 @@ function handleObservatorio(_req: any, res: any) {
     </ul>
   </div>
   <div class="bg-white border border-slate-200 rounded-lg p-4">
-    <div class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-2">Lo que el vecino busca y no encuentra</div>
+    <div class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-2">Fuente 2 · Lo que el vecino busca y no encuentra (*7711)</div>
     <ul class="text-sm text-slate-700 space-y-2">
       <li>"¿Quién es el alcalde?" · "número de la policía municipal" <span class="text-rose-600 font-semibold">sin respuesta</span></li>
       <li>"¿Cuándo recogen la basura?" (Joyuda, Las Ramírez, Villa del Carmen)</li>
@@ -2975,22 +3163,9 @@ function handleObservatorio(_req: any, res: any) {
 </div>
 <blockquote class="text-sm">Nota de integridad: tres búsquedas cívicas aparecían con 89 cada una; al auditar resultaron ser data de prueba (2 usuarios, ventana cerrada). Las excluimos. Si un dato no se puede verificar, no entra.</blockquote>
 
-<h2>La pregunta incómoda: ¿de quién es la lealtad?</h2>
-<p>No acusamos a nadie. Pero hay una pregunta que un pueblo despierto tiene derecho a hacer, y a verificar por récord público: en Puerto Rico, los mismos nombres aparecen en todos los partidos. Los abogados, cabilderos y contratistas que representan a los grandes intereses a menudo trabajan con candidatos de partidos distintos a la vez. No es ilegal. Pero el pueblo merece saberlo.</p>
-<p><strong>Lo que sí puedes verificar tú mismo:</strong> quién es el representante legal de un proyecto es récord público (consta en los documentos del caso). Quién le hace campaña a quién, también. Cruza esos dos datos y verás los conflictos de interés sin que nadie te los tenga que señalar. No señalamos a nadie: te enseñamos a buscar.</p>
-
-<h2>El examen de Cabo Rojo</h2>
-<p>Estas preguntas salen de la data, no de un partido. Cualquiera que aspire a la alcaldía o a representarnos en el Distrito 20 las va a tener que contestar, en sus propias palabras. Las mismas para todos. El que conteste, queda en récord. El que no, también.</p>
-<ol>
-<li>¿Apoyas a Esencia como está, lo rechazas, o bajo qué condiciones? Sé específico.</li>
-<li>¿De dónde sale el agua para Cabo Rojo en los próximos 10 años?</li>
-<li>El vertedero tiene los años contados. ¿Cuál es tu plan de basura, reciclaje y costos?</li>
-<li>¿Qué pasa con los $5.2M del Coliseo si no se usan antes del 20 de septiembre de 2026?</li>
-<li>El Faro lleva años cerrado. ¿Plan concreto y fecha para reabrirlo?</li>
-<li>¿Cómo vas a publicar el presupuesto y los contratos para que cualquier vecino los vea sin pedir permiso?</li>
-<li>¿Qué haces con el sargazo en Combate, Boquerón y Playa Sucia?</li>
-<li>¿Cómo evitas que la familia caborrojeña se quede sin poder comprar casa en su propio pueblo?</li>
-</ol>
+<h2>Lo que el pueblo añadió</h2>
+<p>Esto no lo escribimos nosotros. Lo añadieron vecinos como tú y un humano lo revisó antes de publicarlo. Si lo tuyo no está aquí todavía, súbelo con el botón de más arriba.</p>
+${renderPuebloAdd(puebloAddRows || [])}
 
 <h2>¿Quién nos representa? ¿Y qué le toca a cada uno?</h2>
 <p class="text-sm text-slate-600">Ficha neutral, récord público. Cada uno tiene su trabajo. Si sabes qué le toca a cada quién, sabes a quién pedirle cuentas. Aún no hay candidatos declarados para 2028: cuando los haya, reciben la misma ficha y el mismo examen.</p>
@@ -3106,6 +3281,7 @@ ${renderPromesometroRows(PROMESAS_CABOROJO)}
     <div class="text-sm text-slate-300 mt-1">Pregúntale al Veci: textea <strong>CABOROJO al ${PHONE_CTA}</strong> y te dice quién resuelve.</div>
   </div>
 </div>
+${civicSubmitForm({ kind: 'problema', showTopic: true, title: '¿Hay otro problema de todos los días que falta aquí?', sub: 'Ruido, un poste sin luz, una esquina peligrosa, un servicio que no existe. Dilo en tus palabras.', placeholder: 'Cuéntalo: qué es, dónde, y desde cuándo.', cta: 'Reportarlo' })}
 
 <h2>¿Quién arregla qué? Para que no le grites al que no es.</h2>
 <p>Mucha gente se molesta con el alcalde por algo que le toca a LUMA. O con el representante por algo del municipio. Aquí está, fácil, a quién le toca cada cosa.</p>
@@ -3120,6 +3296,49 @@ ${renderPromesometroRows(PROMESAS_CABOROJO)}
 </div>
 <p class="mt-4">¿No sabes a quién le toca tu caso? Pregúntale al Veci: textea <strong>CABOROJO al ${PHONE_CTA}</strong> y te dice quién resuelve.</p>
 
+<h2>La pregunta que casi nadie hace: ¿cuánta gente trabaja para el municipio?</h2>
+<p>No es chisme. Es la pregunta de dinero más grande de cualquier municipio: la nómina es casi siempre el gasto número uno. Y es récord público.</p>
+<div class="not-prose mt-3 bg-white border border-slate-200 border-l-4 border-l-amber-500 rounded-lg p-4">
+  <ul class="text-sm text-slate-700 space-y-2">
+    <li><strong>El dato que se puede pedir:</strong> cuántos empleados tiene el municipio, cuánto del presupuesto es nómina, y cuántos puestos son de confianza (los que el alcalde nombra) vs de carrera. Eso sale del presupuesto municipal, que es público.</li>
+    <li><strong>Lo que el propio alcalde dijo en cámara:</strong> que las "damas de llaves" pasaron de 22 a cerca de 90. Más gente ayudando, sí, pero también más nómina. La pregunta justa: ¿de dónde sale ese dinero todos los años?</li>
+    <li><strong>El patrón de PR:</strong> el Contralor llama "empleomanía política" a llenar el municipio de gente por favor político. No es de un pueblo ni de una persona, es de toda la isla. Por eso se mira con número, no con corazonada.</li>
+  </ul>
+  <p class="text-xs text-slate-500 mt-2">Récord, no acusación. Si el municipio publica su nómina y su presupuesto claritos, esta pregunta se contesta sola.</p>
+</div>
+
+<h2>El examen de Cabo Rojo</h2>
+<p>Estas preguntas salen de la data, no de un partido. Cualquiera que aspire a la alcaldía o a representarnos en el Distrito 20 las va a tener que contestar, en sus propias palabras. Las mismas para todos. El que conteste, queda en récord. El que no, también.</p>
+<ol>
+<li>¿De dónde sale el agua para Cabo Rojo en los próximos 10 años?</li>
+<li>El vertedero tiene los años contados. ¿Cuál es tu plan de basura, reciclaje y costos, por escrito?</li>
+<li>Cuando se va la luz, ¿qué haces tú desde el municipio para que el vecino no quede solo frente a LUMA?</li>
+<li>¿Qué oportunidad nueva traes para que la gente joven no tenga que irse del pueblo a buscar trabajo?</li>
+<li>¿Cuánta es la nómina del municipio y cómo la haces sostenible sin botar gente?</li>
+<li>¿Cómo vas a publicar el presupuesto y los contratos para que cualquier vecino los vea sin pedir permiso?</li>
+<li>¿Qué pasa con los $5.2M del Coliseo si no se usan antes del 20 de septiembre de 2026?</li>
+<li>¿Apoyas a Esencia como está, lo rechazas, o bajo qué condiciones? Sé específico.</li>
+</ol>
+
+<h2>Esencia: por qué sigue en esta página</h2>
+<p>No la ponemos como proyecto de playa ni como pelea de ricos contra pobres. La ponemos por una sola razón concreta: <strong>se come el agua y el vertedero que ya están apretados.</strong> Mientras eso no esté resuelto por escrito, es parte de la lista de problemas. Cuando entre en ley con sus condiciones cumplidas, se mira distinto.</p>
+<div class="not-prose grid grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
+  <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-center"><div class="text-2xl font-black text-rose-700">~3 MGD</div><div class="text-xs text-slate-600 mt-1">de agua: más de 1/3 de lo que consume todo el municipio</div></div>
+  <div class="bg-rose-50 border border-rose-200 rounded-lg p-3 text-center"><div class="text-2xl font-black text-rose-700">+30 ton</div><div class="text-xs text-slate-600 mt-1">de basura al día encima del vertedero (testimonio en vistas)</div></div>
+  <div class="bg-slate-100 border border-slate-200 rounded-lg p-3 text-center"><div class="text-2xl font-black text-teal-700">Sept 2025</div><div class="text-xs text-slate-600 mt-1">el DRNA rechazó el diseño por daño a especies protegidas</div></div>
+  <div class="bg-slate-100 border border-slate-200 rounded-lg p-3 text-center"><div class="text-2xl font-black text-teal-700">24 dic 2025</div><div class="text-xs text-slate-600 mt-1">OGPe aprobó la Declaración de Impacto con 46 condiciones</div></div>
+</div>
+<div class="not-prose mt-4 bg-slate-900 rounded-lg p-4">
+  <div class="text-xs font-bold text-teal-300 uppercase tracking-wide mb-2">🎬 Míralo tú mismo · no nos creas a nosotros</div>
+  <div class="flex flex-col gap-2 text-sm">
+    <a href="https://youtu.be/Fv8WCuov9lA" target="_blank" rel="noopener" class="text-white hover:text-teal-300">▶ El geólogo que se atrevió a decir la verdad sobre Esencia</a>
+    <a href="https://youtu.be/UGyOSEhGRsU" target="_blank" rel="noopener" class="text-white hover:text-teal-300">▶ Proyecto Esencia: ¿Progreso o Peligro para Cabo Rojo?</a>
+    <a href="https://youtu.be/NFeo3v07rHA" target="_blank" rel="noopener" class="text-white hover:text-teal-300">▶ Por qué la AAA no contesta sobre el agua de Esencia</a>
+  </div>
+</div>
+<p class="text-sm text-slate-600 mt-3"><strong>Cómo verificarlo tú mismo, sin que nadie te lo señale:</strong> quién es el representante legal de un proyecto es récord público (consta en los documentos del caso). Quién le hace campaña a quién, también. Cruza esos dos datos y los conflictos de interés aparecen solos. No señalamos a nadie: te enseñamos dónde mirar.</p>
+<p class="text-xs text-slate-500 mt-2">Fuentes: Centro de Periodismo Investigativo (2025) · El Nuevo Día (dic 2025) · Marea Ecologista (sept 2025) · entrevistas en video de CaboRojo.com.</p>
+
 <blockquote>Yo no escojo. Yo organizo. Le doy a todos el mismo espejo, con número, fecha y fuente. Si esto te ayuda a entender mejor tu pueblo, llégate. Si no, sigue tu camino. Pero que nadie diga que no había dónde mirar.</blockquote>
 
 <h3>Fuentes principales</h3>
@@ -3132,6 +3351,7 @@ ${renderPromesometroRows(PROMESAS_CABOROJO)}
 <a href="https://www.camara.pr.gov/representante/" target="_blank" rel="noopener">Cámara — Distrito 20</a> ·
 <a href="https://consultacontratos.ocpr.gov.pr/" target="_blank" rel="noopener">Contralor — Registro de Contratos</a>
 </p>
+${CIVIC_FORM_SCRIPT}
 `
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -3159,18 +3379,159 @@ ${renderPromesometroRows(PROMESAS_CABOROJO)}
 
 // =============== HANDLER ===============
 
+// =============== /quien-responde — El Organigrama Vivo de Cabo Rojo ===============
+// La capa de ESTRUCTURA: quién te representa, de qué responde por ley, y cómo lo
+// contactas. La rabia se vuelve ruteo. Enlaza a /promesas (el Promesómetro) para
+// el scorecard del alcalde. Lee de la RPC get_quien_responde() (candados en RLS).
+// No-partidista. Reanclado 2026-06-20.
+const NIVEL_GRUPOS: Array<{ nivel: string; titulo: string; sub: string }> = [
+  { nivel: 'municipal', titulo: '🏛️ En tu municipio', sub: 'Lo que tocas todos los días.' },
+  { nivel: 'estatal', titulo: '🇵🇷 En el gobierno de Puerto Rico', sub: 'Los que votas pero casi no ves.' },
+  { nivel: 'no_electo', titulo: '⚡ Los que mandan sin que los votes', sub: 'No los eliges, pero responden por tu agua, tu luz, tu costa. Aquí vive la mayoría de la rabia diaria.' },
+  { nivel: 'federal', titulo: '🇺🇸 Federal', sub: 'Lo que mucha gente cree que es del municipio, y no lo es.' },
+]
+const PESTADO: Record<string, [string, string]> = {
+  cumplido:   ['✅ Cumplió', '#059669'],
+  en_proceso: ['🟡 En proceso', '#d97706'],
+  vencido:    ['❌ No cumplió', '#e11d48'],
+  pendiente:  ['⏳ Sin verificar', '#64748b'],
+}
+function qrYear(desde: string | null): string {
+  if (!desde) return ''
+  const y = String(desde).slice(0, 4)
+  return /^\d{4}$/.test(y) ? `desde ${y}` : ''
+}
+function qrPromesaRow(p: any): string {
+  const [label, color] = PESTADO[p.estado] || PESTADO.pendiente
+  return `<div style="padding:0.6rem 0;border-top:1px solid #f1f5f9;">
+    <p style="font-size:0.9rem;color:#0f172a;font-weight:600;margin:0 0 2px;">${escapeHtml(p.promesa)}</p>
+    <p style="font-size:0.8rem;margin:0 0 4px;"><strong style="color:${color}">${label}</strong>${p.que_paso ? ' · <span style="color:#475569;">' + escapeHtml(p.que_paso) + '</span>' : ''}</p>
+    ${p.fuente ? `<p style="font-size:0.72rem;color:#94a3b8;margin:0;">Fuente: <a href="${escapeHtml(p.fuente)}" target="_blank" rel="noopener" style="color:#0d9488;">${escapeHtml(String(p.fuente).replace(/^https?:\/\/(www\.)?/, '').split('/')[0])}</a> · récord en cámara ${p.fecha ? '(' + escapeHtml(String(p.fecha)) + ')' : ''}</p>` : ''}
+  </div>`
+}
+function qrCard(c: any): string {
+  const sc = c.scorecard || { total: 0 }
+  const scoreBadge = sc.total > 0
+    ? `<div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:0.72rem;color:#64748b;text-transform:uppercase;letter-spacing:0.04em;font-weight:700;">Promesas verificadas</div>
+        <div style="font-size:0.85rem;margin-top:2px;">
+          ${sc.cumplido ? `<span style="color:#059669;font-weight:700;">${sc.cumplido} ✅</span> ` : ''}
+          ${sc.en_proceso ? `<span style="color:#d97706;font-weight:700;">${sc.en_proceso} 🟡</span> ` : ''}
+          ${sc.vencido ? `<span style="color:#e11d48;font-weight:700;">${sc.vencido} ❌</span>` : ''}
+        </div>
+      </div>`
+    : ''
+  const promesasHtml = (Array.isArray(c.promesas) && c.promesas.length > 0)
+    ? `<div style="margin-top:0.9rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0.75rem 1rem;">
+        <p style="font-size:0.75rem;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:0.04em;margin:0;">Qué dijo en cámara · qué pasó</p>
+        ${c.promesas.map(qrPromesaRow).join('')}
+        <a href="/promesas" style="display:inline-block;margin-top:0.6rem;font-size:0.82rem;font-weight:700;color:#0d9488;text-decoration:none;">Ver todo lo que prometió en cámara →</a>
+      </div>`
+    : ''
+  const accionHtml = c.accion_vecino
+    ? `<div style="margin-top:0.85rem;background:#ecfeff;border-left:3px solid #14b8a6;border-radius:0 8px 8px 0;padding:0.65rem 0.9rem;">
+        <p style="font-size:0.72rem;font-weight:700;color:#0f766e;text-transform:uppercase;letter-spacing:0.04em;margin:0 0 2px;">Una acción</p>
+        <p style="font-size:0.88rem;color:#134e4a;margin:0;">${escapeHtml(c.accion_vecino)}</p>
+        ${c.contacto_tel ? `<a href="tel:${escapeHtml(c.contacto_tel)}" style="display:inline-block;margin-top:6px;font-size:0.85rem;font-weight:700;color:#0d9488;text-decoration:none;">📞 ${escapeHtml(c.contacto_tel)}</a>` : ''}
+        ${c.contacto_web ? `${c.contacto_tel ? ' · ' : ''}<a href="${escapeHtml(c.contacto_web)}" target="_blank" rel="noopener" style="font-size:0.85rem;font-weight:700;color:#0d9488;text-decoration:none;">🌐 sitio oficial</a>` : ''}
+      </div>`
+    : ''
+  const persona = c.nombre
+    ? `<p style="font-size:0.85rem;color:#475569;margin:2px 0 0;">${escapeHtml(c.nombre)}${c.partido ? ` · <span style="font-weight:600;">${escapeHtml(c.partido)}</span>` : ''}${qrYear(c.desde) ? ` · ${qrYear(c.desde)}` : ''}</p>`
+    : `<p style="font-size:0.82rem;color:#94a3b8;font-style:italic;margin:2px 0 0;">Por confirmar</p>`
+  return `<div class="not-prose" style="background:white;border:1px solid #e2e8f0;border-radius:14px;padding:1.25rem 1.4rem;margin-bottom:1rem;box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;">
+      <div style="min-width:0;">
+        <h3 style="font-size:1.1rem;font-weight:800;color:#0f172a;margin:0;line-height:1.25;">${escapeHtml(c.cargo)}</h3>
+        ${persona}
+      </div>
+      ${scoreBadge}
+    </div>
+    <div style="margin-top:0.75rem;font-size:0.9rem;line-height:1.55;">
+      <p style="margin:0;color:#1e293b;"><span style="font-weight:700;color:#0f766e;">De qué responde:</span> ${escapeHtml(c.responde_de)}</p>
+      ${c.no_responde_de ? `<p style="margin:6px 0 0;color:#64748b;"><span style="font-weight:600;">No responde de:</span> ${escapeHtml(c.no_responde_de)}</p>` : ''}
+      ${c.fuente_legal ? `<p style="margin:4px 0 0;font-size:0.75rem;color:#94a3b8;">${escapeHtml(c.fuente_legal)}</p>` : ''}
+    </div>
+    ${promesasHtml}
+    ${accionHtml}
+  </div>`
+}
+async function handleQuienResponde(_req: any, res: any) {
+  let cargos: any[] = []
+  try {
+    const { data } = await supabase.rpc('get_quien_responde')
+    if (Array.isArray(data)) cargos = data
+  } catch (_e) { cargos = [] }
+
+  const gruposHtml = NIVEL_GRUPOS.map(g => {
+    const items = cargos.filter(c => c.nivel === g.nivel).sort((a, b) => (a.orden || 0) - (b.orden || 0))
+    if (items.length === 0) return ''
+    return `<h2>${g.titulo}</h2>
+<p class="text-sm text-slate-500 -mt-2 mb-3">${escapeHtml(g.sub)}</p>
+${items.map(qrCard).join('\n')}`
+  }).filter(Boolean).join('\n\n')
+
+  const body = `
+<span class="not-prose inline-block bg-teal-100 text-teal-800 text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full">Quién Responde · No-partidista · Cabo Rojo</span>
+
+<h1 class="mt-4">¿Quién responde por esto?</h1>
+
+<p class="text-lg text-slate-600 mt-3">Cuando se te va el agua sientes rabia, pero a veces no sabes a quién señalar. Aquí está, claro: <strong>quién te representa, de qué responde por ley, y cómo lo contactas.</strong> No para pelear. Para que sepas dónde toca tocar.</p>
+
+<div class="not-prose mt-4 bg-white border border-slate-200 border-l-4 border-l-teal-600 rounded-lg p-4">
+  <p class="text-sm text-slate-700">El error más caro del pueblo: pedirle al alcalde cosas que son de la AAA, de LUMA, o de la Legislatura. Cuando sabes <strong>de qué responde cada quién</strong>, dejas de gritarle a la pared equivocada.</p>
+</div>
+
+${gruposHtml}
+
+<div class="not-prose mt-6 bg-teal-900 text-white rounded-xl p-5">
+  <p class="font-bold text-base">¿Falta alguien? ¿Un dato cambió?</p>
+  <p class="text-sm text-teal-100 mt-1">Dilo abajo, o textea <strong>QUIEN al ${PHONE_CTA}</strong>. Lo revisa un humano antes de cambiar nada. Cada nombre y cada número se verifica contra fuente, no contra memoria.</p>
+</div>
+
+${civicSubmitForm({ kind: 'feedback_quien', tone: 'teal', title: '🏛️ Corregir o añadir', sub: 'Si un cargo, un nombre o un contacto está mal o falta, escríbelo. Si tienes la fuente oficial, mejor.', placeholder: '¿Qué cargo, y qué hay que corregir o añadir?', cta: 'Enviar' })}
+
+<blockquote>No escogemos a nadie. Organizamos quién responde por qué, y lo ponemos donde todos lo vean. Si esto te ayuda a entender mejor tu pueblo, llégate. Si no, sigue tu camino.</blockquote>
+
+<p class="text-xs text-slate-500 mt-4"><a href="/promesas" class="text-teal-700 font-semibold">Las promesas del alcalde, en cámara →</a> · <a href="/observatorio" class="text-teal-700 font-semibold">El Observatorio del pueblo →</a></p>
+${CIVIC_FORM_SCRIPT}
+`
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Dataset',
+    name: 'Quién Responde — estructura de gobierno de Cabo Rojo',
+    description: 'Quién representa a un residente de Cabo Rojo (municipal, estatal, federal y cuerpos no electos), de qué responde cada cargo por ley, y cómo contactarlo. No-partidista.',
+    creator: { '@type': 'Organization', name: 'mapadecaborojo.com' },
+    spatialCoverage: { '@type': 'Place', name: 'Cabo Rojo, Puerto Rico' },
+    isAccessibleForFree: true,
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=1800')
+  res.status(200).send(layout({
+    title: 'Quién Responde — el organigrama vivo de Cabo Rojo',
+    description: 'Quién te representa en Cabo Rojo, de qué responde por ley, y cómo lo contactas. Municipal, estatal, federal y los que mandan sin que los votes. No-partidista.',
+    slug: 'quien-responde',
+    bodyHtml: body,
+    jsonLd,
+    ogImage: '/og/observatorio.png',
+  }))
+}
+
 export default async function handler(req: any, res: any) {
   const page = String(req.query.page || '')
 
   switch (page) {
+    case 'quien-responde': return await handleQuienResponde(req, res)
     case 'acceso': return handleAcceso(req, res)
     case 'acceso-log': return await handleAccesoLog(req, res)
     case 'registro': return await handleRegistro(req, res)
     case 'registro-data': return await handleRegistroData(req, res)
     case 'registro-search': return await handleRegistroSearch(req, res)
-    case 'observatorio': return handleObservatorio(req, res)
+    case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)
     case 'civico-json': return handleCivicoJson(req, res)
+    case 'civico-submit': return await handleCivicoSubmit(req, res)
+    case 'civico-moderate': return await handleCivicoModerate(req, res)
     case 'mision': return handleMision(req, res)
     case 'transparencia': return await handleTransparencia(req, res)
     case 'equipo': return handleEquipo(req, res)

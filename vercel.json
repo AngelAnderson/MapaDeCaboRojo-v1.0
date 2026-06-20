@@ -41,6 +41,8 @@
     { "source": "/registro", "destination": "/api/mapa-pages?page=registro" },
     { "source": "/observatorio", "destination": "/api/mapa-pages?page=observatorio" },
     { "source": "/promesas", "destination": "/api/mapa-pages?page=promesas" },
+    { "source": "/quien-responde", "destination": "/api/mapa-pages?page=quien-responde" },
+    { "source": "/quién-responde", "destination": "/api/mapa-pages?page=quien-responde" },
     { "source": "/civico.json", "destination": "/api/mapa-pages?page=civico-json" },
     { "source": "/mision", "destination": "/api/mapa-pages?page=mision" },
     { "source": "/transparencia", "destination": "/api/mapa-pages?page=transparencia" },
