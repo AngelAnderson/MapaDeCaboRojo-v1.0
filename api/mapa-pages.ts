@@ -2736,7 +2736,7 @@ const PROMESAS_CABOROJO: Promesa[] = [
   { topic: '🗑️ Basura y vertedero', text: 'El vertedero ya no es vertedero: ahora es "centro de transbordo" que lleva la basura a Mayagüez.', quien: 'Alcalde Morales · 2024', src: null, status: 'EMPEZO', detail: '' },
   { topic: '🗑️ Basura y vertedero', text: 'Tres excavadoras, una siempre en el vertedero montando la basura para Mayagüez.', quien: 'Alcalde Morales · 2023', src: null, status: 'ESPERANDO', detail: '' },
   { topic: '🗑️ Basura y vertedero', text: 'querellavirtual del municipio para reportar escombros que no recogieron.', quien: 'Alcalde Morales · 2023', src: null, status: 'ESPERANDO', detail: '' },
-  { topic: '🗑️ Basura y vertedero', text: 'Limpieza "2.0": sacaron 4,000 yardas de escombro con 450 voluntarios.', quien: 'Alcalde Morales · 2024', src: null, status: 'HECHO', detail: '' },
+  { topic: '🗑️ Basura y vertedero', text: 'Limpieza "2.0": sacaron 4,000 yardas de escombro con 450 voluntarios.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
   { topic: '🗑️ Basura y vertedero', text: 'Ordenanza de un fee de $250 al año (escombros/manejo).', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
   // 🕳️ HOYOS, ASFALTO Y CARRETERAS
   { topic: '🕳️ Hoyos, asfalto y carreteras', text: '"El 90% de los caminos del pueblo estaban destruidos, ya llevamos un 60% mejorado." La tonelada subió de $99 a $129.', quien: 'Alcalde Morales · mar 2024', src: ['https://youtu.be/-HKfFUfE9nk', 'CaboRojo.com'], status: 'EMPEZO', detail: 'dice 60% · verifícalo en tu calle', feat: true },
@@ -2763,7 +2763,7 @@ const PROMESAS_CABOROJO: Promesa[] = [
   // 🏀 DEPORTE, ESCUELAS Y PLAZA
   { topic: '🏀 Deporte, escuelas y plaza', text: 'Usar los $5.2M de FEMA del Coliseo Rebekah Colberg antes del 20 de septiembre de 2026.', quien: 'Municipio · límite 20 sept 2026', src: ['https://youtu.be/WpizUMfP3rc', 'alcalde en cámara'], status: 'EMPEZO', detail: 'obras empezaron feb 2026 · reloj corriendo', feat: true , deadline: '2026-09-20' },
   { topic: '🏀 Deporte, escuelas y plaza', text: 'Canchas profesionales en la Rebeca Colberg + 2 bleachers para 400 fanáticos.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
-  { topic: '🏀 Deporte, escuelas y plaza', text: 'Pequeñas ligas: 200+ niños con una inversión de $22,000. Sistema profesional de voleibol ($5,000) "ya llegó".', quien: 'Alcalde Morales · 2024', src: null, status: 'HECHO', detail: '' },
+  { topic: '🏀 Deporte, escuelas y plaza', text: 'Pequeñas ligas: 200+ niños con una inversión de $22,000. Sistema profesional de voleibol ($5,000) "ya llegó".', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
   { topic: '🏀 Deporte, escuelas y plaza', text: '$20 millones para la escuela Inés María Mendoza.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
   { topic: '🏀 Deporte, escuelas y plaza', text: 'Un mini estadio de fútbol: 300 butacas y camerinos. La plaza "va a quedar preciosa" (faltan permisos).', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
   { topic: '🏀 Deporte, escuelas y plaza', text: 'Damas de llaves (ayuda a personas): de 22 que había, ya cerca de 90.', quien: 'Alcalde Morales · 2024', src: null, status: 'EMPEZO', detail: '' },
