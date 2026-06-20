@@ -15,7 +15,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
-import { createHash } from 'crypto'
+import { createHash, createHmac, timingSafeEqual } from 'crypto'
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || 'https://vprjteqgmanntvisjrvp.supabase.co',
@@ -2831,17 +2831,37 @@ const CIVIC_KINDS = new Set(['problema', 'me_pasa', 'feedback_promesa', 'promesa
 const CIVIC_TOPICS = new Set(['agua', 'basura', 'luz', 'oportunidades', 'otro'])
 const CIVIC_TOPIC_LABEL: Record<string, string> = { agua: '💧 Agua', basura: '🗑️ Basura', luz: '💡 Luz', oportunidades: '🌱 Lo que falta', otro: 'Otro' }
 
-function civicModToken(id: string): string {
-  const secret = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || 'x'
-  return createHash('sha256').update(id + ':' + secret).digest('hex').slice(0, 20)
+// Moderation link signing — server-only secret, HMAC, expiry, constant-time verify.
+// Refuses to sign (returns null) when no real secret is set, so we never fall back
+// to a public VITE_ key or a literal. SERVICE_ROLE_KEY is set in prod (the RPC client
+// uses it), so this resolves to a real server-only secret.
+const MOD_SECRET = process.env.MODERATION_SIGNING_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+const MOD_TTL_MS = 14 * 24 * 60 * 60 * 1000 // 14 días
+
+function civicModSign(id: string, exp: number): string | null {
+  if (!MOD_SECRET || !id) return null
+  return createHmac('sha256', MOD_SECRET).update(`${id}:${exp}`).digest('hex').slice(0, 32)
+}
+function civicModVerify(id: string, exp: number, t: string): boolean {
+  if (!MOD_SECRET || !id || !t || !Number.isFinite(exp) || exp <= 0) return false
+  if (Date.now() > exp) return false // expirado
+  const expected = civicModSign(id, exp)
+  if (!expected) return false
+  const a = Buffer.from(t)
+  const b = Buffer.from(expected)
+  if (a.length !== b.length) return false
+  return timingSafeEqual(a, b)
 }
 
 async function notifyCivicSubmission(row: any, id: string): Promise<void> {
   if (!RESEND_API_KEY) return
-  const base = `${SITE_URL}/api/mapa-pages?page=civico-moderate&id=${id}&t=${civicModToken(id)}`
+  const exp = Date.now() + MOD_TTL_MS
+  const sig = civicModSign(id, exp)
+  const base = sig ? `${SITE_URL}/api/mapa-pages?page=civico-moderate&id=${id}&exp=${exp}&t=${sig}` : ''
   const kindLabel: Record<string, string> = {
     problema: '🆕 Problema nuevo', me_pasa: '🙋 "Me pasa a mí"',
     feedback_promesa: '💬 Feedback de promesa', promesa_hecha: '✅ "Esto ya se hizo"',
+    feedback_quien: '🏛️ Corregir Quién Responde',
   }
   const html = `<div style="font-family:system-ui,sans-serif;max-width:560px;margin:0 auto">
     <h2 style="color:#0f766e">${kindLabel[row.kind] || row.kind}</h2>
@@ -2850,10 +2870,10 @@ async function notifyCivicSubmission(row: any, id: string): Promise<void> {
     ${row.ref ? `<p style="font-size:13px;color:#64748b">Sobre: <strong>${escapeHtml(row.ref)}</strong></p>` : ''}
     ${row.contact ? `<p style="font-size:13px;color:#64748b">Contacto: <strong>${escapeHtml(row.contact)}</strong></p>` : ''}
     ${row.proof_url ? `<p style="font-size:13px"><a href="${escapeHtml(row.proof_url)}">Ver prueba →</a></p>` : ''}
-    <div style="margin-top:20px">
+    ${base ? `<div style="margin-top:20px">
       <a href="${base}&action=approve" style="display:inline-block;background:#059669;color:#fff;font-weight:700;padding:12px 22px;border-radius:8px;text-decoration:none;margin-right:8px">✅ Aprobar y publicar</a>
       <a href="${base}&action=reject" style="display:inline-block;background:#e11d48;color:#fff;font-weight:700;padding:12px 22px;border-radius:8px;text-decoration:none">❌ Rechazar</a>
-    </div>
+    </div>` : '<p style="color:#b45309;font-size:13px">⚠️ Falta MODERATION_SIGNING_KEY — modera en /admin.</p>'}
     <p style="font-size:12px;color:#94a3b8;margin-top:18px">Nada se publica hasta que aprietes Aprobar. Observatorio Cívico · mapadecaborojo.com/observatorio</p>
   </div>`
   try {
@@ -2905,17 +2925,59 @@ async function handleCivicoSubmit(req: any, res: any) {
 }
 
 async function handleCivicoModerate(req: any, res: any) {
-  const id = String(req.query.id || '')
-  const action = String(req.query.action || '')
-  const t = String(req.query.t || '')
+  const isPost = req.method === 'POST'
+  // GET lee de query (link del email); POST lee del body del form de confirmación.
+  const src: any = isPost
+    ? (typeof req.body === 'string' ? Object.fromEntries(new URLSearchParams(req.body)) : (req.body || {}))
+    : req.query
+  const id = String(src.id || '')
+  const action = String(src.action || '')
+  const t = String(src.t || '')
+  const exp = Number(src.exp || 0)
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
-  if (!id || (action !== 'approve' && action !== 'reject') || t !== civicModToken(id)) {
+  res.setHeader('Referrer-Policy', 'no-referrer') // el token no se filtra vía Referer
+
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    res.status(405).send('<body style="font-family:system-ui;padding:48px;text-align:center"><h2>Método no permitido</h2></body>')
+    return
+  }
+  const valid = id && (action === 'approve' || action === 'reject') && civicModVerify(id, exp, t)
+  if (!valid) {
     res.status(403).send('<body style="font-family:system-ui;padding:48px;text-align:center"><h2>No autorizado</h2><p>El enlace no es válido o ya expiró.</p></body>')
     return
   }
+
+  // GET = página de confirmación. El cambio de estado SOLO ocurre con el POST del
+  // botón, así que un prefetch/escáner de email (que solo hace GET) no puede moderar.
+  if (!isPost) {
+    const verbo = action === 'approve' ? 'aprobar y publicar' : 'rechazar'
+    const color = action === 'approve' ? '#059669' : '#e11d48'
+    res.status(200).send(`<body style="font-family:system-ui,sans-serif;padding:48px;text-align:center;color:#0f172a">
+      <h2>¿Confirmar ${verbo}?</h2>
+      <p style="color:#475569">Entrada ${escapeHtml(id.slice(0, 8))}. Esto no se aplica hasta que confirmes.</p>
+      <form method="POST" action="/api/mapa-pages?page=civico-moderate" style="margin-top:24px">
+        <input type="hidden" name="id" value="${escapeHtml(id)}">
+        <input type="hidden" name="action" value="${escapeHtml(action)}">
+        <input type="hidden" name="t" value="${escapeHtml(t)}">
+        <input type="hidden" name="exp" value="${escapeHtml(String(exp))}">
+        <button type="submit" style="background:${color};color:#fff;font-weight:700;padding:14px 28px;border:0;border-radius:8px;font-size:15px;cursor:pointer">Sí, ${verbo}</button>
+      </form>
+      <p style="margin-top:18px"><a href="/observatorio" rel="noreferrer" style="color:#64748b">Cancelar</a></p>
+    </body>`)
+    return
+  }
+
+  // POST = aplica. First-write-wins: solo muta si aún no fue revisado (idempotente,
+  // un token filtrado/reenviado no puede revertir una decisión previa).
   const status = action === 'approve' ? 'approved' : 'rejected'
-  await supabase.from('civic_submissions').update({ status, reviewed_at: new Date().toISOString() }).eq('id', id)
-  res.status(200).send(`<body style="font-family:system-ui,sans-serif;padding:48px;text-align:center;color:#0f172a"><h2>${action === 'approve' ? '✅ Aprobado y publicado' : '❌ Rechazado'}</h2><p style="color:#475569">Entrada ${id.slice(0, 8)} marcada como <strong>${status}</strong>.</p><a href="/observatorio" style="color:#0f766e;font-weight:700">← Ver el Observatorio</a></body>`)
+  const { data: updated } = await supabase
+    .from('civic_submissions')
+    .update({ status, reviewed_at: new Date().toISOString() })
+    .eq('id', id)
+    .is('reviewed_at', null)
+    .select('id')
+  const yaEstaba = !updated || updated.length === 0
+  res.status(200).send(`<body style="font-family:system-ui,sans-serif;padding:48px;text-align:center;color:#0f172a"><h2>${action === 'approve' ? '✅ Aprobado y publicado' : '❌ Rechazado'}${yaEstaba ? ' (ya estaba revisado)' : ''}</h2><p style="color:#475569">Entrada ${escapeHtml(id.slice(0, 8))} marcada como <strong>${escapeHtml(status)}</strong>.</p><a href="/observatorio" rel="noreferrer" style="color:#0f766e;font-weight:700">← Ver el Observatorio</a></body>`)
 }
 
 // Formulario de submission reusable. El script cliente se incluye una vez por página vía CIVIC_FORM_SCRIPT.
