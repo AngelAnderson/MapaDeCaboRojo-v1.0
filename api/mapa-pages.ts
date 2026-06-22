@@ -2585,7 +2585,7 @@ async function handleRegistro(req: any, res: any) {
       .then(function(r){return r.json();})
       .then(function(d){
         var list=(d&&d.providers)||[];
-        if(!list.length){box.innerHTML='<div style="color:#64748b;font-size:14px;">No hay teléfonos cargados pa\\'esta combinación todavía. Escríbele al Veci abajo.</div>';return;}
+        if(!list.length){try{gtag('event','search_no_results',{spec:spec,region:region})}catch(e){}box.innerHTML='<div style="color:#64748b;font-size:14px;">No hay teléfonos cargados pa\\'esta combinación todavía. Escríbele al Veci abajo.</div>';return;}
         var rows=list.map(function(p){
           var tel=p.phone?('<a href="tel:'+esc(p.phone.replace(/[^0-9]/g,''))+'" style="color:#0f766e;font-weight:700;white-space:nowrap;">'+esc(p.phone)+'</a>'):'<span style="color:#94a3b8;">sin teléfono</span>';
           var nm=p.slug?('<a href="/especialista/'+encodeURIComponent(p.slug)+'" style="color:#0f172a;font-weight:600;text-decoration:none;border-bottom:1px dotted #94a3b8;">'+esc(p.name)+'</a>'):esc(p.name);
@@ -2599,6 +2599,7 @@ async function handleRegistro(req: any, res: any) {
   function render(){
     if(!sp.value||!rg.value){out.innerHTML='';hint.style.display='block';return;}
     hint.style.display='none';
+    try{gtag('event','search_specialty',{spec:sp.value,region:rg.value})}catch(e){}
     var x=BYID[sp.value],region=rg.value,n=x.r[region]||0,M=x.r.Metro||0,tone,msg;
     if(region==='Metro'){
       msg='<b>En el área metro hay '+M+' '+esc(x.l)+'.</b> Es donde se concentran los especialistas de la isla — aquí no te toca viajar lejos.';tone='ok';
@@ -2852,9 +2853,10 @@ async function handleEspecialista(req: any, res: any) {
     ? `https://maps.google.com/maps?q=${place.lat},${place.lon}&z=15&output=embed`
     : `https://maps.google.com/maps?q=${encodeURIComponent((place.address || (muni + ', Puerto Rico')))}&z=13&output=embed`
 
+  const evtAttr = `specialty:'${place.subcategory || ''}',region:'${region || ''}'`
   const actionBtns = `<div class="not-prose flex flex-wrap gap-3 mt-5">
-    ${telLink ? `<a href="${telLink}" class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-bold px-5 py-3 rounded-xl text-base"><i class="fa-solid fa-phone"></i> ${T.call} ${escapeHtml(place.phone)}</a>` : ''}
-    ${waLink ? `<a href="${waLink}" class="inline-flex items-center gap-2 bg-white border-2 border-teal-600 text-teal-700 font-bold px-5 py-3 rounded-xl text-base hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${T.wa}</a>` : ''}
+    ${telLink ? `<a href="${telLink}" onclick="try{gtag('event','click_to_call',{${evtAttr}})}catch(e){}" class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-bold px-5 py-3 rounded-xl text-base"><i class="fa-solid fa-phone"></i> ${T.call} ${escapeHtml(place.phone)}</a>` : ''}
+    ${waLink ? `<a href="${waLink}" onclick="try{gtag('event','click_whatsapp',{${evtAttr}})}catch(e){}" class="inline-flex items-center gap-2 bg-white border-2 border-teal-600 text-teal-700 font-bold px-5 py-3 rounded-xl text-base hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${T.wa}</a>` : ''}
     <a href="https://wa.me/17874177711?text=${spec ? spec.kw : 'ESPECIALISTA'}" class="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-5 py-3 rounded-xl text-base"><i class="fa-brands fa-whatsapp"></i> ${T.veci}</a>
   </div>`
 
