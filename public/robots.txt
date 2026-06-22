@@ -38,6 +38,7 @@ Allow: /
 
 # LLM-friendly metadata
 Sitemap: https://www.mapadecaborojo.com/sitemap.xml
+Sitemap: https://registromedicopr.com/sitemap.xml
 Host: https://www.mapadecaborojo.com
 
 # Para LLMs: contexto completo del sitio en

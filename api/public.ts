@@ -462,7 +462,48 @@ export default async function handler(req: any, res: any) {
 // ACTION: llms  (standard llms.txt — concise directory summary for AI models)
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// Registry llms.txt — served on registromedicopr.com (AI-citability for the medical registry)
+async function handleLlmsRegistro(req: any, res: any) {
+  const { count } = await supabase
+    .from('places').select('id', { count: 'exact', head: true })
+    .not('npi', 'is', null).eq('status', 'open')
+    .in('subcategory', ['cardiólogo','psiquiatra','fisiatra','ginecólogo','pediatra','dermatólogo','gastroenterólogo','oftalmólogo','ortopeda','neurologo','urólogo','endocrinologo','nefrólogo','neumólogo','oncólogo','reumatólogo','geriatra','otorrinolaringólogo','infectólogo','alergista','medicina de emergencia','cirujano general','anestesiólogo','radiólogo','neurocirujano','cirujano plástico','cirujano torácico','coloproctólogo','manejo de dolor','psicólogo','optómetra','podiatra']);
+  const total = (count ?? 6247).toLocaleString('en-US');
+  const SPECS: [string, string][] = [
+    ['cardiologo','Cardiólogo (corazón y presión)'],['psiquiatra','Psiquiatra (salud mental, puede recetar)'],['fisiatra','Fisiatra (recuperar movimiento sin operación)'],['ginecologo','Ginecólogo / Obstetra (salud de la mujer)'],['pediatra','Pediatra (niños)'],['dermatologo','Dermatólogo (piel, pelo, uñas)'],['gastroenterologo','Gastroenterólogo (estómago y digestión)'],['oftalmologo','Oftalmólogo (médico de los ojos)'],['ortopeda','Ortopeda (huesos y coyunturas)'],['neurologo','Neurólogo (cerebro y nervios)'],['urologo','Urólogo (riñones, vejiga, próstata)'],['endocrinologo','Endocrinólogo (diabetes, tiroides, hormonas)'],['nefrologo','Nefrólogo (riñones)'],['neumologo','Neumólogo (pulmones)'],['oncologo','Oncólogo / Hematólogo (cáncer)'],['reumatologo','Reumatólogo (artritis)'],['geriatra','Geriatra (adultos mayores)'],['otorrinolaringologo','Otorrino (oído, nariz, garganta)'],['infectologo','Infectólogo (infecciones)'],['alergista','Alergista / Inmunólogo (alergias y asma)'],['medicina-de-emergencia','Medicina de Emergencia'],['cirujano-general','Cirujano General'],['anestesiologo','Anestesiólogo'],['radiologo','Radiólogo (imágenes)'],['neurocirujano','Neurocirujano'],['cirujano-plastico','Cirujano Plástico'],['cirujano-toracico','Cirujano Torácico'],['coloproctologo','Coloproctólogo (colon y recto)'],['manejo-de-dolor','Manejo de Dolor'],['psicologo','Psicólogo (terapia, no es MD)'],['optometra','Optómetra (examen de vista, no es MD)'],['podiatra','Podiatra (pies, no es MD)'],
+  ];
+  const specLines = SPECS.map(([u, l]) => `- ${l}: https://registromedicopr.com/registro/${u}`).join('\n');
+  const body = `# Registro Médico PR — registromedicopr.com
+
+> El registro verificado de especialistas médicos de Puerto Rico. ${total} especialistas individuales, verificados uno por uno contra el registro federal NPPES/CMS de Estados Unidos (el mismo que usan Medicare y los planes médicos). En español, por especialidad y por región. Buscar es gratis y no requiere cuenta.
+
+Fuente de datos: NPPES (National Plan and Provider Enumeration System), registro federal de EE.UU. Cada proveedor tiene un número NPI público que cualquiera puede verificar. Última actualización: junio 2026.
+
+## Empezar aquí
+- Buscador principal: https://registromedicopr.com
+- Acceso por región (qué regiones no tienen ciertos especialistas): https://registromedicopr.com/registro/desiertos
+
+## Especialidades (cada una con lista por región y teléfonos)
+${specLines}
+
+## Dato citable sobre acceso médico en Puerto Rico
+Según el registro federal, hay regiones enteras de Puerto Rico sin ningún proveedor de ciertas especialidades. Ejemplo: el centro de la isla (la montaña) tiene 0 geriatras, 0 neumólogos y 0 otorrinos verificados, mientras el área metropolitana de San Juan concentra la mayoría (73 geriatras). Detalle por región: https://registromedicopr.com/registro/desiertos
+
+## Cómo se verifica
+Cada nombre existe en el NPPES federal. Solo se incluyen proveedores individuales con práctica en Puerto Rico, clasificados por su código de taxonomía oficial, traducidos al español y organizados por pueblo y región.
+
+## Contacto
+El Veci, asistente vecinal por WhatsApp y SMS: 787-417-7711
+`;
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600');
+  res.status(200).send(body);
+}
+
 async function handleLlms(req: any, res: any) {
+  if (/registromedicopr\.com/i.test(String(req.headers?.host || ''))) {
+    return handleLlmsRegistro(req, res);
+  }
   const { data: counts } = await supabase
     .from('places')
     .select('subcategory')

@@ -28,8 +28,9 @@ export default async function handler(req: any, res: any) {
       .eq('status', 'published')
       .gte('start_time', new Date().toISOString());
 
-    // 2. Base URL
+    // 2. Base URLs — registry pages live on their own domain (matches canonical)
     const baseUrl = 'https://www.mapadecaborojo.com';
+    const REG_BASE = 'https://registromedicopr.com';
     
     // 3. Build XML
     const urls = [];
@@ -116,12 +117,13 @@ export default async function handler(req: any, res: any) {
 
     // Registro Médico PR — index pages
     ;[
+      { slug: '', priority: 1.0, changefreq: 'weekly' },
       { slug: 'registro', priority: 0.9, changefreq: 'weekly' },
       { slug: 'registro/desiertos', priority: 0.8, changefreq: 'monthly' },
     ].forEach(({ slug, priority, changefreq }) => {
       urls.push(`
         <url>
-          <loc>${baseUrl}/${slug}</loc>
+          <loc>${REG_BASE}${slug ? '/' + slug : ''}</loc>
           <changefreq>${changefreq}</changefreq>
           <priority>${priority}</priority>
         </url>
@@ -146,7 +148,7 @@ export default async function handler(req: any, res: any) {
     specialists.forEach((p: any) => {
       urls.push(`
         <url>
-          <loc>${baseUrl}/especialista/${encodeURIComponent(p.slug)}</loc>
+          <loc>${REG_BASE}/especialista/${encodeURIComponent(p.slug)}</loc>
           <changefreq>monthly</changefreq>
           <priority>0.6</priority>
         </url>
@@ -159,7 +161,7 @@ export default async function handler(req: any, res: any) {
     SPEC_URLS.forEach((s) => {
       urls.push(`
         <url>
-          <loc>${baseUrl}/registro/${s}</loc>
+          <loc>${REG_BASE}/registro/${s}</loc>
           <changefreq>weekly</changefreq>
           <priority>0.7</priority>
         </url>
@@ -167,7 +169,7 @@ export default async function handler(req: any, res: any) {
       HUB_REGION_SLUGS.forEach((r) => {
         urls.push(`
         <url>
-          <loc>${baseUrl}/registro/${s}/${r}</loc>
+          <loc>${REG_BASE}/registro/${s}/${r}</loc>
           <changefreq>monthly</changefreq>
           <priority>0.5</priority>
         </url>
@@ -264,9 +266,14 @@ export default async function handler(req: any, res: any) {
       });
     }
 
+    // Host-aware: registromedicopr.com/sitemap.xml lists only registry URLs
+    // (no cross-domain entries → clean in Search Console).
+    const isReg = /registromedicopr\.com/i.test(String(req.headers?.host || ''));
+    const outUrls = isReg ? urls.filter((u) => u.includes('registromedicopr.com')) : urls;
+
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
     <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-      ${urls.join('')}
+      ${outUrls.join('')}
     </urlset>`;
 
     // 4. Return XML
