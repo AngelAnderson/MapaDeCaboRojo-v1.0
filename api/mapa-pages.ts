@@ -2857,7 +2857,12 @@ async function handleEspecialista(req: any, res: any) {
     ? `https://maps.google.com/maps?q=${place.lat},${place.lon}&z=15&output=embed`
     : `https://maps.google.com/maps?q=${encodeURIComponent((place.address || (muni + ', Puerto Rico')))}&z=13&output=embed`
 
-  const evtAttr = `specialty:'${place.subcategory || ''}',region:'${region || ''}'`
+  // Allowlist both values before they touch the inline onclick (HTML+JS context).
+  // spec is non-null only when subcategory ∈ REGISTRY_SPECS; region must be a known PR region.
+  const REG_REGIONS = new Set(['Oeste', 'Norte', 'Centro', 'Sur', 'Este', 'Metro', 'Diáspora'])
+  const safeSpec = spec ? place.subcategory : ''
+  const safeRegion = REG_REGIONS.has(region) ? region : ''
+  const evtAttr = `specialty:'${safeSpec}',region:'${safeRegion}'`
   const actionBtns = `<div class="not-prose flex flex-wrap gap-3 mt-5">
     ${telLink ? `<a href="${telLink}" onclick="try{gtag('event','click_to_call',{${evtAttr}})}catch(e){}" class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-bold px-5 py-3 rounded-xl text-base"><i class="fa-solid fa-phone"></i> ${T.call} ${escapeHtml(place.phone)}</a>` : ''}
     ${waLink ? `<a href="${waLink}" onclick="try{gtag('event','click_whatsapp',{${evtAttr}})}catch(e){}" class="inline-flex items-center gap-2 bg-white border-2 border-teal-600 text-teal-700 font-bold px-5 py-3 rounded-xl text-base hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${T.wa}</a>` : ''}
