@@ -11,9 +11,6 @@
       "schedule": "0 3 * * 1"
     }
   ],
-  "redirects": [
-    { "source": "/", "has": [{ "type": "host", "value": "(www\\.)?registromedicopr\\.com" }], "destination": "/registro", "permanent": false }
-  ],
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/admin/municipio", "destination": "/api/pages?page=admin-municipio" },

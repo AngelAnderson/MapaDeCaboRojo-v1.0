@@ -112,13 +112,14 @@ function layout(opts: {
   ogImage?: string  // custom OG image path (relative or absolute); falls back to menos-revolu canonical OG
   host?: string     // serving host header — switches branding (registromedicopr.com gets its own shell)
   canonicalHost?: string // force canonical/og base to a specific origin (SEO consolidation across domains)
+  canonicalUrl?: string  // full canonical URL override (e.g. the clean root) — wins over host+slug
 }): string {
   // Host-aware branding. registromedicopr.com is its OWN property — not Mapa de Cabo Rojo.
   const isReg = /registromedicopr\.com/i.test(opts.host || '')
   const canonicalBase = opts.canonicalHost || (isReg ? 'https://registromedicopr.com' : SITE_URL)
   const brandName = isReg ? 'Registro Médico PR' : 'Mapa de Cabo Rojo'
   const GA = 'G-6KBMV0LKQ4'
-  const canonical = `${canonicalBase}/${opts.slug}`
+  const canonical = opts.canonicalUrl || `${canonicalBase}/${opts.slug}`
   const jsonLd = opts.jsonLd
     ? `<script type="application/ld+json">${JSON.stringify(opts.jsonLd)}</script>`
     : ''
@@ -2738,6 +2739,7 @@ async function handleRegistro(req: any, res: any) {
     ogImage: '/og/registro.png',
     host: req.headers?.host,
     canonicalHost: 'https://registromedicopr.com',
+    canonicalUrl: 'https://registromedicopr.com',
   }))
 }
 
