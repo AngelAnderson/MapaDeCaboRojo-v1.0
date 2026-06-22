@@ -2496,7 +2496,11 @@ const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:n
 async function handleRegistro(req: any, res: any) {
   const md = REGISTRY_SPECS.filter(x => x.md)
   const allied = REGISTRY_SPECS.filter(x => !x.md)
-  const totalVerified = '6,370'
+  // Live count — accurate + auto-updating (page is cached s-maxage=3600, so ~1 query/hour)
+  const { count: npiCount } = await supabase
+    .from('places').select('id', { count: 'exact', head: true })
+    .not('npi', 'is', null).eq('status', 'open')
+  const totalVerified = (npiCount ?? 6344).toLocaleString('en-US')
 
   const optionsHtml = REGISTRY_SPECS.map(x =>
     `<option value="${escapeHtml(x.s)}">${x.e} ${escapeHtml(x.l)} (${x.t})</option>`).join('')
