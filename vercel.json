@@ -51,6 +51,7 @@
     { "source": "/moonshots", "destination": "/api/mapa-pages?page=moonshots" },
     { "source": "/mira-la-vuelta", "destination": "/api/mapa-pages?page=mira-la-vuelta" },
     { "source": "/pon-tu-negocio-en-el-mapa", "destination": "/api/mapa-pages?page=pon-tu-negocio-en-el-mapa" },
+    { "source": "/tienda", "destination": "/api/mapa-pages?page=tienda" },
     { "source": "/senales-del-pueblo", "destination": "/api/mapa-pages?page=senales-del-pueblo" },
     { "source": "/señales-del-pueblo", "destination": "/api/mapa-pages?page=senales-del-pueblo" },
     { "source": "/menos-revolu", "destination": "/api/mapa-pages?page=menos-revolu" },

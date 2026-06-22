@@ -176,6 +176,7 @@ ${jsonLd}
 </a>
 <nav class="hidden md:flex gap-4 text-sm text-slate-600 flex-wrap">
 <a href="/menos-revolu" class="hover:text-teal-600">Menos Revolú</a>
+<a href="/tienda" class="hover:text-teal-600 font-semibold text-teal-700">Tienda</a>
 <a href="/pon-tu-negocio-en-el-mapa" class="hover:text-teal-600 font-semibold text-teal-700">Pon tu negocio</a>
 <a href="/mira-la-vuelta" class="hover:text-teal-600">Mira la vuelta</a>
 <a href="/senales-del-pueblo" class="hover:text-teal-600">Señales</a>
@@ -201,6 +202,7 @@ ${opts.bodyHtml}
 
 <div class="mt-6 flex justify-center gap-4 text-xs text-slate-500 flex-wrap">
 <a href="/menos-revolu" class="hover:text-teal-600 font-semibold">Menos Revolú</a>
+<a href="/tienda" class="hover:text-teal-600 font-semibold text-teal-700">Tienda</a>
 <a href="/mision" class="hover:text-teal-600">Misión</a>
 <a href="/pon-tu-negocio-en-el-mapa" class="hover:text-teal-600">Pon tu negocio</a>
 <a href="/mira-la-vuelta" class="hover:text-teal-600">Mira la vuelta</a>
@@ -3579,10 +3581,197 @@ ${CIVIC_FORM_SCRIPT}
   }))
 }
 
+// =============== /tienda — La Tienda del Mapa ===============
+// The storefront for the ecosystem's real products. Vecino is the hero, the mapa
+// is the guide. Only verified products/prices/links (no guessed Stripe links).
+//   · La Vitrina (escalera $40 / $150 / $799 / $1,800) → textea (Angel qualifies)
+//   · Verificado gratis → textea
+//   · Boost 7 días $29 → textea (Stripe link pendiente)
+//   · Libro AJORÁO PDF $9.99 → Stripe checkout directo (link verificado en canon)
+//   · El Conserje 24/7 (hoteles) → textea (B2B, requiere conversación)
+// CTAs log intent to store_clicks via POST /api/mapa-pages?page=tienda-log.
+const BOOK_STRIPE_URL = 'https://buy.stripe.com/aFa3cu5VOa0n0EpbAL0co0l'
+const WA_BASE = 'https://wa.me/17874177711?text='
+const STORE_PRODUCTS = new Set([
+  'vitrina_prueba', 'vitrina_mensual', 'vitrina_anual', 'vitrina_veci',
+  'boost', 'libro', 'conserje', 'verificado',
+])
+
+function handleTienda(_req: any, res: any) {
+  const wa = (keyword: string) => `${WA_BASE}${encodeURIComponent(keyword)}`
+
+  const body = `
+<h1>La Tienda del Mapa</h1>
+
+<p class="text-lg text-slate-600 mt-4">Todo lo que vendemos cabe en una idea: <strong>menos revolú, más sistema</strong>. Aquí están las herramientas pa' que tu negocio aparezca cuando alguien lo busca, y pa' que tú pongas tu día en orden.</p>
+
+<div class="bg-teal-50 border border-teal-200 rounded-lg p-4 mt-5 not-prose">
+  <p class="text-sm text-slate-700 leading-snug"><strong>¿Cómo se compra?</strong> Lo digital (el libro) se paga al instante. Lo del directorio (La Vitrina, El Conserje) lo cuadramos por texto, porque primero te oigo y te digo qué te conviene. Sin llamadas. Todo en blanco y negro.</p>
+</div>
+
+<!-- ============ LA VITRINA ============ -->
+<h2 id="vitrina">La Vitrina · tu negocio en el mapa</h2>
+<p>Cuando alguien busca lo que tú vendes, apareces. No es "estar en un mapa". Es aparecer en el momento correcto, frente a gente con intención de comprar. La escalera empieza con $40 y sin compromiso.</p>
+
+<div class="grid sm:grid-cols-2 gap-4 mt-4 not-prose">
+
+  <div class="bg-white border border-slate-200 rounded-xl p-5 flex flex-col">
+    <div class="text-xs font-bold text-slate-500 uppercase tracking-wide">Entrada · sin compromiso</div>
+    <h3 class="text-xl font-bold mt-1">Prueba</h3>
+    <p class="text-2xl font-black text-slate-900 mt-1">$40</p>
+    <p class="text-sm text-slate-600 mt-2 flex-1">1 publicación esta semana + tu negocio listado en El Veci. Pa' probar sin amarrarte.</p>
+    <a href="${wa('VITRINA PRUEBA')}" data-store="vitrina_prueba" data-action="whatsapp" target="_blank" rel="noopener" class="mt-4 block text-center px-4 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-700 text-white text-sm font-bold">Textea VITRINA PRUEBA</a>
+  </div>
+
+  <div class="bg-teal-50 border-2 border-teal-400 rounded-xl p-5 flex flex-col relative">
+    <div class="absolute -top-3 left-5 bg-teal-500 text-white text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded">El que más cuadra</div>
+    <div class="text-xs font-bold text-teal-700 uppercase tracking-wide">Mensual</div>
+    <h3 class="text-xl font-bold mt-1">Destacado</h3>
+    <p class="text-2xl font-black text-slate-900 mt-1">$150<span class="text-sm font-semibold text-slate-500">/mes</span></p>
+    <p class="text-sm text-slate-600 mt-2 flex-1">4 publicaciones al mes (una por semana) + prioridad en El Veci + mención en el newsletter + reporte de cómo te fue.</p>
+    <a href="${wa('VITRINA MENSUAL')}" data-store="vitrina_mensual" data-action="whatsapp" target="_blank" rel="noopener" class="mt-4 block text-center px-4 py-2.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold">Textea VITRINA MENSUAL</a>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-xl p-5 flex flex-col">
+    <div class="text-xs font-bold text-slate-500 uppercase tracking-wide">Anual · pago completo</div>
+    <h3 class="text-xl font-bold mt-1">Anual</h3>
+    <p class="text-2xl font-black text-slate-900 mt-1">$799<span class="text-sm font-semibold text-slate-500">/año</span></p>
+    <p class="text-sm text-slate-600 mt-2 flex-1">52 publicaciones (una por semana todo el año) + exclusividad de tu categoría + reporte mensual + trato directo conmigo.</p>
+    <a href="${wa('VITRINA ANUAL')}" data-store="vitrina_anual" data-action="whatsapp" target="_blank" rel="noopener" class="mt-4 block text-center px-4 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-700 text-white text-sm font-bold">Textea VITRINA ANUAL</a>
+  </div>
+
+  <div class="bg-slate-900 text-white rounded-xl p-5 flex flex-col">
+    <div class="text-xs font-bold text-teal-300 uppercase tracking-wide">Premium · upfront</div>
+    <h3 class="text-xl font-bold mt-1">Vitrina + Veci</h3>
+    <p class="text-2xl font-black mt-1">$1,800<span class="text-sm font-semibold text-slate-400">/año</span></p>
+    <p class="text-sm text-slate-300 mt-2 flex-1">El Veci recomienda tu negocio activamente cuando alguien busca lo que vendes + reporte mensual + exclusiva por categoría y zona + garantía de 60 días.</p>
+    <a href="${wa('VITRINA VECI')}" data-store="vitrina_veci" data-action="whatsapp" target="_blank" rel="noopener" class="mt-4 block text-center px-4 py-2.5 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-900 text-sm font-bold">Textea VITRINA VECI</a>
+  </div>
+
+</div>
+
+<p class="text-sm text-slate-500 mt-3 italic">Antes de cobrarte, te pregunto qué tipo de negocio tienes y qué quieres lograr. Por eso La Vitrina se cuadra por texto, no con un botón.</p>
+
+<!-- ============ VERIFICADO GRATIS ============ -->
+<h2 id="verificado">Verificado · gratis pa' siempre</h2>
+<div class="bg-white border border-slate-200 rounded-xl p-5 mt-3 not-prose">
+  <p class="text-sm text-slate-600">Tu negocio en el directorio, en el mapa, y en las búsquedas de El Veci. Si Angel o Noelia llaman y confirman que sigues abierto, te ponemos el badge "verificado". <strong>No cuesta nada.</strong> No es pagar por aparecer. La Vitrina es opcional, pa' los que quieren más visibilidad.</p>
+  <a href="${wa('NEGOCIO')}" data-store="verificado" data-action="whatsapp" target="_blank" rel="noopener" class="mt-4 inline-block px-4 py-2.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold">Textea NEGOCIO + tu nombre</a>
+</div>
+
+<!-- ============ BOOST ============ -->
+<h2 id="boost">Boost 7 días</h2>
+<div class="bg-amber-50 border border-amber-200 rounded-xl p-5 mt-3 not-prose">
+  <div class="flex items-baseline gap-3">
+    <p class="text-2xl font-black text-slate-900">$29</p>
+    <p class="text-sm font-semibold text-amber-700">7 días arriba en tu categoría</p>
+  </div>
+  <p class="text-sm text-slate-600 mt-2">Tu negocio aparece primero en su categoría por una semana. Bueno pa' un fin de semana fuerte, una promoción, o una temporada. Lo cuadramos por texto.</p>
+  <a href="${wa('BOOST')}" data-store="boost" data-action="whatsapp" target="_blank" rel="noopener" class="mt-4 inline-block px-4 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold">Textea BOOST</a>
+</div>
+
+<!-- ============ EL LIBRO ============ -->
+<h2 id="libro">AJORÁO NO ES UN PLAN · el libro</h2>
+<div class="bg-white border-2 border-teal-300 rounded-xl p-5 mt-3 not-prose">
+  <div class="flex items-baseline gap-3">
+    <p class="text-2xl font-black text-slate-900">$9.99</p>
+    <p class="text-sm font-semibold text-teal-700">PDF · descarga al instante</p>
+  </div>
+  <p class="text-sm text-slate-600 mt-2">Vivir corriendo sale caro. Este libro corto te enseña a poner el día en orden sin volverte loco. Lo compras, lo descargas, y empiezas hoy. Pago seguro con Stripe.</p>
+  <a href="${BOOK_STRIPE_URL}" data-store="libro" data-action="checkout" target="_blank" rel="noopener" class="mt-4 inline-block px-5 py-2.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold">Comprar el PDF · $9.99</a>
+</div>
+
+<!-- ============ EL CONSERJE ============ -->
+<h2 id="conserje">El Conserje 24/7 · pa' hoteles y paradores</h2>
+<div class="bg-slate-50 border border-slate-200 rounded-xl p-5 mt-3 not-prose">
+  <p class="text-sm text-slate-600">El Veci, pero pa' tu hotel. Contesta las preguntas de tus huéspedes a cualquier hora (qué hay cerca, dónde comer, qué hacer, cómo llegar) sin que tu recepción tenga que estar pendiente. Es un producto distinto, lo cuadramos según tu propiedad.</p>
+  <a href="${wa('CONSERJE')}" data-store="conserje" data-action="whatsapp" target="_blank" rel="noopener" class="mt-4 inline-block px-4 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-700 text-white text-sm font-bold">Textea CONSERJE</a>
+</div>
+
+<!-- ============ POR QUÉ ============ -->
+<h2>Por qué este mapa y no Google</h2>
+<p><strong>Google tiene datos. Facebook tiene ruido. Nosotros tenemos contexto local.</strong> No somos visitantes mirando un mapa. Somos vecinos leyendo la vuelta. Cada negocio se verifica a mano, uno por uno. Eso es lo que estás comprando: que alguien se sentó a confirmar que la información sirve.</p>
+<p>Lee más: <a href="/pon-tu-negocio-en-el-mapa" class="text-teal-600 hover:underline">cómo poner tu negocio</a> · <a href="/transparencia" class="text-teal-600 hover:underline">los números en vivo</a> · <a href="/mision" class="text-teal-600 hover:underline">por qué existe el mapa</a>.</p>
+
+<div class="bg-teal-50 border border-teal-200 rounded-lg p-6 mt-8 text-center not-prose">
+  <p class="text-lg font-semibold">¿No sabes cuál te conviene?</p>
+  <p class="text-sm text-slate-600 mt-1">Texteame qué vendes y yo te digo. Sin pitch, sin presión.</p>
+  <a href="${wa('TIENDA')}" data-store="verificado" data-action="whatsapp" target="_blank" rel="noopener" class="mt-3 inline-block px-5 py-2.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold">Textea al ${PHONE_CTA}</a>
+  <p class="text-sm text-slate-600 mt-3 italic">Si te sirve, llégate. Si no, sigue tu camino. El directorio sigue funcionando con o sin ti.</p>
+</div>
+
+<script>
+(function(){
+  function track(product, action){
+    try {
+      fetch('/api/mapa-pages?page=tienda-log', {
+        method: 'POST', keepalive: true,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ product: product, action: action, referrer: document.referrer || '' })
+      });
+    } catch(e) {}
+  }
+  document.querySelectorAll('[data-store]').forEach(function(el){
+    el.addEventListener('click', function(){
+      track(el.getAttribute('data-store'), el.getAttribute('data-action') || '');
+    });
+  });
+})();
+</script>
+`
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Store',
+    name: 'La Tienda del Mapa · MapaDeCaboRojo.com',
+    description: 'Productos del ecosistema de Cabo Rojo: La Vitrina pa\' negocios, el libro AJORÁO, El Conserje 24/7 pa\' hoteles.',
+    url: `${SITE_URL}/tienda`,
+    makesOffer: [
+      { '@type': 'Offer', name: 'La Vitrina Prueba', price: '40', priceCurrency: 'USD' },
+      { '@type': 'Offer', name: 'La Vitrina Mensual', price: '150', priceCurrency: 'USD' },
+      { '@type': 'Offer', name: 'La Vitrina Anual', price: '799', priceCurrency: 'USD' },
+      { '@type': 'Offer', name: 'La Vitrina + Veci', price: '1800', priceCurrency: 'USD' },
+      { '@type': 'Offer', name: 'Boost 7 días', price: '29', priceCurrency: 'USD' },
+      { '@type': 'Offer', name: 'Libro AJORÁO NO ES UN PLAN (PDF)', price: '9.99', priceCurrency: 'USD', url: BOOK_STRIPE_URL },
+    ],
+  }
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=1800')
+  res.status(200).send(layout({
+    title: 'La Tienda del Mapa · La Vitrina, el libro AJORÁO, El Conserje',
+    description: 'Los productos de Cabo Rojo en un solo sitio. La Vitrina pa\' que tu negocio aparezca ($40 a $1,800). El libro AJORÁO ($9.99 PDF). El Conserje 24/7 pa\' hoteles. Menos revolú, más sistema.',
+    slug: 'tienda',
+    bodyHtml: body,
+    jsonLd,
+    ogImage: '/og/menos-revolu.png',
+  }))
+}
+
+async function handleTiendaLog(req: any, res: any) {
+  try {
+    let body: any = req.body
+    if (typeof body === 'string') { try { body = JSON.parse(body) } catch { body = {} } }
+    body = body || {}
+    const product = String(body.product || '').slice(0, 40)
+    if (STORE_PRODUCTS.has(product)) {
+      await supabase.from('store_clicks').insert({
+        product,
+        action: body.action ? String(body.action).slice(0, 20) : null,
+        ua: String(req.headers['user-agent'] || '').slice(0, 300),
+        referrer: body.referrer ? String(body.referrer).slice(0, 300) : null,
+      })
+    }
+  } catch { /* analytics must never break the page */ }
+  res.status(204).end()
+}
+
 export default async function handler(req: any, res: any) {
   const page = String(req.query.page || '')
 
   switch (page) {
+    case 'tienda': return handleTienda(req, res)
+    case 'tienda-log': return await handleTiendaLog(req, res)
     case 'quien-responde': return await handleQuienResponde(req, res)
     case 'acceso': return handleAcceso(req, res)
     case 'acceso-log': return await handleAccesoLog(req, res)
