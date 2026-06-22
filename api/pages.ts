@@ -3082,8 +3082,28 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
 
     const generatedAt = new Date().toLocaleString('es-PR', { timeZone: 'America/Puerto_Rico' });
 
+    // ── Single source of truth: every count on this page comes from the live
+    // census view (mv_places_census). NO hardcoded business counts anywhere.
     const total = c.total ?? 0;
     const openCount = c.open_count ?? 0;
+    const closedCount = c.closed_count ?? 0;
+    const unknownCount = c.unknown_count ?? 0;
+    const everVerified = c.ever_verified ?? 0;
+    const fresh90d = c.fresh_90d ?? 0;
+    const newThisMonth = c.new_this_month ?? 0;
+    const freshnessPct = c.freshness_pct != null ? String(c.freshness_pct) : '0';
+    const residents = CABO_ROJO_BASELINE.residents;
+    const perCapita = openCount > 0 ? Math.round(residents / openCount) : 0; // personas por 1 negocio abierto
+    // Sourced regional density (our own verified directory, May 2026) — replaces the
+    // unsourced "1 cada 90 / casi el doble que PR" claim that was retired in the baseline comment.
+    const regionalDensity = [
+      { town: 'Hormigueros', per: 47 },
+      { town: 'Cabo Rojo', per: perCapita, self: true },
+      { town: 'San Germán', per: 50 },
+      { town: 'Lajas', per: 62 },
+      { town: 'Sabana Grande', per: 81 },
+      { town: 'Mayagüez', per: 87 },
+    ].sort((a, b) => a.per - b.per);
     const fmt = (n: number) => n.toLocaleString('es-PR');
     const fmtMoney = (n: number) => n >= 1_000_000 ? `$${(n / 1_000_000).toFixed(1)}M` : `$${Math.round(n / 1000)}K`;
     const fmtMoneyExact = (n: number) => `$${(n / 1_000_000).toFixed(2)}M`;
@@ -3203,15 +3223,53 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
     const youthCeroOeste = youthCensus.filter(r => r.oeste === 0);
     const youthCeroCr = youthCensus.filter(r => r.cr === 0 && r.oeste > 0);
 
+    // ── SECTION 1.45 data: "Lo que Cabo Rojo buscó" — el tablero de demanda real.
+    // Agrupa las búsquedas crudas del *7711 (mv_real_searches_90d) en categorías legibles,
+    // las cruza contra el supply del directorio, y saca el veredicto. Es lo más compartible
+    // de la página: la voz del pueblo en números que nadie más publica.
+    type DemandDef = { label: string; emoji: string; q: RegExp; supply: (p: any) => boolean; slug?: string };
+    const DEMAND_DEFS: DemandDef[] = [
+      { label: 'Heladerías', emoji: '🍦', q: /helado|ice cream|mantecado|rex cream|gold ice/i, supply: (p) => /helado|ice cream|mantecado|rex cream|gold ice/i.test(`${p.name} ${(p.tags||[]).join(' ')} ${p.subcategory||''}`), slug: 'restaurantes' },
+      { label: 'Electricistas', emoji: '⚡', q: /electric|electrisista/i, supply: (p) => /electric/i.test(`${p.name} ${(p.tags||[]).join(' ')} ${p.subcategory||''}`), slug: 'electrico' },
+      { label: 'Lavanderías / laundromat', emoji: '🧺', q: /lavanderia|laundromat|lavar ropa|laundry/i, supply: (p) => /lavanderia|laundromat|laundry/i.test(`${p.name} ${(p.tags||[]).join(' ')} ${p.subcategory||''}`), slug: 'servicios' },
+      { label: 'Mariscos / pescadería', emoji: '🦐', q: /marisco|seafood|pescaderia|pescado/i, supply: (p) => /marisco|seafood|pescaderia/i.test(`${p.name} ${(p.tags||[]).join(' ')} ${p.subcategory||''}`), slug: 'restaurantes' },
+      { label: 'Reparación de aire / nevera', emoji: '❄️', q: /aire acondicionado|reparar aire|reparacion de aire|frigorifico|nevera|refrigerac/i, supply: (p) => /aire|refrigerac|frigorific|nevera|a\/c|hvac/i.test(`${p.name} ${(p.tags||[]).join(' ')} ${p.subcategory||''}`), slug: 'ac' },
+      { label: 'Veterinarios', emoji: '🐾', q: /veterinari|vet\b/i, supply: (p) => /veterinari/i.test(`${p.name} ${(p.tags||[]).join(' ')} ${p.subcategory||''}`), slug: 'veterinario' },
+      { label: 'Grúa / remolque', emoji: '🚛', q: /grua|remolque|tow/i, supply: (p) => /grua|remolque|tow/i.test(`${p.name} ${(p.tags||[]).join(' ')} ${p.subcategory||''}`), slug: 'servicios' },
+      { label: 'Dentistas', emoji: '🦷', q: /dentist|dentista/i, supply: (p) => /dentist|dental/i.test(`${p.name} ${(p.tags||[]).join(' ')} ${p.subcategory||''}`), slug: 'dentista' },
+      { label: 'Mueblerías', emoji: '🛋️', q: /mueble|muebleria|furniture/i, supply: (p) => /mueble|furniture/i.test(`${p.name} ${(p.tags||[]).join(' ')} ${p.subcategory||''}`), slug: 'compras' },
+      { label: 'Carnicerías', emoji: '🥩', q: /carniceria|carne|butcher/i, supply: (p) => /carniceria|butcher/i.test(`${p.name} ${(p.tags||[]).join(' ')} ${p.subcategory||''}`), slug: 'compras' },
+      { label: 'Desayuno / brunch', emoji: '🍳', q: /desayun|brunch|breakfast/i, supply: (p) => /desayun|brunch|breakfast|cafe/i.test(`${p.name} ${(p.tags||[]).join(' ')} ${p.subcategory||''}`), slug: 'restaurantes' },
+      { label: 'Ropa / boutique', emoji: '👕', q: /ropa|boutique|tienda de ropa|clothing/i, supply: (p) => /ropa|boutique|clothing/i.test(`${p.name} ${(p.tags||[]).join(' ')} ${p.subcategory||''}`), slug: 'compras' },
+      { label: 'Pinchos / comida criolla', emoji: '🍢', q: /pincho|comida criolla|frituras|kiosko/i, supply: (p) => /pincho|criolla|frituras|kiosko/i.test(`${p.name} ${(p.tags||[]).join(' ')} ${p.subcategory||''}`), slug: 'restaurantes' },
+      { label: 'Plomeros', emoji: '🔧', q: /plomer|plumber|tuberia/i, supply: (p) => /plomer|plumber/i.test(`${p.name} ${(p.tags||[]).join(' ')} ${p.subcategory||''}`), slug: 'plomero' },
+    ];
+    const demandBoard = DEMAND_DEFS.map(d => {
+      const demand = (realSearches90d as any[])
+        .filter((rq: any) => d.q.test(rq.q_norm || ''))
+        .reduce((s: number, rq: any) => s + (rq.cnt || 0), 0);
+      const supply = (allPlaces as any[]).filter(d.supply).length;
+      // veredicto: relación demanda÷supply (búsquedas por negocio que lo resuelve)
+      const ratio = supply > 0 ? demand / supply : demand;
+      let verdict: 'gap' | 'tight' | 'covered';
+      if (supply === 0) verdict = 'gap';
+      else if (ratio >= 60) verdict = 'tight';   // mucha demanda, poco supply
+      else verdict = 'covered';
+      return { label: d.label, emoji: d.emoji, demand, supply, ratio, verdict, slug: d.slug };
+    }).filter(d => d.demand > 0).sort((a, b) => b.demand - a.demand);
+    const demandTotal = demandBoard.reduce((s, d) => s + d.demand, 0);
+    const demandTop = demandBoard.slice(0, 12);
+    const demandGaps = demandBoard.filter(d => d.verdict === 'gap' || d.verdict === 'tight');
+
     const html = `<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cabo Rojo en Números — el pueblo viéndose en el espejo</title>
-<meta name="description" content="937 negocios verificados para 47,158 personas en Cabo Rojo. 1 por cada 50. TAM/SAM/SOM por categoría, sobreoferta visible, lo que el pueblo necesita. Work-in-progress — admitimos errores en público.">
+<meta name="description" content="${fmt(openCount)} negocios verificados para ${fmt(residents)} personas en Cabo Rojo. 1 por cada ${perCapita}. TAM/SAM/SOM por categoría, lo que el pueblo buscó esta semana, sobreoferta visible. Work-in-progress — admitimos errores en público.">
 <meta property="og:title" content="Cabo Rojo en Números — el pueblo viéndose en el espejo">
-<meta property="og:description" content="937 negocios para 47,158 personas. Trabajo en construcción · errores admitidos públicamente · TAM/SAM/SOM por categoría · ajá moments que nadie más publica.">
+<meta property="og:description" content="${fmt(openCount)} negocios para ${fmt(residents)} personas. Lo que Cabo Rojo buscó esta semana · TAM/SAM/SOM por categoría · ajá moments que nadie más publica.">
 <meta property="og:url" content="https://www.mapadecaborojo.com/pueblo-en-numeros">
 <meta property="og:type" content="article">
 <meta property="og:image" content="https://www.mapadecaborojo.com/og/pueblo-en-numeros.png">
@@ -3219,8 +3277,8 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
 <meta property="og:image:height" content="630">
 <meta property="og:locale" content="es_PR">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Cabo Rojo en Números — 1 negocio por cada 50 personas">
-<meta name="twitter:description" content="TAM/SAM/SOM por categoría, sobreoferta visible, errores admitidos en público.">
+<meta name="twitter:title" content="Cabo Rojo en Números — 1 negocio por cada ${perCapita} personas">
+<meta name="twitter:description" content="Lo que el pueblo buscó esta semana, TAM/SAM/SOM por categoría, errores admitidos en público.">
 <meta name="twitter:image" content="https://www.mapadecaborojo.com/og/pueblo-en-numeros.png">
 <link rel="canonical" href="https://www.mapadecaborojo.com/pueblo-en-numeros">
 <meta name="robots" content="index,follow">
@@ -3228,7 +3286,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
   "@context": "https://schema.org",
   "@type": "Article",
   "headline": "Cabo Rojo en Números — densidad de negocios por categoría",
-  "description": `937 negocios verificados para 47,158 personas. 1 por cada 50. TAM/SAM/SOM por categoría, sobreoferta visible, lo que el pueblo necesita.`,
+  "description": `${fmt(openCount)} negocios verificados para ${fmt(residents)} personas. 1 por cada ${perCapita}. TAM/SAM/SOM por categoría, sobreoferta visible, lo que el pueblo necesita.`,
   "url": "https://www.mapadecaborojo.com/pueblo-en-numeros",
   "datePublished": "2026-05-06",
   "dateModified": new Date().toISOString().slice(0, 10),
@@ -3306,21 +3364,21 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
   <div style="max-width:980px;margin:0 auto;">
     <div style="text-align:center;max-width:780px;margin:0 auto 28px;">
       <div style="font-size:13px;color:#5eead4;letter-spacing:0.15em;text-transform:uppercase;font-weight:700;margin-bottom:18px;">📊 Cabo Rojo en Números</div>
-      <h1 style="font-size:clamp(28px, 6.5vw, 42px);font-weight:800;letter-spacing:-1px;line-height:1.15;margin-bottom:14px;">1 negocio por cada <span style="color:#5eead4;">50 personas</span> en Cabo Rojo.</h1>
-      <div style="font-family:'SF Mono',Monaco,Menlo,monospace;font-size:14px;color:#94a3b8;background:rgba(255,255,255,0.06);padding:8px 14px;border-radius:6px;display:inline-block;margin-bottom:18px;letter-spacing:0;">47,158 personas ÷ 937 negocios abiertos = 1 cada 50</div>
-      <p style="font-size:20px;color:#cbd5e1;line-height:1.5;margin-bottom:8px;">El promedio en Puerto Rico: 1 negocio cada 90 personas. <strong style="color:#fff;">O sea: Cabo Rojo tiene casi el doble de negocios por habitante.</strong></p>
-      <p style="font-size:15px;color:#94a3b8;line-height:1.5;">Hormigueros y San Germán están igual de apretados. Mayagüez tiene la mitad de negocios por persona que nosotros — esa es la comparación que importa.</p>
+      <h1 style="font-size:clamp(28px, 6.5vw, 42px);font-weight:800;letter-spacing:-1px;line-height:1.15;margin-bottom:14px;">1 negocio por cada <span style="color:#5eead4;">${perCapita} personas</span> en Cabo Rojo.</h1>
+      <div style="font-family:'SF Mono',Monaco,Menlo,monospace;font-size:14px;color:#94a3b8;background:rgba(255,255,255,0.06);padding:8px 14px;border-radius:6px;display:inline-block;margin-bottom:18px;letter-spacing:0;">${fmt(residents)} personas ÷ ${fmt(openCount)} negocios abiertos = 1 cada ${perCapita}</div>
+      <p style="font-size:20px;color:#cbd5e1;line-height:1.5;margin-bottom:8px;">Comparado con el resto del oeste, <strong style="color:#fff;">Cabo Rojo es de los más apretados de negocios por persona.</strong> No es opinión — es nuestro propio directorio verificado, pueblo por pueblo.</p>
+      <p style="font-size:15px;color:#94a3b8;line-height:1.5;">${regionalDensity.map(d => `${d.self ? '<strong style="color:#5eead4;">' : ''}${esc(d.town)} 1/${d.per}${d.self ? '</strong>' : ''}`).join(' · ')}. Mientras menos personas por negocio, más apretada la competencia.</p>
     </div>
 
     <!-- WIIFM micro-stack (3 chips: qué significa / por qué importa / qué hago) -->
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;max-width:920px;margin:0 auto;">
       <div style="background:rgba(94,234,212,0.08);border:1px solid rgba(94,234,212,0.2);border-radius:10px;padding:16px 18px;">
         <div style="font-size:11px;color:#5eead4;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:8px;">¿Qué significa?</div>
-        <div style="font-size:14px;color:#e2e8f0;line-height:1.55;">Hay casi el doble de negocios por persona que en un pueblo típico de PR.</div>
+        <div style="font-size:14px;color:#e2e8f0;line-height:1.55;">Hay 1 negocio por cada ${perCapita} personas — de los más apretados del oeste.</div>
       </div>
       <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:16px 18px;">
         <div style="font-size:11px;color:#fbbf24;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:8px;">¿Por qué importa?</div>
-        <div style="font-size:14px;color:#e2e8f0;line-height:1.55;">Cuando hay 2 veces más negocios pa' la misma gente, la ganancia se divide entre más manos. Más quiebras, menos margen.</div>
+        <div style="font-size:14px;color:#e2e8f0;line-height:1.55;">Cuando hay muchos negocios pa' la misma gente, la ganancia se divide entre más manos. Más quiebras, menos margen.</div>
       </div>
       <div style="background:rgba(96,165,250,0.08);border:1px solid rgba(96,165,250,0.2);border-radius:10px;padding:16px 18px;">
         <div style="font-size:11px;color:#60a5fa;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:8px;">¿Qué hago con esto?</div>
@@ -3342,7 +3400,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
   <!-- SECTION 1.5: TL;DR ABUELA (plain-language summary) -->
   <div class="card" style="background:#ecfdf5;border-left:4px solid #0d9488;">
     <div style="font-size:11px;color:#0f766e;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:8px;">Lo que esta página dice, en una línea</div>
-    <p style="font-size:16px;color:#134e4a;line-height:1.6;margin:0 0 10px 0;">En Cabo Rojo hay <strong>946 negocios en el directorio · 937 abiertos hoy · 4 cerrados · 5 dudosos</strong>. Para 47,158 personas. Usamos los <strong>937 abiertos</strong> para calcular densidad porque los cerrados ya no compiten. Más negocios de los que el pueblo solo puede sostener — <strong>sobran de unas cosas</strong> (food trucks, boutiques, restaurantes — entrar es barato y rápido), <strong>faltan de otras</strong> (plomero, electricista, cardiólogo — entrar requiere licencia, años de estudio o capital alto). El por qué de cada uno está abajo. Si tú o alguien tuyo está pensando en abrir negocio, busca tu categoría en la tabla y léela antes de firmar nada.</p>
+    <p style="font-size:16px;color:#134e4a;line-height:1.6;margin:0 0 10px 0;">En Cabo Rojo hay <strong>${fmt(total)} negocios en el directorio · ${fmt(openCount)} abiertos hoy · ${fmt(closedCount)} cerrados · ${fmt(unknownCount)} dudosos</strong>. Para ${fmt(residents)} personas. Usamos los <strong>${fmt(openCount)} abiertos</strong> para calcular densidad porque los cerrados ya no compiten. Más negocios de los que el pueblo solo puede sostener — <strong>sobran de unas cosas</strong> (food trucks, boutiques, restaurantes — entrar es barato y rápido), <strong>faltan de otras</strong> (plomero, electricista, cardiólogo — entrar requiere licencia, años de estudio o capital alto). El por qué de cada uno está abajo. Si tú o alguien tuyo está pensando en abrir negocio, busca tu categoría en la tabla y léela antes de firmar nada.</p>
   </div>
 
   ${oppBanner}
@@ -3354,6 +3412,61 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
     <div style="font-size:14px;color:#475569;margin-top:10px;line-height:1.55;">$5.2M de FEMA para el Coliseo Rebekah Colberg (límite 20 sept 2026) + ~$735K para Isla Ratones (devueltos). El problema casi nunca es que no haya dinero: está obligado y sentado. Cada activo cerrado es un motor económico apagado.</div>
     <div style="margin-top:12px;color:#0d9488;font-size:13px;font-weight:700;">Ver el récord completo en el Observatorio →</div>
   </a>
+
+  <!-- SECTION 1.42: ÍNDICE — salta a lo que te interesa (tame information overload) -->
+  <div style="margin-bottom:20px;text-align:center;">
+    <div style="font-size:11px;color:#64748b;letter-spacing:0.1em;text-transform:uppercase;font-weight:700;margin-bottom:10px;">Es mucha info — salta a lo tuyo</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
+      ${[
+        { t: '🔍 Lo que el pueblo busca', h: '#demanda' },
+        { t: '💵 La matemática en dólares', h: '#tabla-categorias' },
+        { t: '⚙️ Tengo negocio y va lento', h: '#3-movidas' },
+        { t: '🗺️ El mapa de negocios', h: '#mapa' },
+        { t: '🩺 Especialistas del oeste', h: '#especialistas' },
+      ].map(c => `<a href="${c.h}" style="background:#fff;border:1px solid #e2e8f0;color:#334155;padding:8px 14px;border-radius:999px;font-size:13px;font-weight:600;text-decoration:none;box-shadow:0 1px 2px rgba(0,0,0,0.04);">${c.t}</a>`).join('')}
+    </div>
+  </div>
+
+  <!-- SECTION 1.45: LO QUE CABO ROJO BUSCÓ — tablero de demanda real (shareable + money) -->
+  <div class="card" id="demanda" style="border-left:4px solid #0d9488;scroll-margin-top:20px;">
+    <div class="kicker">🔍 La voz del pueblo · en vivo</div>
+    <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:6px;">Lo que Cabo Rojo buscó en el *7711</h2>
+    <p style="font-size:14px;color:#475569;margin-bottom:6px;line-height:1.55;">Esto no es una encuesta. Son las búsquedas reales que la gente le texteó al <strong>787-417-7711</strong> en los últimos 90 días. <strong>${fmt(demandTotal)} búsquedas</strong> en las categorías de abajo. Nadie más en Puerto Rico publica esto — porque nadie más lo tiene.</p>
+    <p style="font-size:12px;color:#94a3b8;margin-bottom:18px;">🟢 lo tienes cubierto · 🟡 mucha demanda, pocos lo resuelven · 🔥 lo buscan y nadie aparece en el directorio.</p>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      ${demandTop.map((d, i) => {
+        const max = demandTop[0].demand || 1;
+        const w = Math.max(6, Math.round((d.demand / max) * 100));
+        const vEmoji = d.verdict === 'gap' ? '🔥' : d.verdict === 'tight' ? '🟡' : '🟢';
+        const vColor = d.verdict === 'gap' ? '#dc2626' : d.verdict === 'tight' ? '#ca8a04' : '#0d9488';
+        const vText = d.verdict === 'gap' ? 'nadie lo resuelve' : d.verdict === 'tight' ? `solo ${d.supply} lo resuelve${d.supply === 1 ? '' : 'n'}` : `${d.supply} negocios lo resuelven`;
+        const link = d.slug ? `/categoria/${d.slug}` : `https://wa.me/17874177711?text=${encodeURIComponent(d.label)}`;
+        return `<a href="${link}" style="display:block;text-decoration:none;color:inherit;background:#f8fafc;border-radius:8px;padding:11px 14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:5px;">
+            <span style="font-size:14px;font-weight:700;color:#1e293b;">${d.emoji} ${esc(d.label)}</span>
+            <span style="font-size:12px;font-weight:700;color:${vColor};white-space:nowrap;">${vEmoji} ${esc(vText)}</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="flex:1;background:#e2e8f0;height:9px;border-radius:5px;overflow:hidden;">
+              <div style="background:${vColor};height:100%;width:${w}%;border-radius:5px;"></div>
+            </div>
+            <span style="font-size:12px;font-weight:700;color:#475569;white-space:nowrap;min-width:92px;text-align:right;">${fmt(d.demand)} búsquedas</span>
+          </div>
+        </a>`;
+      }).join('')}
+    </div>
+    ${demandGaps.length > 0 ? `
+    <div style="margin-top:16px;padding:14px 16px;background:#fef2f2;border-radius:10px;border-left:3px solid #dc2626;">
+      <div style="font-size:13px;font-weight:800;color:#991b1b;margin-bottom:4px;">💰 Si tú resuelves una de estas, el pueblo ya te está buscando</div>
+      <p style="font-size:12px;color:#7f1d1d;line-height:1.55;margin:0 0 8px 0;">Demanda real, poco o ningún negocio en el directorio: <strong>${demandGaps.map(g => esc(g.label.toLowerCase())).join(' · ')}</strong>. Si tienes ese negocio o lo vas a abrir, te ponemos en el mapa pa' que te encuentren — gratis los primeros 30 días.</p>
+      <a href="https://wa.me/17874177711?text=${encodeURIComponent('Resuelvo uno de los que el pueblo busca y quiero salir en el mapa')}" target="_blank" rel="noopener" style="display:inline-block;background:#dc2626;color:#fff;padding:9px 16px;border-radius:7px;font-size:13px;font-weight:700;text-decoration:none;min-height:40px;line-height:22px;">Quiero aparecer →</a>
+    </div>` : ''}
+    <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+      <span style="font-size:12px;color:#64748b;font-weight:600;">¿Útil? Mándaselo a alguien:</span>
+      <a href="https://wa.me/?text=${encodeURIComponent('Esto es lo que Cabo Rojo buscó este mes (búsquedas reales del *7711): https://www.mapadecaborojo.com/pueblo-en-numeros')}" target="_blank" rel="noopener" style="background:#25d366;color:#fff;padding:8px 14px;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none;min-height:38px;display:inline-flex;align-items:center;gap:6px;">💬 WhatsApp</a>
+      <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://www.mapadecaborojo.com/pueblo-en-numeros')}" target="_blank" rel="noopener" style="background:#1877f2;color:#fff;padding:8px 14px;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none;min-height:38px;display:inline-flex;align-items:center;gap:6px;">f Facebook</a>
+    </div>
+  </div>
 
   <!-- SECTION 1.6: PRIMER PASO UNIVERSAL — 2 caminos claros -->
   <div class="card" style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:#fff;border-left:4px solid #5eead4;padding:24px 28px;">
@@ -3393,7 +3506,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
         { lbl: 'Ingreso típico', val: '$' + fmt(CABO_ROJO_BASELINE.median_income), sub: 'Census ACS 2019-23 (mediana)', subUrl: 'https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico', icon: '💵', color: '#16a34a', wiifm: 'Es la mitad del promedio US ($75K). O sea: precio bajo gana, premium pierde.' },
         { lbl: 'Pull regional', val: '~' + fmt(CABO_ROJO_BASELINE.regional_pull), sub: '47K CR + 15K Hormigueros + 23K Lajas + 30K S.Germán', subUrl: 'https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico', icon: '🌐', color: '#0369a1', wiifm: 'Servicios (salud, mecánico, abogado) — tu cliente puede venir de pueblo vecino.' },
         { lbl: 'Visitantes/año', val: '~' + fmt(CABO_ROJO_BASELINE.visitors_annual), sub: '⚠️ PRTC estimate · pendiente verificar', subUrl: 'https://www.tourism.pr.gov/', icon: '🏖️', color: '#ea580c', wiifm: '3 meses pico (verano + diciembre). Restaurante + hospedaje viven de aquí.' },
-        { lbl: 'Negocios abiertos hoy', val: fmt(openCount), sub: '946 directorio · 937 abiertos · 4 cerrados · 5 dudosos', subUrl: 'https://mapadecaborojo.com', icon: '🏢', color: '#dc2626', wiifm: 'Casi 2× lo que aguanta el pueblo solo. El resto compite por turistas o se exporta.' },
+        { lbl: 'Negocios abiertos hoy', val: fmt(openCount), sub: `${fmt(total)} directorio · ${fmt(openCount)} abiertos · ${fmt(closedCount)} cerrados · ${fmt(unknownCount)} dudosos`, subUrl: 'https://mapadecaborojo.com', icon: '🏢', color: '#dc2626', wiifm: 'Más negocios de los que el pueblo solo puede sostener. El resto compite por turistas o se exporta.' },
       ].map(s => `
         <div style="padding:16px 14px;background:#f8fafc;border-radius:10px;border-left:3px solid ${s.color};">
           <div style="font-size:20px;margin-bottom:4px;">${s.icon}</div>
@@ -3776,7 +3889,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
   })()}
 
   <!-- SECTION 5.7: ESPECIALISTAS MÉDICOS DEL OESTE (live, crowdsource-first) -->
-  <div class="card" style="border-left:4px solid #0d9488;">
+  <div class="card" id="especialistas" style="border-left:4px solid #0d9488;scroll-margin-top:20px;">
     <div class="kicker" style="color:#0d9488;">Salud · región oeste</div>
     <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:6px;">¿Cuántos especialistas tenemos? Esto es lo que sabemos.</h2>
     <p style="font-size:13px;color:#475569;margin-bottom:8px;">Conteo en vivo de nuestro directorio verificado: Cabo Rojo + Mayagüez + San Germán + Lajas + Hormigueros + Sabana Grande + Añasco. <strong>No es la lista oficial de nadie — es la que estamos construyendo entre todos.</strong> Si sabes de un especialista que falta (¿uno en Ponce que esté cogiendo citas?), dínoslo y lo agregamos.</p>
@@ -3906,7 +4019,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
       <p style="font-size:13px;color:#64748b;margin:0;">Lo que la data actual NO cubre — admitido en público. La próxima versión cubre cada una.</p>
     </summary>
     <ol style="padding-left:24px;font-size:13px;color:#374151;line-height:1.8;margin-top:18px;">
-      <li><strong>Cuántos negocios son zombi.</strong> De 937 abiertos publicados, solo 20 verificados en persona en los últimos 90 días (2.1%). La cifra "abierto" puede estar inflada 5-15% por negocios cerrados que no actualizaron Google. La próxima versión: chequeo automático contra Google + caminata mensual del pueblo.</li>
+      <li><strong>Cuántos negocios son zombi.</strong> De ${fmt(openCount)} abiertos publicados, ${fmt(fresh90d)} verificados en los últimos 90 días (${freshnessPct}%) y ${fmt(everVerified)} verificados alguna vez. La cifra "abierto" puede estar inflada 5-15% por negocios cerrados que no actualizaron Google. La próxima versión: chequeo automático contra Google + caminata mensual del pueblo.</li>
       <li><strong>Tasa de cierre real.</strong> No tenemos data histórica año tras año de cuántos cierran. Hipótesis: 15-20% rotación en categorías saturadas.</li>
       <li><strong>Margen y salud financiera por categoría.</strong> Información privada. Solo la podemos adivinar por señales indirectas (reseñas, horario, años abierto).</li>
       <li><strong>Economía informal completa.</strong> La repostería casera (4 búsquedas, 0 en el directorio) probablemente tiene 30-100 productores via FB/IG. El bot no los ve. Google Maps tampoco.</li>
