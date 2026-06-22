@@ -2518,15 +2518,15 @@ async function handleRegistro(req: any, res: any) {
   const body = `
 <h1>Registro de Especialistas Médicos de Puerto Rico</h1>
 
-<p class="text-lg text-slate-600 mt-3"><strong>${totalVerified} especialistas y proveedores de salud</strong>, cada uno verificado contra el <strong>registro federal NPPES/CMS</strong> del gobierno de EE.UU. En español, por especialidad y por región. El único que puedes leer sin ser doctor ni saber inglés.</p>
+<p class="text-lg text-slate-600 mt-2">Encuentra tu especialista por especialidad y región. <strong>${totalVerified} verificados</strong> contra el registro federal NPPES. En español, gratis, sin cuenta.</p>
 
-<div class="not-prose mt-4 flex flex-wrap gap-3 text-sm">
-  <span class="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1.5 rounded-full"><i class="fa-solid fa-shield-halved"></i> Cada nombre tiene NPI federal público</span>
-  <span class="inline-flex items-center gap-2 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1.5 rounded-full"><i class="fa-solid fa-list-check"></i> ${REGISTRY_SPECS.length} especialidades</span>
-  <span class="inline-flex items-center gap-2 bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full"><i class="fa-solid fa-calendar-check"></i> Actualizado junio 2026</span>
+<div class="not-prose mt-3 flex flex-wrap gap-2 text-xs">
+  <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-shield-halved"></i> NPI federal verificado</span>
+  <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-list-check"></i> ${REGISTRY_SPECS.length} especialidades</span>
+  <span class="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-calendar-check"></i> Actualizado junio 2026</span>
 </div>
 
-<div id="reg-tool" class="not-prose mt-6 bg-white border-2 border-teal-300 rounded-2xl p-6 shadow-sm scroll-mt-24">
+<div id="reg-tool" class="not-prose mt-5 bg-white border-2 border-teal-300 rounded-2xl p-6 shadow-sm scroll-mt-24">
   <label class="block">
     <span class="text-sm font-bold text-slate-700"><i class="fa-solid fa-magnifying-glass text-teal-600"></i> Busca por nombre o especialidad</span>
     <input id="rg-search" type="search" autocomplete="off" placeholder="Ej: el nombre de tu médico, o 'cardiólogo'…" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-base">
@@ -2559,6 +2559,8 @@ async function handleRegistro(req: any, res: any) {
   <div id="rg-result" class="mt-5"></div>
   <p id="rg-hint" class="mt-4 text-sm text-slate-400 text-center">Escoge los dos y te decimos cuántos hay cerca, cuáles, y sus teléfonos.</p>
 </div>
+
+<p class="not-prose mt-3 text-sm text-slate-500 text-center">¿Vives lejos del área metro? <a href="/registro/desiertos" class="text-teal-700 font-semibold hover:underline">Mira en qué regiones no hay ciertos especialistas →</a></p>
 
 <h2>Las ${REGISTRY_SPECS.length} especialidades del registro</h2>
 <p class="text-slate-600 -mt-2">El número es cuántos hay <strong>en toda la isla</strong>, verificados contra el registro federal. Toca cualquiera pa' ver dónde están y sus teléfonos.</p>
@@ -2684,7 +2686,7 @@ async function handleRegistro(req: any, res: any) {
 })();
 </script>
 
-<h2>Cómo se hizo (y por qué puedes confiar)</h2>
+<h2 id="como-se-hizo">Cómo se hizo (y por qué puedes confiar)</h2>
 <p>Cada persona en este registro existe en el <strong>NPPES</strong> (National Plan and Provider Enumeration System), el registro oficial del gobierno federal de EE.UU. — el mismo que usan Medicare y los planes médicos. Tomamos solo <strong>proveedores individuales con práctica en Puerto Rico</strong>, por código de taxonomía (la especialidad oficial), y lo pusimos en español, por región. El <strong>NPI</strong> de cada uno es un número público que cualquiera puede verificar.</p>
 <p class="text-sm text-slate-600">Lo que no encontrarás en ningún otro sitio: el gobierno tiene la data, pero enterrada, en inglés, sin organizar por pueblo. La pusimos clara, en un solo sitio, a mano. Si ves un dato viejo o un especialista que ya no ejerce, dínoslo y se corrige — <a href="mailto:angel@angelanderson.com" class="text-teal-600 hover:underline">angel@angelanderson.com</a>.</p>
 <p class="text-sm text-slate-600"><strong>¿Periodista, plan médico, o investigador?</strong> Esta data es citable y hay acceso programático. Escríbenos.</p>
@@ -2699,24 +2701,41 @@ async function handleRegistro(req: any, res: any) {
   <p class="text-xs text-teal-200 mt-4">— Menos revolú, más sistema, mejor vida.</p>
 </div>
 `
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'MedicalWebPage',
-    name: 'Registro de Especialistas Médicos de Puerto Rico',
-    description: `Registro verificado de ${totalVerified} especialistas y proveedores de salud de Puerto Rico, por especialidad y región, con fuente federal NPPES/CMS. En español.`,
-    inLanguage: 'es',
-    url: `${SITE_URL}/registro`,
-    isPartOf: { '@type': 'WebSite', name: 'Mapa de Cabo Rojo', url: SITE_URL },
-    medicalAudience: 'Patient',
-  }
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'MedicalWebPage',
+      name: 'Registro de Especialistas Médicos de Puerto Rico',
+      description: `Registro verificado de ${totalVerified} especialistas y proveedores de salud de Puerto Rico, por especialidad y región, con fuente federal NPPES/CMS. En español.`,
+      inLanguage: 'es',
+      url: 'https://registromedicopr.com/registro',
+      publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+      medicalAudience: 'Patient',
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: [
+        { '@type': 'Question', name: '¿Cuántos especialistas médicos hay en Puerto Rico?',
+          acceptedAnswer: { '@type': 'Answer', text: `En Puerto Rico hay ${totalVerified} especialistas médicos verificados contra el registro federal NPPES/CMS, organizados por ${REGISTRY_SPECS.length} especialidades y por región.` } },
+        { '@type': 'Question', name: '¿Cómo se verifica este registro de médicos?',
+          acceptedAnswer: { '@type': 'Answer', text: 'Cada proveedor existe en el NPPES (National Plan and Provider Enumeration System), el registro oficial del gobierno federal de EE.UU. que usan Medicare y los planes médicos. Cada NPI es un número público que cualquiera puede verificar.' } },
+        { '@type': 'Question', name: '¿Es gratis buscar un especialista aquí?',
+          acceptedAnswer: { '@type': 'Answer', text: 'Sí. Buscar es gratis y no requiere cuenta. Puedes buscar por nombre o por especialidad y región, y ver el teléfono de cada especialista.' } },
+        { '@type': 'Question', name: '¿En qué regiones de Puerto Rico no hay ciertos especialistas?',
+          acceptedAnswer: { '@type': 'Answer', text: 'Hay especialidades sin ningún proveedor en regiones enteras. Por ejemplo, el centro de la isla no tiene neumólogos, geriatras ni otorrinos según el registro federal, mientras el área metro concentra la mayoría. El mapa de acceso por región está en registromedicopr.com/registro/desiertos.' } },
+      ],
+    },
+  ]
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=300')
   res.status(200).send(layout({
     title: 'Registro de Especialistas Médicos de Puerto Rico — verificado, en español',
-    description: `${totalVerified} especialistas de PR verificados contra el registro federal NPPES/CMS. Por especialidad y región, en español. El único que puedes leer.`,
+    description: `${totalVerified} especialistas de PR verificados contra el registro federal NPPES/CMS. Busca por especialidad y región, en español, gratis.`,
     slug: 'registro',
     bodyHtml: body,
     jsonLd,
+    ogImage: '/og/registro.png',
     host: req.headers?.host,
     canonicalHost: 'https://registromedicopr.com',
   }))
@@ -2994,6 +3013,7 @@ ${othersHtml}
     slug: `especialista/${place.slug}`,
     bodyHtml: body,
     jsonLd,
+    ogImage: '/og/registro.png',
     host: req.headers?.host,
     canonicalHost: 'https://registromedicopr.com',
   }))
@@ -3166,6 +3186,7 @@ async function handleRegistroDesiertos(req: any, res: any) {
     slug: 'registro/desiertos',
     bodyHtml: body,
     jsonLd,
+    ogImage: '/og/desiertos.png',
     host: req.headers?.host,
     canonicalHost: 'https://registromedicopr.com',
   }))
