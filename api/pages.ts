@@ -3266,9 +3266,9 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cabo Rojo en Números — el pueblo viéndose en el espejo</title>
-<meta name="description" content="${fmt(openCount)} negocios verificados para ${fmt(residents)} personas en Cabo Rojo. 1 por cada ${perCapita}. TAM/SAM/SOM por categoría, lo que el pueblo buscó esta semana, sobreoferta visible. Work-in-progress — admitimos errores en público.">
-<meta property="og:title" content="Cabo Rojo en Números — el pueblo viéndose en el espejo">
+<title>Cabo Rojo en Números: el pueblo viéndose en el espejo</title>
+<meta name="description" content="${fmt(openCount)} negocios verificados para ${fmt(residents)} personas en Cabo Rojo. 1 por cada ${perCapita}. TAM/SAM/SOM por categoría, lo que el pueblo buscó esta semana, sobreoferta visible. Work-in-progress, admitimos errores en público.">
+<meta property="og:title" content="Cabo Rojo en Números: el pueblo viéndose en el espejo">
 <meta property="og:description" content="${fmt(openCount)} negocios para ${fmt(residents)} personas. Lo que Cabo Rojo buscó esta semana · TAM/SAM/SOM por categoría · ajá moments que nadie más publica.">
 <meta property="og:url" content="https://www.mapadecaborojo.com/pueblo-en-numeros">
 <meta property="og:type" content="article">
@@ -3277,7 +3277,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
 <meta property="og:image:height" content="630">
 <meta property="og:locale" content="es_PR">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Cabo Rojo en Números — 1 negocio por cada ${perCapita} personas">
+<meta name="twitter:title" content="Cabo Rojo en Números: 1 negocio por cada ${perCapita} personas">
 <meta name="twitter:description" content="Lo que el pueblo buscó esta semana, TAM/SAM/SOM por categoría, errores admitidos en público.">
 <meta name="twitter:image" content="https://www.mapadecaborojo.com/og/pueblo-en-numeros.png">
 <link rel="canonical" href="https://www.mapadecaborojo.com/pueblo-en-numeros">
@@ -3366,7 +3366,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
       <div style="font-size:13px;color:#5eead4;letter-spacing:0.15em;text-transform:uppercase;font-weight:700;margin-bottom:18px;">📊 Cabo Rojo en Números</div>
       <h1 style="font-size:clamp(28px, 6.5vw, 42px);font-weight:800;letter-spacing:-1px;line-height:1.15;margin-bottom:14px;">1 negocio por cada <span style="color:#5eead4;">${perCapita} personas</span> en Cabo Rojo.</h1>
       <div style="font-family:'SF Mono',Monaco,Menlo,monospace;font-size:14px;color:#94a3b8;background:rgba(255,255,255,0.06);padding:8px 14px;border-radius:6px;display:inline-block;margin-bottom:18px;letter-spacing:0;">${fmt(residents)} personas ÷ ${fmt(openCount)} negocios abiertos = 1 cada ${perCapita}</div>
-      <p style="font-size:20px;color:#cbd5e1;line-height:1.5;margin-bottom:8px;">Comparado con el resto del oeste, <strong style="color:#fff;">Cabo Rojo es de los más apretados de negocios por persona.</strong> No es opinión — es nuestro propio directorio verificado, pueblo por pueblo.</p>
+      <p style="font-size:20px;color:#cbd5e1;line-height:1.5;margin-bottom:8px;">Comparado con el resto del oeste, <strong style="color:#fff;">Cabo Rojo es de los más apretados de negocios por persona.</strong> No es opinión. Es nuestro propio directorio verificado, pueblo por pueblo.</p>
       <p style="font-size:15px;color:#94a3b8;line-height:1.5;">${regionalDensity.map(d => `${d.self ? '<strong style="color:#5eead4;">' : ''}${esc(d.town)} 1/${d.per}${d.self ? '</strong>' : ''}`).join(' · ')}. Mientras menos personas por negocio, más apretada la competencia.</p>
     </div>
 
@@ -3374,7 +3374,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;max-width:920px;margin:0 auto;">
       <div style="background:rgba(94,234,212,0.08);border:1px solid rgba(94,234,212,0.2);border-radius:10px;padding:16px 18px;">
         <div style="font-size:11px;color:#5eead4;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:8px;">¿Qué significa?</div>
-        <div style="font-size:14px;color:#e2e8f0;line-height:1.55;">Hay 1 negocio por cada ${perCapita} personas — de los más apretados del oeste.</div>
+        <div style="font-size:14px;color:#e2e8f0;line-height:1.55;">Hay 1 negocio por cada ${perCapita} personas, de los más apretados del oeste.</div>
       </div>
       <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.2);border-radius:10px;padding:16px 18px;">
         <div style="font-size:11px;color:#fbbf24;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:8px;">¿Por qué importa?</div>
@@ -3400,7 +3400,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
   <!-- SECTION 1.5: TL;DR ABUELA (plain-language summary) -->
   <div class="card" style="background:#ecfdf5;border-left:4px solid #0d9488;">
     <div style="font-size:11px;color:#0f766e;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:8px;">Lo que esta página dice, en una línea</div>
-    <p style="font-size:16px;color:#134e4a;line-height:1.6;margin:0 0 10px 0;">En Cabo Rojo hay <strong>${fmt(total)} negocios en el directorio · ${fmt(openCount)} abiertos hoy · ${fmt(closedCount)} cerrados · ${fmt(unknownCount)} dudosos</strong>. Para ${fmt(residents)} personas. Usamos los <strong>${fmt(openCount)} abiertos</strong> para calcular densidad porque los cerrados ya no compiten. Más negocios de los que el pueblo solo puede sostener — <strong>sobran de unas cosas</strong> (food trucks, boutiques, restaurantes — entrar es barato y rápido), <strong>faltan de otras</strong> (plomero, electricista, cardiólogo — entrar requiere licencia, años de estudio o capital alto). El por qué de cada uno está abajo. Si tú o alguien tuyo está pensando en abrir negocio, busca tu categoría en la tabla y léela antes de firmar nada.</p>
+    <p style="font-size:16px;color:#134e4a;line-height:1.6;margin:0 0 10px 0;">En Cabo Rojo hay <strong>${fmt(total)} negocios en el directorio · ${fmt(openCount)} abiertos hoy · ${fmt(closedCount)} cerrados · ${fmt(unknownCount)} dudosos</strong>. Para ${fmt(residents)} personas. Usamos los <strong>${fmt(openCount)} abiertos</strong> para calcular densidad porque los cerrados ya no compiten. Más negocios de los que el pueblo solo puede sostener. <strong>Sobran de unas cosas</strong> (food trucks, boutiques, restaurantes, donde entrar es barato y rápido), <strong>faltan de otras</strong> (plomero, electricista, cardiólogo, donde entrar requiere licencia, años de estudio o capital alto). El por qué de cada uno está abajo. Si tú o alguien tuyo está pensando en abrir negocio, busca tu categoría en la tabla y léela antes de firmar nada.</p>
   </div>
 
   ${oppBanner}
@@ -3415,7 +3415,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
 
   <!-- SECTION 1.42: ÍNDICE — salta a lo que te interesa (tame information overload) -->
   <div style="margin-bottom:20px;text-align:center;">
-    <div style="font-size:11px;color:#64748b;letter-spacing:0.1em;text-transform:uppercase;font-weight:700;margin-bottom:10px;">Es mucha info — salta a lo tuyo</div>
+    <div style="font-size:11px;color:#64748b;letter-spacing:0.1em;text-transform:uppercase;font-weight:700;margin-bottom:10px;">Es mucha info. Salta a lo tuyo.</div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;">
       ${[
         { t: '🔍 Lo que el pueblo busca', h: '#demanda' },
@@ -3431,7 +3431,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
   <div class="card" id="demanda" style="border-left:4px solid #0d9488;scroll-margin-top:20px;">
     <div class="kicker">🔍 La voz del pueblo · en vivo</div>
     <h2 style="font-size:22px;font-weight:800;color:#1e293b;margin-bottom:6px;">Lo que Cabo Rojo buscó en el *7711</h2>
-    <p style="font-size:14px;color:#475569;margin-bottom:6px;line-height:1.55;">Esto no es una encuesta. Son las búsquedas reales que la gente le texteó al <strong>787-417-7711</strong> en los últimos 90 días. <strong>${fmt(demandTotal)} búsquedas</strong> en las categorías de abajo. Nadie más en Puerto Rico publica esto — porque nadie más lo tiene.</p>
+    <p style="font-size:14px;color:#475569;margin-bottom:6px;line-height:1.55;">Esto no es una encuesta. Son las búsquedas reales que la gente le texteó al <strong>787-417-7711</strong> en los últimos 90 días. <strong>${fmt(demandTotal)} búsquedas</strong> en las categorías de abajo. Nadie más en Puerto Rico publica esto, porque nadie más lo tiene.</p>
     <p style="font-size:12px;color:#94a3b8;margin-bottom:18px;">🟢 lo tienes cubierto · 🟡 mucha demanda, pocos lo resuelven · 🔥 lo buscan y nadie aparece en el directorio.</p>
     <div style="display:flex;flex-direction:column;gap:8px;">
       ${demandTop.map((d, i) => {
@@ -3458,7 +3458,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
     ${demandGaps.length > 0 ? `
     <div style="margin-top:16px;padding:14px 16px;background:#fef2f2;border-radius:10px;border-left:3px solid #dc2626;">
       <div style="font-size:13px;font-weight:800;color:#991b1b;margin-bottom:4px;">💰 Si tú resuelves una de estas, el pueblo ya te está buscando</div>
-      <p style="font-size:12px;color:#7f1d1d;line-height:1.55;margin:0 0 8px 0;">Demanda real, poco o ningún negocio en el directorio: <strong>${demandGaps.map(g => esc(g.label.toLowerCase())).join(' · ')}</strong>. Si tienes ese negocio o lo vas a abrir, te ponemos en el mapa pa' que te encuentren — gratis los primeros 30 días.</p>
+      <p style="font-size:12px;color:#7f1d1d;line-height:1.55;margin:0 0 8px 0;">Demanda real, poco o ningún negocio en el directorio: <strong>${demandGaps.map(g => esc(g.label.toLowerCase())).join(' · ')}</strong>. Si tienes ese negocio o lo vas a abrir, te ponemos en el mapa pa' que te encuentren. Gratis los primeros 30 días.</p>
       <a href="https://wa.me/17874177711?text=${encodeURIComponent('Resuelvo uno de los que el pueblo busca y quiero salir en el mapa')}" target="_blank" rel="noopener" style="display:inline-block;background:#dc2626;color:#fff;padding:9px 16px;border-radius:7px;font-size:13px;font-weight:700;text-decoration:none;min-height:40px;line-height:22px;">Quiero aparecer →</a>
     </div>` : ''}
     <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
