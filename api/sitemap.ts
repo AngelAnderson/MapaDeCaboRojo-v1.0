@@ -129,12 +129,15 @@ export default async function handler(req: any, res: any) {
     });
 
     // Registro Médico PR — one page per verified specialist (NPPES). Paginate past the 1000-row cap.
+    // Only the 32 verified specialties (excludes old Cabo Rojo health businesses that also carry an NPI).
+    const SPECIALIST_SUBS = ['cardiólogo','psiquiatra','fisiatra','ginecólogo','pediatra','dermatólogo','gastroenterólogo','oftalmólogo','ortopeda','neurologo','urólogo','endocrinologo','nefrólogo','neumólogo','oncólogo','reumatólogo','geriatra','otorrinolaringólogo','infectólogo','alergista','medicina de emergencia','cirujano general','anestesiólogo','radiólogo','neurocirujano','cirujano plástico','cirujano torácico','coloproctólogo','manejo de dolor','psicólogo','optómetra','podiatra'];
     const specialists: any[] = [];
     for (let page = 0; page < 10; page++) {
       const { data } = await supabase
         .from('places')
         .select('slug')
         .not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open')
+        .in('subcategory', SPECIALIST_SUBS)
         .range(page * 1000, (page + 1) * 1000 - 1);
       if (!data || data.length === 0) break;
       specialists.push(...data);
@@ -148,6 +151,28 @@ export default async function handler(req: any, res: any) {
           <priority>0.6</priority>
         </url>
       `);
+    });
+
+    // Registro Médico PR — specialty + specialty×region HUB pages (224 list pages, strong SEO)
+    const SPEC_URLS = ['cardiologo','psiquiatra','fisiatra','ginecologo','pediatra','dermatologo','gastroenterologo','oftalmologo','ortopeda','neurologo','urologo','endocrinologo','nefrologo','neumologo','oncologo','reumatologo','geriatra','otorrinolaringologo','infectologo','alergista','medicina-de-emergencia','cirujano-general','anestesiologo','radiologo','neurocirujano','cirujano-plastico','cirujano-toracico','coloproctologo','manejo-de-dolor','psicologo','optometra','podiatra'];
+    const HUB_REGION_SLUGS = ['oeste','norte','centro','sur','este','metro'];
+    SPEC_URLS.forEach((s) => {
+      urls.push(`
+        <url>
+          <loc>${baseUrl}/registro/${s}</loc>
+          <changefreq>weekly</changefreq>
+          <priority>0.7</priority>
+        </url>
+      `);
+      HUB_REGION_SLUGS.forEach((r) => {
+        urls.push(`
+        <url>
+          <loc>${baseUrl}/registro/${s}/${r}</loc>
+          <changefreq>monthly</changefreq>
+          <priority>0.5</priority>
+        </url>
+      `);
+      });
     });
 
     // Category pages

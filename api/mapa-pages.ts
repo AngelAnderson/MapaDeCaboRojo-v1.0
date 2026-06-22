@@ -2497,23 +2497,25 @@ const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:n
 async function handleRegistro(req: any, res: any) {
   const md = REGISTRY_SPECS.filter(x => x.md)
   const allied = REGISTRY_SPECS.filter(x => !x.md)
-  // Live count — accurate + auto-updating (page is cached s-maxage=3600, so ~1 query/hour)
+  // Live count — accurate + auto-updating (page is cached s-maxage=3600, so ~1 query/hour).
+  // Only the 32 verified NPPES specialties count as "registry specialists".
   const { count: npiCount } = await supabase
     .from('places').select('id', { count: 'exact', head: true })
     .not('npi', 'is', null).eq('status', 'open')
-  const totalVerified = (npiCount ?? 6344).toLocaleString('en-US')
+    .in('subcategory', REGISTRY_SPECS.map(x => x.s))
+  const totalVerified = (npiCount ?? 6247).toLocaleString('en-US')
 
   const optionsHtml = REGISTRY_SPECS.map(x =>
     `<option value="${escapeHtml(x.s)}">${x.e} ${escapeHtml(x.l)} (${x.t})</option>`).join('')
 
   function card(x: typeof REGISTRY_SPECS[number]) {
-    return `<button type="button" data-spec="${escapeHtml(x.s)}" class="reg-card text-left bg-white border border-slate-200 rounded-xl p-4 hover:border-teal-400 hover:shadow-sm transition">
+    return `<a href="/registro/${specToUrl(x.s)}" class="reg-card block text-left bg-white border border-slate-200 rounded-xl p-4 hover:border-teal-400 hover:shadow-sm transition">
       <div class="flex items-baseline justify-between gap-2">
         <span class="font-bold text-slate-900 text-sm leading-tight">${x.e} ${escapeHtml(x.l)}</span>
         <span class="text-teal-700 font-black text-lg">${x.t}</span>
       </div>
-      <div class="text-xs text-slate-500 mt-1">verificados en PR · toca pa' ver dónde</div>
-    </button>`
+      <div class="text-xs text-slate-500 mt-1">verificados en PR · toca pa' ver la lista</div>
+    </a>`
   }
 
   const body = `
@@ -2634,9 +2636,6 @@ async function handleRegistro(req: any, res: any) {
     document.getElementById('reg-tool').scrollIntoView({behavior:'smooth',block:'start'});
     render();
   }
-  Array.prototype.forEach.call(document.querySelectorAll('.reg-card'),function(b){
-    b.addEventListener('click',function(){jumpToSpec(b.getAttribute('data-spec'));});
-  });
 
   // --- Free-text search: specialty chips (instant) + provider names (debounced) ---
   var srch=document.getElementById('rg-search'),srchOut=document.getElementById('rg-search-result');
@@ -2831,6 +2830,15 @@ async function handleEspecialista(req: any, res: any) {
     return
   }
 
+  // Registry integrity: only the 32 verified NPPES specialties get a specialist page.
+  // Non-registry NPI rows (old Cabo Rojo health businesses: farmacia, spa, etc.) → back to /registro.
+  if (!REGISTRY_SUBS.has(place.subcategory)) {
+    res.statusCode = 302
+    res.setHeader('Location', '/registro')
+    res.end()
+    return
+  }
+
   const spec = REGISTRY_BYSUB[place.subcategory] || null
   const specLabel = spec ? spec.l : (place.subcategory || 'Proveedor de salud')
   const specEmoji = spec ? spec.e : '🩺'
@@ -2846,7 +2854,7 @@ async function handleEspecialista(req: any, res: any) {
   const verifiedDate = place.last_verified_at
     ? new Date(place.last_verified_at).toLocaleDateString('es-PR', { year: 'numeric', month: 'long' })
     : null
-  const pageUrl = `${SITE_URL}/especialista/${encodeURIComponent(place.slug)}`
+  const pageUrl = `https://registromedicopr.com/especialista/${encodeURIComponent(place.slug)}`
 
   const T = lang === 'en' ? {
     sub: `${specLabel} in ${muni}, Puerto Rico. Verified against the U.S. federal NPPES registry.`,
@@ -3172,12 +3180,12 @@ async function handleRegistroDesiertos(req: any, res: any) {
     '@type': 'Dataset',
     name: 'Desiertos médicos de Puerto Rico por región',
     description: `${totalDeserts.length} combinaciones de especialidad y región sin ningún proveedor, según el registro federal NPPES/CMS. Datos abiertos de acceso a especialistas en Puerto Rico, en español.`,
-    creator: { '@type': 'Organization', name: 'Registro Médico PR', url: SITE_URL },
+    creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
     license: 'https://npiregistry.cms.hhs.gov/',
     isAccessibleForFree: true,
     inLanguage: 'es',
     keywords: ['acceso a salud', 'especialistas', 'Puerto Rico', 'desiertos médicos', 'NPPES'],
-    url: `${SITE_URL}/registro/desiertos`,
+    url: `https://registromedicopr.com/registro/desiertos`,
   }
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
@@ -3191,6 +3199,163 @@ async function handleRegistroDesiertos(req: any, res: any) {
     ogImage: '/og/desiertos.png',
     host: req.headers?.host,
     canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
+// =============== /registro/:spec  +  /registro/:spec/:region — HUB pages (útiles + SEO moat) ===============
+// Plain-Spanish, medically-accurate specialty explainers (qué resuelve / cuándo ir / nota).
+const SPEC_INFO: Record<string, { treats: string; whenToGo: string; note: string }> = {
+  'cardiólogo': { treats: 'El médico del corazón, la presión y la circulación.', whenToGo: 'Cuando tienes presión alta, palpitaciones, dolor en el pecho o falta de aire.', note: '' },
+  'psiquiatra': { treats: 'El médico de la mente: depresión, ansiedad, sueño y otras condiciones que afectan el ánimo.', whenToGo: 'Cuando te sientes muy triste, ansioso o no puedes dormir, y crees que necesitas medicamento.', note: 'No es lo mismo que un psicólogo. El psiquiatra es médico y puede recetar.' },
+  'fisiatra': { treats: 'El médico que te ayuda a recuperar el movimiento y bajar el dolor sin operación.', whenToGo: 'Cuando tienes dolor de espalda, cuello o una lesión y quieres mejorar con terapia.', note: '' },
+  'ginecólogo': { treats: 'El médico de la salud de la mujer y sus partes íntimas.', whenToGo: 'Para tu chequeo anual, problemas de regla, embarazo o molestias femeninas.', note: '' },
+  'pediatra': { treats: 'El médico de los niños, desde que nacen hasta jóvenes.', whenToGo: 'Para las vacunas, los chequeos y cuando el nene está enfermo.', note: '' },
+  'dermatólogo': { treats: 'El médico de la piel, el pelo y las uñas.', whenToGo: 'Cuando tienes ronchas, un lunar raro, acné fuerte o caída de pelo.', note: '' },
+  'gastroenterólogo': { treats: 'El médico del estómago, los intestinos y la digestión.', whenToGo: 'Cuando tienes acidez constante, dolor de barriga, estreñimiento o problemas para ir al baño.', note: '' },
+  'oftalmólogo': { treats: 'El médico de los ojos y la vista.', whenToGo: 'Cuando ves borroso, tienes cataratas, glaucoma o necesitas operación de los ojos.', note: 'Es médico de los ojos. El optómetra solo te examina y receta espejuelos.' },
+  'ortopeda': { treats: 'El médico de los huesos, las coyunturas y los músculos.', whenToGo: 'Cuando te fracturas, te duele una rodilla o cadera, o necesitas reemplazo de coyuntura.', note: '' },
+  'neurologo': { treats: 'El médico del cerebro y los nervios.', whenToGo: 'Cuando tienes dolores de cabeza fuertes, convulsiones, temblor o pérdida de memoria.', note: '' },
+  'urólogo': { treats: 'El médico de los riñones, la vejiga y las partes íntimas del hombre.', whenToGo: 'Cuando te arde o cuesta orinar, ves sangre en la orina o tienes problemas de próstata.', note: '' },
+  'endocrinologo': { treats: 'El médico de la diabetes, la tiroides y las hormonas.', whenToGo: 'Cuando tienes el azúcar alta, problemas de tiroides o cambios fuertes de peso.', note: '' },
+  'nefrólogo': { treats: 'El médico de los riñones.', whenToGo: 'Cuando tus riñones no están trabajando bien o necesitas diálisis.', note: '' },
+  'neumólogo': { treats: 'El médico de los pulmones y la respiración.', whenToGo: 'Cuando tienes asma, te falta el aire, toses mucho o usas oxígeno.', note: '' },
+  'oncólogo': { treats: 'El médico que trata el cáncer.', whenToGo: 'Cuando te diagnostican cáncer y necesitas tratamiento como quimioterapia.', note: '' },
+  'reumatólogo': { treats: 'El médico de la artritis y las coyunturas inflamadas.', whenToGo: 'Cuando tienes las coyunturas hinchadas, tiesas o te duelen por la mañana.', note: '' },
+  'geriatra': { treats: 'El médico que cuida la salud de las personas mayores.', whenToGo: 'Cuando eres mayor, tomas muchos medicamentos o necesitas un médico que vea todo en conjunto.', note: '' },
+  'otorrinolaringólogo': { treats: 'El médico de los oídos, la nariz y la garganta.', whenToGo: 'Cuando no oyes bien, tienes sinusitis, dolor de garganta seguido o mareos.', note: 'Mucha gente le dice "el médico de oído, nariz y garganta".' },
+  'infectólogo': { treats: 'El médico de las infecciones difíciles de tratar.', whenToGo: 'Cuando tienes una infección que no se quita o una condición como VIH.', note: '' },
+  'alergista': { treats: 'El médico de las alergias y el asma.', whenToGo: 'Cuando estornudas mucho, te brotan ronchas o ciertas comidas te hacen daño.', note: '' },
+  'medicina de emergencia': { treats: 'El médico de la sala de emergencia que atiende lo urgente y grave.', whenToGo: 'Cuando tienes una emergencia: un golpe fuerte, dolor de pecho o algo que no puede esperar.', note: '' },
+  'cirujano general': { treats: 'El médico que opera problemas comunes de la barriga y el cuerpo.', whenToGo: 'Cuando necesitas operarte de apendicitis, vesícula o una hernia.', note: '' },
+  'anestesiólogo': { treats: 'El médico que te duerme y cuida durante una operación.', whenToGo: 'Lo conoces cuando te van a operar; él controla la anestesia y el dolor.', note: '' },
+  'radiólogo': { treats: 'El médico que lee las radiografías, los CT scan y los sonogramas.', whenToGo: 'Trabaja detrás de tus pruebas de imágenes; casi siempre no lo ves en persona.', note: '' },
+  'neurocirujano': { treats: 'El médico que opera el cerebro, la columna y los nervios.', whenToGo: 'Cuando tienes un problema serio del cerebro o la columna que necesita operación.', note: '' },
+  'cirujano plástico': { treats: 'El médico que reconstruye o arregla partes del cuerpo y la piel.', whenToGo: 'Cuando necesitas reconstrucción después de un accidente, quemadura u operación.', note: '' },
+  'cirujano torácico': { treats: 'El médico que opera el pecho: los pulmones y la zona alrededor del corazón.', whenToGo: 'Cuando tienes un problema de los pulmones o el pecho que necesita operación.', note: '' },
+  'coloproctólogo': { treats: 'El médico del colon, el recto y el área del ano.', whenToGo: 'Cuando tienes hemorroides, sangrado al ir al baño o te toca la colonoscopía.', note: '' },
+  'manejo de dolor': { treats: 'El médico que trata el dolor crónico que no se quita.', whenToGo: 'Cuando llevas mucho tiempo con dolor y nada te lo controla.', note: '' },
+  'psicólogo': { treats: 'El profesional que te ayuda con terapia y a hablar de lo que sientes.', whenToGo: 'Cuando quieres apoyo, terapia o herramientas para manejar la ansiedad o el estrés.', note: 'Tiene licencia, pero no es médico (MD) y no receta medicamentos.' },
+  'optómetra': { treats: 'El profesional que examina la vista y receta espejuelos o lentes de contacto.', whenToGo: 'Cuando ves borroso o te toca el examen anual de la vista.', note: 'Tiene licencia, pero no es médico (MD). Para operación o enfermedad del ojo, vas al oftalmólogo.' },
+  'podiatra': { treats: 'El profesional que cuida los pies y los tobillos.', whenToGo: 'Cuando tienes dolor de pies, uñas enterradas, callos o problemas del pie por diabetes.', note: 'Tiene licencia, pero no es médico (MD); es especialista del pie.' },
+}
+function specToUrl(sub: string): string {
+  return sub.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+const SPEC_BY_URL: Record<string, typeof REGISTRY_SPECS[number]> = {}
+REGISTRY_SPECS.forEach(x => { SPEC_BY_URL[specToUrl(x.s)] = x })
+const HUB_REGIONS = ['Oeste', 'Norte', 'Centro', 'Sur', 'Este', 'Metro'] as const
+const REGION_BY_URL: Record<string, string> = { oeste: 'Oeste', norte: 'Norte', centro: 'Centro', sur: 'Sur', este: 'Este', metro: 'Metro' }
+const REGION_FULL: Record<string, string> = {
+  Oeste: 'el oeste (Mayagüez, Cabo Rojo, Aguadilla)', Norte: 'el norte (Arecibo, Manatí, Hatillo)',
+  Centro: 'el centro y la montaña (Aibonito, Barranquitas)', Sur: 'el sur (Ponce, Yauco, Guayama)',
+  Este: 'el este (Caguas, Humacao, Fajardo)', Metro: 'el área metro (San Juan y alrededores)',
+}
+
+async function handleRegistroHub(req: any, res: any) {
+  const specUrl = String(req.query.spec || '').toLowerCase()
+  const regionUrl = String(req.query.region || '').toLowerCase()
+  const x = SPEC_BY_URL[specUrl]
+  if (!x) { res.statusCode = 302; res.setHeader('Location', '/registro'); res.end(); return }
+  const region = regionUrl ? (REGION_BY_URL[regionUrl] || '') : ''
+  if (regionUrl && !region) { res.statusCode = 302; res.setHeader('Location', `/registro/${specUrl}`); res.end(); return }
+
+  const info = SPEC_INFO[x.s] || { treats: '', whenToGo: '', note: '' }
+  const total = x.t
+  const regionCount = region ? ((x.r as any)[region] || 0) : 0
+  const metroCount = x.r.Metro || 0
+  const isMD = x.md
+
+  // provider list (this specialty, optionally this region)
+  let q = supabase.from('places')
+    .select('name,municipality,region,slug,phone')
+    .eq('subcategory', x.s).not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open')
+    .order('municipality', { ascending: true }).limit(200)
+  if (region) q = q.eq('region', region)
+  const { data: provData } = await q
+  const providers = provData || []
+
+  const provRows = providers.map(p => `<tr class="border-t border-slate-100">
+    <td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td>
+    <td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '—')}</td>
+    <td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="text-teal-700 font-semibold whitespace-nowrap">${escapeHtml(p.phone)}</a>` : '<span class="text-slate-400">sin teléfono</span>'}</td>
+  </tr>`).join('')
+
+  const noteHtml = info.note ? `<p class="text-sm text-slate-500 mt-1"><i class="fa-solid fa-circle-info text-teal-600"></i> ${escapeHtml(info.note)}</p>` : ''
+  const breadcrumb = `<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <a href="/registro/${specUrl}" class="hover:text-teal-700">${escapeHtml(x.l)}</a>${region ? ` <span class="text-slate-300">/</span> <span class="text-slate-700">${escapeHtml(region)}</span>` : ''}</nav>`
+
+  let body: string, title: string, description: string, answerFirst: string
+  if (region) {
+    answerFirst = regionCount > 0
+      ? `En ${REGION_FULL[region]} hay <strong>${regionCount} ${escapeHtml(x.l.toLowerCase())}</strong> verificados contra el registro federal NPPES.`
+      : `Según el registro federal, en ${REGION_FULL[region]} no hay ningún ${escapeHtml(x.l.toLowerCase())} verificado. El grupo más grande está en el área metro (${metroCount}).`
+    title = `${x.l} en ${region}, Puerto Rico — ${regionCount} verificados`
+    description = `${regionCount} ${x.l.toLowerCase()} en ${region}, PR, verificados contra el registro federal NPPES. Con teléfono, en español.`
+    body = `${breadcrumb}
+<h1>${x.e} ${escapeHtml(x.l)} en ${escapeHtml(region)}, Puerto Rico</h1>
+<p class="text-lg text-slate-600 mt-2">${answerFirst}</p>
+${info.treats ? `<p class="text-slate-600 mt-1">${escapeHtml(info.treats)} ${escapeHtml(info.whenToGo)}</p>` : ''}
+${noteHtml}
+${providers.length ? `<div class="not-prose mt-5 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(x.l)}</th><th class="py-2 px-3">Pueblo</th><th class="py-2 px-3 text-right">Teléfono</th></tr></thead><tbody>${provRows}</tbody></table></div>` : `<div class="not-prose mt-5 bg-amber-50 border border-amber-200 rounded-xl p-5"><p class="text-amber-900 font-semibold">No hay ${escapeHtml(x.l.toLowerCase())} verificados en ${escapeHtml(region)}.</p><p class="text-sm text-amber-800 mt-1">Te va a tocar viajar. Mira los de <a href="/registro/${specUrl}/metro" class="font-semibold underline">el área metro (${metroCount}) →</a></p></div>`}
+<p class="not-prose mt-4 text-sm"><a href="/registro/${specUrl}" class="text-teal-700 font-semibold">Ver los ${total} ${escapeHtml(x.l.toLowerCase())} de toda la isla →</a></p>`
+  } else {
+    answerFirst = `En Puerto Rico hay <strong>${total} ${escapeHtml(x.l.toLowerCase())}</strong> verificados contra el registro federal NPPES, distribuidos por región.`
+    title = `${x.l} en Puerto Rico — ${total} verificados, por región`
+    description = `${total} ${x.l.toLowerCase()} en Puerto Rico verificados contra el registro federal NPPES. ${info.treats} Por región, con teléfono, en español.`
+    const regionCards = HUB_REGIONS.map(r => {
+      const n = (x.r as any)[r] || 0
+      return `<a href="/registro/${specUrl}/${specToUrl(r)}" class="flex items-center justify-between bg-white border ${n === 0 ? 'border-red-200' : 'border-slate-200'} rounded-lg px-4 py-3 hover:border-teal-400 hover:shadow-sm transition">
+        <span class="font-semibold text-slate-800">${escapeHtml(r)}</span>
+        <span class="font-black ${n === 0 ? 'text-red-500' : 'text-teal-700'}">${n}</span>
+      </a>`
+    }).join('')
+    body = `${breadcrumb}
+<h1>${x.e} ${escapeHtml(x.l)} en Puerto Rico</h1>
+<p class="text-lg text-slate-600 mt-2">${answerFirst}</p>
+<div class="not-prose mt-4 grid sm:grid-cols-2 gap-3">
+  <div class="bg-teal-50 border border-teal-200 rounded-xl p-4"><div class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-1">¿Qué resuelve?</div><p class="text-sm text-slate-700">${escapeHtml(info.treats)}</p></div>
+  <div class="bg-amber-50 border border-amber-200 rounded-xl p-4"><div class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-1">¿Cuándo ir?</div><p class="text-sm text-slate-700">${escapeHtml(info.whenToGo)}</p></div>
+</div>
+${noteHtml}
+<h2>Por región</h2>
+<p class="text-slate-600 -mt-2">Cuántos hay en cada región. Toca una para ver la lista con teléfonos.</p>
+<div class="not-prose mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">${regionCards}</div>
+<h2>Los ${total} ${escapeHtml(x.l.toLowerCase())} de Puerto Rico</h2>
+<div class="not-prose mt-2 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(x.l)}</th><th class="py-2 px-3">Pueblo</th><th class="py-2 px-3 text-right">Teléfono</th></tr></thead><tbody>${provRows}</tbody></table></div>
+${providers.length >= 200 ? `<p class="text-xs text-slate-500 mt-2">Mostrando 200. Busca por pueblo arriba para acortar.</p>` : ''}`
+  }
+
+  body += `
+<div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
+  <p class="text-lg font-bold mb-1">¿No sabes a cuál ir?</p>
+  <p class="text-sm text-teal-100 mb-4">Escríbele al Veci. Te dice quién hay cerca y sus teléfonos. Al <strong>${PHONE_CTA}</strong>:</p>
+  <a href="https://wa.me/17874177711?text=${x.kw}" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${x.kw}</a>
+</div>
+<p class="text-xs text-slate-500 mt-6">Datos del <strong>NPPES</strong>, el registro federal de proveedores de EE.UU. (el que usan Medicare y los planes). Cada NPI es público y verificable. <a href="/registro/desiertos" class="text-teal-600">Mira el acceso por región en toda la isla →</a></p>`
+
+  const canonicalPath = region ? `registro/${specUrl}/${specToUrl(region).toLowerCase()}` : `registro/${specUrl}`
+  const itemList = providers.slice(0, 50).map((p, i) => ({
+    '@type': 'ListItem', position: i + 1, name: cleanProviderName(p.name),
+    url: `https://registromedicopr.com/especialista/${encodeURIComponent(p.slug)}`,
+  }))
+  const jsonLd = [
+    { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Registro Médico PR', item: 'https://registromedicopr.com' },
+      { '@type': 'ListItem', position: 2, name: x.l, item: `https://registromedicopr.com/registro/${specUrl}` },
+      ...(region ? [{ '@type': 'ListItem', position: 3, name: region, item: `https://registromedicopr.com/${canonicalPath}` }] : []),
+    ] },
+    { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [
+      { '@type': 'Question', name: `¿Qué hace un ${x.l.toLowerCase()}?`, acceptedAnswer: { '@type': 'Answer', text: `${info.treats} ${info.whenToGo}` } },
+      { '@type': 'Question', name: region ? `¿Cuántos ${x.l.toLowerCase()} hay en ${region}, Puerto Rico?` : `¿Cuántos ${x.l.toLowerCase()} hay en Puerto Rico?`,
+        acceptedAnswer: { '@type': 'Answer', text: region ? `En ${region} hay ${regionCount} ${x.l.toLowerCase()} verificados contra el registro federal NPPES.` : `En Puerto Rico hay ${total} ${x.l.toLowerCase()} verificados contra el registro federal NPPES.` } },
+    ] },
+    ...(itemList.length ? [{ '@context': 'https://schema.org', '@type': 'ItemList', name: title, numberOfItems: providers.length, itemListElement: itemList }] : []),
+  ]
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title, description, slug: canonicalPath, bodyHtml: body, jsonLd,
+    ogImage: '/og/registro.png', host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
   }))
 }
 
@@ -4254,6 +4419,7 @@ export default async function handler(req: any, res: any) {
     case 'especialista': return await handleEspecialista(req, res)
     case 'especialista-claim': return await handleEspecialistaClaim(req, res)
     case 'registro-desiertos': return await handleRegistroDesiertos(req, res)
+    case 'registro-hub': return await handleRegistroHub(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)
     case 'civico-json': return handleCivicoJson(req, res)
