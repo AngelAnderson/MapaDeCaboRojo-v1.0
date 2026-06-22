@@ -3321,7 +3321,7 @@ ${noteHtml}
 <div class="not-prose mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">${regionCards}</div>
 <h2>Los ${total} ${escapeHtml(x.l.toLowerCase())} de Puerto Rico</h2>
 <div class="not-prose mt-2 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(x.l)}</th><th class="py-2 px-3">Pueblo</th><th class="py-2 px-3 text-right">Teléfono</th></tr></thead><tbody>${provRows}</tbody></table></div>
-${providers.length >= 200 ? `<p class="text-xs text-slate-500 mt-2">Mostrando 200. Busca por pueblo arriba para acortar.</p>` : ''}`
+${providers.length >= 200 ? `<p class="text-xs text-slate-500 mt-2">Mostrando los primeros 200. Usa las regiones de arriba para ver la lista completa de tu zona.</p>` : ''}`
   }
 
   body += `
