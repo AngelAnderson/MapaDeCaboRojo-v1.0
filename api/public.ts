@@ -496,7 +496,7 @@ Cada nombre existe en el NPPES federal. Solo se incluyen proveedores individuale
 El Veci, asistente vecinal por WhatsApp y SMS: 787-417-7711
 `;
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600');
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=600');
   res.status(200).send(body);
 }
 
