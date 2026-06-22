@@ -35,6 +35,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, onSelect, is
     // Navigation
     { id: 'nav_map', label: t('nav_map'), icon: 'map', group: 'Navigation' },
     { id: 'nav_explore', label: t('nav_explore'), icon: 'compass', group: 'Navigation' },
+    { id: 'nav_tienda', label: language === 'es' ? 'Tienda' : 'Store', icon: 'bag-shopping', group: 'Navigation' },
     
     // Actions
     { id: 'action_search', label: t('search'), icon: 'magnifying-glass', group: 'Actions' },

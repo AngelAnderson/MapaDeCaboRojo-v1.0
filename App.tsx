@@ -294,6 +294,7 @@ const MainApp: React.FC = () => {
           case 'action_add': setIsSuggestOpen(true); break;
           case 'action_chat': setIsConciergeOpen(true); break;
           case 'action_contact': setIsContactOpen(true); break;
+          case 'nav_tienda': window.location.href = '/tienda'; break;
           case 'sys_theme': setIsDarkMode(!isDarkMode); break;
           case 'sys_lang': setLanguage(language === 'es' ? 'en' : 'es'); break;
           case 'sys_admin': setIsAdminOpen(true); break;
