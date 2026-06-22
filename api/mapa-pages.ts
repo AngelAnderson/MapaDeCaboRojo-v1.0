@@ -110,62 +110,41 @@ function layout(opts: {
   bodyHtml: string
   jsonLd?: object
   ogImage?: string  // custom OG image path (relative or absolute); falls back to menos-revolu canonical OG
+  host?: string     // serving host header — switches branding (registromedicopr.com gets its own shell)
+  canonicalHost?: string // force canonical/og base to a specific origin (SEO consolidation across domains)
 }): string {
-  const canonical = `${SITE_URL}/${opts.slug}`
+  // Host-aware branding. registromedicopr.com is its OWN property — not Mapa de Cabo Rojo.
+  const isReg = /registromedicopr\.com/i.test(opts.host || '')
+  const canonicalBase = opts.canonicalHost || (isReg ? 'https://registromedicopr.com' : SITE_URL)
+  const brandName = isReg ? 'Registro Médico PR' : 'Mapa de Cabo Rojo'
+  const GA = 'G-6KBMV0LKQ4'
+  const canonical = `${canonicalBase}/${opts.slug}`
   const jsonLd = opts.jsonLd
     ? `<script type="application/ld+json">${JSON.stringify(opts.jsonLd)}</script>`
     : ''
 
-  // OG image — per-page if provided, else fall back to canonical /menos-revolu OG
-  // (which is the universal site image with frase madre + tagline).
+  // OG image — per-page if provided, else fall back to canonical /menos-revolu OG.
   const ogImagePath = opts.ogImage || '/og/menos-revolu.png'
   const ogImageUrl = ogImagePath.startsWith('http')
     ? ogImagePath
-    : `${SITE_URL}${ogImagePath}`
+    : `${canonicalBase}${ogImagePath}`
 
-  return `<!DOCTYPE html>
-<html lang="es-PR">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${escapeHtml(opts.title)} · Mapa de Cabo Rojo</title>
-<meta name="description" content="${escapeHtml(opts.description)}">
-<link rel="canonical" href="${canonical}">
-<meta property="og:title" content="${escapeHtml(opts.title)}">
-<meta property="og:description" content="${escapeHtml(opts.description)}">
-<meta property="og:url" content="${canonical}">
-<meta property="og:type" content="website">
-<meta property="og:image" content="${ogImageUrl}">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:locale" content="es_PR">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="${ogImageUrl}">
-<link rel="icon" href="/favicon.ico">
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<style>
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-  .prose-narrative h1 { font-size: 2.25rem; font-weight: 800; line-height: 1.1; }
-  .prose-narrative h2 { font-size: 1.5rem; font-weight: 700; margin-top: 2rem; margin-bottom: 0.75rem; }
-  .prose-narrative h3 { font-size: 1.15rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; }
-  .prose-narrative p { margin: 0.75rem 0; line-height: 1.65; }
-  .prose-narrative ul { margin: 0.75rem 0; padding-left: 1.25rem; }
-  .prose-narrative li { margin: 0.35rem 0; line-height: 1.55; }
-  .prose-narrative blockquote { border-left: 4px solid #14b8a6; padding-left: 1rem; margin: 1rem 0; color: #475569; font-style: italic; }
-  .prose-narrative table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
-  .prose-narrative th, .prose-narrative td { border: 1px solid #e2e8f0; padding: 0.5rem 0.75rem; text-align: left; vertical-align: top; }
-  .prose-narrative th { background: #f1f5f9; font-weight: 600; }
-  @media (max-width: 640px) {
-    .prose-narrative table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; font-size: 0.82rem; }
-    .prose-narrative th, .prose-narrative td { padding: 0.4rem 0.5rem; min-width: 7.5rem; }
-    .prose-narrative td:first-child, .prose-narrative th:first-child { min-width: 12rem; }
-  }
-</style>
-${jsonLd}
-</head>
-<body class="bg-slate-50 text-slate-900">
-
+  // --- Header (host-aware) ---
+  const header = isReg ? `
+<header class="bg-white border-b border-slate-200 sticky top-0 z-10">
+<div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+<a href="/registro" class="flex items-center gap-2 text-slate-900 hover:text-teal-700">
+<div class="bg-teal-700 w-8 h-8 rounded-lg flex items-center justify-center text-white">
+<i class="fa-solid fa-user-doctor text-sm"></i>
+</div>
+<span class="font-black tracking-tight">Registro Médico PR</span>
+</a>
+<nav class="hidden md:flex gap-5 text-sm text-slate-600">
+<a href="/registro" class="hover:text-teal-700">Buscar especialista</a>
+<a href="/registro#como-se-hizo" class="hover:text-teal-700">Cómo se verifica</a>
+</nav>
+</div>
+</header>` : `
 <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
 <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
 <a href="/" class="flex items-center gap-2 text-slate-900 hover:text-teal-600">
@@ -184,12 +163,22 @@ ${jsonLd}
 <a href="/equipo" class="hover:text-teal-600">Equipo</a>
 </nav>
 </div>
-</header>
+</header>`
 
-<main class="max-w-3xl mx-auto px-4 py-8 prose-narrative">
-${opts.bodyHtml}
-</main>
-
+  // --- Footer (host-aware). Registro = quiet, no newsletter/tienda; desiertos kept low-key. ---
+  const footer = isReg ? `
+<footer class="border-t border-slate-200 mt-12 py-8 bg-white">
+<div class="max-w-4xl mx-auto px-4 text-center">
+<p class="text-base font-semibold text-teal-800">El registro verificado de especialistas médicos de Puerto Rico.</p>
+<p class="text-xs text-slate-500 mt-1">Cada nombre verificado contra el registro federal NPPES/CMS. En español, por especialidad y por región.</p>
+<div class="mt-6 flex justify-center gap-4 text-xs text-slate-500 flex-wrap">
+<a href="/registro" class="hover:text-teal-700 font-semibold">Buscar especialista</a>
+<a href="/registro#como-se-hizo" class="hover:text-teal-700">Cómo se verifica</a>
+<a href="/registro/desiertos" class="hover:text-teal-700">Acceso por región</a>
+</div>
+<p class="mt-4 text-xs text-slate-400">¿Dudas de a quién ir? Escríbele al Veci: <strong>${PHONE_CTA}</strong>. Si te sirve, llégate.</p>
+</div>
+</footer>` : `
 <footer class="border-t border-slate-200 mt-12 py-8 bg-white">
 <div class="max-w-4xl mx-auto px-4 text-center">
 <p class="text-base font-semibold text-teal-700">Menos revolú. Mejores decisiones. Mejor vida.</p>
@@ -216,10 +205,60 @@ ${opts.bodyHtml}
 </div>
 <p class="mt-4 text-xs text-slate-400">Textea al <strong>${PHONE_CTA}</strong> · El Veci te contesta. Si te sirve, llégate. Si no, sigue tu camino.</p>
 </div>
-</footer>
+</footer>`
 
-${SUBSCRIBE_FORM_SCRIPT}
-
+  return `<!DOCTYPE html>
+<html lang="es-PR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>${escapeHtml(opts.title)} · ${brandName}</title>
+<meta name="description" content="${escapeHtml(opts.description)}">
+<link rel="canonical" href="${canonical}">
+<meta property="og:title" content="${escapeHtml(opts.title)}">
+<meta property="og:description" content="${escapeHtml(opts.description)}">
+<meta property="og:url" content="${canonical}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="${brandName}">
+<meta property="og:image" content="${ogImageUrl}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="es_PR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${ogImageUrl}">
+<link rel="icon" href="/favicon.ico">
+<script async src="https://www.googletagmanager.com/gtag/js?id=${GA}"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA}');</script>
+<script defer src="/_vercel/insights/script.js"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  .prose-narrative h1 { font-size: 2.25rem; font-weight: 800; line-height: 1.1; }
+  .prose-narrative h2 { font-size: 1.5rem; font-weight: 700; margin-top: 2rem; margin-bottom: 0.75rem; }
+  .prose-narrative h3 { font-size: 1.15rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+  .prose-narrative p { margin: 0.75rem 0; line-height: 1.65; }
+  .prose-narrative ul { margin: 0.75rem 0; padding-left: 1.25rem; }
+  .prose-narrative li { margin: 0.35rem 0; line-height: 1.55; }
+  .prose-narrative blockquote { border-left: 4px solid #14b8a6; padding-left: 1rem; margin: 1rem 0; color: #475569; font-style: italic; }
+  .prose-narrative table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+  .prose-narrative th, .prose-narrative td { border: 1px solid #e2e8f0; padding: 0.5rem 0.75rem; text-align: left; vertical-align: top; }
+  .prose-narrative th { background: #f1f5f9; font-weight: 600; }
+  @media (max-width: 640px) {
+    .prose-narrative table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; font-size: 0.82rem; }
+    .prose-narrative th, .prose-narrative td { padding: 0.4rem 0.5rem; min-width: 7.5rem; }
+    .prose-narrative td:first-child, .prose-narrative th:first-child { min-width: 12rem; }
+  }
+</style>
+${jsonLd}
+</head>
+<body class="bg-slate-50 text-slate-900">
+${header}
+<main class="max-w-3xl mx-auto px-4 py-8 prose-narrative">
+${opts.bodyHtml}
+</main>
+${footer}
+${isReg ? '' : SUBSCRIBE_FORM_SCRIPT}
 </body>
 </html>`
 }
@@ -2454,7 +2493,7 @@ const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:n
   {s:'podiatra',l:'Podiatra (pies)',e:'🦶',kw:'PODIATRA',md:false,t:57,r:{Oeste:6,Norte:2,Centro:1,Sur:6,Este:9,Metro:33}},
 ]
 
-async function handleRegistro(_req: any, res: any) {
+async function handleRegistro(req: any, res: any) {
   const md = REGISTRY_SPECS.filter(x => x.md)
   const allied = REGISTRY_SPECS.filter(x => !x.md)
   const totalVerified = '6,370'
@@ -2673,6 +2712,8 @@ async function handleRegistro(_req: any, res: any) {
     slug: 'registro',
     bodyHtml: body,
     jsonLd,
+    host: req.headers?.host,
+    canonicalHost: 'https://registromedicopr.com',
   }))
 }
 
@@ -2754,10 +2795,12 @@ async function handleEspecialista(req: any, res: any) {
 
   if (!place) {
     res.status(404).send(layout({
-      title: 'Especialista no encontrado | Registro Médico PR',
+      title: 'Especialista no encontrado',
       description: 'Ese perfil no está en el registro. Busca por nombre o especialidad.',
       slug: 'registro',
       bodyHtml: `<h1>No encontramos ese especialista</h1><p class="text-slate-600">Puede que el enlace esté viejo. <a href="/registro" class="text-teal-700 font-semibold">Vuelve al registro y busca por nombre o especialidad →</a></p>`,
+      host: req.headers?.host,
+      canonicalHost: 'https://registromedicopr.com',
     }))
     return
   }
@@ -2852,7 +2895,7 @@ async function handleEspecialista(req: any, res: any) {
       </div>
       <input name="corrected_phone" placeholder="¿El teléfono de arriba está mal? Pon el correcto aquí" class="w-full rounded-lg border border-amber-300 p-2.5 text-sm">
       <input name="accepted_plans" placeholder="Planes que aceptas (ej: MMM, Triple-S, Plan Medicare, First Medical...)" class="w-full rounded-lg border border-amber-300 p-2.5 text-sm">
-      <label class="flex items-center gap-2 text-sm text-amber-900"><input type="checkbox" name="wants_vitrina" class="rounded"> Quiero que me llamen sobre aparecer destacado (La Vitrina Especialista)</label>
+      <label class="flex items-center gap-2 text-sm text-amber-900"><input type="checkbox" name="wants_vitrina" class="rounded"> Me interesa que me contacten para mantener mi perfil al día</label>
       <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-5 py-2.5 rounded-lg text-sm">Enviar confirmación</button>
       <div id="claim-status" class="text-sm hidden"></div>
     </form>
@@ -2935,11 +2978,13 @@ ${othersHtml}
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
   res.status(200).send(layout({
-    title: `${name} — ${specLabel} en ${muni}, PR | Registro Médico PR`,
+    title: `${name} — ${specLabel} en ${muni}, PR`,
     description: T.sub,
     slug: `especialista/${place.slug}`,
     bodyHtml: body,
     jsonLd,
+    host: req.headers?.host,
+    canonicalHost: 'https://registromedicopr.com',
   }))
 }
 
@@ -2990,7 +3035,7 @@ ${b.wants_vitrina ? '<strong>⭐ Quiere que lo llamen sobre La Vitrina Especiali
 
 // =============== /registro/desiertos — El Observatorio de Desiertos Médicos ===============
 // Public, shareable artifact of ABSENCE. The data the government has buried, made plain.
-async function handleRegistroDesiertos(_req: any, res: any) {
+async function handleRegistroDesiertos(req: any, res: any) {
   const REGIONS = ['Oeste', 'Norte', 'Centro', 'Sur', 'Este'] as const // Metro = the hub, shown as reference
   // Build deserts: non-Metro region × specialty where count is 0 (total) or 1-2 (casi)
   type Gap = { spec: typeof REGISTRY_SPECS[number]; region: string; n: number; metro: number }
@@ -3105,11 +3150,13 @@ async function handleRegistroDesiertos(_req: any, res: any) {
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
   res.status(200).send(layout({
-    title: 'Los desiertos médicos de Puerto Rico — regiones sin especialistas | Registro Médico PR',
+    title: 'Los desiertos médicos de Puerto Rico — regiones sin especialistas',
     description: `${totalDeserts.length} especialidades sin un solo proveedor en regiones enteras de PR, según el registro federal. La data que el gobierno tiene enterrada, puesta clara.`,
     slug: 'registro/desiertos',
     bodyHtml: body,
     jsonLd,
+    host: req.headers?.host,
+    canonicalHost: 'https://registromedicopr.com',
   }))
 }
 
