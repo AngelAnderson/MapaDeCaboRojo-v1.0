@@ -11,8 +11,10 @@
       "schedule": "0 3 * * 1"
     }
   ],
+  "redirects": [
+    { "source": "/", "has": [{ "type": "host", "value": "(www\\.)?registromedicopr\\.com" }], "destination": "/registro", "permanent": false }
+  ],
   "rewrites": [
-    { "source": "/", "has": [{ "type": "host", "value": "(www\\.)?registromedicopr\\.com" }], "destination": "/api/mapa-pages?page=registro" },
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/admin/municipio", "destination": "/api/pages?page=admin-municipio" },
     { "source": "/admin/lifecycle-queue", "destination": "/api/pages?page=admin-lifecycle-queue" },
