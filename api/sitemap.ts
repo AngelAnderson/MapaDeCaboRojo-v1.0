@@ -114,6 +114,42 @@ export default async function handler(req: any, res: any) {
       `)
     })
 
+    // Registro Médico PR — index pages
+    ;[
+      { slug: 'registro', priority: 0.9, changefreq: 'weekly' },
+      { slug: 'registro/desiertos', priority: 0.8, changefreq: 'monthly' },
+    ].forEach(({ slug, priority, changefreq }) => {
+      urls.push(`
+        <url>
+          <loc>${baseUrl}/${slug}</loc>
+          <changefreq>${changefreq}</changefreq>
+          <priority>${priority}</priority>
+        </url>
+      `);
+    });
+
+    // Registro Médico PR — one page per verified specialist (NPPES). Paginate past the 1000-row cap.
+    const specialists: any[] = [];
+    for (let page = 0; page < 10; page++) {
+      const { data } = await supabase
+        .from('places')
+        .select('slug')
+        .not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open')
+        .range(page * 1000, (page + 1) * 1000 - 1);
+      if (!data || data.length === 0) break;
+      specialists.push(...data);
+      if (data.length < 1000) break;
+    }
+    specialists.forEach((p: any) => {
+      urls.push(`
+        <url>
+          <loc>${baseUrl}/especialista/${encodeURIComponent(p.slug)}</loc>
+          <changefreq>monthly</changefreq>
+          <priority>0.6</priority>
+        </url>
+      `);
+    });
+
     // Category pages
     const categories = ['restaurantes', 'playas', 'salud', 'farmacia', 'dentista', 'veterinario', 'medico', 'hospital', 'laboratorio', 'optica', 'salud-mental', 'quiropractico', 'gimnasio', 'fisiatra', 'hospedaje', 'servicios', 'compras', 'entretenimiento', 'turismo', 'deportes', 'belleza', 'automotriz', 'marina', 'educacion', 'gobierno'];
     categories.forEach((cat) => {

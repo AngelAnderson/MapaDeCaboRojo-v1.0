@@ -12,6 +12,7 @@
     }
   ],
   "rewrites": [
+    { "source": "/", "has": [{ "type": "host", "value": "(www\\.)?registromedicopr\\.com" }], "destination": "/api/mapa-pages?page=registro" },
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/admin/municipio", "destination": "/api/pages?page=admin-municipio" },
     { "source": "/admin/lifecycle-queue", "destination": "/api/pages?page=admin-lifecycle-queue" },
@@ -39,6 +40,8 @@
     { "source": "/playas/defensa-y-limpieza", "destination": "/api/mapa-pages?page=defensa-y-limpieza" },
     { "source": "/acceso", "destination": "/api/mapa-pages?page=acceso" },
     { "source": "/registro", "destination": "/api/mapa-pages?page=registro" },
+    { "source": "/registro/desiertos", "destination": "/api/mapa-pages?page=registro-desiertos" },
+    { "source": "/especialista/:slug", "destination": "/api/mapa-pages?page=especialista&slug=:slug" },
     { "source": "/observatorio", "destination": "/api/mapa-pages?page=observatorio" },
     { "source": "/promesas", "destination": "/api/mapa-pages?page=promesas" },
     { "source": "/quien-responde", "destination": "/api/mapa-pages?page=quien-responde" },

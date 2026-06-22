@@ -2549,7 +2549,8 @@ async function handleRegistro(_req: any, res: any) {
         if(!list.length){box.innerHTML='<div style="color:#64748b;font-size:14px;">No hay teléfonos cargados pa\\'esta combinación todavía. Escríbele al Veci abajo.</div>';return;}
         var rows=list.map(function(p){
           var tel=p.phone?('<a href="tel:'+esc(p.phone.replace(/[^0-9]/g,''))+'" style="color:#0f766e;font-weight:700;white-space:nowrap;">'+esc(p.phone)+'</a>'):'<span style="color:#94a3b8;">sin teléfono</span>';
-          return '<tr style="border-top:1px solid #e2e8f0;"><td style="padding:7px 8px;font-weight:600;color:#0f172a;">'+esc(p.name)+'</td><td style="padding:7px 8px;color:#475569;">'+esc(p.municipality||'—')+'</td><td style="padding:7px 8px;text-align:right;">'+tel+'</td></tr>';
+          var nm=p.slug?('<a href="/especialista/'+encodeURIComponent(p.slug)+'" style="color:#0f172a;font-weight:600;text-decoration:none;border-bottom:1px dotted #94a3b8;">'+esc(p.name)+'</a>'):esc(p.name);
+          return '<tr style="border-top:1px solid #e2e8f0;"><td style="padding:7px 8px;font-weight:600;color:#0f172a;">'+nm+'</td><td style="padding:7px 8px;color:#475569;">'+esc(p.municipality||'—')+'</td><td style="padding:7px 8px;text-align:right;">'+tel+'</td></tr>';
         }).join('');
         box.innerHTML='<div style="font-size:12px;color:#64748b;margin:4px 0 6px;">'+list.length+' en '+regionLabel(region)+(d.capped?'+ (mostrando los primeros '+list.length+')':'')+' · fuente NPPES federal</div>'
           +'<div style="max-height:340px;overflow:auto;border:1px solid #e2e8f0;border-radius:10px;"><table style="width:100%;border-collapse:collapse;font-size:14px;"><tbody>'+rows+'</tbody></table></div>';
@@ -2610,7 +2611,8 @@ async function handleRegistro(_req: any, res: any) {
     var rows=list.map(function(p){
       var lab=(BYID[p.subcategory]&&BYID[p.subcategory].l)||p.subcategory;
       var tel=p.phone?('<a href="tel:'+esc(p.phone.replace(/[^0-9]/g,''))+'" style="color:#0f766e;font-weight:700;white-space:nowrap;">'+esc(p.phone)+'</a>'):'<span style="color:#94a3b8;">sin teléfono</span>';
-      return '<tr style="border-top:1px solid #e2e8f0;"><td style="padding:7px 8px;font-weight:600;color:#0f172a;">'+esc(p.name)+'</td><td style="padding:7px 8px;color:#475569;">'+esc(lab)+'</td><td style="padding:7px 8px;color:#475569;">'+esc(p.municipality||'—')+'</td><td style="padding:7px 8px;text-align:right;">'+tel+'</td></tr>';
+      var nm=p.slug?('<a href="/especialista/'+encodeURIComponent(p.slug)+'" style="color:#0f172a;font-weight:600;text-decoration:none;border-bottom:1px dotted #94a3b8;">'+esc(p.name)+'</a>'):esc(p.name);
+      return '<tr style="border-top:1px solid #e2e8f0;"><td style="padding:7px 8px;font-weight:600;color:#0f172a;">'+nm+'</td><td style="padding:7px 8px;color:#475569;">'+esc(lab)+'</td><td style="padding:7px 8px;color:#475569;">'+esc(p.municipality||'—')+'</td><td style="padding:7px 8px;text-align:right;">'+tel+'</td></tr>';
     }).join('');
     return '<div style="font-size:12px;color:#64748b;margin:4px 0 6px;">'+list.length+(capped?'+':'')+' con "'+esc(q)+'" en el nombre · fuente NPPES federal</div>'
       +'<div style="max-height:340px;overflow:auto;border:1px solid #e2e8f0;border-radius:10px;"><table style="width:100%;border-collapse:collapse;font-size:14px;"><tbody>'+rows+'</tbody></table></div>';
@@ -2684,12 +2686,12 @@ async function handleRegistroData(req: any, res: any) {
     if (!REGISTRY_SUBS.has(spec)) { res.status(200).send(JSON.stringify({ providers: [] })); return }
     let q = supabase
       .from('places')
-      .select('name,municipality,phone,npi')
+      .select('name,municipality,phone,npi,slug')
       .eq('category', 'HEALTH').eq('subcategory', spec).not('npi', 'is', null)
       .order('municipality', { ascending: true }).limit(120)
     if (region) q = q.eq('region', region)
     const { data } = await q
-    const providers = (data || []).map((p: any) => ({ name: p.name, municipality: p.municipality, phone: p.phone }))
+    const providers = (data || []).map((p: any) => ({ name: p.name, municipality: p.municipality, phone: p.phone, slug: p.slug }))
     res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=300')
     res.status(200).send(JSON.stringify({ providers, capped: providers.length >= 120 }))
   } catch {
@@ -2707,18 +2709,408 @@ async function handleRegistroSearch(req: any, res: any) {
     const safe = q.replace(/[%,()*]/g, ' ').trim()
     const { data } = await supabase
       .from('places')
-      .select('name,subcategory,municipality,phone,region')
+      .select('name,subcategory,municipality,phone,region,slug')
       .eq('category', 'HEALTH').not('npi', 'is', null)
       .ilike('name', `%${safe}%`)
       .order('name', { ascending: true }).limit(40)
     const providers = (data || [])
       .filter((p: any) => REGISTRY_SUBS.has(p.subcategory))
-      .map((p: any) => ({ name: p.name, subcategory: p.subcategory, municipality: p.municipality, phone: p.phone, region: p.region }))
+      .map((p: any) => ({ name: p.name, subcategory: p.subcategory, municipality: p.municipality, phone: p.phone, region: p.region, slug: p.slug }))
     res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=300')
     res.status(200).send(JSON.stringify({ providers, capped: providers.length >= 40 }))
   } catch {
     res.status(200).send(JSON.stringify({ providers: [] }))
   }
+}
+
+// =============== /especialista/:slug — página por cada especialista (statewide, NPPES) ===============
+// THE flag-plant: one page per verified provider in Puerto Rico. Statewide-aware (NOT Cabo Rojo).
+const REGISTRY_BYSUB: Record<string, typeof REGISTRY_SPECS[number]> = {}
+REGISTRY_SPECS.forEach(x => { REGISTRY_BYSUB[x.s] = x })
+
+const REGION_BLURB: Record<string, string> = {
+  Oeste: 'Mayagüez, Cabo Rojo, Aguadilla y el oeste',
+  Metro: 'San Juan y el área metropolitana',
+  Norte: 'Arecibo, Manatí, Hatillo y el norte',
+  Sur: 'Ponce, Yauco, Guayama y el sur',
+  Este: 'Caguas, Humacao, Fajardo y el este',
+  Centro: 'Aibonito, Barranquitas y la montaña',
+  'Diáspora': 'fuera de Puerto Rico',
+}
+
+function cleanProviderName(n: string): string {
+  return String(n || '').replace(/^Dr\(a\)\.\s*/, '').trim()
+}
+
+async function handleEspecialista(req: any, res: any) {
+  const slug = String(req.query.slug || '').trim()
+  const lang: 'es' | 'en' = String(req.query.lang || '') === 'en' ? 'en' : 'es'
+  if (!slug) { res.status(400).send('Slug requerido'); return }
+
+  const { data: place } = await supabase
+    .from('places')
+    .select('id,name,subcategory,municipality,region,phone,address,npi,lat,lon,slug,last_verified_at,accepted_plans')
+    .eq('slug', slug).not('npi', 'is', null).maybeSingle()
+
+  if (!place) {
+    res.status(404).send(layout({
+      title: 'Especialista no encontrado | Registro Médico PR',
+      description: 'Ese perfil no está en el registro. Busca por nombre o especialidad.',
+      slug: 'registro',
+      bodyHtml: `<h1>No encontramos ese especialista</h1><p class="text-slate-600">Puede que el enlace esté viejo. <a href="/registro" class="text-teal-700 font-semibold">Vuelve al registro y busca por nombre o especialidad →</a></p>`,
+    }))
+    return
+  }
+
+  const spec = REGISTRY_BYSUB[place.subcategory] || null
+  const specLabel = spec ? spec.l : (place.subcategory || 'Proveedor de salud')
+  const specEmoji = spec ? spec.e : '🩺'
+  const isMD = spec ? spec.md : true
+  const name = cleanProviderName(place.name)
+  const muni = place.municipality || 'Puerto Rico'
+  const region = place.region || ''
+  const regionLabel = region === 'Metro' ? 'área metro' : region
+  const npi = place.npi as string
+  const phoneDigits = (place.phone || '').replace(/\D/g, '')
+  const telLink = phoneDigits.length >= 7 ? `tel:${phoneDigits}` : null
+  const waLink = phoneDigits.length >= 10 ? `https://wa.me/1${phoneDigits.slice(-10)}` : null
+  const verifiedDate = place.last_verified_at
+    ? new Date(place.last_verified_at).toLocaleDateString('es-PR', { year: 'numeric', month: 'long' })
+    : null
+  const pageUrl = `${SITE_URL}/especialista/${encodeURIComponent(place.slug)}`
+
+  const T = lang === 'en' ? {
+    sub: `${specLabel} in ${muni}, Puerto Rico. Verified against the U.S. federal NPPES registry.`,
+    verified: 'Verified · federal NPI', call: 'Call', wa: 'WhatsApp', veci: 'Ask El Veci',
+    addr: 'Address', regionH: 'Region', specialtyH: 'Specialty', npiH: 'Federal NPI',
+    othersH: `Other ${specLabel.toLowerCase()}s in ${regionLabel || 'PR'}`,
+    claimH: 'Is this your profile?', notFound: 'Not who you were looking for?',
+  } : {
+    sub: `${specLabel} en ${muni}, Puerto Rico. Verificado contra el registro federal NPPES de EE.UU.`,
+    verified: 'Verificado · NPI federal', call: 'Llamar', wa: 'WhatsApp', veci: 'Pregúntale al Veci',
+    addr: 'Dirección', regionH: 'Región', specialtyH: 'Especialidad', npiH: 'NPI federal',
+    othersH: `Otros ${specLabel.toLowerCase()} en el ${regionLabel || 'PR'}`,
+    claimH: '¿Es tu perfil?', notFound: '¿No es a quien buscabas?',
+  }
+
+  // "Otros cerca" — same specialty + region, with a page of their own
+  let others: any[] = []
+  if (place.subcategory) {
+    let q = supabase.from('places')
+      .select('name,municipality,slug,phone').eq('subcategory', place.subcategory)
+      .not('npi', 'is', null).not('slug', 'is', null).neq('id', place.id)
+      .order('municipality', { ascending: true }).limit(8)
+    if (region) q = q.eq('region', region)
+    const { data } = await q
+    others = data || []
+  }
+
+  const mapsEmbed = (place.lat && place.lon)
+    ? `https://maps.google.com/maps?q=${place.lat},${place.lon}&z=15&output=embed`
+    : `https://maps.google.com/maps?q=${encodeURIComponent((place.address || (muni + ', Puerto Rico')))}&z=13&output=embed`
+
+  const actionBtns = `<div class="not-prose flex flex-wrap gap-3 mt-5">
+    ${telLink ? `<a href="${telLink}" class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-bold px-5 py-3 rounded-xl text-base"><i class="fa-solid fa-phone"></i> ${T.call} ${escapeHtml(place.phone)}</a>` : ''}
+    ${waLink ? `<a href="${waLink}" class="inline-flex items-center gap-2 bg-white border-2 border-teal-600 text-teal-700 font-bold px-5 py-3 rounded-xl text-base hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${T.wa}</a>` : ''}
+    <a href="https://wa.me/17874177711?text=${spec ? spec.kw : 'ESPECIALISTA'}" class="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-5 py-3 rounded-xl text-base"><i class="fa-brands fa-whatsapp"></i> ${T.veci}</a>
+  </div>`
+
+  const dataRows = `<div class="not-prose grid sm:grid-cols-2 gap-3 mt-6">
+    <div class="bg-white border border-slate-200 rounded-xl p-4"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${T.specialtyH}</div><div class="text-slate-900 font-semibold mt-1">${specEmoji} ${escapeHtml(specLabel)}</div></div>
+    <div class="bg-white border border-slate-200 rounded-xl p-4"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${T.regionH}</div><div class="text-slate-900 font-semibold mt-1">${escapeHtml(muni)}${region ? ` · ${escapeHtml(region)}` : ''}</div>${region && REGION_BLURB[region] ? `<div class="text-xs text-slate-500 mt-0.5">${escapeHtml(REGION_BLURB[region])}</div>` : ''}</div>
+    ${place.address ? `<div class="bg-white border border-slate-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${T.addr}</div><div class="text-slate-900 mt-1">${escapeHtml(place.address)}</div></div>` : ''}
+    <div class="bg-white border border-slate-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${T.npiH}</div><div class="text-slate-900 font-mono mt-1">${escapeHtml(npi)} <a href="https://npiregistry.cms.hhs.gov/provider-view/${escapeHtml(npi)}" target="_blank" rel="noopener" class="text-teal-600 text-sm font-sans font-semibold ml-2">verificar en el registro federal →</a></div></div>
+  </div>`
+
+  const othersHtml = others.length ? `<h2>${escapeHtml(T.othersH)}</h2>
+    <div class="not-prose grid sm:grid-cols-2 gap-2 mt-2">
+      ${others.map(o => `<a href="/especialista/${encodeURIComponent(o.slug)}" class="flex items-center justify-between gap-2 bg-white border border-slate-200 rounded-lg px-4 py-3 hover:border-teal-400 hover:shadow-sm transition">
+        <span class="font-semibold text-slate-800 text-sm">${escapeHtml(cleanProviderName(o.name))}</span>
+        <span class="text-xs text-slate-500 whitespace-nowrap">${escapeHtml(o.municipality || '')}</span>
+      </a>`).join('')}
+    </div>
+    <p class="text-sm text-slate-500 mt-2"><a href="/registro" class="text-teal-700 font-semibold">Ver los ${spec ? spec.t : ''} ${escapeHtml(specLabel.toLowerCase())} de toda la isla →</a></p>` : ''
+
+  // Claim form (Product 4 — the monetization + data loop)
+  const claimForm = `<div class="not-prose mt-8 bg-amber-50 border-2 border-amber-200 rounded-2xl p-5">
+    <button type="button" id="claim-toggle" class="w-full flex items-center justify-between text-left">
+      <span class="font-bold text-amber-900 text-base"><i class="fa-solid fa-user-check"></i> ${escapeHtml(T.claimH)} Confírmalo y di qué planes médicos aceptas.</span>
+      <i class="fa-solid fa-chevron-down text-amber-700" id="claim-chev"></i>
+    </button>
+    <form id="claim-form" class="hidden mt-4 space-y-3" data-npi="${escapeHtml(npi)}" data-place="${escapeHtml(place.id)}" data-name="${escapeHtml(name)}">
+      <p class="text-sm text-amber-800">Lo revisamos y, si cuadra, tu perfil aparece destacado con los planes que aceptas — para que el paciente correcto te encuentre. Gratis confirmar. Sin compromiso.</p>
+      <div class="grid sm:grid-cols-2 gap-3">
+        <input name="claimant_name" required placeholder="Tu nombre" class="rounded-lg border border-amber-300 p-2.5 text-sm">
+        <select name="claimant_role" class="rounded-lg border border-amber-300 p-2.5 text-sm bg-white">
+          <option value="el médico">Soy el especialista</option>
+          <option value="oficina">Trabajo en la oficina</option>
+          <option value="familiar">Soy familiar</option>
+          <option value="otro">Otro</option>
+        </select>
+        <input name="contact_phone" placeholder="Teléfono de contacto" class="rounded-lg border border-amber-300 p-2.5 text-sm">
+        <input name="contact_email" type="email" placeholder="Correo (opcional)" class="rounded-lg border border-amber-300 p-2.5 text-sm">
+      </div>
+      <input name="corrected_phone" placeholder="¿El teléfono de arriba está mal? Pon el correcto aquí" class="w-full rounded-lg border border-amber-300 p-2.5 text-sm">
+      <input name="accepted_plans" placeholder="Planes que aceptas (ej: MMM, Triple-S, Plan Medicare, First Medical...)" class="w-full rounded-lg border border-amber-300 p-2.5 text-sm">
+      <label class="flex items-center gap-2 text-sm text-amber-900"><input type="checkbox" name="wants_vitrina" class="rounded"> Quiero que me llamen sobre aparecer destacado (La Vitrina Especialista)</label>
+      <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-5 py-2.5 rounded-lg text-sm">Enviar confirmación</button>
+      <div id="claim-status" class="text-sm hidden"></div>
+    </form>
+  </div>
+  <script>
+  (function(){
+    var t=document.getElementById('claim-toggle'),f=document.getElementById('claim-form'),c=document.getElementById('claim-chev');
+    if(t)t.addEventListener('click',function(){f.classList.toggle('hidden');c.style.transform=f.classList.contains('hidden')?'':'rotate(180deg)';});
+    if(f)f.addEventListener('submit',function(e){
+      e.preventDefault();var st=document.getElementById('claim-status');var btn=f.querySelector('button[type=submit]');
+      btn.disabled=true;btn.textContent='Enviando…';
+      var fd=new FormData(f);var body={npi:f.dataset.npi,place_id:f.dataset.place,provider_name:f.dataset.name};
+      fd.forEach(function(v,k){body[k]=v;});body.wants_vitrina=!!fd.get('wants_vitrina');
+      fetch('/api/mapa-pages?page=especialista-claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+       .then(function(r){return r.json();}).then(function(d){
+         st.classList.remove('hidden');st.className='text-sm text-emerald-700 font-semibold';
+         st.textContent='✓ Gracias. Lo revisamos y te confirmamos. — Angel';f.querySelector('button').style.display='none';
+       }).catch(function(){st.classList.remove('hidden');st.className='text-sm text-red-600';st.textContent='No se pudo enviar. Escríbele al Veci al 787-417-7711.';btn.disabled=false;btn.textContent='Enviar confirmación';});
+    });
+  })();
+  </script>`
+
+  const body = `
+<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <a href="/registro" class="hover:text-teal-700">${escapeHtml(specLabel)}</a> <span class="text-slate-300">/</span> <span class="text-slate-700">${escapeHtml(name)}</span></nav>
+
+<div class="not-prose flex items-start gap-4">
+  <div class="text-5xl leading-none">${specEmoji}</div>
+  <div>
+    <h1 class="text-3xl font-black text-slate-900 leading-tight">${escapeHtml(name)}</h1>
+    <p class="text-lg text-slate-600 mt-1">${escapeHtml(specLabel)} · ${escapeHtml(muni)}${region ? ` · ${escapeHtml(region)}` : ''}</p>
+    <div class="mt-3 flex flex-wrap gap-2">
+      <span class="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full text-sm"><i class="fa-solid fa-shield-halved"></i> ${T.verified}</span>
+      ${isMD ? '' : '<span class="inline-flex items-center gap-2 bg-slate-100 border border-slate-200 text-slate-600 font-semibold px-3 py-1 rounded-full text-sm">Proveedor licenciado (no es médico MD)</span>'}
+      ${verifiedDate ? `<span class="inline-flex items-center gap-2 bg-slate-50 border border-slate-200 text-slate-500 px-3 py-1 rounded-full text-xs">Verificado ${escapeHtml(verifiedDate)}</span>` : ''}
+    </div>
+  </div>
+</div>
+
+${actionBtns}
+${dataRows}
+
+<div class="not-prose mt-6 rounded-2xl overflow-hidden border border-slate-200"><iframe src="${mapsEmbed}" width="100%" height="280" style="border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+
+${claimForm}
+
+${othersHtml}
+
+<div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
+  <p class="text-lg font-bold mb-1">${escapeHtml(T.notFound)}</p>
+  <p class="text-sm text-teal-100 mb-4">Antes de dar vueltas, escríbele al Veci. Te dice quién resuelve, en qué región, sin enredos. Al <strong>${PHONE_CTA}</strong>:</p>
+  <div class="flex flex-wrap gap-3 justify-center">
+    <a href="https://wa.me/17874177711?text=${spec ? spec.kw : 'ESPECIALISTA'}" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${spec ? spec.kw : 'ESPECIALISTA'}</a>
+    <a href="/registro" class="inline-flex items-center gap-2 bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-900"><i class="fa-solid fa-magnifying-glass"></i> Buscar otro especialista</a>
+  </div>
+</div>
+
+<p class="text-xs text-slate-500 mt-6">${escapeHtml(name)} aparece en el <strong>NPPES</strong>, el registro oficial del gobierno federal de EE.UU. — el mismo que usan Medicare y los planes médicos. El NPI <strong>${escapeHtml(npi)}</strong> es público y cualquiera puede verificarlo. ¿Dato viejo o ya no ejerce aquí? Dínoslo: <a href="mailto:angel@angelanderson.com" class="text-teal-600">angel@angelanderson.com</a>.</p>
+`
+
+  const jsonLd: any = {
+    '@context': 'https://schema.org',
+    '@type': isMD ? 'Physician' : 'MedicalBusiness',
+    name,
+    medicalSpecialty: specLabel,
+    telephone: place.phone || undefined,
+    url: pageUrl,
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: place.address || undefined,
+      addressLocality: muni,
+      addressRegion: 'Puerto Rico',
+      addressCountry: 'US',
+    },
+    geo: (place.lat && place.lon) ? { '@type': 'GeoCoordinates', latitude: place.lat, longitude: place.lon } : undefined,
+    areaServed: { '@type': 'AdministrativeArea', name: region ? `${region}, Puerto Rico` : 'Puerto Rico' },
+    identifier: { '@type': 'PropertyValue', name: 'NPI', value: npi },
+    isAcceptingNewPatients: undefined,
+  }
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: `${name} — ${specLabel} en ${muni}, PR | Registro Médico PR`,
+    description: T.sub,
+    slug: `especialista/${place.slug}`,
+    bodyHtml: body,
+    jsonLd,
+  }))
+}
+
+async function handleEspecialistaClaim(req: any, res: any) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8')
+  try {
+    const b = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}')
+    if (!b.npi && !b.place_id) { res.status(400).send(JSON.stringify({ ok: false })); return }
+    const plans = String(b.accepted_plans || '').split(/[,;]+/).map((s: string) => s.trim()).filter(Boolean)
+    await supabase.from('provider_claims').insert({
+      place_id: b.place_id || null,
+      npi: String(b.npi || '').slice(0, 20) || null,
+      provider_name: String(b.provider_name || '').slice(0, 200) || null,
+      claimant_name: String(b.claimant_name || '').slice(0, 120) || null,
+      claimant_role: String(b.claimant_role || '').slice(0, 40) || null,
+      contact_phone: String(b.contact_phone || '').slice(0, 40) || null,
+      contact_email: String(b.contact_email || '').slice(0, 120) || null,
+      corrected_phone: String(b.corrected_phone || '').slice(0, 40) || null,
+      accepted_plans: plans.length ? plans : null,
+      wants_vitrina: !!b.wants_vitrina,
+      source: 'especialista_page',
+    })
+    // Notify Angel (non-blocking)
+    if (RESEND_API_KEY) {
+      try {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: FROM_EMAIL, to: REPLY_TO, reply_to: b.contact_email || REPLY_TO,
+            subject: `🩺 Reclamo de perfil: ${b.provider_name || b.npi}${b.wants_vitrina ? ' · QUIERE VITRINA' : ''}`,
+            html: `<p><strong>${escapeHtml(String(b.provider_name || ''))}</strong> (NPI ${escapeHtml(String(b.npi || ''))})</p>
+<p>Reclamado por: ${escapeHtml(String(b.claimant_name || ''))} (${escapeHtml(String(b.claimant_role || ''))})<br>
+Tel: ${escapeHtml(String(b.contact_phone || '—'))} · Email: ${escapeHtml(String(b.contact_email || '—'))}<br>
+Tel corregido: ${escapeHtml(String(b.corrected_phone || '—'))}<br>
+Planes: ${escapeHtml(plans.join(', ') || '—')}<br>
+${b.wants_vitrina ? '<strong>⭐ Quiere que lo llamen sobre La Vitrina Especialista</strong>' : ''}</p>
+<p style="color:#64748b;font-size:12px">provider_claims · registromedicopr.com</p>`,
+          }),
+        })
+      } catch { /* email best-effort */ }
+    }
+    res.status(200).send(JSON.stringify({ ok: true }))
+  } catch {
+    res.status(200).send(JSON.stringify({ ok: false }))
+  }
+}
+
+// =============== /registro/desiertos — El Observatorio de Desiertos Médicos ===============
+// Public, shareable artifact of ABSENCE. The data the government has buried, made plain.
+async function handleRegistroDesiertos(_req: any, res: any) {
+  const REGIONS = ['Oeste', 'Norte', 'Centro', 'Sur', 'Este'] as const // Metro = the hub, shown as reference
+  // Build deserts: non-Metro region × specialty where count is 0 (total) or 1-2 (casi)
+  type Gap = { spec: typeof REGISTRY_SPECS[number]; region: string; n: number; metro: number }
+  const totalDeserts: Gap[] = []
+  const nearDeserts: Gap[] = []
+  REGISTRY_SPECS.forEach(spec => {
+    REGIONS.forEach(region => {
+      const n = (spec.r as any)[region] || 0
+      const metro = spec.r.Metro || 0
+      if (n === 0) totalDeserts.push({ spec, region, n, metro })
+      else if (n <= 2) nearDeserts.push({ spec, region, n, metro })
+    })
+  })
+  // Sort total deserts: MDs first, then by how many exist in Metro (bigger gap = more striking)
+  totalDeserts.sort((a, b) => (Number(b.spec.md) - Number(a.spec.md)) || (b.metro - a.metro))
+  nearDeserts.sort((a, b) => (Number(b.spec.md) - Number(a.spec.md)) || (b.metro - a.metro))
+
+  // Per-region scorecard: how many of the 32 specialties are TOTALLY absent
+  const regionScore: Record<string, number> = {}
+  REGIONS.forEach(r => { regionScore[r] = totalDeserts.filter(g => g.region === r).length })
+
+  const regionFull: Record<string, string> = {
+    Oeste: 'el Oeste (Mayagüez, Cabo Rojo, Aguadilla)',
+    Norte: 'el Norte (Arecibo, Manatí, Hatillo)',
+    Centro: 'el Centro / la montaña (Aibonito, Barranquitas)',
+    Sur: 'el Sur (Ponce, Yauco, Guayama)',
+    Este: 'el Este (Caguas, Humacao, Fajardo)',
+  }
+
+  const scoreCards = REGIONS
+    .map(r => ({ r, z: regionScore[r] }))
+    .sort((a, b) => b.z - a.z)
+    .map(({ r, z }) => `<div class="bg-white border-2 ${z >= 8 ? 'border-red-300' : z >= 4 ? 'border-amber-300' : 'border-slate-200'} rounded-xl p-4 text-center">
+      <div class="text-4xl font-black ${z >= 8 ? 'text-red-600' : z >= 4 ? 'text-amber-600' : 'text-slate-700'}">${z}</div>
+      <div class="text-sm font-bold text-slate-800 mt-1">${escapeHtml(r)}</div>
+      <div class="text-xs text-slate-500">especialidades con <strong>cero</strong> proveedores</div>
+    </div>`).join('')
+
+  const desertRow = (g: Gap) => `<tr class="border-t border-slate-100">
+    <td class="py-2 px-3"><span class="font-semibold text-slate-800">${g.spec.e} ${escapeHtml(g.spec.l)}</span></td>
+    <td class="py-2 px-3 text-slate-600">${escapeHtml(g.region)}</td>
+    <td class="py-2 px-3 text-center"><span class="inline-block bg-red-100 text-red-700 font-black px-2 py-0.5 rounded">0</span></td>
+    <td class="py-2 px-3 text-center text-slate-500">${g.metro} en metro</td>
+  </tr>`
+
+  const nearRow = (g: Gap) => `<tr class="border-t border-slate-100">
+    <td class="py-2 px-3"><span class="font-semibold text-slate-800">${g.spec.e} ${escapeHtml(g.spec.l)}</span></td>
+    <td class="py-2 px-3 text-slate-600">${escapeHtml(g.region)}</td>
+    <td class="py-2 px-3 text-center"><span class="inline-block bg-amber-100 text-amber-700 font-black px-2 py-0.5 rounded">${g.n}</span></td>
+    <td class="py-2 px-3 text-center text-slate-500">${g.metro} en metro</td>
+  </tr>`
+
+  const body = `
+<h1>Los desiertos médicos de Puerto Rico</h1>
+<p class="text-lg text-slate-600 mt-3">Hay especialidades médicas que, según el registro federal, <strong>no tienen ni un solo proveedor</strong> en regiones enteras del país. No es opinión. Es el dato oficial — el mismo que usan Medicare y los planes médicos — puesto claro, por primera vez, región por región.</p>
+
+<div class="not-prose mt-4 flex flex-wrap gap-3 text-sm">
+  <span class="inline-flex items-center gap-2 bg-red-50 border border-red-200 text-red-800 font-semibold px-3 py-1.5 rounded-full"><i class="fa-solid fa-triangle-exclamation"></i> ${totalDeserts.length} desiertos totales (cero proveedores)</span>
+  <span class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 font-semibold px-3 py-1.5 rounded-full"><i class="fa-solid fa-circle-exclamation"></i> ${nearDeserts.length} casi-desiertos (1-2)</span>
+  <span class="inline-flex items-center gap-2 bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full"><i class="fa-solid fa-shield-halved"></i> Fuente federal NPPES/CMS</span>
+</div>
+
+<h2>Cuántas especialidades faltan por completo, por región</h2>
+<p class="text-slate-600 -mt-2">De las ${REGISTRY_SPECS.length} especialidades del registro, cuántas tienen <strong>cero</strong> proveedores en cada región. El área metro concentra casi todo — por eso no aparece aquí: es la vara contra la que se mide el resto.</p>
+<div class="not-prose grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4">${scoreCards}</div>
+
+<h2>Los desiertos totales — cero proveedores en toda la región</h2>
+<p class="text-slate-600 -mt-2">Si vives aquí y necesitas a uno de estos, el registro federal dice que te toca viajar — casi siempre al área metro.</p>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+    <th class="py-2 px-3">Especialidad</th><th class="py-2 px-3">Región sin cobertura</th><th class="py-2 px-3 text-center">Hay</th><th class="py-2 px-3 text-center">Más cerca</th>
+  </tr></thead><tbody>${totalDeserts.map(desertRow).join('')}</tbody></table>
+</div>
+
+<h2>Los casi-desiertos — 1 o 2 para una región entera</h2>
+<p class="text-slate-600 -mt-2">Existen, pero son tan pocos que la cita puede tardar meses. Pide el referido temprano.</p>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+    <th class="py-2 px-3">Especialidad</th><th class="py-2 px-3">Región</th><th class="py-2 px-3 text-center">Hay</th><th class="py-2 px-3 text-center">En metro</th>
+  </tr></thead><tbody>${nearDeserts.map(nearRow).join('')}</tbody></table>
+</div>
+
+<h2>Por qué esto importa</h2>
+<p>Un desierto médico no es que "haya poco". Es que el sistema te obliga a manejar dos o tres horas — o a no atenderte. Eso pega más fuerte en el adulto mayor, en quien no maneja, y en quien no tiene a alguien que lo lleve. La data existía. El gobierno la tiene. Pero enterrada, en inglés, sin organizar por pueblo. La sacamos a la luz para que se pueda <strong>ver</strong>, <strong>citar</strong>, y <strong>arreglar</strong>.</p>
+<p class="text-sm text-slate-600">¿Eres especialista y atiendes en una de estas regiones sin cobertura? El registro no te muestra. <a href="/registro" class="text-teal-700 font-semibold">Reclama tu perfil aquí</a> y aparece donde la gente te busca.</p>
+<p class="text-sm text-slate-600"><strong>¿Periodista, agencia de salud, o investigador?</strong> Esta data es citable y hay acceso programático. Escríbenos: <a href="mailto:angel@angelanderson.com" class="text-teal-600">angel@angelanderson.com</a>.</p>
+
+<div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
+  <p class="text-lg font-bold mb-1">¿Necesitas un especialista y no sabes a dónde ir?</p>
+  <p class="text-sm text-teal-100 mb-4">Escríbele al Veci. Te dice cuántos hay en tu región, cuáles, y sus teléfonos. Al <strong>${PHONE_CTA}</strong>:</p>
+  <div class="flex flex-wrap gap-3 justify-center">
+    <a href="https://wa.me/17874177711?text=ESPECIALISTA" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ESPECIALISTA</a>
+    <a href="/registro" class="inline-flex items-center gap-2 bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-900"><i class="fa-solid fa-magnifying-glass"></i> Ir al registro completo</a>
+  </div>
+  <p class="text-xs text-teal-200 mt-4">— Menos revolú, más sistema, mejor vida.</p>
+</div>
+`
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Dataset',
+    name: 'Desiertos médicos de Puerto Rico por región',
+    description: `${totalDeserts.length} combinaciones de especialidad y región sin ningún proveedor, según el registro federal NPPES/CMS. Datos abiertos de acceso a especialistas en Puerto Rico, en español.`,
+    creator: { '@type': 'Organization', name: 'Registro Médico PR', url: SITE_URL },
+    license: 'https://npiregistry.cms.hhs.gov/',
+    isAccessibleForFree: true,
+    inLanguage: 'es',
+    keywords: ['acceso a salud', 'especialistas', 'Puerto Rico', 'desiertos médicos', 'NPPES'],
+    url: `${SITE_URL}/registro/desiertos`,
+  }
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'Los desiertos médicos de Puerto Rico — regiones sin especialistas | Registro Médico PR',
+    description: `${totalDeserts.length} especialidades sin un solo proveedor en regiones enteras de PR, según el registro federal. La data que el gobierno tiene enterrada, puesta clara.`,
+    slug: 'registro/desiertos',
+    bodyHtml: body,
+    jsonLd,
+  }))
 }
 
 // =============== CAPA DE DATOS CÍVICA — promesas (drive /observatorio + /promesas + pueblos futuros) ===============
@@ -3778,6 +4170,9 @@ export default async function handler(req: any, res: any) {
     case 'registro': return await handleRegistro(req, res)
     case 'registro-data': return await handleRegistroData(req, res)
     case 'registro-search': return await handleRegistroSearch(req, res)
+    case 'especialista': return await handleEspecialista(req, res)
+    case 'especialista-claim': return await handleEspecialistaClaim(req, res)
+    case 'registro-desiertos': return await handleRegistroDesiertos(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)
     case 'civico-json': return handleCivicoJson(req, res)
