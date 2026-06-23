@@ -283,6 +283,17 @@ html.dark .text-emerald-800{color:#6ee7b7 !important;}
 html.dark .text-amber-900,html.dark .text-amber-800,html.dark .text-amber-700{color:#fcd34d !important;}
 html.dark .text-red-700,html.dark .text-red-600{color:#fca5a5 !important;}
 html.dark input,html.dark select{background-color:#1e293b !important;color:#e2e8f0 !important;border-color:#475569 !important;}
+html.dark input::placeholder{color:#64748b !important;}
+/* Search results are injected by JS with inline hex styles — override them in dark mode */
+html.dark #rg-result [style*="color:#0f172a"],html.dark #rg-search-result [style*="color:#0f172a"]{color:#f1f5f9 !important;}
+html.dark #rg-result [style*="color:#475569"],html.dark #rg-search-result [style*="color:#475569"],html.dark #rg-result [style*="color:#334155"],html.dark #rg-search-result [style*="color:#334155"]{color:#cbd5e1 !important;}
+html.dark #rg-result [style*="color:#64748b"],html.dark #rg-search-result [style*="color:#64748b"]{color:#94a3b8 !important;}
+html.dark #rg-result [style*="color:#0f766e"],html.dark #rg-search-result [style*="color:#0f766e"]{color:#5eead4 !important;}
+html.dark #rg-result [style*="#e2e8f0"],html.dark #rg-search-result [style*="#e2e8f0"]{border-color:#334155 !important;}
+html.dark #rg-result [style*="background:#ecfdf5"]{background:#064e3b !important;border-color:#047857 !important;}
+html.dark #rg-result [style*="background:#fffbeb"]{background:#451a03 !important;border-color:#b45309 !important;}
+html.dark #rg-result [style*="background:#fef2f2"]{background:#450a0a !important;border-color:#b91c1c !important;}
+html.dark #rg-search-result button[style]{background:#1e293b !important;border-color:#0f766e !important;color:#5eead4 !important;}
 </style>` : ''}
 ${jsonLd}
 </head>
