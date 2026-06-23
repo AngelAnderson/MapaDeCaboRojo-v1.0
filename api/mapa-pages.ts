@@ -3077,6 +3077,7 @@ ${othersHtml}
     ogImage: '/og/registro.png',
     host: req.headers?.host,
     canonicalHost: 'https://registromedicopr.com',
+    lang,
   }))
 }
 
@@ -3349,7 +3350,14 @@ async function handleRegistroHub(req: any, res: any) {
   const region = regionUrl ? (REGION_BY_URL[regionUrl] || '') : ''
   if (regionUrl && !region) { res.statusCode = 302; res.setHeader('Location', `/registro/${specUrl}`); res.end(); return }
 
-  const info = SPEC_INFO[x.s] || { treats: '', whenToGo: '', note: '' }
+  const en = String(req.query.lang || '') === 'en'
+  const t = (es: string, env: string) => en ? env : es
+  const lp = en ? '?lang=en' : ''
+  const label = en ? (SPEC_LABEL_EN[x.s] || x.l) : x.l
+  const labelLow = en ? label : x.l.toLowerCase()
+  const info = en ? (SPEC_INFO_EN[x.s] || { treats: '', whenToGo: '', note: '' }) : (SPEC_INFO[x.s] || { treats: '', whenToGo: '', note: '' })
+  const REGION_FULL_EN: Record<string, string> = { Oeste: 'the West (Mayagüez, Cabo Rojo, Aguadilla)', Norte: 'the North (Arecibo, Manatí, Hatillo)', Centro: 'the central mountains (Aibonito, Barranquitas)', Sur: 'the South (Ponce, Yauco, Guayama)', Este: 'the East (Caguas, Humacao, Fajardo)', Metro: 'the San Juan metro area' }
+  const regionFull = (r: string) => en ? (REGION_FULL_EN[r] || r) : REGION_FULL[r]
   const total = x.t
   const regionCount = region ? ((x.r as any)[region] || 0) : 0
   const metroCount = x.r.Metro || 0
@@ -3365,62 +3373,63 @@ async function handleRegistroHub(req: any, res: any) {
   const providers = provData || []
 
   const provRows = providers.map(p => `<tr class="border-t border-slate-100">
-    <td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td>
+    <td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td>
     <td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '—')}</td>
-    <td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="text-teal-700 font-semibold whitespace-nowrap">${escapeHtml(p.phone)}</a>` : '<span class="text-slate-400">sin teléfono</span>'}</td>
+    <td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="text-teal-700 font-semibold whitespace-nowrap">${escapeHtml(p.phone)}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td>
   </tr>`).join('')
+  const thead = `<thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(label)}</th><th class="py-2 px-3">${t('Pueblo', 'Town')}</th><th class="py-2 px-3 text-right">${t('Teléfono', 'Phone')}</th></tr></thead>`
 
   const noteHtml = info.note ? `<p class="text-sm text-slate-500 mt-1"><i class="fa-solid fa-circle-info text-teal-600"></i> ${escapeHtml(info.note)}</p>` : ''
-  const breadcrumb = `<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <a href="/registro/${specUrl}" class="hover:text-teal-700">${escapeHtml(x.l)}</a>${region ? ` <span class="text-slate-300">/</span> <span class="text-slate-700">${escapeHtml(region)}</span>` : ''}</nav>`
+  const breadcrumb = `<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro${lp}" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <a href="/registro/${specUrl}${lp}" class="hover:text-teal-700">${escapeHtml(label)}</a>${region ? ` <span class="text-slate-300">/</span> <span class="text-slate-700">${escapeHtml(region)}</span>` : ''}</nav>`
 
   let body: string, title: string, description: string, answerFirst: string
   if (region) {
     answerFirst = regionCount > 0
-      ? `En ${REGION_FULL[region]} hay <strong>${regionCount} ${escapeHtml(x.l.toLowerCase())}</strong> verificados contra el registro federal NPPES.`
-      : `Según el registro federal, en ${REGION_FULL[region]} no hay ningún ${escapeHtml(x.l.toLowerCase())} verificado. El grupo más grande está en el área metro (${metroCount}).`
-    title = `${x.l} en ${region}, Puerto Rico — ${regionCount} verificados`
-    description = `${regionCount} ${x.l.toLowerCase()} en ${region}, PR, verificados contra el registro federal NPPES. Con teléfono, en español.`
+      ? t(`En ${regionFull(region)} hay <strong>${regionCount} ${escapeHtml(x.l.toLowerCase())}</strong> verificados contra el registro federal NPPES.`, `${regionFull(region)} has <strong>${regionCount} verified ${escapeHtml(labelLow)}${regionCount === 1 ? '' : 's'}</strong> in the federal NPPES registry.`)
+      : t(`Según el registro federal, en ${regionFull(region)} no hay ningún ${escapeHtml(x.l.toLowerCase())} verificado. El grupo más grande está en el área metro (${metroCount}).`, `According to the federal registry, ${regionFull(region)} has no verified ${escapeHtml(labelLow)}. The largest group is in the metro area (${metroCount}).`)
+    title = t(`${x.l} en ${region}, Puerto Rico — ${regionCount} verificados`, `${label} in ${region}, Puerto Rico — ${regionCount} verified`)
+    description = t(`${regionCount} ${x.l.toLowerCase()} en ${region}, PR, verificados contra el registro federal NPPES. Con teléfono, en español.`, `${regionCount} verified ${labelLow} in ${region}, Puerto Rico, from the federal NPPES registry. With phone numbers.`)
     body = `${breadcrumb}
-<h1>${x.e} ${escapeHtml(x.l)} en ${escapeHtml(region)}, Puerto Rico</h1>
+<h1>${x.e} ${escapeHtml(label)} ${t('en', 'in')} ${escapeHtml(region)}, Puerto Rico</h1>
 <p class="text-lg text-slate-600 mt-2">${answerFirst}</p>
 ${info.treats ? `<p class="text-slate-600 mt-1">${escapeHtml(info.treats)} ${escapeHtml(info.whenToGo)}</p>` : ''}
 ${noteHtml}
-${providers.length ? `<div class="not-prose mt-5 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(x.l)}</th><th class="py-2 px-3">Pueblo</th><th class="py-2 px-3 text-right">Teléfono</th></tr></thead><tbody>${provRows}</tbody></table></div>` : `<div class="not-prose mt-5 bg-amber-50 border border-amber-200 rounded-xl p-5"><p class="text-amber-900 font-semibold">No hay ${escapeHtml(x.l.toLowerCase())} verificados en ${escapeHtml(region)}.</p><p class="text-sm text-amber-800 mt-1">Te va a tocar viajar. Mira los de <a href="/registro/${specUrl}/metro" class="font-semibold underline">el área metro (${metroCount}) →</a></p></div>`}
-<p class="not-prose mt-4 text-sm"><a href="/registro/${specUrl}" class="text-teal-700 font-semibold">Ver los ${total} ${escapeHtml(x.l.toLowerCase())} de toda la isla →</a></p>`
+${providers.length ? `<div class="not-prose mt-5 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${thead}<tbody>${provRows}</tbody></table></div>` : `<div class="not-prose mt-5 bg-amber-50 border border-amber-200 rounded-xl p-5"><p class="text-amber-900 font-semibold">${t(`No hay ${escapeHtml(x.l.toLowerCase())} verificados en ${escapeHtml(region)}.`, `No verified ${escapeHtml(labelLow)} in ${escapeHtml(region)}.`)}</p><p class="text-sm text-amber-800 mt-1">${t('Te va a tocar viajar. Mira los de', 'You will have to travel. See those in')} <a href="/registro/${specUrl}/metro${lp}" class="font-semibold underline">${t('el área metro', 'the metro area')} (${metroCount}) →</a></p></div>`}
+<p class="not-prose mt-4 text-sm"><a href="/registro/${specUrl}${lp}" class="text-teal-700 font-semibold">${t(`Ver los ${total} ${escapeHtml(x.l.toLowerCase())} de toda la isla →`, `See all ${total} ${escapeHtml(labelLow)} across the island →`)}</a></p>`
   } else {
-    answerFirst = `En Puerto Rico hay <strong>${total} ${escapeHtml(x.l.toLowerCase())}</strong> verificados contra el registro federal NPPES, distribuidos por región.`
-    title = `${x.l} en Puerto Rico — ${total} verificados, por región`
-    description = `${total} ${x.l.toLowerCase()} en Puerto Rico verificados contra el registro federal NPPES. ${info.treats} Por región, con teléfono, en español.`
+    answerFirst = t(`En Puerto Rico hay <strong>${total} ${escapeHtml(x.l.toLowerCase())}</strong> verificados contra el registro federal NPPES, distribuidos por región.`, `Puerto Rico has <strong>${total} verified ${escapeHtml(labelLow)}</strong> in the federal NPPES registry, spread across regions.`)
+    title = t(`${x.l} en Puerto Rico — ${total} verificados, por región`, `${label} in Puerto Rico — ${total} verified, by region`)
+    description = t(`${total} ${x.l.toLowerCase()} en Puerto Rico verificados contra el registro federal NPPES. ${info.treats} Por región, con teléfono, en español.`, `${total} verified ${labelLow} in Puerto Rico from the federal NPPES registry. ${info.treats} By region, with phone numbers.`)
     const regionCards = HUB_REGIONS.map(r => {
       const n = (x.r as any)[r] || 0
-      return `<a href="/registro/${specUrl}/${specToUrl(r)}" class="flex items-center justify-between bg-white border ${n === 0 ? 'border-red-200' : 'border-slate-200'} rounded-lg px-4 py-3 hover:border-teal-400 hover:shadow-sm transition">
+      return `<a href="/registro/${specUrl}/${specToUrl(r)}${lp}" class="flex items-center justify-between bg-white border ${n === 0 ? 'border-red-200' : 'border-slate-200'} rounded-lg px-4 py-3 hover:border-teal-400 hover:shadow-sm transition">
         <span class="font-semibold text-slate-800">${escapeHtml(r)}</span>
         <span class="font-black ${n === 0 ? 'text-red-500' : 'text-teal-700'}">${n}</span>
       </a>`
     }).join('')
     body = `${breadcrumb}
-<h1>${x.e} ${escapeHtml(x.l)} en Puerto Rico</h1>
+<h1>${x.e} ${escapeHtml(label)} ${t('en', 'in')} Puerto Rico</h1>
 <p class="text-lg text-slate-600 mt-2">${answerFirst}</p>
 <div class="not-prose mt-4 grid sm:grid-cols-2 gap-3">
-  <div class="bg-teal-50 border border-teal-200 rounded-xl p-4"><div class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-1">¿Qué resuelve?</div><p class="text-sm text-slate-700">${escapeHtml(info.treats)}</p></div>
-  <div class="bg-amber-50 border border-amber-200 rounded-xl p-4"><div class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-1">¿Cuándo ir?</div><p class="text-sm text-slate-700">${escapeHtml(info.whenToGo)}</p></div>
+  <div class="bg-teal-50 border border-teal-200 rounded-xl p-4"><div class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-1">${t('¿Qué resuelve?', 'What do they handle?')}</div><p class="text-sm text-slate-700">${escapeHtml(info.treats)}</p></div>
+  <div class="bg-amber-50 border border-amber-200 rounded-xl p-4"><div class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-1">${t('¿Cuándo ir?', 'When to go')}</div><p class="text-sm text-slate-700">${escapeHtml(info.whenToGo)}</p></div>
 </div>
 ${noteHtml}
-<h2>Por región</h2>
-<p class="text-slate-600 -mt-2">Cuántos hay en cada región. Toca una para ver la lista con teléfonos.</p>
+<h2>${t('Por región', 'By region')}</h2>
+<p class="text-slate-600 -mt-2">${t('Cuántos hay en cada región. Toca una para ver la lista con teléfonos.', 'How many in each region. Tap one to see the list with phone numbers.')}</p>
 <div class="not-prose mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">${regionCards}</div>
-<h2>Los ${total} ${escapeHtml(x.l.toLowerCase())} de Puerto Rico</h2>
-<div class="not-prose mt-2 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(x.l)}</th><th class="py-2 px-3">Pueblo</th><th class="py-2 px-3 text-right">Teléfono</th></tr></thead><tbody>${provRows}</tbody></table></div>
-${providers.length >= 200 ? `<p class="text-xs text-slate-500 mt-2">Mostrando los primeros 200. Usa las regiones de arriba para ver la lista completa de tu zona.</p>` : ''}`
+<h2>${t(`Los ${total} ${escapeHtml(x.l.toLowerCase())} de Puerto Rico`, `All ${total} ${escapeHtml(labelLow)} in Puerto Rico`)}</h2>
+<div class="not-prose mt-2 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${thead}<tbody>${provRows}</tbody></table></div>
+${providers.length >= 200 ? `<p class="text-xs text-slate-500 mt-2">${t('Mostrando los primeros 200. Usa las regiones de arriba para ver la lista completa de tu zona.', 'Showing the first 200. Use the regions above to see the full list for your area.')}</p>` : ''}`
   }
 
   body += `
 <div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
-  <p class="text-lg font-bold mb-1">¿No sabes a cuál ir?</p>
-  <p class="text-sm text-teal-100 mb-4">Escríbele al Veci. Te dice quién hay cerca y sus teléfonos. Al <strong>${PHONE_CTA}</strong>:</p>
+  <p class="text-lg font-bold mb-1">${t('¿No sabes a cuál ir?', 'Not sure which one to see?')}</p>
+  <p class="text-sm text-teal-100 mb-4">${t('Escríbele al Veci. Te dice quién hay cerca y sus teléfonos. Al', 'Text El Veci. He tells you who is nearby and their phone numbers. At')} <strong>${PHONE_CTA}</strong>:</p>
   <a href="https://wa.me/17874177711?text=${x.kw}" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${x.kw}</a>
 </div>
-<p class="text-xs text-slate-500 mt-6">Datos del <strong>NPPES</strong>, el registro federal de proveedores de EE.UU. (el que usan Medicare y los planes). Cada NPI es público y verificable. <a href="/registro/desiertos" class="text-teal-600">Mira el acceso por región en toda la isla →</a></p>`
+<p class="text-xs text-slate-500 mt-6">${t('Datos del <strong>NPPES</strong>, el registro federal de proveedores de EE.UU. (el que usan Medicare y los planes). Cada NPI es público y verificable.', 'Data from the <strong>NPPES</strong>, the US federal provider registry (the same one Medicare and health plans use). Every NPI is public and verifiable.')} <a href="/registro/desiertos${lp}" class="text-teal-600">${t('Mira el acceso por región en toda la isla →', 'See access by region across the island →')}</a></p>`
 
   const canonicalPath = region ? `registro/${specUrl}/${specToUrl(region).toLowerCase()}` : `registro/${specUrl}`
   const itemList = providers.slice(0, 50).map((p, i) => ({
@@ -3446,6 +3455,7 @@ ${providers.length >= 200 ? `<p class="text-xs text-slate-500 mt-2">Mostrando lo
   res.status(200).send(layout({
     title, description, slug: canonicalPath, bodyHtml: body, jsonLd,
     ogImage: '/og/registro.png', host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+    lang: en ? 'en' : 'es',
   }))
 }
 
