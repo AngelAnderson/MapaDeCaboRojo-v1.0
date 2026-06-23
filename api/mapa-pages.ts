@@ -113,9 +113,12 @@ function layout(opts: {
   host?: string     // serving host header — switches branding (registromedicopr.com gets its own shell)
   canonicalHost?: string // force canonical/og base to a specific origin (SEO consolidation across domains)
   canonicalUrl?: string  // full canonical URL override (e.g. the clean root) — wins over host+slug
+  lang?: 'es' | 'en'     // registry pages can render English for the diaspora
 }): string {
   // Host-aware branding. registromedicopr.com is its OWN property — not Mapa de Cabo Rojo.
   const isReg = /registromedicopr\.com/i.test(opts.host || '')
+  const isEn = opts.lang === 'en'
+  const langHref = `/${opts.slug}?lang=${isEn ? 'es' : 'en'}`
   const canonicalBase = opts.canonicalHost || (isReg ? 'https://registromedicopr.com' : SITE_URL)
   const brandName = isReg ? 'Registro Médico PR' : 'Mapa de Cabo Rojo'
   const GA = 'G-6KBMV0LKQ4'
@@ -140,12 +143,13 @@ function layout(opts: {
 </div>
 <span class="font-black tracking-tight">Registro Médico PR</span>
 </a>
-<div class="flex items-center gap-4">
+<div class="flex items-center gap-3">
 <nav class="hidden md:flex gap-5 text-sm text-slate-600">
-<a href="/registro" class="hover:text-teal-700">Buscar especialista</a>
-<a href="/registro#como-se-hizo" class="hover:text-teal-700">Cómo se verifica</a>
+<a href="/registro${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Find a specialist' : 'Buscar especialista'}</a>
+<a href="/registro#como-se-hizo" class="hover:text-teal-700">${isEn ? 'How it works' : 'Cómo se verifica'}</a>
 </nav>
-<button id="theme-toggle" type="button" aria-label="Cambiar tema claro/oscuro" class="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-teal-400 flex items-center justify-center"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
+<a href="${langHref}" class="text-xs font-bold text-slate-500 hover:text-teal-700 border border-slate-200 rounded-lg px-2.5 py-1.5" aria-label="Language">${isEn ? 'ES' : 'EN'}</a>
+<button id="theme-toggle" type="button" aria-label="Theme" class="w-9 h-9 rounded-lg border border-slate-200 text-slate-600 hover:border-teal-400 flex items-center justify-center"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
 </div>
 </div>
 </header>` : `
@@ -2539,6 +2543,8 @@ const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:n
 ]
 
 async function handleRegistro(req: any, res: any) {
+  const en = String(req.query.lang || '') === 'en'
+  const t = (es: string, env: string) => en ? env : es
   const md = REGISTRY_SPECS.filter(x => x.md)
   const allied = REGISTRY_SPECS.filter(x => !x.md)
   // Live count — accurate + auto-updating (page is cached s-maxage=3600, so ~1 query/hour).
@@ -2550,75 +2556,75 @@ async function handleRegistro(req: any, res: any) {
   const totalVerified = (npiCount ?? 6247).toLocaleString('en-US')
 
   const optionsHtml = REGISTRY_SPECS.map(x =>
-    `<option value="${escapeHtml(x.s)}">${x.e} ${escapeHtml(x.l)} (${x.t})</option>`).join('')
+    `<option value="${escapeHtml(x.s)}">${x.e} ${escapeHtml(en ? (SPEC_LABEL_EN[x.s] || x.l) : x.l)} (${x.t})</option>`).join('')
 
   function card(x: typeof REGISTRY_SPECS[number]) {
-    return `<a href="/registro/${specToUrl(x.s)}" class="reg-card block text-left bg-white border border-slate-200 rounded-xl p-4 hover:border-teal-400 hover:shadow-sm transition">
+    return `<a href="/registro/${specToUrl(x.s)}${en ? '?lang=en' : ''}" class="reg-card block text-left bg-white border border-slate-200 rounded-xl p-4 hover:border-teal-400 hover:shadow-sm transition">
       <div class="flex items-baseline justify-between gap-2">
-        <span class="font-bold text-slate-900 text-sm leading-tight">${x.e} ${escapeHtml(x.l)}</span>
+        <span class="font-bold text-slate-900 text-sm leading-tight">${x.e} ${escapeHtml(en ? (SPEC_LABEL_EN[x.s] || x.l) : x.l)}</span>
         <span class="text-teal-700 font-black text-lg">${x.t}</span>
       </div>
-      <div class="text-xs text-slate-500 mt-1">verificados en PR · toca pa' ver la lista</div>
+      <div class="text-xs text-slate-500 mt-1">${t('verificados en PR · toca pa\' ver la lista', 'verified in PR · tap to see the list')}</div>
     </a>`
   }
 
   const body = `
-<h1>Registro de Especialistas Médicos de Puerto Rico</h1>
+<h1>${t('Registro de Especialistas Médicos de Puerto Rico', 'Registry of Puerto Rico Medical Specialists')}</h1>
 
-<p class="text-lg text-slate-600 mt-2">Encuentra tu especialista por especialidad y región. <strong>${totalVerified} verificados</strong> contra el registro federal NPPES. En español, gratis, sin cuenta.</p>
+<p class="text-lg text-slate-600 mt-2">${t(`Encuentra tu especialista por especialidad y región. <strong>${totalVerified} verificados</strong> contra el registro federal NPPES. En español, gratis, sin cuenta.`, `Find your specialist by specialty and region. <strong>${totalVerified} verified</strong> against the federal NPPES registry. Free, no account needed.`)}</p>
 
 <div class="not-prose mt-3 flex flex-wrap gap-2 text-xs">
-  <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-shield-halved"></i> NPI federal verificado</span>
-  <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-list-check"></i> ${REGISTRY_SPECS.length} especialidades</span>
-  <span class="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-calendar-check"></i> Actualizado junio 2026</span>
+  <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-shield-halved"></i> ${t('NPI federal verificado', 'Federal NPI verified')}</span>
+  <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-list-check"></i> ${REGISTRY_SPECS.length} ${t('especialidades', 'specialties')}</span>
+  <span class="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-calendar-check"></i> ${t('Actualizado junio 2026', 'Updated June 2026')}</span>
 </div>
 
 <div id="reg-tool" class="not-prose mt-5 bg-white border-2 border-teal-300 rounded-2xl p-6 shadow-sm scroll-mt-24">
   <label class="block">
-    <span class="text-sm font-bold text-slate-700"><i class="fa-solid fa-magnifying-glass text-teal-600"></i> Busca por nombre o especialidad</span>
-    <input id="rg-search" type="search" autocomplete="off" placeholder="Ej: el nombre de tu médico, o 'cardiólogo'…" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-base">
+    <span class="text-sm font-bold text-slate-700"><i class="fa-solid fa-magnifying-glass text-teal-600"></i> ${t('Busca por nombre o especialidad', 'Search by name or specialty')}</span>
+    <input id="rg-search" type="search" autocomplete="off" placeholder="${t('Ej: el nombre de tu médico, o \'cardiólogo\'…', 'e.g. your doctor\'s name, or \'cardiologist\'…')}" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-base">
   </label>
   <div id="rg-search-result" class="mt-3"></div>
   <div class="flex items-center gap-3 my-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
-    <span class="flex-1 h-px bg-slate-200"></span>o escoge especialidad y región<span class="flex-1 h-px bg-slate-200"></span>
+    <span class="flex-1 h-px bg-slate-200"></span>${t('o escoge especialidad y región', 'or pick specialty and region')}<span class="flex-1 h-px bg-slate-200"></span>
   </div>
   <div class="grid sm:grid-cols-2 gap-4">
     <label class="block">
-      <span class="text-sm font-bold text-slate-700">1. ¿Qué especialista buscas?</span>
+      <span class="text-sm font-bold text-slate-700">1. ${t('¿Qué especialista buscas?', 'Which specialist?')}</span>
       <select id="rg-spec" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-base bg-white">
-        <option value="">Escoge...</option>
+        <option value="">${t('Escoge...', 'Choose...')}</option>
         ${optionsHtml}
       </select>
     </label>
     <label class="block">
-      <span class="text-sm font-bold text-slate-700">2. ¿En qué región estás?</span>
+      <span class="text-sm font-bold text-slate-700">2. ${t('¿En qué región estás?', 'Which region?')}</span>
       <select id="rg-region" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-base bg-white">
-        <option value="">Escoge...</option>
-        <option value="Oeste">Oeste (Mayagüez, Cabo Rojo, Aguadilla...)</option>
-        <option value="Metro">Área Metro (San Juan y alrededores)</option>
-        <option value="Norte">Norte (Arecibo, Manatí, Hatillo...)</option>
-        <option value="Sur">Sur (Ponce, Yauco, Guayama...)</option>
-        <option value="Este">Este (Caguas, Humacao, Fajardo...)</option>
-        <option value="Centro">Centro (Aibonito, Barranquitas...)</option>
+        <option value="">${t('Escoge...', 'Choose...')}</option>
+        <option value="Oeste">${t('Oeste', 'West')} (Mayagüez, Cabo Rojo, Aguadilla...)</option>
+        <option value="Metro">${t('Área Metro', 'Metro')} (San Juan...)</option>
+        <option value="Norte">${t('Norte', 'North')} (Arecibo, Manatí, Hatillo...)</option>
+        <option value="Sur">${t('Sur', 'South')} (Ponce, Yauco, Guayama...)</option>
+        <option value="Este">${t('Este', 'East')} (Caguas, Humacao, Fajardo...)</option>
+        <option value="Centro">${t('Centro', 'Central')} (Aibonito, Barranquitas...)</option>
       </select>
     </label>
   </div>
   <div id="rg-result" class="mt-5"></div>
-  <p id="rg-hint" class="mt-4 text-sm text-slate-400 text-center">Escoge los dos y te decimos cuántos hay cerca, cuáles, y sus teléfonos.</p>
+  <p id="rg-hint" class="mt-4 text-sm text-slate-400 text-center">${t('Escoge los dos y te decimos cuántos hay cerca, cuáles, y sus teléfonos.', 'Pick both and we\'ll tell you how many are near you, who, and their phone numbers.')}</p>
 </div>
 
-<p class="not-prose mt-3 text-sm text-slate-500 text-center">¿Vives lejos del área metro? <a href="/registro/desiertos" class="text-teal-700 font-semibold hover:underline">Mira en qué regiones no hay ciertos especialistas →</a></p>
+<p class="not-prose mt-3 text-sm text-slate-500 text-center">${t('¿Vives lejos del área metro?', 'Live far from the metro area?')} <a href="/registro/desiertos${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold hover:underline">${t('Mira en qué regiones no hay ciertos especialistas →', 'See which regions have no specialists →')}</a></p>
 
-<h2>Las ${REGISTRY_SPECS.length} especialidades del registro</h2>
-<p class="text-slate-600 -mt-2">El número es cuántos hay <strong>en toda la isla</strong>, verificados contra el registro federal. Toca cualquiera pa' ver dónde están y sus teléfonos.</p>
+<h2>${t(`Las ${REGISTRY_SPECS.length} especialidades del registro`, `The ${REGISTRY_SPECS.length} specialties in the registry`)}</h2>
+<p class="text-slate-600 -mt-2">${t('El número es cuántos hay <strong>en toda la isla</strong>, verificados contra el registro federal. Toca cualquiera pa\' ver dónde están y sus teléfonos.', 'The number is how many there are <strong>across the whole island</strong>, verified against the federal registry. Tap any to see where they are and their phone numbers.')}</p>
 
-<div class="not-prose mt-4 text-xs font-bold uppercase tracking-widest text-teal-700 mb-3">Médicos especialistas</div>
+<div class="not-prose mt-4 text-xs font-bold uppercase tracking-widest text-teal-700 mb-3">${t('Médicos especialistas', 'Medical specialists')}</div>
 <div class="not-prose grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
   ${md.map(card).join('')}
 </div>
 
-<div class="not-prose mt-8 text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">Otros proveedores de salud licenciados (no son médicos MD)</div>
-<p class="not-prose text-sm text-slate-500 mb-3">Psicólogos, optómetras y podiatras tienen licencia y NPI federal, pero no son médicos. Los separamos pa' que sepas exactamente a quién vas.</p>
+<div class="not-prose mt-8 text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">${t('Otros proveedores de salud licenciados (no son médicos MD)', 'Other licensed health providers (not medical doctors / MDs)')}</div>
+<p class="not-prose text-sm text-slate-500 mb-3">${t('Psicólogos, optómetras y podiatras tienen licencia y NPI federal, pero no son médicos. Los separamos pa\' que sepas exactamente a quién vas.', 'Psychologists, optometrists, and podiatrists are licensed and have a federal NPI, but they are not medical doctors. We list them separately so you know exactly who you are seeing.')}</p>
 <div class="not-prose grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
   ${allied.map(card).join('')}
 </div>
@@ -2730,17 +2736,17 @@ async function handleRegistro(req: any, res: any) {
 })();
 </script>
 
-<h2 id="como-se-hizo">Cómo se hizo (y por qué puedes confiar)</h2>
-<p>Cada persona en este registro existe en el <strong>NPPES</strong> (National Plan and Provider Enumeration System), el registro oficial del gobierno federal de EE.UU. — el mismo que usan Medicare y los planes médicos. Tomamos solo <strong>proveedores individuales con práctica en Puerto Rico</strong>, por código de taxonomía (la especialidad oficial), y lo pusimos en español, por región. El <strong>NPI</strong> de cada uno es un número público que cualquiera puede verificar.</p>
-<p class="text-sm text-slate-600">Lo que no encontrarás en ningún otro sitio: el gobierno tiene la data, pero enterrada, en inglés, sin organizar por pueblo. La pusimos clara, en un solo sitio, a mano. Si ves un dato viejo o un especialista que ya no ejerce, dínoslo y se corrige — <a href="mailto:angel@angelanderson.com" class="text-teal-600 hover:underline">angel@angelanderson.com</a>.</p>
-<p class="text-sm text-slate-600"><strong>¿Periodista, plan médico, o investigador?</strong> Esta data es citable y hay acceso programático. Escríbenos.</p>
+<h2 id="como-se-hizo">${t('Cómo se hizo (y por qué puedes confiar)', 'How it was made (and why you can trust it)')}</h2>
+<p>${t('Cada persona en este registro existe en el <strong>NPPES</strong> (National Plan and Provider Enumeration System), el registro oficial del gobierno federal de EE.UU. — el mismo que usan Medicare y los planes médicos. Tomamos solo <strong>proveedores individuales con práctica en Puerto Rico</strong>, por código de taxonomía (la especialidad oficial), y lo pusimos en español, por región. El <strong>NPI</strong> de cada uno es un número público que cualquiera puede verificar.', 'Every person in this registry exists in the <strong>NPPES</strong> (National Plan and Provider Enumeration System), the official US federal registry that Medicare and health plans use. We took only <strong>individual providers practicing in Puerto Rico</strong>, by taxonomy code (the official specialty), and organized them by region. Each <strong>NPI</strong> is a public number anyone can verify.')}</p>
+<p class="text-sm text-slate-600">${t('Lo que no encontrarás en ningún otro sitio: el gobierno tiene la data, pero enterrada, en inglés, sin organizar por pueblo. La pusimos clara, en un solo sitio, a mano. Si ves un dato viejo o un especialista que ya no ejerce, dínoslo y se corrige — ', 'What you won\'t find anywhere else: the government has the data, but buried, in English, not organized by town. We made it clear, in one place, by hand. See something outdated or a provider who no longer practices here? Tell us and we fix it — ')}<a href="mailto:angel@angelanderson.com" class="text-teal-600 hover:underline">angel@angelanderson.com</a>.</p>
+<p class="text-sm text-slate-600"><strong>${t('¿Periodista, plan médico, o investigador?', 'Journalist, health plan, or researcher?')}</strong> ${t('Esta data es citable y hay acceso programático. Escríbenos.', 'This data is citable and programmatic access is available. Reach out.')}</p>
 
 <div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
-  <p class="text-lg font-bold mb-1">¿No sabes por dónde empezar?</p>
-  <p class="text-sm text-teal-100 mb-4">Antes de dar vueltas, escríbele al Veci. Te dice quién resuelve, sin enredos. Al <strong>${PHONE_CTA}</strong>:</p>
+  <p class="text-lg font-bold mb-1">${t('¿No sabes por dónde empezar?', 'Not sure where to start?')}</p>
+  <p class="text-sm text-teal-100 mb-4">${t('Antes de dar vueltas, escríbele al Veci. Te dice quién resuelve, sin enredos. Al', 'Before driving around, text El Veci. He tells you who can help, no hassle. At')} <strong>${PHONE_CTA}</strong>:</p>
   <div class="flex flex-wrap gap-3 justify-center">
     <a href="https://wa.me/17874177711?text=ESPECIALISTA" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ESPECIALISTA</a>
-    <a href="/acceso" class="inline-flex items-center gap-2 bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-900"><i class="fa-solid fa-chart-simple"></i> Ver el reporte de acceso</a>
+    <a href="/acceso" class="inline-flex items-center gap-2 bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-900"><i class="fa-solid fa-chart-simple"></i> ${t('Ver el reporte de acceso', 'See the access report')}</a>
   </div>
   <p class="text-xs text-teal-200 mt-4">— Menos revolú, más sistema, mejor vida.</p>
 </div>
@@ -2774,8 +2780,8 @@ async function handleRegistro(req: any, res: any) {
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=300')
   res.status(200).send(layout({
-    title: 'Registro de Especialistas Médicos de Puerto Rico — verificado, en español',
-    description: `${totalVerified} especialistas de PR verificados contra el registro federal NPPES/CMS. Busca por especialidad y región, en español, gratis.`,
+    title: t('Registro de Especialistas Médicos de Puerto Rico — verificado, en español', 'Puerto Rico Medical Specialist Registry — verified, federal NPPES data'),
+    description: t(`${totalVerified} especialistas de PR verificados contra el registro federal NPPES/CMS. Busca por especialidad y región, en español, gratis.`, `${totalVerified} PR specialists verified against the federal NPPES/CMS registry. Search by specialty and region. Free.`),
     slug: 'registro',
     bodyHtml: body,
     jsonLd,
@@ -2783,6 +2789,7 @@ async function handleRegistro(req: any, res: any) {
     host: req.headers?.host,
     canonicalHost: 'https://registromedicopr.com',
     canonicalUrl: 'https://registromedicopr.com',
+    lang: en ? 'en' : 'es',
   }))
 }
 
@@ -3284,6 +3291,45 @@ const SPEC_INFO: Record<string, { treats: string; whenToGo: string; note: string
 }
 function specToUrl(sub: string): string {
   return sub.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+}
+// English specialty labels (for ?lang=en on hub pages) — keyed by subcategory slug.
+const SPEC_LABEL_EN: Record<string, string> = {
+  'cardiólogo':'Cardiologist','psiquiatra':'Psychiatrist','fisiatra':'Physiatrist (Rehab)','ginecólogo':'OB-GYN','pediatra':'Pediatrician','dermatólogo':'Dermatologist','gastroenterólogo':'Gastroenterologist','oftalmólogo':'Ophthalmologist (Eye MD)','ortopeda':'Orthopedic Surgeon','neurologo':'Neurologist','urólogo':'Urologist','endocrinologo':'Endocrinologist (Diabetes)','nefrólogo':'Nephrologist (Kidney)','neumólogo':'Pulmonologist (Lungs)','oncólogo':'Oncologist / Hematologist','reumatólogo':'Rheumatologist (Arthritis)','geriatra':'Geriatrician','otorrinolaringólogo':'ENT (Ear, Nose & Throat)','infectólogo':'Infectious Disease','alergista':'Allergist / Immunologist','medicina de emergencia':'Emergency Medicine','cirujano general':'General Surgeon','anestesiólogo':'Anesthesiologist','radiólogo':'Radiologist','neurocirujano':'Neurosurgeon','cirujano plástico':'Plastic Surgeon','cirujano torácico':'Thoracic Surgeon','coloproctólogo':'Colorectal Surgeon','manejo de dolor':'Pain Management','psicólogo':'Psychologist','optómetra':'Optometrist','podiatra':'Podiatrist',
+}
+// English specialty explainers (for ?lang=en on hub pages).
+const SPEC_INFO_EN: Record<string, { treats: string; whenToGo: string; note: string }> = {
+  'cardiólogo':{treats:'The doctor for your heart, blood pressure, and circulation.',whenToGo:'When you have high blood pressure, a racing heartbeat, chest pain, or shortness of breath.',note:''},
+  'psiquiatra':{treats:'The doctor for the mind: depression, anxiety, sleep, and other conditions that affect your mood.',whenToGo:'When you feel very sad, anxious, or can\'t sleep, and you think you may need medication.',note:'This is not the same as a psychologist. A psychiatrist is a medical doctor and can prescribe medication.'},
+  'fisiatra':{treats:'The doctor who helps you get your movement back and ease pain without surgery.',whenToGo:'When you have back pain, neck pain, or an injury and want to get better through therapy.',note:''},
+  'ginecólogo':{treats:'The doctor for women\'s health and the reproductive system.',whenToGo:'For your yearly checkup, period problems, pregnancy, or any women\'s health concerns.',note:''},
+  'pediatra':{treats:'The doctor for children, from newborns through the teen years.',whenToGo:'For vaccines, checkups, and when your child is sick.',note:''},
+  'dermatólogo':{treats:'The doctor for your skin, hair, and nails.',whenToGo:'When you have a rash, an unusual mole, bad acne, or hair loss.',note:''},
+  'gastroenterólogo':{treats:'The doctor for your stomach, intestines, and digestion.',whenToGo:'When you have constant heartburn, stomach pain, constipation, or trouble using the bathroom.',note:''},
+  'oftalmólogo':{treats:'The doctor for your eyes and vision.',whenToGo:'When your vision is blurry, or you have cataracts, glaucoma, or need eye surgery.',note:'This is a medical eye doctor. An optometrist only examines your eyes and prescribes glasses.'},
+  'ortopeda':{treats:'The doctor for your bones, joints, and muscles.',whenToGo:'When you break a bone, your knee or hip hurts, or you need a joint replacement.',note:''},
+  'neurologo':{treats:'The doctor for your brain and nerves.',whenToGo:'When you have severe headaches, seizures, tremors, or memory loss.',note:''},
+  'urólogo':{treats:'The doctor for your kidneys, bladder, and men\'s reproductive health.',whenToGo:'When it burns or is hard to urinate, you see blood in your urine, or you have prostate problems.',note:''},
+  'endocrinologo':{treats:'The doctor for diabetes, thyroid, and hormones.',whenToGo:'When your blood sugar is high, you have thyroid problems, or major weight changes.',note:''},
+  'nefrólogo':{treats:'The doctor for your kidneys.',whenToGo:'When your kidneys aren\'t working well or you need dialysis.',note:''},
+  'neumólogo':{treats:'The doctor for your lungs and breathing.',whenToGo:'When you have asthma, shortness of breath, a bad cough, or you use oxygen.',note:''},
+  'oncólogo':{treats:'The doctor who treats cancer.',whenToGo:'When you are diagnosed with cancer and need treatment such as chemotherapy.',note:''},
+  'reumatólogo':{treats:'The doctor for arthritis and inflamed joints.',whenToGo:'When your joints are swollen, stiff, or hurt in the morning.',note:''},
+  'geriatra':{treats:'The doctor who looks after the health of older adults.',whenToGo:'When you are older, take a lot of medications, or need a doctor who looks at everything together.',note:''},
+  'otorrinolaringólogo':{treats:'The doctor for your ears, nose, and throat.',whenToGo:'When you can\'t hear well, you have sinus problems, frequent sore throats, or dizziness.',note:'Most people call this the ear, nose, and throat doctor (ENT).'},
+  'infectólogo':{treats:'The doctor for infections that are hard to treat.',whenToGo:'When you have an infection that won\'t go away or a condition like HIV.',note:''},
+  'alergista':{treats:'The doctor for allergies and asthma.',whenToGo:'When you sneeze a lot, break out in hives, or certain foods make you sick.',note:''},
+  'medicina de emergencia':{treats:'The emergency room doctor who handles urgent and serious problems.',whenToGo:'When you have an emergency: a bad fall, chest pain, or something that can\'t wait.',note:''},
+  'cirujano general':{treats:'The doctor who operates on common problems of the abdomen and body.',whenToGo:'When you need surgery for appendicitis, your gallbladder, or a hernia.',note:''},
+  'anestesiólogo':{treats:'The doctor who puts you to sleep and watches over you during surgery.',whenToGo:'You meet this doctor when you are going to have surgery; they handle the anesthesia and your pain.',note:''},
+  'radiólogo':{treats:'The doctor who reads your X-rays, CT scans, and ultrasounds.',whenToGo:'They work behind the scenes on your imaging tests; you usually don\'t see them in person.',note:''},
+  'neurocirujano':{treats:'The doctor who operates on the brain, spine, and nerves.',whenToGo:'When you have a serious brain or spine problem that needs surgery.',note:''},
+  'cirujano plástico':{treats:'The doctor who reconstructs or repairs parts of the body and skin.',whenToGo:'When you need reconstruction after an accident, a burn, or surgery.',note:''},
+  'cirujano torácico':{treats:'The doctor who operates on the chest: the lungs and the area around the heart.',whenToGo:'When you have a lung or chest problem that needs surgery.',note:''},
+  'coloproctólogo':{treats:'The doctor for the colon, rectum, and the area around the anus.',whenToGo:'When you have hemorrhoids, bleeding when you use the bathroom, or it is time for your colonoscopy.',note:''},
+  'manejo de dolor':{treats:'The doctor who treats chronic pain that won\'t go away.',whenToGo:'When you have had pain for a long time and nothing keeps it under control.',note:''},
+  'psicólogo':{treats:'The licensed professional who helps you through therapy and talking about what you feel.',whenToGo:'When you want support, therapy, or tools to manage anxiety or stress.',note:'They are licensed, but they are not a medical doctor (MD) and cannot prescribe medication.'},
+  'optómetra':{treats:'The professional who examines your vision and prescribes glasses or contact lenses.',whenToGo:'When your vision is blurry or it is time for your yearly eye exam.',note:'They are licensed, but they are not a medical doctor (MD). For surgery or eye disease, see an ophthalmologist.'},
+  'podiatra':{treats:'The professional who cares for your feet and ankles.',whenToGo:'When you have foot pain, ingrown nails, calluses, or foot problems from diabetes.',note:'They are licensed, but they are not a medical doctor (MD); they are a foot specialist.'},
 }
 const SPEC_BY_URL: Record<string, typeof REGISTRY_SPECS[number]> = {}
 REGISTRY_SPECS.forEach(x => { SPEC_BY_URL[specToUrl(x.s)] = x })
