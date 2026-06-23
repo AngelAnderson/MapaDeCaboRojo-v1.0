@@ -132,7 +132,7 @@ function layout(opts: {
 
   // --- Header (host-aware) ---
   const header = isReg ? `
-<header class="bg-white border-b border-slate-200 sticky top-0 z-10">
+<header class="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10">
 <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
 <a href="/registro" class="flex items-center gap-2 text-slate-900 hover:text-teal-700">
 <div class="bg-teal-700 w-8 h-8 rounded-lg flex items-center justify-center text-white">
@@ -140,10 +140,13 @@ function layout(opts: {
 </div>
 <span class="font-black tracking-tight">Registro Médico PR</span>
 </a>
+<div class="flex items-center gap-4">
 <nav class="hidden md:flex gap-5 text-sm text-slate-600">
 <a href="/registro" class="hover:text-teal-700">Buscar especialista</a>
 <a href="/registro#como-se-hizo" class="hover:text-teal-700">Cómo se verifica</a>
 </nav>
+<button id="theme-toggle" type="button" aria-label="Cambiar tema claro/oscuro" class="w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-teal-400 flex items-center justify-center"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
+</div>
 </div>
 </header>` : `
 <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
@@ -231,6 +234,7 @@ function layout(opts: {
 <script async src="https://www.googletagmanager.com/gtag/js?id=${GA}"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA}');</script>
 <script defer src="/_vercel/insights/script.js"></script>
+${isReg ? `<script>window.tailwind={config:{darkMode:'class'}};(function(){try{var m=localStorage.getItem('theme');var d=m?(m==='dark'):window.matchMedia('(prefers-color-scheme:dark)').matches;if(d)document.documentElement.classList.add('dark');}catch(e){}})();</script>` : ''}
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
@@ -251,6 +255,35 @@ function layout(opts: {
     .prose-narrative td:first-child, .prose-narrative th:first-child { min-width: 12rem; }
   }
 </style>
+${isReg ? `<style>
+html.dark body{background:#0f172a !important;color:#e2e8f0;}
+html.dark .bg-slate-50{background-color:#0f172a !important;}
+html.dark .bg-white{background-color:#1e293b !important;}
+html.dark .bg-slate-100{background-color:#1e293b !important;}
+html.dark .text-slate-900{color:#f1f5f9 !important;}
+html.dark .text-slate-800{color:#e2e8f0 !important;}
+html.dark .text-slate-700,html.dark .text-slate-600{color:#cbd5e1 !important;}
+html.dark .text-slate-500,html.dark .text-slate-400{color:#94a3b8 !important;}
+html.dark .border-slate-200,html.dark .border-slate-100{border-color:#334155 !important;}
+html.dark .border-slate-300{border-color:#475569 !important;}
+html.dark thead tr.bg-slate-50,html.dark thead tr{background-color:#1e293b !important;}
+html.dark .prose-narrative th{background:#1e293b;}
+html.dark .prose-narrative th,html.dark .prose-narrative td{border-color:#334155;}
+html.dark .prose-narrative blockquote{color:#94a3b8;}
+html.dark .bg-teal-50{background-color:#134e4a !important;}
+html.dark .bg-emerald-50{background-color:#064e3b !important;}
+html.dark .bg-amber-50{background-color:#451a03 !important;}
+html.dark .bg-red-50,html.dark .bg-red-100{background-color:#450a0a !important;}
+html.dark .border-teal-200,html.dark .border-teal-300{border-color:#0f766e !important;}
+html.dark .border-emerald-200{border-color:#047857 !important;}
+html.dark .border-amber-200,html.dark .border-amber-300{border-color:#b45309 !important;}
+html.dark .border-red-200,html.dark .border-red-300{border-color:#b91c1c !important;}
+html.dark .text-teal-800,html.dark .text-teal-700{color:#5eead4 !important;}
+html.dark .text-emerald-800{color:#6ee7b7 !important;}
+html.dark .text-amber-900,html.dark .text-amber-800,html.dark .text-amber-700{color:#fcd34d !important;}
+html.dark .text-red-700,html.dark .text-red-600{color:#fca5a5 !important;}
+html.dark input,html.dark select{background-color:#1e293b !important;color:#e2e8f0 !important;border-color:#475569 !important;}
+</style>` : ''}
 ${jsonLd}
 </head>
 <body class="bg-slate-50 text-slate-900">
@@ -259,7 +292,7 @@ ${header}
 ${opts.bodyHtml}
 </main>
 ${footer}
-${isReg ? '' : SUBSCRIBE_FORM_SCRIPT}
+${isReg ? `<script>(function(){var t=document.getElementById('theme-toggle'),ic=document.getElementById('theme-icon');function set(d){document.documentElement.classList.toggle('dark',d);if(ic)ic.className=d?'fa-solid fa-sun':'fa-solid fa-moon';try{localStorage.setItem('theme',d?'dark':'light');}catch(e){}}if(ic)ic.className=document.documentElement.classList.contains('dark')?'fa-solid fa-sun':'fa-solid fa-moon';if(t)t.addEventListener('click',function(){set(!document.documentElement.classList.contains('dark'));});})();</script>` : SUBSCRIBE_FORM_SCRIPT}
 </body>
 </html>`
 }
