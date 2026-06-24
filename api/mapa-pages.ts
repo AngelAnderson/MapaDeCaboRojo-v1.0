@@ -181,8 +181,9 @@ function layout(opts: {
 <p class="text-xs text-slate-500 mt-1">Cada nombre verificado contra el registro federal NPPES/CMS. En español, por especialidad y por región.</p>
 <div class="mt-6 flex justify-center gap-4 text-xs text-slate-500 flex-wrap">
 <a href="/registro" class="hover:text-teal-700 font-semibold">Buscar especialista</a>
-<a href="/registro#como-se-hizo" class="hover:text-teal-700">Cómo se verifica</a>
 <a href="/registro/desiertos" class="hover:text-teal-700">Acceso por región</a>
+<a href="/observatorio" class="hover:text-teal-700">Observatorio</a>
+<a href="/registro#como-se-hizo" class="hover:text-teal-700">Cómo se verifica</a>
 </div>
 <p class="mt-4 text-xs text-slate-400">¿Dudas de a quién ir? Escríbele al Veci: <strong>${PHONE_CTA}</strong>. Si te sirve, llégate.</p>
 </div>
