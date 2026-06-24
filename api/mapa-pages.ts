@@ -3128,6 +3128,104 @@ ${b.wants_vitrina ? '<strong>⭐ Quiere que lo llamen sobre La Vitrina Especiali
 
 // =============== /registro/desiertos — El Observatorio de Desiertos Médicos ===============
 // Public, shareable artifact of ABSENCE. The data the government has buried, made plain.
+// =============== /observatorio (registromedicopr) — El Observatorio del Acceso Médico de PR ===============
+// The citable policy reference: qué pasó / qué tiene que pasar / cómo se arregla. Live deserts + verified analysis.
+async function handleObservatorioMedico(req: any, res: any) {
+  const REGIONS = ['Oeste', 'Norte', 'Centro', 'Sur', 'Este'] as const
+  const score: Record<string, { zero: number; near: number }> = {}
+  REGIONS.forEach(r => { score[r] = { zero: 0, near: 0 } })
+  REGISTRY_SPECS.forEach(spec => REGIONS.forEach(r => {
+    const n = (spec.r as any)[r] || 0
+    if (n === 0) score[r].zero++; else if (n <= 2) score[r].near++
+  }))
+  const cards = REGIONS.map(r => ({ r, ...score[r] })).sort((a, b) => b.zero - a.zero)
+    .map(({ r, zero, near }) => `<div class="bg-white border-2 ${zero >= 15 ? 'border-red-300' : zero >= 8 ? 'border-amber-300' : 'border-slate-200'} rounded-xl p-4 text-center">
+      <div class="text-4xl font-black ${zero >= 15 ? 'text-red-600' : zero >= 8 ? 'text-amber-600' : 'text-slate-700'}">${zero}</div>
+      <div class="text-sm font-bold text-slate-800 mt-1">${escapeHtml(r)}</div>
+      <div class="text-xs text-slate-500">de 32 especialidades en <strong>cero</strong></div>
+    </div>`).join('')
+
+  const body = `
+<p class="not-prose text-xs font-bold uppercase tracking-widest text-teal-700 mb-2">El Observatorio del Acceso Médico de Puerto Rico</p>
+<h1>Por qué a Puerto Rico se le van los médicos, y cómo se arregla</h1>
+<p class="text-lg text-slate-600 mt-3"><strong>No es que los médicos sean malagradecidos. Es un problema de pago federal que se volvió de fuerza laboral.</strong> Medicare le paga a PR cerca de <strong>40% menos</strong> que al continente por el mismo paciente, así que el médico gana <strong>~$67,000 menos al año</strong>, así que se va. Y un pipeline envejecido no puede rellenar el hueco. Esta es la referencia, con la data verificada y la fuente de cada número.</p>
+
+<div class="not-prose mt-4 flex flex-wrap gap-2 text-xs">
+  <span class="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-calendar-check"></i> Actualizado junio 2026</span>
+  <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-shield-halved"></i> Data de proveedores verificada contra NPPES federal</span>
+  <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-quote-right"></i> Citable · cada cifra con su fuente</span>
+</div>
+
+<h2>Lo que el registro ve hoy, pueblo por pueblo</h2>
+<p class="text-slate-600 -mt-2">De las 32 especialidades, cuántas tienen <strong>cero</strong> proveedores verificados en cada región. El área metro concentra casi todo — es la vara. El Centro de la isla es el desierto crítico.</p>
+<div class="not-prose grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4">${cards}</div>
+<p class="text-sm text-slate-500 mt-3">El Centro (la montaña) tiene <strong>cero neumólogos</strong> (84 en el metro), <strong>cero geriatras</strong> (73), <strong>cero otorrinos</strong> (50) y <strong>cero neurocirujanos</strong> (31). 81 especialistas para toda la montaña. <a href="/registro/desiertos" class="text-teal-700 font-semibold">Ver el detalle por especialidad →</a></p>
+
+<h2>1. Qué pasó (las causas, con números)</h2>
+<p><strong>La disparidad de pago es la raíz.</strong> El benchmark de Medicare Advantage de PR está <strong>~38-41% por debajo</strong> del continente (STAT 2024; JAMA Health Forum jun 2025). En 2026 PR recibe un recorte de −1.11% mientras el continente sube +5.06%, ensanchando la brecha (MMAPA). Golpea a casi todos: PR tiene la <strong>penetración MA más alta de la nación, ~90%</strong>. Es "el canario en la mina."</p>
+<p>El resultado en salario: el médico en PR gana <strong>~$162,000/año</strong> vs <strong>&gt;$229,000</strong> en el continente. La fuerza médica cayó de <strong>~14,500 (2009) a ~9,800 hoy</strong> para 3.2 millones, y <strong>salen 365-500 al año</strong> (JAMA jun 2025). Lo más golpeado son los especialistas: cardiólogos ~400→150; anestesiólogos ~300→100.</p>
+<p>Y la bomba de tiempo: <strong>más del 40% de los especialistas estarán en edad de retiro para 2027</strong>. Sumado: deuda de escuela médica $150k-$250k, malpráctica $100k-$300k/año, el golpe de María (~15% del personal en un año), y un Medicaid de bloque con tope que ahogó las tarifas.</p>
+
+<h2>2. La pelea de "obligarlos a quedarse"</h2>
+<p>La evidencia global es clara: <strong>la coerción sin dinero se devuelve como rotación</strong> — la gente sale apenas suena el timbre. La revisión de la OMS de 70+ países lo confirma; el servicio obligatorio retiene solo cuando viene con pago, vivienda y entrenamiento real. PR ya lo vivió: la <strong>Ley #79</strong> de servicio compulsorio llevó a PR de <strong>16 pueblos sin médico a los 78 con al menos uno</strong> (WHO Bulletin). Pero distribuir no es retener. El <strong>P. del S. 973 (2023)</strong> — 5 años de compromiso a cambio de beca — pasó el Senado y fue vetado por falta de fondos.</p>
+<p><strong>La conclusión:</strong> obligar a quedarse fracasa a menos que la matemática le gane al continente. Hoy no le gana. El instinto de PR hacia incentivos está mejor respaldado — pero los incentivos solo funcionan después de cerrar la brecha de pago federal.</p>
+
+<h2>3. Qué tiene que pasar (los levers de verdad)</h2>
+<ul>
+<li><strong>Paridad de Medicare (LA raíz).</strong> El vehículo es <strong>H.R. 6031, el Medicare Advantage Integrity Act of 2025</strong>, radicado nov 2025 por el Comisionado Residente Pablo José Hernández + Reps. María Elvira Salazar y Darren Soto. Pone un piso mínimo de benchmark, proyectado en <strong>$1,000-1,200 millones/año</strong>. Estado: radicado, no avanzado.</li>
+<li><strong>Cerrar el "Medicaid cliff."</strong> El FMAP de 76% de PR es estatutario solo hasta FY2027; sin acción revierte a 55%. Los otros 4 territorios ya tienen 83% permanente; PR no.</li>
+<li><strong>Crecer las residencias en la isla.</strong> El residente entrenado en PR se queda mucho más. CMS metió a PR en la expansión de plazas (200 en 2023, +200 desde FY2026). El mayor win estructural.</li>
+<li><strong>Escalar el repago de préstamos.</strong> Hoy el NHSC en PR es ~$2.1M/42 becados contra 42 HPSAs de cuidado primario — una migaja.</li>
+<li><strong>Arreglar el incentivo contributivo.</strong> La Ley 14 (4%) quedó congelada por la Junta en 2020; el P. del S. 15 pendiente la cambiaría a 12% con requisitos de servicio. Ayuda solo una vez que cierre la brecha federal.</li>
+</ul>
+
+<h2>4. Quién tiene la autoridad de actuar</h2>
+<div class="not-prose overflow-auto border border-slate-200 rounded-xl mt-2">
+<table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Actor</th><th class="py-2 px-3">El lever que de verdad tiene</th></tr></thead><tbody>
+<tr class="border-t border-slate-100"><td class="py-2 px-3 font-semibold">Congreso de EE.UU.</td><td class="py-2 px-3 text-slate-600">El único que puede dar paridad permanente, cerrar el Medicaid cliff, financiar residencias. Pero el voto de PR es el Comisionado Residente: radica, no aprueba.</td></tr>
+<tr class="border-t border-slate-100"><td class="py-2 px-3 font-semibold">CMS</td><td class="py-2 px-3 text-slate-600">El lever más rápido. Fija el benchmark de MA de PR cada año y las reglas de adecuación de red. Administrativo, sin voto.</td></tr>
+<tr class="border-t border-slate-100"><td class="py-2 px-3 font-semibold">Depto. de Salud / ASES</td><td class="py-2 px-3 text-slate-600">Licencias, data de escasez, contratos de Plan Vital y marco de tarifas. Pero las alzas necesitan visto bueno de la Junta de Supervisión Fiscal.</td></tr>
+<tr class="border-t border-slate-100"><td class="py-2 px-3 font-semibold">Legislatura PR</td><td class="py-2 px-3 text-slate-600">Incentivos contributivos, requisitos de servicio, residencias — topado por la Junta en presupuesto.</td></tr>
+<tr class="border-t border-slate-100"><td class="py-2 px-3 font-semibold">HRSA</td><td class="py-2 px-3 text-slate-600">Designa los HPSA (la llave de los fondos federales), financia el NHSC, aprueba los waivers J-1.</td></tr>
+</tbody></table></div>
+<p class="text-sm text-slate-600 mt-3"><strong>La línea decisiva:</strong> el Congreso es dueño del arreglo permanente pero no lo puede pasar fácil; CMS es dueño del lever más rápido y lo puede mover este año; todos los demás operan río abajo, estrangulados por la Junta.</p>
+
+<h2>5. Por qué esta data importa para arreglarlo</h2>
+<p>Toda la maquinaria federal de fondos corre sobre un insumo: <strong>conteos de proveedores verificados, actuales, mapeados a la población.</strong> Las designaciones de escasez (HPSA) convierten esa data en dinero — desbloquean repago de préstamos, un bono Medicare de 10%, y elegibilidad de grants. Pero <strong>muchos mapas federales no se revisan desde los años 70-90</strong>, y <strong>PR no tiene ningún dataset público a nivel de sus 78 municipios</strong> (los mapas federales son de resolución de condado, demasiado gruesos para ver un pueblo).</p>
+<p>Un vecino que verificó a mano, pueblo por pueblo, quién ejerce y qué especialidades simplemente no existen, tiene el artefacto que la política pública no puede generar sola: <strong>ground-truth.</strong> Eso convierte "sospechamos una escasez" en "aquí está el conteo verificado, por pueblo, hoy" — el insumo exacto que se vuelve un puntaje HPSA, una asignación de fondos, un reto de adecuación de red, o un proyecto de ley. (Precedentes: los "Maternity Care Deserts" de March of Dimes y los "Pharmacy Deserts" de GoodRx — un actor no-gubernamental construye el mapa verificado y se vuelve la referencia citada que dirige política.)</p>
+
+<div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-white">
+  <p class="text-lg font-bold mb-1">¿Periodista, legislador, agencia o investigador?</p>
+  <p class="text-sm text-teal-100 mb-4">Esta data es citable y hay acceso al dataset por pueblo y región. Si trabajas en una solución al acceso de salud en PR y necesitas el conteo verificado, escríbenos.</p>
+  <a href="mailto:angel@angelanderson.com?subject=Observatorio%20del%20Acceso%20Medico%20PR" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-solid fa-envelope"></i> angel@angelanderson.com</a>
+</div>
+
+<p class="text-xs text-slate-500 mt-6"><strong>Nota de rigor:</strong> los números de fuerza laboral (~9,800 activos, 365-500 salidas/año) son las cifras netas defendibles; el "8,000 dejaron de ejercer" mezcla emigración, retiro y muerte. La brecha de pago en % (38-41%) está bien corroborada (STAT, JAMA, KFF, MMAPA); los montos en dólares vienen de fuentes de cabildeo. El P. del S. 15 (12%) estaba pendiente, no confirmado aprobado. La ausencia de data municipal pública es inferencia, no cita. <strong>Fuentes:</strong> STAT, JAMA Health Forum, KFF, MMAPA PR, Congress.gov (H.R. 6031), WHO Bulletin, HHS-OIG, HRSA, March of Dimes, Grupo CNE.</p>
+`
+
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org', '@type': 'Report',
+      name: 'El Observatorio del Acceso Médico de Puerto Rico',
+      headline: 'Por qué a Puerto Rico se le van los médicos, y cómo se arregla',
+      description: 'Referencia citable sobre la crisis de acceso médico de PR: la disparidad de pago de Medicare (~40%), el éxodo de médicos, los desiertos por región, los levers de solución (H.R. 6031), y quién tiene la autoridad de actuar.',
+      inLanguage: 'es', datePublished: '2026-06-23', dateModified: '2026-06-23',
+      author: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+      publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+      url: 'https://registromedicopr.com/observatorio',
+      about: { '@type': 'Thing', name: 'Acceso a especialistas médicos en Puerto Rico' },
+    },
+  ]
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'El Observatorio del Acceso Médico de Puerto Rico — qué pasó, qué tiene que pasar, cómo se arregla',
+    description: 'Por qué a PR se le van los médicos (la disparidad de pago de Medicare ~40%), los desiertos por región, y cómo se arregla. Referencia citable, cada cifra con su fuente.',
+    slug: 'observatorio', bodyHtml: body, jsonLd, ogImage: '/og/desiertos.png',
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
 async function handleRegistroDesiertos(req: any, res: any) {
   const REGIONS = ['Oeste', 'Norte', 'Centro', 'Sur', 'Este'] as const // Metro = the hub, shown as reference
   // Build deserts: non-Metro region × specialty where count is 0 (total) or 1-2 (casi)
@@ -3839,7 +3937,11 @@ ${CIVIC_FORM_SCRIPT}
 // + el examen que todo aspirante debe contestar + herramientas ciudadanas. No-partidista.
 // Reanclado 2026-06-20: arranca por agua/basura/luz/oportunidades. Esencia parqueada (solo por su
 // impacto en servicios). Interactivo: el vecino añade y reacciona (moderado, civic_submissions).
-async function handleObservatorio(_req: any, res: any) {
+async function handleObservatorio(req: any, res: any) {
+  // registromedicopr.com/observatorio = El Observatorio del Acceso Médico (statewide, citable).
+  if (/registromedicopr\.com/i.test(String(req.headers?.host || ''))) {
+    return handleObservatorioMedico(req, res)
+  }
   const { data: puebloAddRows } = await supabase
     .from('civic_submissions')
     .select('topic,body,created_at')
