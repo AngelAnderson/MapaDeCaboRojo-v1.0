@@ -149,6 +149,8 @@ export default async function handler(req: Request) {
   // ---- Señal del Día (demanda real *7711) ----
   if (senal) {
     const KW = kw.toUpperCase();
+    // Sanitiza para el header (evita inyección en Content-Disposition): solo a-z0-9-
+    const kwFile = kw.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 24) || 'senal';
     return new ImageResponse(
       (
         <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: '#faf8f5', fontFamily: 'Source Sans 3' }}>
@@ -185,7 +187,7 @@ export default async function handler(req: Request) {
         width: 1200,
         height: 630,
         ...(fonts.length ? { fonts } : {}),
-        ...(download ? { headers: { 'Content-Disposition': `attachment; filename="senal-${kw}.png"` } } : {}),
+        ...(download ? { headers: { 'Content-Disposition': `attachment; filename="senal-${kwFile}.png"` } } : {}),
       }
     );
   }
