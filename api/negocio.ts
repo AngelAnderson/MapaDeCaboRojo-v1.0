@@ -132,7 +132,9 @@ export default async function handler(req: any, res: any) {
   const description = place.description
     ? esc(place.description).slice(0, 160)
     : `Descubre ${esc(place.name)} en Cabo Rojo, Puerto Rico. Horarios, dirección, teléfono y más.`;
-  const image = place.image_url || 'https://mapadecaborojo.com/og-default.png';
+  // Sin foto propia -> tarjeta de marca generada (nombre + categoría), no un default genérico.
+  const ogCard = `${baseUrl}/api/og?t=${encodeURIComponent(place.name)}&k=${encodeURIComponent(place.subcategory || place.category || 'Cabo Rojo')}`;
+  const image = place.image_url || ogCard;
   const hoursText = formatHours(place.opening_hours);
   const isOpen = place.status === 'open';
   const parking = formatAmenity(place.amenities, 'parking');
