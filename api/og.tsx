@@ -158,10 +158,16 @@ export default async function handler(req: Request) {
               Señal del día · El Veci *7711
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', width: '100%' }}>
-              <span style={{ fontFamily: 'Fraunces', fontWeight: 900, fontSize: 150, lineHeight: 0.9, color: '#1b4b5a', marginRight: 28 }}>{n}</span>
-              <span style={{ fontFamily: 'Fraunces', fontWeight: 900, fontSize: 60, lineHeight: 1.05, letterSpacing: -1, color: '#2c2418' }}>
-                vecinos buscaron <span style={{ color: '#d4603a' }}>{kw}</span> {period}
-              </span>
+              <span style={{ fontFamily: 'Fraunces', fontWeight: 900, fontSize: 150, lineHeight: 0.9, color: '#1b4b5a', marginRight: 30 }}>{n}</span>
+              <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', fontFamily: 'Fraunces', fontWeight: 900, fontSize: 60, lineHeight: 1.08, letterSpacing: -1, color: '#2c2418' }}>
+                {['vecinos', 'buscaron'].map((w, i) => (
+                  <span key={i} style={{ marginRight: 17 }}>{w}</span>
+                ))}
+                <span style={{ color: '#d4603a', marginRight: 17 }}>{kw}</span>
+                {period.split(' ').filter(Boolean).map((w, i) => (
+                  <span key={`p${i}`} style={{ marginRight: 17 }}>{w}</span>
+                ))}
+              </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 14 }}>
               <div style={{ display: 'flex', background: '#fff', border: '2px solid #e8e2d9', borderRadius: 18, padding: '20px 26px', fontSize: 30, fontWeight: 700, color: '#2c2418' }}>
