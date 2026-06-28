@@ -1,8 +1,9 @@
 // /marca — guía de marca viva. Host-aware: mapadecaborojo.com (teal) y
-// registromedicopr.com (medico azul) sirven su propia marca desde un archivo.
-// Muestra tokens, tipografía, componentes y previews EN VIVO de las tarjetas
-// (img -> /api/og). noindex (referencia interna).
+// registromedicopr.com (medico azul). Tokens, tipografía (con specimen en
+// imagen), componentes, y galería de tarjetas para redes DESCARGABLES (?dl=1).
+// noindex (referencia interna).
 
+type Preset = { label: string; q: string };
 type Brand = {
   key: 'mapa' | 'medico';
   name: string;
@@ -13,9 +14,13 @@ type Brand = {
   ink: string;
   sub: string;
   bg: string;
-  cardTheme: string;
-  cardEx: string;
+  theme: string;
+  badgeBg: string;
+  badgeBd: string;
+  badgeInk: string;
   colors: { n: string; hex: string }[];
+  specimen: string;
+  presets: Preset[];
 };
 
 const MAPA: Brand = {
@@ -28,8 +33,10 @@ const MAPA: Brand = {
   ink: '#0f172a',
   sub: '#475569',
   bg: '#ffffff',
-  cardTheme: '',
-  cardEx: '/api/og?t=Tino%27s&k=Comida&badge=Verificado&sub=Cabo%20Rojo%20%C2%B7%20frente%20al%20mar',
+  theme: '',
+  badgeBg: '#f0fdfa',
+  badgeBd: '#5eead4',
+  badgeInk: '#0f766e',
   colors: [
     { n: 'Teal (Océano)', hex: '#0d9488' },
     { n: 'Tinta', hex: '#0f172a' },
@@ -37,6 +44,12 @@ const MAPA: Brand = {
     { n: 'Teal claro', hex: '#5eead4' },
     { n: 'Borde', hex: '#e2e8f0' },
     { n: 'Bandera (rojo)', hex: '#dc2626' },
+  ],
+  specimen: 't=El%20directorio%20verificado%20de%20Cabo%20Rojo&k=Source%20Sans%203',
+  presets: [
+    { label: 'Negocio verificado', q: 't=Tino%27s&k=Comida&badge=Verificado&sub=Joyuda%20%C2%B7%20frente%20al%20mar' },
+    { label: 'Categoría', q: 't=Las%20mejores%20farmacias%20de%20Cabo%20Rojo&k=Salud' },
+    { label: 'Evento', q: 't=Festival%20del%20Pescao&k=Evento&sub=Este%20s%C3%A1bado%20en%20Boquer%C3%B3n' },
   ],
 };
 
@@ -50,8 +63,10 @@ const MEDICO: Brand = {
   ink: '#0f172a',
   sub: '#475569',
   bg: '#ffffff',
-  cardTheme: 'medico',
-  cardEx: '/api/og?theme=medico&t=Dra.%20Ana%20Mar%C3%ADa%20Ram%C3%ADrez&k=Cardiolog%C3%ADa&badge=En%20el%20registro',
+  theme: 'medico',
+  badgeBg: '#eff6ff',
+  badgeBd: '#93c5fd',
+  badgeInk: '#1e40af',
   colors: [
     { n: 'Azul', hex: '#1d4ed8' },
     { n: 'Tinta', hex: '#0f172a' },
@@ -60,7 +75,18 @@ const MEDICO: Brand = {
     { n: 'Borde', hex: '#e2e8f0' },
     { n: 'Verde ok', hex: '#16a34a' },
   ],
+  specimen: 't=El%20registro%20de%20especialistas%20de%20PR&k=Source%20Sans%203',
+  presets: [
+    { label: 'Especialista', q: 't=Dra.%20Ana%20Mar%C3%ADa%20Ram%C3%ADrez&k=Cardiolog%C3%ADa&badge=En%20el%20registro' },
+    { label: 'Por pueblo', q: 't=Cardi%C3%B3logos%20en%20Mayag%C3%BCez&k=Especialidad' },
+    { label: 'Verificado', q: 't=Dr.%20Luis%20Torres&k=Pediatr%C3%ADa&badge=Licencia%20activa&sub=San%20Juan%20%C2%B7%20acepta%20planes' },
+  ],
 };
+
+function og(b: Brand, q: string, dl = false): string {
+  const t = b.theme ? `theme=${b.theme}&amp;` : '';
+  return `/api/og?${t}${q}${dl ? '&amp;dl=1' : ''}`;
+}
 
 function swatch(c: { n: string; hex: string }): string {
   return `<div><div style="height:96px;border-radius:14px;border:1px solid #e2e8f0;background:${c.hex}"></div>
@@ -68,8 +94,17 @@ function swatch(c: { n: string; hex: string }): string {
   <div style="font-size:12px;color:#94a3b8;font-weight:700;text-transform:uppercase">${c.hex}</div></div>`;
 }
 
+function dlcard(b: Brand, p: Preset): string {
+  return `<div>
+    <img class="cardimg" alt="${p.label}" src="${og(b, p.q)}">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px">
+      <span style="font-weight:800;font-size:14px">${p.label}</span>
+      <a class="dl" href="${og(b, p.q, true)}" download>Descargar PNG</a>
+    </div>
+  </div>`;
+}
+
 export default function handler(req: any, res: any) {
-  // Marca por host (registromedicopr.com -> medico) con override ?theme=medico|mapa.
   const host = String(req.headers['x-forwarded-host'] || req.headers.host || '').toLowerCase();
   const q = String((req.query && req.query.theme) || '').toLowerCase();
   const useMedico = q === 'medico' || (q !== 'mapa' && host.includes('registromedico'));
@@ -95,12 +130,14 @@ export default function handler(req: any, res: any) {
   .kh{font-size:13px;letter-spacing:.16em;text-transform:uppercase;font-weight:900;color:${b.accent};margin:0 0 18px}
   section{border-top:1px solid #e2e8f0;padding:40px 0}
   .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
-  @media(max-width:680px){.grid{grid-template-columns:repeat(2,1fr)}}
-  .cardimg{width:100%;border-radius:14px;border:1px solid #e2e8f0;display:block}
+  .grid2{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+  @media(max-width:680px){.grid,.grid2{grid-template-columns:repeat(2,1fr)}}
+  .cardimg{width:100%;border-radius:14px;border:1px solid #e2e8f0;display:block;background:#fff}
   code{background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:2px 7px;font-size:13px;color:${b.ink};font-family:ui-monospace,monospace;word-break:break-all}
   .btn{display:inline-block;border-radius:999px;background:${b.accent};color:#fff;font-weight:800;padding:13px 28px;font-size:16px;text-decoration:none}
   .btn2{display:inline-block;border-radius:999px;border:1px solid #cbd5e1;color:${b.ink};font-weight:700;padding:12px 26px;font-size:15px;text-decoration:none}
-  .badge{display:inline-flex;align-items:center;gap:8px;background:${b.key==='mapa'?'#f0fdfa':'#eff6ff'};border:2px solid ${b.key==='mapa'?'#5eead4':'#93c5fd'};color:${b.key==='mapa'?'#0f766e':'#1e40af'};border-radius:999px;padding:10px 20px;font-weight:800;font-size:15px}
+  .dl{font-weight:800;font-size:13px;color:#fff;background:${b.accent};border-radius:999px;padding:7px 14px;text-decoration:none;white-space:nowrap}
+  .badge{display:inline-flex;align-items:center;gap:8px;background:${b.badgeBg};border:2px solid ${b.badgeBd};color:${b.badgeInk};border-radius:999px;padding:10px 20px;font-weight:800;font-size:15px}
   .row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
   .specA{font-family:'Fraunces',serif;font-weight:900;font-size:96px;line-height:.9}
   .ty{font-size:13px;color:#94a3b8;font-weight:700}
@@ -120,7 +157,7 @@ export default function handler(req: any, res: any) {
 
   <section>
     <p class="kh">Tipografía</p>
-    <div class="row" style="align-items:flex-end;gap:36px">
+    <div class="row" style="align-items:flex-end;gap:36px;margin-bottom:24px">
       <div class="specA">Aa</div>
       <div>
         <div style="font-family:'Fraunces',serif;font-weight:900;font-size:30px;letter-spacing:-.5px">Fraunces — display, títulos</div>
@@ -129,6 +166,21 @@ export default function handler(req: any, res: any) {
         <div class="ty">400 · 600 · 700 · 900</div>
       </div>
     </div>
+    <img class="cardimg" alt="Specimen tipográfico" src="${og(b, b.specimen)}">
+    <p class="ty" style="margin-top:8px">Specimen en imagen (cómo se ve el título en una tarjeta).</p>
+  </section>
+
+  <section>
+    <p class="kh">Tarjetas para redes · descargables</p>
+    <p style="color:${b.sub};margin:-6px 0 18px">Cada una se genera en vivo. Botón <strong>Descargar PNG</strong> = baja el archivo listo para Instagram / Facebook / WhatsApp.</p>
+    <div class="grid2">${b.presets.map((p) => dlcard(b, p)).join('')}</div>
+    <p class="kh" style="margin-top:28px">Hazla tuya · parámetros</p>
+    <ul>
+      <li><code>t</code> título · <code>k</code> kicker · <code>sub</code> subtítulo · <code>badge</code> sello</li>
+      <li><code>theme</code> — <code>mapa</code> · <code>medico</code> · <code>caborojo</code> · <code>angel</code></li>
+      <li><code>dl=1</code> — fuerza la descarga del PNG</li>
+    </ul>
+    <p style="margin-top:6px"><code>https://${b.site}/api/og?${b.theme ? 'theme=' + b.theme + '&amp;' : ''}t=Nombre&amp;k=Categor%C3%ADa&amp;badge=Verificado&amp;dl=1</code></p>
   </section>
 
   <section>
@@ -137,30 +189,6 @@ export default function handler(req: any, res: any) {
       <a class="btn" href="/">Buscar en el mapa</a>
       <a class="btn2" href="/">Ver categorías</a>
       <span class="badge">✓ Verificado</span>
-    </div>
-  </section>
-
-  <section>
-    <p class="kh">Tarjeta OG · en vivo (motor /api/og)</p>
-    <img class="cardimg" alt="Tarjeta OG ${b.name}" src="${b.cardEx}">
-    <p style="color:${b.sub};margin-top:16px">Esta imagen se genera en vivo desde <code>/api/og</code>. Cada negocio sin foto usa su propia tarjeta automáticamente.</p>
-    <p class="kh" style="margin-top:24px">Parámetros</p>
-    <ul>
-      <li><code>t</code> — título (nombre del negocio)</li>
-      <li><code>k</code> — kicker / categoría</li>
-      <li><code>sub</code> — subtítulo (opcional)</li>
-      <li><code>badge</code> — texto del sello verificado (opcional)</li>
-      <li><code>theme</code> — <code>mapa</code> (default) · <code>medico</code> · <code>caborojo</code></li>
-    </ul>
-    <p style="margin-top:14px"><code>https://${b.site}/api/og?${b.cardTheme ? 'theme=' + b.cardTheme + '&amp;' : ''}t=Nombre&amp;k=Categor%C3%ADa&amp;badge=Verificado</code></p>
-  </section>
-
-  <section>
-    <p class="kh">El motor sirve 3 marcas</p>
-    <div class="grid">
-      <img class="cardimg" alt="mapa" src="/api/og?t=Farmacia%20Encarnaci%C3%B3n&k=Farmacia&badge=Verificado">
-      <img class="cardimg" alt="medico" src="/api/og?theme=medico&t=Dra.%20Ram%C3%ADrez&k=Cardiolog%C3%ADa&badge=En%20el%20registro">
-      <img class="cardimg" alt="caborojo" src="/api/og?theme=caborojo&t=Tino%27s&k=Comida&badge=Verificado">
     </div>
   </section>
 

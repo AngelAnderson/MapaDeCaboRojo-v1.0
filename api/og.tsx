@@ -53,6 +53,20 @@ const THEMES = {
     site: 'CaboRojo.com',
     place: 'Cabo Rojo, Puerto Rico',
   },
+  // angelanderson.com: rojo AJORÁO + navy sobre papel, título en Fraunces.
+  angel: {
+    bg: '#fdfaf6',
+    bar: '#c23a22',
+    kicker: '#c23a22',
+    title: '#1a1a1a',
+    sub: '#6b6b6b',
+    badgeBg: '#fdecea',
+    badgeBorder: '#e8a99e',
+    badgeInk: '#a83020',
+    titleFont: 'Fraunces',
+    site: 'AngelAnderson.com',
+    place: 'Cabo Rojo, Puerto Rico',
+  },
 };
 
 const CHARSET =
@@ -87,8 +101,10 @@ export default async function handler(req: Request) {
   const subRaw = (searchParams.get('sub') || '').slice(0, 140);
   const badge = (searchParams.get('badge') || '').slice(0, 40);
   const tp = searchParams.get('theme');
-  const themeKey = tp === 'medico' || tp === 'caborojo' ? tp : 'mapa';
+  const themeKey =
+    tp === 'medico' || tp === 'caborojo' || tp === 'angel' ? tp : 'mapa';
   const th = THEMES[themeKey];
+  const download = searchParams.get('dl') === '1';
   const site = searchParams.get('site') || th.site;
 
   const titleSize = t.length > 42 ? 64 : t.length > 26 ? 78 : 92;
@@ -230,6 +246,9 @@ export default async function handler(req: Request) {
       width: 1200,
       height: 630,
       ...(fonts.length ? { fonts } : {}),
+      ...(download
+        ? { headers: { 'Content-Disposition': `attachment; filename="${themeKey}-tarjeta.png"` } }
+        : {}),
     }
   );
 }
