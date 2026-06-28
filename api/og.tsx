@@ -119,10 +119,16 @@ export default async function handler(req: Request) {
   const download = searchParams.get('dl') === '1';
   const site = searchParams.get('site') || th.site;
 
+  // Señal del Día: demanda real del *7711 (número de bot_real_inbound, limpio).
+  const senal = searchParams.get('mode') === 'senal';
+  const kw = (searchParams.get('kw') || 'plomero').slice(0, 28);
+  const n = Math.max(0, parseInt(searchParams.get('n') || '0', 10) || 0);
+  const period = (searchParams.get('p') || 'este mes').slice(0, 24);
+
   const tlen = t.replace('||', '').trim().length;
   const titleSize = tlen > 42 ? 64 : tlen > 26 ? 78 : 92;
 
-  const needsFraunces = th.titleFont === 'Fraunces';
+  const needsFraunces = th.titleFont === 'Fraunces' || senal;
   const [w400, w600, w700, w900, fr900] = await Promise.all([
     loadFont('Source+Sans+3', 400),
     loadFont('Source+Sans+3', 600),
@@ -139,6 +145,44 @@ export default async function handler(req: Request) {
   ]
     .filter((f) => f.data)
     .map((f) => ({ name: f.name, weight: f.weight, data: f.data as ArrayBuffer, style: 'normal' as const }));
+
+  // ---- Señal del Día (demanda real *7711) ----
+  if (senal) {
+    const KW = kw.toUpperCase();
+    return new ImageResponse(
+      (
+        <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', background: '#faf8f5', fontFamily: 'Source Sans 3' }}>
+          <div style={{ height: 14, width: '100%', background: '#1b4b5a' }} />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '54px 66px' }}>
+            <div style={{ display: 'flex', fontSize: 26, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase', color: '#d4603a' }}>
+              Señal del día · El Veci *7711
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', flexWrap: 'wrap', width: '100%' }}>
+              <span style={{ fontFamily: 'Fraunces', fontWeight: 900, fontSize: 150, lineHeight: 0.9, color: '#1b4b5a', marginRight: 28 }}>{n}</span>
+              <span style={{ fontFamily: 'Fraunces', fontWeight: 900, fontSize: 60, lineHeight: 1.05, letterSpacing: -1, color: '#2c2418' }}>
+                vecinos buscaron <span style={{ color: '#d4603a' }}>{kw}</span> {period}
+              </span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 14 }}>
+              <div style={{ display: 'flex', background: '#fff', border: '2px solid #e8e2d9', borderRadius: 18, padding: '20px 26px', fontSize: 30, fontWeight: 700, color: '#2c2418' }}>
+                {`¿${kw} en Cabo Rojo? Escríbele ${KW} al 787-417-7711`}
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 22, fontWeight: 800 }}>
+                <span style={{ color: '#1b4b5a' }}>CaboRojo.com</span>
+                <span style={{ color: '#8a7e6f' }}>Demanda real, no inventada</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+      {
+        width: 1200,
+        height: 630,
+        ...(fonts.length ? { fonts } : {}),
+        ...(download ? { headers: { 'Content-Disposition': `attachment; filename="senal-${kw}.png"` } } : {}),
+      }
+    );
+  }
 
   return new ImageResponse(
     (
