@@ -86,11 +86,23 @@ async function loadFont(family: string, weight: number): Promise<ArrayBuffer | n
   }
 }
 
-function words(text: string, color: string, size: number) {
-  return text.split(' ').map((w, i) => (
-    <span key={i} style={{ color, marginRight: size * 0.24 }}>
-      {w}
-    </span>
+// Título: separa con || en líneas (cada segmento su propia línea); el 2do
+// segmento sale en el color de acento del tema. Dentro, las palabras envuelven.
+function titleLines(text: string, base: string, accent: string, size: number) {
+  const [a, b] = text.split('||');
+  const segs = [{ text: a.trim(), color: base }];
+  if (b) segs.push({ text: b.trim(), color: accent });
+  return segs.map((seg, si) => (
+    <div key={si} style={{ display: 'flex', flexWrap: 'wrap', width: '100%' }}>
+      {seg.text
+        .split(' ')
+        .filter(Boolean)
+        .map((w, wi) => (
+          <span key={wi} style={{ color: seg.color, marginRight: size * 0.24 }}>
+            {w}
+          </span>
+        ))}
+    </div>
   ));
 }
 
@@ -107,7 +119,8 @@ export default async function handler(req: Request) {
   const download = searchParams.get('dl') === '1';
   const site = searchParams.get('site') || th.site;
 
-  const titleSize = t.length > 42 ? 64 : t.length > 26 ? 78 : 92;
+  const tlen = t.replace('||', '').trim().length;
+  const titleSize = tlen > 42 ? 64 : tlen > 26 ? 78 : 92;
 
   const needsFraunces = th.titleFont === 'Fraunces';
   const [w400, w600, w700, w900, fr900] = await Promise.all([
@@ -170,7 +183,7 @@ export default async function handler(req: Request) {
             <div
               style={{
                 display: 'flex',
-                flexWrap: 'wrap',
+                flexDirection: 'column',
                 width: '100%',
                 fontFamily: th.titleFont,
                 fontWeight: 900,
@@ -179,7 +192,7 @@ export default async function handler(req: Request) {
                 letterSpacing: -2,
               }}
             >
-              {words(t, th.title, titleSize)}
+              {titleLines(t, th.title, th.kicker, titleSize)}
             </div>
             {subRaw ? (
               <div
