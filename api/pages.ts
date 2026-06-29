@@ -511,6 +511,59 @@ export function computeTamSamSom(
   };
 }
 
+// =================== Business Verdicts — SINGLE SOURCE OF TRUTH ===================
+// Una sola fórmula alimenta DOS páginas: /pueblo-en-numeros (El Espejo) y /me-conviene.
+// Si cambias el cálculo aquí, las dos páginas cambian juntas. Cero contradicción de números.
+export type BusinessVerdict = {
+  k: string; label: string; emoji: string;
+  supply: number; vComfort: number; vSurvive: number; demand: number;
+  verdict: 'over' | 'tight' | 'room' | 'zero';
+};
+
+export function buildVerdictsFromComputed(
+  tamSomResults: Array<{ key: string; label: string; supply: number; sam: number; breakevenLow: number; breakevenHigh: number }>,
+  heatWithDemand: Array<{ key: string; label: string; emoji: string; demand: number; supply: number }>
+): { data: BusinessVerdict[]; byKey: Record<string, BusinessVerdict> } {
+  const byKey: Record<string, BusinessVerdict> = {};
+  for (const t of tamSomResults) {
+    const hd = heatWithDemand.find(h => h.key === t.key);
+    const vComfort = t.breakevenHigh > 0 ? Math.floor(t.sam / t.breakevenHigh) : 0; // viven cómodos
+    const vSurvive = t.breakevenLow > 0 ? Math.floor(t.sam / t.breakevenLow) : 0;    // apenas sobreviven
+    let v: BusinessVerdict['verdict'];
+    if (t.supply === 0) v = 'zero';
+    else if (t.supply > vSurvive) v = 'over';
+    else if (t.supply > vComfort) v = 'tight';
+    else v = 'room';
+    byKey[t.key] = { k: t.key, label: t.label, emoji: hd?.emoji || '🏪', supply: t.supply, vComfort, vSurvive, demand: hd?.demand || 0, verdict: v };
+  }
+  for (const h of heatWithDemand) { // vacíos con demanda real
+    if (!byKey[h.key] && h.supply === 0 && h.demand > 0) {
+      byKey[h.key] = { k: h.key, label: h.label, emoji: h.emoji || '🔥', supply: 0, vComfort: 0, vSurvive: 0, demand: h.demand, verdict: 'zero' };
+    }
+  }
+  const data = Object.values(byKey).sort((a, b) => {
+    const order: Record<string, number> = { over: 0, tight: 1, room: 2, zero: 3 };
+    return (order[a.verdict] - order[b.verdict]) || (b.supply - a.supply);
+  });
+  return { data, byKey };
+}
+
+// Async wrapper — corre las queries y devuelve los veredictos. Para /me-conviene.
+export async function fetchBusinessVerdicts(): Promise<{ data: BusinessVerdict[]; byKey: Record<string, BusinessVerdict> }> {
+  const [allPlaces, realSearches90d] = await Promise.all([
+    supabase.from('places').select('name, category, subcategory, tags').eq('visibility', 'published').eq('status', 'open').eq('municipality', 'Cabo Rojo').range(0, 4999).then((r: any) => r.data || []),
+    supabase.from('mv_real_searches_90d').select('*').then((r: any) => r.data || []),
+  ]);
+  const supplyByCat = computeSupplyByCategory(allPlaces);
+  const tamSomResults = CATEGORY_TAM_PARAMS.map(p => computeTamSamSom(p, supplyByCat[p.key] || 0));
+  const heatWithDemand = HEAT_BUCKETS_DEF.map(b => ({
+    key: b.key, label: b.label, emoji: b.emoji,
+    demand: realSearches90d.filter((rq: any) => b.qRegex.test(rq.q_norm || '')).reduce((s: number, rq: any) => s + rq.cnt, 0),
+    supply: allPlaces.filter(b.matches).length,
+  }));
+  return buildVerdictsFromComputed(tamSomResults as any, heatWithDemand);
+}
+
 /**
  * Density comparison — CR vs PR average per capita.
  */
@@ -3105,29 +3158,8 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
       return b.multiplier - a.multiplier;
     }).slice(0, 24);
 
-    // ── EL ESPEJO: per-category "mira tu apuesta" decision data (2026-06-29) ──
-    // Joins TAM/SOM economics (viable-business count) with live bot demand.
-    const espejoByKey: Record<string, any> = {};
-    for (const t of tamSomResults) {
-      const hd: any = heatWithDemand.find((h: any) => h.key === t.key);
-      const vComfort = t.breakevenHigh > 0 ? Math.floor(t.sam / t.breakevenHigh) : 0; // viven cómodos
-      const vSurvive = t.breakevenLow > 0 ? Math.floor(t.sam / t.breakevenLow) : 0;    // apenas sobreviven
-      let v: string;
-      if (t.supply === 0) v = 'zero';
-      else if (t.supply > vSurvive) v = 'over';
-      else if (t.supply > vComfort) v = 'tight';
-      else v = 'room';
-      espejoByKey[t.key] = { k: t.key, label: t.label, emoji: hd?.emoji || '🏪', supply: t.supply, vComfort, vSurvive, demand: hd?.demand || 0, verdict: v };
-    }
-    for (const h of heatWithDemand) { // append vacíos con demanda real
-      if (!espejoByKey[h.key] && h.supply === 0 && h.demand > 0) {
-        espejoByKey[h.key] = { k: h.key, label: h.label, emoji: h.emoji || '🔥', supply: 0, vComfort: 0, vSurvive: 0, demand: h.demand, verdict: 'zero' };
-      }
-    }
-    const espejoData = Object.values(espejoByKey).sort((a: any, b: any) => {
-      const order: Record<string, number> = { over: 0, tight: 1, room: 2, zero: 3 };
-      return (order[a.verdict] - order[b.verdict]) || (b.supply - a.supply);
-    });
+    // ── EL ESPEJO: per-category decision data — single source of truth (shared con /me-conviene) ──
+    const { data: espejoData } = buildVerdictsFromComputed(tamSomResults as any, heatWithDemand);
     const espejoJson = JSON.stringify(espejoData).replace(/</g, '\\u003c');
     const espejoOptions = espejoData.map((d: any) => {
       const hint = d.verdict === 'zero' ? `0 — nadie lo resuelve` : `${d.supply} abierto${d.supply === 1 ? '' : 's'}`;
@@ -4462,10 +4494,11 @@ type MCStatusColor = '🔴' | '🟡' | '🟢';
 
 type MCVeredictoCat = {
   key: string;
+  engineKey?: string; // mapea a CATEGORY_TAM_PARAMS/HEAT key cuando difiere — pa' jalar veredicto vivo
   label: string;
   emoji: string;
-  status: MCStatusColor;
-  headline_number: string;
+  status: MCStatusColor;       // fallback editorial si no hay match vivo
+  headline_number: string;     // fallback editorial si no hay match vivo
   one_sentence: string;
   pasos_lunes: [string, string, string];
   cross_link: {
@@ -4516,7 +4549,7 @@ const MC_VEREDICTOS: MCVeredictoCat[] = [
     cross_link: { type: 'verify_name', url: '/categoria/legal', copy: '🔍 Ve quién ya está en el directorio' },
   },
   {
-    key: 'aire', label: 'AC / Refrigeración', emoji: '❄️',
+    key: 'aire', engineKey: 'aire_acondicionado', label: 'AC / Refrigeración', emoji: '❄️',
     status: '🟢',
     headline_number: 'Solo 3 negocios verificados de AC pa\' el pueblo entero',
     one_sentence: 'Dos de los tres no mantienen presencia visible — cuando el AC se rompe un sábado, solo Luis David contesta.',
@@ -4540,7 +4573,7 @@ const MC_VEREDICTOS: MCVeredictoCat[] = [
     cross_link: { type: 'vitrina', url: 'https://wa.me/17874177711?text=Quiero%20agregar%20mi%20negocio', copy: '📋 Agrega tu negocio al directorio' },
   },
   {
-    key: 'plomeria', label: 'Plomería', emoji: '🔧',
+    key: 'plomeria', engineKey: 'plomero', label: 'Plomería', emoji: '🔧',
     status: '🟢',
     headline_number: 'Demanda real, casi cero plomeros verificados en el directorio',
     one_sentence: 'Operan 100% por referido — el que entra al directorio captura la demanda que el referido pierde.',
@@ -4601,7 +4634,7 @@ const MC_VEREDICTOS: MCVeredictoCat[] = [
     cross_link: { type: 'verify_name', url: '/categoria/veterinario', copy: '🔍 Ve clínicas veterinarias en el directorio' },
   },
   {
-    key: 'hotel', label: 'Hospedaje / Airbnb', emoji: '🏨',
+    key: 'hotel', engineKey: 'hospedaje', label: 'Hospedaje / Airbnb', emoji: '🏨',
     status: '🔴',
     headline_number: '~41 negocios de hospedaje — 20 concentrados en Boquerón',
     one_sentence: 'Boquerón está saturado. Las zonas de crecimiento real: Combate, Joyuda, Puerto Real — menos tráfico pero menos competencia.',
@@ -4614,7 +4647,7 @@ const MC_VEREDICTOS: MCVeredictoCat[] = [
     caveat: 'Hospedaje ecológico, retiro wellness, alquiler de surf/kayak incluido — nichos con espacio.',
   },
   {
-    key: 'belleza', label: 'Salón / Belleza / Barbería', emoji: '💇',
+    key: 'belleza', engineKey: 'salon_belleza', label: 'Salón / Belleza / Barbería', emoji: '💇',
     status: '🔴',
     headline_number: 'Saturación alta — densidad de salones entre las más altas del pueblo',
     one_sentence: 'La fidelidad del cliente es fuerte pero el mercado ya está repartido — el número 16 lo tiene difícil.',
@@ -4626,7 +4659,7 @@ const MC_VEREDICTOS: MCVeredictoCat[] = [
     cross_link: { type: 'verify_name', url: '/categoria/belleza', copy: '🔍 Ve salones en el directorio' },
   },
   {
-    key: 'auto', label: 'Mecánica / Taller de Auto', emoji: '🔩',
+    key: 'auto', engineKey: 'mecanico', label: 'Mecánica / Taller de Auto', emoji: '🔩',
     status: '🟡',
     headline_number: 'Demanda constante — pero muchos talleres operan informales',
     one_sentence: 'El taller formal con garantía y factura es el que el cliente busca y no encuentra.',
@@ -5042,21 +5075,56 @@ ${zonaItems}
   return mc_pageShell(body, 'Elige tu zona · ¿Me Conviene?', `¿En qué parte de Cabo Rojo piensas abrir tu ${catLabel}?`);
 }
 
-function mc_renderVeredicto(cat: string, zona: string): string {
+function mc_renderVeredicto(cat: string, zona: string, byKey: Record<string, BusinessVerdict> = {}): string {
   const v = MC_VEREDICTOS.find(x => x.key === cat);
   if (!v) {
-    return mc_renderFallbackVeredicto(cat, zona);
+    return mc_renderFallbackVeredicto(cat, zona, byKey);
   }
 
   const zonaInfo = MC_ZONAS.find(z => z.key === zona);
   const zonaLabel = zonaInfo ? zonaInfo.label : 'Cabo Rojo';
+  const noun = v.label.toLowerCase();
 
-  const statusClass = v.status === '🔴' ? 'pill-red' : v.status === '🟡' ? 'pill-yellow' : 'pill-green';
-  const statusWord = v.status === '🔴' ? 'Saturado' : v.status === '🟡' ? 'Hay espacio — con cautela' : 'Oportunidad real';
-  const bgColor = v.status === '🔴' ? '#fef2f2' : v.status === '🟡' ? '#fffbeb' : '#f0fdf4';
-  const borderColor = v.status === '🔴' ? '#fca5a5' : v.status === '🟡' ? '#fcd34d' : '#6ee7b7';
+  // ── Veredicto VIVO (single source of truth) — override del editorial si hay match ──
+  const live = byKey[v.engineKey || v.key] || null;
+  let status: MCStatusColor = v.status;
+  let headline = v.headline_number;
+  let heroNum = '';
+  let heroSub = '';
+  if (live) {
+    if (live.verdict === 'over') {
+      status = '🔴';
+      const demas = Math.max(0, live.supply - live.vSurvive);
+      heroNum = String(live.supply);
+      heroSub = `${noun} en Cabo Rojo. El mercado da para ~${live.vSurvive}. <b>${demas} de más.</b>`;
+      headline = `${live.supply} ${noun} · el mercado da para ~${live.vSurvive}`;
+    } else if (live.verdict === 'tight') {
+      status = '🟡';
+      heroNum = String(live.supply);
+      heroSub = `${noun}. El mercado está justo (~${live.vComfort}–${live.vSurvive}). Cabe uno más solo si llega distinto.`;
+      headline = `${live.supply} ${noun} · mercado justo (~${live.vComfort}–${live.vSurvive})`;
+    } else if (live.verdict === 'room') {
+      status = '🟢';
+      heroNum = String(live.supply);
+      heroSub = `${noun}. El mercado aguanta ~${live.vComfort} cómodos. <b>Todavía cabe.</b>`;
+      headline = `${live.supply} ${noun} · todavía cabe (~${live.vComfort} cómodos)`;
+    } else { // zero
+      status = '🟢';
+      heroNum = String(live.demand);
+      heroSub = `vecinos buscaron ${noun} en 90 días. <b>0 lo resuelven.</b> Mercado vacío con gente esperando.`;
+      headline = `0 ${noun} en el directorio · ${live.demand} lo buscaron en 90 días`;
+    }
+  }
 
-  const waText = encodeURIComponent(`¿Me conviene abrir ${v.label} en ${zonaLabel}, Cabo Rojo? El resultado dice: ${v.status} ${statusWord}. Número clave: ${v.headline_number}. Pasos del lunes: (1) ${v.pasos_lunes[0]} (2) ${v.pasos_lunes[1]} (3) ${v.pasos_lunes[2]}. Verifica en mapadecaborojo.com/me-conviene`);
+  const statusClass = status === '🔴' ? 'pill-red' : status === '🟡' ? 'pill-yellow' : 'pill-green';
+  const statusWord = status === '🔴' ? 'Saturado' : status === '🟡' ? 'Hay espacio — con cautela' : 'Oportunidad real';
+  const bgColor = status === '🔴' ? '#fef2f2' : status === '🟡' ? '#fffbeb' : '#f0fdf4';
+  const borderColor = status === '🔴' ? '#fca5a5' : status === '🟡' ? '#fcd34d' : '#6ee7b7';
+  const numColor = status === '🔴' ? '#dc2626' : status === '🟡' ? '#d97706' : '#16a34a';
+  const isGreen = status === '🟢';
+  const pasosHeader = isGreen ? "🚀 Tu camino pa' abrir: empieza esta semana" : status === '🔴' ? '🛑 Antes de invertir un peso, piensa esto' : '📋 Antes de invertir, haz esto el lunes';
+
+  const waText = encodeURIComponent(`¿Me conviene abrir ${v.label} en ${zonaLabel}, Cabo Rojo? Resultado: ${status} ${statusWord}. ${headline}. Pasos: (1) ${v.pasos_lunes[0]} (2) ${v.pasos_lunes[1]} (3) ${v.pasos_lunes[2]}. Chequéalo en mapadecaborojo.com/me-conviene`);
 
   const body = `
 <!-- PROGRESS -->
@@ -5068,12 +5136,17 @@ function mc_renderVeredicto(cat: string, zona: string): string {
   <span style="font-size:12px;color:#94a3b8;">Tu veredicto</span>
 </div>
 
-<!-- VEREDICTO HERO -->
-<div style="background:${bgColor};border:2px solid ${borderColor};border-radius:16px;padding:24px;margin-bottom:16px;text-align:center;">
-  <div style="font-size:48px;margin-bottom:8px;">${v.status}</div>
-  <span class="pill ${statusClass}" style="font-size:16px;padding:8px 18px;margin-bottom:14px;display:inline-block;">${statusWord}</span>
-  <h2 style="font-size:22px;font-weight:800;letter-spacing:-0.3px;margin-bottom:10px;margin-top:14px;">${esc(v.headline_number)}</h2>
-  <p style="font-size:15px;color:#374151;line-height:1.5;">${esc(v.one_sentence)}</p>
+<!-- VEREDICTO HERO (número primero) -->
+<div style="background:${bgColor};border:2px solid ${borderColor};border-radius:16px;padding:26px 22px;margin-bottom:16px;text-align:center;">
+  <span class="pill ${statusClass}" style="font-size:14px;padding:7px 16px;margin-bottom:8px;display:inline-block;">${status} ${statusWord}</span>
+  ${heroNum ? `
+  <div style="display:flex;align-items:baseline;justify-content:center;gap:12px;flex-wrap:wrap;margin:14px 0 6px;">
+    <span style="font-size:64px;font-weight:900;letter-spacing:-2px;line-height:0.9;color:${numColor};">${esc(heroNum)}</span>
+    <span style="font-size:16px;color:#374151;line-height:1.4;max-width:330px;text-align:left;">${heroSub}</span>
+  </div>` : `
+  <div style="font-size:40px;margin:6px 0;">${status}</div>
+  <h2 style="font-size:21px;font-weight:800;letter-spacing:-0.3px;margin:10px 0;">${esc(headline)}</h2>`}
+  <p style="font-size:14px;color:#475569;line-height:1.5;margin-top:10px;">${esc(v.one_sentence)}</p>
   ${v.caveat ? `<p style="font-size:13px;color:#6b7280;margin-top:10px;padding-top:10px;border-top:1px solid ${borderColor};font-style:italic;">${esc(v.caveat)}</p>` : ''}
 </div>
 
@@ -5081,23 +5154,23 @@ function mc_renderVeredicto(cat: string, zona: string): string {
 ${zonaInfo && zona !== 'no_se' ? `
 <div style="background:#f8fafc;border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:13px;color:#475569;">
   <strong>Zona elegida: ${esc(zonaLabel)}</strong> — ${esc(zonaInfo.note)}
-  <span style="color:#94a3b8;font-size:11px;display:block;margin-top:2px;">Veredicto por zona llega en Fase 2 — este resultado es para Cabo Rojo en general.</span>
+  <span style="color:#94a3b8;font-size:11px;display:block;margin-top:2px;">El veredicto por zona llega en Fase 2 — este resultado es para Cabo Rojo en general.</span>
 </div>
 ` : ''}
 
-<!-- 3 PASOS DEL LUNES -->
-<div class="card">
-  <p style="font-size:12px;color:#0d9488;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px;">📋 Antes de invertir — haz esto el lunes</p>
+<!-- PASOS (verde = arranca · rojo = frena) -->
+<div class="card"${isGreen ? ' style="border:2px solid #6ee7b7;"' : ''}>
+  <p style="font-size:12px;color:${isGreen ? '#16a34a' : '#0d9488'};font-weight:700;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:14px;">${pasosHeader}</p>
   <div class="paso">
-    <div class="paso-num">1</div>
+    <div class="paso-num"${isGreen ? ' style="background:#16a34a;"' : ''}>1</div>
     <div style="font-size:14px;color:#1e293b;line-height:1.5;">${esc(v.pasos_lunes[0])}</div>
   </div>
   <div class="paso">
-    <div class="paso-num">2</div>
+    <div class="paso-num"${isGreen ? ' style="background:#16a34a;"' : ''}>2</div>
     <div style="font-size:14px;color:#1e293b;line-height:1.5;">${esc(v.pasos_lunes[1])}</div>
   </div>
   <div class="paso">
-    <div class="paso-num">3</div>
+    <div class="paso-num"${isGreen ? ' style="background:#16a34a;"' : ''}>3</div>
     <div style="font-size:14px;color:#1e293b;line-height:1.5;">${esc(v.pasos_lunes[2])}</div>
   </div>
 </div>
@@ -5171,7 +5244,43 @@ async function submitLead(e) {
   return mc_pageShell(body, `${v.status} ${v.label} en Cabo Rojo · ¿Me Conviene?`, `¿Conviene abrir ${v.label} en Cabo Rojo? ${statusWord}. ${v.one_sentence}`);
 }
 
-function mc_renderFallbackVeredicto(cat: string, zona: string): string {
+function mc_renderFallbackVeredicto(cat: string, zona: string, byKey: Record<string, BusinessVerdict> = {}): string {
+  // Auto-cobertura: si el motor tiene la categoría aunque no haya copy editorial, da veredicto vivo.
+  const live = byKey[cat];
+  if (live) {
+    const noun = live.label.toLowerCase();
+    const status: MCStatusColor = live.verdict === 'over' ? '🔴' : live.verdict === 'tight' ? '🟡' : '🟢';
+    const isGreen = status === '🟢';
+    const bgColor = status === '🔴' ? '#fef2f2' : status === '🟡' ? '#fffbeb' : '#f0fdf4';
+    const borderColor = status === '🔴' ? '#fca5a5' : status === '🟡' ? '#fcd34d' : '#6ee7b7';
+    const numColor = status === '🔴' ? '#dc2626' : status === '🟡' ? '#d97706' : '#16a34a';
+    const statusWord = status === '🔴' ? 'Saturado' : status === '🟡' ? 'Con cautela' : 'Oportunidad real';
+    let heroNum: string, heroSub: string;
+    if (live.verdict === 'over') { heroNum = String(live.supply); heroSub = `${noun}. El mercado da para ~${live.vSurvive}. <b>${Math.max(0, live.supply - live.vSurvive)} de más.</b>`; }
+    else if (live.verdict === 'tight') { heroNum = String(live.supply); heroSub = `${noun}. Mercado justo (~${live.vComfort}–${live.vSurvive}). Cabe uno más solo si llega distinto.`; }
+    else if (live.verdict === 'room') { heroNum = String(live.supply); heroSub = `${noun}. Aguanta ~${live.vComfort} cómodos. <b>Todavía cabe.</b>`; }
+    else { heroNum = String(live.demand); heroSub = `vecinos lo buscaron en 90 días. <b>0 lo resuelven.</b> Mercado vacío con gente esperando.`; }
+    const kwUpper = noun.replace(/[^a-záéíóúñ0-9]+/gi, ' ').trim().split(' ')[0].toUpperCase();
+    const body = `
+<div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;">
+  <a href="/me-conviene?screen=categoria" style="font-size:13px;color:#0d9488;font-weight:600;">← Atrás</a>
+  <div style="flex:1;height:4px;background:#e2e8f0;border-radius:2px;"><div style="width:100%;height:4px;background:#0d9488;border-radius:2px;"></div></div>
+  <span style="font-size:12px;color:#94a3b8;">Tu veredicto</span>
+</div>
+<div style="background:${bgColor};border:2px solid ${borderColor};border-radius:16px;padding:26px 22px;margin-bottom:16px;text-align:center;">
+  <span class="pill ${isGreen ? 'pill-green' : status === '🔴' ? 'pill-red' : 'pill-yellow'}" style="font-size:14px;padding:7px 16px;display:inline-block;">${status} ${statusWord}</span>
+  <div style="display:flex;align-items:baseline;justify-content:center;gap:12px;flex-wrap:wrap;margin:14px 0 6px;">
+    <span style="font-size:64px;font-weight:900;letter-spacing:-2px;line-height:0.9;color:${numColor};">${esc(heroNum)}</span>
+    <span style="font-size:16px;color:#374151;line-height:1.4;max-width:330px;text-align:left;">${heroSub}</span>
+  </div>
+  <p style="font-size:13px;color:#64748b;margin-top:10px;">Veredicto vivo del directorio + demanda *7711. ${esc(live.label)} en Cabo Rojo.</p>
+</div>
+<a href="https://wa.me/17874177711?text=${encodeURIComponent(live.label + ' en Cabo Rojo')}" target="_blank" rel="noopener" class="btn btn-primary" style="display:block;text-align:center;margin-bottom:12px;">${isGreen ? `📋 Entra al directorio — texteale ${esc(kwUpper)}` : `💬 Pregúntale al Veci sobre ${esc(noun)}`}</a>
+<div style="text-align:center;margin-top:8px;"><a href="/pueblo-en-numeros" style="font-size:13px;color:#0d9488;font-weight:600;">🔍 Verifica los números → /pueblo-en-numeros</a></div>
+<div style="text-align:center;margin-top:4px;"><a href="/me-conviene" style="font-size:13px;color:#94a3b8;">Evalúa otra categoría →</a></div>
+`;
+    return mc_pageShell(body, `${status} ${esc(live.label)} en Cabo Rojo · ¿Me Conviene?`, `¿Conviene abrir ${esc(live.label)} en Cabo Rojo? ${statusWord} según el directorio + demanda real del *7711.`);
+  }
   const body = `
 <div class="card" style="text-align:center;padding:32px 24px;">
   <div style="font-size:48px;margin-bottom:12px;">🟡</div>
@@ -5214,9 +5323,11 @@ async function handle_me_conviene(req: any, res: any) {
       case 'zona':
         res.send(mc_renderScreen3(cat));
         break;
-      case 'veredicto':
-        res.send(mc_renderVeredicto(cat, zona));
+      case 'veredicto': {
+        const { byKey } = await fetchBusinessVerdicts();
+        res.send(mc_renderVeredicto(cat, zona, byKey));
         break;
+      }
       default:
         res.send(mc_renderScreen1());
     }
