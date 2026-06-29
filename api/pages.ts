@@ -5349,8 +5349,9 @@ async function handle_sistema(req: any, res: any) {
     const { data } = await fetchBusinessVerdicts();
     const fmt = (n: number) => Number(n).toLocaleString('es-PR');
 
-    const gaps = data.filter(d => (d.verdict === 'zero' || d.verdict === 'room') && d.demand > 0)
-      .sort((a, b) => b.demand - a.demand).slice(0, 8);
+    const allGaps = data.filter(d => (d.verdict === 'zero' || d.verdict === 'room') && d.demand > 0)
+      .sort((a, b) => b.demand - a.demand);
+    const gaps = allGaps.slice(0, 8);
     const huecos = data.filter(d => d.verdict === 'zero' && d.demand > 0);
     const oversupply = data.filter(d => d.verdict === 'over')
       .sort((a, b) => (b.supply - b.vSurvive) - (a.supply - a.vSurvive)).slice(0, 5);
@@ -5362,15 +5363,13 @@ async function handle_sistema(req: any, res: any) {
       const isHueco = d.verdict === 'zero';
       const accent = isHueco ? '#5eead4' : '#fbbf24';
       const tag = isHueco ? `0 lo resuelven` : `solo ${fmt(d.supply)} lo resuelve${d.supply === 1 ? '' : 'n'}`;
-      return `<a href="/me-conviene?screen=veredicto&cat=${encodeURIComponent(d.k)}&zona=no_se" style="display:block;text-decoration:none;background:rgba(255,255,255,0.04);border:1px solid rgba(94,234,212,0.18);border-left:3px solid ${accent};border-radius:12px;padding:18px 20px;margin-bottom:12px;">
-        <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;">
-          <span style="font-family:'SF Mono',Monaco,monospace;font-size:38px;font-weight:800;color:${accent};line-height:0.9;">${fmt(d.demand)}</span>
-          <div style="flex:1;min-width:180px;">
-            <div style="font-size:17px;font-weight:700;color:#fff;">${d.emoji} ${esc(d.label)}</div>
-            <div style="font-size:13px;color:#94a3b8;margin-top:2px;">vecinos lo buscaron en 90 días · <span style="color:${accent};">${tag}</span></div>
-          </div>
+      return `<a href="/me-conviene?screen=veredicto&cat=${encodeURIComponent(d.k)}&zona=no_se" style="display:flex;align-items:center;gap:13px;text-decoration:none;background:rgba(255,255,255,0.04);border:1px solid rgba(94,234,212,0.15);border-left:3px solid ${accent};border-radius:12px;padding:15px 16px;">
+        <span style="font-family:'SF Mono',Monaco,monospace;font-size:30px;font-weight:800;color:${accent};line-height:1;min-width:52px;">${fmt(d.demand)}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:15px;font-weight:700;color:#fff;">${d.emoji} ${esc(d.label)}</div>
+          <div style="font-size:12px;color:#94a3b8;margin-top:1px;">lo buscaron en 90 días · <span style="color:${accent};">${tag}</span></div>
         </div>
-        <div style="font-size:13px;color:#cbd5e1;margin-top:10px;line-height:1.5;">${isHueco ? 'Mercado vacío con gente esperando. El que entra bien empieza sin competencia.' : 'Hay demanda sin cubrir. Cabe el que resuelve mejor.'} <span style="color:${accent};font-weight:600;">Ver el camino pa' abrir →</span></div>
+        <span style="color:${accent};font-size:18px;flex-shrink:0;">→</span>
       </a>`;
     };
 
@@ -5390,10 +5389,15 @@ async function handle_sistema(req: any, res: any) {
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0e1a;color:#e2e8f0;-webkit-font-smoothing:antialiased;line-height:1.55}
 a{color:inherit}
-.wrap{max-width:760px;margin:0 auto;padding:0 18px}
+.wrap{max-width:940px;margin:0 auto;padding:0 20px}
 .kick{font-size:11px;letter-spacing:0.16em;text-transform:uppercase;font-weight:800;color:#5eead4}
-.sec{padding:30px 0;border-top:1px solid rgba(255,255,255,0.07)}
-.h2{font-size:24px;font-weight:800;letter-spacing:-0.4px;color:#fff;margin-bottom:6px;}
+.sec{padding:26px 0;border-top:1px solid rgba(255,255,255,0.07)}
+.h2{font-size:clamp(20px,3.6vw,24px);font-weight:800;letter-spacing:-0.4px;color:#fff;margin-bottom:4px;}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px;margin-top:16px}
+.layer{display:inline-flex;align-items:center;gap:7px;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:800;padding:5px 11px;border-radius:999px;margin-bottom:10px}
+.statcard{background:rgba(255,255,255,0.05);border:1px solid rgba(94,234,212,0.2);border-radius:14px;padding:18px 20px;text-align:center;flex:1;min-width:150px}
+.statnum{font-family:'SF Mono',Monaco,monospace;font-size:32px;font-weight:800;color:#5eead4;line-height:1}
+.soon{background:rgba(255,255,255,0.025);border:1px dashed rgba(148,163,184,0.32);border-radius:14px;padding:20px 22px;margin-top:14px}
 </style>
 </head>
 <body>
@@ -5411,55 +5415,65 @@ a{color:inherit}
     <div class="kick" style="margin-bottom:14px;">⚡ El Sistema · Inteligencia económica del pueblo</div>
     <h1 style="font-size:clamp(28px,6vw,44px);font-weight:900;letter-spacing:-1.2px;line-height:1.1;color:#fff;">La capa de verdad económica de Cabo Rojo.</h1>
     <p style="font-size:18px;color:#cbd5e1;line-height:1.55;margin:16px auto 0;max-width:560px;">No es lo que un pueblo <em>cree</em> que necesita. Es lo que <strong style="color:#fff;">mide</strong> que necesita: lo que la gente busca de verdad, cruzado con lo que de verdad existe.</p>
-    <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-top:30px;">
-      <div><div style="font-family:'SF Mono',Monaco,monospace;font-size:34px;font-weight:800;color:#5eead4;">${fmt(huecos.length)}</div><div style="font-size:12px;color:#94a3b8;">negocios que el pueblo<br>busca y nadie resuelve</div></div>
-      <div><div style="font-family:'SF Mono',Monaco,monospace;font-size:34px;font-weight:800;color:#5eead4;">${fmt(totalDemand)}</div><div style="font-size:12px;color:#94a3b8;">señales de demanda<br>reales (90 días)</div></div>
-      <div><div style="font-family:'SF Mono',Monaco,monospace;font-size:34px;font-weight:800;color:#5eead4;">${fmt(categoriesAnalyzed)}</div><div style="font-size:12px;color:#94a3b8;">categorías<br>analizadas en vivo</div></div>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:30px;max-width:620px;margin-left:auto;margin-right:auto;">
+      <div class="statcard"><div class="statnum">${fmt(allGaps.length)}</div><div style="font-size:12px;color:#94a3b8;margin-top:6px;">oportunidades abiertas<br>(demanda sin cubrir)</div></div>
+      <div class="statcard"><div class="statnum">${fmt(totalDemand)}</div><div style="font-size:12px;color:#94a3b8;margin-top:6px;">señales de demanda<br>reales (90 días)</div></div>
+      <div class="statcard"><div class="statnum">${fmt(categoriesAnalyzed)}</div><div style="font-size:12px;color:#94a3b8;margin-top:6px;">categorías<br>analizadas en vivo</div></div>
     </div>
   </div>
 </div>
 
 <div class="wrap">
 
-  <!-- LO QUE EL PUEBLO NECESITA (flip ofensivo) -->
-  <div class="sec" style="border-top:none;">
-    <div class="kick" style="color:#5eead4;">El flip</div>
-    <div class="h2">Lo que el pueblo necesita 🟢</div>
-    <p style="font-size:14px;color:#94a3b8;margin-bottom:20px;">Todo el mundo te dice de qué hay de más. Esto es lo contrario: el negocio que la gente está buscando <em>esta semana</em> y casi nadie resuelve. Demanda real del *7711. Si abres uno de estos bien, no compites — sirves.</div>
-    ${gaps.map(gapCard).join('')}
-    <p style="font-size:12px;color:#64748b;margin-top:8px;">Toca cualquiera y te lleva a tu apuesta en números (/me-conviene). El número grande = vecinos que lo buscaron en 90 días sin que nadie del directorio lo resolviera bien.</p>
+  <!-- INTRO 3 CAPAS -->
+  <div class="sec" style="border-top:none;padding-bottom:8px;">
+    <div class="h2">Tres capas de oportunidad. Hoy ves la primera.</div>
+    <p style="font-size:14px;color:#94a3b8;margin-top:6px;">La demanda del bot solo ve <em>servicios</em>. Pero el hueco de un pueblo también está en lo <em>especializado</em> y en los <em>productos</em> que nadie ha hecho. Esas dos no salen de la data: se ven a mano.</p>
   </div>
 
-  <!-- LO QUE YA SOBRA (defensivo, breve) -->
-  ${oversupply.length ? `
+  <!-- CAPA 1 · SERVICIOS (en vivo) -->
   <div class="sec">
-    <div class="kick" style="color:#f87171;">El otro lado</div>
-    <div class="h2">Lo que ya sobra 🔴</div>
-    <p style="font-size:14px;color:#94a3b8;margin-bottom:16px;">Donde abrir uno más es pelear por sobras. No es prohibido — es cuesta arriba.</p>
-    ${oversupply.map(d => `<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 14px;background:rgba(248,113,113,0.06);border-radius:9px;margin-bottom:8px;font-size:14px;">
-      <span style="color:#fff;font-weight:600;">${d.emoji} ${esc(d.label)}</span>
-      <span style="color:#f87171;font-family:'SF Mono',Monaco,monospace;font-size:13px;">${fmt(d.supply)} hay · ~${fmt(d.vSurvive)} caben · ${fmt(Math.max(0, d.supply - d.vSurvive))} de más</span>
-    </div>`).join('')}
-    <p style="font-size:12px;color:#64748b;margin-top:8px;"><a href="/pueblo-en-numeros" style="color:#5eead4;">Ver las ${fmt(categoriesAnalyzed)} categorías completas → /pueblo-en-numeros</a></p>
-  </div>` : ''}
+    <span class="layer" style="background:rgba(94,234,212,0.12);color:#5eead4;">🟢 Capa 1 · Servicios · en vivo</span>
+    <div class="h2">Lo que el pueblo necesita</div>
+    <p style="font-size:14px;color:#94a3b8;margin-top:4px;">Todo el mundo te dice de qué hay de más. Esto es lo contrario: el negocio que la gente busca <em>esta semana</em> y casi nadie resuelve. Si abres uno de estos bien, no compites, sirves.</p>
+    <div class="grid2">${gaps.map(gapCard).join('')}</div>
+    <p style="font-size:12px;color:#64748b;margin-top:12px;">El número = vecinos que lo buscaron en 90 días sin que nadie del directorio lo resolviera bien. Toca cualquiera y te lleva a tu apuesta en números.</p>
+    ${oversupply.length ? `
+    <div style="margin-top:22px;">
+      <div style="font-size:13px;font-weight:700;color:#f87171;margin-bottom:10px;">🔴 Y al otro lado, lo que ya sobra (pelear por sobras):</div>
+      <div class="grid2" style="margin-top:0;">${oversupply.map(d => `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:11px 14px;background:rgba(248,113,113,0.06);border-radius:10px;font-size:13px;">
+        <span style="color:#fff;font-weight:600;">${d.emoji} ${esc(d.label)}</span>
+        <span style="color:#f87171;font-family:'SF Mono',Monaco,monospace;font-size:12px;flex-shrink:0;">${fmt(d.supply)} hay · ${fmt(Math.max(0, d.supply - d.vSurvive))} de más</span>
+      </div>`).join('')}</div>
+      <p style="font-size:12px;color:#64748b;margin-top:10px;"><a href="/pueblo-en-numeros" style="color:#5eead4;">Ver las ${fmt(categoriesAnalyzed)} categorías completas en /pueblo-en-numeros →</a></p>
+    </div>` : ''}
+  </div>
+
+  <!-- CAPA 2 · ESPECIALIZADOS (viene) -->
+  <div class="sec">
+    <span class="layer" style="background:rgba(251,191,36,0.12);color:#fbbf24;">🟡 Capa 2 · Especializados · viene</span>
+    <div class="h2">Saturado de genérico no es saturado de especializado.</div>
+    <div class="soon">
+      <p style="font-size:15px;color:#cbd5e1;line-height:1.6;">Hay 20 farmacias en Cabo Rojo. ¿Cuántas hacen <strong style="color:#fff;">compounding</strong>? Hay casi 100 médicos, pero el especialista manda al paciente a Mayagüez. El hueco no siempre es una categoría vacía. A veces es <strong style="color:#fff;">el nicho vacío dentro de una categoría llena.</strong></p>
+      <p style="font-size:13px;color:#94a3b8;margin-top:12px;">Esto no sale del bot, porque nadie textea pidiendo "compounding". Se ve a mano, negocio por negocio. <span style="color:#fbbf24;font-weight:600;">Lo estamos mapeando.</span></p>
+    </div>
+  </div>
+
+  <!-- CAPA 3 · PRODUCTOS E IDENTIDAD (viene) -->
+  <div class="sec">
+    <span class="layer" style="background:rgba(244,101,58,0.14);color:#fb923c;">🟠 Capa 3 · Productos e identidad · viene</span>
+    <div class="h2">Lo que el pueblo querría tener en la mano.</div>
+    <div class="soon">
+      <p style="font-size:15px;color:#cbd5e1;line-height:1.6;"><strong style="color:#fff;">96.8% de la gente que sigue a Cabo Rojo lo vive como identidad, no como utilidad.</strong> Esa audiencia no busca un plomero. Compraría la camisa, la toalla, el mug con la bandera de Cabo Rojo. Una revista del pueblo. Productos que nadie ha hecho.</p>
+      <p style="font-size:13px;color:#94a3b8;margin-top:12px;">El bot nunca los detectaría: nadie textea pidiendo una camisa. La data ve servicios. Esta capa ve lo que el pueblo querría tener en la mano, y quién lo podría hacer. <span style="color:#fb923c;font-weight:600;">Lo estamos mapeando.</span></p>
+    </div>
+  </div>
 
   <!-- EL MOAT -->
   <div class="sec">
     <div class="kick">Por qué esto no existe en ningún otro sitio</div>
     <div class="h2" style="margin-top:6px;">No es data. Es data que alguien verificó a mano.</div>
     <p style="font-size:15px;color:#cbd5e1;line-height:1.65;margin-top:10px;">Google te da resultados. El censo te da promedios viejos. Esto es distinto: cada negocio se verificó uno por uno, la demanda sale de lo que la gente de verdad textea al *7711, y se corrige sola cada vez que alguien busca algo y no lo encuentra. Es la combinación que ningún mapa, ninguna AI y ninguna agencia tiene de un pueblo de 50,000: <strong style="color:#fff;">verificado, citable, mantenido humano-y-AI, y al día.</strong></p>
-  </div>
-
-  <!-- LA CAPA QUE VIENE (roadmap honesto, no data falsa) -->
-  <div class="sec">
-    <div class="kick" style="color:#fbbf24;">La capa que viene</div>
-    <div class="h2" style="margin-top:6px;">Esto es la primera grieta, no el final.</div>
-    <p style="font-size:14px;color:#94a3b8;margin:10px 0 16px;">Hoy te dice qué falta. Hacia dónde va:</p>
-    <div style="display:grid;gap:10px;">
-      <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px 16px;"><strong style="color:#fff;">Conectar la demanda con quien la resuelve.</strong> <span style="color:#94a3b8;font-size:14px;">132 buscan electricista → el licenciado entra al directorio y el *7711 le empieza a mandar los trabajos. El hueco se llena solo.</span></div>
-      <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px 16px;"><strong style="color:#fff;">Ver la curva antes que pase.</strong> <span style="color:#94a3b8;font-size:14px;">No solo qué falta hoy — qué va a faltar en 6 meses según cómo se mueve el pueblo.</span></div>
-      <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px 16px;"><strong style="color:#fff;">Tu pueblo también tiene esta capa.</strong> <span style="color:#94a3b8;font-size:14px;">El método se replica. Cabo Rojo es el primero, no el único.</span></div>
-    </div>
   </div>
 
   <!-- B2B FOLD (la monetización nivel 20) -->
