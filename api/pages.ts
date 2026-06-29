@@ -5449,24 +5449,46 @@ a{color:inherit}
     </div>` : ''}
   </div>
 
-  <!-- CAPA 2 · ESPECIALIZADOS (viene) -->
+  <!-- CAPA 2 · ESPECIALIZADOS (curado, visto a mano) -->
   <div class="sec">
-    <span class="layer" style="background:rgba(251,191,36,0.12);color:#fbbf24;">🟡 Capa 2 · Especializados · viene</span>
+    <span class="layer" style="background:rgba(251,191,36,0.12);color:#fbbf24;">🟡 Capa 2 · Especializados · visto a mano</span>
     <div class="h2">Saturado de genérico no es saturado de especializado.</div>
-    <div class="soon">
-      <p style="font-size:15px;color:#cbd5e1;line-height:1.6;">Hay 20 farmacias en Cabo Rojo. ¿Cuántas hacen <strong style="color:#fff;">compounding</strong>? Hay casi 100 médicos, pero el especialista manda al paciente a Mayagüez. El hueco no siempre es una categoría vacía. A veces es <strong style="color:#fff;">el nicho vacío dentro de una categoría llena.</strong></p>
-      <p style="font-size:13px;color:#94a3b8;margin-top:12px;">Esto no sale del bot, porque nadie textea pidiendo "compounding". Se ve a mano, negocio por negocio. <span style="color:#fbbf24;font-weight:600;">Lo estamos mapeando.</span></p>
+    <p style="font-size:14px;color:#94a3b8;margin-top:4px;">Hay 20 farmacias, pero ¿cuántas hacen compounding? Casi 100 médicos, pero el especialista manda al paciente a Mayagüez. El hueco no es la categoría vacía: es <strong style="color:#cbd5e1;">el nicho vacío dentro de la categoría llena.</strong></p>
+    <div class="grid2">
+      ${[
+        ['💊 Farmacia', 'Compounding (fórmulas magistrales) · homecare + delivery de recetas · consultoría de farmacia'],
+        ['🧠 Salud', 'Geriatra · salud mental / psicólogo · terapia física · nutrición y endocrino'],
+        ['🍽️ Restaurante', 'Catering dedicado (eventos/escuelas/corporativo) · vegana, sin gluten, keto · cocina nocturna'],
+        ['🦷 Dentista', 'Ortodoncia · endodoncia · estética dental · odontopediatría'],
+        ['🔩 Mecánico', 'Transmisión · AC de carro · híbrido y eléctrico'],
+        ['🐾 Veterinario', 'Emergencia 24h · servicio a domicilio'],
+        ['🏨 Hospedaje', 'Eco · wellness · retiro (no cama genérica)'],
+      ].map(([t, n]) => `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(251,191,36,0.18);border-radius:12px;padding:14px 16px;">
+        <div style="font-size:14px;font-weight:700;color:#fff;">${t}</div>
+        <div style="font-size:13px;color:#94a3b8;margin-top:4px;line-height:1.5;">${n}</div>
+      </div>`).join('')}
     </div>
+    <p style="font-size:12px;color:#64748b;margin-top:12px;">Nadie textea al bot pidiendo "compounding". Estos huecos se ven a mano, mirando el pueblo. Por eso ningún directorio genérico los tiene.</p>
   </div>
 
-  <!-- CAPA 3 · PRODUCTOS E IDENTIDAD (viene) -->
+  <!-- CAPA 3 · PRODUCTOS E IDENTIDAD (curado, visto a mano) -->
   <div class="sec">
-    <span class="layer" style="background:rgba(244,101,58,0.14);color:#fb923c;">🟠 Capa 3 · Productos e identidad · viene</span>
+    <span class="layer" style="background:rgba(244,101,58,0.14);color:#fb923c;">🟠 Capa 3 · Productos e identidad · visto a mano</span>
     <div class="h2">Lo que el pueblo querría tener en la mano.</div>
-    <div class="soon">
-      <p style="font-size:15px;color:#cbd5e1;line-height:1.6;"><strong style="color:#fff;">96.8% de la gente que sigue a Cabo Rojo lo vive como identidad, no como utilidad.</strong> Esa audiencia no busca un plomero. Compraría la camisa, la toalla, el mug con la bandera de Cabo Rojo. Una revista del pueblo. Productos que nadie ha hecho.</p>
-      <p style="font-size:13px;color:#94a3b8;margin-top:12px;">El bot nunca los detectaría: nadie textea pidiendo una camisa. La data ve servicios. Esta capa ve lo que el pueblo querría tener en la mano, y quién lo podría hacer. <span style="color:#fb923c;font-weight:600;">Lo estamos mapeando.</span></p>
+    <p style="font-size:14px;color:#94a3b8;margin-top:4px;"><strong style="color:#cbd5e1;">96.8% de la gente que sigue a Cabo Rojo lo vive como identidad, no como utilidad.</strong> Esa audiencia no busca un plomero. Compraría algo que diga Cabo Rojo. El bot nunca lo ve, porque nadie textea pidiendo una camisa.</p>
+    <div class="grid2">
+      ${[
+        ['👕 Merch de identidad', 'Camisas, toallas, mugs, gorras, stickers, tote bags (bandera, Faro, Cofresí, Boquerón)'],
+        ['🧂 Productos locales', 'Sal de Cabo Rojo (las Salinas) · café · mantecaditos y dulces típicos · sazón/salsa local · miel'],
+        ['📰 Print y cultura', 'Revista del pueblo · guía del visitante · prints y arte del Faro · libro de historia (Betances, Cofresí)'],
+        ['🎨 Servicios creativos', 'Marketing local · diseño · fotografía · manejo de redes · producción de contenido'],
+        ['🗺️ Experiencias', 'Tours (kayak, bioluminiscencia, eBike) · clases y talleres'],
+      ].map(([t, n]) => `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(244,101,58,0.2);border-radius:12px;padding:14px 16px;">
+        <div style="font-size:14px;font-weight:700;color:#fff;">${t}</div>
+        <div style="font-size:13px;color:#94a3b8;margin-top:4px;line-height:1.5;">${n}</div>
+      </div>`).join('')}
     </div>
+    <p style="font-size:12px;color:#64748b;margin-top:12px;">La data ve servicios. Esta capa ve lo que el pueblo querría tener en la mano, y quién lo podría hacer. Es la mitad de la audiencia que ningún mapa de utilidad sirve.</p>
   </div>
 
   <!-- EL MOAT -->
