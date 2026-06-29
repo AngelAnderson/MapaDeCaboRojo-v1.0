@@ -3568,6 +3568,15 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
   })();
   </script>
 
+  <!-- PUENTE A /sistema (la data ve servicios; lo especializado y los productos se ven a mano) -->
+  <a href="/sistema" class="card" style="display:flex;align-items:center;gap:14px;text-decoration:none;color:inherit;background:#0f172a;border:none;padding:18px 22px;">
+    <span style="font-size:28px;flex-shrink:0;">⚡</span>
+    <div style="flex:1;">
+      <div style="font-size:15px;font-weight:800;color:#fff;line-height:1.3;">Esto es lo que la data VE. Hay dos capas más que la data no ve.</div>
+      <div style="font-size:13px;color:#94a3b8;margin-top:3px;line-height:1.5;">Lo especializado (el compounding que falta) y los productos de identidad (la camisa, la revista) se ven a mano. <span style="color:#5eead4;font-weight:700;">Mira las 3 capas en /sistema →</span></div>
+    </div>
+  </a>
+
   ${oppBanner}
 
   <!-- SECTION 1.56: EL DINERO FEDERAL DORMIDO (link a /observatorio) -->
@@ -5174,6 +5183,13 @@ ${zonaInfo && zona !== 'no_se' ? `
     <div style="font-size:14px;color:#1e293b;line-height:1.5;">${esc(v.pasos_lunes[2])}</div>
   </div>
 </div>
+
+${status === '🔴' ? `
+<!-- SALIDA ESPECIALIZADA (puente a /sistema cuando saturado) -->
+<a href="/sistema" style="display:block;text-decoration:none;background:#fffbeb;border:1.5px solid #fcd34d;border-radius:12px;padding:16px 18px;margin-bottom:12px;">
+  <div style="font-size:13px;font-weight:800;color:#92400e;margin-bottom:4px;">🟡 Saturado de genérico no es saturado de especializado</div>
+  <div style="font-size:14px;color:#78350f;line-height:1.5;">Puede que esta categoría esté llena de lo genérico y vacía de lo que de verdad falta (el nicho, el producto que nadie hace). Mira las 3 capas de oportunidad del pueblo. <span style="color:#b45309;font-weight:700;">Ver /sistema →</span></div>
+</a>` : ''}
 
 <!-- CTA PRINCIPAL -->
 <a href="${esc(v.cross_link.url)}" target="_blank" rel="noopener" class="btn btn-primary" style="text-align:center;display:block;margin-bottom:12px;">${esc(v.cross_link.copy)}</a>
