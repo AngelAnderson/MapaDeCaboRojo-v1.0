@@ -3105,6 +3105,35 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
       return b.multiplier - a.multiplier;
     }).slice(0, 24);
 
+    // ── EL ESPEJO: per-category "mira tu apuesta" decision data (2026-06-29) ──
+    // Joins TAM/SOM economics (viable-business count) with live bot demand.
+    const espejoByKey: Record<string, any> = {};
+    for (const t of tamSomResults) {
+      const hd: any = heatWithDemand.find((h: any) => h.key === t.key);
+      const vComfort = t.breakevenHigh > 0 ? Math.floor(t.sam / t.breakevenHigh) : 0; // viven cómodos
+      const vSurvive = t.breakevenLow > 0 ? Math.floor(t.sam / t.breakevenLow) : 0;    // apenas sobreviven
+      let v: string;
+      if (t.supply === 0) v = 'zero';
+      else if (t.supply > vSurvive) v = 'over';
+      else if (t.supply > vComfort) v = 'tight';
+      else v = 'room';
+      espejoByKey[t.key] = { k: t.key, label: t.label, emoji: hd?.emoji || '🏪', supply: t.supply, vComfort, vSurvive, demand: hd?.demand || 0, verdict: v };
+    }
+    for (const h of heatWithDemand) { // append vacíos con demanda real
+      if (!espejoByKey[h.key] && h.supply === 0 && h.demand > 0) {
+        espejoByKey[h.key] = { k: h.key, label: h.label, emoji: h.emoji || '🔥', supply: 0, vComfort: 0, vSurvive: 0, demand: h.demand, verdict: 'zero' };
+      }
+    }
+    const espejoData = Object.values(espejoByKey).sort((a: any, b: any) => {
+      const order: Record<string, number> = { over: 0, tight: 1, room: 2, zero: 3 };
+      return (order[a.verdict] - order[b.verdict]) || (b.supply - a.supply);
+    });
+    const espejoJson = JSON.stringify(espejoData).replace(/</g, '\\u003c');
+    const espejoOptions = espejoData.map((d: any) => {
+      const hint = d.verdict === 'zero' ? `0 — nadie lo resuelve` : `${d.supply} abierto${d.supply === 1 ? '' : 's'}`;
+      return `<option value="${esc(d.k)}">${d.emoji} ${esc(d.label)} (${hint})</option>`;
+    }).join('');
+
     const generatedAt = new Date().toLocaleString('es-PR', { timeZone: 'America/Puerto_Rico' });
 
     // ── Single source of truth: every count on this page comes from the live
@@ -3431,10 +3460,86 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
     <p style="font-size:16px;color:#134e4a;line-height:1.6;margin:0 0 10px 0;">En Cabo Rojo hay <strong>${fmt(total)} negocios en el directorio · ${fmt(openCount)} abiertos hoy · ${fmt(closedCount)} cerrados · ${fmt(unknownCount)} dudosos</strong>. Para ${fmt(residents)} personas. Usamos los <strong>${fmt(openCount)} abiertos</strong> para calcular densidad porque los cerrados ya no compiten. Más negocios de los que el pueblo solo puede sostener. <strong>Sobran de unas cosas</strong> (food trucks, boutiques, restaurantes, donde entrar es barato y rápido), <strong>faltan de otras</strong> (plomero, electricista, cardiólogo, donde entrar requiere licencia, años de estudio o capital alto). El por qué de cada uno está abajo. Si tú o alguien tuyo está pensando en abrir negocio, busca tu categoría en la tabla y léela antes de firmar nada.</p>
   </div>
 
+  <!-- SECTION 1.55b: TU VEREDICTO — capa de decisión (no leas todo, dime quién eres) -->
+  <div class="card" style="background:#0f172a;color:#fff;padding:26px 24px;border:none;">
+    <div style="text-align:center;max-width:680px;margin:0 auto 20px;">
+      <div style="font-size:11px;color:#5eead4;letter-spacing:0.14em;text-transform:uppercase;font-weight:800;margin-bottom:8px;">🪞 No leas toda la página</div>
+      <div style="font-size:clamp(20px,4.5vw,26px);font-weight:800;line-height:1.25;">Dime quién eres y te digo qué hacer.<br><span style="color:#94a3b8;font-size:15px;font-weight:500;">Los números completos están abajo. Esto es la conclusión.</span></div>
+    </div>
+
+    <!-- EL ESPEJO -->
+    <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(94,234,212,0.25);border-radius:14px;padding:20px;max-width:680px;margin:0 auto;">
+      <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:4px;">Vas a abrir un negocio (o ya tienes uno)</div>
+      <div style="font-size:13px;color:#94a3b8;margin-bottom:14px;">Escoge la categoría. Te enseño tu apuesta en números — sin adornos.</div>
+      <select id="espejo-sel" style="width:100%;padding:13px 14px;border-radius:10px;border:1px solid #334155;background:#1e293b;color:#fff;font-size:15px;font-weight:600;outline:none;">
+        <option value="">— Escoge tu categoría —</option>
+        ${espejoOptions}
+      </select>
+      <div id="espejo-out" style="margin-top:16px;min-height:20px;"></div>
+    </div>
+
+    <!-- 2 PUERTAS MÁS -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;max-width:680px;margin:18px auto 0;">
+      <a href="#dinero-federal" style="display:block;text-decoration:none;background:rgba(220,38,38,0.12);border:1px solid rgba(248,113,113,0.3);border-radius:12px;padding:16px 18px;color:#fff;">
+        <div style="font-size:13px;font-weight:800;color:#fca5a5;margin-bottom:6px;">🏛️ Decides por el pueblo</div>
+        <div style="font-size:14px;line-height:1.5;color:#e2e8f0;">$5.9M federales <b>trancados</b> + $13.8M obligados desde 2020. El dinero ya es de Cabo Rojo. Falta moverlo. <span style="color:#fca5a5;font-weight:700;">Ver el récord →</span></div>
+      </a>
+      <a href="#compartir" style="display:block;text-decoration:none;background:rgba(13,148,136,0.12);border:1px solid rgba(45,212,191,0.3);border-radius:12px;padding:16px 18px;color:#fff;">
+        <div style="font-size:13px;font-weight:800;color:#5eead4;margin-bottom:6px;">🏡 Eres vecino o estás afuera</div>
+        <div style="font-size:14px;line-height:1.5;color:#e2e8f0;">Este pueblo no se entiende solo. Si alguien en tu mesa va a abrir negocio, mándale esto antes de que firme. <span style="color:#5eead4;font-weight:700;">Compartir →</span></div>
+      </a>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    var DATA = ${espejoJson};
+    var byKey = {}; DATA.forEach(function(d){ byKey[d.k] = d; });
+    var sel = document.getElementById('espejo-sel');
+    var out = document.getElementById('espejo-out');
+    if(!sel || !out) return;
+    function f(n){ return Number(n).toLocaleString('es-PR'); }
+    function box(border, html){ return '<div style="background:#1e293b;border-left:4px solid '+border+';border-radius:10px;padding:16px 18px;">'+html+'</div>'; }
+    function render(k){
+      var d = byKey[k];
+      if(!d){ out.innerHTML=''; return; }
+      var lbl = d.label.toLowerCase();
+      var wa = 'https://wa.me/17874177711?text='+encodeURIComponent(d.label);
+      var big='', p='', cta='', color='';
+      if(d.verdict==='zero'){
+        color='#16a34a';
+        big='Nadie lo resuelve — y '+f(d.demand)+' vecinos lo buscaron.';
+        p='Hay <b>0</b> '+lbl+' en el directorio. Esto no es un mercado lleno: es uno <b>vacío con gente esperando</b>. Si lo abres bien, empiezas sin competencia.';
+        cta='<a href="'+wa+'" target="_blank" rel="noopener" style="display:inline-block;margin-top:12px;background:#16a34a;color:#fff;padding:11px 18px;border-radius:9px;font-weight:800;font-size:14px;text-decoration:none;">Dile a Angel que lo vas a resolver →</a>';
+      } else if(d.verdict==='over'){
+        color='#dc2626';
+        var demas = d.supply - d.vSurvive;
+        big='Hay '+f(d.supply)+'. El mercado da para que vivan ~'+f(d.vSurvive)+'.';
+        p='<b>'+f(demas)+' están de más</b> — peleando por las mismas sobras. Si abres el #'+f(d.supply+1)+', tu plan es quitarle el cliente a uno que ya está parado. La pregunta no es "¿puedo?" — es <b>"¿qué hago yo que esos '+f(d.supply)+' no hacen?"</b>';
+        cta='<a href="#tabla-categorias" style="display:inline-block;margin-top:12px;background:#dc2626;color:#fff;padding:11px 18px;border-radius:9px;font-weight:800;font-size:14px;text-decoration:none;">Ver el detalle antes de firmar →</a>';
+      } else if(d.verdict==='tight'){
+        color='#f59e0b';
+        big='Hay '+f(d.supply)+'. El mercado está justo (~'+f(d.vComfort)+'–'+f(d.vSurvive)+').';
+        p='No está lleno, pero tampoco sobra espacio. <b>Cabe uno más solo si llega distinto</b>, no si llega igual a los que ya están.';
+        cta='<a href="#tabla-categorias" style="display:inline-block;margin-top:12px;background:#f59e0b;color:#0f172a;padding:11px 18px;border-radius:9px;font-weight:800;font-size:14px;text-decoration:none;">Ver el detalle →</a>';
+      } else {
+        color='#0d9488';
+        big='Hay '+f(d.supply)+'. El mercado aguanta ~'+f(d.vComfort)+' cómodos — todavía cabe.';
+        p='Hay espacio real aquí. Pero ojo: <b>gana el que resuelve mejor, no el que llega de último</b>. El espacio no te salva si el servicio es igual al de todos.';
+        cta='<a href="#tabla-categorias" style="display:inline-block;margin-top:12px;background:#0d9488;color:#fff;padding:11px 18px;border-radius:9px;font-weight:800;font-size:14px;text-decoration:none;">Ver el detalle →</a>';
+      }
+      out.innerHTML = box(color,
+        '<div style="font-size:17px;font-weight:800;color:#fff;line-height:1.3;margin-bottom:8px;">'+big+'</div>'+
+        '<div style="font-size:14px;color:#cbd5e1;line-height:1.6;">'+p+'</div>'+cta);
+    }
+    sel.addEventListener('change', function(){ render(sel.value); });
+  })();
+  </script>
+
   ${oppBanner}
 
   <!-- SECTION 1.56: EL DINERO FEDERAL DORMIDO (link a /observatorio) -->
-  <a href="/observatorio" class="card" style="display:block;text-decoration:none;color:inherit;background:#fff;border-left:4px solid #dc2626;padding:22px 26px;">
+  <a id="dinero-federal" href="/observatorio" class="card" style="display:block;text-decoration:none;color:inherit;background:#fff;border-left:4px solid #dc2626;padding:22px 26px;">
     <div style="font-size:11px;color:#dc2626;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:8px;">💰 El dinero federal dormido</div>
     <div style="font-size:clamp(24px,5vw,34px);font-weight:900;color:#1e293b;line-height:1.1;">~$5.9M en fondos federales <span style="color:#dc2626;">obligados a Cabo Rojo y sin moverse.</span></div>
     <div style="font-size:14px;color:#475569;margin-top:10px;line-height:1.55;">$5.2M de FEMA para el Coliseo Rebekah Colberg (límite 20 sept 2026) + ~$735K para Isla Ratones (devueltos). Y eso es solo lo trancado: desde 2020, Cabo Rojo tiene <strong>$13.8M en grants federales</strong> obligados a su nombre — $3.94M de USDA pa' aguas usadas tras los huracanes, ~$6M en bloques CDBG de Vivienda, $1.2M pa' restaurar Las Salinas de Cabo Rojo. El problema casi nunca es que no haya dinero: está obligado y sentado. Cada activo cerrado es un motor económico apagado.</div>
@@ -4065,7 +4170,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
   </details>
 
   <!-- SECTION 8.5: COMPARTE CTA (residente-facing close) -->
-  <div class="card" style="background:#ecfdf5;border-left:4px solid #0d9488;text-align:center;">
+  <div id="compartir" class="card" style="background:#ecfdf5;border-left:4px solid #0d9488;text-align:center;scroll-margin-top:20px;">
     <div style="font-size:32px;margin-bottom:8px;">🤝</div>
     <div style="font-size:18px;font-weight:800;color:#134e4a;margin-bottom:6px;line-height:1.35;">Si alguien en tu mesa está pensando abrir negocio — mándale esta página.</div>
     <div style="font-size:13px;color:#0f766e;line-height:1.5;margin-bottom:16px;">Es la única regla: que no abra a ciegas. Léela una vez. Compártela una vez. Y vuelve cuando alguien diga "voy a abrir X."</div>
