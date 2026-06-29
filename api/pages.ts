@@ -32,6 +32,31 @@ export const CABO_ROJO_BASELINE = {
   // PR-wide comparison pending BLS QCEW integration (Phase 2). NO claim "50% más denso que PR" sin esa data.
 } as const;
 
+/**
+ * Verified federal-data layer — pulled from official APIs (no estimate).
+ * Verified 2026-06-29.
+ *
+ * QCEW: BLS Quarterly Census of Employment & Wages, annual 2023 averages,
+ *   all ownership + all industries (agglvl 70 county / 50 state). Counts
+ *   employer establishments with payroll under UI coverage — it UNDERCOUNTS
+ *   sole-proprietors / the informal economy, which is exactly the gap our
+ *   live directory captures. This is the source the page promised ("pendiente BLS QCEW").
+ *   Source: https://data.bls.gov/cew/data/api/2023/a/area/<fips>.csv (72023 = Cabo Rojo, 72000 = PR)
+ *
+ * USASpending: federal GRANTS (award types 02-05), place-of-performance
+ *   Cabo Rojo (FIPS 72-023), FY2020-2026 — 20 awards. Source: api.usaspending.gov.
+ *
+ * Population: ACS 2024 1-year (PR = 3,203,295; CR = 47,158 ACS 5-yr per baseline above).
+ */
+export const VERIFIED_FEDERAL_DATA = {
+  qcew_estabs_cr_2023: 687,
+  qcew_estabs_pr_2023: 53_356,
+  pop_pr: 3_203_295,
+  usaspending_grants_cr_total: 13_785_467,
+  source_qcew: 'BLS QCEW · promedio anual 2023',
+  source_usaspending: 'USASpending.gov · grants FY2020-26 · lugar de ejecución Cabo Rojo',
+} as const;
+
 export type AudienceCalc = {
   residents?: number;     // multiplier on residents (1.0 = all)
   regional?: number;      // multiplier on regional_pull
@@ -3094,6 +3119,9 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
     const freshnessPct = c.freshness_pct != null ? String(c.freshness_pct) : '0';
     const residents = CABO_ROJO_BASELINE.residents;
     const perCapita = openCount > 0 ? Math.round(residents / openCount) : 0; // personas por 1 negocio abierto
+    // Verified PR-wide density (official BLS QCEW 2023 — employer establishments only).
+    const crDensityQcew = Math.round(residents / VERIFIED_FEDERAL_DATA.qcew_estabs_cr_2023);   // 1 per 69
+    const prDensityQcew = Math.round(VERIFIED_FEDERAL_DATA.pop_pr / VERIFIED_FEDERAL_DATA.qcew_estabs_pr_2023); // 1 per 60
     // Sourced regional density (our own verified directory, May 2026) — replaces the
     // unsourced "1 cada 90 / casi el doble que PR" claim that was retired in the baseline comment.
     const regionalDensity = [
@@ -3409,7 +3437,8 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
   <a href="/observatorio" class="card" style="display:block;text-decoration:none;color:inherit;background:#fff;border-left:4px solid #dc2626;padding:22px 26px;">
     <div style="font-size:11px;color:#dc2626;letter-spacing:0.12em;text-transform:uppercase;font-weight:700;margin-bottom:8px;">💰 El dinero federal dormido</div>
     <div style="font-size:clamp(24px,5vw,34px);font-weight:900;color:#1e293b;line-height:1.1;">~$5.9M en fondos federales <span style="color:#dc2626;">obligados a Cabo Rojo y sin moverse.</span></div>
-    <div style="font-size:14px;color:#475569;margin-top:10px;line-height:1.55;">$5.2M de FEMA para el Coliseo Rebekah Colberg (límite 20 sept 2026) + ~$735K para Isla Ratones (devueltos). El problema casi nunca es que no haya dinero: está obligado y sentado. Cada activo cerrado es un motor económico apagado.</div>
+    <div style="font-size:14px;color:#475569;margin-top:10px;line-height:1.55;">$5.2M de FEMA para el Coliseo Rebekah Colberg (límite 20 sept 2026) + ~$735K para Isla Ratones (devueltos). Y eso es solo lo trancado: desde 2020, Cabo Rojo tiene <strong>$13.8M en grants federales</strong> obligados a su nombre — $3.94M de USDA pa' aguas usadas tras los huracanes, ~$6M en bloques CDBG de Vivienda, $1.2M pa' restaurar Las Salinas de Cabo Rojo. El problema casi nunca es que no haya dinero: está obligado y sentado. Cada activo cerrado es un motor económico apagado.</div>
+    <div style="font-size:11px;color:#94a3b8;margin-top:8px;font-style:italic;">Fuente: <a href="https://www.usaspending.gov/search/?hash=&filters=%7B%22place_of_performance_locations%22%3A%5B%7B%22country%22%3A%22USA%22%2C%22state%22%3A%22PR%22%2C%22county%22%3A%22023%22%7D%5D%7D" target="_blank" rel="noopener" style="color:#94a3b8;text-decoration:underline;">USASpending.gov</a> — 20 grants federales, lugar de ejecución Cabo Rojo, FY2020-26. Verificado 29 jun 2026.</div>
     <div style="margin-top:12px;color:#0d9488;font-size:13px;font-weight:700;">Ver el récord completo en el Observatorio →</div>
   </a>
 
@@ -4029,7 +4058,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
       <li><strong>Si los dueños actuales están ganando.</strong> Pueden estar sobreoferta y RICOS (turistas pagan premium) o sobreoferta y QUEBRANDO. La movida es diferente.</li>
       <li><strong>El rol real de las cadenas.</strong> Walgreens, McDonald's, Subway — no los trackeamos. La próxima versión los separa.</li>
       <li><strong>Bodas / eventos.</strong> 10 búsquedas en 90 días, 0 negocios en el directorio. Hay docenas de wedding planners en FB sin licencia. Categoría 100% invisible al stack.</li>
-      <li><strong>Comparativa con el resto de PR.</strong> El claim original "50% más denso que PR" venía de un estimate sin fuente verificable — lo quitamos. Para comparación real necesitamos data oficial del gobierno (próxima versión). Lo que SÍ podemos decir: CR está en el promedio denso del oeste (Hormigueros 1/47 · CR 1/50 · San Germán 1/50 · Mayagüez 1/87).</li>
+      <li><strong>Comparativa con el resto de PR.</strong> Ya la tenemos, con data oficial del gobierno: según <a href="https://www.bls.gov/cew/" target="_blank" rel="noopener" style="color:#0d9488;font-weight:600;">BLS QCEW 2023</a> (negocios con empleados en nómina), Puerto Rico tiene ${fmt(VERIFIED_FEDERAL_DATA.qcew_estabs_pr_2023)} establecimientos = 1 por cada ${prDensityQcew} personas, y Cabo Rojo tiene ${fmt(VERIFIED_FEDERAL_DATA.qcew_estabs_cr_2023)} = 1 por cada ${crDensityQcew}. Por esa medida oficial, CR está cerca del promedio de PR (ligeramente menos denso). PERO QCEW solo cuenta empleadores con nómina — no cuenta al dueño-operador (el colmado, el food truck, el salón, el plomero solo), que es donde Cabo Rojo se concentra. Nuestro directorio sí los cuenta: por eso vemos ~1 por cada ${perCapita}. Esa diferencia (${fmt(VERIFIED_FEDERAL_DATA.qcew_estabs_cr_2023)} oficiales vs ${fmt(openCount)} en el directorio) ES la economía cuenta-propia de Cabo Rojo. Lo que falta calibrar: la densidad PR categoría por categoría (Phase 2, con QCEW por industria).</li>
       <li><strong>Visitantes reales.</strong> Los 250,000 visitantes/año son estimate de PRTC turismo — no hay contador físico en Boquerón / Joyuda / Combate. La próxima versión los instala. Mientras tanto, todo cálculo turístico (restaurante, hospedaje, food truck) tiene esta limitación.</li>
       <li><strong>Gasto por persona.</strong> El "Dinero total / año" se calcula con benchmarks de industria nacional — NO son específicos de PR. La realidad de Cabo Rojo puede ser 10-30% más baja por mediana de ingreso más baja ($26K vs US avg $75K).</li>
     </ol>
@@ -4071,7 +4100,8 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
       <strong>Per-cápita spend:</strong> <a href="https://www.bls.gov/cex/tables.htm" target="_blank" rel="noopener" style="color:#0d9488;">BLS CES</a>, <a href="https://restaurant.org/research-and-media/research/economic-impact/" target="_blank" rel="noopener" style="color:#0d9488;">NRA</a>, <a href="https://www.convenience.org/Research" target="_blank" rel="noopener" style="color:#0d9488;">NACS</a>, <a href="https://www.ncpdp.org/" target="_blank" rel="noopener" style="color:#0d9488;">NCPDP</a>, <a href="https://www.ihrsa.org/" target="_blank" rel="noopener" style="color:#0d9488;">IHRSA</a>, <a href="https://www.ada.org/resources/research" target="_blank" rel="noopener" style="color:#0d9488;">ADA</a>, <a href="https://www.cms.gov/" target="_blank" rel="noopener" style="color:#0d9488;">CMS</a>, <a href="https://www.probeauty.org/" target="_blank" rel="noopener" style="color:#0d9488;">PBA</a> — industry benchmarks. ·
       <strong>Supply:</strong> <a href="https://mapadecaborojo.com" target="_blank" rel="noopener" style="color:#0d9488;">Live directorio MapaDeCaboRojo.com</a>. ·
       <strong>Demand:</strong> Live bot *7711 search logs (90 días). ·
-      <strong>Densidad PR para comparar:</strong> estimate vía <a href="https://www.bls.gov/cew/" target="_blank" rel="noopener" style="color:#0d9488;">data oficial del gobierno</a> (próxima versión la calibra).
+      <strong>Densidad PR para comparar:</strong> <a href="https://www.bls.gov/cew/" target="_blank" rel="noopener" style="color:#0d9488;">BLS QCEW 2023</a> — PR ${fmt(VERIFIED_FEDERAL_DATA.qcew_estabs_pr_2023)} establecimientos, Cabo Rojo ${fmt(VERIFIED_FEDERAL_DATA.qcew_estabs_cr_2023)} (verificado 29 jun 2026). La calibración por categoría individual sigue pendiente Phase 2. ·
+      <strong>Fondos federales:</strong> <a href="https://www.usaspending.gov/" target="_blank" rel="noopener" style="color:#0d9488;">USASpending.gov</a> (grants FY2020-26, lugar de ejecución Cabo Rojo).
     </p>
     <p style="font-size:11px;color:#94a3b8;margin-top:12px;font-style:italic;">
       Reporte completo con SQL queries y skeptic challenges: <a href="https://github.com/AngelAnderson/MapaDeCaboRojo-v1.0/blob/main/Outbox/CaboRojo/Sobreoferta-CR-2026-05-06.md" target="_blank" rel="noopener" style="color:#0d9488;">Sobreoferta-CR-2026-05-06.md</a> (interno).
