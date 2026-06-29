@@ -5338,6 +5338,158 @@ async function handle_me_conviene(req: any, res: any) {
 }
 
 
+// ============ /sistema — La capa de verdad económica del pueblo (nivel 20) ============
+// No es una página que consultas. Es la primera grieta del sistema nervioso económico:
+// demanda real (*7711) × oferta verificada (directorio) = qué negocio necesita el pueblo.
+// Alimentada por el MISMO motor que /pueblo-en-numeros y /me-conviene (fetchBusinessVerdicts).
+async function handle_sistema(req: any, res: any) {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'private, no-store');
+  try {
+    const { data } = await fetchBusinessVerdicts();
+    const fmt = (n: number) => Number(n).toLocaleString('es-PR');
+
+    const gaps = data.filter(d => (d.verdict === 'zero' || d.verdict === 'room') && d.demand > 0)
+      .sort((a, b) => b.demand - a.demand).slice(0, 8);
+    const huecos = data.filter(d => d.verdict === 'zero' && d.demand > 0);
+    const oversupply = data.filter(d => d.verdict === 'over')
+      .sort((a, b) => (b.supply - b.vSurvive) - (a.supply - a.vSurvive)).slice(0, 5);
+    const totalDemand = data.reduce((s, d) => s + (d.demand || 0), 0);
+    const categoriesAnalyzed = data.length;
+    const generatedAt = new Date().toLocaleString('es-PR', { timeZone: 'America/Puerto_Rico' });
+
+    const gapCard = (d: BusinessVerdict) => {
+      const isHueco = d.verdict === 'zero';
+      const accent = isHueco ? '#5eead4' : '#fbbf24';
+      const tag = isHueco ? `0 lo resuelven` : `solo ${fmt(d.supply)} lo resuelve${d.supply === 1 ? '' : 'n'}`;
+      return `<a href="/me-conviene?screen=veredicto&cat=${encodeURIComponent(d.k)}&zona=no_se" style="display:block;text-decoration:none;background:rgba(255,255,255,0.04);border:1px solid rgba(94,234,212,0.18);border-left:3px solid ${accent};border-radius:12px;padding:18px 20px;margin-bottom:12px;">
+        <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;">
+          <span style="font-family:'SF Mono',Monaco,monospace;font-size:38px;font-weight:800;color:${accent};line-height:0.9;">${fmt(d.demand)}</span>
+          <div style="flex:1;min-width:180px;">
+            <div style="font-size:17px;font-weight:700;color:#fff;">${d.emoji} ${esc(d.label)}</div>
+            <div style="font-size:13px;color:#94a3b8;margin-top:2px;">vecinos lo buscaron en 90 días · <span style="color:${accent};">${tag}</span></div>
+          </div>
+        </div>
+        <div style="font-size:13px;color:#cbd5e1;margin-top:10px;line-height:1.5;">${isHueco ? 'Mercado vacío con gente esperando. El que entra bien empieza sin competencia.' : 'Hay demanda sin cubrir. Cabe el que resuelve mejor.'} <span style="color:${accent};font-weight:600;">Ver el camino pa' abrir →</span></div>
+      </a>`;
+    };
+
+    const html = `<!DOCTYPE html>
+<html lang="es-PR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El Sistema · La capa de verdad económica de Cabo Rojo</title>
+<meta name="description" content="Qué negocio necesita Cabo Rojo, en vivo. Demanda real del *7711 cruzada con oferta verificada a mano. La capa de inteligencia económica de un pueblo — replicable a cualquier municipio.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://mapadecaborojo.com/sistema">
+<meta property="og:title" content="El Sistema · La capa de verdad económica de Cabo Rojo">
+<meta property="og:description" content="Qué negocio necesita el pueblo, en vivo. Demanda real cruzada con oferta verificada.">
+<meta property="og:image" content="https://www.mapadecaborojo.com/api/og?theme=mapa&k=El+Sistema&t=La+capa+de+verdad+econ%C3%B3mica+de+Cabo+Rojo.&sub=Qu%C3%A9+negocio+necesita+el+pueblo%2C+en+vivo.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0e1a;color:#e2e8f0;-webkit-font-smoothing:antialiased;line-height:1.55}
+a{color:inherit}
+.wrap{max-width:760px;margin:0 auto;padding:0 18px}
+.kick{font-size:11px;letter-spacing:0.16em;text-transform:uppercase;font-weight:800;color:#5eead4}
+.sec{padding:30px 0;border-top:1px solid rgba(255,255,255,0.07)}
+.h2{font-size:24px;font-weight:800;letter-spacing:-0.4px;color:#fff;margin-bottom:6px;}
+</style>
+</head>
+<body>
+
+<div style="background:#0f172a;padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.07);">
+  <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;">
+    <a href="/" style="color:#5eead4;font-size:13px;font-weight:600;text-decoration:none;">← Mapa de Cabo Rojo</a>
+    <span style="font-size:11px;color:#475569;">En vivo · ${esc(generatedAt)}</span>
+  </div>
+</div>
+
+<!-- HERO -->
+<div style="padding:54px 0 38px;background:radial-gradient(120% 80% at 50% 0%, rgba(94,234,212,0.10), transparent 60%);">
+  <div class="wrap" style="text-align:center;">
+    <div class="kick" style="margin-bottom:14px;">⚡ El Sistema · Inteligencia económica del pueblo</div>
+    <h1 style="font-size:clamp(28px,6vw,44px);font-weight:900;letter-spacing:-1.2px;line-height:1.1;color:#fff;">La capa de verdad económica de Cabo Rojo.</h1>
+    <p style="font-size:18px;color:#cbd5e1;line-height:1.55;margin:16px auto 0;max-width:560px;">No es lo que un pueblo <em>cree</em> que necesita. Es lo que <strong style="color:#fff;">mide</strong> que necesita: lo que la gente busca de verdad, cruzado con lo que de verdad existe.</p>
+    <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-top:30px;">
+      <div><div style="font-family:'SF Mono',Monaco,monospace;font-size:34px;font-weight:800;color:#5eead4;">${fmt(huecos.length)}</div><div style="font-size:12px;color:#94a3b8;">negocios que el pueblo<br>busca y nadie resuelve</div></div>
+      <div><div style="font-family:'SF Mono',Monaco,monospace;font-size:34px;font-weight:800;color:#5eead4;">${fmt(totalDemand)}</div><div style="font-size:12px;color:#94a3b8;">señales de demanda<br>reales (90 días)</div></div>
+      <div><div style="font-family:'SF Mono',Monaco,monospace;font-size:34px;font-weight:800;color:#5eead4;">${fmt(categoriesAnalyzed)}</div><div style="font-size:12px;color:#94a3b8;">categorías<br>analizadas en vivo</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- LO QUE EL PUEBLO NECESITA (flip ofensivo) -->
+  <div class="sec" style="border-top:none;">
+    <div class="kick" style="color:#5eead4;">El flip</div>
+    <div class="h2">Lo que el pueblo necesita 🟢</div>
+    <p style="font-size:14px;color:#94a3b8;margin-bottom:20px;">Todo el mundo te dice de qué hay de más. Esto es lo contrario: el negocio que la gente está buscando <em>esta semana</em> y casi nadie resuelve. Demanda real del *7711. Si abres uno de estos bien, no compites — sirves.</div>
+    ${gaps.map(gapCard).join('')}
+    <p style="font-size:12px;color:#64748b;margin-top:8px;">Toca cualquiera y te lleva a tu apuesta en números (/me-conviene). El número grande = vecinos que lo buscaron en 90 días sin que nadie del directorio lo resolviera bien.</p>
+  </div>
+
+  <!-- LO QUE YA SOBRA (defensivo, breve) -->
+  ${oversupply.length ? `
+  <div class="sec">
+    <div class="kick" style="color:#f87171;">El otro lado</div>
+    <div class="h2">Lo que ya sobra 🔴</div>
+    <p style="font-size:14px;color:#94a3b8;margin-bottom:16px;">Donde abrir uno más es pelear por sobras. No es prohibido — es cuesta arriba.</p>
+    ${oversupply.map(d => `<div style="display:flex;justify-content:space-between;align-items:center;padding:11px 14px;background:rgba(248,113,113,0.06);border-radius:9px;margin-bottom:8px;font-size:14px;">
+      <span style="color:#fff;font-weight:600;">${d.emoji} ${esc(d.label)}</span>
+      <span style="color:#f87171;font-family:'SF Mono',Monaco,monospace;font-size:13px;">${fmt(d.supply)} hay · ~${fmt(d.vSurvive)} caben · ${fmt(Math.max(0, d.supply - d.vSurvive))} de más</span>
+    </div>`).join('')}
+    <p style="font-size:12px;color:#64748b;margin-top:8px;"><a href="/pueblo-en-numeros" style="color:#5eead4;">Ver las ${fmt(categoriesAnalyzed)} categorías completas → /pueblo-en-numeros</a></p>
+  </div>` : ''}
+
+  <!-- EL MOAT -->
+  <div class="sec">
+    <div class="kick">Por qué esto no existe en ningún otro sitio</div>
+    <div class="h2" style="margin-top:6px;">No es data. Es data que alguien verificó a mano.</div>
+    <p style="font-size:15px;color:#cbd5e1;line-height:1.65;margin-top:10px;">Google te da resultados. El censo te da promedios viejos. Esto es distinto: cada negocio se verificó uno por uno, la demanda sale de lo que la gente de verdad textea al *7711, y se corrige sola cada vez que alguien busca algo y no lo encuentra. Es la combinación que ningún mapa, ninguna AI y ninguna agencia tiene de un pueblo de 50,000: <strong style="color:#fff;">verificado, citable, mantenido humano-y-AI, y al día.</strong></p>
+  </div>
+
+  <!-- LA CAPA QUE VIENE (roadmap honesto, no data falsa) -->
+  <div class="sec">
+    <div class="kick" style="color:#fbbf24;">La capa que viene</div>
+    <div class="h2" style="margin-top:6px;">Esto es la primera grieta, no el final.</div>
+    <p style="font-size:14px;color:#94a3b8;margin:10px 0 16px;">Hoy te dice qué falta. Hacia dónde va:</p>
+    <div style="display:grid;gap:10px;">
+      <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px 16px;"><strong style="color:#fff;">Conectar la demanda con quien la resuelve.</strong> <span style="color:#94a3b8;font-size:14px;">132 buscan electricista → el licenciado entra al directorio y el *7711 le empieza a mandar los trabajos. El hueco se llena solo.</span></div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px 16px;"><strong style="color:#fff;">Ver la curva antes que pase.</strong> <span style="color:#94a3b8;font-size:14px;">No solo qué falta hoy — qué va a faltar en 6 meses según cómo se mueve el pueblo.</span></div>
+      <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:14px 16px;"><strong style="color:#fff;">Tu pueblo también tiene esta capa.</strong> <span style="color:#94a3b8;font-size:14px;">El método se replica. Cabo Rojo es el primero, no el único.</span></div>
+    </div>
+  </div>
+
+  <!-- B2B FOLD (la monetización nivel 20) -->
+  <div class="sec">
+    <div style="background:linear-gradient(135deg,#0d9488,#0f766e);border-radius:16px;padding:26px 24px;">
+      <div class="kick" style="color:#a7f3d0;">Para municipios, bancos y capital</div>
+      <div style="font-size:22px;font-weight:800;color:#fff;margin:8px 0 10px;line-height:1.25;">Esta es la capa de verdad económica de UN pueblo. Tu municipio puede tener la suya.</div>
+      <p style="font-size:15px;color:#d1fae5;line-height:1.6;margin-bottom:18px;">Antes de aprobar un préstamo, repartir un incentivo, o decidir dónde abrir — saber qué necesita de verdad cada barrio cambia la apuesta. Esto se construye en semanas, no años. El moat es la verificación humana sostenida, y ya está corriendo.</p>
+      <a href="https://wa.me/17874177711?text=${encodeURIComponent('Quiero hablar de la capa económica /sistema para mi municipio/banco/empresa')}" style="display:inline-block;background:#fff;color:#0f766e;padding:13px 24px;border-radius:10px;font-weight:800;font-size:15px;text-decoration:none;">Hablar con Angel →</a>
+    </div>
+  </div>
+
+  <!-- CTA ciudadano -->
+  <div class="sec" style="text-align:center;">
+    <p style="font-size:16px;color:#cbd5e1;margin-bottom:14px;">¿Tú o alguien tuyo va a abrir negocio?</p>
+    <a href="/me-conviene" style="display:inline-block;background:#5eead4;color:#0a0e1a;padding:13px 26px;border-radius:10px;font-weight:800;font-size:15px;text-decoration:none;">Mira tu apuesta en números →</a>
+    <p style="font-size:12px;color:#475569;margin-top:18px;">Demanda: bot *7711 (90 días). Oferta: directorio verificado a mano. Mismo motor que <a href="/pueblo-en-numeros" style="color:#5eead4;">/pueblo-en-numeros</a>. Cero estimate inventado.</p>
+  </div>
+
+</div>
+</body>
+</html>`;
+
+    res.status(200).send(html);
+  } catch (err: any) {
+    console.error('handle_sistema error:', err);
+    res.status(500).send(`<html><body style="font-family:sans-serif;padding:40px;"><h1>Error</h1><pre>${esc(err?.message || 'Unknown')}</pre></body></html>`);
+  }
+}
+
 // ============ cultura ============
 // Directorio cultural curado — companion mapa-native a caborojo.com/directorio-cultural
 // Lugares verificados manualmente. Mapa Leaflet interactivo + lista por sección.
@@ -5866,6 +6018,7 @@ export default async function handler(req: any, res: any) {
     case 'admin-lifecycle-queue': return handle_admin_lifecycle_queue(req, res);
     case 'pueblo-en-numeros': return handle_pueblo_en_numeros(req, res);
     case 'me-conviene': return handle_me_conviene(req, res);
+    case 'sistema': return handle_sistema(req, res);
     case 'cultura': return handle_cultura(req, res);
     default: return res.status(404).json({ error: 'Page not found' });
   }
