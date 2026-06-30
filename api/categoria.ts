@@ -159,6 +159,23 @@ const CATEGORY_MAP: Record<string, { match: string[]; display: string; emoji: st
   marina:         { match: ['marina', 'MARINA', 'naútico', 'nautico', 'boat'], display: 'Marina & Náutico', emoji: '⛵' },
   ropa:           { match: ['ropa', 'clothing', 'moda', 'fashion', 'zapatos', 'thrift_shop'], display: 'Tiendas de Ropa', emoji: '👗' },
   'tiendas-de-ropa': { match: ['ropa', 'clothing', 'moda', 'fashion', 'zapatos', 'thrift_shop'], display: 'Tiendas de Ropa', emoji: '👗' },
+  // ── Demanda real del bot *7711, verificada en places 2026-06-29 (helados 31 búsq, mariscos 30, lavandería 20, pizza 17, bakery 27) ──
+  helados:        { match: ['helado', 'helados', 'ice cream', 'mantecado', 'heladería', 'heladeria', 'gelato'], display: 'Heladerías', emoji: '🍦', nameMatch: true },
+  heladeria:      { match: ['helado', 'helados', 'ice cream', 'mantecado', 'heladería', 'heladeria', 'gelato'], display: 'Heladerías', emoji: '🍦', nameMatch: true },
+  panaderia:      { match: ['panadería', 'panaderia', 'bakery', 'repostería', 'reposteria', 'bizcocho', 'pastelería', 'pasteleria'], display: 'Panaderías y Reposterías', emoji: '🥖', nameMatch: true },
+  reposteria:     { match: ['panadería', 'panaderia', 'bakery', 'repostería', 'reposteria', 'bizcocho', 'pastelería', 'pasteleria'], display: 'Panaderías y Reposterías', emoji: '🥖', nameMatch: true },
+  pizza:          { match: ['pizza', 'pizzería', 'pizzeria'], display: 'Pizzerías', emoji: '🍕', nameMatch: true },
+  pizzeria:       { match: ['pizza', 'pizzería', 'pizzeria'], display: 'Pizzerías', emoji: '🍕', nameMatch: true },
+  mariscos:       { match: ['marisco', 'mariscos', 'seafood', 'pescadería', 'pescaderia'], display: 'Restaurantes de Mariscos', emoji: '🦞', nameMatch: true },
+  seafood:        { match: ['marisco', 'mariscos', 'seafood', 'pescadería', 'pescaderia'], display: 'Restaurantes de Mariscos', emoji: '🦞', nameMatch: true },
+  lavanderia:     { match: ['lavandería', 'lavanderia', 'laundromat', 'laundry', 'lavamática', 'lavamatica'], display: 'Lavanderías', emoji: '🧺', nameMatch: true },
+  lavanderias:    { match: ['lavandería', 'lavanderia', 'laundromat', 'laundry', 'lavamática', 'lavamatica'], display: 'Lavanderías', emoji: '🧺', nameMatch: true },
+  cafe:           { match: ['café', 'cafetería', 'cafeteria', 'coffee', 'brunch', 'coffee shop'], display: 'Cafés y Brunch', emoji: '☕', nameMatch: true },
+  brunch:         { match: ['café', 'cafetería', 'cafeteria', 'coffee', 'brunch', 'coffee shop'], display: 'Cafés y Brunch', emoji: '☕', nameMatch: true },
+  barberia:       { match: ['barbería', 'barberia', 'barber', 'barbershop'], display: 'Barberías', emoji: '💈', nameMatch: true },
+  peluqueria:     { match: ['peluquería', 'peluqueria', 'salón de belleza', 'salon de belleza', 'estilista', 'hair salon'], display: 'Peluquerías y Salones', emoji: '💇', nameMatch: true },
+  imprenta:       { match: ['imprenta', 'printing', 'print shop', 'letrero', 'letreros', 'banner', 'rótulo', 'rotulo', 'serigrafía', 'serigrafia', 'flyer'], display: 'Imprentas y Rotulación', emoji: '🖨️', nameMatch: true },
+  imprentas:      { match: ['imprenta', 'printing', 'print shop', 'letrero', 'letreros', 'banner', 'rótulo', 'rotulo', 'serigrafía', 'serigrafia', 'flyer'], display: 'Imprentas y Rotulación', emoji: '🖨️', nameMatch: true },
 };
 
 export default async function handler(req: any, res: any) {
@@ -358,6 +375,52 @@ export default async function handler(req: any, res: any) {
       title: 'Instaladores de Placas Solares en Cabo Rojo',
       description: `Instaladores de placas solares en Cabo Rojo, PR — baja tu factura de LUMA, baterías, financiamiento. ${filtered.length} instaladores que sirven Cabo Rojo, con teléfono y rating.`,
       intro: `Con la luz subiendo cada año, las placas solares dejaron de ser lujo. Aquí tienes ${filtered.length} opciones de instaladores de placas solares que sirven Cabo Rojo, con teléfono y rating real — pa' que compares antes de firmar nada. Si quieres orientación primero, pregúntale a El Veci.`,
+    },
+    // ── Demanda real del bot *7711 (2026-06) — comida + utilidad ──
+    helados: {
+      title: 'Heladerías en Cabo Rojo, dónde comer helados y mantecado',
+      description: `${filtered.length} heladerías y sitios de mantecado en Cabo Rojo, PR, con dirección, horario y rating real. Mira cuál está abierto antes de salir con el calor.`,
+      intro: `Con el calor de Cabo Rojo, un helado no se discute. Aquí tienes ${filtered.length} heladerías y sitios de mantecado verificados, con su pueblo, horario y rating real, pa' que no llegues y esté cerrado. ¿Buscas algo cerca ahora mismo? Escríbele HELADOS a El Veci al 787-417-7711.`,
+    },
+    panaderia: {
+      title: 'Panaderías y Reposterías en Cabo Rojo',
+      description: `${filtered.length} panaderías y reposterías en Cabo Rojo, PR. Pan caliente, bizcochos y repostería por encargo, con teléfono y horario.`,
+      intro: `El pan de la mañana y el bizcocho del cumpleaños salen de aquí. ${filtered.length} panaderías y reposterías de Cabo Rojo verificadas, con teléfono pa' encargar y horario pa' que no llegues tarde. ¿Necesitas un bizcocho pa' este finde? Escríbele PANADERIA a El Veci al 787-417-7711.`,
+    },
+    pizza: {
+      title: 'Pizzerías en Cabo Rojo, dónde comer pizza',
+      description: `${filtered.length} pizzerías en Cabo Rojo, PR, con teléfono, horario y rating real. Mira cuál entrega y cuál está abierta esta noche.`,
+      intro: `Pizza un viernes en la noche es plan seguro. Aquí tienes ${filtered.length} pizzerías de Cabo Rojo con su teléfono, horario y rating real, pa' que llames antes y no des la vuelta en balde. ¿Cuál entrega cerca de ti? Escríbele PIZZA a El Veci al 787-417-7711.`,
+    },
+    mariscos: {
+      title: 'Restaurantes de Mariscos en Cabo Rojo, de Joyuda a Boquerón',
+      description: `${filtered.length} restaurantes de mariscos y pescado fresco en Cabo Rojo, PR, con dirección, horario y rating. Joyuda, Boquerón y El Combate.`,
+      intro: `Cabo Rojo es mariscos: Joyuda, Boquerón, El Combate. Aquí tienes ${filtered.length} restaurantes de mariscos verificados, con su zona, horario y rating real, pa' que escojas con calma y no por el primer letrero. ¿Cuál tiene vista al mar y está abierto? Escríbele MARISCOS a El Veci al 787-417-7711.`,
+    },
+    lavanderia: {
+      title: 'Lavanderías en Cabo Rojo, laundromats abiertos',
+      description: `${filtered.length} lavanderías y laundromats en Cabo Rojo, PR, con dirección y horario. La utilidad que nadie te dice dónde queda, aquí sí.`,
+      intro: `Buscar una lavandería en un pueblo nuevo es un dolor de cabeza, y Google casi nunca lo resuelve. Aquí tienes ${filtered.length} lavanderías y laundromats de Cabo Rojo con su dirección y horario, verificados. ¿La más cerca de ti? Escríbele LAVANDERIA a El Veci al 787-417-7711.`,
+    },
+    cafe: {
+      title: 'Cafés y Brunch en Cabo Rojo',
+      description: `${filtered.length} cafés y sitios de brunch en Cabo Rojo, PR, con horario y rating real. Café de la mañana, desayuno tarde y buen ambiente.`,
+      intro: `Un buen café o un brunch sin prisa cambian el día. Aquí tienes ${filtered.length} cafés y sitios de brunch de Cabo Rojo verificados, con horario y rating real. ¿Cuál abre temprano cerca de ti? Escríbele CAFE a El Veci al 787-417-7711.`,
+    },
+    barberia: {
+      title: 'Barberías en Cabo Rojo',
+      description: `${filtered.length} barberías en Cabo Rojo, PR, con teléfono, horario y rating real. Mira cuál coge walk-in y cuál es por cita.`,
+      intro: `Un buen corte no se improvisa. Aquí tienes ${filtered.length} barberías de Cabo Rojo con su teléfono, horario y rating real, pa' que sepas cuál coge walk-in y cuál es por cita. ¿La más cerca? Escríbele BARBERIA a El Veci al 787-417-7711.`,
+    },
+    peluqueria: {
+      title: 'Peluquerías y Salones de Belleza en Cabo Rojo',
+      description: `${filtered.length} peluquerías y salones en Cabo Rojo, PR, con teléfono y horario. Corte, color, uñas y más, con rating real.`,
+      intro: `Aquí tienes ${filtered.length} peluquerías y salones de Cabo Rojo verificados, con teléfono pa' coger cita y rating real. ¿Cuál te queda cerca y tiene buena reseña? Escríbele PELUQUERIA a El Veci al 787-417-7711.`,
+    },
+    imprenta: {
+      title: 'Imprentas y Rotulación en Cabo Rojo, flyers, banners y letreros',
+      description: `${filtered.length} imprentas y servicios de rotulación que sirven Cabo Rojo: flyers, banners, stickers, tazas, camisas y letreros, con teléfono.`,
+      intro: `Cuando necesitas flyers pa'l negocio, un banner pa'l evento o stickers, esto es lo que hay. ${filtered.length} imprentas y servicios de rotulación que sirven Cabo Rojo, con su teléfono. ¿Cuál te hace el trabajo rápido? Escríbele IMPRENTA a El Veci al 787-417-7711.`,
     },
   };
   const catSeo = CATEGORY_SEO[cat];

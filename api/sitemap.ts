@@ -179,7 +179,7 @@ export default async function handler(req: any, res: any) {
     });
 
     // Category pages
-    const categories = ['restaurantes', 'playas', 'salud', 'farmacia', 'dentista', 'veterinario', 'medico', 'hospital', 'laboratorio', 'optica', 'salud-mental', 'quiropractico', 'gimnasio', 'fisiatra', 'hospedaje', 'servicios', 'compras', 'entretenimiento', 'turismo', 'deportes', 'belleza', 'automotriz', 'marina', 'educacion', 'gobierno'];
+    const categories = ['restaurantes', 'playas', 'salud', 'farmacia', 'dentista', 'veterinario', 'medico', 'hospital', 'laboratorio', 'optica', 'salud-mental', 'quiropractico', 'gimnasio', 'fisiatra', 'hospedaje', 'servicios', 'compras', 'entretenimiento', 'turismo', 'deportes', 'belleza', 'automotriz', 'marina', 'educacion', 'gobierno', 'helados', 'panaderia', 'pizza', 'mariscos', 'lavanderia', 'cafe', 'barberia', 'peluqueria', 'imprenta'];
     categories.forEach((cat) => {
       urls.push(`
         <url>
