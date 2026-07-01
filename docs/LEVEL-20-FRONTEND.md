@@ -39,3 +39,18 @@ like Cabo Rojo itself: the salt flats (Las Salinas), El Faro, the coral cliffs, 
 - Verify names/data against Supabase before displaying.
 - Deploy = Vercel preview first, verify live URL renders new build, watch 307s.
 - Never touch prod data destructively.
+
+## Follow-ups (flagged, not done)
+
+- **RLS-gated public data**: `people`, `admin_logs`, and the `get_search_trends`
+  RPC are admin-only in RLS, so anon reads 401'd on every load. Gated behind an
+  auth-session check in `services/supabase.ts` (checkDataVersion, getPeople,
+  getSearchTrends) to clean the console + drop wasted requests. Consequence:
+  `relatedPeople` and trending terms never render for public visitors. If that
+  content should be public, add anon SELECT policies / grant the RPC to anon and
+  drop the guards.
+- **`api/pages.ts`** (/sistema, /pueblo-en-numeros, /me-conviene): 8 hand-written
+  style blocks not yet given the Fraunces + Source Sans 3 + warm-canvas treatment.
+  Apply the same head snippet used in mapa-pages.ts / categoria.ts.
+- **Bundle size**: main chunk ~726KB (212KB gz). Consider manualChunks (leaflet,
+  supabase) if load time regresses.
