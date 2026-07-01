@@ -3254,6 +3254,30 @@ async function handleRegistroLead(req: any, res: any) {
           }),
         })
       } catch { /* email best-effort */ }
+      // Welcome email to the lead — deliver the report to their inbox (closes the loop).
+      try {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: 'Registro Médico PR <newsletter@mapadecaborojo.com>', to: email, reply_to: REPLY_TO,
+            subject: 'Aquí está tu reporte del acceso médico en Puerto Rico',
+            html: `<div style="font-family:-apple-system,'Segoe UI',sans-serif;max-width:560px;margin:0 auto;color:#0f172a;font-size:16px;line-height:1.6;">
+  <p>Hola,</p>
+  <p>Gracias por pedir el reporte. Aquí está, completo, con la data por región y la fuente de cada número.</p>
+  <p style="margin:26px 0;text-align:center;">
+    <a href="${REG_REPORT_URL}" style="background:#d97706;color:#ffffff;font-weight:700;text-decoration:none;padding:13px 26px;border-radius:999px;display:inline-block;">Baja el reporte (PDF)</a>
+  </p>
+  <p>Lo armé porque en Puerto Rico nadie te dice lo básico: dónde están de verdad los especialistas, y si cogen tu plan. Si estás cuidando a alguien de lejos, esto te ahorra vueltas.</p>
+  <p>De vez en cuando te escribo cuando hay algo que de verdad sirve, como cuando llega un especialista nuevo al pueblo de los tuyos. Nada de spam.</p>
+  <p>Si te sirve, aprovéchalo. Si no, aquí no pasa nada.</p>
+  <p style="margin-top:26px;">- Angel<br>
+  <span style="color:#64748b;font-size:14px;">Registro Médico PR · <a href="https://registromedicopr.com" style="color:#0f766e;">registromedicopr.com</a></span></p>
+  <p style="color:#94a3b8;font-size:12px;margin-top:20px;">Recibiste esto porque pediste el reporte en registromedicopr.com. Si no fuiste tú, ignóralo.</p>
+</div>`,
+          }),
+        })
+      } catch { /* welcome email best-effort */ }
     }
     res.status(200).send(JSON.stringify({ ok: true, url: REG_REPORT_URL }))
   } catch {
