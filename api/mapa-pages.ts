@@ -3231,6 +3231,20 @@ async function handleRegistroLead(req: any, res: any) {
     const b = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}')
     const email = String(b.email || '').slice(0, 160).trim().toLowerCase()
     if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { res.status(400).send(JSON.stringify({ ok: false })); return }
+    const ip = String(req.headers?.['x-forwarded-for'] || '').split(',')[0].trim().slice(0, 64) || 'unknown'
+    // Abuse controls: (1) email the report AT MOST ONCE per address (no mail-bombing a victim
+    // via repeat POSTs); (2) throttle new leads per IP (bounds enumeration + Resend quota /
+    // domain-reputation abuse). The on-page PDF link still works regardless — only the outbound
+    // email is gated. Not full double-opt-in (lead-magnet UX), but kills the abuse vectors.
+    const { data: existingLead } = await supabase.from('registro_leads').select('id').eq('email', email).maybeSingle()
+    const isNewLead = !existingLead
+    let ipThrottled = false
+    if (isNewLead) {
+      const sinceHour = new Date(Date.now() - 3600 * 1000).toISOString()
+      const { count: ipCount } = await supabase.from('registro_leads')
+        .select('id', { count: 'exact', head: true }).eq('ip', ip).gte('created_at', sinceHour)
+      ipThrottled = (ipCount ?? 0) >= 5
+    }
     // Upsert on email (unique index) — repeat downloads don't error, just refresh the row.
     await supabase.from('registro_leads').upsert({
       email,
@@ -3239,8 +3253,10 @@ async function handleRegistroLead(req: any, res: any) {
       lang: String(b.lang || 'es').slice(0, 5),
       wants_alerts: b.wants_alerts !== false,
       source: String(b.source || 'observatorio').slice(0, 40),
+      ip,
     }, { onConflict: 'email' })
-    if (RESEND_API_KEY) {
+    // Only email a genuinely new, non-throttled lead — kills repeat-send + mail-bomb abuse.
+    if (RESEND_API_KEY && isNewLead && !ipThrottled) {
       try {
         await fetch('https://api.resend.com/emails', {
           method: 'POST',
