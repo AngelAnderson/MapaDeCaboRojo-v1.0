@@ -3434,7 +3434,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
     "veredicto de sobreoferta"
   ]
 })}</script>
-<style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;color:#1e293b;-webkit-font-smoothing:antialiased;line-height:1.5}a{color:inherit}a:hover{opacity:0.85}h2{letter-spacing:-0.3px}.card{background:#fff;border-radius:14px;padding:28px;box-shadow:0 1px 3px rgba(0,0,0,0.06);margin-bottom:20px;}.kicker{font-size:12px;color:#0d9488;letter-spacing:0.1em;text-transform:uppercase;font-weight:700;margin-bottom:6px;}</style>
+<style>@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Source+Sans+3:wght@400;500;600;700&display=swap');*{box-sizing:border-box;margin:0;padding:0}body{font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#faf9f7;color:#1c1917;-webkit-font-smoothing:antialiased;line-height:1.5}a{color:inherit}a:hover{opacity:0.85}h1,h2,h3{font-family:'Fraunces',Georgia,serif}h2{letter-spacing:-0.3px}.card{background:#fff;border-radius:14px;padding:28px;box-shadow:0 1px 3px rgba(0,0,0,0.06);margin-bottom:20px;}.kicker{font-size:12px;color:#0d9488;letter-spacing:0.1em;text-transform:uppercase;font-weight:700;margin-bottom:6px;}</style>
 </head>
 <body>
 
@@ -4878,10 +4878,13 @@ function mc_pageShell(bodyHtml: string, title: string, description: string): str
 <meta property="og:description" content="${esc(description)}">
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="https://mapadecaborojo.com/me-conviene">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"¿Me Conviene? — Decisión de Negocio Cabo Rojo","description":"${esc(description)}","url":"https://mapadecaborojo.com/me-conviene","applicationCategory":"BusinessApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;color:#1e293b;-webkit-font-smoothing:antialiased;line-height:1.5}
+body{font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#faf9f7;color:#1c1917;-webkit-font-smoothing:antialiased;line-height:1.5}
+h1,h2,h3{font-family:'Fraunces',Georgia,serif}
 a{color:inherit;text-decoration:none}
 .btn{display:inline-block;padding:16px 24px;border-radius:12px;font-size:16px;font-weight:700;text-align:center;cursor:pointer;border:none;width:100%;margin-bottom:12px}
 .btn-primary{background:#0d9488;color:#fff}
@@ -5398,12 +5401,15 @@ async function handle_sistema(req: any, res: any) {
 <meta name="description" content="Qué negocio necesita Cabo Rojo, en vivo. Demanda real del *7711 cruzada con oferta verificada a mano. La capa de inteligencia económica de un pueblo — replicable a cualquier municipio.">
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="https://mapadecaborojo.com/sistema">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
 <meta property="og:title" content="El Sistema · La capa de verdad económica de Cabo Rojo">
 <meta property="og:description" content="Qué negocio necesita el pueblo, en vivo. Demanda real cruzada con oferta verificada.">
 <meta property="og:image" content="https://www.mapadecaborojo.com/api/og?theme=mapa&k=El+Sistema&t=La+capa+de+verdad+econ%C3%B3mica+de+Cabo+Rojo.&sub=Qu%C3%A9+negocio+necesita+el+pueblo%2C+en+vivo.">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0a0e1a;color:#e2e8f0;-webkit-font-smoothing:antialiased;line-height:1.55}
+body{font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#12100e;color:#f5f4f1;-webkit-font-smoothing:antialiased;line-height:1.55}
+h1,h2,h3{font-family:'Fraunces',Georgia,serif}
 a{color:inherit}
 .wrap{max-width:940px;margin:0 auto;padding:0 20px}
 .kick{font-size:11px;letter-spacing:0.16em;text-transform:uppercase;font-weight:800;color:#5eead4}
