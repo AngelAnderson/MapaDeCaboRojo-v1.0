@@ -3246,7 +3246,7 @@ async function handleRegistroLead(req: any, res: any) {
       ipThrottled = (ipCount ?? 0) >= 5
     }
     // Upsert on email (unique index) — repeat downloads don't error, just refresh the row.
-    await supabase.from('registro_leads').upsert({
+    const { error: upsertErr } = await supabase.from('registro_leads').upsert({
       email,
       name: String(b.name || '').slice(0, 120).trim() || null,
       region: String(b.region || '').slice(0, 40).trim() || null,
@@ -3255,8 +3255,8 @@ async function handleRegistroLead(req: any, res: any) {
       source: String(b.source || 'observatorio').slice(0, 40),
       ip,
     }, { onConflict: 'email' })
-    // Only email a genuinely new, non-throttled lead — kills repeat-send + mail-bomb abuse.
-    if (RESEND_API_KEY && isNewLead && !ipThrottled) {
+    // Only email a genuinely new, non-throttled lead that actually saved (no silent send-without-save).
+    if (RESEND_API_KEY && isNewLead && !ipThrottled && !upsertErr) {
       try {
         await fetch('https://api.resend.com/emails', {
           method: 'POST',
