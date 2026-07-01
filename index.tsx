@@ -8,6 +8,8 @@ import { LanguageProvider } from './i18n/LanguageContext';
 // Standalone owner-facing form. Lazy-loaded so it never enters the map bundle.
 // Shareable: mapadecaborojo.com/?page=negocio
 const AddBusinessPage = lazy(() => import('./components/AddBusinessPage'));
+// Living style guide for the Level-20 design system. Route: ?page=ui
+const StyleGuide = lazy(() => import('./components/ui/StyleGuide'));
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -31,6 +33,14 @@ if (pageParam === 'negocio') {
           </Suspense>
         </ErrorBoundary>
       </LanguageProvider>
+    </React.StrictMode>
+  );
+} else if (pageParam === 'ui') {
+  root.render(
+    <React.StrictMode>
+      <Suspense fallback={null}>
+        <StyleGuide />
+      </Suspense>
     </React.StrictMode>
   );
 } else {

@@ -310,7 +310,7 @@ const MainApp: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col overflow-hidden relative bg-slate-50 dark:bg-slate-900 font-sans transition-colors duration-500">
+    <div className="h-screen w-screen flex flex-col overflow-hidden relative bg-canvas font-sans transition-colors duration-500">
       <div className="noise-overlay"></div>
       
       {/* SEO Engine */}
@@ -331,21 +331,21 @@ const MainApp: React.FC = () => {
         <div className="pointer-events-auto flex flex-col gap-3 items-end">
             <a
               href="/3d"
-              className="bg-gradient-to-br from-teal-500 to-emerald-600 text-white px-3 h-10 rounded-full shadow-lg border border-white/40 font-extrabold text-sm hover:scale-105 transition-transform flex items-center justify-center gap-1.5"
+              className="bg-gradient-to-br from-brand-500 to-emerald-600 text-white px-3 h-10 rounded-full shadow-lg border border-white/40 font-extrabold text-sm hover:scale-105 transition-transform flex items-center justify-center gap-1.5"
               title="Mapa 3D de Cabo Rojo"
             >
               <i className="fa-solid fa-mountain-sun text-xs"></i>3D
             </a>
             <button 
               onClick={() => setMapStyle(prev => prev === 'standard' ? 'satellite' : 'standard')}
-              className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-emerald-600 dark:text-emerald-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center mb-0"
+              className="bg-paper/80 backdrop-blur-md text-emerald-600 dark:text-emerald-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-line font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center mb-0"
               title={mapStyle === 'standard' ? t('satellite_view') : t('map_view')}
             >
               <i className={`fa-solid ${mapStyle === 'standard' ? 'fa-satellite' : 'fa-map'}`}></i>
             </button>
             <button
               onClick={() => zoomIn()}
-              className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-700 dark:text-slate-100 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-black text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"
+              className="bg-paper/80 backdrop-blur-md text-ink p-2.5 rounded-full shadow-lg border border-white/40 dark:border-line font-black text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"
               title={t('zoom_in')}
               aria-label="Acercar"
             >
@@ -353,17 +353,17 @@ const MainApp: React.FC = () => {
             </button>
             <button
               onClick={() => zoomOut()}
-              className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-700 dark:text-slate-100 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-black text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"
+              className="bg-paper/80 backdrop-blur-md text-ink p-2.5 rounded-full shadow-lg border border-white/40 dark:border-line font-black text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center"
               title={t('zoom_out')}
               aria-label="Alejar"
             >
                 <i className="fa-solid fa-minus" style={{ fontWeight: 900 }}></i>
             </button>
-            <button onClick={() => setIsDarkMode(!isDarkMode)} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-amber-500 dark:text-purple-300 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">
+            <button onClick={() => setIsDarkMode(!isDarkMode)} className="bg-paper/80 backdrop-blur-md text-amber-500 dark:text-purple-300 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-line font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">
               <i className={`fa-solid ${isDarkMode ? 'fa-moon' : 'fa-sun'}`}></i>
             </button>
-            <button onClick={() => setLanguage(language === 'es' ? 'en' : 'es')} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-800 dark:text-white p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-[10px] uppercase hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">{language === 'es' ? 'EN' : 'ES'}</button>
-            <button onClick={() => setIsAdminOpen(true)} className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-md text-slate-600 dark:text-slate-400 p-2.5 rounded-full shadow-lg border border-white/40 dark:border-slate-700 font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">
+            <button onClick={() => setLanguage(language === 'es' ? 'en' : 'es')} className="bg-paper/80 backdrop-blur-md text-ink p-2.5 rounded-full shadow-lg border border-white/40 dark:border-line font-bold text-[10px] uppercase hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">{language === 'es' ? 'EN' : 'ES'}</button>
+            <button onClick={() => setIsAdminOpen(true)} className="bg-paper/80 backdrop-blur-md text-ink-soft p-2.5 rounded-full shadow-lg border border-white/40 dark:border-line font-bold text-xl hover:scale-105 transition-transform w-10 h-10 flex items-center justify-center">
               <i className="fa-solid fa-lock"></i>
             </button>
         </div>
@@ -376,9 +376,9 @@ const MainApp: React.FC = () => {
         {/* Loading overlay while places fetch */}
         {loading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
-            <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl px-6 py-4 shadow-xl flex items-center gap-3">
-              <div className="w-5 h-5 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-200">Cargando negocios…</span>
+            <div className="bg-paper/90 backdrop-blur-md rounded-2xl px-6 py-4 shadow-xl flex items-center gap-3">
+              <div className="w-5 h-5 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+              <span className="text-sm font-medium text-ink">Cargando negocios…</span>
             </div>
           </div>
         )}
@@ -387,10 +387,10 @@ const MainApp: React.FC = () => {
         {activeTab === 'map' && (
           <button
             onClick={() => { handleTabChange('explore', false); setSearchFocusTrigger(prev => prev + 1); }}
-            className="absolute top-20 left-1/2 -translate-x-1/2 z-[1500] flex items-center gap-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-white/60 dark:border-slate-700/50 shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] rounded-full px-5 py-3 text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 transition-all active:scale-95 max-w-[220px]"
+            className="absolute top-20 left-1/2 -translate-x-1/2 z-[1500] flex items-center gap-2 bg-paper/80 backdrop-blur-xl border border-line shadow-[0_8px_32px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] rounded-full px-5 py-3 text-ink-soft hover:bg-white dark:hover:bg-paper-2 transition-all active:scale-95 max-w-[220px]"
             aria-label="Buscar en el mapa"
           >
-            <i className="fa-solid fa-magnifying-glass text-sm text-slate-400 dark:text-slate-500 shrink-0"></i>
+            <i className="fa-solid fa-magnifying-glass text-sm text-ink-muted shrink-0"></i>
             <span className="text-sm font-semibold truncate">{floatingSearchLabel}</span>
           </button>
         )}
@@ -420,7 +420,7 @@ const MainApp: React.FC = () => {
           <div className="absolute bottom-36 right-4 z-[1500] flex flex-col gap-2">
             <button
               onClick={() => { setRouteMode(!routeMode); if (routeMode) setRouteStops([]); }}
-              className={`w-12 h-12 flex items-center justify-center rounded-full backdrop-blur-md border shadow-lg hover:scale-105 transition-all ${routeMode ? 'bg-teal-500 text-white border-teal-400' : 'bg-white/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border-white/60 dark:border-slate-700'}`}
+              className={`w-12 h-12 flex items-center justify-center rounded-full backdrop-blur-md border shadow-lg hover:scale-105 transition-all ${routeMode ? 'bg-brand-500 text-white border-brand-400' : 'bg-paper/80 text-ink-soft border-white/60 dark:border-line'}`}
               title="Planificar ruta"
             >
               <i className="fa-solid fa-route text-lg"></i>
@@ -428,14 +428,14 @@ const MainApp: React.FC = () => {
             </button>
             <button
               onClick={() => setIsAlertOpen(true)}
-              className="w-12 h-12 flex items-center justify-center rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-white/60 dark:border-slate-700 shadow-lg text-amber-500 hover:scale-105 transition-transform"
+              className="w-12 h-12 flex items-center justify-center rounded-full bg-paper/80 backdrop-blur-md border border-white/60 dark:border-line shadow-lg text-amber-500 hover:scale-105 transition-transform"
               title="Alertas de negocios nuevos"
             >
               <i className="fa-solid fa-bell text-lg"></i>
             </button>
             <button
               onClick={centerOnUser}
-              className={`w-12 h-12 flex items-center justify-center rounded-full bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border border-white/60 dark:border-slate-700 shadow-lg text-blue-500 dark:text-blue-400 hover:scale-105 transition-transform ${!userLocation ? 'animate-pulse-dot' : ''}`}
+              className={`w-12 h-12 flex items-center justify-center rounded-full bg-paper/80 backdrop-blur-md border border-white/60 dark:border-line shadow-lg text-blue-500 dark:text-blue-400 hover:scale-105 transition-transform ${!userLocation ? 'animate-pulse-dot' : ''}`}
               title="Mi ubicación"
             >
               <i className="fa-solid fa-location-crosshairs text-lg"></i>

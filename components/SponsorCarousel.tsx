@@ -46,14 +46,14 @@ const SponsorCarousel: React.FC<SponsorCarouselProps> = ({ places, onSelect }) =
                   <i className="fa-solid fa-crown"></i>
                 </span>
               )}
-              <div className={`w-10 h-10 rounded-xl overflow-hidden shrink-0 ${isVitrina ? 'bg-gradient-to-br from-amber-400 to-yellow-500' : 'bg-gradient-to-br from-teal-500 to-cyan-500'}`}>
+              <div className={`w-10 h-10 rounded-xl overflow-hidden shrink-0 ${isVitrina ? 'bg-gradient-to-br from-amber-400 to-yellow-500' : 'bg-gradient-to-br from-brand-500 to-cyan-500'}`}>
                 {p.imageUrl && (
                   <img src={getOptimizedImageUrl(p.imageUrl, 80)} alt={p.name} className="w-full h-full object-cover" loading="lazy" />
                 )}
               </div>
               <div className="min-w-0 text-left flex-1">
-                <div className="font-bold text-xs text-slate-800 dark:text-white truncate">{p.name}</div>
-                <div className={`text-[10px] font-bold truncate ${isVitrina ? 'text-amber-600 dark:text-amber-400' : 'text-teal-600 dark:text-teal-400'}`}>
+                <div className="font-bold text-xs text-ink truncate">{p.name}</div>
+                <div className={`text-[10px] font-bold truncate ${isVitrina ? 'text-amber-600 dark:text-amber-400' : 'text-brand-600 dark:text-brand-400'}`}>
                   {isVitrina ? 'Vitrina' : 'Recom. El Veci'}
                 </div>
               </div>

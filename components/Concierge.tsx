@@ -98,7 +98,7 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
                     <button 
                         key={place.id}
                         onClick={() => onNavigateToPlace(place)}
-                        className="flex-shrink-0 w-32 bg-white dark:bg-slate-700/50 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-600 active:scale-95 transition-transform text-left group"
+                        className="flex-shrink-0 w-32 bg-white dark:bg-slate-700/50 rounded-xl overflow-hidden shadow-sm border border-line active:scale-95 transition-transform text-left group"
                     >
                         <div className="h-20 w-full overflow-hidden relative">
                             <img 
@@ -112,7 +112,7 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
                             <span className="absolute bottom-1 left-2 text-[10px] text-white font-bold uppercase tracking-wide">{place.category}</span>
                         </div>
                         <div className="p-2">
-                            <h4 className="text-xs font-bold text-slate-800 dark:text-white truncate group-hover:text-teal-500 transition-colors">{place.name}</h4>
+                            <h4 className="text-xs font-bold text-ink truncate group-hover:text-brand-500 transition-colors">{place.name}</h4>
                             <p className="text-[9px] truncate flex items-center gap-1">
                                 {openNow ? (
                                     <span className="text-green-600 font-bold">● Abierto</span>
@@ -168,16 +168,16 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
                         <i className="fa-solid fa-circle-exclamation mr-1"></i> No se pudo generar el itinerario. Intenta de nuevo.
                     </div>
                 ) : (
-                    <div className="ml-2 border-l-2 border-teal-200 dark:border-teal-800 space-y-4">
+                    <div className="ml-2 border-l-2 border-brand-200 dark:border-brand-800 space-y-4">
                         {msg.itineraryData.map((item, i) => (
-                            <div key={i} className="ml-4 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
-                                <span className="text-xs font-bold text-teal-600 uppercase flex items-center gap-2">
+                            <div key={i} className="ml-4 bg-canvas/50 p-3 rounded-xl border border-line">
+                                <span className="text-xs font-bold text-brand-600 uppercase flex items-center gap-2">
                                     <i className={`fa-solid ${item.icon || 'fa-clock'}`}></i>
                                     {item.time}
                                 </span>
-                                <h4 className="font-bold text-slate-900 dark:text-white mt-1">{item.activity}</h4>
-                                <p className="text-xs text-slate-500 mb-2">{item.description}</p>
-                                {item.placeId && <button onClick={() => { const p = places.find(x => x.id === item.placeId); if(p) onNavigateToPlace(p); }} className="text-xs bg-white dark:bg-slate-800 border dark:border-slate-600 px-3 py-1.5 rounded-lg font-bold w-full hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"><i className="fa-solid fa-location-arrow text-teal-500"></i> Ver Lugar</button>}
+                                <h4 className="font-bold text-ink mt-1">{item.activity}</h4>
+                                <p className="text-xs text-ink-muted mb-2">{item.description}</p>
+                                {item.placeId && <button onClick={() => { const p = places.find(x => x.id === item.placeId); if(p) onNavigateToPlace(p); }} className="text-xs bg-paper border dark:border-line px-3 py-1.5 rounded-lg font-bold w-full hover:bg-paper-2 transition-colors flex items-center justify-center gap-2"><i className="fa-solid fa-location-arrow text-brand-500"></i> Ver Lugar</button>}
                             </div>
                         ))}
                     </div>
@@ -199,7 +199,7 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
 
   return (
     <div className="fixed inset-0 bg-slate-900/50 dark:bg-black/60 z-[5000] flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-slate-800 w-full max-w-md h-[80vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-fade-in border border-slate-200 dark:border-slate-700">
+      <div className="bg-paper w-full max-w-md h-[80vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-fade-in border border-line">
         
         {/* Header */}
         <div className="bg-emerald-600 dark:bg-emerald-900 p-4 flex justify-between items-center shadow-md z-10">
@@ -216,18 +216,18 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
         </div>
 
         {/* Chat */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-slate-50 dark:bg-slate-900">
+        <div className="flex-1 overflow-y-auto p-4 space-y-6 bg-canvas">
           {messages.map((msg, idx) => (
             <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} animate-slide-up`}>
-              <div className={`max-w-[90%] p-4 rounded-2xl text-[15px] shadow-sm ${msg.role === 'user' ? 'bg-emerald-600 text-white rounded-br-none' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-bl-none border dark:border-slate-700'}`}>
+              <div className={`max-w-[90%] p-4 rounded-2xl text-[15px] shadow-sm ${msg.role === 'user' ? 'bg-emerald-600 text-white rounded-br-none' : 'bg-paper text-ink rounded-bl-none border dark:border-line'}`}>
                 {renderMessageContent(msg)}
               </div>
             </div>
           ))}
           {isLoading && (
               <div className="flex justify-start animate-slide-up">
-                  <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl rounded-bl-none border dark:border-slate-700 shadow-sm flex items-center gap-2 text-slate-500">
-                      <i className="fa-solid fa-circle-notch fa-spin text-teal-500"></i>
+                  <div className="bg-paper p-4 rounded-2xl rounded-bl-none border dark:border-line shadow-sm flex items-center gap-2 text-ink-muted">
+                      <i className="fa-solid fa-circle-notch fa-spin text-brand-500"></i>
                       <span className="text-xs font-bold">{t('loading')}</span>
                   </div>
               </div>
@@ -236,14 +236,14 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
         </div>
 
         {/* Input */}
-        <div className="p-4 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700">
+        <div className="p-4 bg-paper border-t border-line">
           <div className="flex gap-2">
-            <button onClick={() => fileInputRef.current?.click()} className="bg-slate-100 dark:bg-slate-700 text-slate-500 p-4 rounded-2xl w-14 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"><i className="fa-solid fa-camera"></i></button>
+            <button onClick={() => fileInputRef.current?.click()} className="bg-paper-2 text-ink-muted p-4 rounded-2xl w-14 hover:bg-line transition-colors"><i className="fa-solid fa-camera"></i></button>
             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={(e) => { if(e.target.files?.[0]) handleImageUpload(e.target.files[0], onNavigateToPlace); }} />
 
             <div className="flex-1 relative">
-                <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder={t('search')} className="w-full bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white p-4 pr-12 rounded-2xl outline-none border border-transparent focus:border-teal-500 transition-colors" />
-                <button onClick={handleMicClick} className={`absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors ${isListening ? 'text-red-500 animate-pulse' : 'text-slate-400'}`}><i className="fa-solid fa-microphone"></i></button>
+                <input type="text" value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={(e) => e.key === 'Enter' && handleSend()} placeholder={t('search')} className="w-full bg-paper-2 text-ink p-4 pr-12 rounded-2xl outline-none border border-transparent focus:border-brand-500 transition-colors" />
+                <button onClick={handleMicClick} className={`absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-line transition-colors ${isListening ? 'text-red-500 animate-pulse' : 'text-ink-muted'}`}><i className="fa-solid fa-microphone"></i></button>
             </div>
             <button onClick={() => handleSend()} disabled={isLoading} className="bg-emerald-500 text-white p-4 rounded-2xl w-14 hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/30 disabled:opacity-50 disabled:shadow-none"><i className="fa-solid fa-paper-plane"></i></button>
           </div>
@@ -266,7 +266,7 @@ const Concierge: React.FC<ConciergeProps> = ({ isOpen, onClose, places, events, 
              <button 
                 onClick={() => handleSend("Necesito un servicio (plomero, mecánico, etc.)")} 
                 disabled={isLoading} 
-                className="whitespace-nowrap px-4 py-2.5 rounded-xl text-xs font-bold border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 transition-colors"
+                className="whitespace-nowrap px-4 py-2.5 rounded-xl text-xs font-bold border border-line bg-slate-50 text-ink hover:bg-paper-2 dark:border-line dark:text-ink-muted transition-colors"
              >
                  🛠️ Servicios
              </button>

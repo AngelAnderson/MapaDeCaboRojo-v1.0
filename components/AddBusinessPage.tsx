@@ -146,24 +146,24 @@ const AddBusinessPage: React.FC = () => {
     }
   };
 
-  const inputClass = "w-full bg-white dark:bg-slate-800 text-slate-900 dark:text-white p-4 rounded-xl border border-slate-300 dark:border-slate-600 outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 transition-all font-medium";
-  const labelClass = "block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2 ml-1";
+  const inputClass = "w-full bg-paper text-ink p-4 rounded-xl border border-line-strong outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 transition-all font-medium";
+  const labelClass = "block text-xs font-bold text-ink-muted uppercase mb-2 ml-1";
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 font-sans transition-colors">
+    <div className="min-h-screen bg-canvas font-sans transition-colors">
 
       {/* Navbar */}
-      <header className="sticky top-0 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200 dark:border-slate-700 px-4 py-4 flex justify-between items-center shadow-sm">
+      <header className="sticky top-0 z-50 bg-paper/90 backdrop-blur-xl border-b border-line px-4 py-4 flex justify-between items-center shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-teal-600/20">
+          <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-600/20">
             <i className="fa-solid fa-store"></i>
           </div>
           <div>
-            <h1 className="text-lg font-black text-slate-900 dark:text-white leading-none">Añade tu negocio</h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Gratis · al directorio de Cabo Rojo</p>
+            <h1 className="text-lg font-black text-ink leading-none">Añade tu negocio</h1>
+            <p className="text-xs text-ink-muted font-medium">Gratis · al directorio de Cabo Rojo</p>
           </div>
         </div>
-        <button onClick={handleGoHome} className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center justify-center transition-colors" aria-label="Cerrar">
+        <button onClick={handleGoHome} className="w-10 h-10 rounded-full bg-paper-2 text-ink-muted hover:text-ink dark:hover:text-white flex items-center justify-center transition-colors" aria-label="Cerrar">
           <i className="fa-solid fa-xmark text-lg"></i>
         </button>
       </header>
@@ -172,8 +172,8 @@ const AddBusinessPage: React.FC = () => {
 
         {/* Intro — solo en el primer paso */}
         {step === 1 && (
-          <div className="mb-6 bg-teal-50 dark:bg-teal-900/20 border border-teal-100 dark:border-teal-800/40 rounded-2xl p-5 animate-fade-in">
-            <p className="text-slate-700 dark:text-slate-200 leading-relaxed">
+          <div className="mb-6 bg-brand-50 dark:bg-brand-900/20 border border-brand-100 dark:border-brand-800/40 rounded-2xl p-5 animate-fade-in">
+            <p className="text-ink leading-relaxed">
               ¿Tienes un negocio en Cabo Rojo? Ponlo aquí para que los vecinos te encuentren
               en el mapa y cuando le escriben al Veci al <span className="font-bold whitespace-nowrap">787-417-7711</span>.
               Es <span className="font-bold">gratis</span> y toma dos minutos.
@@ -184,8 +184,8 @@ const AddBusinessPage: React.FC = () => {
         {/* Progreso */}
         {step < 3 && (
           <div className="flex items-center gap-2 mb-6">
-            <div className={`flex-1 h-1.5 rounded-full transition-colors ${step >= 1 ? 'bg-teal-500' : 'bg-slate-200 dark:bg-slate-700'}`} />
-            <div className={`flex-1 h-1.5 rounded-full transition-colors ${step >= 2 ? 'bg-teal-500' : 'bg-slate-200 dark:bg-slate-700'}`} />
+            <div className={`flex-1 h-1.5 rounded-full transition-colors ${step >= 1 ? 'bg-brand-500' : 'bg-line'}`} />
+            <div className={`flex-1 h-1.5 rounded-full transition-colors ${step >= 2 ? 'bg-brand-500' : 'bg-line'}`} />
           </div>
         )}
 
@@ -203,7 +203,7 @@ const AddBusinessPage: React.FC = () => {
                 <select className={inputClass} value={category} onChange={e => setCategory(e.target.value as PlaceCategory)}>
                   {Object.values(PlaceCategory).map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500">
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-ink-muted">
                   <i className="fa-solid fa-chevron-down"></i>
                 </div>
               </div>
@@ -212,19 +212,19 @@ const AddBusinessPage: React.FC = () => {
             <div>
               <label className={labelClass}>Enlace de Google Maps</label>
               <input className={inputClass} value={gmapsUrl} onChange={e => setGmapsUrl(e.target.value)} placeholder="Pega aquí el enlace de tu negocio en Google Maps" />
-              <p className="text-[11px] text-slate-400 mt-1 ml-1">Así lo ubicamos exacto en el mapa. Si no lo tienes, déjalo en blanco.</p>
+              <p className="text-[11px] text-ink-muted mt-1 ml-1">Así lo ubicamos exacto en el mapa. Si no lo tienes, déjalo en blanco.</p>
             </div>
 
             <div>
               <label className={labelClass}>Una foto del negocio</label>
-              <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 rounded-xl p-8 text-center cursor-pointer hover:border-teal-500 dark:hover:border-teal-500 transition-colors group">
+              <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-line-strong bg-paper rounded-xl p-8 text-center cursor-pointer hover:border-brand-500 dark:hover:border-brand-500 transition-colors group">
                 {imageFile ? (
                   <div className="flex flex-col items-center">
-                    <i className="fa-solid fa-check-circle text-teal-500 text-3xl mb-2"></i>
-                    <span className="text-teal-600 dark:text-teal-400 font-bold">{imageFile.name}</span>
+                    <i className="fa-solid fa-check-circle text-brand-500 text-3xl mb-2"></i>
+                    <span className="text-brand-600 dark:text-brand-400 font-bold">{imageFile.name}</span>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center text-slate-400 group-hover:text-teal-500 transition-colors">
+                  <div className="flex flex-col items-center text-ink-muted group-hover:text-brand-500 transition-colors">
                     <i className="fa-solid fa-camera text-3xl mb-2"></i>
                     <span className="font-medium">Toca para subir una foto</span>
                   </div>
@@ -249,7 +249,7 @@ const AddBusinessPage: React.FC = () => {
 
             <div>
               <label className={labelClass}>Horario</label>
-              <div className="bg-white dark:bg-slate-800 p-1.5 rounded-xl border border-slate-300 dark:border-slate-600 flex mb-3">
+              <div className="bg-paper p-1.5 rounded-xl border border-line-strong flex mb-3">
                 {[
                   { id: 'fixed', label: 'Horario fijo' },
                   { id: '24_7', label: '24/7' },
@@ -259,7 +259,7 @@ const AddBusinessPage: React.FC = () => {
                     key={opt.id}
                     type="button"
                     onClick={() => setHoursType(opt.id as any)}
-                    className={`flex-1 py-2.5 text-[11px] font-bold uppercase rounded-lg transition-all ${hoursType === opt.id ? 'bg-teal-600 text-white shadow-md' : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'}`}
+                    className={`flex-1 py-2.5 text-[11px] font-bold uppercase rounded-lg transition-all ${hoursType === opt.id ? 'bg-brand-600 text-white shadow-md' : 'text-ink-muted hover:bg-paper-2'}`}
                   >
                     {opt.label}
                   </button>
@@ -287,7 +287,7 @@ const AddBusinessPage: React.FC = () => {
                 <i className="fa-solid fa-user"></i>
                 <span className="font-bold text-sm uppercase tracking-wide">¿A dónde te avisamos?</span>
               </div>
-              <p className="text-[13px] text-slate-600 dark:text-slate-300 -mt-2">Te escribimos cuando tu negocio esté publicado.</p>
+              <p className="text-[13px] text-ink-soft -mt-2">Te escribimos cuando tu negocio esté publicado.</p>
               <div>
                 <label className={labelClass}>Tu nombre</label>
                 <input className={inputClass} value={ownerName} onChange={e => setOwnerName(e.target.value)} placeholder="¿Cómo te llamas?" />
@@ -303,16 +303,16 @@ const AddBusinessPage: React.FC = () => {
             </div>
 
             {/* Interés Vitrina — informativo, sin pitch */}
-            <label className="flex items-start gap-3 bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-300 dark:border-slate-600 cursor-pointer hover:border-teal-500 transition-colors">
-              <input type="checkbox" checked={wantsVitrina} onChange={e => setWantsVitrina(e.target.checked)} className="w-6 h-6 accent-teal-600 rounded mt-0.5 shrink-0 cursor-pointer" />
-              <span className="text-slate-700 dark:text-slate-200 text-sm leading-relaxed">
+            <label className="flex items-start gap-3 bg-paper p-5 rounded-2xl border border-line-strong cursor-pointer hover:border-brand-500 transition-colors">
+              <input type="checkbox" checked={wantsVitrina} onChange={e => setWantsVitrina(e.target.checked)} className="w-6 h-6 accent-brand-600 rounded mt-0.5 shrink-0 cursor-pointer" />
+              <span className="text-ink text-sm leading-relaxed">
                 <span className="font-bold">Quiero que más gente lo vea.</span> Cuéntame cómo destacar mi
-                negocio para que aparezca primero. <span className="text-slate-400">(sin compromiso)</span>
+                negocio para que aparezca primero. <span className="text-ink-muted">(sin compromiso)</span>
               </span>
             </label>
 
             <div className="flex gap-3 pt-4">
-              <button onClick={() => setStep(1)} className="px-6 py-4 rounded-xl text-slate-500 dark:text-slate-400 font-bold bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">Atrás</button>
+              <button onClick={() => setStep(1)} className="px-6 py-4 rounded-xl text-ink-muted font-bold bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-paper-2 transition-colors">Atrás</button>
               <div className="flex-1">
                 <Button
                   label={analyzing || resolvingCoords ? 'Revisando…' : loading ? 'Enviando…' : 'Añadir mi negocio'}
@@ -322,7 +322,7 @@ const AddBusinessPage: React.FC = () => {
                 />
               </div>
             </div>
-            <p className="text-[11px] text-center text-slate-400 mt-2">
+            <p className="text-[11px] text-center text-ink-muted mt-2">
               Tu negocio entra a revisión antes de salir publicado. Nada se publica sin verificar.
             </p>
           </div>
@@ -334,14 +334,14 @@ const AddBusinessPage: React.FC = () => {
             <div className="w-24 h-24 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-6 text-4xl shadow-lg shadow-emerald-500/20">
               <i className="fa-solid fa-check"></i>
             </div>
-            <h3 className="text-3xl font-black text-slate-900 dark:text-white mb-4">¡Recibido, gracias!</h3>
-            <p className="text-slate-600 dark:text-slate-300 text-lg leading-relaxed max-w-md mx-auto">
+            <h3 className="text-3xl font-black text-ink mb-4">¡Recibido, gracias!</h3>
+            <p className="text-ink-soft text-lg leading-relaxed max-w-md mx-auto">
               Lo revisamos y te escribimos por WhatsApp cuando tu negocio esté en el directorio.
               {wantsVitrina && ' Y te cuento cómo destacarlo para que aparezca primero.'}
             </p>
             <div className="mt-12 space-y-3">
               <Button label="Añadir otro negocio" onClick={() => window.location.reload()} variant="secondary" icon="plus" />
-              <button onClick={handleGoHome} className="w-full py-4 text-slate-500 dark:text-slate-400 font-bold hover:text-slate-800 dark:hover:text-white transition-colors">
+              <button onClick={handleGoHome} className="w-full py-4 text-ink-muted font-bold hover:text-ink dark:hover:text-white transition-colors">
                 Ir al mapa
               </button>
             </div>

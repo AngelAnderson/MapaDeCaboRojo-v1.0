@@ -455,6 +455,12 @@ export const checkSession = async () => {
 // --- VERSION CHECK / HEARTBEAT ---
 export const checkDataVersion = async (): Promise<void> => {
     try {
+        // admin_logs is RLS-restricted to authenticated admins. For anonymous
+        // visitors (the 99% case) this request always 401s, so skip it — it only
+        // adds console noise + a wasted request. Cache TTL keeps anon data fresh.
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+
         // 1. Get latest mutation log from server (High-water mark)
         // We check for specific actions that imply data structure/content changes
         const { data, error } = await supabase
@@ -922,6 +928,16 @@ export const getPeople = async (): Promise<Person[]> => {
     const cached = await getFromCache('PEOPLE');
     if (cached) return cached;
 
+    // The `people` table is RLS-restricted to authenticated admins, so anon
+    // reads always 401. Skip for anon to keep the console + network clean.
+    // NOTE: this means relatedPeople never renders for public visitors. If that
+    // content should be public, add an anon SELECT policy on `people` and drop
+    // this guard. (Flagged in docs/LEVEL-20-FRONTEND.md follow-ups.)
+    try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return [];
+    } catch { return []; }
+
     try {
         const { data, error } = await supabase.from('people').select('*');
         if (error) {
@@ -1245,6 +1261,13 @@ export const getDemandSurges = async (): Promise<DemandSurge[]> => {
 
 // --- SEARCH TRENDS ---
 export const getSearchTrends = async (daysBack: number = 7): Promise<{term: string; searches: number; unique_users: number}[]> => {
+  // get_search_trends RPC is RLS-restricted (admin). Anon calls 401, so skip for
+  // anon to keep console + network clean. If trends should be public, grant the
+  // RPC to anon and drop this guard. (Flagged in docs/LEVEL-20-FRONTEND.md.)
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return [];
+  } catch { return []; }
   try {
     const { data, error } = await supabase.rpc('get_search_trends', { days_back: daysBack });
     if (error || !data) return [];

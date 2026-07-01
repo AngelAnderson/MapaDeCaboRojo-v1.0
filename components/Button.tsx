@@ -10,10 +10,10 @@ const Button: React.FC<ButtonProps> = ({ variant = 'primary', icon, label, class
   const baseStyles = "flex flex-col items-center justify-center p-3 rounded-2xl transition-transform active:scale-95 shadow-md min-h-[70px] w-full";
   
   const variants = {
-    primary: "bg-teal-600 text-white border-2 border-teal-700",
+    primary: "bg-brand-600 text-white border-2 border-brand-700",
     secondary: "bg-orange-500 text-white border-2 border-orange-600",
     danger: "bg-red-600 text-white border-2 border-red-700",
-    white: "bg-white text-slate-900 border-2 border-slate-200"
+    white: "bg-white text-ink border-2 border-line"
   };
 
   return (

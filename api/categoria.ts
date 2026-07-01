@@ -797,9 +797,12 @@ export default async function handler(req: any, res: any) {
   <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
   ${faqSchema ? `<script type="application/ld+json">${JSON.stringify(faqSchema)}</script>` : ''}
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; }
+    body { font-family: "Source Sans 3", -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #faf9f7; color: #1c1917; }
+    h1, h2, h3, .font-display { font-family: 'Fraunces', Georgia, serif; letter-spacing: -0.01em; }
     .container { max-width: 960px; margin: 0 auto; padding: 1rem; }
     header { background: linear-gradient(135deg, #0d9488, #0f766e); color: white; padding: 2rem 1rem; text-align: center; margin-bottom: 0; }
     header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }

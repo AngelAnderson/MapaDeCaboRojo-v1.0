@@ -79,29 +79,29 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, onSelect, is
     <div className="fixed inset-0 z-[4000] flex items-start justify-center pt-[20vh] px-4 animate-fade-in">
       <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
       
-      <div className="w-full max-w-xl bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-white/20 dark:border-slate-700 shadow-2xl rounded-2xl overflow-hidden transform transition-all scale-100 animate-slide-up ring-1 ring-black/5 dark:ring-white/10">
+      <div className="w-full max-w-xl bg-paper/80 backdrop-blur-xl border border-white/20 dark:border-line shadow-2xl rounded-2xl overflow-hidden transform transition-all scale-100 animate-slide-up ring-1 ring-black/5 dark:ring-white/10">
         
         {/* Search Input */}
         <div className="flex items-center border-b border-slate-200/50 dark:border-slate-700/50 px-4 py-4">
-          <i className="fa-solid fa-magnifying-glass text-slate-400 dark:text-slate-500 text-lg mr-4"></i>
+          <i className="fa-solid fa-magnifying-glass text-ink-muted text-lg mr-4"></i>
           <input
             ref={inputRef}
             type="text"
-            className="flex-1 bg-transparent border-none outline-none text-xl text-slate-800 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 font-medium"
+            className="flex-1 bg-transparent border-none outline-none text-xl text-ink placeholder-slate-400 dark:placeholder-slate-500 font-medium"
             placeholder={t('type_a_command')}
             value={query}
             onChange={e => { setQuery(e.target.value); setActiveIndex(0); }}
             onKeyDown={handleKeyDown}
           />
           <div className="hidden sm:flex gap-2">
-            <span className="text-[10px] font-bold bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-1 rounded">esc</span>
+            <span className="text-[10px] font-bold bg-line text-ink-muted px-2 py-1 rounded">esc</span>
           </div>
         </div>
 
         {/* Results */}
         <div className="max-h-[60vh] overflow-y-auto p-2">
           {filteredCommands.length === 0 ? (
-            <div className="p-8 text-center text-slate-400 dark:text-slate-500">
+            <div className="p-8 text-center text-ink-muted">
               <p>{t('no_results_found')}</p>
             </div>
           ) : (
@@ -112,8 +112,8 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, onSelect, is
                   onClick={() => { onSelect(cmd.id); onClose(); }}
                   className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group ${
                     index === activeIndex 
-                      ? 'bg-teal-600 text-white shadow-md shadow-teal-900/20' 
-                      : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700/50'
+                      ? 'bg-brand-600 text-white shadow-md shadow-brand-900/20' 
+                      : 'text-ink hover:bg-paper-2/50'
                   }`}
                   onMouseEnter={() => setActiveIndex(index)}
                 >
@@ -121,15 +121,15 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, onSelect, is
                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
                       index === activeIndex 
                         ? 'bg-white/20 text-white' 
-                        : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
+                        : 'bg-paper-2 text-ink-muted'
                     }`}>
                       <i className={`fa-solid fa-${cmd.icon}`}></i>
                     </div>
                     <div className="text-left">
-                      <span className={`block font-bold text-sm ${index === activeIndex ? 'text-white' : 'text-slate-800 dark:text-white'}`}>
+                      <span className={`block font-bold text-sm ${index === activeIndex ? 'text-white' : 'text-ink'}`}>
                         {cmd.label}
                       </span>
-                      <span className={`block text-[10px] uppercase tracking-wider ${index === activeIndex ? 'text-teal-100' : 'text-slate-400 dark:text-slate-500'}`}>
+                      <span className={`block text-[10px] uppercase tracking-wider ${index === activeIndex ? 'text-brand-100' : 'text-ink-muted'}`}>
                         {cmd.group}
                       </span>
                     </div>
@@ -137,7 +137,7 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, onSelect, is
                   
                   {cmd.shortcut && (
                     <span className={`text-xs font-bold px-2 py-0.5 rounded ${
-                      index === activeIndex ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-400'
+                      index === activeIndex ? 'bg-white/20 text-white' : 'bg-paper-2 text-ink-muted'
                     }`}>
                       {cmd.shortcut}
                     </span>
@@ -152,11 +152,11 @@ const CommandMenu: React.FC<CommandMenuProps> = ({ isOpen, onClose, onSelect, is
         </div>
         
         {/* Footer */}
-        <div className="bg-slate-50/80 dark:bg-slate-900/50 border-t border-slate-200/50 dark:border-slate-700/50 px-4 py-2 flex justify-between items-center text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+        <div className="bg-slate-50/80 dark:bg-slate-900/50 border-t border-slate-200/50 dark:border-slate-700/50 px-4 py-2 flex justify-between items-center text-[10px] text-ink-muted font-medium">
             <span>{t('app_version')}</span>
             <div className="flex gap-3">
-                <span>{t('select')} <b className="text-slate-600 dark:text-slate-300">↵</b></span>
-                <span>{t('navigate')} <b className="text-slate-600 dark:text-slate-300">↑↓</b></span>
+                <span>{t('select')} <b className="text-ink-soft">↵</b></span>
+                <span>{t('navigate')} <b className="text-ink-soft">↑↓</b></span>
             </div>
         </div>
       </div>

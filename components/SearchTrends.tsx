@@ -30,7 +30,7 @@ const SearchTrends: React.FC<SearchTrendsProps> = ({ onSelectTerm }) => {
 
   return (
     <div className="px-1 py-2">
-      <button onClick={() => setExpanded(!expanded)} className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">
+      <button onClick={() => setExpanded(!expanded)} className="flex items-center gap-1.5 text-xs font-bold text-ink-muted mb-2">
         <span>🔥</span> Tendencias esta semana
         <i className={`fa-solid fa-chevron-${expanded ? 'up' : 'down'} text-[8px]`}></i>
       </button>
@@ -39,11 +39,11 @@ const SearchTrends: React.FC<SearchTrendsProps> = ({ onSelectTerm }) => {
           <button
             key={t.term}
             onClick={() => onSelectTerm(t.term)}
-            className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-teal-100 dark:hover:bg-teal-900 hover:text-teal-700 dark:hover:text-teal-300 transition-colors"
+            className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-paper-2 text-ink-soft hover:bg-brand-100 dark:hover:bg-brand-900 hover:text-brand-700 dark:hover:text-brand-300 transition-colors"
           >
             {i < 3 && <span>🔥</span>}
             {t.term}
-            <span className="text-[10px] text-slate-400">({t.searches})</span>
+            <span className="text-[10px] text-ink-muted">({t.searches})</span>
           </button>
         ))}
       </div>

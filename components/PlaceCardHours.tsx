@@ -31,7 +31,7 @@ const HoursDisplay = memo<HoursDisplayProps>(({ hours }) => {
     return `${h}:${m} ${suffix}`;
   };
 
-  let status = { text: t('hours_na'), color: 'text-slate-500', bg: 'bg-slate-100', icon: 'clock' };
+  let status = { text: t('hours_na'), color: 'text-ink-muted', bg: 'bg-slate-100', icon: 'clock' };
 
   if (hours?.type === '24_7') {
     status = { text: t('status_open_24'), color: 'text-green-600', bg: 'bg-green-100 dark:bg-green-900/30', icon: 'clock' };
@@ -46,7 +46,7 @@ const HoursDisplay = memo<HoursDisplayProps>(({ hours }) => {
   } else if (hours?.structured) {
     const today = hours.structured.find((d: any) => d.day === todayIdx) || hours.structured[todayIdx];
     if (!today) {
-      status = { text: t('hours_not_available'), color: 'text-slate-400', bg: 'bg-slate-100', icon: 'clock' };
+      status = { text: t('hours_not_available'), color: 'text-ink-muted', bg: 'bg-slate-100', icon: 'clock' };
     } else if (today.isClosed) {
       status = { text: t('status_closed_today'), color: 'text-red-500', bg: 'bg-red-100 dark:bg-red-900/30', icon: 'clock' };
     } else if (today.open && today.close) {
@@ -64,22 +64,22 @@ const HoursDisplay = memo<HoursDisplayProps>(({ hours }) => {
       }
     }
   } else if (hours?.note) {
-    status = { text: hours.note, color: 'text-slate-600', bg: 'bg-slate-100 dark:bg-slate-700', icon: 'clock' };
+    status = { text: hours.note, color: 'text-ink-soft', bg: 'bg-paper-2', icon: 'clock' };
   }
 
   const showExpand = hours?.type === 'fixed' || (!hours?.type && !!hours?.structured);
 
   return (
-    <div className="bg-slate-50 dark:bg-slate-700/50 rounded-2xl border border-slate-100 dark:border-slate-600 overflow-hidden">
-      <div onClick={() => showExpand && setExpanded(!expanded)} className={`p-4 flex justify-between items-center transition-colors ${showExpand ? 'cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-600/50' : ''}`}>
+    <div className="bg-paper-2 rounded-2xl border border-line overflow-hidden">
+      <div onClick={() => showExpand && setExpanded(!expanded)} className={`p-4 flex justify-between items-center transition-colors ${showExpand ? 'cursor-pointer hover:bg-line/50' : ''}`}>
         <div className="flex items-center gap-3">
           <i className={`fa-solid fa-${status.icon} ${status.color}`}></i>
           <div>
-            <p className="text-xs font-bold uppercase text-slate-400">{t('hours')}</p>
+            <p className="text-xs font-bold uppercase text-ink-muted">{t('hours')}</p>
             <p className={`text-sm font-bold ${status.color}`}>{status.text}</p>
           </div>
         </div>
-        {showExpand && <i className={`fa-solid fa-chevron-down text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`}></i>}
+        {showExpand && <i className={`fa-solid fa-chevron-down text-ink-muted transition-transform ${expanded ? 'rotate-180' : ''}`}></i>}
       </div>
 
       {holiday && (
@@ -93,15 +93,15 @@ const HoursDisplay = memo<HoursDisplayProps>(({ hours }) => {
 
       {expanded && showExpand && hours?.structured && (
         <div className="px-4 pb-4 pt-2">
-          <div className="space-y-2 border-t border-slate-200 dark:border-slate-600 pt-3">
+          <div className="space-y-2 border-t border-line pt-3">
             {hours.structured.map((d, i) => (
-              <div key={i} className={`flex justify-between text-sm ${i === todayIdx ? 'font-bold text-teal-600 dark:text-teal-400' : 'text-slate-600 dark:text-slate-300'}`}>
+              <div key={i} className={`flex justify-between text-sm ${i === todayIdx ? 'font-bold text-brand-600 dark:text-brand-400' : 'text-ink-soft'}`}>
                 <span className="w-10">{DAYS[i]}</span>
-                {d.isClosed ? <span className="text-slate-400 italic">{t('status_closed')}</span> : <span>{to12h(d.open)} - {to12h(d.close)}</span>}
+                {d.isClosed ? <span className="text-ink-muted italic">{t('status_closed')}</span> : <span>{to12h(d.open)} - {to12h(d.close)}</span>}
               </div>
             ))}
           </div>
-          {hours.note && <div className="mt-3 text-xs text-slate-500 italic border-t border-slate-200 dark:border-slate-600 pt-2">{hours.note}</div>}
+          {hours.note && <div className="mt-3 text-xs text-ink-muted italic border-t border-line pt-2">{hours.note}</div>}
         </div>
       )}
     </div>
