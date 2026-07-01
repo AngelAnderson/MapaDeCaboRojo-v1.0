@@ -4928,6 +4928,33 @@ function handleAgua(req: any, res: any) {
     ${cards}
 
     <div class="bg-white border border-sand-200 rounded-2xl p-5 my-8">
+      <p class="text-brand-700 font-bold uppercase tracking-wide text-xs mb-1">¿A quién le reclamas?</p>
+      <h3 class="font-display text-xl font-bold text-sand-900 mb-2">El error más caro del pueblo: gritarle a la pared equivocada</h3>
+      <p class="text-sand-700 text-sm mb-4">El agua potable <strong>no es del alcalde</strong>. Cuando sabes de qué responde cada quién, dejas de perder tiempo y le reclamas al que sí puede arreglarlo.</p>
+      <div class="overflow-auto border border-sand-200 rounded-xl">
+        <table class="w-full text-sm">
+          <thead><tr class="bg-sand-50 text-left text-xs uppercase tracking-wide text-sand-500"><th class="py-2 px-3">Quién</th><th class="py-2 px-3">De qué responde</th><th class="py-2 px-3">Cómo llegarle</th></tr></thead>
+          <tbody>
+            <tr class="border-t border-sand-100"><td class="py-2 px-3 font-semibold text-sand-900">AAA / PRASA</td><td class="py-2 px-3 text-sand-600">El que <strong>opera tu agua</strong>: avería, presión, calidad. El responsable real.</td><td class="py-2 px-3"><a href="tel:7876202482" class="text-brand-700 font-semibold">787-620-2482</a> · <a href="https://www.acueductos.pr.gov" target="_blank" rel="noopener" class="text-brand-700">acueductos.pr.gov</a></td></tr>
+            <tr class="border-t border-sand-100"><td class="py-2 px-3 font-semibold text-sand-900">Acueducto comunal</td><td class="py-2 px-3 text-sand-600">Si tu comunidad tiene su propio sistema (mira la lista arriba), responde su junta + Salud.</td><td class="py-2 px-3 text-sand-500">Junta comunitaria local</td></tr>
+            <tr class="border-t border-sand-100"><td class="py-2 px-3 font-semibold text-sand-900">Depto. de Salud / JCA</td><td class="py-2 px-3 text-sand-600">Muestreo, primacía estatal, avisos de hervir el agua.</td><td class="py-2 px-3 text-sand-500">salud.pr.gov</td></tr>
+            <tr class="border-t border-sand-100"><td class="py-2 px-3 font-semibold text-sand-900">EPA (federal)</td><td class="py-2 px-3 text-sand-600">Fiscaliza y publica el récord (esta data). Obliga a cumplir.</td><td class="py-2 px-3 text-sand-500">epa.gov</td></tr>
+            <tr class="border-t border-sand-100"><td class="py-2 px-3 font-semibold text-sand-900">Municipio / Alcalde</td><td class="py-2 px-3 text-sand-600">Presiona a la AAA y gestiona fondos. <strong>No controla el agua potable.</strong></td><td class="py-2 px-3 text-sand-500">—</td></tr>
+            <tr class="border-t border-sand-100"><td class="py-2 px-3 font-semibold text-sand-900">Tú, vecino</td><td class="py-2 px-3 text-sand-600">Reportar la avería, exigir el reporte anual de calidad (CCR) que la AAA está obligada a publicar, y pasar el dato.</td><td class="py-2 px-3 text-sand-500">Escríbele al Veci: ${PHONE_CTA}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="bg-sand-50 border border-sand-200 border-l-4 border-l-brand-500 rounded-2xl p-5 my-8">
+      <p class="text-brand-700 font-bold uppercase tracking-wide text-xs mb-1">La radiografía completa</p>
+      <h3 class="font-display text-xl font-bold text-sand-900 mb-2">El récord no vive solo: el mismo sistema y un megaproyecto</h3>
+      <p class="text-sand-700 text-sm mb-3">El Sistema PRASA de Cabo Rojo sirve a <strong>${fmt(20749)} personas</strong> desde la red del suroeste (Planta de Filtros Betances), con 3 violaciones activas en el récord federal. Ese mismo sistema es del que dependería <strong>Esencia</strong>, un desarrollo propuesto de más de 1,600 unidades residenciales y hoteleras.</p>
+      <p class="text-sand-700 text-sm mb-3">La pregunta de interés público que sigue sin contestarse en público: <strong>¿determinó la AAA que la Planta Betances tiene capacidad para esa demanda nueva</strong>, sin afectar el servicio a los pueblos que ya abastece ni la sostenibilidad del acuífero del suroeste? Son datos que la Ley 141-2019 obliga a entregar cuando se piden.</p>
+      <p class="text-sand-600 text-sm mb-0">Fuente sobre el proyecto: <a href="https://periodismoinvestigativo.com/2025/10/esencia-residential-project-tax-breaks-puerto-rico/" target="_blank" rel="noopener" class="text-brand-700 font-semibold hover:underline">investigación del Centro de Periodismo Investigativo →</a></p>
+    </div>
+
+    <div class="bg-white border border-sand-200 rounded-2xl p-5 my-8">
       <h3 class="font-display text-lg font-bold text-sand-900 mb-2">¿Y el tuyo? Búscalo tú mismo</h3>
       <p class="text-sand-700 text-sm m-0">El récord de cualquier sistema de agua de Puerto Rico es público y gratis en el buscador de agua potable de la EPA (Safe Drinking Water). Si tu comunidad tiene su propio acueducto, búscalo por nombre; si te llega por PRASA, busca el de tu pueblo.</p>
       <p class="text-sand-800 text-sm font-semibold mt-3 mb-0">Si conoces a alguien en una comunidad con récord activo, pásale este dato. Lo que no se mira, no se arregla.</p>
