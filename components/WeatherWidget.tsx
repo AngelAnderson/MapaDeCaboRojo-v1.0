@@ -30,11 +30,11 @@ const WeatherWidget: React.FC<WeatherWidgetProps> = ({ weather }) => {
 
   if (weather.loading) {
       return (
-        <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-3 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-800 pointer-events-auto animate-pulse flex items-center gap-3">
-             <div className="w-10 h-10 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+        <div className="bg-paper/90 backdrop-blur-md p-3 rounded-2xl shadow-lg border border-line dark:border-slate-800 pointer-events-auto animate-pulse flex items-center gap-3">
+             <div className="w-10 h-10 bg-line rounded-full"></div>
              <div className="space-y-1">
-                 <div className="w-16 h-4 bg-slate-200 dark:bg-slate-700 rounded"></div>
-                 <div className="w-24 h-3 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                 <div className="w-16 h-4 bg-line rounded"></div>
+                 <div className="w-24 h-3 bg-line rounded"></div>
              </div>
         </div>
       );
@@ -46,7 +46,7 @@ const WeatherWidget: React.FC<WeatherWidgetProps> = ({ weather }) => {
     <div className={`backdrop-blur-md p-3 rounded-2xl shadow-xl border pointer-events-auto animate-float flex items-center gap-4 max-w-[280px] transition-colors duration-500 ${
         isAlertMode 
         ? 'bg-amber-50/95 dark:bg-amber-950/90 border-amber-200 dark:border-amber-700/50' 
-        : `bg-white/95 dark:bg-slate-900/95 ${weather.isSafe ? 'border-white/50 dark:border-slate-700' : 'border-red-500/50 dark:border-red-500/30'}`
+        : `bg-white/95 dark:bg-slate-900/95 ${weather.isSafe ? 'border-white/50 dark:border-line' : 'border-red-500/50 dark:border-red-500/30'}`
     }`}>
         {isAlertMode ? (
             <>
@@ -65,15 +65,15 @@ const WeatherWidget: React.FC<WeatherWidgetProps> = ({ weather }) => {
         ) : (
             <>
                 <div className="flex flex-col items-center justify-center w-12 text-center shrink-0">
-                    <i className={`fa-solid ${weather.icon} text-3xl ${weather.isSafe ? (weather.icon.includes('moon') ? 'text-purple-400' : 'text-orange-500') : 'text-slate-500'} mb-1`}></i>
-                    <span className="text-xl font-black text-slate-800 dark:text-white leading-none">{weather.temp}°</span>
+                    <i className={`fa-solid ${weather.icon} text-3xl ${weather.isSafe ? (weather.icon.includes('moon') ? 'text-purple-400' : 'text-orange-500') : 'text-ink-muted'} mb-1`}></i>
+                    <span className="text-xl font-black text-ink leading-none">{weather.temp}°</span>
                 </div>
-                <div className="flex-1 border-l border-slate-200 dark:border-slate-700 pl-3 min-w-0">
+                <div className="flex-1 border-l border-line pl-3 min-w-0">
                     <div className="flex items-center gap-2">
-                        <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-0.5">{weather.condition}</p>
+                        <p className="text-xs font-bold text-ink-muted uppercase tracking-wider mb-0.5">{weather.condition}</p>
                         {!weather.isSafe && <i className="fa-solid fa-triangle-exclamation text-amber-500 text-xs animate-pulse"></i>}
                     </div>
-                    <p className="text-xs text-slate-700 dark:text-slate-300 font-medium leading-tight truncate">{weather.advice}</p>
+                    <p className="text-xs text-ink-soft font-medium leading-tight truncate">{weather.advice}</p>
                 </div>
             </>
         )}

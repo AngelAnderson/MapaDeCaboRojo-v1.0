@@ -45,7 +45,7 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose }) => {
       value: stats.total,
       sub: 'mapeados en el pueblo',
       icon: 'map-location-dot',
-      color: 'from-teal-500 to-cyan-500',
+      color: 'from-brand-500 to-cyan-500',
       href: '/pueblo-en-numeros',
     },
     {
@@ -93,7 +93,7 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose }) => {
       value: stats.sights,
       sub: 'Faro, Esencia, Cofresí',
       icon: 'binoculars',
-      color: 'from-emerald-500 to-teal-500',
+      color: 'from-emerald-500 to-brand-500',
       href: '/categoria/turismo',
     },
     {
@@ -131,35 +131,35 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose }) => {
   ];
 
   const chipCls =
-    'shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-white/80 dark:bg-slate-800/60 border border-white/60 dark:border-slate-700/50 text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-700 hover:scale-105 active:scale-95 transition-all whitespace-nowrap';
+    'tap shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-pill text-xs font-bold bg-paper border border-line text-ink-soft hover:text-ink hover:border-line-strong transition-colors whitespace-nowrap no-underline';
 
   return (
     <section
-      className="relative bg-gradient-to-br from-white via-slate-50 to-teal-50/40 dark:from-slate-900 dark:via-slate-900 dark:to-teal-950/30 border border-white/60 dark:border-slate-700/50 rounded-3xl shadow-xl flex flex-col min-h-0 max-h-full overflow-hidden"
+      className="relative surface rounded-2xl shadow-e4 flex flex-col min-h-0 max-h-full overflow-hidden"
       aria-labelledby="pueblo-numeros-title"
     >
       {/* Inner scroll container — header + content scroll together, close button stays accessible */}
       <div className="overflow-y-auto overscroll-contain p-5 md:p-6 min-h-0">
       <div className="flex items-start justify-between mb-3">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-teal-600 dark:text-teal-400">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-brand-600 dark:text-brand-400">
             El mapa vivo
           </p>
           <h2
             id="pueblo-numeros-title"
-            className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white leading-tight"
+            className="text-2xl md:text-3xl font-black text-ink leading-tight"
             style={{ fontFamily: 'Fraunces, serif' }}
           >
             Pa' poner orden en el revolú de Cabo Rojo
           </h2>
-          <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+          <p className="text-sm text-ink-soft mt-1">
             Encuentra lugares, negocios, servicios y oportunidades sin perder el día buscando entre screenshots, posts viejos y recomendaciones sueltas.
           </p>
         </div>
         {onClose && (
           <button
             onClick={onClose}
-            className="shrink-0 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 w-9 h-9 rounded-full bg-white/60 dark:bg-slate-800/60 flex items-center justify-center"
+            className="shrink-0 text-ink-muted hover:text-ink w-9 h-9 rounded-full bg-paper-2 flex items-center justify-center"
             aria-label="Cerrar"
           >
             <i className="fa-solid fa-xmark"></i>
@@ -172,15 +172,16 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose }) => {
           <a
             key={tile.label}
             href={tile.href}
-            className="relative overflow-hidden rounded-2xl p-3 text-left bg-white/80 dark:bg-slate-800/60 backdrop-blur-sm border border-white/60 dark:border-slate-700/50 hover:scale-[1.03] active:scale-95 transition-transform cursor-pointer block no-underline"
+            className="tap group relative overflow-hidden rounded-xl p-3.5 text-left surface-2 hover:shadow-e2 hover:border-line-strong transition-all cursor-pointer block no-underline"
           >
-            <div className={`absolute -top-2 -right-2 w-12 h-12 rounded-full bg-gradient-to-br ${tile.color} opacity-20`} />
-            <i className={`fa-solid fa-${tile.icon} text-base text-slate-400 dark:text-slate-500 mb-1`} aria-hidden="true"></i>
-            <div className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white leading-none" style={{ fontFamily: 'Fraunces, serif' }}>
+            <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${tile.color} flex items-center justify-center mb-2 shadow-e1`}>
+              <i className={`fa-solid fa-${tile.icon} text-sm text-white`} aria-hidden="true"></i>
+            </div>
+            <div className="font-display text-3xl md:text-4xl font-semibold text-ink leading-none tracking-tight">
               {tile.value.toLocaleString()}
             </div>
-            <div className="text-[11px] font-bold text-slate-600 dark:text-slate-300 mt-1">{tile.label}</div>
-            <div className="text-[10px] text-slate-400 dark:text-slate-500 leading-snug mt-0.5">{tile.sub}</div>
+            <div className="text-xs font-bold text-ink mt-1.5">{tile.label}</div>
+            <div className="text-2xs text-ink-muted leading-snug mt-0.5">{tile.sub}</div>
           </a>
         ))}
       </div>
@@ -189,7 +190,7 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose }) => {
       <div className="mt-4">
         <div className="flex items-center gap-2 mb-1.5">
           <i className="fa-solid fa-briefcase-medical text-rose-500 text-xs" aria-hidden="true"></i>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Salud por especialidad</p>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-muted">Salud por especialidad</p>
         </div>
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
           {saludChips.map((c) => (
@@ -201,8 +202,8 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose }) => {
       {/* Sub-chips Servicios */}
       <div className="mt-3">
         <div className="flex items-center gap-2 mb-1.5">
-          <i className="fa-solid fa-screwdriver-wrench text-slate-500 text-xs" aria-hidden="true"></i>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Servicios por categoría</p>
+          <i className="fa-solid fa-screwdriver-wrench text-ink-muted text-xs" aria-hidden="true"></i>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-ink-muted">Servicios por categoría</p>
         </div>
         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-1 px-1">
           {serviciosChips.map((c) => (
@@ -215,21 +216,21 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose }) => {
       <div className="mt-4 flex flex-col sm:flex-row gap-2">
         <a
           href="/pon-tu-negocio-en-el-mapa"
-          className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold no-underline transition-colors"
+          className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-sm font-bold no-underline transition-colors"
         >
           <i className="fa-solid fa-store text-xs" aria-hidden="true"></i>
           Pon tu negocio en el mapa
         </a>
         <a
           href="/mira-la-vuelta"
-          className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 border-2 border-teal-600 text-teal-700 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-slate-700 text-sm font-bold no-underline transition-colors"
+          className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-paper border-2 border-brand-600 text-brand-700 dark:text-brand-400 hover:bg-brand-50 dark:hover:bg-paper-2 text-sm font-bold no-underline transition-colors"
         >
           <i className="fa-solid fa-eye text-xs" aria-hidden="true"></i>
           Antes de abrir, mira la vuelta
         </a>
       </div>
 
-      <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-3 text-center">
+      <p className="text-[10px] text-ink-muted mt-3 text-center">
         {stats.sponsorCount + stats.featuredFree > 0 && (
           <span className="mr-2">
             <i className="fa-solid fa-star text-amber-500"></i> {stats.sponsorCount} Vitrina · {stats.featuredFree} recomendados ·{' '}
@@ -237,11 +238,11 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose }) => {
         )}
         Cada número se cuenta solo si está en Cabo Rojo.
       </p>
-      <p className="text-[10px] italic text-slate-500 dark:text-slate-400 mt-1 text-center">
+      <p className="text-[10px] italic text-ink-muted mt-1 text-center">
         Google tiene datos. Facebook tiene ruido. Nosotros tenemos contexto local.
       </p>
       <p className="text-[11px] text-center mt-2">
-        <a href="/menos-revolu" className="text-teal-600 dark:text-teal-400 hover:underline font-semibold">
+        <a href="/menos-revolu" className="text-brand-600 dark:text-brand-400 hover:underline font-semibold">
           ¿Qué es esto? Lee la versión corta →
         </a>
       </p>

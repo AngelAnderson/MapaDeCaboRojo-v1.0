@@ -154,7 +154,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
 
   return (
     <div 
-        className={`fixed left-0 right-0 z-[2000] bg-white/80 dark:bg-slate-800/85 backdrop-blur-xl border-t border-white/60 dark:border-slate-700/50 shadow-[0_-10px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.3)] rounded-t-[32px] transition-all duration-500 cubic-bezier(0.32, 0.72, 0, 1) flex flex-col bottom-0 
+        className={`fixed left-0 right-0 z-[2000] bg-white/80 dark:bg-slate-800/85 backdrop-blur-xl border-t border-line shadow-[0_-10px_40px_rgba(0,0,0,0.05)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.3)] rounded-t-[32px] transition-all duration-500 cubic-bezier(0.32, 0.72, 0, 1) flex flex-col bottom-0 
         ${isVisible ? 'translate-y-0' : 'translate-y-[120%]'} 
         ${expanded ? 'h-[92vh]' : 'h-[75vh]'}`}
     >
@@ -165,7 +165,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
       <div className="px-5 pb-2 space-y-4 shrink-0">
         <div className="flex justify-between items-center">
             <div className="flex items-center gap-3 min-w-0">
-              <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight" style={{fontFamily: 'Fraunces, serif'}}>Explorar</h2>
+              <h2 className="text-2xl font-black text-ink tracking-tight" style={{fontFamily: 'Fraunces, serif'}}>Explorar</h2>
               {onAudienceChange && (
                 <AudienceToggle mode={audienceMode} onChange={onAudienceChange} />
               )}
@@ -174,17 +174,17 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                 {userLocation && (
                     <button 
                         onClick={() => setSortBy(prev => prev === 'recommended' ? 'distance' : 'recommended')}
-                        className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all flex items-center gap-1 ${sortBy === 'distance' ? 'bg-teal-600 text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400'}`}
+                        className={`text-xs font-bold px-3 py-1.5 rounded-full transition-all flex items-center gap-1 ${sortBy === 'distance' ? 'bg-brand-600 text-white' : 'bg-paper-2 text-ink-muted'}`}
                     >
                         <i className={`fa-solid ${sortBy === 'distance' ? 'fa-location-crosshairs' : 'fa-star'}`}></i>
                         {sortBy === 'distance' ? t('sort_distance') : t('sort_recommended')}
                     </button>
                 )}
-                <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{sortedPlaces.length}</span>
+                <span className="text-xs font-bold text-ink-muted uppercase tracking-wider">{sortedPlaces.length}</span>
                 {/* Close Button */}
                 <button 
                   onClick={() => onTabChange('map', false)} 
-                  className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 p-2 rounded-full"
+                  className="text-ink-muted hover:text-ink-soft dark:hover:text-ink-muted p-2 rounded-full"
                   aria-label={t('close')}
                 >
                     <i className="fa-solid fa-xmark text-xl"></i>
@@ -213,8 +213,8 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                     onClick={() => setActiveNeighborhood(activeNeighborhood === hood ? null : hood)}
                     className={`px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wide border transition-colors whitespace-nowrap ${
                         activeNeighborhood === hood 
-                        ? 'bg-slate-800 text-white border-slate-800 dark:bg-white dark:text-slate-900' 
-                        : 'bg-transparent text-slate-500 border-slate-300 dark:border-slate-600 hover:border-slate-400'
+                        ? 'bg-slate-800 text-white border-slate-800 dark:bg-white dark:text-ink' 
+                        : 'bg-transparent text-ink-muted border-line-strong hover:border-slate-400'
                     }`}
                 >
                     {hood}
@@ -227,7 +227,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
               className={`flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full border transition-all ${
                 showOpenOnly
                   ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/30'
-                  : 'bg-transparent text-slate-500 border-slate-300 dark:border-slate-600 hover:border-emerald-400'
+                  : 'bg-transparent text-ink-muted border-line-strong hover:border-emerald-400'
               }`}
             >
               {showOpenOnly ? '🟢' : '⏰'} Abierto ahora
@@ -238,18 +238,18 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                 title="Verificado a pie en los últimos 90 días"
                 className={`flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full border transition-all ${
                   showVerifiedOnly
-                    ? 'bg-teal-600 text-white border-teal-600 shadow-md shadow-teal-500/30'
-                    : 'bg-transparent text-slate-500 border-slate-300 dark:border-slate-600 hover:border-teal-400'
+                    ? 'bg-brand-600 text-white border-brand-600 shadow-md shadow-brand-500/30'
+                    : 'bg-transparent text-ink-muted border-line-strong hover:border-brand-400'
                 }`}
               >
                 <i className="fa-solid fa-circle-check text-[10px]"></i> Verificado &lt;90d
               </button>
             )}
             <div className="ml-auto flex gap-1">
-              <button onClick={() => setViewMode('list')} className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs ${viewMode === 'list' ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900' : 'text-slate-400'}`}>
+              <button onClick={() => setViewMode('list')} className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs ${viewMode === 'list' ? 'bg-slate-800 text-white dark:bg-white dark:text-ink' : 'text-ink-muted'}`}>
                 <i className="fa-solid fa-list"></i>
               </button>
-              <button onClick={() => setViewMode('grid')} className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs ${viewMode === 'grid' ? 'bg-slate-800 text-white dark:bg-white dark:text-slate-900' : 'text-slate-400'}`}>
+              <button onClick={() => setViewMode('grid')} className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs ${viewMode === 'grid' ? 'bg-slate-800 text-white dark:bg-white dark:text-ink' : 'text-ink-muted'}`}>
                 <i className="fa-solid fa-grip"></i>
               </button>
             </div>
@@ -278,7 +278,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                           <button
                               key={col.id}
                               onClick={() => onSelectCollection && onSelectCollection(isActive ? null : col)}
-                              className={`relative w-40 h-24 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-3 text-left transition-all active:scale-95 border ${isActive ? 'ring-2 ring-teal-500 border-transparent' : 'border-white/20'}`}
+                              className={`relative w-40 h-24 rounded-2xl overflow-hidden shadow-sm flex flex-col justify-end p-3 text-left transition-all active:scale-95 border ${isActive ? 'ring-2 ring-brand-500 border-transparent' : 'border-white/20'}`}
                           >
                               <div className={`absolute inset-0 bg-gradient-to-br ${col.color} opacity-90`}></div>
                               <div className="absolute top-2 right-2 text-white/30"><i className={`fa-solid fa-${col.icon} text-3xl`}></i></div>
@@ -294,10 +294,10 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
         )}
         {sortedPlaces.length === 0 ? (
             <div className="text-center py-16 flex flex-col items-center gap-4 px-6">
-                <i className="fa-solid fa-map-location-dot text-5xl text-slate-200 dark:text-slate-600"></i>
-                <p className="text-base font-bold text-slate-400 dark:text-slate-500">{t('no_results')}</p>
+                <i className="fa-solid fa-map-location-dot text-5xl text-slate-200 dark:text-ink-soft"></i>
+                <p className="text-base font-bold text-ink-muted">{t('no_results')}</p>
                 {searchText && (
-                  <p className="text-xs text-slate-400 dark:text-slate-500 max-w-xs">
+                  <p className="text-xs text-ink-muted max-w-xs">
                     Si "{searchText}" debería existir en Cabo Rojo y no está, pregúntale al Veci. Cada búsqueda fallida es data para mejorar el mapa.
                   </p>
                 )}
@@ -330,7 +330,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                 }
                 return (
                   <button key={place.id} onClick={() => onSelect(place)} className="relative aspect-square rounded-2xl overflow-hidden shadow-sm active:scale-95 transition-transform group">
-                    <div className={`absolute inset-0 bg-gradient-to-br from-teal-500 to-cyan-500 ${isClosed ? 'grayscale opacity-70' : ''}`}>
+                    <div className={`absolute inset-0 bg-gradient-to-br from-brand-500 to-cyan-500 ${isClosed ? 'grayscale opacity-70' : ''}`}>
                       {place.imageUrl && (
                         <img src={getOptimizedImageUrl(place.imageUrl, 300)} alt={place.name} className="w-full h-full object-cover" loading="lazy" decoding="async" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
                       )}
@@ -340,7 +340,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                       <h4 className="font-bold text-white text-sm leading-tight truncate">{place.name}</h4>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className="text-[10px] text-white/70 font-medium">{categoryLabel(place.category)}</span>
-                        {dist && <span className="text-[10px] text-teal-300 font-bold">• {dist}</span>}
+                        {dist && <span className="text-[10px] text-brand-300 font-bold">• {dist}</span>}
                       </div>
                     </div>
                     {place.is_featured && <div className="absolute top-2 left-2 w-2.5 h-2.5 bg-yellow-400 rounded-full border-2 border-white shadow-sm" />}
@@ -363,8 +363,8 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                 const fallbackImage = '';
 
                 return (
-                    <div key={place.id} onClick={() => onSelect(place)} className="flex items-center gap-4 p-3 pr-4 rounded-[24px] bg-white/50 dark:bg-slate-700/40 hover:bg-white dark:hover:bg-slate-700 active:scale-[0.98] transition-all cursor-pointer border border-white/60 dark:border-slate-600/50 shadow-sm group backdrop-blur-sm relative">
-                        <div className={`relative w-20 h-20 shrink-0 rounded-[18px] overflow-hidden bg-gradient-to-br from-teal-500 to-cyan-500 shadow-inner ${isClosed ? 'grayscale opacity-70' : ''}`}>
+                    <div key={place.id} onClick={() => onSelect(place)} className="flex items-center gap-4 p-3 pr-4 rounded-[24px] bg-white/50 dark:bg-slate-700/40 hover:bg-white dark:hover:bg-paper-2 active:scale-[0.98] transition-all cursor-pointer border border-white/60 dark:border-slate-600/50 shadow-sm group backdrop-blur-sm relative">
+                        <div className={`relative w-20 h-20 shrink-0 rounded-[18px] overflow-hidden bg-gradient-to-br from-brand-500 to-cyan-500 shadow-inner ${isClosed ? 'grayscale opacity-70' : ''}`}>
                             {place.imageUrl && (
                               <img
                                 src={getOptimizedImageUrl(place.imageUrl, 200)}
@@ -381,7 +381,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                         </div>
                         <div className="flex-1 min-w-0 py-1">
                             <div className="flex justify-between items-start mb-0.5">
-                                <h4 className={`font-bold truncate text-[16px] leading-tight ${isClosed ? 'text-slate-500 dark:text-slate-400' : 'text-slate-900 dark:text-white'}`}>{place.name}</h4>
+                                <h4 className={`font-bold truncate text-[16px] leading-tight ${isClosed ? 'text-ink-muted' : 'text-ink'}`}>{place.name}</h4>
                             </div>
                             
                             {isEvent ? (
@@ -389,9 +389,9 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                                     <i className="fa-regular fa-calendar mr-1"></i> {place.priceLevel}
                                 </p>
                             ) : (
-                                <p className="text-xs text-slate-500 dark:text-slate-300 font-medium truncate mb-2 flex items-center gap-2">
+                                <p className="text-xs text-ink-muted dark:text-ink-muted font-medium truncate mb-2 flex items-center gap-2">
                                     <span>{categoryLabel(place.category)} • {place.priceLevel || '$'}</span>
-                                    {dist && <span className="text-teal-600 dark:text-teal-400 font-bold">• {dist}</span>}
+                                    {dist && <span className="text-brand-600 dark:text-brand-400 font-bold">• {dist}</span>}
                                 </p>
                             )}
                             
@@ -404,7 +404,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                             </div>
                         </div>
                         <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-600/50 flex items-center justify-center group-hover:bg-slate-200 dark:group-hover:bg-slate-500 transition-colors">
-                            <i className="fa-solid fa-chevron-right text-slate-400 dark:text-slate-300 text-xs group-hover:text-slate-600 dark:group-hover:text-white"></i>
+                            <i className="fa-solid fa-chevron-right text-ink-muted dark:text-ink-muted text-xs group-hover:text-ink-soft dark:group-hover:text-white"></i>
                         </div>
                     </div>
                 );
@@ -413,7 +413,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
       </div>
 
       {/* Footer — cross-property SEO link */}
-      <div className="px-4 py-6 text-center text-xs text-slate-400 dark:text-slate-500">
+      <div className="px-4 py-6 text-center text-xs text-ink-muted">
         Directorio editorial: <a href="https://caborojo.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">caborojo.com</a>
       </div>
     </div>

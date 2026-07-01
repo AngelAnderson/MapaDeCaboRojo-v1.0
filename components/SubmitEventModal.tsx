@@ -71,23 +71,23 @@ const SubmitEventModal: React.FC<SubmitEventModalProps> = ({ isOpen, onClose }) 
     }
   };
 
-  const inputClass = "w-full bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white p-3 rounded-xl border border-slate-200 dark:border-slate-700 outline-none focus:border-teal-500 transition-colors";
-  const labelClass = "block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-1";
+  const inputClass = "w-full bg-canvas text-ink p-3 rounded-xl border border-line outline-none focus:border-brand-500 transition-colors";
+  const labelClass = "block text-xs font-bold text-ink-muted uppercase mb-1";
 
   return (
     <div className="fixed inset-0 bg-slate-900/90 backdrop-blur-md z-[2500] flex items-center justify-center p-4 animate-fade-in overflow-y-auto">
-      <div className="bg-white dark:bg-slate-800 w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh] transition-colors">
-        <div className="bg-teal-600 dark:bg-teal-700 p-6 text-white flex justify-between items-center shrink-0 shadow-md z-10">
+      <div className="bg-paper w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden relative flex flex-col max-h-[90vh] transition-colors">
+        <div className="bg-brand-600 dark:bg-brand-700 p-6 text-white flex justify-between items-center shrink-0 shadow-md z-10">
           <div>
             <h2 className="text-2xl font-black">Somete tu evento</h2>
-            <p className="text-teal-100 text-sm">Cuéntale al pueblo lo que viene. Lo revisamos y lo publicamos.</p>
+            <p className="text-brand-100 text-sm">Cuéntale al pueblo lo que viene. Lo revisamos y lo publicamos.</p>
           </div>
-          <button onClick={onClose} className="bg-teal-700/50 p-2 rounded-full hover:bg-teal-800 transition-colors" aria-label="Cerrar">
+          <button onClick={onClose} className="bg-brand-700/50 p-2 rounded-full hover:bg-brand-800 transition-colors" aria-label="Cerrar">
             <i className="fa-solid fa-xmark text-xl"></i>
           </button>
         </div>
 
-        <div className="p-6 space-y-5 overflow-y-auto flex-1 bg-white dark:bg-slate-800">
+        <div className="p-6 space-y-5 overflow-y-auto flex-1 bg-paper">
           {!done ? (
             <div className="space-y-4 animate-slide-up">
               <div>
@@ -135,8 +135,8 @@ const SubmitEventModal: React.FC<SubmitEventModalProps> = ({ isOpen, onClose }) 
                 <input className={inputClass} value={link} onChange={e => setLink(e.target.value)} placeholder="https://…" type="url" />
               </div>
 
-              <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3">
-                <p className="text-xs text-slate-500 dark:text-slate-400">Por si tenemos una pregunta antes de publicar. No se muestra al público.</p>
+              <div className="bg-canvas/50 p-4 rounded-xl border border-line space-y-3">
+                <p className="text-xs text-ink-muted">Por si tenemos una pregunta antes de publicar. No se muestra al público.</p>
                 <div>
                   <label className={labelClass}>Tu nombre</label>
                   <input className={inputClass} value={submitterName} onChange={e => setSubmitterName(e.target.value)} />
@@ -150,7 +150,7 @@ const SubmitEventModal: React.FC<SubmitEventModalProps> = ({ isOpen, onClose }) 
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="w-full bg-teal-600 hover:bg-teal-700 disabled:opacity-60 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-teal-600/20 transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-brand-600 hover:bg-brand-700 disabled:opacity-60 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-brand-600/20 transition-colors flex items-center justify-center gap-2"
               >
                 {loading
                   ? <><i className="fa-solid fa-circle-notch fa-spin"></i> Enviando…</>
@@ -162,9 +162,9 @@ const SubmitEventModal: React.FC<SubmitEventModalProps> = ({ isOpen, onClose }) 
               <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-sm">
                 <i className="fa-solid fa-check"></i>
               </div>
-              <h3 className="text-2xl font-bold text-slate-800 dark:text-white">¡Gracias! Lo recibimos.</h3>
-              <p className="text-slate-600 dark:text-slate-300 mt-2">Lo revisamos y, si todo cuadra, lo publicamos en el mapa.</p>
-              <button onClick={onClose} className="mt-8 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-8 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition-transform">Cerrar</button>
+              <h3 className="text-2xl font-bold text-ink">¡Gracias! Lo recibimos.</h3>
+              <p className="text-ink-soft mt-2">Lo revisamos y, si todo cuadra, lo publicamos en el mapa.</p>
+              <button onClick={onClose} className="mt-8 bg-slate-900 dark:bg-white text-white dark:text-ink px-8 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition-transform">Cerrar</button>
             </div>
           )}
         </div>

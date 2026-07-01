@@ -35,9 +35,9 @@ interface PlaceCardProps {
 
 // ---------- Skeleton for lazy-loaded detail ---------------------------------
 const Skeleton = memo(({ lines = 3, className = '' }: { lines?: number; className?: string }) => (
-  <div className={`animate-pulse space-y-2 ${className}`}>
+  <div className={`space-y-2 ${className}`}>
     {Array.from({ length: lines }).map((_, i) => (
-      <div key={i} className={`h-3 bg-slate-200 dark:bg-slate-700 rounded ${i === lines - 1 ? 'w-2/3' : 'w-full'}`}></div>
+      <div key={i} className={`skeleton h-3 rounded ${i === lines - 1 ? 'w-2/3' : 'w-full'}`}></div>
     ))}
   </div>
 ));
@@ -47,16 +47,16 @@ Skeleton.displayName = 'Skeleton';
 
 const InfoBadge = memo(({ icon, label, active, colorClass, darkColorClass }: any) => (
   <div
-    className={`flex flex-col items-center justify-center p-2 rounded-xl border transition-colors ${
+    className={`flex flex-col items-center justify-center p-2.5 rounded-lg border transition-colors ${
       active
         ? `${colorClass} ${darkColorClass}`
-        : 'bg-slate-50 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 text-slate-400 dark:text-slate-500 opacity-50'
+        : 'bg-paper-2 border-line text-ink-muted opacity-50'
     }`}
     role="status"
     aria-label={`${label}: ${active ? 'Sí' : 'No'}`}
   >
     <i className={`fa-solid fa-${icon} text-xl mb-1`} aria-hidden="true"></i>
-    <span className="text-[10px] font-bold uppercase">{label}</span>
+    <span className="text-2xs font-bold uppercase tracking-wide">{label}</span>
   </div>
 ));
 InfoBadge.displayName = 'InfoBadge';
@@ -74,20 +74,20 @@ const ActionButton = memo(({ icon, label, onClick, disabled, primary, color, loa
   <button
     onClick={onClick}
     disabled={disabled || loading}
-    className={`flex-1 flex flex-col items-center justify-center py-3 rounded-2xl transition-transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 ${
+    className={`tap flex-1 flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl transition-colors ${
       primary
-        ? 'bg-teal-600 text-white shadow-lg shadow-teal-900/20'
+        ? 'bg-brand-500 text-white shadow-e2 hover:bg-brand-600'
         : color
         ? color
-        : 'bg-white dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-600'
+        : 'bg-paper-2 border border-line text-ink-soft hover:text-ink hover:border-line-strong disabled:opacity-50 disabled:cursor-not-allowed'
     }`}
   >
     {loading ? (
-      <i className="fa-solid fa-circle-notch fa-spin text-lg mb-1"></i>
+      <i className="fa-solid fa-circle-notch fa-spin text-lg"></i>
     ) : (
-      <i className={`fa-solid fa-${icon} text-lg mb-1`} aria-hidden="true"></i>
+      <i className={`fa-solid fa-${icon} text-lg`} aria-hidden="true"></i>
     )}
-    <span className="text-xs font-bold">{label}</span>
+    <span className="text-2xs font-bold uppercase tracking-wide">{label}</span>
   </button>
 ));
 ActionButton.displayName = 'ActionButton';
@@ -174,22 +174,22 @@ const ReviewsSection: React.FC<{ placeId: string }> = memo(({ placeId }) => {
   if (!data) return null;
 
   return (
-    <section className="pt-4 border-t border-slate-100 dark:border-slate-700">
+    <section className="pt-4 border-t border-line">
       <div className="flex items-center justify-between mb-3">
-        <h4 className="font-bold text-sm text-slate-800 dark:text-white flex items-center gap-2">
+        <h4 className="font-bold text-sm text-ink flex items-center gap-2">
           <i className="fa-solid fa-star text-amber-400"></i>
           Reseñas
-          {data.count > 0 && <span className="text-xs font-normal text-slate-500">({data.avg_rating} · {data.count})</span>}
+          {data.count > 0 && <span className="text-xs font-normal text-ink-muted">({data.avg_rating} · {data.count})</span>}
         </h4>
         {!showForm && !submitted && (
-          <button onClick={() => setShowForm(true)} className="text-xs font-bold text-teal-500 hover:text-teal-600">
+          <button onClick={() => setShowForm(true)} className="text-xs font-bold text-brand-500 hover:text-brand-600">
             Dejar reseña
           </button>
         )}
       </div>
 
       {showForm && (
-        <div className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 mb-3 space-y-2">
+        <div className="bg-paper-2 rounded-xl p-3 mb-3 space-y-2">
           <div className="flex gap-1">
             {[1,2,3,4,5].map(s => (
               <button key={s} onMouseEnter={() => setHoverRating(s)} onMouseLeave={() => setHoverRating(0)} onClick={() => setRating(s)} className="text-xl transition-colors">
@@ -197,11 +197,11 @@ const ReviewsSection: React.FC<{ placeId: string }> = memo(({ placeId }) => {
               </button>
             ))}
           </div>
-          <textarea value={comment} onChange={e => setComment(e.target.value)} placeholder="¿Cómo fue tu experiencia?" className="w-full text-sm p-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 resize-none" rows={2} />
-          <input value={authorName} onChange={e => setAuthorName(e.target.value)} placeholder="Tu nombre (opcional)" className="w-full text-sm p-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700" />
+          <textarea value={comment} onChange={e => setComment(e.target.value)} placeholder="¿Cómo fue tu experiencia?" className="w-full text-sm p-2 rounded-lg border border-line bg-paper resize-none" rows={2} />
+          <input value={authorName} onChange={e => setAuthorName(e.target.value)} placeholder="Tu nombre (opcional)" className="w-full text-sm p-2 rounded-lg border border-line bg-paper" />
           <div className="flex gap-2">
-            <button onClick={() => setShowForm(false)} className="flex-1 text-xs font-bold text-slate-500 py-2">Cancelar</button>
-            <button onClick={handleSubmit} disabled={rating === 0 || submitting} className="flex-1 text-xs font-bold text-white py-2 bg-teal-500 rounded-lg disabled:opacity-40">
+            <button onClick={() => setShowForm(false)} className="flex-1 text-xs font-bold text-ink-muted py-2">Cancelar</button>
+            <button onClick={handleSubmit} disabled={rating === 0 || submitting} className="flex-1 text-xs font-bold text-white py-2 bg-brand-500 rounded-lg disabled:opacity-40">
               {submitting ? '...' : 'Enviar'}
             </button>
           </div>
@@ -215,11 +215,11 @@ const ReviewsSection: React.FC<{ placeId: string }> = memo(({ placeId }) => {
           {data.reviews.slice(0, 5).map(r => (
             <div key={r.id} className="text-xs">
               <div className="flex items-center gap-1 mb-0.5">
-                <span className="font-bold text-slate-700 dark:text-slate-200">{r.author_name}</span>
+                <span className="font-bold text-ink">{r.author_name}</span>
                 <span className="text-amber-400">{'★'.repeat(r.rating)}</span>
-                <span className="text-slate-400 ml-auto">{new Date(r.created_at).toLocaleDateString('es-PR', { month: 'short', day: 'numeric' })}</span>
+                <span className="text-ink-muted ml-auto">{new Date(r.created_at).toLocaleDateString('es-PR', { month: 'short', day: 'numeric' })}</span>
               </div>
-              {r.comment && <p className="text-slate-500 dark:text-slate-400">{r.comment}</p>}
+              {r.comment && <p className="text-ink-muted">{r.comment}</p>}
             </div>
           ))}
         </div>
@@ -386,9 +386,9 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
 
   // ---- Container shell (desktop side panel vs mobile bottom sheet) -------
   const desktopShell =
-    'fixed top-20 right-4 bottom-20 w-[420px] max-w-[calc(100vw-2rem)] bg-white dark:bg-slate-800 rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.25)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.6)] z-[2000] flex flex-col overflow-hidden animate-slide-up';
+    'fixed top-20 right-4 bottom-20 w-[420px] max-w-[calc(100vw-2rem)] bg-paper rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.25)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.6)] z-[2000] flex flex-col overflow-hidden animate-slide-up';
   const mobileShell =
-    'fixed inset-x-0 bottom-0 top-16 bg-white dark:bg-slate-800 rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.3)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.6)] z-[2000] flex flex-col overflow-hidden animate-slide-up';
+    'fixed inset-x-0 bottom-0 top-16 bg-paper rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.3)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.6)] z-[2000] flex flex-col overflow-hidden animate-slide-up';
 
   const mobileTransform = dragOffset > 0 ? { transform: `translateY(${dragOffset}px)`, transition: 'none' } : undefined;
 
@@ -404,16 +404,16 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
       style={mobileTransform}
     >
       {/* Sticky header: drag handle (mobile) + title row (always visible) */}
-      <div className="sticky top-0 z-20 bg-white/95 dark:bg-slate-800/95 backdrop-blur-md border-b border-slate-100 dark:border-slate-700 pt-2 pb-3 px-5 flex flex-col gap-2 shrink-0">
+      <div className="sticky top-0 z-20 bg-paper/95 backdrop-blur-md border-b border-line pt-2 pb-3 px-5 flex flex-col gap-2 shrink-0">
         {!isDesktop && (
           <div className="flex justify-center pb-1" aria-hidden="true">
-            <div className="w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full"></div>
+            <div className="w-10 h-1 bg-line-strong rounded-full"></div>
           </div>
         )}
 
         <div className="flex items-start gap-3">
           <div className="flex-1 min-w-0">
-            <h1 id="place-name" className="text-xl font-black text-slate-900 dark:text-white leading-tight truncate" style={{fontFamily: 'Fraunces, serif'}}>
+            <h1 id="place-name" className="text-xl font-black text-ink leading-tight truncate" style={{fontFamily: 'Fraunces, serif'}}>
               {placeName}
             </h1>
             <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -423,7 +423,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
                 </span>
               )}
               {userLocation && place.coords && (
-                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium flex items-center gap-1">
+                <span className="text-xs text-ink-muted font-medium flex items-center gap-1">
                   <i className="fa-solid fa-location-arrow text-[9px]"></i>
                   {distanceKm(userLocation, place.coords)}
                 </span>
@@ -458,7 +458,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
                 className={`w-9 h-9 rounded-full flex items-center justify-center transition-colors ${
                   isFavorite
                     ? 'bg-pink-500 text-white'
-                    : 'bg-slate-100 dark:bg-slate-700 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600'
+                    : 'bg-paper-2 text-ink-muted hover:bg-line'
                 }`}
               >
                 <i className={`fa-${isFavorite ? 'solid' : 'regular'} fa-heart text-sm`}></i>
@@ -470,7 +470,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
                 onClose();
               }}
               aria-label={t('close')}
-              className="bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 w-9 h-9 rounded-full flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors focus:outline-none"
+              className="bg-paper-2 text-ink-muted w-9 h-9 rounded-full flex items-center justify-center hover:bg-line transition-colors focus:outline-none"
             >
               <i className="fa-solid fa-xmark text-sm" aria-hidden="true"></i>
             </button>
@@ -481,7 +481,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
       {/* Scrollable body */}
       <div className="flex-1 overflow-y-auto overscroll-contain">
         {/* Hero image — real photo if we have one, otherwise a branded gradient with category icon */}
-        <header className="relative w-full h-56 shrink-0 bg-gradient-to-br from-teal-500 via-cyan-500 to-orange-400 overflow-hidden">
+        <header className="relative w-full h-56 shrink-0 bg-gradient-to-br from-brand-500 via-brand-400 to-coral-400 overflow-hidden">
           {hasRealImage ? (
             <img
               src={heroSrc}
@@ -522,7 +522,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
           )}
         </header>
 
-        <div className="p-5 space-y-5 bg-white dark:bg-slate-800">
+        <div className="p-5 space-y-5 bg-paper">
           {/* Action row — context-aware */}
           <nav className="grid grid-cols-4 gap-2">
             {isMobileBiz ? (
@@ -548,7 +548,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
                 icon="whatsapp"
                 label="WhatsApp"
                 onClick={handleWhatsApp}
-                color="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300"
+                color="bg-brand-50 dark:bg-brand-500/15 border border-brand-200 dark:border-brand-500/30 text-brand-700 dark:text-brand-300"
               />
             )}
             <ActionButton icon="share-nodes" label={t('share')} onClick={handleShare} />
@@ -556,7 +556,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
               icon="robot"
               label="El Veci"
               onClick={handleElVeciSMS}
-              color="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 text-teal-700 dark:text-teal-300"
+              color="bg-coral-50 dark:bg-coral-500/15 border border-coral-200 dark:border-coral-500/30 text-coral-700 dark:text-coral-300"
             />
           </nav>
 
@@ -581,7 +581,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
                 <h3 className="text-xs font-black text-fuchsia-600 dark:text-fuchsia-400 uppercase tracking-wider flex items-center gap-2 mb-1">
                   <i className="fa-solid fa-bolt"></i> Vibe Check
                 </h3>
-                <p className="text-sm font-medium text-slate-700 dark:text-slate-200 italic leading-relaxed">"{vibeCheck.text}"</p>
+                <p className="text-sm font-medium text-ink italic leading-relaxed">"{vibeCheck.text}"</p>
                 <p className="text-[9px] text-fuchsia-400/70 mt-1 text-right">Updated via El Veci</p>
               </div>
             </section>
@@ -589,9 +589,9 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
 
           {/* Description — skeleton while detail loads */}
           <section>
-            <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-2 tracking-wider">{t('the_scoop')}</h3>
+            <h3 className="text-xs font-bold text-ink-muted uppercase mb-2 tracking-wider">{t('the_scoop')}</h3>
             {detailLoaded ? (
-              placeDescription ? <p className="text-slate-700 dark:text-slate-200 text-lg leading-relaxed">{placeDescription}</p> : null
+              placeDescription ? <p className="text-ink text-lg leading-relaxed">{placeDescription}</p> : null
             ) : (
               <Skeleton lines={3} />
             )}
@@ -600,28 +600,28 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
           {/* Related people */}
           {place.relatedPeople && place.relatedPeople.length > 0 && (
             <section>
-              <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-3 tracking-wider flex items-center gap-2">
+              <h3 className="text-xs font-bold text-ink-muted uppercase mb-3 tracking-wider flex items-center gap-2">
                 <i className="fa-solid fa-user-group"></i> Gente Importante
               </h3>
               <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
                 {place.relatedPeople.map((person) => (
                   <div
                     key={person.id}
-                    className="min-w-[240px] bg-slate-50 dark:bg-slate-700/50 rounded-xl p-3 border border-slate-100 dark:border-slate-600 flex items-center gap-3"
+                    className="min-w-[240px] bg-paper-2 rounded-xl p-3 border border-line flex items-center gap-3"
                   >
-                    <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-600 overflow-hidden shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-line overflow-hidden shrink-0">
                       {person.imageUrl ? (
                         <img src={person.imageUrl} alt={person.name} className="w-full h-full object-cover" loading="lazy" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-slate-400">
+                        <div className="w-full h-full flex items-center justify-center text-ink-muted">
                           <i className="fa-solid fa-user"></i>
                         </div>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-slate-800 dark:text-white text-sm truncate">{person.name}</h4>
-                      <p className="text-xs text-teal-600 dark:text-teal-400 font-bold uppercase truncate">{person.role}</p>
-                      {person.years && <p className="text-[10px] text-slate-500">{person.years}</p>}
+                      <h4 className="font-bold text-ink text-sm truncate">{person.name}</h4>
+                      <p className="text-xs text-brand-600 dark:text-brand-400 font-bold uppercase truncate">{person.role}</p>
+                      {person.years && <p className="text-[10px] text-ink-muted">{person.years}</p>}
                     </div>
                   </div>
                 ))}
@@ -635,7 +635,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
               {detailLoaded && place.opening_hours ? (
                 <HoursDisplay hours={place.opening_hours} />
               ) : !detailLoaded ? (
-                <div className="bg-slate-50 dark:bg-slate-700/50 rounded-2xl border border-slate-100 dark:border-slate-600 p-4">
+                <div className="bg-paper-2 rounded-2xl border border-line p-4">
                   <Skeleton lines={2} />
                 </div>
               ) : null}
@@ -644,28 +644,28 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
 
           {/* Contact block — deferred until detail loads */}
           {detailLoaded && (placeAddress || placePhone || place.gmapsUrl) && (
-            <section className="bg-slate-50 dark:bg-slate-700/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-600 space-y-3 transition-colors">
+            <section className="bg-paper-2 p-4 rounded-2xl border border-line space-y-3 transition-colors">
               {placeAddress && (
                 <div className="flex items-start gap-3">
                   {isMobileBiz ? (
                     <i className="fa-solid fa-truck-fast text-purple-500 dark:text-purple-400 mt-1"></i>
                   ) : (
-                    <i className="fa-solid fa-map-pin text-teal-600 dark:text-teal-400 mt-1"></i>
+                    <i className="fa-solid fa-map-pin text-brand-600 dark:text-brand-400 mt-1"></i>
                   )}
                   <div>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase">
+                    <p className="text-xs text-ink-muted font-bold uppercase">
                       {isEvent ? t('event_location') : isMobileBiz ? t('service_area') : t('address')}
                     </p>
-                    <p className="text-sm text-slate-700 dark:text-slate-200">{placeAddress}</p>
+                    <p className="text-sm text-ink">{placeAddress}</p>
                   </div>
                 </div>
               )}
               {placePhone && (
-                <div className="flex items-start gap-3 pt-2 border-t border-slate-200 dark:border-slate-600">
-                  <i className="fa-solid fa-phone text-teal-600 dark:text-teal-400 mt-1"></i>
+                <div className="flex items-start gap-3 pt-2 border-t border-line">
+                  <i className="fa-solid fa-phone text-brand-600 dark:text-brand-400 mt-1"></i>
                   <div>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 font-bold uppercase">{t('phone')}</p>
-                    <a href={`tel:${digitsOnly(placePhone)}`} className="text-sm text-teal-600 dark:text-teal-400 font-bold underline">
+                    <p className="text-xs text-ink-muted font-bold uppercase">{t('phone')}</p>
+                    <a href={`tel:${digitsOnly(placePhone)}`} className="text-sm text-brand-600 dark:text-brand-400 font-bold underline">
                       {placePhone}
                     </a>
                   </div>
@@ -684,16 +684,16 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
                 <span className="text-[10px] text-cyan-500/80 bg-cyan-100 dark:bg-cyan-900/40 px-2 py-0.5 rounded-full">Live</span>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <div className="bg-white/60 dark:bg-slate-800/60 p-2 rounded-xl text-center">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">Surf</p>
+                <div className="bg-paper/70 p-2 rounded-xl text-center">
+                  <p className="text-[10px] font-bold text-ink-muted uppercase">Surf</p>
                   <p className="text-lg font-black text-cyan-700 dark:text-cyan-300">{surf.waves}</p>
                 </div>
-                <div className="bg-white/60 dark:bg-slate-800/60 p-2 rounded-xl text-center">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">Condition</p>
+                <div className="bg-paper/70 p-2 rounded-xl text-center">
+                  <p className="text-[10px] font-bold text-ink-muted uppercase">Condition</p>
                   <p className="text-xs font-bold text-cyan-700 dark:text-cyan-300 mt-1">{surf.condition}</p>
                 </div>
-                <div className="bg-white/60 dark:bg-slate-800/60 p-2 rounded-xl text-center">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">UV</p>
+                <div className="bg-paper/70 p-2 rounded-xl text-center">
+                  <p className="text-[10px] font-bold text-ink-muted uppercase">UV</p>
                   <p className={`text-lg font-black ${surf.uv > 7 ? 'text-red-500' : 'text-cyan-700 dark:text-cyan-300'}`}>{surf.uv}</p>
                 </div>
               </div>
@@ -703,7 +703,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
 
           {/* Logistics badges — deferred until detail */}
           {detailLoaded && <section>
-            <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-3 tracking-wider">{t('logistics')}</h3>
+            <h3 className="text-xs font-bold text-ink-muted uppercase mb-3 tracking-wider">{t('logistics')}</h3>
             <div className="grid grid-cols-4 gap-2">
               {!isMobileBiz && (
                 <InfoBadge
@@ -745,7 +745,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
               <h3 className="text-orange-800 dark:text-orange-300 font-bold uppercase mb-2 text-sm flex items-center gap-2">
                 <i className="fa-solid fa-user-secret" aria-hidden="true"></i> {t('tip_title')}
               </h3>
-              <p className="text-slate-800 dark:text-slate-200 font-medium relative z-10">{placeTips}</p>
+              <p className="text-ink font-medium relative z-10">{placeTips}</p>
               <button
                 onClick={() => onAskAi('')}
                 className="mt-4 bg-white/80 dark:bg-slate-700 hover:bg-white dark:hover:bg-slate-600 text-orange-700 dark:text-orange-300 text-sm font-bold py-2 px-4 rounded-xl shadow-sm flex items-center gap-2 transition-colors relative z-10"
@@ -758,15 +758,15 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
           {/* Related places */}
           {relatedPlaces.length > 0 && onSelect && (
             <section className="pt-2">
-              <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase mb-3 tracking-wider">{t('explore_also')}</h3>
+              <h3 className="text-xs font-bold text-ink-muted uppercase mb-3 tracking-wider">{t('explore_also')}</h3>
               <div className="grid grid-cols-1 gap-2">
                 {relatedPlaces.map((rp) => (
                   <button
                     key={rp.id}
                     onClick={() => onSelect(rp)}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-700/50 border border-slate-100 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-600 transition-colors text-left group"
+                    className="flex items-center gap-3 p-3 rounded-xl bg-paper-2 border border-line hover:bg-line transition-colors text-left group"
                   >
-                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-teal-500 to-cyan-500 overflow-hidden shrink-0 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-brand-500 to-cyan-500 overflow-hidden shrink-0 flex items-center justify-center">
                       {rp.imageUrl ? (
                         <img
                           src={getPlaceHeaderImage(rp.imageUrl)}
@@ -782,12 +782,12 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm truncate group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                      <h4 className="font-bold text-ink text-sm truncate group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
                         {rp.name}
                       </h4>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{rp.category}</p>
+                      <p className="text-xs text-ink-muted truncate">{rp.category}</p>
                     </div>
-                    <i className="fa-solid fa-chevron-right text-xs text-slate-400"></i>
+                    <i className="fa-solid fa-chevron-right text-xs text-ink-muted"></i>
                   </button>
                 ))}
               </div>
@@ -797,10 +797,10 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
           {/* Reviews Section */}
           <ReviewsSection placeId={place.id} />
 
-          <footer className="pt-4 border-t border-slate-100 dark:border-slate-700 flex flex-col gap-2">
+          <footer className="pt-4 border-t border-line flex flex-col gap-2">
             <button
               onClick={onSuggestEdit}
-              className="text-slate-400 text-xs font-bold hover:text-teal-600 dark:hover:text-teal-400 transition-colors flex items-center justify-center gap-2 py-2"
+              className="text-ink-muted text-xs font-bold hover:text-brand-600 dark:hover:text-brand-400 transition-colors flex items-center justify-center gap-2 py-2"
             >
               <i className="fa-solid fa-pen-to-square" aria-hidden="true"></i> {t('btn_suggest')}
             </button>
@@ -809,7 +809,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
         </div>
       </div>
       {shareToast && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs font-bold px-4 py-2 rounded-full shadow-lg z-50 animate-bounce-in">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-ink text-canvas text-xs font-bold px-4 py-2 rounded-full shadow-lg z-50 animate-bounce-in">
           {shareToast}
         </div>
       )}

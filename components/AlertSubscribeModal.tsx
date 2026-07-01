@@ -40,33 +40,33 @@ const AlertSubscribeModal: React.FC<AlertSubscribeModalProps> = ({ isOpen, onClo
 
   return (
     <div className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-6 mx-4 max-w-sm w-full" onClick={e => e.stopPropagation()}>
+      <div className="bg-canvas rounded-2xl shadow-2xl p-6 mx-4 max-w-sm w-full" onClick={e => e.stopPropagation()}>
         {status === 'success' ? (
           <div className="text-center py-4">
             <div className="text-4xl mb-3">🔔</div>
-            <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-2">¡Listo!</h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400">Te avisaremos cuando abran negocios nuevos.</p>
-            <button onClick={onClose} className="mt-4 px-6 py-2 bg-teal-500 text-white rounded-full font-bold text-sm">Cerrar</button>
+            <h3 className="font-bold text-lg text-ink mb-2">¡Listo!</h3>
+            <p className="text-sm text-ink-muted">Te avisaremos cuando abran negocios nuevos.</p>
+            <button onClick={onClose} className="mt-4 px-6 py-2 bg-brand-500 text-white rounded-full font-bold text-sm">Cerrar</button>
           </div>
         ) : (
           <>
-            <h3 className="font-bold text-lg text-slate-800 dark:text-white mb-1 flex items-center gap-2">
+            <h3 className="font-bold text-lg text-ink mb-1 flex items-center gap-2">
               <i className="fa-solid fa-bell text-amber-500"></i> Alertas de negocios nuevos
             </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">Recibe un mensaje cuando abra algo nuevo.</p>
+            <p className="text-xs text-ink-muted mb-4">Recibe un mensaje cuando abra algo nuevo.</p>
 
             <input
               type="tel"
               placeholder="787-417-7711"
               value={phone}
               onChange={e => setPhone(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full px-4 py-2.5 rounded-xl border border-line bg-paper-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-brand-500"
             />
 
             <select
               value={barrio}
               onChange={e => setBarrio(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              className="w-full px-4 py-2.5 rounded-xl border border-line bg-paper-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
               <option value="">Todos los barrios</option>
               {BARRIOS.map(b => <option key={b} value={b}>{b}</option>)}
@@ -77,11 +77,11 @@ const AlertSubscribeModal: React.FC<AlertSubscribeModalProps> = ({ isOpen, onClo
             )}
 
             <div className="flex gap-2">
-              <button onClick={onClose} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">Cancelar</button>
+              <button onClick={onClose} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-ink-muted hover:bg-slate-100 dark:hover:bg-paper-2 transition-colors">Cancelar</button>
               <button
                 onClick={handleSubmit}
                 disabled={status === 'loading'}
-                className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-teal-500 hover:bg-teal-600 disabled:opacity-50 transition-colors"
+                className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-brand-500 hover:bg-brand-600 disabled:opacity-50 transition-colors"
               >
                 {status === 'loading' ? 'Enviando...' : 'Suscribirme'}
               </button>
