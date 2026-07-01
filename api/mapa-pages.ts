@@ -2550,6 +2550,7 @@ const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:n
 ]
 
 const REG_PODCAST_URL = 'https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/especialistas-fantasma-desiertos.m4a'
+const REG_REPORT_URL = 'https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/reportes/estado-acceso-medico-pr-2026.pdf'
 
 async function handleRegistro(req: any, res: any) {
   const en = String(req.query.lang || '') === 'en'
@@ -2624,29 +2625,7 @@ async function handleRegistro(req: any, res: any) {
 
 <p class="not-prose mt-3 text-sm text-slate-500 text-center">${t('¿Vives lejos del área metro?', 'Live far from the metro area?')} <a href="/registro/desiertos${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold hover:underline">${t('Mira en qué regiones no hay ciertos especialistas →', 'See which regions have no specialists →')}</a></p>
 
-<div class="not-prose mt-8 bg-gradient-to-br from-teal-50 to-white border-2 border-teal-200 rounded-2xl p-6">
-  <div class="flex items-start gap-3">
-    <div class="text-3xl leading-none">🎙️</div>
-    <div class="flex-1 min-w-0">
-      <h3 class="text-xl font-black text-slate-900">${t('Escucha: por qué existe este registro', 'Listen: why this registry exists')}</h3>
-      <p class="text-slate-600 mt-1 text-[15px] leading-relaxed">${t('En cristiano: en Puerto Rico no es que falten médicos, es que están casi todos en el área metro. Y nadie te contesta lo más importante — si tu especialista coge tu plan. Aquí te lo explico.', 'Plain talk: Puerto Rico\'s problem is not a lack of doctors, it is that nearly all of them are in the metro area. And no one answers the thing that matters most — whether your specialist takes your plan. Here is why.')}</p>
-      <audio controls preload="none" class="mt-3 w-full" src="${REG_PODCAST_URL}">
-        ${t('Tu navegador no puede reproducir el audio.', 'Your browser cannot play this audio.')} <a href="${REG_PODCAST_URL}" class="text-teal-700 font-semibold">${t('Descárgalo aquí', 'Download it')}</a>.
-      </audio>
-    </div>
-  </div>
-</div>
-<script type="application/ld+json">${JSON.stringify({
-  '@context': 'https://schema.org',
-  '@type': 'AudioObject',
-  name: 'Especialistas fantasma y desiertos médicos en Puerto Rico',
-  description: 'Por qué en Puerto Rico el problema no es que falten médicos sino que se concentran en el área metro, y por qué nadie contesta si tu especialista acepta tu plan médico. Registro verificado contra el NPPES federal.',
-  contentUrl: REG_PODCAST_URL,
-  encodingFormat: 'audio/mp4',
-  inLanguage: 'es',
-  isAccessibleForFree: true,
-  publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' }
-})}</script>
+<p class="not-prose mt-4 text-sm text-slate-500 text-center">🎙️ ${t('¿Quieres entender por qué pasa esto?', 'Want to understand why this happens?')} <a href="/observatorio${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold hover:underline">${t('Escucha el podcast y baja el reporte completo →', 'Listen to the podcast and get the full report →')}</a></p>
 
 <h2>${t(`Las ${REGISTRY_SPECS.length} especialidades del registro`, `The ${REGISTRY_SPECS.length} specialties in the registry`)}</h2>
 <p class="text-slate-600 -mt-2">${t('El número es cuántos hay <strong>en toda la isla</strong>, verificados contra el registro federal. Toca cualquiera pa\' ver dónde están y sus teléfonos.', 'The number is how many there are <strong>across the whole island</strong>, verified against the federal registry. Tap any to see where they are and their phone numbers.')}</p>
@@ -3244,6 +3223,44 @@ WhatsApp: ${escapeHtml(whatsapp || '—')}</p>
   }
 }
 
+// =============== Lead magnet capture (diáspora list, gated report PDF) ===============
+// /observatorio: email → registro_leads → devuelve el URL del reporte. Angel recibe aviso.
+async function handleRegistroLead(req: any, res: any) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8')
+  try {
+    const b = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}')
+    const email = String(b.email || '').slice(0, 160).trim().toLowerCase()
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { res.status(400).send(JSON.stringify({ ok: false })); return }
+    // Upsert on email (unique index) — repeat downloads don't error, just refresh the row.
+    await supabase.from('registro_leads').upsert({
+      email,
+      name: String(b.name || '').slice(0, 120).trim() || null,
+      region: String(b.region || '').slice(0, 40).trim() || null,
+      lang: String(b.lang || 'es').slice(0, 5),
+      wants_alerts: b.wants_alerts !== false,
+      source: String(b.source || 'observatorio').slice(0, 40),
+    }, { onConflict: 'email' })
+    if (RESEND_API_KEY) {
+      try {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: FROM_EMAIL, to: REPLY_TO, reply_to: email,
+            subject: `📄 Lead diáspora: ${email} bajó el reporte del acceso médico`,
+            html: `<p>Nuevo lead del reporte (registromedicopr.com/observatorio):</p>
+<p><strong>${escapeHtml(email)}</strong>${b.region ? ` · ${escapeHtml(String(b.region))}` : ''}</p>
+<p style="color:#64748b;font-size:12px">registro_leads · quiere alertas de especialistas nuevos · candidato Conserje diáspora</p>`,
+          }),
+        })
+      } catch { /* email best-effort */ }
+    }
+    res.status(200).send(JSON.stringify({ ok: true, url: REG_REPORT_URL }))
+  } catch {
+    res.status(200).send(JSON.stringify({ ok: false }))
+  }
+}
+
 // =============== /registro/desiertos — El Observatorio de Desiertos Médicos ===============
 // Public, shareable artifact of ABSENCE. The data the government has buried, made plain.
 // =============== /observatorio (registromedicopr) — El Observatorio del Acceso Médico de PR ===============
@@ -3273,6 +3290,57 @@ async function handleObservatorioMedico(req: any, res: any) {
   <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-shield-halved"></i> Data de proveedores verificada contra NPPES federal</span>
   <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-quote-right"></i> Citable · cada cifra con su fuente</span>
 </div>
+
+<div class="not-prose mt-6 grid md:grid-cols-2 gap-4">
+  <div class="bg-gradient-to-br from-teal-50 to-white border-2 border-teal-200 rounded-2xl p-5 flex flex-col">
+    <div class="text-2xl leading-none">🎙️</div>
+    <h3 class="text-lg font-black text-slate-900 mt-1">Escúchalo en 10 minutos</h3>
+    <p class="text-sm text-slate-600 mt-1 flex-1">En cristiano: por qué no es que falten médicos, sino dónde están todos, y por qué nadie te dice si tu especialista coge tu plan.</p>
+    <audio controls preload="none" class="mt-3 w-full" src="${REG_PODCAST_URL}">Tu navegador no puede reproducir el audio. <a href="${REG_PODCAST_URL}" class="text-teal-700 font-semibold">Descárgalo</a>.</audio>
+  </div>
+  <div class="bg-gradient-to-br from-amber-50 to-white border-2 border-amber-200 rounded-2xl p-5 flex flex-col">
+    <div class="text-2xl leading-none">📄</div>
+    <h3 class="text-lg font-black text-slate-900 mt-1">Baja el reporte completo (PDF)</h3>
+    <p class="text-sm text-slate-600 mt-1 flex-1">El panorama entero del acceso médico en PR, con la data por región y la fuente de cada número. Te lo mando y te aviso cuando llegue un especialista nuevo al pueblo de los tuyos.</p>
+    <form id="lm-form" class="mt-3 grid gap-2">
+      <input id="lm-email" type="email" required autocomplete="email" placeholder="Tu email" class="w-full rounded-lg border border-slate-300 p-2.5 text-base">
+      <button id="lm-send" type="submit" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold px-5 py-2.5 rounded-full text-base">Mándame el reporte</button>
+    </form>
+    <div id="lm-done" hidden class="mt-2 text-sm text-slate-700"></div>
+    <p class="text-[11px] text-slate-400 mt-2">Sin spam. Un email solo cuando hay algo que de verdad te sirve.</p>
+  </div>
+</div>
+<script>
+(function(){
+  var f=document.getElementById('lm-form');if(!f)return;
+  var btn=document.getElementById('lm-send'),orig=btn.textContent;
+  f.addEventListener('submit',function(ev){
+    ev.preventDefault();
+    var email=(document.getElementById('lm-email').value||'').trim();
+    if(!/.+@.+\\..+/.test(email)){alert('Escribe un email válido.');return;}
+    btn.disabled=true;btn.textContent='Enviando...';
+    try{gtag('event','lead_magnet',{asset:'reporte_pdf'})}catch(e){}
+    fetch('/api/mapa-pages?page=registro-lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,source:'observatorio',lang:(document.documentElement.lang||'es')})})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        f.style.display='none';
+        var done=document.getElementById('lm-done');done.hidden=false;
+        var url=(d&&d.url)?d.url:'${REG_REPORT_URL}';
+        done.innerHTML='✅ Listo. <a href="'+url+'" target="_blank" rel="noopener" class="text-amber-700 font-bold underline">Baja el reporte aquí</a>. Te aviso cuando haya algo nuevo cerca de los tuyos.';
+      })
+      .catch(function(){btn.disabled=false;btn.textContent=orig;alert('No se pudo. Intenta de nuevo o escribe a angel@angelanderson.com');});
+  });
+})();
+</script>
+<script type="application/ld+json">${JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'AudioObject',
+  name: 'Especialistas fantasma y desiertos médicos en Puerto Rico',
+  description: 'Por qué en Puerto Rico el problema no es que falten médicos sino que se concentran en el área metro, y por qué nadie contesta si tu especialista acepta tu plan médico. Registro verificado contra el NPPES federal.',
+  contentUrl: REG_PODCAST_URL,
+  encodingFormat: 'audio/mp4', inLanguage: 'es', isAccessibleForFree: true,
+  publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' }
+})}</script>
 
 <h2>Lo que el registro ve hoy, pueblo por pueblo</h2>
 <p class="text-slate-600 -mt-2">De las 32 especialidades, cuántas tienen <strong>cero</strong> proveedores verificados en cada región. El área metro concentra casi todo — es la vara. El Centro de la isla es el desierto crítico.</p>
@@ -4739,6 +4807,7 @@ export default async function handler(req: any, res: any) {
     case 'especialista': return await handleEspecialista(req, res)
     case 'especialista-claim': return await handleEspecialistaClaim(req, res)
     case 'conserje-intent': return await handleConserjeIntent(req, res)
+    case 'registro-lead': return await handleRegistroLead(req, res)
     case 'registro-desiertos': return await handleRegistroDesiertos(req, res)
     case 'registro-hub': return await handleRegistroHub(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
