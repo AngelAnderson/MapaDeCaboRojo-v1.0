@@ -45,7 +45,7 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose }) => {
       value: stats.total,
       sub: 'mapeados en el pueblo',
       icon: 'map-location-dot',
-      color: 'from-teal-500 to-cyan-500',
+      color: 'from-brand-500 to-cyan-500',
       href: '/pueblo-en-numeros',
     },
     {
@@ -93,7 +93,7 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose }) => {
       value: stats.sights,
       sub: 'Faro, Esencia, Cofresí',
       icon: 'binoculars',
-      color: 'from-emerald-500 to-teal-500',
+      color: 'from-emerald-500 to-brand-500',
       href: '/categoria/turismo',
     },
     {

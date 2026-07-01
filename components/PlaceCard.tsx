@@ -684,15 +684,15 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
                 <span className="text-[10px] text-cyan-500/80 bg-cyan-100 dark:bg-cyan-900/40 px-2 py-0.5 rounded-full">Live</span>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <div className="bg-white/60 dark:bg-slate-800/60 p-2 rounded-xl text-center">
+                <div className="bg-paper/70 p-2 rounded-xl text-center">
                   <p className="text-[10px] font-bold text-ink-muted uppercase">Surf</p>
                   <p className="text-lg font-black text-cyan-700 dark:text-cyan-300">{surf.waves}</p>
                 </div>
-                <div className="bg-white/60 dark:bg-slate-800/60 p-2 rounded-xl text-center">
+                <div className="bg-paper/70 p-2 rounded-xl text-center">
                   <p className="text-[10px] font-bold text-ink-muted uppercase">Condition</p>
                   <p className="text-xs font-bold text-cyan-700 dark:text-cyan-300 mt-1">{surf.condition}</p>
                 </div>
-                <div className="bg-white/60 dark:bg-slate-800/60 p-2 rounded-xl text-center">
+                <div className="bg-paper/70 p-2 rounded-xl text-center">
                   <p className="text-[10px] font-bold text-ink-muted uppercase">UV</p>
                   <p className={`text-lg font-black ${surf.uv > 7 ? 'text-red-500' : 'text-cyan-700 dark:text-cyan-300'}`}>{surf.uv}</p>
                 </div>

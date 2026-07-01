@@ -15,7 +15,7 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({ activeGroup, onSelect, ca
 
   // Combine static groups (All, Favs, Events) with dynamic DB categories
   const allGroups = [
-      { key: 'ALL', label: t('cat_all'), icon: 'globe', color: 'bg-slate-800 text-white shadow-lg shadow-slate-900/20' },
+      { key: 'ALL', label: t('cat_all'), icon: 'globe', color: 'bg-ink text-canvas shadow-e2' },
       ...categories.map(cat => ({
           key: cat.id,
           label: language === 'es' ? cat.label_es : cat.label_en,
@@ -45,7 +45,7 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({ activeGroup, onSelect, ca
               }
           } else {
               // Inactive State
-              className += 'bg-slate-100 text-slate-500 hover:bg-slate-200';
+              className += 'bg-paper-2 text-ink-soft hover:bg-line';
           }
 
           // Special Fallback: If DB category but list is missing color (rare), use constant
@@ -63,7 +63,7 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({ activeGroup, onSelect, ca
               style={style}
               className={className}
             >
-              <i className={`fa-solid fa-${group.icon} ${isActive ? 'text-white/90' : 'text-slate-400'}`}></i>
+              <i className={`fa-solid fa-${group.icon} ${isActive ? 'text-white/90' : 'text-ink-muted'}`}></i>
               {group.label}
             </button>
           );

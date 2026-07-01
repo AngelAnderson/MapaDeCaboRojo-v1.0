@@ -51,14 +51,14 @@ const DemandFeed: React.FC<Props> = ({ onSelectTerm }) => {
 
   return (
     <aside
-      className={`hidden lg:flex fixed right-4 top-32 z-[1400] flex-col bg-white/85 dark:bg-slate-800/85 backdrop-blur-xl border border-white/60 dark:border-slate-700/50 rounded-2xl shadow-lg overflow-hidden transition-all ${
+      className={`hidden lg:flex fixed right-4 top-32 z-[1400] flex-col bg-white/85 dark:bg-slate-800/85 backdrop-blur-xl border border-line rounded-2xl shadow-lg overflow-hidden transition-all ${
         collapsed ? 'w-12 h-12' : 'w-72 max-h-[60vh]'
       }`}
       aria-label="Lo que el pueblo busca"
     >
       <button
         onClick={() => setCollapsed((c) => !c)}
-        className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors w-full text-left"
+        className="flex items-center gap-2 px-3 py-2 border-b border-line hover:bg-paper-2/40 transition-colors w-full text-left"
         aria-expanded={!collapsed}
       >
         <span className="relative flex h-2 w-2 shrink-0">
@@ -67,10 +67,10 @@ const DemandFeed: React.FC<Props> = ({ onSelectTerm }) => {
         </span>
         {!collapsed && (
           <>
-            <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
+            <span className="text-[11px] font-black uppercase tracking-wider text-ink">
               Lo que el pueblo busca
             </span>
-            <i className="fa-solid fa-chevron-up text-[10px] text-slate-400 ml-auto"></i>
+            <i className="fa-solid fa-chevron-up text-[10px] text-ink-muted ml-auto"></i>
           </>
         )}
       </button>
@@ -78,7 +78,7 @@ const DemandFeed: React.FC<Props> = ({ onSelectTerm }) => {
       {!collapsed && (
         <div className="overflow-y-auto flex-1 px-2 py-2 space-y-1">
           {loading ? (
-            <div className="text-center py-6 text-xs text-slate-400">
+            <div className="text-center py-6 text-xs text-ink-muted">
               <i className="fa-solid fa-circle-notch fa-spin mr-1"></i>
               Escuchando…
             </div>
@@ -87,10 +87,10 @@ const DemandFeed: React.FC<Props> = ({ onSelectTerm }) => {
               <button
                 key={`${it.term}-${i}`}
                 onClick={() => onSelectTerm?.(it.term)}
-                className="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/40 transition-colors group"
+                className="w-full text-left flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-paper-2/40 transition-colors group"
               >
-                <i className="fa-solid fa-magnifying-glass text-[9px] text-slate-400 group-hover:text-teal-500"></i>
-                <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate flex-1">
+                <i className="fa-solid fa-magnifying-glass text-[9px] text-ink-muted group-hover:text-brand-500"></i>
+                <span className="text-xs font-semibold text-ink truncate flex-1">
                   {it.term}
                 </span>
                 {typeof it.result_count === 'number' && (
@@ -104,14 +104,14 @@ const DemandFeed: React.FC<Props> = ({ onSelectTerm }) => {
                     {it.result_count > 0 ? `${it.result_count}` : 'gap'}
                   </span>
                 )}
-                <span className="text-[9px] text-slate-400 shrink-0">{formatRelative(it.created_at)}</span>
+                <span className="text-[9px] text-ink-muted shrink-0">{formatRelative(it.created_at)}</span>
               </button>
             ))
           )}
         </div>
       )}
       {!collapsed && (
-        <div className="border-t border-slate-100 dark:border-slate-700 px-3 py-2 text-[10px] text-slate-400 dark:text-slate-500">
+        <div className="border-t border-line px-3 py-2 text-[10px] text-ink-muted">
           Cada búsqueda al bot *7711 entra acá.
         </div>
       )}
