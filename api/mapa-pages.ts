@@ -4832,10 +4832,145 @@ async function handleTiendaLog(req: any, res: any) {
   res.status(204).end()
 }
 
+// --- /agua — el récord federal del agua potable, por pueblo (EPA SDWIS, pull 2026-07-01) ---
+// Substrato cívico Tier 3: dato público federal, verificado, traducido, citable. Framing = accountability, no alarmismo.
+type AguaSys = { name: string; pop: number; source: 'SW' | 'GW'; total: number; activas: number; reciente: string | null; nota: string }
+type AguaMuni = { name: string; systems: AguaSys[] }
+
+// Cabo Rojo + pueblos aledaños. Data cruda verificada en Outbox/Salud/Agua-Oeste-PR/agua-oeste-verificado.json
+const AGUA_DATA: AguaMuni[] = [
+  { name: 'Cabo Rojo', systems: [
+    { name: 'Sistema PRASA de Cabo Rojo', pop: 20749, source: 'SW', total: 48, activas: 3, reciente: '2023', nota: 'Casi todo por trihalometanos, un subproducto de la desinfección. 45 de 48 ya resueltas.' },
+  ]},
+  { name: 'Lajas', systems: [
+    { name: 'Sistema PRASA de Lajas', pop: 47531, source: 'SW', total: 26, activas: 0, reciente: '2020', nota: 'Mismo perfil de trihalometanos, todas resueltas.' },
+  ]},
+  { name: 'San Germán', systems: [
+    { name: 'Peniche', pop: 1100, source: 'SW', total: 6, activas: 4, reciente: '2025', nota: 'Acueducto comunal. Bacterias y tratamiento. El récord activo más reciente del área.' },
+    { name: 'Com. Río Piedras', pop: 220, source: 'SW', total: 3, activas: 2, reciente: '2024', nota: 'Acueducto comunal. Coliformes / agua subterránea.' },
+    { name: 'Comunidad Méndez', pop: 60, source: 'SW', total: 3, activas: 2, reciente: '2024', nota: 'Acueducto comunal. Tratamiento / agua subterránea.' },
+    { name: 'El Japonés', pop: 1303, source: 'GW', total: 2, activas: 0, reciente: '2015', nota: 'Coliformes, ya resueltas.' },
+    { name: 'Capriles · Pedregal', pop: 1704, source: 'GW', total: 0, activas: 0, reciente: null, nota: 'Sin violaciones de salud en récord.' },
+  ]},
+  { name: 'Sabana Grande', systems: [
+    { name: 'Sistema PRASA de Sabana Grande', pop: 25229, source: 'SW', total: 39, activas: 2, reciente: '2022', nota: 'Trihalometanos. 37 de 39 ya resueltas.' },
+    { name: 'Rayo', pop: 3855, source: 'GW', total: 0, activas: 0, reciente: null, nota: 'Sin violaciones de salud en récord.' },
+  ]},
+  { name: 'Mayagüez', systems: [
+    { name: 'Ponce de León · Consumo', pop: 11321, source: 'SW', total: 0, activas: 0, reciente: null, nota: 'Sin violaciones de salud en récord.' },
+  ]},
+  { name: 'Hormigueros', systems: [
+    { name: 'Sistema de Hormigueros', pop: 10541, source: 'GW', total: 0, activas: 0, reciente: null, nota: 'Sin violaciones de salud en récord.' },
+  ]},
+  { name: 'Guánica', systems: [
+    { name: 'Guánica Urbano', pop: 6838, source: 'GW', total: 2, activas: 0, reciente: '2019', nota: 'Coliformes, ya resueltas.' },
+    { name: 'Ensenada', pop: 6122, source: 'GW', total: 0, activas: 0, reciente: null, nota: 'Sin violaciones de salud en récord.' },
+  ]},
+]
+
+function handleAgua(req: any, res: any) {
+  const fmt = (n: number) => n.toLocaleString('en-US')
+  let sysTotal = 0, activasTotal = 0, popActivas = 0, limpios = 0
+  for (const m of AGUA_DATA) for (const s of m.systems) {
+    sysTotal++; activasTotal += s.activas
+    if (s.activas > 0) popActivas += s.pop
+    if (s.total === 0) limpios++
+  }
+
+  const badge = (s: AguaSys) => {
+    if (s.activas > 0) return `<span class="shrink-0 text-xs font-bold rounded-full px-2.5 py-1 leading-tight text-center bg-red-50 text-red-700 border border-red-200">${s.activas} activa${s.activas > 1 ? 's' : ''}<br>últ. ${s.reciente}</span>`
+    if (s.total > 0) return `<span class="shrink-0 text-xs font-bold rounded-full px-2.5 py-1 leading-tight text-center bg-amber-50 text-amber-800 border border-amber-200">0 activas<br>resuelto</span>`
+    return `<span class="shrink-0 text-xs font-bold rounded-full px-2.5 py-1 leading-tight text-center bg-emerald-50 text-emerald-800 border border-emerald-200">limpio ✓</span>`
+  }
+
+  const cards = AGUA_DATA.map(m => {
+    const pop = m.systems.reduce((a, s) => a + s.pop, 0)
+    const rows = m.systems.map(s => `
+      <div class="flex justify-between items-start gap-3 py-3 border-t border-sand-100 first:border-t-0">
+        <div>
+          <div class="font-semibold text-sand-900">${escapeHtml(s.name)}</div>
+          <div class="text-sm text-sand-500 mt-0.5">${fmt(s.pop)} personas · ${s.source === 'SW' ? 'agua superficial' : 'agua subterránea'} · ${escapeHtml(s.nota)}</div>
+        </div>
+        ${badge(s)}
+      </div>`).join('')
+    return `
+    <section class="bg-white border border-sand-200 rounded-2xl p-5 mb-4 shadow-sm">
+      <div class="flex justify-between items-baseline gap-3 mb-1">
+        <h2 class="font-display text-xl font-bold text-sand-900 m-0">${escapeHtml(m.name)}</h2>
+        <span class="text-xs text-sand-500 whitespace-nowrap">${m.systems.length} sistema${m.systems.length > 1 ? 's' : ''} · ${fmt(pop)} pers.</span>
+      </div>
+      ${rows}
+    </section>`
+  }).join('')
+
+  const tile = (num: string, label: string, color: string) => `
+    <div class="bg-white border border-sand-200 rounded-xl p-4 text-center">
+      <div class="font-display text-3xl font-bold ${color}">${num}</div>
+      <div class="text-xs text-sand-500 mt-1 leading-tight">${label}</div>
+    </div>`
+
+  const body = `
+  <div class="max-w-3xl mx-auto px-4 py-8">
+    <p class="text-brand-700 font-bold uppercase tracking-wide text-xs mb-1">Dato verificado · EPA federal</p>
+    <h1 class="font-display text-3xl md:text-4xl font-extrabold text-sand-900 leading-tight mb-3">El agua de tu pueblo, contra el récord federal</h1>
+    <p class="text-lg text-sand-700 leading-relaxed">Cabo Rojo y los pueblos de al lado. Cada número sale directo de la base de datos de la EPA (el gobierno federal), sistema por sistema. No es opinión: es el récord público. Verificado el 1 de julio de 2026.</p>
+
+    <div class="grid grid-cols-3 gap-3 my-6">
+      ${tile(String(AGUA_DATA.length), 'pueblos', 'text-brand-700')}
+      ${tile(String(activasTotal), 'violaciones de salud activas', 'text-coral-600')}
+      ${tile(fmt(popActivas), 'personas en un sistema con récord activo', 'text-sand-800')}
+    </div>
+
+    <div class="bg-gold-50 border border-gold-200 border-l-4 border-l-gold-500 rounded-xl p-4 text-sm text-sand-800 mb-8">
+      Una <strong>“violación de salud”</strong> en el récord no significa que hay bacteria en tu llave hoy. Va desde una falla de monitoreo hasta un problema real, y hay que leer cada caso. Aquí separamos siempre lo <strong>activo</strong> (sin resolver) de lo <strong>ya resuelto</strong>, y le damos crédito al que está limpio. Es un espejo, no una alarma.
+    </div>
+
+    ${cards}
+
+    <div class="bg-white border border-sand-200 rounded-2xl p-5 my-8">
+      <h3 class="font-display text-lg font-bold text-sand-900 mb-2">¿Y el tuyo? Búscalo tú mismo</h3>
+      <p class="text-sand-700 text-sm m-0">El récord de cualquier sistema de agua de Puerto Rico es público y gratis en el buscador de agua potable de la EPA (Safe Drinking Water). Si tu comunidad tiene su propio acueducto, búscalo por nombre; si te llega por PRASA, busca el de tu pueblo.</p>
+      <p class="text-sand-800 text-sm font-semibold mt-3 mb-0">Si conoces a alguien en una comunidad con récord activo, pásale este dato. Lo que no se mira, no se arregla.</p>
+    </div>
+
+    <div class="text-center bg-brand-50 border border-brand-200 rounded-2xl p-5 mb-8">
+      <p class="text-sand-700 text-sm m-0">¿Dudas de dónde queda algo o quién resuelve en tu pueblo? Escríbele al Veci: <strong>${PHONE_CTA}</strong>. Si te sirve, llégate.</p>
+    </div>
+
+    <div class="text-xs text-sand-500 border-t border-sand-200 pt-4">
+      <strong>Metodología:</strong> EPA Envirofacts SDWIS (data.epa.gov). Sistemas comunitarios activos mapeados por área de servicio. “Activa” = sin fecha de retorno al cumplimiento. Tipo por regla federal (<code>rule_family_code</code>). Cobertura: sistemas comunitarios de Cabo Rojo y pueblos aledaños; no incluye pozos privados ni sistemas de escuelas/negocios. Pull 2026-07-01. Extensión a los 15 municipios del oeste en camino.
+    </div>
+  </div>`
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Dataset',
+    name: 'Calidad del agua potable — Cabo Rojo y pueblos aledaños (récord EPA)',
+    description: 'Violaciones de salud del agua potable por sistema comunitario en Cabo Rojo y pueblos del oeste de Puerto Rico, verificadas contra la base de datos federal EPA SDWIS. Separa violaciones activas de resueltas.',
+    creator: { '@type': 'Organization', name: 'Mapa de Cabo Rojo' },
+    isBasedOn: 'https://www.epa.gov/ground-water-and-drinking-water',
+    spatialCoverage: 'Cabo Rojo, Puerto Rico',
+    dateModified: '2026-07-01',
+    variableMeasured: ['violaciones de salud del agua', 'trihalometanos', 'coliformes', 'población servida'],
+  }
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=1800')
+  res.status(200).send(layout({
+    title: 'El agua de tu pueblo · récord federal de la EPA',
+    description: 'Cabo Rojo y los pueblos de al lado, contra el récord federal del agua potable (EPA SDWIS). Verificado sistema por sistema. Activas vs resueltas, sin alarmismo.',
+    slug: 'agua',
+    bodyHtml: body,
+    jsonLd,
+    ogImage: '/og/menos-revolu.png',
+  }))
+}
+
 export default async function handler(req: any, res: any) {
   const page = String(req.query.page || '')
 
   switch (page) {
+    case 'agua': return handleAgua(req, res)
     case 'tienda': return handleTienda(req, res)
     case 'tienda-log': return await handleTiendaLog(req, res)
     case 'quien-responde': return await handleQuienResponde(req, res)

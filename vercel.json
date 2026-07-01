@@ -46,6 +46,7 @@
     { "source": "/registro/:spec", "destination": "/api/mapa-pages?page=registro-hub&spec=:spec" },
     { "source": "/especialista/:slug", "destination": "/api/mapa-pages?page=especialista&slug=:slug" },
     { "source": "/observatorio", "destination": "/api/mapa-pages?page=observatorio" },
+    { "source": "/agua", "destination": "/api/mapa-pages?page=agua" },
     { "source": "/promesas", "destination": "/api/mapa-pages?page=promesas" },
     { "source": "/quien-responde", "destination": "/api/mapa-pages?page=quien-responde" },
     { "source": "/quién-responde", "destination": "/api/mapa-pages?page=quien-responde" },
