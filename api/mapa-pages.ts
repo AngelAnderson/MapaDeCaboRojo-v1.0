@@ -2543,6 +2543,8 @@ const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:n
   {s:'podiatra',l:'Podiatra (pies)',e:'🦶',kw:'PODIATRA',md:false,t:57,r:{Oeste:6,Norte:2,Centro:1,Sur:6,Este:9,Metro:33}},
 ]
 
+const REG_PODCAST_URL = 'https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/especialistas-fantasma-desiertos.m4a'
+
 async function handleRegistro(req: any, res: any) {
   const en = String(req.query.lang || '') === 'en'
   const t = (es: string, env: string) => en ? env : es
@@ -2615,6 +2617,30 @@ async function handleRegistro(req: any, res: any) {
 </div>
 
 <p class="not-prose mt-3 text-sm text-slate-500 text-center">${t('¿Vives lejos del área metro?', 'Live far from the metro area?')} <a href="/registro/desiertos${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold hover:underline">${t('Mira en qué regiones no hay ciertos especialistas →', 'See which regions have no specialists →')}</a></p>
+
+<div class="not-prose mt-8 bg-gradient-to-br from-teal-50 to-white border-2 border-teal-200 rounded-2xl p-6">
+  <div class="flex items-start gap-3">
+    <div class="text-3xl leading-none">🎙️</div>
+    <div class="flex-1 min-w-0">
+      <h3 class="text-xl font-black text-slate-900">${t('Escucha: por qué existe este registro', 'Listen: why this registry exists')}</h3>
+      <p class="text-slate-600 mt-1 text-[15px] leading-relaxed">${t('En cristiano: en Puerto Rico no es que falten médicos, es que están casi todos en el área metro. Y nadie te contesta lo más importante — si tu especialista coge tu plan. Aquí te lo explico.', 'Plain talk: Puerto Rico\'s problem is not a lack of doctors, it is that nearly all of them are in the metro area. And no one answers the thing that matters most — whether your specialist takes your plan. Here is why.')}</p>
+      <audio controls preload="none" class="mt-3 w-full" src="${REG_PODCAST_URL}">
+        ${t('Tu navegador no puede reproducir el audio.', 'Your browser cannot play this audio.')} <a href="${REG_PODCAST_URL}" class="text-teal-700 font-semibold">${t('Descárgalo aquí', 'Download it')}</a>.
+      </audio>
+    </div>
+  </div>
+</div>
+<script type="application/ld+json">${JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'AudioObject',
+  name: 'Especialistas fantasma y desiertos médicos en Puerto Rico',
+  description: 'Por qué en Puerto Rico el problema no es que falten médicos sino que se concentran en el área metro, y por qué nadie contesta si tu especialista acepta tu plan médico. Registro verificado contra el NPPES federal.',
+  contentUrl: REG_PODCAST_URL,
+  encodingFormat: 'audio/mp4',
+  inLanguage: 'es',
+  isAccessibleForFree: true,
+  publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' }
+})}</script>
 
 <h2>${t(`Las ${REGISTRY_SPECS.length} especialidades del registro`, `The ${REGISTRY_SPECS.length} specialties in the registry`)}</h2>
 <p class="text-slate-600 -mt-2">${t('El número es cuántos hay <strong>en toda la isla</strong>, verificados contra el registro federal. Toca cualquiera pa\' ver dónde están y sus teléfonos.', 'The number is how many there are <strong>across the whole island</strong>, verified against the federal registry. Tap any to see where they are and their phone numbers.')}</p>
