@@ -1,3 +1,192 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ============================================================================
+   Level-20 design tokens — Warm Coastal Cabo Rojo
+   Semantic surface/ink/line as CSS vars (space-separated RGB channels so
+   Tailwind's `/ <alpha-value>` opacity works). Light + dark share the names.
+   ========================================================================== */
+:root {
+  --canvas: 250 249 247;      /* sand-50  */
+  --paper: 255 255 255;       /* cards/surfaces */
+  --paper-2: 244 242 237;     /* recessed surface / sand-100 */
+  --ink: 28 25 23;            /* near-black warm */
+  --ink-soft: 87 83 78;       /* secondary text */
+  --ink-muted: 150 143 133;   /* tertiary / captions */
+  --line: 231 228 223;        /* hairline borders */
+  --line-strong: 214 207 193; /* stronger dividers */
+
+  /* Brand shortcuts (used by base layer + glass) */
+  --brand: 16 185 129;
+  --brand-ink: 4 78 70;
+
+  /* Glass */
+  --glass-bg: 255 255 255;
+  --glass-alpha: 0.72;
+  --glass-border: 255 255 255;
+  --glass-border-alpha: 0.55;
+
+  color-scheme: light;
+}
+
+.dark {
+  --canvas: 18 16 14;         /* deep warm black */
+  --paper: 28 26 23;          /* raised warm surface */
+  --paper-2: 38 35 31;        /* higher surface */
+  --ink: 245 244 241;
+  --ink-soft: 196 189 178;
+  --ink-muted: 138 129 117;
+  --line: 50 46 41;
+  --line-strong: 74 68 60;
+
+  --brand: 52 211 153;        /* brand-400, brighter for dark bg */
+  --brand-ink: 209 250 229;
+
+  --glass-bg: 28 26 23;
+  --glass-alpha: 0.66;
+  --glass-border: 255 255 255;
+  --glass-border-alpha: 0.10;
+
+  color-scheme: dark;
+}
+
+/* ============================================================================
+   Base layer
+   ========================================================================== */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    font-family: "Source Sans 3", 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: rgb(var(--canvas));
+    color: rgb(var(--ink));
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior: none;
+  }
+
+  /* Display headings default to Fraunces where the app opts in via font-display */
+  .font-display { font-optical-sizing: auto; }
+
+  /* Consistent, on-brand focus ring across the whole app */
+  :where(a, button, [role="button"], input, select, textarea, [tabindex]):focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgb(var(--canvas)), 0 0 0 4px rgb(var(--brand) / 0.85);
+    border-radius: 0.5rem;
+  }
+
+  ::selection {
+    background: rgb(var(--brand) / 0.22);
+    color: rgb(var(--ink));
+  }
+
+  /* Thin, unobtrusive scrollbars where visible */
+  * { scrollbar-width: thin; scrollbar-color: rgb(var(--line-strong)) transparent; }
+  ::-webkit-scrollbar { width: 0px; height: 0px; background: transparent; }
+  .show-scrollbar::-webkit-scrollbar { width: 8px; height: 8px; }
+  .show-scrollbar::-webkit-scrollbar-thumb { background: rgb(var(--line-strong)); border-radius: 9999px; }
+}
+
+/* Respect reduced-motion globally */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================================
+   Component utilities
+   ========================================================================== */
+@layer components {
+  /* Frosted glass — lighter, more intentional than the old ios-glass */
+  .glass {
+    background: rgb(var(--glass-bg) / var(--glass-alpha));
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+    border: 1px solid rgb(var(--glass-border) / var(--glass-border-alpha));
+  }
+  .glass-strong {
+    background: rgb(var(--glass-bg) / 0.9);
+    backdrop-filter: blur(24px) saturate(1.5);
+    -webkit-backdrop-filter: blur(24px) saturate(1.5);
+    border: 1px solid rgb(var(--glass-border) / var(--glass-border-alpha));
+  }
+
+  /* Neutral surface card that respects the theme */
+  .surface {
+    background: rgb(var(--paper));
+    border: 1px solid rgb(var(--line));
+  }
+  .surface-2 {
+    background: rgb(var(--paper-2));
+    border: 1px solid rgb(var(--line));
+  }
+
+  /* Hairline dividers */
+  .divide-line > * + * { border-color: rgb(var(--line)); }
+
+  /* Skeleton shimmer */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background: rgb(var(--paper-2));
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgb(var(--ink) / 0.06) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.4s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) { .skeleton::after { animation: none; } }
+
+  /* Tap feedback for touch surfaces */
+  .tap {
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.12s cubic-bezier(0.32,0.72,0,1), background-color 0.15s ease;
+  }
+  .tap:active { transform: scale(0.97); }
+
+  /* Verified / freshness pill base */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-weight: 600;
+    line-height: 1;
+    border-radius: 9999px;
+  }
+
+  /* Hide-scrollbar helper (used by horizontal rails) */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/* ============================================================================
+   Legacy compatibility — keep old class names alive during migration
+   (index.html still defines .ios-glass/.ios-card; these mirror them onto tokens)
+   ========================================================================== */
+.ios-glass { background: rgb(var(--glass-bg) / var(--glass-alpha)); }
+.ios-card {
+  background: rgb(var(--paper) / 0.95);
+  border: 1px solid rgb(var(--line));
+}
+
+/* ============================================================================
+   Leaflet integration
+   ========================================================================== */
+.leaflet-container { font-family: "Source Sans 3", 'Inter', sans-serif !important; background: rgb(var(--paper-2)) !important; }
+.leaflet-control-attribution { font-size: 9px; opacity: 0.55; }
+.leaflet-control-attribution a:first-child { display: none; }
