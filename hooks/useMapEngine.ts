@@ -101,6 +101,8 @@ const lightenColor = (hex: string, factor = 0.4): string => {
     return `rgb(${lr},${lg},${lb})`;
 };
 
+const GOLD = '#f5a623'; // sponsor ring — matches gold token family
+
 const generateMarkerHtml = (place: Place, categories?: Category[]): string => {
     const isClosed  = place.status === 'closed';
     const isSponsor = place.is_featured === true;
@@ -118,41 +120,46 @@ const generateMarkerHtml = (place: Place, categories?: Category[]): string => {
     const fontSize = isSponsor ? 18 : isClosed ? 11 : 14;
 
     // Visual states
-    const opacity  = isClosed ? '0.6' : '1';
-    const filter   = isClosed ? 'grayscale(1)' : 'none';
+    const opacity  = isClosed ? '0.55' : '1';
+    const filter   = isClosed ? 'grayscale(0.9)' : 'none';
     const gradient = isClosed
-        ? 'linear-gradient(135deg,#94a3b8,#64748b)'
-        : `linear-gradient(135deg,${lightenColor(catColor, 0.35)},${catColor})`;
-    const shadow   = isSponsor
-        ? '0 3px 12px rgba(0,0,0,0.35)'
-        : '0 2px 8px rgba(0,0,0,0.3)';
+        ? 'linear-gradient(160deg,#b7b0a6,#8f8371)'
+        : `linear-gradient(160deg,${lightenColor(catColor, 0.32)},${catColor})`;
 
-    // Pulse ring for sponsors (color matches category)
+    // Warm-tinted, layered shadow so pins float above the basemap.
+    // Sponsors carry a gold ring + gold glow (premium signal); everyone else a
+    // crisp white ring. Selected markers are boosted via a class in createMarker.
+    const ring = isSponsor
+        ? `0 0 0 3px #ffffff, 0 0 0 5px ${GOLD}, 0 6px 14px rgba(60,42,18,0.4)`
+        : isClosed
+            ? `0 0 0 2px #ffffff, 0 2px 6px rgba(40,34,26,0.28)`
+            : `0 0 0 2px #ffffff, 0 4px 10px rgba(40,34,26,0.3), 0 1px 3px rgba(0,0,0,0.18)`;
+
+    // Gold pulse ring for sponsors (was category-colored; gold reads as premium)
     const pulseRing = isSponsor
-        ? `<div class="sponsor-pulse-ring" style="color:${catColor};"></div>`
+        ? `<div class="sponsor-pulse-ring" style="color:${GOLD};"></div>`
         : '';
 
     // Photo avatar or icon
     const innerContent = (place as any).photo_url
         ? `<div style="width:${size - border * 2 - 6}px;height:${size - border * 2 - 6}px;border-radius:50%;background-image:url('${escapeHTML((place as any).photo_url)}');background-size:cover;background-position:center;"></div>`
-        : `<i class="fa-solid ${getSmartIcon(place, categories)}" style="font-size:${fontSize}px;color:white;"></i>`;
+        : `<i class="fa-solid ${getSmartIcon(place, categories)}" style="font-size:${fontSize}px;color:white;filter:drop-shadow(0 1px 1px rgba(0,0,0,0.25));"></i>`;
 
     return `
-      <div style="
+      <div class="mdc-pin" style="
         position:relative;
         width:${size}px;
         height:${size}px;
         background:${gradient};
         border-radius:50%;
-        border:${border}px solid white;
         display:flex;
         align-items:center;
         justify-content:center;
-        box-shadow:${shadow};
+        box-shadow:${ring};
         cursor:pointer;
         opacity:${opacity};
         filter:${filter};
-        transition:transform 0.2s ease, box-shadow 0.2s ease;
+        transition:transform 0.18s cubic-bezier(0.32,0.72,0,1), box-shadow 0.18s ease;
       ">
         ${pulseRing}
         ${innerContent}
@@ -213,6 +220,18 @@ export const useMapEngine = (
             attribution  = '&copy; OpenStreetMap and CARTO';
         }
         tileLayer.current = L.tileLayer(tileUrl, { attribution, maxZoom: 19 }).addTo(map.current);
+
+        // Warm-coastal basemap treatment: gently desaturate + warm the tiles so the
+        // colored markers pop and the map recedes. Satellite stays untouched.
+        const container = tileLayer.current.getContainer();
+        if (container) {
+            container.style.filter = mapStyle === 'satellite'
+                ? 'none'
+                : isDarkMode
+                    ? 'saturate(0.85) brightness(0.95) contrast(1.05)'
+                    : 'saturate(0.82) brightness(1.03) sepia(0.06)';
+            container.style.transition = 'filter 0.3s ease';
+        }
     }, [isDarkMode, mapLoaded, mapStyle]);
 
     // 3. Render Markers with Clustering
@@ -260,7 +279,7 @@ export const useMapEngine = (
                         }
                         return c;
                     }
-                    return '#4f46e5';
+                    return '#10b981'; // brand emerald fallback
                 })();
                 const count = cluster.getChildCount();
                 const size  = count < 10 ? 36 : count < 50 ? 44 : 52;
