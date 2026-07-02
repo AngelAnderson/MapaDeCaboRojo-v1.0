@@ -3834,8 +3834,9 @@ const PROMESAS_CABOROJO: Promesa[] = [
   // 🗑️ BASURA Y VERTEDERO
   { topic: '🗑️ Basura y vertedero', text: 'Nueva celda del vertedero "con capacidad de diez años". Dijo que ya se celebró la presubasta.', quien: 'Alcalde Morales · mar 2024', src: ['https://youtu.be/-HKfFUfE9nk', 'CaboRojo.com'], status: 'ESPERANDO', detail: '', feat: true },
   { topic: '🗑️ Basura y vertedero', text: 'El vertedero ya no es vertedero: ahora es "centro de transbordo" que lleva la basura a Mayagüez.', quien: 'Alcalde Morales · 2024', src: null, status: 'EMPEZO', detail: '' },
-  { topic: '🗑️ Basura y vertedero', text: 'Tres excavadoras, una siempre en el vertedero montando la basura para Mayagüez.', quien: 'Alcalde Morales · 2023', src: null, status: 'ESPERANDO', detail: '' },
-  { topic: '🗑️ Basura y vertedero', text: 'querellavirtual del municipio para reportar escombros que no recogieron.', quien: 'Alcalde Morales · 2023', src: null, status: 'ESPERANDO', detail: '' },
+  { topic: '🗑️ Basura y vertedero', text: '3 excavadoras, 1 siempre en el vertedero montando la basura para Mayagüez.', quien: 'Alcalde Morales · 2023', src: null, status: 'ESPERANDO', detail: '' },
+  { topic: '🗑️ Basura y vertedero', text: 'Querella Virtual del municipio para reportar escombros que no recogieron.', quien: 'Alcalde Morales · 2023', src: null, status: 'EMPEZO', detail: 'el portal existe (ciudadcaborojo.com) · falta ver si contestan — test ciudadano en curso jul 2026' },
+  { topic: '🗑️ Basura y vertedero', text: 'Canon de $200/año a los alquileres a corto plazo (~1,000 unidades en 2023) para cubrir el recogido de basura que dejan los turistas.', quien: 'Ex-legislador municipal · 2024', src: null, status: 'ESPERANDO', detail: 'si se cobra completo son ~$200,000/año · ¿se está cobrando y a dónde va?' },
   { topic: '🗑️ Basura y vertedero', text: 'Limpieza "2.0": sacaron 4,000 yardas de escombro con 450 voluntarios.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
   { topic: '🗑️ Basura y vertedero', text: 'Ordenanza de un fee de $250 al año (escombros/manejo).', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
   // 🕳️ HOYOS, ASFALTO Y CARRETERAS
@@ -3856,7 +3857,7 @@ const PROMESAS_CABOROJO: Promesa[] = [
   { topic: '💧 Agua', text: 'Llevar las aguas a las plantas de Villataína y de ahí a Lajas.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
   // 🏖️ FARO, PLAYAS Y BALNEARIO
   { topic: '🏖️ Faro, playas y balneario', text: 'Reabrir el Faro Los Morrillos "en unos meses", con fondos de Fiona. Admitió que el municipio dejó vencer el acuerdo de manejo en 2016.', quien: 'Alcalde Morales · 2024', src: ['https://youtu.be/-HKfFUfE9nk', 'CaboRojo.com'], status: 'NO', detail: 'cerrado a 2026', feat: true },
-  { topic: '🏖️ Faro, playas y balneario', text: 'Hacer el Balneario de Boquerón "uno de los lugares más icónicos de Puerto Rico".', quien: 'Alcalde Morales · 2024', src: null, status: 'EMPEZO', detail: 'traspaso al municipio en proceso (ordenanza 2024-25)', feat: true },
+  { topic: '🏖️ Faro, playas y balneario', text: 'Hacer el Balneario de Boquerón "uno de los lugares más icónicos de Puerto Rico".', quien: 'Alcalde Morales · 2024', src: null, status: 'EMPEZO', detail: 'traspaso al municipio en proceso (ordenanza 2024-25) · baños accesibles ya instalados (verificado jul 2026)', feat: true },
   { topic: '🏖️ Faro, playas y balneario', text: 'Aduana Federal construye un edificio de $18M en Boquerón (proyecto federal, ya comenzó).', quien: 'Alcalde Morales · 2024', src: null, status: 'HECHO', detail: 'proyecto federal de CBP, no municipal', feat: true },
   { topic: '🏖️ Faro, playas y balneario', text: 'En el Combate: el desvío de Polo Gea, un proyecto de $3-4 millones.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
   { topic: '🏖️ Faro, playas y balneario', text: 'Cunetones frente a las casas del Camino Hernández.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
@@ -3867,8 +3868,13 @@ const PROMESAS_CABOROJO: Promesa[] = [
   { topic: '🏀 Deporte, escuelas y plaza', text: '$20 millones para la escuela Inés María Mendoza.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
   { topic: '🏀 Deporte, escuelas y plaza', text: 'Un mini estadio de fútbol: 300 butacas y camerinos. La plaza "va a quedar preciosa" (faltan permisos).', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
   { topic: '🏀 Deporte, escuelas y plaza', text: 'Damas de llaves (ayuda a personas): de 22 que había, ya cerca de 90.', quien: 'Alcalde Morales · 2024', src: null, status: 'EMPEZO', detail: '' },
+  // 🏚️ ESTORBOS PÚBLICOS Y CASCO URBANO (entrevista propiedades abandonadas, CaboRojo.com)
+  { topic: '🏚️ Estorbos públicos y casco urbano', text: 'Estacionamiento para los placeros: demoler "prontito" el edificio a punto de caerse al lado de la Plaza del Mercado. "Uno de nuestros compromisos de campaña."', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: 'compromiso de campaña, en cámara', feat: true },
+  { topic: '🏚️ Estorbos públicos y casco urbano', text: 'Revocación de usufructos en el casco urbano: "más de 100 unidades" trabajadas, y con las ventas "podemos comenzar a tumbar de inmediato casi 100 propiedades".', quien: 'Alcalde Morales · 2024', src: null, status: 'EMPEZO', detail: '' },
+  { topic: '🏚️ Estorbos públicos y casco urbano', text: '16 solares a subasta (sobres cerrados): solo 2 se vendieron. Prometió que los demás vuelven a subasta, con regla de construir en 1 año o se devuelve el dinero.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '¿cuándo es la próxima subasta?' },
   // 💰 DINERO Y PRESUPUESTO
   { topic: '💰 Dinero y presupuesto', text: 'Endoso condicionado a Esencia: la condición es que el proyecto tenga su propia agua.', quien: 'Alcaldía · 2024', src: ['https://youtu.be/85V_v2cBj1s', 'CaboRojo.com'], status: 'ESPERANDO', detail: '', feat: true },
+  { topic: '💰 Dinero y presupuesto', text: 'Esencia pagará CRIM y arbitrios: "más de $20 millones en 10 años para las arcas municipales". Y: "el municipio lo va a fiscalizar".', quien: 'Alcalde Morales · ponencia vistas Esencia', src: null, status: 'ESPERANDO', detail: 'número verificable año a año si el proyecto va', feat: true },
   { topic: '💰 Dinero y presupuesto', text: '~$735K de FEMA para Isla Ratones — proyecto retirado; el cayo se hundió en 2020.', quien: 'DRNA / Municipio · 2025-2026', src: ['https://www.primerahora.com/noticias/puerto-rico/notas/a-la-deriva-isla-ratones-se-ahoga-su-reconstruccion/', 'Primera Hora'], status: 'NO', detail: 'devuelto a FEMA', feat: true },
   { topic: '💰 Dinero y presupuesto', text: '"Cuando saque del medio el pago de esos préstamos, nos va a sobrar mucho más." "En dos años la Junta debe estar diciendo adiós."', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
 ]
@@ -3887,15 +3893,17 @@ function renderPromesometroRows(promesas: Promesa[]): string {
     `<tr><td>${p.text}</td><td>${p.quien}</td><td>${civicSrcCell(p)}</td><td>${civicBadge(p.status, p.detail)}</td></tr>`
   ).join('\n')
 }
-// /promesas: todas, agrupadas por tema
+// /promesas: todas, agrupadas por tema. Cada fila lleva QUIÉN lo dijo, CUÁNDO y la FUENTE
+// (feedback Angel jul 2026: sin el quién/cuándo la gente no entiende por qué es una promesa,
+// y sin fuente los politiqueros lo pintan de chisme).
 function renderPromesasByTopic(promesas: Promesa[]): string {
   const topics: string[] = []
   for (const p of promesas) if (!topics.includes(p.topic)) topics.push(p.topic)
   return topics.map(t => {
     const rows = promesas.filter(p => p.topic === t).map(p =>
-      `<tr><td>${p.text}</td><td>${civicBadge(p.status, p.detail)}</td></tr>`
+      `<tr><td>${p.text}</td><td><span style="font-size:13px">${p.quien}</span><br><span style="font-size:12px;color:#64748b">${civicSrcCell(p)}</span></td><td>${civicBadge(p.status, p.detail)}</td></tr>`
     ).join('\n')
-    return `<h2>${t}</h2>\n<table><thead><tr><th>Lo que dijo</th><th>¿Y?</th></tr></thead><tbody>\n${rows}\n</tbody></table>`
+    return `<h2>${t}</h2>\n<table><thead><tr><th>Lo que dijo</th><th>Quién y cuándo</th><th>¿Y?</th></tr></thead><tbody>\n${rows}\n</tbody></table>`
   }).join('\n\n')
 }
 function civicCounts(promesas: Promesa[]): Record<string, number> {
@@ -4142,6 +4150,7 @@ function civicMePasa(b){
 // Banco completo de promesas extraído de las entrevistas (archivo CaboRojo.com 2023-2024).
 // Fuente: El Cerebro pozo 'civico'. Organizado por tema, a lectura de 2do grado.
 function handlePromesas(_req: any, res: any) {
+  const cc = civicCounts(PROMESAS_CABOROJO)
   const body = `
 <span class="not-prose inline-block bg-teal-100 text-teal-800 text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full">Observatorio Cívico · No-partidista · Cabo Rojo</span>
 
@@ -4149,11 +4158,23 @@ function handlePromesas(_req: any, res: any) {
 
 <p class="text-lg text-slate-600 mt-3"><strong>¿Qué es esto?</strong> Es la lista de lo que el alcalde de Cabo Rojo prometió o dijo en sus entrevistas con nosotros (2023-2024). Lo guardamos con su video. Aquí está, una por una. Tú decides cuál se hizo y cuál no.</p>
 
+<div class="not-prose mt-5 grid grid-cols-4 gap-2 text-center">
+  <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3"><div class="text-2xl font-black text-emerald-700">${cc.HECHO}</div><div class="text-xs font-bold text-emerald-800">✅ HECHO</div></div>
+  <div class="bg-amber-50 border border-amber-200 rounded-xl p-3"><div class="text-2xl font-black text-amber-600">${cc.EMPEZO}</div><div class="text-xs font-bold text-amber-800">🟡 EMPEZÓ</div></div>
+  <div class="bg-rose-50 border border-rose-200 rounded-xl p-3"><div class="text-2xl font-black text-rose-600">${cc.NO}</div><div class="text-xs font-bold text-rose-800">❌ NO</div></div>
+  <div class="bg-slate-50 border border-slate-200 rounded-xl p-3"><div class="text-2xl font-black text-slate-500">${cc.ESPERANDO}</div><div class="text-xs font-bold text-slate-600">⏳ SIN CONTESTAR</div></div>
+</div>
+<p class="not-prose text-xs text-slate-500 mt-2 text-center">El marcador se mueve con prueba, en cualquier dirección. Lo HECHO se celebra igual de rápido que lo que falta.</p>
+
 <div class="not-prose mt-4 bg-white border border-slate-200 border-l-4 border-l-teal-600 rounded-lg p-4">
-  <p class="text-sm text-slate-700"><strong class="text-teal-700">Para la alcaldía:</strong> esto no es para pelear. Es una lista de trabajo. Lo que ya esté hecho, dilo con prueba y lo marcamos <strong>HECHO</strong> el mismo día. Lo que falta, dinos cuándo. El pueblo solo quiere saber.</p>
+  <p class="text-sm text-slate-700"><strong class="text-teal-700">Para la alcaldía:</strong> esto no es para pelear. Es una lista de trabajo. Lo que ya esté hecho, dilo con prueba y lo marcamos <strong>HECHO</strong> el mismo día, con el crédito público que le toca. Lo que falta, dinos cuándo. Canal directo: <a href="mailto:angel@caborojo.com?subject=Promesas%20—%20respuesta%20de%20la%20alcald%C3%ADa" class="text-teal-700 font-semibold">angel@caborojo.com</a> o el formulario de abajo. El pueblo solo quiere saber.</p>
 </div>
 
-<p class="text-sm text-slate-600 mt-4">Cómo leer: <span class="font-bold text-emerald-700">✅ HECHO</span> · <span class="font-bold text-amber-600">🟡 EMPEZÓ</span> · <span class="font-bold text-rose-600">❌ NO</span> · <span class="font-bold text-slate-500">⏳ SIN CONTESTAR</span>. La mayoría dice "sin contestar" porque falta que la alcaldía responda con prueba.</p>
+<div class="not-prose mt-3 bg-gold-50 border border-gold-200 border-l-4 border-l-gold-500 rounded-lg p-4">
+  <p class="text-sm text-slate-700"><strong>¿De quién es el dinero?</strong> Un detalle para leer esta lista completa: mucho de lo que se inaugura se paga con <strong>fondos federales</strong> (FEMA, ARPA, CDBG) o con lo que ya pagaste tú — no con dinero nuevo del municipio. Saber quién paga no le quita mérito a quien ejecuta: solo pone el crédito donde va. Donde lo sabemos, lo anotamos en la fila.</p>
+</div>
+
+<p class="text-sm text-slate-600 mt-4">Cómo leer: <span class="font-bold text-emerald-700">✅ HECHO</span> · <span class="font-bold text-amber-600">🟡 EMPEZÓ</span> · <span class="font-bold text-rose-600">❌ NO</span> · <span class="font-bold text-slate-500">⏳ SIN CONTESTAR</span>. La mayoría dice "sin contestar" porque falta que la alcaldía responda con prueba. Cada fila dice <strong>quién lo dijo, cuándo, y dónde está el video</strong> — por eso es una promesa y no un chisme.</p>
 
 <p class="text-sm text-slate-500 mt-2"><a href="/observatorio" class="text-teal-700 font-semibold">← Volver al Observatorio</a> · <a href="/quien-responde" class="text-teal-700 font-semibold">¿Quién responde por esto? →</a> · Cada cosa salió de entrevistas en video de CaboRojo.com con el alcalde.</p>
 
