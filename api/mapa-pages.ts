@@ -2551,6 +2551,27 @@ const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:n
 
 const REG_PODCAST_URL = 'https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/especialistas-fantasma-desiertos.m4a'
 const REG_REPORT_URL = 'https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/reportes/estado-acceso-medico-pr-2026.pdf'
+const AGUA_PODCAST_URL = 'https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/acueductos-olvidados-oeste.m4a'
+const AGUA_INFOGRAFIA_URL = 'https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/compartir/semaforo-del-agua-2026.png'
+
+// "Pásalo" — share row (WhatsApp deep-link + copy). Text is OUR constant, never user input.
+function shareRow(opts: { text: string; url: string; toWho: string; dark?: boolean }) {
+  const full = `${opts.text} ${opts.url}`
+  const wa = `https://wa.me/?text=${encodeURIComponent(full)}`
+  const tone = opts.dark
+    ? { box: 'bg-teal-900 text-white', sub: 'text-teal-100', copyBtn: 'bg-white/15 hover:bg-white/25 text-white' }
+    : { box: 'bg-white border border-sand-200', sub: 'text-sand-600', copyBtn: 'bg-sand-100 hover:bg-sand-200 text-sand-800' }
+  return `
+  <div class="not-prose ${tone.box} rounded-2xl p-5 my-8">
+    <p class="font-bold text-base mb-1">📤 Pásalo a quien le toca</p>
+    <p class="text-sm ${tone.sub} mb-3">${escapeHtml(opts.toWho)}</p>
+    <div class="flex flex-wrap gap-2">
+      <a href="${wa}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-full text-sm"><i class="fa-brands fa-whatsapp"></i> Compartir por WhatsApp</a>
+      <button type="button" class="share-copy inline-flex items-center gap-2 ${tone.copyBtn} font-bold px-4 py-2.5 rounded-full text-sm" data-copy="${escapeHtml(full)}"><i class="fa-regular fa-copy"></i> Copiar el texto</button>
+    </div>
+  </div>`
+}
+const SHARE_COPY_SCRIPT = `<script>document.addEventListener('click',function(e){var b=e.target.closest('.share-copy');if(!b)return;navigator.clipboard.writeText(b.getAttribute('data-copy')||'').then(function(){var o=b.innerHTML;b.innerHTML='✓ Copiado';setTimeout(function(){b.innerHTML=o},1600);});});</script>`
 
 async function handleRegistro(req: any, res: any) {
   const en = String(req.query.lang || '') === 'en'
@@ -3324,15 +3345,24 @@ async function handleObservatorioMedico(req: any, res: any) {
 <p class="text-lg text-slate-600 mt-3"><strong>No es que los médicos sean malagradecidos. Es un problema de pago federal que se volvió de fuerza laboral.</strong> Medicare le paga a PR cerca de <strong>40% menos</strong> que al continente por el mismo paciente, así que el médico gana <strong>~$67,000 menos al año</strong>, así que se va. Y un pipeline envejecido no puede rellenar el hueco. Esta es la referencia, con la data verificada y la fuente de cada número.</p>
 
 <div class="not-prose mt-4 flex flex-wrap gap-2 text-xs">
-  <span class="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-calendar-check"></i> Actualizado junio 2026</span>
+  <span class="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-calendar-check"></i> Actualizado julio 2026</span>
   <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-shield-halved"></i> Data de proveedores verificada contra NPPES federal</span>
   <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-quote-right"></i> Citable · cada cifra con su fuente</span>
+</div>
+
+<div class="not-prose mt-6 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-xs font-bold uppercase tracking-widest text-teal-300 mb-2">Si solo te llevas 3 cosas</p>
+  <ol class="grid md:grid-cols-3 gap-4 text-sm list-none m-0 p-0">
+    <li><span class="text-2xl font-black text-teal-300">1</span><br><strong>No faltan médicos por vagancia.</strong> Medicare le paga a PR ~40% menos, el médico gana ~$67 mil menos al año, y se va.</li>
+    <li><span class="text-2xl font-black text-teal-300">2</span><br><strong>Los que quedan están casi todos en el metro.</strong> La montaña tiene especialidades enteras en cero. El mapa está abajo.</li>
+    <li><span class="text-2xl font-black text-teal-300">3</span><br><strong>Nadie sabe qué médico coge qué plan.</strong> De 6,247 especialistas, uno solo tiene ese dato público. Eso lo estamos llenando entre todos.</li>
+  </ol>
 </div>
 
 <div class="not-prose mt-6 grid md:grid-cols-2 gap-4">
   <div class="bg-gradient-to-br from-teal-50 to-white border-2 border-teal-200 rounded-2xl p-5 flex flex-col">
     <div class="text-2xl leading-none">🎙️</div>
-    <h3 class="text-lg font-black text-slate-900 mt-1">Escúchalo en 10 minutos</h3>
+    <h3 class="text-lg font-black text-slate-900 mt-1">Escúchalo en 13 minutos</h3>
     <p class="text-sm text-slate-600 mt-1 flex-1">En cristiano: por qué no es que falten médicos, sino dónde están todos, y por qué nadie te dice si tu especialista coge tu plan.</p>
     <audio controls preload="none" class="mt-3 w-full" src="${REG_PODCAST_URL}">Tu navegador no puede reproducir el audio. <a href="${REG_PODCAST_URL}" class="text-teal-700 font-semibold">Descárgalo</a>.</audio>
   </div>
@@ -3423,6 +3453,14 @@ async function handleObservatorioMedico(req: any, res: any) {
   <p class="text-sm text-teal-100 mb-4">Esta data es citable y hay acceso al dataset por pueblo y región. Si trabajas en una solución al acceso de salud en PR y necesitas el conteo verificado, escríbenos.</p>
   <a href="mailto:angel@angelanderson.com?subject=Observatorio%20del%20Acceso%20Medico%20PR" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-solid fa-envelope"></i> angel@angelanderson.com</a>
 </div>
+
+${shareRow({
+  text: 'Por qué a Puerto Rico se le van los médicos, en cristiano y con la fuente de cada número. Hay podcast de 13 minutos y el mapa de qué especialidades no existen en tu región.',
+  url: 'https://registromedicopr.com/observatorio',
+  toWho: 'Al que siempre dice "es que aquí no hay médicos", al familiar afuera que cuida a alguien acá, y a cualquier periodista o legislador que conozcas.',
+  dark: true,
+})}
+${SHARE_COPY_SCRIPT}
 
 <p class="text-xs text-slate-500 mt-6"><strong>Nota de rigor:</strong> los números de fuerza laboral (~9,800 activos, 365-500 salidas/año) son las cifras netas defendibles; el "8,000 dejaron de ejercer" mezcla emigración, retiro y muerte. La brecha de pago en % (38-41%) está bien corroborada (STAT, JAMA, KFF, MMAPA); los montos en dólares vienen de fuentes de cabildeo. El P. del S. 15 (12%) estaba pendiente, no confirmado aprobado. La ausencia de data municipal pública es inferencia, no cita. <strong>Fuentes:</strong> STAT, JAMA Health Forum, KFF, MMAPA PR, Congress.gov (H.R. 6031), WHO Bulletin, HHS-OIG, HRSA, March of Dimes, Grupo CNE.</p>
 `
@@ -4125,6 +4163,14 @@ ${renderPromesasByTopic(PROMESAS_CABOROJO)}
   <p class="font-bold text-base">¿Falta alguna? ¿Alguna ya está hecha?</p>
   <p class="text-sm text-teal-100 mt-1">Lo puedes decir aquí mismo (abajo), o textea <strong>OBSERVATORIO al ${PHONE_CTA}</strong>. Lo revisa un humano antes de cambiar nada. Esto se mantiene vivo.</p>
 </div>
+
+${shareRow({
+  text: 'Todo lo que el alcalde de Cabo Rojo dijo o prometió en cámara (2023-2024), una por una, con su estado. Récord público, no acusación. Tú decides cuál se hizo.',
+  url: 'https://www.mapadecaborojo.com/promesas',
+  toWho: 'Al chat de la familia, al vecino que dice "aquí nunca se sabe nada", y a quien vaya a votar en Cabo Rojo.',
+  dark: true,
+})}
+${SHARE_COPY_SCRIPT}
 
 ${civicSubmitForm({ kind: 'promesa_hecha', showProof: true, tone: 'teal', title: '✅ "Esto ya se hizo"', sub: 'Si sabes que algo de esta lista ya está cumplido, dilo. Si tienes prueba (una foto, un link, un documento), mejor: lo marcamos HECHO el mismo día.', placeholder: '¿Cuál promesa, y cómo sabes que ya se hizo?', cta: 'Avisar que ya se hizo' })}
 
@@ -4968,6 +5014,24 @@ function handleAgua(req: any, res: any) {
       <strong>Esto NO es un aviso de emergencia.</strong> Los avisos de hervir el agua los emite la AAA o Salud en el momento — esta página es el <strong>récord</strong>: te dice qué vigilar y qué preguntar. Una “violación de salud” va desde una falla de monitoreo hasta un problema real; por eso separamos siempre lo <strong>activo</strong> (sin resolver) de lo <strong>ya resuelto</strong>, y le damos crédito al que está limpio. Es un espejo, no una alarma.
     </div>
 
+    <div class="bg-gradient-to-br from-brand-50 to-white border-2 border-brand-200 rounded-2xl p-5 mb-8">
+      <div class="flex items-start gap-3">
+        <div class="text-3xl leading-none">🎙️</div>
+        <div class="flex-1 min-w-0">
+          <h2 class="font-display text-xl font-bold text-sand-900 m-0">Escúchalo en 15 minutos</h2>
+          <p class="text-sm text-sand-600 mt-1 mb-0">La historia completa en cristiano: los acueductos comunales que nadie mira, qué dice el récord federal de esta zona, y qué te toca a ti. Ponlo mientras guías.</p>
+          <audio controls preload="none" class="mt-3 w-full" src="${AGUA_PODCAST_URL}">Tu navegador no puede reproducir el audio. <a href="${AGUA_PODCAST_URL}" class="text-brand-700 font-semibold">Descárgalo</a>.</audio>
+        </div>
+      </div>
+    </div>
+    <script type="application/ld+json">${JSON.stringify({
+      '@context': 'https://schema.org', '@type': 'AudioObject',
+      name: 'Los acueductos olvidados del oeste de Puerto Rico',
+      description: 'El récord federal del agua potable (EPA SDWIS) de Cabo Rojo y los pueblos aledaños, en cristiano: acueductos comunales con violaciones activas, quién responde por el agua, y qué puede hacer el vecino.',
+      contentUrl: AGUA_PODCAST_URL, encodingFormat: 'audio/mp4', inLanguage: 'es', isAccessibleForFree: true,
+      publisher: { '@type': 'Organization', name: 'Mapa de Cabo Rojo', url: 'https://www.mapadecaborojo.com' },
+    })}</script>
+
     ${cards}
 
     <div class="bg-emerald-50 border border-emerald-200 border-l-4 border-l-emerald-500 rounded-2xl p-5 my-8">
@@ -5009,6 +5073,13 @@ function handleAgua(req: any, res: any) {
       <p class="text-sand-600 text-sm mb-0">Fuente sobre el proyecto: <a href="https://periodismoinvestigativo.com/2025/10/esencia-residential-project-tax-breaks-puerto-rico/" target="_blank" rel="noopener" class="text-brand-700 font-semibold hover:underline">investigación del Centro de Periodismo Investigativo →</a></p>
     </div>
 
+    ${shareRow({
+      text: 'El récord federal del agua de Cabo Rojo y los pueblos de al lado, en cristiano: quién está limpio, quién tiene algo activo sin resolver, y a quién reclamarle (pista: no es el alcalde).',
+      url: 'https://www.mapadecaborojo.com/agua',
+      toWho: 'Al chat del barrio, a la junta de tu acueducto comunal, y a ese familiar que vive en un sistema con récord activo. Un mensaje ahorra tres llamadas.',
+    })}
+    <p class="not-prose -mt-5 mb-8 text-sm text-sand-600 text-center">¿Prefieres una imagen? <a href="${AGUA_INFOGRAFIA_URL}" target="_blank" rel="noopener" class="text-brand-700 font-semibold hover:underline">Baja el semáforo del agua (imagen pa' compartir) →</a></p>
+
     <div class="bg-white border border-sand-200 rounded-2xl p-5 my-8">
       <h3 class="font-display text-lg font-bold text-sand-900 mb-2">¿Y el tuyo? Búscalo tú mismo</h3>
       <p class="text-sand-700 text-sm m-0">El récord de cualquier sistema de agua de Puerto Rico es público y gratis en el buscador de agua potable de la EPA (Safe Drinking Water). Si tu comunidad tiene su propio acueducto, búscalo por nombre; si te llega por PRASA, busca el de tu pueblo.</p>
@@ -5022,7 +5093,8 @@ function handleAgua(req: any, res: any) {
     <div class="text-xs text-sand-500 border-t border-sand-200 pt-4">
       <strong>Metodología:</strong> EPA Envirofacts SDWIS (data.epa.gov). Sistemas comunitarios activos mapeados por área de servicio. “Activa” = sin fecha de retorno al cumplimiento. Tipo por regla federal (<code>rule_family_code</code>). Cobertura: sistemas comunitarios de Cabo Rojo y pueblos aledaños; no incluye pozos privados ni sistemas de escuelas/negocios. La población servida es la del <em>sistema</em> según EPA y puede cruzar límites municipales (los sistemas PRASA grandes sirven a más de un pueblo). Pull 2026-07-01. Extensión a los 15 municipios del oeste en camino.
     </div>
-  </div>`
+  </div>
+  ${SHARE_COPY_SCRIPT}`
 
   const jsonLd = {
     '@context': 'https://schema.org',
