@@ -4881,18 +4881,45 @@ function handleAgua(req: any, res: any) {
     return `<span class="shrink-0 text-xs font-bold rounded-full px-2.5 py-1 leading-tight text-center bg-emerald-50 text-emerald-800 border border-emerald-200">limpio ✓</span>`
   }
 
+  const slugify = (t: string) => t.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-')
+
+  // Por cada sistema en rojo: la pregunta exacta (guión listo) + botón de pasar el recibo por WhatsApp.
+  const actionRow = (s: AguaSys, muni: string) => {
+    if (s.activas === 0) return ''
+    const esPrasa = /PRASA/i.test(s.name)
+    const guion = esPrasa
+      ? `El récord federal de la EPA muestra ${s.activas} violación${s.activas > 1 ? 'es' : ''} de salud activa${s.activas > 1 ? 's' : ''} del sistema de ${muni} (la más reciente de ${s.reciente}). ¿Cuál es el estado y el plan de corrección?`
+      : `Vi en el récord federal de la EPA que ${s.name} tiene ${s.activas} violación${s.activas > 1 ? 'es' : ''} de salud sin fecha de corrección (la más reciente de ${s.reciente}). ¿Cuál es el plan pa' corregirla${s.activas > 1 ? 's' : ''} y pa' cuándo? ¿Nos conviene pedir la ayuda técnica gratis que existe pa' acueductos comunitarios?`
+    const aQuien = esPrasa
+      ? `Llama a la AAA (<a href="tel:7876202482" class="text-brand-700 font-semibold">787-620-2482</a>) o pregúntalo en tu oficina regional.`
+      : `Llévala a la próxima reunión de la junta, o mándala al chat de la comunidad. No es pa' pelear: es pa' que haya plan.`
+    const share = encodeURIComponent(`${s.name} (${muni}) tiene ${s.activas} violación${s.activas > 1 ? 'es' : ''} de salud sin resolver en el récord federal del agua potable (EPA), la más reciente de ${s.reciente}. Míralo tú mismo: https://www.mapadecaborojo.com/agua#${slugify(muni)}`)
+    return `
+      <details class="mt-2 mb-1 bg-red-50/50 border border-red-100 rounded-xl">
+        <summary class="cursor-pointer select-none px-3 py-2 text-sm font-bold text-red-800">¿Qué hago? La pregunta exacta →</summary>
+        <div class="px-3 pb-3">
+          <p class="text-sm text-sand-800 bg-white border border-sand-200 rounded-lg p-3 my-2">“${escapeHtml(guion)}”</p>
+          <p class="text-xs text-sand-600 mb-2">${aQuien}</p>
+          <a href="https://wa.me/?text=${share}" target="_blank" rel="noopener" class="inline-block text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-lg px-3 py-2">📲 Pásale este recibo a alguien que viva allí</a>
+        </div>
+      </details>`
+  }
+
   const cards = AGUA_DATA.map(m => {
     const pop = m.systems.reduce((a, s) => a + s.pop, 0)
     const rows = m.systems.map(s => `
-      <div class="flex justify-between items-start gap-3 py-3 border-t border-sand-100 first:border-t-0">
-        <div>
-          <div class="font-semibold text-sand-900">${escapeHtml(s.name)}</div>
-          <div class="text-sm text-sand-500 mt-0.5">${fmt(s.pop)} personas · ${s.source === 'SW' ? 'agua superficial' : 'agua subterránea'} · ${escapeHtml(s.nota)}</div>
+      <div class="py-3 border-t border-sand-100 first:border-t-0">
+        <div class="flex justify-between items-start gap-3">
+          <div>
+            <div class="font-semibold text-sand-900">${escapeHtml(s.name)}</div>
+            <div class="text-sm text-sand-500 mt-0.5">${fmt(s.pop)} personas · ${s.source === 'SW' ? 'agua superficial' : 'agua subterránea'} · ${escapeHtml(s.nota)}</div>
+          </div>
+          ${badge(s)}
         </div>
-        ${badge(s)}
+        ${actionRow(s, m.name)}
       </div>`).join('')
     return `
-    <section class="bg-white border border-sand-200 rounded-2xl p-5 mb-4 shadow-sm">
+    <section id="${slugify(m.name)}" class="bg-white border border-sand-200 rounded-2xl p-5 mb-4 shadow-sm scroll-mt-20">
       <div class="flex justify-between items-baseline gap-3 mb-1">
         <h2 class="font-display text-xl font-bold text-sand-900 m-0">${escapeHtml(m.name)}</h2>
         <span class="text-xs text-sand-500 whitespace-nowrap">${m.systems.length} sistema${m.systems.length > 1 ? 's' : ''} · ${fmt(pop)} pers.</span>
@@ -4911,7 +4938,25 @@ function handleAgua(req: any, res: any) {
   <div class="max-w-3xl mx-auto px-4 py-8">
     <p class="text-brand-700 font-bold uppercase tracking-wide text-xs mb-1">Dato verificado · EPA federal</p>
     <h1 class="font-display text-3xl md:text-4xl font-extrabold text-sand-900 leading-tight mb-3">El agua de tu pueblo, contra el récord federal</h1>
-    <p class="text-lg text-sand-700 leading-relaxed">Cabo Rojo y los pueblos de al lado. Cada número sale directo de la base de datos de la EPA (el gobierno federal), sistema por sistema. No es opinión: es el récord público. Verificado el 1 de julio de 2026.</p>
+    <p class="text-lg text-sand-700 leading-relaxed">Cabo Rojo y los pueblos de al lado, contra la base de datos de la EPA (el gobierno federal). En 60 segundos sabes <strong>si te toca hacer algo, qué exacto, y a quién preguntarle</strong>. Verificado el 1 de julio de 2026.</p>
+
+    <div class="bg-white border-2 border-brand-200 rounded-2xl p-5 my-6">
+      <p class="text-brand-700 font-bold uppercase tracking-wide text-xs mb-3">Empieza aquí · ¿cuál eres tú?</p>
+      <div class="grid md:grid-cols-3 gap-3 text-sm">
+        <div class="bg-sand-50 rounded-xl p-4">
+          <p class="font-bold text-sand-900 mb-1">💧 Mi agua viene de la AAA</p>
+          <p class="text-sand-600 m-0">La mayoría. Los sistemas PRASA de esta zona tienen el récord casi al día. <strong>Tu única acción:</strong> mira la tarjeta de tu pueblo abajo — si sale en rojo, ahí mismo está la pregunta exacta pa' la AAA.</p>
+        </div>
+        <div class="bg-sand-50 rounded-xl p-4">
+          <p class="font-bold text-sand-900 mb-1">🏘️ Mi comunidad tiene su propio acueducto</p>
+          <p class="text-sand-600 m-0">Búscala abajo por nombre. Si sale en rojo, hay un <strong>guión listo pa' la próxima reunión de la junta</strong> — y ayuda técnica gratis pa' resolver. No es pa' pelear: es pa' que haya plan.</p>
+        </div>
+        <div class="bg-sand-50 rounded-xl p-4">
+          <p class="font-bold text-sand-900 mb-1">🌎 Yo no vivo allá, pero mi gente sí</p>
+          <p class="text-sand-600 m-0">Cada sistema en rojo tiene un botón pa' <strong>mandarle el recibo por WhatsApp</strong> a quien vive allí, con el dato exacto y el link. Eso es todo lo que te toca.</p>
+        </div>
+      </div>
+    </div>
 
     <div class="grid grid-cols-3 gap-3 my-6">
       ${tile(String(AGUA_DATA.length), 'pueblos', 'text-brand-700')}
@@ -4920,10 +4965,22 @@ function handleAgua(req: any, res: any) {
     </div>
 
     <div class="bg-gold-50 border border-gold-200 border-l-4 border-l-gold-500 rounded-xl p-4 text-sm text-sand-800 mb-8">
-      Una <strong>“violación de salud”</strong> en el récord no significa que hay bacteria en tu llave hoy. Va desde una falla de monitoreo hasta un problema real, y hay que leer cada caso. Aquí separamos siempre lo <strong>activo</strong> (sin resolver) de lo <strong>ya resuelto</strong>, y le damos crédito al que está limpio. Es un espejo, no una alarma.
+      <strong>Esto NO es un aviso de emergencia.</strong> Los avisos de hervir el agua los emite la AAA o Salud en el momento — esta página es el <strong>récord</strong>: te dice qué vigilar y qué preguntar. Una “violación de salud” va desde una falla de monitoreo hasta un problema real; por eso separamos siempre lo <strong>activo</strong> (sin resolver) de lo <strong>ya resuelto</strong>, y le damos crédito al que está limpio. Es un espejo, no una alarma.
     </div>
 
     ${cards}
+
+    <div class="bg-emerald-50 border border-emerald-200 border-l-4 border-l-emerald-500 rounded-2xl p-5 my-8">
+      <p class="text-emerald-800 font-bold uppercase tracking-wide text-xs mb-1">Si eres de la junta de un acueducto comunal</p>
+      <h3 class="font-display text-xl font-bold text-sand-900 mb-2">Esto no es una acusación. Es el mapa pa' salir del récord.</h3>
+      <p class="text-sand-700 text-sm mb-2">Administrar el agua de 300 casas es trabajo duro y casi siempre voluntario. La violación no se borra escondiéndola — se borra con un plan. Y no estás solo:</p>
+      <ul class="text-sand-700 text-sm space-y-1 mb-2 list-disc pl-5">
+        <li><strong>Ayuda técnica gratuita:</strong> existen programas de asistencia pa' sistemas rurales y comunitarios en PR (la red RCAP trabaja con acueductos como el tuyo sin costo).</li>
+        <li><strong>Fondos federales:</strong> el fondo rotatorio de agua potable (DWSRF) financia mejoras de sistemas pequeños — se canaliza por el Departamento de Salud, que es tu regulador primario.</li>
+        <li><strong>El primer paso es gratis:</strong> saber exactamente qué dice tu récord. Escríbele al Veci (${PHONE_CTA}) con el nombre de tu acueducto y te pasamos el detalle federal de tu sistema, sin vueltas.</li>
+      </ul>
+      <p class="text-sand-600 text-xs m-0">Pedir ayuda no es fallar. Fallar es dejar el récord quieto otro año más.</p>
+    </div>
 
     <div class="bg-white border border-sand-200 rounded-2xl p-5 my-8">
       <p class="text-brand-700 font-bold uppercase tracking-wide text-xs mb-1">¿A quién le reclamas?</p>
@@ -4983,7 +5040,7 @@ function handleAgua(req: any, res: any) {
   res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=1800')
   res.status(200).send(layout({
     title: 'El agua de tu pueblo · récord federal de la EPA',
-    description: 'Cabo Rojo y los pueblos de al lado, contra el récord federal del agua potable (EPA SDWIS). Verificado sistema por sistema. Activas vs resueltas, sin alarmismo.',
+    description: 'El récord federal del agua de Cabo Rojo y los pueblos de al lado, con lo que importa: si te toca hacer algo, la pregunta exacta pa\' la AAA o tu junta comunal, y a quién le corresponde arreglarlo.',
     slug: 'agua',
     bodyHtml: body,
     jsonLd,
