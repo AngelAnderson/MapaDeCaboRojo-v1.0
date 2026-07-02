@@ -216,7 +216,7 @@ const SuggestPlaceModal: React.FC<SuggestPlaceModalProps> = ({ isOpen, onClose }
             </div>
           )}
           {step === 3 && (
-            <div className="text-center py-10 animate-fade-in"><div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-sm"><i className="fa-solid fa-check"></i></div><h3 className="text-2xl font-bold text-ink">{t('suggest_success_title')}</h3><p className="text-ink-soft mt-2">{t('suggest_success_msg_admin_review')}</p><button onClick={onClose} className="mt-8 bg-slate-900 dark:bg-white text-white dark:text-ink px-8 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition-transform">{t('close')}</button></div>
+            <div className="text-center py-10 animate-fade-in"><div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl shadow-sm"><i className="fa-solid fa-check"></i></div><h3 className="text-2xl font-bold text-ink">{t('suggest_success_title')}</h3><p className="text-ink-soft mt-2">{t('suggest_success_msg_admin_review')}</p><button onClick={onClose} className="mt-8 bg-ink text-canvas px-8 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition-transform">{t('close')}</button></div>
           )}
         </div>
       </div>

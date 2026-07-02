@@ -213,7 +213,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                     onClick={() => setActiveNeighborhood(activeNeighborhood === hood ? null : hood)}
                     className={`px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wide border transition-colors whitespace-nowrap ${
                         activeNeighborhood === hood 
-                        ? 'bg-slate-800 text-white border-slate-800 dark:bg-white dark:text-ink' 
+                        ? 'bg-ink text-canvas border-ink'
                         : 'bg-transparent text-ink-muted border-line-strong hover:border-slate-400'
                     }`}
                 >
@@ -246,10 +246,10 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
               </button>
             )}
             <div className="ml-auto flex gap-1">
-              <button onClick={() => setViewMode('list')} className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs ${viewMode === 'list' ? 'bg-slate-800 text-white dark:bg-white dark:text-ink' : 'text-ink-muted'}`}>
+              <button onClick={() => setViewMode('list')} className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs ${viewMode === 'list' ? 'bg-ink text-canvas' : 'text-ink-muted'}`}>
                 <i className="fa-solid fa-list"></i>
               </button>
-              <button onClick={() => setViewMode('grid')} className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs ${viewMode === 'grid' ? 'bg-slate-800 text-white dark:bg-white dark:text-ink' : 'text-ink-muted'}`}>
+              <button onClick={() => setViewMode('grid')} className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs ${viewMode === 'grid' ? 'bg-ink text-canvas' : 'text-ink-muted'}`}>
                 <i className="fa-solid fa-grip"></i>
               </button>
             </div>

@@ -63,7 +63,8 @@ const CategoryPills: React.FC<CategoryPillsProps> = ({ activeGroup, onSelect, ca
               style={style}
               className={className}
             >
-              <i className={`fa-solid fa-${group.icon} ${isActive ? 'text-white/90' : 'text-ink-muted'}`}></i>
+              {/* Active: inherit the button's text color (canvas on ink, white on hex) so it stays visible in dark mode */}
+              <i className={`fa-solid fa-${group.icon} ${isActive ? 'opacity-90' : 'text-ink-muted'}`}></i>
               {group.label}
             </button>
           );
