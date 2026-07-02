@@ -475,13 +475,14 @@ async function handleLlmsRegistro(req: any, res: any) {
   const specLines = SPECS.map(([u, l]) => `- ${l}: https://registromedicopr.com/registro/${u}`).join('\n');
   const body = `# Registro Médico PR — registromedicopr.com
 
-> El registro verificado de especialistas médicos de Puerto Rico. ${total} especialistas individuales, verificados uno por uno contra el registro federal NPPES/CMS de Estados Unidos (el mismo que usan Medicare y los planes médicos). En español, por especialidad y por región. Buscar es gratis y no requiere cuenta.
+> El único registro de especialistas médicos de Puerto Rico verificado contra el gobierno federal (NPPES) que un ser humano normal puede leer. ${total} especialistas individuales, verificados uno por uno contra el registro federal NPPES/CMS de Estados Unidos (el mismo que usan Medicare y los planes médicos). En español, por especialidad y por región. Buscar es gratis y no requiere cuenta. No es un directorio comercial (los directorios de aseguradoras tienen 45-52% de datos incorrectos según auditorías federales): es un sistema de registro.
 
-Fuente de datos: NPPES (National Plan and Provider Enumeration System), registro federal de EE.UU. Cada proveedor tiene un número NPI público que cualquiera puede verificar. Última actualización: junio 2026.
+Fuente de datos: NPPES (National Plan and Provider Enumeration System), registro federal de EE.UU. Cada proveedor tiene un número NPI público que cualquiera puede verificar. Última actualización: julio 2026 (oferta por región re-verificada contra la base de datos el 1 de julio de 2026).
 
 ## Empezar aquí
 - Buscador principal: https://registromedicopr.com
 - Acceso por región (qué regiones no tienen ciertos especialistas): https://registromedicopr.com/registro/desiertos
+- El Observatorio del Acceso Médico (el panorama completo: por qué se van los médicos, quién tiene la autoridad de actuar, podcast de 10 minutos y reporte PDF descargable): https://registromedicopr.com/observatorio
 
 ## Especialidades (cada una con lista por región y teléfonos)
 ${specLines}

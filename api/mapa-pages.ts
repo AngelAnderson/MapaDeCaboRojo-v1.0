@@ -2586,7 +2586,7 @@ async function handleRegistro(req: any, res: any) {
 <div class="not-prose mt-3 flex flex-wrap gap-2 text-xs">
   <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-shield-halved"></i> ${t('NPI federal verificado', 'Federal NPI verified')}</span>
   <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-list-check"></i> ${REGISTRY_SPECS.length} ${t('especialidades', 'specialties')}</span>
-  <span class="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-calendar-check"></i> ${t('Actualizado junio 2026', 'Updated June 2026')}</span>
+  <span class="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-calendar-check"></i> ${t('Actualizado julio 2026', 'Updated July 2026')}</span>
 </div>
 
 <div id="reg-tool" class="not-prose mt-5 bg-white border-2 border-teal-300 rounded-2xl p-6 shadow-sm scroll-mt-24">
@@ -3232,21 +3232,18 @@ async function handleRegistroLead(req: any, res: any) {
     const email = String(b.email || '').slice(0, 160).trim().toLowerCase()
     if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { res.status(400).send(JSON.stringify({ ok: false })); return }
     const ip = String(req.headers?.['x-forwarded-for'] || '').split(',')[0].trim().slice(0, 64) || 'unknown'
-    // Abuse controls: (1) email the report AT MOST ONCE per address (no mail-bombing a victim
-    // via repeat POSTs); (2) throttle new leads per IP (bounds enumeration + Resend quota /
-    // domain-reputation abuse). The on-page PDF link still works regardless — only the outbound
-    // email is gated. Not full double-opt-in (lead-magnet UX), but kills the abuse vectors.
-    const { data: existingLead } = await supabase.from('registro_leads').select('id').eq('email', email).maybeSingle()
-    const isNewLead = !existingLead
-    let ipThrottled = false
-    if (isNewLead) {
-      const sinceHour = new Date(Date.now() - 3600 * 1000).toISOString()
-      const { count: ipCount } = await supabase.from('registro_leads')
-        .select('id', { count: 'exact', head: true }).eq('ip', ip).gte('created_at', sinceHour)
-      ipThrottled = (ipCount ?? 0) >= 5
-    }
-    // Upsert on email (unique index) — repeat downloads don't error, just refresh the row.
-    const { error: upsertErr } = await supabase.from('registro_leads').upsert({
+    // Abuse controls: (1) email the report AT MOST ONCE per address — decided ATOMICALLY by
+    // Postgres (ignoreDuplicates insert: only one concurrent request wins the row, so a burst
+    // of parallel POSTs for the same address can never trigger multiple sends); (2) throttle
+    // new leads per IP (bounds enumeration + Resend quota / domain-reputation abuse). The
+    // on-page PDF link still works regardless — only the outbound email is gated. Not full
+    // double-opt-in (lead-magnet UX), but kills the abuse vectors.
+    const sinceHour = new Date(Date.now() - 3600 * 1000).toISOString()
+    const { count: ipCount } = await supabase.from('registro_leads')
+      .select('id', { count: 'exact', head: true }).eq('ip', ip).gte('created_at', sinceHour)
+    const ipThrottled = (ipCount ?? 0) >= 5
+    // ON CONFLICT DO NOTHING + select: returns the row ONLY if this request inserted it.
+    const { data: inserted, error: upsertErr } = await supabase.from('registro_leads').upsert({
       email,
       name: String(b.name || '').slice(0, 120).trim() || null,
       region: String(b.region || '').slice(0, 40).trim() || null,
@@ -3254,9 +3251,10 @@ async function handleRegistroLead(req: any, res: any) {
       wants_alerts: b.wants_alerts !== false,
       source: String(b.source || 'observatorio').slice(0, 40),
       ip,
-    }, { onConflict: 'email' })
+    }, { onConflict: 'email', ignoreDuplicates: true }).select('id')
+    const isNewLead = !upsertErr && Array.isArray(inserted) && inserted.length > 0
     // Only email a genuinely new, non-throttled lead that actually saved (no silent send-without-save).
-    if (RESEND_API_KEY && isNewLead && !ipThrottled && !upsertErr) {
+    if (RESEND_API_KEY && isNewLead && !ipThrottled) {
       try {
         await fetch('https://api.resend.com/emails', {
           method: 'POST',
