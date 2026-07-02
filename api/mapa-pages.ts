@@ -4957,7 +4957,7 @@ function handleAgua(req: any, res: any) {
       <div class="py-3 border-t border-sand-100 first:border-t-0">
         <div class="flex justify-between items-start gap-3">
           <div>
-            <div class="font-semibold text-sand-900">${escapeHtml(s.name)}</div>
+            <div class="font-semibold text-sand-900">${escapeHtml(s.name)}${/PRASA/i.test(s.name) ? ' <span class="text-xs font-normal text-sand-500">(la AAA — Acueductos)</span>' : ''}</div>
             <div class="text-sm text-sand-500 mt-0.5">${fmt(s.pop)} personas · ${s.source === 'SW' ? 'agua superficial' : 'agua subterránea'} · ${escapeHtml(s.nota)}</div>
           </div>
           ${badge(s)}
@@ -5031,6 +5031,19 @@ function handleAgua(req: any, res: any) {
       contentUrl: AGUA_PODCAST_URL, encodingFormat: 'audio/mp4', inLanguage: 'es', isAccessibleForFree: true,
       publisher: { '@type': 'Organization', name: 'Mapa de Cabo Rojo', url: 'https://www.mapadecaborojo.com' },
     })}</script>
+
+    <div class="bg-white border border-sand-200 rounded-2xl p-5 mb-6">
+      <h2 class="font-display text-xl font-bold text-sand-900 m-0 mb-1">Cómo leer estas tarjetas, en cristiano</h2>
+      <p class="text-sm text-sand-600 mt-0 mb-4">El récord federal usa palabras que nadie usa en la fila de la panadería. Traducción:</p>
+      <dl class="grid sm:grid-cols-2 gap-x-6 gap-y-4 text-sm m-0">
+        <div><dt class="font-bold text-sand-900">“PRASA”</dt><dd class="text-sand-600 m-0 mt-0.5">Es <strong>la AAA</strong> — Acueductos, el sistema del gobierno. PRASA es su nombre en inglés y así la nombra el récord federal. Si tu agua “viene de Acueductos”, este es tu sistema.</dd></div>
+        <div><dt class="font-bold text-sand-900">“20,749 personas”</dt><dd class="text-sand-600 m-0 mt-0.5">A cuántas personas les sirve agua ese sistema, según la EPA. Los sistemas grandes cruzan de un pueblo a otro, así que el número puede ser más grande que tu pueblo.</dd></div>
+        <div><dt class="font-bold text-sand-900">“Agua superficial” vs “subterránea”</dt><dd class="text-sand-600 m-0 mt-0.5">Superficial = viene de un río, lago o embalse, y necesita más tratamiento. Subterránea = viene de pozo. Ninguna es “mala” — solo se vigilan distinto.</dd></div>
+        <div><dt class="font-bold text-sand-900">“Trihalometanos”</dt><dd class="text-sand-600 m-0 mt-0.5">Se forman cuando el <strong>cloro que desinfecta el agua</strong> se mezcla con materia orgánica (hojas, tierra). No es que el agua te enferme hoy: es un riesgo de exposición <strong>por años</strong>, y por eso la EPA lo mide y lo anota. Lo serio es dejarlo sin corregir.</dd></div>
+        <div><dt class="font-bold text-sand-900">“Coliformes”</dt><dd class="text-sand-600 m-0 mt-0.5">Bacterias que sirven de <strong>señal de alerta</strong>: si aparecen, algo pudo entrar al agua y hay que investigar. Es lo típico que se vigila en pozos y acueductos pequeños.</dd></div>
+        <div><dt class="font-bold text-sand-900">“45 de 48 ya resueltas”</dt><dd class="text-sand-600 m-0 mt-0.5">Ese sistema ha tenido 48 anotaciones en toda su historia y 45 ya se corrigieron. <strong>Lo que importa es lo ACTIVO</strong> (el badge rojo): lo que sigue sin resolver hoy.</dd></div>
+      </dl>
+    </div>
 
     ${cards}
 
