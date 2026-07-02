@@ -164,7 +164,7 @@ const SubmitEventModal: React.FC<SubmitEventModalProps> = ({ isOpen, onClose }) 
               </div>
               <h3 className="text-2xl font-bold text-ink">¡Gracias! Lo recibimos.</h3>
               <p className="text-ink-soft mt-2">Lo revisamos y, si todo cuadra, lo publicamos en el mapa.</p>
-              <button onClick={onClose} className="mt-8 bg-slate-900 dark:bg-white text-white dark:text-ink px-8 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition-transform">Cerrar</button>
+              <button onClick={onClose} className="mt-8 bg-ink text-canvas px-8 py-3 rounded-full font-bold shadow-lg hover:scale-105 transition-transform">Cerrar</button>
             </div>
           )}
         </div>

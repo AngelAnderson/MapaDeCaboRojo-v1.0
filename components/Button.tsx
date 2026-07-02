@@ -13,7 +13,8 @@ const Button: React.FC<ButtonProps> = ({ variant = 'primary', icon, label, class
     primary: "bg-brand-600 text-white border-2 border-brand-700",
     secondary: "bg-orange-500 text-white border-2 border-orange-600",
     danger: "bg-red-600 text-white border-2 border-red-700",
-    white: "bg-white text-ink border-2 border-line"
+    // Locked-light bg needs locked-dark text (text-ink flips near-white in dark mode)
+    white: "bg-white text-sand-900 border-2 border-line"
   };
 
   return (

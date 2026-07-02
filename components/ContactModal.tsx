@@ -33,12 +33,12 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose, onSuggest,
             
           {/* Action Grid */}
           <div className="grid grid-cols-2 gap-3">
-              <button onClick={onSuggest} className="bg-paper-2 hover:bg-paper-2 border border-line p-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all active:scale-95">
+              <button onClick={onSuggest} className="bg-paper-2 hover:bg-line border border-line p-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all active:scale-95">
                   <i className="fa-solid fa-map-location-dot text-2xl text-ink"></i>
                   <span className="text-xs font-bold text-ink-soft text-center">{t('btn_suggest')}</span>
               </button>
               
-              <button onClick={() => window.open('mailto:angel@caborojo.com?subject=Report Bug', '_self')} className="bg-paper-2 hover:bg-paper-2 border border-line p-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all active:scale-95">
+              <button onClick={() => window.open('mailto:angel@caborojo.com?subject=Report Bug', '_self')} className="bg-paper-2 hover:bg-line border border-line p-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all active:scale-95">
                   <i className="fa-solid fa-bug text-2xl text-ink"></i>
                   <span className="text-xs font-bold text-ink-soft text-center">{t('report_issue')}</span>
               </button>
