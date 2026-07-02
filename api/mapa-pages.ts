@@ -4844,7 +4844,7 @@ const AGUA_DATA: AguaMuni[] = [
     { name: 'Sistema PRASA de Lajas', pop: 47531, source: 'SW', total: 26, activas: 0, reciente: '2020', nota: 'Mismo perfil de trihalometanos, todas resueltas.' },
   ]},
   { name: 'San Germán', systems: [
-    { name: 'Peniche', pop: 1100, source: 'SW', total: 6, activas: 4, reciente: '2025', nota: 'Acueducto comunal. Bacterias y tratamiento. El récord activo más reciente del área.' },
+    { name: 'Periche', pop: 1100, source: 'SW', total: 6, activas: 4, reciente: '2025', nota: 'Acueducto comunal. Bacterias y tratamiento. El récord activo más reciente del área.' },
     { name: 'Com. Río Piedras', pop: 220, source: 'SW', total: 3, activas: 2, reciente: '2024', nota: 'Acueducto comunal. Coliformes / agua subterránea.' },
     { name: 'Comunidad Méndez', pop: 60, source: 'SW', total: 3, activas: 2, reciente: '2024', nota: 'Acueducto comunal. Tratamiento / agua subterránea.' },
     { name: 'El Japonés', pop: 1303, source: 'GW', total: 2, activas: 0, reciente: '2015', nota: 'Coliformes, ya resueltas.' },
@@ -4963,7 +4963,7 @@ function handleAgua(req: any, res: any) {
     </div>
 
     <div class="text-xs text-sand-500 border-t border-sand-200 pt-4">
-      <strong>Metodología:</strong> EPA Envirofacts SDWIS (data.epa.gov). Sistemas comunitarios activos mapeados por área de servicio. “Activa” = sin fecha de retorno al cumplimiento. Tipo por regla federal (<code>rule_family_code</code>). Cobertura: sistemas comunitarios de Cabo Rojo y pueblos aledaños; no incluye pozos privados ni sistemas de escuelas/negocios. Pull 2026-07-01. Extensión a los 15 municipios del oeste en camino.
+      <strong>Metodología:</strong> EPA Envirofacts SDWIS (data.epa.gov). Sistemas comunitarios activos mapeados por área de servicio. “Activa” = sin fecha de retorno al cumplimiento. Tipo por regla federal (<code>rule_family_code</code>). Cobertura: sistemas comunitarios de Cabo Rojo y pueblos aledaños; no incluye pozos privados ni sistemas de escuelas/negocios. La población servida es la del <em>sistema</em> según EPA y puede cruzar límites municipales (los sistemas PRASA grandes sirven a más de un pueblo). Pull 2026-07-01. Extensión a los 15 municipios del oeste en camino.
     </div>
   </div>`
 
