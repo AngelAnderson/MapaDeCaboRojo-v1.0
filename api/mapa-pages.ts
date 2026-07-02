@@ -2552,6 +2552,7 @@ const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:n
 const REG_PODCAST_URL = 'https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/especialistas-fantasma-desiertos.m4a'
 const REG_REPORT_URL = 'https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/reportes/estado-acceso-medico-pr-2026.pdf'
 const AGUA_PODCAST_URL = 'https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/acueductos-olvidados-oeste.m4a'
+const OBS_PODCAST_URL = 'https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/quien-manda-cabo-rojo.m4a'
 const AGUA_INFOGRAFIA_URL = 'https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/compartir/semaforo-del-agua-2026.png'
 
 // "Pásalo" — share row (WhatsApp deep-link + copy). Text is OUR constant, never user input.
@@ -4233,6 +4234,7 @@ async function handleObservatorio(req: any, res: any) {
   if (/registromedicopr\.com/i.test(String(req.headers?.host || ''))) {
     return handleObservatorioMedico(req, res)
   }
+  const ccObs = civicCounts(PROMESAS_CABOROJO)
   const { data: puebloAddRows } = await supabase
     .from('civic_submissions')
     .select('topic,body,created_at')
@@ -4253,6 +4255,24 @@ async function handleObservatorio(req: any, res: any) {
   <p class="text-sm text-slate-700"><strong class="text-teal-700">Nuestra posición es Suiza.</strong> No somos candidatos, no endosamos a nadie, y ninguna campaña nos paga por cobertura. Mismas preguntas, misma data, mismo trato para todos. Lo que ves aquí ya es público; solo lo pusimos en un solo sitio.</p>
 </div>
 
+<div class="not-prose mt-5 bg-gradient-to-br from-teal-50 to-white border-2 border-teal-200 rounded-2xl p-5">
+  <div class="flex items-start gap-3">
+    <div class="text-3xl leading-none">🎙️</div>
+    <div class="flex-1 min-w-0">
+      <h3 class="text-lg font-black text-slate-900 m-0">Escúchalo en 15 minutos: quién manda de verdad en Cabo Rojo</h3>
+      <p class="text-sm text-slate-600 mt-1 mb-0">Toda esta página en cristiano: los 4 problemas que deciden cómo se vive, a quién le toca cada cosa, el vertedero, lo que encontró el Contralor y el Promesómetro. Ponlo mientras guías.</p>
+      <audio controls preload="none" class="mt-3 w-full" src="${OBS_PODCAST_URL}">Tu navegador no puede reproducir el audio. <a href="${OBS_PODCAST_URL}" class="text-teal-700 font-semibold">Descárgalo</a>.</audio>
+    </div>
+  </div>
+</div>
+<script type="application/ld+json">${JSON.stringify({
+  '@context': 'https://schema.org', '@type': 'AudioObject',
+  name: 'Quién manda de verdad en Cabo Rojo',
+  description: 'El Observatorio Cívico de Cabo Rojo en 15 minutos: agua, basura, luz, el vertedero, lo que encontró el Contralor de PR, el Promesómetro del alcalde, y a quién le toca resolver cada cosa. Récord público, no-partidista.',
+  contentUrl: OBS_PODCAST_URL, encodingFormat: 'audio/mp4', inLanguage: 'es', isAccessibleForFree: true,
+  publisher: { '@type': 'Organization', name: 'Mapa de Cabo Rojo', url: 'https://www.mapadecaborojo.com' },
+})}</script>
+
 <div class="not-prose mt-5 bg-teal-900 text-white rounded-xl p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
   <div>
     <p class="font-bold text-base">Este observatorio está vivo. Pregúntale al Veci.</p>
@@ -4269,6 +4289,7 @@ async function handleObservatorio(req: any, res: any) {
     <div class="font-bold text-slate-900 mt-1">El agua</div>
     <p class="text-sm text-slate-600 mt-1">El suroeste es la región más seca de PR. El municipio consume 4.4 MGD y nadie ha dicho, por escrito, de dónde sale el agua de Cabo Rojo en los próximos 10 años.</p>
     <p class="text-xs text-teal-700 font-semibold mt-2">¿Se fue el agua? No es el alcalde. Es la AAA: 787-620-2482.</p>
+    <p class="text-xs mt-1"><a href="/agua" class="text-teal-700 font-semibold hover:underline">Mira el récord federal del agua de tu pueblo (EPA) →</a></p>
     ${mePasaBtn('agua')}
   </div>
   <div class="bg-white border border-slate-200 border-l-4 border-l-rose-500 rounded-lg p-4">
@@ -4394,6 +4415,14 @@ ${renderPuebloAdd(puebloAddRows || [])}
 <h2>El Promesómetro</h2>
 <p><strong>Esto no lo dijo un periódico. Lo dijo el alcalde, él mismo, en cámara.</strong> Lo guardamos con fecha y video. No se borra. Aquí se ve qué prometió y qué pasó.</p>
 
+<div class="not-prose mt-4 grid grid-cols-4 gap-2 text-center">
+  <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3"><div class="text-2xl font-black text-emerald-700">${ccObs.HECHO}</div><div class="text-xs font-bold text-emerald-800">✅ HECHO</div></div>
+  <div class="bg-amber-50 border border-amber-200 rounded-xl p-3"><div class="text-2xl font-black text-amber-600">${ccObs.EMPEZO}</div><div class="text-xs font-bold text-amber-800">🟡 EMPEZÓ</div></div>
+  <div class="bg-rose-50 border border-rose-200 rounded-xl p-3"><div class="text-2xl font-black text-rose-600">${ccObs.NO}</div><div class="text-xs font-bold text-rose-800">❌ NO</div></div>
+  <div class="bg-slate-50 border border-slate-200 rounded-xl p-3"><div class="text-2xl font-black text-slate-500">${ccObs.ESPERANDO}</div><div class="text-xs font-bold text-slate-600">⏳ SIN CONTESTAR</div></div>
+</div>
+<p class="not-prose text-xs text-slate-500 mt-2 text-center">El marcador se mueve con prueba, en cualquier dirección. Lo HECHO se celebra igual de rápido que lo que falta.</p>
+
 <div class="not-prose mt-4 bg-white border border-slate-200 border-l-4 border-l-teal-600 rounded-lg p-4">
   <p class="text-sm text-slate-700"><strong class="text-teal-700">¿Alcalde, esto ya está hecho?</strong> Dilo, con prueba, y lo marcamos <strong>HECHO</strong> el mismo día. ¿No se ha hecho? Dinos cuándo. Esto no es para pelear. Es para que el pueblo sepa. La pelota está en tu cancha.</p>
 </div>
@@ -4408,7 +4437,7 @@ ${renderPromesometroRows(PROMESAS_CABOROJO)}
 <p class="text-xs text-slate-500">Las citas en cámara salen de entrevistas públicas de CaboRojo.com con el alcalde (2023-2024). El video y el minuto exacto están en el archivo; se enlazan a medida que se confirman. Récord, no acusación: cada quien puede ver la entrevista completa y juzgar.</p>
 
 <div class="not-prose mt-4">
-  <a href="/promesas" class="inline-block bg-teal-700 hover:bg-teal-800 text-white font-bold px-5 py-3 rounded-lg">Ver las 60+ cosas que el alcalde dijo en cámara, tema por tema →</a>
+  <a href="/promesas" class="inline-block bg-teal-700 hover:bg-teal-800 text-white font-bold px-5 py-3 rounded-lg">Ver las ${PROMESAS_CABOROJO.length} cosas que el alcalde dijo en cámara, tema por tema →</a>
 </div>
 
 <h2>Verifícalo tú mismo</h2>
@@ -4535,6 +4564,14 @@ ${civicSubmitForm({ kind: 'problema', showTopic: true, title: '¿Hay otro proble
 <p class="text-xs text-slate-500 mt-2">Fuentes: Centro de Periodismo Investigativo (2025) · El Nuevo Día (dic 2025) · Marea Ecologista (sept 2025) · entrevistas en video de CaboRojo.com.</p>
 
 <blockquote>Yo no escojo. Yo organizo. Le doy a todos el mismo espejo, con número, fecha y fuente. Si esto te ayuda a entender mejor tu pueblo, llégate. Si no, sigue tu camino. Pero que nadie diga que no había dónde mirar.</blockquote>
+
+${shareRow({
+  text: 'La lista de problemas de Cabo Rojo en un solo sitio: agua, basura, luz, el vertedero, lo que encontró el Contralor, y todo lo que el alcalde dijo en cámara con su video. Récord público, no chisme. Tú lo ves, tú decides.',
+  url: 'https://www.mapadecaborojo.com/observatorio',
+  toWho: 'Al chat de la familia, al vecino que dice "aquí nadie hace nada", y al que vaya a votar en Cabo Rojo. Un pueblo informado reclama mejor.',
+  dark: true,
+})}
+${SHARE_COPY_SCRIPT}
 
 <h3>Fuentes principales</h3>
 <p class="text-xs text-slate-500">
