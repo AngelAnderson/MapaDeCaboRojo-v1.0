@@ -133,10 +133,10 @@ function shell(inner: string, opts: { noindex?: boolean; title: string; desc: st
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHTML(opts.title)}</title>
 <meta name="description" content="${escapeHTML(opts.desc)}">
-${opts.noindex ? '<meta name="robots" content="noindex">' : '<link rel="canonical" href="https://mapadecaborojo.com/ia">'}
+${opts.noindex ? '<meta name="robots" content="noindex">' : '<link rel="canonical" href="https://www.mapadecaborojo.com/ia">'}
 <meta property="og:title" content="${escapeHTML(opts.title)}">
 <meta property="og:description" content="${escapeHTML(opts.desc)}">
-<meta property="og:image" content="https://mapadecaborojo.com/api/og?t=${encodeURIComponent("¿Te conoce la IA?")}&k=${encodeURIComponent("Cabo Rojo")}&sub=${encodeURIComponent("Si no te ven, no te compran")}">
+<meta property="og:image" content="https://www.mapadecaborojo.com/api/og?t=${encodeURIComponent("¿Te conoce la IA?")}&k=${encodeURIComponent("Cabo Rojo")}&sub=${encodeURIComponent("Si no te ven, no te compran")}">
 <style>
   :root{--teal:#0d9488;--teal-d:#0f766e;--ink:#0f172a;--sub:#475569;--line:#e2e8f0;--paper:#f8fafc;--red:#dc2626}
   *{box-sizing:border-box}
@@ -178,7 +178,7 @@ function landing(err?: string, pre?: { q: string; c: string }): string {
       <div class="hint">En pocas palabras, como lo buscaría un cliente.</div>
       <button type="submit">Ver si la IA me conoce →</button>
     </form>
-    <p class="muted">Le preguntamos a la IA (con búsqueda web en vivo) lo que un vecino realmente preguntaría, y miramos si te nombra. Es una foto, no un juicio final — pero si no sales, ya sabes por qué el teléfono no suena. — <a href="https://mapadecaborojo.com">MapaDeCaboRojo.com</a>, el directorio verificado de Cabo Rojo.</p>
+    <p class="muted">Le preguntamos a la IA (con búsqueda web en vivo) lo que un vecino realmente preguntaría, y miramos si te nombra. Es una foto, no un juicio final — pero si no sales, ya sabes por qué el teléfono no suena. — <a href="https://www.mapadecaborojo.com">MapaDeCaboRojo.com</a>, el directorio verificado de Cabo Rojo.</p>
   `, { title: "¿Te conoce la IA? · Cabo Rojo", desc: "Averigua si la inteligencia artificial recomienda tu negocio en Cabo Rojo. Si no te ven, no te compran." });
 }
 
@@ -198,7 +198,7 @@ function result(name: string, cat: string, r: Check): string {
         <div class="snippet">${snippet}</div>
         <p style="margin:0 0 8px;font-weight:600">Si no te ven, no te compran.</p>
         <a class="cta wa" href="${WA(`Vi que la IA no me encuentra pa' ${cat} en Cabo Rojo. Quiero que me consiga. ¿Qué hago?`)}">Quiero que la IA me encuentre →</a>
-        <a class="cta" href="https://mapadecaborojo.com/pon-tu-negocio-en-el-mapa">Cómo funciona el índice verificado →</a>
+        <a class="cta" href="https://www.mapadecaborojo.com/pon-tu-negocio-en-el-mapa">Cómo funciona el índice verificado →</a>
       </div>`;
   return shell(`
     <div class="bar"></div>
@@ -206,14 +206,14 @@ function result(name: string, cat: string, r: Check): string {
     <p class="lede">Le preguntamos a la IA: <em>"${escapeHTML(cat)} en Cabo Rojo"</em>.</p>
     ${block}
     <a class="cta" style="background:#fff;color:var(--teal-d);border:1px solid var(--line)" href="/ia">← Probar otro negocio</a>
-    <p class="muted">Hecho con IA + búsqueda web en vivo. Es una foto del momento; la respuesta puede variar. Lo que no varía: quien está en el índice verificado del Veci aparece cuando lo buscan. — <a href="https://mapadecaborojo.com">MapaDeCaboRojo.com</a></p>
+    <p class="muted">Hecho con IA + búsqueda web en vivo. Es una foto del momento; la respuesta puede variar. Lo que no varía: quien está en el índice verificado del Veci aparece cuando lo buscan. — <a href="https://www.mapadecaborojo.com">MapaDeCaboRojo.com</a></p>
   `, { noindex: true, title: `${r.cited ? "✅" : "❌"} ${name} · ¿Te conoce la IA?`, desc: "Chequeo de visibilidad en IA para negocios de Cabo Rojo." });
 }
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   try {
-    const url = new URL(req.url, "https://mapadecaborojo.com");
+    const url = new URL(req.url, "https://www.mapadecaborojo.com");
     // Truncar server-side también — el maxlength del form no protege la API.
     const q = (url.searchParams.get("q") || "").trim().slice(0, 80);
     const c = (url.searchParams.get("c") || "").trim().slice(0, 60);
