@@ -1,16 +1,17 @@
 // /ia — "¿Te conoce la IA?" — el espejo público del moonshot de citabilidad.
-// El dueño escribe su negocio + lo que hace → le preguntamos a la IA (Gemini
-// con Google Search grounding, la superficie de respuesta local dominante) la
-// pregunta que un vecino REALMENTE haría, y medimos si la IA lo nombra.
+// El dueño escribe su negocio + lo que hace → le preguntamos a la IA (OpenAI
+// Responses API + web_search, mismo motor que la edge fn ai-visibility-check)
+// la pregunta que un vecino REALMENTE haría, y medimos si la IA lo nombra.
 //
 // Si no te ven, no te compran. El ❌ es el hook; el arreglo es el índice
-// verificado del Veci. Motor hermano de la edge fn ai-visibility-check (que
-// mide las propiedades de Angel). Doc: Moonshot-Citabilidad-IA-PR-2026-06-30.md
+// verificado del Veci. Doc: Moonshot-Citabilidad-IA-PR-2026-06-30.md
 //
 // GET /ia            → landing + formulario
-// GET /ia?q=..&c=..  → corre el chequeo server-side y renderiza el veredicto
-// Env: OPENAI_API_KEY (Responses API + web_search) — mismo motor que la edge fn
-//   ai-visibility-check. Requiere que OPENAI_API_KEY esté en el env de Vercel.
+// GET /ia?q=..&c=..  → chequeo server-side y veredicto. URL compartible:
+//   el resultado se cachea 24h en ia_checks (mismo negocio+categoría no
+//   re-gasta OpenAI) y cada chequeo real se loggea ahí = pipeline de leads.
+// Env: OPENAI_API_KEY · VITE_SUPABASE_URL · SUPABASE_SERVICE_ROLE_KEY ·
+//   IA_DAILY_CAP (opcional, default 200)
 
 const OPENAI_KEY = process.env.OPENAI_API_KEY || "";
 const MODEL = "gpt-4o";
@@ -19,23 +20,50 @@ const MODEL = "gpt-4o";
 const DAILY_CAP = parseInt(process.env.IA_DAILY_CAP || "200", 10);
 const SB_URL = process.env.VITE_SUPABASE_URL || "";
 const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
+const SB_HEADERS = { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "Content-Type": "application/json" };
+
+// Previews de FB/WhatsApp/Twitter y crawlers no pagan OpenAI: cache o landing.
+const BOT_UA = /facebookexternalhit|whatsapp|twitterbot|telegrambot|linkedinbot|slackbot|discordbot|googlebot|bingbot|duckduckbot|baiduspider|yandex|pinterest|redditbot|applebot|crawler|spider|preview/i;
+
+const norm = (s: string): string =>
+  s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+
+type Check = { cited: boolean; answer: string };
 
 // Bump atómico vía RPC. Fail-CLOSED: si no podemos verificar el contador, NO
 // gastamos (devolvemos blocked). El cost cap es el requisito, no el uptime.
-async function bumpUsage(): Promise<{ allowed: boolean; used: number; error?: boolean }> {
+async function bumpUsage(): Promise<{ allowed: boolean; error?: boolean }> {
   try {
     const r = await fetch(`${SB_URL}/rest/v1/rpc/ia_usage_bump`, {
-      method: "POST",
-      headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ p_cap: DAILY_CAP }),
+      method: "POST", headers: SB_HEADERS, body: JSON.stringify({ p_cap: DAILY_CAP }),
     });
-    if (!r.ok) return { allowed: false, used: DAILY_CAP, error: true };
+    if (!r.ok) return { allowed: false, error: true };
     const rows = await r.json();
     const row = Array.isArray(rows) ? rows[0] : rows;
-    return { allowed: !!row?.allowed, used: row?.used ?? DAILY_CAP };
+    return { allowed: !!row?.allowed };
   } catch {
-    return { allowed: false, used: DAILY_CAP, error: true };
+    return { allowed: false, error: true };
   }
+}
+
+async function getCached(qn: string, cn: string): Promise<Check | null> {
+  try {
+    const since = new Date(Date.now() - 24 * 3600_000).toISOString();
+    const u = `${SB_URL}/rest/v1/ia_checks?select=cited,answer&q_norm=eq.${encodeURIComponent(qn)}&c_norm=eq.${encodeURIComponent(cn)}&created_at=gte.${encodeURIComponent(since)}&order=created_at.desc&limit=1`;
+    const r = await fetch(u, { headers: SB_HEADERS });
+    if (!r.ok) return null;
+    const rows = await r.json();
+    return rows[0] ? { cited: !!rows[0].cited, answer: rows[0].answer || "" } : null;
+  } catch { return null; }
+}
+
+async function logCheck(qn: string, cn: string, name: string, cat: string, c: Check): Promise<void> {
+  try {
+    await fetch(`${SB_URL}/rest/v1/ia_checks`, {
+      method: "POST", headers: { ...SB_HEADERS, Prefer: "return=minimal" },
+      body: JSON.stringify({ q_norm: qn, c_norm: cn, business_name: name, category: cat, cited: c.cited, answer: c.answer.slice(0, 4000) }),
+    });
+  } catch { /* log best-effort: no romper la página por esto */ }
 }
 
 const escapeHTML = (s: string | undefined): string =>
@@ -70,21 +98,32 @@ function outText(data: any): string {
   return text.trim();
 }
 
-async function checkVisibility(name: string, cat: string): Promise<{ cited: boolean; answer: string; question: string }> {
+async function checkVisibility(name: string, cat: string): Promise<Check> {
   const question = `Soy de Puerto Rico. ¿Cuáles son los mejores ${cat} en Cabo Rojo, Puerto Rico? Menciona nombres de negocios específicos.`;
   const search = await openai({ model: MODEL, tools: [{ type: "web_search_preview" }], input: question });
   const answer = outText(search);
-  if (!answer) return { cited: false, answer: "", question };
+  if (!answer) return { cited: false, answer: "" };
 
   // El modelo juzga su propia respuesta — más robusto que match de strings.
+  // El nombre va sin comillas/saltos pa' que no pueda romper el prompt.
+  const safeName = name.replace(/["\n\r]/g, " ").trim();
   const judge = await openai({
     model: MODEL,
-    input: `Texto:\n"""${answer.slice(0, 4000)}"""\n\n¿El texto anterior menciona o recomienda un negocio llamado "${name}" (o una variación obvia del mismo nombre)? Responde únicamente con la palabra SI o la palabra NO.`,
+    input: `Texto:\n"""${answer.slice(0, 4000)}"""\n\n¿El texto anterior menciona o recomienda un negocio llamado "${safeName}" (o una variación obvia del mismo nombre)? Responde únicamente con la palabra SI o la palabra NO.`,
   });
   // Normaliza acentos ("sí" → "si") — el \b de JS no reconoce la í.
   const first = outText(judge).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z\s]/g, "").trim().split(/\s+/)[0] || "";
-  const cited = first === "si";
-  return { cited, answer, question };
+  return { cited: first === "si", answer };
+}
+
+// La respuesta del modelo trae markdown y marcadores de cita — limpiar pa' mostrar.
+function cleanAnswer(s: string): string {
+  return s
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1") // [texto](url) → texto
+    .replace(/【[^】]*】/g, "")
+    .replace(/[*_#`]+/g, "")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 const WA = (text: string) => `https://wa.me/17874177711?text=${encodeURIComponent(text)}`;
@@ -106,7 +145,6 @@ ${opts.noindex ? '<meta name="robots" content="noindex">' : '<link rel="canonica
   a{color:var(--teal-d)}
   .bar{height:5px;background:var(--teal);border-radius:99px;width:56px;margin-bottom:22px}
   h1{font-size:30px;line-height:1.15;margin:0 0 12px;letter-spacing:-.02em}
-  h2{font-size:20px;margin:26px 0 8px}
   .lede{font-size:17px;color:var(--sub);margin:0 0 24px}
   form{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
   label{display:block;font-weight:600;font-size:14px;margin:0 0 6px}
@@ -144,8 +182,9 @@ function landing(err?: string, pre?: { q: string; c: string }): string {
   `, { title: "¿Te conoce la IA? · Cabo Rojo", desc: "Averigua si la inteligencia artificial recomienda tu negocio en Cabo Rojo. Si no te ven, no te compran." });
 }
 
-function result(name: string, cat: string, r: { cited: boolean; answer: string; question: string }): string {
-  const snippet = r.answer ? escapeHTML(r.answer.slice(0, 420)) + (r.answer.length > 420 ? "…" : "") : "(La IA no devolvió respuesta esta vez — intenta de nuevo.)";
+function result(name: string, cat: string, r: Check): string {
+  const clean = cleanAnswer(r.answer);
+  const snippet = clean ? escapeHTML(clean.slice(0, 420)) + (clean.length > 420 ? "…" : "") : "(La IA no devolvió respuesta esta vez — intenta de nuevo.)";
   const block = r.cited
     ? `<div class="card">
         <p class="verdict yes">✅ La IA sí te nombra.</p>
@@ -175,15 +214,30 @@ export default async function handler(req: any, res: any) {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   try {
     const url = new URL(req.url, "https://mapadecaborojo.com");
-    const q = (url.searchParams.get("q") || "").trim();
-    const c = (url.searchParams.get("c") || "").trim();
+    // Truncar server-side también — el maxlength del form no protege la API.
+    const q = (url.searchParams.get("q") || "").trim().slice(0, 80);
+    const c = (url.searchParams.get("c") || "").trim().slice(0, 60);
 
     if (!q && !c) return res.status(200).send(landing());
     if (!q || !c) return res.status(200).send(landing("Escribe el nombre de tu negocio y qué haces.", { q, c }));
     if (q.length < 2 || c.length < 2) return res.status(200).send(landing("Un poquito más de detalle, por favor.", { q, c }));
 
+    const qn = norm(q), cn = norm(c);
+
+    // Cache 24h: links compartidos y re-visitas no re-gastan OpenAI ni cupo,
+    // y el veredicto compartido se mantiene consistente.
+    const cached = await getCached(qn, cn);
+    if (cached) return res.status(200).send(result(q, c, cached));
+
+    // Bots/previews (FB, WhatsApp, crawlers) nunca disparan un chequeo nuevo.
+    const ua = String(req.headers["user-agent"] || "");
+    if (BOT_UA.test(ua)) return res.status(200).send(landing());
+
     const ip = (req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "unknown").split(",")[0].trim();
     if (!rateOk(ip)) return res.status(200).send(landing("Muchas consultas seguidas. Espera un minuto y vuelve a intentar.", { q, c }));
+
+    // Sin llave no hay chequeo — y no quemamos cupo del día.
+    if (!OPENAI_KEY) return res.status(200).send(landing("Estamos afinando la herramienta. Vuelve en un ratito.", { q, c }));
 
     // Tope de gasto diario — antes de gastar un centavo en OpenAI.
     const cap = await bumpUsage();
@@ -195,6 +249,7 @@ export default async function handler(req: any, res: any) {
     }
 
     const r = await checkVisibility(q, c);
+    await logCheck(qn, cn, q, c, r); // cache pa'l próximo + lead pa'l pipeline
     return res.status(200).send(result(q, c, r));
   } catch (e: any) {
     return res.status(200).send(landing("Algo falló al consultar la IA. Intenta de nuevo en un momento."));
