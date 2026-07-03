@@ -3449,6 +3449,57 @@ async function handleObservatorioMedico(req: any, res: any) {
 <p>Toda la maquinaria federal de fondos corre sobre un insumo: <strong>conteos de proveedores verificados, actuales, mapeados a la población.</strong> Las designaciones de escasez (HPSA) convierten esa data en dinero — desbloquean repago de préstamos, un bono Medicare de 10%, y elegibilidad de grants. Pero <strong>muchos mapas federales no se revisan desde los años 70-90</strong>, y <strong>PR no tiene ningún dataset público a nivel de sus 78 municipios</strong> (los mapas federales son de resolución de condado, demasiado gruesos para ver un pueblo).</p>
 <p>Un vecino que verificó a mano, pueblo por pueblo, quién ejerce y qué especialidades simplemente no existen, tiene el artefacto que la política pública no puede generar sola: <strong>ground-truth.</strong> Eso convierte "sospechamos una escasez" en "aquí está el conteo verificado, por pueblo, hoy" — el insumo exacto que se vuelve un puntaje HPSA, una asignación de fondos, un reto de adecuación de red, o un proyecto de ley. (Precedentes: los "Maternity Care Deserts" de March of Dimes y los "Pharmacy Deserts" de GoodRx — un actor no-gubernamental construye el mapa verificado y se vuelve la referencia citada que dirige política.)</p>
 
+<h2 id="salidas">6. ¿Y ahora qué? Las 4 salidas, según quién seas</h2>
+<p class="text-slate-600 -mt-2">Todo lo de arriba es la pelea grande, la de Washington y San Juan. Mientras esa se pelea, hay puertas que ya están abiertas hoy, con fuente y todo. Coge la tuya y deja las demás.</p>
+
+<h3>🎓 Si tu hijo quiere ser médico (y tú no quieres que se ahogue en deuda)</h3>
+<p>La ruta que casi nadie cuenta: <strong>la misma escasez que ves arriba es la que puede pagar la escuela.</strong> El "o se endeuda con $250 mil o no es médico" era mentira. El mapa completo:</p>
+<ul>
+<li><strong>Estudiar aquí cuesta menos, pero depende de la escuela.</strong> La UPR (Ciencias Médicas) cobra <strong>~$24,665/año</strong> a residentes de PR: como un tercio del promedio privado de EEUU (~$66-70 mil). Las otras tres escuelas de la isla van de ~$47 mil (San Juan Bautista, hoy acreditada en probatoria LCME) a ~$73 mil (Ponce, que ya cuesta como una privada de allá). La UPR es la jugada. (Tarifas 2025-26; AAMC.)</li>
+<li><strong>El repago federal de préstamos existe y PR cualifica.</strong> El National Health Service Corps (NHSC) paga hasta <strong>$75,000 por 2 años</strong> de servicio a tiempo completo en cuidado primario, más <strong>$5,000 adicionales por atender en español</strong>, trabajando en un centro de salud comunitario en zona de escasez (HPSA). PR tiene <strong>42 zonas así</strong> de cuidado primario. En FY2025 solo 34 clínicos en toda la isla usaron este programa ($1.77M): cabe mucha más gente. (HRSA, ciclo FY2026.)</li>
+<li><strong>La beca completa (NHSC Scholarship) también existe, con honestidad:</strong> paga matrícula completa + ~$1,648/mes de estipendio, pero aceptan ~5-10% de los que aplican, y se sirve donde haya vacante que cualifique: en PR es posible, no garantizado. Un boleto que vale la pena pedir, no un plan A.</li>
+<li><strong>Residencia en la isla = quedarse.</strong> El residente entrenado en PR se queda mucho más (§3), y hay plazas federales nuevas: 200/año desde 2023 (hospitales de PR recibieron en la primera ronda) y 200 más desde julio 2026, la mitad en psiquiatría, con prioridad pa' zonas de escasez. (CMS.)</li>
+<li><strong>PSLF (perdón de préstamos por servicio público):</strong> 10 años como <em>empleado</em> de gobierno o entidad 501(c)(3) (centros 330, UPR, hospitales públicos) y el balance federal restante se perdona. Los hospitales con fines de lucro NO cuentan, aunque el trabajo sea el mismo. Se certifica el empleo (formulario ECF) desde el primer año, no al final. (34 CFR 685.219.)</li>
+<li><strong>¿Ya se fue y está allá con la deuda?</strong> La ruta de regreso es la misma combinación: repago NHSC + PSLF + residencia o plaza acá. La deuda no lo condena a quedarse allá. No saber esto, sí.</li>
+</ul>
+<p class="text-sm text-slate-600">Nada de esto es garantía. Es el mapa completo, con la fuente de cada pieza, pa' que la decisión se tome con todos los números.</p>
+
+<h3>🏥 Si vives en un desierto (tu especialista no existe en tu región)</h3>
+<ul>
+<li><strong>Tu plan Medicare Advantage te debe la salida.</strong> Por regla federal (42 CFR 422.112), si la red del plan no tiene el especialista que necesitas a distancia razonable, el plan tiene que cubrirte <em>fuera</em> de la red pagando tú lo mismo que si fuera dentro. El paso: tú o tu médico le piden al plan una <strong>"determinación de organización"</strong> antes de la cita, por escrito, diciendo que la red no tiene el especialista. Contestan en 14 días (72 horas si urge). ¿Dicen que no? Se apela, y se pone la queja al <strong>1-800-MEDICARE</strong>: CMS fiscaliza a los planes con esas quejas.</li>
+<li><strong>Telemedicina:</strong> cubierta en Medicare hasta diciembre 2027, y la de salud mental desde tu casa quedó permanente. En los planes MA y en Vital depende del plan: pregunta antes. (CAA 2026, actualizado jul 2026.)</li>
+<li><strong>Los centros de salud comunitarios (330)</strong> atienden con o sin plan, con tarifa según ingreso.</li>
+</ul>
+<p>¿No sabes a quién ir? Escríbele <strong>MEDICO</strong> con tu pueblo y la especialidad al <a href="https://wa.me/17874177711?text=MEDICO" class="text-teal-700 font-semibold">787-417-7711</a>. Y si lo que buscas no existe todavía, el Veci te ofrece avisarte cuando llegue.</p>
+
+<h3>🩺 Si eres médico y estás haciendo la maleta</h3>
+<p>Vete si te tienes que ir: el problema es el pago federal, no tú (§1). Pero haz la cuenta con todos los números, no con la mitad:</p>
+<ul>
+<li><strong>En un centro 330, la impericia la cubre el gobierno federal (FTCA):</strong> el médico empleado es "empleado federal" pa' efectos de demandas, dentro del alcance del empleo (el moonlighting va aparte, con póliza propia). Y en PR los límites mandatorios son $100k/$300k, no el $1M/$3M típico del continente: por eso la prima aquí es una fracción de la de allá. (BPHC Compliance Manual Cap. 21.)</li>
+<li><strong>Repago NHSC:</strong> hasta $80,000 por 2 años (cuidado primario a tiempo completo + bono de español) por servir en HPSA. Con 42 en PR, hay dónde.</li>
+<li><strong>El 4% (Ley 14) está congelado pa' decretos nuevos desde 2020.</strong> El relevo, el <strong>P. del S. 15</strong> (12% fijo con requisitos de servicio a pacientes de Vital), pasó ambas cámaras el 1-2 de julio de 2026 y al momento de escribir esto espera la firma de la gobernadora. Si se firma, cambia la cuenta. (Actualizado jul 2026; verifica el estado antes de decidir.)</li>
+<li><strong>PSLF</strong> si tu patrono es público o 501(c)(3): certifica el empleo ya. Cada año certificado cuenta, aunque después te muevas.</li>
+</ul>
+
+<h3>🏛️ Si eres alcalde, funcionario o reportero</h3>
+<p>Tu palanca es la data. Las designaciones de escasez (HPSA) no se piden a HRSA directo: se someten por la <strong>Primary Care Office del Departamento de Salud de PR</strong>. Un municipio con el conteo verificado en la mano puede pedirle al PCO que someta o actualice la designación de su zona, y esa designación es la que desbloquea el repago de préstamos, las becas y los grants de arriba. La data de este Observatorio está disponible pa' eso, por pueblo y por región.</p>
+
+<div class="not-prose mt-4 bg-slate-50 border-2 border-slate-200 rounded-2xl p-5">
+  <p class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">📰 Kit de prensa · las cifras citables, listas pa' copiar</p>
+  <ul class="text-sm text-slate-700 space-y-1.5 m-0 p-0 list-none">
+    <li>· Medicare le paga a PR ~38-41% menos que al continente por el mismo paciente (STAT 2024; JAMA Health Forum jun 2025)</li>
+    <li>· La fuerza médica cayó de ~14,500 (2009) a ~9,800; salen 365-500 médicos al año (JAMA jun 2025)</li>
+    <li>· El Centro de la isla tiene 9 de 32 especialidades en cero: cero neumólogos vs 84 en el metro (Registro Médico PR, verificado contra NPPES, jul 2026)</li>
+    <li>· PR tiene 42 zonas de escasez (HPSA) de cuidado primario; en FY2025 solo 34 clínicos usaron el repago federal NHSC, $1.77M en toda la isla (HRSA)</li>
+    <li>· De 6,247 especialistas verificados, uno solo tiene público qué plan médico acepta (Registro Médico PR)</li>
+  </ul>
+  <div class="mt-3 flex flex-wrap items-center gap-2">
+    <button class="share-copy inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-full text-xs" data-copy="Cifras del Observatorio del Acceso Médico de PR (registromedicopr.com/observatorio, jul 2026): Medicare le paga a PR ~38-41% menos que al continente (STAT 2024; JAMA jun 2025). Fuerza médica: de ~14,500 (2009) a ~9,800; salen 365-500/año (JAMA). El Centro de la isla: 9 de 32 especialidades en cero; cero neumólogos vs 84 en el metro (Registro Médico PR/NPPES). PR tiene 42 HPSAs de cuidado primario; solo 34 clínicos usaron el NHSC en FY2025, $1.77M (HRSA). De 6,247 especialistas verificados, 1 tiene público qué plan acepta. Contacto y dataset por pueblo: angel@angelanderson.com"><i class="fa-solid fa-copy"></i> Copiar las cifras</button>
+    <a href="${REG_PODCAST_URL}" class="inline-flex items-center gap-1.5 bg-white border border-slate-300 text-slate-700 font-bold px-4 py-2 rounded-full text-xs hover:bg-slate-100"><i class="fa-solid fa-headphones"></i> Audio 13 min</a>
+    <a href="${REG_REPORT_URL}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 bg-white border border-slate-300 text-slate-700 font-bold px-4 py-2 rounded-full text-xs hover:bg-slate-100"><i class="fa-solid fa-file-pdf"></i> Reporte PDF</a>
+  </div>
+</div>
+
 <div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-white">
   <p class="text-lg font-bold mb-1">¿Periodista, legislador, agencia o investigador?</p>
   <p class="text-sm text-teal-100 mb-4">Esta data es citable y hay acceso al dataset por pueblo y región. Si trabajas en una solución al acceso de salud en PR y necesitas el conteo verificado, escríbenos.</p>
@@ -3463,7 +3514,7 @@ ${shareRow({
 })}
 ${SHARE_COPY_SCRIPT}
 
-<p class="text-xs text-slate-500 mt-6"><strong>Nota de rigor:</strong> los números de fuerza laboral (~9,800 activos, 365-500 salidas/año) son las cifras netas defendibles; el "8,000 dejaron de ejercer" mezcla emigración, retiro y muerte. La brecha de pago en % (38-41%) está bien corroborada (STAT, JAMA, KFF, MMAPA); los montos en dólares vienen de fuentes de cabildeo. El P. del S. 15 (12%) estaba pendiente, no confirmado aprobado. La ausencia de data municipal pública es inferencia, no cita. <strong>Fuentes:</strong> STAT, JAMA Health Forum, KFF, MMAPA PR, Congress.gov (H.R. 6031), WHO Bulletin, HHS-OIG, HRSA, March of Dimes, Grupo CNE.</p>
+<p class="text-xs text-slate-500 mt-6"><strong>Nota de rigor:</strong> los números de fuerza laboral (~9,800 activos, 365-500 salidas/año) son las cifras netas defendibles; el "8,000 dejaron de ejercer" mezcla emigración, retiro y muerte. La brecha de pago en % (38-41%) está bien corroborada (STAT, JAMA, KFF, MMAPA); los montos en dólares vienen de fuentes de cabildeo. El P. del S. 15 (12%) estaba pendiente, no confirmado aprobado. La ausencia de data municipal pública es inferencia, no cita. Sobre la sección 6 (las salidas): las cifras NHSC son del ciclo FY2026 y HRSA las ajusta cada año; la beca NHSC es altamente competitiva (~5-10%) y el servicio en PR depende de vacantes que cualifiquen (FY2024: 1 becado en PR; FY2025: 0); las matrículas son del año 2025-26 (la de UPR aplica a residentes de PR); el P. del S. 15 estaba aprobado por ambas cámaras pero SIN firma de la gobernadora al cierre de esta edición (jul 2026); las flexibilidades de telemedicina de Medicare vencen el 31 dic 2027 salvo renovación. Esta sección se re-verifica cada ciclo NHSC (otoño) y cada enero. <strong>Fuentes:</strong> STAT, JAMA Health Forum, KFF, MMAPA PR, Congress.gov (H.R. 6031), WHO Bulletin, HHS-OIG, HRSA (nhsc.hrsa.gov, data.hrsa.gov, bphc.hrsa.gov), 42 CFR 422.112, 34 CFR 685.219, CAA 2026 (H.R. 7148), CMS GME, LCME, AAMC, SIMED, Microjuris (P. del S. 15), March of Dimes, Grupo CNE.</p>
 `
 
   const jsonLd = [
@@ -3471,8 +3522,8 @@ ${SHARE_COPY_SCRIPT}
       '@context': 'https://schema.org', '@type': 'Report',
       name: 'El Observatorio del Acceso Médico de Puerto Rico',
       headline: 'Por qué a Puerto Rico se le van los médicos, y cómo se arregla',
-      description: 'Referencia citable sobre la crisis de acceso médico de PR: la disparidad de pago de Medicare (~40%), el éxodo de médicos, los desiertos por región, los levers de solución (H.R. 6031), y quién tiene la autoridad de actuar.',
-      inLanguage: 'es', datePublished: '2026-06-23', dateModified: '2026-06-23',
+      description: 'Referencia citable sobre la crisis de acceso médico de PR: la disparidad de pago de Medicare (~40%), el éxodo de médicos, los desiertos por región, los levers de solución (H.R. 6031), quién tiene la autoridad de actuar, y las 4 salidas concretas: la ruta sin deuda pa\' estudiar medicina, los derechos del paciente en un desierto, la matemática de quedarse pa\'l médico, y la palanca HPSA del municipio.',
+      inLanguage: 'es', datePublished: '2026-06-23', dateModified: '2026-07-03',
       author: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
       publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
       url: 'https://registromedicopr.com/observatorio',
