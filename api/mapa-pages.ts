@@ -3340,6 +3340,36 @@ async function handleObservatorioMedico(req: any, res: any) {
       <div class="text-xs text-slate-500">de 32 especialidades en <strong>cero</strong></div>
     </div>`).join('')
 
+  // Ready-to-send instruments for the two audiences who can actually move the needle:
+  // the doctor (capture, below) and the mayor/official/reporter (copy-paste letter + press note).
+  const PCO_LETTER = `Para: Primary Care Office, Departamento de Salud de Puerto Rico
+Asunto: Solicitud de designacion o actualizacion de HPSA para [TU PUEBLO O REGION]
+
+Saludos. Soy [TU NOMBRE], [alcalde / funcionario / lider comunitario] de [TU PUEBLO]. Solicito que la Primary Care Office someta o actualice ante HRSA la designacion de zona de escasez de profesionales de la salud (HPSA) para nuestra zona.
+
+Base: el registro federal NPPES, verificado y publicado en registromedicopr.com, muestra huecos de acceso reales por region. En el centro de la isla, 9 de 32 especialidades tienen cero proveedores verificados (cero neumologos, cero geriatras, cero otorrinos), mientras el area metro concentra la oferta. La designacion HPSA es la que desbloquea el repago de prestamos (NHSC), las becas y los grants federales que atraen y retienen medicos.
+
+Puerto Rico tiene 42 HPSAs de cuidado primario y en FY2025 solo 34 clinicos en toda la isla usaron el repago NHSC (1.77 millones). Hay capacidad sin usar. Pido: (1) revisar el estatus HPSA de [TU PUEBLO O REGION]; (2) de faltar o estar vencida, someter o renovar la designacion; (3) orientacion sobre datos adicionales que necesiten. Tengo el conteo por pueblo disponible y se lo hago llegar.
+
+Gracias por su gestion.
+[TU NOMBRE] - [CARGO] - [PUEBLO] - [TELEFONO O EMAIL]
+
+Fuente: registromedicopr.com (NPPES federal, verificado jul 2026). Dataset por pueblo: angel@angelanderson.com`
+
+  const PRESS_PITCH = `Asunto: Data verificada - por que a Puerto Rico se le van los medicos (y donde faltan hoy, por pueblo)
+
+Tengo un dataset verificado contra el NPPES federal sobre el acceso a especialistas en PR, por region y por pueblo, con la historia que casi nadie cuenta con numeros:
+
+- Medicare le paga a PR ~38-41% menos que al continente por el mismo paciente (STAT 2024; JAMA Health Forum jun 2025).
+- La fuerza medica cayo de ~14,500 (2009) a ~9,800; salen 365-500 medicos al año (JAMA jun 2025).
+- El centro de la isla tiene 9 de 32 especialidades en cero: cero neumologos vs 84 en el metro (Registro Medico PR / NPPES, jul 2026).
+- PR tiene 42 zonas de escasez (HPSA) de cuidado primario; en FY2025 solo 34 clinicos usaron el repago federal NHSC, 1.77 millones en toda la isla (HRSA).
+- De 6,247 especialistas verificados, uno solo tiene publico que plan medico acepta.
+
+El angulo: no es que "falten medicos" en abstracto. Es pago federal y concentracion en el metro, y hay palancas concretas que reportar (P. del S. 15, NHSC, designaciones HPSA). Te paso el dataset por pueblo, las fuentes y quien puede hablar.
+
+Contacto: Angel Anderson - angel@angelanderson.com - registromedicopr.com/observatorio`
+
   const body = `
 <p class="not-prose text-xs font-bold uppercase tracking-widest text-teal-700 mb-2">El Observatorio del Acceso Médico de Puerto Rico</p>
 <h1>Por qué a Puerto Rico se le van los médicos, y cómo se arregla</h1>
@@ -3481,8 +3511,45 @@ async function handleObservatorioMedico(req: any, res: any) {
 <li><strong>PSLF</strong> si tu patrono es público o 501(c)(3): certifica el empleo ya. Cada año certificado cuenta, aunque después te muevas.</li>
 </ul>
 
+<div class="not-prose mt-4 bg-teal-50 border-2 border-teal-200 rounded-2xl p-5">
+  <p class="text-sm text-slate-700 m-0">¿Eres médico, dentro o fuera de la isla, y quieres decidir con la cuenta completa? Te aviso de una sola cosa, cuando de verdad cambie el número: si se firma el <strong>P. del S. 15</strong>, o cuando abra una plaza o zona de escasez (HPSA) que te sirva para el repago.</p>
+  <form id="md-form" class="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+    <input id="md-email" type="email" required autocomplete="email" placeholder="Tu email" class="w-full rounded-lg border border-slate-300 p-2.5 text-base">
+    <button id="md-send" type="submit" class="bg-teal-700 hover:bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-base whitespace-nowrap">Avísame cuando cambie</button>
+  </form>
+  <div id="md-done" hidden class="mt-2 text-sm text-slate-700"></div>
+  <p class="text-[11px] text-slate-400 mt-2">Sin spam. Un email solo cuando el número cambia de verdad.</p>
+</div>
+<script>
+(function(){
+  var f=document.getElementById('md-form');if(!f)return;
+  var btn=document.getElementById('md-send'),orig=btn.textContent;
+  f.addEventListener('submit',function(ev){
+    ev.preventDefault();
+    var email=(document.getElementById('md-email').value||'').trim();
+    if(!/.+@.+\\..+/.test(email)){alert('Escribe un email válido.');return;}
+    btn.disabled=true;btn.textContent='Enviando...';
+    try{gtag('event','lead_magnet',{asset:'medico_diaspora'})}catch(e){}
+    fetch('/api/mapa-pages?page=registro-lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,source:'medico_diaspora',lang:(document.documentElement.lang||'es')})})
+      .then(function(r){return r.json();})
+      .then(function(){f.style.display='none';var d=document.getElementById('md-done');d.hidden=false;d.innerHTML='✅ Anotado. Te escribo cuando el P. del S. 15 se firme o abra una plaza que te sirva. Nada más.';})
+      .catch(function(){btn.disabled=false;btn.textContent=orig;alert('No se pudo. Intenta de nuevo o escribe a angel@angelanderson.com');});
+  });
+})();
+</script>
+
 <h3>🏛️ Si eres alcalde, funcionario o reportero</h3>
 <p>Tu palanca es la data. Las designaciones de escasez (HPSA) no se piden a HRSA directo: se someten por la <strong>Primary Care Office del Departamento de Salud de PR</strong>. Un municipio con el conteo verificado en la mano puede pedirle al PCO que someta o actualice la designación de su zona, y esa designación es la que desbloquea el repago de préstamos, las becas y los grants de arriba. La data de este Observatorio está disponible pa' eso, por pueblo y por región.</p>
+
+<div class="not-prose mt-4 bg-white border-2 border-slate-200 rounded-2xl p-5">
+  <p class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">🛠️ Listo pa' enviar hoy · copia y manda</p>
+  <p class="text-sm font-bold text-slate-800 mb-1">Carta a la Primary Care Office (Depto. de Salud PR) — pedir o actualizar la designación de escasez (HPSA)</p>
+  <p class="text-xs text-slate-500 mb-2">Es el paso que desbloquea el repago de préstamos, las becas y los grants. Cámbiale <strong>[TU PUEBLO]</strong> y tu nombre, y mándala.</p>
+  <button class="share-copy inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-full text-xs mb-5" data-copy="${escapeHtml(PCO_LETTER)}"><i class="fa-solid fa-copy"></i> Copiar la carta al PCO</button>
+  <p class="text-sm font-bold text-slate-800 mb-1">Nota a un reportero de salud — la data, la fuente y el ángulo, listos</p>
+  <p class="text-xs text-slate-500 mb-2">Si eres reportero, es tuyo. Si conoces a uno, reenvíaselo.</p>
+  <button class="share-copy inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-full text-xs" data-copy="${escapeHtml(PRESS_PITCH)}"><i class="fa-solid fa-copy"></i> Copiar la nota de prensa</button>
+</div>
 
 <div class="not-prose mt-4 bg-slate-50 border-2 border-slate-200 rounded-2xl p-5">
   <p class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">📰 Kit de prensa · las cifras citables, listas pa' copiar</p>
