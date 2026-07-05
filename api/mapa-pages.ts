@@ -4758,6 +4758,21 @@ async function handleSigueElDinero(req: any, res: any) {
   <div class="bg-white border-2 border-red-300 rounded-xl p-4 text-center"><div class="text-3xl font-black text-red-600">${pctFuera}%</div><div class="text-xs text-slate-600 mt-1">de los contratos rastreados fue a firmas de afuera de PR</div></div>
   <div class="bg-white border-2 border-teal-200 rounded-xl p-4 text-center"><div class="text-3xl font-black text-teal-700">${100 - pctFuera}%</div><div class="text-xs text-slate-600 mt-1">quedó con empresas boricuas</div></div>
 </div>
+<p class="text-xs text-slate-500 mt-2">*Esto es solo el flujo de contratos de emergencia de FEMA. La vivienda va por otra tubería (abajo).</p>
+
+<h2>Dos flujos, dos historias</h2>
+<p>El dinero de recuperación de PR corre por dos tuberías muy distintas — y confundirlas engaña:</p>
+<div class="not-prose grid sm:grid-cols-2 gap-3 mt-3">
+  <div class="border-2 border-red-200 bg-red-50/40 rounded-xl p-4">
+    <div class="text-xs font-bold text-red-700 uppercase">Flujo 1 · Emergencia (FEMA)</div>
+    <p class="text-sm text-slate-700 mt-1">Los contratos de gestión e ingeniería de la respuesta al desastre. Mercado especializado donde ~${pctFuera}% fue a firmas del mainland (la tabla de abajo).</p>
+  </div>
+  <div class="border-2 border-teal-200 bg-teal-50/40 rounded-xl p-4">
+    <div class="text-xs font-bold text-teal-700 uppercase">Flujo 2 · Vivienda (HUD CDBG-DR)</div>
+    <p class="text-sm text-slate-700 mt-1"><strong>~$20.8 mil millones</strong> los administra el propio gobierno de PR (Depto. de la Vivienda) como grantee. 100% boricua en el papel. Aquí la pregunta no es de dónde es la empresa, sino <strong>cuánto llegó de verdad a las familias</strong>: el CDBG-DR es famoso por lo lento que baja.</p>
+  </div>
+</div>
+<p class="text-sm text-slate-600 mt-2">La ejecución real (lo gastado, no solo lo asignado) vive en <a href="https://cdbg-dr.pr.gov" target="_blank" rel="noopener" class="text-teal-700 font-semibold">cdbg-dr.pr.gov ↗</a> y el sistema DRGR de HUD. USASpending muestra lo asignado, no lo desembolsado.</p>
 
 <h2>El caso más crudo</h2>
 <p><strong>CH2M Hill – CDM</strong> (Denver, Colorado) se llevó sola <strong>$238 millones</strong> en servicios "PA-TAC" — es decir, en <em>asesorar</em> sobre cómo gastar el dinero de FEMA. Sumando las firmas de ingeniería y consultoría de afuera (CDM, AECOM, WSP, Fluor), más de <strong>$700 millones</strong> se fueron en gestión y consultoría, no en obra física.</p>
