@@ -4160,6 +4160,12 @@ async function handleSinFiltros(req: any, res: any) {
   </div>
 </div>
 
+<a href="/prediccion" data-prsf="record" data-rec="prediccion" class="not-prose block bg-slate-900 text-white rounded-2xl p-5 mt-5 hover:bg-slate-800 transition-colors no-underline">
+  <span class="text-xs uppercase tracking-widest text-teal-300 font-bold">La síntesis</span>
+  <p class="text-lg sm:text-xl font-black mt-1 leading-snug">Predicción 2030: lo que dicen todos los récords juntos →</p>
+  <p class="text-slate-300 mt-1 text-sm">Si Puerto Rico no hace nada, ¿a dónde llega? La lectura de todos los récords, con la fuente al lado.</p>
+</a>
+
 <h2 id="records">Los récords</h2>
 <p class="text-slate-600 -mt-1">Cada uno es un dato verificado contra un registro federal o público. La brecha habla sola.</p>
 ${recordCards}
@@ -4421,6 +4427,72 @@ async function handleDatoRecord(req: any, res: any) {
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
   res.status(200).send(layout({
     title: `${cfg.h1}`, description: cfg.hero, slug: page, bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
+// /prediccion — la síntesis: qué dicen todos los récords juntos si no hacemos nada.
+// Números verificados (con enlace a su récord); las conexiones/proyecciones son análisis, no profecía.
+function handlePrediccion(req: any, res: any) {
+  const body = `
+<h1>Predicción 2030: lo que dicen todos los récords juntos</h1>
+<p class="text-lg text-slate-600 mt-2">Cada récord de este sitio cuenta una parte. Esta página los junta y pregunta: <strong>si Puerto Rico no hace nada, ¿a dónde llega en 2030?</strong> Los números salen de las fuentes federales (cada uno con su récord enlazado). Las conexiones y las proyecciones son lectura, no profecía. Si un número está mal, se corrige.</p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Estamos reconstruyendo el ladrillo para una población que se queda sin quien la atienda.</p>
+</div>
+
+<h2>1. El cuadro: lo inerte se reconstruye, lo vivo se erosiona</h2>
+<p>Los fondos federales fluyen hacia lo físico mientras el capital humano de salud desaparece en silencio. La brecha, en cifras:</p>
+<div class="not-prose overflow-auto border border-slate-200 rounded-xl mt-3 mb-4">
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Municipio</th><th class="py-2 px-3 text-right">Fondos FEMA</th><th class="py-2 px-3">Realidad médica</th></tr></thead><tbody>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3 font-semibold">Total PR (78 municipios)</td><td class="py-2 px-3 text-right">~$8,755 millones</td><td class="py-2 px-3">3 municipios con 0 especialistas; 36 con 0 psiquiatras</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3 font-semibold">Jayuya</td><td class="py-2 px-3 text-right">$424 millones</td><td class="py-2 px-3">2 especialistas / 0 psiquiatras</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3 font-semibold">Maricao</td><td class="py-2 px-3 text-right">$183 millones ($31,807/hab, el más alto de la isla)</td><td class="py-2 px-3">0 especialistas / 0 psiquiatras</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3 font-semibold">Añasco</td><td class="py-2 px-3 text-right">$316 millones</td><td class="py-2 px-3">13 especialistas / 0 psiquiatras</td></tr>
+  </tbody></table>
+</div>
+<p><strong>El cupón sin cobrar:</strong> 65 de 76 municipios tienen designación federal de escasez activa; 33 (792,221 personas) tienen el dinero de salud mental aprobado y cero psiquiatras. El incentivo (repago de préstamos hasta $75,000) existe, pero falta el "sitio aprobado" donde el médico se pare a cobrarlo. <a href="/registro/estado" class="text-teal-700 font-semibold">Ver el récord →</a></p>
+<p><strong>La tormenta que se junta:</strong> se proyecta que el 55% de los médicos activos se retire para 2030; el financiamiento federal de Medicaid cae de 76% a 55% el 30 de septiembre de 2027; y Medicare Advantage paga en PR ~41% menos que en los estados. Tres presiones, una misma dirección.</p>
+<p><strong>El agua debajo de todo:</strong> el récord federal de la EPA muestra 13 violaciones de salud activas en el oeste — Cabo Rojo con 3 (trihalometanos) y Periche (San Germán) con 4. <a href="/agua" class="text-teal-700 font-semibold">Ver el récord →</a></p>
+
+<h2>2. Puerto Rico 2030 bajo la inercia</h2>
+<p>De seguir así, municipios como <strong>Maricao, Las Marías y Jayuya</strong> serán monumentos a la ineficiencia: clínicas nuevas, reconstruidas con la inversión más alta por habitante de la isla, sin un solo médico dentro. Es pérdida del 100% de utilidad de esa inversión federal.</p>
+<p>La crisis de salud mental se agudiza en los 33 municipios del cupón sin cobrar. <strong>Guánica</strong> es el caso: el municipio más pobre de PR (63.6% de pobreza), puntuación máxima de necesidad, cero psiquiatras.</p>
+<p>Y en el oeste, la data de densidad predice "muerte por inanición" en sectores sobreofertados: Cabo Rojo tiene ~195 restaurantes (1 por cada 242 residentes, frente a 1 por 1,500 en el resto de PR) mientras la gente le pide al *7711, sin encontrar, electricistas, plomeros y especialistas (neumólogos, urólogos: cero en el municipio). <a href="/demanda" class="text-teal-700 font-semibold">Ver la demanda →</a></p>
+
+<h2>3. Qué debemos hacer (de más palanca al menos)</h2>
+<ul>
+  <li><strong>Activar sitios NHSC (casi gratis).</strong> No pedir fondos nuevos: gestionar los existentes. Los centros 330/FQHC ya establecidos inscriben sus instalaciones como "sitios aprobados", y eso destraba el repago de hasta $75,000 por médico. Conecta el incentivo con el pueblo sin legislación nueva.</li>
+  <li><strong>Patentes municipales informadas por data.</strong> Con 1 restaurante por cada 242 residentes, el municipio puede orientar a los emprendedores lejos de sectores saturados y hacia la demanda real insatisfecha (técnicos HVAC, electricistas, especialistas).</li>
+  <li><strong>Agua: canalizar el Fondo Rotatorio (DWSRF) + asistencia técnica gratis (RCAP)</strong> a los acueductos comunitarios como Periche para cerrar las violaciones activas.</li>
+</ul>
+
+<h2>4. Lo que todavía no sabemos</h2>
+<p>La ausencia de estos datos es en sí un fallo de gobernanza. Para predecir mejor faltan: la estabilidad real de la red de <strong>LUMA</strong> (frecuencia de apagones) y la capacidad restante de los <strong>vertederos</strong>; la magnitud de la <strong>economía informal</strong> (construcción, repostería casera) invisible al sistema contributivo; y los datos de <strong>movimiento y gasto real</strong> (Cabo Rojo tiene 47,158 residentes pero un "pull" regional de ~75,000, con ingreso real de $26,408 muy por debajo de los benchmarks de EE.UU.). <a href="/luz" class="text-teal-700 font-semibold">/luz</a> · <a href="/basura" class="text-teal-700 font-semibold">/basura</a> ya arrancaron esa ingesta.</p>
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
+  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">La predicción no es destino. Es lo que pasa si no escogemos otra cosa.</p>
+  <p class="mt-2 text-sm text-slate-600 italic">Para escoger, primero hay que ver. Si te sirve, úsalo.</p>
+</div>
+
+<p class="text-sm text-slate-500 mt-6">Cómo se hizo: síntesis de los récords verificados de este sitio (NPPES/CMS, HRSA, OpenFEMA, EPA, Censo/ACS, El Veci *7711), asistida por IA sobre esas fuentes primarias. Los números son verificables en cada récord enlazado; las conexiones y proyecciones son análisis. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a> y se corrige. Julio 2026.</p>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Report',
+    name: 'Predicción 2030: El estado de situación de Puerto Rico',
+    about: 'Síntesis de los récords verificados de PR (salud, recuperación federal, agua, demanda) proyectada a 2030.',
+    author: { '@type': 'Person', name: 'Angel Anderson' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    inLanguage: 'es', datePublished: '2026-07-05', url: 'https://puertoricosinfiltros.com/prediccion',
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'Predicción 2030 — lo que dicen todos los récords de Puerto Rico juntos',
+    description: 'Si Puerto Rico no hace nada, ¿a dónde llega en 2030? La síntesis de los récords verificados: reconstruimos el ladrillo para una población que se queda sin médicos. Con la fuente al lado.',
+    slug: 'prediccion', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
@@ -6276,6 +6348,7 @@ export default async function handler(req: any, res: any) {
     case 'sinfiltros-pulso': return await handleSinFiltrosPulso(req, res)
     case 'luz': return await handleDatoRecord(req, res)
     case 'basura': return await handleDatoRecord(req, res)
+    case 'prediccion': return handlePrediccion(req, res)
     case 'registro-hub': return await handleRegistroHub(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)
