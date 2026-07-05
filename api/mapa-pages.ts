@@ -3701,7 +3701,8 @@ async function handleRegistroDesiertos(req: any, res: any) {
 
   const body = `
 <h1>Los desiertos médicos de Puerto Rico</h1>
-<p class="text-lg text-slate-600 mt-3">Hay especialidades médicas que, según el registro federal, <strong>no tienen ni un solo proveedor</strong> en regiones enteras del país. No es opinión. Es el dato oficial — el mismo que usan Medicare y los planes médicos — puesto claro, por primera vez, región por región.</p>
+<p class="text-lg text-slate-600 mt-3">Hay especialidades médicas que, según el registro federal, <strong>no tienen ni un solo proveedor</strong> en regiones enteras del país. No es opinión. Es el dato oficial (el mismo que usan Medicare y los planes médicos) puesto claro, por primera vez, región por región.</p>
+<p class="text-slate-600 mt-3">Lo vimos primero en el oeste, donde vivimos. Pero la cuenta da igual de fea en casi toda la isla. Contamos esto, uno por uno, <strong>para que no te quedes varado hoy y para que no quede escondido mañana.</strong></p>
 
 <div class="not-prose mt-4 flex flex-wrap gap-3 text-sm">
   <span class="inline-flex items-center gap-2 bg-red-50 border border-red-200 text-red-800 font-semibold px-3 py-1.5 rounded-full"><i class="fa-solid fa-triangle-exclamation"></i> ${totalDeserts.length} desiertos totales (cero proveedores)</span>
