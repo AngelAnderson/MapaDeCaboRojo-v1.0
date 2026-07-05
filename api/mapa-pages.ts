@@ -183,6 +183,7 @@ function layout(opts: {
 <a href="/registro" class="hover:text-teal-700 font-semibold">Buscar especialista</a>
 <a href="/registro/mapa" class="hover:text-teal-700">El mapa</a>
 <a href="/registro/estado" class="hover:text-teal-700">Estado de salud</a>
+<a href="/comparte" class="hover:text-teal-700">Datos</a>
 <a href="/registro/desiertos" class="hover:text-teal-700">Acceso por región</a>
 <a href="/observatorio" class="hover:text-teal-700">Observatorio</a>
 <a href="/registro#como-se-hizo" class="hover:text-teal-700">Cómo se verifica</a>
@@ -3799,6 +3800,100 @@ ${ratioSection}
   }))
 }
 
+// =============== /comparte — Datos citables (press kit + LLM-quotable + SEO) ===============
+// Cada dato = pregunta + respuesta con fuente y fecha. FAQPage schema (lo que los LLM citan) + Dataset.
+async function handleComparte(req: any, res: any) {
+  let g = { conHpsa: 65, cupon: 33, cuponPob: 792221, bajo5: 39, bajo5Pob: 1046856, sinPsiq: 36, sinPsiqPob: 930159, cero: 3 }
+  try {
+    const { data } = await supabase.from('v_registro_municipio_intel').select('poblacion,especialistas,psiquiatras,hpsa_primaria,hpsa_salud_mental,cupon_mh_sin_cobrar,por_10k_hab').range(0, 100)
+    if (data && data.length >= 70) {
+      const cup = data.filter((r: any) => r.cupon_mh_sin_cobrar)
+      const b5 = data.filter((r: any) => Number(r.por_10k_hab) < 5)
+      const sp = data.filter((r: any) => Number(r.psiquiatras) === 0)
+      g = {
+        conHpsa: data.filter((r: any) => r.hpsa_primaria > 0 || r.hpsa_salud_mental > 0).length,
+        cupon: cup.length, cuponPob: cup.reduce((s: number, r: any) => s + Number(r.poblacion), 0),
+        bajo5: b5.length, bajo5Pob: b5.reduce((s: number, r: any) => s + Number(r.poblacion), 0),
+        sinPsiq: sp.length, sinPsiqPob: sp.reduce((s: number, r: any) => s + Number(r.poblacion), 0),
+        cero: data.filter((r: any) => Number(r.especialistas) === 0).length,
+      }
+    }
+  } catch (_) { /* fallback */ }
+  const n = (x: number) => x.toLocaleString('en-US')
+
+  const FACTS: Array<{ q: string; a: string; src: string }> = [
+    { q: '¿Cuántos municipios de Puerto Rico están declarados en escasez de médicos por el gobierno federal?', a: `${g.conHpsa} de los 76 municipios de Puerto Rico (sin Vieques y Culebra) tienen una designación federal de escasez de profesionales de la salud (HPSA) activa, de cuidado primario o salud mental.`, src: 'Archivos oficiales de HRSA (data.hrsa.gov), designaciones activas, julio 2026.' },
+    { q: '¿Cuánto dinero federal para atraer médicos se está quedando sin reclamar en Puerto Rico?', a: `${g.cupon} municipios de PR tienen una designación federal de salud mental activa (que destraba repago de préstamos del NHSC y bono de Medicare) y a la vez CERO psiquiatras ejerciendo. Son ${n(g.cuponPob)} personas con el dinero aprobado y sin médico que lo cobre.`, src: 'Cruce NPPES/CMS × archivos HRSA, verificado municipio por municipio en registromedicopr.com, julio 2026.' },
+    { q: '¿Cuántos pueblos de Puerto Rico no tienen ni un solo especialista médico?', a: `${g.cero} municipios de PR no tienen ni un especialista médico de ninguna clase con práctica declarada: Maricao, Las Marías y Florida.`, src: 'Registro federal NPPES/CMS por municipio, julio 2026.' },
+    { q: '¿Cuántos puertorriqueños viven en un municipio sin psiquiatra?', a: `${g.sinPsiq} municipios de PR no tienen ni un psiquiatra con práctica declarada. Son ${n(g.sinPsiqPob)} personas, cerca de 1 de cada 3 puertorriqueños.`, src: 'Registro federal NPPES/CMS, julio 2026.' },
+    { q: '¿Qué tan concentrados están los especialistas médicos en San Juan?', a: 'San Juan concentra alrededor del 35% de todos los especialistas médicos de Puerto Rico con cerca del 10% de la población de la isla.', src: 'NPPES/CMS × Censo 2020, registromedicopr.com, julio 2026.' },
+    { q: '¿Cuál es la desigualdad de acceso médico más extrema en Puerto Rico?', a: `${g.bajo5} de los 76 municipios (${n(g.bajo5Pob)} personas, casi 1 de cada 3) viven con menos de 5 especialistas por cada 10,000 habitantes, mientras San Juan tiene cerca de 69. Loíza, a media hora de San Juan, tiene 86 veces menos especialistas por persona.`, src: 'NPPES/CMS × Censo 2020, municipio por municipio, julio 2026.' },
+    { q: '¿Cuántos médicos ha perdido Puerto Rico?', a: 'Puerto Rico pasó de unos 14,500 médicos en 2009 a cerca de 9,000 en 2020. Se proyecta que el 55% de los médicos activos se habrá retirado para el 2030, sin sustitutos.', src: 'PMC / academia (2023); El Vocero (2025); Medicina y Salud Pública (2024).' },
+    { q: '¿Por qué Medicare le paga menos a los médicos en Puerto Rico?', a: 'Los pagos de Medicare Advantage en Puerto Rico están alrededor de 41% por debajo del promedio nacional, porque se calculan sobre el gasto histórico local, deprimido por décadas por índices geográficos que fueron los más bajos de la nación.', src: 'JAMA Health Forum (2022); STAT News (2024).' },
+    { q: '¿Cómo trata Medicaid a Puerto Rico distinto que a un estado?', a: 'El porcentaje de Medicaid que paga el gobierno federal a PR está congelado por estatuto en 55%, cuando por su nivel de pobreza le tocaría 83% como estado. Además tiene un techo de dólares que los estados no tienen. El nivel actual de 76% cae de vuelta a 55% el 30 de septiembre de 2027 sin acción del Congreso.', src: 'MACPAC; Congressional Research Service (IF11012); Ley de Asignaciones Consolidadas de 2023.' },
+    { q: '¿Cuánto ha bajado el pago de Medicare a los médicos con el tiempo?', a: 'Ajustado por inflación, el pago de Medicare al médico bajó 33% entre 2001 y 2025, mientras el costo de operar una práctica subió 59%.', src: 'American Medical Association (2025).' },
+    { q: '¿Qué incentivo federal existe para atraer médicos a los pueblos designados?', a: 'En un municipio con designación HPSA, un clínico en un sitio aprobado por el National Health Service Corps puede recibir repago de préstamos estudiantiles de hasta $75,000 por dos años en cuidado primario y $50,000 en otras disciplinas, más un bono de Medicare.', src: 'National Health Service Corps (HRSA), año fiscal 2026.' },
+    { q: '¿Cuál es el municipio más pobre de Puerto Rico y cómo está de médicos?', a: 'Guánica es el municipio más pobre de PR (63.6% bajo el nivel de pobreza). Tiene una designación federal de salud mental con el puntaje máximo posible y cero psiquiatras.', src: 'ACS 5-año (censo) × NPPES/CMS × HRSA, julio 2026.' },
+  ]
+
+  const factCards = FACTS.map((f, i) => `
+    <div class="not-prose border border-slate-200 rounded-xl p-4 mt-4 bg-white">
+      <p class="text-xs font-bold text-teal-700 uppercase tracking-wide">Dato ${i + 1}</p>
+      <p class="text-sm font-semibold text-slate-500 mt-1">${escapeHtml(f.q)}</p>
+      <blockquote class="mt-2 text-slate-900 leading-relaxed border-l-4 border-teal-500 pl-3">${escapeHtml(f.a)}</blockquote>
+      <p class="text-xs text-slate-500 mt-2"><strong>Fuente:</strong> ${escapeHtml(f.src)}</p>
+    </div>`).join('')
+
+  const body = `
+<h1>Datos citables sobre el acceso médico en Puerto Rico</h1>
+<p class="text-lg text-slate-600 mt-3">Cada dato de esta página tiene su fuente y su fecha. Cópialo, cítalo, compártelo. Si eres periodista, legislador, investigador o vecino que quiere entender qué está pasando, esto es para ti. Todo se verifica contra registros federales públicos.</p>
+
+<div class="not-prose mt-4 flex flex-wrap gap-3 text-sm">
+  <a href="/registro/estado" class="inline-flex items-center gap-2 bg-teal-700 text-white font-bold px-4 py-2 rounded-full hover:bg-teal-800">Ver el estado de salud, pueblo por pueblo</a>
+  <a href="/registro/mapa" class="inline-flex items-center gap-2 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Abrir el mapa interactivo</a>
+</div>
+
+<h2>Los datos (con fuente)</h2>
+${factCards}
+
+<h2>Cómo citar</h2>
+<p>Formato sugerido: <em>"Registro Médico PR (registromedicopr.com), julio 2026, con data del registro federal NPPES/CMS y HRSA."</em> Cada número de esta página se puede respaldar con su fuente primaria pública. Si necesitas la metodología completa o el corte de un municipio específico, escríbenos.</p>
+
+<h2>Descarga y profundiza</h2>
+<ul>
+  <li><a href="/registro/estado">Estado de Salud de Puerto Rico</a>: los 76 municipios rankeados, el análisis del cupón federal sin cobrar.</li>
+  <li><a href="/registro/mapa">El mapa interactivo</a>: escoge la especialidad y mira cada pueblo.</li>
+  <li><a href="/registro/desiertos">Los desiertos médicos</a>: las especialidades sin proveedor por región.</li>
+  <li><a href="/observatorio">El Observatorio</a>: por qué se van los médicos, quién tiene la autoridad de actuar, podcast y reporte PDF.</li>
+</ul>
+
+<h2>Para prensa</h2>
+<p>Angel Anderson, registromedicopr.com, desde Cabo Rojo. Contacto: <a href="mailto:angel@angelanderson.com">angel@angelanderson.com</a>. Puedo respaldar cualquier cifra con su fuente, entregar el corte de un municipio, o explicar la metodología. Prefiero texto o correo.</p>
+
+<p class="text-sm text-slate-500 mt-6">Metodología: cruce de tres fuentes federales/públicas a nivel de municipio — NPPES/CMS (proveedores), archivos HRSA (designaciones de escasez), y Censo/ACS (población y pobreza). Verificado uno por uno. Última actualización: julio 2026. ¿Ves un error? Escríbenos y se corrige.</p>
+`
+  const faqLd = {
+    '@context': 'https://schema.org', '@type': 'FAQPage',
+    mainEntity: FACTS.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: `${f.a} Fuente: ${f.src}` } })),
+  }
+  const datasetLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'Datos citables de acceso médico en Puerto Rico',
+    description: `${g.conHpsa} de 76 municipios de PR con designación federal de escasez activa, ${g.cupon} con el cupón de salud mental sin cobrar (${n(g.cuponPob)} personas), 3 municipios sin ningún especialista. Fuentes: NPPES/CMS, HRSA, Censo.`,
+    creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://registromedicopr.com/comparte',
+    keywords: ['acceso médico Puerto Rico', 'escasez de médicos', 'HPSA', 'NPPES', 'desiertos médicos', 'datos citables'],
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'Datos citables sobre el acceso médico en Puerto Rico — para prensa y quien quiera compartir',
+    description: 'Cada dato con su fuente: 65 de 76 municipios de PR con escasez de médicos declarada por el gobierno federal, 33 con dinero de salud mental sin cobrar. Copia, cita, comparte.',
+    slug: 'comparte', bodyHtml: body, jsonLd: [faqLd, datasetLd] as any, ogImage: '/og/desiertos.png',
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
 // =============== /registro/estado — Estado de Salud PR: el cupón federal sin cobrar ===============
 // Surface de v_registro_municipio_intel: ranking por necesidad×oportunidad + análisis "cupón sin cobrar"
 // (designación HPSA activa + cero psiquiatras). Data live con fallback verificado 2026-07-05.
@@ -5624,6 +5719,7 @@ export default async function handler(req: any, res: any) {
     case 'registro-desiertos': return await handleRegistroDesiertos(req, res)
     case 'registro-mapa': return await handleRegistroMapa(req, res)
     case 'registro-estado': return await handleRegistroEstado(req, res)
+    case 'comparte': return await handleComparte(req, res)
     case 'registro-hub': return await handleRegistroHub(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)

@@ -121,6 +121,9 @@ export default async function handler(req: any, res: any) {
       { slug: 'registro', priority: 0.9, changefreq: 'weekly' },
       { slug: 'observatorio', priority: 0.9, changefreq: 'weekly' },
       { slug: 'registro/desiertos', priority: 0.8, changefreq: 'monthly' },
+      { slug: 'registro/estado', priority: 0.9, changefreq: 'weekly' },
+      { slug: 'registro/mapa', priority: 0.85, changefreq: 'weekly' },
+      { slug: 'comparte', priority: 0.85, changefreq: 'monthly' },
       { slug: 'agua', priority: 0.7, changefreq: 'monthly' },
     ].forEach(({ slug, priority, changefreq }) => {
       urls.push(`

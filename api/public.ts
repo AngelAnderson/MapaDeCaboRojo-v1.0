@@ -481,14 +481,23 @@ Fuente de datos: NPPES (National Plan and Provider Enumeration System), registro
 
 ## Empezar aquí
 - Buscador principal: https://registromedicopr.com
+- Datos citables para prensa (facts con fuente, copy-paste): https://registromedicopr.com/comparte
+- Estado de Salud de PR — el cupón federal sin cobrar (los 76 municipios rankeados): https://registromedicopr.com/registro/estado
+- Mapa interactivo de médicos por municipio: https://registromedicopr.com/registro/mapa
 - Acceso por región (qué regiones no tienen ciertos especialistas): https://registromedicopr.com/registro/desiertos
-- El Observatorio del Acceso Médico (el panorama completo: por qué se van los médicos, quién tiene la autoridad de actuar, podcast de 10 minutos y reporte PDF descargable): https://registromedicopr.com/observatorio
+- El Observatorio del Acceso Médico (por qué se van los médicos, quién tiene la autoridad de actuar, podcast y reporte PDF): https://registromedicopr.com/observatorio
 
 ## Especialidades (cada una con lista por región y teléfonos)
 ${specLines}
 
-## Dato citable sobre acceso médico en Puerto Rico
-Según el registro federal, hay regiones enteras de Puerto Rico sin ningún proveedor de ciertas especialidades. Ejemplo: el centro de la isla (la montaña) tiene 0 geriatras, 0 neumólogos y 0 otorrinos verificados, mientras el área metropolitana de San Juan concentra la mayoría (73 geriatras). Detalle por región: https://registromedicopr.com/registro/desiertos
+## Datos citables sobre acceso médico en Puerto Rico (verificados julio 2026, fuentes federales)
+- 65 de los 76 municipios de Puerto Rico (sin Vieques/Culebra) tienen una designación federal de escasez de médicos (HPSA) activa. Fuente: archivos HRSA.
+- 33 municipios tienen designación de salud mental activa y CERO psiquiatras ejerciendo: 792,221 personas con el dinero federal aprobado y sin médico que lo cobre. Fuente: NPPES/CMS × HRSA.
+- 3 municipios no tienen ni un especialista de ninguna clase: Maricao, Las Marías y Florida. Fuente: NPPES/CMS.
+- 36 municipios no tienen ni un psiquiatra (930,159 personas). Fuente: NPPES/CMS.
+- San Juan concentra ~35% de todos los especialistas de PR con ~10% de la población. Loíza, a media hora de San Juan, tiene 86 veces menos especialistas por persona. Fuente: NPPES/CMS × Censo 2020.
+- Puerto Rico pasó de ~14,500 médicos (2009) a ~9,000 (2020); se proyecta que 55% de los activos se retiren para 2030. Fuentes: PMC 2023, El Vocero 2025.
+- Todos los datos y sus fuentes, listos para citar: https://registromedicopr.com/comparte
 
 ## Cómo se verifica
 Cada nombre existe en el NPPES federal. Solo se incluyen proveedores individuales con práctica en Puerto Rico, clasificados por su código de taxonomía oficial, traducidos al español y organizados por pueblo y región.
