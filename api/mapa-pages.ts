@@ -3340,6 +3340,36 @@ async function handleObservatorioMedico(req: any, res: any) {
       <div class="text-xs text-slate-500">de 32 especialidades en <strong>cero</strong></div>
     </div>`).join('')
 
+  // Ready-to-send instruments for the two audiences who can actually move the needle:
+  // the doctor (capture, below) and the mayor/official/reporter (copy-paste letter + press note).
+  const PCO_LETTER = `Para: Primary Care Office, Departamento de Salud de Puerto Rico
+Asunto: Solicitud de designacion o actualizacion de HPSA para [TU PUEBLO O REGION]
+
+Saludos. Soy [TU NOMBRE], [alcalde / funcionario / lider comunitario] de [TU PUEBLO]. Solicito que la Primary Care Office someta o actualice ante HRSA la designacion de zona de escasez de profesionales de la salud (HPSA) para nuestra zona.
+
+Base: el registro federal NPPES, verificado y publicado en registromedicopr.com, muestra huecos de acceso reales por region. En el centro de la isla, 9 de 32 especialidades tienen cero proveedores verificados (cero neumologos, cero geriatras, cero otorrinos), mientras el area metro concentra la oferta. La designacion HPSA es la que desbloquea el repago de prestamos (NHSC), las becas y los grants federales que atraen y retienen medicos.
+
+Puerto Rico tiene 42 HPSAs de cuidado primario y en FY2025 solo 34 clinicos en toda la isla usaron el repago NHSC (1.77 millones). Hay capacidad sin usar. Pido: (1) revisar el estatus HPSA de [TU PUEBLO O REGION]; (2) de faltar o estar vencida, someter o renovar la designacion; (3) orientacion sobre datos adicionales que necesiten. Tengo el conteo por pueblo disponible y se lo hago llegar.
+
+Gracias por su gestion.
+[TU NOMBRE] - [CARGO] - [PUEBLO] - [TELEFONO O EMAIL]
+
+Fuente: registromedicopr.com (NPPES federal, verificado jul 2026). Dataset por pueblo: angel@angelanderson.com`
+
+  const PRESS_PITCH = `Asunto: Data verificada - por que a Puerto Rico se le van los medicos (y donde faltan hoy, por pueblo)
+
+Tengo un dataset verificado contra el NPPES federal sobre el acceso a especialistas en PR, por region y por pueblo, con la historia que casi nadie cuenta con numeros:
+
+- Medicare le paga a PR ~38-41% menos que al continente por el mismo paciente (STAT 2024; JAMA Health Forum jun 2025).
+- La fuerza medica cayo de ~14,500 (2009) a ~9,800; salen 365-500 medicos al año (JAMA jun 2025).
+- El centro de la isla tiene 9 de 32 especialidades en cero: cero neumologos vs 84 en el metro (Registro Medico PR / NPPES, jul 2026).
+- PR tiene 42 zonas de escasez (HPSA) de cuidado primario; en FY2025 solo 34 clinicos usaron el repago federal NHSC, 1.77 millones en toda la isla (HRSA).
+- De 6,247 especialistas verificados, uno solo tiene publico que plan medico acepta.
+
+El angulo: no es que "falten medicos" en abstracto. Es pago federal y concentracion en el metro, y hay palancas concretas que reportar (P. del S. 15, NHSC, designaciones HPSA). Te paso el dataset por pueblo, las fuentes y quien puede hablar.
+
+Contacto: Angel Anderson - angel@angelanderson.com - registromedicopr.com/observatorio`
+
   const body = `
 <p class="not-prose text-xs font-bold uppercase tracking-widest text-teal-700 mb-2">El Observatorio del Acceso Médico de Puerto Rico</p>
 <h1>Por qué a Puerto Rico se le van los médicos, y cómo se arregla</h1>
@@ -3449,6 +3479,94 @@ async function handleObservatorioMedico(req: any, res: any) {
 <p>Toda la maquinaria federal de fondos corre sobre un insumo: <strong>conteos de proveedores verificados, actuales, mapeados a la población.</strong> Las designaciones de escasez (HPSA) convierten esa data en dinero — desbloquean repago de préstamos, un bono Medicare de 10%, y elegibilidad de grants. Pero <strong>muchos mapas federales no se revisan desde los años 70-90</strong>, y <strong>PR no tiene ningún dataset público a nivel de sus 78 municipios</strong> (los mapas federales son de resolución de condado, demasiado gruesos para ver un pueblo).</p>
 <p>Un vecino que verificó a mano, pueblo por pueblo, quién ejerce y qué especialidades simplemente no existen, tiene el artefacto que la política pública no puede generar sola: <strong>ground-truth.</strong> Eso convierte "sospechamos una escasez" en "aquí está el conteo verificado, por pueblo, hoy" — el insumo exacto que se vuelve un puntaje HPSA, una asignación de fondos, un reto de adecuación de red, o un proyecto de ley. (Precedentes: los "Maternity Care Deserts" de March of Dimes y los "Pharmacy Deserts" de GoodRx — un actor no-gubernamental construye el mapa verificado y se vuelve la referencia citada que dirige política.)</p>
 
+<h2 id="salidas">6. ¿Y ahora qué? Las 4 salidas, según quién seas</h2>
+<p class="text-slate-600 -mt-2">Todo lo de arriba es la pelea grande, la de Washington y San Juan. Mientras esa se pelea, hay puertas que ya están abiertas hoy, con fuente y todo. Coge la tuya y deja las demás.</p>
+
+<h3>🎓 Si tu hijo quiere ser médico (y tú no quieres que se ahogue en deuda)</h3>
+<p>La ruta que casi nadie cuenta: <strong>la misma escasez que ves arriba es la que puede pagar la escuela.</strong> El "o se endeuda con $250 mil o no es médico" era mentira. El mapa completo:</p>
+<ul>
+<li><strong>Estudiar aquí cuesta menos, pero depende de la escuela.</strong> La UPR (Ciencias Médicas) cobra <strong>~$24,665/año</strong> a residentes de PR: como un tercio del promedio privado de EEUU (~$66-70 mil). Las otras tres escuelas de la isla van de ~$47 mil (San Juan Bautista, hoy acreditada en probatoria LCME) a ~$73 mil (Ponce, que ya cuesta como una privada de allá). La UPR es la jugada. (Tarifas 2025-26; AAMC.)</li>
+<li><strong>El repago federal de préstamos existe y PR cualifica.</strong> El National Health Service Corps (NHSC) paga hasta <strong>$75,000 por 2 años</strong> de servicio a tiempo completo en cuidado primario, más <strong>$5,000 adicionales por atender en español</strong>, trabajando en un centro de salud comunitario en zona de escasez (HPSA). PR tiene <strong>42 zonas así</strong> de cuidado primario. En FY2025 solo 34 clínicos en toda la isla usaron este programa ($1.77M): cabe mucha más gente. (HRSA, ciclo FY2026.)</li>
+<li><strong>La beca completa (NHSC Scholarship) también existe, con honestidad:</strong> paga matrícula completa + ~$1,648/mes de estipendio, pero aceptan ~5-10% de los que aplican, y se sirve donde haya vacante que cualifique: en PR es posible, no garantizado. Un boleto que vale la pena pedir, no un plan A.</li>
+<li><strong>Residencia en la isla = quedarse.</strong> El residente entrenado en PR se queda mucho más (§3), y hay plazas federales nuevas: 200/año desde 2023 (hospitales de PR recibieron en la primera ronda) y 200 más desde julio 2026, la mitad en psiquiatría, con prioridad pa' zonas de escasez. (CMS.)</li>
+<li><strong>PSLF (perdón de préstamos por servicio público):</strong> 10 años como <em>empleado</em> de gobierno o entidad 501(c)(3) (centros 330, UPR, hospitales públicos) y el balance federal restante se perdona. Los hospitales con fines de lucro NO cuentan, aunque el trabajo sea el mismo. Se certifica el empleo (formulario ECF) desde el primer año, no al final. (34 CFR 685.219.)</li>
+<li><strong>¿Ya se fue y está allá con la deuda?</strong> La ruta de regreso es la misma combinación: repago NHSC + PSLF + residencia o plaza acá. La deuda no lo condena a quedarse allá. No saber esto, sí.</li>
+</ul>
+<p class="text-sm text-slate-600">Nada de esto es garantía. Es el mapa completo, con la fuente de cada pieza, pa' que la decisión se tome con todos los números.</p>
+
+<h3>🏥 Si vives en un desierto (tu especialista no existe en tu región)</h3>
+<ul>
+<li><strong>Tu plan Medicare Advantage te debe la salida.</strong> Por regla federal (42 CFR 422.112), si la red del plan no tiene el especialista que necesitas a distancia razonable, el plan tiene que cubrirte <em>fuera</em> de la red pagando tú lo mismo que si fuera dentro. El paso: tú o tu médico le piden al plan una <strong>"determinación de organización"</strong> antes de la cita, por escrito, diciendo que la red no tiene el especialista. Contestan en 14 días (72 horas si urge). ¿Dicen que no? Se apela, y se pone la queja al <strong>1-800-MEDICARE</strong>: CMS fiscaliza a los planes con esas quejas.</li>
+<li><strong>Telemedicina:</strong> cubierta en Medicare hasta diciembre 2027, y la de salud mental desde tu casa quedó permanente. En los planes MA y en Vital depende del plan: pregunta antes. (CAA 2026, actualizado jul 2026.)</li>
+<li><strong>Los centros de salud comunitarios (330)</strong> atienden con o sin plan, con tarifa según ingreso.</li>
+</ul>
+<p>¿No sabes a quién ir? Escríbele <strong>MEDICO</strong> con tu pueblo y la especialidad al <a href="https://wa.me/17874177711?text=MEDICO" class="text-teal-700 font-semibold">787-417-7711</a>. Y si lo que buscas no existe todavía, el Veci te ofrece avisarte cuando llegue.</p>
+
+<h3>🩺 Si eres médico y estás haciendo la maleta</h3>
+<p>Vete si te tienes que ir: el problema es el pago federal, no tú (§1). Pero haz la cuenta con todos los números, no con la mitad:</p>
+<ul>
+<li><strong>En un centro 330, la impericia la cubre el gobierno federal (FTCA):</strong> el médico empleado es "empleado federal" pa' efectos de demandas, dentro del alcance del empleo (el moonlighting va aparte, con póliza propia). Y en PR los límites mandatorios son $100k/$300k, no el $1M/$3M típico del continente: por eso la prima aquí es una fracción de la de allá. (BPHC Compliance Manual Cap. 21.)</li>
+<li><strong>Repago NHSC:</strong> hasta $80,000 por 2 años (cuidado primario a tiempo completo + bono de español) por servir en HPSA. Con 42 en PR, hay dónde.</li>
+<li><strong>El 4% (Ley 14) está congelado pa' decretos nuevos desde 2020.</strong> El relevo, el <strong>P. del S. 15</strong> (12% fijo con requisitos de servicio a pacientes de Vital), pasó ambas cámaras el 1-2 de julio de 2026 y al momento de escribir esto espera la firma de la gobernadora. Si se firma, cambia la cuenta. (Actualizado jul 2026; verifica el estado antes de decidir.)</li>
+<li><strong>PSLF</strong> si tu patrono es público o 501(c)(3): certifica el empleo ya. Cada año certificado cuenta, aunque después te muevas.</li>
+</ul>
+
+<div class="not-prose mt-4 bg-teal-50 border-2 border-teal-200 rounded-2xl p-5">
+  <p class="text-sm text-slate-700 m-0">¿Eres médico, dentro o fuera de la isla, y quieres decidir con la cuenta completa? Te aviso de una sola cosa, cuando de verdad cambie el número: si se firma el <strong>P. del S. 15</strong>, o cuando abra una plaza o zona de escasez (HPSA) que te sirva para el repago.</p>
+  <form id="md-form" class="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
+    <input id="md-email" type="email" required autocomplete="email" placeholder="Tu email" class="w-full rounded-lg border border-slate-300 p-2.5 text-base">
+    <button id="md-send" type="submit" class="bg-teal-700 hover:bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-base whitespace-nowrap">Avísame cuando cambie</button>
+  </form>
+  <div id="md-done" hidden class="mt-2 text-sm text-slate-700"></div>
+  <p class="text-[11px] text-slate-400 mt-2">Sin spam. Un email solo cuando el número cambia de verdad.</p>
+</div>
+<script>
+(function(){
+  var f=document.getElementById('md-form');if(!f)return;
+  var btn=document.getElementById('md-send'),orig=btn.textContent;
+  f.addEventListener('submit',function(ev){
+    ev.preventDefault();
+    var email=(document.getElementById('md-email').value||'').trim();
+    if(!/.+@.+\\..+/.test(email)){alert('Escribe un email válido.');return;}
+    btn.disabled=true;btn.textContent='Enviando...';
+    try{gtag('event','lead_magnet',{asset:'medico_diaspora'})}catch(e){}
+    fetch('/api/mapa-pages?page=registro-lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,source:'medico_diaspora',lang:(document.documentElement.lang||'es')})})
+      .then(function(r){return r.json();})
+      .then(function(){f.style.display='none';var d=document.getElementById('md-done');d.hidden=false;d.innerHTML='✅ Anotado. Te escribo cuando el P. del S. 15 se firme o abra una plaza que te sirva. Nada más.';})
+      .catch(function(){btn.disabled=false;btn.textContent=orig;alert('No se pudo. Intenta de nuevo o escribe a angel@angelanderson.com');});
+  });
+})();
+</script>
+
+<h3>🏛️ Si eres alcalde, funcionario o reportero</h3>
+<p>Tu palanca es la data. Las designaciones de escasez (HPSA) no se piden a HRSA directo: se someten por la <strong>Primary Care Office del Departamento de Salud de PR</strong>. Un municipio con el conteo verificado en la mano puede pedirle al PCO que someta o actualice la designación de su zona, y esa designación es la que desbloquea el repago de préstamos, las becas y los grants de arriba. La data de este Observatorio está disponible pa' eso, por pueblo y por región.</p>
+
+<div class="not-prose mt-4 bg-white border-2 border-slate-200 rounded-2xl p-5">
+  <p class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">🛠️ Listo pa' enviar hoy · copia y manda</p>
+  <p class="text-sm font-bold text-slate-800 mb-1">Carta a la Primary Care Office (Depto. de Salud PR) — pedir o actualizar la designación de escasez (HPSA)</p>
+  <p class="text-xs text-slate-500 mb-2">Es el paso que desbloquea el repago de préstamos, las becas y los grants. Cámbiale <strong>[TU PUEBLO]</strong> y tu nombre, y mándala.</p>
+  <button class="share-copy inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-full text-xs mb-5" data-copy="${escapeHtml(PCO_LETTER)}"><i class="fa-solid fa-copy"></i> Copiar la carta al PCO</button>
+  <p class="text-sm font-bold text-slate-800 mb-1">Nota a un reportero de salud — la data, la fuente y el ángulo, listos</p>
+  <p class="text-xs text-slate-500 mb-2">Si eres reportero, es tuyo. Si conoces a uno, reenvíaselo.</p>
+  <button class="share-copy inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-full text-xs" data-copy="${escapeHtml(PRESS_PITCH)}"><i class="fa-solid fa-copy"></i> Copiar la nota de prensa</button>
+</div>
+
+<div class="not-prose mt-4 bg-slate-50 border-2 border-slate-200 rounded-2xl p-5">
+  <p class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">📰 Kit de prensa · las cifras citables, listas pa' copiar</p>
+  <ul class="text-sm text-slate-700 space-y-1.5 m-0 p-0 list-none">
+    <li>· Medicare le paga a PR ~38-41% menos que al continente por el mismo paciente (STAT 2024; JAMA Health Forum jun 2025)</li>
+    <li>· La fuerza médica cayó de ~14,500 (2009) a ~9,800; salen 365-500 médicos al año (JAMA jun 2025)</li>
+    <li>· El Centro de la isla tiene 9 de 32 especialidades en cero: cero neumólogos vs 84 en el metro (Registro Médico PR, verificado contra NPPES, jul 2026)</li>
+    <li>· PR tiene 42 zonas de escasez (HPSA) de cuidado primario; en FY2025 solo 34 clínicos usaron el repago federal NHSC, $1.77M en toda la isla (HRSA)</li>
+    <li>· De 6,247 especialistas verificados, uno solo tiene público qué plan médico acepta (Registro Médico PR)</li>
+  </ul>
+  <div class="mt-3 flex flex-wrap items-center gap-2">
+    <button class="share-copy inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-full text-xs" data-copy="Cifras del Observatorio del Acceso Médico de PR (registromedicopr.com/observatorio, jul 2026): Medicare le paga a PR ~38-41% menos que al continente (STAT 2024; JAMA jun 2025). Fuerza médica: de ~14,500 (2009) a ~9,800; salen 365-500/año (JAMA). El Centro de la isla: 9 de 32 especialidades en cero; cero neumólogos vs 84 en el metro (Registro Médico PR/NPPES). PR tiene 42 HPSAs de cuidado primario; solo 34 clínicos usaron el NHSC en FY2025, $1.77M (HRSA). De 6,247 especialistas verificados, 1 tiene público qué plan acepta. Contacto y dataset por pueblo: angel@angelanderson.com"><i class="fa-solid fa-copy"></i> Copiar las cifras</button>
+    <a href="${REG_PODCAST_URL}" class="inline-flex items-center gap-1.5 bg-white border border-slate-300 text-slate-700 font-bold px-4 py-2 rounded-full text-xs hover:bg-slate-100"><i class="fa-solid fa-headphones"></i> Audio 13 min</a>
+    <a href="${REG_REPORT_URL}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 bg-white border border-slate-300 text-slate-700 font-bold px-4 py-2 rounded-full text-xs hover:bg-slate-100"><i class="fa-solid fa-file-pdf"></i> Reporte PDF</a>
+  </div>
+</div>
+
 <div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-white">
   <p class="text-lg font-bold mb-1">¿Periodista, legislador, agencia o investigador?</p>
   <p class="text-sm text-teal-100 mb-4">Esta data es citable y hay acceso al dataset por pueblo y región. Si trabajas en una solución al acceso de salud en PR y necesitas el conteo verificado, escríbenos.</p>
@@ -3463,7 +3581,7 @@ ${shareRow({
 })}
 ${SHARE_COPY_SCRIPT}
 
-<p class="text-xs text-slate-500 mt-6"><strong>Nota de rigor:</strong> los números de fuerza laboral (~9,800 activos, 365-500 salidas/año) son las cifras netas defendibles; el "8,000 dejaron de ejercer" mezcla emigración, retiro y muerte. La brecha de pago en % (38-41%) está bien corroborada (STAT, JAMA, KFF, MMAPA); los montos en dólares vienen de fuentes de cabildeo. El P. del S. 15 (12%) estaba pendiente, no confirmado aprobado. La ausencia de data municipal pública es inferencia, no cita. <strong>Fuentes:</strong> STAT, JAMA Health Forum, KFF, MMAPA PR, Congress.gov (H.R. 6031), WHO Bulletin, HHS-OIG, HRSA, March of Dimes, Grupo CNE.</p>
+<p class="text-xs text-slate-500 mt-6"><strong>Nota de rigor:</strong> los números de fuerza laboral (~9,800 activos, 365-500 salidas/año) son las cifras netas defendibles; el "8,000 dejaron de ejercer" mezcla emigración, retiro y muerte. La brecha de pago en % (38-41%) está bien corroborada (STAT, JAMA, KFF, MMAPA); los montos en dólares vienen de fuentes de cabildeo. El P. del S. 15 (12%) estaba pendiente, no confirmado aprobado. La ausencia de data municipal pública es inferencia, no cita. Sobre la sección 6 (las salidas): las cifras NHSC son del ciclo FY2026 y HRSA las ajusta cada año; la beca NHSC es altamente competitiva (~5-10%) y el servicio en PR depende de vacantes que cualifiquen (FY2024: 1 becado en PR; FY2025: 0); las matrículas son del año 2025-26 (la de UPR aplica a residentes de PR); el P. del S. 15 estaba aprobado por ambas cámaras pero SIN firma de la gobernadora al cierre de esta edición (jul 2026); las flexibilidades de telemedicina de Medicare vencen el 31 dic 2027 salvo renovación. Esta sección se re-verifica cada ciclo NHSC (otoño) y cada enero. <strong>Fuentes:</strong> STAT, JAMA Health Forum, KFF, MMAPA PR, Congress.gov (H.R. 6031), WHO Bulletin, HHS-OIG, HRSA (nhsc.hrsa.gov, data.hrsa.gov, bphc.hrsa.gov), 42 CFR 422.112, 34 CFR 685.219, CAA 2026 (H.R. 7148), CMS GME, LCME, AAMC, SIMED, Microjuris (P. del S. 15), March of Dimes, Grupo CNE.</p>
 `
 
   const jsonLd = [
@@ -3471,8 +3589,8 @@ ${SHARE_COPY_SCRIPT}
       '@context': 'https://schema.org', '@type': 'Report',
       name: 'El Observatorio del Acceso Médico de Puerto Rico',
       headline: 'Por qué a Puerto Rico se le van los médicos, y cómo se arregla',
-      description: 'Referencia citable sobre la crisis de acceso médico de PR: la disparidad de pago de Medicare (~40%), el éxodo de médicos, los desiertos por región, los levers de solución (H.R. 6031), y quién tiene la autoridad de actuar.',
-      inLanguage: 'es', datePublished: '2026-06-23', dateModified: '2026-06-23',
+      description: 'Referencia citable sobre la crisis de acceso médico de PR: la disparidad de pago de Medicare (~40%), el éxodo de médicos, los desiertos por región, los levers de solución (H.R. 6031), quién tiene la autoridad de actuar, y las 4 salidas concretas: la ruta sin deuda pa\' estudiar medicina, los derechos del paciente en un desierto, la matemática de quedarse pa\'l médico, y la palanca HPSA del municipio.',
+      inLanguage: 'es', datePublished: '2026-06-23', dateModified: '2026-07-03',
       author: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
       publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
       url: 'https://registromedicopr.com/observatorio',
@@ -3542,16 +3660,80 @@ async function handleRegistroDesiertos(req: any, res: any) {
     <td class="py-2 px-3 text-center text-slate-500">${g.metro} en metro</td>
   </tr>`
 
+  // --- Densidad per cápita, grano MUNICIPIO (la región promedia y esconde; el municipio revela) ---
+  // Live desde v_registro_muni_ratio (mapeo canónico: municipalities decide región Y población,
+  // proveedores mapeados por texto de municipio normalizado). Fallback verificado 2026-07-05.
+  // NOTA: NO usar agregados por región aquí — el promedio regional esconde el desierto (Loíza está
+  // en "metro" con 0.8/10k) y la definición de región de places difiere de la de municipalities.
+  type MuniRatio = { municipio: string; poblacion: number; especialistas: number; por_10k_hab: number }
+  let munis: MuniRatio[] = []
+  try {
+    const { data: rr } = await supabase.from('v_registro_muni_ratio').select('municipio,poblacion,especialistas,por_10k_hab').neq('region', 'islas')
+    if (rr && rr.length >= 70) munis = rr.map((x: any) => ({
+      municipio: x.municipio, poblacion: Number(x.poblacion),
+      especialistas: Number(x.especialistas), por_10k_hab: Number(x.por_10k_hab || 0),
+    }))
+  } catch (_) { /* fallback below */ }
+  // Fallback: cifras verificadas 2026-07-05 (NPPES × Censo 2020, vista v_registro_muni_ratio)
+  const FALLBACK_BARS: MuniRatio[] = [
+    { municipio: 'San Juan', poblacion: 318441, especialistas: 2193, por_10k_hab: 68.9 },
+    { municipio: 'Ponce', poblacion: 132502, especialistas: 500, por_10k_hab: 37.7 },
+    { municipio: 'Mayagüez', poblacion: 77255, especialistas: 281, por_10k_hab: 36.4 },
+    { municipio: 'Cabo Rojo', poblacion: 48988, especialistas: 99, por_10k_hab: 20.2 },
+    { municipio: 'Arroyo', poblacion: 18046, especialistas: 4, por_10k_hab: 2.2 },
+    { municipio: 'Jayuya', poblacion: 15045, especialistas: 2, por_10k_hab: 1.3 },
+    { municipio: 'Guánica', poblacion: 16783, especialistas: 2, por_10k_hab: 1.2 },
+    { municipio: 'Loíza', poblacion: 25578, especialistas: 2, por_10k_hab: 0.8 },
+    { municipio: 'Florida', poblacion: 11668, especialistas: 0, por_10k_hab: 0 },
+    { municipio: 'Las Marías', poblacion: 8874, especialistas: 0, por_10k_hab: 0 },
+    { municipio: 'Maricao', poblacion: 5765, especialistas: 0, por_10k_hab: 0 },
+  ]
+  let bajo5Munis = 39, bajo5Pob = 1046856
+  let barRowsData: MuniRatio[]
+  if (munis.length) {
+    const bajo5 = munis.filter(m => m.por_10k_hab < 5)
+    bajo5Munis = bajo5.length
+    bajo5Pob = bajo5.reduce((s, m) => s + m.poblacion, 0)
+    const byName = (n: string) => munis.find(m => m.municipio === n)
+    const worst = [...munis].sort((a, b) => a.por_10k_hab - b.por_10k_hab || b.poblacion - a.poblacion).slice(0, 7)
+    const anchors = ['San Juan', 'Ponce', 'Mayagüez', 'Cabo Rojo'].map(byName).filter(Boolean) as MuniRatio[]
+    barRowsData = [...anchors, ...worst.reverse()]
+  } else {
+    barRowsData = FALLBACK_BARS
+  }
+  const sjRatio = barRowsData.find(m => m.municipio === 'San Juan')?.por_10k_hab || 68.9
+  const crRow = barRowsData.find(m => m.municipio === 'Cabo Rojo')
+  const ratioColor = (v: number) => v >= 20 ? { bar: 'bg-emerald-500', txt: 'text-emerald-700' } : v >= 8 ? { bar: 'bg-amber-500', txt: 'text-amber-700' } : { bar: 'bg-red-600', txt: 'text-red-700' }
+  const ratioRows = barRowsData.map(r => {
+    const c = ratioColor(r.por_10k_hab)
+    const w = Math.max(2, Math.round(r.por_10k_hab / sjRatio * 100))
+    const cero = r.especialistas === 0
+    return `<div class="flex items-center gap-3 py-2">
+      <div class="w-28 sm:w-36 shrink-0 text-sm font-semibold text-slate-800">${escapeHtml(r.municipio)}</div>
+      <div class="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden"><div class="${c.bar} h-6 rounded-full" style="width:${w}%"></div></div>
+      <div class="w-32 sm:w-40 shrink-0 text-right text-sm">${cero ? '<span class="font-black text-red-700">0</span> <span class="text-slate-400">especialistas</span>' : `<span class="font-black ${c.txt}">${r.por_10k_hab.toFixed(1)}</span> <span class="text-slate-400">/10k</span>`}</div>
+    </div>`
+  }).join('')
+  const ratioSection = `
+<h2>La densidad: especialistas por cada 10,000 habitantes, pueblo por pueblo</h2>
+<p class="text-slate-600 -mt-2">El promedio regional esconde el desierto: <strong>Loíza está a media hora de San Juan, en la misma región metro — y tiene 86 veces menos especialistas por persona.</strong> Por eso esta cuenta se hace municipio por municipio, no por región. Tres pueblos no tienen <strong>ni un solo especialista de ninguna clase</strong>: Maricao, Las Marías y Florida.</p>
+<div class="not-prose mt-4 bg-white border border-slate-200 rounded-xl p-4 sm:p-5">${ratioRows}</div>
+<p class="not-prose mt-3 text-center text-sm text-slate-600"><strong class="text-red-700">${bajo5Munis} de los 76 municipios</strong> — ${bajo5Pob.toLocaleString('en-US')} personas, casi 1 de cada 3 — viven con menos de <strong>5</strong> especialistas por cada 10,000 habitantes. San Juan tiene <strong>${sjRatio.toFixed(1)}</strong>: el 35% de todos los especialistas del país, con el 10% de la gente.</p>
+${crRow ? `<p class="not-prose mt-2 text-center text-sm text-slate-500">Cabo Rojo, donde vivimos: ${crRow.especialistas} especialistas, ${crRow.por_10k_hab.toFixed(1)} por 10,000 — mejor que la mayoría, y aun así ${(sjRatio / crRow.por_10k_hab).toFixed(1)}× menos que San Juan.</p>` : ''}
+<p class="not-prose mt-2 text-center text-xs text-slate-400">Fuente: NPPES/CMS (proveedores individuales con práctica en PR, por municipio declarado) × Censo 2020 (población). Verificado julio 2026.</p>
+`
+
   const body = `
 <h1>Los desiertos médicos de Puerto Rico</h1>
-<p class="text-lg text-slate-600 mt-3">Hay especialidades médicas que, según el registro federal, <strong>no tienen ni un solo proveedor</strong> en regiones enteras del país. No es opinión. Es el dato oficial — el mismo que usan Medicare y los planes médicos — puesto claro, por primera vez, región por región.</p>
+<p class="text-lg text-slate-600 mt-3">Hay especialidades médicas que, según el registro federal, <strong>no tienen ni un solo proveedor</strong> en regiones enteras del país. No es opinión. Es el dato oficial (el mismo que usan Medicare y los planes médicos) puesto claro, por primera vez, región por región.</p>
+<p class="text-slate-600 mt-3">Lo vimos primero en el oeste, donde vivimos. Pero la cuenta da igual de fea en casi toda la isla. Contamos esto, uno por uno, <strong>para que no te quedes varado hoy y para que no quede escondido mañana.</strong></p>
 
 <div class="not-prose mt-4 flex flex-wrap gap-3 text-sm">
   <span class="inline-flex items-center gap-2 bg-red-50 border border-red-200 text-red-800 font-semibold px-3 py-1.5 rounded-full"><i class="fa-solid fa-triangle-exclamation"></i> ${totalDeserts.length} desiertos totales (cero proveedores)</span>
   <span class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 font-semibold px-3 py-1.5 rounded-full"><i class="fa-solid fa-circle-exclamation"></i> ${nearDeserts.length} casi-desiertos (1-2)</span>
   <span class="inline-flex items-center gap-2 bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full"><i class="fa-solid fa-shield-halved"></i> Fuente federal NPPES/CMS</span>
 </div>
-
+${ratioSection}
 <h2>Cuántas especialidades faltan por completo, por región</h2>
 <p class="text-slate-600 -mt-2">De las ${REGISTRY_SPECS.length} especialidades del registro, cuántas tienen <strong>cero</strong> proveedores en cada región. El área metro concentra casi todo — por eso no aparece aquí: es la vara contra la que se mide el resto.</p>
 <div class="not-prose grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4">${scoreCards}</div>
