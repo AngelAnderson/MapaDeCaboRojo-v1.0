@@ -217,6 +217,7 @@ function layout(opts: {
 <a href="/registro/mapa" class="hover:text-teal-700">El mapa</a>
 <a href="/registro/estado" class="hover:text-teal-700">Estado de salud</a>
 <a href="/comparte" class="hover:text-teal-700">Datos</a>
+<a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a>
 <a href="/registro/desiertos" class="hover:text-teal-700">Acceso por región</a>
 <a href="/observatorio" class="hover:text-teal-700">Observatorio</a>
 <a href="/registro#como-se-hizo" class="hover:text-teal-700">Cómo se verifica</a>
@@ -3833,6 +3834,89 @@ ${ratioSection}
   }))
 }
 
+// =============== /recuperacion — ¿Dónde está el dinero de María? (carril FEMA) ===============
+// Surface de v_recuperacion (OpenFEMA obligado × Censo × salud). Honesto: obligado, no gastado.
+async function handleRecuperacion(req: any, res: any) {
+  type R = { municipio: string; poblacion: number; federal_obligado: number; proyectos: number; por_habitante: number; especialistas: number; psiquiatras: number; cupon_mh_sin_cobrar: boolean }
+  let rows: R[] = []
+  let totMuni = 8.7, cuponFema = 3469
+  try {
+    const { data } = await supabase.from('v_recuperacion').select('*').range(0, 100)
+    if (data && data.length >= 60) {
+      rows = data.map((r: any) => ({ municipio: r.municipio, poblacion: +r.poblacion, federal_obligado: +r.federal_obligado, proyectos: +r.proyectos, por_habitante: +(r.por_habitante || 0), especialistas: +(r.especialistas || 0), psiquiatras: +(r.psiquiatras || 0), cupon_mh_sin_cobrar: !!r.cupon_mh_sin_cobrar }))
+      rows.sort((a, b) => b.federal_obligado - a.federal_obligado)
+      totMuni = Math.round(rows.reduce((s, r) => s + r.federal_obligado, 0) / 1e8) / 10
+      cuponFema = Math.round(rows.filter(r => r.cupon_mh_sin_cobrar).reduce((s, r) => s + r.federal_obligado, 0) / 1e6)
+    }
+  } catch (_) { /* fallback */ }
+  const maxObl = Math.max(1, ...rows.map(r => r.federal_obligado))
+  const money = (v: number) => v >= 1e9 ? `$${(v / 1e9).toFixed(1)}B` : `$${Math.round(v / 1e6)}M`
+
+  const rowHtml = rows.map((r, i) => {
+    const w = Math.max(2, Math.round(r.federal_obligado / maxObl * 100))
+    return `<tr class="border-t border-slate-100 ${r.cupon_mh_sin_cobrar ? 'bg-amber-50/40' : ''}">
+      <td class="py-1.5 px-2 text-slate-400 text-xs">${i + 1}</td>
+      <td class="py-1.5 px-3 font-semibold text-slate-800">${escapeHtml(r.municipio)}</td>
+      <td class="py-1.5 px-3"><div class="flex items-center gap-2"><div class="flex-1 bg-slate-100 rounded-full h-3 min-w-[40px] overflow-hidden"><div class="bg-teal-500 h-3 rounded-full" style="width:${w}%"></div></div><span class="text-slate-700 font-semibold text-xs w-14 text-right">${money(r.federal_obligado)}</span></div></td>
+      <td class="py-1.5 px-3 text-right text-slate-600">$${r.por_habitante.toLocaleString('en-US')}</td>
+      <td class="py-1.5 px-3 text-right text-slate-500">${r.proyectos.toLocaleString('en-US')}</td>
+      <td class="py-1.5 px-3 text-center text-xs">${r.especialistas === 0 ? '<span class="text-red-700 font-bold">0 médicos</span>' : r.psiquiatras === 0 ? '<span class="text-amber-700">0 psiquiatras</span>' : '<span class="text-slate-400">—</span>'}</td>
+    </tr>`
+  }).join('')
+
+  const body = `
+<h1>¿Dónde está el dinero de María?</h1>
+<p class="text-lg text-slate-600 mt-3">El gobierno federal ha obligado <strong>$39,500 millones</strong> para la recuperación de Puerto Rico, casi todo del huracán María de 2017. Esta es la cuenta, pueblo por pueblo, de a dónde fue ese dinero. Y lo que revela cruzándolo con la salud del pueblo.</p>
+
+<div class="not-prose grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
+  <div class="bg-white border-2 border-teal-200 rounded-xl p-4 text-center"><div class="text-2xl font-black text-teal-700">$39.5<span class="text-lg">B</span></div><div class="text-xs text-slate-600 mt-1">total federal obligado a PR (María, Fiona, terremotos)</div></div>
+  <div class="bg-white border-2 border-slate-200 rounded-xl p-4 text-center"><div class="text-2xl font-black text-slate-700">$${totMuni}<span class="text-lg">B</span></div><div class="text-xs text-slate-600 mt-1">atribuible a municipios (el resto, a agencias centrales)</div></div>
+  <div class="bg-white border-2 border-amber-300 rounded-xl p-4 text-center"><div class="text-2xl font-black text-amber-600">73%</div><div class="text-xs text-slate-600 mt-1">del dinero rastreado sigue en proyectos <strong>abiertos</strong>, 8 años después</div></div>
+  <div class="bg-white border-2 border-red-300 rounded-xl p-4 text-center"><div class="text-2xl font-black text-red-600">$${cuponFema.toLocaleString('en-US')}<span class="text-sm">M</span></div><div class="text-xs text-slate-600 mt-1">fue a los 33 pueblos con cero psiquiatras</div></div>
+</div>
+
+<h2>Le llegó el cemento, pero no el médico</h2>
+<p><strong>Maricao</strong> recibió <strong>$31,807 por habitante</strong> en fondos de recuperación, lo más de toda la isla por persona, y no tiene ni un médico especialista. <strong>Jayuya</strong>, $424 millones y solo 2 especialistas, cero psiquiatras. El dinero de ladrillo llegó a la montaña. El de salud, no. Son el mismo mapa del abandono, visto desde dos bases federales distintas: la de FEMA y la del registro de médicos. <a href="/registro/estado" class="text-teal-700 font-semibold">Ver el cupón de salud sin cobrar →</a></p>
+
+<h2>Los municipios, por dinero recibido</h2>
+<p class="text-slate-600 -mt-2">Barra = total federal obligado. La columna "por habitante" revela lo que el total esconde: los pueblos pequeños de la montaña recibieron muchísimo por persona porque el daño de María fue brutal ahí.</p>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+    <th class="py-2 px-2">#</th><th class="py-2 px-3">Municipio</th><th class="py-2 px-3">Federal obligado</th><th class="py-2 px-3 text-right">Por habitante</th><th class="py-2 px-3 text-right">Proyectos</th><th class="py-2 px-3 text-center">Salud</th>
+  </tr></thead><tbody>${rowHtml}</tbody></table>
+</div>
+
+<h2>Qué significa "obligado" (y qué NO dice esta página)</h2>
+<p>"Obligado" es el dinero que FEMA <strong>comprometió</strong> a un proyecto. No es necesariamente dinero ya gastado ni obra ya terminada: de hecho, de los proyectos que FEMA rastrea en su data de cierre, cerca del <strong>73% del dinero sigue en proyectos abiertos</strong> ocho años después. Esta página <strong>no</strong> afirma que un monto específico se "perdió" o "robó" — las bases de datos federales de FEMA no reconcilian a ese nivel de precisión. Lo que sí es sólido y verificable: cuánto se obligó a cada pueblo, y que el dinero de infraestructura fluyó a pueblos que siguen sin médicos.</p>
+
+<p class="text-sm text-slate-500 mt-6">Fuente: OpenFEMA — Public Assistance Funded Projects Summaries (montos obligados) y Grant Award Activities (estatus de cierre), datos abiertos de FEMA. Cruzado con Censo 2020 y el registro médico NPPES. Julio 2026. <a href="/comparte" class="text-teal-700 font-semibold">Datos citables →</a> · <a href="/registro/estado" class="text-teal-700 font-semibold">Estado de salud →</a></p>
+`
+  const faqLd = {
+    '@context': 'https://schema.org', '@type': 'FAQPage',
+    mainEntity: [
+      { '@type': 'Question', name: '¿Cuánto dinero federal de recuperación ha recibido Puerto Rico?', acceptedAnswer: { '@type': 'Answer', text: 'El gobierno federal ha obligado alrededor de $39,500 millones para la recuperación de Puerto Rico, casi todo del huracán María de 2017, según los datos abiertos de FEMA (OpenFEMA), julio 2026.' } },
+      { '@type': 'Question', name: '¿Cuál municipio de Puerto Rico recibió más dinero de FEMA por habitante?', acceptedAnswer: { '@type': 'Answer', text: 'Maricao recibió cerca de $31,807 por habitante en fondos federales de recuperación, lo más de la isla por persona, y no tiene ni un médico especialista. Fuente: OpenFEMA × Censo 2020, julio 2026.' } },
+      { '@type': 'Question', name: '¿Se gastó el dinero de recuperación de Puerto Rico?', acceptedAnswer: { '@type': 'Answer', text: '"Obligado" es dinero comprometido, no necesariamente gastado. De los proyectos que FEMA rastrea en su data de cierre, cerca del 73% del dinero sigue en proyectos abiertos ocho años después de María. Fuente: OpenFEMA Grant Award Activities, julio 2026.' } },
+    ],
+  }
+  const datasetLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'Fondos federales de recuperación de Puerto Rico por municipio (FEMA)',
+    description: 'Cuánto dinero federal de recuperación (FEMA Public Assistance) se ha obligado a cada municipio de Puerto Rico, por habitante, con estatus de cierre y cruce con el acceso a médicos. Fuente: OpenFEMA × Censo × NPPES.',
+    creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://registromedicopr.com/recuperacion',
+    keywords: ['dinero de María', 'FEMA Puerto Rico', 'fondos de recuperación', 'recuperación por municipio'],
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: '¿Dónde está el dinero de María? Fondos federales de recuperación de PR por municipio',
+    description: '$39,500 millones obligados a Puerto Rico. Pueblo por pueblo, a dónde fue, y el cruce con la salud: Maricao recibió $31,807 por habitante y no tiene ni un médico.',
+    slug: 'recuperacion', bodyHtml: body, jsonLd: [faqLd, datasetLd] as any, ogImage: '/og/desiertos.png',
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
 // =============== /comparte — Datos citables (press kit + LLM-quotable + SEO) ===============
 // Cada dato = pregunta + respuesta con fuente y fecha. FAQPage schema (lo que los LLM citan) + Dataset.
 async function handleComparte(req: any, res: any) {
@@ -5935,6 +6019,7 @@ export default async function handler(req: any, res: any) {
     case 'registro-mapa': return await handleRegistroMapa(req, res)
     case 'registro-estado': return await handleRegistroEstado(req, res)
     case 'comparte': return await handleComparte(req, res)
+    case 'recuperacion': return await handleRecuperacion(req, res)
     case 'sinfiltros': return await handleSinFiltros(req, res)
     case 'registro-hub': return await handleRegistroHub(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
