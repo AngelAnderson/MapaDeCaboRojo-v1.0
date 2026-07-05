@@ -3821,10 +3821,13 @@ async function handleComparte(req: any, res: any) {
   } catch (_) { /* fallback */ }
   const n = (x: number) => x.toLocaleString('en-US')
 
-  const FACTS: Array<{ q: string; a: string; srcText: string; srcUrl: string; tag?: 'medicos' }> = [
+  const FACTS: Array<{ q: string; a: string; srcText: string; srcUrl: string; tag?: 'medicos' | 'local' }> = [
     { q: '¿Cuántos municipios de Puerto Rico están declarados en escasez de médicos por el gobierno federal?', a: `${g.conHpsa} de los 76 municipios de Puerto Rico (sin Vieques y Culebra) tienen una designación federal de escasez de profesionales de la salud (HPSA) activa, de cuidado primario o salud mental.`, srcText: 'Archivos oficiales de HRSA (Health Resources & Services Administration), designaciones activas, julio 2026.', srcUrl: 'https://data.hrsa.gov/tools/shortage-area/hpsa-find' },
     { q: '¿Cuánto dinero federal para atraer médicos se está quedando sin reclamar en Puerto Rico?', a: `${g.cupon} municipios de PR tienen una designación federal de salud mental activa (que destraba repago de préstamos del NHSC y bono de Medicare) y a la vez CERO psiquiatras ejerciendo. Son ${n(g.cuponPob)} personas con el dinero aprobado y sin médico que lo cobre.`, srcText: 'Cruce NPPES/CMS × archivos HRSA, verificado municipio por municipio (ver el detalle).', srcUrl: 'https://registromedicopr.com/registro/estado' },
     { q: '¿Cuántos pueblos de Puerto Rico no tienen ni un solo especialista médico?', a: `${g.cero} municipios de PR no tienen ni un especialista médico de ninguna clase con práctica declarada: Maricao, Las Marías y Florida.`, srcText: 'Registro federal NPPES/CMS por municipio (ver el mapa).', srcUrl: 'https://registromedicopr.com/registro/mapa' },
+    { q: '¿Le llegó dinero de recuperación a los pueblos que no tienen médicos?', a: 'Sí, pero solo el de ladrillo. $3,470 millones de fondos federales de recuperación (FEMA) fueron a los 33 municipios de PR que tienen designación de salud mental activa y cero psiquiatras. Se reconstruyeron edificios, carreteras y sistemas de agua. No llegó ni un médico de la mente. Ejemplo: Jayuya recibió $424 millones y tiene 2 especialistas y cero psiquiatras.', srcText: 'OpenFEMA (Public Assistance) × NPPES/CMS × HRSA, julio 2026.', srcUrl: 'https://www.fema.gov/openfema-data-page/public-assistance-funded-projects-summaries-v1' },
+    { q: '¿Cómo está Cabo Rojo de médicos comparado con sus vecinos del oeste?', a: 'Cabo Rojo está entre los pueblos mejor servidos del oeste: 99 especialistas y 3 psiquiatras, con el hub de Mayagüez a unos 20 minutos. Pero está rodeado de desiertos: a menos de una hora, en la montaña, Maricao y Las Marías no tienen ni un especialista de ninguna clase.', srcText: 'NPPES/CMS × Censo 2020 (ver el mapa).', srcUrl: 'https://registromedicopr.com/registro/mapa', tag: 'local' },
+    { q: '¿Cuántos pueblos del oeste no tienen ni un psiquiatra?', a: 'Seis municipios del oeste no tienen ni un psiquiatra: Maricao, Las Marías, Hormigueros, Añasco, Lajas y Moca. Todo el oeste depende de los 26 psiquiatras de Mayagüez. Y Añasco recibió $316 millones de fondos federales de recuperación sin un solo psiquiatra en el pueblo.', srcText: 'NPPES/CMS × HRSA × OpenFEMA (ver el estado).', srcUrl: 'https://registromedicopr.com/registro/estado', tag: 'local' },
     { q: '¿Cuántos puertorriqueños viven en un municipio sin psiquiatra?', a: `${g.sinPsiq} municipios de PR no tienen ni un psiquiatra con práctica declarada. Son ${n(g.sinPsiqPob)} personas, cerca de 1 de cada 3 puertorriqueños.`, srcText: 'Registro federal NPPES/CMS (ver el estado, pueblo por pueblo).', srcUrl: 'https://registromedicopr.com/registro/estado' },
     { q: '¿Qué tan concentrados están los especialistas médicos en San Juan?', a: 'San Juan concentra alrededor del 35% de todos los especialistas médicos de Puerto Rico con cerca del 10% de la población de la isla.', srcText: 'NPPES/CMS × Censo 2020 (ver el mapa).', srcUrl: 'https://registromedicopr.com/registro/mapa' },
     { q: '¿Cuál es la desigualdad de acceso médico más extrema en Puerto Rico?', a: `${g.bajo5} de los 76 municipios (${n(g.bajo5Pob)} personas, casi 1 de cada 3) viven con menos de 5 especialistas por cada 10,000 habitantes, mientras San Juan tiene cerca de 69. Loíza, a media hora de San Juan, tiene 86 veces menos especialistas por persona.`, srcText: 'NPPES/CMS × Censo 2020, municipio por municipio (ver los desiertos).', srcUrl: 'https://registromedicopr.com/registro/desiertos' },
@@ -3843,8 +3846,8 @@ async function handleComparte(req: any, res: any) {
   const factCards = FACTS.map((f, i) => {
     const isExt = f.srcUrl.startsWith('http') && !/registromedicopr\.com/.test(f.srcUrl)
     const copyText = `${f.a} Fuente: ${f.srcText} Vía registromedicopr.com/comparte`
-    const box = f.tag === 'medicos' ? 'border-teal-300 bg-teal-50/40' : 'border-slate-200 bg-white'
-    const label = f.tag === 'medicos' ? 'Para médicos' : 'Dato'
+    const box = f.tag === 'medicos' ? 'border-teal-300 bg-teal-50/40' : f.tag === 'local' ? 'border-amber-300 bg-amber-50/40' : 'border-slate-200 bg-white'
+    const label = f.tag === 'medicos' ? 'Para médicos' : f.tag === 'local' ? 'Cabo Rojo y el oeste' : 'Dato'
     return `
     <div class="not-prose border ${box} rounded-xl p-4 mt-4">
       <div class="flex items-start justify-between gap-2">
@@ -3944,6 +3947,19 @@ async function handleRegistroEstado(req: any, res: any) {
     }
   } catch (_) { /* fallback numbers stand */ }
 
+  // Cruce FEMA: cuánto dinero de recuperación fue a los pueblos con el cupón sin cobrar ("cemento no médico")
+  let femaCuponM = 3470
+  try {
+    const { data: fd } = await supabase.from('fema_recovery_by_municipio').select('municipio_raw,federal_obligado').range(0, 100)
+    if (fd && fd.length && rows.length) {
+      const norm = (s: string) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+      const fmap: Record<string, number> = {}
+      for (const f of fd) fmap[norm(f.municipio_raw)] = Number(f.federal_obligado)
+      const sum = rows.filter(r => r.cupon_mh_sin_cobrar).reduce((s, r) => s + (fmap[norm(r.municipio)] || 0), 0)
+      if (sum > 0) femaCuponM = Math.round(sum / 1e6)
+    }
+  } catch (_) { /* fallback */ }
+
   const rowHtml = rows.map((r, i) => {
     const pr = r.prioridad
     const prColor = pr >= 80 ? 'bg-red-100 text-red-800' : pr >= 70 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'
@@ -3973,6 +3989,12 @@ async function handleRegistroEstado(req: any, res: any) {
 
 <h2>Qué es el "cupón sin cobrar"</h2>
 <p>Una designación federal de escasez (HPSA) es un cupón: le dice a un médico o psicólogo "múdate a este pueblo y el gobierno federal te paga los préstamos estudiantiles — hasta $75,000 en cuidado primario, $50,000 en salud mental — más un bono de Medicare". Pero para cobrarlo, el clínico tiene que trabajar en un <strong>sitio aprobado por el NHSC dentro del pueblo</strong>. En los pueblos más necesitados no hay ese sitio. La designación existe en un archivo federal; la clínica donde pararse, no. <strong>Ese es el eslabón roto.</strong> Puerto Rico ya tiene la red de centros 330 que puede hospedarlo — falta conectarla.</p>
+
+<div class="not-prose mt-6 border-l-4 border-amber-500 bg-amber-50 rounded-r-xl p-4">
+  <p class="font-black text-slate-900">Le llegó el cemento, pero no el médico</p>
+  <p class="text-sm text-slate-700 mt-1 leading-relaxed">$${femaCuponM.toLocaleString('en-US')} millones de fondos federales de recuperación (FEMA, casi todo del huracán María de 2017) fueron a los ${agg.cupon} pueblos que tienen el cupón de salud mental sin cobrar. Se reconstruyeron edificios, carreteras y sistemas de agua. No llegó ni un psiquiatra. Jayuya recibió $424 millones y tiene 2 especialistas y cero psiquiatras; Maricao, $183 millones, y cero médicos de ninguna clase.</p>
+  <p class="text-xs text-slate-500 mt-2">Fuente: OpenFEMA (Public Assistance, monto obligado) × este registro, julio 2026. El dinero de FEMA es de infraestructura, no de salud; se muestra para dimensionar que el dinero de ladrillo sí fluyó a estos pueblos.</p>
+</div>
 
 <h2>Los 76 municipios, rankeados por dónde el cupón vale más</h2>
 <p class="text-slate-600 -mt-2">Prioridad = necesidad (pobreza + envejecimiento + escasez de médicos) × oportunidad (designación activa sin cobrar). 💰 = tiene designación de salud mental activa y cero psiquiatras.</p>
