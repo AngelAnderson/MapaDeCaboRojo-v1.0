@@ -4767,6 +4767,10 @@ async function handleSigueElDinero(req: any, res: any) {
   <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Recipiente</th><th class="py-2 px-3 text-right">Monto</th><th class="py-2 px-3">Sede</th></tr></thead><tbody>${rowHtml || '<tr><td colspan="3" class="py-3 px-3 text-slate-400 italic">Data no disponible ahora.</td></tr>'}</tbody></table>
 </div>
 
+<h2>¿Por qué pasó, y qué se hace?</h2>
+<p>No es que "las de afuera sean malas": los contratos grandes de gestión de emergencia y de ingeniería son un mercado especializado donde EE.UU. tiene firmas gigantes, y Puerto Rico tenía pocas a esa escala tras el desastre. <strong>Ese es justo el punto:</strong> la recuperación reconstruyó edificios, pero no construyó la capacidad local para que la próxima vez el dinero se quede aquí. Es un dato para exigir mejor, no para señalar a una empresa.</p>
+<p class="text-sm text-slate-700"><strong>La jugada (para quien la ejecute):</strong> exigir requisitos de contratación y <em>subcontratación</em> local en los fondos que aún no se han gastado — sobre todo el HUD CDBG-DR — para que reconstruir a PR también levante su economía y su fuerza laboral. <a href="/expediente/representante-distrito-20#agenda" class="text-teal-700 font-semibold">Ver la agenda completa →</a></p>
+
 <div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 mt-5 text-sm text-slate-700"><strong>Método y límites:</strong> contratos federales de la agencia DHS/FEMA con lugar de ejecución en PR (2017–2025), vía USASpending.gov. Excluye el passthrough del Gobierno de PR (que sub-otorga a los municipios — esos son los fondos de <a href="/recuperacion" class="text-teal-700 font-semibold">/recuperacion</a>). <strong>Falta HUD CDBG-DR</strong> (~$20B más) — segunda pasada pendiente. Los montos son a nivel transacción (las modificaciones se suman), así que léelos como orden de magnitud, no centavo exacto.</div>
 
 <p class="text-sm text-slate-500 mt-5">Fuente: USASpending.gov (Departamento de Seguridad Nacional / FEMA), lugar de ejecución Puerto Rico. Cada recipiente tiene su enlace de verificación (↗) en la tabla. Julio 2026.</p>
@@ -4886,6 +4890,8 @@ ${estadoHtml}
 <h2>¿Qué viene?</h2>
 <p class="text-slate-600 -mt-2">La gestión no se mide solo por lo que pasó, sino por lo que viene. Estas fechas afectan a ${escapeHtml(cfg.ambito)} como a todo Puerto Rico — y hay algo que hacer hoy. <a href="/prediccion" class="text-teal-700 font-semibold">Ver la predicción completa →</a></p>
 ${renderAlertas()}
+
+${renderAgenda()}
 
 <div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
   <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Un expediente público, para que nadie decida a ciegas.</p>
@@ -5206,6 +5212,30 @@ ${ALERTAS.map(a => `
     <a href="${a.cal}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">🔔 Recuérdame</a>
     <a href="${escapeHtml(a.fuente.url)}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Fuente: ${escapeHtml(a.fuente.texto)} ↗</a>
   </div>
+</div>`).join('')}`
+}
+
+// La Agenda — lo que la data PIDE, masticado: problema + acción ambiciosa + fecha. Neutral. "El que lo ejecute, gana."
+const AGENDA = [
+  { area: 'Médicos y salud mental', problema: '36 municipios de PR no tienen un solo psiquiatra; Hormigueros tiene 0 para 16,614 personas. Y el 55% de los médicos se retira para 2030.', accion: 'Inscribir los centros 330/FQHC del área como sitios aprobados por el NHSC: destraba hasta $75,000 de repago de préstamos por médico, sin pedir un solo dólar nuevo. Y activar telemedicina en los pueblos donde el internet ya cubre el 80%+.', fecha: 'Antes de 2030', ref: '/telemedicina' },
+  { area: 'Medicaid', problema: 'El financiamiento federal de Medicaid de PR cae de 76% a 55% si el Congreso no actúa: golpe directo a la salud de casi la mitad de los boricuas.', accion: 'Gestión congresional coordinada + un plan de contingencia municipal para la red de salud local antes de la fecha.', fecha: '30 sep 2027', ref: '/prediccion' },
+  { area: 'Luz', problema: 'Puerto Rico paga la luz a ~24.5¢/kWh: casi el doble del promedio de EE.UU.', accion: 'Acelerar solar comunitario y microrredes en edificios públicos (escuelas, centros de gobierno) + exigir que se publiquen las métricas de confiabilidad por pueblo.', fecha: '', ref: '/luz' },
+  { area: 'Basura', problema: 'La mayoría de los ~29 vertederos de PR ya está sobre capacidad; la EPA tiene acuerdos para cerrar 12.', accion: 'Plan regional de transbordo + reciclaje serio con metas medibles, no solo mover la basura de un pueblo a otro.', fecha: '', ref: '/basura' },
+  { area: 'Agua', problema: 'El récord federal de la EPA muestra violaciones de salud activas en los acueductos comunitarios del oeste.', accion: 'Canalizar el Fondo Rotatorio de Agua Potable (DWSRF) + la asistencia técnica gratis (RCAP) a esos acueductos para cerrar las violaciones.', fecha: '', ref: '/agua' },
+  { area: 'La recuperación', problema: 'De cada dólar de contrato de recuperación rastreado, ~87 centavos salieron de PR hacia el mainland.', accion: 'Exigir requisitos de contratación y subcontratación local en los fondos que aún no se han gastado (HUD CDBG-DR): que el dinero de reconstruir PR construya también su economía.', fecha: '', ref: '/sigue-el-dinero' },
+]
+function renderAgenda() {
+  return `<h2 id="agenda">La agenda que sale de la data</h2>
+<p class="text-slate-600 -mt-2">Esto no es opinión partidista: es lo que la data pide, masticado. El problema, la acción concreta, y cuándo. <strong>Cualquiera que se atreva a ejecutarlo — el que sea — gana.</strong></p>
+${AGENDA.map((a, i) => `
+<div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-4">
+  <div class="flex items-baseline justify-between gap-3 flex-wrap">
+    <h3 class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">${i + 1}. ${escapeHtml(a.area)}</h3>
+    ${a.fecha ? `<span class="text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded-full px-3 py-1">${escapeHtml(a.fecha)}</span>` : ''}
+  </div>
+  <p class="text-sm text-slate-600 mt-2"><strong>El problema:</strong> ${escapeHtml(a.problema)}</p>
+  <p class="text-sm text-slate-800 mt-2"><strong>La jugada:</strong> ${escapeHtml(a.accion)}</p>
+  <p class="text-xs text-slate-400 mt-2"><a href="${a.ref}" class="text-teal-700 underline">Ver la data →</a></p>
 </div>`).join('')}`
 }
 
