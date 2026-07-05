@@ -4822,7 +4822,7 @@ async function handleSigueElDinero(req: any, res: any) {
 
 const FUNCIONARIOS: Record<string, any> = {
   'alcalde-cabo-rojo': { nombre: 'Jorge Morales Wiscovitch', cargo: 'Alcalde de Cabo Rojo', tipo: 'alcalde', cargo_id: 'fd65244c-9ba5-4f31-bf72-c4dbde040912', promesasPublicas: true, ambito: 'Cabo Rojo', municipios: [{ nombre: 'Cabo Rojo', key: 'cabo rojo' }] },
-  'representante-distrito-20': { nombre: 'Emilio Carlo Acosta', cargo: 'Representante · Cámara de PR · Distrito 20', tipo: 'representante', partido: 'PNP', cargo_id: 'b7c3ac60-5f99-4326-8a4d-e9eb8fd80c08', promesasPublicas: false, ambito: 'el Distrito 20 (Cabo Rojo, San Germán y Hormigueros)', municipios: [{ nombre: 'Cabo Rojo', key: 'cabo rojo' }, { nombre: 'San Germán', key: 'germ' }, { nombre: 'Hormigueros', key: 'hormigueros' }] },
+  'representante-distrito-20': { nombre: 'Emilio Carlo Acosta', cargo: 'Representante · Cámara de PR · Distrito 20', tipo: 'representante', partido: 'PNP', cargo_id: 'b7c3ac60-5f99-4326-8a4d-e9eb8fd80c08', promesasPublicas: true, ambito: 'el Distrito 20 (Cabo Rojo, San Germán y Hormigueros)', municipios: [{ nombre: 'Cabo Rojo', key: 'cabo rojo' }, { nombre: 'San Germán', key: 'germ' }, { nombre: 'Hormigueros', key: 'hormigueros' }] },
 }
 async function handleExpediente(req: any, res: any) {
   const f = String(req.query?.f || 'alcalde-cabo-rojo')
@@ -4831,7 +4831,7 @@ async function handleExpediente(req: any, res: any) {
   let promesas: any[] = []
   const munis: any[] = []
   try {
-    let pq: any = supabase.from('quien_responde_promesas').select('estado').eq('cargo_id', cfg.cargo_id)
+    let pq: any = supabase.from('quien_responde_promesas').select('estado,promesa,fuente_que_paso').eq('cargo_id', cfg.cargo_id)
     if (cfg.promesasPublicas) pq = pq.eq('publicable', true)
     const pp = await pq
     promesas = pp.data || []
@@ -4850,9 +4850,12 @@ async function handleExpediente(req: any, res: any) {
   const cnt = (s: string) => promesas.filter((p: any) => p.estado === s).length
   const tile = (num: string, label: string) => `<div class="bg-white border-2 border-slate-200 rounded-xl p-4 text-center"><div class="text-2xl font-black text-slate-900">${num}</div><div class="text-xs text-slate-600 mt-1">${label}</div></div>`
 
-  const promesasHtml = cfg.promesasPublicas
+  const repMedidas = promesas.map((p: any) => `<li>${escapeHtml(p.promesa)}${p.fuente_que_paso ? ` · <a href="${escapeHtml(p.fuente_que_paso)}" target="_blank" rel="noopener" class="text-teal-700 underline">fuente ↗</a>` : ''}</li>`).join('')
+  const promesasHtml = cfg.tipo === 'alcalde'
     ? `<p>Dos vistas del mismo récord: <a href="/promesas" class="text-teal-700 font-semibold">el promesómetro</a> (todas las promesas por tema — basura, asfalto, policía, agua — con su estado), y <a href="/historial" class="text-teal-700 font-semibold">el historial</a> (${nP} con la cita textual y el enlace al minuto exacto del video: ${cnt('cumplido')} cumplida${cnt('cumplido') === 1 ? '' : 's'}, ${cnt('en_proceso')} en proceso, ${cnt('vencido')} vencida${cnt('vencido') === 1 ? '' : 's'}). Cada una dicha en un video público.</p>`
-    : `<p><strong>${nP} medidas legislativas rastreadas</strong> (alumbrado en la PR-2 tras un accidente fatal · solares abandonados para adjudicar a familias de bajos recursos · escuela vocacional del distrito). Están <strong>en verificación</strong> de números y fechas exactas contra el récord de la Cámara (SUTRA) antes de publicarse: <em>el récord no muestra un dato sin confirmar</em>.</p>`
+    : `<p><strong>${nP} medidas legislativas radicadas</strong>, verificadas contra el récord oficial de la Cámara (SUTRA):</p>
+<ul class="text-sm text-slate-700 list-disc pl-5 space-y-1 mt-2">${repMedidas}</ul>
+<p class="text-xs text-slate-400 mt-2">Son resoluciones de investigación/estudio radicadas en 2025 (aún no son leyes aprobadas). Cada una con su número de medida (R. de la C.) y su fuente oficial.</p>`
 
   let estadoHtml = ''
   if (cfg.tipo === 'representante') {
@@ -5119,7 +5122,7 @@ async function handleHistorial(req: any, res: any) {
   let rows: any[] = []
   const grab: Record<string, any> = {}
   try {
-    const { data } = await supabase.from('quien_responde_promesas').select('promesa,minuto,fecha_grabacion,estado,que_paso,fuente_que_paso,cita,grabacion_id').eq('publicable', true).order('fecha_grabacion', { ascending: false })
+    const { data } = await supabase.from('quien_responde_promesas').select('promesa,minuto,fecha_grabacion,estado,que_paso,fuente_que_paso,cita,grabacion_id').eq('publicable', true).eq('cargo_id', 'fd65244c-9ba5-4f31-bf72-c4dbde040912').order('fecha_grabacion', { ascending: false })
     rows = data || []
     const { data: gd } = await supabase.from('grabaciones').select('grabacion_id,video_url,clip_url,plataforma')
     for (const g of (gd || [])) grab[g.grabacion_id] = g
