@@ -48,6 +48,8 @@
     { "source": "/comparte", "destination": "/api/mapa-pages?page=comparte" },
     { "source": "/recuperacion", "destination": "/api/mapa-pages?page=recuperacion" },
     { "source": "/sinfiltros/pulso", "destination": "/api/mapa-pages?page=sinfiltros-pulso" },
+    { "source": "/luz", "destination": "/api/mapa-pages?page=luz" },
+    { "source": "/basura", "destination": "/api/mapa-pages?page=basura" },
     { "source": "/sinfiltros", "destination": "/api/mapa-pages?page=sinfiltros" },
     { "source": "/registro/:spec/:region", "destination": "/api/mapa-pages?page=registro-hub&spec=:spec&region=:region" },
     { "source": "/registro/:spec", "destination": "/api/mapa-pages?page=registro-hub&spec=:spec" },

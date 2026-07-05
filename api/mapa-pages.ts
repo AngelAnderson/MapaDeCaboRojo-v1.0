@@ -4186,7 +4186,29 @@ ${recordCards}
   </div>
 </div>
 
-<p class="not-prose text-sm text-slate-500 mt-5">En camino, cuando tengamos la fuente ingestada: luz (LUMA/EIA) y basura, economía informal, y el cruce de todo. Los récords no se publican sin data verificable detrás.</p>
+<div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-4">
+  <span class="text-xs font-bold text-teal-700 uppercase tracking-wide">Luz</span>
+  <h3 class="text-xl font-black text-slate-900 mt-1" style="font-family:'Fraunces',Georgia,serif">La luz, contra el récord federal</h3>
+  <blockquote class="mt-2 text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3">Puerto Rico paga la luz a ~24.5¢ por kWh (2023): casi el doble del promedio de Estados Unidos (~12.9¢). En residencial, ~45.6% más caro que la nación. El récord federal de energía, en cristiano.</blockquote>
+  <p class="text-xs text-slate-500 mt-3"><strong>Fuente:</strong> EIA (US Energy Information Administration), perfil de electricidad de PR, 2023-2025.</p>
+  <div class="mt-3 flex flex-wrap gap-2 text-sm">
+    <a href="/luz" data-prsf="record" data-rec="luz" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">Ver el récord completo</a>
+    <a href="https://www.eia.gov/electricity/state/puertorico/" target="_blank" rel="noopener" data-prsf="verify" data-rec="luz" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Verifícalo tú mismo: EIA ↗</a>
+  </div>
+</div>
+
+<div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-4">
+  <span class="text-xs font-bold text-teal-700 uppercase tracking-wide">Basura</span>
+  <h3 class="text-xl font-black text-slate-900 mt-1" style="font-family:'Fraunces',Georgia,serif">Dónde termina lo que botamos</h3>
+  <blockquote class="mt-2 text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3">~29 vertederos operando en Puerto Rico, la mayoría ya sobre su capacidad. La EPA tiene acuerdos legales para cerrar 12, con órdenes de consentimiento en 12 municipios. Desde 2002 interviene directamente.</blockquote>
+  <p class="text-xs text-slate-500 mt-3"><strong>Fuente:</strong> EPA — récord federal de vertederos de Puerto Rico y órdenes de consentimiento.</p>
+  <div class="mt-3 flex flex-wrap gap-2 text-sm">
+    <a href="/basura" data-prsf="record" data-rec="basura" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">Ver el récord completo</a>
+    <a href="https://www.epa.gov/pr/puerto-rico-landfill-consent-orders-and-consent-decrees" target="_blank" rel="noopener" data-prsf="verify" data-rec="basura" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Verifícalo tú mismo: EPA ↗</a>
+  </div>
+</div>
+
+<p class="not-prose text-sm text-slate-500 mt-5">En camino, cuando haya fuente verificable: economía informal, la frecuencia de apagones (SAIDI del EIA), y el cruce de todos los récords. No se publica nada sin data detrás.</p>
 
 <h2 id="como">Cómo se verifica</h2>
 <p>Cada número sale de una fuente federal o pública, cruzada a nivel de municipio, y revisada uno por uno. Sin robots que copian data de Google. Sin AI inventando cifras. Sin "aproximaciones". Cada dato lleva su fecha; si tiene más de lo que debe, se vuelve a correr. <strong>¿Ves un error? Escríbenos y se corrige, en público.</strong> Ese es el trato.</p>
@@ -4317,6 +4339,62 @@ ${list('Capa citable (API / IA / datos)', topCite)}
     description: 'Lo que la gente hace en Puerto Rico Sin Filtros: récords más mirados, fuentes verificadas, capa citable. Últimos 30 días.',
     slug: 'sinfiltros/pulso', bodyHtml: body, host: req.headers?.host,
     canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
+// Récords de dato federal PR: /luz (pr_electricidad, EIA) y /basura (pr_residuos_solidos, EPA).
+// Handler genérico: la fila trae metrica/valor/source/verificalo. Data verificada 2026-07-05.
+async function handleDatoRecord(req: any, res: any) {
+  const page = String(req.query?.page || 'luz')
+  const isBasura = page === 'basura'
+  const cfg = isBasura
+    ? { table: 'pr_residuos_solidos', tag: 'Basura', h1: 'La basura de Puerto Rico, contra el récord federal',
+        hero: '~29 vertederos operando, la mayoría ya sobre su capacidad. La EPA tiene acuerdos legales para cerrar 12, y desde 2002 interviene directamente en la isla.',
+        intro: 'Lo que el récord federal de la EPA dice sobre dónde termina lo que botamos. Cada dato con su documento oficial al lado.',
+        gap: 'Falta ingestar: los años de capacidad restante por vertedero (data de la Autoridad de Desperdicios Sólidos) no está en formato primario descargable, así que aquí va solo lo verificable en el récord federal de la EPA.',
+        verify: 'https://www.epa.gov/pr/puerto-rico-landfill-consent-orders-and-consent-decrees', verifyText: 'los documentos de la EPA' }
+    : { table: 'pr_electricidad', tag: 'Luz', h1: 'La luz de Puerto Rico, contra el récord federal',
+        hero: 'Puerto Rico paga ~24.5¢ por kWh (todos los sectores, 2023), casi el doble del promedio de Estados Unidos (~12.9¢). En residencial, ~45.6% más caro que la nación.',
+        intro: 'Lo que el récord federal de energía (EIA) dice sobre el precio y el sistema eléctrico de Puerto Rico. Cada cifra con su fuente al lado.',
+        gap: 'Falta ingestar: las métricas de confiabilidad (SAIDI/SAIFI — cuántas horas al año se va la luz) del EIA-861, que requieren una llave de acceso del EIA. Aquí está el precio; la frecuencia de apagones viene después.',
+        verify: 'https://www.eia.gov/electricity/state/puertorico/', verifyText: 'el perfil de PR en la EIA' }
+  let rows: any[] = []
+  try { const { data } = await supabase.from(cfg.table).select('*').order('id'); rows = data || [] } catch (_) { /* empty */ }
+  const rowHtml = rows.map((r: any) => {
+    const val = isBasura
+      ? `<strong class="text-slate-900">${escapeHtml(String(r.valor))}</strong>`
+      : `<strong class="text-slate-900">${Number(r.valor).toLocaleString('en-US')}</strong> <span class="text-slate-500 text-xs">${escapeHtml(r.unidad || '')}</span>${r.valor_us ? `<div class="text-xs text-slate-400 mt-0.5">EEUU: ${Number(r.valor_us).toLocaleString('en-US')}</div>` : ''}`
+    const detail = isBasura && r.detalle ? `<div class="text-xs text-slate-500 mt-0.5">${escapeHtml(r.detalle)}</div>` : ''
+    return `<tr class="border-t border-slate-100">
+      <td class="py-2 px-3"><div class="font-semibold text-slate-800">${escapeHtml(r.metrica)}</div>${detail}<div class="text-xs text-slate-400 mt-0.5">${escapeHtml(r.periodo || '')} · <a href="${escapeHtml(r.verificalo)}" target="_blank" rel="noopener" class="text-teal-700 underline">verifícalo ↗</a></div></td>
+      <td class="py-2 px-3 text-right align-top whitespace-nowrap">${val}</td>
+    </tr>`
+  }).join('')
+  const body = `
+<h1>${cfg.h1}</h1>
+<p class="text-lg text-slate-600 mt-2">${cfg.intro}</p>
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El dato</p>
+  <p class="text-lg sm:text-xl font-black mt-1 leading-snug">${cfg.hero}</p>
+</div>
+<div class="not-prose mt-5 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Métrica</th><th class="py-2 px-3 text-right">Valor</th></tr></thead><tbody>${rowHtml || '<tr><td class="py-3 px-3 text-slate-400 italic" colspan="2">Data no disponible ahora.</td></tr>'}</tbody></table>
+</div>
+<div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 mt-5 text-sm text-slate-700"><strong>Lo que todavía no sabemos:</strong> ${cfg.gap}</div>
+<p class="text-sm text-slate-500 mt-5">Verifícalo tú mismo en <a href="${cfg.verify}" target="_blank" rel="noopener" class="text-teal-700 font-semibold">${cfg.verifyText} ↗</a>. Cada fila trae su enlace a la fuente primaria. ¿Ves un error? Escríbenos y se corrige.</p>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: cfg.h1, description: cfg.hero,
+    creator: { '@type': 'Person', name: 'Angel Anderson' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    isAccessibleForFree: true, inLanguage: 'es', url: `https://puertoricosinfiltros.com/${page}`,
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: `${cfg.h1}`, description: cfg.hero, slug: page, bodyHtml: body, jsonLd,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
 
@@ -6169,6 +6247,8 @@ export default async function handler(req: any, res: any) {
     case 'sinfiltros': return await handleSinFiltros(req, res)
     case 'sinfiltros-log': return await handleSinFiltrosLog(req, res)
     case 'sinfiltros-pulso': return await handleSinFiltrosPulso(req, res)
+    case 'luz': return await handleDatoRecord(req, res)
+    case 'basura': return await handleDatoRecord(req, res)
     case 'registro-hub': return await handleRegistroHub(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)
