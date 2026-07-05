@@ -3996,6 +3996,11 @@ async function handleComparte(req: any, res: any) {
 <h2>Los datos (toca "Copiar" en cualquiera)</h2>
 ${factCards}
 
+<h2>El médico fantasma (por qué el número real es aún más bajo)</h2>
+<div class="not-prose border-l-4 border-amber-500 bg-amber-50 rounded-r-xl p-4 mt-2">
+<p class="text-slate-700 leading-relaxed">Antes de que alguien diga "tu data está mal porque cuenta médicos que ya se fueron": tiene razón a medias, y eso hace la crisis <strong>peor</strong>, no mejor. Estos conteos vienen del registro federal (NPPES), y <strong>tener un número federal (NPI) no es estar viendo pacientes.</strong> Pregúntale a cualquier vecino mayor y te dice "mi doctor se fue pa' Estados Unidos" — pero ese doctor sigue apareciendo como activo, porque el NPI no se apaga cuando uno se va. La prueba: un estudio de FARO cuenta 84 endocrinólogos activos; el registro federal cuenta 158. Esos 74 de diferencia son fantasmas. <strong>Lo que de verdad queda atendiendo es aún menos que lo que muestran estos números.</strong> Por eso este registro se verifica a mano, uno por uno: los directorios federales están 45-52% equivocados, y nadie los revisa.</p>
+</div>
+
 <h2>Cómo citar</h2>
 <p>Formato sugerido: <em>"Registro Médico PR (registromedicopr.com), julio 2026, con data del registro federal NPPES/CMS y HRSA."</em> Cada número de esta página se puede respaldar con su fuente primaria pública. Si necesitas la metodología completa o el corte de un municipio específico, escríbenos.</p>
 
