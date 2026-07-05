@@ -4118,7 +4118,13 @@ async function handleRegistroPorque(req: any, res: any) {
 
 <p><i>Este informe se publica desde Cabo Rojo, Puerto Rico. Lo vimos primero en el oeste, donde vivimos — pero la cuenta da igual de fea en casi toda la isla. La data completa, municipio por municipio, vive en registromedicopr.com y se actualiza contra el registro federal. Si te sirve, úsala. Es tuya.</i></p>
 `
-  const body = `<p class="text-xs text-slate-400 mb-4">Artículo · registromedicopr.com · publicado julio 2026 · <a href="/comparte" class="text-teal-600">datos citables</a> · <a href="/registro/estado" class="text-teal-600">estado de salud</a></p>${articleHtml}
+  const body = `<p class="text-xs text-slate-400 mb-4">Artículo · registromedicopr.com · publicado julio 2026 · <a href="/comparte" class="text-teal-600">datos citables</a> · <a href="/registro/estado" class="text-teal-600">estado de salud</a></p>
+<div class="not-prose my-5 bg-slate-50 border border-slate-200 rounded-xl p-4">
+  <p class="text-sm font-bold text-slate-800 mb-2">🎧 Escúchalo: "La verdad tras los médicos fantasmas" (~10 min)</p>
+  <audio controls preload="none" class="w-full"><source src="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/porque-medicos-fantasmas.m4a" type="audio/mp4">Tu navegador no soporta audio.</audio>
+  <p class="text-xs text-slate-400 mt-1">Un análisis en audio de este artículo. Léelo abajo o escúchalo mientras manejas.</p>
+</div>
+${articleHtml}
 <div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
   <p class="text-lg font-bold mb-1">¿Buscas un especialista cerca?</p>
   <p class="text-sm text-teal-100 mb-4">El registro te dice quién hay y dónde, verificado contra el gobierno federal.</p>
@@ -4147,7 +4153,13 @@ async function handleRegistroPorque(req: any, res: any) {
   res.status(200).send(layout({
     title: '¿Por qué se van los médicos de Puerto Rico? — la matemática, con fuente',
     description: 'El éxodo médico de PR explicado en cristiano y verificado: la fórmula de Medicare, el peaje de Medicare Advantage, la mesada de Medicaid, y qué se puede hacer hoy.',
-    slug: 'porque', bodyHtml: body, jsonLd: [articleLd, faqLd] as any, ogImage: '/og/desiertos.png',
+    slug: 'porque', bodyHtml: body, jsonLd: [articleLd, faqLd, {
+      '@context': 'https://schema.org', '@type': 'AudioObject',
+      name: 'La verdad tras los médicos fantasmas',
+      description: 'Análisis en audio (es-419) sobre por qué se van los médicos de Puerto Rico: la fórmula de Medicare, el peaje de los planes, la mesada de Medicaid y el médico fantasma.',
+      contentUrl: 'https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/porque-medicos-fantasmas.m4a',
+      encodingFormat: 'audio/mp4', inLanguage: 'es', uploadDate: '2026-07-05',
+    }] as any, ogImage: '/og/desiertos.png',
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
   }))
 }
