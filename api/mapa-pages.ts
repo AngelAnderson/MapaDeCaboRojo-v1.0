@@ -4071,6 +4071,17 @@ async function handleSinFiltros(req: any, res: any) {
   } catch (_) { /* fallback stands */ }
   const n = (x: number) => x.toLocaleString('en-US')
 
+  // Demanda del Veci en vivo — el log ES un récord. Fallback verificado 2026-07-05 (90d).
+  let dem = { total90: 228, unmet90: 78 }
+  try {
+    const since = new Date(Date.now() - 90 * 24 * 3600 * 1000).toISOString()
+    const [tot, unm] = await Promise.all([
+      supabase.from('demand_signals_real').select('id', { count: 'exact', head: true }).gte('created_at', since),
+      supabase.from('demand_signals_real').select('id', { count: 'exact', head: true }).gte('created_at', since).eq('had_results', false),
+    ])
+    if (typeof tot.count === 'number' && tot.count > 0) dem = { total90: tot.count, unmet90: unm.count || 0 }
+  } catch (_) { /* fallback stands */ }
+
   type Record = { titulo: string; brecha: string; fuente: string; verUrl: string; verificaUrl: string; verificaText: string; tag: string }
   const records: Record[] = [
     {
@@ -4130,7 +4141,41 @@ async function handleSinFiltros(req: any, res: any) {
 <p class="text-slate-600 -mt-1">Cada uno es un dato verificado contra un registro federal o público. La brecha habla sola.</p>
 ${recordCards}
 
-<p class="not-prose text-sm text-slate-500 mt-5">Más récords en camino: agua y servicios en el oeste, promesas vs. entregas, y lo que Puerto Rico le pregunta al Veci que nadie sirve. <a href="/agua" class="text-teal-700 font-semibold">Ver /agua</a>.</p>
+<h2 id="mas-records">Más récords del substrato</h2>
+<p class="text-slate-600 -mt-1">La misma disciplina, otras esquinas del pueblo. Cada uno vivo y verificado.</p>
+
+<div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-4">
+  <span class="text-xs font-bold text-teal-700 uppercase tracking-wide">Recuperación</span>
+  <h3 class="text-xl font-black text-slate-900 mt-1" style="font-family:'Fraunces',Georgia,serif">Los fondos de recuperación, pueblo por pueblo</h3>
+  <blockquote class="mt-2 text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3">Casi $8,755 millones de fondos federales de recuperación se obligaron a los 78 municipios de Puerto Rico. Aquí está quién recibió cuánto, municipio por municipio. La pregunta que sigue: ¿en qué se convirtió?</blockquote>
+  <p class="text-xs text-slate-500 mt-3"><strong>Fuente:</strong> OpenFEMA (Public Assistance), obligaciones por municipio, julio 2026.</p>
+  <div class="mt-3 flex flex-wrap gap-2 text-sm">
+    <a href="/recuperacion" data-prsf="record" data-rec="recuperacion" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">Ver el récord completo</a>
+    <a href="https://www.fema.gov/openfema-data-page/public-assistance-funded-projects-summaries-v1" target="_blank" rel="noopener" data-prsf="verify" data-rec="recuperacion" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Verifícalo tú mismo: OpenFEMA ↗</a>
+  </div>
+</div>
+
+<div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-4">
+  <span class="text-xs font-bold text-teal-700 uppercase tracking-wide">Promesas</span>
+  <h3 class="text-xl font-black text-slate-900 mt-1" style="font-family:'Fraunces',Georgia,serif">Las promesas, con el recibo</h3>
+  <blockquote class="mt-2 text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3">Las promesas públicas del alcalde de Cabo Rojo, rastreadas con la cita textual y el minuto exacto del video donde se hicieron. Cuando una vence sin cumplirse, se anota. Sin memoria selectiva.</blockquote>
+  <p class="text-xs text-slate-500 mt-3"><strong>Fuente:</strong> grabaciones públicas del municipio, con timestamp verificado.</p>
+  <div class="mt-3 flex flex-wrap gap-2 text-sm">
+    <a href="/quien-responde" data-prsf="record" data-rec="promesas" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">Ver el récord completo</a>
+  </div>
+</div>
+
+<div class="not-prose border border-teal-200 bg-teal-50/40 rounded-2xl p-5 mt-4">
+  <span class="text-xs font-bold text-teal-700 uppercase tracking-wide">Demanda · en vivo</span>
+  <h3 class="text-xl font-black text-slate-900 mt-1" style="font-family:'Fraunces',Georgia,serif">Lo que Puerto Rico está preguntando</h3>
+  <blockquote class="mt-2 text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3">${n(dem.total90)} búsquedas reales al vecino digital *7711 en los últimos 90 días. ${n(dem.unmet90)} se quedaron sin respuesta directa: demanda que existe y nadie está sirviendo todavía. Este récord se actualiza solo. El log de lo que el pueblo busca es, también, un dato que nadie más tiene.</blockquote>
+  <p class="text-xs text-slate-500 mt-3"><strong>Fuente:</strong> El Veci (*7711), señales de demanda reales, sin números de prueba. En vivo.</p>
+  <div class="mt-3 flex flex-wrap gap-2 text-sm">
+    <a href="/demanda" data-prsf="record" data-rec="demanda" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">Ver lo que busca PR</a>
+  </div>
+</div>
+
+<p class="not-prose text-sm text-slate-500 mt-5">En camino: agua, luz y basura del oeste (Proyecto Esencia), economía informal, y el cruce de todo. <a href="/agua" class="text-teal-700 font-semibold">Ver /agua</a>.</p>
 
 <h2 id="como">Cómo se verifica</h2>
 <p>Cada número sale de una fuente federal o pública, cruzada a nivel de municipio, y revisada uno por uno. Sin robots que copian data de Google. Sin AI inventando cifras. Sin "aproximaciones". Cada dato lleva su fecha; si tiene más de lo que debe, se vuelve a correr. <strong>¿Ves un error? Escríbenos y se corrige, en público.</strong> Ese es el trato.</p>
