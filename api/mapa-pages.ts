@@ -3660,6 +3660,45 @@ async function handleRegistroDesiertos(req: any, res: any) {
     <td class="py-2 px-3 text-center text-slate-500">${g.metro} en metro</td>
   </tr>`
 
+  // --- Densidad per cápita (el blindaje contra "es que allá vive menos gente") ---
+  // Live desde la vista v_registro_ratio (NPPES × Censo 2020). Fallback a los números verificados 2026-07.
+  const REG_LABEL: Record<string, string> = { metro: 'Metro (San Juan)', este: 'Este', sur: 'Sur', oeste: 'Oeste', norte: 'Norte', centro: 'Centro (la montaña)' }
+  type RatioRow = { region: string; poblacion: number; especialistas: number; por_10k_hab: number; veces_menos_que_metro: number }
+  let ratio: RatioRow[] = [
+    { region: 'metro', poblacion: 1049390, especialistas: 3589, por_10k_hab: 34.2, veces_menos_que_metro: 1.0 },
+    { region: 'este', poblacion: 264537, especialistas: 821, por_10k_hab: 31.0, veces_menos_que_metro: 1.1 },
+    { region: 'sur', poblacion: 453152, especialistas: 662, por_10k_hab: 14.6, veces_menos_que_metro: 2.3 },
+    { region: 'oeste', poblacion: 519557, especialistas: 747, por_10k_hab: 14.4, veces_menos_que_metro: 2.4 },
+    { region: 'norte', poblacion: 385700, especialistas: 412, por_10k_hab: 10.7, veces_menos_que_metro: 3.2 },
+    { region: 'centro', poblacion: 650445, especialistas: 81, por_10k_hab: 1.2, veces_menos_que_metro: 28.5 },
+  ]
+  try {
+    const { data: rr } = await supabase.from('v_registro_ratio').select('*')
+    if (rr && rr.length) ratio = rr.map((x: any) => ({
+      region: x.region, poblacion: Number(x.poblacion), especialistas: Number(x.especialistas),
+      por_10k_hab: Number(x.por_10k_hab), veces_menos_que_metro: Number(x.veces_menos_que_metro),
+    }))
+  } catch (_) { /* keep fallback */ }
+  ratio.sort((a, b) => b.por_10k_hab - a.por_10k_hab)
+  const maxRatio = Math.max(...ratio.map(r => r.por_10k_hab)) || 34.2
+  const centro = ratio.find(r => r.region === 'centro')
+  const ratioColor = (v: number) => v >= 20 ? { bar: 'bg-emerald-500', txt: 'text-emerald-700' } : v >= 8 ? { bar: 'bg-amber-500', txt: 'text-amber-700' } : { bar: 'bg-red-600', txt: 'text-red-700' }
+  const ratioRows = ratio.map(r => {
+    const c = ratioColor(r.por_10k_hab)
+    const w = Math.max(2, Math.round(r.por_10k_hab / maxRatio * 100))
+    return `<div class="flex items-center gap-3 py-2">
+      <div class="w-28 sm:w-36 shrink-0 text-sm font-semibold text-slate-800">${REG_LABEL[r.region] || escapeHtml(r.region)}</div>
+      <div class="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden"><div class="${c.bar} h-6 rounded-full" style="width:${w}%"></div></div>
+      <div class="w-36 sm:w-44 shrink-0 text-right text-sm"><span class="font-black ${c.txt}">${r.por_10k_hab.toFixed(1)}</span> <span class="text-slate-400">/10k</span>${r.region !== 'metro' ? ` · <span class="text-slate-500">${r.veces_menos_que_metro.toFixed(1)}× menos</span>` : ''}</div>
+    </div>`
+  }).join('')
+  const ratioSection = `
+<h2>La densidad: especialistas por cada 10,000 habitantes</h2>
+<p class="text-slate-600 -mt-2">Contar cabezas no basta — hay que cruzarlo con cuánta gente vive en cada región. Aquí está el número que desarma el "es que allá vive menos gente": el <strong>Centro es la segunda región más poblada de Puerto Rico</strong> (${centro ? centro.poblacion.toLocaleString('en-US') : '650,445'} habitantes, más que el Oeste, el Sur, el Norte y el Este) — y tiene la <strong>menor</strong> densidad de médicos de toda la isla.</p>
+<div class="not-prose mt-4 bg-white border border-slate-200 rounded-xl p-4 sm:p-5">${ratioRows}</div>
+<p class="not-prose mt-3 text-center text-sm text-slate-500">Un vecino del metro tiene <strong class="text-red-700">${centro ? centro.veces_menos_que_metro.toFixed(0) : '28'}× más acceso</strong> a un especialista, por persona, que uno de la montaña. Fuente: NPPES/CMS (proveedores) × Censo 2020 (población).</p>
+`
+
   const body = `
 <h1>Los desiertos médicos de Puerto Rico</h1>
 <p class="text-lg text-slate-600 mt-3">Hay especialidades médicas que, según el registro federal, <strong>no tienen ni un solo proveedor</strong> en regiones enteras del país. No es opinión. Es el dato oficial — el mismo que usan Medicare y los planes médicos — puesto claro, por primera vez, región por región.</p>
@@ -3669,7 +3708,7 @@ async function handleRegistroDesiertos(req: any, res: any) {
   <span class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 font-semibold px-3 py-1.5 rounded-full"><i class="fa-solid fa-circle-exclamation"></i> ${nearDeserts.length} casi-desiertos (1-2)</span>
   <span class="inline-flex items-center gap-2 bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full"><i class="fa-solid fa-shield-halved"></i> Fuente federal NPPES/CMS</span>
 </div>
-
+${ratioSection}
 <h2>Cuántas especialidades faltan por completo, por región</h2>
 <p class="text-slate-600 -mt-2">De las ${REGISTRY_SPECS.length} especialidades del registro, cuántas tienen <strong>cero</strong> proveedores en cada región. El área metro concentra casi todo — por eso no aparece aquí: es la vara contra la que se mide el resto.</p>
 <div class="not-prose grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4">${scoreCards}</div>
