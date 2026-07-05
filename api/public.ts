@@ -536,6 +536,7 @@ function handleLlmsSinFiltros(req: any, res: any) {
 - Lo que Puerto Rico le pregunta al Veci (demanda real): https://puertoricosinfiltros.com/demanda
 - El historial de promesas del alcalde de Cabo Rojo (con video al minuto): https://puertoricosinfiltros.com/historial
 - Lo que ni se mide (los huecos donde PR es invisible en su data): https://puertoricosinfiltros.com/no-se-mide
+- El proyecto Esencia en Cabo Rojo — línea de tiempo pública con fuente (CPI, Senado, protestas): https://puertoricosinfiltros.com/esencia
 
 ## Los Expedientes (récord público de funcionarios, neutral y citable)
 - Alcalde de Cabo Rojo (Jorge Morales Wiscovitch): https://puertoricosinfiltros.com/expediente/alcalde-cabo-rojo
