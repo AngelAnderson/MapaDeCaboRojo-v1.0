@@ -4159,6 +4159,7 @@ async function handleSinFiltros(req: any, res: any) {
     <a href="/luz" data-prsf="record" data-rec="idx-luz" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Luz</a>
     <a href="/basura" data-prsf="record" data-rec="idx-basura" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Basura</a>
     <a href="/telemedicina" data-prsf="record" data-rec="idx-telemedicina" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Telemedicina</a>
+    <a href="/no-se-mide" data-prsf="record" data-rec="idx-no-se-mide" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Lo que ni se mide</a>
   </div>
 </div>
 
@@ -4250,7 +4251,7 @@ ${recordCards}
   </div>
 </div>
 
-<p class="not-prose text-sm text-slate-500 mt-5">En camino, cuando haya fuente verificable: economía informal, la frecuencia de apagones (SAIDI del EIA), y la enfermedad por pueblo (PR no aparece en el mapa federal de salud — un récord en sí mismo). No se publica nada sin data detrás.</p>
+<p class="not-prose text-sm text-slate-500 mt-5">¿Y lo que todavía no se puede medir? Eso también es un récord: <a href="/no-se-mide" class="text-teal-700 font-semibold">Lo que ni se mide →</a> — los huecos donde Puerto Rico es invisible en su propia data. No se publica nada sin data detrás.</p>
 
 <h2 id="como">Cómo se verifica</h2>
 <p>Cada número sale de una fuente federal o pública, cruzada a nivel de municipio, y revisada uno por uno. Sin robots que copian data de Google. Sin AI inventando cifras. Sin "aproximaciones". Cada dato lleva su fecha; si tiene más de lo que debe, se vuelve a correr. <strong>¿Ves un error? Escríbenos y se corrige, en público.</strong> Ese es el trato.</p>
@@ -4440,6 +4441,51 @@ async function handleDatoRecord(req: any, res: any) {
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
   res.status(200).send(layout({
     title: `${cfg.h1}`, description: cfg.hero, slug: page, bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
+// /no-se-mide — el meta-récord: los huecos donde PR es invisible en su propia data. Nombrar el hueco es el récord.
+function handleNoSeMide(req: any, res: any) {
+  const huecos: Array<{ tag: string; titulo: string; falta: string; importa: string; estado: string; verificalo?: string }> = [
+    { tag: 'Salud', titulo: 'La enfermedad por pueblo', falta: 'El CDC modela diabetes, depresión, asma y presión alta a nivel de sector censal para los 50 estados y DC — y excluye a Puerto Rico. El único dato de enfermedad por municipio para PR es diabetes (modelado, Diabetes Atlas).', importa: 'No se puede cruzar "dónde más se enferman" contra "dónde no hay médicos" si la enfermedad no se mide. PR aparece en blanco en el mapa nacional de salud por pueblo.', estado: 'Confirmado: PLACES no tiene filas de PR.', verificalo: 'https://data.cdc.gov/500-Cities-Places/PLACES-Local-Data-for-Better-Health-Place-Data-202/eav7-hnsx' },
+    { tag: 'Salud mental', titulo: 'Depresión y salud mental por municipio', falta: 'No hay una fuente pública que mida prevalencia de depresión o angustia mental por municipio en PR. El BRFSS encuesta a nivel de toda la isla, no de pueblo.', importa: '36 municipios no tienen ni un psiquiatra. Sin medir la demanda de salud mental por pueblo, la escasez se ve solo por el lado de la oferta.', estado: 'Sin fuente municipio-nivel.' },
+    { tag: 'Luz', titulo: 'Cuántas horas se va la luz, por pueblo', falta: 'No hay data pública a nivel de municipio de la frecuencia y duración de los apagones (las métricas SAIDI/SAIFI de LUMA por pueblo).', importa: 'Sabemos que PR paga la luz casi al doble que EEUU, pero no cuánto la recibe cada pueblo. La confiabilidad se siente; no se publica.', estado: 'Requiere data del EIA-861 / LUMA por municipio.' },
+    { tag: 'Basura', titulo: 'Cuántos años le quedan a cada vertedero', falta: 'La capacidad restante por vertedero (data de la Autoridad de Desperdicios Sólidos) no está en formato primario descargable. Solo el "beyond capacity" cualitativo de la EPA.', importa: 'La mayoría de los ~29 vertederos ya está sobre capacidad. Sin los años restantes por sitio, no se puede planificar el cierre ni el reemplazo.', estado: 'Requiere data primaria de la ADS.' },
+    { tag: 'Economía', titulo: 'La economía informal', falta: 'La magnitud de la economía de "cuenta propia" — construcción, repostería casera, servicios sin factura — es invisible al sistema contributivo y no se mide por municipio.', importa: 'Sostiene el consumo local pero no aparece en ningún número oficial. Se le apostó y a la vez se ignora.', estado: 'Sin fuente directa.' },
+    { tag: 'Movimiento', titulo: 'El gasto y el movimiento real', falta: 'No hay data pública de movimiento inter-municipal ni de gasto real por municipio. Cabo Rojo tiene 47,158 residentes pero un "pull" regional de ~75,000 personas que consumen en su territorio.', importa: 'La planificación municipal se hace a ciegas, con benchmarks de EE.UU. ($75k de ingreso) en vez del real ($26,408). Las inversiones fallan por falta de contexto local.', estado: 'Requiere data de movilidad / gasto agregado.' },
+  ]
+  const cards = huecos.map(h => `
+    <div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-4">
+      <span class="text-xs font-bold text-teal-700 uppercase tracking-wide">${escapeHtml(h.tag)}</span>
+      <h3 class="text-xl font-black text-slate-900 mt-1" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(h.titulo)}</h3>
+      <p class="text-sm text-slate-700 mt-2"><strong>Qué falta:</strong> ${escapeHtml(h.falta)}</p>
+      <p class="text-sm text-slate-600 mt-2"><strong>Por qué importa:</strong> ${escapeHtml(h.importa)}</p>
+      <p class="text-xs text-slate-400 mt-2">${escapeHtml(h.estado)}${h.verificalo ? ` · <a href="${escapeHtml(h.verificalo)}" target="_blank" rel="noopener" class="text-teal-700 underline">verifícalo ↗</a>` : ''}</p>
+    </div>`).join('')
+  const body = `
+<h1>Lo que ni se mide</h1>
+<p class="text-lg text-slate-600 mt-2">Todos los récords de este sitio nacen de un dato. Esta página es lo contrario: los <strong>huecos</strong> donde Puerto Rico es invisible en su propia data — no porque el problema no exista, sino porque nadie lo cuenta. <strong>Lo que ni se mide no se puede arreglar.</strong> Nombrar el hueco es el primer paso.</p>
+${cards}
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
+  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Un pueblo que no se mide no se puede defender.</p>
+  <p class="mt-2 text-sm text-slate-600 italic">¿Conoces una fuente que llene uno de estos huecos? Escríbenos y la verificamos.</p>
+</div>
+<p class="text-sm text-slate-500 mt-6">Cada hueco se cierra en cuanto aparezca una fuente primaria verificable por municipio. Algunos ya tienen la tubería montada esperando la data. Julio 2026.</p>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Article',
+    headline: 'Lo que ni se mide — los huecos donde Puerto Rico es invisible en su propia data',
+    author: { '@type': 'Person', name: 'Angel Anderson' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    inLanguage: 'es', url: 'https://puertoricosinfiltros.com/no-se-mide',
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'Lo que ni se mide — los huecos donde Puerto Rico es invisible',
+    description: 'Los huecos donde PR es invisible en su propia data: la enfermedad por pueblo, los apagones, la economía informal. Lo que ni se mide no se puede arreglar.',
+    slug: 'no-se-mide', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
@@ -6523,6 +6569,7 @@ export default async function handler(req: any, res: any) {
     case 'prediccion': return handlePrediccion(req, res)
     case 'historial': return await handleHistorial(req, res)
     case 'telemedicina': return await handleTelemedicina(req, res)
+    case 'no-se-mide': return handleNoSeMide(req, res)
     case 'registro-hub': return await handleRegistroHub(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)
