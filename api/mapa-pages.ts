@@ -3821,28 +3821,41 @@ async function handleComparte(req: any, res: any) {
   } catch (_) { /* fallback */ }
   const n = (x: number) => x.toLocaleString('en-US')
 
-  const FACTS: Array<{ q: string; a: string; src: string }> = [
-    { q: '¿Cuántos municipios de Puerto Rico están declarados en escasez de médicos por el gobierno federal?', a: `${g.conHpsa} de los 76 municipios de Puerto Rico (sin Vieques y Culebra) tienen una designación federal de escasez de profesionales de la salud (HPSA) activa, de cuidado primario o salud mental.`, src: 'Archivos oficiales de HRSA (data.hrsa.gov), designaciones activas, julio 2026.' },
-    { q: '¿Cuánto dinero federal para atraer médicos se está quedando sin reclamar en Puerto Rico?', a: `${g.cupon} municipios de PR tienen una designación federal de salud mental activa (que destraba repago de préstamos del NHSC y bono de Medicare) y a la vez CERO psiquiatras ejerciendo. Son ${n(g.cuponPob)} personas con el dinero aprobado y sin médico que lo cobre.`, src: 'Cruce NPPES/CMS × archivos HRSA, verificado municipio por municipio en registromedicopr.com, julio 2026.' },
-    { q: '¿Cuántos pueblos de Puerto Rico no tienen ni un solo especialista médico?', a: `${g.cero} municipios de PR no tienen ni un especialista médico de ninguna clase con práctica declarada: Maricao, Las Marías y Florida.`, src: 'Registro federal NPPES/CMS por municipio, julio 2026.' },
-    { q: '¿Cuántos puertorriqueños viven en un municipio sin psiquiatra?', a: `${g.sinPsiq} municipios de PR no tienen ni un psiquiatra con práctica declarada. Son ${n(g.sinPsiqPob)} personas, cerca de 1 de cada 3 puertorriqueños.`, src: 'Registro federal NPPES/CMS, julio 2026.' },
-    { q: '¿Qué tan concentrados están los especialistas médicos en San Juan?', a: 'San Juan concentra alrededor del 35% de todos los especialistas médicos de Puerto Rico con cerca del 10% de la población de la isla.', src: 'NPPES/CMS × Censo 2020, registromedicopr.com, julio 2026.' },
-    { q: '¿Cuál es la desigualdad de acceso médico más extrema en Puerto Rico?', a: `${g.bajo5} de los 76 municipios (${n(g.bajo5Pob)} personas, casi 1 de cada 3) viven con menos de 5 especialistas por cada 10,000 habitantes, mientras San Juan tiene cerca de 69. Loíza, a media hora de San Juan, tiene 86 veces menos especialistas por persona.`, src: 'NPPES/CMS × Censo 2020, municipio por municipio, julio 2026.' },
-    { q: '¿Cuántos médicos ha perdido Puerto Rico?', a: 'Puerto Rico pasó de unos 14,500 médicos en 2009 a cerca de 9,000 en 2020. Se proyecta que el 55% de los médicos activos se habrá retirado para el 2030, sin sustitutos.', src: 'PMC / academia (2023); El Vocero (2025); Medicina y Salud Pública (2024).' },
-    { q: '¿Por qué Medicare le paga menos a los médicos en Puerto Rico?', a: 'Los pagos de Medicare Advantage en Puerto Rico están alrededor de 41% por debajo del promedio nacional, porque se calculan sobre el gasto histórico local, deprimido por décadas por índices geográficos que fueron los más bajos de la nación.', src: 'JAMA Health Forum (2022); STAT News (2024).' },
-    { q: '¿Cómo trata Medicaid a Puerto Rico distinto que a un estado?', a: 'El porcentaje de Medicaid que paga el gobierno federal a PR está congelado por estatuto en 55%, cuando por su nivel de pobreza le tocaría 83% como estado. Además tiene un techo de dólares que los estados no tienen. El nivel actual de 76% cae de vuelta a 55% el 30 de septiembre de 2027 sin acción del Congreso.', src: 'MACPAC; Congressional Research Service (IF11012); Ley de Asignaciones Consolidadas de 2023.' },
-    { q: '¿Cuánto ha bajado el pago de Medicare a los médicos con el tiempo?', a: 'Ajustado por inflación, el pago de Medicare al médico bajó 33% entre 2001 y 2025, mientras el costo de operar una práctica subió 59%.', src: 'American Medical Association (2025).' },
-    { q: '¿Qué incentivo federal existe para atraer médicos a los pueblos designados?', a: 'En un municipio con designación HPSA, un clínico en un sitio aprobado por el National Health Service Corps puede recibir repago de préstamos estudiantiles de hasta $75,000 por dos años en cuidado primario y $50,000 en otras disciplinas, más un bono de Medicare.', src: 'National Health Service Corps (HRSA), año fiscal 2026.' },
-    { q: '¿Cuál es el municipio más pobre de Puerto Rico y cómo está de médicos?', a: 'Guánica es el municipio más pobre de PR (63.6% bajo el nivel de pobreza). Tiene una designación federal de salud mental con el puntaje máximo posible y cero psiquiatras.', src: 'ACS 5-año (censo) × NPPES/CMS × HRSA, julio 2026.' },
+  const FACTS: Array<{ q: string; a: string; srcText: string; srcUrl: string; tag?: 'medicos' }> = [
+    { q: '¿Cuántos municipios de Puerto Rico están declarados en escasez de médicos por el gobierno federal?', a: `${g.conHpsa} de los 76 municipios de Puerto Rico (sin Vieques y Culebra) tienen una designación federal de escasez de profesionales de la salud (HPSA) activa, de cuidado primario o salud mental.`, srcText: 'Archivos oficiales de HRSA (Health Resources & Services Administration), designaciones activas, julio 2026.', srcUrl: 'https://data.hrsa.gov/tools/shortage-area/hpsa-find' },
+    { q: '¿Cuánto dinero federal para atraer médicos se está quedando sin reclamar en Puerto Rico?', a: `${g.cupon} municipios de PR tienen una designación federal de salud mental activa (que destraba repago de préstamos del NHSC y bono de Medicare) y a la vez CERO psiquiatras ejerciendo. Son ${n(g.cuponPob)} personas con el dinero aprobado y sin médico que lo cobre.`, srcText: 'Cruce NPPES/CMS × archivos HRSA, verificado municipio por municipio (ver el detalle).', srcUrl: 'https://registromedicopr.com/registro/estado' },
+    { q: '¿Cuántos pueblos de Puerto Rico no tienen ni un solo especialista médico?', a: `${g.cero} municipios de PR no tienen ni un especialista médico de ninguna clase con práctica declarada: Maricao, Las Marías y Florida.`, srcText: 'Registro federal NPPES/CMS por municipio (ver el mapa).', srcUrl: 'https://registromedicopr.com/registro/mapa' },
+    { q: '¿Cuántos puertorriqueños viven en un municipio sin psiquiatra?', a: `${g.sinPsiq} municipios de PR no tienen ni un psiquiatra con práctica declarada. Son ${n(g.sinPsiqPob)} personas, cerca de 1 de cada 3 puertorriqueños.`, srcText: 'Registro federal NPPES/CMS (ver el estado, pueblo por pueblo).', srcUrl: 'https://registromedicopr.com/registro/estado' },
+    { q: '¿Qué tan concentrados están los especialistas médicos en San Juan?', a: 'San Juan concentra alrededor del 35% de todos los especialistas médicos de Puerto Rico con cerca del 10% de la población de la isla.', srcText: 'NPPES/CMS × Censo 2020 (ver el mapa).', srcUrl: 'https://registromedicopr.com/registro/mapa' },
+    { q: '¿Cuál es la desigualdad de acceso médico más extrema en Puerto Rico?', a: `${g.bajo5} de los 76 municipios (${n(g.bajo5Pob)} personas, casi 1 de cada 3) viven con menos de 5 especialistas por cada 10,000 habitantes, mientras San Juan tiene cerca de 69. Loíza, a media hora de San Juan, tiene 86 veces menos especialistas por persona.`, srcText: 'NPPES/CMS × Censo 2020, municipio por municipio (ver los desiertos).', srcUrl: 'https://registromedicopr.com/registro/desiertos' },
+    { q: '¿En cuántos pueblos un psiquiatra tendría cero competencia y el gobierno le pagaría los préstamos?', a: 'Hay 26 municipios de PR con una designación federal de salud mental de puntaje casi máximo (20 o más de 25) y CERO psiquiatras. Un psiquiatra que ejerza en uno de esos pueblos, en un sitio aprobado por el NHSC, puede recibir hasta $50,000 de repago de préstamos por dos años y no tiene competencia local. Los de puntaje más alto: Peñuelas, Guayanilla, Guánica y Jayuya.', srcText: 'Cruce NPPES/CMS × HRSA × NHSC, verificado (ver el estado).', srcUrl: 'https://registromedicopr.com/registro/estado', tag: 'medicos' },
+    { q: '¿En cuántos pueblos un médico primario tendría oportunidad con incentivo federal?', a: 'Hay 10 municipios de PR con una designación federal de cuidado primario activa y 5 o menos especialistas. Un médico primario en un sitio aprobado dentro de esos pueblos puede recibir hasta $75,000 de repago de préstamos por dos años, más bono de Medicare.', srcText: 'Cruce NPPES/CMS × HRSA × NHSC, verificado (ver el estado).', srcUrl: 'https://registromedicopr.com/registro/estado', tag: 'medicos' },
+    { q: '¿Cuántos médicos ha perdido Puerto Rico?', a: 'Puerto Rico pasó de unos 14,500 médicos en 2009 a cerca de 9,000 en 2020. Se proyecta que el 55% de los médicos activos se habrá retirado para el 2030, sin sustitutos.', srcText: 'PMC / academia (2023); El Vocero (2025).', srcUrl: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC10170400/' },
+    { q: '¿Por qué Medicare le paga menos a los médicos en Puerto Rico?', a: 'Los pagos de Medicare Advantage en Puerto Rico están alrededor de 41% por debajo del promedio nacional, porque se calculan sobre el gasto histórico local, deprimido por décadas por índices geográficos que fueron los más bajos de la nación.', srcText: 'JAMA Health Forum (2022).', srcUrl: 'https://jamanetwork.com/journals/jama-health-forum/fullarticle/2796409' },
+    { q: '¿Cómo trata Medicaid a Puerto Rico distinto que a un estado?', a: 'El porcentaje de Medicaid que paga el gobierno federal a PR está congelado por estatuto en 55%, cuando por su nivel de pobreza le tocaría 83% como estado. Además tiene un techo de dólares que los estados no tienen. El nivel actual de 76% cae de vuelta a 55% el 30 de septiembre de 2027 sin acción del Congreso.', srcText: 'Congressional Research Service (IF11012); MACPAC.', srcUrl: 'https://www.congress.gov/crs-product/IF11012' },
+    { q: '¿Cuánto ha bajado el pago de Medicare a los médicos con el tiempo?', a: 'Ajustado por inflación, el pago de Medicare al médico bajó 33% entre 2001 y 2025, mientras el costo de operar una práctica subió 59%.', srcText: 'American Medical Association (2025).', srcUrl: 'https://www.ama-assn.org/practice-management/medicare-medicaid/medicare-physician-pay-has-plummeted-2001-find-out-why' },
+    { q: '¿Qué incentivo federal existe para atraer médicos a los pueblos designados?', a: 'En un municipio con designación HPSA, un clínico en un sitio aprobado por el National Health Service Corps puede recibir repago de préstamos estudiantiles de hasta $75,000 por dos años en cuidado primario y $50,000 en otras disciplinas, más un bono de Medicare.', srcText: 'National Health Service Corps (HRSA), año fiscal 2026.', srcUrl: 'https://nhsc.hrsa.gov/loan-repayment/nhsc-loan-repayment-program' },
+    { q: '¿Cuál es el municipio más pobre de Puerto Rico y cómo está de médicos?', a: 'Guánica es el municipio más pobre de PR (63.6% bajo el nivel de pobreza). Tiene una designación federal de salud mental con el puntaje máximo posible y cero psiquiatras.', srcText: 'ACS 5-año (censo) × NPPES/CMS × HRSA (ver el estado).', srcUrl: 'https://registromedicopr.com/registro/estado' },
   ]
 
-  const factCards = FACTS.map((f, i) => `
-    <div class="not-prose border border-slate-200 rounded-xl p-4 mt-4 bg-white">
-      <p class="text-xs font-bold text-teal-700 uppercase tracking-wide">Dato ${i + 1}</p>
+  const heroClaim = `El dinero federal para traer médicos a Puerto Rico ya está aprobado y no se cobra. ${g.conHpsa} de 76 municipios tienen designación federal de escasez activa; ${g.cupon} tienen el dinero de salud mental aprobado y cero psiquiatras, para ${n(g.cuponPob)} personas. Verificado pueblo por pueblo contra el registro federal. Fuente: registromedicopr.com/registro/estado`
+
+  const factCards = FACTS.map((f, i) => {
+    const isExt = f.srcUrl.startsWith('http') && !/registromedicopr\.com/.test(f.srcUrl)
+    const copyText = `${f.a} Fuente: ${f.srcText} Vía registromedicopr.com/comparte`
+    const box = f.tag === 'medicos' ? 'border-teal-300 bg-teal-50/40' : 'border-slate-200 bg-white'
+    const label = f.tag === 'medicos' ? 'Para médicos' : 'Dato'
+    return `
+    <div class="not-prose border ${box} rounded-xl p-4 mt-4">
+      <div class="flex items-start justify-between gap-2">
+        <p class="text-xs font-bold text-teal-700 uppercase tracking-wide">${label} ${i + 1}</p>
+        <button type="button" class="copy-btn shrink-0 text-xs font-semibold text-teal-700 border border-teal-300 rounded-full px-3 py-1 hover:bg-teal-50" data-copy="${escapeHtml(copyText)}">📋 Copiar</button>
+      </div>
       <p class="text-sm font-semibold text-slate-500 mt-1">${escapeHtml(f.q)}</p>
       <blockquote class="mt-2 text-slate-900 leading-relaxed border-l-4 border-teal-500 pl-3">${escapeHtml(f.a)}</blockquote>
-      <p class="text-xs text-slate-500 mt-2"><strong>Fuente:</strong> ${escapeHtml(f.src)}</p>
-    </div>`).join('')
+      <p class="text-xs text-slate-500 mt-2"><strong>Fuente:</strong> <a href="${escapeHtml(f.srcUrl)}"${isExt ? ' target="_blank" rel="noopener"' : ''} class="text-teal-700 underline hover:text-teal-900">${escapeHtml(f.srcText)}</a>${isExt ? ' ↗' : ''}</p>
+    </div>`
+  }).join('')
 
   const body = `
 <h1>Datos citables sobre el acceso médico en Puerto Rico</h1>
@@ -3853,7 +3866,14 @@ async function handleComparte(req: any, res: any) {
   <a href="/registro/mapa" class="inline-flex items-center gap-2 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Abrir el mapa interactivo</a>
 </div>
 
-<h2>Los datos (con fuente)</h2>
+<div class="not-prose mt-6 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular verificado</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">El dinero federal para traer médicos ya está aprobado. Y no se cobra.</p>
+  <p class="text-slate-300 mt-2 text-sm leading-relaxed">${g.conHpsa} de 76 municipios de PR con designación federal de escasez activa. ${g.cupon} con el dinero de salud mental aprobado y cero psiquiatras: ${n(g.cuponPob)} personas. Verificado contra el registro federal, pueblo por pueblo.</p>
+  <button type="button" class="copy-btn mt-3 text-sm font-bold text-slate-900 bg-white rounded-full px-4 py-2 hover:bg-slate-100" data-copy="${escapeHtml(heroClaim)}">📋 Copiar el titular</button>
+</div>
+
+<h2>Los datos (toca "Copiar" en cualquiera)</h2>
 ${factCards}
 
 <h2>Cómo citar</h2>
@@ -3871,10 +3891,23 @@ ${factCards}
 <p>Angel Anderson, registromedicopr.com, desde Cabo Rojo. Contacto: <a href="mailto:angel@angelanderson.com">angel@angelanderson.com</a>. Puedo respaldar cualquier cifra con su fuente, entregar el corte de un municipio, o explicar la metodología. Prefiero texto o correo.</p>
 
 <p class="text-sm text-slate-500 mt-6">Metodología: cruce de tres fuentes federales/públicas a nivel de municipio — NPPES/CMS (proveedores), archivos HRSA (designaciones de escasez), y Censo/ACS (población y pobreza). Verificado uno por uno. Última actualización: julio 2026. ¿Ves un error? Escríbenos y se corrige.</p>
+
+<script>
+(function(){
+  document.querySelectorAll('.copy-btn').forEach(function(b){
+    b.addEventListener('click',function(){
+      var t=b.getAttribute('data-copy')||'';
+      var done=function(){var o=b.textContent;b.textContent='✓ Copiado';b.disabled=true;setTimeout(function(){b.textContent=o;b.disabled=false},1600)};
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done).catch(function(){})}
+      else{var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}document.body.removeChild(ta)}
+    });
+  });
+})();
+</script>
 `
   const faqLd = {
     '@context': 'https://schema.org', '@type': 'FAQPage',
-    mainEntity: FACTS.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: `${f.a} Fuente: ${f.src}` } })),
+    mainEntity: FACTS.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: `${f.a} Fuente: ${f.srcText}` } })),
   }
   const datasetLd = {
     '@context': 'https://schema.org', '@type': 'Dataset',
