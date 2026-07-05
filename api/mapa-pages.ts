@@ -4139,7 +4139,20 @@ async function handleRegistroPorque(req: any, res: any) {
   <p class="text-xs text-slate-400 mt-1">Un análisis en audio de este artículo. Léelo abajo o escúchalo mientras manejas.</p>
 </div>
 ${articleHtml}
-<div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
+<div class="not-prose mt-8 bg-slate-900 text-white rounded-2xl p-6">
+  <p class="text-lg font-bold">📍 ¿Te aviso cuando cambie la salud de tu pueblo?</p>
+  <p class="text-sm text-slate-300 mt-1">Deja tu correo. Te aviso si llega un especialista a tu zona o si sale data nueva. Sin spam, sin cuenta.</p>
+  <form id="av-form" class="mt-3 flex flex-col sm:flex-row gap-2">
+    <input id="av-email" type="email" required placeholder="tu@correo.com" class="flex-1 rounded-lg px-3 py-2 text-slate-900" aria-label="Tu correo" />
+    <button type="submit" class="bg-teal-500 hover:bg-teal-400 text-slate-900 font-bold rounded-lg px-5 py-2">Avísame</button>
+  </form>
+  <p id="av-done" class="text-sm text-teal-300 mt-2 hidden"></p>
+  <p class="text-[11px] text-slate-400 mt-2">Un email solo cuando de verdad te sirve.</p>
+</div>
+<script>
+(function(){var f=document.getElementById('av-form');if(!f)return;f.addEventListener('submit',function(e){e.preventDefault();var em=(document.getElementById('av-email').value||'').trim();if(!/.+@.+\\..+/.test(em)){alert('Escribe un email válido.');return;}var b=f.querySelector('button');b.disabled=true;b.textContent='...';fetch('/api/mapa-pages?page=registro-lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,source:'porque',lang:'es'})}).then(function(r){return r.json()}).then(function(){f.classList.add('hidden');var d=document.getElementById('av-done');d.classList.remove('hidden');d.textContent='✅ Listo. Te aviso cuando haya algo nuevo cerca de los tuyos.';}).catch(function(){b.disabled=false;b.textContent='Avísame';alert('Hubo un error, intenta de nuevo.');});});})();
+</script>
+<div class="not-prose mt-4 bg-teal-700 rounded-2xl p-6 text-center text-white">
   <p class="text-lg font-bold mb-1">¿Buscas un especialista cerca?</p>
   <p class="text-sm text-teal-100 mb-4">El registro te dice quién hay y dónde, verificado contra el gobierno federal.</p>
   <a href="/registro" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50">Ir al registro</a>
@@ -5505,6 +5518,19 @@ async function handleRegistroEstado(req: any, res: any) {
 <p><strong>El piloto:</strong> Maricao + Las Marías, con Hospital General de Castañer como vehículo. Dos pueblos contiguos, cero de todo, designación activa. Un punto satélite inscrito como sitio NHSC convierte el cupón en un médico reclutado. <strong>Los 33 cupones:</strong> cada uno con su centro 330 regional como vehículo natural — data lista para la Oficina de Cuidado Primario del Departamento de Salud, que es quien radica ante HRSA.</p>
 <p class="text-sm text-slate-600">¿Eres médico, psicólogo o residente? En estos pueblos no tienes competencia y el gobierno te paga los préstamos. ¿Alcalde o legislador? El expediente de tu pueblo se arma con esta data. Escríbenos: <a href="mailto:angel@angelanderson.com" class="text-teal-600">angel@angelanderson.com</a>.</p>
 
+<div class="mt-8 bg-slate-900 text-white rounded-2xl p-6">
+  <p class="text-lg font-bold">📍 ¿Te aviso cuando cambie la salud de tu pueblo?</p>
+  <p class="text-sm text-slate-300 mt-1">Deja tu correo. Te aviso si llega un especialista a tu zona o si sale data nueva. Sin spam, sin cuenta.</p>
+  <form id="av-form" class="mt-3 flex flex-col sm:flex-row gap-2">
+    <input id="av-email" type="email" required placeholder="tu@correo.com" class="flex-1 rounded-lg px-3 py-2 text-slate-900" aria-label="Tu correo" />
+    <button type="submit" class="bg-teal-500 hover:bg-teal-400 text-slate-900 font-bold rounded-lg px-5 py-2">Avísame</button>
+  </form>
+  <p id="av-done" class="text-sm text-teal-300 mt-2 hidden"></p>
+  <p class="text-[11px] text-slate-400 mt-2">Un email solo cuando de verdad te sirve.</p>
+</div>
+<script>
+(function(){var f=document.getElementById('av-form');if(!f)return;f.addEventListener('submit',function(e){e.preventDefault();var em=(document.getElementById('av-email').value||'').trim();if(!/.+@.+\\..+/.test(em)){alert('Escribe un email válido.');return;}var b=f.querySelector('button');b.disabled=true;b.textContent='...';fetch('/api/mapa-pages?page=registro-lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,source:'estado',lang:'es'})}).then(function(r){return r.json()}).then(function(){f.classList.add('hidden');var d=document.getElementById('av-done');d.classList.remove('hidden');d.textContent='✅ Listo. Te aviso cuando haya algo nuevo cerca de los tuyos.';}).catch(function(){b.disabled=false;b.textContent='Avísame';alert('Hubo un error, intenta de nuevo.');});});})();
+</script>
 <p class="text-sm text-slate-500 mt-6">Fuente: NPPES/CMS (proveedores) × archivos HRSA (designaciones HPSA) × Censo/ACS (pobreza, edad), cruzados municipio por municipio, julio 2026. <a href="/registro/mapa" class="text-teal-700 font-semibold">Ver el mapa →</a> · <a href="/registro/desiertos" class="text-teal-700 font-semibold">Los desiertos →</a></p>
 `
   const jsonLd = {
