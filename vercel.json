@@ -46,6 +46,7 @@
     { "source": "/registro/mapa", "destination": "/api/mapa-pages?page=registro-mapa" },
     { "source": "/registro/estado", "destination": "/api/mapa-pages?page=registro-estado" },
     { "source": "/comparte", "destination": "/api/mapa-pages?page=comparte" },
+    { "source": "/porque", "destination": "/api/mapa-pages?page=porque" },
     { "source": "/recuperacion", "destination": "/api/mapa-pages?page=recuperacion" },
     { "source": "/sinfiltros/pulso", "destination": "/api/mapa-pages?page=sinfiltros-pulso" },
     { "source": "/luz", "destination": "/api/mapa-pages?page=luz" },

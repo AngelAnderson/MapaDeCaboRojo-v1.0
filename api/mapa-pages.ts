@@ -180,6 +180,7 @@ function layout(opts: {
 <div class="flex items-center gap-3">
 <nav class="hidden md:flex gap-5 text-sm text-slate-600">
 <a href="/registro${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Find a specialist' : 'Buscar especialista'}</a>
+<a href="/porque" class="hover:text-teal-700">¿Por qué se van?</a>
 <a href="/registro#como-se-hizo" class="hover:text-teal-700">${isEn ? 'How it works' : 'Cómo se verifica'}</a>
 </nav>
 <a href="${langHref}" class="text-xs font-bold text-slate-500 hover:text-teal-700 border border-slate-200 rounded-lg px-2.5 py-1.5" aria-label="Language">${isEn ? 'ES' : 'EN'}</a>
@@ -3917,6 +3918,240 @@ async function handleRecuperacion(req: any, res: any) {
   }))
 }
 
+// =============== /porque — ¿Por qué se van los médicos de PR? (artículo canónico) ===============
+async function handleRegistroPorque(req: any, res: any) {
+  const articleHtml = `<h1>¿Por qué se van los médicos de Puerto Rico?</h1>
+
+<h2>El informe en cristiano: la fórmula, el peaje y la mesada</h2>
+
+<p><i>Por Angel Anderson · registromedicopr.com · julio 2026</i></p>
+
+<blockquote style="border-left:3px solid #0d9488;padding-left:10px;color:#334155">Pagamos los mismos impuestos de Medicare que cualquier ciudadano en Florida. Recibimos el nivel de fondos de Medicare más bajo de la nación. Esto no es opinión: cada número de este informe tiene fecha y fuente, y cualquiera puede verificarlos. No es misterio, es matemática de nómina.</blockquote>
+
+<hr>
+
+<h2>El problema, en una página</h2>
+
+<p>En Puerto Rico hay <b>3 municipios donde no queda ni un solo especialista médico de ninguna clase</b>: Maricao, Las Marías y Florida. <b>39 de los 76 municipios</b> — más de un millón de personas, casi 1 de cada 3 — viven con menos de 5 especialistas por cada 10,000 habitantes. San Juan tiene 68.9. <b>36 municipios no tienen ni un psiquiatra</b> (930,159 personas). <i>(Fuente: registro federal NPPES cruzado con el Censo 2020, verificado municipio por municipio en registromedicopr.com, julio 2026.)</i></p>
+
+<p>¿Cómo llegamos aquí? En 2009, Puerto Rico tenía <b>14,500 médicos</b>. Para 2020 quedaban <b>9,000</b>. Después de María, perdimos ~15% del personal médico en un solo año. Y lo que viene es peor: un estudio de la firma FARO para la Asociación de Industriales Farmacéuticos proyecta que <b>el 55% de los médicos activos se habrá retirado para el 2030, sin sustitutos.</b> Un ejemplo con números: hoy hay unos 84 endocrinólogos activos; para 2030 harían falta 379 — cuatro veces y media más de los que hay. <i>(FARO/PIA vía Univision y Medicina y Salud Pública, 2024-2025.)</i> Y no es que quieran ser ricos. Es que aquí <b>la hora del médico vale menos cada año</b> mientras la renta, la nómina y el seguro suben.</p>
+
+<p><b>Esto es lo que queda hoy, para 3.2 millones de personas.</b> No es proyección: es el conteo verificado contra el registro federal, julio 2026.</p>
+
+<table border="1" cellpadding="6" style="border-collapse:collapse">
+<tr><th>Especialidad</th><th>Con NPI en PR</th></tr>
+<tr><td>Coloproctólogo</td><td><b>4</b></td></tr>
+<tr><td>Manejo de dolor</td><td><b>5</b></td></tr>
+<tr><td>Cirujano torácico</td><td>15</td></tr>
+<tr><td>Cirujano plástico</td><td>20</td></tr>
+<tr><td>Alergista</td><td>27</td></tr>
+<tr><td>Neurocirujano</td><td><b>44</b></td></tr>
+<tr><td>Pediatra</td><td>74</td></tr>
+<tr><td>Otorrinolaringólogo</td><td>75</td></tr>
+<tr><td>Reumatólogo</td><td>86</td></tr>
+<tr><td>Geriatra (médico de viejos, en la isla más vieja)</td><td>106</td></tr>
+<tr><td>Neumólogo</td><td>146</td></tr>
+<tr><td>Endocrinólogo</td><td>158</td></tr>
+<tr><td>Cardiólogo</td><td>337</td></tr>
+</table>
+
+<p><i>(Las 29 especialidades completas están en el apéndice.)</i></p>
+
+<blockquote style="border-left:3px solid #0d9488;padding-left:10px;color:#334155"><b>El médico fantasma.</b> Aquí está la trampa que hace que nadie vea la crisis clara: <b>estos números son un techo, no un piso.</b> Tener un número federal (NPI) no es estar viendo pacientes. Pregúntale a cualquier vecino mayor y te dice <i>&quot;mi doctor se fue pa&#x27; Estados Unidos&quot;</i> — pero ese doctor sigue apareciendo como activo en el registro federal, porque el NPI no se apaga cuando uno se va. La prueba: el estudio de FARO cuenta <b>84</b> endocrinólogos activos; el registro federal cuenta <b>158</b> con NPI. Esos 74 de diferencia son fantasmas: número vivo, médico que ya no está. <b>Lo que de verdad queda atendiendo es aún menos que esta tabla.</b> Y esa es exactamente la razón por la que este registro se verifica a mano, uno por uno: los directorios federales están 45-52% equivocados, y nadie los revisa.</blockquote>
+
+<p>Este informe explica las 3 piezas de esa matemática — la fórmula, el peaje y la mesada — y qué se puede hacer, hoy, con nombre y apellido.</p>
+
+<hr>
+
+<h2>§1 · La Fórmula (cómo empezó)</h2>
+
+<p><b>Versión abuela:</b> <i>Washington decidió que atender a un enfermo en Puerto Rico &quot;vale menos&quot; que atender al mismo enfermo en Ohio. Lo decidió una fórmula, no un debate.</i></p>
+
+<p>Medicare no paga igual en todos lados. Ajusta sus tarifas por área usando unos índices (los &quot;GPCI&quot;) que miden &quot;lo que cuesta practicar medicina&quot; en cada lugar: salarios, renta, seguros. Suena justo. La trampa: <b>la fórmula usa los salarios locales como termómetro del costo.</b> Como en PR los salarios son bajos, la fórmula concluye &quot;allá es barato practicar&quot; y paga bajo. Y como paga bajo, los salarios se quedan bajos. Un perro mordiéndose la cola, con sello federal. Puerto Rico tuvo los tres índices <b>más bajos de toda la nación</b>.</p>
+
+<p>Y aquí el dato que casi nadie cuenta, porque prueba que esto SÍ se puede pelear: <b>en 2017, tras años de presión, CMS corrigió los índices de PR al promedio nacional (1.0).</b> La pelea de la fórmula se ganó. Pero el daño de décadas ya estaba hecho — y el mecanismo del descuento se mudó de sitio. Hoy vive en el peaje.</p>
+
+<p><i>(Nota de precisión: por eso este informe NO dice que la fórmula GPCI siga siendo el problema de hoy. El descuento de hoy tiene otro nombre. Sigue leyendo.)</i></p>
+
+<h2>§2 · El Peaje (dónde vive el 40% hoy)</h2>
+
+<p><b>Versión abuela:</b> <i>El gobierno federal manda el dinero de tus médicos por correo. El cartero es una aseguradora. El cartero decide cuánto te llega.</i></p>
+
+<p>En Puerto Rico, <b>~94% de los beneficiarios de Medicare están en Medicare Advantage</b> — la penetración más alta de la nación (el promedio nacional es ~55%). ¿Por qué? La aseguradora sale a buscar cabezas. ¿Cómo convence a una población donde el ingreso es bajo? Premium $0 + dental + espejuelos + transporte + la tarjetita de compra. Para alguien con $900 de Seguro Social, eso es irresistible. No es que los boricuas amen los planes: es que Medicare tradicional aquí es impagable (deducibles, sin Medigap barato) y el plan regala cosas visibles.</p>
+
+<p>Ahora los números del peaje:</p>
+
+<li>El gobierno federal le paga a los planes de PR usando &quot;benchmarks&quot; que en 2022 estaban <b>41% por debajo del promedio nacional</b> — porque se calculan sobre el gasto histórico local, que la fórmula vieja mantuvo deprimido por décadas. La circularidad no murió: se mudó. <i>(JAMA Health Forum, 2022.)</i></li>
+<li>Y aquí el truco: una vez el plan tiene la cabeza, <b>el plan decide cuánto le paga al médico.</b> Con 3-4 aseguradoras controlando ~90% de los pacientes mayores, el médico no negocia nada: o aceptas la tarifa que te pongo, te pago cuando me dé la gana, y me pides permiso (pre-autorización) pa&#x27; cada cosa — o te quedas sin pacientes. Eso tiene nombre en economía: <b>monopsonio</b>. Un solo comprador que fija el precio de tu trabajo.</li>
+<li>¿Y dónde gana el plan? No atendiendo mejor. Gana <b>codificando</b>: mientras más diagnósticos le documenta a cada paciente, más le paga el gobierno federal por esa cabeza. El negocio está en el papeleo, no en pagarle al médico ni en curarte.</li>
+
+<p>El dinero federal SÍ llega a Puerto Rico. Se queda en el peaje.</p>
+
+<h2>§3 · La Mesada (Medicaid / Vital)</h2>
+
+<p><b>Versión abuela:</b> <i>A los estados, Washington les dice: &quot;de cada dólar que gastes curando a tus pobres, yo pongo la mayoría — gastes lo que gastes.&quot; A Puerto Rico le dice: &quot;toma una mesada. Cuando se acabe, se acabó — aunque la gente siga enferma.&quot;</i></p>
+
+<p>Así funciona para un estado: el gobierno federal paga un <b>porcentaje de TODO el gasto de Medicaid, sin tope</b>. El porcentaje depende de cuán pobre es el estado — mientras más pobre, más pone Washington (el máximo por ley es 83%). Misisipi, el estado más pobre, recibe ~77%.</p>
+
+<p>Así funciona para Puerto Rico: <b>dos castigos a la vez.</b></p>
+
+<li><b>El porcentaje está congelado por estatuto en 55%</b> — no se calcula por pobreza. Si a PR se le aplicara la misma fórmula que a los estados, por nuestro nivel de pobreza nos tocaría <b>el máximo: 83%</b>. <i>(MACPAC; Congressional Research Service.)</i></li>
+<li><b>Y encima hay un techo de dólares</b> (el &quot;tope de la Sección 1108&quot;): el 55% aplica solo hasta que se acaba la asignación anual. Después de eso, el gobierno federal pone <b>cero</b> y PR paga solo. Los estados no tienen techo. Nosotros sí.</li>
+
+<p>El parcho vigente: el Congreso subió el porcentaje a <b>76% hasta el 30 de septiembre de 2027</b> (Ley de Asignaciones Consolidadas de 2023). Ese día, sin acción del Congreso, <b>cae de cantazo a 55%</b> — el famoso &quot;precipicio de Medicaid&quot;, y ya tiene fecha. Y la mesada tiene números: el techo es <b>$3,645 millones para el año fiscal 2026</b> y $3,825M para el 2027. <i>(KFF; CRS IF11012.)</i> Un sistema de salud no se planifica con parchos que vencen.</p>
+
+<p><b>El resultado en la calle:</b> Vital (La Reforma) les paga a médicos y hospitales tarifas ~<b>un tercio más bajas</b> que lo que pagan los planes Medicaid del continente. <i>(KFF Health News.)</i> En los pueblos pobres — donde Vital es la mayoría de los pacientes — practicar medicina simplemente no da los números. Por eso el desierto empieza en la montaña.</p>
+
+<h2>§4 · La Compresión (por qué se van — y no es avaricia)</h2>
+
+<p><b>Versión abuela:</b> <i>Al médico le llevan 25 años pagándole lo mismo por hora, mientras la luz, la renta y la nómina le suben todos los años. Tú también te irías.</i></p>
+
+<p>No es avaricia, es compresión. La tarifa base de Medicare (el &quot;conversion factor&quot;) lleva más de 20 años prácticamente congelada a nivel nacional. Entre 2001 y 2025, el pago de Medicare al médico quedó plano mientras <b>el costo de operar una práctica subió 59%</b>. Ajustado por inflación, el médico cobra hoy <b>33% MENOS</b> por el mismo procedimiento que en 2001. <i>(AMA, 2025.)</i></p>
+
+<p>Ahora móntale eso encima de una base que ya era la más baja de la nación, y de un mercado donde el 94% de tus pacientes viene por planes que pagan por debajo de Medicare. El médico de PR no se va &quot;por más dinero&quot; — se va porque <b>su hora vale menos cada año</b> mientras todo lo demás sube. En 2016, la hora del médico en PR valía <b>menos de la mitad</b> que en el continente. Cualquier persona con una calculadora se va. Los que se quedan, se quedan por otra cosa que no es la matemática.</p>
+
+<p>Lo local que se ha hecho (Ley 14-2017: contribución fija de 4% pa&#x27; médicos) ayuda al margen, pero no arregla la matemática del que paga.</p>
+
+<h2>§5 · ¿Y esto es legal? Sí. Y por eso no se ha arreglado.</h2>
+
+<p><b>Versión abuela:</b> <i>El que reparte el dinero no nos debe nada en las elecciones. Y el Tribunal Supremo dijo que eso está bien.</i></p>
+
+<p>La pregunta que todo el mundo hace: ¿esto no es discriminación? La respuesta incómoda: <b>es desigualdad legalizada.</b> La Constitución tiene una Cláusula Territorial que le permite al Congreso tratar a los territorios distinto que a los estados, y el Tribunal Supremo lo ha sostenido — la última vez en <i>Estados Unidos v. Vaello Madero</i> (2022).</p>
+
+<p>¿Y por qué el Congreso no lo arregla, si es tan obvio? Porque un congresista de Florida que permita que le bajen Medicare a sus viejos pierde el puesto. <b>Con los viejos de PR, nadie pierde nada. No hay precio político por abandonarnos.</b> PR no tiene senadores ni voto presidencial. La única palanca que nos queda es la vergüenza pública con data indiscutible — y los mecanismos administrativos que no requieren al Congreso (ver §7). La corrección de 2017 se ganó exactamente así.</p>
+
+<h2>§6 · Los malcriaos del plan (la parte que nadie quiere decir)</h2>
+
+<p><b>Versión abuela:</b> <i>Al médico de aquí le enseñaron un solo negocio: facturarle al plan. Cuando el plan paga hambre, no conoce otro camino que el avión.</i></p>
+
+<p>Sí existen otros modelos de negocio para un médico:</p>
+
+<li><b>DPC (Direct Primary Care):</b> el paciente paga $50-80/mes directo al médico, sin plan, citas ilimitadas. Crece brutal en EE.UU.</li>
+<li><b>Concierge / cash:</b> los psicólogos privados de PR ya lo hacen — muchos NO aceptan planes y cobran directo. (Por eso hay psicólogos en San Juan, pero el que depende de Vital no consigue.)</li>
+<li><b>Telemedicina multi-estado, contratos con patronos, medicina laboral.</b></li>
+
+<p>¿Por qué casi nadie lo hace aquí? Tres razones: <b>(a) nadie les enseña negocio</b> — la escuela de medicina los entrena a facturarle al plan, y facturarle al plan es todo lo que conocen: malcriaos del sistema; <b>(b) la cultura del asegurao</b> — aquí pagar cash por médico se siente raro, aunque la gente pague cash por el mecánico y el barbero sin pestañear; <b>(c) el mercado cash es flaco</b> — concierge funciona en Guaynabo, no en Maricao con 55% de pobreza.</p>
+
+<p>Pero fíjate la combinación que SÍ cuadra en la montaña: <b>DPC barato + telemedicina + designación federal de escasez (HPSA).</b> Si Maricao logra la designación, el gobierno federal le paga los préstamos estudiantiles al clínico que se mude — hasta <b>$75,000 por 2 años</b> en cuidado primario y <b>$50,000</b> en las demás disciplinas, incluyendo salud mental <i>(NHSC, año fiscal 2026)</i> — y le da bono de Medicare. De momento el médico no necesita que el plan le pague bien: la deuda se la paga el gobierno y el piso se lo pone el DPC. <b>Ese es el modelo de negocio que nadie les está enseñando.</b> Y el expediente pa&#x27; pedir esa designación ya está escrito (ver §7).</p>
+
+<h2>§7 · ¿Qué se puede hacer? (con nombre y apellido)</h2>
+
+<p>Si nadie mueve el papeleo, esto empeora, porque cada retiro en la montaña es un médico que no se reemplaza. Lo que puede pasar tiene 3 niveles:</p>
+
+<blockquote style="border-left:3px solid #0d9488;padding-left:10px;color:#334155"><b>La mejor noticia, la que casi nadie cuenta:</b> los médicos jóvenes de PR <i>quieren</i> quedarse. La emigración de graduados bajó de 56% (2022) a 43% (2024), y Puerto Rico tiene la segunda tasa más alta de retención del país: 75.6% se queda a ejercer donde hizo la residencia. El problema no es que se quieran ir. Es que <b>no hay suficientes plazas de residencia para retenerlos</b> — se van porque no hay dónde terminar de formarse aquí. Y eso se arregla en Puerto Rico, sin esperar al Congreso: crear plazas de residencia es la palanca más directa que tenemos. <i>(AAMC; NRMP; Centro de Periodismo Investigativo, 2024.)</i></blockquote>
+
+<p><b>Nivel 1 — Federal (la cura de raíz, la más lenta):</b> paridad en los benchmarks de Medicare Advantage y en Medicaid (quitar el techo, aplicar la fórmula de pobreza real). Requiere al Congreso. Nuestro rol: que cada legislador, periodista y junta que toque este tema cite ESTE número y no un &quot;se dice&quot;. La corrección GPCI de 2017 prueba que la presión con data funciona.</p>
+
+<p><b>Nivel 2 — El dinero que YA existe (alcanzable en ~1 año):</b> las designaciones federales de escasez (HPSA) destraban repago de préstamos (NHSC), bono de 10% de Medicare y elegibilidad de grants — pero requieren data fresca de proveedores por área, y <b>los mapas federales llevan décadas sin actualizarse porque nadie ha hecho el papeleo.</b> Ya empezamos: el expediente de <b>Maricao + Las Marías</b> (2 de los 3 municipios en cero absoluto, salud mental) está escrito y listo para la Oficina de Cuidado Primario del Departamento de Salud, que es quien radica ante el gobierno federal. Cada municipio que cualifique puede tener el suyo — la data ya está municipio por municipio en registromedicopr.com.</p>
+
+<p><b>Nivel 3 — Hoy, sin esperar a nadie:</b></p>
+
+<table border="1" cellpadding="6" style="border-collapse:collapse">
+<tr><th>Si eres...</th><th>Haz esto</th></tr>
+<tr><td><b>Vecino de un desierto</b></td><td>En registromedicopr.com está el más cercano que SÍ atiende, por especialidad y pueblo. Pa&#x27; salud mental, pregunta por telemedicina — tu plan la cubre más de lo que crees. Y suscríbete a TE AVISO: te avisamos si llega un especialista a tu zona.</td></tr>
+<tr><td><b>Médico / psicólogo / residente</b></td><td>En estos pueblos no tienes competencia, y si la designación federal llega, el gobierno te paga los préstamos. Reclama tu ficha en el registro o levanta la mano — te avisamos cuando el expediente de tu zona se mueva.</td></tr>
+<tr><td><b>Alcalde / legislador</b></td><td>El expediente de escasez de tu municipio se puede armar con esta data — el de Maricao y Las Marías ya existe como modelo. Pídelo: es papeleo que trae dinero federal, no una denuncia.</td></tr>
+<tr><td><b>Diáspora cuidando a los tuyos</b></td><td>El registro te dice, desde allá, qué especialista existe en el pueblo de tu mamá y cuál es el más cercano real.</td></tr>
+</table>
+
+<h2>Apéndice · Las 29 especialidades, cuántas quedan hoy</h2>
+
+<p>Conteo de proveedores individuales con NPI y práctica declarada en Puerto Rico (NPPES/CMS, julio 2026). Recuerda: es el techo, no el piso (ver &quot;El médico fantasma&quot; arriba).</p>
+
+<table border="1" cellpadding="6" style="border-collapse:collapse">
+<tr><th>Especialidad</th><th>Con NPI en PR</th></tr>
+<tr><td>Coloproctólogo</td><td>4</td></tr>
+<tr><td>Manejo de dolor</td><td>5</td></tr>
+<tr><td>Cirujano torácico</td><td>15</td></tr>
+<tr><td>Cirujano plástico</td><td>20</td></tr>
+<tr><td>Alergista</td><td>27</td></tr>
+<tr><td>Neurocirujano</td><td>44</td></tr>
+<tr><td>Pediatra</td><td>74</td></tr>
+<tr><td>Otorrinolaringólogo</td><td>75</td></tr>
+<tr><td>Reumatólogo</td><td>86</td></tr>
+<tr><td>Geriatra</td><td>106</td></tr>
+<tr><td>Ginecólogo / Obstetra</td><td>109</td></tr>
+<tr><td>Urólogo</td><td>119</td></tr>
+<tr><td>Infectólogo</td><td>122</td></tr>
+<tr><td>Dermatólogo</td><td>123</td></tr>
+<tr><td>Oncólogo / Hematólogo</td><td>143</td></tr>
+<tr><td>Neumólogo</td><td>146</td></tr>
+<tr><td>Ortopeda</td><td>150</td></tr>
+<tr><td>Nefrólogo</td><td>155</td></tr>
+<tr><td>Endocrinólogo</td><td>158</td></tr>
+<tr><td>Neurólogo</td><td>166</td></tr>
+<tr><td>Gastroenterólogo</td><td>202</td></tr>
+<tr><td>Anestesiólogo</td><td>225</td></tr>
+<tr><td>Oftalmólogo</td><td>238</td></tr>
+<tr><td>Fisiatra</td><td>251</td></tr>
+<tr><td>Radiólogo</td><td>252</td></tr>
+<tr><td>Cirujano general</td><td>332</td></tr>
+<tr><td>Cardiólogo</td><td>337</td></tr>
+<tr><td>Medicina de emergencia</td><td>342</td></tr>
+<tr><td>Psiquiatra</td><td>473</td></tr>
+</table>
+
+<p><i>Cada una tiene su lista por región y teléfonos en registromedicopr.com. La cuenta se actualiza contra el registro federal.</i></p>
+
+<h2>§8 · Metodología y fuentes</h2>
+
+<p><b>Regla del informe:</b> cada afirmación con número lleva fecha y fuente pública verificable. Si encuentras un error, escríbenos y se corrige: angel@angelanderson.com.</p>
+
+<li><b>Desiertos por municipio:</b> registro federal NPPES/CMS (proveedores individuales con práctica en PR, por código de taxonomía) × Censo Decenal 2020. Verificado municipio por municipio, julio 2026. Data viva: registromedicopr.com/registro/desiertos.</li>
+<li><b>Éxodo 14,500 → 9,000 (2009-2020) y salario por hora &lt;50% del continente (2016):</b> <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC10170400/">On leaving: Coloniality and Physician Migration in Puerto Rico (PMC, 2023)</a> · <a href="https://pasquines.us/2022/08/23/doctor-exodus-threatens-healthcare-in-puerto-rico/">Pasquines (2022)</a> · <a href="https://www.nbcnews.com/news/latino/puerto-rico-s-exodus-doctors-adds-health-care-strain-dire-n783776">NBC News</a></li>
+<li><b>GPCI más bajos de la nación + corrección de CMS a 1.0 (2017):</b> <a href="https://www.ama-assn.org/system/files/geographic-practice-cost-indices-gpcis.pdf">AMA — GPCIs</a> · <a href="https://www.govinfo.gov/content/pkg/GAOREPORTS-GAO-05-119/html/GAOREPORTS-GAO-05-119.htm">GAO-05-119</a> · <a href="https://puertoricoreport.com/physician-payments-increase-medicare/">Puerto Rico Report</a></li>
+<li><b>Benchmarks MA 41% bajo el promedio nacional (2022):</b> <a href="https://jamanetwork.com/journals/jama-health-forum/fullarticle/2796409">JAMA Health Forum — Medicare Advantage Financing and Quality in Puerto Rico vs the 50 US States</a> · <a href="https://www.statnews.com/2024/02/21/medicare-puerto-rico-disparities-health-reimbursement/">STAT News (2024)</a></li>
+<li><b>Penetración MA ~94% (la más alta; nacional ~55%):</b> <a href="https://www.kff.org/medicare/medicare-advantage-in-2026-enrollment-update-and-key-trends/">KFF — Medicare Advantage 2026 Enrollment Update</a> · <a href="https://www.mmapapr.org/post/modern-healthcare-puerto-rico-the-canary-in-the-coal-mine-for-medicare-advantage-growth">Modern Healthcare vía MMAPA</a></li>
+<li><b>Medicaid: FMAP estatutario 55% (sería 83% como estado) + tope Sección 1108 + Vital paga ~1/3 menos:</b> <a href="https://www.macpac.gov/wp-content/uploads/2020/08/Medicaid-and-CHIP-in-Puerto-Rico.pdf">MACPAC — Medicaid and CHIP in Puerto Rico</a> · <a href="https://www.congress.gov/crs-product/IF11012">CRS IF11012</a> · <a href="https://www.commonwealthfund.org/publications/issue-briefs/2021/jan/how-states-fare-medicaid-block-grants-per-capita-caps-puerto-rico">Commonwealth Fund (2021)</a> · <a href="https://kffhealthnews.org/news/exodus-by-puerto-rican-medical-students-deepens-islands-doctor-drain/">KFF Health News</a></li>
+<li><b>Conversion factor: -33% real 2001-2025, costos de práctica +59%:</b> <a href="https://www.ama-assn.org/practice-management/medicare-medicaid/medicare-physician-pay-has-plummeted-2001-find-out-why">AMA — Medicare physician pay has plummeted since 2001</a> · <a href="https://www.ama-assn.org/system/files/2025-medicare-updates-inflation-chart.pdf">AMA — updates vs inflation chart</a></li>
+<li><b>NHSC repago de préstamos hasta $75K/2 años:</b> <a href="https://nhsc.hrsa.gov/loan-repayment/nhsc-loan-repayment-program">NHSC Loan Repayment Program (HRSA)</a></li>
+<li><b>Cláusula Territorial / trato desigual sostenido:</b> <i>United States v. Vaello Madero</i>, 596 U.S. ___ (2022).</li>
+
+<li><b>FMAP 76% hasta 2027-09-30 (luego cae a 55%) + techos anuales ($3,645M FY2026):</b> <a href="https://www.kff.org/elections/recent-changes-in-medicaid-financing-in-puerto-rico-and-other-u-s-territories/">KFF — Recent Changes in Medicaid Financing in Puerto Rico</a> · <a href="https://www.congress.gov/crs-product/IF11012">CRS IF11012</a> (Ley de Asignaciones Consolidadas de 2023, P.L. 117-328)</li>
+<li><b>Ola de retiro (55% de los activos pa&#x27;l 2030; cirujanos edad promedio &gt;60):</b> <a href="https://www.elvocero.com/actualidad/alertan-sobre-la-falta-de-sucesi-n-de-m-dicos-en-la-isla/article_e796cd58-e59d-11ef-b202-e7fc5a49dad5.html">El Vocero (2025)</a> · <a href="https://medicinaysaludpublica.com/noticias/salud-publica/desafios-y-avances-de-salud-publica-en-puerto-rico-durante-el-2024/25653">Medicina y Salud Pública (2024)</a></li>
+<li><b>Estudio FARO/Asociación de Industriales Farmacéuticos (55% retiro 2030; endocrinólogos 84 activos → 379 necesarios):</b> <a href="https://www.univision.com/local/puerto-rico-wlii/puerto-rico-escasez-medicos-especialistas-2030-enfermedades-salud">Univision Puerto Rico</a> · <a href="https://claridadpuertorico.com/puerto-rico-se-queda-sin-medicos-especialistas/">Claridad</a></li>
+<li><b>Pipeline / residencias (emigración de graduados 56%→43% 2022-24; retención 75.6%; cuello de botella de plazas):</b> <a href="https://www.aamc.org/news/puerto-rican-medical-students-face-challenges-when-applying-residency">AAMC</a> · <a href="https://www.nrmp.org/wp-content/uploads/2025/02/Puerto-Rico_Revised.pdf">NRMP — Puerto Rico</a> · <a href="https://periodismoinvestigativo.com/2024/12/medical-residencies-increase-health-puerto-rico/">CPI — &quot;Los números de residencias no cuadran&quot; (2024)</a></li>
+
+<p><b>Flags de verificación:</b> los 3 pendientes fueron cerrados 2026-07-05 con las fuentes de arriba. Nota editorial: la cifra de médicos totales más reciente con fuente sólida sigue siendo 9,000 (2020) — no se encontró censo médico posterior confiable; el informe usa 2020 + la proyección de retiro 2030 en su lugar.</p>
+
+<hr>
+
+<p><i>Este informe se publica desde Cabo Rojo, Puerto Rico. Lo vimos primero en el oeste, donde vivimos — pero la cuenta da igual de fea en casi toda la isla. La data completa, municipio por municipio, vive en registromedicopr.com y se actualiza contra el registro federal. Si te sirve, úsala. Es tuya.</i></p>
+`
+  const body = `<p class="text-xs text-slate-400 mb-4">Artículo · registromedicopr.com · publicado julio 2026 · <a href="/comparte" class="text-teal-600">datos citables</a> · <a href="/registro/estado" class="text-teal-600">estado de salud</a></p>${articleHtml}
+<div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
+  <p class="text-lg font-bold mb-1">¿Buscas un especialista cerca?</p>
+  <p class="text-sm text-teal-100 mb-4">El registro te dice quién hay y dónde, verificado contra el gobierno federal.</p>
+  <a href="/registro" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50">Ir al registro</a>
+</div>`
+  const articleLd = {
+    '@context': 'https://schema.org', '@type': 'Article',
+    headline: '¿Por qué se van los médicos de Puerto Rico?',
+    description: 'La matemática que explica el éxodo médico de PR, en cristiano y con fuente: la fórmula de Medicare, el peaje de Medicare Advantage, y la mesada de Medicaid. Cada número verificado.',
+    author: { '@type': 'Person', name: 'Angel Anderson' },
+    publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+    datePublished: '2026-07-05', dateModified: '2026-07-05', inLanguage: 'es',
+    mainEntityOfPage: 'https://registromedicopr.com/porque',
+  }
+  const faqLd = {
+    '@context': 'https://schema.org', '@type': 'FAQPage',
+    mainEntity: [
+      { '@type': 'Question', name: '¿Por qué se van los médicos de Puerto Rico?', acceptedAnswer: { '@type': 'Answer', text: 'No es avaricia, es matemática. Medicare le paga a los médicos de PR menos que en los estados (los benchmarks de Medicare Advantage están 41% bajo el promedio nacional), Medicaid tiene un techo de dólares que los estados no tienen, y la tarifa base de Medicare ajustada por inflación bajó 33% entre 2001 y 2025. La hora del médico vale menos cada año mientras todo sube.' } },
+      { '@type': 'Question', name: '¿Cuántos médicos le quedan a Puerto Rico?', acceptedAnswer: { '@type': 'Answer', text: 'PR pasó de ~14,500 médicos (2009) a ~9,000 (2020). Un estudio de FARO proyecta que el 55% de los activos se habrá retirado para 2030 sin sustitutos. Hoy quedan, por ejemplo, 4 coloproctólogos, 44 neurocirujanos y 106 geriatras para 3.2 millones de personas (registro federal NPPES, julio 2026).' } },
+      { '@type': 'Question', name: '¿La desigualdad de fondos de salud de PR es legal?', acceptedAnswer: { '@type': 'Answer', text: 'Sí. La Cláusula Territorial de la Constitución permite al Congreso tratar a los territorios distinto que a los estados, y el Tribunal Supremo lo sostuvo en Estados Unidos v. Vaello Madero (2022). No se arregla porque PR no tiene senadores ni voto presidencial: no hay costo político por no actuar.' } },
+      { '@type': 'Question', name: '¿Qué se puede hacer para que vuelvan los médicos?', acceptedAnswer: { '@type': 'Answer', text: 'Tres niveles: paridad federal en Medicare/Medicaid (requiere al Congreso); activar las designaciones federales de escasez (HPSA) que traen repago de préstamos NHSC; y crear plazas de residencia, porque los médicos jóvenes quieren quedarse (la emigración de graduados bajó de 56% a 43%) pero no hay dónde formarse aquí.' } },
+    ],
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: '¿Por qué se van los médicos de Puerto Rico? — la matemática, con fuente',
+    description: 'El éxodo médico de PR explicado en cristiano y verificado: la fórmula de Medicare, el peaje de Medicare Advantage, la mesada de Medicaid, y qué se puede hacer hoy.',
+    slug: 'porque', bodyHtml: body, jsonLd: [articleLd, faqLd] as any, ogImage: '/og/desiertos.png',
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
 // =============== /comparte — Datos citables (press kit + LLM-quotable + SEO) ===============
 // Cada dato = pregunta + respuesta con fuente y fecha. FAQPage schema (lo que los LLM citan) + Dataset.
 async function handleComparte(req: any, res: any) {
@@ -6773,6 +7008,7 @@ export default async function handler(req: any, res: any) {
     case 'registro-mapa': return await handleRegistroMapa(req, res)
     case 'registro-estado': return await handleRegistroEstado(req, res)
     case 'comparte': return await handleComparte(req, res)
+    case 'porque': return await handleRegistroPorque(req, res)
     case 'recuperacion': return await handleRecuperacion(req, res)
     case 'sinfiltros': return await handleSinFiltros(req, res)
     case 'sinfiltros-log': return await handleSinFiltrosLog(req, res)
