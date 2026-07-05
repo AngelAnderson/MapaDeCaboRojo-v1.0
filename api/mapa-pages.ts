@@ -4153,6 +4153,7 @@ async function handleSinFiltros(req: any, res: any) {
     <a href="/registro/estado" data-prsf="record" data-rec="idx-salud" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Salud</a>
     <a href="/recuperacion" data-prsf="record" data-rec="idx-recuperacion" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Recuperación</a>
     <a href="/quien-responde" data-prsf="record" data-rec="idx-promesas" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Promesas</a>
+    <a href="/historial" data-prsf="record" data-rec="idx-historial" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Historial</a>
     <a href="/demanda" data-prsf="record" data-rec="idx-demanda" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Demanda</a>
     <a href="/agua" data-prsf="record" data-rec="idx-agua" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Agua</a>
     <a href="/luz" data-prsf="record" data-rec="idx-luz" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Luz</a>
@@ -4431,6 +4432,60 @@ async function handleDatoRecord(req: any, res: any) {
   }))
 }
 
+// /historial — la línea de tiempo de rendición de cuentas: promesa pública → qué pasó, con el minuto del video.
+// Solo publicable=true (Angel vetea). Balanceado: muestra vencidos, en proceso Y cumplidos.
+async function handleHistorial(req: any, res: any) {
+  let rows: any[] = []
+  try {
+    const { data } = await supabase.from('quien_responde_promesas').select('promesa,minuto,fecha_grabacion,estado,que_paso,fuente_que_paso').eq('publicable', true).order('fecha_grabacion', { ascending: false })
+    rows = data || []
+  } catch (_) { /* empty state */ }
+  const est: Record<string, { label: string; cls: string }> = {
+    cumplido: { label: 'Cumplido', cls: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+    en_proceso: { label: 'En proceso', cls: 'bg-amber-100 text-amber-800 border-amber-200' },
+    vencido: { label: 'Vencido sin cumplir', cls: 'bg-red-100 text-red-800 border-red-200' },
+    pendiente: { label: 'Pendiente', cls: 'bg-slate-100 text-slate-600 border-slate-200' },
+  }
+  const items = rows.map((r: any) => {
+    const e = est[r.estado] || est.pendiente
+    return `<div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-4">
+      <div class="flex items-start justify-between gap-3 flex-wrap">
+        <div class="text-xs text-slate-400 font-semibold">${escapeHtml(r.fecha_grabacion || '')}${r.minuto ? ` · minuto ${escapeHtml(r.minuto)} del video` : ''}</div>
+        <span class="text-xs font-bold rounded-full px-3 py-1 border ${e.cls}">${e.label}</span>
+      </div>
+      <p class="text-lg font-black text-slate-900 mt-1" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(r.promesa)}</p>
+      ${r.que_paso ? `<blockquote class="mt-2 text-slate-700 leading-relaxed border-l-4 border-slate-300 pl-3 text-sm">${escapeHtml(r.que_paso)}</blockquote>` : ''}
+      ${r.fuente_que_paso ? `<p class="text-xs text-slate-400 mt-2">Fuente: ${escapeHtml(r.fuente_que_paso)}</p>` : ''}
+    </div>`
+  }).join('')
+  const body = `
+<h1>El historial: promesas con recibo</h1>
+<p class="text-lg text-slate-600 mt-2">Cada promesa aquí se dijo en un video público, con el minuto exacto anotado. Cuando una vence sin cumplirse, se anota. Cuando se cumple, también. <strong>No es cacería: es memoria.</strong> El pueblo tiene derecho a recordar lo que se le dijo.</p>
+${rows.length ? items : '<div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 mt-4 text-sm text-slate-700">Verificando el próximo lote de promesas. Vuelve pronto.</div>'}
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
+  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Recordar lo que se prometió no es pelea. Es orden.</p>
+  <p class="mt-2 text-sm text-slate-600 italic">¿Sabes de una promesa pública que falta o ya se cumplió? Escríbenos.</p>
+</div>
+<p class="text-sm text-slate-500 mt-6">Solo se publica lo verificado contra la grabación pública y el estado real del proyecto. Faltan promesas por revisar antes de entrar. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a> y se corrige. Julio 2026.</p>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'Historial de promesas públicas de Cabo Rojo — con timestamp de video',
+    description: 'Promesas públicas rastreadas con la cita y el minuto exacto del video donde se hicieron, y qué pasó con cada una.',
+    creator: { '@type': 'Person', name: 'Angel Anderson' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/historial',
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'El historial: promesas públicas con recibo — Puerto Rico Sin Filtros',
+    description: 'Las promesas públicas rastreadas con el minuto del video donde se hicieron y qué pasó con cada una. No es cacería: es memoria.',
+    slug: 'historial', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
 // /prediccion — la síntesis: qué dicen todos los récords juntos si no hacemos nada.
 // Números verificados (con enlace a su récord); las conexiones/proyecciones son análisis, no profecía.
 function handlePrediccion(req: any, res: any) {
@@ -4441,6 +4496,11 @@ function handlePrediccion(req: any, res: any) {
 <div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular</p>
   <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Estamos reconstruyendo el ladrillo para una población que se queda sin quien la atienda.</p>
+</div>
+
+<div class="not-prose mt-5 bg-white border border-slate-200 rounded-2xl p-4">
+  <p class="text-sm font-bold text-slate-700 mb-2">🎧 Escúchalo: la predicción en audio</p>
+  <audio controls preload="none" class="w-full" src="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/prediccion-2030-pr.m4a">Tu navegador no puede reproducir el audio. <a href="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/prediccion-2030-pr.m4a" class="text-teal-700 font-semibold">Descárgalo</a>.</audio>
 </div>
 
 <h2>1. El cuadro: lo inerte se reconstruye, lo vivo se erosiona</h2>
@@ -6349,6 +6409,7 @@ export default async function handler(req: any, res: any) {
     case 'luz': return await handleDatoRecord(req, res)
     case 'basura': return await handleDatoRecord(req, res)
     case 'prediccion': return handlePrediccion(req, res)
+    case 'historial': return await handleHistorial(req, res)
     case 'registro-hub': return await handleRegistroHub(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)
