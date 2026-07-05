@@ -13,5 +13,9 @@ export default function middleware(request: Request) {
     // URL stays registromedicopr.com/ — content served from the registro handler.
     return rewrite(new URL('/api/mapa-pages?page=registro', request.url))
   }
+  if (host === 'puertoricosinfiltros.com' || host === 'www.puertoricosinfiltros.com') {
+    // URL stays puertoricosinfiltros.com/ — the third face of the substrate: PR's public record.
+    return rewrite(new URL('/api/mapa-pages?page=sinfiltros', request.url))
+  }
   return next()
 }

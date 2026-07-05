@@ -117,10 +117,11 @@ function layout(opts: {
 }): string {
   // Host-aware branding. registromedicopr.com is its OWN property — not Mapa de Cabo Rojo.
   const isReg = /registromedicopr\.com/i.test(opts.host || '')
+  const isPRSF = /puertoricosinfiltros\.com/i.test(opts.host || '')
   const isEn = opts.lang === 'en'
   const langHref = `/${opts.slug}?lang=${isEn ? 'es' : 'en'}`
-  const canonicalBase = opts.canonicalHost || (isReg ? 'https://registromedicopr.com' : SITE_URL)
-  const brandName = isReg ? 'Registro Médico PR' : 'Mapa de Cabo Rojo'
+  const canonicalBase = opts.canonicalHost || (isPRSF ? 'https://puertoricosinfiltros.com' : isReg ? 'https://registromedicopr.com' : SITE_URL)
+  const brandName = isPRSF ? 'Puerto Rico Sin Filtros' : isReg ? 'Registro Médico PR' : 'Mapa de Cabo Rojo'
   const GA = 'G-6KBMV0LKQ4'
   const canonical = opts.canonicalUrl || `${canonicalBase}/${opts.slug}`
   const jsonLd = opts.jsonLd
@@ -134,7 +135,39 @@ function layout(opts: {
     : `${canonicalBase}${ogImagePath}`
 
   // --- Header (host-aware) ---
-  const header = isReg ? `
+  const prsfHeader = `
+<header class="bg-white border-b border-slate-200 sticky top-0 z-10">
+<div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+<a href="/" class="flex items-center gap-2 text-slate-900 hover:text-teal-700">
+<div class="bg-slate-900 w-8 h-8 rounded-lg flex items-center justify-center text-white">
+<i class="fa-solid fa-eye text-sm"></i>
+</div>
+<span class="font-black tracking-tight">Puerto Rico <span class="text-teal-700">Sin Filtros</span></span>
+</a>
+<nav class="hidden md:flex gap-5 text-sm text-slate-600">
+<a href="/#records" class="hover:text-teal-700">Los récords</a>
+<a href="/#como" class="hover:text-teal-700">Cómo se verifica</a>
+<a href="/comparte" class="hover:text-teal-700">Datos citables</a>
+</nav>
+</div>
+</header>`
+  const prsfFooter = `
+<footer class="border-t border-slate-200 mt-12 py-8 bg-white">
+<div class="max-w-4xl mx-auto px-4 text-center">
+<p class="text-base font-semibold text-slate-800">El récord público de Puerto Rico. El dato, con la fuente al lado.</p>
+<p class="text-xs text-slate-500 mt-1">Verificado uno por uno contra registros federales y públicos. Sin spin, sin relleno.</p>
+<div class="mt-6 flex justify-center gap-4 text-xs text-slate-500 flex-wrap">
+<a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a>
+<a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a>
+<a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a>
+<a href="/comparte" class="hover:text-teal-700">Datos citables</a>
+<a href="/civico.json" class="hover:text-teal-700">API pública</a>
+<a href="/llms.txt" class="hover:text-teal-700">Para IA</a>
+</div>
+<p class="mt-4 text-xs text-slate-400">Angel Anderson, desde Cabo Rojo. Prensa e investigadores: <a href="mailto:angel@angelanderson.com" class="hover:text-teal-700">angel@angelanderson.com</a></p>
+</div>
+</footer>`
+  const header = isPRSF ? prsfHeader : isReg ? `
 <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
 <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
 <a href="/registro" class="flex items-center gap-2 text-slate-900 hover:text-teal-700">
@@ -174,7 +207,7 @@ function layout(opts: {
 </header>`
 
   // --- Footer (host-aware). Registro = quiet, no newsletter/tienda; desiertos kept low-key. ---
-  const footer = isReg ? `
+  const footer = isPRSF ? prsfFooter : isReg ? `
 <footer class="border-t border-slate-200 mt-12 py-8 bg-white">
 <div class="max-w-4xl mx-auto px-4 text-center">
 <p class="text-base font-semibold text-teal-800">El registro verificado de especialistas médicos de Puerto Rico.</p>
@@ -3930,6 +3963,133 @@ ${factCards}
   }))
 }
 
+// =============== puertoricosinfiltros.com — la tercera cara del substrato: el récord público de PR ===============
+// Puerta de entrada PR-wide al récord verificado. Un dato, su fuente, y la brecha entre lo declarado y lo entregado.
+// Reusa los datasets ya vivos (Cupón, mapa médico, desiertos, agua) + la capa citable (/comparte, /civico.json, /llms.txt).
+// Sirve en el root de puertoricosinfiltros.com vía middleware; también en /sinfiltros de los otros hosts.
+async function handleSinFiltros(req: any, res: any) {
+  // Números en vivo (mismo query + fallback verificado 2026-07-05 que /comparte).
+  let g = { conHpsa: 65, cupon: 33, cuponPob: 792221, bajo5: 39, bajo5Pob: 1046856, sinPsiq: 36, sinPsiqPob: 930159, cero: 3 }
+  try {
+    const { data } = await supabase.from('v_registro_municipio_intel').select('poblacion,especialistas,psiquiatras,hpsa_primaria,hpsa_salud_mental,cupon_mh_sin_cobrar,por_10k_hab').range(0, 100)
+    if (data && data.length >= 70) {
+      const cup = data.filter((r: any) => r.cupon_mh_sin_cobrar)
+      const b5 = data.filter((r: any) => Number(r.por_10k_hab) < 5)
+      const sp = data.filter((r: any) => Number(r.psiquiatras) === 0)
+      g = {
+        conHpsa: data.filter((r: any) => r.hpsa_primaria > 0 || r.hpsa_salud_mental > 0).length,
+        cupon: cup.length, cuponPob: cup.reduce((s: number, r: any) => s + Number(r.poblacion), 0),
+        bajo5: b5.length, bajo5Pob: b5.reduce((s: number, r: any) => s + Number(r.poblacion), 0),
+        sinPsiq: sp.length, sinPsiqPob: sp.reduce((s: number, r: any) => s + Number(r.poblacion), 0),
+        cero: data.filter((r: any) => Number(r.especialistas) === 0).length,
+      }
+    }
+  } catch (_) { /* fallback stands */ }
+  const n = (x: number) => x.toLocaleString('en-US')
+
+  type Record = { titulo: string; brecha: string; fuente: string; verUrl: string; verificaUrl: string; verificaText: string; tag: string }
+  const records: Record[] = [
+    {
+      titulo: 'El cupón federal sin cobrar',
+      brecha: `El gobierno federal ya declaró en escasez a ${g.conHpsa} de los 76 municipios de PR y ya aprobó el dinero para atraer médicos. ${g.cupon} de ellos tienen el dinero de salud mental aprobado y CERO psiquiatras: ${n(g.cuponPob)} personas con el cupón sin cobrar.`,
+      fuente: 'Cruce NPPES/CMS × archivos HRSA × Censo/ACS, verificado municipio por municipio, julio 2026.',
+      verUrl: '/registro/estado', verificaUrl: 'https://data.hrsa.gov/tools/shortage-area/hpsa-find', verificaText: 'Archivos oficiales HRSA', tag: 'Salud',
+    },
+    {
+      titulo: 'Los pueblos sin un solo especialista',
+      brecha: `${g.cero} municipios de PR no tienen ni un especialista médico de ninguna clase con práctica declarada. Y ${g.sinPsiq} municipios (${n(g.sinPsiqPob)} personas, cerca de 1 de cada 3 boricuas) no tienen ni un psiquiatra.`,
+      fuente: 'Registro federal NPPES/CMS por municipio, julio 2026.',
+      verUrl: '/registro/mapa', verificaUrl: 'https://npiregistry.cms.hhs.gov/', verificaText: 'Registro federal NPPES', tag: 'Salud',
+    },
+    {
+      titulo: 'El dinero de ladrillo llegó; el médico no',
+      brecha: '$3,470 millones de fondos federales de recuperación (FEMA) fueron a los 33 municipios con salud mental en escasez y cero psiquiatras. Se reconstruyeron edificios, carreteras y agua. No llegó ni un médico de la mente. Jayuya recibió $424 millones y tiene cero psiquiatras.',
+      fuente: 'OpenFEMA (Public Assistance) × NPPES/CMS × HRSA, julio 2026.',
+      verUrl: '/registro/estado', verificaUrl: 'https://www.fema.gov/openfema-data-page/public-assistance-funded-projects-summaries-v1', verificaText: 'OpenFEMA', tag: 'Salud',
+    },
+    {
+      titulo: 'La desigualdad de acceso más extrema',
+      brecha: `${g.bajo5} de los 76 municipios (${n(g.bajo5Pob)} personas) viven con menos de 5 especialistas por cada 10,000 habitantes, mientras San Juan tiene cerca de 69. Loíza, a media hora de San Juan, tiene 86 veces menos especialistas por persona.`,
+      fuente: 'NPPES/CMS × Censo 2020, municipio por municipio.',
+      verUrl: '/registro/desiertos', verificaUrl: 'https://npiregistry.cms.hhs.gov/', verificaText: 'Registro federal NPPES', tag: 'Salud',
+    },
+  ]
+
+  const recordCards = records.map((r) => `
+    <div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-4">
+      <div class="flex items-center justify-between gap-2">
+        <span class="text-xs font-bold text-teal-700 uppercase tracking-wide">${escapeHtml(r.tag)}</span>
+      </div>
+      <h3 class="text-xl font-black text-slate-900 mt-1" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(r.titulo)}</h3>
+      <blockquote class="mt-2 text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3">${escapeHtml(r.brecha)}</blockquote>
+      <p class="text-xs text-slate-500 mt-3"><strong>Fuente:</strong> ${escapeHtml(r.fuente)}</p>
+      <div class="mt-3 flex flex-wrap gap-2 text-sm">
+        <a href="${escapeHtml(r.verUrl)}" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">Ver el récord completo</a>
+        <a href="${escapeHtml(r.verificaUrl)}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Verifícalo tú mismo: ${escapeHtml(r.verificaText)} ↗</a>
+      </div>
+    </div>`).join('')
+
+  const body = `
+<h1>Puerto Rico, sin filtros.</h1>
+<p class="text-lg text-slate-600 mt-3">El récord público que Puerto Rico nunca tuvo. Datos verificados que nadie había publicado, cada uno con su fuente al lado y la brecha entre lo que el papel dice y lo que tocó el suelo. Sin spin. Sin relleno. Verificado uno por uno.</p>
+
+<div class="not-prose mt-6 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">Qué es esto</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">El récord, no el ruido.</p>
+  <p class="text-slate-300 mt-2 text-sm leading-relaxed">No es un blog. No es opinión. Es infraestructura: el dato verificado, la fuente primaria pública para que lo confirmes tú mismo, y la brecha que nadie había puesto en una sola tabla. La misma data que corre por debajo del Mapa de Cabo Rojo y del Registro Médico PR, aquí junta, para todo Puerto Rico. Si eres periodista, investigador, legislador o vecino, esto es tuyo.</p>
+</div>
+
+<h2 id="records">Los récords</h2>
+<p class="text-slate-600 -mt-1">Cada uno es un dato verificado contra un registro federal o público. La brecha habla sola.</p>
+${recordCards}
+
+<p class="not-prose text-sm text-slate-500 mt-5">Más récords en camino: agua y servicios en el oeste, promesas vs. entregas, y lo que Puerto Rico le pregunta al Veci que nadie sirve. <a href="/agua" class="text-teal-700 font-semibold">Ver /agua</a>.</p>
+
+<h2 id="como">Cómo se verifica</h2>
+<p>Cada número sale de una fuente federal o pública, cruzada a nivel de municipio, y revisada uno por uno. Sin robots que copian data de Google. Sin AI inventando cifras. Sin "aproximaciones". Cada dato lleva su fecha; si tiene más de lo que debe, se vuelve a correr. <strong>¿Ves un error? Escríbenos y se corrige, en público.</strong> Ese es el trato.</p>
+
+<h2>Para prensa, investigadores y quien construye</h2>
+<p>Todo aquí es citable y libre. Cópialo, cítalo, constrúyele encima.</p>
+<ul>
+  <li><a href="/comparte">Datos citables</a>: cada cifra con su fuente, botón de copiar, formato para citar.</li>
+  <li><a href="/civico.json">API pública (civico.json)</a>: la data cívica en formato máquina-legible.</li>
+  <li><a href="/llms.txt">Para IA (llms.txt)</a>: para que los modelos de lenguaje citen la fuente, no inventen.</li>
+</ul>
+<p class="text-sm text-slate-600">¿Necesitas el corte de un municipio, la metodología completa, o una licencia de datos para tu redacción o institución? Angel Anderson, desde Cabo Rojo. Escribe a <a href="mailto:angel@angelanderson.com" class="text-teal-700 font-semibold">angel@angelanderson.com</a>. Prefiero texto o correo.</p>
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
+  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Puerto Rico no necesita más ruido. Necesita mejor récord.</p>
+  <p class="mt-2 text-sm text-slate-600 italic">Si te sirve, úsalo. Si no, sigue tu camino.</p>
+</div>
+
+<p class="text-sm text-slate-500 mt-6">Metodología: cruce de fuentes federales y públicas a nivel de municipio — NPPES/CMS (proveedores), archivos HRSA (designaciones de escasez), OpenFEMA (fondos de recuperación), Censo/ACS (población y pobreza). Verificado uno por uno. Última actualización: julio 2026.</p>
+`
+  const datasetLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'Puerto Rico Sin Filtros — récord público de datos verificados de PR',
+    description: `Datos verificados de Puerto Rico con fuente primaria: ${g.conHpsa} de 76 municipios con escasez de médicos declarada por el gobierno federal, ${g.cupon} con el cupón de salud mental sin cobrar (${n(g.cuponPob)} personas), ${g.cero} municipios sin ningún especialista. Fuentes: NPPES/CMS, HRSA, OpenFEMA, Censo.`,
+    creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/',
+    keywords: ['Puerto Rico', 'datos verificados', 'acceso médico', 'HPSA', 'NPPES', 'transparencia', 'récord público'],
+  }
+  const siteLd = {
+    '@context': 'https://schema.org', '@type': 'WebSite',
+    name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com',
+    description: 'El récord público de Puerto Rico: datos verificados uno por uno contra registros federales y públicos, cada uno con su fuente al lado.',
+    inLanguage: 'es', publisher: { '@type': 'Person', name: 'Angel Anderson' },
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'Puerto Rico Sin Filtros — el récord público de PR, con la fuente al lado',
+    description: 'Datos verificados de Puerto Rico que nadie había publicado, cada uno con su fuente primaria. 65 de 76 municipios con escasez de médicos declarada por el gobierno federal, 33 con el dinero sin cobrar. Sin spin.',
+    slug: '', bodyHtml: body, jsonLd: [siteLd, datasetLd] as any, ogImage: '/og/desiertos.png',
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+    canonicalUrl: 'https://puertoricosinfiltros.com/',
+  }))
+}
+
 // =============== /registro/estado — Estado de Salud PR: el cupón federal sin cobrar ===============
 // Surface de v_registro_municipio_intel: ranking por necesidad×oportunidad + análisis "cupón sin cobrar"
 // (designación HPSA activa + cero psiquiatras). Data live con fallback verificado 2026-07-05.
@@ -5775,6 +5935,7 @@ export default async function handler(req: any, res: any) {
     case 'registro-mapa': return await handleRegistroMapa(req, res)
     case 'registro-estado': return await handleRegistroEstado(req, res)
     case 'comparte': return await handleComparte(req, res)
+    case 'sinfiltros': return await handleSinFiltros(req, res)
     case 'registro-hub': return await handleRegistroHub(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)
