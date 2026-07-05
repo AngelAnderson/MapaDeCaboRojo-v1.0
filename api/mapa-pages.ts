@@ -3930,6 +3930,17 @@ async function handleRegistroPorque(req: any, res: any) {
 
 <hr>
 
+<div class="not-prose my-5 bg-teal-50 border border-teal-200 rounded-xl p-5">
+<p class="font-black text-slate-900 mb-1">Antes de entrar en números, el mapa.</p>
+<p class="text-slate-700 text-sm leading-relaxed">Esto explica, en cristiano, por qué se van los médicos de Puerto Rico. No es una queja: es la matemática, con el número y la fuente al lado, para que se pueda ver y arreglar. Vas a encontrar cuatro cosas, en este orden:</p>
+<ol class="text-sm text-slate-700 mt-2 ml-5 list-decimal space-y-1">
+<li><b>Cuántos médicos quedan hoy</b> (el susto).</li>
+<li><b>Por qué se van</b>: la fórmula, el peaje y la mesada (la matemática, sin jerga).</li>
+<li><b>Por qué no se ha arreglado</b> (spoiler: es legal).</li>
+<li><b>Qué se puede hacer hoy</b>, sin esperar a nadie (la esperanza).</li>
+</ol>
+<p class="text-slate-700 text-sm mt-3">No tienes que leerlo de corrido. Empieza por lo que te importe. Y si solo lees una cosa, que sea el final: hay salida.</p>
+</div>
 <h2>El problema, en una página</h2>
 
 <p>En Puerto Rico hay <b>3 municipios donde no queda ni un solo especialista médico de ninguna clase</b>: Maricao, Las Marías y Florida. <b>39 de los 76 municipios</b> — más de un millón de personas, casi 1 de cada 3 — viven con menos de 5 especialistas por cada 10,000 habitantes. San Juan tiene 68.9. <b>36 municipios no tienen ni un psiquiatra</b> (930,159 personas). <i>(Fuente: registro federal NPPES cruzado con el Censo 2020, verificado municipio por municipio en registromedicopr.com, julio 2026.)</i></p>
