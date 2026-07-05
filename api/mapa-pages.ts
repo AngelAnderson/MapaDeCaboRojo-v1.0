@@ -181,6 +181,7 @@ function layout(opts: {
 <p class="text-xs text-slate-500 mt-1">Cada nombre verificado contra el registro federal NPPES/CMS. En español, por especialidad y por región.</p>
 <div class="mt-6 flex justify-center gap-4 text-xs text-slate-500 flex-wrap">
 <a href="/registro" class="hover:text-teal-700 font-semibold">Buscar especialista</a>
+<a href="/registro/mapa" class="hover:text-teal-700">El mapa</a>
 <a href="/registro/desiertos" class="hover:text-teal-700">Acceso por región</a>
 <a href="/observatorio" class="hover:text-teal-700">Observatorio</a>
 <a href="/registro#como-se-hizo" class="hover:text-teal-700">Cómo se verifica</a>
@@ -2645,7 +2646,7 @@ async function handleRegistro(req: any, res: any) {
   <p id="rg-hint" class="mt-4 text-sm text-slate-400 text-center">${t('Escoge los dos y te decimos cuántos hay cerca, cuáles, y sus teléfonos.', 'Pick both and we\'ll tell you how many are near you, who, and their phone numbers.')}</p>
 </div>
 
-<p class="not-prose mt-3 text-sm text-slate-500 text-center">${t('¿Vives lejos del área metro?', 'Live far from the metro area?')} <a href="/registro/desiertos${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold hover:underline">${t('Mira en qué regiones no hay ciertos especialistas →', 'See which regions have no specialists →')}</a></p>
+<p class="not-prose mt-3 text-sm text-slate-500 text-center"><a href="/registro/mapa" class="text-teal-700 font-semibold hover:underline">${t('🗺️ Mira el mapa: qué especialista hay en cada pueblo →', '🗺️ See the map: which specialists each town has →')}</a> · ${t('¿Vives lejos del área metro?', 'Live far from the metro area?')} <a href="/registro/desiertos${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold hover:underline">${t('Los desiertos médicos →', 'The medical deserts →')}</a></p>
 
 <p class="not-prose mt-4 text-sm text-slate-500 text-center">🎙️ ${t('¿Quieres entender por qué pasa esto?', 'Want to understand why this happens?')} <a href="/observatorio${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold hover:underline">${t('Escucha el podcast y baja el reporte completo →', 'Listen to the podcast and get the full report →')}</a></p>
 
@@ -3794,6 +3795,156 @@ ${ratioSection}
     ogImage: '/og/desiertos.png',
     host: req.headers?.host,
     canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
+// =============== /registro/mapa — Mapa interactivo de médicos por municipio ===============
+// Grano MUNICIPIO (la región promedia y esconde). Data live: v_registro_muni_ratio (totales) +
+// municipalities (coords) + v_registro_muni_spec (matriz especialidad) + hpsa_designations (cupón federal).
+// Sin pines por doctor a propósito: solo 390/6,330 NPI tienen coords — precisión falsa. El municipio es honesto.
+async function handleRegistroMapa(req: any, res: any) {
+  const norm = (s: string) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+  let munis: any[] = []
+  let matrix: Record<string, Record<string, number>> = {}
+  const hpsa: Record<string, { pc?: number; mh?: number }> = {}
+  try {
+    const [mr, mm, mx, hp] = await Promise.all([
+      supabase.from('v_registro_muni_ratio').select('*').neq('region', 'islas').range(0, 200),
+      supabase.from('municipalities').select('name,lat,lon').range(0, 200),
+      supabase.from('v_registro_muni_spec').select('*').range(0, 2999),
+      supabase.from('hpsa_designations').select('municipio,discipline,score').range(0, 499),
+    ])
+    const coords: Record<string, { lat: number; lon: number }> = {}
+    for (const m of (mm.data || [])) coords[norm(m.name)] = { lat: Number(m.lat), lon: Number(m.lon) }
+    for (const h of (hp.data || [])) {
+      const k = norm(h.municipio)
+      hpsa[k] = hpsa[k] || {}
+      const key = h.discipline === 'primaria' ? 'pc' : h.discipline === 'salud_mental' ? 'mh' : null
+      if (key) (hpsa[k] as any)[key] = Math.max((hpsa[k] as any)[key] || 0, Number(h.score) || 0)
+    }
+    for (const r of (mx.data || [])) {
+      matrix[r.municipio] = matrix[r.municipio] || {}
+      matrix[r.municipio][r.subcategory] = Number(r.n)
+    }
+    munis = (mr.data || []).map((r: any) => {
+      const c = coords[norm(r.municipio)] || {}
+      const h = hpsa[norm(r.municipio)] || {}
+      return {
+        m: r.municipio, lat: c.lat, lon: c.lon, pob: Number(r.poblacion),
+        n: Number(r.especialistas), sm: Number(r.salud_mental), psq: Number(r.psiquiatras),
+        r10k: Number(r.por_10k_hab || 0), pc: h.pc || 0, mh: h.mh || 0,
+      }
+    }).filter((x: any) => x.lat && x.lon)
+  } catch (_) { /* page renders with empty-data note */ }
+
+  const kwBySpec: Record<string, string> = {}
+  REGISTRY_SPECS.forEach(s => { kwBySpec[s.s] = s.kw })
+  const dataJson = JSON.stringify({ munis, matrix, kw: kwBySpec }).replace(/</g, '\\u003c')
+
+  // SEO/no-JS fallback: full table of the 76 municipios
+  const seoRows = [...munis].sort((a, b) => b.r10k - a.r10k).map(x =>
+    `<tr class="border-t border-slate-100"><td class="py-1.5 px-3 font-semibold text-slate-800">${escapeHtml(x.m)}</td><td class="py-1.5 px-3 text-right">${x.n}</td><td class="py-1.5 px-3 text-right">${x.r10k.toFixed(1)}</td><td class="py-1.5 px-3 text-center">${x.mh ? `SM ${x.mh}` : ''}${x.pc ? ` · PC ${x.pc}` : ''}</td></tr>`).join('')
+
+  const body = `
+<h1>El mapa de los médicos de Puerto Rico</h1>
+<p class="text-lg text-slate-600 mt-3">Cada círculo es un municipio. <strong>Escoge el especialista que buscas</strong> y el mapa te dice dónde hay, cuántos, y dónde no hay ninguno. Todo verificado contra el registro federal NPPES — pueblo por pueblo, no por promedio.</p>
+
+<div class="not-prose mt-4 flex flex-wrap items-center gap-3">
+  <label class="text-sm font-bold text-slate-700" for="spec-sel">¿Qué buscas?</label>
+  <select id="spec-sel" class="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white min-w-[220px]"><option value="">Todos los especialistas</option></select>
+  <span class="text-xs text-slate-500 hidden sm:inline">Toca un pueblo pa'l detalle</span>
+</div>
+
+<div class="not-prose relative mt-3">
+  <div id="reg-map" style="height:520px" class="rounded-2xl border border-slate-200 z-0"></div>
+  <div id="muni-panel" class="hidden absolute top-3 right-3 z-[500] w-[300px] max-w-[85vw] bg-white rounded-xl border border-slate-200 shadow-lg p-4 max-h-[480px] overflow-auto"></div>
+</div>
+<div class="not-prose mt-2 flex flex-wrap gap-4 text-xs text-slate-500">
+  <span><i class="fa-solid fa-circle" style="color:#10b981"></i> 20+ por 10,000 hab</span>
+  <span><i class="fa-solid fa-circle" style="color:#f59e0b"></i> 8–20</span>
+  <span><i class="fa-solid fa-circle" style="color:#dc2626"></i> menos de 8</span>
+  <span><i class="fa-regular fa-circle" style="color:#7f1d1d"></i> cero</span>
+  <span>💰 = designación federal de escasez activa (HRSA)</span>
+</div>
+
+<details class="mt-6"><summary class="cursor-pointer text-sm font-semibold text-slate-600">Ver la tabla completa (los 76 municipios)</summary>
+<div class="not-prose mt-2 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Municipio</th><th class="py-2 px-3 text-right">Especialistas</th><th class="py-2 px-3 text-right">Por 10k hab</th><th class="py-2 px-3 text-center">💰 HPSA (score)</th></tr></thead><tbody>${seoRows}</tbody></table></div></details>
+
+<p class="text-sm text-slate-500 mt-4">Fuente: NPPES/CMS (proveedores individuales con práctica en PR, por municipio declarado) × Censo 2020 × designaciones HRSA (julio 2026). Los puntos marcan el municipio, no la oficina exacta. <a href="/registro" class="text-teal-700 font-semibold">Buscar teléfonos y perfiles →</a> · <a href="/registro/desiertos" class="text-teal-700 font-semibold">Los desiertos médicos →</a></p>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="anonymous"></script>
+<script>
+(function(){
+  var D=${dataJson};
+  function esc(t){return String(t).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  if(!D.munis.length){document.getElementById('reg-map').innerHTML='<p style="padding:2rem;text-align:center;color:#64748b">La data del mapa no está disponible ahora — intenta en un rato.</p>';return}
+  var map=L.map('reg-map',{scrollWheelZoom:false}).setView([18.20,-66.42],9);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap &copy; CARTO',maxZoom:12,minZoom:8}).addTo(map);
+  // specialty dropdown from matrix
+  var specs={};Object.values(D.matrix).forEach(function(o){Object.keys(o).forEach(function(s){specs[s]=(specs[s]||0)+o[s]})});
+  var sel=document.getElementById('spec-sel');
+  Object.keys(specs).sort().forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s+' ('+specs[s]+')';sel.appendChild(o)});
+  var markers=[];var cur='';
+  function colorFor(x){
+    if(cur){var n=(D.matrix[x.m]||{})[cur]||0;return n===0?{c:'#7f1d1d',f:0.15}:n>=10?{c:'#10b981',f:0.75}:n>=3?{c:'#f59e0b',f:0.75}:{c:'#dc2626',f:0.75}}
+    return x.n===0?{c:'#7f1d1d',f:0.15}:x.r10k>=20?{c:'#10b981',f:0.7}:x.r10k>=8?{c:'#f59e0b',f:0.7}:{c:'#dc2626',f:0.7}
+  }
+  function radiusFor(x){
+    if(cur){var n=(D.matrix[x.m]||{})[cur]||0;return Math.max(6,Math.min(24,5+Math.sqrt(n)*2.4))}
+    return Math.max(6,Math.min(26,4+Math.sqrt(x.n)*0.55))
+  }
+  function panel(x){
+    var el=document.getElementById('muni-panel');
+    var mx=D.matrix[x.m]||{};
+    var top=Object.keys(mx).sort(function(a,b){return mx[b]-mx[a]}).slice(0,10);
+    var kw=cur?(D.kw[cur]||cur.toUpperCase().split(' ')[0]):'ESPECIALISTA';
+    var curLine=cur?('<div class="mt-1 text-sm">'+(mx[cur]?('<b>'+mx[cur]+'</b> '+esc(cur)+(mx[cur]>1?'s':'')+' aquí'):'<b style="color:#b91c1c">0 '+esc(cur)+'s aquí</b>')+'</div>'):'';
+    var badges='';
+    if(x.mh||x.pc){badges='<div class="mt-2 text-xs bg-amber-50 border border-amber-200 rounded-lg p-2">💰 <b>Designación federal de escasez activa</b> — '+(x.pc?('primaria score '+x.pc):'')+(x.pc&&x.mh?' · ':'')+(x.mh?('salud mental score '+x.mh):'')+'. Un médico que practique aquí puede cualificar pa\\' repago federal de préstamos (NHSC).</div>'}
+    el.innerHTML='<div class="flex items-start justify-between"><h3 class="font-black text-slate-900">'+esc(x.m)+'</h3><button onclick="document.getElementById(\\'muni-panel\\').classList.add(\\'hidden\\')" class="text-slate-400 hover:text-slate-700 text-lg leading-none">&times;</button></div>'
+      +'<div class="text-xs text-slate-500">'+x.pob.toLocaleString('en-US')+' habitantes</div>'
+      +'<div class="mt-2 text-sm"><b>'+x.n+'</b> especialistas · <b>'+x.r10k.toFixed(1)+'</b> por 10,000</div>'
+      +'<div class="text-sm text-slate-600">Salud mental: '+x.sm+' ('+x.psq+' psiquiatra'+(x.psq===1?'':'s')+')</div>'
+      +curLine+badges
+      +(top.length?'<div class="mt-2 text-xs text-slate-500 font-bold uppercase tracking-wide">Lo que hay</div><ul class="text-sm text-slate-700">'+top.map(function(s){return '<li>'+esc(s)+' · <b>'+mx[s]+'</b></li>'}).join('')+'</ul>':'<div class="mt-2 text-sm text-red-700 font-semibold">Ni un especialista con práctica declarada en este municipio.</div>')
+      +'<div class="mt-3 flex flex-col gap-1.5">'
+      +'<a class="text-sm font-bold text-white bg-teal-700 hover:bg-teal-800 rounded-full px-3 py-1.5 text-center" href="https://wa.me/17874177711?text='+encodeURIComponent(kw)+'">Escríbele '+kw+' al Veci</a>'
+      +(cur?'<a class="text-sm font-semibold text-teal-700 text-center hover:underline" href="/registro/'+encodeURIComponent(cur.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-'))+'">Ver todos los '+esc(cur)+'s de PR →</a>':'<a class="text-sm font-semibold text-teal-700 text-center hover:underline" href="/registro">Buscar en el registro →</a>')
+      +'</div>';
+    el.classList.remove('hidden');
+  }
+  function draw(){
+    markers.forEach(function(m){map.removeLayer(m)});markers=[];
+    D.munis.forEach(function(x){
+      var s=colorFor(x);
+      var m=L.circleMarker([x.lat,x.lon],{radius:radiusFor(x),color:s.c,weight:2,fillColor:s.c,fillOpacity:s.f});
+      m.bindTooltip(esc(x.m)+(cur?(' · '+(((D.matrix[x.m]||{})[cur])||0)):(' · '+x.n)),{direction:'top',offset:[0,-6]});
+      m.on('click',function(){panel(x)});
+      m.addTo(map);markers.push(m);
+    });
+  }
+  sel.addEventListener('change',function(){cur=sel.value;draw()});
+  draw();
+})();
+</script>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'Mapa de médicos especialistas de Puerto Rico por municipio',
+    description: 'Mapa interactivo: cuántos especialistas médicos verificados (NPPES/CMS) hay en cada municipio de Puerto Rico, densidad por 10,000 habitantes, y designaciones federales de escasez (HRSA) activas.',
+    creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+    isAccessibleForFree: true, inLanguage: 'es',
+    keywords: ['médicos Puerto Rico', 'especialistas por municipio', 'desiertos médicos', 'HPSA', 'NPPES'],
+    url: 'https://registromedicopr.com/registro/mapa',
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'El mapa de los médicos de Puerto Rico — especialistas por municipio',
+    description: 'Escoge el especialista que buscas y mira dónde hay, cuántos, y dónde no hay ninguno. Verificado contra el registro federal NPPES, municipio por municipio.',
+    slug: 'registro/mapa', bodyHtml: body, jsonLd, ogImage: '/og/registro.png',
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
   }))
 }
 
@@ -5391,6 +5542,7 @@ export default async function handler(req: any, res: any) {
     case 'conserje-intent': return await handleConserjeIntent(req, res)
     case 'registro-lead': return await handleRegistroLead(req, res)
     case 'registro-desiertos': return await handleRegistroDesiertos(req, res)
+    case 'registro-mapa': return await handleRegistroMapa(req, res)
     case 'registro-hub': return await handleRegistroHub(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)
