@@ -4168,7 +4168,7 @@ ${recordCards}
 <div class="not-prose border border-teal-200 bg-teal-50/40 rounded-2xl p-5 mt-4">
   <span class="text-xs font-bold text-teal-700 uppercase tracking-wide">Demanda · en vivo</span>
   <h3 class="text-xl font-black text-slate-900 mt-1" style="font-family:'Fraunces',Georgia,serif">Lo que Puerto Rico está preguntando</h3>
-  <blockquote class="mt-2 text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3">${n(dem.total90)} búsquedas reales al vecino digital *7711 en los últimos 90 días. ${n(dem.unmet90)} se quedaron sin respuesta directa: demanda que existe y nadie está sirviendo todavía. Este récord se actualiza solo. El log de lo que el pueblo busca es, también, un dato que nadie más tiene.</blockquote>
+  <blockquote class="mt-2 text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3">${n(dem.total90)} búsquedas reales al vecino digital *7711 en los últimos 90 días. ${n(dem.unmet90)} no encontraron respuesta directa en el directorio. Algunas son huecos reales sin proveedor; otras son negocios que sí existen pero todavía no aparecen bien. Separar una cosa de la otra es parte del trabajo, y por eso este récord importa: el log de lo que el pueblo busca es un dato que nadie más tiene, y se actualiza solo.</blockquote>
   <p class="text-xs text-slate-500 mt-3"><strong>Fuente:</strong> El Veci (*7711), señales de demanda reales, sin números de prueba. En vivo.</p>
   <div class="mt-3 flex flex-wrap gap-2 text-sm">
     <a href="/demanda" data-prsf="record" data-rec="demanda" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">Ver lo que busca PR</a>
