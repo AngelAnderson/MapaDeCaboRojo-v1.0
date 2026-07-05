@@ -4850,7 +4850,10 @@ async function handleExpediente(req: any, res: any) {
   const cnt = (s: string) => promesas.filter((p: any) => p.estado === s).length
   const tile = (num: string, label: string) => `<div class="bg-white border-2 border-slate-200 rounded-xl p-4 text-center"><div class="text-2xl font-black text-slate-900">${num}</div><div class="text-xs text-slate-600 mt-1">${label}</div></div>`
 
-  const repMedidas = promesas.map((p: any) => `<li>${escapeHtml(p.promesa)}${p.fuente_que_paso ? ` · <a href="${escapeHtml(p.fuente_que_paso)}" target="_blank" rel="noopener" class="text-teal-700 underline">fuente ↗</a>` : ''}</li>`).join('')
+  const repMedidas = promesas.map((p: any) => {
+    const okSrc = /^https?:\/\//i.test(String(p.fuente_que_paso || ''))
+    return `<li>${escapeHtml(p.promesa)}${okSrc ? ` · <a href="${escapeHtml(p.fuente_que_paso)}" target="_blank" rel="noopener" class="text-teal-700 underline">fuente ↗</a>` : ''}</li>`
+  }).join('')
   const promesasHtml = cfg.tipo === 'alcalde'
     ? `<p>Dos vistas del mismo récord: <a href="/promesas" class="text-teal-700 font-semibold">el promesómetro</a> (todas las promesas por tema — basura, asfalto, policía, agua — con su estado), y <a href="/historial" class="text-teal-700 font-semibold">el historial</a> (${nP} con la cita textual y el enlace al minuto exacto del video: ${cnt('cumplido')} cumplida${cnt('cumplido') === 1 ? '' : 's'}, ${cnt('en_proceso')} en proceso, ${cnt('vencido')} vencida${cnt('vencido') === 1 ? '' : 's'}). Cada una dicha en un video público.</p>`
     : `<p><strong>${nP} medidas legislativas radicadas</strong>, verificadas contra el récord oficial de la Cámara (SUTRA):</p>
