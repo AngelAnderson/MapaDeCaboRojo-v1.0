@@ -52,6 +52,7 @@
     { "source": "/basura", "destination": "/api/mapa-pages?page=basura" },
     { "source": "/prediccion", "destination": "/api/mapa-pages?page=prediccion" },
     { "source": "/historial", "destination": "/api/mapa-pages?page=historial" },
+    { "source": "/telemedicina", "destination": "/api/mapa-pages?page=telemedicina" },
     { "source": "/sinfiltros", "destination": "/api/mapa-pages?page=sinfiltros" },
     { "source": "/registro/:spec/:region", "destination": "/api/mapa-pages?page=registro-hub&spec=:spec&region=:region" },
     { "source": "/registro/:spec", "destination": "/api/mapa-pages?page=registro-hub&spec=:spec" },

@@ -4158,6 +4158,7 @@ async function handleSinFiltros(req: any, res: any) {
     <a href="/agua" data-prsf="record" data-rec="idx-agua" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Agua</a>
     <a href="/luz" data-prsf="record" data-rec="idx-luz" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Luz</a>
     <a href="/basura" data-prsf="record" data-rec="idx-basura" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Basura</a>
+    <a href="/telemedicina" data-prsf="record" data-rec="idx-telemedicina" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Telemedicina</a>
   </div>
 </div>
 
@@ -4238,7 +4239,18 @@ ${recordCards}
   </div>
 </div>
 
-<p class="not-prose text-sm text-slate-500 mt-5">En camino, cuando haya fuente verificable: economía informal, la frecuencia de apagones (SAIDI del EIA), y el cruce de todos los récords. No se publica nada sin data detrás.</p>
+<div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-4">
+  <span class="text-xs font-bold text-teal-700 uppercase tracking-wide">Cruce · Telemedicina</span>
+  <h3 class="text-xl font-black text-slate-900 mt-1" style="font-family:'Fraunces',Georgia,serif">¿La solución ya está donde no hay médico?</h3>
+  <blockquote class="mt-2 text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3">De los 36 municipios sin un solo psiquiatra, en 17 la banda ancha ya cubre el 80%+ de los hogares: la teleconsulta es viable hoy, falta el servicio no el cable. Solo 3 son desierto doble (Las Marías, Maricao, Guánica): ni médico ni internet.</blockquote>
+  <p class="text-xs text-slate-500 mt-3"><strong>Fuente:</strong> Censo ACS (B28002, acceso a internet) × registro federal NPPES (psiquiatras).</p>
+  <div class="mt-3 flex flex-wrap gap-2 text-sm">
+    <a href="/telemedicina" data-prsf="record" data-rec="telemedicina" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">Ver el cruce completo</a>
+    <a href="https://data.census.gov/table/ACSDT5Y2023.B28002" target="_blank" rel="noopener" data-prsf="verify" data-rec="telemedicina" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Verifícalo: Censo ↗</a>
+  </div>
+</div>
+
+<p class="not-prose text-sm text-slate-500 mt-5">En camino, cuando haya fuente verificable: economía informal, la frecuencia de apagones (SAIDI del EIA), y la enfermedad por pueblo (PR no aparece en el mapa federal de salud — un récord en sí mismo). No se publica nada sin data detrás.</p>
 
 <h2 id="como">Cómo se verifica</h2>
 <p>Cada número sale de una fuente federal o pública, cruzada a nivel de municipio, y revisada uno por uno. Sin robots que copian data de Google. Sin AI inventando cifras. Sin "aproximaciones". Cada dato lleva su fecha; si tiene más de lo que debe, se vuelve a correr. <strong>¿Ves un error? Escríbenos y se corrige, en público.</strong> Ese es el trato.</p>
@@ -4432,6 +4444,79 @@ async function handleDatoRecord(req: any, res: any) {
   }))
 }
 
+// /telemedicina — cruce broadband (ACS B28002) × desierto médico. ¿La solución técnica ya existe donde no hay médico?
+async function handleTelemedicina(req: any, res: any) {
+  let rows: any[] = []
+  try {
+    const { data } = await supabase.from('v_broadband_cruce').select('municipio,especialistas,psiquiatras,pct_broadband,pct_sin_internet,diagnostico_telemedicina').eq('psiquiatras', 0).order('pct_broadband', { ascending: false, nullsFirst: false })
+    rows = data || []
+  } catch (_) { /* empty */ }
+  const count = (d: string) => rows.filter((r: any) => r.diagnostico_telemedicina === d).length
+  const viable = count('telemedicina_viable'), marginal = count('telemedicina_marginal'), doble = count('desierto_doble')
+  const dx: Record<string, { label: string; cls: string }> = {
+    telemedicina_viable: { label: 'Viable ya', cls: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+    telemedicina_marginal: { label: 'Marginal', cls: 'bg-amber-100 text-amber-800 border-amber-200' },
+    desierto_doble: { label: 'Desierto doble', cls: 'bg-red-100 text-red-800 border-red-200' },
+  }
+  const rowHtml = rows.map((r: any) => {
+    const d = dx[r.diagnostico_telemedicina] || dx.telemedicina_marginal
+    return `<tr class="border-t border-slate-100 ${r.diagnostico_telemedicina === 'desierto_doble' ? 'bg-red-50/40' : ''}">
+      <td class="py-1.5 px-3 font-semibold text-slate-800">${escapeHtml(r.municipio)}</td>
+      <td class="py-1.5 px-3 text-right text-slate-600">${r.especialistas}</td>
+      <td class="py-1.5 px-3 text-right ${Number(r.pct_broadband) < 65 ? 'text-red-700 font-bold' : 'text-slate-700'}">${Number(r.pct_broadband).toFixed(1)}%</td>
+      <td class="py-1.5 px-3 text-right text-slate-500">${Number(r.pct_sin_internet).toFixed(1)}%</td>
+      <td class="py-1.5 px-3 text-center"><span class="text-xs font-bold rounded-full px-2 py-0.5 border ${d.cls}">${d.label}</span></td>
+    </tr>`
+  }).join('')
+  const body = `
+<h1>¿Telemedicina posible? El internet contra el desierto médico</h1>
+<p class="text-lg text-slate-600 mt-2">36 municipios de Puerto Rico no tienen ni un psiquiatra. La pregunta que nadie había hecho con data: <strong>¿tienen al menos el internet para verlo por pantalla?</strong> Cruzamos el récord de médicos con el acceso a banda ancha, municipio por municipio.</p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El hallazgo</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">En la mayoría de los pueblos sin psiquiatra, el cable ya está. Falta el servicio, no la conexión.</p>
+</div>
+
+<div class="not-prose grid grid-cols-3 gap-3 mt-5">
+  <div class="bg-white border-2 border-emerald-200 rounded-xl p-4 text-center"><div class="text-3xl font-black text-emerald-700">${viable}</div><div class="text-xs text-slate-600 mt-1">telemedicina <strong>viable ya</strong> (0 psiquiatras, banda ancha ≥80%)</div></div>
+  <div class="bg-white border-2 border-amber-200 rounded-xl p-4 text-center"><div class="text-3xl font-black text-amber-600">${marginal}</div><div class="text-xs text-slate-600 mt-1">marginal (65–80%)</div></div>
+  <div class="bg-white border-2 border-red-300 rounded-xl p-4 text-center"><div class="text-3xl font-black text-red-600">${doble}</div><div class="text-xs text-slate-600 mt-1"><strong>desierto doble</strong>: ni médico ni internet</div></div>
+</div>
+
+<h2>El desierto doble: donde ni la pantalla llega</h2>
+<p>Tres pueblos no tienen psiquiatra <strong>y</strong> tampoco tienen internet: <strong>Las Marías</strong> (38.3% banda ancha, 58.8% de hogares sin internet), <strong>Maricao</strong> (39.0%, 60.5% sin internet) y <strong>Guánica</strong> (58.5%). Los tres tienen además el cupón federal de salud mental sin cobrar. Aquí la telemedicina todavía no es la salida: primero hay que llevar el cable.</p>
+
+<h2>La oportunidad: la solución ya está montada</h2>
+<p>En cambio, en ${viable} municipios sin un solo psiquiatra la banda ancha ya cubre el 80% o más de los hogares — Las Piedras (89.7%), Juncos (88.9%), Trujillo Alto (88.1%), Loíza (86.4%)… <strong>La infraestructura para la teleconsulta existe hoy. Lo que falta no es el cable: es el servicio.</strong></p>
+<p>Y el dato que lo sella: los 33 municipios del cupón sin cobrar tienen banda ancha promedio de <strong>76.5%</strong>, apenas 3.3 puntos por debajo del resto de la isla (79.8%). Donde el dinero federal para médicos se queda sin reclamar, el internet en su mayoría <strong>sí existe</strong>. El cuello de botella es el acceso al servicio, no la conectividad.</p>
+
+<h2>Los 36 pueblos sin psiquiatra, por acceso a internet</h2>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Municipio</th><th class="py-2 px-3 text-right">Especialistas</th><th class="py-2 px-3 text-right">Banda ancha</th><th class="py-2 px-3 text-right">Sin internet</th><th class="py-2 px-3 text-center">Diagnóstico</th></tr></thead><tbody>${rowHtml || '<tr><td colspan="5" class="py-3 px-3 text-slate-400 italic">Data no disponible ahora.</td></tr>'}</tbody></table>
+</div>
+
+<div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 mt-5 text-sm text-slate-700"><strong>Método y límites:</strong> "banda ancha" = hogares con suscripción de banda ancha de cualquier tipo (incluye plan de datos celular), medida estándar del Censo (tabla ACS B28002, estimados 2020–2024). No es lo mismo que cobertura de fibra fija. Los 0 psiquiatras salen del registro federal NPPES. Es un mapa de posibilidad, no una promesa de que la teleconsulta ya esté pasando.</div>
+
+<p class="text-sm text-slate-500 mt-5">Fuente: U.S. Census Bureau, ACS 5-año (B28002) × registro federal NPPES/CMS. Verifícalo tú mismo en <a href="https://data.census.gov/table/ACSDT5Y2023.B28002?g=040XX00US72\$0500000" target="_blank" rel="noopener" class="text-teal-700 font-semibold">data.census.gov ↗</a>. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a>. Julio 2026.</p>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'Telemedicina posible vs desierto médico en Puerto Rico',
+    description: `De los 36 municipios de PR sin psiquiatra, ${viable} ya tienen banda ancha ≥80% (telemedicina viable), ${doble} son desierto doble (ni médico ni internet). Fuentes: ACS B28002 × NPPES.`,
+    creator: { '@type': 'Person', name: 'Angel Anderson' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/telemedicina',
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: '¿Telemedicina posible? El internet contra el desierto médico de PR',
+    description: 'De los 36 municipios de PR sin psiquiatra, en la mayoría el internet ya está: falta el servicio, no el cable. 3 son desierto doble. Con la fuente al lado.',
+    slug: 'telemedicina', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
 // /historial — la línea de tiempo de rendición de cuentas: promesa pública → qué pasó, con el minuto del video.
 // Solo publicable=true (Angel vetea). Balanceado: muestra vencidos, en proceso Y cumplidos.
 async function handleHistorial(req: any, res: any) {
@@ -4458,12 +4543,13 @@ async function handleHistorial(req: any, res: any) {
   const items = rows.map((r: any) => {
     const e = est[r.estado] || est.pendiente
     const g = grab[r.grabacion_id]
+    const okUrl = (u: string) => /^https?:\/\//i.test(String(u || ''))
     const minutoHtml = r.minuto
-      ? (g && g.video_url
+      ? (g && okUrl(g.video_url)
         ? ` · <a href="${escapeHtml(tsLink(g.video_url, r.minuto))}" target="_blank" rel="noopener" class="text-teal-700 underline font-semibold">minuto ${escapeHtml(r.minuto)} del video ↗</a>`
         : ` · minuto ${escapeHtml(r.minuto)} del video`)
       : ''
-    const clipHtml = g && g.clip_url
+    const clipHtml = g && okUrl(g.clip_url)
       ? `<div class="mt-2"><a href="${escapeHtml(g.clip_url)}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-xs font-bold text-white bg-red-600 rounded-full px-3 py-1 hover:bg-red-700">▶ Ver el clip</a></div>`
       : ''
     const citaHtml = r.cita ? `<blockquote class="mt-2 text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3 text-sm italic">"${escapeHtml(r.cita)}"</blockquote>` : ''
@@ -6436,6 +6522,7 @@ export default async function handler(req: any, res: any) {
     case 'basura': return await handleDatoRecord(req, res)
     case 'prediccion': return handlePrediccion(req, res)
     case 'historial': return await handleHistorial(req, res)
+    case 'telemedicina': return await handleTelemedicina(req, res)
     case 'registro-hub': return await handleRegistroHub(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)
