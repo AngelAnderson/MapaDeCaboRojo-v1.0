@@ -4400,6 +4400,7 @@ async function handleSinFiltros(req: any, res: any) {
     <a href="/basura" data-prsf="record" data-rec="idx-basura" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Basura</a>
     <a href="/telemedicina" data-prsf="record" data-rec="idx-telemedicina" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Telemedicina</a>
     <a href="/diabetes" data-prsf="record" data-rec="idx-diabetes" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Diabetes</a>
+    <a href="/sigue-el-dinero" data-prsf="record" data-rec="idx-sigue-dinero" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Sigue el dinero</a>
     <a href="/no-se-mide" data-prsf="record" data-rec="idx-no-se-mide" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Lo que ni se mide</a>
   </div>
 </div>
@@ -4410,11 +4411,20 @@ async function handleSinFiltros(req: any, res: any) {
   <p class="text-slate-300 mt-1 text-sm">Si Puerto Rico no hace nada, ¿a dónde llega? La lectura de todos los récords, con la fuente al lado.</p>
 </a>
 
-<a href="/expediente/alcalde-cabo-rojo" data-prsf="record" data-rec="expediente-alcalde" class="not-prose block border-2 border-teal-300 bg-teal-50 rounded-2xl p-5 mt-5 hover:bg-teal-100 transition-colors no-underline">
-  <span class="text-xs uppercase tracking-widest text-teal-700 font-bold">El Expediente</span>
-  <p class="text-lg sm:text-xl font-black mt-1 leading-snug text-slate-900" style="font-family:'Fraunces',Georgia,serif">Alcalde de Cabo Rojo: el récord completo →</p>
-  <p class="text-slate-600 mt-1 text-sm">Sus promesas y el estado de su pueblo, en una página, con la fuente al lado. Neutral y citable. La plantilla para cualquier funcionario.</p>
-</a>
+<h2 id="expedientes">Los Expedientes</h2>
+<p class="text-slate-600 -mt-1">El récord completo de quien te gobierna: sus promesas y el estado de su gente, en una página, con la fuente al lado. Neutral y citable — para el vecino que decide y el periodista que investiga.</p>
+<div class="not-prose grid sm:grid-cols-2 gap-3 mt-3">
+  <a href="/expediente/alcalde-cabo-rojo" data-prsf="record" data-rec="expediente-alcalde" class="block border-2 border-teal-300 bg-teal-50 rounded-2xl p-5 hover:bg-teal-100 transition-colors no-underline">
+    <span class="text-xs uppercase tracking-widest text-teal-700 font-bold">Alcalde</span>
+    <p class="text-lg font-black mt-1 leading-snug text-slate-900" style="font-family:'Fraunces',Georgia,serif">Cabo Rojo →</p>
+    <p class="text-slate-600 mt-1 text-sm">Jorge Morales Wiscovitch: promesas con video + estado del pueblo.</p>
+  </a>
+  <a href="/expediente/representante-distrito-20" data-prsf="record" data-rec="expediente-rep20" class="block border-2 border-teal-300 bg-teal-50 rounded-2xl p-5 hover:bg-teal-100 transition-colors no-underline">
+    <span class="text-xs uppercase tracking-widest text-teal-700 font-bold">Representante · Distrito 20</span>
+    <p class="text-lg font-black mt-1 leading-snug text-slate-900" style="font-family:'Fraunces',Georgia,serif">Cabo Rojo · San Germán · Hormigueros →</p>
+    <p class="text-slate-600 mt-1 text-sm">Emilio Carlo Acosta: medidas + estado del distrito ($140M FEMA, Hormigueros sin psiquiatra).</p>
+  </a>
+</div>
 
 <h2 id="records">Los récords</h2>
 <p class="text-slate-600 -mt-1">Cada uno es un dato verificado contra un registro federal o público. La brecha habla sola.</p>
@@ -4506,6 +4516,17 @@ ${recordCards}
   <div class="mt-3 flex flex-wrap gap-2 text-sm">
     <a href="/diabetes" data-prsf="record" data-rec="diabetes" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">Ver el cruce completo</a>
     <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4537060/" target="_blank" rel="noopener" data-prsf="verify" data-rec="diabetes" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Verifícalo: CDC ↗</a>
+  </div>
+</div>
+
+<div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-4">
+  <span class="text-xs font-bold text-teal-700 uppercase tracking-wide">Sigue el dinero</span>
+  <h3 class="text-xl font-black text-slate-900 mt-1" style="font-family:'Fraunces',Georgia,serif">¿Quién se llevó la recuperación?</h3>
+  <blockquote class="mt-2 text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3">De cada dólar de contrato de recuperación que rastreamos, ~87 centavos salieron de Puerto Rico hacia el mainland. CH2M/CDM (Denver) sola se llevó $238M solo en asesorar cómo gastar el dinero de FEMA.</blockquote>
+  <p class="text-xs text-slate-500 mt-3"><strong>Fuente:</strong> USASpending.gov (DHS/FEMA) × lugar de ejecución PR.</p>
+  <div class="mt-3 flex flex-wrap gap-2 text-sm">
+    <a href="/sigue-el-dinero" data-prsf="record" data-rec="sigue-dinero" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">Ver quién cobró →</a>
+    <a href="https://www.usaspending.gov/" target="_blank" rel="noopener" data-prsf="verify" data-rec="sigue-dinero" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Verifícalo: USASpending ↗</a>
   </div>
 </div>
 
@@ -4705,54 +4726,135 @@ async function handleDatoRecord(req: any, res: any) {
 
 // /expediente/:slug — el dossier público de un funcionario: sus promesas + el estado de su pueblo, todo citable.
 // v1: alcalde de Cabo Rojo (plantilla replicable a cualquier funcionario/distrito).
-async function handleExpediente(req: any, res: any) {
-  // v1 solo maneja al alcalde de Cabo Rojo; otros slugs → mismo por ahora.
-  const CARGO_ALCALDE = 'fd65244c-9ba5-4f31-bf72-c4dbde040912'
-  let promesas: any[] = []
-  let med: any = { especialistas: 99, psiquiatras: 3, poblacion: 48988, poverty_pct: 38.4, por_10k_hab: 20.2, hpsa_salud_mental: 22 }
-  let fema: any = { federal_obligado: 34315703, proyectos: 119 }
-  let broadband: any = { pct_broadband: 75.7, pct_sin_internet: 18.8 }
-  let diabetes = '15.2'
+// /sigue-el-dinero — quién recibió los fondos de recuperación de PR (USASpending × FEMA). El moat: seguir la plata.
+async function handleSigueElDinero(req: any, res: any) {
+  let rows: any[] = []
   try {
-    const [pp, mm, ff, bb, dd] = await Promise.all([
-      supabase.from('quien_responde_promesas').select('estado').eq('publicable', true).eq('cargo_id', CARGO_ALCALDE),
-      supabase.from('v_registro_municipio_intel').select('especialistas,psiquiatras,poblacion,poverty_pct,por_10k_hab,hpsa_salud_mental').ilike('municipio', '%cabo rojo%').maybeSingle(),
-      supabase.from('fema_recovery_by_municipio').select('federal_obligado,proyectos').ilike('municipio_raw', '%cabo rojo%').maybeSingle(),
-      supabase.from('pr_broadband').select('pct_broadband,pct_sin_internet').ilike('municipio', '%cabo rojo%').maybeSingle(),
-      supabase.from('v_salud_cruce').select('diabetes_pct').ilike('municipio', '%cabo rojo%').maybeSingle(),
-    ])
-    promesas = pp.data || []
-    if (mm.data) med = mm.data
-    if (ff.data) fema = ff.data
-    if (bb.data) broadband = bb.data
-    if (dd.data && dd.data.diabetes_pct) diabetes = dd.data.diabetes_pct
-  } catch (_) { /* fallbacks */ }
-  const nP = promesas.length
-  const cnt = (s: string) => promesas.filter((p: any) => p.estado === s).length
-  const money = (x: number) => '$' + Number(x).toLocaleString('en-US')
+    const { data } = await supabase.from('pr_contratos_federales').select('recipient,monto_total,origen,municipio_hq,verificalo').ilike('categoria', '%contratista%').order('monto_total', { ascending: false }).limit(25)
+    rows = data || []
+  } catch (_) { /* empty */ }
+  const esPR = (o: string) => /^PR/i.test(String(o || ''))
+  const totalC = rows.reduce((a: number, r: any) => a + Number(r.monto_total || 0), 0)
+  const totalPR = rows.filter((r: any) => esPR(r.origen)).reduce((a: number, r: any) => a + Number(r.monto_total || 0), 0)
+  const pctFuera = totalC ? Math.round(((totalC - totalPR) / totalC) * 100) : 0
+  const money = (x: number) => '$' + Number(x || 0).toLocaleString('en-US')
+  const mill = (x: number) => '$' + (Number(x || 0) / 1e6).toFixed(0) + 'M'
+  const rowHtml = rows.map((r: any) => `<tr class="border-t border-slate-100 ${esPR(r.origen) ? 'bg-teal-50/40' : ''}">
+      <td class="py-1.5 px-3 font-semibold text-slate-800">${escapeHtml(r.recipient)}${r.verificalo ? ` <a href="${escapeHtml(r.verificalo)}" target="_blank" rel="noopener" class="text-teal-700 text-xs underline">↗</a>` : ''}</td>
+      <td class="py-1.5 px-3 text-right font-bold text-slate-900">${mill(r.monto_total)}</td>
+      <td class="py-1.5 px-3 text-xs ${esPR(r.origen) ? 'text-teal-700 font-semibold' : 'text-slate-500'}">${escapeHtml(r.municipio_hq || r.origen || '')}</td>
+    </tr>`).join('')
   const body = `
-<div class="not-prose bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
-  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El Expediente</p>
-  <h1 class="text-2xl sm:text-3xl font-black mt-1 leading-tight" style="font-family:'Fraunces',Georgia,serif">Alcalde de Cabo Rojo</h1>
-  <p class="text-slate-300 mt-1">Jorge Morales Wiscovitch</p>
+<h1>Sigue el dinero: ¿quién se llevó la recuperación?</h1>
+<p class="text-lg text-slate-600 mt-2">Puerto Rico recibió miles de millones para reconstruirse tras los huracanes. La pregunta que casi nadie hace con nombres: <strong>¿a quién se los pagaron?</strong> Rastreamos los contratos federales de recuperación por recipiente.</p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El hallazgo</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">De cada dólar de contrato de recuperación que rastreamos, unos ${pctFuera} centavos salieron de Puerto Rico hacia el mainland.</p>
+  <p class="text-slate-300 mt-2 text-sm">Los contratos grandes de "recovery services" — asesorar, inspeccionar, gestionar cómo gastar el dinero de FEMA — se los llevaron firmas de Colorado, California, Virginia y Maryland. Solo una fracción quedó con empresas boricuas.</p>
 </div>
 
-<p class="text-lg text-slate-600 mt-4">Todo lo que el récord público dice sobre su gestión y el estado de su pueblo, en un solo lugar y con la fuente al lado. Para el vecino que decide, el periodista que investiga, y cualquiera que quiera servir mejor a Cabo Rojo.</p>
+<div class="not-prose grid grid-cols-2 gap-3 mt-5">
+  <div class="bg-white border-2 border-red-300 rounded-xl p-4 text-center"><div class="text-3xl font-black text-red-600">${pctFuera}%</div><div class="text-xs text-slate-600 mt-1">de los contratos rastreados fue a firmas de afuera de PR</div></div>
+  <div class="bg-white border-2 border-teal-200 rounded-xl p-4 text-center"><div class="text-3xl font-black text-teal-700">${100 - pctFuera}%</div><div class="text-xs text-slate-600 mt-1">quedó con empresas boricuas</div></div>
+</div>
 
-<h2>Las promesas</h2>
-<p>Dos vistas del mismo récord: <a href="/promesas" class="text-teal-700 font-semibold">el promesómetro</a> (todas las promesas por tema — basura, asfalto, policía, agua — con su estado), y <a href="/historial" class="text-teal-700 font-semibold">el historial</a> (${nP} con la cita textual y el enlace al minuto exacto del video: ${cnt('cumplido')} cumplida${cnt('cumplido') === 1 ? '' : 's'}, ${cnt('en_proceso')} en proceso, ${cnt('vencido')} vencida${cnt('vencido') === 1 ? '' : 's'}). Cada una dicha en un video público.</p>
+<h2>El caso más crudo</h2>
+<p><strong>CH2M Hill – CDM</strong> (Denver, Colorado) se llevó sola <strong>$238 millones</strong> en servicios "PA-TAC" — es decir, en <em>asesorar</em> sobre cómo gastar el dinero de FEMA. Sumando las firmas de ingeniería y consultoría de afuera (CDM, AECOM, WSP, Fluor), más de <strong>$700 millones</strong> se fueron en gestión y consultoría, no en obra física.</p>
 
-<h2>El estado de Cabo Rojo, en números</h2>
-<p class="text-slate-600 -mt-2">Lo que hereda, administra y le entrega al pueblo. Cada número con su récord.</p>
+<h2>Los contratistas de la recuperación (fila teal = boricua)</h2>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Recipiente</th><th class="py-2 px-3 text-right">Monto</th><th class="py-2 px-3">Sede</th></tr></thead><tbody>${rowHtml || '<tr><td colspan="3" class="py-3 px-3 text-slate-400 italic">Data no disponible ahora.</td></tr>'}</tbody></table>
+</div>
 
+<div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 mt-5 text-sm text-slate-700"><strong>Método y límites:</strong> contratos federales de la agencia DHS/FEMA con lugar de ejecución en PR (2017–2025), vía USASpending.gov. Excluye el passthrough del Gobierno de PR (que sub-otorga a los municipios — esos son los fondos de <a href="/recuperacion" class="text-teal-700 font-semibold">/recuperacion</a>). <strong>Falta HUD CDBG-DR</strong> (~$20B más) — segunda pasada pendiente. Los montos son a nivel transacción (las modificaciones se suman), así que léelos como orden de magnitud, no centavo exacto.</div>
+
+<p class="text-sm text-slate-500 mt-5">Fuente: USASpending.gov (Departamento de Seguridad Nacional / FEMA), lugar de ejecución Puerto Rico. Cada recipiente tiene su enlace de verificación (↗) en la tabla. Julio 2026.</p>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'Sigue el dinero: recipientes de la recuperación federal de Puerto Rico',
+    description: `De los contratos federales de recuperación de PR rastreados, ~${pctFuera}% fue a firmas de afuera de la isla. CH2M/CDM (Denver) sola recibió $238M en asesoría. Fuente: USASpending × FEMA.`,
+    creator: { '@type': 'Person', name: 'Angel Anderson' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/sigue-el-dinero',
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'Sigue el dinero: quién se llevó la recuperación de Puerto Rico',
+    description: 'De cada dólar de contrato de recuperación de PR, ~87 centavos salieron al mainland. Los contratistas de la reconstrucción, con nombre y monto. Con la fuente al lado.',
+    slug: 'sigue-el-dinero', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
+const FUNCIONARIOS: Record<string, any> = {
+  'alcalde-cabo-rojo': { nombre: 'Jorge Morales Wiscovitch', cargo: 'Alcalde de Cabo Rojo', tipo: 'alcalde', cargo_id: 'fd65244c-9ba5-4f31-bf72-c4dbde040912', promesasPublicas: true, ambito: 'Cabo Rojo', municipios: [{ nombre: 'Cabo Rojo', key: 'cabo rojo' }] },
+  'representante-distrito-20': { nombre: 'Emilio Carlo Acosta', cargo: 'Representante · Cámara de PR · Distrito 20', tipo: 'representante', partido: 'PNP', cargo_id: 'b7c3ac60-5f99-4326-8a4d-e9eb8fd80c08', promesasPublicas: false, ambito: 'el Distrito 20 (Cabo Rojo, San Germán y Hormigueros)', municipios: [{ nombre: 'Cabo Rojo', key: 'cabo rojo' }, { nombre: 'San Germán', key: 'germ' }, { nombre: 'Hormigueros', key: 'hormigueros' }] },
+}
+async function handleExpediente(req: any, res: any) {
+  const f = String(req.query?.f || 'alcalde-cabo-rojo')
+  const cfg = FUNCIONARIOS[f] || FUNCIONARIOS['alcalde-cabo-rojo']
+  const money = (x: number) => '$' + Number(x || 0).toLocaleString('en-US')
+  let promesas: any[] = []
+  const munis: any[] = []
+  try {
+    let pq: any = supabase.from('quien_responde_promesas').select('estado').eq('cargo_id', cfg.cargo_id)
+    if (cfg.promesasPublicas) pq = pq.eq('publicable', true)
+    const pp = await pq
+    promesas = pp.data || []
+    for (const m of cfg.municipios) {
+      const [mm, ff, bb, dd] = await Promise.all([
+        supabase.from('v_registro_municipio_intel').select('especialistas,psiquiatras,poblacion,poverty_pct,por_10k_hab,hpsa_salud_mental').ilike('municipio', `%${m.key}%`).maybeSingle(),
+        supabase.from('fema_recovery_by_municipio').select('federal_obligado,proyectos').ilike('municipio_raw', `%${m.key}%`).maybeSingle(),
+        supabase.from('pr_broadband').select('pct_broadband,pct_sin_internet').ilike('municipio', `%${m.key}%`).maybeSingle(),
+        supabase.from('v_salud_cruce').select('diabetes_pct').ilike('municipio', `%${m.key}%`).maybeSingle(),
+      ])
+      munis.push({ nombre: m.nombre, med: mm.data || {}, fema: ff.data || {}, bb: bb.data || {}, diabetes: dd.data?.diabetes_pct })
+    }
+  } catch (_) { /* fallbacks */ }
+  const T = munis.reduce((a: any, x: any) => ({ esp: a.esp + (+x.med.especialistas || 0), psq: a.psq + (+x.med.psiquiatras || 0), pob: a.pob + (+x.med.poblacion || 0), fema: a.fema + (+x.fema.federal_obligado || 0), proy: a.proy + (+x.fema.proyectos || 0) }), { esp: 0, psq: 0, pob: 0, fema: 0, proy: 0 })
+  const nP = promesas.length
+  const cnt = (s: string) => promesas.filter((p: any) => p.estado === s).length
+  const tile = (num: string, label: string) => `<div class="bg-white border-2 border-slate-200 rounded-xl p-4 text-center"><div class="text-2xl font-black text-slate-900">${num}</div><div class="text-xs text-slate-600 mt-1">${label}</div></div>`
+
+  const promesasHtml = cfg.promesasPublicas
+    ? `<p>Dos vistas del mismo récord: <a href="/promesas" class="text-teal-700 font-semibold">el promesómetro</a> (todas las promesas por tema — basura, asfalto, policía, agua — con su estado), y <a href="/historial" class="text-teal-700 font-semibold">el historial</a> (${nP} con la cita textual y el enlace al minuto exacto del video: ${cnt('cumplido')} cumplida${cnt('cumplido') === 1 ? '' : 's'}, ${cnt('en_proceso')} en proceso, ${cnt('vencido')} vencida${cnt('vencido') === 1 ? '' : 's'}). Cada una dicha en un video público.</p>`
+    : `<p><strong>${nP} medidas legislativas rastreadas</strong> (alumbrado en la PR-2 tras un accidente fatal · solares abandonados para adjudicar a familias de bajos recursos · escuela vocacional del distrito). Están <strong>en verificación</strong> de números y fechas exactas contra el récord de la Cámara (SUTRA) antes de publicarse: <em>el récord no muestra un dato sin confirmar</em>.</p>`
+
+  let estadoHtml = ''
+  if (cfg.tipo === 'representante') {
+    const rows = munis.map((m: any) => `<tr class="border-t border-slate-100 ${(+m.med.psiquiatras || 0) === 0 ? 'bg-red-50/40' : ''}">
+      <td class="py-1.5 px-3 font-semibold text-slate-800">${escapeHtml(m.nombre)}</td>
+      <td class="py-1.5 px-3 text-right text-slate-600">${(+m.med.poblacion || 0).toLocaleString('en-US')}</td>
+      <td class="py-1.5 px-3 text-right">${m.med.especialistas ?? '—'}</td>
+      <td class="py-1.5 px-3 text-right ${(+m.med.psiquiatras || 0) === 0 ? 'text-red-700 font-bold' : 'text-slate-600'}">${m.med.psiquiatras ?? '—'}</td>
+      <td class="py-1.5 px-3 text-right text-slate-600">${money(m.fema.federal_obligado)}</td>
+    </tr>`).join('')
+    estadoHtml = `
+<div class="not-prose grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
+  ${tile(T.pob.toLocaleString('en-US'), 'habitantes en el distrito')}
+  ${tile(String(T.esp), 'especialistas médicos')}
+  ${tile(String(T.psq), 'psiquiatras en 3 municipios')}
+  ${tile(money(T.fema), `de FEMA (${T.proy} proyectos)`)}
+</div>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Municipio</th><th class="py-2 px-3 text-right">Población</th><th class="py-2 px-3 text-right">Especialistas</th><th class="py-2 px-3 text-right">Psiquiatras</th><th class="py-2 px-3 text-right">FEMA obligado</th></tr></thead><tbody>${rows}</tbody></table>
+</div>
+<p class="text-sm text-slate-700 mt-3"><strong>Lo que salta:</strong> Hormigueros, con 16,614 habitantes, tiene <strong>0 psiquiatras</strong> y solo 9 especialistas; los tres municipios cargan designación federal de escasez de salud mental. San Germán concentra el 65% de la recuperación federal del distrito. <a href="/telemedicina" class="text-teal-700 font-semibold">Ver el cruce de acceso →</a></p>`
+  } else {
+    const m = munis[0] || {}
+    const med = m.med || {}, fema = m.fema || {}, bb = m.bb || {}
+    estadoHtml = `
 <div class="not-prose grid sm:grid-cols-2 gap-3 mt-3">
   <a href="/registro/estado" class="block border border-slate-200 bg-white rounded-xl p-4 hover:border-teal-300 no-underline">
     <div class="text-xs font-bold text-teal-700 uppercase">Salud</div>
-    <div class="text-sm text-slate-700 mt-1">${med.especialistas} especialistas · ${med.psiquiatras} psiquiatras (${Number(med.por_10k_hab).toFixed(1)}/10k). <strong>Designación federal de escasez de salud mental activa</strong> (score ${med.hpsa_salud_mental}) pese a tener psiquiatras. Diabetes ${diabetes}% (est. 2009).</div>
+    <div class="text-sm text-slate-700 mt-1">${med.especialistas ?? 99} especialistas · ${med.psiquiatras ?? 3} psiquiatras (${Number(med.por_10k_hab || 20.2).toFixed(1)}/10k). <strong>Designación federal de escasez de salud mental activa</strong> (score ${med.hpsa_salud_mental ?? 22}) pese a tener psiquiatras. Diabetes ${m.diabetes || '15.2'}% (est. 2009).</div>
   </a>
   <a href="/recuperacion" class="block border border-slate-200 bg-white rounded-xl p-4 hover:border-teal-300 no-underline">
     <div class="text-xs font-bold text-teal-700 uppercase">Recuperación federal</div>
-    <div class="text-sm text-slate-700 mt-1">${money(fema.federal_obligado)} de fondos FEMA obligados en ${fema.proyectos} proyectos. ¿En qué se convirtieron?</div>
+    <div class="text-sm text-slate-700 mt-1">${money(fema.federal_obligado ?? 34315703)} de fondos FEMA obligados en ${fema.proyectos ?? 119} proyectos. ¿En qué se convirtieron?</div>
   </a>
   <a href="/agua" class="block border border-slate-200 bg-white rounded-xl p-4 hover:border-teal-300 no-underline">
     <div class="text-xs font-bold text-teal-700 uppercase">Agua</div>
@@ -4760,12 +4862,29 @@ async function handleExpediente(req: any, res: any) {
   </a>
   <a href="/telemedicina" class="block border border-slate-200 bg-white rounded-xl p-4 hover:border-teal-300 no-underline">
     <div class="text-xs font-bold text-teal-700 uppercase">Internet</div>
-    <div class="text-sm text-slate-700 mt-1">${Number(broadband.pct_broadband).toFixed(1)}% de los hogares con banda ancha; ${Number(broadband.pct_sin_internet).toFixed(1)}% sin ningún internet. Pobreza ${Number(med.poverty_pct).toFixed(0)}%.</div>
+    <div class="text-sm text-slate-700 mt-1">${Number(bb.pct_broadband || 75.7).toFixed(1)}% de los hogares con banda ancha; ${Number(bb.pct_sin_internet || 18.8).toFixed(1)}% sin ningún internet. Pobreza ${Number(med.poverty_pct || 38.4).toFixed(0)}%.</div>
   </a>
+</div>`
+  }
+
+  const body = `
+<div class="not-prose bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El Expediente</p>
+  <h1 class="text-2xl sm:text-3xl font-black mt-1 leading-tight" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(cfg.cargo)}</h1>
+  <p class="text-slate-300 mt-1">${escapeHtml(cfg.nombre)}${cfg.partido ? ' · ' + escapeHtml(cfg.partido) : ''}</p>
 </div>
 
-<h2>¿Qué viene para Cabo Rojo?</h2>
-<p class="text-slate-600 -mt-2">La gestión no se mide solo por lo que pasó, sino por lo que viene. Estas fechas afectan a Cabo Rojo como a todo Puerto Rico — y hay algo que hacer hoy. <a href="/prediccion" class="text-teal-700 font-semibold">Ver la predicción completa del pueblo →</a></p>
+<p class="text-lg text-slate-600 mt-4">Todo lo que el récord público dice sobre su gestión y el estado de ${escapeHtml(cfg.ambito)}, en un solo lugar y con la fuente al lado. Para el vecino que decide, el periodista que investiga, y cualquiera que quiera servir mejor.</p>
+
+<h2>Las promesas</h2>
+${promesasHtml}
+
+<h2>El estado ${cfg.tipo === 'representante' ? 'del distrito' : 'de Cabo Rojo'}, en números</h2>
+<p class="text-slate-600 -mt-2">Lo que hereda, administra y le entrega a la gente. Cada número con su récord.</p>
+${estadoHtml}
+
+<h2>¿Qué viene?</h2>
+<p class="text-slate-600 -mt-2">La gestión no se mide solo por lo que pasó, sino por lo que viene. Estas fechas afectan a ${escapeHtml(cfg.ambito)} como a todo Puerto Rico — y hay algo que hacer hoy. <a href="/prediccion" class="text-teal-700 font-semibold">Ver la predicción completa →</a></p>
 ${renderAlertas()}
 
 <div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
@@ -4773,20 +4892,20 @@ ${renderAlertas()}
   <p class="mt-2 text-sm text-slate-600 italic">Todo con fuente. Se actualiza con el récord. ¿Ves un error? Escríbenos.</p>
 </div>
 
-<p class="text-sm text-slate-500 mt-6">Fuentes: promesas verificadas contra grabaciones públicas · NPPES/CMS (médicos) · HRSA (escasez) · OpenFEMA (recuperación) · EPA SDWIS (agua) · Censo ACS (internet, pobreza) · CDC (diabetes, est. 2009). Este expediente es neutral y no partidista: es el récord, no una opinión. Julio 2026.</p>
+<p class="text-sm text-slate-500 mt-6">Fuentes: NPPES/CMS (médicos) · HRSA (escasez) · OpenFEMA (recuperación) · EPA SDWIS (agua) · Censo ACS (internet, pobreza) · CDC (diabetes, est. 2009) · Cámara de PR / grabaciones públicas (promesas). Este expediente es neutral y no partidista: es el récord, no una opinión. Julio 2026.</p>
 `
   const jsonLd = {
     '@context': 'https://schema.org', '@type': 'ProfilePage',
-    about: { '@type': 'Person', name: 'Jorge Morales Wiscovitch', jobTitle: 'Alcalde de Cabo Rojo' },
+    about: { '@type': 'Person', name: cfg.nombre, jobTitle: cfg.cargo },
     publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
-    inLanguage: 'es', url: 'https://puertoricosinfiltros.com/expediente/alcalde-cabo-rojo',
+    inLanguage: 'es', url: `https://puertoricosinfiltros.com/expediente/${f}`,
   }
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=3600')
   res.status(200).send(layout({
-    title: 'El Expediente: Alcalde de Cabo Rojo — promesas y estado del pueblo, con la fuente al lado',
-    description: 'Todo el récord público del alcalde de Cabo Rojo y el estado de su pueblo: promesas rastreadas, recuperación federal, salud, agua, internet. Neutral y citable.',
-    slug: 'expediente/alcalde-cabo-rojo', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    title: `El Expediente: ${cfg.cargo} — promesas y estado, con la fuente al lado`,
+    description: `Todo el récord público de ${cfg.nombre} (${cfg.cargo}) y el estado de ${cfg.ambito}: promesas, recuperación federal, salud, agua, internet. Neutral y citable.`,
+    slug: `expediente/${f}`, bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
@@ -7021,6 +7140,7 @@ export default async function handler(req: any, res: any) {
     case 'no-se-mide': return handleNoSeMide(req, res)
     case 'diabetes': return await handleDiabetes(req, res)
     case 'expediente': return await handleExpediente(req, res)
+    case 'sigue-el-dinero': return await handleSigueElDinero(req, res)
     case 'registro-hub': return await handleRegistroHub(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)

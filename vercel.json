@@ -56,6 +56,7 @@
     { "source": "/telemedicina", "destination": "/api/mapa-pages?page=telemedicina" },
     { "source": "/no-se-mide", "destination": "/api/mapa-pages?page=no-se-mide" },
     { "source": "/diabetes", "destination": "/api/mapa-pages?page=diabetes" },
+    { "source": "/sigue-el-dinero", "destination": "/api/mapa-pages?page=sigue-el-dinero" },
     { "source": "/expediente/:slug", "destination": "/api/mapa-pages?page=expediente&f=:slug" },
     { "source": "/expediente", "destination": "/api/mapa-pages?page=expediente" },
     { "source": "/sinfiltros", "destination": "/api/mapa-pages?page=sinfiltros" },
