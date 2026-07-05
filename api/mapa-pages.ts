@@ -4099,7 +4099,9 @@ async function handleSinFiltros(req: any, res: any) {
     },
   ]
 
-  const recordCards = records.map((r) => `
+  const recordCards = records.map((r, i) => {
+    const slug = ['cupon', 'sin-especialista', 'ladrillo', 'desigualdad'][i] || `rec${i}`
+    return `
     <div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-4">
       <div class="flex items-center justify-between gap-2">
         <span class="text-xs font-bold text-teal-700 uppercase tracking-wide">${escapeHtml(r.tag)}</span>
@@ -4108,10 +4110,11 @@ async function handleSinFiltros(req: any, res: any) {
       <blockquote class="mt-2 text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3">${escapeHtml(r.brecha)}</blockquote>
       <p class="text-xs text-slate-500 mt-3"><strong>Fuente:</strong> ${escapeHtml(r.fuente)}</p>
       <div class="mt-3 flex flex-wrap gap-2 text-sm">
-        <a href="${escapeHtml(r.verUrl)}" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">Ver el récord completo</a>
-        <a href="${escapeHtml(r.verificaUrl)}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Verifícalo tú mismo: ${escapeHtml(r.verificaText)} ↗</a>
+        <a href="${escapeHtml(r.verUrl)}" data-prsf="record" data-rec="${slug}" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">Ver el récord completo</a>
+        <a href="${escapeHtml(r.verificaUrl)}" target="_blank" rel="noopener" data-prsf="verify" data-rec="${slug}" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Verifícalo tú mismo: ${escapeHtml(r.verificaText)} ↗</a>
       </div>
-    </div>`).join('')
+    </div>`
+  }).join('')
 
   const body = `
 <h1>Puerto Rico, sin filtros.</h1>
@@ -4135,9 +4138,9 @@ ${recordCards}
 <h2>Para prensa, investigadores y quien construye</h2>
 <p>Todo aquí es citable y libre. Cópialo, cítalo, constrúyele encima.</p>
 <ul>
-  <li><a href="/comparte">Datos citables</a>: cada cifra con su fuente, botón de copiar, formato para citar.</li>
-  <li><a href="/civico.json">API pública (civico.json)</a>: la data cívica en formato máquina-legible.</li>
-  <li><a href="/llms.txt">Para IA (llms.txt)</a>: para que los modelos de lenguaje citen la fuente, no inventen.</li>
+  <li><a href="/comparte" data-prsf="cite" data-rec="comparte">Datos citables</a>: cada cifra con su fuente, botón de copiar, formato para citar.</li>
+  <li><a href="/civico.json" data-prsf="cite" data-rec="civico-json">API pública (civico.json)</a>: la data cívica en formato máquina-legible.</li>
+  <li><a href="/llms.txt" data-prsf="cite" data-rec="llms-txt">Para IA (llms.txt)</a>: para que los modelos de lenguaje citen la fuente, no inventen.</li>
 </ul>
 <p class="text-sm text-slate-600">¿Necesitas el corte de un municipio, la metodología completa, o una licencia de datos para tu redacción o institución? Angel Anderson, desde Cabo Rojo. Escribe a <a href="mailto:angel@angelanderson.com" class="text-teal-700 font-semibold">angel@angelanderson.com</a>. Prefiero texto o correo.</p>
 
@@ -4147,6 +4150,23 @@ ${recordCards}
 </div>
 
 <p class="text-sm text-slate-500 mt-6">Metodología: cruce de fuentes federales y públicas a nivel de municipio — NPPES/CMS (proveedores), archivos HRSA (designaciones de escasez), OpenFEMA (fondos de recuperación), Censo/ACS (población y pobreza). Verificado uno por uno. Última actualización: julio 2026.</p>
+
+<script>
+(function(){
+  function log(ev, rec, target){
+    try{ fetch('/api/mapa-pages?page=sinfiltros-log',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({event:ev,record:rec||'',target:target||'',referrer:document.referrer||''})}); }catch(e){}
+  }
+  log('page_view','', location.pathname);
+  document.addEventListener('click', function(e){
+    var a = e.target.closest ? e.target.closest('a[data-prsf]') : null;
+    if(!a) return;
+    var kind = a.getAttribute('data-prsf'); // record | verify | cite
+    var rec = a.getAttribute('data-rec') || '';
+    var href = a.getAttribute('href') || '';
+    log(kind + '_click', rec, href);
+  }, true);
+})();
+</script>
 `
   const datasetLd = {
     '@context': 'https://schema.org', '@type': 'Dataset',
@@ -4172,6 +4192,28 @@ ${recordCards}
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
     canonicalUrl: 'https://puertoricosinfiltros.com/',
   }))
+}
+
+// Analytics de PuertoRicoSinFiltros.com — el log ES un récord (qué mira PR).
+// Mismo patrón fail-safe que acceso-log: allowlist + insert service-role, nunca rompe la página.
+const SINFILTROS_EVENTS = new Set(['page_view', 'record_click', 'verify_click', 'cite_click'])
+async function handleSinFiltrosLog(req: any, res: any) {
+  try {
+    let body: any = req.body
+    if (typeof body === 'string') { try { body = JSON.parse(body) } catch { body = {} } }
+    body = body || {}
+    const event = String(body.event || '').slice(0, 40)
+    if (SINFILTROS_EVENTS.has(event)) {
+      await supabase.from('prsf_events').insert({
+        event,
+        record: body.record ? String(body.record).slice(0, 60) : null,
+        target: body.target ? String(body.target).slice(0, 200) : null,
+        referrer: body.referrer ? String(body.referrer).slice(0, 200) : null,
+        ua: String(req.headers['user-agent'] || '').slice(0, 300),
+      })
+    }
+  } catch { /* analytics must never break the page */ }
+  res.status(204).end()
 }
 
 // =============== /registro/estado — Estado de Salud PR: el cupón federal sin cobrar ===============
@@ -6021,6 +6063,7 @@ export default async function handler(req: any, res: any) {
     case 'comparte': return await handleComparte(req, res)
     case 'recuperacion': return await handleRecuperacion(req, res)
     case 'sinfiltros': return await handleSinFiltros(req, res)
+    case 'sinfiltros-log': return await handleSinFiltrosLog(req, res)
     case 'registro-hub': return await handleRegistroHub(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)
