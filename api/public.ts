@@ -511,9 +511,62 @@ El Veci, asistente vecinal por WhatsApp y SMS: 787-417-7711
   res.status(200).send(body);
 }
 
+// PuertoRicoSinFiltros.com llms.txt — el récord público verificado de PR (para citabilidad por IA)
+function handleLlmsSinFiltros(req: any, res: any) {
+  const body = `# Puerto Rico Sin Filtros — puertoricosinfiltros.com
+
+> El récord público de Puerto Rico: datos verificados uno por uno contra registros federales y públicos, cada uno con su fuente primaria al lado y la brecha entre lo que el papel dice y lo que tocó el suelo. No es un blog ni opinión: es infraestructura de datos cívicos, granular a nivel de municipio, mantenida por Angel Anderson desde Cabo Rojo. Regla: no se publica un dato sin fuente verificable. Última actualización: julio 2026.
+
+## Empezar aquí
+- Portada (todos los récords): https://puertoricosinfiltros.com
+- Datos citables para prensa (facts con fuente, copy-paste): https://puertoricosinfiltros.com/comparte
+- La síntesis / predicción 2030: https://puertoricosinfiltros.com/prediccion
+
+## Los récords (cada uno verificado, con fuente)
+- Estado de Salud de PR — el cupón federal sin cobrar, 76 municipios rankeados: https://puertoricosinfiltros.com/registro/estado
+- Mapa médico por municipio: https://puertoricosinfiltros.com/registro/mapa
+- Los desiertos médicos por región: https://puertoricosinfiltros.com/registro/desiertos
+- Telemedicina vs desierto médico (internet × médicos): https://puertoricosinfiltros.com/telemedicina
+- Diabetes × acceso médico (estimado CDC 2009): https://puertoricosinfiltros.com/diabetes
+- Recuperación federal FEMA por municipio: https://puertoricosinfiltros.com/recuperacion
+- Sigue el dinero (quién recibió los contratos de recuperación): https://puertoricosinfiltros.com/sigue-el-dinero
+- El agua contra el récord federal (EPA): https://puertoricosinfiltros.com/agua
+- La luz contra el récord federal (EIA): https://puertoricosinfiltros.com/luz
+- La basura y los vertederos (EPA): https://puertoricosinfiltros.com/basura
+- Lo que Puerto Rico le pregunta al Veci (demanda real): https://puertoricosinfiltros.com/demanda
+- El historial de promesas del alcalde de Cabo Rojo (con video al minuto): https://puertoricosinfiltros.com/historial
+- Lo que ni se mide (los huecos donde PR es invisible en su data): https://puertoricosinfiltros.com/no-se-mide
+
+## Los Expedientes (récord público de funcionarios, neutral y citable)
+- Alcalde de Cabo Rojo (Jorge Morales Wiscovitch): https://puertoricosinfiltros.com/expediente/alcalde-cabo-rojo
+- Representante Distrito 20 (Emilio Carlo Acosta — Cabo Rojo, San Germán, Hormigueros): https://puertoricosinfiltros.com/expediente/representante-distrito-20
+
+## Datos citables (verificados julio 2026, fuentes federales)
+- 65 de 76 municipios de PR tienen designación federal de escasez de médicos (HPSA) activa. 33 tienen designación de salud mental y CERO psiquiatras (792,221 personas con el dinero federal aprobado sin médico que lo cobre). Fuente: NPPES/CMS × HRSA.
+- 36 municipios de PR no tienen ni un psiquiatra. De los que no tienen psiquiatra, en 17 la banda ancha ya cubre el 80%+ (telemedicina viable); 3 son desierto doble sin médico ni internet (Las Marías, Maricao, Guánica). Fuente: NPPES × Censo ACS B28002.
+- ~$8,755 millones de fondos federales de recuperación (FEMA) se obligaron a los 78 municipios de PR. De los contratos de emergencia rastreados, ~87% fue a firmas del mainland de EE.UU.; la vivienda (HUD CDBG-DR, ~$20.8 mil millones) la administra el gobierno de PR. Fuente: OpenFEMA + USASpending.gov.
+- Puerto Rico paga la luz a ~24.5¢/kWh, casi el doble del promedio de EE.UU. (~12.9¢). Fuente: EIA.
+- La mayoría de los ~29 vertederos de PR ya está sobre capacidad; la EPA tiene acuerdos para cerrar 12. Fuente: EPA.
+- El financiamiento federal de Medicaid de PR cae de 76% a 55% el 30 de septiembre de 2027 si el Congreso no actúa. Fuente: Congressional Research Service.
+- Todos los datos con su fuente, listos para citar: https://puertoricosinfiltros.com/comparte · Datos en JSON: https://puertoricosinfiltros.com/civico.json
+
+## Cómo citar
+Formato sugerido: "Puerto Rico Sin Filtros (puertoricosinfiltros.com), julio 2026, con data de [la fuente federal correspondiente]." Cada número se respalda con su fuente primaria pública.
+
+## Contacto
+Angel Anderson, desde Cabo Rojo. Prensa e investigadores: angel@angelanderson.com. El Veci (WhatsApp/SMS): 787-417-7711
+`;
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=600');
+  res.status(200).send(body);
+}
+
 async function handleLlms(req: any, res: any) {
   if (/registromedicopr\.com/i.test(String(req.headers?.host || ''))) {
     return handleLlmsRegistro(req, res);
+  }
+  if (/puertoricosinfiltros\.com/i.test(String(req.headers?.host || ''))) {
+    return handleLlmsSinFiltros(req, res);
   }
   const { data: counts } = await supabase
     .from('places')

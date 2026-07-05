@@ -145,27 +145,30 @@ function layout(opts: {
 <span class="font-black tracking-tight">Puerto Rico <span class="text-teal-700">Sin Filtros</span></span>
 </a>
 <nav class="hidden md:flex gap-5 text-sm text-slate-600">
-<a href="/#records" class="hover:text-teal-700">Los récords</a>
-<a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a>
+<a href="/#records" class="hover:text-teal-700">Récords</a>
+<a href="/#expedientes" class="hover:text-teal-700">Expedientes</a>
+<a href="/prediccion" class="hover:text-teal-700">Predicción</a>
+<a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a>
 <a href="/comparte" class="hover:text-teal-700">Datos citables</a>
 </nav>
 </div>
 </header>`
   const prsfFooter = `
-<footer class="border-t border-slate-200 mt-12 py-8 bg-white">
-<div class="max-w-4xl mx-auto px-4 text-center">
-<p class="text-base font-semibold text-slate-800">El récord público de Puerto Rico. El dato, con la fuente al lado.</p>
-<p class="text-xs text-slate-500 mt-1">Verificado uno por uno contra registros federales y públicos. Sin spin, sin relleno.</p>
-<div class="mt-6 flex justify-center gap-4 text-xs text-slate-500 flex-wrap">
-<a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a>
-<a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a>
-<a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a>
-<a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a>
-<a href="/comparte" class="hover:text-teal-700">Datos citables</a>
-<a href="/civico.json" class="hover:text-teal-700">API pública</a>
-<a href="/llms.txt" class="hover:text-teal-700">Para IA</a>
+<footer class="border-t border-slate-200 mt-12 py-10 bg-white">
+<div class="max-w-4xl mx-auto px-4">
+<p class="text-base font-semibold text-slate-800 text-center">El récord público de Puerto Rico. El dato, con la fuente al lado.</p>
+<p class="text-xs text-slate-500 mt-1 text-center">Verificado uno por uno contra registros federales y públicos. Sin spin, sin relleno.</p>
+<div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6 text-xs">
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Salud</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a><a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a><a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a><a href="/telemedicina" class="hover:text-teal-700">Telemedicina</a><a href="/diabetes" class="hover:text-teal-700">Diabetes</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Servicios</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/agua" class="hover:text-teal-700">Agua</a><a href="/luz" class="hover:text-teal-700">Luz</a><a href="/basura" class="hover:text-teal-700">Basura</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">El pueblo</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/demanda" class="hover:text-teal-700">Lo que busca PR</a><a href="/historial" class="hover:text-teal-700">Historial de promesas</a><a href="/promesas" class="hover:text-teal-700">Promesómetro</a><a href="/no-se-mide" class="hover:text-teal-700">Lo que ni se mide</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Expedientes</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/expediente/alcalde-cabo-rojo" class="hover:text-teal-700">Alcalde de Cabo Rojo</a><a href="/expediente/representante-distrito-20" class="hover:text-teal-700">Rep. Distrito 20</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Predicción</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/prediccion" class="hover:text-teal-700">Predicción 2030</a><a href="/sinfiltros/pulso" class="hover:text-teal-700">Pulso</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Para IA / datos</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/comparte" class="hover:text-teal-700">Datos citables</a><a href="/civico.json" class="hover:text-teal-700">API pública</a><a href="/llms.txt" class="hover:text-teal-700">Para IA (llms.txt)</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">La casa</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/#mision" class="hover:text-teal-700">La misión</a><a href="/#sugiere" class="hover:text-teal-700">Sugiere un récord</a></div></div>
 </div>
-<p class="mt-4 text-xs text-slate-400">Angel Anderson, desde Cabo Rojo. Prensa e investigadores: <a href="mailto:angel@angelanderson.com" class="hover:text-teal-700">angel@angelanderson.com</a></p>
+<p class="mt-8 text-xs text-slate-400 text-center">Angel Anderson, desde Cabo Rojo. Prensa e investigadores: <a href="mailto:angel@angelanderson.com" class="hover:text-teal-700">angel@angelanderson.com</a></p>
 </div>
 </footer>`
   const header = isPRSF ? prsfHeader : isReg ? `
