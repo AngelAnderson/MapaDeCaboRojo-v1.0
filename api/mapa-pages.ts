@@ -4436,9 +4436,12 @@ async function handleDatoRecord(req: any, res: any) {
 // Solo publicable=true (Angel vetea). Balanceado: muestra vencidos, en proceso Y cumplidos.
 async function handleHistorial(req: any, res: any) {
   let rows: any[] = []
+  const grab: Record<string, any> = {}
   try {
-    const { data } = await supabase.from('quien_responde_promesas').select('promesa,minuto,fecha_grabacion,estado,que_paso,fuente_que_paso').eq('publicable', true).order('fecha_grabacion', { ascending: false })
+    const { data } = await supabase.from('quien_responde_promesas').select('promesa,minuto,fecha_grabacion,estado,que_paso,fuente_que_paso,cita,grabacion_id').eq('publicable', true).order('fecha_grabacion', { ascending: false })
     rows = data || []
+    const { data: gd } = await supabase.from('grabaciones').select('grabacion_id,video_url,clip_url,plataforma')
+    for (const g of (gd || [])) grab[g.grabacion_id] = g
   } catch (_) { /* empty state */ }
   const est: Record<string, { label: string; cls: string }> = {
     cumplido: { label: 'Cumplido', cls: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
@@ -4446,16 +4449,39 @@ async function handleHistorial(req: any, res: any) {
     vencido: { label: 'Vencido sin cumplir', cls: 'bg-red-100 text-red-800 border-red-200' },
     pendiente: { label: 'Pendiente', cls: 'bg-slate-100 text-slate-600 border-slate-200' },
   }
+  const tsLink = (url: string, minuto: string) => {
+    const m = parseInt(String(minuto || '').replace(/[^0-9]/g, ''), 10)
+    const secs = isFinite(m) ? m * 60 : 0
+    const sep = url.includes('?') ? '&' : '?'
+    return /youtu\.?be|youtube/.test(url) ? `${url}${sep}t=${secs}s` : `${url}${sep}t=${secs}`
+  }
   const items = rows.map((r: any) => {
     const e = est[r.estado] || est.pendiente
+    const g = grab[r.grabacion_id]
+    const minutoHtml = r.minuto
+      ? (g && g.video_url
+        ? ` · <a href="${escapeHtml(tsLink(g.video_url, r.minuto))}" target="_blank" rel="noopener" class="text-teal-700 underline font-semibold">minuto ${escapeHtml(r.minuto)} del video ↗</a>`
+        : ` · minuto ${escapeHtml(r.minuto)} del video`)
+      : ''
+    const clipHtml = g && g.clip_url
+      ? `<div class="mt-2"><a href="${escapeHtml(g.clip_url)}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-xs font-bold text-white bg-red-600 rounded-full px-3 py-1 hover:bg-red-700">▶ Ver el clip</a></div>`
+      : ''
+    const citaHtml = r.cita ? `<blockquote class="mt-2 text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3 text-sm italic">"${escapeHtml(r.cita)}"</blockquote>` : ''
+    const fuenteHtml = r.fuente_que_paso
+      ? (/^https?:\/\//.test(r.fuente_que_paso)
+        ? `<p class="text-xs text-slate-400 mt-2">Fuente: <a href="${escapeHtml(r.fuente_que_paso)}" target="_blank" rel="noopener" class="text-teal-700 underline">${escapeHtml(r.fuente_que_paso.replace(/^https?:\/\/(www\.)?/, '').split('/')[0])} ↗</a></p>`
+        : `<p class="text-xs text-slate-400 mt-2">Fuente: ${escapeHtml(r.fuente_que_paso)}</p>`)
+      : ''
     return `<div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-4">
       <div class="flex items-start justify-between gap-3 flex-wrap">
-        <div class="text-xs text-slate-400 font-semibold">${escapeHtml(r.fecha_grabacion || '')}${r.minuto ? ` · minuto ${escapeHtml(r.minuto)} del video` : ''}</div>
+        <div class="text-xs text-slate-400 font-semibold">${escapeHtml(r.fecha_grabacion || '')}${minutoHtml}</div>
         <span class="text-xs font-bold rounded-full px-3 py-1 border ${e.cls}">${e.label}</span>
       </div>
       <p class="text-lg font-black text-slate-900 mt-1" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(r.promesa)}</p>
-      ${r.que_paso ? `<blockquote class="mt-2 text-slate-700 leading-relaxed border-l-4 border-slate-300 pl-3 text-sm">${escapeHtml(r.que_paso)}</blockquote>` : ''}
-      ${r.fuente_que_paso ? `<p class="text-xs text-slate-400 mt-2">Fuente: ${escapeHtml(r.fuente_que_paso)}</p>` : ''}
+      ${citaHtml}
+      ${clipHtml}
+      ${r.que_paso ? `<p class="text-sm font-semibold text-slate-500 mt-3 mb-1">Qué pasó:</p><blockquote class="text-slate-700 leading-relaxed border-l-4 border-slate-300 pl-3 text-sm">${escapeHtml(r.que_paso)}</blockquote>` : ''}
+      ${fuenteHtml}
     </div>`
   }).join('')
   const body = `
