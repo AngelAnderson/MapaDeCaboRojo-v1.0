@@ -54,6 +54,7 @@
     { "source": "/historial", "destination": "/api/mapa-pages?page=historial" },
     { "source": "/telemedicina", "destination": "/api/mapa-pages?page=telemedicina" },
     { "source": "/no-se-mide", "destination": "/api/mapa-pages?page=no-se-mide" },
+    { "source": "/diabetes", "destination": "/api/mapa-pages?page=diabetes" },
     { "source": "/sinfiltros", "destination": "/api/mapa-pages?page=sinfiltros" },
     { "source": "/registro/:spec/:region", "destination": "/api/mapa-pages?page=registro-hub&spec=:spec&region=:region" },
     { "source": "/registro/:spec", "destination": "/api/mapa-pages?page=registro-hub&spec=:spec" },

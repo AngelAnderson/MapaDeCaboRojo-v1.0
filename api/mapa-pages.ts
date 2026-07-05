@@ -4159,6 +4159,7 @@ async function handleSinFiltros(req: any, res: any) {
     <a href="/luz" data-prsf="record" data-rec="idx-luz" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Luz</a>
     <a href="/basura" data-prsf="record" data-rec="idx-basura" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Basura</a>
     <a href="/telemedicina" data-prsf="record" data-rec="idx-telemedicina" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Telemedicina</a>
+    <a href="/diabetes" data-prsf="record" data-rec="idx-diabetes" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Diabetes</a>
     <a href="/no-se-mide" data-prsf="record" data-rec="idx-no-se-mide" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Lo que ni se mide</a>
   </div>
 </div>
@@ -4248,6 +4249,17 @@ ${recordCards}
   <div class="mt-3 flex flex-wrap gap-2 text-sm">
     <a href="/telemedicina" data-prsf="record" data-rec="telemedicina" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">Ver el cruce completo</a>
     <a href="https://data.census.gov/table/ACSDT5Y2023.B28002" target="_blank" rel="noopener" data-prsf="verify" data-rec="telemedicina" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Verifícalo: Censo ↗</a>
+  </div>
+</div>
+
+<div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-4">
+  <span class="text-xs font-bold text-teal-700 uppercase tracking-wide">Cruce · Salud</span>
+  <h3 class="text-xl font-black text-slate-900 mt-1" style="font-family:'Fraunces',Georgia,serif">La diabetes contra el desierto médico</h3>
+  <blockquote class="mt-2 text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3">Lajas es el pueblo con más diabetes de Puerto Rico (18%) y no tiene un solo psiquiatra. Florida, con 15.7%, no tiene ni un especialista de ninguna clase. La enfermedad crónica más común, en los pueblos con menos con quién atenderla.</blockquote>
+  <p class="text-xs text-slate-500 mt-3"><strong>Fuente:</strong> estudio CDC 2009 (única data de diabetes por municipio de PR) × NPPES. <em>Ojo: 15 años de antigüedad.</em></p>
+  <div class="mt-3 flex flex-wrap gap-2 text-sm">
+    <a href="/diabetes" data-prsf="record" data-rec="diabetes" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">Ver el cruce completo</a>
+    <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4537060/" target="_blank" rel="noopener" data-prsf="verify" data-rec="diabetes" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Verifícalo: CDC ↗</a>
   </div>
 </div>
 
@@ -4445,10 +4457,62 @@ async function handleDatoRecord(req: any, res: any) {
   }))
 }
 
+// /diabetes — cruce enfermedad × desierto médico (v_salud_cruce). Data CDC 2009 (única por municipio para PR) — caveat grande.
+async function handleDiabetes(req: any, res: any) {
+  let rows: any[] = []
+  try {
+    const { data } = await supabase.from('v_salud_cruce').select('municipio,diabetes_pct,especialistas,psiquiatras,por_10k_hab,poverty_pct').not('diabetes_pct', 'is', null).order('diabetes_pct', { ascending: false, nullsFirst: false })
+    rows = data || []
+  } catch (_) { /* empty */ }
+  const rowHtml = rows.map((r: any) => `<tr class="border-t border-slate-100 ${Number(r.psiquiatras) === 0 ? 'bg-red-50/30' : ''}">
+      <td class="py-1.5 px-3 font-semibold text-slate-800">${escapeHtml(r.municipio)}</td>
+      <td class="py-1.5 px-3 text-right font-bold text-slate-900">${Number(r.diabetes_pct).toFixed(1)}%</td>
+      <td class="py-1.5 px-3 text-right text-slate-600">${Number(r.por_10k_hab).toFixed(1)}</td>
+      <td class="py-1.5 px-3 text-right ${Number(r.psiquiatras) === 0 ? 'text-red-700 font-bold' : 'text-slate-600'}">${r.psiquiatras}</td>
+      <td class="py-1.5 px-3 text-right text-slate-500">${r.poverty_pct ? Number(r.poverty_pct).toFixed(0) + '%' : ''}</td>
+    </tr>`).join('')
+  const body = `
+<h1>La diabetes contra el desierto médico</h1>
+<p class="text-lg text-slate-600 mt-2">La diabetes es una enfermedad crónica: necesita médico de seguimiento, y viene de la mano con la depresión. La pregunta del cruce: <strong>¿dónde hay más diabetes y menos quién la atienda?</strong></p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Lajas es el pueblo con más diabetes de Puerto Rico (18%). No tiene un solo psiquiatra.</p>
+  <p class="text-slate-300 mt-2 text-sm">Y Florida, con 15.7% de diabetes, no tiene ni un especialista médico de ninguna clase. La enfermedad crónica más común del archipiélago, en los pueblos con menos con quién atenderla.</p>
+</div>
+
+<div class="not-prose bg-amber-50 border-2 border-amber-300 rounded-xl p-4 mt-5 text-sm text-slate-800"><strong>⚠️ Ojo con la fecha:</strong> esta es la <strong>única</strong> data de diabetes por municipio que existe para Puerto Rico, y es de un estudio del CDC de <strong>2009</strong>. El Diabetes Atlas moderno del CDC <strong>no incluye a PR a nivel de pueblo</strong> (lo verificamos hasta su API). Que el dato más reciente tenga 15 años es, en sí, parte del problema — lo contamos en <a href="/no-se-mide" class="text-teal-700 font-semibold underline">Lo que ni se mide</a>. Léelo como el mapa histórico de la carga, no como la foto de hoy.</div>
+
+<h2>Los pueblos, por diabetes vs. acceso médico</h2>
+<p class="text-slate-600 -mt-2">Fila roja = cero psiquiatras. La diabetes descontrolada y la depresión caminan juntas; muchos de estos pueblos no tienen ninguno de los dos.</p>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Municipio</th><th class="py-2 px-3 text-right">Diabetes</th><th class="py-2 px-3 text-right">Espec./10k</th><th class="py-2 px-3 text-right">Psiquiatras</th><th class="py-2 px-3 text-right">Pobreza</th></tr></thead><tbody>${rowHtml || '<tr><td colspan="5" class="py-3 px-3 text-slate-400 italic">Data no disponible ahora.</td></tr>'}</tbody></table>
+</div>
+
+<p class="text-sm text-slate-500 mt-5">Fuente: "Small-Area Variation in Diabetes Prevalence in Puerto Rico", CDC <em>Preventing Chronic Disease</em> (2009, modelo bayesiano sobre BRFSS, los 78 municipios) × registro federal NPPES (especialistas y psiquiatras). Verifícalo tú mismo en <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4537060/" target="_blank" rel="noopener" class="text-teal-700 font-semibold">el estudio del CDC ↗</a>. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a>.</p>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'Diabetes por municipio vs. acceso médico en Puerto Rico',
+    description: 'Prevalencia de diabetes por municipio de PR (estimado CDC 2009) cruzada con especialistas y psiquiatras (NPPES). Lajas 18% con 0 psiquiatras; Florida 15.7% con 0 especialistas.',
+    creator: { '@type': 'Person', name: 'Angel Anderson' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/diabetes',
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'La diabetes contra el desierto médico de Puerto Rico',
+    description: 'Lajas, el pueblo con más diabetes de PR (18%), no tiene un solo psiquiatra. El cruce enfermedad × acceso médico, con la fuente al lado (estimado CDC 2009).',
+    slug: 'diabetes', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
 // /no-se-mide — el meta-récord: los huecos donde PR es invisible en su propia data. Nombrar el hueco es el récord.
 function handleNoSeMide(req: any, res: any) {
   const huecos: Array<{ tag: string; titulo: string; falta: string; importa: string; estado: string; verificalo?: string }> = [
-    { tag: 'Salud', titulo: 'La enfermedad por pueblo', falta: 'El CDC modela diabetes, depresión, asma y presión alta a nivel de sector censal para los 50 estados y DC — y excluye a Puerto Rico. El único dato de enfermedad por municipio para PR es diabetes (modelado, Diabetes Atlas).', importa: 'No se puede cruzar "dónde más se enferman" contra "dónde no hay médicos" si la enfermedad no se mide. PR aparece en blanco en el mapa nacional de salud por pueblo.', estado: 'Confirmado: PLACES no tiene filas de PR.', verificalo: 'https://data.cdc.gov/500-Cities-Places/PLACES-Local-Data-for-Better-Health-Place-Data-202/eav7-hnsx' },
+    { tag: 'Salud', titulo: 'La enfermedad por pueblo', falta: 'El CDC modela diabetes, depresión, asma y presión alta a nivel de sector censal para los 50 estados y DC — y excluye a Puerto Rico. La única enfermedad con dato por municipio para PR es la diabetes, y de un estudio del CDC de 2009; el Diabetes Atlas moderno tampoco incluye a PR a nivel de pueblo.', importa: 'No se puede cruzar "dónde más se enferman" contra "dónde no hay médicos" si la enfermedad no se mide. La diabetes sí se puede (aunque con data de hace 15 años); asma, presión alta y salud mental no. PR aparece casi en blanco en el mapa nacional de salud por pueblo.', estado: 'Confirmado: PLACES y el Atlas no tienen PR por municipio. Diabetes 2009 sí — ver el cruce en /diabetes.', verificalo: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC4537060/' },
     { tag: 'Salud mental', titulo: 'Depresión y salud mental por municipio', falta: 'No hay una fuente pública que mida prevalencia de depresión o angustia mental por municipio en PR. El BRFSS encuesta a nivel de toda la isla, no de pueblo.', importa: '36 municipios no tienen ni un psiquiatra. Sin medir la demanda de salud mental por pueblo, la escasez se ve solo por el lado de la oferta.', estado: 'Sin fuente municipio-nivel.' },
     { tag: 'Luz', titulo: 'Cuántas horas se va la luz, por pueblo', falta: 'No hay data pública a nivel de municipio de la frecuencia y duración de los apagones (las métricas SAIDI/SAIFI de LUMA por pueblo).', importa: 'Sabemos que PR paga la luz casi al doble que EEUU, pero no cuánto la recibe cada pueblo. La confiabilidad se siente; no se publica.', estado: 'Requiere data del EIA-861 / LUMA por municipio.' },
     { tag: 'Basura', titulo: 'Cuántos años le quedan a cada vertedero', falta: 'La capacidad restante por vertedero (data de la Autoridad de Desperdicios Sólidos) no está en formato primario descargable. Solo el "beyond capacity" cualitativo de la EPA.', importa: 'La mayoría de los ~29 vertederos ya está sobre capacidad. Sin los años restantes por sitio, no se puede planificar el cierre ni el reemplazo.', estado: 'Requiere data primaria de la ADS.' },
@@ -6570,6 +6634,7 @@ export default async function handler(req: any, res: any) {
     case 'historial': return await handleHistorial(req, res)
     case 'telemedicina': return await handleTelemedicina(req, res)
     case 'no-se-mide': return handleNoSeMide(req, res)
+    case 'diabetes': return await handleDiabetes(req, res)
     case 'registro-hub': return await handleRegistroHub(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)
