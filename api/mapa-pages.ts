@@ -3660,43 +3660,67 @@ async function handleRegistroDesiertos(req: any, res: any) {
     <td class="py-2 px-3 text-center text-slate-500">${g.metro} en metro</td>
   </tr>`
 
-  // --- Densidad per cápita (el blindaje contra "es que allá vive menos gente") ---
-  // Live desde la vista v_registro_ratio (NPPES × Censo 2020). Fallback a los números verificados 2026-07.
-  const REG_LABEL: Record<string, string> = { metro: 'Metro (San Juan)', este: 'Este', sur: 'Sur', oeste: 'Oeste', norte: 'Norte', centro: 'Centro (la montaña)' }
-  type RatioRow = { region: string; poblacion: number; especialistas: number; por_10k_hab: number; veces_menos_que_metro: number }
-  let ratio: RatioRow[] = [
-    { region: 'metro', poblacion: 1049390, especialistas: 3589, por_10k_hab: 34.2, veces_menos_que_metro: 1.0 },
-    { region: 'este', poblacion: 264537, especialistas: 821, por_10k_hab: 31.0, veces_menos_que_metro: 1.1 },
-    { region: 'sur', poblacion: 453152, especialistas: 662, por_10k_hab: 14.6, veces_menos_que_metro: 2.3 },
-    { region: 'oeste', poblacion: 519557, especialistas: 747, por_10k_hab: 14.4, veces_menos_que_metro: 2.4 },
-    { region: 'norte', poblacion: 385700, especialistas: 412, por_10k_hab: 10.7, veces_menos_que_metro: 3.2 },
-    { region: 'centro', poblacion: 650445, especialistas: 81, por_10k_hab: 1.2, veces_menos_que_metro: 28.5 },
-  ]
+  // --- Densidad per cápita, grano MUNICIPIO (la región promedia y esconde; el municipio revela) ---
+  // Live desde v_registro_muni_ratio (mapeo canónico: municipalities decide región Y población,
+  // proveedores mapeados por texto de municipio normalizado). Fallback verificado 2026-07-05.
+  // NOTA: NO usar agregados por región aquí — el promedio regional esconde el desierto (Loíza está
+  // en "metro" con 0.8/10k) y la definición de región de places difiere de la de municipalities.
+  type MuniRatio = { municipio: string; poblacion: number; especialistas: number; por_10k_hab: number }
+  let munis: MuniRatio[] = []
   try {
-    const { data: rr } = await supabase.from('v_registro_ratio').select('*')
-    if (rr && rr.length) ratio = rr.map((x: any) => ({
-      region: x.region, poblacion: Number(x.poblacion), especialistas: Number(x.especialistas),
-      por_10k_hab: Number(x.por_10k_hab), veces_menos_que_metro: Number(x.veces_menos_que_metro),
+    const { data: rr } = await supabase.from('v_registro_muni_ratio').select('municipio,poblacion,especialistas,por_10k_hab').neq('region', 'islas')
+    if (rr && rr.length >= 70) munis = rr.map((x: any) => ({
+      municipio: x.municipio, poblacion: Number(x.poblacion),
+      especialistas: Number(x.especialistas), por_10k_hab: Number(x.por_10k_hab || 0),
     }))
-  } catch (_) { /* keep fallback */ }
-  ratio.sort((a, b) => b.por_10k_hab - a.por_10k_hab)
-  const maxRatio = Math.max(...ratio.map(r => r.por_10k_hab)) || 34.2
-  const centro = ratio.find(r => r.region === 'centro')
+  } catch (_) { /* fallback below */ }
+  // Fallback: cifras verificadas 2026-07-05 (NPPES × Censo 2020, vista v_registro_muni_ratio)
+  const FALLBACK_BARS: MuniRatio[] = [
+    { municipio: 'San Juan', poblacion: 318441, especialistas: 2193, por_10k_hab: 68.9 },
+    { municipio: 'Ponce', poblacion: 132502, especialistas: 500, por_10k_hab: 37.7 },
+    { municipio: 'Mayagüez', poblacion: 77255, especialistas: 281, por_10k_hab: 36.4 },
+    { municipio: 'Cabo Rojo', poblacion: 48988, especialistas: 99, por_10k_hab: 20.2 },
+    { municipio: 'Arroyo', poblacion: 18046, especialistas: 4, por_10k_hab: 2.2 },
+    { municipio: 'Jayuya', poblacion: 15045, especialistas: 2, por_10k_hab: 1.3 },
+    { municipio: 'Guánica', poblacion: 16783, especialistas: 2, por_10k_hab: 1.2 },
+    { municipio: 'Loíza', poblacion: 25578, especialistas: 2, por_10k_hab: 0.8 },
+    { municipio: 'Florida', poblacion: 11668, especialistas: 0, por_10k_hab: 0 },
+    { municipio: 'Las Marías', poblacion: 8874, especialistas: 0, por_10k_hab: 0 },
+    { municipio: 'Maricao', poblacion: 5765, especialistas: 0, por_10k_hab: 0 },
+  ]
+  let bajo5Munis = 39, bajo5Pob = 1046856
+  let barRowsData: MuniRatio[]
+  if (munis.length) {
+    const bajo5 = munis.filter(m => m.por_10k_hab < 5)
+    bajo5Munis = bajo5.length
+    bajo5Pob = bajo5.reduce((s, m) => s + m.poblacion, 0)
+    const byName = (n: string) => munis.find(m => m.municipio === n)
+    const worst = [...munis].sort((a, b) => a.por_10k_hab - b.por_10k_hab || b.poblacion - a.poblacion).slice(0, 7)
+    const anchors = ['San Juan', 'Ponce', 'Mayagüez', 'Cabo Rojo'].map(byName).filter(Boolean) as MuniRatio[]
+    barRowsData = [...anchors, ...worst.reverse()]
+  } else {
+    barRowsData = FALLBACK_BARS
+  }
+  const sjRatio = barRowsData.find(m => m.municipio === 'San Juan')?.por_10k_hab || 68.9
+  const crRow = barRowsData.find(m => m.municipio === 'Cabo Rojo')
   const ratioColor = (v: number) => v >= 20 ? { bar: 'bg-emerald-500', txt: 'text-emerald-700' } : v >= 8 ? { bar: 'bg-amber-500', txt: 'text-amber-700' } : { bar: 'bg-red-600', txt: 'text-red-700' }
-  const ratioRows = ratio.map(r => {
+  const ratioRows = barRowsData.map(r => {
     const c = ratioColor(r.por_10k_hab)
-    const w = Math.max(2, Math.round(r.por_10k_hab / maxRatio * 100))
+    const w = Math.max(2, Math.round(r.por_10k_hab / sjRatio * 100))
+    const cero = r.especialistas === 0
     return `<div class="flex items-center gap-3 py-2">
-      <div class="w-28 sm:w-36 shrink-0 text-sm font-semibold text-slate-800">${REG_LABEL[r.region] || escapeHtml(r.region)}</div>
+      <div class="w-28 sm:w-36 shrink-0 text-sm font-semibold text-slate-800">${escapeHtml(r.municipio)}</div>
       <div class="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden"><div class="${c.bar} h-6 rounded-full" style="width:${w}%"></div></div>
-      <div class="w-36 sm:w-44 shrink-0 text-right text-sm"><span class="font-black ${c.txt}">${r.por_10k_hab.toFixed(1)}</span> <span class="text-slate-400">/10k</span>${r.region !== 'metro' ? ` · <span class="text-slate-500">${r.veces_menos_que_metro.toFixed(1)}× menos</span>` : ''}</div>
+      <div class="w-32 sm:w-40 shrink-0 text-right text-sm">${cero ? '<span class="font-black text-red-700">0</span> <span class="text-slate-400">especialistas</span>' : `<span class="font-black ${c.txt}">${r.por_10k_hab.toFixed(1)}</span> <span class="text-slate-400">/10k</span>`}</div>
     </div>`
   }).join('')
   const ratioSection = `
-<h2>La densidad: especialistas por cada 10,000 habitantes</h2>
-<p class="text-slate-600 -mt-2">Contar cabezas no basta — hay que cruzarlo con cuánta gente vive en cada región. Aquí está el número que desarma el "es que allá vive menos gente": el <strong>Centro es la segunda región más poblada de Puerto Rico</strong> (${centro ? centro.poblacion.toLocaleString('en-US') : '650,445'} habitantes, más que el Oeste, el Sur, el Norte y el Este) — y tiene la <strong>menor</strong> densidad de médicos de toda la isla.</p>
+<h2>La densidad: especialistas por cada 10,000 habitantes, pueblo por pueblo</h2>
+<p class="text-slate-600 -mt-2">El promedio regional esconde el desierto: <strong>Loíza está a media hora de San Juan, en la misma región metro — y tiene 86 veces menos especialistas por persona.</strong> Por eso esta cuenta se hace municipio por municipio, no por región. Tres pueblos no tienen <strong>ni un solo especialista de ninguna clase</strong>: Maricao, Las Marías y Florida.</p>
 <div class="not-prose mt-4 bg-white border border-slate-200 rounded-xl p-4 sm:p-5">${ratioRows}</div>
-<p class="not-prose mt-3 text-center text-sm text-slate-500">Un vecino del metro tiene <strong class="text-red-700">${centro ? centro.veces_menos_que_metro.toFixed(0) : '28'}× más acceso</strong> a un especialista, por persona, que uno de la montaña. Fuente: NPPES/CMS (proveedores) × Censo 2020 (población).</p>
+<p class="not-prose mt-3 text-center text-sm text-slate-600"><strong class="text-red-700">${bajo5Munis} de los 76 municipios</strong> — ${bajo5Pob.toLocaleString('en-US')} personas, casi 1 de cada 3 — viven con menos de <strong>5</strong> especialistas por cada 10,000 habitantes. San Juan tiene <strong>${sjRatio.toFixed(1)}</strong>: el 35% de todos los especialistas del país, con el 10% de la gente.</p>
+${crRow ? `<p class="not-prose mt-2 text-center text-sm text-slate-500">Cabo Rojo, donde vivimos: ${crRow.especialistas} especialistas, ${crRow.por_10k_hab.toFixed(1)} por 10,000 — mejor que la mayoría, y aun así ${(sjRatio / crRow.por_10k_hab).toFixed(1)}× menos que San Juan.</p>` : ''}
+<p class="not-prose mt-2 text-center text-xs text-slate-400">Fuente: NPPES/CMS (proveedores individuales con práctica en PR, por municipio declarado) × Censo 2020 (población). Verificado julio 2026.</p>
 `
 
   const body = `
