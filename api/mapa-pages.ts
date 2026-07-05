@@ -4134,7 +4134,7 @@ async function handleRegistroPorque(req: any, res: any) {
 `
   const body = `<p class="text-xs text-slate-400 mb-4">Artículo · registromedicopr.com · publicado julio 2026 · <a href="/comparte" class="text-teal-600">datos citables</a> · <a href="/registro/estado" class="text-teal-600">estado de salud</a></p>
 <div class="not-prose my-5 bg-slate-50 border border-slate-200 rounded-xl p-4">
-  <p class="text-sm font-bold text-slate-800 mb-2">🎧 Escúchalo: "La verdad tras los médicos fantasmas" (~10 min)</p>
+  <p class="text-sm font-bold text-slate-800 mb-2">🎧 Escúchalo: "La verdad tras los médicos fantasmas" (~18 min)</p>
   <audio controls preload="none" class="w-full"><source src="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/porque-medicos-fantasmas.m4a" type="audio/mp4">Tu navegador no soporta audio.</audio>
   <p class="text-xs text-slate-400 mt-1">Un análisis en audio de este artículo. Léelo abajo o escúchalo mientras manejas.</p>
 </div>
@@ -4752,6 +4752,67 @@ async function handleDatoRecord(req: any, res: any) {
 
 // /expediente/:slug — el dossier público de un funcionario: sus promesas + el estado de su pueblo, todo citable.
 // v1: alcalde de Cabo Rojo (plantilla replicable a cualquier funcionario/distrito).
+// /esencia — la línea de tiempo pública del proyecto Esencia en Cabo Rojo. Neutral, solo hechos con fuente.
+async function handleEsencia(req: any, res: any) {
+  let rows: any[] = []
+  try {
+    const { data } = await supabase.from('esencia_timeline').select('event_date,title,description,category,source_name,source_url').order('event_date', { ascending: false })
+    rows = data || []
+  } catch (_) { /* empty */ }
+  const catCls: Record<string, string> = {
+    financial: 'bg-amber-100 text-amber-800 border-amber-200',
+    legal: 'bg-slate-100 text-slate-700 border-slate-200',
+    social: 'bg-red-100 text-red-800 border-red-200',
+    environmental: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  }
+  const catLabel: Record<string, string> = { financial: 'Dinero', legal: 'Legal', social: 'Protesta', environmental: 'Ambiente' }
+  const items = rows.map((r: any) => {
+    const cls = catCls[r.category] || catCls.legal
+    const okSrc = /^https?:\/\//i.test(String(r.source_url || ''))
+    return `<div class="not-prose border border-slate-200 bg-white rounded-2xl p-4 mt-3">
+      <div class="flex items-start justify-between gap-3 flex-wrap">
+        <div class="text-xs text-slate-400 font-semibold">${escapeHtml(String(r.event_date || ''))}</div>
+        <span class="text-xs font-bold rounded-full px-2.5 py-0.5 border ${cls}">${catLabel[r.category] || 'Dato'}</span>
+      </div>
+      <p class="font-bold text-slate-800 mt-1">${escapeHtml(r.title)}</p>
+      ${r.description ? `<p class="text-sm text-slate-600 mt-1">${escapeHtml(r.description)}</p>` : ''}
+      <p class="text-xs text-slate-400 mt-1">Fuente: ${okSrc ? `<a href="${escapeHtml(r.source_url)}" target="_blank" rel="noopener" class="text-teal-700 underline">${escapeHtml(r.source_name || 'ver')} ↗</a>` : escapeHtml(r.source_name || '—')}</p>
+    </div>`
+  }).join('')
+  const body = `
+<h1>El proyecto Esencia, en línea de tiempo</h1>
+<p class="text-lg text-slate-600 mt-2">Esencia es el mega-desarrollo turístico-residencial propuesto para Cabo Rojo que ha generado investigaciones periodísticas, medidas del Senado y protestas. Esta es la <strong>línea de tiempo pública, con fuente en cada punto</strong>. Sin opinión: solo lo que está en el récord. Tú decides qué pensar.</p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">Lo que está en el récord</p>
+  <p class="text-lg sm:text-xl font-black mt-1 leading-snug">Un decreto de incentivos de $498 millones en créditos contributivos, investigaciones del Centro de Periodismo Investigativo, una investigación del Senado, y protestas de San Juan a Nueva York.</p>
+</div>
+
+<h2>La línea de tiempo</h2>
+${items || '<p class="text-sm text-slate-400 italic">Data no disponible ahora.</p>'}
+
+<div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 mt-5 text-sm text-slate-700"><strong>Nota:</strong> cada punto de esta línea viene de una fuente pública citada (Centro de Periodismo Investigativo, prensa, registros del DRNA y del Departamento de Estado). PuertoRicoSinFiltros.com no toma posición sobre el proyecto: organiza el récord para que cualquiera — vecino, periodista, funcionario — pueda verlo completo y en orden.</div>
+
+<p class="text-sm text-slate-500 mt-5">Fuentes: Centro de Periodismo Investigativo (CPI), Metro PR, The Indypendent, registros del DRNA y del Departamento de Estado de PR. ¿Ves un error o falta un hito? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a>. Julio 2026.</p>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'Línea de tiempo del proyecto Esencia en Cabo Rojo',
+    description: 'Cronología pública y con fuente del proyecto de desarrollo Esencia en Cabo Rojo: decretos contributivos, investigaciones del CPI, medidas del Senado y protestas.',
+    creator: { '@type': 'Person', name: 'Angel Anderson' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/esencia',
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'El proyecto Esencia en Cabo Rojo — la línea de tiempo pública, con fuente',
+    description: 'La cronología pública del proyecto Esencia en Cabo Rojo: $498M en créditos contributivos, investigaciones del CPI, medidas del Senado, protestas. Sin opinión, con la fuente al lado.',
+    slug: 'esencia', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
 // /sigue-el-dinero — quién recibió los fondos de recuperación de PR (USASpending × FEMA). El moat: seguir la plata.
 async function handleSigueElDinero(req: any, res: any) {
   let rows: any[] = []
@@ -4933,6 +4994,12 @@ ${promesasHtml}
 <h2>El estado ${cfg.tipo === 'representante' ? 'del distrito' : 'de Cabo Rojo'}, en números</h2>
 <p class="text-slate-600 -mt-2">Lo que hereda, administra y le entrega a la gente. Cada número con su récord.</p>
 ${estadoHtml}
+
+<a href="/esencia" class="not-prose block border-2 border-amber-300 bg-amber-50 rounded-2xl p-5 mt-4 hover:bg-amber-100 transition-colors no-underline">
+  <span class="text-xs uppercase tracking-widest text-amber-700 font-bold">El caso que define a Cabo Rojo</span>
+  <p class="text-lg font-black mt-1 leading-snug text-slate-900" style="font-family:'Fraunces',Georgia,serif">El proyecto Esencia: la línea de tiempo pública →</p>
+  <p class="text-slate-600 mt-1 text-sm">$498M en créditos contributivos, investigaciones del CPI, medidas del Senado y protestas. Con fuente en cada punto. Sin opinión.</p>
+</a>
 
 <h2>¿Qué viene?</h2>
 <p class="text-slate-600 -mt-2">La gestión no se mide solo por lo que pasó, sino por lo que viene. Estas fechas afectan a ${escapeHtml(cfg.ambito)} como a todo Puerto Rico — y hay algo que hacer hoy. <a href="/prediccion" class="text-teal-700 font-semibold">Ver la predicción completa →</a></p>
@@ -7218,6 +7285,7 @@ export default async function handler(req: any, res: any) {
     case 'diabetes': return await handleDiabetes(req, res)
     case 'expediente': return await handleExpediente(req, res)
     case 'sigue-el-dinero': return await handleSigueElDinero(req, res)
+    case 'esencia': return await handleEsencia(req, res)
     case 'registro-hub': return await handleRegistroHub(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)
