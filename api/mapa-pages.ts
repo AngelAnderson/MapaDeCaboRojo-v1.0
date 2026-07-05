@@ -4170,6 +4170,12 @@ async function handleSinFiltros(req: any, res: any) {
   <p class="text-slate-300 mt-1 text-sm">Si Puerto Rico no hace nada, ¿a dónde llega? La lectura de todos los récords, con la fuente al lado.</p>
 </a>
 
+<a href="/expediente/alcalde-cabo-rojo" data-prsf="record" data-rec="expediente-alcalde" class="not-prose block border-2 border-teal-300 bg-teal-50 rounded-2xl p-5 mt-5 hover:bg-teal-100 transition-colors no-underline">
+  <span class="text-xs uppercase tracking-widest text-teal-700 font-bold">El Expediente</span>
+  <p class="text-lg sm:text-xl font-black mt-1 leading-snug text-slate-900" style="font-family:'Fraunces',Georgia,serif">Alcalde de Cabo Rojo: el récord completo →</p>
+  <p class="text-slate-600 mt-1 text-sm">Sus promesas y el estado de su pueblo, en una página, con la fuente al lado. Neutral y citable. La plantilla para cualquier funcionario.</p>
+</a>
+
 <h2 id="records">Los récords</h2>
 <p class="text-slate-600 -mt-1">Cada uno es un dato verificado contra un registro federal o público. La brecha habla sola.</p>
 ${recordCards}
@@ -4453,6 +4459,90 @@ async function handleDatoRecord(req: any, res: any) {
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
   res.status(200).send(layout({
     title: `${cfg.h1}`, description: cfg.hero, slug: page, bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
+// /expediente/:slug — el dossier público de un funcionario: sus promesas + el estado de su pueblo, todo citable.
+// v1: alcalde de Cabo Rojo (plantilla replicable a cualquier funcionario/distrito).
+async function handleExpediente(req: any, res: any) {
+  // v1 solo maneja al alcalde de Cabo Rojo; otros slugs → mismo por ahora.
+  const CARGO_ALCALDE = 'fd65244c-9ba5-4f31-bf72-c4dbde040912'
+  let promesas: any[] = []
+  let med: any = { especialistas: 99, psiquiatras: 3, poblacion: 48988, poverty_pct: 38.4, por_10k_hab: 20.2, hpsa_salud_mental: 22 }
+  let fema: any = { federal_obligado: 34315703, proyectos: 119 }
+  let broadband: any = { pct_broadband: 75.7, pct_sin_internet: 18.8 }
+  let diabetes = '15.2'
+  try {
+    const [pp, mm, ff, bb, dd] = await Promise.all([
+      supabase.from('quien_responde_promesas').select('estado').eq('publicable', true).eq('cargo_id', CARGO_ALCALDE),
+      supabase.from('v_registro_municipio_intel').select('especialistas,psiquiatras,poblacion,poverty_pct,por_10k_hab,hpsa_salud_mental').ilike('municipio', '%cabo rojo%').maybeSingle(),
+      supabase.from('fema_recovery_by_municipio').select('federal_obligado,proyectos').ilike('municipio_raw', '%cabo rojo%').maybeSingle(),
+      supabase.from('pr_broadband').select('pct_broadband,pct_sin_internet').ilike('municipio', '%cabo rojo%').maybeSingle(),
+      supabase.from('v_salud_cruce').select('diabetes_pct').ilike('municipio', '%cabo rojo%').maybeSingle(),
+    ])
+    promesas = pp.data || []
+    if (mm.data) med = mm.data
+    if (ff.data) fema = ff.data
+    if (bb.data) broadband = bb.data
+    if (dd.data && dd.data.diabetes_pct) diabetes = dd.data.diabetes_pct
+  } catch (_) { /* fallbacks */ }
+  const nP = promesas.length
+  const cnt = (s: string) => promesas.filter((p: any) => p.estado === s).length
+  const money = (x: number) => '$' + Number(x).toLocaleString('en-US')
+  const body = `
+<div class="not-prose bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El Expediente</p>
+  <h1 class="text-2xl sm:text-3xl font-black mt-1 leading-tight" style="font-family:'Fraunces',Georgia,serif">Alcalde de Cabo Rojo</h1>
+  <p class="text-slate-300 mt-1">Jorge Morales Wiscovitch</p>
+</div>
+
+<p class="text-lg text-slate-600 mt-4">Todo lo que el récord público dice sobre su gestión y el estado de su pueblo, en un solo lugar y con la fuente al lado. Para el vecino que decide, el periodista que investiga, y cualquiera que quiera servir mejor a Cabo Rojo.</p>
+
+<h2>Las promesas</h2>
+<p><strong>${nP} promesas públicas rastreadas</strong> con la cita textual y el minuto del video: ${cnt('cumplido')} cumplida${cnt('cumplido') === 1 ? '' : 's'}, ${cnt('en_proceso')} en proceso, ${cnt('vencido')} vencida${cnt('vencido') === 1 ? '' : 's'} sin cumplirse. <a href="/historial" class="text-teal-700 font-semibold">Ver el historial completo, con el video al minuto →</a></p>
+
+<h2>El estado de Cabo Rojo, en números</h2>
+<p class="text-slate-600 -mt-2">Lo que hereda, administra y le entrega al pueblo. Cada número con su récord.</p>
+
+<div class="not-prose grid sm:grid-cols-2 gap-3 mt-3">
+  <a href="/registro/estado" class="block border border-slate-200 bg-white rounded-xl p-4 hover:border-teal-300 no-underline">
+    <div class="text-xs font-bold text-teal-700 uppercase">Salud</div>
+    <div class="text-sm text-slate-700 mt-1">${med.especialistas} especialistas · ${med.psiquiatras} psiquiatras (${Number(med.por_10k_hab).toFixed(1)}/10k). <strong>Designación federal de escasez de salud mental activa</strong> (score ${med.hpsa_salud_mental}) pese a tener psiquiatras. Diabetes ${diabetes}% (est. 2009).</div>
+  </a>
+  <a href="/recuperacion" class="block border border-slate-200 bg-white rounded-xl p-4 hover:border-teal-300 no-underline">
+    <div class="text-xs font-bold text-teal-700 uppercase">Recuperación federal</div>
+    <div class="text-sm text-slate-700 mt-1">${money(fema.federal_obligado)} de fondos FEMA obligados en ${fema.proyectos} proyectos. ¿En qué se convirtieron?</div>
+  </a>
+  <a href="/agua" class="block border border-slate-200 bg-white rounded-xl p-4 hover:border-teal-300 no-underline">
+    <div class="text-xs font-bold text-teal-700 uppercase">Agua</div>
+    <div class="text-sm text-slate-700 mt-1">3 violaciones de salud activas (trihalometanos) en el récord federal del agua potable de Cabo Rojo.</div>
+  </a>
+  <a href="/telemedicina" class="block border border-slate-200 bg-white rounded-xl p-4 hover:border-teal-300 no-underline">
+    <div class="text-xs font-bold text-teal-700 uppercase">Internet</div>
+    <div class="text-sm text-slate-700 mt-1">${Number(broadband.pct_broadband).toFixed(1)}% de los hogares con banda ancha; ${Number(broadband.pct_sin_internet).toFixed(1)}% sin ningún internet. Pobreza ${Number(med.poverty_pct).toFixed(0)}%.</div>
+  </a>
+</div>
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
+  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Un expediente público, para que nadie decida a ciegas.</p>
+  <p class="mt-2 text-sm text-slate-600 italic">Todo con fuente. Se actualiza con el récord. ¿Ves un error? Escríbenos.</p>
+</div>
+
+<p class="text-sm text-slate-500 mt-6">Fuentes: promesas verificadas contra grabaciones públicas · NPPES/CMS (médicos) · HRSA (escasez) · OpenFEMA (recuperación) · EPA SDWIS (agua) · Censo ACS (internet, pobreza) · CDC (diabetes, est. 2009). Este expediente es neutral y no partidista: es el récord, no una opinión. Julio 2026.</p>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'ProfilePage',
+    about: { '@type': 'Person', name: 'Jorge Morales Wiscovitch', jobTitle: 'Alcalde de Cabo Rojo' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    inLanguage: 'es', url: 'https://puertoricosinfiltros.com/expediente/alcalde-cabo-rojo',
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'El Expediente: Alcalde de Cabo Rojo — promesas y estado del pueblo, con la fuente al lado',
+    description: 'Todo el récord público del alcalde de Cabo Rojo y el estado de su pueblo: promesas rastreadas, recuperación federal, salud, agua, internet. Neutral y citable.',
+    slug: 'expediente/alcalde-cabo-rojo', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
@@ -6635,6 +6725,7 @@ export default async function handler(req: any, res: any) {
     case 'telemedicina': return await handleTelemedicina(req, res)
     case 'no-se-mide': return handleNoSeMide(req, res)
     case 'diabetes': return await handleDiabetes(req, res)
+    case 'expediente': return await handleExpediente(req, res)
     case 'registro-hub': return await handleRegistroHub(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)
