@@ -4175,7 +4175,18 @@ ${recordCards}
   </div>
 </div>
 
-<p class="not-prose text-sm text-slate-500 mt-5">En camino: agua, luz y basura del oeste (Proyecto Esencia), economía informal, y el cruce de todo. <a href="/agua" class="text-teal-700 font-semibold">Ver /agua</a>.</p>
+<div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-4">
+  <span class="text-xs font-bold text-teal-700 uppercase tracking-wide">Agua</span>
+  <h3 class="text-xl font-black text-slate-900 mt-1" style="font-family:'Fraunces',Georgia,serif">El agua de tu pueblo, contra el récord federal</h3>
+  <blockquote class="mt-2 text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3">Los acueductos del oeste con violaciones de salud en el récord federal del agua potable (EPA), separando siempre lo que sigue activo y sin resolver de lo que ya se corrigió. Es un espejo, no una alarma: te dice qué vigilar, qué preguntar, y quién responde por el agua.</blockquote>
+  <p class="text-xs text-slate-500 mt-3"><strong>Fuente:</strong> EPA SDWIS (récord federal del agua potable), Cabo Rojo y pueblos aledaños.</p>
+  <div class="mt-3 flex flex-wrap gap-2 text-sm">
+    <a href="/agua" data-prsf="record" data-rec="agua" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">Ver el récord completo</a>
+    <a href="https://www.epa.gov/ground-water-and-drinking-water" target="_blank" rel="noopener" data-prsf="verify" data-rec="agua" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Verifícalo tú mismo: EPA ↗</a>
+  </div>
+</div>
+
+<p class="not-prose text-sm text-slate-500 mt-5">En camino, cuando tengamos la fuente ingestada: luz (LUMA/EIA) y basura, economía informal, y el cruce de todo. Los récords no se publican sin data verificable detrás.</p>
 
 <h2 id="como">Cómo se verifica</h2>
 <p>Cada número sale de una fuente federal o pública, cruzada a nivel de municipio, y revisada uno por uno. Sin robots que copian data de Google. Sin AI inventando cifras. Sin "aproximaciones". Cada dato lleva su fecha; si tiene más de lo que debe, se vuelve a correr. <strong>¿Ves un error? Escríbenos y se corrige, en público.</strong> Ese es el trato.</p>
@@ -4259,6 +4270,54 @@ async function handleSinFiltrosLog(req: any, res: any) {
     }
   } catch { /* analytics must never break the page */ }
   res.status(204).end()
+}
+
+// Pulso de PuertoRicoSinFiltros.com — qué mira la gente (lee prsf_events). Público, solo agregados.
+async function handleSinFiltrosPulso(req: any, res: any) {
+  const since = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString()
+  let rows: any[] = []
+  try {
+    const { data } = await supabase.from('prsf_events').select('event,record,target,created_at').gte('created_at', since).order('created_at', { ascending: false }).limit(5000)
+    rows = data || []
+  } catch (_) { /* empty state */ }
+  const count = (ev: string) => rows.filter(r => r.event === ev).length
+  const totals = { views: count('page_view'), record: count('record_click'), verify: count('verify_click'), cite: count('cite_click') }
+  const tally = (ev: string, key: string) => {
+    const m: Record<string, number> = {}
+    rows.filter(r => r.event === ev).forEach(r => { const k = r[key] || '(sin etiqueta)'; m[k] = (m[k] || 0) + 1 })
+    return Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 10)
+  }
+  const topRec = tally('record_click', 'record')
+  const topVerify = tally('verify_click', 'record')
+  const topCite = tally('cite_click', 'record')
+  const tile = (num: number, label: string) => `<div class="bg-white border-2 border-slate-200 rounded-xl p-4 text-center"><div class="text-3xl font-black text-slate-900">${num.toLocaleString('en-US')}</div><div class="text-xs text-slate-600 mt-1">${label}</div></div>`
+  const list = (title: string, pairs: [string, number][]) => pairs.length
+    ? `<h3>${title}</h3><div class="not-prose overflow-auto border border-slate-200 rounded-xl mt-2 mb-4"><table class="w-full text-sm"><tbody>${pairs.map(([k, v]) => `<tr class="border-t border-slate-100"><td class="py-1.5 px-3 font-semibold text-slate-800">${escapeHtml(k)}</td><td class="py-1.5 px-3 text-right text-slate-600">${v}</td></tr>`).join('')}</tbody></table></div>`
+    : `<h3>${title}</h3><p class="text-sm text-slate-400 italic">Sin clicks todavía.</p>`
+  const empty = rows.length === 0
+  const body = `
+<h1>Pulso</h1>
+<p class="text-lg text-slate-600 mt-2">Lo que la gente hace en Puerto Rico Sin Filtros, últimos 30 días. El log también es un récord: nos dice qué le importa al pueblo.</p>
+${empty ? '<div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 mt-4 text-sm text-slate-700">Todavía sin tráfico registrado. Esta página se llena sola a medida que la gente usa el sitio.</div>' : ''}
+<div class="not-prose grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
+  ${tile(totals.views, 'vistas de página')}
+  ${tile(totals.record, 'clicks a un récord')}
+  ${tile(totals.verify, 'clicks "verifícalo tú mismo"')}
+  ${tile(totals.cite, 'clicks a la capa citable')}
+</div>
+${list('Récords más mirados', topRec)}
+${list('Fuentes que la gente fue a verificar', topVerify)}
+${list('Capa citable (API / IA / datos)', topCite)}
+<p class="text-sm text-slate-500 mt-6">Instrumentado con la tabla <code>prsf_events</code>. Solo agregados, sin datos personales. Complementa Vercel Analytics + GA.</p>
+`
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=300')
+  res.status(200).send(layout({
+    title: 'Pulso — qué mira Puerto Rico Sin Filtros',
+    description: 'Lo que la gente hace en Puerto Rico Sin Filtros: récords más mirados, fuentes verificadas, capa citable. Últimos 30 días.',
+    slug: 'sinfiltros/pulso', bodyHtml: body, host: req.headers?.host,
+    canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
 }
 
 // =============== /registro/estado — Estado de Salud PR: el cupón federal sin cobrar ===============
@@ -6109,6 +6168,7 @@ export default async function handler(req: any, res: any) {
     case 'recuperacion': return await handleRecuperacion(req, res)
     case 'sinfiltros': return await handleSinFiltros(req, res)
     case 'sinfiltros-log': return await handleSinFiltrosLog(req, res)
+    case 'sinfiltros-pulso': return await handleSinFiltrosPulso(req, res)
     case 'registro-hub': return await handleRegistroHub(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)
