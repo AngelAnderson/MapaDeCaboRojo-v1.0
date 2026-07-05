@@ -4500,7 +4500,7 @@ async function handleExpediente(req: any, res: any) {
 <p class="text-lg text-slate-600 mt-4">Todo lo que el récord público dice sobre su gestión y el estado de su pueblo, en un solo lugar y con la fuente al lado. Para el vecino que decide, el periodista que investiga, y cualquiera que quiera servir mejor a Cabo Rojo.</p>
 
 <h2>Las promesas</h2>
-<p><strong>${nP} promesas públicas rastreadas</strong> con la cita textual y el minuto del video: ${cnt('cumplido')} cumplida${cnt('cumplido') === 1 ? '' : 's'}, ${cnt('en_proceso')} en proceso, ${cnt('vencido')} vencida${cnt('vencido') === 1 ? '' : 's'} sin cumplirse. <a href="/historial" class="text-teal-700 font-semibold">Ver el historial completo, con el video al minuto →</a></p>
+<p>Dos vistas del mismo récord: <a href="/promesas" class="text-teal-700 font-semibold">el promesómetro</a> (todas las promesas por tema — basura, asfalto, policía, agua — con su estado), y <a href="/historial" class="text-teal-700 font-semibold">el historial</a> (${nP} con la cita textual y el enlace al minuto exacto del video: ${cnt('cumplido')} cumplida${cnt('cumplido') === 1 ? '' : 's'}, ${cnt('en_proceso')} en proceso, ${cnt('vencido')} vencida${cnt('vencido') === 1 ? '' : 's'}). Cada una dicha en un video público.</p>
 
 <h2>El estado de Cabo Rojo, en números</h2>
 <p class="text-slate-600 -mt-2">Lo que hereda, administra y le entrega al pueblo. Cada número con su récord.</p>
@@ -4523,6 +4523,10 @@ async function handleExpediente(req: any, res: any) {
     <div class="text-sm text-slate-700 mt-1">${Number(broadband.pct_broadband).toFixed(1)}% de los hogares con banda ancha; ${Number(broadband.pct_sin_internet).toFixed(1)}% sin ningún internet. Pobreza ${Number(med.poverty_pct).toFixed(0)}%.</div>
   </a>
 </div>
+
+<h2>¿Qué viene para Cabo Rojo?</h2>
+<p class="text-slate-600 -mt-2">La gestión no se mide solo por lo que pasó, sino por lo que viene. Estas fechas afectan a Cabo Rojo como a todo Puerto Rico — y hay algo que hacer hoy. <a href="/prediccion" class="text-teal-700 font-semibold">Ver la predicción completa del pueblo →</a></p>
+${renderAlertas()}
 
 <div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
   <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Un expediente público, para que nadie decida a ciegas.</p>
@@ -4798,6 +4802,54 @@ ${rows.length ? items : '<div class="not-prose bg-amber-50 border border-amber-2
   }))
 }
 
+// Alertas accionables — la predicción con fecha + qué hacer AHORA + fuente + recuérdame. Reusable en /prediccion y expedientes.
+const ALERTAS = [
+  {
+    titulo: 'El precipicio de Medicaid',
+    fecha: '30 de septiembre de 2027',
+    cuando: 'Faltan ~14 meses',
+    que: 'El financiamiento federal de Medicaid a Puerto Rico cae de 76% a 55% si el Congreso no actúa antes de esa fecha. Afecta la cobertura de salud de casi la mitad de los boricuas.',
+    hacer: [
+      'Si dependes de Medicaid o del Plan de Salud del Gobierno: agenda tus citas, estudios y renovaciones de recetas mientras la cobertura está fuerte.',
+      'Confirma tu elegibilidad y tus datos ahora, no en 2027.',
+      'Exígele acción a tu comisionado residente y legisladores — la fecha es dura.',
+    ],
+    fuente: { texto: 'Congressional Research Service (IF11012)', url: 'https://www.congress.gov/crs-product/IF11012' },
+    cal: 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=Precipicio+Medicaid+PR+%28cae+76%25%E2%86%9255%25%29&dates=20270901T120000Z/20270901T130000Z&details=El+financiamiento+federal+de+Medicaid+de+PR+cae+el+30+sep+2027+si+el+Congreso+no+actua.+Fuente%3A+CRS+IF11012',
+  },
+  {
+    titulo: 'El éxodo de médicos',
+    fecha: '2030',
+    cuando: 'Se acerca',
+    que: 'Se proyecta que el 55% de los médicos activos de PR se habrá retirado para 2030 sin sustitutos, mientras Medicare Advantage paga en la isla ~41% menos que en los estados. En los pueblos sin especialista, esperar a necesitarlo es el riesgo.',
+    hacer: [
+      'Establece tu médico primario AHORA, aunque estés sano — no esperes a la emergencia.',
+      'Si tu pueblo no tiene especialista, pregunta por telemedicina (mira dónde ya es viable).',
+      'Guarda copia de tus récords médicos y recetas; si tu médico se va, no empiezas de cero.',
+    ],
+    fuente: { texto: 'PMC / academia (2023); JAMA Health Forum (2022)', url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC10170400/' },
+    cal: 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=Revisar+mi+medico+primario+%28exodo+medico+PR+2030%29&dates=20260901T120000Z/20260901T130000Z&details=El+55%25+de+los+medicos+de+PR+se+retira+para+2030.+Establece+tu+medico+primario+ahora.',
+  },
+]
+function renderAlertas() {
+  return `<h2 id="alertas">⏰ Las fechas que te van a cobrar (y qué hacer)</h2>
+<p class="text-slate-600 -mt-2">Una predicción no sirve si no te dice qué hacer hoy. Estas son las fechas reales, con acción concreta.</p>
+${ALERTAS.map(a => `
+<div class="not-prose border-2 border-amber-300 bg-amber-50 rounded-2xl p-5 mt-4">
+  <div class="flex items-start justify-between gap-3 flex-wrap">
+    <div><span class="text-xs font-bold text-amber-700 uppercase tracking-wide">Alerta</span><h3 class="text-xl font-black text-slate-900 mt-0.5" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(a.titulo)}</h3></div>
+    <div class="text-right"><div class="text-lg font-black text-red-700">${escapeHtml(a.fecha)}</div><div class="text-xs text-slate-500">${escapeHtml(a.cuando)}</div></div>
+  </div>
+  <p class="text-sm text-slate-700 mt-2">${escapeHtml(a.que)}</p>
+  <p class="text-sm font-bold text-slate-800 mt-3 mb-1">Qué puedes hacer ahora:</p>
+  <ul class="text-sm text-slate-700 list-disc pl-5 space-y-1">${a.hacer.map(h => `<li>${escapeHtml(h)}</li>`).join('')}</ul>
+  <div class="mt-3 flex flex-wrap gap-2 text-sm">
+    <a href="${a.cal}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">🔔 Recuérdame</a>
+    <a href="${escapeHtml(a.fuente.url)}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Fuente: ${escapeHtml(a.fuente.texto)} ↗</a>
+  </div>
+</div>`).join('')}`
+}
+
 // /prediccion — la síntesis: qué dicen todos los récords juntos si no hacemos nada.
 // Números verificados (con enlace a su récord); las conexiones/proyecciones son análisis, no profecía.
 function handlePrediccion(req: any, res: any) {
@@ -4814,6 +4866,8 @@ function handlePrediccion(req: any, res: any) {
   <p class="text-sm font-bold text-slate-700 mb-2">🎧 Escúchalo: la predicción en audio</p>
   <audio controls preload="none" class="w-full" src="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/prediccion-2030-pr.m4a">Tu navegador no puede reproducir el audio. <a href="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/prediccion-2030-pr.m4a" class="text-teal-700 font-semibold">Descárgalo</a>.</audio>
 </div>
+
+${renderAlertas()}
 
 <h2>1. El cuadro: lo inerte se reconstruye, lo vivo se erosiona</h2>
 <p>Los fondos federales fluyen hacia lo físico mientras el capital humano de salud desaparece en silencio. La brecha, en cifras:</p>
