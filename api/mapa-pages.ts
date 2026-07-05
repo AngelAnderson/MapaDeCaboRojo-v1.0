@@ -4051,6 +4051,13 @@ ${factCards}
 // Puerta de entrada PR-wide al récord verificado. Un dato, su fuente, y la brecha entre lo declarado y lo entregado.
 // Reusa los datasets ya vivos (Cupón, mapa médico, desiertos, agua) + la capa citable (/comparte, /civico.json, /llms.txt).
 // Sirve en el root de puertoricosinfiltros.com vía middleware; también en /sinfiltros de los otros hosts.
+// OG de PRSF — bandera que abre puertas (misión: para escoger, primero hay que ver).
+const OG_SINFILTROS = 'https://puertoricosinfiltros.com/api/og?theme=sinfiltros'
+  + '&t=' + encodeURIComponent('Puerto Rico,||sin filtros')
+  + '&k=' + encodeURIComponent('El récord público verificado')
+  + '&sub=' + encodeURIComponent('Los datos que nadie te enseñó. Para escoger el futuro, primero hay que verlo claro.')
+  + '&site=puertoricosinfiltros.com'
+
 async function handleSinFiltros(req: any, res: any) {
   // Números en vivo (mismo query + fallback verificado 2026-07-05 que /comparte).
   let g = { conHpsa: 65, cupon: 33, cuponPob: 792221, bajo5: 39, bajo5Pob: 1046856, sinPsiq: 36, sinPsiqPob: 930159, cero: 3 }
@@ -4135,6 +4142,22 @@ async function handleSinFiltros(req: any, res: any) {
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">Qué es esto</p>
   <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">El récord, no el ruido.</p>
   <p class="text-slate-300 mt-2 text-sm leading-relaxed">No es un blog. No es opinión. Es infraestructura: el dato verificado, la fuente primaria pública para que lo confirmes tú mismo, y la brecha que nadie había puesto en una sola tabla. La misma data que corre por debajo del Mapa de Cabo Rojo y del Registro Médico PR, aquí junta, para todo Puerto Rico. Si eres periodista, investigador, legislador o vecino, esto es tuyo.</p>
+</div>
+
+<h2 id="mision">La misión</h2>
+<p class="text-lg text-slate-700">Un pueblo que no ve su realidad no la escoge: la aguanta. <strong>Puerto Rico Sin Filtros existe para que Puerto Rico se pueda ver claro</strong> — el récord, con la fuente al lado — porque solo lo que se ve se puede decidir. Ver claro es el primer paso para vivir el país que escogemos, no el que nos tocó.</p>
+
+<div class="not-prose bg-white border border-slate-200 rounded-2xl p-5 mt-5">
+  <p class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-3">Índice de récords</p>
+  <div class="flex flex-wrap gap-2 text-sm">
+    <a href="/registro/estado" data-prsf="record" data-rec="idx-salud" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Salud</a>
+    <a href="/recuperacion" data-prsf="record" data-rec="idx-recuperacion" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Recuperación</a>
+    <a href="/quien-responde" data-prsf="record" data-rec="idx-promesas" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Promesas</a>
+    <a href="/demanda" data-prsf="record" data-rec="idx-demanda" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Demanda</a>
+    <a href="/agua" data-prsf="record" data-rec="idx-agua" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Agua</a>
+    <a href="/luz" data-prsf="record" data-rec="idx-luz" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Luz</a>
+    <a href="/basura" data-prsf="record" data-rec="idx-basura" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Basura</a>
+  </div>
 </div>
 
 <h2 id="records">Los récords</h2>
@@ -4222,9 +4245,13 @@ ${recordCards}
 </ul>
 <p class="text-sm text-slate-600">¿Necesitas el corte de un municipio, la metodología completa, o una licencia de datos para tu redacción o institución? Angel Anderson, desde Cabo Rojo. Escribe a <a href="mailto:angel@angelanderson.com" class="text-teal-700 font-semibold">angel@angelanderson.com</a>. Prefiero texto o correo.</p>
 
+<h2 id="sugiere">Sugiere un récord</h2>
+<p>El récord no está completo, y nunca lo estará por sí solo. ¿Qué dato de Puerto Rico crees que merece verse sin filtro — un número que nadie ha publicado, una promesa sin cumplir, un gasto sin explicar, un servicio que falla? Dínoslo y lo verificamos. Así el récord crece con el pueblo, no con un blog.</p>
+<p class="text-sm text-slate-600">Escríbele a Angel: <a href="mailto:angel@angelanderson.com?subject=Sugiero%20un%20r%C3%A9cord%20para%20Puerto%20Rico%20Sin%20Filtros" class="text-teal-700 font-semibold">angel@angelanderson.com</a>, o textéale al vecino digital: <strong>787-417-7711</strong>. Si traes la fuente, mejor. Si no, la buscamos.</p>
+
 <div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
   <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Puerto Rico no necesita más ruido. Necesita mejor récord.</p>
-  <p class="mt-2 text-sm text-slate-600 italic">Si te sirve, úsalo. Si no, sigue tu camino.</p>
+  <p class="mt-2 text-sm text-slate-600 italic">Para escoger nuestro futuro, primero hay que verlo. Si te sirve, úsalo. Si no, sigue tu camino.</p>
 </div>
 
 <p class="text-sm text-slate-500 mt-6">Metodología: cruce de fuentes federales y públicas a nivel de municipio — NPPES/CMS (proveedores), archivos HRSA (designaciones de escasez), OpenFEMA (fondos de recuperación), Censo/ACS (población y pobreza). Verificado uno por uno. Última actualización: julio 2026.</p>
@@ -4266,7 +4293,7 @@ ${recordCards}
   res.status(200).send(layout({
     title: 'Puerto Rico Sin Filtros — el récord público de PR, con la fuente al lado',
     description: 'Datos verificados de Puerto Rico que nadie había publicado, cada uno con su fuente primaria. 65 de 76 municipios con escasez de médicos declarada por el gobierno federal, 33 con el dinero sin cobrar. Sin spin.',
-    slug: '', bodyHtml: body, jsonLd: [siteLd, datasetLd] as any, ogImage: '/og/desiertos.png',
+    slug: '', bodyHtml: body, jsonLd: [siteLd, datasetLd] as any, ogImage: OG_SINFILTROS,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
     canonicalUrl: 'https://puertoricosinfiltros.com/',
   }))
@@ -4337,7 +4364,7 @@ ${list('Capa citable (API / IA / datos)', topCite)}
   res.status(200).send(layout({
     title: 'Pulso — qué mira Puerto Rico Sin Filtros',
     description: 'Lo que la gente hace en Puerto Rico Sin Filtros: récords más mirados, fuentes verificadas, capa citable. Últimos 30 días.',
-    slug: 'sinfiltros/pulso', bodyHtml: body, host: req.headers?.host,
+    slug: 'sinfiltros/pulso', bodyHtml: body, host: req.headers?.host, ogImage: OG_SINFILTROS,
     canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
@@ -4393,7 +4420,7 @@ async function handleDatoRecord(req: any, res: any) {
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
   res.status(200).send(layout({
-    title: `${cfg.h1}`, description: cfg.hero, slug: page, bodyHtml: body, jsonLd,
+    title: `${cfg.h1}`, description: cfg.hero, slug: page, bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }

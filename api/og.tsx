@@ -67,6 +67,20 @@ const THEMES = {
     site: 'AngelAnderson.com',
     place: 'Cabo Rojo, Puerto Rico',
   },
+  // puertoricosinfiltros.com: récord público. Slate-900 oscuro + teal, título en Fraunces.
+  sinfiltros: {
+    bg: '#0f172a',
+    bar: '#14b8a6',
+    kicker: '#5eead4',
+    title: '#f8fafc',
+    sub: '#cbd5e1',
+    badgeBg: '#134e4a',
+    badgeBorder: '#0f766e',
+    badgeInk: '#5eead4',
+    titleFont: 'Fraunces',
+    site: 'PuertoRicoSinFiltros.com',
+    place: 'Puerto Rico',
+  },
 };
 
 const CHARSET =
@@ -114,7 +128,7 @@ export default async function handler(req: Request) {
   const badge = (searchParams.get('badge') || '').slice(0, 40);
   const tp = searchParams.get('theme');
   const themeKey =
-    tp === 'medico' || tp === 'caborojo' || tp === 'angel' ? tp : 'mapa';
+    tp === 'medico' || tp === 'caborojo' || tp === 'angel' || tp === 'sinfiltros' ? tp : 'mapa';
   const th = THEMES[themeKey];
   const download = searchParams.get('dl') === '1';
   const site = searchParams.get('site') || th.site;
