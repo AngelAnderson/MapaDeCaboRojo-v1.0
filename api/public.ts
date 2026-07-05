@@ -484,7 +484,6 @@ Fuente de datos: NPPES (National Plan and Provider Enumeration System), registro
 - Datos citables para prensa (facts con fuente, copy-paste): https://registromedicopr.com/comparte
 - Estado de Salud de PR — el cupón federal sin cobrar (los 76 municipios rankeados): https://registromedicopr.com/registro/estado
 - Mapa interactivo de médicos por municipio: https://registromedicopr.com/registro/mapa
-- ¿Dónde está el dinero de María? (fondos federales de recuperación FEMA por municipio, cruzado con salud): https://registromedicopr.com/recuperacion
 - Acceso por región (qué regiones no tienen ciertos especialistas): https://registromedicopr.com/registro/desiertos
 - El Observatorio del Acceso Médico (por qué se van los médicos, quién tiene la autoridad de actuar, podcast y reporte PDF): https://registromedicopr.com/observatorio
 

@@ -146,7 +146,7 @@ function layout(opts: {
 </a>
 <nav class="hidden md:flex gap-5 text-sm text-slate-600">
 <a href="/#records" class="hover:text-teal-700">Los récords</a>
-<a href="/#como" class="hover:text-teal-700">Cómo se verifica</a>
+<a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a>
 <a href="/comparte" class="hover:text-teal-700">Datos citables</a>
 </nav>
 </div>
@@ -160,6 +160,7 @@ function layout(opts: {
 <a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a>
 <a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a>
 <a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a>
+<a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a>
 <a href="/comparte" class="hover:text-teal-700">Datos citables</a>
 <a href="/civico.json" class="hover:text-teal-700">API pública</a>
 <a href="/llms.txt" class="hover:text-teal-700">Para IA</a>
@@ -217,7 +218,6 @@ function layout(opts: {
 <a href="/registro/mapa" class="hover:text-teal-700">El mapa</a>
 <a href="/registro/estado" class="hover:text-teal-700">Estado de salud</a>
 <a href="/comparte" class="hover:text-teal-700">Datos</a>
-<a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a>
 <a href="/registro/desiertos" class="hover:text-teal-700">Acceso por región</a>
 <a href="/observatorio" class="hover:text-teal-700">Observatorio</a>
 <a href="/registro#como-se-hizo" class="hover:text-teal-700">Cómo se verifica</a>
@@ -3904,7 +3904,7 @@ async function handleRecuperacion(req: any, res: any) {
     name: 'Fondos federales de recuperación de Puerto Rico por municipio (FEMA)',
     description: 'Cuánto dinero federal de recuperación (FEMA Public Assistance) se ha obligado a cada municipio de Puerto Rico, por habitante, con estatus de cierre y cruce con el acceso a médicos. Fuente: OpenFEMA × Censo × NPPES.',
     creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
-    isAccessibleForFree: true, inLanguage: 'es', url: 'https://registromedicopr.com/recuperacion',
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/recuperacion',
     keywords: ['dinero de María', 'FEMA Puerto Rico', 'fondos de recuperación', 'recuperación por municipio'],
   }
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
@@ -3913,7 +3913,7 @@ async function handleRecuperacion(req: any, res: any) {
     title: '¿Dónde está el dinero de María? Fondos federales de recuperación de PR por municipio',
     description: '$39,500 millones obligados a Puerto Rico. Pueblo por pueblo, a dónde fue, y el cruce con la salud: Maricao recibió $31,807 por habitante y no tiene ni un médico.',
     slug: 'recuperacion', bodyHtml: body, jsonLd: [faqLd, datasetLd] as any, ogImage: '/og/desiertos.png',
-    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
 
