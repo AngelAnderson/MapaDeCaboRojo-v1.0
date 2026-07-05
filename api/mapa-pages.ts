@@ -182,6 +182,7 @@ function layout(opts: {
 <div class="mt-6 flex justify-center gap-4 text-xs text-slate-500 flex-wrap">
 <a href="/registro" class="hover:text-teal-700 font-semibold">Buscar especialista</a>
 <a href="/registro/mapa" class="hover:text-teal-700">El mapa</a>
+<a href="/registro/estado" class="hover:text-teal-700">Estado de salud</a>
 <a href="/registro/desiertos" class="hover:text-teal-700">Acceso por región</a>
 <a href="/observatorio" class="hover:text-teal-700">Observatorio</a>
 <a href="/registro#como-se-hizo" class="hover:text-teal-700">Cómo se verifica</a>
@@ -3798,6 +3799,85 @@ ${ratioSection}
   }))
 }
 
+// =============== /registro/estado — Estado de Salud PR: el cupón federal sin cobrar ===============
+// Surface de v_registro_municipio_intel: ranking por necesidad×oportunidad + análisis "cupón sin cobrar"
+// (designación HPSA activa + cero psiquiatras). Data live con fallback verificado 2026-07-05.
+async function handleRegistroEstado(req: any, res: any) {
+  type Row = { municipio: string; poblacion: number; especialistas: number; psiquiatras: number; poverty_pct: number; hpsa_primaria: number; hpsa_salud_mental: number; cupon_mh_sin_cobrar: boolean; prioridad: number }
+  let rows: Row[] = []
+  let agg = { conHpsa: 65, cupon: 33, cuponPob: 792221, tier1: 21 }
+  try {
+    const { data } = await supabase.from('v_registro_municipio_intel').select('municipio,poblacion,especialistas,psiquiatras,poverty_pct,hpsa_primaria,hpsa_salud_mental,cupon_mh_sin_cobrar,prioridad').range(0, 100)
+    if (data && data.length >= 70) {
+      rows = data.map((r: any) => ({ municipio: r.municipio, poblacion: +r.poblacion, especialistas: +r.especialistas, psiquiatras: +r.psiquiatras, poverty_pct: +(r.poverty_pct || 0), hpsa_primaria: +r.hpsa_primaria, hpsa_salud_mental: +r.hpsa_salud_mental, cupon_mh_sin_cobrar: !!r.cupon_mh_sin_cobrar, prioridad: +r.prioridad }))
+      rows.sort((a, b) => b.prioridad - a.prioridad)
+      const cup = rows.filter(r => r.cupon_mh_sin_cobrar)
+      agg = { conHpsa: rows.filter(r => r.hpsa_primaria > 0 || r.hpsa_salud_mental > 0).length, cupon: cup.length, cuponPob: cup.reduce((s, r) => s + r.poblacion, 0), tier1: rows.filter(r => r.prioridad >= 75).length }
+    }
+  } catch (_) { /* fallback numbers stand */ }
+
+  const rowHtml = rows.map((r, i) => {
+    const pr = r.prioridad
+    const prColor = pr >= 80 ? 'bg-red-100 text-red-800' : pr >= 70 ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'
+    return `<tr class="border-t border-slate-100 ${r.cupon_mh_sin_cobrar ? 'bg-amber-50/40' : ''}">
+      <td class="py-1.5 px-2 text-slate-400 text-xs">${i + 1}</td>
+      <td class="py-1.5 px-3 font-semibold text-slate-800">${escapeHtml(r.municipio)}</td>
+      <td class="py-1.5 px-3 text-right text-slate-600">${r.poblacion.toLocaleString('en-US')}</td>
+      <td class="py-1.5 px-3 text-right">${r.especialistas === 0 ? '<span class="text-red-700 font-bold">0</span>' : r.especialistas}</td>
+      <td class="py-1.5 px-3 text-right ${r.psiquiatras === 0 ? 'text-red-700 font-bold' : 'text-slate-600'}">${r.psiquiatras}</td>
+      <td class="py-1.5 px-3 text-right text-slate-600">${r.poverty_pct.toFixed(0)}%</td>
+      <td class="py-1.5 px-3 text-center text-xs">${r.hpsa_salud_mental ? `<span class="text-teal-700 font-semibold">SM ${r.hpsa_salud_mental}</span>` : ''}${r.hpsa_primaria ? ` <span class="text-slate-500">PC ${r.hpsa_primaria}</span>` : ''}</td>
+      <td class="py-1.5 px-3 text-center">${r.cupon_mh_sin_cobrar ? '💰' : ''}</td>
+      <td class="py-1.5 px-2 text-right"><span class="inline-block ${prColor} font-bold px-2 py-0.5 rounded text-xs">${pr.toFixed(0)}</span></td>
+    </tr>`
+  }).join('')
+
+  const body = `
+<h1>Estado de Salud de Puerto Rico</h1>
+<p class="text-lg text-slate-600 mt-3">El dinero federal para traer médicos <strong>ya está aprobado</strong> en casi todos nuestros pueblos. Y se está quedando sin reclamar. Esta es la primera cuenta, municipio por municipio, de dónde está el <strong>cupón sin cobrar</strong>.</p>
+
+<div class="not-prose grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
+  <div class="bg-white border-2 border-teal-200 rounded-xl p-4 text-center"><div class="text-3xl font-black text-teal-700">${agg.conHpsa}<span class="text-lg text-slate-400">/76</span></div><div class="text-xs text-slate-600 mt-1">municipios con designación federal de escasez <strong>activa</strong></div></div>
+  <div class="bg-white border-2 border-amber-300 rounded-xl p-4 text-center"><div class="text-3xl font-black text-amber-600">${agg.cupon}</div><div class="text-xs text-slate-600 mt-1">con el <strong>cupón de salud mental sin cobrar</strong> (designado + cero psiquiatras)</div></div>
+  <div class="bg-white border-2 border-red-300 rounded-xl p-4 text-center"><div class="text-3xl font-black text-red-600">${agg.cuponPob.toLocaleString('en-US')}</div><div class="text-xs text-slate-600 mt-1">personas viven en esos municipios</div></div>
+  <div class="bg-white border-2 border-slate-200 rounded-xl p-4 text-center"><div class="text-3xl font-black text-slate-700">3</div><div class="text-xs text-slate-600 mt-1">pueblos con <strong>cero</strong> especialistas de toda clase</div></div>
+</div>
+
+<h2>Qué es el "cupón sin cobrar"</h2>
+<p>Una designación federal de escasez (HPSA) es un cupón: le dice a un médico o psicólogo "múdate a este pueblo y el gobierno federal te paga los préstamos estudiantiles — hasta $75,000 en cuidado primario, $50,000 en salud mental — más un bono de Medicare". Pero para cobrarlo, el clínico tiene que trabajar en un <strong>sitio aprobado por el NHSC dentro del pueblo</strong>. En los pueblos más necesitados no hay ese sitio. La designación existe en un archivo federal; la clínica donde pararse, no. <strong>Ese es el eslabón roto.</strong> Puerto Rico ya tiene la red de centros 330 que puede hospedarlo — falta conectarla.</p>
+
+<h2>Los 76 municipios, rankeados por dónde el cupón vale más</h2>
+<p class="text-slate-600 -mt-2">Prioridad = necesidad (pobreza + envejecimiento + escasez de médicos) × oportunidad (designación activa sin cobrar). 💰 = tiene designación de salud mental activa y cero psiquiatras.</p>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+    <th class="py-2 px-2">#</th><th class="py-2 px-3">Municipio</th><th class="py-2 px-3 text-right">Pob.</th><th class="py-2 px-3 text-right">Espec.</th><th class="py-2 px-3 text-right">Psiq.</th><th class="py-2 px-3 text-right">Pobreza</th><th class="py-2 px-3 text-center">HPSA (score)</th><th class="py-2 px-3 text-center">Cupón</th><th class="py-2 px-2 text-right">Prioridad</th>
+  </tr></thead><tbody>${rowHtml}</tbody></table>
+</div>
+
+<h2>Qué se puede hacer</h2>
+<p><strong>El piloto:</strong> Maricao + Las Marías, con Hospital General de Castañer como vehículo. Dos pueblos contiguos, cero de todo, designación activa. Un punto satélite inscrito como sitio NHSC convierte el cupón en un médico reclutado. <strong>Los 33 cupones:</strong> cada uno con su centro 330 regional como vehículo natural — data lista para la Oficina de Cuidado Primario del Departamento de Salud, que es quien radica ante HRSA.</p>
+<p class="text-sm text-slate-600">¿Eres médico, psicólogo o residente? En estos pueblos no tienes competencia y el gobierno te paga los préstamos. ¿Alcalde o legislador? El expediente de tu pueblo se arma con esta data. Escríbenos: <a href="mailto:angel@angelanderson.com" class="text-teal-600">angel@angelanderson.com</a>.</p>
+
+<p class="text-sm text-slate-500 mt-6">Fuente: NPPES/CMS (proveedores) × archivos HRSA (designaciones HPSA) × Censo/ACS (pobreza, edad), cruzados municipio por municipio, julio 2026. <a href="/registro/mapa" class="text-teal-700 font-semibold">Ver el mapa →</a> · <a href="/registro/desiertos" class="text-teal-700 font-semibold">Los desiertos →</a></p>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'Estado de Salud de Puerto Rico — designaciones de escasez sin redimir por municipio',
+    description: `${agg.conHpsa} de 76 municipios de PR tienen designación federal de escasez activa; ${agg.cupon} tienen el cupón de salud mental sin cobrar (${agg.cuponPob.toLocaleString('en-US')} personas). Cruce NPPES × HRSA × Censo, municipio por municipio.`,
+    creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://registromedicopr.com/registro/estado',
+    keywords: ['acceso a salud Puerto Rico', 'HPSA', 'desiertos médicos', 'NHSC', 'escasez de médicos'],
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'Estado de Salud de Puerto Rico — el cupón federal sin cobrar',
+    description: 'El dinero federal para traer médicos ya está aprobado en 65 de 76 municipios de PR y se queda sin reclamar. La primera cuenta, municipio por municipio.',
+    slug: 'registro/estado', bodyHtml: body, jsonLd, ogImage: '/og/desiertos.png',
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
 // =============== /registro/mapa — Mapa interactivo de médicos por municipio ===============
 // Grano MUNICIPIO (la región promedia y esconde). Data live: v_registro_muni_ratio (totales) +
 // municipalities (coords) + v_registro_muni_spec (matriz especialidad) + hpsa_designations (cupón federal).
@@ -5543,6 +5623,7 @@ export default async function handler(req: any, res: any) {
     case 'registro-lead': return await handleRegistroLead(req, res)
     case 'registro-desiertos': return await handleRegistroDesiertos(req, res)
     case 'registro-mapa': return await handleRegistroMapa(req, res)
+    case 'registro-estado': return await handleRegistroEstado(req, res)
     case 'registro-hub': return await handleRegistroHub(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)

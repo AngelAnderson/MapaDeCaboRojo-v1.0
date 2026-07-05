@@ -44,6 +44,7 @@
     { "source": "/registro", "destination": "/api/mapa-pages?page=registro" },
     { "source": "/registro/desiertos", "destination": "/api/mapa-pages?page=registro-desiertos" },
     { "source": "/registro/mapa", "destination": "/api/mapa-pages?page=registro-mapa" },
+    { "source": "/registro/estado", "destination": "/api/mapa-pages?page=registro-estado" },
     { "source": "/registro/:spec/:region", "destination": "/api/mapa-pages?page=registro-hub&spec=:spec&region=:region" },
     { "source": "/registro/:spec", "destination": "/api/mapa-pages?page=registro-hub&spec=:spec" },
     { "source": "/especialista/:slug", "destination": "/api/mapa-pages?page=especialista&slug=:slug" },
