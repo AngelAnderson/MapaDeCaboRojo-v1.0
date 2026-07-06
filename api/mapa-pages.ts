@@ -5600,6 +5600,7 @@ function handleCostoDeVida(req: any, res: any) {
 <ul>
   <li><strong>La luz al doble.</strong> PR paga ~<b>24.5¢/kWh</b>, casi el doble del promedio de EE.UU. <a href="/luz" class="text-teal-700 font-semibold">Ver el récord →</a></li>
   <li><strong>La comida importada, más cara.</strong> Los comestibles corren estimados <b>15-30% por encima</b> del mainland — no por gusto, sino por el costo de envío bajo la <strong>Ley Jones</strong> (Jones Act), que obliga a que la carga entre en barcos de EE.UU. Un galón de leche: $4-6. <i>(Estimados de mercado; el mecanismo — la Ley Jones — es la parte verificable.)</i></li>
+  <li><strong>La canasta, con número del gobierno.</strong> DACO publica una <strong>Canasta Básica de Emergencias</strong> (Orden 2021-012): <b>$256.57 al mes para 4 personas</b> ($324.58 para 6, $419.53 para 8), más un Historial de Precios Mayoristas. <i>(DACO, Orden 2021-012.)</i></li>
 </ul>
 <p><strong>El resultado en la calle:</strong> el dólar rinde menos aquí que en casi cualquier estado. No es percepción — es un ingreso de estado pobre con precios de isla importadora.</p>
 
@@ -5610,8 +5611,9 @@ function handleCostoDeVida(req: any, res: any) {
 <h2>4. El premio sin reclamar</h2>
 <p>Hoy nadie publica <strong>la canasta real por pueblo.</strong> Todo son promedios de isla, y un promedio esconde que en un pueblo el dólar rinde y en otro no. El municipio (o el vecino con data) que publique el costo real de vivir en SU pueblo — renta, luz, canasta, transporte — <strong>le da munición al que evalúa mudarse allí y al que quiere abrir negocio donde hay gente que puede pagar.</strong> El primero que lo haga, marca el estándar. El que se atreva, gana.</p>
 
-<h2>5. Lo que todavía falta medir</h2>
-<p>Ser honesto con el gap es parte del récord: <strong>no existe una canasta de costo de vida oficial, pueblo por pueblo, en Puerto Rico.</strong> Hay promedios de isla y estimados de agencias de mudanza, pero no un índice granular con fuente primaria. Esa ausencia es, en sí, un fallo de gobernanza — y exactamente el hueco que este sitio quiere ayudar a llenar con las fuentes que sí existen (EIA para la luz, Censo para el ingreso, muestreo local para los precios).</p>
+<h2>5. El número que el gobierno no tiene — y nosotros sí podemos armar</h2>
+<p>Aquí está el hueco de verdad, y no es nuestro: <strong>el propio gobierno admitió en 2025 que no tiene un número claro de lo que cuesta la canasta básica del día a día en Puerto Rico.</strong> <i>(DACO, secretaria Natalia Catoni, vía El Vocero, 2025.)</i> DACO publica una canasta de emergencias y un historial de precios mayoristas, pero no un índice del costo real de vivir, pueblo por pueblo.</p>
+<p>Eso no es un "no se puede medir" — es un "nadie lo ha armado." Y entre los precios que DACO sí publica y lo que este substrato ya tiene — la luz de la EIA en <a href="/luz" class="text-teal-700 font-semibold">/luz</a>, el ingreso del Censo, la demanda real del *7711, los negocios verificados del mapa — <strong>la canasta por pueblo se puede construir, con histórico, hasta proyectar hacia dónde va.</strong> Ese es el próximo récord, no un callejón sin salida.</p>
 
 <div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
   <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Puerto Rico podría ser donde una familia vive con dignidad con menos — si se ve claro dónde.</p>
@@ -5626,7 +5628,7 @@ function handleCostoDeVida(req: any, res: any) {
   <p class="text-xs text-slate-400 italic mt-2">Si no te sirve, sigue tu camino.</p>
 </div>
 
-<p class="text-sm text-slate-500 mt-6">Cómo se hizo: ingreso y pobreza del Censo/ACS (Encuesta sobre la Comunidad de PR); tarifa de luz de la EIA vía el récord <a href="/luz" class="text-teal-700">/luz</a>; el sobrecosto de comestibles se atribuye al costo de envío bajo la Ley Jones (mecanismo verificable; los porcentajes exactos son estimados de mercado). Las conexiones son análisis. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a> y se corrige. Julio 2026.</p>
+<p class="text-sm text-slate-500 mt-6">Cómo se hizo: ingreso y pobreza del Censo/ACS (Encuesta sobre la Comunidad de PR); precios de la canasta de DACO (Orden 2021-012); tarifa de luz de la EIA vía el récord <a href="/luz" class="text-teal-700">/luz</a>; el sobrecosto de comestibles se atribuye al costo de envío bajo la Ley Jones (mecanismo verificable; los porcentajes exactos son estimados de mercado). Las conexiones son análisis. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a> y se corrige. Julio 2026.</p>
 `
   const jsonLd = {
     '@context': 'https://schema.org', '@type': 'Report',
