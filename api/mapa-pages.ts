@@ -5552,6 +5552,14 @@ ${renderAlertas()}
   <p class="mt-2 text-sm text-slate-600 italic">Para escoger, primero hay que ver. Si te sirve, úsalo.</p>
 </div>
 
+<div class="not-prose border-l-4 border-slate-300 bg-slate-50 rounded-r-xl p-5 mt-8">
+  <p class="text-xs uppercase tracking-widest text-slate-400 font-bold">El porqué, más hondo · esto ya no es récord, es reflexión</p>
+  <p class="text-slate-700 mt-2">Estos récords hacen una cosa importante: quitan la culpa. Si el sistema reconstruye el ladrillo pero pierde al médico, y el sueldo rinde un tercio, la gente no se quedó atrás por falta de ganas. La escalera no estaba.</p>
+  <p class="text-slate-700 mt-2">Pero hay una idea más vieja que cualquiera de estos números, y es la que de verdad pesa: <em>"aquí no se puede."</em> Esa también se instaló — y también se reescribe.</p>
+  <p class="mt-3"><a href="https://www.angelanderson.com/te-programaron" class="text-teal-700 font-semibold">Te programaron a creer que no puedes. Empieza por ahí. →</a></p>
+  <p class="text-xs text-slate-400 italic mt-2">Si no te sirve, sigue tu camino.</p>
+</div>
+
 <p class="text-sm text-slate-500 mt-6">Cómo se hizo: síntesis de los récords verificados de este sitio (NPPES/CMS, HRSA, OpenFEMA, EPA, Censo/ACS, El Veci *7711), asistida por IA sobre esas fuentes primarias. Los números son verificables en cada récord enlazado; las conexiones y proyecciones son análisis. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a> y se corrige. Julio 2026.</p>
 `
   const jsonLd = {
@@ -5608,6 +5616,14 @@ function handleCostoDeVida(req: any, res: any) {
 <div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
   <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Puerto Rico podría ser donde una familia vive con dignidad con menos — si se ve claro dónde.</p>
   <p class="mt-2 text-sm text-slate-600 italic">Para escoger, primero hay que ver el número. Si te sirve, úsalo.</p>
+</div>
+
+<div class="not-prose border-l-4 border-slate-300 bg-slate-50 rounded-r-xl p-5 mt-8">
+  <p class="text-xs uppercase tracking-widest text-slate-400 font-bold">El porqué, más hondo · esto ya no es récord, es reflexión</p>
+  <p class="text-slate-700 mt-2">El número hace una cosa importante: te quita la culpa. Si el sueldo rinde un tercio y el costo es el doble, no te quedaste atrás por falta de ganas. La escalera no estaba.</p>
+  <p class="text-slate-700 mt-2">Pero hay una idea más vieja que el bolsillo, y es la que de verdad pesa: <em>"aquí no se puede."</em> Esa también se instaló — y también se reescribe.</p>
+  <p class="mt-3"><a href="https://www.angelanderson.com/te-programaron" class="text-teal-700 font-semibold">Te programaron a creer que no puedes. Empieza por ahí. →</a></p>
+  <p class="text-xs text-slate-400 italic mt-2">Si no te sirve, sigue tu camino.</p>
 </div>
 
 <p class="text-sm text-slate-500 mt-6">Cómo se hizo: ingreso y pobreza del Censo/ACS (Encuesta sobre la Comunidad de PR); tarifa de luz de la EIA vía el récord <a href="/luz" class="text-teal-700">/luz</a>; el sobrecosto de comestibles se atribuye al costo de envío bajo la Ley Jones (mecanismo verificable; los porcentajes exactos son estimados de mercado). Las conexiones son análisis. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a> y se corrige. Julio 2026.</p>
