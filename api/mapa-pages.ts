@@ -145,6 +145,7 @@ function layout(opts: {
 <span class="font-black tracking-tight">Puerto Rico <span class="text-teal-700">Sin Filtros</span></span>
 </a>
 <nav class="hidden md:flex gap-5 text-sm text-slate-600">
+<a href="/decidir" class="font-bold text-teal-700 hover:text-teal-800">¿Me quedo?</a>
 <a href="/#records" class="hover:text-teal-700">Récords</a>
 <a href="/#expedientes" class="hover:text-teal-700">Expedientes</a>
 <a href="/prediccion" class="hover:text-teal-700">Predicción</a>
@@ -5781,6 +5782,115 @@ function handleTrabajo(req: any, res: any) {
   }))
 }
 
+// /decidir — la espina: ¿me quedo, me voy, me mudo? Organiza los factores + auto-veredicto por perfil.
+function handleDecidir(req: any, res: any) {
+  const card = (id: string, titulo: string, badge: string, badgeClass: string, texto: string, href: string, linkTxt: string) => `
+  <div data-card="${id}" class="bg-white border border-slate-200 rounded-2xl p-5 transition-all">
+    <div class="flex items-center justify-between gap-2">
+      <h3 class="text-lg font-black text-slate-900 m-0" style="font-family:'Fraunces',Georgia,serif">${titulo}</h3>
+      <span class="text-xs font-bold rounded-full px-2.5 py-1 whitespace-nowrap ${badgeClass}">${badge}</span>
+    </div>
+    <p class="text-sm text-slate-600 mt-2">${texto}</p>
+    <a href="${href}" class="text-teal-700 font-semibold text-sm mt-2 inline-block">${linkTxt} →</a>
+  </div>`
+
+  const body = `
+<h1>¿Me quedo, me voy, me mudo?</h1>
+<p class="text-lg text-slate-600 mt-2">La decisión más grande no se toma con un sentimiento — se toma con los números claros. Esta página junta todo lo que pesa esa decisión en Puerto Rico, con la fuente al lado. <strong>Para vivir la vida que eliges, no la que te tocó.</strong></p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">La regla</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Una predicción no es destino. Es lo que pasa si no escoges otra cosa. Primero, hay que ver.</p>
+</div>
+
+<div class="not-prose mt-6 bg-white border-2 border-teal-200 rounded-2xl p-5">
+  <p class="text-sm font-bold text-slate-800 mb-3">Dime quién eres y te resalto lo que más te pesa:</p>
+  <p class="text-xs uppercase tracking-wide text-slate-400 font-bold mb-2">¿Cómo es tu trabajo?</p>
+  <div class="flex flex-wrap gap-2 mb-4" data-group="trabajo">
+    <button type="button" class="prsf-chip" data-val="pantalla">Pantalla / remoto</button>
+    <button type="button" class="prsf-chip" data-val="manos">Oficio de manos</button>
+    <button type="button" class="prsf-chip" data-val="dueno">Dueño de negocio</button>
+  </div>
+  <p class="text-xs uppercase tracking-wide text-slate-400 font-bold mb-2">¿Dónde estás?</p>
+  <div class="flex flex-wrap gap-2" data-group="situacion">
+    <button type="button" class="prsf-chip" data-val="residente">Vivo aquí</button>
+    <button type="button" class="prsf-chip" data-val="diaspora">Diáspora, evalúo volver</button>
+    <button type="button" class="prsf-chip" data-val="mudarme">Pienso mudarme a PR</button>
+  </div>
+  <p id="prsf-jugada" class="text-sm text-teal-900 bg-teal-50 border border-teal-200 rounded-xl p-3 mt-4 hidden"></p>
+</div>
+
+<div class="not-prose grid sm:grid-cols-2 gap-4 mt-6">
+  ${card('costo', 'Costo de vida', '🔴 pesa fuerte', 'text-red-700 bg-red-50 border border-red-200', 'Ganas cerca de 1/3 del ingreso de EE.UU., pero pagas la luz al doble y la comida 15-30% más. El dólar rinde menos.', '/costo-de-vida', 'Ver el récord')}
+  ${card('trabajo', 'Trabajo y AI', '🔴 pesa fuerte', 'text-red-700 bg-red-50 border border-red-200', 'Solo 40.7% de la gente en edad de trabajar está activa. La AI corta lo de pantalla; las manos aguantan; el cruce a operador abre.', '/trabajo', 'Ver el récord')}
+  ${card('salud', 'Salud', '🟡 con fecha', 'text-amber-800 bg-amber-50 border border-amber-200', 'Se proyecta que el 55% de los médicos se retire para 2030, y el Medicaid federal cae de 76% a 55% el 30 de septiembre de 2027.', '/prediccion', 'Ver la predicción')}
+  ${card('servicios', 'Servicios: agua y luz', '🟡 verifica el tuyo', 'text-amber-800 bg-amber-50 border border-amber-200', 'La luz a 24.5¢/kWh (el doble de EE.UU.) y violaciones de agua activas en varios pueblos del oeste. Depende de tu sistema.', '/agua', 'Ver el récord')}
+</div>
+
+<p class="text-sm text-slate-500 mt-4 italic">Próximamente: seguridad y educación por pueblo. <a href="/prediccion" class="text-teal-700 font-semibold">Y la síntesis completa: Predicción 2030 →</a></p>
+
+<div class="not-prose border-l-4 border-slate-300 bg-slate-50 rounded-r-xl p-5 mt-8">
+  <p class="text-xs uppercase tracking-widest text-slate-400 font-bold">El porqué, más hondo · esto ya no es récord, es reflexión</p>
+  <p class="text-slate-700 mt-2">Estos números te quitan la culpa: si la decisión de quedarte o irte se siente imposible, no es que estés perdido — es que nadie te puso los datos claros al lado. Ahora los tienes.</p>
+  <p class="text-slate-700 mt-2">Pero hay una idea más vieja que cualquiera de estas cifras, y es la que de verdad decide: <em>"aquí no se puede."</em> Esa también se instaló — y también se reescribe.</p>
+  <p class="mt-3"><a href="https://www.angelanderson.com/te-programaron" class="text-teal-700 font-semibold">Te programaron a creer que no puedes. Empieza por ahí. →</a></p>
+  <p class="text-xs text-slate-400 italic mt-2">Si no te sirve, sigue tu camino.</p>
+</div>
+
+<p class="text-sm text-slate-500 mt-6">Cómo se hizo: cada tarjeta resume un récord verificado de este sitio, con su fuente en la página enlazada (Censo/ACS, EIA, EPA, FMI, NPPES/CMS, DACO). El resaltado por perfil es una ayuda de lectura, no un consejo. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a> y se corrige. Julio 2026.</p>
+
+<style>
+.prsf-chip{border:1px solid #cbd5e1;border-radius:9999px;padding:6px 14px;font-size:14px;font-weight:600;color:#334155;background:#fff;cursor:pointer;transition:all .15s}
+.prsf-chip:hover{border-color:#14b8a6}
+.prsf-on{background:#0f766e;color:#fff;border-color:#0f766e}
+.prsf-hi{outline:3px solid #14b8a6;outline-offset:2px;box-shadow:0 4px 14px rgba(20,184,166,.18)}
+[data-card]{scroll-margin-top:80px}
+</style>
+<script>
+(function(){
+  var rel={pantalla:['trabajo','costo'],manos:['trabajo','costo'],dueno:['trabajo','costo'],residente:['salud','costo','servicios'],diaspora:['costo','salud','trabajo'],mudarme:['costo','servicios','salud']};
+  var jug={pantalla:'Tu jugada: cruza de empleado a operador. Alquila inteligencia con AI, apúntala, y sube tu valor sin salir de la isla.',manos:'Tu jugada: la AI no toca tu oficio. Hazte encontrable (directorio, 787-417-7711) y deja que la demanda te llegue.',dueno:'Tu jugada: adopta la AI primero. Baja tu costo de operar y compite con firmas grandes desde el pueblo.'};
+  var sel={trabajo:null,situacion:null};
+  function apply(){
+    var ids={};
+    if(sel.trabajo)rel[sel.trabajo].forEach(function(x){ids[x]=1});
+    if(sel.situacion)rel[sel.situacion].forEach(function(x){ids[x]=1});
+    document.querySelectorAll('[data-card]').forEach(function(c){c.classList.toggle('prsf-hi',!!ids[c.getAttribute('data-card')])});
+    var j=document.getElementById('prsf-jugada'),t='';
+    if(sel.trabajo)t=jug[sel.trabajo];
+    if(sel.situacion==='diaspora')t+=' Y como estás en la diáspora: ganas en dólares donde el costo rinde más.';
+    if(sel.situacion==='mudarme')t+=' Antes de mudarte, mira el costo de vida y los servicios de tu pueblo.';
+    if(t){j.textContent=t;j.classList.remove('hidden')}else{j.classList.add('hidden')}
+  }
+  document.querySelectorAll('[data-group]').forEach(function(g){
+    var grp=g.getAttribute('data-group');
+    g.querySelectorAll('.prsf-chip').forEach(function(b){
+      b.addEventListener('click',function(){
+        g.querySelectorAll('.prsf-chip').forEach(function(x){x.classList.remove('prsf-on')});
+        b.classList.add('prsf-on');sel[grp]=b.getAttribute('data-val');apply();
+      });
+    });
+  });
+})();
+</script>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'WebPage',
+    name: '¿Me quedo, me voy, me mudo? La decisión con los números de Puerto Rico',
+    description: 'Todo lo que pesa la decisión de vivir en Puerto Rico — costo de vida, trabajo, salud, servicios — con la fuente al lado, y un veredicto según tu perfil.',
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    inLanguage: 'es', url: 'https://puertoricosinfiltros.com/decidir',
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: '¿Me quedo, me voy, me mudo? La decisión con los números claros',
+    description: 'La decisión de quedarte, irte o mudarte a Puerto Rico — costo de vida, trabajo, salud, servicios — con la fuente al lado y un veredicto según tu perfil. Para vivir la vida que eliges.',
+    slug: 'decidir', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
 // =============== /registro/estado — Estado de Salud PR: el cupón federal sin cobrar ===============
 // Surface de v_registro_municipio_intel: ranking por necesidad×oportunidad + análisis "cupón sin cobrar"
 // (designación HPSA activa + cero psiquiatras). Data live con fallback verificado 2026-07-05.
@@ -7651,6 +7761,7 @@ export default async function handler(req: any, res: any) {
     case 'prediccion': return handlePrediccion(req, res)
     case 'costo-de-vida': return handleCostoDeVida(req, res)
     case 'trabajo': return handleTrabajo(req, res)
+    case 'decidir': return handleDecidir(req, res)
     case 'historial': return await handleHistorial(req, res)
     case 'telemedicina': return await handleTelemedicina(req, res)
     case 'no-se-mide': return handleNoSeMide(req, res)
