@@ -3898,7 +3898,7 @@ async function handleRecuperacion(req: any, res: any) {
 </div>
 
 <h2>Le llegó el cemento, pero no el médico</h2>
-<p><strong>Maricao</strong> recibió <strong>$31,807 por habitante</strong> en fondos de recuperación, lo más de toda la isla por persona, y no tiene ni un médico especialista. <strong>Jayuya</strong>, $424 millones y solo 2 especialistas, cero psiquiatras. El dinero de ladrillo llegó a la montaña. El de salud, no. Son el mismo mapa del abandono, visto desde dos bases federales distintas: la de FEMA y la del registro de médicos. <a href="/registro/estado" class="text-teal-700 font-semibold">Ver el cupón de salud sin cobrar →</a></p>
+<p><strong>Maricao</strong> recibió <strong>$31,807 por habitante</strong> en fondos de recuperación, lo más de toda la isla por persona, y no tiene ni un médico especialista. <strong>Jayuya</strong>, $424 millones y solo 2 especialistas, cero psiquiatras. El dinero del cemento llegó a la montaña. El de salud, no. Son el mismo mapa del abandono, visto desde dos bases federales distintas: la de FEMA y la del registro de médicos. <a href="/registro/estado" class="text-teal-700 font-semibold">Ver el cupón de salud sin cobrar →</a></p>
 
 <h2>Los municipios, por dinero recibido</h2>
 <p class="text-slate-600 -mt-2">Barra = total federal obligado. La columna "por habitante" revela lo que el total esconde: los pueblos pequeños de la montaña recibieron muchísimo por persona porque el daño de María fue brutal ahí.</p>
@@ -4234,7 +4234,7 @@ async function handleComparte(req: any, res: any) {
     { q: '¿Cuántos municipios de Puerto Rico están declarados en escasez de médicos por el gobierno federal?', a: `${g.conHpsa} de los 76 municipios de Puerto Rico (sin Vieques y Culebra) tienen una designación federal de escasez de profesionales de la salud (HPSA) activa, de cuidado primario o salud mental.`, srcText: 'Archivos oficiales de HRSA (Health Resources & Services Administration), designaciones activas, julio 2026.', srcUrl: 'https://data.hrsa.gov/tools/shortage-area/hpsa-find' },
     { q: '¿Cuánto dinero federal para atraer médicos se está quedando sin reclamar en Puerto Rico?', a: `${g.cupon} municipios de PR tienen una designación federal de salud mental activa (que destraba repago de préstamos del NHSC y bono de Medicare) y a la vez CERO psiquiatras ejerciendo. Son ${n(g.cuponPob)} personas con el dinero aprobado y sin médico que lo cobre.`, srcText: 'Cruce NPPES/CMS × archivos HRSA, verificado municipio por municipio (ver el detalle).', srcUrl: 'https://registromedicopr.com/registro/estado' },
     { q: '¿Cuántos pueblos de Puerto Rico no tienen ni un solo especialista médico?', a: `${g.cero} municipios de PR no tienen ni un especialista médico de ninguna clase con práctica declarada: Maricao, Las Marías y Florida.`, srcText: 'Registro federal NPPES/CMS por municipio (ver el mapa).', srcUrl: 'https://registromedicopr.com/registro/mapa' },
-    { q: '¿Le llegó dinero de recuperación a los pueblos que no tienen médicos?', a: 'Sí, pero solo el de ladrillo. $3,469 millones de fondos federales de recuperación (FEMA) fueron a los 33 municipios de PR que tienen designación de salud mental activa y cero psiquiatras. Se reconstruyeron edificios, carreteras y sistemas de agua. No llegó ni un médico de la mente. Ejemplo: Jayuya recibió $424 millones y tiene 2 especialistas y cero psiquiatras.', srcText: 'OpenFEMA (Public Assistance) × NPPES/CMS × HRSA, julio 2026.', srcUrl: 'https://www.fema.gov/openfema-data-page/public-assistance-funded-projects-summaries-v1' },
+    { q: '¿Le llegó dinero de recuperación a los pueblos que no tienen médicos?', a: 'Sí, pero solo el de cemento. $3,469 millones de fondos federales de recuperación (FEMA) fueron a los 33 municipios de PR que tienen designación de salud mental activa y cero psiquiatras. Se reconstruyeron edificios, carreteras y sistemas de agua. No llegó ni un médico de la mente. Ejemplo: Jayuya recibió $424 millones y tiene 2 especialistas y cero psiquiatras.', srcText: 'OpenFEMA (Public Assistance) × NPPES/CMS × HRSA, julio 2026.', srcUrl: 'https://www.fema.gov/openfema-data-page/public-assistance-funded-projects-summaries-v1' },
     { q: '¿Cómo está Cabo Rojo de médicos comparado con sus vecinos del oeste?', a: 'Cabo Rojo está entre los pueblos mejor servidos del oeste: 99 especialistas y 3 psiquiatras, con el hub de Mayagüez a unos 20 minutos. Pero está rodeado de desiertos: a menos de una hora, en la montaña, Maricao y Las Marías no tienen ni un especialista de ninguna clase.', srcText: 'NPPES/CMS × Censo 2020 (ver el mapa).', srcUrl: 'https://registromedicopr.com/registro/mapa', tag: 'local' },
     { q: '¿Cuántos pueblos del oeste no tienen ni un psiquiatra?', a: 'Seis municipios del oeste no tienen ni un psiquiatra: Maricao, Las Marías, Hormigueros, Añasco, Lajas y Moca. Todo el oeste depende de los 26 psiquiatras de Mayagüez. Y Añasco recibió $316 millones de fondos federales de recuperación sin un solo psiquiatra en el pueblo.', srcText: 'NPPES/CMS × HRSA × OpenFEMA (ver el estado).', srcUrl: 'https://registromedicopr.com/registro/estado', tag: 'local' },
     { q: '¿Cuántos puertorriqueños viven en un municipio sin psiquiatra?', a: `${g.sinPsiq} municipios de PR no tienen ni un psiquiatra con práctica declarada. Son ${n(g.sinPsiqPob)} personas, cerca de 1 de cada 3 puertorriqueños.`, srcText: 'Registro federal NPPES/CMS (ver el estado, pueblo por pueblo).', srcUrl: 'https://registromedicopr.com/registro/estado' },
@@ -4401,7 +4401,7 @@ async function handleSinFiltros(req: any, res: any) {
       verUrl: '/registro/mapa', verificaUrl: 'https://npiregistry.cms.hhs.gov/', verificaText: 'Registro federal NPPES', tag: 'Salud',
     },
     {
-      titulo: 'El dinero de ladrillo llegó; el médico no',
+      titulo: 'El dinero del cemento llegó; el médico no',
       brecha: '$3,469 millones de fondos federales de recuperación (FEMA) fueron a los 33 municipios con salud mental en escasez y cero psiquiatras. Se reconstruyeron edificios, carreteras y agua. No llegó ni un médico de la mente. Jayuya recibió $424 millones y tiene cero psiquiatras.',
       fuente: 'OpenFEMA (Public Assistance) × NPPES/CMS × HRSA, julio 2026.',
       verUrl: '/registro/estado', verificaUrl: 'https://www.fema.gov/openfema-data-page/public-assistance-funded-projects-summaries-v1', verificaText: 'OpenFEMA', tag: 'Salud',
@@ -5203,6 +5203,43 @@ async function handleSigueElDinero(req: any, res: any) {
 
 <h2>El caso más crudo</h2>
 <p><strong>CH2M Hill – CDM</strong> (Denver, Colorado) se llevó sola <strong>$238 millones</strong> en servicios "PA-TAC" — es decir, en <em>asesorar</em> sobre cómo gastar el dinero de FEMA. Sumando las firmas de ingeniería y consultoría de afuera (CDM, AECOM, WSP, Fluor), más de <strong>$700 millones</strong> se fueron en gestión y consultoría, no en obra física.</p>
+
+<h2>La calculadora: ¿cuánto se hubiera quedado?</h2>
+<p>Esos $700 millones se fueron en gestión y consultoría a firmas de afuera. Mueve la barra y mira cuánto se hubiera quedado en Puerto Rico con un piso de subcontratación local en esos contratos.</p>
+<div class="not-prose mt-3" id="fuga-calc">
+  <div class="bg-slate-900 rounded-2xl p-5 text-center">
+    <div class="text-xs uppercase tracking-widest text-teal-300 font-bold">Se queda en Puerto Rico</div>
+    <div class="text-3xl sm:text-4xl font-black text-white" data-out>$0</div>
+    <div class="text-xs text-slate-400 mt-1" data-outsub>de los $700M que se fueron · piso de subcontratación local: 0%</div>
+  </div>
+  <input type="range" min="0" max="50" value="0" step="5" data-slider aria-label="Piso de subcontratación local" class="w-full mt-4 accent-teal-600">
+  <div class="flex justify-between text-xs text-slate-400 px-1"><span>0%</span><span>25%</span><span>50%</span></div>
+  <p class="text-sm text-slate-600 mt-3" data-msg>Como pasó: casi todo se fue. Mueve la barra para ver cuánto se pudo quedar.</p>
+</div>
+<p class="text-sm text-slate-700 mt-3"><strong>Y esta palanca está viva:</strong> el HUD CDBG-DR (~$20.8 mil millones) todavía está bajando. Exigir ese piso de subcontratación local en lo que falta por gastar es donde de verdad se decide. No pide fondos nuevos. Pide una condición.</p>
+<p class="text-xs text-slate-400 mt-1">Cálculo de PuertoRicoSinFiltros.com sobre la cifra verificada de más de $700M en gestión y consultoría que salieron de la isla (USASpending × FEMA). Es una regla de tres simple sobre ese pote, para dimensionar la palanca, no una proyección de contratos futuros.</p>
+<script>
+(function(){
+  var root=document.getElementById('fuga-calc');
+  if(!root)return;
+  var slider=root.querySelector('[data-slider]');
+  var out=root.querySelector('[data-out]');
+  var sub=root.querySelector('[data-outsub]');
+  var msg=root.querySelector('[data-msg]');
+  function render(){
+    var pct=parseInt(slider.value,10)||0;
+    var stay=Math.round(700*pct/100);
+    out.textContent='$'+stay+'M';
+    out.classList.toggle('text-emerald-300',stay>0);
+    out.classList.toggle('text-white',stay===0);
+    sub.textContent='de los $700M que se fueron · piso de subcontratación local: '+pct+'%';
+    if(pct===0){msg.textContent='Como pasó: casi todo se fue. Mueve la barra para ver cuánto se pudo quedar.';}
+    else{msg.textContent='Con un piso de '+pct+'% de subcontratación local, cerca de $'+stay+'M de esa consultoría se hubiera quedado en Puerto Rico: en nóminas, ingenieros y suplidores boricuas.';}
+  }
+  slider.addEventListener('input',render);
+  render();
+})();
+</script>
 
 <h2>Los contratistas de la recuperación (fila teal = boricua)</h2>
 <div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
