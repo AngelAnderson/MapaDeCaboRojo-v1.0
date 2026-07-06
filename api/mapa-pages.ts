@@ -5507,7 +5507,7 @@ function handlePrediccion(req: any, res: any) {
 
 <div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular</p>
-  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Estamos reconstruyendo el ladrillo para una población que se queda sin quien la atienda.</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Estamos reconstruyendo edificios para una población que se queda sin quien la atienda.</p>
 </div>
 
 <div class="not-prose mt-5 bg-white border border-slate-200 rounded-2xl p-4">
@@ -5554,7 +5554,7 @@ ${renderAlertas()}
 
 <div class="not-prose border-l-4 border-slate-300 bg-slate-50 rounded-r-xl p-5 mt-8">
   <p class="text-xs uppercase tracking-widest text-slate-400 font-bold">El porqué, más hondo · esto ya no es récord, es reflexión</p>
-  <p class="text-slate-700 mt-2">Estos récords hacen una cosa importante: quitan la culpa. Si el sistema reconstruye el ladrillo pero pierde al médico, y el sueldo rinde un tercio, la gente no se quedó atrás por falta de ganas. La escalera no estaba.</p>
+  <p class="text-slate-700 mt-2">Estos récords hacen una cosa importante: quitan la culpa. Si el sistema reconstruye edificios pero pierde al médico, y el sueldo rinde un tercio, la gente no se quedó atrás por falta de ganas. La escalera no estaba.</p>
   <p class="text-slate-700 mt-2">Pero hay una idea más vieja que cualquiera de estos números, y es la que de verdad pesa: <em>"aquí no se puede."</em> Esa también se instaló — y también se reescribe.</p>
   <p class="mt-3"><a href="https://www.angelanderson.com/te-programaron" class="text-teal-700 font-semibold">Te programaron a creer que no puedes. Empieza por ahí. →</a></p>
   <p class="text-xs text-slate-400 italic mt-2">Si no te sirve, sigue tu camino.</p>
@@ -5574,7 +5574,7 @@ ${renderAlertas()}
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
   res.status(200).send(layout({
     title: 'Predicción 2030 — lo que dicen todos los récords de Puerto Rico juntos',
-    description: 'Si Puerto Rico no hace nada, ¿a dónde llega en 2030? La síntesis de los récords verificados: reconstruimos el ladrillo para una población que se queda sin médicos. Con la fuente al lado.',
+    description: 'Si Puerto Rico no hace nada, ¿a dónde llega en 2030? La síntesis de los récords verificados: reconstruimos edificios para una población que se queda sin médicos. Con la fuente al lado.',
     slug: 'prediccion', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
