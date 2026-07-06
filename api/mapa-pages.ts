@@ -171,6 +171,23 @@ function layout(opts: {
 <p class="mt-8 text-xs text-slate-400 text-center">Angel Anderson, desde Cabo Rojo. Prensa e investigadores: <a href="mailto:angel@angelanderson.com" class="hover:text-teal-700">angel@angelanderson.com</a></p>
 </div>
 </footer>`
+  const laMaquinaPRSF = `
+<section class="max-w-4xl mx-auto px-4 mt-12">
+<div class="bg-slate-900 text-white rounded-2xl p-6 sm:p-8">
+<p class="text-xs uppercase tracking-widest text-teal-300 font-bold">Pásalo por la máquina</p>
+<div class="text-xl sm:text-2xl font-black mt-1 leading-snug">Antes de creer o compartir — a favor o en contra</div>
+<p class="text-slate-300 mt-2 text-sm">Esta página es el récord. Un récord solo sirve si lo usas para pensar por tu cuenta. Antes de creer o regar cualquier cosa, pásala por estas seis preguntas:</p>
+<div class="grid sm:grid-cols-2 gap-x-6 gap-y-2.5 mt-4">
+<div class="flex gap-2.5 items-start"><span class="text-teal-300 font-black">1</span><span class="text-sm text-slate-100">¿De dónde salió esto de verdad?</span></div>
+<div class="flex gap-2.5 items-start"><span class="text-teal-300 font-black">2</span><span class="text-sm text-slate-100">¿Es un hecho, una opinión, o un susto?</span></div>
+<div class="flex gap-2.5 items-start"><span class="text-teal-300 font-black">3</span><span class="text-sm text-slate-100">¿Lo dice más de uno, por su cuenta?</span></div>
+<div class="flex gap-2.5 items-start"><span class="text-teal-300 font-black">4</span><span class="text-sm text-slate-100">¿Quién gana si yo me lo creo?</span></div>
+<div class="flex gap-2.5 items-start"><span class="text-teal-300 font-black">5</span><span class="text-sm text-slate-100">¿Qué siento, y por qué me lo hicieron sentir así?</span></div>
+<div class="flex gap-2.5 items-start"><span class="text-teal-300 font-black">6</span><span class="text-sm text-slate-100">¿Si lo comparto, ayudo o riego?</span></div>
+</div>
+<p class="text-slate-300 mt-5 text-sm">Eso es tener el lápiz en la mano. El porqué completo — por qué a un pueblo se le enseñó a consumir el feed en vez de leer el récord — lo cuenta Angel en <a href="https://www.angelanderson.com/te-programaron/" target="_blank" rel="noopener" class="text-teal-300 underline font-semibold">Te programaron</a>.</p>
+</div>
+</section>`
   const header = isPRSF ? prsfHeader : isReg ? `
 <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
 <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -212,7 +229,7 @@ function layout(opts: {
 </header>`
 
   // --- Footer (host-aware). Registro = quiet, no newsletter/tienda; desiertos kept low-key. ---
-  const footer = isPRSF ? prsfFooter : isReg ? `
+  const footer = isPRSF ? (laMaquinaPRSF + prsfFooter) : isReg ? `
 <footer class="border-t border-slate-200 mt-12 py-8 bg-white">
 <div class="max-w-4xl mx-auto px-4 text-center">
 <p class="text-base font-semibold text-teal-800">El registro verificado de especialistas médicos de Puerto Rico.</p>
