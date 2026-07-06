@@ -4879,7 +4879,7 @@ Reuben Brothers <span class="text-slate-400">(Londres, UK · David &amp; Simon R
 <p class="text-xs text-slate-400 mt-1">Fuentes: <a href="https://www.bls.gov/regions/northeast/news-release/occupationalemploymentandwages_sanjuan.htm" target="_blank" rel="noopener" class="text-teal-700 underline">BLS OEWS PR ↗</a> · Glassdoor Ritz-Carlton Dorado · CPI.</p>
 
 <h2>El agua</h2>
-<p>El sistema PRASA del suroeste (Planta de Filtros Betances) sirve a <strong>~20,749 personas</strong> y arrastra <strong>3 violaciones activas</strong> en el récord federal de agua. Ese es el mismo sistema del que dependería Esencia, que necesitaría del orden de <strong>1.25 a 1.5 millones de galones diarios</strong>. Según la denuncia llevada ante la ONU, esos 1.25 millones de galones diarios equivaldrían a cerca del <strong>28% del suministro diario de agua de Cabo Rojo</strong>. Mientras se debate el proyecto, vecinos del sector Las Palmas reportaron estar días sin agua. La AAA no ha hecho pública una determinación de capacidad.</p>
+<p>El sistema PRASA del suroeste (Planta de Filtros Betances) sirve a <strong>~20,749 personas</strong> y arrastra <strong>3 violaciones activas</strong> en el récord federal de agua. Ese es el mismo sistema del que dependería Esencia, que necesitaría <strong>1.2 millones de galones diarios</strong> (según la página 89 de su propia Declaración de Impacto Ambiental). Según la denuncia llevada ante la ONU, ese consumo equivaldría a cerca del <strong>28% del suministro diario de agua de Cabo Rojo</strong>. Y la propia AAA le informó al expediente, el <strong>26 de septiembre de 2024</strong>, que la infraestructura actual de la Planta de Filtros Betances <strong>no puede suplir esa demanda</strong> y que harían falta mejoras significativas. Mientras tanto, vecinos del sector Las Palmas reportaron estar días sin agua.</p>
 <p class="text-xs text-slate-400 mt-1">Fuentes: EPA (récord federal de agua) · reportes de prensa y de vecinos · <a href="https://news.un.org/es/story/2026/06/1541586" target="_blank" rel="noopener" class="text-teal-700 underline">Noticias ONU ↗</a> · <a href="https://mareaecologista.com/2025/04/cabo-rojo-el-proyecto-esencia-y-la-crisis-del-agua-en-el-suroeste/" target="_blank" rel="noopener" class="text-teal-700 underline">Marea Ecologista ↗</a>. Ver también <a href="/agua" class="text-teal-700 underline">el récord del agua en PRSF</a>.</p>
 
 <h2>El historial de los desarrolladores</h2>
@@ -4923,6 +4923,62 @@ Reuben Brothers <span class="text-slate-400">(Londres, UK · David &amp; Simon R
   <li><strong>Senado:</strong> las dos investigaciones aprobadas el 31 de marzo de 2026.</li>
 </ul>
 <p class="text-sm text-slate-600 mt-1">Cuando respondan, se publica lo que digan — diga lo que diga.</p>
+
+<h2>La cuenta completa: lo que el pueblo pone y lo que recibe</h2>
+<p>Nadie ha puesto en una sola cuenta lo que Cabo Rojo entrega y lo que recibe si Esencia va como está. Y no solo en dinero. En las tres cosas que no se reponen: <strong>dinero, agua y basura</strong>. Aquí está, con la fuente al lado. No dice sí ni no. Dice cuánto está en juego.</p>
+
+<div class="not-prose mt-4 space-y-3">
+  <div class="border border-slate-200 rounded-2xl overflow-hidden">
+    <div class="bg-slate-900 text-white px-4 py-2 text-sm font-black uppercase tracking-wide">💰 Dinero · a 10 años</div>
+    <div class="grid sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-200">
+      <div class="p-4">
+        <div class="text-xs font-bold text-red-700 uppercase">El pueblo pone</div>
+        <ul class="text-sm text-slate-700 mt-1 space-y-1">
+          <li>$498M en créditos contributivos del estado</li>
+          <li>$69M que el municipio deja de cobrar (CRIM y patentes, 90% por 10 años)</li>
+          <li class="font-bold text-slate-900">= ~$567 millones de subsidio público</li>
+        </ul>
+      </div>
+      <div class="p-4">
+        <div class="text-xs font-bold text-emerald-700 uppercase">El pueblo recibe (si todo sale como se promete)</div>
+        <ul class="text-sm text-slate-700 mt-1 space-y-1">
+          <li>2,000 empleos prometidos, sin cláusula: si no se crean, no se devuelve nada</li>
+          <li>A $15.37/hora, sobran ~$416 al mes por empleado</li>
+        </ul>
+      </div>
+    </div>
+    <div class="bg-amber-50 border-t border-amber-200 px-4 py-2 text-sm text-slate-700"><strong>El número que nadie ha mostrado:</strong> repartido entre las ~1,652 unidades, cada casa o cuarto de lujo lleva <strong>~$343,000 de subsidio público</strong> (solo contando créditos estatales y exenciones municipales). Un planificador, en vista pública, lo estimó en más de $1 millón por unidad, y señaló que el subsidio supera la inversión que los propios desarrolladores dicen que harán.</div>
+  </div>
+
+  <div class="border border-slate-200 rounded-2xl overflow-hidden">
+    <div class="bg-slate-900 text-white px-4 py-2 text-sm font-black uppercase tracking-wide">💧 Agua</div>
+    <div class="p-4 text-sm text-slate-700 space-y-1">
+      <p>El proyecto pide <strong>1.2 millones de galones al día</strong> (página 89 de su propia Declaración de Impacto Ambiental), cerca del <strong>28% del suministro diario</strong> de Cabo Rojo (denuncia ante la ONU).</p>
+      <p>La propia AAA le informó al expediente, el <strong>26 de septiembre de 2024</strong>, que la infraestructura actual de la Planta de Filtros Betances <strong>no puede suplir esa demanda</strong>. El mismo sistema ya arrastra 3 violaciones federales activas y vecinos que pasan días sin agua.</p>
+    </div>
+    <div class="bg-amber-50 border-t border-amber-200 px-4 py-2 text-sm text-slate-700"><strong>El desperdicio:</strong> agua que, según la agencia, hoy no alcanza, comprometida a un uso privado antes de resolver la del vecino de toda la vida.</div>
+  </div>
+
+  <div class="border border-slate-200 rounded-2xl overflow-hidden">
+    <div class="bg-slate-900 text-white px-4 py-2 text-sm font-black uppercase tracking-wide">🗑️ Basura</div>
+    <div class="p-4 text-sm text-slate-700 space-y-1">
+      <p>El desarrollo (1,132 residencias + 520 unidades de hotel) le sumaría, según estimado en vista pública, <strong>más de 30 toneladas de basura al día</strong> a la celda del vertedero municipal.</p>
+      <p>Esa celda (construida en 2020 con un préstamo de $2.2M, vida útil de ~10 años) se llena cerca de <strong>2030</strong>. La basura extra le quita entre <strong>2 y 4 años</strong> de vida. Y Puerto Rico está cerrando 7 vertederos, redirigiendo basura al sur.</p>
+    </div>
+    <div class="bg-amber-50 border-t border-amber-200 px-4 py-2 text-sm text-slate-700"><strong>El desperdicio:</strong> años de vertedero público, que paga el vecino, consumidos por un desarrollo que no paga por la capacidad que usa. Sin plan B después de 2030.</div>
+  </div>
+</div>
+
+<h3 class="mt-6">Las palancas: cómo se voltea la cuenta</h3>
+<p>Aquí está lo útil. Cada uno de estos es un cambio concreto que mueve la cuenta de la columna roja a la verde, sin matar el proyecto. Esto no es estar en contra. Es exigir que, si va, vaya sin desperdicio:</p>
+<div class="not-prose grid sm:grid-cols-2 gap-3 mt-3">
+  <div class="border-l-4 border-teal-400 bg-white rounded-r-xl p-4"><div class="font-bold text-slate-800 text-sm">Cláusula de empleo amarrada</div><p class="text-sm text-slate-600 mt-1">Si no crea los empleos prometidos, devuelve los créditos. Hoy no existe esa cláusula.</p></div>
+  <div class="border-l-4 border-teal-400 bg-white rounded-r-xl p-4"><div class="font-bold text-slate-800 text-sm">Contratación y compra local</div><p class="text-sm text-slate-600 mt-1">Un piso de contratación y suministro local (por ejemplo, 30%) hace que el dinero se quede en el pueblo, no se vaya.</p></div>
+  <div class="border-l-4 border-teal-400 bg-white rounded-r-xl p-4"><div class="font-bold text-slate-800 text-sm">Que pague su propia agua y su propia basura</div><p class="text-sm text-slate-600 mt-1">Fuente de agua y disposición de residuos propias y probadas, para no trasladarle el costo al sistema del pueblo.</p></div>
+  <div class="border-l-4 border-teal-400 bg-white rounded-r-xl p-4"><div class="font-bold text-slate-800 text-sm">Participación municipal en los ingresos</div><p class="text-sm text-slate-600 mt-1">Que Cabo Rojo cobre una parte, no solo mire de lejos mientras los créditos van a Londres.</p></div>
+</div>
+<p class="text-xs text-slate-400 mt-2">Cálculo de PuertoRicoSinFiltros.com sobre datos verificados: créditos y presupuesto (CPI), agua (DIA p.89 y carta de la AAA del 26 sept 2024 en el expediente), basura (testimonio en vista pública y registros del préstamo del vertedero). La cifra de subsidio por unidad es una división simple del subsidio público conocido entre las unidades propuestas; el estimado de más de $1M por unidad es del deponente en vista pública. Los escenarios de empleo asumen que las promesas se cumplen.</p>
+
 
 <h2>Qué protege cada quien</h2>
 <p>Nadie es el villano de su propia historia. Antes de decidir qué piensas, ayuda ver qué protege cada parte. Todos defienden algo legítimo. Aquí no decimos quién tiene la razón: mostramos qué está en juego para cada quien, para que te ubiques tú y entiendas al que piensa distinto.</p>
