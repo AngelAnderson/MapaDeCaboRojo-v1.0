@@ -4794,20 +4794,121 @@ async function handleEsencia(req: any, res: any) {
     </div>`
   }).join('')
   const body = `
-<h1>El proyecto Esencia, en línea de tiempo</h1>
-<p class="text-lg text-slate-600 mt-2">Esencia es el mega-desarrollo turístico-residencial propuesto para Cabo Rojo que ha generado investigaciones periodísticas, medidas del Senado y protestas. Esta es la <strong>línea de tiempo pública, con fuente en cada punto</strong>. Sin opinión: solo lo que está en el récord. Tú decides qué pensar.</p>
+<h1>El proyecto Esencia, sin filtros</h1>
+<p class="text-lg text-slate-600 mt-2">Esencia es el mega-desarrollo turístico-residencial propuesto para Cabo Rojo que ha generado investigaciones periodísticas, medidas del Senado y protestas de San Juan a Nueva York. Esta página <strong>organiza el récord público con la fuente al lado de cada dato</strong>. Sin opinión: tú decides qué pensar.</p>
 
 <div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
-  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">Lo que está en el récord</p>
-  <p class="text-lg sm:text-xl font-black mt-1 leading-snug">Un decreto de incentivos de $498 millones en créditos contributivos, investigaciones del Centro de Periodismo Investigativo, una investigación del Senado, y protestas de San Juan a Nueva York.</p>
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El proyecto en una línea</p>
+  <p class="text-lg sm:text-xl font-black mt-1 leading-snug">Unas 1,549 cuerdas entre Boquerón y Combate · ~1,132 residencias + 520 unidades de hotel · ~$2,000 millones de inversión privada · ~$498 millones en créditos contributivos aprobados.</p>
+  <p class="text-slate-300 mt-2 text-sm">Presentado como turístico; reportado como ~70% residencial. Controlado desde Londres. El DRNA lo rechazó; OGPe aprobó su Declaración de Impacto Ambiental con 46 condiciones.</p>
 </div>
 
+<h2>Qué es, en números</h2>
+<div class="not-prose grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
+  <div class="bg-white border border-slate-200 rounded-xl p-4 text-center"><div class="text-2xl font-black text-slate-900">1,549</div><div class="text-xs text-slate-500 mt-1">cuerdas de terreno</div></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4 text-center"><div class="text-2xl font-black text-slate-900">~1,652</div><div class="text-xs text-slate-500 mt-1">unidades (1,132 casas + 520 hotel)</div></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4 text-center"><div class="text-2xl font-black text-slate-900">~$2,000M</div><div class="text-xs text-slate-500 mt-1">inversión anunciada</div></div>
+  <div class="bg-white border border-amber-300 rounded-xl p-4 text-center"><div class="text-2xl font-black text-amber-600">$498M</div><div class="text-xs text-slate-500 mt-1">en créditos contributivos</div></div>
+</div>
+<p class="text-xs text-slate-400 mt-2">Fuentes: Centro de Periodismo Investigativo (CPI), The Real Deal, registros públicos. La cifra de cuerdas y unidades proviene de la documentación del proyecto reseñada por el CPI.</p>
+
 <h2>La línea de tiempo</h2>
+<div class="not-prose flex flex-wrap gap-2 mb-1 text-xs">
+  <span class="rounded-full px-2.5 py-0.5 border bg-amber-100 text-amber-800 border-amber-200 font-bold">Dinero</span>
+  <span class="rounded-full px-2.5 py-0.5 border bg-slate-100 text-slate-700 border-slate-200 font-bold">Legal</span>
+  <span class="rounded-full px-2.5 py-0.5 border bg-red-100 text-red-800 border-red-200 font-bold">Protesta</span>
+  <span class="rounded-full px-2.5 py-0.5 border bg-emerald-100 text-emerald-800 border-emerald-200 font-bold">Ambiente</span>
+</div>
 ${items || '<p class="text-sm text-slate-400 italic">Data no disponible ahora.</p>'}
 
-<div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 mt-5 text-sm text-slate-700"><strong>Nota:</strong> cada punto de esta línea viene de una fuente pública citada (Centro de Periodismo Investigativo, prensa, registros del DRNA y del Departamento de Estado). PuertoRicoSinFiltros.com no toma posición sobre el proyecto: organiza el récord para que cualquiera — vecino, periodista, funcionario — pueda verlo completo y en orden.</div>
+<h2>Quién es el dueño (registros públicos)</h2>
+<p>Esto no es teoría: es lo que dicen los registros corporativos de Puerto Rico y del Reino Unido.</p>
+<div class="not-prose bg-slate-50 border border-slate-200 rounded-2xl p-4 mt-3 font-mono text-xs sm:text-sm text-slate-700 leading-relaxed overflow-auto">
+Reuben Brothers <span class="text-slate-400">(Londres, UK · David &amp; Simon Reuben)</span>
+&nbsp;&nbsp;└─ Motcomb Estates Ltd <span class="text-slate-400">(UK Companies House #02373675)</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ <strong class="text-slate-900">Cabo Rojo Land Acquisition LLC</strong> <span class="text-slate-400">(PR #424893-1511 · formada 25 mar 2019)</span>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Presidente: Stephane Nahum — Millbank Tower, Londres
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Tesorera: Eileen Sawyer — Millbank Tower, Londres
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Agente registrado: CT Corporation System, San Juan
+</div>
+<p class="text-sm text-slate-600 mt-2">El socio operacional citado, <strong>Three Rules Capital</strong> (Will Bennett y Roberto Ruiz Vargas), no aparece incorporado en los registros públicos de Florida, Delaware ni Nueva York que se revisaron. Una compañía registrada en Puerto Rico, controlada por ejecutivos en Londres.</p>
+<p class="text-xs text-slate-400 mt-1">Fuentes: <a href="https://rcp.estado.pr.gov/en/entity-information?c=424893-1511" target="_blank" rel="noopener" class="text-teal-700 underline">Registro del Depto. de Estado de PR ↗</a> · UK Companies House #02373675 · <a href="https://therealdeal.com/magazine/april-2025/meet-the-little-known-developer-behind-a-2b-reuben-brother-development/" target="_blank" rel="noopener" class="text-teal-700 underline">The Real Deal ↗</a></p>
 
-<p class="text-sm text-slate-500 mt-5">Fuentes: Centro de Periodismo Investigativo (CPI), Metro PR, The Indypendent, registros del DRNA y del Departamento de Estado de PR. ¿Ves un error o falta un hito? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a>. Julio 2026.</p>
+<h2>El paquete fiscal: $498 millones</h2>
+<p>Los créditos no salen del aire: salen de impuestos que paga el contribuyente. Para tener una vara de medir, <strong>$498M son unos 26 años del presupuesto completo del municipio de Cabo Rojo</strong> ($19.2M/año). Costo aproximado por contribuyente: <strong>~$413</strong>.</p>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Incentivo</th><th class="py-2 px-3">Beneficio</th><th class="py-2 px-3">Duración</th></tr></thead><tbody>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Créditos contributivos turísticos</td><td class="py-1.5 px-3 font-semibold">$498M (~40% de $1.244B elegible)</td><td class="py-1.5 px-3">—</td></tr>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Exención sobre ingresos</td><td class="py-1.5 px-3 font-semibold">90%</td><td class="py-1.5 px-3">10 años</td></tr>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Exención CRIM (propiedad)</td><td class="py-1.5 px-3 font-semibold">90%</td><td class="py-1.5 px-3">10 años</td></tr>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Exención patentes municipales</td><td class="py-1.5 px-3 font-semibold">90%</td><td class="py-1.5 px-3">10 años</td></tr>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Impuesto de construcción / IVU municipal</td><td class="py-1.5 px-3 font-semibold">Exento</td><td class="py-1.5 px-3">Construcción / operaciones</td></tr>
+  </tbody></table>
+</div>
+<div class="not-prose grid grid-cols-2 gap-3 mt-3">
+  <div class="bg-white border-2 border-amber-300 rounded-xl p-4 text-center"><div class="text-2xl font-black text-amber-600">~$69M</div><div class="text-xs text-slate-600 mt-1">que Cabo Rojo deja de cobrar en 10 años (~$6.9M/año)</div></div>
+  <div class="bg-white border-2 border-slate-200 rounded-xl p-4 text-center"><div class="text-2xl font-black text-slate-900">~$1M</div><div class="text-xs text-slate-600 mt-1">costo por habitación vs. ~$273K promedio histórico en PR</div></div>
+</div>
+<p class="text-sm text-slate-700 mt-2">El decreto original es de diciembre de 2020 (Gov. Wanda Vázquez), enmendado en 2024 (Gov. Pierluisi), bajo la Ley 74 de 2010. Según el análisis del decreto, <strong>no hay cláusula de devolución</strong> si no se cumplen las metas de empleo.</p>
+<p class="text-xs text-slate-400 mt-1">Fuente: <a href="https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/" target="_blank" rel="noopener" class="text-teal-700 underline">CPI, octubre 2025 ↗</a></p>
+
+<h2>Los empleos: la pregunta que falta</h2>
+<p>El argumento más fuerte a favor es el empleo, y Cabo Rojo necesita trabajo — hay que tratarlo con respeto y con números. El proyecto promete <strong>2,000+ empleos</strong>. Dos preguntas sin contestar:</p>
+<div class="not-prose grid sm:grid-cols-2 gap-3 mt-3">
+  <div class="border border-slate-200 bg-white rounded-xl p-4"><div class="text-xs font-bold text-slate-700 uppercase">¿Cuánto pagan?</div><p class="text-sm text-slate-700 mt-1">En un resort de lujo comparable (Dorado Beach, Ritz-Carlton) un mesero gana <strong>$15.37/hora</strong> — ~$2,000 netos al mes. El costo de vida en Cabo Rojo ronda <strong>$1,574/mes</strong>. Sobran ~$416 para carro, ahorro y emergencias.</p></div>
+  <div class="border border-slate-200 bg-white rounded-xl p-4"><div class="text-xs font-bold text-slate-700 uppercase">¿Y si no se crean?</div><p class="text-sm text-slate-700 mt-1">Según el análisis del decreto, <strong>no hay cláusula de cumplimiento de empleo</strong>. Si no se generan los 2,000 empleos, no se devuelven los créditos. La promesa y el incentivo no están amarrados.</p></div>
+</div>
+<p class="text-xs text-slate-400 mt-1">Fuentes: <a href="https://www.bls.gov/regions/northeast/news-release/occupationalemploymentandwages_sanjuan.htm" target="_blank" rel="noopener" class="text-teal-700 underline">BLS OEWS PR ↗</a> · Glassdoor Ritz-Carlton Dorado · CPI.</p>
+
+<h2>El agua</h2>
+<p>El sistema PRASA del suroeste (Planta de Filtros Betances) sirve a <strong>~20,749 personas</strong> y arrastra <strong>3 violaciones activas</strong> en el récord federal de agua. Ese es el mismo sistema del que dependería Esencia, que necesitaría del orden de <strong>1.25 a 1.5 millones de galones diarios</strong>. Mientras se debate el proyecto, vecinos del sector Las Palmas reportaron estar días sin agua. La AAA no ha hecho pública una determinación de capacidad.</p>
+<p class="text-xs text-slate-400 mt-1">Fuentes: EPA (récord federal de agua) · reportes de prensa y de vecinos · <a href="https://mareaecologista.com/2025/04/cabo-rojo-el-proyecto-esencia-y-la-crisis-del-agua-en-el-suroeste/" target="_blank" rel="noopener" class="text-teal-700 underline">Marea Ecologista ↗</a>. Ver también <a href="/agua" class="text-teal-700 underline">el récord del agua en PRSF</a>.</p>
+
+<h2>El historial de los desarrolladores</h2>
+<p>El CPI documentó el rastro global de las empresas y personas vinculadas al proyecto en siete países. Esto es contexto verificable, no una acusación sobre Esencia:</p>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Lugar</th><th class="py-2 px-3">Vinculado a</th><th class="py-2 px-3">Documentado</th></tr></thead><tbody>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Waikiki, Hawái</td><td class="py-1.5 px-3">Bennett / PACREP LLC</td><td class="py-1.5 px-3">Edificio excedió zonificación; $100K+ en donaciones políticas</td></tr>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Los Cabos, México</td><td class="py-1.5 px-3">Bennett + Ruiz Vargas</td><td class="py-1.5 px-3">Daño a arrecifes de coral, alteración de playas</td></tr>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Ibiza, España</td><td class="py-1.5 px-3">Reuben Brothers</td><td class="py-1.5 px-3">5,000 residentes firmaron petición en contra</td></tr>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Mallorca, España</td><td class="py-1.5 px-3">Reuben Brothers</td><td class="py-1.5 px-3">Adquisición de ~20 km de costa</td></tr>
+  </tbody></table>
+</div>
+<p class="text-xs text-slate-400 mt-1">Fuente: <a href="https://periodismoinvestigativo.com/2025/06/esencia-project-puerto-rico-environmental-damage/" target="_blank" rel="noopener" class="text-teal-700 underline">CPI, junio 2025 ↗</a> · <a href="https://ejatlas.org/conflict/esencia-project" target="_blank" rel="noopener" class="text-teal-700 underline">EJ Atlas ↗</a></p>
+
+<h2>Las donaciones (registro del Contralor Electoral)</h2>
+<p>Donar a campañas es legal. Se pone aquí porque es información pública y porque cualquiera tiene derecho a saber quién le dio a quién mientras se aprobaba un proyecto de este tamaño.</p>
+<ul class="text-sm text-slate-700">
+  <li><strong>Will Bennett</strong> donó $3,100 a: Thomas Rivera Schatz, Tatiana Pérez Ramírez, Ángel Matos, Jesús Manuel Ortiz.</li>
+  <li><strong>Roberto Ruiz Vargas</strong> donó $3,100 a: Miguel Romero Lugo, Rivera Schatz, Tatiana Pérez, Ángel Matos, y al ex alcalde de Cabo Rojo Roberto Ramírez Kurtz.</li>
+</ul>
+<p class="text-sm text-slate-600 mt-1">El alcalde actual, Jorge Morales Wiscovitch, le dijo al CPI que <strong>no fue incluido</strong> en las negociaciones del decreto.</p>
+<p class="text-xs text-slate-400 mt-1">Fuente: Oficina del Contralor Electoral (OCE), vía <a href="https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/" target="_blank" rel="noopener" class="text-teal-700 underline">CPI ↗</a></p>
+
+<h2>En video: el panel</h2>
+<p>Expertos y voces del país explicando el proyecto, cara a cara. Publicados en el canal de Cabo Rojo:</p>
+<div class="not-prose flex flex-col gap-2 mt-3">
+  <a href="https://youtu.be/Ahta7PZ4YNo" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Senador E. Molina: falla geológica y riesgos del proyecto</a>
+  <a href="https://youtu.be/NFeo3v07rHA" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Luis García Pelatti: por qué la AAA y la AEE no contestan sobre agua y luz</a>
+  <a href="https://youtu.be/6jlNJt87rDM" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Dra. Dimaris Acosta Mercado: análisis científico del peligro ambiental</a>
+  <a href="https://youtu.be/OoRZA-pWciU" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Javier O. Torres: por qué la agricultura del suroeste está en riesgo</a>
+  <a href="https://youtu.be/g0Aw5aD_rf4" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Reniel Rodríguez Ramos: la amenaza a sitios arqueológicos</a>
+</div>
+
+<h2>Lo que falta — y lo que se pide por escrito</h2>
+<p>Hay cosas que todavía no se saben. En vez de adivinar, se piden por escrito al amparo de la Ley 141-2019 de transparencia:</p>
+<ul class="text-sm text-slate-700">
+  <li><strong>DRNA:</strong> la Declaración de Impacto Ambiental completa y el estado del permiso de pozos privados.</li>
+  <li><strong>AAA:</strong> la determinación oficial de capacidad de agua.</li>
+  <li><strong>Compañía de Turismo:</strong> el decreto de exención, el análisis costo-beneficio y las cláusulas de cumplimiento.</li>
+  <li><strong>Contralor Electoral:</strong> el registro completo de donaciones relacionadas.</li>
+  <li><strong>Senado:</strong> las dos investigaciones aprobadas el 31 de marzo de 2026.</li>
+</ul>
+<p class="text-sm text-slate-600 mt-1">Cuando respondan, se publica lo que digan — diga lo que diga.</p>
+
+<div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 mt-6 text-sm text-slate-700"><strong>Nota:</strong> cada punto de esta página viene de una fuente pública citada (Centro de Periodismo Investigativo, prensa, BLS, EPA, UK Companies House, registros del DRNA, de la OCE y del Departamento de Estado). PuertoRicoSinFiltros.com no toma posición sobre el proyecto: organiza el récord para que cualquiera — vecino, periodista, funcionario — pueda verlo completo y en orden.</div>
+
+<p class="text-sm text-slate-500 mt-5">Fuentes primarias: <a href="https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/" target="_blank" rel="noopener" class="text-teal-700">CPI — créditos contributivos</a> · <a href="https://periodismoinvestigativo.com/2025/06/esencia-project-puerto-rico-environmental-damage/" target="_blank" rel="noopener" class="text-teal-700">CPI — historial global</a> · <a href="https://periodismoinvestigativo.com/2025/03/esencia-project-cabo-rojo-hearings/" target="_blank" rel="noopener" class="text-teal-700">CPI — inversionistas</a> · <a href="https://www.metro.pr/noticias/2026/03/28/miles-protestan-en-el-viejo-san-juan-contra-proyecto-esencia-en-cabo-rojo/" target="_blank" rel="noopener" class="text-teal-700">Metro PR</a> · <a href="https://therealdeal.com/magazine/april-2025/meet-the-little-known-developer-behind-a-2b-reuben-brother-development/" target="_blank" rel="noopener" class="text-teal-700">The Real Deal</a>. ¿Ves un error o falta un hito? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a>. Actualizado julio 2026.</p>
 `
   const jsonLd = {
     '@context': 'https://schema.org', '@type': 'Dataset',
