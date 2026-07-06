@@ -5733,14 +5733,20 @@ function handleCostoDeVida(req: any, res: any) {
 </ul>
 <p><strong>El resultado en la calle:</strong> el dólar rinde menos aquí que en casi cualquier estado. No es percepción — es un ingreso de estado pobre con precios de isla importadora.</p>
 
-<h2>3. Por qué esto empuja a irse — y la jugada que lo voltea</h2>
+<h2>3. La matemática que no te enseñaron</h2>
+<p>Esto no te lo enseñaron en la escuela — ni aquí ni en casi ningún sitio. Por eso lo ponemos con número.</p>
+<p>El salario mínimo de PR es <b>$10.50 la hora</b> (desde julio de 2024). <i>(Departamento del Trabajo de PR, Ley 47-2022.)</i> A tiempo completo son ~<b>$1,820 al mes</b> antes de impuestos (~$21,840 al año). Eso es <strong>menos</strong> que el ingreso mediano de un hogar ($25,000): con un solo sueldo mínimo, un hogar ni llega a la mitad de la isla. Y ese piso choca con lo de arriba — la luz al doble, la comida 15-30% más. A una persona la cubre a duras penas; a una familia no le da.</p>
+<p><strong>La regla que nadie te dice:</strong> el salario mínimo es un <strong>piso, no una meta.</strong> Un ingreso sano <strong>crece cada año</strong>, por encima de lo que sube la vida. Si el tuyo lleva años pegado al mínimo, no es que valgas el mínimo — es que un sueldo tiene techo (lo fija otro) y nadie te enseñó a construir lo que no lo tiene.</p>
+<p><strong>Y aquí está la parte que sí es tuya:</strong> el pedazo de tu ingreso que crece sin techo es el que <strong>tú controlas</strong> — un servicio propio, un oficio que cobras directo, algo que sigue produciendo aunque no estés vendiendo tu hora. El sueldo lo topa tu jefe; lo tuyo lo topas tú. La meta no es un mejor mínimo: es que una parte de lo que ganas deje de depender de la hora que vendes.</p>
+
+<h2>4. Por qué esto empuja a irse — y la jugada que lo voltea</h2>
 <p>Esta es la matemática que se lleva a la gente pa'l avión: si ganas lo mismo aquí que allá pero el dólar rinde más allá, mudarse es racional. Por décadas esa fue la única salida.</p>
 <p>Pero la ecuación acaba de cambiar. <strong>La primera vez en la historia, una persona puede ganar en dólares del mundo entero sin salir de la isla</strong> — trabajo remoto, servicio propio, valor que sube con AI — y vivir donde el costo es menor. Eso voltea la trampa: en vez de mudarte a donde pagan más, subes tu valor donde ya estás. Pero solo sirve si se agarra la herramienta. <a href="/prediccion#alertas" class="text-teal-700 font-semibold">Ver cómo la AI corta y a la vez abre →</a></p>
 
-<h2>4. El premio sin reclamar</h2>
+<h2>5. El premio sin reclamar</h2>
 <p>Hoy nadie publica <strong>la canasta real por pueblo.</strong> Todo son promedios de isla, y un promedio esconde que en un pueblo el dólar rinde y en otro no. El municipio (o el vecino con data) que publique el costo real de vivir en SU pueblo — renta, luz, canasta, transporte — <strong>le da munición al que evalúa mudarse allí y al que quiere abrir negocio donde hay gente que puede pagar.</strong> El primero que lo haga, marca el estándar. El que se atreva, gana.</p>
 
-<h2>5. El número que el gobierno no tiene — y nosotros sí podemos armar</h2>
+<h2>6. El número que el gobierno no tiene — y nosotros sí podemos armar</h2>
 <p>Aquí está el hueco de verdad, y no es nuestro: <strong>el propio gobierno admitió en 2025 que no tiene un número claro de lo que cuesta la canasta básica del día a día en Puerto Rico.</strong> <i>(DACO, secretaria Natalia Catoni, vía El Vocero, 2025.)</i> DACO publica una canasta de emergencias y un historial de precios mayoristas, pero no un índice del costo real de vivir, pueblo por pueblo.</p>
 <p>Eso no es un "no se puede medir" — es un "nadie lo ha armado." Y entre los precios que DACO sí publica y lo que este substrato ya tiene — la luz de la EIA en <a href="/luz" class="text-teal-700 font-semibold">/luz</a>, el ingreso del Censo, la demanda real del 787-417-7711, los negocios verificados del mapa — <strong>la canasta por pueblo se puede construir, con histórico, hasta proyectar hacia dónde va.</strong> Ese es el próximo récord, no un callejón sin salida.</p>
 
