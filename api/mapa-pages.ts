@@ -5454,6 +5454,64 @@ ${renderAlertas()}
   }))
 }
 
+// /costo-de-vida — factor de decisión: ¿el sueldo rinde en PR? Ingreso vs costo real.
+// Números verificados (Censo/ACS, EIA). Premio sin reclamar + gap honesto declarado.
+function handleCostoDeVida(req: any, res: any) {
+  const body = `
+<h1>¿El sueldo rinde en Puerto Rico?</h1>
+<p class="text-lg text-slate-600 mt-2">Antes de decidir si te quedas, te vas o te mudas, hay un número que casi nadie te pone claro: <strong>lo que ganas contra lo que cuesta vivir aquí.</strong> Esta página lo junta, con la fuente al lado. Para escoger la vida que quieres, primero hay que ver el número sin filtro.</p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Ganas cerca de un tercio, pero pagas como si ganaras el doble.</p>
+</div>
+
+<h2>1. Lo que ganas</h2>
+<p>El ingreso mediano de un hogar en Puerto Rico ronda los <b>$25,000</b> al año; en Estados Unidos es <b>~$81,600</b>. Es <strong>cerca de un tercio.</strong> Y cerca del <b>40%</b> de la población vive bajo el nivel de pobreza federal — más del triple que el estado más pobre del continente. <i>(Censo / Encuesta sobre la Comunidad de PR, ACS 2019-2023 y 2024.)</i></p>
+
+<h2>2. Pero vivir aquí no es barato</h2>
+<p>La trampa es que el ingreso bajo no viene con un costo bajo. Al revés:</p>
+<ul>
+  <li><strong>La luz al doble.</strong> PR paga ~<b>24.5¢/kWh</b>, casi el doble del promedio de EE.UU. <a href="/luz" class="text-teal-700 font-semibold">Ver el récord →</a></li>
+  <li><strong>La comida importada, más cara.</strong> Los comestibles corren estimados <b>15-30% por encima</b> del mainland — no por gusto, sino por el costo de envío bajo la <strong>Ley Jones</strong> (Jones Act), que obliga a que la carga entre en barcos de EE.UU. Un galón de leche: $4-6. <i>(Estimados de mercado; el mecanismo — la Ley Jones — es la parte verificable.)</i></li>
+</ul>
+<p><strong>El resultado en la calle:</strong> el dólar rinde menos aquí que en casi cualquier estado. No es percepción — es un ingreso de estado pobre con precios de isla importadora.</p>
+
+<h2>3. Por qué esto empuja a irse — y la jugada que lo voltea</h2>
+<p>Esta es la matemática que se lleva a la gente pa'l avión: si ganas lo mismo aquí que allá pero el dólar rinde más allá, mudarse es racional. Por décadas esa fue la única salida.</p>
+<p>Pero la ecuación acaba de cambiar. <strong>La primera vez en la historia, una persona puede ganar en dólares del mundo entero sin salir de la isla</strong> — trabajo remoto, servicio propio, valor que sube con AI — y vivir donde el costo es menor. Eso voltea la trampa: en vez de mudarte a donde pagan más, subes tu valor donde ya estás. Pero solo sirve si se agarra la herramienta. <a href="/prediccion#alertas" class="text-teal-700 font-semibold">Ver cómo la AI corta y a la vez abre →</a></p>
+
+<h2>4. El premio sin reclamar</h2>
+<p>Hoy nadie publica <strong>la canasta real por pueblo.</strong> Todo son promedios de isla, y un promedio esconde que en un pueblo el dólar rinde y en otro no. El municipio (o el vecino con data) que publique el costo real de vivir en SU pueblo — renta, luz, canasta, transporte — <strong>le da munición al que evalúa mudarse allí y al que quiere abrir negocio donde hay gente que puede pagar.</strong> El primero que lo haga, marca el estándar. El que se atreva, gana.</p>
+
+<h2>5. Lo que todavía falta medir</h2>
+<p>Ser honesto con el gap es parte del récord: <strong>no existe una canasta de costo de vida oficial, pueblo por pueblo, en Puerto Rico.</strong> Hay promedios de isla y estimados de agencias de mudanza, pero no un índice granular con fuente primaria. Esa ausencia es, en sí, un fallo de gobernanza — y exactamente el hueco que este sitio quiere ayudar a llenar con las fuentes que sí existen (EIA para la luz, Censo para el ingreso, muestreo local para los precios).</p>
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
+  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Puerto Rico podría ser donde una familia vive con dignidad con menos — si se ve claro dónde.</p>
+  <p class="mt-2 text-sm text-slate-600 italic">Para escoger, primero hay que ver el número. Si te sirve, úsalo.</p>
+</div>
+
+<p class="text-sm text-slate-500 mt-6">Cómo se hizo: ingreso y pobreza del Censo/ACS (Encuesta sobre la Comunidad de PR); tarifa de luz de la EIA vía el récord <a href="/luz" class="text-teal-700">/luz</a>; el sobrecosto de comestibles se atribuye al costo de envío bajo la Ley Jones (mecanismo verificable; los porcentajes exactos son estimados de mercado). Las conexiones son análisis. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a> y se corrige. Julio 2026.</p>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Report',
+    name: '¿El sueldo rinde en Puerto Rico? Ingreso contra costo de vida',
+    about: 'El ingreso mediano de PR (~$25,000) contra el costo real de vivir en la isla (luz al doble, comida importada 15-30% más cara), como factor de la decisión de quedarse, irse o mudarse.',
+    author: { '@type': 'Person', name: 'Angel Anderson' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    inLanguage: 'es', datePublished: '2026-07-06', url: 'https://puertoricosinfiltros.com/costo-de-vida',
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: '¿El sueldo rinde en Puerto Rico? Ingreso contra costo de vida',
+    description: 'Ganas cerca de un tercio del ingreso de EE.UU., pero pagas la luz al doble y la comida importada 15-30% más cara. El número que pesa en la decisión de quedarte, irte o mudarte — con la fuente al lado.',
+    slug: 'costo-de-vida', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
 // =============== /registro/estado — Estado de Salud PR: el cupón federal sin cobrar ===============
 // Surface de v_registro_municipio_intel: ranking por necesidad×oportunidad + análisis "cupón sin cobrar"
 // (designación HPSA activa + cero psiquiatras). Data live con fallback verificado 2026-07-05.
@@ -7320,6 +7378,7 @@ export default async function handler(req: any, res: any) {
     case 'luz': return await handleDatoRecord(req, res)
     case 'basura': return await handleDatoRecord(req, res)
     case 'prediccion': return handlePrediccion(req, res)
+    case 'costo-de-vida': return handleCostoDeVida(req, res)
     case 'historial': return await handleHistorial(req, res)
     case 'telemedicina': return await handleTelemedicina(req, res)
     case 'no-se-mide': return handleNoSeMide(req, res)
