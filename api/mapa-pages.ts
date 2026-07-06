@@ -4956,6 +4956,32 @@ Reuben Brothers <span class="text-slate-400">(Londres, UK · David &amp; Simon R
 <p class="text-sm text-slate-600 mt-3"><strong>Por qué el amarillo es el más probable hoy:</strong> la DIA ya está aprobada, el capital no tiene prisa, y el agua sigue sin resolverse en el récord. El limbo favorece a quien puede esperar. Se mueve hacia el verde solo cuando el récord del agua se pone tan claro que la vista de permiso no lo puede ignorar. Ese récord es lo que esta página organiza.</p>
 <p class="text-xs text-slate-400 mt-1">Estos escenarios son lectura del récord público, no predicción ni recomendación. La data que los sostiene está arriba, con la fuente al lado.</p>
 
+<h2>Escucha a los dos lados, directo</h2>
+<p>Este récord organiza los hechos con su fuente. Pero cada bando también habla por su cuenta, y tienes derecho a oírlos sin intermediario. Antes de formar opinión, léelos a los dos en sus propias palabras, no en las nuestras:</p>
+<div class="not-prose grid sm:grid-cols-2 gap-3 mt-3">
+  <div class="border-l-4 border-emerald-400 bg-white rounded-r-xl p-4">
+    <div class="text-xs font-bold text-emerald-700 uppercase tracking-wide">A favor del proyecto</div>
+    <p class="text-sm text-slate-700 mt-1"><strong>Conoce la Verdad</strong> es la campaña que defiende a Esencia como un "desarrollo responsable y ecoamigable", con acceso público a la playa y motor económico para el pueblo.</p>
+    <a href="https://www.conocelaverdad.com" target="_blank" rel="noopener" class="inline-block mt-2 text-teal-700 text-sm underline font-semibold">conocelaverdad.com ↗</a>
+  </div>
+  <div class="border-l-4 border-red-400 bg-white rounded-r-xl p-4">
+    <div class="text-xs font-bold text-red-700 uppercase tracking-wide">En contra del proyecto</div>
+    <p class="text-sm text-slate-700 mt-1"><strong>Defiende a Cabo Rojo</strong> es la coalición de decenas de organizaciones que rechaza el proyecto por el agua, la costa y el impacto ambiental.</p>
+    <a href="https://defiendeacaborojo.org" target="_blank" rel="noopener" class="inline-block mt-2 text-teal-700 text-sm underline font-semibold">defiendeacaborojo.org ↗</a>
+  </div>
+</div>
+<p class="text-xs text-slate-400 mt-2">PuertoRicoSinFiltros.com no está afiliado a ninguno de los dos. Los ponemos lado a lado para que compares tú, no para empujarte a un lado.</p>
+
+<h2>El expediente es público</h2>
+<p>Casi todo el papeleo de Esencia está disponible para quien lo quiera leer. Si alguien te dice algo, puedes ir a la fuente y verificarlo tú mismo:</p>
+<ul class="text-sm text-slate-700">
+  <li>La <strong>Declaración de Impacto Ambiental</strong> aprobada por OGPe (16 tomos) y el informe de su vista pública.</li>
+  <li>Los <strong>comentarios y recomendaciones del DRNA</strong> sobre la DIA.</li>
+  <li>Las <strong>resoluciones de investigación del Senado</strong> sobre el proyecto.</li>
+  <li>La respuesta del <strong>Servicio Federal de Pesca y Vida Silvestre (USFWS)</strong> a la solicitud de designación de proyecto estratégico.</li>
+</ul>
+<p class="text-xs text-slate-400 mt-1">El expediente ambiental del gobierno vive en <a href="https://docs.pr.gov" target="_blank" rel="noopener" class="text-teal-700 underline">docs.pr.gov</a>. La coalición Defiende a Cabo Rojo también mantiene un repositorio público de estos documentos en <a href="https://defiendeacaborojo.org" target="_blank" rel="noopener" class="text-teal-700 underline">defiendeacaborojo.org</a>.</p>
+
 <div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 mt-6 text-sm text-slate-700"><strong>Nota:</strong> cada punto de esta página viene de una fuente pública citada (Centro de Periodismo Investigativo, prensa, BLS, EPA, UK Companies House, registros del DRNA, de la OCE y del Departamento de Estado). PuertoRicoSinFiltros.com no toma posición sobre el proyecto: organiza el récord para que cualquiera — vecino, periodista, funcionario — pueda verlo completo y en orden.</div>
 
 <div class="not-prose border-2 border-slate-800 rounded-2xl p-5 sm:p-6 mt-6 bg-white">
