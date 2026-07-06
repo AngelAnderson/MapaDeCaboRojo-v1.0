@@ -4923,6 +4923,39 @@ Reuben Brothers <span class="text-slate-400">(Londres, UK · David &amp; Simon R
 </ul>
 <p class="text-sm text-slate-600 mt-1">Cuando respondan, se publica lo que digan — diga lo que diga.</p>
 
+<h2>Qué protege cada quien</h2>
+<p>Nadie es el villano de su propia historia. Antes de decidir qué piensas, ayuda ver qué protege cada parte. Todos defienden algo legítimo. Aquí no decimos quién tiene la razón: mostramos qué está en juego para cada quien, para que te ubiques tú y entiendas al que piensa distinto.</p>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Quién</th><th class="py-2 px-3">Qué protege</th><th class="py-2 px-3">Su verdad legítima</th></tr></thead><tbody>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3 font-semibold text-slate-800">Los desarrolladores</td><td class="py-1.5 px-3">El retorno de una apuesta de ~$2,000M, los créditos y el permiso</td><td class="py-1.5 px-3 text-slate-600">Pusieron capital que ningún local puso</td></tr>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3 font-semibold text-slate-800">El gobierno estatal</td><td class="py-1.5 px-3">La narrativa de inversión y empleos, y el marco de incentivos</td><td class="py-1.5 px-3 text-slate-600">El país necesita actividad económica y base contributiva</td></tr>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3 font-semibold text-slate-800">El municipio</td><td class="py-1.5 px-3">El agua, la posición fiscal del pueblo</td><td class="py-1.5 px-3 text-slate-600">Quiere los empleos y el CRIM, pero no lo sentaron a negociar</td></tr>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3 font-semibold text-slate-800">Los vecinos que se oponen</td><td class="py-1.5 px-3">El acuífero, la costa, el carácter del pueblo, contra el desplazamiento</td><td class="py-1.5 px-3 text-slate-600">No quieren pagar en agua, taxes y acceso por créditos que van a Londres</td></tr>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3 font-semibold text-slate-800">Los vecinos que lo apoyan</td><td class="py-1.5 px-3">La oportunidad de un trabajo digno, ahora</td><td class="py-1.5 px-3 text-slate-600">La precariedad económica es real, no abstracta</td></tr>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3 font-semibold text-slate-800">La diáspora</td><td class="py-1.5 px-3">El pueblo que todavía llaman casa, la memoria</td><td class="py-1.5 px-3 text-slate-600">No quieren que se venda lo que dejaron</td></tr>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3 font-semibold text-slate-800">Los financiadores</td><td class="py-1.5 px-3">Reputación y retorno</td><td class="py-1.5 px-3 text-slate-600">Financiar algo rentable sin volverse el malo</td></tr>
+  </tbody></table>
+</div>
+
+<h2>Los caminos posibles</h2>
+<p>Nadie sabe cómo termina. Pero el récord sí marca por dónde puede ir. Y el punto que lo decide casi todo no son las marchas: <strong>es el agua.</strong> El endoso del alcalde ya está condicionado a que el proyecto tenga su propia agua, la AAA no ha certificado capacidad, y el sistema del suroeste ya sirve a ~20,749 personas con 3 violaciones activas.</p>
+<div class="not-prose grid gap-3 mt-4">
+  <div class="border-l-4 border-emerald-400 bg-emerald-50/40 rounded-r-xl p-4">
+    <div class="text-xs font-bold text-emerald-700 uppercase tracking-wide">🟢 El proyecto se dobla</div>
+    <p class="text-sm text-slate-700 mt-1">Las 46 condiciones de la DIA, el muro del agua y la presión reputacional sobre los financiadores obligan a un proyecto más pequeño o reestructurado: fuente de agua propia <em>probada</em> (no promesa), acceso público a la costa garantizado, piso salarial y contratación local real, y participación municipal negociada. La oposición amarra condiciones en vez de quedarse en un sí o un no.</p>
+  </div>
+  <div class="border-l-4 border-red-400 bg-red-50/40 rounded-r-xl p-4">
+    <div class="text-xs font-bold text-red-700 uppercase tracking-wide">🔴 Se construye casi como está</div>
+    <p class="text-sm text-slate-700 mt-1">El proyecto avanza sobre la DIA aprobada y el decreto ya firmado. Las condiciones se cumplen en papel (el municipio fiscaliza, pero no tiene ni el estudio ni la capacidad). El agua sale de pozos privados que le compiten al acuífero del pueblo. Los ~$69M municipales no entran, los 2,000 empleos van sin cláusula, y el CRIM retasa a los vecinos de al lado.</p>
+  </div>
+  <div class="border-l-4 border-amber-400 bg-amber-50 rounded-r-xl p-4">
+    <div class="flex items-center justify-between gap-2 flex-wrap"><div class="text-xs font-bold text-amber-700 uppercase tracking-wide">🟡 Limbo largo</div><span class="text-[10px] font-black uppercase tracking-wider bg-amber-600 text-white rounded-full px-2 py-0.5">El más probable hoy</span></div>
+    <p class="text-sm text-slate-700 mt-1">Los pleitos (deslinde, la notificación defectuosa del DRNA), las dos investigaciones del Senado y las apelaciones de permisos lo estiran por años. Ni muere ni se construye pronto. El capital espera. El desenlace lo deciden dos cosas concretas: si la AAA y el DRNA certifican el agua, y si la oposición se mueve de la plaza a la vista de permiso.</p>
+  </div>
+</div>
+<p class="text-sm text-slate-600 mt-3"><strong>Por qué el amarillo es el más probable hoy:</strong> la DIA ya está aprobada, el capital no tiene prisa, y el agua sigue sin resolverse en el récord. El limbo favorece a quien puede esperar. Se mueve hacia el verde solo cuando el récord del agua se pone tan claro que la vista de permiso no lo puede ignorar. Ese récord es lo que esta página organiza.</p>
+<p class="text-xs text-slate-400 mt-1">Estos escenarios son lectura del récord público, no predicción ni recomendación. La data que los sostiene está arriba, con la fuente al lado.</p>
+
 <div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 mt-6 text-sm text-slate-700"><strong>Nota:</strong> cada punto de esta página viene de una fuente pública citada (Centro de Periodismo Investigativo, prensa, BLS, EPA, UK Companies House, registros del DRNA, de la OCE y del Departamento de Estado). PuertoRicoSinFiltros.com no toma posición sobre el proyecto: organiza el récord para que cualquiera — vecino, periodista, funcionario — pueda verlo completo y en orden.</div>
 
 <p class="text-sm text-slate-500 mt-5">Fuentes primarias: <a href="https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/" target="_blank" rel="noopener" class="text-teal-700">CPI — créditos contributivos</a> · <a href="https://periodismoinvestigativo.com/2025/06/esencia-project-puerto-rico-environmental-damage/" target="_blank" rel="noopener" class="text-teal-700">CPI — historial global</a> · <a href="https://periodismoinvestigativo.com/2025/03/esencia-project-cabo-rojo-hearings/" target="_blank" rel="noopener" class="text-teal-700">CPI — inversionistas</a> · <a href="https://www.metro.pr/noticias/2026/03/28/miles-protestan-en-el-viejo-san-juan-contra-proyecto-esencia-en-cabo-rojo/" target="_blank" rel="noopener" class="text-teal-700">Metro PR</a> · <a href="https://therealdeal.com/magazine/april-2025/meet-the-little-known-developer-behind-a-2b-reuben-brother-development/" target="_blank" rel="noopener" class="text-teal-700">The Real Deal</a>. ¿Ves un error o falta un hito? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a>. Actualizado julio 2026.</p>
