@@ -161,7 +161,7 @@ function layout(opts: {
 <p class="text-xs text-slate-500 mt-1 text-center">Verificado uno por uno contra registros federales y públicos. Sin spin, sin relleno.</p>
 <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6 text-xs">
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Salud</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a><a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a><a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a><a href="/telemedicina" class="hover:text-teal-700">Telemedicina</a><a href="/diabetes" class="hover:text-teal-700">Diabetes</a></div></div>
-<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/exposicion-ai" class="hover:text-teal-700">Exposición a la AI</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Servicios</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/agua" class="hover:text-teal-700">Agua</a><a href="/luz" class="hover:text-teal-700">Luz</a><a href="/basura" class="hover:text-teal-700">Basura</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">El pueblo</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/demanda" class="hover:text-teal-700">Lo que busca PR</a><a href="/historial" class="hover:text-teal-700">Historial de promesas</a><a href="/promesas" class="hover:text-teal-700">Promesómetro</a><a href="/esencia" class="hover:text-teal-700">Proyecto Esencia</a><a href="/no-se-mide" class="hover:text-teal-700">Lo que ni se mide</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Expedientes</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/expediente/alcalde-cabo-rojo" class="hover:text-teal-700">Alcalde de Cabo Rojo</a><a href="/expediente/representante-distrito-20" class="hover:text-teal-700">Rep. Distrito 20</a></div></div>
@@ -5960,6 +5960,83 @@ function handleTrabajo(req: any, res: any) {
   }))
 }
 
+// /exposicion-ai — Índice de Exposición a la AI por municipio. Data nueva: Census (ocupación) × exposición por ocupación (literatura). Ranking robusto (Spearman 0.98-1.0 a distintos pesos).
+function handleExposicionAi(req: any, res: any) {
+  const EXP = [
+{n:"Guaynabo",s:57.0,t:"alto",e:38337},{n:"Trujillo Alto",s:54.9,t:"alto",e:29359},{n:"Hormigueros",s:53.7,t:"alto",e:5389},{n:"Bayamón",s:52.7,t:"alto",e:69669},{n:"Dorado",s:52.6,t:"alto",e:13226},{n:"San Juan",s:51.7,t:"alto",e:133578},{n:"Carolina",s:51.1,t:"alto",e:63071},{n:"Toa Baja",s:50.9,t:"alto",e:31409},{n:"Cataño",s:49.8,t:"alto",e:7707},{n:"Gurabo",s:49.4,t:"alto",e:17399},{n:"Toa Alta",s:49.2,t:"alto",e:28425},{n:"Caguas",s:48.4,t:"alto",e:49666},{n:"Canóvanas",s:48.0,t:"alto",e:16631},{n:"Ponce",s:47.9,t:"alto",e:39132},{n:"Hatillo",s:47.4,t:"alto",e:13829},{n:"Juana Díaz",s:47.2,t:"alto",e:15190},{n:"Cayey",s:47.1,t:"alto",e:15042},{n:"Vega Alta",s:46.9,t:"alto",e:11980},{n:"Juncos",s:46.6,t:"alto",e:14666},{n:"Yauco",s:46.6,t:"alto",e:10883},{n:"Manatí",s:46.6,t:"alto",e:12374},{n:"Río Grande",s:46.5,t:"alto",e:17786},{n:"Aguadilla",s:46.0,t:"alto",e:16365},{n:"Cabo Rojo",s:45.9,t:"alto",e:16821},{n:"Cidra",s:45.9,t:"alto",e:13747},{n:"Vega Baja",s:45.9,t:"alto",e:18003},{n:"Moca",s:45.8,t:"medio",e:12239},{n:"Barceloneta",s:45.8,t:"medio",e:8232},{n:"Sabana Grande",s:45.5,t:"medio",e:6662},{n:"Mayagüez",s:45.4,t:"medio",e:20523},{n:"Rincón",s:45.4,t:"medio",e:5086},{n:"Isabela",s:45.3,t:"medio",e:13414},{n:"Arecibo",s:45.3,t:"medio",e:27409},{n:"Las Piedras",s:45.2,t:"medio",e:12377},{n:"Humacao",s:44.8,t:"medio",e:16125},{n:"Aguada",s:44.6,t:"medio",e:12166},{n:"San Lorenzo",s:44.6,t:"medio",e:13071},{n:"Utuado",s:44.5,t:"medio",e:7951},{n:"Camuy",s:44.3,t:"medio",e:12333},{n:"San Germán",s:44.3,t:"medio",e:8615},{n:"San Sebastián",s:44.1,t:"medio",e:11216},{n:"Arroyo",s:43.7,t:"medio",e:4727},{n:"Aguas Buenas",s:43.5,t:"medio",e:8631},{n:"Morovis",s:43.2,t:"medio",e:10150},{n:"Guayama",s:43.1,t:"medio",e:10928},{n:"Añasco",s:43.0,t:"medio",e:9584},{n:"Luquillo",s:42.3,t:"medio",e:6233},{n:"Florida",s:42.3,t:"medio",e:3752},{n:"Santa Isabel",s:42.0,t:"medio",e:7707},{n:"Adjuntas",s:41.8,t:"medio",e:4946},{n:"Patillas",s:41.8,t:"medio",e:4551},{n:"Barranquitas",s:41.7,t:"medio",e:9443},{n:"Guayanilla",s:41.7,t:"bajo",e:4816},{n:"Comerío",s:41.6,t:"bajo",e:5526},{n:"Fajardo",s:41.6,t:"bajo",e:11306},{n:"Loíza",s:41.5,t:"bajo",e:7295},{n:"Aibonito",s:41.2,t:"bajo",e:7589},{n:"Ceiba",s:41.1,t:"bajo",e:3646},{n:"Jayuya",s:40.8,t:"bajo",e:4407},{n:"Corozal",s:40.6,t:"bajo",e:11484},{n:"Peñuelas",s:40.1,t:"bajo",e:6373},{n:"Villalba",s:40.0,t:"bajo",e:6743},{n:"Lajas",s:40.0,t:"bajo",e:7209},{n:"Yabucoa",s:39.7,t:"bajo",e:8431},{n:"Lares",s:39.4,t:"bajo",e:9014},{n:"Coamo",s:38.9,t:"bajo",e:11485},{n:"Guánica",s:38.7,t:"bajo",e:3552},{n:"Naranjito",s:38.6,t:"bajo",e:9511},{n:"Quebradillas",s:38.5,t:"bajo",e:7359},{n:"Naguabo",s:38.4,t:"bajo",e:7835},{n:"Culebra",s:38.3,t:"bajo",e:710},{n:"Las Marías",s:38.2,t:"bajo",e:2518},{n:"Ciales",s:38.0,t:"bajo",e:4466},{n:"Maricao",s:37.7,t:"bajo",e:1434},{n:"Orocovis",s:37.5,t:"bajo",e:6260},{n:"Salinas",s:36.6,t:"bajo",e:8381},{n:"Maunabo",s:34.7,t:"bajo",e:2858},{n:"Vieques",s:34.6,t:"bajo",e:2868}
+  ]
+  const col = (t: string) => t === 'alto' ? '#dc2626' : t === 'medio' ? '#d97706' : '#059669'
+  const badge = (t: string) => t === 'alto' ? 'más expuesto' : t === 'medio' ? 'intermedio' : 'más resiliente'
+  const rowsHtml = EXP.map((m, i) => {
+    const w = Math.max(4, Math.min(100, (m.s - 33) / (58 - 33) * 100))
+    return `<tr class="border-t border-slate-100">
+      <td class="py-1.5 px-2 text-slate-400 text-xs text-right">${i + 1}</td>
+      <td class="py-1.5 px-3 font-semibold text-slate-800">${escapeHtml(m.n)}</td>
+      <td class="py-1.5 px-2"><div class="flex items-center gap-2"><div class="h-2 rounded-full" style="width:${w.toFixed(0)}%;background:${col(m.t)}"></div><span class="text-xs text-slate-500">${m.s.toFixed(0)}</span></div></td>
+      <td class="py-1.5 px-3 text-right text-xs" style="color:${col(m.t)};font-weight:600">${badge(m.t)}</td>
+    </tr>`
+  }).join('')
+
+  const body = `
+<h1>¿A qué pueblos de Puerto Rico les pega más la AI?</h1>
+<p class="text-lg text-slate-600 mt-2">Nadie lo había publicado. Cruzamos la composición real de empleos de cada municipio (Censo) con cuánto expone la AI a cada ocupación (literatura académica) y sacamos, por primera vez, <strong>un ranking de exposición a la AI de los 78 municipios de PR.</strong></p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular (y voltea la narrativa)</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">El metro "moderno" es el MÁS expuesto a la AI. El campo, el más resiliente.</p>
+</div>
+
+<p>La AI corta primero el trabajo de <strong>pantalla</strong> (oficina, ventas, administración, cómputo). Corta menos el de <strong>manos</strong> (construcción, agricultura, cuido, transporte). Así que los pueblos con más empleo corporativo salen arriba: <strong>Guaynabo, Trujillo Alto, Bayamón, San Juan, Carolina.</strong> Y los del campo salen abajo, los más a salvo: <strong>Maunabo, Vieques, Salinas, Orocovis, Maricao.</strong> Lo que suena "atrasado" es, frente a la AI, lo más resistente. <a href="/trabajo" class="text-teal-700 font-semibold">Por qué, y la salida (el cruce a operador) →</a></p>
+
+<h2>Los 78 municipios, de más expuesto a más resiliente</h2>
+<p class="text-slate-600 -mt-1 text-sm">Índice relativo (comparativo, 0-100). Lo que importa es el <strong>orden</strong>, no el número exacto.</p>
+<div class="not-prose overflow-auto border border-slate-200 rounded-xl mt-3 mb-2" style="max-height:520px">
+  <table class="w-full text-sm"><thead class="sticky top-0 bg-slate-50"><tr class="text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-2 text-right">#</th><th class="py-2 px-3">Municipio</th><th class="py-2 px-2">Exposición a la AI</th><th class="py-2 px-3 text-right">Tier</th></tr></thead><tbody>${rowsHtml}</tbody></table>
+</div>
+<div class="not-prose flex gap-4 text-xs text-slate-500 mb-6"><span>🔴 más expuesto</span><span>🟠 intermedio</span><span>🟢 más resiliente</span></div>
+
+<h2>Cómo se hizo (y por qué es real, no inventado)</h2>
+<p>El principio: no inventar un número. <strong>Unir dos datos públicos que nadie había cruzado.</strong> La novedad es la relación, no el dato.</p>
+<ul>
+  <li><strong>Fuente 1 — la mezcla de empleos por pueblo:</strong> Censo / ACS 5 años, tabla de ocupación C24010, los 78 municipios. Público.</li>
+  <li><strong>Fuente 2 — cuánto expone la AI a cada ocupación:</strong> literatura publicada (Eloundou et al. 2023, "GPTs are GPTs"; índice AIOE de Felten, Raj y Seamans).</li>
+  <li><strong>La cuenta:</strong> por cada pueblo, la proporción de sus empleos en cada ocupación, pesada por la exposición de esa ocupación. Un promedio ponderado.</li>
+  <li><strong>Lo probamos:</strong> recalculamos el ranking con tres esquemas de pesos distintos y da casi idéntico (correlación de Spearman 0.98 a 1.00). O sea, <strong>el orden lo manda la composición real de empleos, no nuestros pesos.</strong></li>
+</ul>
+
+<h2>Lo que este número NO dice (para que nadie lo maluse)</h2>
+<ul>
+  <li>Es un <strong>ranking relativo</strong>, no una predicción de despidos. Di "más/menos expuesto", no "exactamente 57".</li>
+  <li>El Censo no capta la <strong>economía informal</strong> (grande en PR): el trabajo de manos real es aún mayor, así que el campo es probablemente todavía más resiliente de lo que muestra.</li>
+  <li>Los índices de exposición son de <strong>EE.UU.</strong> aplicados a PR (asume contenido de tarea similar por ocupación).</li>
+  <li><strong>Exposición ≠ reemplazo.</strong> La mitad de lo expuesto se puede <em>aumentar</em> con AI, no borrar (FMI). La salida es volverse el que la maneja. <a href="/trabajo" class="text-teal-700 font-semibold">→ el cruce a operador</a></li>
+</ul>
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
+  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Saber a qué te expone la AI es el primer paso para ponerte del lado que la maneja.</p>
+  <p class="mt-2 text-sm text-slate-600 italic">Para escoger, primero hay que ver. Si te sirve, úsalo.</p>
+</div>
+
+<p class="text-sm text-slate-500 mt-6">Cómo se hizo: ocupación por municipio del Censo/ACS (tabla C24010, vía Census Reporter); exposición por ocupación de la literatura publicada (Eloundou et al. 2023; AIOE de Felten/Raj/Seamans). Modelo direccional, transparente y reproducible: cualquiera con las dos fuentes lo recalcula. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a> y se corrige. Julio 2026.</p>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'Índice de Exposición a la AI por municipio de Puerto Rico',
+    description: 'Ranking de los 78 municipios de PR por exposición de sus empleos a la inteligencia artificial, cruzando la composición ocupacional del Censo (ACS C24010) con índices de exposición por ocupación (Eloundou 2023; AIOE).',
+    creator: { '@type': 'Person', name: 'Angel Anderson' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    inLanguage: 'es', url: 'https://puertoricosinfiltros.com/exposicion-ai',
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: '¿A qué pueblos de PR les pega más la AI? El ranking de los 78 municipios',
+    description: 'Data nunca publicada: el ranking de exposición a la inteligencia artificial de los 78 municipios de Puerto Rico. El metro corporativo es el más expuesto; el campo, el más resiliente. Con metodología y fuente.',
+    slug: 'exposicion-ai', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
 // /decidir — la espina: ¿me quedo, me voy, me mudo? Organiza los factores + auto-veredicto por perfil.
 function handleDecidir(req: any, res: any) {
   const card = (id: string, titulo: string, badge: string, badgeClass: string, texto: string, href: string, linkTxt: string) => `
@@ -7940,6 +8017,7 @@ export default async function handler(req: any, res: any) {
     case 'costo-de-vida': return handleCostoDeVida(req, res)
     case 'trabajo': return handleTrabajo(req, res)
     case 'decidir': return handleDecidir(req, res)
+    case 'exposicion-ai': return handleExposicionAi(req, res)
     case 'historial': return await handleHistorial(req, res)
     case 'telemedicina': return await handleTelemedicina(req, res)
     case 'no-se-mide': return handleNoSeMide(req, res)

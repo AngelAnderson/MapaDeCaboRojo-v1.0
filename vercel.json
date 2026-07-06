@@ -54,6 +54,7 @@
     { "source": "/prediccion", "destination": "/api/mapa-pages?page=prediccion" },
     { "source": "/costo-de-vida", "destination": "/api/mapa-pages?page=costo-de-vida" },
     { "source": "/trabajo", "destination": "/api/mapa-pages?page=trabajo" },
+    { "source": "/exposicion-ai", "destination": "/api/mapa-pages?page=exposicion-ai" },
     { "source": "/decidir", "destination": "/api/mapa-pages?page=decidir" },
     { "source": "/historial", "destination": "/api/mapa-pages?page=historial" },
     { "source": "/telemedicina", "destination": "/api/mapa-pages?page=telemedicina" },
