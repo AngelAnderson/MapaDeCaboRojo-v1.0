@@ -5323,6 +5323,19 @@ const ALERTAS = [
     fuente: { texto: 'PMC / academia (2023); JAMA Health Forum (2022)', url: 'https://pmc.ncbi.nlm.nih.gov/articles/PMC10170400/' },
     cal: 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=Revisar+mi+medico+primario+%28exodo+medico+PR+2030%29&dates=20260901T120000Z/20260901T130000Z&details=El+55%25+de+los+medicos+de+PR+se+retira+para+2030.+Establece+tu+medico+primario+ahora.',
   },
+  {
+    titulo: 'El corte de los trabajos de pantalla',
+    fecha: '2027-2030',
+    cuando: 'Ya empezó',
+    que: 'La AI no reemplaza al que arregla tu nevera ni a la enfermera — reemplaza primero los trabajos de pantalla: servicio al cliente remoto, data entry, oficina, contenido, traducción. En PR esos son los empleos de exportación (Ley 20, BPO) que traen dólares a familias que no se fueron de la isla. El FMI proyecta que ~60% de los empleos en economías avanzadas están expuestos a la AI, y cerca de la mitad de los expuestos con riesgo de salario más bajo o menos contratación. Encima del éxodo médico y el precipicio de Medicaid, es un segundo golpe al poder adquisitivo — y el menos medido. (No existe un censo de exposición AI específico de PR: esto aplica los índices globales del FMI a la composición del empleo de la isla.)',
+    hacer: [
+      'Si tu ingreso es de pantalla o remoto: usa la AI para ser dueño de algo tuyo (un servicio, una lista de clientes), no solo para hacer tu tarea actual más rápido — eso acelera tu reemplazo.',
+      'Si tienes un oficio de manos (plomería, refrigeración, cuido, mecánica): ese trabajo la AI no lo toca. Hazte encontrable (directorio local, *7711) para que la demanda te llegue.',
+      'Si eres dueño de negocio local: la AI baja tu costo de operar. El que la adopte primero compite con firmas grandes desde el pueblo.',
+    ],
+    fuente: { texto: 'FMI — El FMI y el futuro del trabajo (2024)', url: 'https://www.imf.org/en/blogs/articles/2024/01/14/ai-will-transform-the-global-economy-lets-make-sure-it-benefits-humanity' },
+    cal: 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=Revisar+como+la+AI+afecta+mi+ingreso+%28ser+dueno%2C+no+solo+empleado%29&dates=20270102T120000Z/20270102T130000Z&details=El+FMI+proyecta+~60%25+de+empleos+en+economias+avanzadas+expuestos+a+la+AI.+Usa+la+AI+para+ser+dueno+de+algo%2C+no+solo+para+hacer+tu+tarea+mas+rapido.',
+  },
 ]
 function renderAlertas() {
   return `<h2 id="alertas">⏰ Las fechas que te van a cobrar (y qué hacer)</h2>
