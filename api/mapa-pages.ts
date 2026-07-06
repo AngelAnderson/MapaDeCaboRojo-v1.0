@@ -5175,6 +5175,17 @@ async function handleSigueElDinero(req: any, res: any) {
 <h1>Sigue el dinero: ¿quién se llevó la recuperación?</h1>
 <p class="text-lg text-slate-600 mt-2">Puerto Rico recibió miles de millones para reconstruirse tras los huracanes. La pregunta que casi nadie hace con nombres: <strong>¿a quién se los pagaron?</strong> Rastreamos los contratos federales de recuperación por recipiente.</p>
 
+<div class="not-prose mt-5 bg-white border border-slate-200 rounded-2xl p-4">
+  <div class="flex items-start gap-3">
+    <div class="text-2xl leading-none">🎧</div>
+    <div class="flex-1 min-w-0">
+      <p class="text-sm font-bold text-slate-800 m-0">Escúchalo en vez de leerlo</p>
+      <p class="text-xs text-slate-500 mt-0.5 mb-2">Análisis en audio (es-419). Ponlo mientras guías.</p>
+      <audio controls preload="none" class="w-full" src="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/prsf/sigue-el-dinero.m4a">Tu navegador no puede reproducir el audio. <a href="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/prsf/sigue-el-dinero.m4a" class="text-teal-700 font-semibold">Descárgalo</a>.</audio>
+    </div>
+  </div>
+</div>
+
 <div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El hallazgo</p>
   <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">De cada dólar de contrato de recuperación que rastreamos, unos ${pctFuera} centavos salieron de Puerto Rico hacia el mainland.</p>
@@ -6228,6 +6239,17 @@ async function handleRegistroEstado(req: any, res: any) {
   const body = `
 <h1>Estado de Salud de Puerto Rico</h1>
 <p class="text-lg text-slate-600 mt-3">El dinero federal para traer médicos <strong>ya está aprobado</strong> en casi todos nuestros pueblos. Y se está quedando sin reclamar. Esta es la primera cuenta, municipio por municipio, de dónde está el <strong>cupón sin cobrar</strong>.</p>
+
+<div class="not-prose mt-5 bg-white border border-slate-200 rounded-2xl p-4">
+  <div class="flex items-start gap-3">
+    <div class="text-2xl leading-none">🎧</div>
+    <div class="flex-1 min-w-0">
+      <p class="text-sm font-bold text-slate-800 m-0">Escúchalo en vez de leerlo</p>
+      <p class="text-xs text-slate-500 mt-0.5 mb-2">Análisis en audio (es-419). Ponlo mientras guías.</p>
+      <audio controls preload="none" class="w-full" src="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/prsf/estado-salud.m4a">Tu navegador no puede reproducir el audio. <a href="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/prsf/estado-salud.m4a" class="text-teal-700 font-semibold">Descárgalo</a>.</audio>
+    </div>
+  </div>
+</div>
 
 <div class="not-prose grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
   <div class="bg-white border-2 border-teal-200 rounded-xl p-4 text-center"><div class="text-3xl font-black text-teal-700">${agg.conHpsa}<span class="text-lg text-slate-400">/76</span></div><div class="text-xs text-slate-600 mt-1">municipios con designación federal de escasez <strong>activa</strong></div></div>
