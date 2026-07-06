@@ -161,7 +161,7 @@ function layout(opts: {
 <p class="text-xs text-slate-500 mt-1 text-center">Verificado uno por uno contra registros federales y públicos. Sin spin, sin relleno.</p>
 <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6 text-xs">
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Salud</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a><a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a><a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a><a href="/telemedicina" class="hover:text-teal-700">Telemedicina</a><a href="/diabetes" class="hover:text-teal-700">Diabetes</a></div></div>
-<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/exposicion-ai" class="hover:text-teal-700">Exposición a la AI</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/exposicion-ai" class="hover:text-teal-700">Exposición a la IA</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Servicios</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/agua" class="hover:text-teal-700">Agua</a><a href="/luz" class="hover:text-teal-700">Luz</a><a href="/basura" class="hover:text-teal-700">Basura</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">El pueblo</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/demanda" class="hover:text-teal-700">Lo que busca PR</a><a href="/historial" class="hover:text-teal-700">Historial de promesas</a><a href="/promesas" class="hover:text-teal-700">Promesómetro</a><a href="/esencia" class="hover:text-teal-700">Proyecto Esencia</a><a href="/no-se-mide" class="hover:text-teal-700">Lo que ni se mide</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Expedientes</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/expediente/alcalde-cabo-rojo" class="hover:text-teal-700">Alcalde de Cabo Rojo</a><a href="/expediente/representante-distrito-20" class="hover:text-teal-700">Rep. Distrito 20</a></div></div>
@@ -5978,20 +5978,20 @@ function handleExposicionAi(req: any, res: any) {
   }).join('')
 
   const body = `
-<h1>¿A qué pueblos de Puerto Rico les pega más la AI?</h1>
-<p class="text-lg text-slate-600 mt-2">Nadie lo había publicado. Cruzamos la composición real de empleos de cada municipio (Censo) con cuánto expone la AI a cada ocupación (literatura académica) y sacamos, por primera vez, <strong>un ranking de exposición a la AI de los 78 municipios de PR.</strong></p>
+<h1>¿Qué pueblos de Puerto Rico están más expuestos a la inteligencia artificial?</h1>
+<p class="text-lg text-slate-600 mt-2">"Expuesto" quiere decir una cosa concreta: <strong>cuántos de los empleos del pueblo son del tipo que la inteligencia artificial puede hacer.</strong> Nadie lo había publicado. Cruzamos la composición real de empleos de cada municipio (Censo) con cuánto expone la inteligencia artificial a cada ocupación (literatura académica) y sacamos, por primera vez, un <strong>orden de los 78 municipios de Puerto Rico, del más expuesto al más resiliente.</strong></p>
 
 <div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular (y voltea la narrativa)</p>
-  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">El metro "moderno" es el MÁS expuesto a la AI. El campo, el más resiliente.</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">El metro "moderno" es el MÁS expuesto a la inteligencia artificial. El campo, el más resiliente.</p>
 </div>
 
-<p>La AI corta primero el trabajo de <strong>pantalla</strong> (oficina, ventas, administración, cómputo). Corta menos el de <strong>manos</strong> (construcción, agricultura, cuido, transporte). Así que los pueblos con más empleo corporativo salen arriba: <strong>Guaynabo, Trujillo Alto, Bayamón, San Juan, Carolina.</strong> Y los del campo salen abajo, los más a salvo: <strong>Maunabo, Vieques, Salinas, Orocovis, Maricao.</strong> Lo que suena "atrasado" es, frente a la AI, lo más resistente. <a href="/trabajo" class="text-teal-700 font-semibold">Por qué, y la salida (el cruce a operador) →</a></p>
+<p>La inteligencia artificial corta primero el trabajo de <strong>pantalla</strong> (oficina, ventas, administración, cómputo). Corta menos el de <strong>manos</strong> (construcción, agricultura, cuido, transporte). Así que los pueblos con más empleo corporativo salen arriba: <strong>Guaynabo, Trujillo Alto, Bayamón, San Juan, Carolina.</strong> Y los del campo salen abajo, los más a salvo: <strong>Maunabo, Vieques, Salinas, Orocovis, Maricao.</strong> Lo que suena "atrasado" es, frente a la inteligencia artificial, lo más resistente. <a href="/trabajo" class="text-teal-700 font-semibold">Por qué, y la salida (el cruce a operador) →</a></p>
 
 <h2>Los 78 municipios, de más expuesto a más resiliente</h2>
 <p class="text-slate-600 -mt-1 text-sm">Índice relativo (comparativo, 0-100). Lo que importa es el <strong>orden</strong>, no el número exacto.</p>
 <div class="not-prose overflow-auto border border-slate-200 rounded-xl mt-3 mb-2" style="max-height:520px">
-  <table class="w-full text-sm"><thead class="sticky top-0 bg-slate-50"><tr class="text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-2 text-right">#</th><th class="py-2 px-3">Municipio</th><th class="py-2 px-2">Exposición a la AI</th><th class="py-2 px-3 text-right">Tier</th></tr></thead><tbody>${rowsHtml}</tbody></table>
+  <table class="w-full text-sm"><thead class="sticky top-0 bg-slate-50"><tr class="text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-2 text-right">#</th><th class="py-2 px-3">Municipio</th><th class="py-2 px-2">Exposición</th><th class="py-2 px-3 text-right">Tier</th></tr></thead><tbody>${rowsHtml}</tbody></table>
 </div>
 <div class="not-prose flex gap-4 text-xs text-slate-500 mb-6"><span>🔴 más expuesto</span><span>🟠 intermedio</span><span>🟢 más resiliente</span></div>
 
@@ -5999,7 +5999,7 @@ function handleExposicionAi(req: any, res: any) {
 <p>El principio: no inventar un número. <strong>Unir dos datos públicos que nadie había cruzado.</strong> La novedad es la relación, no el dato.</p>
 <ul>
   <li><strong>Fuente 1 — la mezcla de empleos por pueblo:</strong> Censo / ACS 5 años, tabla de ocupación C24010, los 78 municipios. Público.</li>
-  <li><strong>Fuente 2 — cuánto expone la AI a cada ocupación:</strong> literatura publicada (Eloundou et al. 2023, "GPTs are GPTs"; índice AIOE de Felten, Raj y Seamans).</li>
+  <li><strong>Fuente 2 — cuánto expone la inteligencia artificial a cada ocupación:</strong> literatura publicada (Eloundou et al. 2023, "GPTs are GPTs"; índice AIOE de Felten, Raj y Seamans).</li>
   <li><strong>La cuenta:</strong> por cada pueblo, la proporción de sus empleos en cada ocupación, pesada por la exposición de esa ocupación. Un promedio ponderado.</li>
   <li><strong>Lo probamos:</strong> recalculamos el ranking con tres esquemas de pesos distintos y da casi idéntico (correlación de Spearman 0.98 a 1.00). O sea, <strong>el orden lo manda la composición real de empleos, no nuestros pesos.</strong></li>
 </ul>
@@ -6009,11 +6009,11 @@ function handleExposicionAi(req: any, res: any) {
   <li>Es un <strong>ranking relativo</strong>, no una predicción de despidos. Di "más/menos expuesto", no "exactamente 57".</li>
   <li>El Censo no capta la <strong>economía informal</strong> (grande en PR): el trabajo de manos real es aún mayor, así que el campo es probablemente todavía más resiliente de lo que muestra.</li>
   <li>Los índices de exposición son de <strong>EE.UU.</strong> aplicados a PR (asume contenido de tarea similar por ocupación).</li>
-  <li><strong>Exposición ≠ reemplazo.</strong> La mitad de lo expuesto se puede <em>aumentar</em> con AI, no borrar (FMI). La salida es volverse el que la maneja. <a href="/trabajo" class="text-teal-700 font-semibold">→ el cruce a operador</a></li>
+  <li><strong>Exposición ≠ reemplazo.</strong> La mitad de lo expuesto se puede <em>aumentar</em> con inteligencia artificial, no borrar (FMI). La salida es volverse el que la maneja. <a href="/trabajo" class="text-teal-700 font-semibold">→ el cruce a operador</a></li>
 </ul>
 
 <div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
-  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Saber a qué te expone la AI es el primer paso para ponerte del lado que la maneja.</p>
+  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Saber a qué te expone la inteligencia artificial es el primer paso para ponerte del lado que la maneja.</p>
   <p class="mt-2 text-sm text-slate-600 italic">Para escoger, primero hay que ver. Si te sirve, úsalo.</p>
 </div>
 
@@ -6021,7 +6021,7 @@ function handleExposicionAi(req: any, res: any) {
 `
   const jsonLd = {
     '@context': 'https://schema.org', '@type': 'Dataset',
-    name: 'Índice de Exposición a la AI por municipio de Puerto Rico',
+    name: 'Índice de Exposición a la Inteligencia Artificial por municipio de Puerto Rico',
     description: 'Ranking de los 78 municipios de PR por exposición de sus empleos a la inteligencia artificial, cruzando la composición ocupacional del Censo (ACS C24010) con índices de exposición por ocupación (Eloundou 2023; AIOE).',
     creator: { '@type': 'Person', name: 'Angel Anderson' },
     publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
@@ -6030,7 +6030,7 @@ function handleExposicionAi(req: any, res: any) {
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
   res.status(200).send(layout({
-    title: '¿A qué pueblos de PR les pega más la AI? El ranking de los 78 municipios',
+    title: '¿Qué pueblos de Puerto Rico están más expuestos a la inteligencia artificial? Ranking de los 78 municipios',
     description: 'Data nunca publicada: el ranking de exposición a la inteligencia artificial de los 78 municipios de Puerto Rico. El metro corporativo es el más expuesto; el campo, el más resiliente. Con metodología y fuente.',
     slug: 'exposicion-ai', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
