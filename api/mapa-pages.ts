@@ -298,6 +298,7 @@ function layout(opts: {
 <script async src="https://www.googletagmanager.com/gtag/js?id=${GA}"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA}');</script>
 <script defer src="/_vercel/insights/script.js"></script>
+<script defer src="/_vercel/speed-insights/script.js"></script>
 ${isReg ? `<script>(function(){try{var m=localStorage.getItem('theme');var d=m?(m==='dark'):window.matchMedia('(prefers-color-scheme:dark)').matches;if(d)document.documentElement.classList.add('dark');}catch(e){}})();</script>` : ''}
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={theme:{extend:{fontFamily:{display:['Fraunces','Georgia','serif'],sans:['"Source Sans 3"','Inter','-apple-system','sans-serif']},colors:{brand:{50:'#ecfdf5',100:'#d1fae5',200:'#a7f3d0',300:'#6ee7b7',400:'#34d399',500:'#10b981',600:'#059669',700:'#047857',800:'#065f46',900:'#064e3b',950:'#022c22'},coral:{50:'#fff5f1',100:'#ffe4d9',200:'#ffc7b0',300:'#ff9f7d',400:'#fb6d43',500:'#f0491f',600:'#dd3413',700:'#b72713',800:'#932317',900:'#781f16'},sand:{50:'#faf9f7',100:'#f4f2ed',200:'#e8e4db',300:'#d6cfc1',400:'#b3a894',500:'#8f8371',600:'#726758',700:'#5c5347',800:'#3a342c',900:'#241f19'},gold:{50:'#fffbeb',100:'#fef3c7',200:'#fde68a',300:'#fcd34d',400:'#fbbf24',500:'#f59e0b',600:'#d97706',700:'#b45309'}}}}}</script>
@@ -374,6 +375,7 @@ ${opts.bodyHtml}
 </main>
 ${footer}
 ${isReg ? `<script>(function(){var t=document.getElementById('theme-toggle'),ic=document.getElementById('theme-icon');function set(d){document.documentElement.classList.toggle('dark',d);if(ic)ic.className=d?'fa-solid fa-sun':'fa-solid fa-moon';try{localStorage.setItem('theme',d?'dark':'light');}catch(e){}}if(ic)ic.className=document.documentElement.classList.contains('dark')?'fa-solid fa-sun':'fa-solid fa-moon';if(t)t.addEventListener('click',function(){set(!document.documentElement.classList.contains('dark'));});})();</script>` : SUBSCRIBE_FORM_SCRIPT}
+${isPRSF ? `<script>(function(){function L(ev,rec,t){try{fetch('/api/mapa-pages?page=sinfiltros-log',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({event:ev,record:rec||'',target:t||'',referrer:document.referrer||''})});}catch(e){}}var R=location.pathname.replace(/^\\//,'')||'home';L('page_view','',location.pathname);document.addEventListener('click',function(e){var a=e.target.closest?e.target.closest('a'):null;if(a){var p=a.getAttribute('data-prsf');if(p){L(p+'_click',a.getAttribute('data-rec')||R,a.getAttribute('href')||'');return;}var h=a.getAttribute('href')||'';if(h.indexOf('angelanderson.com/te-programaron')>=0){L('outbound_click',R,'te-programaron');return;}if(/^https?:/.test(h)&&h.indexOf('puertoricosinfiltros.com')<0){L('outbound_click',R,h.slice(0,120));return;}}var b=e.target.closest?e.target.closest('.copy-btn'):null;if(b)L('cite_click',R,'copy');},true);document.addEventListener('play',function(e){if(e.target&&e.target.tagName==='AUDIO')L('audio_play',R,'');},true);})();</script>` : ''}
 </body>
 </html>`
 }
@@ -4623,22 +4625,7 @@ ${recordCards}
 
 <p class="text-sm text-slate-500 mt-6">Metodología: cruce de fuentes federales y públicas a nivel de municipio — NPPES/CMS (proveedores), archivos HRSA (designaciones de escasez), OpenFEMA (fondos de recuperación), Censo/ACS (población y pobreza). Verificado uno por uno. Última actualización: julio 2026.</p>
 
-<script>
-(function(){
-  function log(ev, rec, target){
-    try{ fetch('/api/mapa-pages?page=sinfiltros-log',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({event:ev,record:rec||'',target:target||'',referrer:document.referrer||''})}); }catch(e){}
-  }
-  log('page_view','', location.pathname);
-  document.addEventListener('click', function(e){
-    var a = e.target.closest ? e.target.closest('a[data-prsf]') : null;
-    if(!a) return;
-    var kind = a.getAttribute('data-prsf'); // record | verify | cite
-    var rec = a.getAttribute('data-rec') || '';
-    var href = a.getAttribute('href') || '';
-    log(kind + '_click', rec, href);
-  }, true);
-})();
-</script>
+<!-- logging PRSF movido al layout (isPRSF): page_view + record/verify/cite + audio_play + outbound_click -->
 `
   const datasetLd = {
     '@context': 'https://schema.org', '@type': 'Dataset',
@@ -4668,7 +4655,7 @@ ${recordCards}
 
 // Analytics de PuertoRicoSinFiltros.com — el log ES un récord (qué mira PR).
 // Mismo patrón fail-safe que acceso-log: allowlist + insert service-role, nunca rompe la página.
-const SINFILTROS_EVENTS = new Set(['page_view', 'record_click', 'verify_click', 'cite_click'])
+const SINFILTROS_EVENTS = new Set(['page_view', 'record_click', 'verify_click', 'cite_click', 'audio_play', 'outbound_click'])
 async function handleSinFiltrosLog(req: any, res: any) {
   try {
     let body: any = req.body
