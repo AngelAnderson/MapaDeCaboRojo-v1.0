@@ -5837,6 +5837,17 @@ function handleCostoDeVida(req: any, res: any) {
   <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Ganas cerca de un tercio, pero pagas como si ganaras el doble.</p>
 </div>
 
+<div class="not-prose mt-5 bg-white border border-slate-200 rounded-2xl p-4">
+  <div class="flex items-start gap-3">
+    <div class="text-2xl leading-none">🎧</div>
+    <div class="flex-1 min-w-0">
+      <p class="text-sm font-bold text-slate-800 m-0">Escúchalo en vez de leerlo</p>
+      <p class="text-xs text-slate-500 mt-0.5 mb-2">Análisis en audio (es-419). Ponlo mientras guías.</p>
+      <audio controls preload="none" class="w-full" src="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/prsf/costo-de-vida.m4a">Tu navegador no puede reproducir el audio. <a href="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/prsf/costo-de-vida.m4a" class="text-teal-700 font-semibold">Descárgalo</a>.</audio>
+    </div>
+  </div>
+</div>
+
 <h2>1. Lo que ganas</h2>
 <p>El ingreso mediano de un hogar en Puerto Rico ronda los <b>$25,000</b> al año; en Estados Unidos es <b>~$81,600</b>. Es <strong>cerca de un tercio.</strong> Y cerca del <b>40%</b> de la población vive bajo el nivel de pobreza federal — más del triple que el estado más pobre del continente. <i>(Censo / Encuesta sobre la Comunidad de PR, ACS 2019-2023 y 2024.)</i></p>
 
@@ -5909,6 +5920,17 @@ function handleTrabajo(req: any, res: any) {
 <div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular</p>
   <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">El trabajo que se cae primero es el de pantalla. El que queda, la AI no lo toca — pero hay que agarrar la herramienta.</p>
+</div>
+
+<div class="not-prose mt-5 bg-white border border-slate-200 rounded-2xl p-4">
+  <div class="flex items-start gap-3">
+    <div class="text-2xl leading-none">🎧</div>
+    <div class="flex-1 min-w-0">
+      <p class="text-sm font-bold text-slate-800 m-0">Escúchalo en vez de leerlo</p>
+      <p class="text-xs text-slate-500 mt-0.5 mb-2">Análisis en audio (es-419). Ponlo mientras guías.</p>
+      <audio controls preload="none" class="w-full" src="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/prsf/trabajo.m4a">Tu navegador no puede reproducir el audio. <a href="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/prsf/trabajo.m4a" class="text-teal-700 font-semibold">Descárgalo</a>.</audio>
+    </div>
+  </div>
 </div>
 
 <h2>1. El número que casi nadie mira</h2>
@@ -6056,6 +6078,17 @@ function handleDecidir(req: any, res: any) {
 <div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">La regla</p>
   <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Una predicción no es destino. Es lo que pasa si no escoges otra cosa. Primero, hay que ver.</p>
+</div>
+
+<div class="not-prose mt-5 bg-white border border-slate-200 rounded-2xl p-4">
+  <div class="flex items-start gap-3">
+    <div class="text-2xl leading-none">🎧</div>
+    <div class="flex-1 min-w-0">
+      <p class="text-sm font-bold text-slate-800 m-0">Escúchalo en vez de leerlo</p>
+      <p class="text-xs text-slate-500 mt-0.5 mb-2">Resumen en audio (es-419). Ponlo mientras guías.</p>
+      <audio controls preload="none" class="w-full" src="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/prsf/decidir.m4a">Tu navegador no puede reproducir el audio. <a href="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/prsf/decidir.m4a" class="text-teal-700 font-semibold">Descárgalo</a>.</audio>
+    </div>
+  </div>
 </div>
 
 <div class="not-prose mt-6 bg-white border-2 border-teal-200 rounded-2xl p-5">
