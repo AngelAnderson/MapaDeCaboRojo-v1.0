@@ -4958,6 +4958,19 @@ Reuben Brothers <span class="text-slate-400">(Londres, UK · David &amp; Simon R
 
 <div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 mt-6 text-sm text-slate-700"><strong>Nota:</strong> cada punto de esta página viene de una fuente pública citada (Centro de Periodismo Investigativo, prensa, BLS, EPA, UK Companies House, registros del DRNA, de la OCE y del Departamento de Estado). PuertoRicoSinFiltros.com no toma posición sobre el proyecto: organiza el récord para que cualquiera — vecino, periodista, funcionario — pueda verlo completo y en orden.</div>
 
+<div class="not-prose border-2 border-slate-800 rounded-2xl p-5 sm:p-6 mt-6 bg-white">
+<div class="text-xs uppercase tracking-widest text-slate-500 font-bold">Una nota del editor · sin filtro</div>
+<p class="text-sm text-slate-500 mt-1">Hasta aquí, el récord: dato con fuente, sin posición. Lo que sigue es distinto. Es lo que yo quiero para Cabo Rojo. No es dato, es opinión. La marco para que la separes.</p>
+<div class="mt-3 text-slate-800 leading-relaxed space-y-3">
+<p>El Cabo Rojo que quiero no es uno sin desarrollo. Es uno donde el desarrollo no me cueste el agua, la costa, ni al vecino de toda la vida.</p>
+<p>Donde si alguien apuesta $2,000 millones, el pueblo también gane, no solo mire de lejos. Donde en el 2045 pueda caminar con mi hijo hasta el Faro y que el agua salga de la pluma.</p>
+<p>No estoy en contra de que Cabo Rojo crezca. Estoy en contra de que crezca para otro y le pase la cuenta a los míos.</p>
+<p class="text-slate-600">Y si tú lo ves distinto, está bien. Este pueblo es de todos, y por eso pongo el récord: para que decidas tú, no yo.</p>
+</div>
+<p class="text-sm font-semibold text-slate-800 mt-4">- Angel, desde Cabo Rojo</p>
+</div>
+
+
 <p class="text-sm text-slate-500 mt-5">Fuentes primarias: <a href="https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/" target="_blank" rel="noopener" class="text-teal-700">CPI — créditos contributivos</a> · <a href="https://periodismoinvestigativo.com/2025/06/esencia-project-puerto-rico-environmental-damage/" target="_blank" rel="noopener" class="text-teal-700">CPI — historial global</a> · <a href="https://periodismoinvestigativo.com/2025/03/esencia-project-cabo-rojo-hearings/" target="_blank" rel="noopener" class="text-teal-700">CPI — inversionistas</a> · <a href="https://www.metro.pr/noticias/2026/03/28/miles-protestan-en-el-viejo-san-juan-contra-proyecto-esencia-en-cabo-rojo/" target="_blank" rel="noopener" class="text-teal-700">Metro PR</a> · <a href="https://therealdeal.com/magazine/april-2025/meet-the-little-known-developer-behind-a-2b-reuben-brother-development/" target="_blank" rel="noopener" class="text-teal-700">The Real Deal</a>. ¿Ves un error o falta un hito? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a>. Actualizado julio 2026.</p>
 `
   const jsonLd = {
