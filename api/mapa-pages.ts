@@ -160,7 +160,7 @@ function layout(opts: {
 <p class="text-xs text-slate-500 mt-1 text-center">Verificado uno por uno contra registros federales y públicos. Sin spin, sin relleno.</p>
 <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6 text-xs">
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Salud</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a><a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a><a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a><a href="/telemedicina" class="hover:text-teal-700">Telemedicina</a><a href="/diabetes" class="hover:text-teal-700">Diabetes</a></div></div>
-<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Servicios</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/agua" class="hover:text-teal-700">Agua</a><a href="/luz" class="hover:text-teal-700">Luz</a><a href="/basura" class="hover:text-teal-700">Basura</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">El pueblo</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/demanda" class="hover:text-teal-700">Lo que busca PR</a><a href="/historial" class="hover:text-teal-700">Historial de promesas</a><a href="/promesas" class="hover:text-teal-700">Promesómetro</a><a href="/esencia" class="hover:text-teal-700">Proyecto Esencia</a><a href="/no-se-mide" class="hover:text-teal-700">Lo que ni se mide</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Expedientes</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/expediente/alcalde-cabo-rojo" class="hover:text-teal-700">Alcalde de Cabo Rojo</a><a href="/expediente/representante-distrito-20" class="hover:text-teal-700">Rep. Distrito 20</a></div></div>
@@ -5681,6 +5681,67 @@ function handleCostoDeVida(req: any, res: any) {
   }))
 }
 
+// /trabajo — factor de decisión: ¿hay futuro de trabajo en PR? Lo que se cae, lo que abre.
+// Números verificados (Censo/BLS, FMI, DOL/corte). Premio sin reclamar + puente a te-programaron.
+function handleTrabajo(req: any, res: any) {
+  const body = `
+<h1>¿Hay futuro de trabajo en Puerto Rico?</h1>
+<p class="text-lg text-slate-600 mt-2">Antes de decidir si te quedas, te vas o te mudas, hay una pregunta que pesa más que el sueldo de hoy: <strong>¿de qué se va a vivir aquí en cinco años?</strong> Esta página junta lo que se está cayendo, lo que la AI no puede tocar, y la jugada que voltea la trampa. Con la fuente al lado.</p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">El trabajo que se cae primero es el de pantalla. El que queda, la AI no lo toca — pero hay que agarrar la herramienta.</p>
+</div>
+
+<h2>1. El número que casi nadie mira</h2>
+<p>En 2024, la tasa de participación laboral de Puerto Rico fue <b>40.7%</b> — menos de la mitad de la población en edad de trabajar está en la fuerza laboral, contra ~63% en Estados Unidos. <i>(Banco Mundial / BLS, 2024.)</i> No es pereza: por décadas, en una economía armada así, depender de fondos externos fue la apuesta segura y subir de valor no tenía camino. <i>(NBER, 2005.)</i></p>
+
+<h2>2. Lo que se cae primero</h2>
+<p>La AI no reemplaza al que arregla tu nevera. Reemplaza primero los <strong>trabajos de pantalla</strong>: servicio al cliente remoto, data entry, oficina, contenido, traducción. El FMI proyecta que ~<b>60%</b> de los empleos en economías avanzadas están expuestos a la AI, y cerca de la mitad con riesgo de salario más bajo o menos contratación. <i>(FMI, 2024.)</i> <strong>En PR esos son los empleos de exportación</strong> (Ley 20, BPO) que traen dólares a familias que no se fueron de la isla. <a href="/prediccion#alertas" class="text-teal-700 font-semibold">Ver la alerta →</a></p>
+<p><strong>Y una puerta que casi se cierra:</strong> en 2025 el gobierno federal trató de cerrar los 99 centros de <strong>Job Corps</strong> operados por contrato — 2 de ellos en Puerto Rico. Una corte federal lo frenó como ilegal, y por ahora siguen abiertos, pero su futuro quedó en manos del Congreso. <i>(DOL, orden del 29 de mayo de 2025; inyunción preliminar, 25 de junio de 2025.)</i> Se cierran las entradas al trabajo justo cuando más faltan.</p>
+
+<h2>3. Lo que la AI NO toca</h2>
+<p>Aquí está el giro que casi nadie dice: la AI hace <strong>más</strong> valioso el trabajo de manos y de cuido. El plomero, la enfermera, el mecánico, el que instala el solar, la que cuida — eso no sube por una pantalla. Topado por cuerpos, no por AI. Y cuando el directorio y el <strong>*7711</strong> le mandan clientes al que resuelve, la herramienta lo <strong>amplifica</strong> en vez de reemplazarlo. La economía de manos es el lado firme del piso.</p>
+
+<h2>4. La jugada que voltea la trampa</h2>
+<p>Por décadas, la única salida era el avión: mudarse a donde el trabajo de pantalla pagaba más. La AI acaba de cambiar la ecuación. <strong>Por primera vez, una persona puede subir su propio valor sin capital, sin permiso y sin salir de la isla</strong> — un servicio propio, una lista de clientes, valor que la AI multiplica en vez de borrar. El cruce no es "usa la AI para hacer tu trabajo más rápido" (eso acelera tu reemplazo). Es <strong>empleado → operador</strong>: el que manda la herramienta en vez de competir contra ella. <a href="/costo-de-vida" class="text-teal-700 font-semibold">Y ganar en dólares donde el costo rinde →</a></p>
+
+<h2>5. El premio sin reclamar</h2>
+<p>Job Corps enseñaba a ser <strong>empleado</strong>. El hueco que dejó al tambalearse se llena con algo mejor: <strong>la escuela, la ONG o el pueblo que monte formación de operador-AI</strong> — no de empleado — le da a la próxima generación una herramienta que sí sube el valor, y que no depende de que un contrato federal sobreviva en una corte. El primero que lo haga, se gana esa generación. El que se atreva, gana.</p>
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
+  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Puerto Rico podría formar gente que compite con el mundo entero desde el pueblo — en vez de exportarla. La AI lo hace posible por primera vez.</p>
+  <p class="mt-2 text-sm text-slate-600 italic">Para escoger, primero hay que ver el camino. Si te sirve, úsalo.</p>
+</div>
+
+<div class="not-prose border-l-4 border-slate-300 bg-slate-50 rounded-r-xl p-5 mt-8">
+  <p class="text-xs uppercase tracking-widest text-slate-400 font-bold">El porqué, más hondo · esto ya no es récord, es reflexión</p>
+  <p class="text-slate-700 mt-2">El número hace una cosa importante: te quita la culpa. Si la mitad del país no está en la fuerza laboral, no es que medio país sea vago — es que la escalera para subir de valor no estaba. Ahora sí lo tiene.</p>
+  <p class="text-slate-700 mt-2">Pero hay una idea más vieja que cualquier estadística, y es la que de verdad pesa: <em>"aquí no se puede."</em> Esa también se instaló — y también se reescribe.</p>
+  <p class="mt-3"><a href="https://www.angelanderson.com/te-programaron" class="text-teal-700 font-semibold">Te programaron a creer que no puedes. Empieza por ahí. →</a></p>
+  <p class="text-xs text-slate-400 italic mt-2">Si no te sirve, sigue tu camino.</p>
+</div>
+
+<p class="text-sm text-slate-500 mt-6">Cómo se hizo: participación laboral del Banco Mundial/BLS; exposición a la AI del FMI (2024); estado de Job Corps de las órdenes del Departamento del Trabajo federal (DOL) y la inyunción de la corte federal (SDNY, junio 2025). Las conexiones son análisis. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a> y se corrige. Julio 2026.</p>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Report',
+    name: '¿Hay futuro de trabajo en Puerto Rico? Lo que se cae y lo que abre',
+    about: 'La participación laboral de PR (40.7%), los trabajos de pantalla que la AI corta primero, el cierre intentado de Job Corps, y el cruce de empleado a operador — como factor de la decisión de quedarse, irse o mudarse.',
+    author: { '@type': 'Person', name: 'Angel Anderson' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    inLanguage: 'es', datePublished: '2026-07-06', url: 'https://puertoricosinfiltros.com/trabajo',
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: '¿Hay futuro de trabajo en Puerto Rico? Lo que se cae y lo que abre',
+    description: 'Participación laboral 40.7%, la AI corta los trabajos de pantalla, Job Corps casi cierra — pero la economía de manos aguanta y el cruce a operador abre. El factor trabajo en la decisión de quedarte, irte o mudarte.',
+    slug: 'trabajo', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
 // =============== /registro/estado — Estado de Salud PR: el cupón federal sin cobrar ===============
 // Surface de v_registro_municipio_intel: ranking por necesidad×oportunidad + análisis "cupón sin cobrar"
 // (designación HPSA activa + cero psiquiatras). Data live con fallback verificado 2026-07-05.
@@ -7550,6 +7611,7 @@ export default async function handler(req: any, res: any) {
     case 'basura': return await handleDatoRecord(req, res)
     case 'prediccion': return handlePrediccion(req, res)
     case 'costo-de-vida': return handleCostoDeVida(req, res)
+    case 'trabajo': return handleTrabajo(req, res)
     case 'historial': return await handleHistorial(req, res)
     case 'telemedicina': return await handleTelemedicina(req, res)
     case 'no-se-mide': return handleNoSeMide(req, res)
