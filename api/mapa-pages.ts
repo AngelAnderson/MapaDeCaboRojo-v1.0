@@ -4248,6 +4248,12 @@ async function handleComparte(req: any, res: any) {
     { q: '¿Cuánto ha bajado el pago de Medicare a los médicos con el tiempo?', a: 'Ajustado por inflación, el pago de Medicare al médico bajó 33% entre 2001 y 2025, mientras el costo de operar una práctica subió 59%.', srcText: 'American Medical Association (2025).', srcUrl: 'https://www.ama-assn.org/practice-management/medicare-medicaid/medicare-physician-pay-has-plummeted-2001-find-out-why' },
     { q: '¿Qué incentivo federal existe para atraer médicos a los pueblos designados?', a: 'En un municipio con designación HPSA, un clínico en un sitio aprobado por el National Health Service Corps puede recibir repago de préstamos estudiantiles de hasta $75,000 por dos años en cuidado primario y $50,000 en otras disciplinas, más un bono de Medicare.', srcText: 'National Health Service Corps (HRSA), año fiscal 2026.', srcUrl: 'https://nhsc.hrsa.gov/loan-repayment/nhsc-loan-repayment-program' },
     { q: '¿Cuál es el municipio más pobre de Puerto Rico y cómo está de médicos?', a: 'Guánica es el municipio más pobre de PR (63.6% bajo el nivel de pobreza). Tiene una designación federal de salud mental con el puntaje máximo posible y cero psiquiatras.', srcText: 'ACS 5-año (censo) × NPPES/CMS × HRSA (ver el estado).', srcUrl: 'https://registromedicopr.com/registro/estado' },
+    { q: '¿El sueldo rinde en Puerto Rico?', a: 'El ingreso mediano de un hogar en PR ronda los $25,000 al año, cerca de un tercio del de EE.UU. (~$81,600), pero la luz cuesta casi el doble (~24.5¢/kWh) y la comida importada corre 15-30% más cara por la Ley Jones. El salario mínimo es $10.50 la hora (~$1,820 al mes), menos que el ingreso mediano de un hogar.', srcText: 'Censo/ACS; EIA; DACO (Orden 2021-012); Depto. del Trabajo de PR (ver el récord).', srcUrl: 'https://puertoricosinfiltros.com/costo-de-vida' },
+    { q: '¿Cuánta gente en Puerto Rico está trabajando?', a: 'Solo el 40.7% de la población en edad de trabajar de PR está en la fuerza laboral (2024): menos de la mitad, contra cerca de 63% en EE.UU.', srcText: 'Banco Mundial / BLS (2024) (ver el récord).', srcUrl: 'https://puertoricosinfiltros.com/trabajo' },
+    { q: '¿A qué pueblos de PR les pega más la inteligencia artificial?', a: 'Los pueblos con más empleo de pantalla (Guaynabo, San Juan, Bayamón, Carolina) son los más expuestos a la inteligencia artificial; los del campo (Vieques, Maunabo, Salinas, Maricao) los más resilientes. Es el primer ranking de exposición a la inteligencia artificial de los 78 municipios de PR, cruzando la ocupación del Censo con índices de exposición por ocupación.', srcText: 'Censo/ACS (C24010) × Eloundou 2023 / AIOE (ver el ranking).', srcUrl: 'https://puertoricosinfiltros.com/exposicion-ai' },
+    { q: '¿Cuánto del dinero de recuperación de PR se fue de la isla?', a: 'De cada dólar de contrato de recuperación de Puerto Rico rastreado, cerca de 87 centavos salieron hacia el mainland, a firmas de consultoría e ingeniería fuera de la isla. Solo el 13% quedó en manos de empresas boricuas.', srcText: 'OpenFEMA / USASpending (ver el récord).', srcUrl: 'https://puertoricosinfiltros.com/sigue-el-dinero' },
+    { q: '¿Está limpia el agua en el oeste de Puerto Rico?', a: 'El récord federal de la EPA muestra 13 violaciones de salud del agua activas en el oeste de PR: Cabo Rojo con 3 (trihalometanos) y los acueductos comunitarios de San Germán (Periche, Río Piedras y Méndez) con 8.', srcText: 'EPA (SDWIS), récord federal del agua potable (ver el récord).', srcUrl: 'https://puertoricosinfiltros.com/agua', tag: 'local' },
+    { q: '¿Qué le pasa a Puerto Rico para 2030 si no cambia nada?', a: 'Se reconstruye el ladrillo mientras se pierde el recurso humano para servirlo: el Medicaid federal cae de 76% a 55% el 30 de septiembre de 2027, el 55% de los médicos se retira para 2030, y la inteligencia artificial empieza a cortar los trabajos de pantalla que sostienen a las familias que no se fueron de la isla.', srcText: 'Síntesis de récords verificados (ver la predicción).', srcUrl: 'https://puertoricosinfiltros.com/prediccion' },
   ]
 
   const heroClaim = `El dinero federal para traer médicos a Puerto Rico ya está aprobado y no se cobra. ${g.conHpsa} de 76 municipios tienen designación federal de escasez activa; ${g.cupon} tienen el dinero de salud mental aprobado y cero psiquiatras, para ${n(g.cuponPob)} personas. Verificado pueblo por pueblo contra el registro federal. Fuente: registromedicopr.com/registro/estado`
@@ -4270,8 +4276,8 @@ async function handleComparte(req: any, res: any) {
   }).join('')
 
   const body = `
-<h1>Datos citables sobre el acceso médico en Puerto Rico</h1>
-<p class="text-lg text-slate-600 mt-3">Cada dato de esta página tiene su fuente y su fecha. Cópialo, cítalo, compártelo. Si eres periodista, legislador, investigador o vecino que quiere entender qué está pasando, esto es para ti. Todo se verifica contra registros federales públicos.</p>
+<h1>Datos citables de Puerto Rico, verificados uno por uno</h1>
+<p class="text-lg text-slate-600 mt-3"><strong>El trabajo pesado ya está hecho.</strong> Cada número de esta página está verificado contra su fuente federal o pública, con fecha. No tienes que buscarlo, ni cruzar bases de datos, ni dudar si está bien: <strong>cópialo y úsalo.</strong> Si eres periodista, legislador, investigador o vecino, esto es para que lo tomes, lo cites, y sigas tu camino. Salud, costo de vida, trabajo, agua, dinero de recuperación — todo con la fuente al lado.</p>
 
 <div class="not-prose mt-4 flex flex-wrap gap-3 text-sm">
   <a href="/registro/estado" class="inline-flex items-center gap-2 bg-teal-700 text-white font-bold px-4 py-2 rounded-full hover:bg-teal-800">Ver el estado de salud, pueblo por pueblo</a>
@@ -4307,7 +4313,11 @@ ${factCards}
 <h2>Para prensa</h2>
 <p>Angel Anderson, registromedicopr.com, desde Cabo Rojo. Contacto: <a href="mailto:angel@angelanderson.com">angel@angelanderson.com</a>. Puedo respaldar cualquier cifra con su fuente, entregar el corte de un municipio, o explicar la metodología. Prefiero texto o correo.</p>
 
-<p class="text-sm text-slate-500 mt-6">Metodología: cruce de tres fuentes federales/públicas a nivel de municipio — NPPES/CMS (proveedores), archivos HRSA (designaciones de escasez), y Censo/ACS (población y pobreza). Verificado uno por uno. Última actualización: julio 2026. ¿Ves un error? Escríbenos y se corrige.</p>
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-5 mt-8">
+  <p class="text-slate-800 leading-relaxed">Ese es el punto de esta página: <strong>que no tengas que hacer el trabajo dos veces.</strong> Alguien ya cruzó las bases de datos, uno por uno, con la fuente al lado. Tómalo, cítalo, y sigue tu camino. Si no te sirve, también está bien.</p>
+</div>
+
+<p class="text-sm text-slate-500 mt-6">Metodología: cruce de fuentes federales/públicas a nivel de municipio — NPPES/CMS y HRSA (salud), Censo/ACS y EIA y DACO (costo de vida y trabajo), OpenFEMA/USASpending (recuperación), EPA (agua). Cada número enlaza a su récord con la fuente primaria. Verificado a mano. Última actualización: julio 2026. ¿Ves un error? Escríbenos y se corrige.</p>
 
 <script>
 (function(){
