@@ -5494,7 +5494,7 @@ const ALERTAS = [
     que: 'La AI no reemplaza al que arregla tu nevera ni a la enfermera — reemplaza primero los trabajos de pantalla: servicio al cliente remoto, data entry, oficina, contenido, traducción. En PR esos son los empleos de exportación (Ley 20, BPO) que traen dólares a familias que no se fueron de la isla. El FMI proyecta que ~60% de los empleos en economías avanzadas están expuestos a la AI, y cerca de la mitad de los expuestos con riesgo de salario más bajo o menos contratación. Encima del éxodo médico y el precipicio de Medicaid, es un segundo golpe al poder adquisitivo — y el menos medido. (No existe un censo de exposición AI específico de PR: esto aplica los índices globales del FMI a la composición del empleo de la isla.)',
     hacer: [
       'Si tu ingreso es de pantalla o remoto: usa la AI para ser dueño de algo tuyo (un servicio, una lista de clientes), no solo para hacer tu tarea actual más rápido — eso acelera tu reemplazo.',
-      'Si tienes un oficio de manos (plomería, refrigeración, cuido, mecánica): ese trabajo la AI no lo toca. Hazte encontrable (directorio local, *7711) para que la demanda te llegue.',
+      'Si tienes un oficio de manos (plomería, refrigeración, cuido, mecánica): ese trabajo la AI no lo toca. Hazte encontrable (directorio local, 787-417-7711) para que la demanda te llegue.',
       'Si eres dueño de negocio local: la AI baja tu costo de operar. El que la adopte primero compite con firmas grandes desde el pueblo.',
     ],
     fuente: { texto: 'FMI — El FMI y el futuro del trabajo (2024)', url: 'https://www.imf.org/en/blogs/articles/2024/01/14/ai-will-transform-the-global-economy-lets-make-sure-it-benefits-humanity' },
@@ -5659,7 +5659,7 @@ function handleCostoDeVida(req: any, res: any) {
 
 <h2>5. El número que el gobierno no tiene — y nosotros sí podemos armar</h2>
 <p>Aquí está el hueco de verdad, y no es nuestro: <strong>el propio gobierno admitió en 2025 que no tiene un número claro de lo que cuesta la canasta básica del día a día en Puerto Rico.</strong> <i>(DACO, secretaria Natalia Catoni, vía El Vocero, 2025.)</i> DACO publica una canasta de emergencias y un historial de precios mayoristas, pero no un índice del costo real de vivir, pueblo por pueblo.</p>
-<p>Eso no es un "no se puede medir" — es un "nadie lo ha armado." Y entre los precios que DACO sí publica y lo que este substrato ya tiene — la luz de la EIA en <a href="/luz" class="text-teal-700 font-semibold">/luz</a>, el ingreso del Censo, la demanda real del *7711, los negocios verificados del mapa — <strong>la canasta por pueblo se puede construir, con histórico, hasta proyectar hacia dónde va.</strong> Ese es el próximo récord, no un callejón sin salida.</p>
+<p>Eso no es un "no se puede medir" — es un "nadie lo ha armado." Y entre los precios que DACO sí publica y lo que este substrato ya tiene — la luz de la EIA en <a href="/luz" class="text-teal-700 font-semibold">/luz</a>, el ingreso del Censo, la demanda real del 787-417-7711, los negocios verificados del mapa — <strong>la canasta por pueblo se puede construir, con histórico, hasta proyectar hacia dónde va.</strong> Ese es el próximo récord, no un callejón sin salida.</p>
 
 <div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
   <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Puerto Rico podría ser donde una familia vive con dignidad con menos — si se ve claro dónde.</p>
@@ -5699,7 +5699,7 @@ function handleCostoDeVida(req: any, res: any) {
 function handleTrabajo(req: any, res: any) {
   const body = `
 <h1>¿Hay futuro de trabajo en Puerto Rico?</h1>
-<p class="text-lg text-slate-600 mt-2">Antes de decidir si te quedas, te vas o te mudas, hay una pregunta que pesa más que el sueldo de hoy: <strong>¿de qué se va a vivir aquí en cinco años?</strong> Esta página junta lo que se está cayendo, lo que la AI no puede tocar, y la jugada que voltea la trampa. Con la fuente al lado.</p>
+<p class="text-lg text-slate-600 mt-2">Antes de decidir si te quedas, te vas o te mudas, hay una pregunta que pesa más que el sueldo de hoy: <strong>¿de qué se va a vivir aquí en 5 años?</strong> Esta página junta lo que se está cayendo, lo que la AI no puede tocar, y la jugada que voltea la trampa. Con la fuente al lado.</p>
 
 <div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular</p>
@@ -5714,7 +5714,7 @@ function handleTrabajo(req: any, res: any) {
 <p><strong>Y una puerta que casi se cierra:</strong> en 2025 el gobierno federal trató de cerrar los 99 centros de <strong>Job Corps</strong> operados por contrato — 2 de ellos en Puerto Rico. Una corte federal lo frenó como ilegal, y por ahora siguen abiertos, pero su futuro quedó en manos del Congreso. <i>(DOL, orden del 29 de mayo de 2025; inyunción preliminar, 25 de junio de 2025.)</i> Se cierran las entradas al trabajo justo cuando más faltan.</p>
 
 <h2>3. Lo que la AI NO toca</h2>
-<p>Aquí está el giro que casi nadie dice: la AI hace <strong>más</strong> valioso el trabajo de manos y de cuido. El plomero, la enfermera, el mecánico, el que instala el solar, la que cuida — eso no sube por una pantalla. Topado por cuerpos, no por AI. Y cuando el directorio y el <strong>*7711</strong> le mandan clientes al que resuelve, la herramienta lo <strong>amplifica</strong> en vez de reemplazarlo. La economía de manos es el lado firme del piso.</p>
+<p>Aquí está el giro que casi nadie dice: la AI hace <strong>más</strong> valioso el trabajo de manos y de cuido. El plomero, la enfermera, el mecánico, el que instala el solar, la que cuida — eso no sube por una pantalla. Topado por cuerpos, no por AI. Y cuando el directorio y el <strong>787-417-7711</strong> le mandan clientes al que resuelve, la herramienta lo <strong>amplifica</strong> en vez de reemplazarlo. La economía de manos es el lado firme del piso.</p>
 
 <h2>4. La jugada que voltea la trampa</h2>
 <p>Por décadas, la única salida era el avión: mudarse a donde el trabajo de pantalla pagaba más. La AI acaba de cambiar la ecuación. <strong>Por primera vez, una persona puede subir su propio valor sin capital, sin permiso y sin salir de la isla</strong> — un servicio propio, una lista de clientes, valor que la AI multiplica en vez de borrar. El cruce no es "usa la AI para hacer tu trabajo más rápido" (eso acelera tu reemplazo). Es <strong>empleado → operador</strong>: el que manda la herramienta en vez de competir contra ella. <a href="/costo-de-vida" class="text-teal-700 font-semibold">Y ganar en dólares donde el costo rinde →</a></p>
