@@ -4969,14 +4969,93 @@ Reuben Brothers <span class="text-slate-400">(Londres, UK · David &amp; Simon R
   </div>
 </div>
 
-<h3 class="mt-6">Las palancas: cómo se voltea la cuenta</h3>
-<p>Aquí está lo útil. Cada uno de estos es un cambio concreto que mueve la cuenta de la columna roja a la verde, sin matar el proyecto. Esto no es estar en contra. Es exigir que, si va, vaya sin desperdicio:</p>
-<div class="not-prose grid sm:grid-cols-2 gap-3 mt-3">
-  <div class="border-l-4 border-teal-400 bg-white rounded-r-xl p-4"><div class="font-bold text-slate-800 text-sm">Cláusula de empleo amarrada</div><p class="text-sm text-slate-600 mt-1">Si no crea los empleos prometidos, devuelve los créditos. Hoy no existe esa cláusula.</p></div>
-  <div class="border-l-4 border-teal-400 bg-white rounded-r-xl p-4"><div class="font-bold text-slate-800 text-sm">Contratación y compra local</div><p class="text-sm text-slate-600 mt-1">Un piso de contratación y suministro local (por ejemplo, 30%) hace que el dinero se quede en el pueblo, no se vaya.</p></div>
-  <div class="border-l-4 border-teal-400 bg-white rounded-r-xl p-4"><div class="font-bold text-slate-800 text-sm">Que pague su propia agua y su propia basura</div><p class="text-sm text-slate-600 mt-1">Fuente de agua y disposición de residuos propias y probadas, para no trasladarle el costo al sistema del pueblo.</p></div>
-  <div class="border-l-4 border-teal-400 bg-white rounded-r-xl p-4"><div class="font-bold text-slate-800 text-sm">Participación municipal en los ingresos</div><p class="text-sm text-slate-600 mt-1">Que Cabo Rojo cobre una parte, no solo mire de lejos mientras los créditos van a Londres.</p></div>
+<h3 class="mt-6">La calculadora de palancas</h3>
+<p>El proyecto como está deja casi todo en la columna roja. Prende cada palanca y mira cuánto del desperdicio se recupera. Nada de esto mata el proyecto: lo hace pagar por lo que usa. (Cada palanca mueve un número verificado, no un supuesto.)</p>
+
+<div class="not-prose mt-3" id="cuenta-calc">
+  <div class="grid grid-cols-3 gap-2 mb-3">
+    <div class="bg-slate-900 rounded-xl p-3 text-center">
+      <div class="text-[10px] uppercase tracking-wide text-teal-300 font-bold">Dinero público protegido</div>
+      <div class="text-lg sm:text-2xl font-black text-white" data-meter="dinero">$0M</div>
+      <div class="text-[10px] text-slate-400">de $567M</div>
+    </div>
+    <div class="bg-slate-900 rounded-xl p-3 text-center">
+      <div class="text-[10px] uppercase tracking-wide text-teal-300 font-bold">Agua del pueblo</div>
+      <div class="text-base sm:text-xl font-black text-white" data-meter="agua">Comprometida</div>
+      <div class="text-[10px] text-slate-400">1.2M gal/día</div>
+    </div>
+    <div class="bg-slate-900 rounded-xl p-3 text-center">
+      <div class="text-[10px] uppercase tracking-wide text-teal-300 font-bold">Vertedero</div>
+      <div class="text-base sm:text-xl font-black text-white" data-meter="basura">-2 a 4 años</div>
+      <div class="text-[10px] text-slate-400">se llena ~2030</div>
+    </div>
+  </div>
+
+  <div class="space-y-2">
+    <button type="button" data-lever="empleo" aria-pressed="false" class="lever w-full text-left border border-slate-200 rounded-xl p-3 hover:border-teal-300 flex items-start gap-3 bg-white">
+      <span class="dot text-lg leading-none text-slate-300 mt-0.5">○</span>
+      <span><span class="font-bold text-sm text-slate-800">Cláusula de empleo amarrada</span><span class="block text-xs text-slate-500">Si no crea los empleos prometidos, devuelve los créditos. Protege hasta <strong>$498M</strong>.</span></span>
+    </button>
+    <button type="button" data-lever="municipal" aria-pressed="false" class="lever w-full text-left border border-slate-200 rounded-xl p-3 hover:border-teal-300 flex items-start gap-3 bg-white">
+      <span class="dot text-lg leading-none text-slate-300 mt-0.5">○</span>
+      <span><span class="font-bold text-sm text-slate-800">Participación municipal en los ingresos</span><span class="block text-xs text-slate-500">Que Cabo Rojo cobre una parte, no solo mire. Recupera hasta <strong>$69M</strong> en 10 años.</span></span>
+    </button>
+    <button type="button" data-lever="agua" aria-pressed="false" class="lever w-full text-left border border-slate-200 rounded-xl p-3 hover:border-teal-300 flex items-start gap-3 bg-white">
+      <span class="dot text-lg leading-none text-slate-300 mt-0.5">○</span>
+      <span><span class="font-bold text-sm text-slate-800">Que pague su propia agua</span><span class="block text-xs text-slate-500">Fuente propia y probada, para no quitarle <strong>1.2M galones/día</strong> al sistema del pueblo.</span></span>
+    </button>
+    <button type="button" data-lever="basura" aria-pressed="false" class="lever w-full text-left border border-slate-200 rounded-xl p-3 hover:border-teal-300 flex items-start gap-3 bg-white">
+      <span class="dot text-lg leading-none text-slate-300 mt-0.5">○</span>
+      <span><span class="font-bold text-sm text-slate-800">Que pague su propia basura</span><span class="block text-xs text-slate-500">Disposición propia, para salvar los <strong>2 a 4 años</strong> de vertedero que hoy le quita al pueblo.</span></span>
+    </button>
+  </div>
+
+  <p class="text-sm text-slate-700 mt-3 font-semibold" data-summary>Proyecto como está: $0 protegido, el agua comprometida, y 2 a 4 años menos de vertedero. Prende las palancas.</p>
+  <p class="text-xs text-slate-400 mt-1">Además, un piso de contratación y compra local (por ejemplo 30%) mantendría más del dinero en el pueblo. No lo calculamos aquí porque el monto total de inversión no es público.</p>
 </div>
+<script>
+(function(){
+  var root=document.getElementById('cuenta-calc');
+  if(!root)return;
+  var state={empleo:false,municipal:false,agua:false,basura:false};
+  function render(){
+    var dinero=(state.empleo?498:0)+(state.municipal?69:0);
+    var mD=root.querySelector('[data-meter="dinero"]');
+    var mA=root.querySelector('[data-meter="agua"]');
+    var mB=root.querySelector('[data-meter="basura"]');
+    mD.textContent='$'+dinero+'M';
+    mD.classList.toggle('text-emerald-300',dinero>0);
+    mD.classList.toggle('text-white',dinero===0);
+    mA.textContent=state.agua?'Protegida':'Comprometida';
+    mA.classList.toggle('text-emerald-300',state.agua);
+    mA.classList.toggle('text-white',!state.agua);
+    mB.textContent=state.basura?'+2 a 4 años':'-2 a 4 años';
+    mB.classList.toggle('text-emerald-300',state.basura);
+    mB.classList.toggle('text-white',!state.basura);
+    var count=0;
+    root.querySelectorAll('[data-lever]').forEach(function(b){
+      var on=state[b.getAttribute('data-lever')];
+      if(on)count++;
+      b.setAttribute('aria-pressed',on?'true':'false');
+      b.classList.toggle('border-teal-400',on);
+      b.classList.toggle('bg-teal-50',on);
+      b.classList.toggle('bg-white',!on);
+      var dot=b.querySelector('.dot');
+      dot.textContent=on?'●':'○';
+      dot.classList.toggle('text-teal-600',on);
+      dot.classList.toggle('text-slate-300',!on);
+    });
+    var sum=root.querySelector('[data-summary]');
+    if(count===0){sum.textContent='Proyecto como está: $0 protegido, el agua comprometida, y 2 a 4 años menos de vertedero. Prende las palancas.';}
+    else if(count===4){sum.textContent='Con las 4 palancas: hasta $567M dejan de ser regalo, el agua del pueblo queda protegida, y el vertedero a salvo. El proyecto sigue. Solo paga por lo que usa.';}
+    else{sum.textContent='Vas '+count+' de 4. Préndelas todas para ver la cuenta completa voltearse.';}
+  }
+  root.querySelectorAll('[data-lever]').forEach(function(b){
+    b.addEventListener('click',function(){var k=b.getAttribute('data-lever');state[k]=!state[k];render();});
+  });
+  render();
+})();
+</script>
 <p class="text-xs text-slate-400 mt-2">Cálculo de PuertoRicoSinFiltros.com sobre datos verificados: créditos y presupuesto (CPI), agua (DIA p.89 y carta de la AAA del 26 sept 2024 en el expediente), basura (testimonio en vista pública y registros del préstamo del vertedero). La cifra de subsidio por unidad es una división simple del subsidio público conocido entre las unidades propuestas; el estimado de más de $1M por unidad es del deponente en vista pública. Los escenarios de empleo asumen que las promesas se cumplen.</p>
 
 
