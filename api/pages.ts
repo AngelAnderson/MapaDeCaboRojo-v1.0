@@ -6082,10 +6082,69 @@ async function handle_cultura(req: any, res: any) {
 }
 
 
+// /veci — "guarda a El Veci": tarjeta de contacto .vcf + botones WhatsApp/SMS + add to home screen.
+function handle_veci(req: any, res: any) {
+  if (req.query?.vcf !== undefined) {
+    const vcard = ['BEGIN:VCARD', 'VERSION:3.0', 'FN:El Veci (Cabo Rojo)', 'N:Veci;El;;;', 'ORG:CaboRojo.com', 'TITLE:Tu vecino digital', 'TEL;TYPE=CELL:+17874177711', 'URL:https://wa.me/17874177711', 'NOTE:Escribeme por WhatsApp o texto al 787-417-7711. Busco negocios, eventos, medicos y mas en Cabo Rojo. Menos revolu, mas sistema.', 'END:VCARD'].join('\r\n');
+    res.setHeader('Content-Type', 'text/vcard; charset=utf-8');
+    res.setHeader('Content-Disposition', 'inline; filename="el-veci.vcf"');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.status(200).send(vcard);
+  }
+  const icon = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><rect width="180" height="180" rx="40" fill="#0d9488"/><text x="90" y="122" font-size="96" text-anchor="middle">👋</text></svg>');
+  const html = `<!doctype html><html lang="es-PR"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>El Veci · tu vecino digital de Cabo Rojo</title>
+<meta name="theme-color" content="#0d9488">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="El Veci">
+<link rel="apple-touch-icon" href="${icon}">
+<link rel="icon" href="${icon}">
+<meta property="og:title" content="El Veci · guárdame en tu teléfono">
+<meta property="og:description" content="Escríbeme por WhatsApp o texto al 787-417-7711. Busco negocios, eventos, médicos y más en Cabo Rojo.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,system-ui,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:36px 20px;text-align:center}
+.wave{width:96px;height:96px;border-radius:28px;background:#0d9488;display:flex;align-items:center;justify-content:center;font-size:52px;margin-bottom:16px}
+h1{font-size:27px;font-weight:800;color:#fff}
+.sub{color:#94a3b8;font-size:15px;margin:8px 0 28px;max-width:340px;line-height:1.55}
+.btn{display:block;width:100%;max-width:360px;padding:16px;border-radius:14px;font-size:17px;font-weight:700;text-decoration:none;margin-bottom:12px}
+.wa{background:#25D366;color:#062e14}
+.sms{background:#0d9488;color:#fff}
+.save{background:#fff;color:#0f172a}
+.card{background:#1e293b;border-radius:16px;padding:20px;max-width:360px;width:100%;margin-top:16px;text-align:left}
+.card h2{font-size:15px;color:#5eead4;margin-bottom:8px}
+.card ol{margin-left:18px;color:#cbd5e1;font-size:14px;line-height:1.75}
+.foot{color:#64748b;font-size:12px;margin-top:28px;max-width:340px;line-height:1.5}
+</style></head><body>
+<div class="wave">👋</div>
+<h1>El Veci</h1>
+<p class="sub">Tu vecino digital de Cabo Rojo. Búscame negocios, eventos, médicos y más. Menos revolú, más sistema.</p>
+<a class="btn wa" href="https://wa.me/17874177711?text=Hola%20Veci">💬 Escríbeme por WhatsApp</a>
+<a class="btn sms" href="sms:+17874177711">💬 Escríbeme por texto (SMS)</a>
+<a class="btn save" href="/veci.vcf">📇 Guárdame en tus contactos</a>
+<div class="card">
+  <h2>📱 Ponme en tu pantalla de inicio</h2>
+  <ol>
+    <li>Abre esta página en <strong>Safari</strong>.</li>
+    <li>Toca <strong>Compartir</strong> (el cuadrito con la flecha ↑).</li>
+    <li>Baja y toca <strong>"Añadir a inicio"</strong>.</li>
+    <li>Listo: tendrás a El Veci como un ícono, a un tap.</li>
+  </ol>
+</div>
+<p class="foot">787-417-7711 · WhatsApp o SMS · Cabo Rojo, PR<br>Gratis. Escríbeme lo que sea.</p>
+</body></html>`;
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600');
+  return res.status(200).send(html);
+}
+
 // ============ ROUTER ============
 export default async function handler(req: any, res: any) {
   const page = req.query?.page || '';
   switch (page) {
+    case 'veci': return handle_veci(req, res);
     case 'municipio': return handle_municipio(req, res);
     case 'turismo': return handle_turismo(req, res);
     case 'demanda': return handle_demanda(req, res);
