@@ -1896,6 +1896,38 @@ async function handle_demanda(req: any, res: any) {
   const vecinos = Number(vstat?.vecinos || 0);          // distinct people — NOT the search count
   const vecinos7d = Number(vstat?.vecinos_7d || 0);
 
+  // Triangulación: cruza el texteo del bot (alta intención) con lo que se googlea (GSC, alcance amplio).
+  // La pata que le faltaba al radar — confirma la demanda por dos vías independientes.
+  let triangList: Array<{ categoria: string; bot_personas: number; gsc_impresiones: number; gsc_clicks: number; fuente: string; senal_score: number }> = [];
+  try {
+    const { data: tri } = await supabase.from('v_demanda_triangulada')
+      .select('categoria,bot_personas,gsc_impresiones,gsc_clicks,fuente,senal_score');
+    if (Array.isArray(tri)) triangList = tri as any;
+  } catch { triangList = []; }
+  const triConfirm = triangList.filter(r => r.fuente === 'triangulada').sort((a, b) => b.senal_score - a.senal_score);
+  const triGoogleOnly = triangList.filter(r => r.fuente === 'solo_google' && r.gsc_clicks > 0).sort((a, b) => b.gsc_clicks - a.gsc_clicks);
+  const triConfirmRows = triConfirm.slice(0, 8).map(r => `<tr style="border-bottom:1px solid #f1f5f9;">
+        <td style="padding:9px 12px;font-weight:600;color:#0f172a;text-transform:capitalize;">${esc(r.categoria)}</td>
+        <td style="padding:9px 12px;text-align:center;color:#0f766e;font-weight:700;">${r.bot_personas}</td>
+        <td style="padding:9px 12px;text-align:center;color:#475569;">${Number(r.gsc_clicks)} / ${Number(r.gsc_impresiones).toLocaleString('es-PR')}</td>
+      </tr>`).join('');
+  const gOnlyStr = triGoogleOnly.slice(0, 4).map(r => `<span style="text-transform:capitalize;font-weight:600;">${esc(r.categoria)}</span>`).join(' · ');
+  const triangSection = triConfirm.length ? `
+    <div style="background:white;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);padding:24px;margin-bottom:24px;">
+      <div style="display:inline-block;background:#ecfeff;color:#0f766e;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;margin-bottom:10px;">🔺 CONFIRMADO POR DOS VÍAS</div>
+      <h2 style="margin:0 0 6px;font-size:18px;font-weight:800;color:#0f172a;">Lo que se textea Y lo que se googlea</h2>
+      <p style="margin:0 0 14px;color:#475569;font-size:14px;line-height:1.55;">El radar de arriba es lo que la gente <strong>textea</strong> al Veci — demanda urgente, "lo necesito ahora". Esto lo cruzamos con lo que la gente <strong>busca en Google</strong> y llega a nuestros sitios — lo que se planifica con calma. Cuando las dos señales apuntan a la misma categoría, la demanda deja de ser opinión: tiene <strong>dos testigos independientes</strong>.</p>
+      <div style="overflow:auto;border:1px solid #e2e8f0;border-radius:12px;">
+        <table style="width:100%;border-collapse:collapse;font-size:13.5px;">
+          <thead><tr style="background:#f8fafc;text-align:left;color:#64748b;font-size:11.5px;text-transform:uppercase;letter-spacing:0.03em;">
+            <th style="padding:9px 12px;">Categoría</th><th style="padding:9px 12px;text-align:center;">Texteo (personas)</th><th style="padding:9px 12px;text-align:center;">Google (clics/vistas)</th>
+          </tr></thead><tbody>${triConfirmRows}</tbody>
+        </table>
+      </div>
+      ${gOnlyStr ? `<p style="margin:12px 0 0;color:#64748b;font-size:13px;">Y solo por Google (lo que se investiga, no se textea): ${gOnlyStr}.</p>` : ''}
+      <p style="margin:10px 0 0;color:#94a3b8;font-size:12px;">Escopeado al oeste + diáspora buscando la región — no todo Puerto Rico. Se actualiza solo.</p>
+    </div>` : '';
+
   // Headline insight (biggest mover this week, min 4) — lead with the story, not the raw count.
   const movers = [...surgeList]
     .filter(r => (r.this_week || 0) >= 4)
@@ -2270,10 +2302,13 @@ async function handle_demanda(req: any, res: any) {
       <p style="margin:6px 0 0;color:#cbd5e1;font-size:14px;">Si tu categoría aparece hoy, muévete hoy. La demanda no espera.</p>
     </div>
 
+    ${triangSection}
+
     <!-- Metodología y fuente (item 7) — lo que la hace citable por AI y prensa -->
     <div style="background:white;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);padding:24px;margin-bottom:24px;">
       <h2 style="margin:0 0 10px;font-size:16px;font-weight:700;color:#0f172a;">Metodología y fuente</h2>
       <p style="margin:0 0 8px;color:#475569;font-size:13.5px;">Cada número viene de <strong>búsquedas reales</strong> que vecinos, visitantes y diáspora le hacen al asistente *7711 y al buscador de MapaDeCaboRojo.com — no de encuestas ni estimados. Total acumulado: <strong>${accumulated.toLocaleString('es-PR')}</strong> búsquedas. Se actualiza cada semana.</p>
+      <p style="margin:0 0 8px;color:#475569;font-size:13.5px;">Además, cruzamos esa demanda con <strong>Google Search Console</strong> — lo que la gente busca en Google y llega a nuestros sitios — para confirmar la señal por dos vías independientes (texteo + búsqueda). Es demanda del oeste y la diáspora que busca la región, no una proyección de todo Puerto Rico.</p>
       <p style="margin:0 0 8px;color:#475569;font-size:13.5px;">Los datos se muestran <strong>agregados por categoría y término genérico</strong>. Nunca publicamos nombres de personas, teléfonos ni mensajes privados.</p>
       <p style="margin:0;color:#94a3b8;font-size:12.5px;">Fuente citable: <em>Radar de Demanda — MapaDeCaboRojo.com</em>. Datos abiertos en <a href="${baseUrl}/api/intelligence" style="color:#0d9488;text-decoration:none;">/api/intelligence</a>. Prensa e investigadores: escriban al 787-417-7711.</p>
     </div>

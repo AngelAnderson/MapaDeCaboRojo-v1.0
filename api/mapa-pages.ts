@@ -161,7 +161,7 @@ function layout(opts: {
 <p class="text-xs text-slate-500 mt-1 text-center">Verificado uno por uno contra registros federales y públicos. Sin spin, sin relleno.</p>
 <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6 text-xs">
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Salud</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a><a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a><a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a><a href="/telemedicina" class="hover:text-teal-700">Telemedicina</a><a href="/diabetes" class="hover:text-teal-700">Diabetes</a></div></div>
-<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/rendimiento" class="hover:text-teal-700">Rendimiento del dólar</a><a href="/cupon" class="hover:text-teal-700">Dinero sin cobrar</a><a href="/demanda-real" class="hover:text-teal-700">Demanda real</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/exposicion-ai" class="hover:text-teal-700">Exposición a la IA</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/rendimiento" class="hover:text-teal-700">Rendimiento del dólar</a><a href="/cupon" class="hover:text-teal-700">Dinero sin cobrar</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/exposicion-ai" class="hover:text-teal-700">Exposición a la IA</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Servicios</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/agua" class="hover:text-teal-700">Agua</a><a href="/luz" class="hover:text-teal-700">Luz</a><a href="/basura" class="hover:text-teal-700">Basura</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">El pueblo</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/demanda" class="hover:text-teal-700">Lo que busca PR</a><a href="/historial" class="hover:text-teal-700">Historial de promesas</a><a href="/promesas" class="hover:text-teal-700">Promesómetro</a><a href="/esencia" class="hover:text-teal-700">Proyecto Esencia</a><a href="/no-se-mide" class="hover:text-teal-700">Lo que ni se mide</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Expedientes</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/expediente/alcalde-cabo-rojo" class="hover:text-teal-700">Alcalde de Cabo Rojo</a><a href="/expediente/representante-distrito-20" class="hover:text-teal-700">Rep. Distrito 20</a></div></div>
@@ -6134,99 +6134,12 @@ function handleExposicionAi(req: any, res: any) {
   }))
 }
 
-// /demanda-real — qué busca de verdad el oeste, triangulando texteo (El Veci) + búsqueda (Google).
-// Lee v_demanda_triangulada en vivo. Escopeado al oeste — honesto, no "todo PR".
-async function handleDemandaReal(req: any, res: any) {
-  type TR = { categoria: string; bot_personas: number; bot_mensajes: number; gsc_impresiones: number; gsc_clicks: number; fuente: string; senal_score: number }
-  let rows: TR[] = []
-  try {
-    const { data } = await supabase.from('v_demanda_triangulada').select('*')
-    if (data && data.length) rows = data as TR[]
-  } catch (e) { console.error('demanda-real:', e); rows = [] }
-
-  const tri = rows.filter(r => r.fuente === 'triangulada').sort((a, b) => b.senal_score - a.senal_score)
-  const soloBot = rows.filter(r => r.fuente === 'solo_bot').sort((a, b) => b.senal_score - a.senal_score)
-  const soloG = rows.filter(r => r.fuente === 'solo_google').sort((a, b) => b.senal_score - a.senal_score)
-  const triTop = tri[0]
-
-  const triRows = tri.map((r, i) => `<tr class="border-t border-slate-100">
-    <td class="py-1.5 px-2 text-slate-400 text-xs text-right">${i + 1}</td>
-    <td class="py-1.5 px-3 font-semibold text-slate-800">${escapeHtml(r.categoria)}</td>
-    <td class="py-1.5 px-2 text-right text-xs text-slate-600 tabular-nums">${r.bot_personas}</td>
-    <td class="py-1.5 px-2 text-right text-xs text-slate-600 tabular-nums">${r.gsc_clicks} / ${r.gsc_impresiones.toLocaleString()}</td>
-    <td class="py-1.5 px-2 text-right text-xs font-bold text-teal-700 tabular-nums">${r.senal_score}</td>
-  </tr>`).join('')
-
-  const botOnlyList = soloBot.slice(0, 8).map(r => `<strong>${escapeHtml(r.categoria)}</strong> (${r.bot_personas})`).join(' · ')
-  const gOnlyList = soloG.slice(0, 5).map(r => `<strong>${escapeHtml(r.categoria)}</strong> (${r.gsc_clicks} clics)`).join(' · ')
-  const plom = soloBot.find(r => r.categoria === 'plomería') || rows.find(r => r.categoria === 'plomería')
-
-  const body = `
-<h1>¿Qué está buscando de verdad el oeste de Puerto Rico?</h1>
-<p class="text-lg text-slate-600 mt-2">Casi nadie mide la demanda real de un pueblo — lo que la gente <em>de verdad</em> necesita, no lo que una encuesta asume. Aquí lo medimos por partida doble: lo que la gente <strong>textea</strong> pidiendo ayuda (El Veci, 787-417-7711) y lo que la gente <strong>busca en Google</strong> y cae en nuestros sitios. Cuando las dos señales apuntan a lo mismo, la demanda deja de ser opinión: es un hecho con dos testigos.</p>
-
-<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
-  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular${triTop ? '' : ' (cargando)'}</p>
-  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">${triTop ? `Lo que más pide el oeste, confirmado por texteo Y por Google: <span class="text-teal-300">${escapeHtml(triTop.categoria)}</span>.` : 'Demanda real del oeste, medida por dos canales independientes.'}</p>
-</div>
-
-<h2>1. La demanda doble-confirmada (triangulada)</h2>
-<p class="text-slate-600 -mt-1 text-sm">Categorías donde <strong>ambos</strong> canales muestran demanda. La señal más difícil de fingir que existe.</p>
-<div class="not-prose overflow-auto border border-slate-200 rounded-xl mt-3 mb-2">
-  <table class="w-full text-sm"><thead class="bg-slate-50"><tr class="text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-2 text-right">#</th><th class="py-2 px-3">Categoría</th><th class="py-2 px-2 text-right">Texteo (personas)</th><th class="py-2 px-2 text-right">Google (clics/vistas)</th><th class="py-2 px-2 text-right">Señal</th></tr></thead><tbody>${triRows || '<tr><td class="p-3 text-slate-400" colspan="5">Cargando datos en vivo…</td></tr>'}</tbody></table>
-</div>
-
-<h2>2. El hallazgo: la gente pide distinto según el canal</h2>
-<p>Los dos canales no dicen lo mismo — y esa diferencia <strong>es</strong> el dato:</p>
-<ul>
-  <li><strong>Se TEXTEA lo urgente.</strong> Cuando algo se rompe, la gente escribe al Veci: ${botOnlyList || 'servicios de manos'}. Es demanda de <em>"lo necesito ahora"</em> — Google casi no la ve porque nadie googlea con calma cuando se le tapó el baño.</li>
-  <li><strong>Se GOOGLEA lo que se planifica.</strong> Eventos, médicos por nombre, negocios: ${gOnlyList || 'búsquedas de investigación'}. Es demanda de <em>"lo estoy averiguando"</em> — el que investiga antes de decidir.</li>
-</ul>
-<p>Por eso <strong>eventos</strong> y <strong>salud</strong> son los reyes: ambos canales los gritan. Y por eso los <strong>servicios de manos</strong> (plomería, aire, electricista) solo salen por texteo — no porque no haya demanda, sino porque esa demanda llega por mensaje, no por búsqueda.</p>
-
-${plom ? `<div class="not-prose bg-amber-50 border border-amber-200 rounded-2xl p-5 mt-6">
-  <p class="text-sm font-bold text-slate-900 m-0">El dato con nombre y apellido</p>
-  <p class="text-sm text-slate-700 mt-1 mb-0"><strong>${plom.bot_personas} personas distintas</strong> pidieron <strong>plomero</strong> por el Veci en 90 días. Es la demanda de servicio de más alta intención del oeste — gente con un problema real, ahora. Si eres plomero, esa es tu clientela buscándote.</p>
-</div>` : ''}
-
-<h2>3. Qué hacer con esto (aquí resuelve)</h2>
-<ul>
-  <li><strong>Si tienes un negocio o un oficio:</strong> esta es demanda buscándote. Aparecer en el directorio verificado es <strong>gratis</strong> — te encuentra el que ya está pidiendo lo que tú haces. <a href="/pon-tu-negocio-en-el-mapa" class="text-teal-700 font-semibold">Pon tu negocio en el mapa →</a></li>
-  <li><strong>Si buscas un servicio:</strong> no des vueltas. Textea lo que necesitas al <strong>787-417-7711</strong> y El Veci te dice quién resuelve. <a href="/veci" class="text-teal-700 font-semibold">Guarda a El Veci →</a></li>
-  <li><strong>Si organizas eventos:</strong> es la demanda #1 por Google. Si tu actividad no aparece cuando la gente la busca, no existe. <a href="/veci" class="text-teal-700 font-semibold">Anúnciala donde la buscan →</a></li>
-</ul>
-
-<h2>4. El método (copiable, esa es la idea)</h2>
-<p>Esto no requiere una encuesta cara ni un consultor. Requiere <strong>escuchar dos señales que ya existen y cruzarlas</strong>:</p>
-<ul>
-  <li><strong>Texteo:</strong> lo que la gente le pide a un número local de ayuda (alta intención).</li>
-  <li><strong>Búsqueda:</strong> lo que la gente googlea y cae en tus páginas (Google Search Console, alcance amplio).</li>
-  <li><strong>La cuenta:</strong> categoriza ambos con el mismo diccionario y mira dónde coinciden. Donde los dos apuntan = demanda confirmada. Cualquier pueblo con un número de ayuda y un sitio web puede hacerlo.</li>
-</ul>
-
-<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
-  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">La demanda de un pueblo no es un misterio. Solo hay que medirla honesto.</p>
-  <p class="mt-2 text-sm text-slate-600 italic">Para servir mejor, primero hay que ver qué se pide. Si te sirve, úsalo.</p>
-</div>
-
-<p class="text-sm text-slate-500 mt-6">Cómo se hizo: demanda de texteo del log real de mensajes al 787-417-7711 (vista <code>v_demanda_oeste</code>, últimos 90 días, sin números de prueba); demanda de búsqueda de Google Search Console de caborojo.com + mapadecaborojo.com (top queries por sitio, último corte). Ambas categorizadas con el mismo diccionario y trianguladas. <strong>Alcance honesto:</strong> es el <strong>oeste</strong> (Cabo Rojo y pueblos cercanos) más diáspora buscando la región — no "todo Puerto Rico". Google guarda solo las búsquedas de más volumen por sitio (la cabeza, no la cola). Número en vivo, se actualiza solo. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a>. Julio 2026.</p>
-`
-  const jsonLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset',
-    name: 'Demanda real del oeste de Puerto Rico (triangulada: texteo + búsqueda)',
-    description: 'Demanda de servicios y actividades del oeste de PR, medida cruzando lo que la gente textea al 787-417-7711 con lo que busca en Google. Categorías doble-confirmadas.',
-    creator: { '@type': 'Person', name: 'Angel Anderson' },
-    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
-    inLanguage: 'es', url: 'https://puertoricosinfiltros.com/demanda-real',
-  }
-  res.setHeader('Content-Type', 'text/html; charset=utf-8')
-  res.setHeader('Cache-Control', 'public, s-maxage=43200, stale-while-revalidate=3600')
-  res.status(200).send(layout({
-    title: '¿Qué busca de verdad el oeste de PR? La demanda real, triangulada',
-    description: 'La demanda real del oeste de Puerto Rico, medida por dos canales independientes: lo que la gente textea al Veci y lo que busca en Google. Eventos y salud lideran; plomería es el pitch de servicio.',
-    slug: 'demanda-real', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
-    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
-  }))
+// /demanda-real — CONSOLIDADO 2026-07: la demanda (mejorada + triangulada) vive ahora en el radar
+// unificado de MapaDeCaboRojo.com/demanda. Redirect 301 para no fragmentar ni dejar página muerta.
+function handleDemandaReal(req: any, res: any) {
+  res.setHeader('Location', 'https://mapadecaborojo.com/demanda')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400')
+  return res.status(301).end()
 }
 
 // /cupon — el dinero federal que PR deja sin cobrar. Fórmula: potencial − reclamado.
