@@ -5835,7 +5835,69 @@ ${renderAlertas()}
 
 // /costo-de-vida — factor de decisión: ¿el sueldo rinde en PR? Ingreso vs costo real.
 // Números verificados (Censo/ACS, EIA). Premio sin reclamar + gap honesto declarado.
-function handleCostoDeVida(req: any, res: any) {
+async function handleCostoDeVida(req: any, res: any) {
+  // Panel oficial en vivo — lee de pr_cost_indicators (curado, citable, 1 SQL/mes).
+  // Fuente única de verdad: la misma tabla alimenta este panel y el bot (COSTO).
+  let costoPanel = ''
+  try {
+    const { data: ind } = await supabase.from('pr_cost_indicators')
+      .select('slug,label,value_display,period,yoy_change,mom_change,category,is_official,source_name,source_url,as_of_date,published_date,note,sort_order')
+      .order('sort_order', { ascending: true })
+    if (ind && ind.length) {
+      const bySlug: Record<string, any> = {}; ind.forEach((r: any) => { bySlug[r.slug] = r })
+      const dolar = bySlug['dolar_valor']; const ipc = bySlug['ipc_general']; const canasta = bySlug['canasta_basica']
+      const period = ipc?.period || dolar?.period || ''
+      const pub = ipc?.published_date ? new Date(ipc.published_date + 'T00:00:00').toLocaleDateString('es-PR', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
+      // Grupos con alza interanual (excluye los hero y la canasta), ordenados por golpe
+      const groups = ind.filter((r: any) => r.yoy_change != null && !['dolar_valor', 'ipc_general'].includes(r.slug) && r.slug !== 'canasta_basica')
+        .sort((a: any, b: any) => (b.yoy_change || 0) - (a.yoy_change || 0))
+      const grpCells = groups.map((g: any) => {
+        const hot = (g.yoy_change || 0) >= 5
+        return `<div class="rounded-xl border ${hot ? 'border-red-200 bg-red-50' : 'border-slate-200 bg-white'} p-3">
+          <div class="text-2xl font-black ${hot ? 'text-red-600' : 'text-slate-800'}">+${(g.yoy_change).toFixed(1)}%</div>
+          <div class="text-xs font-semibold text-slate-700 mt-0.5">${escapeHtml(g.label)}</div>
+          <div class="text-[11px] text-slate-400">en 12 meses</div>
+        </div>`
+      }).join('')
+      costoPanel = `
+<div class="not-prose mt-6 bg-white border-2 border-slate-900 rounded-2xl overflow-hidden">
+  <div class="bg-slate-900 text-white px-5 py-3">
+    <p class="text-[11px] uppercase tracking-widest text-teal-300 font-bold m-0">Pulso oficial · ${escapeHtml(period)}</p>
+    <p class="text-sm text-slate-300 mt-0.5 mb-0">Lo que de verdad pasó con tu dinero, con el número del gobierno al lado.</p>
+  </div>
+  <div class="p-5">
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div class="rounded-xl bg-slate-900 text-white p-4">
+        <div class="text-4xl font-black text-teal-300">${escapeHtml(dolar?.value_display || '—')}</div>
+        <div class="text-sm font-semibold mt-1">es lo que compra hoy tu dólar</div>
+        <div class="text-xs text-slate-300 mt-1">${escapeHtml(dolar?.note || '')}</div>
+      </div>
+      <div class="rounded-xl bg-red-50 border border-red-200 p-4">
+        <div class="text-4xl font-black text-red-600">+${ipc?.yoy_change != null ? Number(ipc.yoy_change).toFixed(1) : '—'}%</div>
+        <div class="text-sm font-semibold text-slate-800 mt-1">subió todo, junto, en un año</div>
+        <div class="text-xs text-slate-500 mt-1">${escapeHtml(ipc?.note || '')}</div>
+      </div>
+    </div>
+    <p class="text-xs uppercase tracking-widest text-slate-400 font-bold mt-5 mb-2">Dónde pegó más fuerte (últimos 12 meses)</p>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">${grpCells}</div>
+    ${canasta ? `<div class="mt-5 rounded-xl border-l-4 border-amber-400 bg-amber-50 p-4">
+      <p class="text-sm font-bold text-slate-900 m-0">Y la comida del día a día: <span class="text-amber-700">${escapeHtml(canasta.value_display)}</span></p>
+      <p class="text-xs text-slate-600 mt-1 mb-0">${escapeHtml(canasta.note || '')}</p>
+    </div>` : ''}
+    <div class="mt-5 rounded-xl bg-teal-50 border border-teal-200 p-4">
+      <p class="text-sm font-bold text-teal-900 m-0">Qué hacer con esto hoy (no es tu culpa, pero sí tu jugada)</p>
+      <ul class="text-sm text-slate-700 mt-2 mb-0 space-y-1 list-disc pl-5">
+        <li>Transportación es el golpe #1. Antes de echar gasolina, pregúntale a <strong>El Veci</strong> quién la tiene más barata: textea <strong>GASOLINA</strong> al <a href="https://wa.me/17874177711?text=gasolina" class="text-teal-700 font-semibold">787-417-7711</a>.</li>
+        <li>La luz al doble es la otra sangría fija. <a href="/luz" class="text-teal-700 font-semibold">Ve el récord y baja lo que puedas →</a></li>
+        <li>El sueldo tiene techo; lo tuyo no. La parte de tu ingreso que crece sin techo es la que tú controlas. <a href="/trabajo" class="text-teal-700 font-semibold">Cómo se voltea →</a></li>
+      </ul>
+    </div>
+    <p class="text-[11px] text-slate-400 mt-4 mb-0">Fuente: <a href="${escapeHtml(ipc?.source_url || '#')}" class="text-slate-500 underline" rel="nofollow">${escapeHtml(ipc?.source_name || 'DTRH')}</a>${pub ? `, publicado ${escapeHtml(pub)}` : ''}. Base dic-2006=100. Canasta: ${escapeHtml(canasta?.source_name || 'DACO')}. Actualizamos cuando el gobierno publica.</p>
+  </div>
+</div>`
+    }
+  } catch (e) { console.error('costo panel:', e); costoPanel = '' }
+
   const body = `
 <h1>¿El sueldo rinde en Puerto Rico?</h1>
 <p class="text-lg text-slate-600 mt-2">Antes de decidir si te quedas, te vas o te mudas, hay un número que casi nadie te pone claro: <strong>lo que ganas contra lo que cuesta vivir aquí.</strong> Esta página lo junta, con la fuente al lado. Para escoger la vida que quieres, primero hay que ver el número sin filtro.</p>
@@ -5855,7 +5917,7 @@ function handleCostoDeVida(req: any, res: any) {
     </div>
   </div>
 </div>
-
+${costoPanel}
 <h2>1. Lo que ganas</h2>
 <p>El ingreso mediano de un hogar en Puerto Rico ronda los <b>$25,000</b> al año; en Estados Unidos es <b>~$81,600</b>. Es <strong>cerca de un tercio.</strong> Y cerca del <b>40%</b> de la población vive bajo el nivel de pobreza federal — más del triple que el estado más pobre del continente. <i>(Censo / Encuesta sobre la Comunidad de PR, ACS 2019-2023 y 2024.)</i></p>
 
@@ -8066,7 +8128,7 @@ export default async function handler(req: any, res: any) {
     case 'luz': return await handleDatoRecord(req, res)
     case 'basura': return await handleDatoRecord(req, res)
     case 'prediccion': return handlePrediccion(req, res)
-    case 'costo-de-vida': return handleCostoDeVida(req, res)
+    case 'costo-de-vida': return await handleCostoDeVida(req, res)
     case 'trabajo': return handleTrabajo(req, res)
     case 'decidir': return handleDecidir(req, res)
     case 'exposicion-ai': return handleExposicionAi(req, res)
