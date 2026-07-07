@@ -2189,6 +2189,25 @@ async function handle_demanda(req: any, res: any) {
     </details>
     <!-- /dashboard colapsado -->
 
+    <!-- Cruce con las fuentes federales de Puerto Rico Sin Filtros (el próximo nivel: resolver, no solo mostrar) -->
+    <div style="background:#0f172a;border:1px solid #1e293b;border-radius:16px;padding:24px;margin-bottom:16px;color:#e2e8f0;">
+      <p style="margin:0;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#5eead4;font-weight:700;">La demanda local no vive sola</p>
+      <h2 style="margin:6px 0 4px;font-size:20px;font-weight:800;color:#fff;line-height:1.3;">Cruza esto con lo federal, y el hueco deja de ser un problema para volverse una jugada</h2>
+      <p style="margin:0 0 16px;font-size:14px;color:#94a3b8;line-height:1.55;">Lo que la gente de Cabo Rojo busca y no encuentra se explica —y a veces se <em>paga</em>— con la data federal que nadie cruza. El puente:</p>
+      <div style="display:grid;gap:10px;">
+        <a href="https://puertoricosinfiltros.com/registro/estado" style="display:block;text-decoration:none;background:#134e4a;border-radius:10px;padding:14px 16px;color:#fff;">
+          <strong>🩺 Buscan médico y no lo encuentran</strong><br><span style="font-size:13px;color:#a7f3d0;line-height:1.5;">Y hay hasta $75,000 federales (repago de préstamos NHSC) esperando al que abra su práctica en un pueblo designado. La demanda existe Y el dinero existe. →</span>
+        </a>
+        <a href="https://puertoricosinfiltros.com/exposicion-ai" style="display:block;text-decoration:none;background:#1e293b;border-radius:10px;padding:14px 16px;color:#fff;">
+          <strong>🤖 El trabajo de pantalla se va, el oficio de manos aguanta</strong><br><span style="font-size:13px;color:#94a3b8;line-height:1.5;">Lo que más se busca aquí (refrigeración, plomería, mecánica) es justo lo que la inteligencia artificial no toca. Abrir un oficio de manos es abrir en el lado firme del piso. →</span>
+        </a>
+        <a href="https://puertoricosinfiltros.com/costo-de-vida" style="display:block;text-decoration:none;background:#1e293b;border-radius:10px;padding:14px 16px;color:#fff;">
+          <strong>💵 Antes de invertir, mira lo que rinde</strong><br><span style="font-size:13px;color:#94a3b8;line-height:1.5;">Ingreso, luz, canasta — el costo real de operar en Puerto Rico, con la fuente al lado. →</span>
+        </a>
+      </div>
+      <p style="margin:16px 0 0;font-size:13px;color:#cbd5e1;line-height:1.6;"><strong style="color:#fff;">El alivio:</strong> no arriesgues tus ahorros en lo saturado. Aquí está el hueco con demanda probada, y —si es salud— el dinero federal que te paga por llenarlo. Si te sirve, úsalo. Si no, sigue tu camino.</p>
+    </div>
+
     <!-- Captura de lead inbound (item 9) — tabla demand_alerts existente, el Veci avisa -->
     <div id="tu-negocio" style="background:linear-gradient(135deg,#0d9488,#0f766e);border-radius:16px;padding:26px 24px;margin-bottom:16px;color:white;scroll-margin-top:16px;">
       <h2 style="margin:0 0 6px;font-size:20px;font-weight:800;">Avísame cuando te busquen</h2>
