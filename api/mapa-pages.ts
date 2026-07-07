@@ -161,7 +161,7 @@ function layout(opts: {
 <p class="text-xs text-slate-500 mt-1 text-center">Verificado uno por uno contra registros federales y públicos. Sin spin, sin relleno.</p>
 <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6 text-xs">
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Salud</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a><a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a><a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a><a href="/telemedicina" class="hover:text-teal-700">Telemedicina</a><a href="/diabetes" class="hover:text-teal-700">Diabetes</a></div></div>
-<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/exposicion-ai" class="hover:text-teal-700">Exposición a la IA</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/rendimiento" class="hover:text-teal-700">Rendimiento del dólar</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/exposicion-ai" class="hover:text-teal-700">Exposición a la IA</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Servicios</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/agua" class="hover:text-teal-700">Agua</a><a href="/luz" class="hover:text-teal-700">Luz</a><a href="/basura" class="hover:text-teal-700">Basura</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">El pueblo</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/demanda" class="hover:text-teal-700">Lo que busca PR</a><a href="/historial" class="hover:text-teal-700">Historial de promesas</a><a href="/promesas" class="hover:text-teal-700">Promesómetro</a><a href="/esencia" class="hover:text-teal-700">Proyecto Esencia</a><a href="/no-se-mide" class="hover:text-teal-700">Lo que ni se mide</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Expedientes</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/expediente/alcalde-cabo-rojo" class="hover:text-teal-700">Alcalde de Cabo Rojo</a><a href="/expediente/representante-distrito-20" class="hover:text-teal-700">Rep. Distrito 20</a></div></div>
@@ -5945,6 +5945,7 @@ ${costoPanel}
 
 <h2>5. El premio sin reclamar</h2>
 <p>Hoy nadie publica <strong>la canasta real por pueblo.</strong> Todo son promedios de isla, y un promedio esconde que en un pueblo el dólar rinde y en otro no. El municipio (o el vecino con data) que publique el costo real de vivir en SU pueblo — renta, luz, canasta, transporte — <strong>le da munición al que evalúa mudarse allí y al que quiere abrir negocio donde hay gente que puede pagar.</strong> El primero que lo haga, marca el estándar. El que se atreva, gana.</p>
+<p><strong>Ya arrancamos por el pedazo más pesado y más variable: la vivienda.</strong> Cuánto del ingreso local se come el techo, pueblo por pueblo, con el número del Censo al lado. <a href="/rendimiento" class="text-teal-700 font-semibold">Ve dónde rinde más tu dólar en PR →</a></p>
 
 <h2>6. El número que el gobierno no tiene — y nosotros sí podemos armar</h2>
 <p>Aquí está el hueco de verdad, y no es nuestro: <strong>el propio gobierno admitió en 2025 que no tiene un número claro de lo que cuesta la canasta básica del día a día en Puerto Rico.</strong> <i>(DACO, secretaria Natalia Catoni, vía El Vocero, 2025.)</i> DACO publica una canasta de emergencias y un historial de precios mayoristas, pero no un índice del costo real de vivir, pueblo por pueblo.</p>
@@ -6128,6 +6129,103 @@ function handleExposicionAi(req: any, res: any) {
     title: '¿Qué pueblos de Puerto Rico están más expuestos a la inteligencia artificial? Ranking de los 78 municipios',
     description: 'Data nunca publicada: el ranking de exposición a la inteligencia artificial de los 78 municipios de Puerto Rico. El metro corporativo es el más expuesto; el campo, el más resiliente. Con metodología y fuente.',
     slug: 'exposicion-ai', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
+// /rendimiento — ¿dónde rinde más tu dólar en PR? Ingreso local vs renta local, por municipio.
+// Data real nunca publicada así: ACS 2024 5yr (B19013 ingreso + B25064 renta) → carga de vivienda por pueblo.
+function handleRendimiento(req: any, res: any) {
+  // [pueblo, ingreso mediano hogar, renta mediana/mes, % del ingreso al techo] — ordenado mejor→peor
+  const STRETCH: [string, number, number, number][] = [["Gurabo",42216,678,19.3],["Trujillo Alto",40055,694,20.8],["Culebra",29630,528,21.4],["Cayey",30129,540,21.5],["Carolina",36958,677,22.0],["Santa Isabel",25795,489,22.7],["Guayanilla",23915,454,22.8],["Ciales",22586,431,22.9],["Loíza",24272,464,22.9],["Canóvanas",29642,568,23.0],["Guaynabo",46731,901,23.1],["Juncos",29863,577,23.2],["Maricao",21302,413,23.3],["Toa Alta",35241,690,23.5],["Dorado",36391,715,23.6],["Villalba",26286,517,23.6],["Cidra",29246,577,23.7],["Guánica",17633,349,23.8],["Aguas Buenas",23072,468,24.3],["Río Grande",28943,585,24.3],["Hormigueros",26828,559,25.0],["Luquillo",24225,504,25.0],["Corozal",23797,497,25.1],["Jayuya",21796,456,25.1],["Caguas",31379,659,25.2],["Humacao",27038,568,25.2],["Sabana Grande",22065,463,25.2],["Ceiba",25454,538,25.4],["Hatillo",28146,595,25.4],["Quebradillas",24640,521,25.4],["Guayama",20402,436,25.6],["Yabucoa",22944,489,25.6],["Barranquitas",23407,505,25.9],["Peñuelas",22697,489,25.9],["Moca",23586,512,26.0],["Adjuntas",19549,425,26.1],["Vieques",19803,430,26.1],["San Juan",27992,611,26.2],["Naranjito",22156,488,26.4],["Aguada",21501,475,26.5],["Aibonito",21744,481,26.5],["Cataño",25508,564,26.5],["Arroyo",21186,472,26.7],["Camuy",27411,611,26.7],["Patillas",24396,543,26.7],["Toa Baja",32017,713,26.7],["Cabo Rojo",26408,590,26.8],["Bayamón",31354,703,26.9],["Las Piedras",25232,565,26.9],["Arecibo",23635,531,27.0],["Juana Díaz",24852,559,27.0],["Naguabo",23395,528,27.1],["Yauco",24255,551,27.3],["Utuado",20800,476,27.5],["Añasco",24436,576,28.3],["Aguadilla",21540,509,28.4],["Coamo",22045,521,28.4],["Barceloneta",24508,582,28.5],["Manatí",22683,538,28.5],["Salinas",21901,530,29.0],["Lajas",19695,479,29.2],["Fajardo",25563,625,29.3],["Orocovis",20302,499,29.5],["Rincón",24447,604,29.6],["Morovis",25003,618,29.7],["Isabela",23266,582,30.0],["Las Marías",16314,412,30.3],["San Lorenzo",22847,579,30.4],["San Sebastián",19920,508,30.6],["Vega Alta",25538,667,31.3],["San Germán",18317,481,31.5],["Mayagüez",18295,484,31.7],["Lares",18917,505,32.0],["Vega Baja",24244,650,32.2],["Ponce",19877,536,32.4],["Comerío",17134,512,35.9],["Maunabo",18045,549,36.5],["Florida",22332,688,37.0]]
+  const over30 = STRETCH.filter(r => r[3] >= 30).length
+  const col = (b: number) => b < 25 ? '#059669' : b < 30 ? '#d97706' : '#dc2626'
+  const tag = (b: number) => b < 25 ? 'rinde' : b < 30 ? 'ajustado' : 'apretado'
+  const rowsHtml = STRETCH.map((r, i) => {
+    const [n, inc, rent, b] = r
+    const isCR = n === 'Cabo Rojo'
+    const w = Math.max(6, Math.min(100, (b - 18) / (38 - 18) * 100))
+    return `<tr class="border-t border-slate-100 ${isCR ? 'bg-teal-50' : ''}">
+      <td class="py-1.5 px-2 text-slate-400 text-xs text-right">${i + 1}</td>
+      <td class="py-1.5 px-3 font-semibold text-slate-800">${escapeHtml(n)}${isCR ? ' <span class="text-[10px] text-teal-700 font-bold">◄ tú</span>' : ''}</td>
+      <td class="py-1.5 px-2 text-right text-xs text-slate-500 tabular-nums">$${inc.toLocaleString()}</td>
+      <td class="py-1.5 px-2 text-right text-xs text-slate-500 tabular-nums">$${rent}</td>
+      <td class="py-1.5 px-2"><div class="flex items-center gap-2"><div class="h-2 rounded-full" style="width:${w.toFixed(0)}%;background:${col(b)}"></div><span class="text-xs font-semibold" style="color:${col(b)}">${b.toFixed(1)}%</span></div></td>
+    </tr>`
+  }).join('')
+
+  const body = `
+<h1>¿Dónde rinde más tu dólar en Puerto Rico?</h1>
+<p class="text-lg text-slate-600 mt-2">Antes de decidir si te quedas, te mudas de pueblo o abres negocio, hay un número que nadie te pone en fila: <strong>cuánto de lo que ganas se te va en el techo, pueblo por pueblo.</strong> La luz y la comida importada son casi parejas en toda la isla. Lo que de verdad cambia de un pueblo a otro es la <strong>vivienda</strong>. Así que el rendimiento de tu dólar lo decide, sobre todo, la renta contra el ingreso local. Aquí están los 78, en orden.</p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">En 13 pueblos, el techo se come más de un tercio del ingreso local. En otros, menos de la quinta parte.</p>
+</div>
+
+<p class="mt-4">La regla federal dice que la vivienda no debería pasar del <strong>30% de tu ingreso.</strong> Pasado eso, oficialmente estás <em>"cargado por el costo de vivienda"</em> — te queda muy poco para todo lo demás. En Puerto Rico, <strong>${over30} de los 78 municipios</strong> cruzan esa línea con el ingreso y la renta medianos del propio pueblo. No es percepción: es el número.</p>
+
+<h2>Los 78 municipios, de donde más rinde a donde menos</h2>
+<p class="text-slate-600 -mt-1 text-sm">"% al techo" = renta mediana anual ÷ ingreso mediano del hogar. Más bajo = tu dólar cubre el techo con más de sobra.</p>
+<div class="not-prose overflow-auto border border-slate-200 rounded-xl mt-3 mb-2" style="max-height:520px">
+  <table class="w-full text-sm"><thead class="sticky top-0 bg-slate-50"><tr class="text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-2 text-right">#</th><th class="py-2 px-3">Municipio</th><th class="py-2 px-2 text-right">Ingreso</th><th class="py-2 px-2 text-right">Renta/mes</th><th class="py-2 px-2">% al techo</th></tr></thead><tbody>${rowsHtml}</tbody></table>
+</div>
+<div class="not-prose flex flex-wrap gap-4 text-xs text-slate-500 mb-6"><span>🟢 rinde (&lt;25%)</span><span>🟠 ajustado (25-30%)</span><span>🔴 apretado (≥30%)</span></div>
+
+<h2>Léelo bien: "arriba" no quiere decir "barato"</h2>
+<p>Esta es la trampa que hay que evitar. Los pueblos que rinden arriba — <strong>Gurabo, Trujillo Alto, Carolina, Caguas</strong> — no es que la renta esté barata. Es que <strong>el ingreso es más alto</strong>, así que aguanta mejor el techo. Y abajo, en los apretados — <strong>Florida, Maunabo, Comerío, Ponce, Mayagüez</strong> — el problema no es lujo: es ingreso bajo con renta que no bajó igual. <strong>El rendimiento no lo decide el precio solo. Lo decide el precio contra lo que ganas ahí.</strong> Por eso "múdate al pueblo más barato" es mal consejo: te puede rendir menos si allá ganas menos todavía.</p>
+
+<h2>Qué hacer con esto (no es tu culpa, pero sí tu jugada)</h2>
+<ul>
+  <li><strong>Si tu pueblo está en rojo:</strong> el techo te salió comiendo un tercio del ingreso local antes de que empezaras. No es que no sepas administrar — el número estaba en tu contra. Verlo claro es el primer paso para moverte con estrategia, no con culpa.</li>
+  <li><strong>Si evalúas mudarte dentro de PR:</strong> no persigas la renta más baja; persigue el mejor <em>ingreso menos techo</em>. Un pueblo donde ganas $8,000 más al año aguanta $100 más de renta sin problema. <a href="/decidir" class="text-teal-700 font-semibold">Pásalo por la decisión completa →</a></li>
+  <li><strong>Si abres negocio:</strong> los pueblos verdes tienen gente con <strong>más margen después del techo</strong> — dólares que no están todos comprometidos con la renta. Ahí es donde hay bolsillo para gastar.</li>
+</ul>
+
+<h2>Cómo se hizo (y por qué es real, no inventado)</h2>
+<p>El principio de siempre: no inventar un número. <strong>Poner en fila dos datos públicos que nadie había cruzado así, pueblo por pueblo.</strong></p>
+<ul>
+  <li><strong>Ingreso:</strong> ingreso mediano del hogar por municipio, Censo/ACS 2024 (5 años), tabla B19013. Público.</li>
+  <li><strong>Renta:</strong> renta bruta mediana mensual por municipio, misma fuente, tabla B25064. Público.</li>
+  <li><strong>La cuenta:</strong> (renta mensual × 12) ÷ ingreso del hogar = el porcentaje del ingreso que se va en vivienda. La misma vara del gobierno federal para "carga de vivienda". Cualquiera lo recalcula.</li>
+</ul>
+
+<h2>Lo que este número NO dice (para que nadie lo maluse)</h2>
+<ul>
+  <li>Es la <strong>renta</strong> (el que alquila). El que ya es dueño de su casa vive otra ecuación — pero el que <em>evalúa mudarse</em> alquila primero, y para él este es el número.</li>
+  <li>Son <strong>medianas</strong>: la mitad del pueblo está por encima y la mitad por debajo. Tu caso puede variar.</li>
+  <li>No mete luz ni comida <strong>a propósito</strong>: esos son casi parejos en la isla, así que meterlos taparía lo único que de verdad cambia por pueblo. La luz va aparte en <a href="/luz" class="text-teal-700 font-semibold">/luz</a>.</li>
+  <li>Renta e ingreso son de años distintos dentro del mismo ACS 5-años; es un retrato, no un tick en vivo.</li>
+</ul>
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
+  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Tu dólar no rinde igual en todos los pueblos. Ahora sabes en cuáles rinde — y por qué.</p>
+  <p class="mt-2 text-sm text-slate-600 italic">Para escoger la vida que quieres, primero hay que ver el número. Si te sirve, úsalo.</p>
+</div>
+
+<div class="not-prose border-l-4 border-slate-300 bg-slate-50 rounded-r-xl p-5 mt-8">
+  <p class="text-xs uppercase tracking-widest text-slate-400 font-bold">El porqué, más hondo</p>
+  <p class="text-slate-700 mt-2">El número te quita una culpa: si el techo se come un tercio de lo que ganas en tu pueblo, no te quedaste atrás por falta de ganas. La cuenta estaba cuesta arriba desde el arranque.</p>
+  <p class="mt-3"><a href="https://www.angelanderson.com/te-programaron" class="text-teal-700 font-semibold">Te programaron a creer que era falta tuya. Empieza por ahí. →</a></p>
+  <p class="text-xs text-slate-400 italic mt-2">Si no te sirve, sigue tu camino.</p>
+</div>
+
+<p class="text-sm text-slate-500 mt-6">Cómo se hizo: ingreso mediano del hogar (B19013) y renta bruta mediana (B25064) por municipio, Censo/ACS 2024 5-años, vía Census Reporter. La carga de vivienda (renta×12÷ingreso) es la métrica estándar federal. Modelo transparente y reproducible. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a> y se corrige. Julio 2026.</p>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'Rendimiento del dólar por municipio de Puerto Rico (carga de vivienda)',
+    description: 'Ranking de los 78 municipios de PR por cuánto del ingreso mediano local se va en renta (renta bruta mediana × 12 ÷ ingreso mediano del hogar), Censo/ACS 2024 5-años (B19013 + B25064).',
+    creator: { '@type': 'Person', name: 'Angel Anderson' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    inLanguage: 'es', url: 'https://puertoricosinfiltros.com/rendimiento',
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: '¿Dónde rinde más tu dólar en Puerto Rico? Los 78 municipios por carga de vivienda',
+    description: 'Data nunca publicada así: cuánto del ingreso local se come la renta, pueblo por pueblo. 13 de 78 municipios cruzan la línea federal del 30%. Con ingreso, renta y metodología.',
+    slug: 'rendimiento', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
@@ -8135,6 +8233,7 @@ export default async function handler(req: any, res: any) {
     case 'trabajo': return handleTrabajo(req, res)
     case 'decidir': return handleDecidir(req, res)
     case 'exposicion-ai': return handleExposicionAi(req, res)
+    case 'rendimiento': return handleRendimiento(req, res)
     case 'historial': return await handleHistorial(req, res)
     case 'telemedicina': return await handleTelemedicina(req, res)
     case 'no-se-mide': return handleNoSeMide(req, res)
