@@ -6137,7 +6137,7 @@ function handleExposicionAi(req: any, res: any) {
 // /demanda-real — CONSOLIDADO 2026-07: la demanda (mejorada + triangulada) vive ahora en el radar
 // unificado de MapaDeCaboRojo.com/demanda. Redirect 301 para no fragmentar ni dejar página muerta.
 function handleDemandaReal(req: any, res: any) {
-  res.setHeader('Location', 'https://mapadecaborojo.com/demanda')
+  res.setHeader('Location', 'https://www.mapadecaborojo.com/demanda')
   res.setHeader('Cache-Control', 'public, s-maxage=86400')
   return res.status(301).end()
 }
