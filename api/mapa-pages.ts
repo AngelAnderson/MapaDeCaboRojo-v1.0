@@ -5848,6 +5848,9 @@ async function handleCostoDeVida(req: any, res: any) {
       const dolar = bySlug['dolar_valor']; const ipc = bySlug['ipc_general']; const canasta = bySlug['canasta_basica']
       const period = ipc?.period || dolar?.period || ''
       const pub = ipc?.published_date ? new Date(ipc.published_date + 'T00:00:00').toLocaleDateString('es-PR', { day: 'numeric', month: 'long', year: 'numeric' }) : ''
+      // Valida el protocolo del href (escapeHtml NO neutraliza javascript:) — defensa en profundidad
+      let srcHref = '#'
+      try { const u = new URL(String(ipc?.source_url || '')); if (u.protocol === 'https:' || u.protocol === 'http:') srcHref = escapeHtml(u.toString()) } catch { srcHref = '#' }
       // Grupos con alza interanual (excluye los hero y la canasta), ordenados por golpe
       const groups = ind.filter((r: any) => r.yoy_change != null && !['dolar_valor', 'ipc_general'].includes(r.slug) && r.slug !== 'canasta_basica')
         .sort((a: any, b: any) => (b.yoy_change || 0) - (a.yoy_change || 0))
@@ -5892,7 +5895,7 @@ async function handleCostoDeVida(req: any, res: any) {
         <li>El sueldo tiene techo; lo tuyo no. La parte de tu ingreso que crece sin techo es la que tú controlas. <a href="/trabajo" class="text-teal-700 font-semibold">Cómo se voltea →</a></li>
       </ul>
     </div>
-    <p class="text-[11px] text-slate-400 mt-4 mb-0">Fuente: <a href="${escapeHtml(ipc?.source_url || '#')}" class="text-slate-500 underline" rel="nofollow">${escapeHtml(ipc?.source_name || 'DTRH')}</a>${pub ? `, publicado ${escapeHtml(pub)}` : ''}. Base dic-2006=100. Canasta: ${escapeHtml(canasta?.source_name || 'DACO')}. Actualizamos cuando el gobierno publica.</p>
+    <p class="text-[11px] text-slate-400 mt-4 mb-0">Fuente: <a href="${srcHref}" class="text-slate-500 underline" rel="nofollow">${escapeHtml(ipc?.source_name || 'DTRH')}</a>${pub ? `, publicado ${escapeHtml(pub)}` : ''}. Base dic-2006=100. Canasta: ${escapeHtml(canasta?.source_name || 'DACO')}. Actualizamos cuando el gobierno publica.</p>
   </div>
 </div>`
     }
