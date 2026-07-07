@@ -60,6 +60,7 @@
     { "source": "/rendimiento", "destination": "/api/mapa-pages?page=rendimiento" },
     { "source": "/cupon", "destination": "/api/mapa-pages?page=cupon" },
     { "source": "/credito-por-hijos", "destination": "/api/mapa-pages?page=cupon" },
+    { "source": "/demanda-real", "destination": "/api/mapa-pages?page=demanda-real" },
     { "source": "/decidir", "destination": "/api/mapa-pages?page=decidir" },
     { "source": "/historial", "destination": "/api/mapa-pages?page=historial" },
     { "source": "/telemedicina", "destination": "/api/mapa-pages?page=telemedicina" },
