@@ -275,7 +275,18 @@ export default async function handler(req: any, res: any) {
     // Host-aware: registromedicopr.com/sitemap.xml lists only registry URLs
     // (no cross-domain entries → clean in Search Console).
     const isReg = /registromedicopr\.com/i.test(String(req.headers?.host || ''));
-    const outUrls = isReg ? urls.filter((u) => u.includes('registromedicopr.com')) : urls;
+    const isPRSF = /puertoricosinfiltros\.com/i.test(String(req.headers?.host || ''));
+    let outUrls: string[];
+    if (isPRSF) {
+      // Host-aware: puertoricosinfiltros.com lista solo sus récords propios (limpio en GSC).
+      const B = 'https://puertoricosinfiltros.com';
+      const paths = ['', '/prediccion', '/costo-de-vida', '/trabajo', '/decidir', '/exposicion-ai', '/sigue-el-dinero', '/recuperacion', '/agua', '/luz', '/basura', '/diabetes', '/telemedicina', '/historial', '/no-se-mide', '/esencia', '/registro/estado', '/comparte', '/sinfiltros/pulso', '/expediente/alcalde-cabo-rojo', '/expediente/representante-distrito-20'];
+      outUrls = paths.map((p) => `<url><loc>${B}${p}</loc><changefreq>weekly</changefreq><priority>${p === '' ? '1.0' : '0.8'}</priority></url>`);
+    } else if (isReg) {
+      outUrls = urls.filter((u) => u.includes('registromedicopr.com'));
+    } else {
+      outUrls = urls;
+    }
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
     <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
