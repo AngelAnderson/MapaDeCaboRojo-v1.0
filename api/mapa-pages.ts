@@ -283,6 +283,7 @@ function layout(opts: {
 <title>${escapeHtml(opts.title)} · ${brandName}</title>
 <meta name="description" content="${escapeHtml(opts.description)}">
 <link rel="canonical" href="${canonical}">
+${isPRSF ? '<meta name="google-site-verification" content="N42qvVBU_PKj99wLrOAEelsysbx3cT_ZtNgD5iFzXQk">' : ''}
 <meta property="og:title" content="${escapeHtml(opts.title)}">
 <meta property="og:description" content="${escapeHtml(opts.description)}">
 <meta property="og:url" content="${canonical}">
