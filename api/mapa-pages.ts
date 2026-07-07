@@ -298,7 +298,6 @@ function layout(opts: {
 <script async src="https://www.googletagmanager.com/gtag/js?id=${GA}"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA}');</script>
 <script defer src="/_vercel/insights/script.js"></script>
-<script defer src="/_vercel/speed-insights/script.js"></script>
 ${isReg ? `<script>(function(){try{var m=localStorage.getItem('theme');var d=m?(m==='dark'):window.matchMedia('(prefers-color-scheme:dark)').matches;if(d)document.documentElement.classList.add('dark');}catch(e){}})();</script>` : ''}
 <script src="https://cdn.tailwindcss.com"></script>
 <script>tailwind.config={theme:{extend:{fontFamily:{display:['Fraunces','Georgia','serif'],sans:['"Source Sans 3"','Inter','-apple-system','sans-serif']},colors:{brand:{50:'#ecfdf5',100:'#d1fae5',200:'#a7f3d0',300:'#6ee7b7',400:'#34d399',500:'#10b981',600:'#059669',700:'#047857',800:'#065f46',900:'#064e3b',950:'#022c22'},coral:{50:'#fff5f1',100:'#ffe4d9',200:'#ffc7b0',300:'#ff9f7d',400:'#fb6d43',500:'#f0491f',600:'#dd3413',700:'#b72713',800:'#932317',900:'#781f16'},sand:{50:'#faf9f7',100:'#f4f2ed',200:'#e8e4db',300:'#d6cfc1',400:'#b3a894',500:'#8f8371',600:'#726758',700:'#5c5347',800:'#3a342c',900:'#241f19'},gold:{50:'#fffbeb',100:'#fef3c7',200:'#fde68a',300:'#fcd34d',400:'#fbbf24',500:'#f59e0b',600:'#d97706',700:'#b45309'}}}}}</script>
