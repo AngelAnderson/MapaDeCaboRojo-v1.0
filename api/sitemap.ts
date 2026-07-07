@@ -280,7 +280,7 @@ export default async function handler(req: any, res: any) {
     if (isPRSF) {
       // Host-aware: puertoricosinfiltros.com lista solo sus récords propios (limpio en GSC).
       const B = 'https://puertoricosinfiltros.com';
-      const paths = ['', '/prediccion', '/costo-de-vida', '/rendimiento', '/trabajo', '/decidir', '/exposicion-ai', '/sigue-el-dinero', '/recuperacion', '/agua', '/luz', '/basura', '/diabetes', '/telemedicina', '/historial', '/no-se-mide', '/esencia', '/registro/estado', '/comparte', '/sinfiltros/pulso', '/expediente/alcalde-cabo-rojo', '/expediente/representante-distrito-20'];
+      const paths = ['', '/prediccion', '/costo-de-vida', '/rendimiento', '/cupon', '/trabajo', '/decidir', '/exposicion-ai', '/sigue-el-dinero', '/recuperacion', '/agua', '/luz', '/basura', '/diabetes', '/telemedicina', '/historial', '/no-se-mide', '/esencia', '/registro/estado', '/comparte', '/sinfiltros/pulso', '/expediente/alcalde-cabo-rojo', '/expediente/representante-distrito-20'];
       outUrls = paths.map((p) => `<url><loc>${B}${p}</loc><changefreq>weekly</changefreq><priority>${p === '' ? '1.0' : '0.8'}</priority></url>`);
     } else if (isReg) {
       outUrls = urls.filter((u) => u.includes('registromedicopr.com'));

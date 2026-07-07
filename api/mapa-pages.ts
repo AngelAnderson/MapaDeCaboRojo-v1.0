@@ -161,7 +161,7 @@ function layout(opts: {
 <p class="text-xs text-slate-500 mt-1 text-center">Verificado uno por uno contra registros federales y públicos. Sin spin, sin relleno.</p>
 <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6 text-xs">
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Salud</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a><a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a><a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a><a href="/telemedicina" class="hover:text-teal-700">Telemedicina</a><a href="/diabetes" class="hover:text-teal-700">Diabetes</a></div></div>
-<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/rendimiento" class="hover:text-teal-700">Rendimiento del dólar</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/exposicion-ai" class="hover:text-teal-700">Exposición a la IA</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/rendimiento" class="hover:text-teal-700">Rendimiento del dólar</a><a href="/cupon" class="hover:text-teal-700">Dinero sin cobrar</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/exposicion-ai" class="hover:text-teal-700">Exposición a la IA</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Servicios</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/agua" class="hover:text-teal-700">Agua</a><a href="/luz" class="hover:text-teal-700">Luz</a><a href="/basura" class="hover:text-teal-700">Basura</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">El pueblo</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/demanda" class="hover:text-teal-700">Lo que busca PR</a><a href="/historial" class="hover:text-teal-700">Historial de promesas</a><a href="/promesas" class="hover:text-teal-700">Promesómetro</a><a href="/esencia" class="hover:text-teal-700">Proyecto Esencia</a><a href="/no-se-mide" class="hover:text-teal-700">Lo que ni se mide</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Expedientes</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/expediente/alcalde-cabo-rojo" class="hover:text-teal-700">Alcalde de Cabo Rojo</a><a href="/expediente/representante-distrito-20" class="hover:text-teal-700">Rep. Distrito 20</a></div></div>
@@ -5893,6 +5893,7 @@ async function handleCostoDeVida(req: any, res: any) {
         <li>Transportación es el golpe #1. Antes de echar gasolina, pregúntale a <strong>El Veci</strong> quién la tiene más barata: textea <strong>GASOLINA</strong> al <a href="https://wa.me/17874177711?text=gasolina" class="text-teal-700 font-semibold">787-417-7711</a>.</li>
         <li>La luz al doble es la otra sangría fija. <a href="/luz" class="text-teal-700 font-semibold">Ve el récord y baja lo que puedas →</a></li>
         <li>El sueldo tiene techo; lo tuyo no. La parte de tu ingreso que crece sin techo es la que tú controlas. <a href="/trabajo" class="text-teal-700 font-semibold">Cómo se voltea →</a></li>
+        <li>Si tienes hijos: hay dinero federal que quizás no estás cobrando (hasta $1,700 por hijo). <a href="/cupon" class="text-teal-700 font-semibold">Ve cuánto y cómo se reclama →</a></li>
       </ul>
     </div>
     <p class="text-[11px] text-slate-400 mt-4 mb-0">Fuente: <a href="${srcHref}" class="text-slate-500 underline" rel="nofollow">${escapeHtml(ipc?.source_name || 'DTRH')}</a>${pub ? `, publicado ${escapeHtml(pub)}` : ''}. Base dic-2006=100. Canasta: ${escapeHtml(canasta?.source_name || 'DACO')}. Actualizamos cuando el gobierno publica.</p>
@@ -6129,6 +6130,112 @@ function handleExposicionAi(req: any, res: any) {
     title: '¿Qué pueblos de Puerto Rico están más expuestos a la inteligencia artificial? Ranking de los 78 municipios',
     description: 'Data nunca publicada: el ranking de exposición a la inteligencia artificial de los 78 municipios de Puerto Rico. El metro corporativo es el más expuesto; el campo, el más resiliente. Con metodología y fuente.',
     slug: 'exposicion-ai', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
+// /cupon — el dinero federal que PR deja sin cobrar. Fórmula: potencial − reclamado.
+// Flagship: Crédito por Hijos (CTC). Números reales: IDJ (elegibles/potencial) + IRS/Tesoro (reclamado).
+function handleCupon(req: any, res: any) {
+  const body = `
+<h1>¿Cuánto dinero federal está dejando Puerto Rico sin cobrar?</h1>
+<p class="text-lg text-slate-600 mt-2">Hay dinero federal que es <strong>tuyo si cualificas</strong> — no préstamo, no ayuda, no lista de espera. Solo hay que reclamarlo. Y cada año, decenas de miles de familias en Puerto Rico <strong>no lo cobran</strong>, casi siempre porque nadie se los explicó. El más grande se llama <strong>Crédito por Hijos</strong>. Aquí está el número sin filtro: cuánto se queda sin reclamar, por qué, y cómo se cobra.</p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Unas 81,000 familias dejan sin cobrar cerca de $310 millones al año. Dinero elegible. Sin reclamar.</p>
+</div>
+
+<h2>1. La cuenta, sin filtro</h2>
+<div class="not-prose grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+  <div class="rounded-xl bg-white border border-slate-200 p-4">
+    <div class="text-3xl font-black text-slate-900">$1,760M</div>
+    <div class="text-sm font-semibold text-slate-700 mt-1">podría llegar a PR al año</div>
+    <div class="text-xs text-slate-500 mt-1">si el 100% de las familias elegibles lo reclamara (304,000 familias · 565,000 niños). <i>Estimado IDJ.</i></div>
+  </div>
+  <div class="rounded-xl bg-white border border-slate-200 p-4">
+    <div class="text-3xl font-black text-slate-900">$1,450M</div>
+    <div class="text-sm font-semibold text-slate-700 mt-1">llegó de verdad (2024)</div>
+    <div class="text-xs text-slate-500 mt-1">223,000 familias lo reclamaron. <i>Departamento del Tesoro federal.</i></div>
+  </div>
+  <div class="rounded-xl bg-red-50 border border-red-200 p-4">
+    <div class="text-3xl font-black text-red-600">~$310M</div>
+    <div class="text-sm font-semibold text-slate-800 mt-1">se quedó sin cobrar</div>
+    <div class="text-xs text-slate-600 mt-1">la diferencia. Unas <strong>81,000 familias</strong> elegibles que no lo reclamaron.</div>
+  </div>
+</div>
+<p class="text-sm text-slate-500 mt-2">La fórmula es simple y honesta: <strong>lo que podría llegar (potencial, IDJ) menos lo que llegó (reclamado, Tesoro).</strong> Son estimados de fuentes y años distintos, así que el ~$310M es direccional, no un decimal exacto — pero el hueco es real y grande: uno de cada cuatro dólares elegibles no se cobra.</p>
+
+<h2>2. Qué es tuyo, en números que se sienten</h2>
+<p>El Crédito por Hijos (Child Tax Credit) da <strong>hasta $1,700 reembolsable por cada hijo menor de 17</strong> — "reembolsable" quiere decir que te llega en cheque <strong>aunque no debas impuestos ni tengas ingresos.</strong></p>
+<ul>
+  <li>Una familia con <strong>1 hijo</strong>: hasta <strong>$1,700</strong> al año.</li>
+  <li>Con <strong>2 hijos</strong>: hasta <strong>$3,400.</strong></li>
+  <li>Con <strong>3 hijos</strong>: hasta <strong>$5,100.</strong></li>
+</ul>
+<p>Ese dinero no es un favor. Es lo mismo que reciben las familias en cualquier estado. Y contra el costo de vida de aquí — <a href="/costo-de-vida" class="text-teal-700 font-semibold">la luz al doble, la comida 15-30% más</a> — $3,400 al año no es poco: es varios meses de compra.</p>
+
+<h2>3. Por qué tanta gente no lo cobra (y por qué no es tu culpa)</h2>
+<p>Aquí está el alivio que hay que decir claro: <strong>si no lo cobraste, casi seguro no fue por tu culpa.</strong></p>
+<ul>
+  <li><strong>Antes de 2021 no cualificabas.</strong> Por décadas, en PR solo las familias con <strong>3 o más hijos</strong> podían pedirlo. El Plan de Rescate de 2021 lo abrió a <strong>toda familia con 1 hijo o más</strong> — por primera vez en la historia. Mucha gente todavía cree que "eso no es para mí."</li>
+  <li><strong>Hay que radicar planilla federal</strong> (la 1040-SS), y en PR la mayoría no radica federal porque el ingreso local no paga impuesto federal. Entonces el crédito pasa por debajo del radar.</li>
+  <li><strong>Nadie te avisó cuando cambió la regla.</strong> No hubo carta a tu casa. El sistema no está hecho para recordártelo.</li>
+</ul>
+
+<h2>4. Cómo se cobra (esta es la parte que resuelve)</h2>
+<p>Se reclama radicando una planilla federal — <strong>gratis, aunque no tengas ingresos, aunque nunca hayas radicado federal.</strong></p>
+<ul>
+  <li><strong>Formulario:</strong> planilla federal <strong>1040-SS</strong> (o 1040-PR), ante el IRS. Es aparte de tu planilla de Hacienda de PR.</li>
+  <li><strong>Requisitos del hijo:</strong> menor de 17 al cierre del año, con número de Seguro Social, que viva contigo. Uno o más hijos.</li>
+  <li><strong>Ayuda gratis:</strong> los centros <strong>VITA</strong> (Volunteer Income Tax Assistance) del IRS te lo llenan sin cobrar. El <strong>Instituto del Desarrollo de la Juventud</strong> (juventudpr.org) tiene guía en español y localizador de ayuda.</li>
+  <li><strong>Lo más importante:</strong> puedes reclamar <strong>años atrás</strong> (hasta 3 años de planillas). Si no lo cobraste en 2022, 2023 o 2024, todavía puede que estés a tiempo. Eso puede ser <strong>miles de dólares acumulados.</strong></li>
+</ul>
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-5 mt-6">
+  <p class="text-sm font-bold text-teal-900 m-0">Un solo paso hoy</p>
+  <p class="text-sm text-slate-700 mt-1 mb-0">Si tienes un hijo menor de 17 y nunca has radicado la planilla federal por el crédito, esa es tu jugada. Busca "VITA Puerto Rico" o entra a <a href="https://www.juventudpr.org/childtaxcredit" class="text-teal-700 font-semibold" rel="nofollow">juventudpr.org/childtaxcredit</a>. Aunque ganes poco o nada, el cheque puede llegarte igual.</p>
+</div>
+
+<h2>5. Funciona — no es teoría</h2>
+<p>Cuando las familias sí lo cobran, mueve la aguja de verdad: el Crédito por Hijos <strong>bajó la pobreza infantil en Puerto Rico de 55% a 39%</strong> en los años que llegó completo. <i>(Instituto del Desarrollo de la Juventud.)</i> Cada familia que lo reclama es un pedazo de esa caída.</p>
+
+<h2>6. Y no es el único cupón sin cobrar</h2>
+<p>El Crédito por Hijos es el más grande, pero es <strong>un patrón, no un caso aislado</strong>: dinero federal elegible que se queda en la mesa porque nadie arma el número y lo pone claro.</p>
+<ul>
+  <li><strong>Crédito por Trabajo (EITC):</strong> el primo del CTC, para quien trabaja. Otro chorro de millones con reclamo incompleto.</li>
+  <li><strong>El cupón de salud:</strong> hasta <strong>$75,000 federales</strong> para el médico que abra donde falta (áreas de escasez designadas). <a href="/registro/estado" class="text-teal-700 font-semibold">Ver el récord de salud →</a></li>
+</ul>
+<p>El estándar es el mismo: <strong>encontrar el dinero elegible, contar lo que no se cobra, y decir cómo se cobra.</strong> Ese es el récord que otros pueden copiar — municipio por municipio, programa por programa.</p>
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
+  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Hay dinero tuyo esperando. Verlo claro es el primer paso para cobrarlo.</p>
+  <p class="mt-2 text-sm text-slate-600 italic">Si tienes hijos y no lo has reclamado, empieza por ahí. Si no te aplica, pásaselo a quien sí.</p>
+</div>
+
+<div class="not-prose border-l-4 border-slate-300 bg-slate-50 rounded-r-xl p-5 mt-8">
+  <p class="text-xs uppercase tracking-widest text-slate-400 font-bold">El porqué, más hondo</p>
+  <p class="text-slate-700 mt-2">Hay una idea vieja que cuesta dinero de verdad: <em>"esas cosas no son para uno."</em> Se instaló de tanto que el sistema no te incluyó. Pero la regla cambió — y el dinero es igual de tuyo que el de cualquiera. No cobrarlo por costumbre es la programación cobrando intereses.</p>
+  <p class="mt-3"><a href="https://www.angelanderson.com/te-programaron" class="text-teal-700 font-semibold">Te programaron a creer que no era para ti. Empieza por ahí. →</a></p>
+  <p class="text-xs text-slate-400 italic mt-2">Si no te sirve, sigue tu camino.</p>
+</div>
+
+<p class="text-sm text-slate-500 mt-6">Cómo se hizo: familias elegibles y potencial ($1,760M · 304,000 familias · 565,000 niños) del Instituto del Desarrollo de la Juventud (economista María Enchautegui). Reclamado real ($1,450M · 223,000 familias, 2024) del Departamento del Tesoro federal / IRS. Monto por hijo y reglas del IRS (CTC/ACTC, planilla 1040-SS). Caída de pobreza infantil 55%→39% del IDJ. El "sin cobrar" (~$310M · ~81,000 familias) es la resta potencial−reclamado: fuentes y años distintos, cifra direccional. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a> y se corrige. Julio 2026.</p>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Report',
+    name: 'El dinero federal que Puerto Rico deja sin cobrar: el Crédito por Hijos',
+    about: 'Unas 81,000 familias de PR dejan sin reclamar cerca de $310 millones al año del Crédito por Hijos federal (CTC). Cuánto es, por qué pasa, y cómo se cobra.',
+    author: { '@type': 'Person', name: 'Angel Anderson' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    inLanguage: 'es', datePublished: '2026-07-07', url: 'https://puertoricosinfiltros.com/cupon',
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'Crédito por Hijos en Puerto Rico: los $310 millones que las familias dejan sin cobrar',
+    description: 'Unas 81,000 familias en PR no reclaman el Crédito por Hijos federal — cerca de $310 millones al año. Hasta $1,700 por hijo, aunque no tengas ingresos. Cuánto es, por qué, y cómo se cobra gratis.',
+    slug: 'cupon', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
@@ -8234,6 +8341,7 @@ export default async function handler(req: any, res: any) {
     case 'decidir': return handleDecidir(req, res)
     case 'exposicion-ai': return handleExposicionAi(req, res)
     case 'rendimiento': return handleRendimiento(req, res)
+    case 'cupon': return handleCupon(req, res)
     case 'historial': return await handleHistorial(req, res)
     case 'telemedicina': return await handleTelemedicina(req, res)
     case 'no-se-mide': return handleNoSeMide(req, res)
