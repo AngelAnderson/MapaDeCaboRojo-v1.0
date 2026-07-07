@@ -1856,8 +1856,13 @@ async function handle_demanda(req: any, res: any) {
     return;
   }
 
-  // Fetch surge data
-  const { data: surges, error } = await supabase.rpc('get_demand_surges');
+  // Fetch surge data — las 3 lecturas en paralelo (antes secuenciales; recorta el cold start)
+  const [surgeRes, vstatRes, triRes] = await Promise.all([
+    supabase.rpc('get_demand_surges'),
+    supabase.rpc('get_demand_vecino_stats'),
+    supabase.from('v_demanda_triangulada').select('categoria,bot_personas,gsc_impresiones,gsc_clicks,fuente,senal_score').then((r: any) => r, () => ({ data: null })),
+  ]);
+  const surges = surgeRes.data; const error = surgeRes.error;
   const rawSurge: SurgeRow[] = Array.isArray(surges) ? surges : [];
 
   // [PII 2026-05-31] Public page shows ONLY generic topic searches — never a
@@ -1890,7 +1895,7 @@ async function handle_demanda(req: any, res: any) {
 
   // Headline stats via RPC: total searches (big, true) + unique vecinos (the honest
   // people count) + vecinos in the last 7d (proves "y siguen viniendo").
-  const { data: vstatRaw } = await supabase.rpc('get_demand_vecino_stats');
+  const vstatRaw = vstatRes.data;
   const vstat = (Array.isArray(vstatRaw) ? vstatRaw[0] : vstatRaw) as { busquedas?: number; vecinos?: number; vecinos_7d?: number } | null;
   const accumulated = Number(vstat?.busquedas || 0);   // searches — true and big
   const vecinos = Number(vstat?.vecinos || 0);          // distinct people — NOT the search count
@@ -1899,11 +1904,7 @@ async function handle_demanda(req: any, res: any) {
   // Triangulación: cruza el texteo del bot (alta intención) con lo que se googlea (GSC, alcance amplio).
   // La pata que le faltaba al radar — confirma la demanda por dos vías independientes.
   let triangList: Array<{ categoria: string; bot_personas: number; gsc_impresiones: number; gsc_clicks: number; fuente: string; senal_score: number }> = [];
-  try {
-    const { data: tri } = await supabase.from('v_demanda_triangulada')
-      .select('categoria,bot_personas,gsc_impresiones,gsc_clicks,fuente,senal_score');
-    if (Array.isArray(tri)) triangList = tri as any;
-  } catch { triangList = []; }
+  if (Array.isArray((triRes as any)?.data)) triangList = (triRes as any).data;
   const triConfirm = triangList.filter(r => r.fuente === 'triangulada').sort((a, b) => b.senal_score - a.senal_score);
   const triGoogleOnly = triangList.filter(r => r.fuente === 'solo_google' && r.gsc_clicks > 0).sort((a, b) => b.gsc_clicks - a.gsc_clicks);
   const triConfirmRows = triConfirm.slice(0, 8).map(r => `<tr style="border-bottom:1px solid #f1f5f9;">
@@ -6159,6 +6160,16 @@ h1{font-size:27px;font-weight:800;color:#fff}
 <a class="btn wa" href="https://wa.me/17874177711?text=Hola%20Veci">💬 Escríbeme por WhatsApp</a>
 <a class="btn sms" href="sms:+17874177711">💬 Escríbeme por texto (SMS)</a>
 <a class="btn save" href="/veci.vcf">📇 Guárdame en tus contactos</a>
+<div class="card">
+  <h2>⚡ Palabras mágicas (textéalas tal cual)</h2>
+  <ol style="list-style:none;margin-left:0">
+    <li><strong style="color:#5eead4">PLOMERO</strong> (o lo que necesites) — te digo quién resuelve</li>
+    <li><strong style="color:#5eead4">ALERTA</strong> — te aviso si hay emergencia o agua en TU pueblo</li>
+    <li><strong style="color:#5eead4">CUPON</strong> — dinero federal que quizás no estás cobrando</li>
+    <li><strong style="color:#5eead4">COSTO</strong> — qué pasó con tu dólar este mes, sin filtro</li>
+    <li><strong style="color:#5eead4">MEDICO</strong> — la verdad de los médicos en PR + quién queda</li>
+  </ol>
+</div>
 <div class="card">
   <h2>📱 Ponme en tu pantalla de inicio</h2>
   <ol>

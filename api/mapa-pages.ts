@@ -6203,6 +6203,7 @@ function handleCupon(req: any, res: any) {
 <div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-5 mt-6">
   <p class="text-sm font-bold text-teal-900 m-0">Un solo paso hoy</p>
   <p class="text-sm text-slate-700 mt-1 mb-0">Si tienes un hijo menor de 17 y nunca has radicado la planilla federal por el crédito, esa es tu jugada. Busca "VITA Puerto Rico" o entra a <a href="https://www.juventudpr.org/childtaxcredit" class="text-teal-700 font-semibold" rel="nofollow">juventudpr.org/childtaxcredit</a>. Aunque ganes poco o nada, el cheque puede llegarte igual.</p>
+  <p class="text-sm text-slate-700 mt-2 mb-0">¿Se lo quieres pasar a alguien o guardarlo pa' después? Textea <strong>CUPON</strong> al <a href="https://wa.me/17874177711?text=CUPON" class="text-teal-700 font-semibold">787-417-7711</a> y El Veci te manda el resumen con el link.</p>
 </div>
 
 <h2>5. Funciona — no es teoría</h2>
