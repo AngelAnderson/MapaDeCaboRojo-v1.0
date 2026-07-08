@@ -6472,14 +6472,15 @@ function handleDecidir(req: any, res: any) {
 async function handleRegistroEstado(req: any, res: any) {
   type Row = { municipio: string; poblacion: number; especialistas: number; psiquiatras: number; poverty_pct: number; hpsa_primaria: number; hpsa_salud_mental: number; cupon_mh_sin_cobrar: boolean; prioridad: number }
   let rows: Row[] = []
-  let agg = { conHpsa: 65, cupon: 33, cuponPob: 792221, tier1: 21 }
+  let agg = { conHpsa: 65, cupon: 33, cuponPob: 792221, tier1: 21, sinPsiq: 36, sinPsiqPob: 930159 }
   try {
     const { data } = await supabase.from('v_registro_municipio_intel').select('municipio,poblacion,especialistas,psiquiatras,poverty_pct,hpsa_primaria,hpsa_salud_mental,cupon_mh_sin_cobrar,prioridad').range(0, 100)
     if (data && data.length >= 70) {
       rows = data.map((r: any) => ({ municipio: r.municipio, poblacion: +r.poblacion, especialistas: +r.especialistas, psiquiatras: +r.psiquiatras, poverty_pct: +(r.poverty_pct || 0), hpsa_primaria: +r.hpsa_primaria, hpsa_salud_mental: +r.hpsa_salud_mental, cupon_mh_sin_cobrar: !!r.cupon_mh_sin_cobrar, prioridad: +r.prioridad }))
       rows.sort((a, b) => b.prioridad - a.prioridad)
       const cup = rows.filter(r => r.cupon_mh_sin_cobrar)
-      agg = { conHpsa: rows.filter(r => r.hpsa_primaria > 0 || r.hpsa_salud_mental > 0).length, cupon: cup.length, cuponPob: cup.reduce((s, r) => s + r.poblacion, 0), tier1: rows.filter(r => r.prioridad >= 75).length }
+      const sp = rows.filter(r => r.psiquiatras === 0)
+      agg = { conHpsa: rows.filter(r => r.hpsa_primaria > 0 || r.hpsa_salud_mental > 0).length, cupon: cup.length, cuponPob: cup.reduce((s, r) => s + r.poblacion, 0), tier1: rows.filter(r => r.prioridad >= 75).length, sinPsiq: sp.length, sinPsiqPob: sp.reduce((s, r) => s + r.poblacion, 0) }
     }
   } catch (_) { /* fallback numbers stand */ }
 
@@ -6543,6 +6544,31 @@ async function handleRegistroEstado(req: any, res: any) {
   <p class="text-xs text-slate-500 mt-2">Fuente: OpenFEMA (Public Assistance, monto obligado) × este registro, julio 2026. El dinero de FEMA es de infraestructura, no de salud; se muestra para dimensionar que el dinero de ladrillo sí fluyó a estos pueblos.</p>
 </div>
 
+<h2 id="citables">Datos citables: copia y pega</h2>
+<p class="text-slate-600 -mt-2">El trabajo pesado ya está hecho. Cada dato de abajo está verificado contra su fuente federal y lleva el link. Toca <strong>Copiar</strong> y pégalo donde te sirva: una noticia, un post, un mensaje al grupo de la familia. No tienes que buscar nada más.</p>
+${[
+    { label: 'El titular', txt: `${agg.conHpsa} de 76 municipios de Puerto Rico tienen designación federal de escasez de médicos activa. ${agg.cupon} tienen el dinero de salud mental aprobado y cero psiquiatras: ${agg.cuponPob.toLocaleString('en-US')} personas. Verificado pueblo por pueblo contra el registro federal.` },
+    { label: '1 de cada 3', txt: `${agg.sinPsiq} municipios de Puerto Rico no tienen ni un psiquiatra con práctica declarada. Son ${agg.sinPsiqPob.toLocaleString('en-US')} personas, cerca de 1 de cada 3 boricuas.` },
+    { label: 'El cemento sin médico', txt: `$${femaCuponM.toLocaleString('en-US')} millones de fondos de recuperación (FEMA) llegaron a los ${agg.cupon} pueblos de PR que no tienen ni un psiquiatra. Le llegó el cemento, pero no el médico. Jayuya: $424 millones, 2 especialistas, cero psiquiatras.` },
+    { label: 'El oeste', txt: `6 pueblos del oeste de Puerto Rico no tienen ni un psiquiatra: Maricao, Las Marías, Hormigueros, Añasco, Lajas y Moca. Todo el oeste depende de los 26 psiquiatras de Mayagüez.`, tag: 'local' as const },
+    { label: 'Cero de todo', txt: `3 pueblos de Puerto Rico no tienen ni un especialista médico de ninguna clase: Maricao, Las Marías y Florida.` },
+    { label: 'El más pobre', txt: `Guánica es el municipio más pobre de Puerto Rico (63.6% bajo el nivel de pobreza). Tiene la designación federal de salud mental con el puntaje máximo posible y cero psiquiatras.` },
+    { label: 'Para médicos y psicólogos', txt: `Si eres psiquiatra, psicólogo o médico primario: el gobierno federal repaga tus préstamos estudiantiles (hasta $75,000 en primaria, $50,000 en salud mental) por ejercer donde hace falta. En 26 pueblos de PR no tendrías competencia local. El dinero ya está aprobado.`, tag: 'medicos' as const },
+    { label: 'La salida', txt: `Esto tiene arreglo sin dinero nuevo: la designación federal ya existe, el incentivo ya existe y la red de clínicas 330 ya existe. Falta inscribir el sitio donde el médico lo cobre. Piloto propuesto: Maricao y Las Marías con el Hospital de Castañer.`, tag: 'medicos' as const },
+  ].map((f, i) => {
+    const copyText = `${f.txt} Fuente: puertoricosinfiltros.com/registro/estado`
+    const box = (f as any).tag === 'medicos' ? 'border-teal-300 bg-teal-50/40' : (f as any).tag === 'local' ? 'border-amber-300 bg-amber-50/40' : 'border-slate-200 bg-white'
+    return `<div class="not-prose border ${box} rounded-xl p-4 mt-3">
+      <div class="flex items-start justify-between gap-2">
+        <p class="text-xs font-bold text-teal-700 uppercase tracking-wide m-0">${f.label}</p>
+        <button type="button" class="copy-btn shrink-0 text-xs font-semibold text-teal-700 border border-teal-300 rounded-full px-3 py-1 hover:bg-teal-50" data-copy="${escapeHtml(copyText)}">📋 Copiar</button>
+      </div>
+      <blockquote class="mt-2 text-slate-900 leading-relaxed border-l-4 border-teal-500 pl-3">${escapeHtml(f.txt)}</blockquote>
+      <p class="text-xs text-slate-500 mt-2">Fuente al copiar: puertoricosinfiltros.com/registro/estado</p>
+    </div>`
+  }).join('')}
+<p class="text-sm text-slate-500 mt-3">¿Necesitas más datos con fuente (costo de vida, trabajo, agua, recuperación)? <a href="/comparte" class="text-teal-700 font-semibold">Todos los datos citables →</a></p>
+
 <h2>Los 76 municipios, rankeados por dónde el cupón vale más</h2>
 <p class="text-slate-600 -mt-2">Prioridad = necesidad (pobreza + envejecimiento + escasez de médicos) × oportunidad (designación activa sin cobrar). 💰 = tiene designación de salud mental activa y cero psiquiatras.</p>
 <div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
@@ -6567,6 +6593,16 @@ async function handleRegistroEstado(req: any, res: any) {
 </div>
 <script>
 (function(){var f=document.getElementById('av-form');if(!f)return;f.addEventListener('submit',function(e){e.preventDefault();var em=(document.getElementById('av-email').value||'').trim();if(!/.+@.+\\..+/.test(em)){alert('Escribe un email válido.');return;}var b=f.querySelector('button');b.disabled=true;b.textContent='...';fetch('/api/mapa-pages?page=registro-lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,source:'estado',lang:'es'})}).then(function(r){return r.json()}).then(function(){f.classList.add('hidden');var d=document.getElementById('av-done');d.classList.remove('hidden');d.textContent='✅ Listo. Te aviso cuando haya algo nuevo cerca de los tuyos.';}).catch(function(){b.disabled=false;b.textContent='Avísame';alert('Hubo un error, intenta de nuevo.');});});})();
+(function(){
+  document.querySelectorAll('.copy-btn').forEach(function(b){
+    b.addEventListener('click',function(){
+      var t=b.getAttribute('data-copy')||'';
+      var done=function(){var o=b.textContent;b.textContent='✓ Copiado';b.disabled=true;setTimeout(function(){b.textContent=o;b.disabled=false},1600)};
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done).catch(function(){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}document.body.removeChild(ta)})}
+      else{var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}document.body.removeChild(ta)}
+    });
+  });
+})();
 </script>
 <p class="text-sm text-slate-500 mt-6">Fuente: NPPES/CMS (proveedores) × archivos HRSA (designaciones HPSA) × Censo/ACS (pobreza, edad), cruzados municipio por municipio, julio 2026. <a href="/registro/mapa" class="text-teal-700 font-semibold">Ver el mapa →</a> · <a href="/registro/desiertos" class="text-teal-700 font-semibold">Los desiertos →</a></p>
 `
