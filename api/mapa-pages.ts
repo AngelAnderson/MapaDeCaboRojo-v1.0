@@ -7388,6 +7388,28 @@ ${[
   </tr></thead><tbody>${rowHtml}</tbody></table>
 </div>
 
+<h2>"¿Y si el pueblo de al lado sí tiene?"</h2>
+<p>Es la pregunta correcta, y tiene cuatro respuestas con número:</p>
+<div class="not-prose grid sm:grid-cols-2 gap-3 mt-3">
+  <div class="border border-slate-200 bg-white rounded-xl p-4">
+    <div class="text-xs font-bold text-teal-700 uppercase">1 · El gobierno federal ya hizo esa pregunta</div>
+    <p class="text-sm text-slate-700 mt-1">La designación HPSA no se otorga mirando un pueblo aislado: HRSA <strong>cuenta los proveedores de las áreas vecinas y el tiempo de viaje</strong> antes de declarar la escasez. Si el psiquiatra del pueblo de al lado bastara, la designación no existiría. <strong>65 de 76 municipios la tienen activa.</strong> Esa es la respuesta federal, no la nuestra.</p>
+  </div>
+  <div class="border border-slate-200 bg-white rounded-xl p-4">
+    <div class="text-xs font-bold text-teal-700 uppercase">2 · La salud mental es tratamiento, no un viaje</div>
+    <p class="text-sm text-slate-700 mt-1">Una cita de psiquiatría no es una visita única: es seguimiento cada 2-4 semanas por meses o años. A mayor distancia, más citas perdidas y más tratamientos abandonados. Y una crisis no espera el viaje a Mayagüez.</p>
+  </div>
+  <div class="border border-slate-200 bg-white rounded-xl p-4">
+    <div class="text-xs font-bold text-teal-700 uppercase">3 · "Cerca" sin carro no es cerca</div>
+    <p class="text-sm text-slate-700 mt-1">En los pueblos del cupón sin cobrar la pobreza corre de <strong>43% a 64%</strong> (Guánica: 63.6%), con población mayor y sin transporte público real. El paciente que más necesita el servicio es el que menos puede ir a buscarlo lejos.</p>
+  </div>
+  <div class="border border-slate-200 bg-white rounded-xl p-4">
+    <div class="text-xs font-bold text-teal-700 uppercase">4 · Todo el oeste cuelga de un solo punto</div>
+    <p class="text-sm text-slate-700 mt-1">6 pueblos del oeste no tienen ni un psiquiatra (Maricao, Las Marías, Hormigueros, Añasco, Lajas y Moca). Toda la región depende de los <strong>26 psiquiatras de Mayagüez</strong>. Eso no es acceso: es un punto único de fallo para cientos de miles de personas.</p>
+  </div>
+</div>
+<p class="text-xs text-slate-400 mt-2">Fuentes: criterios de designación de HRSA (proveedores del área contigua + distancia/tiempo de viaje) · NPPES/CMS · Censo/ACS. La designación federal activa es, en sí misma, la certificación de que el pueblo de al lado no resuelve.</p>
+
 <h2>Qué se puede hacer</h2>
 <p><strong>El piloto:</strong> Maricao + Las Marías, con Hospital General de Castañer como vehículo. Dos pueblos contiguos, cero de todo, designación activa. Un punto satélite inscrito como sitio NHSC convierte el cupón en un médico reclutado. <strong>Los 33 cupones:</strong> cada uno con su centro 330 regional como vehículo natural — data lista para la Oficina de Cuidado Primario del Departamento de Salud, que es quien radica ante HRSA.</p>
 <p class="text-sm text-slate-600">¿Eres médico, psicólogo o residente? En estos pueblos no tienes competencia y el gobierno te paga los préstamos. ¿Alcalde o legislador? El expediente de tu pueblo se arma con esta data. Escríbenos: <a href="mailto:angel@angelanderson.com" class="text-teal-600">angel@angelanderson.com</a>.</p>
