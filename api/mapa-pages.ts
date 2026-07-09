@@ -7333,6 +7333,13 @@ async function handleRegistroEstado(req: any, res: any) {
   const body = `
 <h1>Estado de Salud de Puerto Rico</h1>
 <p class="text-lg text-slate-600 mt-3">El dinero federal para traer médicos <strong>ya está aprobado</strong> en casi todos nuestros pueblos. Y se está quedando sin reclamar. Esta es la primera cuenta, municipio por municipio, de dónde está el <strong>cupón sin cobrar</strong>.</p>
+<div class="not-prose mt-4 border-2 border-teal-300 bg-teal-50 rounded-2xl p-4 flex items-start gap-3">
+  <div class="text-2xl">🪜</div>
+  <div>
+    <p class="font-black text-slate-900">Antes de asustarte: esto tiene arreglo, y el primer paso es casi gratis.</p>
+    <p class="text-sm text-slate-700 mt-0.5">Los números de abajo son duros, pero cada uno tiene su palanca. <a href="#escalera" class="text-teal-700 font-bold underline">Ve directo a la escalera del arreglo →</a></p>
+  </div>
+</div>
 
 <div class="not-prose mt-5 bg-white border border-slate-200 rounded-2xl p-4">
   <div class="flex items-start gap-3">
@@ -7416,9 +7423,37 @@ ${[
 </div>
 <p class="text-xs text-slate-400 mt-2">Fuentes: criterios de designación de HRSA (proveedores del área contigua + distancia/tiempo de viaje) · NPPES/CMS · Censo/ACS. La designación federal activa es, en sí misma, la certificación de que el pueblo de al lado no resuelve.</p>
 
-<h2>Qué se puede hacer</h2>
-<p><strong>El piloto:</strong> Maricao + Las Marías, con Hospital General de Castañer como vehículo. Dos pueblos contiguos, cero de todo, designación activa. Un punto satélite inscrito como sitio NHSC convierte el cupón en un médico reclutado. <strong>Los 33 cupones:</strong> cada uno con su centro 330 regional como vehículo natural — data lista para la Oficina de Cuidado Primario del Departamento de Salud, que es quien radica ante HRSA.</p>
-<p class="text-sm text-slate-600">¿Eres médico, psicólogo o residente? En estos pueblos no tienes competencia y el gobierno te paga los préstamos. ¿Alcalde o legislador? El expediente de tu pueblo se arma con esta data. Escríbenos: <a href="mailto:angel@angelanderson.com" class="text-teal-600">angel@angelanderson.com</a>.</p>
+<h2 id="escalera">Esto tiene arreglo: la escalera</h2>
+<p>Este récord no es para asustarte. Es para que se vea dónde está la palanca. No hay UNA solución mágica: hay una escalera, y lo potente es que <strong>los primeros escalones son casi gratis.</strong> De más barato a más caro:</p>
+<div class="not-prose mt-4 space-y-3">
+  <div class="border-l-4 border-teal-500 bg-white border border-slate-200 rounded-r-2xl p-4">
+    <div class="flex items-center gap-2 flex-wrap"><span class="text-xs font-black uppercase tracking-wider bg-teal-600 text-white rounded-full px-2.5 py-0.5">Escalón 1 · semanas · ~$0</span></div>
+    <p class="font-bold text-slate-900 mt-2">El papel: inscribir sitios aprobados NHSC</p>
+    <p class="text-sm text-slate-700 mt-1">El repago de préstamos (hasta $75,000 primaria / $50,000 salud mental) <strong>ya está aprobado</strong>. Falta que el centro de salud del pueblo se inscriba como "sitio aprobado" donde el médico lo cobre. No requiere ley ni fondos nuevos: es papeleo ante HRSA. <strong>El piloto natural:</strong> Maricao + Las Marías con el Hospital General de Castañer. Y cada uno de los 33 cupones tiene su centro 330 regional como vehículo; la data está lista para la Oficina de Cuidado Primario del Departamento de Salud, que es quien radica.</p>
+  </div>
+  <div class="border-l-4 border-teal-400 bg-white border border-slate-200 rounded-r-2xl p-4">
+    <div class="flex items-center gap-2 flex-wrap"><span class="text-xs font-black uppercase tracking-wider bg-teal-500 text-white rounded-full px-2.5 py-0.5">Escalón 2 · meses · costo bajo</span></div>
+    <p class="font-bold text-slate-900 mt-2">El médico sin mudanza</p>
+    <p class="text-sm text-slate-700 mt-1">No hace falta que el especialista viva en la montaña. Tres vías que ya existen: <strong>clínica itinerante</strong> (1-2 días/semana desde Castañer o Mayagüez), <strong>telemedicina desde la clínica</strong> (el paciente va al centro del pueblo y el médico está en pantalla; no hace falta internet en cada casa, hace falta en UN edificio), y <strong>visas J-1 (Conrad 30)</strong>: médicos extranjeros ganan su visa ejerciendo justo en zonas designadas como estas.</p>
+  </div>
+  <div class="border-l-4 border-slate-400 bg-white border border-slate-200 rounded-r-2xl p-4">
+    <div class="flex items-center gap-2 flex-wrap"><span class="text-xs font-black uppercase tracking-wider bg-slate-500 text-white rounded-full px-2.5 py-0.5">Escalón 3 · años · la tubería</span></div>
+    <p class="font-bold text-slate-900 mt-2">Formar a los que se quieren quedar</p>
+    <p class="text-sm text-slate-700 mt-1">La emigración de médicos recién graduados <strong>bajó de 56% a 43%</strong>: quieren quedarse, falta dónde formarse. Plazas de residencia (sobre todo psiquiatría) y rotaciones rurales: el residente que rota en la montaña es el que después se queda en la montaña.</p>
+  </div>
+  <div class="border-l-4 border-amber-400 bg-white border border-slate-200 rounded-r-2xl p-4">
+    <div class="flex items-center gap-2 flex-wrap"><span class="text-xs font-black uppercase tracking-wider bg-amber-500 text-white rounded-full px-2.5 py-0.5">Escalón 4 · Congreso · el de fondo</span></div>
+    <p class="font-bold text-slate-900 mt-2">Arreglar la tubería del dinero</p>
+    <p class="text-sm text-slate-700 mt-1">El 30 de septiembre de 2027 el pareo federal de Medicaid cae de 76% a 55%, y Medicare Advantage paga ~41% menos en PR que en los estados. Mientras eso siga, cada arreglo local pelea contra la corriente. Es el escalón más importante y el más lento; por eso no se empieza por aquí, se empieza por el formulario mientras se pelea esto.</p>
+  </div>
+  <div class="border-l-4 border-teal-600 bg-teal-50/60 border border-teal-200 rounded-r-2xl p-4">
+    <div class="flex items-center gap-2 flex-wrap"><span class="text-xs font-black uppercase tracking-wider bg-teal-700 text-white rounded-full px-2.5 py-0.5">Escalón 5 · tú · hoy</span></div>
+    <p class="font-bold text-slate-900 mt-2">Lo que puede hacer cualquier vecino</p>
+    <p class="text-sm text-slate-700 mt-1">UNA pregunta al centro de salud de tu pueblo: <strong>"¿ustedes son sitio aprobado del NHSC?"</strong> Esa pregunta, repetida, sube el escalón 1. Hazle la misma a tu alcalde y a tu representante, con el dato en mano. En crisis: <strong>Línea PAS / 988</strong>, 24/7. Y comparte el récord, no el rumor.</p>
+  </div>
+</div>
+<p class="text-sm text-slate-700 mt-4"><strong>La síntesis:</strong> un formulario esta semana, telemedicina y clínica itinerante este año, residencias esta década, y paridad en el Congreso. Lo trágico no es que sea difícil: es que el primer escalón es casi gratis y nadie lo ha subido.</p>
+<p class="text-sm text-slate-600">¿Eres médico, psicólogo o residente? En estos pueblos no tienes competencia y el gobierno te paga los préstamos. ¿Alcalde, legislador o centro 330? El expediente de tu pueblo se arma con esta data. Escríbenos: <a href="mailto:angel@angelanderson.com" class="text-teal-600">angel@angelanderson.com</a>.</p>
 
 <div class="mt-8 bg-slate-900 text-white rounded-2xl p-6">
   <p class="text-lg font-bold">📍 ¿Te aviso cuando cambie la salud de tu pueblo?</p>
