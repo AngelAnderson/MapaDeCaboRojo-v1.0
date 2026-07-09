@@ -5629,6 +5629,12 @@ async function handleEsencia(req: any, res: any) {
   <p class="text-slate-300 mt-2 text-sm">Presentado como turístico; reportado como ~70% residencial. Controlado desde Londres. El DRNA lo rechazó; OGPe aprobó su Declaración de Impacto Ambiental con 46 condiciones.</p>
 </div>
 
+<div class="not-prose mt-5 bg-white border border-slate-200 rounded-2xl p-4">
+  <p class="text-sm font-bold text-slate-700 mb-2">🎧 Escúchalo: "Lujo sin agua" — el expediente de Esencia en audio (dos voces, 15 min)</p>
+  <audio controls preload="none" class="w-full" src="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/esencia-lujo-sin-agua.m4a">Tu navegador no puede reproducir el audio. <a href="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/esencia-lujo-sin-agua.m4a" class="text-teal-700 font-semibold">Descárgalo</a>.</audio>
+  <p class="text-xs text-slate-400 mt-1">Generado con IA sobre las fuentes primarias de este récord (DIA, carta de la AAA, CPI, vistas públicas). Los números son los de esta página.</p>
+</div>
+
 <h2>Qué es, en números</h2>
 <div class="not-prose grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
   <div class="bg-white border border-slate-200 rounded-xl p-4 text-center"><div class="text-2xl font-black text-slate-900">1,549</div><div class="text-xs text-slate-500 mt-1">cuerdas de terreno</div></div>
