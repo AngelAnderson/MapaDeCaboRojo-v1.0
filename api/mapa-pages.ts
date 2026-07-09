@@ -275,7 +275,7 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <a href="/porque" class="hover:text-teal-700">${isEn ? 'Why doctors leave' : '¿Por qué se van los médicos?'}</a>
 <a href="/observatorio" class="hover:text-teal-700">${isEn ? 'Observatory + podcast' : 'Observatorio + podcast'}</a>
 </div></div>
-<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">${isEn ? 'Press & AI' : 'Prensa e IA'}</div><div class="flex flex-col gap-1.5 text-slate-500">
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">${isEn ? 'Cite & share' : 'Cita y comparte'}</div><div class="flex flex-col gap-1.5 text-slate-500">
 <a href="/comparte" class="hover:text-teal-700">${isEn ? 'Citable facts' : 'Datos citables'}</a>
 <a href="/pueblo${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Facts by town' : 'Datos por pueblo'}</a>
 </div></div>
