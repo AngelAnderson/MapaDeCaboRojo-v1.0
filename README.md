@@ -5,7 +5,7 @@
 | Sitio | Qué es |
 |---|---|
 | [mapadecaborojo.com](https://www.mapadecaborojo.com) | Mapa + directorio verificado de Cabo Rojo (1,000+ negocios en CR, 12,000+ listados en PR) con El Veci detrás |
-| [registromedicopr.com](https://registromedicopr.com) | Registro de especialistas médicos de PR (NPPES): 6,346 servibles, 32 especialidades × 5 regiones, desiertos médicos |
+| [registromedicopr.com](https://registromedicopr.com) | Registro de especialistas médicos de PR (NPPES): 6,300+ verificados, 32 especialidades × 5 regiones × 78 pueblos, desiertos médicos, guías por situación, bilingüe ES/EN |
 | [puertoricosinfiltros.com](https://puertoricosinfiltros.com) | Récords cívicos con data verificable: el número, la fuente, y qué hacer con él |
 
 **El Veci** — textea al **787-417-7711** (SMS o [WhatsApp](https://wa.me/17874177711)) y te contesta 24/7. Guárdalo: [/veci](https://www.mapadecaborojo.com/veci).
@@ -15,6 +15,18 @@
 ## Los récords (PRSF)
 
 Cada récord junta data pública verificable + data propia del substrato, y cierra con acción (no solo muestra el problema): `/prediccion` · `/costo-de-vida` · `/rendimiento` · `/cupon` · `/exposicion-ai` · `/decidir` · `/trabajo` · `/luz` · `/agua` · `/basura` · `/recuperacion` · `/sigue-el-dinero` · `/registro/estado` · `/diabetes` · `/telemedicina` · `/esencia` y más. Índice: [puertoricosinfiltros.com](https://puertoricosinfiltros.com).
+
+## El registro médico (RegistroMedicoPR)
+
+"El único registro de especialistas médicos de PR verificado contra el gobierno federal (NPPES) que un humano normal puede leer." Superficies:
+
+- **[/registro](https://registromedicopr.com/registro)** — buscador por nombre, especialidad, región, **síntoma** ("me falta el aire" → neumólogo, con guard de 911) y **plan médico** (✓ solo si la oficina lo confirmó; sin ✓ = "llama y pregunta", nunca oculta a nadie)
+- **[/pueblo](https://registromedicopr.com/pueblo)** — semáforo de acceso de los 78 municipios (🔴<5 · 🟡5-15 · 🟢15+ especialistas/10k hab, vista canónica `v_registro_muni_ratio`) + página por pueblo: qué hay, qué falta y dónde queda lo más cerca, badge HPSA federal, **datos citables copy-paste con fuente**, y alerta "🔔 te aviso cuando llegue uno nuevo" (tabla `registro_alerts`, cron diario `api/cron?job=alertas` cierra el loop por email)
+- **[/necesito](https://registromedicopr.com/necesito)** — 5 guías por intención (cita rápido · sin plan · cuido a mis padres desde afuera · acabo de llegar · no hay en mi pueblo), traducidas completas pa' la diáspora (`?lang=en`)
+- **[/especialista/:slug](https://registromedicopr.com/registro)** — 6,300+ páginas: NPI verificable, planes confirmados, checklist "antes de llamar", botón "enviárselo por WhatsApp a mami o papi", claim form (crowdsource de `accepted_plans`)
+- **[/registro/desiertos](https://registromedicopr.com/registro/desiertos)** · [/registro/mapa](https://registromedicopr.com/registro/mapa) · [/registro/estado](https://registromedicopr.com/registro/estado) · [/observatorio](https://registromedicopr.com/observatorio) — la capa cívica (ausencia documentada, HPSA, podcast + reporte)
+
+Regla de data: todo per cápita sale de las vistas canónicas (`v_registro_muni_ratio` / `v_registro_muni_spec`), nunca de `places.region` crudo.
 
 ## El motor de demanda
 
