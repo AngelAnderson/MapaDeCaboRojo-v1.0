@@ -218,16 +218,23 @@ function layout(opts: {
 <script>document.addEventListener('click',function(e){var d=document.getElementById('nav-more');if(d&&d.open&&!d.contains(e.target))d.removeAttribute('open');});</script>
 <a href="${langHref}" class="text-xs font-bold text-slate-500 hover:text-teal-700 border border-slate-200 rounded-lg px-2.5 py-1.5" aria-label="Language">${isEn ? 'ES' : 'EN'}</a>
 <button id="theme-toggle" type="button" aria-label="Theme" class="w-9 h-9 rounded-lg border border-slate-200 text-slate-600 hover:border-teal-400 flex items-center justify-center"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
+<button id="mnav-btn" type="button" aria-label="Menu" aria-expanded="false" class="md:hidden w-9 h-9 rounded-lg border border-slate-200 text-slate-600 hover:border-teal-400 flex items-center justify-center"><i class="fa-solid fa-bars" id="mnav-icon"></i></button>
 </div>
 </div>
-<nav class="md:hidden max-w-4xl mx-auto px-4 pb-2.5 -mt-0.5 flex gap-2 overflow-x-auto text-[13px] font-semibold text-slate-600" style="scrollbar-width:none;-webkit-overflow-scrolling:touch;">
-<a href="/registro${isEn ? '?lang=en' : ''}" class="shrink-0 bg-slate-100 rounded-full px-3 py-1.5">🔎 ${isEn ? 'Search' : 'Buscar'}</a>
-<a href="/pueblo${isEn ? '?lang=en' : ''}" class="shrink-0 bg-slate-100 rounded-full px-3 py-1.5">🏘️ ${isEn ? 'Your town' : 'Tu pueblo'}</a>
-<a href="/necesito${isEn ? '?lang=en' : ''}" class="shrink-0 bg-slate-100 rounded-full px-3 py-1.5">🧭 ${isEn ? 'Your situation' : 'Tu situación'}</a>
-<a href="/registro/desiertos${isEn ? '?lang=en' : ''}" class="shrink-0 bg-amber-100 text-amber-800 rounded-full px-3 py-1.5">🏜️ ${isEn ? 'Deserts' : 'Desiertos'}</a>
-<a href="/registro/mapa" class="shrink-0 bg-slate-100 rounded-full px-3 py-1.5">🗺️ ${isEn ? 'Map' : 'Mapa'}</a>
-<a href="/porque" class="shrink-0 bg-slate-100 rounded-full px-3 py-1.5">✈️ ${isEn ? 'Why they leave' : '¿Por qué se van?'}</a>
+<nav id="mnav" hidden class="md:hidden border-t border-slate-100 bg-white">
+<div class="max-w-4xl mx-auto px-4 py-2 flex flex-col text-[15px] font-semibold text-slate-700">
+<a href="/registro${isEn ? '?lang=en' : ''}" class="py-2.5 border-b border-slate-100">🔎 ${isEn ? 'Find a specialist' : 'Buscar especialista'}</a>
+<a href="/pueblo${isEn ? '?lang=en' : ''}" class="py-2.5 border-b border-slate-100">🏘️ ${isEn ? 'Your town' : 'Tu pueblo'}</a>
+<a href="/registro/desiertos${isEn ? '?lang=en' : ''}" class="py-2.5 border-b border-slate-100 text-amber-700">🏜️ ${isEn ? 'Medical deserts' : 'Desiertos médicos'}</a>
+<a href="/necesito${isEn ? '?lang=en' : ''}" class="py-2.5 border-b border-slate-100">🧭 ${isEn ? 'Your situation' : 'Tu situación'}</a>
+<a href="/registro/mapa" class="py-2.5 border-b border-slate-100">🗺️ ${isEn ? 'The interactive map' : 'El mapa interactivo'}</a>
+<a href="/porque" class="py-2.5 border-b border-slate-100">✈️ ${isEn ? 'Why doctors leave' : '¿Por qué se van?'}</a>
+<a href="/comparte" class="py-2.5">📋 ${isEn ? 'Citable facts' : 'Datos citables'}</a>
+</div>
 </nav>
+<script>(function(){var b=document.getElementById('mnav-btn'),n=document.getElementById('mnav'),i=document.getElementById('mnav-icon');if(!b||!n)return;
+b.addEventListener('click',function(){var open=n.hidden;n.hidden=!open;b.setAttribute('aria-expanded',String(open));i.className=open?'fa-solid fa-xmark':'fa-solid fa-bars';});
+document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target)&&!b.contains(e.target)){n.hidden=true;b.setAttribute('aria-expanded','false');i.className='fa-solid fa-bars';}});})();</script>
 </header>` : `
 <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
 <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
