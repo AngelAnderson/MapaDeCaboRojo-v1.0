@@ -9,6 +9,10 @@
     {
       "path": "/api/cron?job=maintenance",
       "schedule": "0 3 * * 1"
+    },
+    {
+      "path": "/api/cron?job=alertas",
+      "schedule": "30 12 * * *"
     }
   ],
   "rewrites": [

@@ -192,7 +192,7 @@ function layout(opts: {
   const header = isPRSF ? prsfHeader : isReg ? `
 <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
 <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-<a href="/registro" class="flex items-center gap-2 text-slate-900 hover:text-teal-700">
+<a href="/registro${isEn ? '?lang=en' : ''}" class="flex items-center gap-2 text-slate-900 hover:text-teal-700">
 <div class="bg-teal-700 w-8 h-8 rounded-lg flex items-center justify-center text-white">
 <i class="fa-solid fa-user-doctor text-sm"></i>
 </div>
@@ -200,17 +200,25 @@ function layout(opts: {
 </a>
 <div class="flex items-center gap-3">
 <nav class="hidden md:flex gap-5 text-sm text-slate-600">
-<a href="/registro${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Find a specialist' : 'Buscar especialista'}</a>
-<a href="/pueblo" class="hover:text-teal-700 font-semibold">${isEn ? 'Your town' : 'Tu pueblo'}</a>
-<a href="/necesito" class="hover:text-teal-700">${isEn ? 'Your situation' : '¿Tu situación?'}</a>
-<a href="/registro/desiertos" class="font-bold text-amber-700 hover:text-amber-800">${isEn ? 'Medical deserts' : 'Desiertos médicos'}</a>
-<a href="/porque" class="hover:text-teal-700">¿Por qué se van?</a>
-<a href="/registro#como-se-hizo" class="hover:text-teal-700">${isEn ? 'How it works' : 'Cómo se verifica'}</a>
+<a href="/registro${isEn ? '?lang=en' : ''}" class="hover:text-teal-700 font-semibold">${isEn ? 'Find a specialist' : 'Buscar especialista'}</a>
+<a href="/pueblo${isEn ? '?lang=en' : ''}" class="hover:text-teal-700 font-semibold">${isEn ? 'Your town' : 'Tu pueblo'}</a>
+<a href="/necesito${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Your situation' : 'Tu situación'}</a>
+<a href="/registro/desiertos${isEn ? '?lang=en' : ''}" class="font-bold text-amber-700 hover:text-amber-800">${isEn ? 'Medical deserts' : 'Desiertos médicos'}</a>
+<a href="/registro/mapa" class="hover:text-teal-700">${isEn ? 'The map' : 'El mapa'}</a>
+<a href="/porque" class="hover:text-teal-700">${isEn ? 'Why doctors leave' : '¿Por qué se van?'}</a>
 </nav>
 <a href="${langHref}" class="text-xs font-bold text-slate-500 hover:text-teal-700 border border-slate-200 rounded-lg px-2.5 py-1.5" aria-label="Language">${isEn ? 'ES' : 'EN'}</a>
 <button id="theme-toggle" type="button" aria-label="Theme" class="w-9 h-9 rounded-lg border border-slate-200 text-slate-600 hover:border-teal-400 flex items-center justify-center"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
 </div>
 </div>
+<nav class="md:hidden max-w-4xl mx-auto px-4 pb-2.5 -mt-0.5 flex gap-2 overflow-x-auto text-[13px] font-semibold text-slate-600" style="scrollbar-width:none;-webkit-overflow-scrolling:touch;">
+<a href="/registro${isEn ? '?lang=en' : ''}" class="shrink-0 bg-slate-100 rounded-full px-3 py-1.5">🔎 ${isEn ? 'Search' : 'Buscar'}</a>
+<a href="/pueblo${isEn ? '?lang=en' : ''}" class="shrink-0 bg-slate-100 rounded-full px-3 py-1.5">🏘️ ${isEn ? 'Your town' : 'Tu pueblo'}</a>
+<a href="/necesito${isEn ? '?lang=en' : ''}" class="shrink-0 bg-slate-100 rounded-full px-3 py-1.5">🧭 ${isEn ? 'Your situation' : 'Tu situación'}</a>
+<a href="/registro/desiertos${isEn ? '?lang=en' : ''}" class="shrink-0 bg-amber-100 text-amber-800 rounded-full px-3 py-1.5">🏜️ ${isEn ? 'Deserts' : 'Desiertos'}</a>
+<a href="/registro/mapa" class="shrink-0 bg-slate-100 rounded-full px-3 py-1.5">🗺️ ${isEn ? 'Map' : 'Mapa'}</a>
+<a href="/porque" class="shrink-0 bg-slate-100 rounded-full px-3 py-1.5">✈️ ${isEn ? 'Why they leave' : '¿Por qué se van?'}</a>
+</nav>
 </header>` : `
 <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
 <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -234,22 +242,35 @@ function layout(opts: {
 
   // --- Footer (host-aware). Registro = quiet, no newsletter/tienda; desiertos kept low-key. ---
   const footer = isPRSF ? (laMaquinaPRSF + prsfFooter) : isReg ? `
-<footer class="border-t border-slate-200 mt-12 py-8 bg-white">
-<div class="max-w-4xl mx-auto px-4 text-center">
-<p class="text-base font-semibold text-teal-800">El registro verificado de especialistas médicos de Puerto Rico.</p>
-<p class="text-xs text-slate-500 mt-1">Cada nombre verificado contra el registro federal NPPES/CMS. En español, por especialidad y por región.</p>
-<div class="mt-6 flex justify-center gap-4 text-xs text-slate-500 flex-wrap">
-<a href="/registro" class="hover:text-teal-700 font-semibold">Buscar especialista</a>
-<a href="/pueblo" class="hover:text-teal-700 font-semibold">Tu pueblo</a>
-<a href="/necesito" class="hover:text-teal-700">Tu situación</a>
-<a href="/registro/mapa" class="hover:text-teal-700">El mapa</a>
-<a href="/registro/estado" class="hover:text-teal-700">Estado de salud</a>
-<a href="/comparte" class="hover:text-teal-700">Datos</a>
-<a href="/registro/desiertos" class="hover:text-teal-700">Acceso por región</a>
-<a href="/observatorio" class="hover:text-teal-700">Observatorio</a>
-<a href="/registro#como-se-hizo" class="hover:text-teal-700">Cómo se verifica</a>
+<footer class="border-t border-slate-200 mt-12 py-10 bg-white">
+<div class="max-w-4xl mx-auto px-4">
+<p class="text-base font-semibold text-teal-800 text-center">${isEn ? 'The verified registry of Puerto Rico medical specialists.' : 'El registro verificado de especialistas médicos de Puerto Rico.'}</p>
+<p class="text-xs text-slate-500 mt-1 text-center">${isEn ? 'Every name verified against the federal NPPES/CMS registry. By specialty, region, and town.' : 'Cada nombre verificado contra el registro federal NPPES/CMS. Por especialidad, región y pueblo.'}</p>
+<div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6 text-xs">
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">${isEn ? 'Find' : 'Busca'}</div><div class="flex flex-col gap-1.5 text-slate-500">
+<a href="/registro${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Find a specialist' : 'Buscar especialista'}</a>
+<a href="/pueblo${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Your town' : 'Tu pueblo'}</a>
+<a href="/necesito${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Your situation' : 'Tu situación'}</a>
+<a href="/registro/mapa" class="hover:text-teal-700">${isEn ? 'The interactive map' : 'El mapa interactivo'}</a>
+</div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">${isEn ? 'Understand' : 'Entiende'}</div><div class="flex flex-col gap-1.5 text-slate-500">
+<a href="/registro/desiertos${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Medical deserts' : 'Desiertos médicos'}</a>
+<a href="/registro/estado" class="hover:text-teal-700">${isEn ? 'PR health status' : 'Estado de salud de PR'}</a>
+<a href="/porque" class="hover:text-teal-700">${isEn ? 'Why doctors leave' : '¿Por qué se van los médicos?'}</a>
+<a href="/observatorio" class="hover:text-teal-700">${isEn ? 'Observatory + podcast' : 'Observatorio + podcast'}</a>
+</div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">${isEn ? 'Press & AI' : 'Prensa e IA'}</div><div class="flex flex-col gap-1.5 text-slate-500">
+<a href="/comparte" class="hover:text-teal-700">${isEn ? 'Citable facts' : 'Datos citables'}</a>
+<a href="/pueblo${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Facts by town' : 'Datos por pueblo'}</a>
+<a href="/llms.txt" class="hover:text-teal-700">llms.txt</a>
+</div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">${isEn ? 'The house' : 'La casa'}</div><div class="flex flex-col gap-1.5 text-slate-500">
+<a href="/registro#como-se-hizo" class="hover:text-teal-700">${isEn ? 'How it is verified' : 'Cómo se verifica'}</a>
+<a href="mailto:angel@angelanderson.com" class="hover:text-teal-700">${isEn ? 'Report an outdated fact' : 'Reporta un dato viejo'}</a>
+<a href="https://wa.me/17874177711?text=ESPECIALISTA" class="hover:text-teal-700">${isEn ? 'Ask El Veci (WhatsApp)' : 'Pregúntale al Veci (WhatsApp)'}</a>
+</div></div>
 </div>
-<p class="mt-4 text-xs text-slate-400">¿Dudas de a quién ir? Escríbele al Veci: <strong>${PHONE_CTA}</strong>. Si te sirve, llégate.</p>
+<p class="mt-8 text-xs text-slate-400 text-center">${isEn ? 'Questions about who to see? Text El Veci:' : '¿Dudas de a quién ir? Escríbele al Veci:'} <strong>${PHONE_CTA}</strong>. ${isEn ? '' : 'Si te sirve, llégate.'}</p>
 </div>
 </footer>` : `
 <footer class="border-t border-slate-200 mt-12 py-8 bg-white">
@@ -2653,6 +2674,37 @@ const PR_PLANS: Array<{ v: string; l: string }> = [
   { v: 'medicare', l: 'Medicare Original' },
 ]
 
+// Mapa síntoma → especialidad (búsqueda en cristiano: "me falta el aire" → neumólogo).
+// Keywords normalizados (minúscula, sin acentos). u:1 = puede ser emergencia → warning 911.
+// Orientación general, NO diagnóstico — el microcopy lo dice siempre.
+const SYMPTOM_MAP: Array<{ k: string[]; s: string[]; u?: number }> = [
+  { k: ['pecho', 'corazon', 'palpitacion', 'presion alta', 'hipertension', 'arritmia', 'chest', 'heart'], s: ['cardiólogo'], u: 1 },
+  { k: ['aire', 'respirar', 'respiracion', 'asma', 'tos', 'pulmon', 'ahogo', 'apnea', 'breath', 'lungs'], s: ['neumólogo'], u: 1 },
+  { k: ['azucar', 'diabetes', 'tiroides', 'hormona', 'insulina'], s: ['endocrinologo'] },
+  { k: ['piel', 'acne', 'mancha', 'lunar', 'salpullido', 'sarpullido', 'eczema', 'psoriasis', 'skin', 'rash'], s: ['dermatólogo'] },
+  { k: ['estomago', 'reflujo', 'acidez', 'gastritis', 'colon', 'estrenimiento', 'diarrea', 'higado', 'colonoscopia', 'stomach'], s: ['gastroenterólogo'] },
+  { k: ['rinon', 'rinones', 'dialisis', 'kidney'], s: ['nefrólogo'] },
+  { k: ['orina', 'orinar', 'prostata', 'vejiga', 'piedra en el rinon'], s: ['urólogo'] },
+  { k: ['ansiedad', 'depresion', 'panico', 'insomnio', 'no duermo', 'bipolar', 'anxiety', 'depression'], s: ['psiquiatra', 'psicólogo'] },
+  { k: ['terapia', 'duelo', 'estres', 'therapy'], s: ['psicólogo'] },
+  { k: ['hueso', 'rodilla', 'hombro', 'fractura', 'cadera', 'knee', 'bone'], s: ['ortopeda'] },
+  { k: ['espalda', 'ciatica', 'dolor muscular', 'rehabilitacion', 'back pain'], s: ['fisiatra', 'ortopeda'] },
+  { k: ['cabeza', 'migrana', 'jaqueca', 'mareo', 'convulsion', 'temblor', 'memoria', 'alzheimer', 'parkinson', 'derrame', 'headache', 'seizure'], s: ['neurologo'], u: 1 },
+  { k: ['ojo', 'ojos', 'vision', 'catarata', 'glaucoma', 'eye'], s: ['oftalmólogo'] },
+  { k: ['espejuelos', 'vista', 'lentes', 'glasses'], s: ['optómetra'] },
+  { k: ['oido', 'garganta', 'sinusitis', 'ronquera', 'vertigo', 'nariz', 'ronquido', 'ear', 'throat'], s: ['otorrinolaringólogo'] },
+  { k: ['embarazo', 'embarazada', 'regla', 'menstruacion', 'papanicolau', 'utero', 'ovario', 'menopausia', 'pregnant'], s: ['ginecólogo'] },
+  { k: ['nino', 'nina', 'nene', 'nena', 'bebe', 'hijo', 'hija', 'child', 'baby'], s: ['pediatra'] },
+  { k: ['envejeciente', 'abuelo', 'abuela', 'adulto mayor', 'anciano', 'elderly'], s: ['geriatra'] },
+  { k: ['artritis', 'coyuntura', 'lupus', 'fibromialgia', 'arthritis'], s: ['reumatólogo'] },
+  { k: ['alergia', 'rinitis', 'allergy'], s: ['alergista'] },
+  { k: ['cancer', 'tumor', 'quimio', 'quimioterapia'], s: ['oncólogo'], u: 1 },
+  { k: ['infeccion', 'vih', 'hepatitis', 'hiv'], s: ['infectólogo'] },
+  { k: ['pie', 'pies', 'juanete', 'una encarnada', 'callo', 'feet', 'foot'], s: ['podiatra'] },
+  { k: ['dolor cronico', 'chronic pain'], s: ['manejo de dolor'] },
+  { k: ['hernia', 'vesicula', 'apendice', 'apendicitis'], s: ['cirujano general'], u: 1 },
+]
+
 // Disclaimer canon (texto de Angel, verbatim). Claro, pero humano.
 function regDisclaimer(en = false): string {
   const t = en
@@ -2818,8 +2870,96 @@ const INTENT_PAGES: IntentPage[] = [
   },
 ]
 
+// Versión EN de cada página de intención (la diáspora es la audiencia #1 que paga).
+const INTENT_EN: Record<string, { title: string; metaDesc: string; who: string; intro: string; steps: Array<{ h: string; p: string }>; faq: Array<{ q: string; a: string }> }> = {
+  'cita-rapido': {
+    title: 'I need a specialist appointment, fast',
+    metaDesc: 'How to get a specialist appointment in Puerto Rico faster: referral, cancellation lists, when to call, and widening your region. Concrete steps, free.',
+    who: 'For when they gave you an appointment months out and you cannot wait that long.',
+    intro: 'You called and they gave you an appointment four months out. Breathe: it is not that there is no way, it is that nobody taught you the moves. None of these require knowing anyone.',
+    steps: [
+      { h: 'Ask for the referral today', p: 'The primary doctor is the key. Without a referral, many offices will not even take your call. Ask for it by phone today, do not wait for your next visit.' },
+      { h: 'Ask to be put on the cancellation list', p: 'Almost every office has one and almost nobody asks. Someone cancels nearly every week, and that slot goes to whoever is on the list.' },
+      { h: 'Call between 8 and 9 in the morning', p: 'That is when offices set up their day and release slots. After noon there is almost never anything left.' },
+      { h: 'Widen the region', p: 'The same specialist with a 4-month wait in your region may have space in 2 weeks in the next one. The registry shows how many there are in each region, with phone numbers.' },
+      { h: 'Ask about telemedicine', p: 'For follow-ups and results, many see patients by video. Sometimes the first evaluation too. Asking costs nothing.' },
+    ],
+    faq: [
+      { q: 'How do I get a specialist appointment faster in Puerto Rico?', a: 'Ask your primary doctor for the referral by phone the same day, ask the office to put you on their cancellation list, call between 8 and 9 AM, and consider specialists in neighboring regions, where the wait can be weeks instead of months.' },
+      { q: 'What is a medical office cancellation list?', a: 'A list of patients willing to take slots that open when someone cancels. Almost every office has one, but you have to ask. It is one of the most effective ways to move up an appointment.' },
+    ],
+  },
+  'no-tengo-plan': {
+    title: 'I have no health insurance, where do I go?',
+    metaDesc: 'Medical options in Puerto Rico without insurance: Vital, federally funded 330 community health centers with sliding-scale fees, and cash office rates. In plain language.',
+    who: 'For when you have no coverage and keep postponing the doctor because of it.',
+    intro: 'Not having a plan does not mean there is no door. There are options that cost little or nothing, and none require waiting for things to get worse.',
+    steps: [
+      { h: 'Check if you qualify for Vital', p: "The government health plan covers more people than folks think, including working adults. Apply at your town's Medicaid office. Bring ID, proof of income, and proof of address." },
+      { h: '330 centers see you with or without insurance', p: 'These are federally funded community clinics that charge based on what you earn. They exist across most of the island, covering primary care, dental, and mental health.' },
+      { h: 'Ask for the cash price', p: 'Many offices have a self-pay rate that is lower than you imagine, especially for a consultation. Asking costs nothing.' },
+      { h: 'The ER is for emergencies', p: 'Federal law requires them to evaluate you even without insurance. But for non-emergencies you leave with a big bill and a long wait. Use the other doors first.' },
+    ],
+    faq: [
+      { q: 'Where can I see a doctor in Puerto Rico without health insurance?', a: "Three doors: apply for Vital (the government health plan) at your town's Medicaid office, go to a federally funded 330 community health center that charges on a sliding scale, or ask the office for their cash rate, which is usually lower than expected." },
+      { q: 'What is a 330 center in Puerto Rico?', a: 'A federally funded community clinic (Section 330) that sees everyone, with or without insurance, charging on a sliding scale by income. They offer primary, dental, and mental health care across most of the island.' },
+    ],
+  },
+  'cuido-a-mis-padres-desde-afuera': {
+    title: 'I care for my parents in Puerto Rico from the States',
+    metaDesc: 'How to help your parents in Puerto Rico find a specialist when you live in the US: federally verified registry, WhatsApp handoff, and direct help.',
+    who: "For the daughter in Orlando or the son in New York managing their parents' care by remote control.",
+    intro: 'You are there and your mom is here. Every medical errand is a chain of calls on a schedule that is not yours, with information nobody confirms. This registry was built with you in mind.',
+    steps: [
+      { h: 'Find the specialist here and send it by WhatsApp', p: 'Every specialist page has a button that sends your relative the name, specialty, and phone number, ready to call. You search from there, they call from here.' },
+      { h: 'Verify the doctor actually exists', p: 'Every profile shows its NPI, the public federal number from the NPPES registry, with a link to verify it yourself. No unsourced names floating around Facebook.' },
+      { h: 'Prep the call before they call', p: 'Plan card at hand, referral from the primary, and the two golden questions: "do you take the plan?" and "are you taking new patients?". The full checklist is on every page.' },
+      { h: 'If the runaround is too much, tell me', p: 'There is a short form in the registry. Tell me who you care for and what they need, and I will write you back myself. No obligation and no dead inbox.' },
+    ],
+    faq: [
+      { q: 'How do I help my parents in Puerto Rico find a specialist if I live in the US?', a: 'Search the verified registry (registromedicopr.com), confirm the provider exists via their federal NPI, and send the full info to your relative by WhatsApp with the page button. Prep them with the key questions before calling: whether the office takes their plan and whether they accept new patients.' },
+      { q: 'How do I verify a doctor in Puerto Rico is real?', a: 'Every legitimate provider has an NPI, a public number in the federal NPPES registry used by Medicare and health plans. On registromedicopr.com every profile shows its NPI with a direct link to the federal registry.' },
+    ],
+  },
+  'acabo-de-llegar': {
+    title: 'I just moved (back) to Puerto Rico, how do I find a doctor?',
+    metaDesc: 'If you moved or returned to Puerto Rico: how the medical system works, why your stateside plan may not travel, and how to get a primary and a specialist.',
+    who: 'For anyone who moved or returned to PR and does not know where to start with healthcare.',
+    intro: "Moving back is a pile of paperwork, and healthcare is the scariest pile. Let's take it in order, because this gets solved step by step.",
+    steps: [
+      { h: 'First a primary doctor, then the specialist', p: 'In Puerto Rico almost everything runs on referrals. Without a primary, every specialist is a closed door. Get one first, even while healthy.' },
+      { h: 'Your stateside plan probably does not work the same here', p: 'Original Medicare travels. Medicare Advantage and employer plans from the mainland almost never cover the same here. Call your plan before the first appointment, not after.' },
+      { h: 'When picking a new plan, ask about the network', p: 'Most Medicare plans here are Advantage plans with closed networks. The specialist you want may not be in the network of the plan being sold to you. Verify before signing.' },
+      { h: 'Check what specialists your region has before picking a town', p: 'Entire regions lack certain specialists. If you have a condition, check the registry and the medical deserts map before deciding where to live.' },
+    ],
+    faq: [
+      { q: 'Does my US health insurance work in Puerto Rico?', a: 'It depends. Original Medicare works in Puerto Rico since it is part of the United States. Medicare Advantage plans and most employer plans have local networks and almost never cover the same on the island. Call your plan before your first appointment.' },
+      { q: 'Do I need a referral to see a specialist in Puerto Rico?', a: 'In most cases yes. The system in Puerto Rico runs on primary-doctor referrals, and many specialist offices will not book without one. The first step after arriving is getting a primary doctor.' },
+    ],
+  },
+  'no-hay-en-mi-pueblo': {
+    title: 'My town does not have the specialist I need',
+    metaDesc: 'What to do when your town or region in Puerto Rico lacks the specialist you need: where the nearest one is, telemedicine, and planning the trip.',
+    who: 'For anyone whose nearest specialist is an hour and a half away.',
+    intro: 'It is not your imagination and it is not your fault: 36 towns have no psychiatrist and entire regions lack geriatricians and pulmonologists. We documented it with federal data so it can be seen. While the big fix happens, here is what you can do today.',
+    steps: [
+      { h: 'Find where the truly nearest one is', p: 'The registry shows how many there are in each region with names and phone numbers. Sometimes the nearest is not in the metro area but in the region next door.' },
+      { h: 'Get the referral early and bundle one trip', p: 'If you have to travel, try to schedule labs, studies, and the appointment on the same day. Say so when you call: offices help more than you would think.' },
+      { h: 'Ask about telemedicine', p: 'For follow-ups and results, many specialists see patients by video and you save the whole trip. The first visit sometimes has to be in person; the rest often do not.' },
+      { h: 'Look at the medical deserts map, and share it', p: 'We documented what exists and what is missing in every town, with the federal source next to it. This starts to change when it is seen.' },
+    ],
+    faq: [
+      { q: 'What do I do if my town has no specialist I need?', a: 'Check the verified registry for the nearest one by region (sometimes the neighboring region has more availability than the metro area), get the referral early, bundle studies and the appointment into one trip if you must travel, and ask whether follow-ups can be done by telemedicine.' },
+      { q: "What are Puerto Rico's medical deserts?", a: 'Towns and regions where no specialist of a given type practices according to the federal NPPES registry. For example, 36 municipalities have no psychiatrist, and the central region has no pulmonologists, geriatricians, or ENTs. The full map is at registromedicopr.com/registro/desiertos.' },
+    ],
+  },
+}
+
 async function handleNecesito(req: any, res: any) {
   const intentSlug = String(req.query.intent || '').toLowerCase().trim()
+  const en = String(req.query.lang || '') === 'en'
+  const lp = en ? '?lang=en' : ''
+  const te = (es: string, env: string) => en ? env : es
   const page = intentSlug ? INTENT_PAGES.find(p => p.slug === intentSlug) : null
   if (intentSlug && !page) { res.statusCode = 302; res.setHeader('Location', '/necesito'); res.end(); return }
 
@@ -2828,81 +2968,90 @@ async function handleNecesito(req: any, res: any) {
 
   if (!page) {
     // Índice: ¿cuál es tu situación?
-    const cards = INTENT_PAGES.map(p => `
-      <a href="/necesito/${p.slug}" class="block bg-white border border-slate-200 rounded-2xl p-5 hover:border-teal-400 hover:shadow-sm transition">
+    const cards = INTENT_PAGES.map(p => {
+      const L = en && INTENT_EN[p.slug] ? INTENT_EN[p.slug] : p
+      return `
+      <a href="/necesito/${p.slug}${lp}" class="block bg-white border border-slate-200 rounded-2xl p-5 hover:border-teal-400 hover:shadow-sm transition">
         <div class="text-3xl leading-none">${p.e}</div>
-        <div class="font-bold text-slate-900 mt-2 leading-snug">${escapeHtml(p.title)}</div>
-        <div class="text-sm text-slate-500 mt-1">${escapeHtml(p.who)}</div>
-      </a>`).join('')
+        <div class="font-bold text-slate-900 mt-2 leading-snug">${escapeHtml(L.title)}</div>
+        <div class="text-sm text-slate-500 mt-1">${escapeHtml(L.who)}</div>
+      </a>`
+    }).join('')
     const body = `
-<h1>¿Cuál es tu situación?</h1>
-<p class="text-lg text-slate-600 mt-2">La gente no busca "neumólogo". Busca "necesito cita rápido" o "cuido a mami desde afuera". Empieza por la tuya: cada una tiene pasos concretos, sin vueltas.</p>
+<h1>${te('¿Cuál es tu situación?', 'What is your situation?')}</h1>
+<p class="text-lg text-slate-600 mt-2">${te('La gente no busca "neumólogo". Busca "necesito cita rápido" o "cuido a mami desde afuera". Empieza por la tuya: cada una tiene pasos concretos, sin vueltas.', 'People do not search for "pulmonologist". They search for "I need an appointment fast" or "I care for mom from afar". Start with yours: each one has concrete steps, no runaround.')}</p>
 <div class="not-prose mt-5 grid sm:grid-cols-2 gap-3">${cards}</div>
-<p class="not-prose mt-6 text-sm text-slate-500">¿Lo tuyo es directo? <a href="/registro" class="text-teal-700 font-semibold">Busca por especialidad y región →</a></p>
-${regDisclaimer()}`
+<p class="not-prose mt-6 text-sm text-slate-500">${te('¿Lo tuyo es directo?', 'Know exactly what you need?')} <a href="/registro${lp}" class="text-teal-700 font-semibold">${te('Busca por especialidad y región →', 'Search by specialty and region →')}</a></p>
+${regDisclaimer(en)}`
     res.status(200).send(layout({
-      title: '¿Cuál es tu situación? · Guías pa\' resolver lo médico en PR',
-      description: 'Guías por situación real: cita rápido, sin plan médico, cuidando a tus padres desde afuera, recién llegado, o sin especialista en tu pueblo. Pasos concretos, gratis.',
+      title: te("¿Cuál es tu situación? · Guías pa' resolver lo médico en PR", 'What is your situation? · Practical healthcare guides for PR'),
+      description: te('Guías por situación real: cita rápido, sin plan médico, cuidando a tus padres desde afuera, recién llegado, o sin especialista en tu pueblo. Pasos concretos, gratis.', 'Guides by real situation: fast appointment, no insurance, caring for your parents from the States, just moved back, or no specialist in your town. Concrete steps, free.'),
       slug: 'necesito', bodyHtml: body,
-      jsonLd: { '@context': 'https://schema.org', '@type': 'CollectionPage', name: '¿Cuál es tu situación? · Registro Médico PR', url: 'https://registromedicopr.com/necesito', inLanguage: 'es' },
+      jsonLd: { '@context': 'https://schema.org', '@type': 'CollectionPage', name: te('¿Cuál es tu situación? · Registro Médico PR', 'What is your situation? · Registro Médico PR'), url: 'https://registromedicopr.com/necesito', inLanguage: en ? 'en' : 'es' },
       ogImage: '/og/registro.png', host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+      canonicalUrl: 'https://registromedicopr.com/necesito',
+      lang: en ? 'en' : 'es',
     }))
     return
   }
 
+  const L = en && INTENT_EN[page.slug] ? INTENT_EN[page.slug] : page
   const specChips = page.specs.map(s => {
     const x = REGISTRY_SPECS.find(r => r.s === s)
     if (!x) return ''
-    return `<a href="/registro/${specToUrl(x.s)}" class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1.5 rounded-full text-sm hover:bg-teal-100">${x.e} ${escapeHtml(x.l)} (${x.t})</a>`
+    const lbl = en ? (SPEC_LABEL_EN[x.s] || x.l) : x.l
+    return `<a href="/registro/${specToUrl(x.s)}${lp}" class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1.5 rounded-full text-sm hover:bg-teal-100">${x.e} ${escapeHtml(lbl)} (${x.t})</a>`
   }).join(' ')
 
-  const stepsHtml = page.steps.map((s, i) => `
+  const stepsHtml = L.steps.map((s, i) => `
     <div class="flex gap-4 items-start bg-white border border-slate-200 rounded-2xl p-5">
       <div class="w-8 h-8 rounded-full bg-teal-700 text-white font-black flex items-center justify-center shrink-0">${i + 1}</div>
       <div><p class="font-bold text-slate-900">${escapeHtml(s.h)}</p><p class="text-sm text-slate-600 mt-1">${escapeHtml(s.p)}</p></div>
     </div>`).join('')
 
   const body = `
-<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <a href="/necesito" class="hover:text-teal-700">¿Cuál es tu situación?</a> <span class="text-slate-300">/</span> <span class="text-slate-700">${escapeHtml(page.title)}</span></nav>
+<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro${lp}" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <a href="/necesito${lp}" class="hover:text-teal-700">${te('¿Cuál es tu situación?', 'Your situation')}</a> <span class="text-slate-300">/</span> <span class="text-slate-700">${escapeHtml(L.title)}</span></nav>
 <div class="not-prose flex items-start gap-4">
   <div class="text-5xl leading-none">${page.e}</div>
   <div>
-    <h1 class="text-3xl font-black text-slate-900 leading-tight">${escapeHtml(page.title)}</h1>
-    <p class="text-slate-500 mt-1">${escapeHtml(page.who)}</p>
+    <h1 class="text-3xl font-black text-slate-900 leading-tight">${escapeHtml(L.title)}</h1>
+    <p class="text-slate-500 mt-1">${escapeHtml(L.who)}</p>
   </div>
 </div>
-<p class="text-lg text-slate-700 mt-4">${escapeHtml(page.intro)}</p>
+<p class="text-lg text-slate-700 mt-4">${escapeHtml(L.intro)}</p>
 <div class="not-prose mt-5 space-y-3">${stepsHtml}</div>
-${antesDeLlamar()}
-${specChips ? `<h2>Especialistas que suelen tocar en esto</h2>
-<p class="text-slate-600 -mt-2">Cada uno con cuántos hay en la isla, por región y con teléfono, verificados contra el registro federal.</p>
+${antesDeLlamar({ en })}
+${specChips ? `<h2>${te('Especialistas que suelen tocar en esto', 'Specialists usually involved here')}</h2>
+<p class="text-slate-600 -mt-2">${te('Cada uno con cuántos hay en la isla, por región y con teléfono, verificados contra el registro federal.', 'Each with how many exist on the island, by region and with phone numbers, verified against the federal registry.')}</p>
 <div class="not-prose mt-3 flex flex-wrap gap-2">${specChips}</div>` : ''}
 <div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
-  <p class="text-lg font-bold mb-1">¿Sigues trancao'?</p>
-  <p class="text-sm text-teal-100 mb-4">Escríbele al Veci al <strong>${PHONE_CTA}</strong>, o déjale una nota a Angel en el registro y te escribe él mismo.</p>
+  <p class="text-lg font-bold mb-1">${te("¿Sigues trancao'?", 'Still stuck?')}</p>
+  <p class="text-sm text-teal-100 mb-4">${te('Escríbele al Veci al', 'Text El Veci at')} <strong>${PHONE_CTA}</strong>${te(', o déjale una nota a Angel en el registro y te escribe él mismo.', ', or leave Angel a note in the registry and he will write you back himself.')}</p>
   <div class="flex flex-wrap gap-3 justify-center">
     <a href="https://wa.me/17874177711?text=ESPECIALISTA" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ESPECIALISTA</a>
-    <a href="/registro" class="inline-flex items-center gap-2 bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-900"><i class="fa-solid fa-magnifying-glass"></i> Buscar en el registro</a>
+    <a href="/registro${lp}" class="inline-flex items-center gap-2 bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-900"><i class="fa-solid fa-magnifying-glass"></i> ${te('Buscar en el registro', 'Search the registry')}</a>
   </div>
 </div>
-${regDisclaimer()}
-<p class="not-prose mt-5 text-sm text-slate-500"><a href="/necesito" class="text-teal-700 font-semibold">← Ver las otras situaciones</a></p>`
+${regDisclaimer(en)}
+<p class="not-prose mt-5 text-sm text-slate-500"><a href="/necesito${lp}" class="text-teal-700 font-semibold">${te('← Ver las otras situaciones', '← See the other situations')}</a></p>`
 
   const jsonLd = [
-    { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: page.faq.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
-    { '@context': 'https://schema.org', '@type': 'HowTo', name: page.title, description: page.metaDesc, inLanguage: 'es',
-      step: page.steps.map((s, i) => ({ '@type': 'HowToStep', position: i + 1, name: s.h, text: s.p })) },
+    { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: L.faq.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+    { '@context': 'https://schema.org', '@type': 'HowTo', name: L.title, description: L.metaDesc, inLanguage: en ? 'en' : 'es',
+      step: L.steps.map((s, i) => ({ '@type': 'HowToStep', position: i + 1, name: s.h, text: s.p })) },
     { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Registro Médico PR', item: 'https://registromedicopr.com/registro' },
-      { '@type': 'ListItem', position: 2, name: '¿Cuál es tu situación?', item: 'https://registromedicopr.com/necesito' },
-      { '@type': 'ListItem', position: 3, name: page.title, item: `https://registromedicopr.com/necesito/${page.slug}` },
+      { '@type': 'ListItem', position: 2, name: te('¿Cuál es tu situación?', 'Your situation'), item: 'https://registromedicopr.com/necesito' },
+      { '@type': 'ListItem', position: 3, name: L.title, item: `https://registromedicopr.com/necesito/${page.slug}` },
     ] },
   ]
   res.status(200).send(layout({
-    title: `${page.title} · guía práctica PR`,
-    description: page.metaDesc,
+    title: te(`${L.title} · guía práctica PR`, `${L.title} · practical guide, Puerto Rico`),
+    description: L.metaDesc,
     slug: `necesito/${page.slug}`, bodyHtml: body, jsonLd,
     ogImage: '/og/registro.png', host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+    canonicalUrl: `https://registromedicopr.com/necesito/${page.slug}`,
+    lang: en ? 'en' : 'es',
   }))
 }
 
@@ -2921,6 +3070,9 @@ function puebloSemaforo(por10k: number): { e: string; label: string; bg: string;
 
 async function handlePueblo(req: any, res: any) {
   const slug = String(req.query.m || '').toLowerCase().trim()
+  const en = String(req.query.lang || '') === 'en'
+  const lp = en ? '?lang=en' : ''
+  const te = (es: string, env: string) => en ? env : es
   const { data: muniData } = await supabase
     .from('v_registro_muni_ratio')
     .select('municipio,region,poblacion,especialistas,psiquiatras,por_10k_hab')
@@ -2941,37 +3093,37 @@ async function handlePueblo(req: any, res: any) {
   // ---------- Índice: el ranking de los 78 ----------
   if (!slug) {
     const rows = all.map((x, i) => {
-      const s = puebloSemaforo(x.por)
+      const sem = puebloSemaforo(x.por)
       return `<tr class="border-t border-slate-100 pueblo-row" data-n="${escapeHtml(specToUrl(x.municipio))}">
         <td class="py-2 px-3 text-slate-400 text-xs">${i + 1}</td>
-        <td class="py-2 px-3"><a href="/pueblo/${specToUrl(x.municipio)}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${s.e} ${escapeHtml(x.municipio)}</a></td>
+        <td class="py-2 px-3"><a href="/pueblo/${specToUrl(x.municipio)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${sem.e} ${escapeHtml(x.municipio)}</a></td>
         <td class="py-2 px-3 text-slate-500 text-sm">${escapeHtml(PUEBLO_REGION_CAP[x.region] || x.region)}</td>
         <td class="py-2 px-3 text-right font-semibold text-slate-700">${x.especialistas.toLocaleString('en-US')}</td>
         <td class="py-2 px-3 text-right font-black ${x.por < 5 ? 'text-red-600' : x.por < 15 ? 'text-amber-600' : 'text-emerald-700'}">${x.por.toFixed(1)}</td>
       </tr>`
     }).join('')
     const body = `
-<h1>¿Cómo está tu pueblo?</h1>
-<p class="text-lg text-slate-600 mt-2">Los 78 municipios de Puerto Rico, rankeados por especialistas médicos verificados por cada 10,000 habitantes. Fuente: registro federal NPPES + Censo. Toca tu pueblo pa' ver qué hay, qué falta y dónde queda lo más cerca.</p>
+<h1>${te('¿Cómo está tu pueblo?', 'How is your town doing?')}</h1>
+<p class="text-lg text-slate-600 mt-2">${te("Los 78 municipios de Puerto Rico, rankeados por especialistas médicos verificados por cada 10,000 habitantes. Fuente: registro federal NPPES + Censo. Toca tu pueblo pa' ver qué hay, qué falta y dónde queda lo más cerca.", 'All 78 municipalities of Puerto Rico, ranked by verified medical specialists per 10,000 residents. Source: federal NPPES registry + Census. Tap your town to see what it has, what is missing, and where the nearest one is.')}</p>
 <div class="not-prose mt-4 grid sm:grid-cols-3 gap-3">
-  <div class="bg-red-50 border border-red-200 rounded-xl p-4"><div class="text-3xl font-black text-red-600">${rojos}</div><div class="text-sm text-slate-600 mt-1">pueblos en rojo (menos de 5 por cada 10 mil)</div></div>
-  <div class="bg-slate-50 border border-slate-200 rounded-xl p-4"><div class="text-3xl font-black text-slate-800">${ceros.length}</div><div class="text-sm text-slate-600 mt-1">pueblos con CERO especialistas${ceros.length ? `: ${escapeHtml(ceros.map(z => z.municipio).join(', '))}` : ''}</div></div>
-  <div class="bg-teal-50 border border-teal-200 rounded-xl p-4"><div class="text-3xl font-black text-teal-700">${mediana.toFixed(1)}</div><div class="text-sm text-slate-600 mt-1">la mediana de la isla, por cada 10 mil habitantes</div></div>
+  <div class="bg-red-50 border border-red-200 rounded-xl p-4"><div class="text-3xl font-black text-red-600">${rojos}</div><div class="text-sm text-slate-600 mt-1">${te('pueblos en rojo (menos de 5 por cada 10 mil)', 'towns in red (fewer than 5 per 10,000)')}</div></div>
+  <div class="bg-slate-50 border border-slate-200 rounded-xl p-4"><div class="text-3xl font-black text-slate-800">${ceros.length}</div><div class="text-sm text-slate-600 mt-1">${te('pueblos con CERO especialistas', 'towns with ZERO specialists')}${ceros.length ? `: ${escapeHtml(ceros.map(z => z.municipio).join(', '))}` : ''}</div></div>
+  <div class="bg-teal-50 border border-teal-200 rounded-xl p-4"><div class="text-3xl font-black text-teal-700">${mediana.toFixed(1)}</div><div class="text-sm text-slate-600 mt-1">${te('la mediana de la isla, por cada 10 mil habitantes', 'the island median, per 10,000 residents')}</div></div>
 </div>
 <div class="not-prose mt-5">
-  <input id="pb-filter" type="search" placeholder="Busca tu pueblo…" class="w-full rounded-lg border border-slate-300 p-3 text-base" autocomplete="off">
+  <input id="pb-filter" type="search" placeholder="${te('Busca tu pueblo…', 'Find your town…')}" class="w-full rounded-lg border border-slate-300 p-3 text-base" autocomplete="off">
 </div>
 <div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
-  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">#</th><th class="py-2 px-3">Pueblo</th><th class="py-2 px-3">Región</th><th class="py-2 px-3 text-right">Especialistas</th><th class="py-2 px-3 text-right">Por 10 mil</th></tr></thead><tbody id="pb-body">${rows}</tbody></table>
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">#</th><th class="py-2 px-3">${te('Pueblo', 'Town')}</th><th class="py-2 px-3">${te('Región', 'Region')}</th><th class="py-2 px-3 text-right">${te('Especialistas', 'Specialists')}</th><th class="py-2 px-3 text-right">${te('Por 10 mil', 'Per 10,000')}</th></tr></thead><tbody id="pb-body">${rows}</tbody></table>
 </div>
-<p class="not-prose text-xs text-slate-500 mt-2">🔴 menos de 5 por 10 mil · 🟡 de 5 a 15 · 🟢 más de 15. El ranking va del más desatendido al mejor servido. Semáforo por cantidad, no por distancia: un pueblo pequeño al lado de Mayagüez puede estar en rojo y aun así tener el especialista a 15 minutos.</p>
+<p class="not-prose text-xs text-slate-500 mt-2">${te('🔴 menos de 5 por 10 mil · 🟡 de 5 a 15 · 🟢 más de 15. El ranking va del más desatendido al mejor servido. Semáforo por cantidad, no por distancia: un pueblo pequeño al lado de Mayagüez puede estar en rojo y aun así tener el especialista a 15 minutos.', '🔴 fewer than 5 per 10,000 · 🟡 5 to 15 · 🟢 more than 15. Ranked from most underserved to best served. The light measures quantity, not distance: a small town next to Mayagüez can be red and still have the specialist 15 minutes away.')}</p>
 <script>
 (function(){var f=document.getElementById('pb-filter'),b=document.getElementById('pb-body');if(!f)return;
 function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');}
 f.addEventListener('input',function(){var q=norm(f.value.trim());Array.prototype.forEach.call(b.querySelectorAll('.pueblo-row'),function(r){r.style.display=!q||r.getAttribute('data-n').indexOf(q)>=0?'':'none';});});})();
 </script>
-${shareRow({ text: `¿Cuántos médicos especialistas tiene tu pueblo? Los 78 municipios de PR rankeados con data federal. ${rojos} están en rojo y ${ceros.length} tienen CERO.`, url: 'https://registromedicopr.com/pueblo', toWho: 'Al grupo de la familia o del pueblo. Cada cual busca el suyo.' })}
-${regDisclaimer()}
+${shareRow({ text: te(`¿Cuántos médicos especialistas tiene tu pueblo? Los 78 municipios de PR rankeados con data federal. ${rojos} están en rojo y ${ceros.length} tienen CERO.`, `How many medical specialists does your hometown in Puerto Rico have? All 78 municipalities ranked with federal data. ${rojos} are in red and ${ceros.length} have ZERO.`), url: 'https://registromedicopr.com/pueblo', toWho: te('Al grupo de la familia o del pueblo. Cada cual busca el suyo.', 'To the family or hometown group chat. Everyone looks up their own.') })}
+${regDisclaimer(en)}
 ${SHARE_COPY_SCRIPT}`
     const jsonLd = [
       { '@context': 'https://schema.org', '@type': 'Dataset', name: 'Acceso a especialistas médicos por municipio de Puerto Rico',
@@ -2986,10 +3138,12 @@ ${SHARE_COPY_SCRIPT}`
       ] },
     ]
     res.status(200).send(layout({
-      title: '¿Cómo está tu pueblo? Semáforo de acceso médico de los 78 municipios',
-      description: `Los 78 municipios de PR rankeados por especialistas verificados por cada 10,000 habitantes. ${rojos} en rojo, ${ceros.length} con cero. Data federal NPPES, en español.`,
+      title: te('¿Cómo está tu pueblo? Semáforo de acceso médico de los 78 municipios', 'How is your town doing? Medical access across all 78 PR municipalities'),
+      description: te(`Los 78 municipios de PR rankeados por especialistas verificados por cada 10,000 habitantes. ${rojos} en rojo, ${ceros.length} con cero. Data federal NPPES, en español.`, `All 78 PR municipalities ranked by verified specialists per 10,000 residents. ${rojos} in red, ${ceros.length} with zero. Federal NPPES data.`),
       slug: 'pueblo', bodyHtml: body, jsonLd, ogImage: '/og/desiertos.png',
       host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+      canonicalUrl: 'https://registromedicopr.com/pueblo',
+      lang: en ? 'en' : 'es',
     }))
     return
   }
@@ -2999,6 +3153,8 @@ ${SHARE_COPY_SCRIPT}`
   if (!town) { res.statusCode = 302; res.setHeader('Location', '/pueblo'); res.end(); return }
   const rank = all.findIndex(x => x.municipio === town.municipio) + 1
   const sem = puebloSemaforo(town.por)
+  const semLabelEn = town.por >= 15 ? 'high access' : town.por >= 5 ? 'medium access' : 'low access'
+  const semLabel = en ? semLabelEn : sem.label
   const regionCap = PUEBLO_REGION_CAP[town.region] || town.region
   const pageUrl = `https://registromedicopr.com/pueblo/${slug}`
 
@@ -3014,88 +3170,113 @@ ${SHARE_COPY_SCRIPT}`
   const presentSet = new Set(present.map(p => p.sub))
   const missing = PUEBLO_HIGH_NEED.filter(s => !presentSet.has(s)).map(s => REGISTRY_BYSUB[s]).filter(Boolean)
 
+  const specLbl = (x: any) => en ? (SPEC_LABEL_EN[x.s] || x.l) : x.l
   const presentChips = present.map(p => {
     const x = REGISTRY_BYSUB[p.sub]
-    return `<a href="/registro/${specToUrl(p.sub)}" class="inline-flex items-center gap-1.5 bg-white border border-teal-200 text-teal-800 font-semibold px-3 py-1.5 rounded-full text-sm hover:bg-teal-50">${x.e} ${escapeHtml(x.l)} <span class="font-black">${p.n}</span></a>`
+    return `<a href="/registro/${specToUrl(p.sub)}${lp}" class="inline-flex items-center gap-1.5 bg-white border border-teal-200 text-teal-800 font-semibold px-3 py-1.5 rounded-full text-sm hover:bg-teal-50">${x.e} ${escapeHtml(specLbl(x))} <span class="font-black">${p.n}</span></a>`
   }).join(' ')
 
   const missingRows = missing.map((x: any) => {
     const regionN = (x.r as any)[regionCap] || 0
     const near = regionN > 0
-      ? `en el ${regionCap} hay <a href="/registro/${specToUrl(x.s)}/${specToUrl(regionCap)}" class="text-teal-700 font-semibold hover:underline">${regionN} →</a>`
-      : `en el ${regionCap} tampoco: el grupo grande está <a href="/registro/${specToUrl(x.s)}/metro" class="text-teal-700 font-semibold hover:underline">en el área metro (${x.r.Metro || 0}) →</a>`
-    return `<li class="flex gap-2.5 items-start"><span class="text-red-500 font-black mt-0.5">✗</span><span class="text-sm text-slate-700"><strong>${x.e} ${escapeHtml(x.l)}:</strong> aquí no hay ninguno verificado; ${near}</span></li>`
+      ? te(`en el ${regionCap} hay <a href="/registro/${specToUrl(x.s)}/${specToUrl(regionCap)}${lp}" class="text-teal-700 font-semibold hover:underline">${regionN} →</a>`, `the ${regionCap} region has <a href="/registro/${specToUrl(x.s)}/${specToUrl(regionCap)}${lp}" class="text-teal-700 font-semibold hover:underline">${regionN} →</a>`)
+      : te(`en el ${regionCap} tampoco: el grupo grande está <a href="/registro/${specToUrl(x.s)}/metro${lp}" class="text-teal-700 font-semibold hover:underline">en el área metro (${x.r.Metro || 0}) →</a>`, `none in the ${regionCap} region either: the largest group is <a href="/registro/${specToUrl(x.s)}/metro${lp}" class="text-teal-700 font-semibold hover:underline">in the metro area (${x.r.Metro || 0}) →</a>`)
+    return `<li class="flex gap-2.5 items-start"><span class="text-red-500 font-black mt-0.5">✗</span><span class="text-sm text-slate-700"><strong>${x.e} ${escapeHtml(specLbl(x))}:</strong> ${te('aquí no hay ninguno verificado;', 'none verified here;')} ${near}</span></li>`
   }).join('')
 
   const hpsaBlock = (hpsaRows && hpsaRows.length) ? `
 <div class="not-prose mt-6 bg-indigo-50 border border-indigo-200 rounded-2xl p-5">
-  <p class="font-bold text-indigo-900 text-base">🏛️ El gobierno federal ya reconoció la escasez aquí</p>
-  <p class="text-sm text-indigo-800 mt-1">${escapeHtml(town.municipio)} tiene ${hpsaRows.length === 1 ? 'una designación federal activa' : hpsaRows.length + ' designaciones federales activas'} de escasez de proveedores (HPSA): ${hpsaRows.map((h: any) => `${escapeHtml(HPSA_DISC_ES[h.discipline] || h.discipline)} (puntuación ${escapeHtml(String(h.score))} de 25)`).join(' · ')}. Eso no es opinión nuestra: es HRSA, la agencia federal de salud. <a href="/registro/estado" class="font-semibold underline">Lo que eso significa y el dinero que trae →</a></p>
+  <p class="font-bold text-indigo-900 text-base">🏛️ ${te('El gobierno federal ya reconoció la escasez aquí', 'The federal government already recognized the shortage here')}</p>
+  <p class="text-sm text-indigo-800 mt-1">${escapeHtml(town.municipio)} ${te(`tiene ${hpsaRows.length === 1 ? 'una designación federal activa' : hpsaRows.length + ' designaciones federales activas'} de escasez de proveedores (HPSA):`, `has ${hpsaRows.length === 1 ? 'an active federal provider-shortage designation' : hpsaRows.length + ' active federal provider-shortage designations'} (HPSA):`)} ${hpsaRows.map((h: any) => `${escapeHtml(en ? h.discipline : (HPSA_DISC_ES[h.discipline] || h.discipline))} (${te('puntuación', 'score')} ${escapeHtml(String(h.score))}/25)`).join(' · ')}. ${te('Eso no es opinión nuestra: es HRSA, la agencia federal de salud.', 'That is not our opinion: it is HRSA, the federal health agency.')} <a href="/registro/estado" class="font-semibold underline">${te('Lo que eso significa y el dinero que trae →', 'What that means and the money it brings →')}</a></p>
 </div>` : ''
+
+  // 📋 Datos citables del pueblo — cada dato con botón Copiar y la fuente pegada (prensa, alcaldías, IA)
+  const fuente = te(`Fuente: registro federal NPPES + Censo · registromedicopr.com/pueblo/${slug}`, `Source: federal NPPES registry + Census · registromedicopr.com/pueblo/${slug}`)
+  const datos: string[] = []
+  datos.push(te(
+    `${town.municipio} tiene ${town.especialistas.toLocaleString('en-US')} especialistas médicos verificados para ${town.poblacion.toLocaleString('en-US')} habitantes: ${town.por.toFixed(1)} por cada 10,000. Puesto ${rank} de 78 municipios de Puerto Rico (mediana: ${mediana.toFixed(1)}).`,
+    `${town.municipio} has ${town.especialistas.toLocaleString('en-US')} verified medical specialists for ${town.poblacion.toLocaleString('en-US')} residents: ${town.por.toFixed(1)} per 10,000. Rank ${rank} of Puerto Rico's 78 municipalities (median: ${mediana.toFixed(1)}).`))
+  datos.push(town.psiquiatras === 0
+    ? te(`${town.municipio} no tiene ni un solo psiquiatra verificado. Es uno de 36 municipios de Puerto Rico sin ninguno.`, `${town.municipio} has not a single verified psychiatrist. It is one of 36 Puerto Rico municipalities with none.`)
+    : te(`${town.municipio} tiene ${town.psiquiatras} psiquiatra${town.psiquiatras === 1 ? '' : 's'} verificado${town.psiquiatras === 1 ? '' : 's'}. En Puerto Rico, 36 municipios no tienen ninguno.`, `${town.municipio} has ${town.psiquiatras} verified psychiatrist${town.psiquiatras === 1 ? '' : 's'}. In Puerto Rico, 36 municipalities have none.`))
+  if (missing.length) datos.push(te(
+    `En ${town.municipio} no hay práctica verificada de: ${missing.map((x: any) => x.l).join(', ')}.`,
+    `${town.municipio} has no verified practice of: ${missing.map((x: any) => (SPEC_LABEL_EN[x.s] || x.l)).join(', ')}.`))
+  if (hpsaRows && hpsaRows.length) datos.push(te(
+    `${town.municipio} tiene designación federal de escasez (HPSA) activa de ${hpsaRows.map((h: any) => `${HPSA_DISC_ES[h.discipline] || h.discipline} (puntuación ${h.score}/25)`).join(' y ')}, según HRSA.`,
+    `${town.municipio} has an active federal shortage designation (HPSA) for ${hpsaRows.map((h: any) => `${h.discipline} (score ${h.score}/25)`).join(' and ')}, per HRSA.`))
+  const datosHtml = datos.map(d => `
+    <div class="flex gap-3 items-start bg-white border border-slate-200 rounded-xl p-4">
+      <div class="flex-1"><p class="text-sm text-slate-800">${escapeHtml(d)}</p><p class="text-xs text-slate-400 mt-1">${escapeHtml(fuente)}</p></div>
+      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(`${d} ${fuente}`)}"><i class="fa-regular fa-copy"></i> ${te('Copiar', 'Copy')}</button>
+    </div>`).join('')
 
   const alertForm = `
 <div class="not-prose mt-8 bg-amber-50 border-2 border-amber-200 rounded-2xl p-5">
-  <p class="font-bold text-amber-900 text-base">🔔 Te aviso cuando llegue uno nuevo a ${escapeHtml(town.municipio)}</p>
-  <p class="text-sm text-amber-800 mt-1">Cuando un especialista nuevo aparezca verificado en el registro federal pa' este pueblo, te escribo. Nada más. Sin spam, sin lista de mercadeo.</p>
+  <p class="font-bold text-amber-900 text-base">🔔 ${te(`Te aviso cuando llegue uno nuevo a ${escapeHtml(town.municipio)}`, `I will let you know when a new one arrives in ${escapeHtml(town.municipio)}`)}</p>
+  <p class="text-sm text-amber-800 mt-1">${te("Cuando un especialista nuevo aparezca verificado en el registro federal pa' este pueblo, te escribo. Nada más. Sin spam, sin lista de mercadeo.", 'When a new specialist shows up verified in the federal registry for this town, I will email you. That is it. No spam, no marketing list.')}</p>
   <form id="al-form" class="mt-3 grid sm:grid-cols-3 gap-3">
-    <input id="al-email" type="email" required placeholder="Tu email" class="sm:col-span-1 rounded-lg border border-amber-300 p-2.5 text-sm">
+    <input id="al-email" type="email" required placeholder="${te('Tu email', 'Your email')}" class="sm:col-span-1 rounded-lg border border-amber-300 p-2.5 text-sm">
     <select id="al-spec" class="rounded-lg border border-amber-300 p-2.5 text-sm bg-white">
-      <option value="">Cualquier especialista</option>
-      ${PUEBLO_HIGH_NEED.map(s => { const x = REGISTRY_BYSUB[s]; return x ? `<option value="${escapeHtml(s)}">${x.e} ${escapeHtml(x.l)}</option>` : '' }).join('')}
+      <option value="">${te('Cualquier especialista', 'Any specialist')}</option>
+      ${PUEBLO_HIGH_NEED.map(s => { const x = REGISTRY_BYSUB[s]; return x ? `<option value="${escapeHtml(s)}">${x.e} ${escapeHtml(specLbl(x))}</option>` : '' }).join('')}
     </select>
-    <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-5 py-2.5 rounded-lg text-sm">Avísame</button>
+    <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-5 py-2.5 rounded-lg text-sm">${te('Avísame', 'Notify me')}</button>
   </form>
-  <div id="al-ok" hidden class="mt-2 text-sm text-emerald-700 font-semibold">✓ Anotado. Si llega uno nuevo a ${escapeHtml(town.municipio)}, te escribo. — Angel</div>
+  <div id="al-ok" hidden class="mt-2 text-sm text-emerald-700 font-semibold">✓ ${te(`Anotado. Si llega uno nuevo a ${escapeHtml(town.municipio)}, te escribo. — Angel`, `Got it. If a new one arrives in ${escapeHtml(town.municipio)}, I will email you. — Angel`)}</div>
 </div>
 <script>
 (function(){var f=document.getElementById('al-form');if(!f)return;
 f.addEventListener('submit',function(ev){ev.preventDefault();
 var em=document.getElementById('al-email').value.trim();if(!em)return;
-var btn=f.querySelector('button');btn.disabled=true;btn.textContent='Enviando…';
+var btn=f.querySelector('button');btn.disabled=true;btn.textContent='${te('Enviando…', 'Sending…')}';
 try{gtag('event','alerta_pueblo',{municipio:'${specToUrl(town.municipio)}'})}catch(e){}
 fetch('/api/mapa-pages?page=registro-alert',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,municipio:'${escapeHtml(town.municipio)}',specialty:document.getElementById('al-spec').value||null})})
 .then(function(r){return r.json();}).then(function(){f.style.display='none';document.getElementById('al-ok').hidden=false;})
-.catch(function(){btn.disabled=false;btn.textContent='Avísame';alert('No se pudo enviar. Intenta de nuevo.');});});})();
+.catch(function(){btn.disabled=false;btn.textContent='${te('Avísame', 'Notify me')}';alert('${te('No se pudo enviar. Intenta de nuevo.', 'Could not send. Try again.')}');});});})();
 </script>`
 
   const psiqNote = town.psiquiatras === 0
-    ? `<p class="text-sm text-slate-600 mt-2">🧠 <strong>${escapeHtml(town.municipio)} es uno de los municipios sin un solo psiquiatra.</strong> No es un caso aislado: son 36 en toda la isla. <a href="/registro/desiertos" class="text-teal-700 font-semibold hover:underline">El mapa completo →</a></p>` : ''
+    ? `<p class="text-sm text-slate-600 mt-2">🧠 <strong>${te(`${escapeHtml(town.municipio)} es uno de los municipios sin un solo psiquiatra.`, `${escapeHtml(town.municipio)} is one of the municipalities without a single psychiatrist.`)}</strong> ${te('No es un caso aislado: son 36 en toda la isla.', 'It is not an isolated case: there are 36 across the island.')} <a href="/registro/desiertos${lp}" class="text-teal-700 font-semibold hover:underline">${te('El mapa completo →', 'The full map →')}</a></p>` : ''
 
   const body = `
-<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <a href="/pueblo" class="hover:text-teal-700">¿Cómo está tu pueblo?</a> <span class="text-slate-300">/</span> <span class="text-slate-700">${escapeHtml(town.municipio)}</span></nav>
-<h1>El acceso médico en ${escapeHtml(town.municipio)}</h1>
-<p class="text-lg text-slate-600 mt-2">${escapeHtml(town.municipio)} tiene <strong>${town.especialistas.toLocaleString('en-US')} especialistas verificados</strong> contra el registro federal pa' ${town.poblacion.toLocaleString('en-US')} habitantes: <strong>${town.por.toFixed(1)} por cada 10,000</strong>. La mediana de la isla es ${mediana.toFixed(1)}.</p>
+<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro${lp}" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <a href="/pueblo${lp}" class="hover:text-teal-700">${te('¿Cómo está tu pueblo?', 'Your town')}</a> <span class="text-slate-300">/</span> <span class="text-slate-700">${escapeHtml(town.municipio)}</span></nav>
+<h1>${te(`El acceso médico en ${escapeHtml(town.municipio)}`, `Medical access in ${escapeHtml(town.municipio)}`)}</h1>
+<p class="text-lg text-slate-600 mt-2">${te(`${escapeHtml(town.municipio)} tiene <strong>${town.especialistas.toLocaleString('en-US')} especialistas verificados</strong> contra el registro federal pa' ${town.poblacion.toLocaleString('en-US')} habitantes: <strong>${town.por.toFixed(1)} por cada 10,000</strong>. La mediana de la isla es ${mediana.toFixed(1)}.`, `${escapeHtml(town.municipio)} has <strong>${town.especialistas.toLocaleString('en-US')} verified specialists</strong> in the federal registry for ${town.poblacion.toLocaleString('en-US')} residents: <strong>${town.por.toFixed(1)} per 10,000</strong>. The island median is ${mediana.toFixed(1)}.`)}</p>
 <div class="not-prose mt-4" style="background:${sem.bg};border:2px solid ${sem.bd};border-radius:16px;padding:18px 20px;">
   <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
     <span class="text-4xl">${sem.e}</span>
     <div>
-      <div class="font-black text-slate-900 text-xl leading-tight">${sem.label.toUpperCase()}</div>
-      <div class="text-sm text-slate-600">Puesto ${rank} de 78 municipios · región ${escapeHtml(regionCap)} · fuente NPPES federal + Censo</div>
+      <div class="font-black text-slate-900 text-xl leading-tight">${semLabel.toUpperCase()}</div>
+      <div class="text-sm text-slate-600">${te(`Puesto ${rank} de 78 municipios · región ${escapeHtml(regionCap)} · fuente NPPES federal + Censo`, `Rank ${rank} of 78 municipalities · ${escapeHtml(regionCap)} region · source: federal NPPES + Census`)}</div>
     </div>
   </div>
   ${psiqNote}
 </div>
 ${hpsaBlock}
-${present.length ? `<h2>Lo que HAY en ${escapeHtml(town.municipio)}</h2>
-<p class="text-slate-600 -mt-2">Toca cualquiera pa' ver la lista completa con nombres y teléfonos.</p>
-<div class="not-prose mt-3 flex flex-wrap gap-2">${presentChips}</div>` : `<h2>En ${escapeHtml(town.municipio)} no hay especialistas verificados</h2>
-<p class="text-slate-600 -mt-2">Ninguno de los ${REGISTRY_SPECS.length} tipos del registro tiene práctica verificada aquí. No es que la gente no se enferme: es que toca viajar. Abajo te digo a dónde.</p>`}
-${missing.length ? `<h2>Lo que NO hay (y dónde queda lo más cerca)</h2>
-<p class="text-slate-600 -mt-2">De los especialistas que más se buscan, estos no tienen práctica verificada en ${escapeHtml(town.municipio)}:</p>
+${present.length ? `<h2>${te(`Lo que HAY en ${escapeHtml(town.municipio)}`, `What ${escapeHtml(town.municipio)} HAS`)}</h2>
+<p class="text-slate-600 -mt-2">${te("Toca cualquiera pa' ver la lista completa con nombres y teléfonos.", 'Tap any to see the full list with names and phone numbers.')}</p>
+<div class="not-prose mt-3 flex flex-wrap gap-2">${presentChips}</div>` : `<h2>${te(`En ${escapeHtml(town.municipio)} no hay especialistas verificados`, `${escapeHtml(town.municipio)} has no verified specialists`)}</h2>
+<p class="text-slate-600 -mt-2">${te(`Ninguno de los ${REGISTRY_SPECS.length} tipos del registro tiene práctica verificada aquí. No es que la gente no se enferme: es que toca viajar. Abajo te digo a dónde.`, `None of the registry's ${REGISTRY_SPECS.length} specialist types has a verified practice here. It is not that people do not get sick: it is that they have to travel. Below is where to.`)}</p>`}
+${missing.length ? `<h2>${te('Lo que NO hay (y dónde queda lo más cerca)', 'What is MISSING (and where the nearest one is)')}</h2>
+<p class="text-slate-600 -mt-2">${te(`De los especialistas que más se buscan, estos no tienen práctica verificada en ${escapeHtml(town.municipio)}:`, `Of the most sought-after specialists, these have no verified practice in ${escapeHtml(town.municipio)}:`)}</p>
 <ul class="not-prose mt-3 space-y-2.5 bg-white border border-slate-200 rounded-2xl p-5">${missingRows}</ul>
-<p class="not-prose text-xs text-slate-500 mt-2">Que no esté en el pueblo no siempre es crisis: lo que importa es cuán lejos queda y si la cita llega a tiempo. Por eso el dato va con el "dónde sí hay" al lado.</p>` : ''}
+<p class="not-prose text-xs text-slate-500 mt-2">${te('Que no esté en el pueblo no siempre es crisis: lo que importa es cuán lejos queda y si la cita llega a tiempo. Por eso el dato va con el "dónde sí hay" al lado.', 'A specialist missing from town is not always a crisis: what matters is how far the nearest one is and whether the appointment comes in time. That is why each gap shows where they DO exist.')}</p>` : ''}
+<h2>📋 ${te(`Datos citables de ${escapeHtml(town.municipio)}`, `Citable facts about ${escapeHtml(town.municipio)}`)}</h2>
+<p class="text-slate-600 -mt-2">${te("Pa' prensa, alcaldías, tareas escolares o discusiones de Facebook: copia el dato con la fuente pegada.", 'For press, mayors, school papers, or Facebook arguments: copy the fact with the source attached.')}</p>
+<div class="not-prose mt-3 space-y-2">${datosHtml}</div>
 ${alertForm}
-${shareRow({ text: `El acceso médico en ${town.municipio}: ${town.especialistas} especialistas verificados pa' ${town.poblacion.toLocaleString('en-US')} habitantes (${town.por.toFixed(1)} por cada 10 mil, ${sem.e} ${sem.label}). Data federal, pueblo por pueblo:`, url: pageUrl, toWho: 'Al grupo del pueblo o de la familia. Que cada cual vea el suyo.' })}
+${shareRow({ text: te(`El acceso médico en ${town.municipio}: ${town.especialistas} especialistas verificados pa' ${town.poblacion.toLocaleString('en-US')} habitantes (${town.por.toFixed(1)} por cada 10 mil, ${sem.e} ${sem.label}). Data federal, pueblo por pueblo:`, `Medical access in ${town.municipio}: ${town.especialistas} verified specialists for ${town.poblacion.toLocaleString('en-US')} residents (${town.por.toFixed(1)} per 10,000, ${sem.e} ${semLabelEn}). Federal data, town by town:`), url: pageUrl, toWho: te('Al grupo del pueblo o de la familia. Que cada cual vea el suyo.', 'To the hometown or family group chat. Everyone checks their own.') })}
 <div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
-  <p class="text-lg font-bold mb-1">¿Buscas un especialista ahora?</p>
-  <p class="text-sm text-teal-100 mb-4">Busca por especialidad y región, o dime tu situación y te doy los pasos.</p>
+  <p class="text-lg font-bold mb-1">${te('¿Buscas un especialista ahora?', 'Looking for a specialist now?')}</p>
+  <p class="text-sm text-teal-100 mb-4">${te('Busca por especialidad y región, o dime tu situación y te doy los pasos.', 'Search by specialty and region, or tell me your situation and I will give you the steps.')}</p>
   <div class="flex flex-wrap gap-3 justify-center">
-    <a href="/registro" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-solid fa-magnifying-glass"></i> Buscar en el registro</a>
-    <a href="/necesito" class="inline-flex items-center gap-2 bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-900">¿Cuál es tu situación?</a>
+    <a href="/registro${lp}" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-solid fa-magnifying-glass"></i> ${te('Buscar en el registro', 'Search the registry')}</a>
+    <a href="/necesito${lp}" class="inline-flex items-center gap-2 bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-900">${te('¿Cuál es tu situación?', 'What is your situation?')}</a>
   </div>
 </div>
-${regDisclaimer()}
-<p class="not-prose mt-5 text-sm text-slate-500"><a href="/pueblo" class="text-teal-700 font-semibold">← Ver el ranking de los 78 pueblos</a></p>
+${regDisclaimer(en)}
+<p class="not-prose mt-5 text-sm text-slate-500"><a href="/pueblo${lp}" class="text-teal-700 font-semibold">${te('← Ver el ranking de los 78 pueblos', '← See the 78-town ranking')}</a></p>
 ${SHARE_COPY_SCRIPT}`
 
   const jsonLd = [
@@ -3117,10 +3298,12 @@ ${SHARE_COPY_SCRIPT}`
     ] },
   ]
   res.status(200).send(layout({
-    title: `El acceso médico en ${town.municipio}: ${town.especialistas} especialistas verificados (${sem.label})`,
-    description: `${town.municipio}, PR: ${town.especialistas} especialistas verificados pa' ${town.poblacion.toLocaleString('en-US')} habitantes (${town.por.toFixed(1)} por 10,000, puesto ${rank}/78). Qué hay, qué falta y dónde queda lo más cerca.`,
+    title: te(`El acceso médico en ${town.municipio}: ${town.especialistas} especialistas verificados (${sem.label})`, `Medical access in ${town.municipio}: ${town.especialistas} verified specialists (${semLabelEn})`),
+    description: te(`${town.municipio}, PR: ${town.especialistas} especialistas verificados pa' ${town.poblacion.toLocaleString('en-US')} habitantes (${town.por.toFixed(1)} por 10,000, puesto ${rank}/78). Qué hay, qué falta y dónde queda lo más cerca.`, `${town.municipio}, PR: ${town.especialistas} verified specialists for ${town.poblacion.toLocaleString('en-US')} residents (${town.por.toFixed(1)} per 10,000, rank ${rank}/78). What it has, what is missing, and where the nearest one is.`),
     slug: `pueblo/${slug}`, bodyHtml: body, jsonLd, ogImage: '/og/desiertos.png',
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+    canonicalUrl: pageUrl,
+    lang: en ? 'en' : 'es',
   }))
 }
 
@@ -3197,7 +3380,7 @@ async function handleRegistro(req: any, res: any) {
 <div id="reg-tool" class="not-prose mt-5 bg-white border-2 border-teal-300 rounded-2xl p-6 shadow-sm scroll-mt-24">
   <label class="block">
     <span class="text-sm font-bold text-slate-700"><i class="fa-solid fa-magnifying-glass text-teal-600"></i> ${t('Busca por nombre o especialidad', 'Search by name or specialty')}</span>
-    <input id="rg-search" type="search" autocomplete="off" placeholder="${t('Ej: el nombre de tu médico, o \'cardiólogo\'…', 'e.g. your doctor\'s name, or \'cardiologist\'…')}" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-base">
+    <input id="rg-search" type="search" autocomplete="off" placeholder="${t('El nombre de tu médico, \'cardiólogo\', o lo que sientes: \'me falta el aire\'…', 'Your doctor\'s name, \'cardiologist\', or what you feel: \'chest pain\'…')}" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-base">
   </label>
   <div id="rg-search-result" class="mt-3"></div>
   <div class="flex items-center gap-3 my-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -3390,9 +3573,32 @@ async function handleRegistro(req: any, res: any) {
     render();
   }
 
-  // --- Free-text search: specialty chips (instant) + provider names (debounced) ---
+  // --- Free-text search: symptom chips + specialty chips (instant) + provider names (debounced) ---
   var srch=document.getElementById('rg-search'),srchOut=document.getElementById('rg-search-result');
+  var SYM=${JSON.stringify(SYMPTOM_MAP)};
   function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');}
+  function symChips(qn){
+    if(qn.length<3)return '';
+    var specs=[],urgent=false;
+    SYM.forEach(function(e){
+      var hit=e.k.some(function(kw){return qn.indexOf(kw)>=0||(kw.length>=4&&kw.indexOf(qn)>=0);});
+      if(!hit)return;
+      if(e.u)urgent=true;
+      e.s.forEach(function(s){if(specs.indexOf(s)<0)specs.push(s);});
+    });
+    if(!specs.length)return '';
+    try{gtag('event','symptom_match',{q:qn.slice(0,40)})}catch(ex){}
+    var chips=specs.slice(0,4).map(function(s){
+      var x=SPECS.filter(function(z){return z.s===s;})[0];if(!x)return '';
+      return '<button type="button" data-jump="'+esc(x.s)+'" style="background:#0f766e;border:1px solid #0f766e;color:#fff;font-weight:700;font-size:13px;padding:6px 13px;border-radius:999px;cursor:pointer;">'+x.e+' '+esc(x.l)+' ('+x.t+' en PR)</button>';
+    }).join('');
+    return '<div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:12px;padding:12px 14px;margin-bottom:10px;">'
+      +'<div style="font-size:13px;color:#134e4a;font-weight:700;margin-bottom:7px;">🧭 Pa\\' eso suele verse:</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:6px;">'+chips+'</div>'
+      +(urgent?'<div style="font-size:12px;color:#b91c1c;font-weight:700;margin-top:8px;">⚠️ Si te dio de repente y fuerte, eso no espera cita: 911 o sala de emergencias primero.</div>':'')
+      +'<div style="font-size:11px;color:#64748b;margin-top:6px;">Orientación general, no diagnóstico. Tu médico primario decide el referido.</div>'
+      +'</div>';
+  }
   function specChips(qn){
     var hits=SPECS.filter(function(x){return norm(x.l).indexOf(qn)>=0||norm(x.s).indexOf(qn)>=0;}).slice(0,8);
     if(!hits.length)return '';
@@ -3421,7 +3627,7 @@ async function handleRegistro(req: any, res: any) {
     var q=srch.value.trim(),qn=norm(q);
     clearTimeout(st);
     if(qn.length<2){srchOut.innerHTML='';return;}
-    var chips=specChips(qn);
+    var chips=symChips(qn)+specChips(qn);
     srchOut.innerHTML=chips+(q.length>=3?'<div style="color:#64748b;font-size:14px;padding:6px 0;">Buscando "'+esc(q)+'"…</div>':'');
     bindJumps();
     if(q.length<3)return;
@@ -3430,10 +3636,10 @@ async function handleRegistro(req: any, res: any) {
         .then(function(r){return r.json();})
         .then(function(d){
           if(srch.value.trim()!==q)return; // stale response
-          srchOut.innerHTML=specChips(qn)+renderProviders((d&&d.providers)||[],d&&d.capped,q);
+          srchOut.innerHTML=symChips(qn)+specChips(qn)+renderProviders((d&&d.providers)||[],d&&d.capped,q);
           bindJumps();
         })
-        .catch(function(){srchOut.innerHTML=specChips(qn)+'<div style="color:#dc2626;font-size:14px;">No se pudo buscar. Intenta de nuevo.</div>';bindJumps();});
+        .catch(function(){srchOut.innerHTML=symChips(qn)+specChips(qn)+'<div style="color:#dc2626;font-size:14px;">No se pudo buscar. Intenta de nuevo.</div>';bindJumps();});
     },280);
   });
 })();
