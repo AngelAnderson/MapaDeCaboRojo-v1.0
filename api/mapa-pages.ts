@@ -157,6 +157,15 @@ function layout(opts: {
   const prsfFooter = `
 <footer class="border-t border-slate-200 mt-12 py-10 bg-white">
 <div class="max-w-4xl mx-auto px-4">
+<div class="pb-8 border-b border-slate-100 mb-8">
+<p class="text-xs uppercase tracking-widest text-teal-700 font-bold">Si lo que necesitas hoy no es data, es ayuda</p>
+<div class="mt-3 grid sm:grid-cols-3 gap-3 text-sm">
+<div class="bg-slate-50 border border-slate-200 rounded-xl p-3"><span class="font-bold text-slate-800">🧠 Crisis o ansiedad</span><br>Línea PAS: marca o textea <strong>988</strong> (o 1-800-981-0023). 24/7, gratis, en español.</div>
+<div class="bg-slate-50 border border-slate-200 rounded-xl p-3"><span class="font-bold text-slate-800">🩺 Buscar un especialista</span><br><a href="https://registromedicopr.com" class="text-teal-700 font-semibold">registromedicopr.com</a>: verificado, por pueblo y especialidad. Sin cuenta, sin registro.</div>
+<div class="bg-slate-50 border border-slate-200 rounded-xl p-3"><span class="font-bold text-slate-800">📋 El dato de tu pueblo</span><br>Agua, salud, dinero: cada récord trae su resumen citable con botón de copiar. Llévatelo.</div>
+</div>
+<p class="text-sm text-slate-500 mt-3">Y si solo viniste a mirar, está bien. No tienes que resolver a Puerto Rico hoy: el récord se queda aquí, guardado, para cuando te haga falta.</p>
+</div>
 <p class="text-base font-semibold text-slate-800 text-center">El récord público de Puerto Rico. El dato, con la fuente al lado.</p>
 <p class="text-xs text-slate-500 mt-1 text-center">Verificado uno por uno contra registros federales y públicos. Sin spin, sin relleno.</p>
 <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6 text-xs">
@@ -286,6 +295,8 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 </div></div>
 </div>
 <p class="mt-8 text-xs text-slate-400 text-center">${isEn ? 'Questions about who to see? Text El Veci:' : '¿Dudas de a quién ir? Escríbele al Veci:'} <strong>${PHONE_CTA}</strong>. ${isEn ? '' : 'Si te sirve, llégate.'}</p>
+<p class="mt-3 text-xs text-slate-500 text-center">🧠 ${isEn ? 'If it is an emotional crisis, do not wait for an appointment:' : 'Si es una crisis emocional, no esperes cita:'} <strong>${isEn ? '988 Lifeline' : 'Línea PAS 988'}</strong> (${isEn ? 'or' : 'o'} 1-800-981-0023), 24/7, ${isEn ? 'free' : 'gratis'}.</p>
+<p class="mt-2 text-xs text-slate-400 text-center">${isEn ? 'You do not have to memorize anything. The registry stays here for whenever you or yours need it.' : 'No tienes que memorizar nada. El registro se queda aquí, para cuando te haga falta a ti o a los tuyos.'}</p>
 </div>
 </footer>` : `
 <footer class="border-t border-slate-200 mt-12 py-8 bg-white">
