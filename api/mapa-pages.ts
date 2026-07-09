@@ -201,6 +201,7 @@ function layout(opts: {
 <div class="flex items-center gap-3">
 <nav class="hidden md:flex gap-5 text-sm text-slate-600">
 <a href="/registro${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Find a specialist' : 'Buscar especialista'}</a>
+<a href="/pueblo" class="hover:text-teal-700 font-semibold">${isEn ? 'Your town' : 'Tu pueblo'}</a>
 <a href="/necesito" class="hover:text-teal-700">${isEn ? 'Your situation' : '¿Tu situación?'}</a>
 <a href="/registro/desiertos" class="font-bold text-amber-700 hover:text-amber-800">${isEn ? 'Medical deserts' : 'Desiertos médicos'}</a>
 <a href="/porque" class="hover:text-teal-700">¿Por qué se van?</a>
@@ -239,6 +240,8 @@ function layout(opts: {
 <p class="text-xs text-slate-500 mt-1">Cada nombre verificado contra el registro federal NPPES/CMS. En español, por especialidad y por región.</p>
 <div class="mt-6 flex justify-center gap-4 text-xs text-slate-500 flex-wrap">
 <a href="/registro" class="hover:text-teal-700 font-semibold">Buscar especialista</a>
+<a href="/pueblo" class="hover:text-teal-700 font-semibold">Tu pueblo</a>
+<a href="/necesito" class="hover:text-teal-700">Tu situación</a>
 <a href="/registro/mapa" class="hover:text-teal-700">El mapa</a>
 <a href="/registro/estado" class="hover:text-teal-700">Estado de salud</a>
 <a href="/comparte" class="hover:text-teal-700">Datos</a>
@@ -2903,6 +2906,257 @@ ${regDisclaimer()}
   }))
 }
 
+// =============== /pueblo/:municipio — el semáforo de acceso médico de cada pueblo (78 páginas) ===============
+// La jugada: el registro no solo contesta "busca un médico", contesta "¿cómo está MI pueblo?".
+// Data SIEMPRE de las vistas canónicas (v_registro_muni_ratio / v_registro_muni_spec) — nunca
+// places.region crudo (lección 2026-07-05: el mapeo municipio→región de places produce artefactos).
+const PUEBLO_REGION_CAP: Record<string, string> = { metro: 'Metro', oeste: 'Oeste', norte: 'Norte', sur: 'Sur', este: 'Este', centro: 'Centro' }
+const PUEBLO_HIGH_NEED = ['psiquiatra', 'cardiólogo', 'pediatra', 'ginecólogo', 'geriatra', 'neumólogo', 'endocrinologo', 'oncólogo', 'neurologo', 'gastroenterólogo']
+const HPSA_DISC_ES: Record<string, string> = { 'Primary Care': 'cuidado primario', 'Dental Health': 'salud dental', 'Mental Health': 'salud mental' }
+function puebloSemaforo(por10k: number): { e: string; label: string; bg: string; bd: string } {
+  if (por10k >= 15) return { e: '🟢', label: 'acceso alto', bg: '#ecfdf5', bd: '#6ee7b7' }
+  if (por10k >= 5) return { e: '🟡', label: 'acceso medio', bg: '#fffbeb', bd: '#fcd34d' }
+  return { e: '🔴', label: 'acceso bajo', bg: '#fef2f2', bd: '#fca5a5' }
+}
+
+async function handlePueblo(req: any, res: any) {
+  const slug = String(req.query.m || '').toLowerCase().trim()
+  const { data: muniData } = await supabase
+    .from('v_registro_muni_ratio')
+    .select('municipio,region,poblacion,especialistas,psiquiatras,por_10k_hab')
+  const all = (muniData || []).map((r: any) => ({
+    municipio: r.municipio as string, region: (r.region || '') as string,
+    poblacion: Number(r.poblacion) || 0, especialistas: Number(r.especialistas) || 0,
+    psiquiatras: Number(r.psiquiatras) || 0, por: Number(r.por_10k_hab) || 0,
+  })).sort((a, b) => a.por - b.por)
+  if (!all.length) { res.status(503).send('Data no disponible, intenta de nuevo'); return }
+  const sorted = all.map(x => x.por).slice().sort((a, b) => a - b)
+  const mediana = sorted[Math.floor(sorted.length / 2)]
+  const rojos = all.filter(x => x.por < 5).length
+  const ceros = all.filter(x => x.especialistas === 0)
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=600')
+
+  // ---------- Índice: el ranking de los 78 ----------
+  if (!slug) {
+    const rows = all.map((x, i) => {
+      const s = puebloSemaforo(x.por)
+      return `<tr class="border-t border-slate-100 pueblo-row" data-n="${escapeHtml(specToUrl(x.municipio))}">
+        <td class="py-2 px-3 text-slate-400 text-xs">${i + 1}</td>
+        <td class="py-2 px-3"><a href="/pueblo/${specToUrl(x.municipio)}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${s.e} ${escapeHtml(x.municipio)}</a></td>
+        <td class="py-2 px-3 text-slate-500 text-sm">${escapeHtml(PUEBLO_REGION_CAP[x.region] || x.region)}</td>
+        <td class="py-2 px-3 text-right font-semibold text-slate-700">${x.especialistas.toLocaleString('en-US')}</td>
+        <td class="py-2 px-3 text-right font-black ${x.por < 5 ? 'text-red-600' : x.por < 15 ? 'text-amber-600' : 'text-emerald-700'}">${x.por.toFixed(1)}</td>
+      </tr>`
+    }).join('')
+    const body = `
+<h1>¿Cómo está tu pueblo?</h1>
+<p class="text-lg text-slate-600 mt-2">Los 78 municipios de Puerto Rico, rankeados por especialistas médicos verificados por cada 10,000 habitantes. Fuente: registro federal NPPES + Censo. Toca tu pueblo pa' ver qué hay, qué falta y dónde queda lo más cerca.</p>
+<div class="not-prose mt-4 grid sm:grid-cols-3 gap-3">
+  <div class="bg-red-50 border border-red-200 rounded-xl p-4"><div class="text-3xl font-black text-red-600">${rojos}</div><div class="text-sm text-slate-600 mt-1">pueblos en rojo (menos de 5 por cada 10 mil)</div></div>
+  <div class="bg-slate-50 border border-slate-200 rounded-xl p-4"><div class="text-3xl font-black text-slate-800">${ceros.length}</div><div class="text-sm text-slate-600 mt-1">pueblos con CERO especialistas${ceros.length ? `: ${escapeHtml(ceros.map(z => z.municipio).join(', '))}` : ''}</div></div>
+  <div class="bg-teal-50 border border-teal-200 rounded-xl p-4"><div class="text-3xl font-black text-teal-700">${mediana.toFixed(1)}</div><div class="text-sm text-slate-600 mt-1">la mediana de la isla, por cada 10 mil habitantes</div></div>
+</div>
+<div class="not-prose mt-5">
+  <input id="pb-filter" type="search" placeholder="Busca tu pueblo…" class="w-full rounded-lg border border-slate-300 p-3 text-base" autocomplete="off">
+</div>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">#</th><th class="py-2 px-3">Pueblo</th><th class="py-2 px-3">Región</th><th class="py-2 px-3 text-right">Especialistas</th><th class="py-2 px-3 text-right">Por 10 mil</th></tr></thead><tbody id="pb-body">${rows}</tbody></table>
+</div>
+<p class="not-prose text-xs text-slate-500 mt-2">🔴 menos de 5 por 10 mil · 🟡 de 5 a 15 · 🟢 más de 15. El ranking va del más desatendido al mejor servido. Semáforo por cantidad, no por distancia: un pueblo pequeño al lado de Mayagüez puede estar en rojo y aun así tener el especialista a 15 minutos.</p>
+<script>
+(function(){var f=document.getElementById('pb-filter'),b=document.getElementById('pb-body');if(!f)return;
+function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');}
+f.addEventListener('input',function(){var q=norm(f.value.trim());Array.prototype.forEach.call(b.querySelectorAll('.pueblo-row'),function(r){r.style.display=!q||r.getAttribute('data-n').indexOf(q)>=0?'':'none';});});})();
+</script>
+${shareRow({ text: `¿Cuántos médicos especialistas tiene tu pueblo? Los 78 municipios de PR rankeados con data federal. ${rojos} están en rojo y ${ceros.length} tienen CERO.`, url: 'https://registromedicopr.com/pueblo', toWho: 'Al grupo de la familia o del pueblo. Cada cual busca el suyo.' })}
+${regDisclaimer()}
+${SHARE_COPY_SCRIPT}`
+    const jsonLd = [
+      { '@context': 'https://schema.org', '@type': 'Dataset', name: 'Acceso a especialistas médicos por municipio de Puerto Rico',
+        description: `Los 78 municipios de Puerto Rico rankeados por especialistas médicos verificados (NPPES) por cada 10,000 habitantes. Mediana de la isla: ${mediana.toFixed(1)}. ${rojos} municipios bajo 5 por 10,000. ${ceros.length} municipios con cero especialistas.`,
+        url: 'https://registromedicopr.com/pueblo', inLanguage: 'es', license: 'https://creativecommons.org/licenses/by/4.0/',
+        creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' } },
+      { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [
+        { '@type': 'Question', name: '¿Qué municipios de Puerto Rico tienen menos médicos especialistas?',
+          acceptedAnswer: { '@type': 'Answer', text: `Según el registro federal NPPES, ${ceros.length ? ceros.map(z => z.municipio).join(', ') + ' no tienen ningún especialista verificado, y ' : ''}${rojos} de los 78 municipios tienen menos de 5 especialistas por cada 10,000 habitantes. El detalle por pueblo está en registromedicopr.com/pueblo.` } },
+        { '@type': 'Question', name: '¿Cuál es la mediana de especialistas médicos por municipio en Puerto Rico?',
+          acceptedAnswer: { '@type': 'Answer', text: `La mediana es ${mediana.toFixed(1)} especialistas verificados por cada 10,000 habitantes. San Juan concentra el máximo con ${Math.max(...all.map(x => x.por)).toFixed(1)}.` } },
+      ] },
+    ]
+    res.status(200).send(layout({
+      title: '¿Cómo está tu pueblo? Semáforo de acceso médico de los 78 municipios',
+      description: `Los 78 municipios de PR rankeados por especialistas verificados por cada 10,000 habitantes. ${rojos} en rojo, ${ceros.length} con cero. Data federal NPPES, en español.`,
+      slug: 'pueblo', bodyHtml: body, jsonLd, ogImage: '/og/desiertos.png',
+      host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+    }))
+    return
+  }
+
+  // ---------- Página de un pueblo ----------
+  const town = all.find(x => specToUrl(x.municipio) === slug)
+  if (!town) { res.statusCode = 302; res.setHeader('Location', '/pueblo'); res.end(); return }
+  const rank = all.findIndex(x => x.municipio === town.municipio) + 1
+  const sem = puebloSemaforo(town.por)
+  const regionCap = PUEBLO_REGION_CAP[town.region] || town.region
+  const pageUrl = `https://registromedicopr.com/pueblo/${slug}`
+
+  const [{ data: specRows }, { data: hpsaRows }] = await Promise.all([
+    supabase.from('v_registro_muni_spec').select('subcategory,n').eq('municipio', town.municipio),
+    supabase.from('hpsa_designations').select('discipline,score').eq('municipio', town.municipio).order('score', { ascending: false }),
+  ])
+  const present = (specRows || [])
+    .filter((r: any) => REGISTRY_BYSUB[r.subcategory])
+    .map((r: any) => ({ sub: r.subcategory as string, n: Number(r.n) || 0 }))
+    .filter(r => r.n > 0)
+    .sort((a, b) => b.n - a.n)
+  const presentSet = new Set(present.map(p => p.sub))
+  const missing = PUEBLO_HIGH_NEED.filter(s => !presentSet.has(s)).map(s => REGISTRY_BYSUB[s]).filter(Boolean)
+
+  const presentChips = present.map(p => {
+    const x = REGISTRY_BYSUB[p.sub]
+    return `<a href="/registro/${specToUrl(p.sub)}" class="inline-flex items-center gap-1.5 bg-white border border-teal-200 text-teal-800 font-semibold px-3 py-1.5 rounded-full text-sm hover:bg-teal-50">${x.e} ${escapeHtml(x.l)} <span class="font-black">${p.n}</span></a>`
+  }).join(' ')
+
+  const missingRows = missing.map((x: any) => {
+    const regionN = (x.r as any)[regionCap] || 0
+    const near = regionN > 0
+      ? `en el ${regionCap} hay <a href="/registro/${specToUrl(x.s)}/${specToUrl(regionCap)}" class="text-teal-700 font-semibold hover:underline">${regionN} →</a>`
+      : `en el ${regionCap} tampoco: el grupo grande está <a href="/registro/${specToUrl(x.s)}/metro" class="text-teal-700 font-semibold hover:underline">en el área metro (${x.r.Metro || 0}) →</a>`
+    return `<li class="flex gap-2.5 items-start"><span class="text-red-500 font-black mt-0.5">✗</span><span class="text-sm text-slate-700"><strong>${x.e} ${escapeHtml(x.l)}:</strong> aquí no hay ninguno verificado; ${near}</span></li>`
+  }).join('')
+
+  const hpsaBlock = (hpsaRows && hpsaRows.length) ? `
+<div class="not-prose mt-6 bg-indigo-50 border border-indigo-200 rounded-2xl p-5">
+  <p class="font-bold text-indigo-900 text-base">🏛️ El gobierno federal ya reconoció la escasez aquí</p>
+  <p class="text-sm text-indigo-800 mt-1">${escapeHtml(town.municipio)} tiene ${hpsaRows.length === 1 ? 'una designación federal activa' : hpsaRows.length + ' designaciones federales activas'} de escasez de proveedores (HPSA): ${hpsaRows.map((h: any) => `${escapeHtml(HPSA_DISC_ES[h.discipline] || h.discipline)} (puntuación ${escapeHtml(String(h.score))} de 25)`).join(' · ')}. Eso no es opinión nuestra: es HRSA, la agencia federal de salud. <a href="/registro/estado" class="font-semibold underline">Lo que eso significa y el dinero que trae →</a></p>
+</div>` : ''
+
+  const alertForm = `
+<div class="not-prose mt-8 bg-amber-50 border-2 border-amber-200 rounded-2xl p-5">
+  <p class="font-bold text-amber-900 text-base">🔔 Te aviso cuando llegue uno nuevo a ${escapeHtml(town.municipio)}</p>
+  <p class="text-sm text-amber-800 mt-1">Cuando un especialista nuevo aparezca verificado en el registro federal pa' este pueblo, te escribo. Nada más. Sin spam, sin lista de mercadeo.</p>
+  <form id="al-form" class="mt-3 grid sm:grid-cols-3 gap-3">
+    <input id="al-email" type="email" required placeholder="Tu email" class="sm:col-span-1 rounded-lg border border-amber-300 p-2.5 text-sm">
+    <select id="al-spec" class="rounded-lg border border-amber-300 p-2.5 text-sm bg-white">
+      <option value="">Cualquier especialista</option>
+      ${PUEBLO_HIGH_NEED.map(s => { const x = REGISTRY_BYSUB[s]; return x ? `<option value="${escapeHtml(s)}">${x.e} ${escapeHtml(x.l)}</option>` : '' }).join('')}
+    </select>
+    <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-5 py-2.5 rounded-lg text-sm">Avísame</button>
+  </form>
+  <div id="al-ok" hidden class="mt-2 text-sm text-emerald-700 font-semibold">✓ Anotado. Si llega uno nuevo a ${escapeHtml(town.municipio)}, te escribo. — Angel</div>
+</div>
+<script>
+(function(){var f=document.getElementById('al-form');if(!f)return;
+f.addEventListener('submit',function(ev){ev.preventDefault();
+var em=document.getElementById('al-email').value.trim();if(!em)return;
+var btn=f.querySelector('button');btn.disabled=true;btn.textContent='Enviando…';
+try{gtag('event','alerta_pueblo',{municipio:'${specToUrl(town.municipio)}'})}catch(e){}
+fetch('/api/mapa-pages?page=registro-alert',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,municipio:'${escapeHtml(town.municipio)}',specialty:document.getElementById('al-spec').value||null})})
+.then(function(r){return r.json();}).then(function(){f.style.display='none';document.getElementById('al-ok').hidden=false;})
+.catch(function(){btn.disabled=false;btn.textContent='Avísame';alert('No se pudo enviar. Intenta de nuevo.');});});})();
+</script>`
+
+  const psiqNote = town.psiquiatras === 0
+    ? `<p class="text-sm text-slate-600 mt-2">🧠 <strong>${escapeHtml(town.municipio)} es uno de los municipios sin un solo psiquiatra.</strong> No es un caso aislado: son 36 en toda la isla. <a href="/registro/desiertos" class="text-teal-700 font-semibold hover:underline">El mapa completo →</a></p>` : ''
+
+  const body = `
+<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <a href="/pueblo" class="hover:text-teal-700">¿Cómo está tu pueblo?</a> <span class="text-slate-300">/</span> <span class="text-slate-700">${escapeHtml(town.municipio)}</span></nav>
+<h1>El acceso médico en ${escapeHtml(town.municipio)}</h1>
+<p class="text-lg text-slate-600 mt-2">${escapeHtml(town.municipio)} tiene <strong>${town.especialistas.toLocaleString('en-US')} especialistas verificados</strong> contra el registro federal pa' ${town.poblacion.toLocaleString('en-US')} habitantes: <strong>${town.por.toFixed(1)} por cada 10,000</strong>. La mediana de la isla es ${mediana.toFixed(1)}.</p>
+<div class="not-prose mt-4" style="background:${sem.bg};border:2px solid ${sem.bd};border-radius:16px;padding:18px 20px;">
+  <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+    <span class="text-4xl">${sem.e}</span>
+    <div>
+      <div class="font-black text-slate-900 text-xl leading-tight">${sem.label.toUpperCase()}</div>
+      <div class="text-sm text-slate-600">Puesto ${rank} de 78 municipios · región ${escapeHtml(regionCap)} · fuente NPPES federal + Censo</div>
+    </div>
+  </div>
+  ${psiqNote}
+</div>
+${hpsaBlock}
+${present.length ? `<h2>Lo que HAY en ${escapeHtml(town.municipio)}</h2>
+<p class="text-slate-600 -mt-2">Toca cualquiera pa' ver la lista completa con nombres y teléfonos.</p>
+<div class="not-prose mt-3 flex flex-wrap gap-2">${presentChips}</div>` : `<h2>En ${escapeHtml(town.municipio)} no hay especialistas verificados</h2>
+<p class="text-slate-600 -mt-2">Ninguno de los ${REGISTRY_SPECS.length} tipos del registro tiene práctica verificada aquí. No es que la gente no se enferme: es que toca viajar. Abajo te digo a dónde.</p>`}
+${missing.length ? `<h2>Lo que NO hay (y dónde queda lo más cerca)</h2>
+<p class="text-slate-600 -mt-2">De los especialistas que más se buscan, estos no tienen práctica verificada en ${escapeHtml(town.municipio)}:</p>
+<ul class="not-prose mt-3 space-y-2.5 bg-white border border-slate-200 rounded-2xl p-5">${missingRows}</ul>
+<p class="not-prose text-xs text-slate-500 mt-2">Que no esté en el pueblo no siempre es crisis: lo que importa es cuán lejos queda y si la cita llega a tiempo. Por eso el dato va con el "dónde sí hay" al lado.</p>` : ''}
+${alertForm}
+${shareRow({ text: `El acceso médico en ${town.municipio}: ${town.especialistas} especialistas verificados pa' ${town.poblacion.toLocaleString('en-US')} habitantes (${town.por.toFixed(1)} por cada 10 mil, ${sem.e} ${sem.label}). Data federal, pueblo por pueblo:`, url: pageUrl, toWho: 'Al grupo del pueblo o de la familia. Que cada cual vea el suyo.' })}
+<div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
+  <p class="text-lg font-bold mb-1">¿Buscas un especialista ahora?</p>
+  <p class="text-sm text-teal-100 mb-4">Busca por especialidad y región, o dime tu situación y te doy los pasos.</p>
+  <div class="flex flex-wrap gap-3 justify-center">
+    <a href="/registro" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-solid fa-magnifying-glass"></i> Buscar en el registro</a>
+    <a href="/necesito" class="inline-flex items-center gap-2 bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-900">¿Cuál es tu situación?</a>
+  </div>
+</div>
+${regDisclaimer()}
+<p class="not-prose mt-5 text-sm text-slate-500"><a href="/pueblo" class="text-teal-700 font-semibold">← Ver el ranking de los 78 pueblos</a></p>
+${SHARE_COPY_SCRIPT}`
+
+  const jsonLd = [
+    { '@context': 'https://schema.org', '@type': 'Dataset',
+      name: `Acceso a especialistas médicos en ${town.municipio}, Puerto Rico`,
+      description: `${town.municipio} tiene ${town.especialistas} especialistas médicos verificados (NPPES) para ${town.poblacion.toLocaleString('en-US')} habitantes: ${town.por.toFixed(1)} por cada 10,000 (mediana de PR: ${mediana.toFixed(1)}). Puesto ${rank} de 78 municipios.`,
+      url: pageUrl, inLanguage: 'es', spatialCoverage: { '@type': 'Place', name: `${town.municipio}, Puerto Rico` },
+      creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' } },
+    { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [
+      { '@type': 'Question', name: `¿Cuántos médicos especialistas hay en ${town.municipio}, Puerto Rico?`,
+        acceptedAnswer: { '@type': 'Answer', text: `${town.municipio} tiene ${town.especialistas} especialistas médicos verificados contra el registro federal NPPES, es decir ${town.por.toFixed(1)} por cada 10,000 habitantes. La mediana de Puerto Rico es ${mediana.toFixed(1)}. Ocupa el puesto ${rank} de 78 municipios.` } },
+      ...(missing.length ? [{ '@type': 'Question', name: `¿Qué especialistas médicos faltan en ${town.municipio}?`,
+        acceptedAnswer: { '@type': 'Answer', text: `Según el registro federal NPPES, en ${town.municipio} no hay práctica verificada de: ${missing.map((x: any) => x.l).join(', ')}. Los más cercanos suelen estar en la región ${regionCap} o en el área metro. Detalle: ${pageUrl}` } }] : []),
+    ] },
+    { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Registro Médico PR', item: 'https://registromedicopr.com/registro' },
+      { '@type': 'ListItem', position: 2, name: '¿Cómo está tu pueblo?', item: 'https://registromedicopr.com/pueblo' },
+      { '@type': 'ListItem', position: 3, name: town.municipio, item: pageUrl },
+    ] },
+  ]
+  res.status(200).send(layout({
+    title: `El acceso médico en ${town.municipio}: ${town.especialistas} especialistas verificados (${sem.label})`,
+    description: `${town.municipio}, PR: ${town.especialistas} especialistas verificados pa' ${town.poblacion.toLocaleString('en-US')} habitantes (${town.por.toFixed(1)} por 10,000, puesto ${rank}/78). Qué hay, qué falta y dónde queda lo más cerca.`,
+    slug: `pueblo/${slug}`, bodyHtml: body, jsonLd, ogImage: '/og/desiertos.png',
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
+// =============== Alerta "avísame cuando llegue uno nuevo a mi pueblo" ===============
+async function handleRegistroAlert(req: any, res: any) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8')
+  try {
+    const b = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}')
+    const email = String(b.email || '').slice(0, 160).trim().toLowerCase()
+    const municipio = String(b.municipio || '').slice(0, 60).trim()
+    const specialty = String(b.specialty || '').slice(0, 60).trim() || null
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || !municipio) { res.status(400).send(JSON.stringify({ ok: false })); return }
+    // El índice único es de expresión (lower(email), municipio, coalesce(specialty,'')) — un
+    // duplicado devuelve error 23505, que tratamos como éxito idempotente (y sin re-notificar).
+    const { error: insErr } = await supabase.from('registro_alerts')
+      .insert({ email, municipio, specialty, source: 'pueblo_page' })
+    if (insErr) { res.status(200).send(JSON.stringify({ ok: true, dup: true })); return }
+    if (RESEND_API_KEY) {
+      try {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: FROM_EMAIL, to: REPLY_TO,
+            subject: `🔔 Alerta de pueblo: ${municipio}${specialty ? ` · ${specialty}` : ''}`,
+            html: `<p><strong>${escapeHtml(email)}</strong> quiere aviso cuando llegue ${specialty ? `un ${escapeHtml(specialty)}` : 'un especialista nuevo'} a <strong>${escapeHtml(municipio)}</strong>.</p><p style="color:#64748b;font-size:12px">registro_alerts · registromedicopr.com/pueblo</p>`,
+          }),
+        })
+      } catch { /* best-effort */ }
+    }
+    res.status(200).send(JSON.stringify({ ok: true }))
+  } catch {
+    res.status(200).send(JSON.stringify({ ok: false }))
+  }
+}
+
 async function handleRegistro(req: any, res: any) {
   const en = String(req.query.lang || '') === 'en'
   const t = (es: string, env: string) => en ? env : es
@@ -3003,7 +3257,8 @@ async function handleRegistro(req: any, res: any) {
   </div>
   <p class="text-sm text-slate-300 mt-5">${t('No es queja: es el registro federal, municipio por municipio, con la fuente al lado. Esto empieza a cambiar cuando se ve.', 'Not a complaint: it is the federal registry, town by town, with the source next to each number. This starts to change when it is seen.')}</p>
   <div class="mt-4 flex flex-wrap gap-3">
-    <a href="/registro/desiertos${en ? '?lang=en' : ''}" class="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold px-5 py-2.5 rounded-full text-sm">${t('Ver el mapa del abandono →', 'See the map →')}</a>
+    <a href="/pueblo" class="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold px-5 py-2.5 rounded-full text-sm">${t('¿Cómo está TU pueblo? →', 'How is YOUR town? →')}</a>
+    <a href="/registro/desiertos${en ? '?lang=en' : ''}" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-5 py-2.5 rounded-full text-sm">${t('El mapa del abandono', 'The map')}</a>
     <a href="/registro/mapa" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-5 py-2.5 rounded-full text-sm">🗺️ ${t('Especialistas por pueblo', 'Specialists by town')}</a>
   </div>
 </div>
@@ -8692,6 +8947,8 @@ export default async function handler(req: any, res: any) {
     case 'acceso-log': return await handleAccesoLog(req, res)
     case 'registro': return await handleRegistro(req, res)
     case 'necesito': return await handleNecesito(req, res)
+    case 'pueblo': return await handlePueblo(req, res)
+    case 'registro-alert': return await handleRegistroAlert(req, res)
     case 'registro-data': return await handleRegistroData(req, res)
     case 'registro-search': return await handleRegistroSearch(req, res)
     case 'especialista': return await handleEspecialista(req, res)

@@ -119,6 +119,7 @@ export default async function handler(req: any, res: any) {
     ;[
       { slug: '', priority: 1.0, changefreq: 'weekly' },
       { slug: 'registro', priority: 0.9, changefreq: 'weekly' },
+      { slug: 'pueblo', priority: 0.9, changefreq: 'weekly' },
       { slug: 'necesito', priority: 0.85, changefreq: 'monthly' },
       { slug: 'necesito/cita-rapido', priority: 0.8, changefreq: 'monthly' },
       { slug: 'necesito/no-tengo-plan', priority: 0.8, changefreq: 'monthly' },
@@ -163,6 +164,22 @@ export default async function handler(req: any, res: any) {
           <loc>${REG_BASE}/especialista/${encodeURIComponent(p.slug)}</loc>
           <changefreq>monthly</changefreq>
           <priority>0.6</priority>
+        </url>
+      `);
+    });
+
+    // Registro Médico PR — /pueblo/:municipio (78 semáforos de acceso por pueblo)
+    const { data: puebloMunis } = await supabase
+      .from('v_registro_muni_ratio')
+      .select('municipio');
+    (puebloMunis || []).forEach((m: any) => {
+      const slug = String(m.municipio || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      if (!slug) return;
+      urls.push(`
+        <url>
+          <loc>${REG_BASE}/pueblo/${slug}</loc>
+          <changefreq>weekly</changefreq>
+          <priority>0.75</priority>
         </url>
       `);
     });

@@ -485,6 +485,8 @@ Fuente de datos: NPPES (National Plan and Provider Enumeration System), registro
 - Artículo: ¿Por qué se van los médicos de Puerto Rico? (la matemática con fuente): https://registromedicopr.com/porque
 - Estado de Salud de PR — el cupón federal sin cobrar (los 76 municipios rankeados): https://registromedicopr.com/registro/estado
 - Mapa interactivo de médicos por municipio: https://registromedicopr.com/registro/mapa
+- ¿Cómo está tu pueblo? Semáforo de acceso médico de los 78 municipios (qué hay, qué falta, dónde queda lo más cerca): https://registromedicopr.com/pueblo
+- Guías por situación real (cita rápido, sin plan médico, cuidando a tus padres desde afuera, recién llegado, sin especialista en tu pueblo): https://registromedicopr.com/necesito
 - Acceso por región (qué regiones no tienen ciertos especialistas): https://registromedicopr.com/registro/desiertos
 - El Observatorio del Acceso Médico (por qué se van los médicos, quién tiene la autoridad de actuar, podcast y reporte PDF): https://registromedicopr.com/observatorio
 
