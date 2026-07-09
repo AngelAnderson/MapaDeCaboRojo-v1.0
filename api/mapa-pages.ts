@@ -3312,10 +3312,19 @@ async function handleRegistroAlert(req: any, res: any) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8')
   try {
     const b = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}')
-    const email = String(b.email || '').slice(0, 160).trim().toLowerCase()
-    const municipio = String(b.municipio || '').slice(0, 60).trim()
-    const specialty = String(b.specialty || '').slice(0, 60).trim() || null
-    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || !municipio) { res.status(400).send(JSON.stringify({ ok: false })); return }
+    // Sanitización en el write (el endpoint es público): sin caracteres de control (header
+    // injection en emails), municipio contra la lista real de 78, specialty contra las 32.
+    const strip = (v: any, n: number) => String(v || '').replace(/[\u0000-\u001f\u007f]/g, '').slice(0, n).trim()
+    const email = strip(b.email, 160).toLowerCase()
+    const muniRaw = strip(b.municipio, 60)
+    const specRaw = strip(b.specialty, 60)
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email) || !muniRaw) { res.status(400).send(JSON.stringify({ ok: false })); return }
+    const { data: muniList } = await supabase.from('v_registro_muni_ratio').select('municipio')
+    const muniMatch = (muniList || []).find((m: any) => specToUrl(m.municipio) === specToUrl(muniRaw))
+    if (!muniMatch) { res.status(400).send(JSON.stringify({ ok: false })); return }
+    const municipio = muniMatch.municipio as string
+    const specialty = specRaw ? (REGISTRY_SUBS.has(specRaw) ? specRaw : null) : null
+    if (specRaw && !specialty) { res.status(400).send(JSON.stringify({ ok: false })); return }
     // El índice único es de expresión (lower(email), municipio, coalesce(specialty,'')) — un
     // duplicado devuelve error 23505, que tratamos como éxito idempotente (y sin re-notificar).
     const { error: insErr } = await supabase.from('registro_alerts')

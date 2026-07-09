@@ -112,6 +112,13 @@ async function runMaintenance(res: any) {
 // NUEVOS (places.created_at > suscripción) contra registro_alerts pendientes, le escribe
 // al vecino UNA vez (one-shot, como TE AVISO del bot) y marca notified_at.
 const ALERT_REGISTRY_SUBS = ['cardiólogo','psiquiatra','fisiatra','ginecólogo','pediatra','dermatólogo','gastroenterólogo','oftalmólogo','ortopeda','neurologo','urólogo','endocrinologo','nefrólogo','neumólogo','oncólogo','reumatólogo','geriatra','otorrinolaringólogo','infectólogo','alergista','medicina de emergencia','cirujano general','anestesiólogo','radiólogo','neurocirujano','cirujano plástico','cirujano torácico','coloproctólogo','manejo de dolor','psicólogo','optómetra','podiatra'];
+function cleanLine(s: any): string {
+  return String(s ?? '').replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 200);
+}
+function maskEmail(e: string): string {
+  const [u, d] = String(e || '').split('@');
+  return `${(u || '').slice(0, 2)}***@${d || ''}`;
+}
 function escH(s: any): string {
   return String(s ?? '').replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c] as string));
 }
@@ -145,18 +152,25 @@ async function runAlertas(res: any) {
       .limit(10);
     if (!matches || matches.length === 0) continue;
 
+    // Claim ANTES de enviar (fail-closed): si Resend falla, el vecino pierde UN email (Angel lo
+    // ve en el resumen y puede re-nullear notified_at), pero nunca recibe duplicados.
+    const { error: claimErr } = await svc.from('registro_alerts')
+      .update({ notified_at: new Date().toISOString() })
+      .eq('id', a.id).is('notified_at', null);
+    if (claimErr) { report.push(`FAIL claim ${a.id}: ${claimErr.message}`); continue; }
+
     const items = matches.map((m: any) =>
       `<li style="margin:6px 0"><strong>${escH(String(m.name).replace(/^Dr\(a\)\.\s*/, ''))}</strong> · ${escH(m.subcategory)}${m.phone ? ` · ${escH(m.phone)}` : ''}<br><a href="https://registromedicopr.com/especialista/${encodeURIComponent(m.slug)}" style="color:#0f766e">Ver el perfil verificado →</a></li>`
     ).join('');
     try {
       const r = await fetch('https://api.resend.com/emails', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${RESEND}`, 'Content-Type': 'application/json' },
+        headers: { Authorization: `Bearer ${RESEND}`, 'Content-Type': 'application/json', 'Idempotency-Key': `alerta-pueblo-${a.id}` },
         body: JSON.stringify({
           from: 'Registro Médico PR <newsletter@mapadecaborojo.com>',
-          to: a.email,
+          to: cleanLine(a.email),
           reply_to: 'angel@angelanderson.com',
-          subject: `Llegó ${matches.length === 1 ? 'un especialista nuevo' : `${matches.length} especialistas nuevos`} a ${a.municipio}`,
+          subject: `Llegó ${matches.length === 1 ? 'un especialista nuevo' : `${matches.length} especialistas nuevos`} a ${cleanLine(a.municipio)}`,
           html: `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#0f172a">
 <p>Me pediste que te avisara cuando apareciera ${a.specialty ? `un <strong>${escH(a.specialty)}</strong>` : 'un especialista nuevo'} verificado en <strong>${escH(a.municipio)}</strong>. Llegó:</p>
 <ul style="padding-left:18px">${items}</ul>
@@ -166,14 +180,13 @@ async function runAlertas(res: any) {
 </div>`,
         }),
       });
-      if (!r.ok) { report.push(`FAIL ${a.email} (${a.municipio}): HTTP ${r.status}`); continue; }
+      if (!r.ok) { report.push(`FAIL alerta ${a.id} (${a.municipio}): HTTP ${r.status} — email NO salió, re-nullea notified_at pa' reintentar`); continue; }
     } catch (e: any) {
-      report.push(`FAIL ${a.email} (${a.municipio}): ${e?.message || 'fetch error'}`);
+      report.push(`FAIL alerta ${a.id} (${a.municipio}): ${e?.message || 'fetch error'} — email NO salió, re-nullea notified_at pa' reintentar`);
       continue;
     }
-    await svc.from('registro_alerts').update({ notified_at: new Date().toISOString() }).eq('id', a.id);
     notified++;
-    report.push(`OK ${a.email} → ${a.municipio}${a.specialty ? ` (${a.specialty})` : ''}: ${matches.length} match(es)`);
+    report.push(`OK ${maskEmail(a.email)} [${a.id}] → ${a.municipio}${a.specialty ? ` (${a.specialty})` : ''}: ${matches.length} match(es)`);
   }
 
   // Resumen a Angel (solo si pasó algo)
@@ -191,7 +204,8 @@ async function runAlertas(res: any) {
       });
     } catch { /* best-effort */ }
   }
-  return res.status(200).json({ success: true, notified, report });
+  // Sin PII en el response HTTP (queda en logs de Vercel) — el detalle enmascarado va en el email a Angel.
+  return res.status(200).json({ success: true, notified, failures: report.filter(r => r.startsWith('FAIL')).length });
 }
 
 // --- Vibe ---
