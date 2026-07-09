@@ -199,14 +199,23 @@ function layout(opts: {
 <span class="font-black tracking-tight">Registro Médico PR</span>
 </a>
 <div class="flex items-center gap-3">
-<nav class="hidden md:flex gap-5 text-sm text-slate-600">
+<nav class="hidden md:flex items-center gap-6 text-sm text-slate-600">
 <a href="/registro${isEn ? '?lang=en' : ''}" class="hover:text-teal-700 font-semibold">${isEn ? 'Find a specialist' : 'Buscar especialista'}</a>
 <a href="/pueblo${isEn ? '?lang=en' : ''}" class="hover:text-teal-700 font-semibold">${isEn ? 'Your town' : 'Tu pueblo'}</a>
-<a href="/necesito${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Your situation' : 'Tu situación'}</a>
-<a href="/registro/desiertos${isEn ? '?lang=en' : ''}" class="font-bold text-amber-700 hover:text-amber-800">${isEn ? 'Medical deserts' : 'Desiertos médicos'}</a>
-<a href="/registro/mapa" class="hover:text-teal-700">${isEn ? 'The map' : 'El mapa'}</a>
-<a href="/porque" class="hover:text-teal-700">${isEn ? 'Why doctors leave' : '¿Por qué se van?'}</a>
+<a href="/registro/desiertos${isEn ? '?lang=en' : ''}" class="font-bold text-amber-700 hover:text-amber-800">${isEn ? 'Deserts' : 'Desiertos'}</a>
+<details id="nav-more" class="relative">
+<summary class="list-none cursor-pointer select-none hover:text-teal-700 flex items-center gap-1">${isEn ? 'More' : 'Más'} <i class="fa-solid fa-chevron-down text-[10px] opacity-60"></i></summary>
+<div class="absolute right-0 top-full mt-2 w-56 bg-white border border-slate-200 rounded-xl shadow-lg py-2 z-20">
+<a href="/necesito${isEn ? '?lang=en' : ''}" class="block px-4 py-2 hover:bg-slate-50 hover:text-teal-700">🧭 ${isEn ? 'Your situation' : 'Tu situación'}</a>
+<a href="/registro/mapa" class="block px-4 py-2 hover:bg-slate-50 hover:text-teal-700">🗺️ ${isEn ? 'The interactive map' : 'El mapa interactivo'}</a>
+<a href="/porque" class="block px-4 py-2 hover:bg-slate-50 hover:text-teal-700">✈️ ${isEn ? 'Why doctors leave' : '¿Por qué se van?'}</a>
+<a href="/registro/estado" class="block px-4 py-2 hover:bg-slate-50 hover:text-teal-700">🏥 ${isEn ? 'PR health status' : 'Estado de salud'}</a>
+<a href="/comparte" class="block px-4 py-2 hover:bg-slate-50 hover:text-teal-700">📋 ${isEn ? 'Citable facts' : 'Datos citables'}</a>
+<a href="/registro#como-se-hizo" class="block px-4 py-2 hover:bg-slate-50 hover:text-teal-700">✅ ${isEn ? 'How it is verified' : 'Cómo se verifica'}</a>
+</div>
+</details>
 </nav>
+<script>document.addEventListener('click',function(e){var d=document.getElementById('nav-more');if(d&&d.open&&!d.contains(e.target))d.removeAttribute('open');});</script>
 <a href="${langHref}" class="text-xs font-bold text-slate-500 hover:text-teal-700 border border-slate-200 rounded-lg px-2.5 py-1.5" aria-label="Language">${isEn ? 'ES' : 'EN'}</a>
 <button id="theme-toggle" type="button" aria-label="Theme" class="w-9 h-9 rounded-lg border border-slate-200 text-slate-600 hover:border-teal-400 flex items-center justify-center"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
 </div>
