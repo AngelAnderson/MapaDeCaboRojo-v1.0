@@ -271,7 +271,6 @@ function layout(opts: {
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">${isEn ? 'Press & AI' : 'Prensa e IA'}</div><div class="flex flex-col gap-1.5 text-slate-500">
 <a href="/comparte" class="hover:text-teal-700">${isEn ? 'Citable facts' : 'Datos citables'}</a>
 <a href="/pueblo${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Facts by town' : 'Datos por pueblo'}</a>
-<a href="/llms.txt" class="hover:text-teal-700">llms.txt</a>
 </div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">${isEn ? 'The house' : 'La casa'}</div><div class="flex flex-col gap-1.5 text-slate-500">
 <a href="/registro#como-se-hizo" class="hover:text-teal-700">${isEn ? 'How it is verified' : 'Cómo se verifica'}</a>
