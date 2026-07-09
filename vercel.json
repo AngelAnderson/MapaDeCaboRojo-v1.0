@@ -44,6 +44,8 @@
     { "source": "/playas/defensa-y-limpieza", "destination": "/api/mapa-pages?page=defensa-y-limpieza" },
     { "source": "/acceso", "destination": "/api/mapa-pages?page=acceso" },
     { "source": "/registro", "destination": "/api/mapa-pages?page=registro" },
+    { "source": "/necesito", "destination": "/api/mapa-pages?page=necesito" },
+    { "source": "/necesito/:intent", "destination": "/api/mapa-pages?page=necesito&intent=:intent" },
     { "source": "/registro/desiertos", "destination": "/api/mapa-pages?page=registro-desiertos" },
     { "source": "/registro/mapa", "destination": "/api/mapa-pages?page=registro-mapa" },
     { "source": "/registro/estado", "destination": "/api/mapa-pages?page=registro-estado" },

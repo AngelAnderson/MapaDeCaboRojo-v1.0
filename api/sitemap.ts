@@ -119,6 +119,12 @@ export default async function handler(req: any, res: any) {
     ;[
       { slug: '', priority: 1.0, changefreq: 'weekly' },
       { slug: 'registro', priority: 0.9, changefreq: 'weekly' },
+      { slug: 'necesito', priority: 0.85, changefreq: 'monthly' },
+      { slug: 'necesito/cita-rapido', priority: 0.8, changefreq: 'monthly' },
+      { slug: 'necesito/no-tengo-plan', priority: 0.8, changefreq: 'monthly' },
+      { slug: 'necesito/cuido-a-mis-padres-desde-afuera', priority: 0.8, changefreq: 'monthly' },
+      { slug: 'necesito/acabo-de-llegar', priority: 0.8, changefreq: 'monthly' },
+      { slug: 'necesito/no-hay-en-mi-pueblo', priority: 0.8, changefreq: 'monthly' },
       { slug: 'observatorio', priority: 0.9, changefreq: 'weekly' },
       { slug: 'registro/desiertos', priority: 0.8, changefreq: 'monthly' },
       { slug: 'registro/estado', priority: 0.9, changefreq: 'weekly' },

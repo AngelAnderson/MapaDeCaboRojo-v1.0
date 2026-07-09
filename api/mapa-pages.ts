@@ -201,6 +201,8 @@ function layout(opts: {
 <div class="flex items-center gap-3">
 <nav class="hidden md:flex gap-5 text-sm text-slate-600">
 <a href="/registro${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Find a specialist' : 'Buscar especialista'}</a>
+<a href="/necesito" class="hover:text-teal-700">${isEn ? 'Your situation' : '¿Tu situación?'}</a>
+<a href="/registro/desiertos" class="font-bold text-amber-700 hover:text-amber-800">${isEn ? 'Medical deserts' : 'Desiertos médicos'}</a>
 <a href="/porque" class="hover:text-teal-700">¿Por qué se van?</a>
 <a href="/registro#como-se-hizo" class="hover:text-teal-700">${isEn ? 'How it works' : 'Cómo se verifica'}</a>
 </nav>
@@ -2635,6 +2637,272 @@ function shareRow(opts: { text: string; url: string; toWho: string; dark?: boole
 }
 const SHARE_COPY_SCRIPT = `<script>document.addEventListener('click',function(e){var b=e.target.closest('.share-copy');if(!b)return;navigator.clipboard.writeText(b.getAttribute('data-copy')||'').then(function(){var o=b.innerHTML;b.innerHTML='✓ Copiado';setTimeout(function(){b.innerHTML=o},1600);});});</script>`
 
+// =============== Registro: helpers compartidos (plan, disclaimer, checklist, WA familia) ===============
+// Planes médicos comunes en PR. `v` = token de match: se compara normalizado (sin acentos,
+// lowercase) como substring en ambas direcciones contra places.accepted_plans (crowdsourced).
+const PR_PLANS: Array<{ v: string; l: string }> = [
+  { v: 'vital', l: 'Vital (Plan del Gobierno)' },
+  { v: 'mmm', l: 'MMM' },
+  { v: 'triple', l: 'Triple-S' },
+  { v: 'mcs', l: 'MCS' },
+  { v: 'first', l: 'First Medical' },
+  { v: 'humana', l: 'Humana' },
+  { v: 'medicare', l: 'Medicare Original' },
+]
+
+// Disclaimer canon (texto de Angel, verbatim). Claro, pero humano.
+function regDisclaimer(en = false): string {
+  const t = en
+    ? { h: 'One important thing, neighbor to neighbor', body: 'This is not a substitute for medical advice. We verify public data, but phone numbers, health plans, and availability change. Before you go, call and confirm.', tail: 'Spotted outdated info? Tell us and we fix it:' }
+    : { h: 'Una cosa importante, de vecino a vecino', body: 'Esto no sustituye consejo médico. Verificamos datos públicos, pero teléfonos, planes médicos y disponibilidad cambian. Antes de ir, llama y confirma.', tail: '¿Viste un dato viejo? Dínoslo y se corrige:' }
+  return `
+<div class="not-prose mt-8 bg-slate-50 border border-slate-200 rounded-2xl p-5 flex gap-4 items-start">
+  <div class="text-2xl leading-none">🤙</div>
+  <div>
+    <p class="font-bold text-slate-800 text-sm">${t.h}</p>
+    <p class="text-sm text-slate-600 mt-1">${t.body}</p>
+    <p class="text-xs text-slate-400 mt-2">${t.tail} <a href="mailto:angel@angelanderson.com" class="text-teal-600">angel@angelanderson.com</a></p>
+  </div>
+</div>`
+}
+
+// Checklist "qué hacer antes de llamar". Se usa en /especialista, hubs y páginas de intención.
+function antesDeLlamar(opts: { specLabel?: string; en?: boolean } = {}): string {
+  const en = !!opts.en
+  const spec = opts.specLabel
+  const items = en ? [
+    ['Have your plan card and ID at hand', 'The first thing they ask. If it is for a relative, also their date of birth and plan number.'],
+    ['Ask your primary doctor for the referral first', `Many ${spec ? spec.toLowerCase() + 's' : 'specialists'} will not book you without one. Request it by phone, do not wait for your next visit.`],
+    ['Ask these two questions first', '"Do you accept my plan?" and "Are you taking new patients?" That saves you the whole trip.'],
+    ['Ask how long the wait is, and to be put on the cancellation list', 'Someone cancels almost every week. Whoever is on the list gets that slot.'],
+    ['Write down who you spoke with and the date', 'If anything gets tangled later, that note untangles it.'],
+  ] : [
+    ['Ten a mano tu tarjeta del plan y tu ID', 'Es lo primero que piden. Si la cita es pa\' un familiar, ten también su fecha de nacimiento y número de plan.'],
+    ['Pide el referido a tu médico primario antes', `Muchos ${spec ? spec.toLowerCase() : 'especialistas'} no te dan cita sin referido. Pídelo por teléfono, no esperes a la próxima visita.`],
+    ['Pregunta estas dos cosas primero', '"¿Aceptan mi plan?" y "¿Están cogiendo pacientes nuevos?" Eso te ahorra el viaje completo.'],
+    ['Pregunta cuánto tarda la cita, y pide la lista de cancelaciones', 'Casi todas las semanas alguien cancela. El que está en la lista, coge ese espacio.'],
+    ['Apunta con quién hablaste y la fecha', 'Si después algo se enreda, esa nota lo desenreda.'],
+  ]
+  return `
+<div class="not-prose mt-8 bg-white border-2 border-teal-200 rounded-2xl p-5">
+  <p class="font-bold text-slate-900 text-base">📞 ${en ? 'Before you call, have this ready' : 'Antes de llamar, ten esto listo'}</p>
+  <p class="text-sm text-slate-500 mt-0.5">${en ? 'Two minutes of prep save you weeks of back and forth.' : 'Dos minutos de preparación te ahorran semanas de vueltas.'}</p>
+  <ul class="mt-3 space-y-2.5">
+    ${items.map(([h, p]) => `<li class="flex gap-2.5 items-start"><span class="text-teal-600 font-black mt-0.5">✓</span><span class="text-sm text-slate-700"><strong>${h}.</strong> ${p}</span></li>`).join('')}
+  </ul>
+</div>`
+}
+
+// Botón "Enviar por WhatsApp a mami/papi": arma el mensaje completo (nombre, especialidad,
+// pueblo, teléfono, aviso de confirmar plan, link) listo pa' reenviar al familiar.
+function waFamiliaBlock(opts: { name: string; specLabel: string; muni: string; phone?: string | null; url: string; en?: boolean }): string {
+  const en = !!opts.en
+  const text = en
+    ? `Found this for you: ${opts.name}, ${opts.specLabel} in ${opts.muni}, Puerto Rico.${opts.phone ? ` Phone: ${opts.phone}.` : ''} Verified in the federal registry. Before going, call and confirm they take your plan. Everything here: ${opts.url}`
+    : `Mira, te encontré esto: ${opts.name}, ${opts.specLabel} en ${opts.muni}.${opts.phone ? ` Tel: ${opts.phone}.` : ''} Está verificado en el registro federal de médicos. Antes de ir, llama y confirma que acepta tu plan. Aquí está todo: ${opts.url}`
+  const wa = `https://wa.me/?text=${encodeURIComponent(text)}`
+  return `
+<div class="not-prose mt-6 bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-5">
+  <p class="font-bold text-emerald-900 text-base">${en ? '💚 Is this for your mom or dad?' : '💚 ¿Esto es pa\' tu mamá o tu papá?'}</p>
+  <p class="text-sm text-emerald-800 mt-1">${en ? 'Send it ready to go: name, specialty, phone, and the reminder to confirm the plan. One tap.' : 'Mándaselo listo: nombre, especialidad, teléfono y el recordatorio de confirmar el plan. Un solo toque.'}</p>
+  <div class="mt-3 flex flex-wrap gap-2">
+    <a href="${wa}" target="_blank" rel="noopener" onclick="try{gtag('event','share_familia')}catch(e){}" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-3 rounded-xl text-base"><i class="fa-brands fa-whatsapp text-lg"></i> ${en ? 'Send by WhatsApp to mom or dad' : 'Enviárselo por WhatsApp a mami o papi'}</a>
+    <button type="button" class="share-copy inline-flex items-center gap-2 bg-white border border-emerald-300 text-emerald-800 font-bold px-4 py-3 rounded-xl text-sm" data-copy="${escapeHtml(text)}"><i class="fa-regular fa-copy"></i> ${en ? 'Copy the message' : 'Copiar el mensaje'}</button>
+  </div>
+</div>`
+}
+
+// =============== /necesito/:intent — páginas por intención (no solo por especialidad) ===============
+// La gente no busca "neumólogo": busca "necesito cita rápido" o "cuido a mami desde afuera".
+// Cada página: nombra el peso, lo quita con pasos concretos, y suelta sin culpa (firma ALIVIO).
+type IntentPage = {
+  slug: string; e: string; title: string; metaDesc: string; who: string; intro: string;
+  steps: Array<{ h: string; p: string }>;
+  specs: string[]; // subcategory keys de REGISTRY_SPECS → chips a los hubs
+  faq: Array<{ q: string; a: string }>;
+}
+const INTENT_PAGES: IntentPage[] = [
+  {
+    slug: 'cita-rapido', e: '⏱️',
+    title: 'Necesito cita con un especialista, rápido',
+    metaDesc: 'Cómo conseguir cita con un especialista en Puerto Rico más rápido: referido, lista de cancelaciones, horarios pa\' llamar y ampliar la región. Pasos concretos, gratis.',
+    who: 'Pa\' cuando te dieron cita pa\' dentro de meses y no puedes esperar tanto.',
+    intro: 'Llamaste y te dieron cita pa\' dentro de cuatro meses. Respira: no es que no haya manera, es que nadie te enseñó las vueltas. Ninguna de estas requiere conocer a nadie.',
+    steps: [
+      { h: 'Pide el referido hoy mismo', p: 'Tu médico primario es la llave. Sin referido, muchas oficinas ni te cogen la llamada. Pídelo por teléfono hoy, no esperes a tu próxima cita.' },
+      { h: 'Pide que te pongan en la lista de cancelaciones', p: 'Casi todas las oficinas tienen una y casi nadie la pide. Alguien cancela casi todas las semanas, y ese espacio se lo dan al que está en la lista.' },
+      { h: 'Llama entre 8 y 9 de la mañana', p: 'Es cuando las oficinas acomodan el día y sueltan espacios. Después del mediodía casi nunca queda nada.' },
+      { h: 'Amplía la región', p: 'El mismo especialista con 4 meses de espera en tu región puede tener espacio en 2 semanas en la de al lado. En el registro ves cuántos hay en cada región, con teléfono.' },
+      { h: 'Pregunta por telemedicina', p: 'Pa\' seguimiento y discutir resultados, muchos atienden por video. A veces la primera evaluación también. Preguntar no cuesta.' },
+    ],
+    specs: ['cardiólogo', 'neurologo', 'gastroenterólogo', 'endocrinologo', 'dermatólogo'],
+    faq: [
+      { q: '¿Cómo consigo cita más rápido con un especialista en Puerto Rico?', a: 'Pide el referido a tu médico primario por teléfono el mismo día, pide que te incluyan en la lista de cancelaciones de la oficina, llama entre 8 y 9 de la mañana, y considera especialistas de regiones vecinas, donde la espera puede ser semanas en vez de meses.' },
+      { q: '¿Qué es la lista de cancelaciones de una oficina médica?', a: 'Es una lista de pacientes dispuestos a tomar espacios que se liberan cuando alguien cancela su cita. Casi todas las oficinas la tienen, pero hay que pedirla. Es una de las formas más efectivas de adelantar una cita.' },
+    ],
+  },
+  {
+    slug: 'no-tengo-plan', e: '🪪',
+    title: 'No tengo plan médico, ¿a dónde voy?',
+    metaDesc: 'Opciones médicas en Puerto Rico si no tienes plan: el Vital, centros de salud comunitarios 330 que cobran según ingreso, y tarifas de oficina en efectivo. En cristiano.',
+    who: 'Pa\' cuando no tienes cubierta y llevas tiempo posponiendo ir al médico por eso.',
+    intro: 'No tener plan no significa que no haya puerta. Hay opciones que cuestan poco o nada, y ninguna requiere esperar a que la cosa se ponga peor.',
+    steps: [
+      { h: 'Mira si cualificas pa\'l Vital', p: 'El Plan de Salud del Gobierno cubre a más gente de la que la gente cree, incluyendo adultos que trabajan. Se solicita en la oficina de Medicaid de tu pueblo. Lleva ID, evidencia de ingreso y de dirección.' },
+      { h: 'Los centros 330 te atienden con o sin plan', p: 'Son clínicas comunitarias con fondos federales que cobran según lo que ganas. Hay en casi toda la isla, y atienden primaria, dental y salud mental.' },
+      { h: 'Pregunta el precio en efectivo', p: 'Muchas oficinas tienen tarifa de "paciente directo" que es menos de lo que imaginas, sobre todo pa\' una consulta. Preguntar no cuesta nada.' },
+      { h: 'La sala de emergencias es pa\' emergencias', p: 'Por ley federal te tienen que evaluar aunque no tengas plan. Pero pa\' lo que no es emergencia sales con una factura grande y una espera larga. Mejor resuelve por las otras puertas.' },
+    ],
+    specs: ['psicólogo', 'optómetra', 'pediatra'],
+    faq: [
+      { q: '¿A dónde puedo ir al médico en Puerto Rico si no tengo plan médico?', a: 'Tienes tres puertas: solicitar el Vital (Plan de Salud del Gobierno) en la oficina de Medicaid de tu pueblo, ir a un centro de salud comunitario 330 que cobra según tu ingreso, o preguntar la tarifa en efectivo de la oficina, que suele ser menor de lo esperado.' },
+      { q: '¿Qué es un centro 330 en Puerto Rico?', a: 'Es una clínica comunitaria con fondos federales (Sección 330) que atiende a todo el mundo, con o sin plan médico, cobrando en escala según ingreso. Ofrecen cuidado primario, dental y de salud mental en casi toda la isla.' },
+    ],
+  },
+  {
+    slug: 'cuido-a-mis-padres-desde-afuera', e: '✈️',
+    title: 'Cuido a mis padres en Puerto Rico desde afuera',
+    metaDesc: 'Cómo ayudar a tus padres en Puerto Rico a conseguir especialista si vives en Estados Unidos: registro verificado federal, envío por WhatsApp y ayuda directa.',
+    who: 'Pa\' la hija en Orlando o el hijo en Nueva York que resuelve lo médico de sus papás a control remoto.',
+    intro: 'Estás allá y tu mamá está aquí. Cada gestión médica es una cadena de llamadas en un horario que no es el tuyo, con información que nadie te confirma. Este registro se hizo pensando en ti.',
+    steps: [
+      { h: 'Busca el especialista aquí y mándaselo por WhatsApp', p: 'Cada página de especialista tiene un botón que le envía a tu familiar el nombre, la especialidad y el teléfono, listo pa\' llamar. Tú buscas desde allá, ellos llaman desde acá.' },
+      { h: 'Verifica que el médico existe de verdad', p: 'Cada perfil tiene su NPI, el número federal público del registro NPPES, con enlace pa\' verificarlo tú mismo. Nada de nombres regados en Facebook sin fuente.' },
+      { h: 'Prepara la llamada antes de que llamen', p: 'Tarjeta del plan a mano, referido del primario, y las dos preguntas de oro: "¿aceptan el plan?" y "¿están cogiendo pacientes nuevos?". La lista completa está en cada página.' },
+      { h: 'Si no puedes con las vueltas, cuéntame', p: 'En el registro hay un formulario corto. Me dices a quién cuidas y qué necesita, y te escribo yo mismo. Sin compromiso y sin buzón muerto.' },
+    ],
+    specs: ['geriatra', 'cardiólogo', 'neumólogo', 'oncólogo', 'nefrólogo'],
+    faq: [
+      { q: '¿Cómo ayudo a mis padres en Puerto Rico a conseguir un especialista si vivo en Estados Unidos?', a: 'Busca el especialista en el registro verificado (registromedicopr.com), confirma que existe con su NPI federal, y envíale la información completa por WhatsApp con el botón de la página. Prepara a tu familiar con las preguntas clave antes de llamar: si aceptan su plan y si están cogiendo pacientes nuevos.' },
+      { q: '¿Cómo verifico que un médico en Puerto Rico es real?', a: 'Todo proveedor legítimo tiene un NPI, un número público del registro federal NPPES que usan Medicare y los planes médicos. En registromedicopr.com cada perfil muestra su NPI con enlace directo al registro federal para verificarlo.' },
+    ],
+  },
+  {
+    slug: 'acabo-de-llegar', e: '🧳',
+    title: 'Acabo de llegar a Puerto Rico, ¿cómo consigo médico?',
+    metaDesc: 'Si te mudaste o regresaste a Puerto Rico: cómo funciona el sistema médico, por qué tu plan de allá puede no servir, y cómo conseguir primario y especialista.',
+    who: 'Pa\' quien se mudó o regresó a PR y no sabe por dónde empezar con lo médico.',
+    intro: 'Regresar es un revolú de papeles, y la salud es el que más asusta. Vamos por partes, que esto se resuelve en orden.',
+    steps: [
+      { h: 'Primero un médico primario, después el especialista', p: 'En Puerto Rico casi todo pasa por referido. Sin primario, cada especialista es una puerta cerrada. Consíguelo primero aunque estés sano.' },
+      { h: 'Tu plan de allá probablemente no funciona igual aquí', p: 'Medicare Original sí viaja. Los Medicare Advantage y los planes de empleador de allá casi nunca cubren igual acá. Llama a tu plan antes de la primera cita, no después.' },
+      { h: 'Cuando escojas plan nuevo, pregunta por la red', p: 'Aquí la mayoría de los planes Medicare son Advantage con redes cerradas. El especialista que quieres puede no estar en la red del plan que te están vendiendo. Verifica antes de firmar.' },
+      { h: 'Mira qué especialistas hay en tu región antes de escoger pueblo', p: 'Hay regiones enteras sin ciertos especialistas. Si tienes una condición, revisa el registro y el mapa de desiertos médicos antes de decidir dónde vivir.' },
+    ],
+    specs: ['cardiólogo', 'endocrinologo', 'psiquiatra', 'reumatólogo'],
+    faq: [
+      { q: '¿Mi plan médico de Estados Unidos funciona en Puerto Rico?', a: 'Depende. Medicare Original funciona en Puerto Rico porque es parte de Estados Unidos. Los planes Medicare Advantage y la mayoría de los planes de empleador tienen redes locales y casi nunca cubren igual en la isla. Llama a tu plan antes de tu primera cita.' },
+      { q: '¿Necesito referido para ver un especialista en Puerto Rico?', a: 'En la mayoría de los casos sí. El sistema en Puerto Rico funciona por referido del médico primario, y muchas oficinas de especialistas no dan cita sin uno. Lo primero al llegar es conseguir médico primario.' },
+    ],
+  },
+  {
+    slug: 'no-hay-en-mi-pueblo', e: '🏜️',
+    title: 'En mi pueblo no hay el especialista que necesito',
+    metaDesc: 'Qué hacer cuando en tu pueblo o región de Puerto Rico no hay el especialista que necesitas: dónde está el más cerca, telemedicina y cómo cuadrar el viaje.',
+    who: 'Pa\' quien vive donde el especialista más cerca queda a hora y media.',
+    intro: 'No es idea tuya y no es tu culpa: hay 36 pueblos sin psiquiatra y regiones enteras sin geriatra ni neumólogo. Lo documentamos con datos federales pa\' que se vea. Mientras lo grande se arregla, esto es lo que puedes hacer hoy.',
+    steps: [
+      { h: 'Mira dónde está el más cerca de verdad', p: 'En el registro ves cuántos hay en cada región con nombre y teléfono. A veces el más cerca no está en el área metro sino en la región de al lado.' },
+      { h: 'Pide el referido con tiempo y cuadra una sola ida', p: 'Si te toca viajar, trata de cuadrar laboratorios, estudios y la cita el mismo día. Dilo en la oficina cuando llames: ayudan más de lo que crees.' },
+      { h: 'Pregunta por telemedicina', p: 'Pa\' seguimiento y resultados, muchos especialistas atienden por video y te ahorras el viaje completo. La primera cita a veces tiene que ser presencial, las demás no siempre.' },
+      { h: 'Mira el mapa de los desiertos médicos, y compártelo', p: 'Documentamos qué hay y qué no hay en cada pueblo, con la fuente federal al lado. Esto empieza a cambiar cuando se ve.' },
+    ],
+    specs: ['psiquiatra', 'geriatra', 'neumólogo', 'neurocirujano', 'otorrinolaringólogo'],
+    faq: [
+      { q: '¿Qué hago si en mi pueblo no hay el especialista que necesito?', a: 'Busca en el registro verificado dónde está el más cercano por región (a veces la región vecina tiene más disponibilidad que el área metro), pide el referido con tiempo, trata de cuadrar estudios y cita el mismo día si te toca viajar, y pregunta si el seguimiento puede ser por telemedicina.' },
+      { q: '¿Qué son los desiertos médicos de Puerto Rico?', a: 'Son pueblos y regiones donde no ejerce ningún especialista de cierto tipo según el registro federal NPPES. Por ejemplo, hay 36 municipios sin psiquiatra, y la región central no tiene neumólogos, geriatras ni otorrinos. El mapa completo está en registromedicopr.com/registro/desiertos.' },
+    ],
+  },
+]
+
+async function handleNecesito(req: any, res: any) {
+  const intentSlug = String(req.query.intent || '').toLowerCase().trim()
+  const page = intentSlug ? INTENT_PAGES.find(p => p.slug === intentSlug) : null
+  if (intentSlug && !page) { res.statusCode = 302; res.setHeader('Location', '/necesito'); res.end(); return }
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=300')
+
+  if (!page) {
+    // Índice: ¿cuál es tu situación?
+    const cards = INTENT_PAGES.map(p => `
+      <a href="/necesito/${p.slug}" class="block bg-white border border-slate-200 rounded-2xl p-5 hover:border-teal-400 hover:shadow-sm transition">
+        <div class="text-3xl leading-none">${p.e}</div>
+        <div class="font-bold text-slate-900 mt-2 leading-snug">${escapeHtml(p.title)}</div>
+        <div class="text-sm text-slate-500 mt-1">${escapeHtml(p.who)}</div>
+      </a>`).join('')
+    const body = `
+<h1>¿Cuál es tu situación?</h1>
+<p class="text-lg text-slate-600 mt-2">La gente no busca "neumólogo". Busca "necesito cita rápido" o "cuido a mami desde afuera". Empieza por la tuya: cada una tiene pasos concretos, sin vueltas.</p>
+<div class="not-prose mt-5 grid sm:grid-cols-2 gap-3">${cards}</div>
+<p class="not-prose mt-6 text-sm text-slate-500">¿Lo tuyo es directo? <a href="/registro" class="text-teal-700 font-semibold">Busca por especialidad y región →</a></p>
+${regDisclaimer()}`
+    res.status(200).send(layout({
+      title: '¿Cuál es tu situación? · Guías pa\' resolver lo médico en PR',
+      description: 'Guías por situación real: cita rápido, sin plan médico, cuidando a tus padres desde afuera, recién llegado, o sin especialista en tu pueblo. Pasos concretos, gratis.',
+      slug: 'necesito', bodyHtml: body,
+      jsonLd: { '@context': 'https://schema.org', '@type': 'CollectionPage', name: '¿Cuál es tu situación? · Registro Médico PR', url: 'https://registromedicopr.com/necesito', inLanguage: 'es' },
+      ogImage: '/og/registro.png', host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+    }))
+    return
+  }
+
+  const specChips = page.specs.map(s => {
+    const x = REGISTRY_SPECS.find(r => r.s === s)
+    if (!x) return ''
+    return `<a href="/registro/${specToUrl(x.s)}" class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1.5 rounded-full text-sm hover:bg-teal-100">${x.e} ${escapeHtml(x.l)} (${x.t})</a>`
+  }).join(' ')
+
+  const stepsHtml = page.steps.map((s, i) => `
+    <div class="flex gap-4 items-start bg-white border border-slate-200 rounded-2xl p-5">
+      <div class="w-8 h-8 rounded-full bg-teal-700 text-white font-black flex items-center justify-center shrink-0">${i + 1}</div>
+      <div><p class="font-bold text-slate-900">${escapeHtml(s.h)}</p><p class="text-sm text-slate-600 mt-1">${escapeHtml(s.p)}</p></div>
+    </div>`).join('')
+
+  const body = `
+<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <a href="/necesito" class="hover:text-teal-700">¿Cuál es tu situación?</a> <span class="text-slate-300">/</span> <span class="text-slate-700">${escapeHtml(page.title)}</span></nav>
+<div class="not-prose flex items-start gap-4">
+  <div class="text-5xl leading-none">${page.e}</div>
+  <div>
+    <h1 class="text-3xl font-black text-slate-900 leading-tight">${escapeHtml(page.title)}</h1>
+    <p class="text-slate-500 mt-1">${escapeHtml(page.who)}</p>
+  </div>
+</div>
+<p class="text-lg text-slate-700 mt-4">${escapeHtml(page.intro)}</p>
+<div class="not-prose mt-5 space-y-3">${stepsHtml}</div>
+${antesDeLlamar()}
+${specChips ? `<h2>Especialistas que suelen tocar en esto</h2>
+<p class="text-slate-600 -mt-2">Cada uno con cuántos hay en la isla, por región y con teléfono, verificados contra el registro federal.</p>
+<div class="not-prose mt-3 flex flex-wrap gap-2">${specChips}</div>` : ''}
+<div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
+  <p class="text-lg font-bold mb-1">¿Sigues trancao'?</p>
+  <p class="text-sm text-teal-100 mb-4">Escríbele al Veci al <strong>${PHONE_CTA}</strong>, o déjale una nota a Angel en el registro y te escribe él mismo.</p>
+  <div class="flex flex-wrap gap-3 justify-center">
+    <a href="https://wa.me/17874177711?text=ESPECIALISTA" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ESPECIALISTA</a>
+    <a href="/registro" class="inline-flex items-center gap-2 bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-900"><i class="fa-solid fa-magnifying-glass"></i> Buscar en el registro</a>
+  </div>
+</div>
+${regDisclaimer()}
+<p class="not-prose mt-5 text-sm text-slate-500"><a href="/necesito" class="text-teal-700 font-semibold">← Ver las otras situaciones</a></p>`
+
+  const jsonLd = [
+    { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: page.faq.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: f.a } })) },
+    { '@context': 'https://schema.org', '@type': 'HowTo', name: page.title, description: page.metaDesc, inLanguage: 'es',
+      step: page.steps.map((s, i) => ({ '@type': 'HowToStep', position: i + 1, name: s.h, text: s.p })) },
+    { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Registro Médico PR', item: 'https://registromedicopr.com/registro' },
+      { '@type': 'ListItem', position: 2, name: '¿Cuál es tu situación?', item: 'https://registromedicopr.com/necesito' },
+      { '@type': 'ListItem', position: 3, name: page.title, item: `https://registromedicopr.com/necesito/${page.slug}` },
+    ] },
+  ]
+  res.status(200).send(layout({
+    title: `${page.title} · guía práctica PR`,
+    description: page.metaDesc,
+    slug: `necesito/${page.slug}`, bodyHtml: body, jsonLd,
+    ogImage: '/og/registro.png', host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
 async function handleRegistro(req: any, res: any) {
   const en = String(req.query.lang || '') === 'en'
   const t = (es: string, env: string) => en ? env : es
@@ -2681,7 +2949,7 @@ async function handleRegistro(req: any, res: any) {
   <div class="flex items-center gap-3 my-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
     <span class="flex-1 h-px bg-slate-200"></span>${t('o escoge especialidad y región', 'or pick specialty and region')}<span class="flex-1 h-px bg-slate-200"></span>
   </div>
-  <div class="grid sm:grid-cols-2 gap-4">
+  <div class="grid sm:grid-cols-3 gap-4">
     <label class="block">
       <span class="text-sm font-bold text-slate-700">1. ${t('¿Qué especialista buscas?', 'Which specialist?')}</span>
       <select id="rg-spec" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-base bg-white">
@@ -2701,6 +2969,13 @@ async function handleRegistro(req: any, res: any) {
         <option value="Centro">${t('Centro', 'Central')} (Aibonito, Barranquitas...)</option>
       </select>
     </label>
+    <label class="block">
+      <span class="text-sm font-bold text-slate-700">3. ${t('¿Qué plan tienes?', 'Your health plan?')} <span class="font-normal text-slate-400">(${t('opcional', 'optional')})</span></span>
+      <select id="rg-plan" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-base bg-white">
+        <option value="">${t('Cualquiera / no sé', 'Any / not sure')}</option>
+        ${PR_PLANS.map(p => `<option value="${p.v}">${escapeHtml(p.l)}</option>`).join('')}
+      </select>
+    </label>
   </div>
   <div id="rg-result" class="mt-5"></div>
   <p id="rg-hint" class="mt-4 text-sm text-slate-400 text-center">${t('Escoge los dos y te decimos cuántos hay cerca, cuáles, y sus teléfonos.', 'Pick both and we\'ll tell you how many are near you, who, and their phone numbers.')}</p>
@@ -2709,6 +2984,29 @@ async function handleRegistro(req: any, res: any) {
 <p class="not-prose mt-3 text-sm text-slate-500 text-center"><a href="/registro/mapa" class="text-teal-700 font-semibold hover:underline">${t('🗺️ Mira el mapa: qué especialista hay en cada pueblo →', '🗺️ See the map: which specialists each town has →')}</a> · ${t('¿Vives lejos del área metro?', 'Live far from the metro area?')} <a href="/registro/desiertos${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold hover:underline">${t('Los desiertos médicos →', 'The medical deserts →')}</a></p>
 
 <p class="not-prose mt-4 text-sm text-slate-500 text-center">🎙️ ${t('¿Quieres entender por qué pasa esto?', 'Want to understand why this happens?')} <a href="/observatorio${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold hover:underline">${t('Escucha el podcast y baja el reporte completo →', 'Listen to the podcast and get the full report →')}</a></p>
+
+<h2>${t('¿Cuál es tu situación?', 'What is your situation?')}</h2>
+<p class="text-slate-600 -mt-2">${t('A veces uno no busca una especialidad, busca salir de un aprieto. Empieza por el tuyo:', 'Sometimes you are not looking for a specialty, you are trying to get unstuck. Start with yours:')}</p>
+<div class="not-prose mt-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+  ${INTENT_PAGES.map(p => `<a href="/necesito/${p.slug}" class="block bg-white border border-slate-200 rounded-xl p-4 hover:border-teal-400 hover:shadow-sm transition">
+    <div class="flex items-start gap-2.5"><span class="text-2xl leading-none">${p.e}</span><span class="font-bold text-slate-900 text-sm leading-snug">${escapeHtml(p.title)}</span></div>
+  </a>`).join('')}
+</div>
+
+<div class="not-prose mt-10 bg-slate-900 rounded-2xl p-6 sm:p-8 text-white">
+  <p class="text-xs uppercase tracking-widest text-amber-300 font-bold">🏜️ ${t('Los desiertos médicos', 'The medical deserts')}</p>
+  <h3 class="text-2xl font-black mt-1 leading-snug">${t('Lo que este registro también enseña: dónde NO hay', 'What this registry also shows: where there is NO ONE')}</h3>
+  <div class="grid sm:grid-cols-3 gap-4 mt-5">
+    <div><div class="text-3xl font-black text-amber-300">36</div><div class="text-sm text-slate-300 mt-1">${t('municipios sin un solo psiquiatra', 'municipalities without a single psychiatrist')}</div></div>
+    <div><div class="text-3xl font-black text-amber-300">0</div><div class="text-sm text-slate-300 mt-1">${t('neumólogos, geriatras y otorrinos en toda la región central', 'pulmonologists, geriatricians and ENTs in the entire central region')}</div></div>
+    <div><div class="text-3xl font-black text-amber-300">1</div><div class="text-sm text-slate-300 mt-1">${t('neurocirujano pa\' todo el oeste de la isla', 'neurosurgeon for the entire west of the island')}</div></div>
+  </div>
+  <p class="text-sm text-slate-300 mt-5">${t('No es queja: es el registro federal, municipio por municipio, con la fuente al lado. Esto empieza a cambiar cuando se ve.', 'Not a complaint: it is the federal registry, town by town, with the source next to each number. This starts to change when it is seen.')}</p>
+  <div class="mt-4 flex flex-wrap gap-3">
+    <a href="/registro/desiertos${en ? '?lang=en' : ''}" class="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold px-5 py-2.5 rounded-full text-sm">${t('Ver el mapa del abandono →', 'See the map →')}</a>
+    <a href="/registro/mapa" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-5 py-2.5 rounded-full text-sm">🗺️ ${t('Especialistas por pueblo', 'Specialists by town')}</a>
+  </div>
+</div>
 
 <h2>${t(`Las ${REGISTRY_SPECS.length} especialidades del registro`, `The ${REGISTRY_SPECS.length} specialties in the registry`)}</h2>
 <p class="text-slate-600 -mt-2">${t('El número es cuántos hay <strong>en toda la isla</strong>, verificados contra el registro federal. Toca cualquiera pa\' ver dónde están y sus teléfonos.', 'The number is how many there are <strong>across the whole island</strong>, verified against the federal registry. Tap any to see where they are and their phone numbers.')}</p>
@@ -2767,10 +3065,16 @@ async function handleRegistro(req: any, res: any) {
 (function(){
   var SPECS=${JSON.stringify(REGISTRY_SPECS)};
   var BYID={}; SPECS.forEach(function(x){BYID[x.s]=x;});
-  var sp=document.getElementById('rg-spec'),rg=document.getElementById('rg-region'),
+  var sp=document.getElementById('rg-spec'),rg=document.getElementById('rg-region'),pl=document.getElementById('rg-plan'),
       out=document.getElementById('rg-result'),hint=document.getElementById('rg-hint');
+  var PLAN_LABELS=${JSON.stringify(Object.fromEntries(PR_PLANS.map(p => [p.v, p.l])))};
   function esc(s){return String(s||'').replace(/[<>&"]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];});}
   function regionLabel(r){return r==='Metro'?'el área metro':'el '+r;}
+  function planNorm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/[^a-z0-9]/g,'');}
+  function planMatch(plans,tok){
+    if(!plans||!tok)return false;var nt=planNorm(tok);
+    return plans.some(function(x){var nx=planNorm(x);return nx.indexOf(nt)>=0||nt.indexOf(nx)>=0;});
+  }
   function loadList(spec,region){
     var box=document.getElementById('rg-list');if(!box)return;
     box.innerHTML='<div style="color:#64748b;font-size:14px;padding:8px 0;">Cargando los teléfonos...</div>';
@@ -2779,12 +3083,21 @@ async function handleRegistro(req: any, res: any) {
       .then(function(d){
         var list=(d&&d.providers)||[];
         if(!list.length){try{gtag('event','search_no_results',{spec:spec,region:region})}catch(e){}box.innerHTML='<div style="color:#64748b;font-size:14px;">No hay teléfonos cargados pa\\'esta combinación todavía. Escríbele al Veci abajo.</div>';return;}
+        var plan=pl&&pl.value?pl.value:'';
+        if(plan){
+          try{gtag('event','filter_plan',{plan:plan,spec:spec,region:region})}catch(e){}
+          list=list.slice().sort(function(a,b){return (planMatch(b.plans,plan)?1:0)-(planMatch(a.plans,plan)?1:0);});
+        }
         var rows=list.map(function(p){
           var tel=p.phone?('<a href="tel:'+esc(p.phone.replace(/[^0-9]/g,''))+'" style="color:#0f766e;font-weight:700;white-space:nowrap;">'+esc(p.phone)+'</a>'):'<span style="color:#94a3b8;">sin teléfono</span>';
           var nm=p.slug?('<a href="/especialista/'+encodeURIComponent(p.slug)+'" style="color:#0f172a;font-weight:600;text-decoration:none;border-bottom:1px dotted #94a3b8;">'+esc(p.name)+'</a>'):esc(p.name);
-          return '<tr style="border-top:1px solid #e2e8f0;"><td style="padding:7px 8px;font-weight:600;color:#0f172a;">'+nm+'</td><td style="padding:7px 8px;color:#475569;">'+esc(p.municipality||'—')+'</td><td style="padding:7px 8px;text-align:right;">'+tel+'</td></tr>';
+          var badge='';
+          if(plan&&planMatch(p.plans,plan)){nm+='<div style="font-size:11px;color:#059669;font-weight:700;margin-top:2px;">✓ la oficina confirmó que acepta '+esc(PLAN_LABELS[plan]||plan)+'</div>';}
+          else if(p.plans&&p.plans.length){nm+='<div style="font-size:11px;color:#64748b;margin-top:2px;">planes confirmados: '+esc(p.plans.join(', '))+'</div>';}
+          return '<tr style="border-top:1px solid #e2e8f0;"><td style="padding:7px 8px;font-weight:600;color:#0f172a;">'+nm+badge+'</td><td style="padding:7px 8px;color:#475569;">'+esc(p.municipality||'—')+'</td><td style="padding:7px 8px;text-align:right;">'+tel+'</td></tr>';
         }).join('');
-        box.innerHTML='<div style="font-size:12px;color:#64748b;margin:4px 0 6px;">'+list.length+' en '+regionLabel(region)+(d.capped?'+ (mostrando los primeros '+list.length+')':'')+' · fuente NPPES federal</div>'
+        var planNote=plan?'<div style="font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:8px 10px;margin:4px 0 8px;">Las oficinas casi nunca publican qué planes aceptan. El ✓ sale solo cuando la oficina lo confirmó con nosotros. Que no tenga ✓ <b>no</b> significa que no acepte '+esc(PLAN_LABELS[plan]||plan)+': llama y pregunta primero.</div>':'';
+        box.innerHTML='<div style="font-size:12px;color:#64748b;margin:4px 0 6px;">'+list.length+' en '+regionLabel(region)+(d.capped?'+ (mostrando los primeros '+list.length+')':'')+' · fuente NPPES federal</div>'+planNote
           +'<div style="max-height:340px;overflow:auto;border:1px solid #e2e8f0;border-radius:10px;"><table style="width:100%;border-collapse:collapse;font-size:14px;"><tbody>'+rows+'</tbody></table></div>';
       })
       .catch(function(){box.innerHTML='<div style="color:#dc2626;font-size:14px;">No se pudo cargar la lista. Intenta de nuevo.</div>';});
@@ -2814,6 +3127,7 @@ async function handleRegistro(req: any, res: any) {
     loadList(sp.value,lr);
   }
   sp.addEventListener('change',render);rg.addEventListener('change',render);
+  if(pl)pl.addEventListener('change',render);
   function jumpToSpec(spec){
     sp.value=spec;
     if(!rg.value)rg.value='Oeste';
@@ -2874,6 +3188,8 @@ async function handleRegistro(req: any, res: any) {
 <p>${t('Cada persona en este registro existe en el <strong>NPPES</strong> (National Plan and Provider Enumeration System), el registro oficial del gobierno federal de EE.UU. — el mismo que usan Medicare y los planes médicos. Tomamos solo <strong>proveedores individuales con práctica en Puerto Rico</strong>, por código de taxonomía (la especialidad oficial), y lo pusimos en español, por región. El <strong>NPI</strong> de cada uno es un número público que cualquiera puede verificar.', 'Every person in this registry exists in the <strong>NPPES</strong> (National Plan and Provider Enumeration System), the official US federal registry that Medicare and health plans use. We took only <strong>individual providers practicing in Puerto Rico</strong>, by taxonomy code (the official specialty), and organized them by region. Each <strong>NPI</strong> is a public number anyone can verify.')}</p>
 <p class="text-sm text-slate-600">${t('Lo que no encontrarás en ningún otro sitio: el gobierno tiene la data, pero enterrada, en inglés, sin organizar por pueblo. La pusimos clara, en un solo sitio, a mano. Si ves un dato viejo o un especialista que ya no ejerce, dínoslo y se corrige — ', 'What you won\'t find anywhere else: the government has the data, but buried, in English, not organized by town. We made it clear, in one place, by hand. See something outdated or a provider who no longer practices here? Tell us and we fix it — ')}<a href="mailto:angel@angelanderson.com" class="text-teal-600 hover:underline">angel@angelanderson.com</a>.</p>
 <p class="text-sm text-slate-600"><strong>${t('¿Periodista, plan médico, o investigador?', 'Journalist, health plan, or researcher?')}</strong> ${t('Esta data es citable y hay acceso programático. Escríbenos.', 'This data is citable and programmatic access is available. Reach out.')}</p>
+
+${regDisclaimer(en)}
 
 <div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
   <p class="text-lg font-bold mb-1">${t('¿No sabes por dónde empezar?', 'Not sure where to start?')}</p>
@@ -2937,12 +3253,12 @@ async function handleRegistroData(req: any, res: any) {
     if (!REGISTRY_SUBS.has(spec)) { res.status(200).send(JSON.stringify({ providers: [] })); return }
     let q = supabase
       .from('places')
-      .select('name,municipality,phone,npi,slug')
+      .select('name,municipality,phone,npi,slug,accepted_plans')
       .eq('category', 'HEALTH').eq('subcategory', spec).not('npi', 'is', null)
       .order('municipality', { ascending: true }).limit(120)
     if (region) q = q.eq('region', region)
     const { data } = await q
-    const providers = (data || []).map((p: any) => ({ name: p.name, municipality: p.municipality, phone: p.phone, slug: p.slug }))
+    const providers = (data || []).map((p: any) => ({ name: p.name, municipality: p.municipality, phone: p.phone, slug: p.slug, plans: Array.isArray(p.accepted_plans) && p.accepted_plans.length ? p.accepted_plans : undefined }))
     res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=300')
     res.status(200).send(JSON.stringify({ providers, capped: providers.length >= 120 }))
   } catch {
@@ -3088,6 +3404,9 @@ async function handleEspecialista(req: any, res: any) {
     <div class="bg-white border border-slate-200 rounded-xl p-4"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${T.regionH}</div><div class="text-slate-900 font-semibold mt-1">${escapeHtml(muni)}${region ? ` · ${escapeHtml(region)}` : ''}</div>${region && REGION_BLURB[region] ? `<div class="text-xs text-slate-500 mt-0.5">${escapeHtml(REGION_BLURB[region])}</div>` : ''}</div>
     ${place.address ? `<div class="bg-white border border-slate-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${T.addr}</div><div class="text-slate-900 mt-1">${escapeHtml(place.address)}</div></div>` : ''}
     <div class="bg-white border border-slate-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${T.npiH}</div><div class="text-slate-900 font-mono mt-1">${escapeHtml(npi)} <a href="https://npiregistry.cms.hhs.gov/provider-view/${escapeHtml(npi)}" target="_blank" rel="noopener" class="text-teal-600 text-sm font-sans font-semibold ml-2">verificar en el registro federal →</a></div></div>
+    ${(Array.isArray(place.accepted_plans) && place.accepted_plans.length)
+      ? `<div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-emerald-700 font-bold">${lang === 'en' ? '✓ Plans the office confirmed' : '✓ Planes que la oficina confirmó'}</div><div class="text-emerald-900 font-semibold mt-1">${escapeHtml((place.accepted_plans as string[]).join(' · '))}</div><div class="text-xs text-emerald-700 mt-1">${lang === 'en' ? 'Confirmed by the office itself. Plans change: confirm again when you call.' : 'Confirmado por la propia oficina. Los planes cambian: vuelve a confirmar cuando llames.'}</div></div>`
+      : `<div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${lang === 'en' ? 'Does this office take your plan?' : '¿Aceptan tu plan?'}</div><div class="text-slate-700 text-sm mt-1">${lang === 'en' ? 'Nobody has confirmed this office’s plans yet. Ask when you call. Work at this office? Confirm them below, free.' : 'Nadie ha confirmado los planes de esta oficina todavía. Pregunta cuando llames. ¿Trabajas en esta oficina? Confírmalos abajo, gratis.'}</div></div>`}
   </div>`
 
   const othersHtml = others.length ? `<h2>${escapeHtml(T.othersH)}</h2>
@@ -3162,6 +3481,10 @@ async function handleEspecialista(req: any, res: any) {
 ${actionBtns}
 ${dataRows}
 
+${waFamiliaBlock({ name, specLabel, muni, phone: place.phone, url: pageUrl, en: lang === 'en' })}
+
+${antesDeLlamar({ specLabel, en: lang === 'en' })}
+
 <div class="not-prose mt-6 rounded-2xl overflow-hidden border border-slate-200"><iframe src="${mapsEmbed}" width="100%" height="280" style="border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
 
 ${claimForm}
@@ -3177,7 +3500,10 @@ ${othersHtml}
   </div>
 </div>
 
+${regDisclaimer(lang === 'en')}
+
 <p class="text-xs text-slate-500 mt-6">${escapeHtml(name)} aparece en el <strong>NPPES</strong>, el registro oficial del gobierno federal de EE.UU. — el mismo que usan Medicare y los planes médicos. El NPI <strong>${escapeHtml(npi)}</strong> es público y cualquiera puede verificarlo. ¿Dato viejo o ya no ejerce aquí? Dínoslo: <a href="mailto:angel@angelanderson.com" class="text-teal-600">angel@angelanderson.com</a>.</p>
+${SHARE_COPY_SCRIPT}
 `
 
   const jsonLd: any = {
@@ -6944,11 +7270,13 @@ ${providers.length >= 200 ? `<p class="text-xs text-slate-500 mt-2">${t('Mostran
   }
 
   body += `
+${antesDeLlamar({ specLabel: x.l, en })}
 <div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
   <p class="text-lg font-bold mb-1">${t('¿No sabes a cuál ir?', 'Not sure which one to see?')}</p>
   <p class="text-sm text-teal-100 mb-4">${t('Escríbele al Veci. Te dice quién hay cerca y sus teléfonos. Al', 'Text El Veci. He tells you who is nearby and their phone numbers. At')} <strong>${PHONE_CTA}</strong>:</p>
   <a href="https://wa.me/17874177711?text=${x.kw}" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${x.kw}</a>
 </div>
+${regDisclaimer(en)}
 <p class="text-xs text-slate-500 mt-6">${t('Datos del <strong>NPPES</strong>, el registro federal de proveedores de EE.UU. (el que usan Medicare y los planes). Cada NPI es público y verificable.', 'Data from the <strong>NPPES</strong>, the US federal provider registry (the same one Medicare and health plans use). Every NPI is public and verifiable.')} <a href="/registro/desiertos${lp}" class="text-teal-600">${t('Mira el acceso por región en toda la isla →', 'See access by region across the island →')}</a></p>`
 
   const canonicalPath = region ? `registro/${specUrl}/${specToUrl(region).toLowerCase()}` : `registro/${specUrl}`
@@ -8363,6 +8691,7 @@ export default async function handler(req: any, res: any) {
     case 'acceso': return handleAcceso(req, res)
     case 'acceso-log': return await handleAccesoLog(req, res)
     case 'registro': return await handleRegistro(req, res)
+    case 'necesito': return await handleNecesito(req, res)
     case 'registro-data': return await handleRegistroData(req, res)
     case 'registro-search': return await handleRegistroSearch(req, res)
     case 'especialista': return await handleEspecialista(req, res)
