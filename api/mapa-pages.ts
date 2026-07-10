@@ -5646,7 +5646,19 @@ async function handleEsencia(req: any, res: any) {
   <p class="text-xs text-slate-400 mt-1">Generado con IA sobre las fuentes primarias de este récord (DIA, carta de la AAA, CPI, vistas públicas). Los números son los de esta página.</p>
 </div>
 
-<h2>Qué es, en números</h2>
+<div class="not-prose mt-4 flex flex-wrap gap-2 text-xs">
+  <a href="#numeros" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Los números</a>
+  <a href="#proscons" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Lo mejor de cada lado</a>
+  <a href="#cuenta" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">La cuenta + calculadora</a>
+  <a href="#agua" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">El agua</a>
+  <a href="#dueno" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">El dueño</a>
+  <a href="#escenarios" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Los escenarios</a>
+  <a href="#timeline" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Línea de tiempo</a>
+  <a href="#video" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">El panel en video</a>
+  <a href="#lados" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Los dos lados</a>
+</div>
+
+<h2 id="numeros">Qué es, en números</h2>
 <div class="not-prose grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
   <div class="bg-white border border-slate-200 rounded-xl p-4 text-center"><div class="text-2xl font-black text-slate-900">1,549</div><div class="text-xs text-slate-500 mt-1">cuerdas de terreno</div></div>
   <div class="bg-white border border-slate-200 rounded-xl p-4 text-center"><div class="text-2xl font-black text-slate-900">~1,652</div><div class="text-xs text-slate-500 mt-1">unidades (1,132 casas + 520 hotel)</div></div>
@@ -5655,16 +5667,34 @@ async function handleEsencia(req: any, res: any) {
 </div>
 <p class="text-xs text-slate-400 mt-2">Fuentes: Centro de Periodismo Investigativo (CPI), The Real Deal, registros públicos. La cifra de cuerdas y unidades proviene de la documentación del proyecto reseñada por el CPI.</p>
 
-<h2>La línea de tiempo</h2>
-<div class="not-prose flex flex-wrap gap-2 mb-1 text-xs">
-  <span class="rounded-full px-2.5 py-0.5 border bg-amber-100 text-amber-800 border-amber-200 font-bold">Dinero</span>
-  <span class="rounded-full px-2.5 py-0.5 border bg-slate-100 text-slate-700 border-slate-200 font-bold">Legal</span>
-  <span class="rounded-full px-2.5 py-0.5 border bg-red-100 text-red-800 border-red-200 font-bold">Protesta</span>
-  <span class="rounded-full px-2.5 py-0.5 border bg-emerald-100 text-emerald-800 border-emerald-200 font-bold">Ambiente</span>
+<h2 id="proscons">Lo mejor que dice cada lado</h2>
+<p>Ningún bando es bobo. Estos son los argumentos más fuertes de cada lado, tratados con respeto, y con lo que el récord dice de cada uno:</p>
+<div class="not-prose grid sm:grid-cols-2 gap-3 mt-3">
+  <div class="border-t-4 border-emerald-400 bg-white border border-slate-200 rounded-b-xl p-4">
+    <div class="text-xs font-black text-emerald-700 uppercase tracking-wide mb-2">A favor</div>
+    <ul class="text-sm text-slate-700 space-y-2">
+      <li><strong>Inversión y empleos.</strong> ~$2,000M privados y 2,000+ empleos prometidos, en una región donde la necesidad económica es real, no abstracta.</li>
+      <li><strong>Actividad todo el año.</strong> Flujo constante para los comercios de Boquerón y El Combate, no solo en temporada.</li>
+      <li><strong>Ingresos municipales.</strong> El alcalde citó en ponencia "más de $20 millones en CRIM y arbitrios en 10 años" para las arcas del pueblo.</li>
+      <li><strong>Promesas de acceso y conservación.</strong> Los proponentes prometen acceso público a la playa y desarrollo "ecoamigable" (conocelaverdad.com).</li>
+    </ul>
+  </div>
+  <div class="border-t-4 border-red-400 bg-white border border-slate-200 rounded-b-xl p-4">
+    <div class="text-xs font-black text-red-700 uppercase tracking-wide mb-2">En contra</div>
+    <ul class="text-sm text-slate-700 space-y-2">
+      <li><strong>El agua.</strong> La propia AAA, por escrito (26 sep 2024): el sistema no puede suplir los 1.2M de galones diarios (~28% del suministro del pueblo).</li>
+      <li><strong>El subsidio.</strong> ~$567M de dinero público (~$343,000 por unidad de lujo), sin cláusula de devolución si los empleos no llegan.</li>
+      <li><strong>La basura.</strong> +30 toneladas/día a un vertedero que se llena ~2030: le quita 2 a 4 años al pueblo.</li>
+      <li><strong>El historial.</strong> Daño documentado por el CPI en 7 países (Hawái, Los Cabos, Ibiza...).</li>
+      <li><strong>La costa.</strong> Deslinde cuestionado; el Tribunal llamó la notificación del DRNA "defectuosa e inadecuada".</li>
+    </ul>
+  </div>
 </div>
-${items || '<p class="text-sm text-slate-400 italic">Data no disponible ahora.</p>'}
+<p class="text-sm text-slate-600 mt-3"><strong>La diferencia honesta entre las dos columnas:</strong> los argumentos a favor descansan mayormente en <em>promesas</em> del proyecto; los de en contra, en el <em>expediente</em>. Eso no hace a unos falsos ni a otros ciertos: significa que unos se verifican después, y los otros ya se pueden verificar hoy. Las palancas de la <a href="#cuenta" class="text-teal-700 font-semibold">calculadora</a> son justo lo que convertiría las promesas en garantías.</p>
 
-<h2>Quién es el dueño (registros públicos)</h2>
+
+
+<h2 id="dueno">Quién es el dueño (registros públicos)</h2>
 <p>Esto no es teoría: es lo que dicen los registros corporativos de Puerto Rico y del Reino Unido.</p>
 <div class="not-prose bg-slate-50 border border-slate-200 rounded-2xl p-4 mt-3 font-mono text-xs sm:text-sm text-slate-700 leading-relaxed overflow-auto">
 Reuben Brothers <span class="text-slate-400">(Londres, UK · David &amp; Simon Reuben)</span>
@@ -5703,7 +5733,7 @@ Reuben Brothers <span class="text-slate-400">(Londres, UK · David &amp; Simon R
 </div>
 <p class="text-xs text-slate-400 mt-1">Fuentes: <a href="https://www.bls.gov/regions/northeast/news-release/occupationalemploymentandwages_sanjuan.htm" target="_blank" rel="noopener" class="text-teal-700 underline">BLS OEWS PR ↗</a> · Glassdoor Ritz-Carlton Dorado · CPI.</p>
 
-<h2>El agua</h2>
+<h2 id="agua">El agua</h2>
 <p>El sistema PRASA del suroeste (Planta de Filtros Betances) sirve a <strong>~20,749 personas</strong> y arrastra <strong>3 violaciones activas</strong> en el récord federal de agua. Ese es el mismo sistema del que dependería Esencia, que necesitaría <strong>1.2 millones de galones diarios</strong> (según la página 89 de su propia Declaración de Impacto Ambiental). Según la denuncia llevada ante la ONU, ese consumo equivaldría a cerca del <strong>28% del suministro diario de agua de Cabo Rojo</strong>. Y la propia AAA le informó al expediente, el <strong>26 de septiembre de 2024</strong>, que la infraestructura actual de la Planta de Filtros Betances <strong>no puede suplir esa demanda</strong> y que harían falta mejoras significativas. Mientras tanto, vecinos del sector Las Palmas reportaron estar días sin agua.</p>
 <p class="text-xs text-slate-400 mt-1">Fuentes: EPA (récord federal de agua) · reportes de prensa y de vecinos · <a href="https://news.un.org/es/story/2026/06/1541586" target="_blank" rel="noopener" class="text-teal-700 underline">Noticias ONU ↗</a> · <a href="https://mareaecologista.com/2025/04/cabo-rojo-el-proyecto-esencia-y-la-crisis-del-agua-en-el-suroeste/" target="_blank" rel="noopener" class="text-teal-700 underline">Marea Ecologista ↗</a>. Ver también <a href="/agua" class="text-teal-700 underline">el récord del agua en PRSF</a>.</p>
 
@@ -5728,7 +5758,16 @@ Reuben Brothers <span class="text-slate-400">(Londres, UK · David &amp; Simon R
 <p class="text-sm text-slate-600 mt-1">El alcalde actual, Jorge Morales Wiscovitch, le dijo al CPI que <strong>no fue incluido</strong> en las negociaciones del decreto.</p>
 <p class="text-xs text-slate-400 mt-1">Fuente: Oficina del Contralor Electoral (OCE), vía <a href="https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/" target="_blank" rel="noopener" class="text-teal-700 underline">CPI ↗</a></p>
 
-<h2>En video: el panel</h2>
+<h2 id="timeline">La línea de tiempo</h2>
+<div class="not-prose flex flex-wrap gap-2 mb-1 text-xs">
+  <span class="rounded-full px-2.5 py-0.5 border bg-amber-100 text-amber-800 border-amber-200 font-bold">Dinero</span>
+  <span class="rounded-full px-2.5 py-0.5 border bg-slate-100 text-slate-700 border-slate-200 font-bold">Legal</span>
+  <span class="rounded-full px-2.5 py-0.5 border bg-red-100 text-red-800 border-red-200 font-bold">Protesta</span>
+  <span class="rounded-full px-2.5 py-0.5 border bg-emerald-100 text-emerald-800 border-emerald-200 font-bold">Ambiente</span>
+</div>
+${items || '<p class="text-sm text-slate-400 italic">Data no disponible ahora.</p>'}
+
+<h2 id="video">En video: el panel</h2>
 <p>Expertos y voces del país explicando el proyecto, cara a cara. Publicados en el canal de Cabo Rojo:</p>
 <div class="not-prose flex flex-col gap-2 mt-3">
   <a href="https://youtu.be/Ahta7PZ4YNo" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Senador E. Molina: falla geológica y riesgos del proyecto</a>
@@ -5749,7 +5788,7 @@ Reuben Brothers <span class="text-slate-400">(Londres, UK · David &amp; Simon R
 </ul>
 <p class="text-sm text-slate-600 mt-1">Cuando respondan, se publica lo que digan — diga lo que diga.</p>
 
-<h2>La cuenta completa: lo que el pueblo pone y lo que recibe</h2>
+<h2 id="cuenta">La cuenta completa: lo que el pueblo pone y lo que recibe</h2>
 <p>Nadie ha puesto en una sola cuenta lo que Cabo Rojo entrega y lo que recibe si Esencia va como está. Y no solo en dinero. En las tres cosas que no se reponen: <strong>dinero, agua y basura</strong>. Aquí está, con la fuente al lado. No dice sí ni no. Dice cuánto está en juego.</p>
 
 <div class="not-prose mt-4 space-y-3">
@@ -5898,7 +5937,7 @@ Reuben Brothers <span class="text-slate-400">(Londres, UK · David &amp; Simon R
   </tbody></table>
 </div>
 
-<h2>Los caminos posibles</h2>
+<h2 id="escenarios">Los caminos posibles</h2>
 <p>Nadie sabe cómo termina. Pero el récord sí marca por dónde puede ir. Y el punto que lo decide casi todo no son las marchas: <strong>es el agua.</strong> El endoso del alcalde ya está condicionado a que el proyecto tenga su propia agua, la AAA no ha certificado capacidad, y el sistema del suroeste ya sirve a ~20,749 personas con 3 violaciones activas.</p>
 <div class="not-prose grid gap-3 mt-4">
   <div class="border-l-4 border-emerald-400 bg-emerald-50/40 rounded-r-xl p-4">
@@ -5917,7 +5956,7 @@ Reuben Brothers <span class="text-slate-400">(Londres, UK · David &amp; Simon R
 <p class="text-sm text-slate-600 mt-3"><strong>Por qué el amarillo es el más probable hoy:</strong> la DIA ya está aprobada, el capital no tiene prisa, y el agua sigue sin resolverse en el récord. El limbo favorece a quien puede esperar. Se mueve hacia el verde solo cuando el récord del agua se pone tan claro que la vista de permiso no lo puede ignorar. Ese récord es lo que esta página organiza.</p>
 <p class="text-xs text-slate-400 mt-1">Estos escenarios son lectura del récord público, no predicción ni recomendación. La data que los sostiene está arriba, con la fuente al lado.</p>
 
-<h2>Escucha a los dos lados, directo</h2>
+<h2 id="lados">Escucha a los dos lados, directo</h2>
 <p>Este récord organiza los hechos con su fuente. Pero cada bando también habla por su cuenta, y tienes derecho a oírlos sin intermediario. Antes de formar opinión, léelos a los dos en sus propias palabras, no en las nuestras:</p>
 <div class="not-prose grid sm:grid-cols-2 gap-3 mt-3">
   <div class="border-l-4 border-emerald-400 bg-white rounded-r-xl p-4">
@@ -5973,7 +6012,7 @@ Reuben Brothers <span class="text-slate-400">(Londres, UK · David &amp; Simon R
   res.status(200).send(layout({
     title: 'El proyecto Esencia en Cabo Rojo — la línea de tiempo pública, con fuente',
     description: 'La cronología pública del proyecto Esencia en Cabo Rojo: $498M en créditos contributivos, investigaciones del CPI, medidas del Senado, protestas. Sin opinión, con la fuente al lado.',
-    slug: 'esencia', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    slug: 'esencia', bodyHtml: body, jsonLd, ogImage: 'https://puertoricosinfiltros.com/api/og?theme=sinfiltros&t=El%20proyecto%20Esencia%2C%20sin%20filtros&k=EL%20R%C3%89CORD%20COMPLETO&sub=%24498M%20en%20cr%C3%A9ditos%20%C2%B7%20la%20AAA%20dice%20que%20el%20agua%20no%20da%20%C2%B7%20la%20cuenta%20completa%2C%20con%20calculadora',
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
