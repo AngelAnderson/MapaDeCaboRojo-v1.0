@@ -173,7 +173,7 @@ function layout(opts: {
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Salud</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a><a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a><a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a><a href="/telemedicina" class="hover:text-teal-700">Telemedicina</a><a href="/diabetes" class="hover:text-teal-700">Diabetes</a><a href="/registro-raras" class="hover:text-teal-700">Enfermedades raras</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/rendimiento" class="hover:text-teal-700">Rendimiento del dólar</a><a href="/cupon" class="hover:text-teal-700">Dinero sin cobrar</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/exposicion-ai" class="hover:text-teal-700">Exposición a la IA</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a><a href="/investigacion" class="hover:text-teal-700">Dinero de ciencia</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Servicios</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/agua" class="hover:text-teal-700">Agua</a><a href="/luz" class="hover:text-teal-700">Luz</a><a href="/basura" class="hover:text-teal-700">Basura</a></div></div>
-<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">El pueblo</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/demanda" class="hover:text-teal-700">Lo que busca PR</a><a href="/historial" class="hover:text-teal-700">Historial de promesas</a><a href="/promesas" class="hover:text-teal-700">Promesómetro</a><a href="/esencia" class="hover:text-teal-700">Proyecto Esencia</a><a href="/activos" class="hover:text-teal-700">Activos dormidos</a><a href="/no-se-mide" class="hover:text-teal-700">Lo que ni se mide</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">El pueblo</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/demanda" class="hover:text-teal-700">Lo que busca PR</a><a href="/historial" class="hover:text-teal-700">Historial de promesas</a><a href="/promesas" class="hover:text-teal-700">Promesómetro</a><a href="/esencia" class="hover:text-teal-700">Proyecto Esencia</a><a href="/activos" class="hover:text-teal-700">Activos dormidos</a><a href="/retiro" class="hover:text-teal-700">El Huracán Lento</a><a href="/no-se-mide" class="hover:text-teal-700">Lo que ni se mide</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Expedientes</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/expediente/alcalde-cabo-rojo" class="hover:text-teal-700">Alcalde de Cabo Rojo</a><a href="/expediente/representante-distrito-20" class="hover:text-teal-700">Rep. Distrito 20</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Predicción</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/prediccion" class="hover:text-teal-700">Predicción 2030</a><a href="/sinfiltros/pulso" class="hover:text-teal-700">Pulso</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Prensa</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/comparte" class="hover:text-teal-700">Datos citables</a><a href="/rompelo" class="hover:text-teal-700">Rómpelo, si puedes</a></div></div>
@@ -4738,6 +4738,7 @@ async function handleRecuperacion(req: any, res: any) {
 <h2>Qué significa "obligado" (y qué NO dice esta página)</h2>
 <p>"Obligado" es el dinero que FEMA <strong>comprometió</strong> a un proyecto. No es necesariamente dinero ya gastado ni obra ya terminada: de hecho, de los proyectos que FEMA rastrea en su data de cierre, cerca del <strong>73% del dinero sigue en proyectos abiertos</strong> ocho años después. Esta página <strong>no</strong> afirma que un monto específico se "perdió" o "robó" — las bases de datos federales de FEMA no reconcilian a ese nivel de precisión. Lo que sí es sólido y verificable: cuánto se obligó a cada pueblo, y que el dinero de infraestructura fluyó a pueblos que siguen sin médicos.</p>
 
+${shareRow({ text: 'A los municipios de PR se les obligaron ~$39,500 millones de recuperación federal. Aquí está cuánto le tocó a TU pueblo, con la fuente al lado:', url: 'https://puertoricosinfiltros.com/recuperacion', toWho: 'Al que pregunta en qué se fue el dinero de María.' })}
 ${mientrasTanto([
   `El número de tu municipio está en la tabla: guárdalo, es tu línea base. Cuando anuncien una obra, la pregunta no es dar las gracias, es "¿esto es parte de lo que ya estaba obligado?"`,
   `Las ventanas federales cierran (la de vivienda, CDBG-DR, en septiembre de 2029). Si tu propiedad o tu comunidad tiene un reclamo pendiente, radícalo y documéntalo ahora, con fotos y papeles: sin expediente no hay ayuda.`,
@@ -5317,6 +5318,7 @@ async function handleSinFiltros(req: any, res: any) {
     <a href="/agua" data-prsf="record" data-rec="idx-agua" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Agua</a>
     <a href="/acueductos" data-prsf="record" data-rec="idx-acueductos" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">El recibo del agua</a>
     <a href="/transicion" data-prsf="record" data-rec="idx-transicion" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">La Transición</a>
+    <a href="/retiro" data-prsf="record" data-rec="idx-retiro" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">El Huracán Lento</a>
     <a href="/luz" data-prsf="record" data-rec="idx-luz" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Luz</a>
     <a href="/basura" data-prsf="record" data-rec="idx-basura" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Basura</a>
     <a href="/telemedicina" data-prsf="record" data-rec="idx-telemedicina" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Telemedicina</a>
@@ -5417,6 +5419,17 @@ ${recordCards}
   <div class="mt-3 flex flex-wrap gap-2 text-sm">
     <a href="/acueductos" data-prsf="record" data-rec="acueductos" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">Ver el récord completo</a>
     <a href="https://oversightboard.pr.gov/fiscal-plans/" target="_blank" rel="noopener" data-prsf="verify" data-rec="acueductos" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Verifícalo tú mismo: el plan certificado ↗</a>
+  </div>
+</div>
+
+<div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-4">
+  <span class="text-xs font-bold text-teal-700 uppercase tracking-wide">El Huracán Lento</span>
+  <h3 class="text-xl font-black text-slate-900 mt-1" style="font-family:'Fraunces',Georgia,serif">El huracán que viene no es de lluvia ni viento</h3>
+  <blockquote class="mt-2 text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3">Es demográfica y burocracia. 4 de cada 10 personas mayores de 65 en PR viven en pobreza (EE.UU.: 1 de cada 9). En 14 pueblos, el hogar retirado vive con menos de $1,500 al mes. Y 13 de los 15 pueblos más golpeados están en el oeste y el sur.</blockquote>
+  <p class="text-xs text-slate-500 mt-3"><strong>Fuente:</strong> Censo/ACS 2024 × NPPES/CMS × HRSA × broadband, municipio por municipio, julio 2026.</p>
+  <div class="mt-3 flex flex-wrap gap-2 text-sm">
+    <a href="/retiro" data-prsf="record" data-rec="retiro" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">Ver el récord completo</a>
+    <a href="https://data.census.gov/" target="_blank" rel="noopener" data-prsf="verify" data-rec="retiro" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Verifícalo tú mismo: el Censo ↗</a>
   </div>
 </div>
 
@@ -5619,12 +5632,14 @@ async function handleDatoRecord(req: any, res: any) {
         hero: '~29 vertederos operando, la mayoría ya sobre su capacidad. La EPA tiene acuerdos legales para cerrar 12, y desde 2002 interviene directamente en la isla.',
         intro: 'Lo que el récord federal de la EPA dice sobre dónde termina lo que botamos. Cada dato con su documento oficial al lado.',
         gap: 'Falta ingestar: los años de capacidad restante por vertedero (data de la Autoridad de Desperdicios Sólidos) no está en formato primario descargable, así que aquí va solo lo verificable en el récord federal de la EPA.',
-        verify: 'https://www.epa.gov/pr/puerto-rico-landfill-consent-orders-and-consent-decrees', verifyText: 'los documentos de la EPA' }
+        verify: 'https://www.epa.gov/pr/puerto-rico-landfill-consent-orders-and-consent-decrees', verifyText: 'los documentos de la EPA',
+        share: 'La mayoría de los ~29 vertederos de PR ya está sobre capacidad y la EPA tiene acuerdos pa cerrar 12. Dónde termina lo que botamos, con el récord federal:', toWho: 'Al que vive cerca de uno.' }
     : { table: 'pr_electricidad', tag: 'Luz', h1: 'La luz de Puerto Rico, contra el récord federal',
         hero: 'Puerto Rico paga ~24.5¢ por kWh (todos los sectores, 2023), casi el doble del promedio de Estados Unidos (~12.9¢). En residencial, ~45.6% más caro que la nación.',
         intro: 'Lo que el récord federal de energía (EIA) dice sobre el precio y el sistema eléctrico de Puerto Rico. Cada cifra con su fuente al lado.',
         gap: 'Falta ingestar: las métricas de confiabilidad (SAIDI/SAIFI — cuántas horas al año se va la luz) del EIA-861, que requieren una llave de acceso del EIA. Aquí está el precio; la frecuencia de apagones viene después.',
-        verify: 'https://www.eia.gov/electricity/state/puertorico/', verifyText: 'el perfil de PR en la EIA' }
+        verify: 'https://www.eia.gov/electricity/state/puertorico/', verifyText: 'el perfil de PR en la EIA',
+        share: 'Puerto Rico paga la luz a ~24.5¢ el kWh, casi el doble del promedio de EE.UU. El récord federal de energía, en cristiano:', toWho: 'Al que le llegó la factura y no entiende por qué.' }
   let rows: any[] = []
   try { const { data } = await supabase.from(cfg.table).select('*').order('id'); rows = data || [] } catch (_) { /* empty */ }
   const rowHtml = rows.map((r: any) => {
@@ -5644,6 +5659,7 @@ async function handleDatoRecord(req: any, res: any) {
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El dato</p>
   <p class="text-lg sm:text-xl font-black mt-1 leading-snug">${cfg.hero}</p>
 </div>
+${shareRow({ text: cfg.share, url: `https://puertoricosinfiltros.com/${page}`, toWho: cfg.toWho })}
 <div class="not-prose mt-5 overflow-auto border border-slate-200 rounded-xl">
   <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Métrica</th><th class="py-2 px-3 text-right">Valor</th></tr></thead><tbody>${rowHtml || '<tr><td class="py-3 px-3 text-slate-400 italic" colspan="2">Data no disponible ahora.</td></tr>'}</tbody></table>
 </div>
@@ -5821,6 +5837,7 @@ ${SHARE_COPY_SCRIPT}
 // Fuentes: transcripts de Angel (Google Drive) + auto-captions ES verificados 2026-07-10. 3 días minados, resto pendiente.
 async function handleTransicion(req: any, res: any) {
   const V1 = 'RguowcKS7wU', V2 = '3R8jwIec-Yg', V3 = 'jCoz2d5IJJA'
+  const V4 = 'uUWb85Doki0', V5 = 'dCVlOodXNPw', V6 = 'BJFs3kJgteM'
   type Claim = { q: string; c: string; d: string; v?: string; t?: number }
   type Bloque = { id: string; tag: string; titulo: string; nota?: string; claims: Claim[] }
   const bloques: Bloque[] = [
@@ -5886,6 +5903,36 @@ async function handleTransicion(req: any, res: any) {
         { q: 'Edwin González Montalvo, director ejecutivo de la ACT', c: 'Ya tenemos 13 de 22 pórticos completamente nuevos', d: 'AutoExpreso: 13 de 22 pórticos reconstruidos a nov 2024. Sin brigadas regulares de semáforos los fines de semana (solo emergencias): buscaban contrato privado 24/7.' },
       ],
     },
+    {
+      id: 'justicia', tag: 'Día 4 · 26 nov 2024', titulo: 'Justicia: el 94% que no era, y los feminicidios en récord',
+      claims: [
+        { q: 'Miembro del comité entrante, autor de la Ley 542-2004, leyendo las cifras', c: 'Para el 2019 ocurrieron 51 feminicidios, en el 2020 75, en el 2021 59, en el 2022 subió a 79, en el 2023 72 y este año hasta el 31 de octubre va por 77', d: 'Feminicidios en PR camino al año más alto en 5 años (77 al 31 de octubre de 2024). Quedó en récord frente al Departamento de Justicia.', v: V4, t: 10699 },
+        { q: 'Lcdo. Oriol (comité) vs la jefa de Fiscales', c: '¿Cuánto es el por ciento de convicción real desde los radicados? Que dudo que sea 94% — El sistema no provee esa data', d: 'El "94% de convicción" del cuatrienio solo cuenta los casos que llegan a juicio. La tasa real desde que se radica un caso no se puede calcular: el propio sistema del DJ no la produce. Admitido en vista.', v: V4, t: 14141 },
+        { q: 'Lcda. Janet Parra, comité entrante', c: 'El diferencial de ellas es de 96 dólares, comparado con el de una taquígrafa que es de 400 y pico, y muchas han tenido que limpiar casas o vender comida', d: 'Las técnicas de víctimas y testigos cobran un diferencial de $96; la reclasificación fue denegada. Quedó como pendiente urgente para la nueva administración.', v: V4, t: 6232 },
+        { q: 'Lcdo. Domingo Emanuelli, secretario de Justicia', c: 'Hay 67 vacantes que no se pudieron llenar en este cuatrienio, de las cuales 49 tuvieron que ser retiradas', d: 'De 326 plazas de fiscal por ley, 67 estaban vacantes; 49 nominaciones se retiraron del Senado. Y la base balística NIBIN estuvo años sin alimentarse.', v: V4, t: 12313 },
+        { q: 'Lcdo. Domingo Emanuelli, secretario de Justicia (el verde también se anota)', c: 'Pasando de 327,843 documentos atrasados a unos 100,000, una disminución de 227,848 en 46 meses', d: 'El Registro de la Propiedad bajó su atraso en más de 227,000 documentos y prometió estar al día "en junio o julio del 2025". Ese reloj está en la tabla de abajo.', v: V4, t: 4795 },
+      ],
+    },
+    {
+      id: 'salud', tag: 'Día 7 · 3 dic 2024', titulo: 'Salud: los $440 millones que la OIG puso en duda',
+      claims: [
+        { q: 'Carta de la Oficina de la Inspectora General, leída en récord', c: 'Se detectó la pérdida de aproximadamente 440 millones en fondos no reembolsados a ASES debido a demoras... solicitudes entregadas con hasta 789 días de retraso, a pesar de que debían presentarse dentro de 15 días', d: 'La OIG alegó ~$440M de Medicaid en riesgo por reembolsos tardíos (789 días vs 15). ASES lo rebatió en vivo: "por regulación federal hay 2 años pa\' retirar los fondos; no hubo pérdida". Las dos versiones quedaron en récord.', v: V5, t: 8289 },
+        { q: 'Roxanna Rosario Serrano, directora ejecutiva de ASES', c: 'Ha hecho unos aumentos el año pasado en la prima de 13 por ciento y la que se está atendiendo ahora tiene ya un aumento de 14', d: 'La prima del Plan Vital ($320-360M al mes en desembolsos) subió 13% y venía otra de 14%. Y una de las 4 aseguradoras llevaba 2+ años incumpliendo las métricas de pago a proveedores.', v: V5, t: 5763 },
+        { q: 'Roxanna Rosario Serrano, directora ejecutiva de ASES', c: 'Hubo unos préstamos que se mantuvieron en el BGF... la obligación del BGF es hacer esfuerzos razonables pero no tiene ninguna obligación de recobrar', d: 'ASES le debe $189M de principal + $98M de intereses al Banco Gubernamental de Fomento; la junta aprobó buscar condonación ante la JSF.', v: V5, t: 3806 },
+        { q: 'Dr. Carlos Mellado, secretario de Salud', c: 'La Junta contrató a FTI Consulting para completar este análisis, ya culminaron pero la Junta todavía no ha compartido sus resultados con el gobierno', d: 'El estudio de necesidad de especialidades médicas (la llave de los decretos contributivos y el pago de préstamos estudiantiles de médicos) estaba TERMINADO y retenido por la JSF. Los médicos que pagaron bajo la Ley 47 seguían en limbo.', v: V5, t: 4590 },
+        { q: 'Dr. Carlos Mellado, secretario de Salud (el verde también se anota)', c: 'De 200 plazas de residencias médicas en 2021 aumentamos a 528 al día de hoy, y se le añaden 50 que ya están aprobadas', d: 'Las residencias médicas subieron de ~218 a 528 plazas en el cuatrienio, con 50 más aprobadas. PR seguía sin residencia de cirugía cardiotorácica.', v: V5, t: 5388 },
+      ],
+    },
+    {
+      id: 'drna', tag: 'Día 8 · 4 dic 2024', titulo: 'Recursos Naturales y Agricultura: los $100M de la costa, en cero',
+      claims: [
+        { q: 'Dra. Marisa Barreto, Comité de Expertos de Cambio Climático', c: 'No se han utilizado, no se han desembolsado esos 100 millones todavía', d: 'Los $100M transferidos al DRNA en 2023 para mitigar la erosión costera: $0 desembolsado a diciembre 2024, proyectos en planificación. Mientras, el DRNA operaba con 43% de sus plazas vacías y el Cuerpo de Vigilantes al 50% (300 de 600).', v: V6, t: 2621 },
+        { q: 'Ramón González, secretario de Agricultura (admisión en récord)', c: 'El tribunal resolvió en contra... notificaron y en la Autoridad no se percataron y no hay oportunidad de apelar... hay que depositar como 5.1 millones', d: 'La Autoridad de Tierras dejó vencer por descuido la apelación del caso de la Comunidad Agrícola Bianchi (Valle de Coloso, Añasco, en el oeste): sentencia firme de ~$5.1M más intereses corriendo.', v: V6, t: 17804 },
+        { q: 'Ramón González, secretario de Agricultura', c: 'Manejar 30 millones para 56 legisladores y no tiene ni el expertise ni la capacidad... hay referidos al Departamento de Justicia, hay casos en el FEI', d: 'El programa de infraestructura rural (~$30M repartido por 56 legisladores) quedó paralizado desde 2022, con directores destituidos y referidos a Justicia, al FEI y a la Contralora. El secretario recomendó sacarlo de la agencia por ley.', v: V6, t: 17687 },
+        { q: 'Antonio Ríos, exdirector de Desperdicios Sólidos (DRNA)', c: 'Son 27 en total, órdenes de cierre por la EPA son 11, y lo que vemos que realmente cumplirían con la reglamentación son siete', d: 'De 27 vertederos operando, solo 7 cumplían la reglamentación. Cruza con el récord de /basura.', v: V6, t: 6095 },
+        { q: 'Ramón González, secretario de Agricultura (el verde también se anota)', c: 'Tenían multas acumuladas por alrededor de 44 millones, logramos una transacción con la EPA y el Departamento de Justicia por 1.65 millones, ya pagado', d: 'Multas ambientales históricas de ~$44M se cerraron por $1.65M. Y el ingreso bruto agrícola subió ~45% en el cuatrienio, con la primera alza en cuerdas sembradas en décadas.', v: V6, t: 11608 },
+      ],
+    },
   ]
 
   const ytLink = (v?: string, t?: number) => v ? `https://www.youtube.com/watch?v=${v}${t ? `&t=${t}s` : ''}` : ''
@@ -5912,8 +5959,8 @@ ${b.claims.map(cl => `
   const videos: [string, string, number, string][] = [
     ['20 nov 2024', V1, 15400, 'minada'], ['21 nov 2024', V2, 28407, 'minada'], ['22 nov 2024', V3, 14255, 'minada'],
     ['22-23 nov 2024', 'XZGTyMNcr0o', 4541, ''], ['23 nov 2024', 'xhr3SrEjR7k', 10717, ''], ['23 nov 2024', 'ZvZmiREinbU', 1412, ''],
-    ['26 nov 2024', 'uUWb85Doki0', 16128, ''], ['3 dic 2024', 'EZvFDSu0sxU', 14412, ''], ['3 dic 2024', 'dCVlOodXNPw', 12158, ''],
-    ['3 dic 2024', 'On2Zg9QdWOo', 7479, ''], ['3 dic 2024', 'az9UhZBvLqs', 2672, ''], ['4 dic 2024', 'BJFs3kJgteM', 18688, ''],
+    ['26 nov 2024', V4, 16128, 'minada'], ['3 dic 2024', 'EZvFDSu0sxU', 14412, ''], ['3 dic 2024', V5, 12158, 'minada'],
+    ['3 dic 2024', 'On2Zg9QdWOo', 7479, ''], ['3 dic 2024', 'az9UhZBvLqs', 2672, ''], ['4 dic 2024', V6, 18688, 'minada'],
     ['4 dic 2024', 'bO6iQecGyjg', 22858, ''], ['5 dic 2024', 'XlnW6cFlJLM', 13501, ''],
   ]
   const dur = (s: number) => `${Math.floor(s / 3600)}h ${String(Math.round((s % 3600) / 60)).padStart(2, '0')}m`
@@ -5965,6 +6012,11 @@ ${bloquesHtml}
       <tr class="border-t border-slate-100"><td class="py-2 px-3">Vivienda: ~3,000 familias R3 restantes</td><td class="py-2 px-3 whitespace-nowrap">2025</td><td class="py-2 px-3 text-slate-500">Por verificar</td></tr>
       <tr class="border-t border-slate-100"><td class="py-2 px-3">AFI: CDT Susana Centeno (Vieques), fases 2 y 3</td><td class="py-2 px-3 whitespace-nowrap">jun y dic 2025</td><td class="py-2 px-3 text-slate-500">Por verificar</td></tr>
       <tr class="border-t border-slate-100"><td class="py-2 px-3">AAA: contratos ARPA ($214M) firmados a tiempo</td><td class="py-2 px-3 whitespace-nowrap">31 dic 2024</td><td class="py-2 px-3 text-slate-500">Por verificar</td></tr>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3">AAA: el costo de los contadores inteligentes, "confidencial" en la vista</td><td class="py-2 px-3 whitespace-nowrap">nov 2024</td><td class="py-2 px-3"><span class="text-teal-700 font-bold">✓ Pista seguida</span>: el contrato ronda los $408M (Utility Metering Solutions) y en jun 2026 el Comisionado Residente <a href="https://www.elnuevodia.com/corresponsalias/washington-dc/notas/pablo-jose-hernandez-pide-cuentas-sobre-contrato-en-la-aaa-que-alcanzo-unos-408-millones/" target="_blank" rel="noopener" class="text-teal-700 font-semibold">pidió cuentas por falta de transparencia ↗</a></td></tr>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3">Justicia: Registro de la Propiedad "al día"</td><td class="py-2 px-3 whitespace-nowrap">jun-jul 2025</td><td class="py-2 px-3 text-slate-500">Por verificar</td></tr>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3">Agricultura: abasto de café asegurado solo hasta feb 2025; pidió subir el precio ~$50/quintal "de inmediato"</td><td class="py-2 px-3 whitespace-nowrap">feb 2025</td><td class="py-2 px-3 text-slate-500">Por verificar</td></tr>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3">DRNA: plan de cambio climático se auto-aprueba si la legislatura no actúa</td><td class="py-2 px-3 whitespace-nowrap">30 jun 2025</td><td class="py-2 px-3 text-slate-500">Por verificar</td></tr>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3">Justicia: albergue de víctimas fase 2 (ARPA) o se pierden los fondos</td><td class="py-2 px-3 whitespace-nowrap">31 dic 2026</td><td class="py-2 px-3 text-slate-500">Corriendo</td></tr>
       <tr class="border-t border-slate-100"><td class="py-2 px-3">Vivienda: cierre de fondos CDBG-DR</td><td class="py-2 px-3 whitespace-nowrap">sept 2029</td><td class="py-2 px-3 text-slate-500">Corriendo</td></tr>
     </tbody>
   </table>
@@ -5972,7 +6024,7 @@ ${bloquesHtml}
 <p class="text-sm text-slate-500 mt-2">Cada "por verificar" es trabajo pendiente de este récord, no una acusación. Cuando se verifique, se anota en verde o en rojo, igual que todo lo demás.</p>
 
 <h2 id="vistas">Las vistas completas (lo que falta por minar)</h2>
-<p>24 sesiones en el canal de El Nuevo Día. Tres están en este récord; el resto sigue ahí, público, esperando. Las sesiones de diciembre incluyen salud, educación, hacienda y seguridad.</p>
+<p>24 sesiones en el canal de El Nuevo Día. Seis están en este récord; el resto sigue ahí, público, esperando (3 no tienen captions disponibles todavía). Faltan educación, hacienda y seguridad, entre otras.</p>
 <div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
   <table class="w-full text-sm">
     <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Fecha</th><th class="py-2 px-3">Duración</th><th class="py-2 px-3">Estado</th><th class="py-2 px-3">Video</th></tr></thead>
@@ -5991,7 +6043,7 @@ ${citableCards}
 <ul class="text-slate-700">
   <li>Las citas salen de transcripciones automáticas de los streams (limpiadas de ruido, sin cambiar números ni palabras clave) y cada una lleva su link al minuto pa' que la verifiques con tus oídos.</li>
   <li>Los nombres de los miembros del comité se identifican por el audio; donde hay duda, se dice "miembro del comité" en vez de adivinar.</li>
-  <li>Tres de 24 sesiones están minadas. Esto es un récord vivo: crece sesión por sesión.</li>
+  <li>Seis de 24 sesiones están minadas. Esto es un récord vivo: crece sesión por sesión.</li>
   <li>¿Ves un error en una cita o un número? Escríbenos y se corrige con el video en la mano: <a href="mailto:angel@angelanderson.com" class="text-teal-700 font-semibold">angel@angelanderson.com</a>.</li>
 </ul>
 
@@ -6019,6 +6071,119 @@ ${SHARE_COPY_SCRIPT}
     title: 'La Transición 2024-2025: el gobierno, en su propia voz, cita por cita y al minuto',
     description: 'Las vistas públicas de la transición de gobierno de PR (nov-dic 2024), compiladas y verificadas: Educación 2.3% de desembolso FEMA, AAA 13.4%, AEE 15%, y el director de la AEE puntuando 3/10 su propia red. Cada cita con el minuto del video.',
     slug: 'transicion', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
+// /retiro — El Huracán Lento: dónde la vejez, la pobreza y la ausencia de médico ya coinciden, municipio
+// por municipio. Cruce inédito ACS 2024 × NPPES/HRSA × broadband (tabla pr_retiro_municipio, jul 2026).
+// Bandera: la frase de Angel a la prensa (9 jul 2026). Cero data inventada; gaps reportados abajo.
+async function handleRetiro(req: any, res: any) {
+  let rows: any[] = []
+  try {
+    const { data } = await supabase.from('pr_retiro_municipio')
+      .select('municipio,region,viejos_n,pct_65plus,ing_mensual_65,pobreza_65_pct,especialistas,psiquiatras,pct_sin_internet,huracan_index')
+      .order('huracan_index', { ascending: false }).limit(76)
+    rows = data || []
+  } catch (_) { /* fallback abajo */ }
+  const top = rows.slice(0, 20)
+  const n = (x: any) => Number(x || 0).toLocaleString('en-US')
+  const tablaRows = top.length ? top.map((r: any, i: number) => `
+    <tr class="border-t border-slate-100 ${i < 5 ? 'bg-red-50/40' : ''}">
+      <td class="py-2 px-3 font-black text-slate-400">${i + 1}</td>
+      <td class="py-2 px-3 font-semibold text-slate-800">${escapeHtml(r.municipio)} <span class="text-xs text-slate-400">${escapeHtml(r.region || '')}</span></td>
+      <td class="py-2 px-3 text-right font-bold text-slate-900">${Number(r.huracan_index).toFixed(1)}</td>
+      <td class="py-2 px-3 text-right text-slate-600">${Number(r.pct_65plus).toFixed(1)}%</td>
+      <td class="py-2 px-3 text-right text-slate-600">$${n(r.ing_mensual_65)}</td>
+      <td class="py-2 px-3 text-right text-slate-600">${Number(r.pobreza_65_pct).toFixed(1)}%</td>
+      <td class="py-2 px-3 text-right text-slate-600">${r.especialistas}</td>
+      <td class="py-2 px-3 text-right text-slate-600">${Number(r.pct_sin_internet).toFixed(0)}%</td>
+    </tr>`).join('') : `<tr><td colspan="8" class="py-3 px-3 text-slate-500 text-sm">Data en vivo no disponible ahora. Top 5 verificado (jul 2026): Guánica 82.0 · Las Marías 80.2 · Maunabo 71.4 · San Germán 71.4 · Sabana Grande 69.5.</td></tr>`
+
+  const citables = [
+    `En Puerto Rico, 4 de cada 10 personas mayores de 65 años viven en pobreza (39.4%). En Estados Unidos, 1 de cada 9 (11.2%). Fuente: Censo/ACS 2024 × registro federal, compilado en puertoricosinfiltros.com/retiro`,
+    `El hogar retirado mediano de EE.UU. vive con $4,971 al mes. En 14 pueblos de Puerto Rico, con menos de $1,500. Fuente: ACS 2024, compilado en puertoricosinfiltros.com/retiro`,
+    `Maricao y Las Marías: cero especialistas médicos y ~6 de cada 10 hogares sin internet. Ni el médico llega, ni la telemedicina puede llegar. Fuente: NPPES × ACS, puertoricosinfiltros.com/retiro`,
+    `13 de los 15 pueblos donde la vejez, la pobreza y la falta de médicos coinciden más duro están en el oeste y el sur de PR. Fuente: puertoricosinfiltros.com/retiro`,
+  ]
+  const citableCards = citables.map((c) => `
+    <div class="flex items-start gap-2 bg-white border border-slate-200 rounded-xl p-3 mt-2">
+      <p class="flex-1 text-sm text-slate-700 leading-relaxed">${escapeHtml(c)}</p>
+      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(c)}"><i class="fa-regular fa-copy"></i> Copiar</button>
+    </div>`).join('')
+
+  const body = `
+<h1>El Huracán Lento</h1>
+<p class="text-lg text-slate-600 mt-2">Dónde la vejez, la pobreza y la ausencia del médico ya coinciden, municipio por municipio. No es una predicción: es una foto de hoy, con la fuente al lado.</p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">La bandera</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">"El huracán que viene no es de lluvia ni viento. Es demográfica y burocracia."</p>
+  <p class="text-slate-300 mt-2 text-sm leading-relaxed">4 de cada 10 personas mayores de 65 en PR viven en pobreza (en EE.UU.: 1 de cada 9). En 14 pueblos, el hogar retirado mediano vive con menos de $1,500 al mes. Y 13 de los 15 pueblos donde todo esto coincide más duro están en el oeste y el sur.</p>
+</div>
+
+${shareRow({ text: 'El huracán que viene no es de lluvia ni viento: es demográfica y burocracia. 4 de cada 10 viejos de PR viven en pobreza, y los pueblos sin médico son también los que no tienen internet pa\' telemedicina. El mapa, pueblo por pueblo:', url: 'https://puertoricosinfiltros.com/retiro', toWho: 'Al que tiene a los papás o abuelos en la isla. Y al que planifica su propio retiro aquí.' })}
+
+<h2 id="ecuacion">La ecuación</h2>
+<p>El índice (0-100) junta, por municipio: <strong>cuán viejo</strong> (25%) + <strong>cuán pobre el viejo</strong> (25%) + <strong>cuán poquito ingreso de retiro</strong> (20%) + <strong>cuán lejos el médico</strong> (15%) + <strong>cuán desconectado del internet</strong> (15%). Nadie había cruzado estas cinco cosas. Ahora están cruzadas y son públicas.</p>
+
+<h2 id="hallazgos">Los 7 hallazgos</h2>
+<div class="not-prose space-y-3 mt-3">
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-sm text-slate-800 leading-relaxed"><strong class="text-slate-900">1 · 4 de cada 10 viejos de PR viven en pobreza.</strong> 39.4% de las 777,750 personas 65+ (EE.UU.: 11.2%). El viejo boricua tiene 3.5 veces más probabilidad de ser pobre que el americano promedio.</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-sm text-slate-800 leading-relaxed"><strong class="text-slate-900">2 · La Resta del Retiro.</strong> El hogar retirado mediano de EE.UU. vive con $4,971/mes. En 14 municipios de PR, con menos de $1,500: Las Marías $1,317, Guánica $1,326, Comerío $1,337, San Sebastián $1,338, Maunabo $1,377. Cabo Rojo: $1,764, con 40.8% de sus viejos en pobreza.</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-sm text-slate-800 leading-relaxed"><strong class="text-slate-900">3 · Viejos por psiquiatra.</strong> El metro tiene 1 psiquiatra por cada 844 personas mayores; el norte, 1 por cada 3,831. Y la depresión geriátrica es exactamente la condición que nadie diagnostica sin médico cerca.</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-sm text-slate-800 leading-relaxed"><strong class="text-slate-900">4 · Pega primero en el oeste.</strong> 13 de los 15 municipios con el índice más alto están en el oeste y el sur: Guánica, Las Marías, Maunabo, San Germán, Sabana Grande encabezan. Son 352,350 personas; 90,132 tienen 65+.</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-sm text-slate-800 leading-relaxed"><strong class="text-slate-900">5 · Los doblemente varados.</strong> La telemedicina es la única salida escalable donde no hay médico. Pero Maricao tiene 0 especialistas y 60.5% de hogares sin internet; Las Marías, 0 y 58.8%. Ni el médico llega, ni la telemedicina puede llegar. Sin broadband primero, la AI no salva a los pueblos que más la necesitan.</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-sm text-slate-800 leading-relaxed"><strong class="text-slate-900">6 · La vejez ya no es futuro.</strong> 21 municipios ya tienen 25%+ de su población sobre los 65 (Hormigueros 30.2%, Rincón 27.9%, San Germán 27.8%, Lajas 27.3%). PR entero: 23.4% vs ~17.7% en EE.UU.</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-sm text-slate-800 leading-relaxed"><strong class="text-slate-900">7 · El calendario del huracán.</strong> 30 sep 2027: el pareo federal de Medicaid cae de 76% a 55% si el Congreso no actúa. 2030: se proyecta que el 55% de los médicos activos se habrá retirado. Los pueblos que reciben ese golpe ya se pueden nombrar, uno por uno. Están en la tabla de abajo.</p></div>
+</div>
+
+<h2 id="tabla">La tabla, municipio por municipio</h2>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm">
+    <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">#</th><th class="py-2 px-3">Municipio</th><th class="py-2 px-3 text-right">Índice</th><th class="py-2 px-3 text-right">% 65+</th><th class="py-2 px-3 text-right">Ingreso 65+/mes</th><th class="py-2 px-3 text-right">Pobreza 65+</th><th class="py-2 px-3 text-right">Especialistas</th><th class="py-2 px-3 text-right">Sin internet</th></tr></thead>
+    <tbody>${tablaRows}</tbody>
+  </table>
+</div>
+<p class="text-sm text-slate-500 mt-2">Top 20 de 76. La tabla completa vive en la base de datos pública (tabla <code>pr_retiro_municipio</code>, lectura abierta). Fuentes: Censo/ACS 2024 (5 años) × NPPES/CMS × HRSA × ACS broadband, julio 2026.</p>
+
+${mientrasTanto([
+  `La Resta es personal: haz TU número hoy (Seguro Social + retiro + lo que entra, contra tus gastos fijos). El hogar retirado mediano de EE.UU. vive con $4,971 al mes; en 14 pueblos de PR, con menos de $1,500. Ese número tuyo decide más que cualquier plan de gobierno.`,
+  `Si cuidas a un viejo en uno de estos pueblos: la llamada semanal es detección temprana. La depresión geriátrica no se diagnostica sola. Y si es ahora: Línea PAS, 988, funciona sin internet.`,
+  `El médico que no está no cancela el cuidado que sí está: el laboratorio, la farmacia y el cernimiento con el primario. Empieza por lo que sí hay en tu pueblo.`,
+], [
+  `Si tu pueblo está en el tope de la tabla: el cupón federal de médicos (HPSA) ya existe y el dinero de broadband ya existe. La pregunta de 5 minutos a tu alcalde: ¿quién en el municipio está conectando esto? Respuesta o silencio, las dos cosas son récord.`,
+  `O copia un citable de abajo y pásaselo al que planifica retirarse en la isla sin haber hecho la cuenta.`,
+])}
+
+<h2 id="citables">Citables (copia y pega, con fuente)</h2>
+${citableCards}
+
+<h2 id="gaps">Lo que todavía no sabemos (honesto)</h2>
+<ul class="text-slate-700">
+  <li><strong>Velocidad de envejecimiento</strong> por municipio (comparar 2013 vs 2024): pendiente de una llave del Censo.</li>
+  <li><strong>Hospitales</strong> (capacidad, cierres, finanzas por municipio): pendiente de cruzar CMS Care Compare con el recorte de Medicaid 2027.</li>
+  <li><strong>El costo real de envejecer aquí</strong> (la otra mitad de La Resta): no se inventa una canasta; se construye con fuentes. Viene en otra pasada.</li>
+</ul>
+
+<p class="text-sm text-slate-500 mt-5">Verifícalo tú mismo: <a href="https://data.census.gov/" target="_blank" rel="noopener" data-prsf="verify" data-rec="retiro" class="text-teal-700 font-semibold">Censo/ACS ↗</a> · <a href="https://npiregistry.cms.hhs.gov/" target="_blank" rel="noopener" data-prsf="verify" data-rec="retiro" class="text-teal-700 font-semibold">registro federal NPPES ↗</a> · <a href="https://data.hrsa.gov/tools/shortage-area/hpsa-find" target="_blank" rel="noopener" data-prsf="verify" data-rec="retiro" class="text-teal-700 font-semibold">HRSA ↗</a>. Récords hermanos: <a href="/registro/estado" class="text-teal-700 font-semibold">el cupón sin cobrar</a> · <a href="/telemedicina" class="text-teal-700 font-semibold">telemedicina</a> · <a href="/costo-de-vida" class="text-teal-700 font-semibold">costo de vida</a>. ¿Ves un error? <a href="/rompelo" class="text-teal-700 font-semibold">Rómpelo</a>.</p>
+${SHARE_COPY_SCRIPT}
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'El Huracán Lento: vejez, pobreza y ausencia de médico por municipio de Puerto Rico',
+    description: 'Cruce inédito por municipio: población 65+, pobreza 65+ (39.4% PR vs 11.2% US), ingreso mensual del hogar retirado, especialistas médicos y hogares sin internet. 13 de los 15 municipios más golpeados están en el oeste y sur de PR. Fuentes: ACS 2024, NPPES/CMS, HRSA.',
+    creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/retiro',
+    keywords: ['retiro', 'envejecimiento', 'Puerto Rico', 'pobreza 65+', 'desierto médico', 'broadband', 'Medicaid 2027'],
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'El Huracán Lento: vejez, pobreza y ausencia de médico, municipio por municipio',
+    description: '"El huracán que viene no es de lluvia ni viento. Es demográfica y burocracia." 4 de cada 10 viejos de PR en pobreza, 14 pueblos con hogares retirados bajo $1,500/mes, y los pueblos sin médico son los que no tienen internet. El mapa completo.',
+    slug: 'retiro', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
@@ -6655,6 +6820,7 @@ async function handleSigueElDinero(req: any, res: any) {
 
 <div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 mt-5 text-sm text-slate-700"><strong>Método y límites:</strong> contratos federales de la agencia DHS/FEMA con lugar de ejecución en PR (2017–2025), vía USASpending.gov. Excluye el passthrough del Gobierno de PR (que sub-otorga a los municipios — esos son los fondos de <a href="/recuperacion" class="text-teal-700 font-semibold">/recuperacion</a>). <strong>Falta HUD CDBG-DR</strong> (~$20B más) — segunda pasada pendiente. Los montos son a nivel transacción (las modificaciones se suman), así que léelos como orden de magnitud, no centavo exacto.</div>
 
+${shareRow({ text: 'De cada dólar de contratos de recuperación que rastreamos, ~87 centavos salieron de PR al mainland. Quién cobró, con enlace de verificación:', url: 'https://puertoricosinfiltros.com/sigue-el-dinero', toWho: 'Al dueño de negocio que licita, o que debería.' })}
 ${mientrasTanto([
   `Si tienes negocio: hasta octubre de 2024 el reglamento federal PROHIBÍA dar preferencia a firmas locales. Ya no. Regístrate en SAM.gov y en los registros de licitadores ahora: el 87% se fue afuera, en parte, porque los locales no estaban en la fila. La fuente de ese cambio está en <a href="/transicion" class="text-teal-700 font-semibold">/transicion</a>, al minuto.`,
 ], [
@@ -7058,6 +7224,7 @@ async function handleDiabetes(req: any, res: any) {
   <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Municipio</th><th class="py-2 px-3 text-right">Diabetes</th><th class="py-2 px-3 text-right">Espec./10k</th><th class="py-2 px-3 text-right">Psiquiatras</th><th class="py-2 px-3 text-right">Pobreza</th></tr></thead><tbody>${rowHtml || '<tr><td colspan="5" class="py-3 px-3 text-slate-400 italic">Data no disponible ahora.</td></tr>'}</tbody></table>
 </div>
 
+${shareRow({ text: 'Lajas es el pueblo con más diabetes de PR (18%) y no tiene un solo psiquiatra. El cruce completo, pueblo por pueblo, con fuente:', url: 'https://puertoricosinfiltros.com/diabetes', toWho: 'Al que tiene familia en un pueblo sin especialista.' })}
 ${mientrasTanto([
   `La única data municipal es del 2009: no esperes a que el sistema te mida. Si tu pueblo está en el tope de la tabla, la prueba de azúcar se hace en cualquier laboratorio con una orden del médico primario, sin especialista. Esa prueba es tu línea base.`,
   `El especialista que no está en tu pueblo no cancela el cuidado: el laboratorio y la farmacia sí están. Empieza por lo que sí hay.`,
@@ -7182,6 +7349,7 @@ async function handleTelemedicina(req: any, res: any) {
 
 <div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 mt-5 text-sm text-slate-700"><strong>Método y límites:</strong> "banda ancha" = hogares con suscripción de banda ancha de cualquier tipo (incluye plan de datos celular), medida estándar del Censo (tabla ACS B28002, estimados 2020–2024). No es lo mismo que cobertura de fibra fija. Los 0 psiquiatras salen del registro federal NPPES. Es un mapa de posibilidad, no una promesa de que la teleconsulta ya esté pasando.</div>
 
+${shareRow({ text: 'En 17 pueblos de PR sin psiquiatra, el internet ya cubre el 80%+ de los hogares: la teleconsulta es viable HOY. El cruce, con la fuente:', url: 'https://puertoricosinfiltros.com/telemedicina', toWho: 'Al que lleva meses esperando una cita.' })}
 ${mientrasTanto([
   `Si tu pueblo no tiene psiquiatra pero la banda ancha ya cubre el 80%+, la teleconsulta ES tu ruta hoy, no un plan B. No esperes a que el médico se mude. Y si es emocional y es ahora: Línea PAS, 988.`,
   `En los 3 pueblos de desierto doble (Las Marías, Maricao, Guánica): la llamada telefónica también es telemedicina. El 988 funciona sin internet.`,
@@ -10730,6 +10898,7 @@ export default async function handler(req: any, res: any) {
     case 'acueductos': return await handleAcueductos(req, res)
     case 'transicion': return await handleTransicion(req, res)
     case 'rompelo': return await handleRompelo(req, res)
+    case 'retiro': return await handleRetiro(req, res)
     case 'prediccion': return handlePrediccion(req, res)
     case 'costo-de-vida': return await handleCostoDeVida(req, res)
     case 'trabajo': return handleTrabajo(req, res)
