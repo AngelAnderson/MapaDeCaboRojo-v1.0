@@ -169,7 +169,7 @@ function layout(opts: {
 <p class="text-base font-semibold text-slate-800 text-center">El récord público de Puerto Rico. El dato, con la fuente al lado.</p>
 <p class="text-xs text-slate-500 mt-1 text-center">Verificado uno por uno contra registros federales y públicos. Sin spin, sin relleno.</p>
 <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6 text-xs">
-<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Salud</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a><a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a><a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a><a href="/telemedicina" class="hover:text-teal-700">Telemedicina</a><a href="/diabetes" class="hover:text-teal-700">Diabetes</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Salud</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a><a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a><a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a><a href="/telemedicina" class="hover:text-teal-700">Telemedicina</a><a href="/diabetes" class="hover:text-teal-700">Diabetes</a><a href="/registro-raras" class="hover:text-teal-700">Enfermedades raras</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/rendimiento" class="hover:text-teal-700">Rendimiento del dólar</a><a href="/cupon" class="hover:text-teal-700">Dinero sin cobrar</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/exposicion-ai" class="hover:text-teal-700">Exposición a la IA</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Servicios</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/agua" class="hover:text-teal-700">Agua</a><a href="/luz" class="hover:text-teal-700">Luz</a><a href="/basura" class="hover:text-teal-700">Basura</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">El pueblo</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/demanda" class="hover:text-teal-700">Lo que busca PR</a><a href="/historial" class="hover:text-teal-700">Historial de promesas</a><a href="/promesas" class="hover:text-teal-700">Promesómetro</a><a href="/esencia" class="hover:text-teal-700">Proyecto Esencia</a><a href="/no-se-mide" class="hover:text-teal-700">Lo que ni se mide</a></div></div>
@@ -10080,6 +10080,133 @@ ${SHARE_COPY_SCRIPT}`
   }))
 }
 
+// ====================== /registro-raras — El Expediente: el registro de raras que prometió el gobierno (PRSF) ======================
+// Marcador de la promesa: Ley 9-2025 / OER. Declarado vs entregado. La cara PRSF del eje diagnóstico;
+// la cara supply-side vive en registromedicopr.com/raras + /atlas. Reloj vivo. Cero data inventada.
+async function handleOER(req: any, res: any) {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=3600')
+
+  const hoy = new Date()
+  const leyFirmada = new Date('2025-04-11T00:00:00Z')
+  const meta2030 = new Date('2030-01-01T00:00:00Z')
+  const dias = (a: Date, b: Date) => Math.round(Math.abs(a.getTime() - b.getTime()) / 86400000)
+  const diasDesdeLey = dias(hoy, leyFirmada)
+  const diasHasta2030 = dias(meta2030, hoy)
+
+  const marcador = [
+    { it: 'Ley 9-2025 firmada', est: 'cumplido', det: 'Firmada el 11 de abril de 2025. Crea el Registro Oficial de Personas con Enfermedades Raras.' },
+    { it: 'Oficina OER establecida', est: 'cumplido', det: 'Adscrita al Departamento de Salud, como entidad rectora.' },
+    { it: 'Director nombrado', est: 'cumplido', det: 'Dr. Fernando Ocasio.' },
+    { it: 'Presupuesto asignado', est: 'cumplido', det: '$450,000.' },
+    { it: 'Interface del registro', est: 'proceso', det: '"Está desarrollando la interfase de lo que va a ser el registro", según su director (jul 2026).' },
+    { it: 'Enfermedades catalogadas', est: 'proceso', det: '42 identificadas, de cerca de 7,000 en el mundo (0.6%).' },
+    { it: 'Cuántas personas las padecen', est: 'pendiente', det: 'Todavía no hay una cifra de cuántas personas están afectadas en la isla.' },
+    { it: 'En qué pueblos viven', est: 'pendiente', det: 'Todavía no hay geografía: dónde se concentran los casos.' },
+    { it: 'Infraestructura de datos interoperable', est: 'proceso', det: 'Meta establecida para 2026-2030.' },
+    { it: 'Cubrir 75% de los casos identificables', est: 'pendiente', det: 'Meta para el año 2030.' },
+  ]
+  const badge = (est: string) => est === 'cumplido'
+    ? '<span class="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2.5 py-0.5">✓ hecho</span>'
+    : est === 'proceso'
+      ? '<span class="inline-flex items-center gap-1 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 rounded-full px-2.5 py-0.5">⏳ en desarrollo</span>'
+      : '<span class="inline-flex items-center gap-1 text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded-full px-2.5 py-0.5">✗ todavía no</span>'
+  const nHecho = marcador.filter(m => m.est === 'cumplido').length
+  const nProceso = marcador.filter(m => m.est === 'proceso').length
+  const nPend = marcador.filter(m => m.est === 'pendiente').length
+  const marcadorHtml = marcador.map(m => `
+    <div class="flex items-start justify-between gap-3 py-3 border-b border-slate-100">
+      <div class="flex-1"><span class="font-semibold text-slate-800">${m.it}</span><br><span class="text-sm text-slate-500">${m.det}</span></div>
+      <div class="shrink-0 pt-0.5">${badge(m.est)}</div>
+    </div>`).join('')
+
+  const citas = [
+    { t: `La Ley 9-2025 creó el registro oficial de enfermedades raras de Puerto Rico hace ${diasDesdeLey} días. Sigue "en desarrollo": 42 enfermedades catalogadas, sin conteo de cuántas personas las padecen ni en qué pueblos viven. Mientras tanto, el mapa de quién puede diagnosticarlas ya existe, gratis: registromedicopr.com/raras. (Puerto Rico Sin Filtros)` },
+    { t: `La meta oficial del gobierno es cubrir 75% de los casos identificables de enfermedades raras para el 2030. Faltan ${diasHasta2030.toLocaleString('en-US')} días. El reloj corre en puertoricosinfiltros.com/registro-raras.` },
+    { t: `Puerto Rico es la jurisdicción #1 de EE.UU. en enfermedades raras por el efecto fundador, y ya hay 6 con variante propia boricua documentada en la ciencia. El registro oficial que las contará todavía no existe; el mapa de las que ya se conocen, sí: registromedicopr.com/atlas. (Puerto Rico Sin Filtros)` },
+  ]
+  const citasHtml = citas.map(c => `
+    <div class="not-prose flex gap-3 items-start bg-white border border-slate-200 rounded-xl p-4 mb-2.5">
+      <div class="text-sm text-slate-700 flex-1">${escapeHtml(c.t)}</div>
+      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(c.t)}"><i class="fa-regular fa-copy"></i> Copiar</button>
+    </div>`).join('')
+
+  const body = `
+<div class="not-prose bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El Expediente</p>
+  <h1 class="text-2xl sm:text-3xl font-black mt-1 leading-tight" style="font-family:'Fraunces',Georgia,serif">El registro de enfermedades raras que prometió el gobierno</h1>
+  <p class="text-slate-300 mt-1">Ley 9-2025 · Oficina OER · Depto. de Salud · $450,000</p>
+</div>
+
+<p class="text-lg text-slate-600 mt-4">El gobierno anunció que Puerto Rico es la jurisdicción de EE.UU. con más enfermedades raras, y creó por ley una oficina para registrarlas. Es una buena noticia. Este expediente le sigue el paso, con la fuente al lado: lo que se prometió, lo que ya está hecho, y lo que todavía no. No para atacar, para que no se pierda.</p>
+
+<div class="not-prose grid grid-cols-3 gap-3 my-6">
+  <div class="bg-white border border-slate-200 rounded-2xl p-4 text-center"><div class="text-3xl font-black text-emerald-700">${nHecho}</div><div class="text-xs text-slate-500 mt-1">pasos hechos</div></div>
+  <div class="bg-white border border-slate-200 rounded-2xl p-4 text-center"><div class="text-3xl font-black text-amber-600">${nProceso}</div><div class="text-xs text-slate-500 mt-1">en desarrollo</div></div>
+  <div class="bg-white border border-slate-200 rounded-2xl p-4 text-center"><div class="text-3xl font-black text-red-700">${nPend}</div><div class="text-xs text-slate-500 mt-1">todavía no</div></div>
+</div>
+
+<h2>El marcador de la promesa</h2>
+<p class="text-slate-600 -mt-2">Lo que dice la Ley 9-2025 y lo que dijo su director a la prensa (El Vocero, 10 jul 2026), punto por punto.</p>
+<div class="not-prose bg-white border border-slate-200 rounded-2xl p-5 mt-3">${marcadorHtml}</div>
+
+<div class="not-prose grid sm:grid-cols-2 gap-3 my-6">
+  <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5"><div class="text-3xl font-black text-slate-900">${diasDesdeLey}</div><div class="text-sm text-slate-500 mt-1">días desde que se firmó la ley (11 abr 2025) y el registro sigue en desarrollo</div></div>
+  <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5"><div class="text-3xl font-black text-slate-900">${diasHasta2030.toLocaleString('en-US')}</div><div class="text-sm text-slate-500 mt-1">días para la meta de cubrir 75% de los casos (2030)</div></div>
+</div>
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-5 sm:p-6 my-6">
+  <p class="font-black text-teal-900 text-lg">La otra mitad de la moneda ya existe</p>
+  <p class="text-sm text-teal-800 mt-1">El gobierno está construyendo "quién TIENE la enfermedad". La otra mitad, "quién la DIAGNOSTICA y dónde", no hay que esperarla hasta el 2030: ya está viva, verificada contra el registro federal, gratis.</p>
+  <div class="flex flex-wrap gap-3 mt-3">
+    <a href="https://registromedicopr.com/raras" class="inline-flex items-center gap-2 bg-teal-700 hover:bg-teal-800 text-white font-bold px-4 py-2 rounded-full text-sm"><i class="fa-solid fa-user-doctor"></i> Quién diagnostica en PR</a>
+    <a href="https://registromedicopr.com/atlas" class="inline-flex items-center gap-2 bg-white border border-teal-300 text-teal-800 font-bold px-4 py-2 rounded-full text-sm"><i class="fa-solid fa-dna"></i> El Atlas de las fundadoras boricuas</a>
+  </div>
+</div>
+
+<h2>Preguntas que solo la OER puede contestar</h2>
+<p class="text-slate-600 -mt-2">Cuando el registro avance, estas se podrán llenar. Las dejamos anotadas para medir el progreso.</p>
+<ul class="text-slate-700">
+  <li>¿Cuántas personas con enfermedades raras hay identificadas hasta hoy?</li>
+  <li>¿En qué municipios se concentran los casos?</li>
+  <li>¿Cuándo estará disponible la interface pública del registro?</li>
+  <li>¿Cuánto de los $450,000 se ha usado, y en qué?</li>
+</ul>
+
+<h2>Datos citables</h2>
+<p class="text-slate-600 -mt-2">Cada dato con su fuente y con algo que hacer. Cópialo y úsalo.</p>
+${citasHtml}
+
+${shareRow({ text: `El registro oficial de enfermedades raras de PR (Ley 9-2025, $450K) lleva ${diasDesdeLey} días y sigue "en desarrollo". Le seguimos el paso, con la fuente al lado, y el mapa de quién sí puede diagnosticarlas ya existe:`, url: 'https://puertoricosinfiltros.com/registro-raras', toWho: 'A quien le toque una enfermedad rara en la familia, a un periodista de salud, a un legislador.' })}
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
+  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Una promesa buena no se pierde si alguien le sigue el paso.</p>
+  <p class="mt-2 text-sm text-slate-600 italic">Todo con fuente. Se actualiza con el récord. Neutral, no partidista.</p>
+</div>
+
+<p class="text-sm text-slate-500 mt-6">Fuentes: Ley 9-2025 (LexJuris) · El Vocero (10 jul 2026) · registro federal NPPES (capacidad de diagnóstico). Este expediente es el récord, no una opinión. Julio 2026.</p>
+${SHARE_COPY_SCRIPT}`
+
+  const jsonLd = [
+    { '@context': 'https://schema.org', '@type': 'WebPage', name: 'El Expediente: el registro de enfermedades raras que prometió el gobierno', url: 'https://puertoricosinfiltros.com/registro-raras', inLanguage: 'es',
+      publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' } },
+    { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [
+      { '@type': 'Question', name: '¿Qué es la Ley 9-2025 de enfermedades raras de Puerto Rico?', acceptedAnswer: { '@type': 'Answer', text: 'La Ley 9-2025, firmada el 11 de abril de 2025, creó la Oficina de Enlace para el Apoyo y Registro de Personas con Enfermedades Raras (OER), adscrita al Departamento de Salud, con un presupuesto de $450,000, para mantener un registro oficial de las personas con enfermedades raras en la isla.' } },
+      { '@type': 'Question', name: '¿En qué va el registro oficial de enfermedades raras de PR?', acceptedAnswer: { '@type': 'Answer', text: 'Según su director (julio 2026), la interface del registro está "en desarrollo". Se han catalogado 42 enfermedades de cerca de 7,000 en el mundo, pero todavía no hay una cifra de cuántas personas las padecen ni en qué municipios viven. La meta oficial es cubrir 75% de los casos identificables para 2030.' } },
+    ] },
+  ]
+
+  const og = `https://puertoricosinfiltros.com/api/og?theme=sinfiltros&k=${encodeURIComponent('El Expediente · Enfermedades raras')}&t=${encodeURIComponent('El registro que prometió el gobierno||el marcador de la promesa')}&sub=${encodeURIComponent(`${nHecho} pasos hechos · ${nProceso} en desarrollo · ${nPend} todavía no · ${diasDesdeLey} días desde la ley`)}&badge=${encodeURIComponent('Ley 9-2025 · $450K')}`
+
+  res.status(200).send(layout({
+    title: 'El Expediente: el registro de enfermedades raras que prometió el gobierno',
+    description: `Ley 9-2025 creó el registro oficial de enfermedades raras de PR con $450,000. ${diasDesdeLey} días después sigue "en desarrollo": 42 catalogadas, sin conteo de personas ni geografía. Le seguimos el paso, con la fuente al lado.`,
+    slug: 'registro-raras', bodyHtml: body, jsonLd, ogImage: og,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+    canonicalUrl: 'https://puertoricosinfiltros.com/registro-raras',
+  }))
+}
+
 export default async function handler(req: any, res: any) {
   const page = String(req.query.page || '')
 
@@ -10105,6 +10232,7 @@ export default async function handler(req: any, res: any) {
     case 'registro-estado': return await handleRegistroEstado(req, res)
     case 'raras': return await handleRaras(req, res)
     case 'atlas': return await handleAtlas(req, res)
+    case 'oer': return await handleOER(req, res)
     case 'comparte': return await handleComparte(req, res)
     case 'porque': return await handleRegistroPorque(req, res)
     case 'recuperacion': return await handleRecuperacion(req, res)

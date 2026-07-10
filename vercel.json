@@ -87,6 +87,8 @@
     { "source": "/registro/:spec", "destination": "/api/mapa-pages?page=registro-hub&spec=:spec" },
     { "source": "/especialista/:slug", "destination": "/api/mapa-pages?page=especialista&slug=:slug" },
     { "source": "/observatorio", "destination": "/api/mapa-pages?page=observatorio" },
+    { "source": "/registro-raras", "destination": "/api/mapa-pages?page=oer" },
+    { "source": "/oer", "destination": "/api/mapa-pages?page=oer" },
     { "source": "/agua", "destination": "/api/mapa-pages?page=agua" },
     { "source": "/acueductos", "destination": "/api/mapa-pages?page=acueductos" },
     { "source": "/promesas", "destination": "/api/mapa-pages?page=promesas" },
