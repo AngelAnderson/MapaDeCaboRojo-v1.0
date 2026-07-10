@@ -5744,6 +5744,13 @@ async function handleAcueductos(req: any, res: any) {
   <p class="text-xs text-slate-400 mt-3">Plan Fiscal Certificado de la AAA (Junta de Supervisión Fiscal, 27 jun 2025) · corte de fondos federales: 31 mar 2025.</p>
 </div>
 
+<div class="not-prose bg-white border-2 border-teal-200 rounded-2xl p-4 sm:p-5 mt-5">
+  <p class="text-teal-700 font-bold uppercase tracking-wide text-xs mb-1">▶ Míralo en video</p>
+  <h2 class="text-xl font-black text-slate-900 m-0" style="font-family:'Fraunces',Georgia,serif">El agua sube hasta el 2039. El dinero pa' arreglarla llegó al 8.6%.</h2>
+  <p class="text-sm text-slate-600 mt-1 mb-3">La versión en video de este récord, del canal de Caborojo.com. Dale play, y todo lo que dice está aquí abajo con el documento certificado al lado, número por número.</p>
+  <div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-950" style="aspect-ratio:16/9"><iframe src="https://www.youtube-nocookie.com/embed/ljAqvtVwCdg" title="El agua sube hasta el 2039. El dinero pa' arreglarla llegó al 8.6%." loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen class="w-full h-full" style="border:0"></iframe></div>
+</div>
+
 ${shareRow({ text: 'El aumento del agua está aprobado hasta el 2039 (mínimo 2% al año). Y el 91% del dinero federal para reconstruir el sistema no ha llegado a la caja. Verificado contra el plan fiscal certificado, con la fuente al lado:', url: 'https://puertoricosinfiltros.com/acueductos', toWho: 'Al que se queja del recibo sin saber de dónde viene. Y al grupo de la familia.' })}
 
 <div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-5 text-sm text-slate-700">
@@ -5822,12 +5829,23 @@ ${SHARE_COPY_SCRIPT}
     isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/acueductos',
     keywords: ['AAA', 'PRASA', 'tarifa de agua', 'fondos federales', 'FEMA', 'plan fiscal', 'Puerto Rico'],
   }
+  const jsonLdVideo = {
+    '@context': 'https://schema.org', '@type': 'VideoObject',
+    name: "El agua sube hasta el 2039. El dinero pa' arreglarla llegó al 8.6%.",
+    description: 'La versión en video del récord del recibo del agua: los aumentos de la AAA aprobados hasta 2039 y el dinero federal para reconstruir el sistema que no ha llegado a la caja, verificado contra el Plan Fiscal Certificado AAA 2025 (JSF).',
+    embedUrl: 'https://www.youtube-nocookie.com/embed/ljAqvtVwCdg',
+    contentUrl: 'https://www.youtube.com/watch?v=ljAqvtVwCdg',
+    thumbnailUrl: 'https://i.ytimg.com/vi/ljAqvtVwCdg/hqdefault.jpg',
+    uploadDate: '2026-07-10',
+    inLanguage: 'es', isAccessibleForFree: true,
+    publisher: { '@type': 'Organization', name: 'CaboRojo.com', url: 'https://caborojo.com' },
+  }
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
   res.status(200).send(layout({
     title: 'El recibo del agua, contra el récord: tarifas AAA hasta 2039 y el dinero federal sin llegar',
     description: 'Los aumentos de la AAA están aprobados hasta 2039 y suman $2,598 millones. El 91% del dinero federal identificado no ha llegado a la caja. Verificado contra el plan fiscal certificado, con la fuente al lado.',
-    slug: 'acueductos', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    slug: 'acueductos', bodyHtml: body, jsonLd: [jsonLd, jsonLdVideo], ogImage: OG_SINFILTROS,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
