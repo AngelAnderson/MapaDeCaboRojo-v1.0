@@ -10003,7 +10003,7 @@ async function handleRaras(req: any, res: any) {
   const citasHtml = citas.map((c) => `
     <div class="not-prose flex gap-3 items-start bg-white border border-slate-200 rounded-xl p-4 mb-2.5">
       <div class="text-sm text-slate-700 flex-1">${escapeHtml(c.t)}</div>
-      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(c.t)}"><i class="fa-regular fa-copy"></i> Copiar</button>
+      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(c.t + '\n\n🔗 https://registromedicopr.com/raras')}"><i class="fa-regular fa-copy"></i> Copiar</button>
     </div>`).join('')
 
   const body = `
@@ -10211,7 +10211,7 @@ async function handleAtlas(req: any, res: any) {
         <a href="/raras#quien-diagnostica" class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1.5 rounded-full text-xs hover:bg-teal-100"><i class="fa-solid fa-user-doctor"></i> Quién la diagnostica</a>
         <a href="/pueblo" class="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-xs hover:bg-slate-100"><i class="fa-solid fa-location-dot"></i> Especialistas en tu pueblo</a>
         ${c.apoyoN ? `<a href="${c.apoyoUrl}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 bg-rose-50 border border-rose-200 text-rose-700 font-semibold px-3 py-1.5 rounded-full text-xs hover:bg-rose-100"><i class="fa-solid fa-heart"></i> Apoyo: ${escapeHtml(c.apoyoN)}</a>` : ''}
-        <button type="button" class="share-copy inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-xs" data-copy="${escapeHtml(`${c.nombre} (${c.gen}): ${c.comun}. En PR: ${c.comunAqui} Se concentra en: ${c.region}. Fuente: ${c.fuente}. Más en registromedicopr.com/atlas`)}"><i class="fa-regular fa-copy"></i> Copiar el dato</button>
+        <button type="button" class="share-copy inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-xs" data-copy="${escapeHtml(`${c.nombre} (${c.gen}): ${c.comun}. En PR: ${c.comunAqui} Se concentra en: ${c.region}. Fuente: ${c.fuente}. \n\n🔗 https://registromedicopr.com/atlas`)}"><i class="fa-regular fa-copy"></i> Copiar el dato</button>
       </div>
       <p class="text-xs text-slate-400 mt-3">Fuente: <a href="${c.fuenteUrl}" target="_blank" rel="noopener" class="hover:text-teal-700 underline">${escapeHtml(c.fuente)}</a></p>
     </div>`).join('')
@@ -10227,7 +10227,7 @@ async function handleAtlas(req: any, res: any) {
   const citasHtml = citas.map(c => `
     <div class="not-prose flex gap-3 items-start bg-white border border-slate-200 rounded-xl p-4 mb-2.5">
       <div class="text-sm text-slate-700 flex-1">${escapeHtml(c.t)}</div>
-      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(c.t)}"><i class="fa-regular fa-copy"></i> Copiar</button>
+      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(c.t + '\n\n🔗 https://registromedicopr.com/atlas')}"><i class="fa-regular fa-copy"></i> Copiar</button>
     </div>`).join('')
 
   const body = `
@@ -10355,7 +10355,7 @@ async function handleOER(req: any, res: any) {
   const citasHtml = citas.map(c => `
     <div class="not-prose flex gap-3 items-start bg-white border border-slate-200 rounded-xl p-4 mb-2.5">
       <div class="text-sm text-slate-700 flex-1">${escapeHtml(c.t)}</div>
-      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(c.t)}"><i class="fa-regular fa-copy"></i> Copiar</button>
+      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(c.t + '\n\n🔗 https://puertoricosinfiltros.com/registro-raras')}"><i class="fa-regular fa-copy"></i> Copiar</button>
     </div>`).join('')
 
   const body = `
@@ -10469,7 +10469,7 @@ async function handleInvestigacion(req: any, res: any) {
   const citasHtml = citas.map(c => `
     <div class="not-prose flex gap-3 items-start bg-white border border-slate-200 rounded-xl p-4 mb-2.5">
       <div class="text-sm text-slate-700 flex-1">${escapeHtml(c.t)}</div>
-      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(c.t)}"><i class="fa-regular fa-copy"></i> Copiar</button>
+      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(c.t + '\n\n🔗 https://puertoricosinfiltros.com/investigacion')}"><i class="fa-regular fa-copy"></i> Copiar</button>
     </div>`).join('')
 
   const body = `
