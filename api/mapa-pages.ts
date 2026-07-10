@@ -7600,6 +7600,7 @@ ${[
     { label: 'Cero de todo', txt: `3 pueblos de Puerto Rico no tienen ni un especialista médico de ninguna clase: Maricao, Las Marías y Florida.` },
     { label: 'El más pobre', txt: `Guánica es el municipio más pobre de Puerto Rico (63.6% bajo el nivel de pobreza). Tiene la designación federal de salud mental con el puntaje máximo posible y cero psiquiatras.` },
     { label: 'Para médicos y psicólogos', txt: `Si eres psiquiatra, psicólogo o médico primario: el gobierno federal repaga tus préstamos estudiantiles (hasta $75,000 en primaria, $50,000 en salud mental) por ejercer donde hace falta. En 26 pueblos de PR no tendrías competencia local. El dinero ya está aprobado.`, tag: 'medicos' as const },
+    { label: 'El programa sin operar', txt: `Puerto Rico usa el programa federal que trae médicos (NHSC) a la tasa más baja de cualquier jurisdicción comparable: 2.5 clínicos por 100,000 habitantes contra 15.3 en West Virginia, que tiene la mitad de nuestra población. Solo 6 médicos de cuidado primario NHSC en toda la isla. Y tres programas hermanos en cero: becas, Students-to-Service y el programa estatal de repago con pareo federal que 40+ estados sí tienen. Fuente: HRSA FY2025, en puertoricosinfiltros.com/registro/estado`, tag: 'medicos' as const },
     { label: 'La salida', txt: `Esto tiene arreglo sin dinero nuevo. Verificado contra HRSA (julio 2026): PR tiene 123 sitios NHSC activos donde un médico puede cobrar el repago de préstamos. De los 33 pueblos del cupón sin cobrar, 28 YA tienen sitio aprobado y aun así cero psiquiatras: lo que falta es el médico que reclame la oferta. Solo en 5 falta el papel: Añasco, Guánica, Guayanilla, Hormigueros y Loíza.`, tag: 'medicos' as const },
   ].map((f, i) => {
     const copyText = `${f.txt} Fuente: puertoricosinfiltros.com/registro/estado`
@@ -7644,6 +7645,36 @@ ${[
   </div>
 </div>
 <p class="text-xs text-slate-400 mt-2">Fuentes: criterios de designación de HRSA (proveedores del área contigua + distancia/tiempo de viaje) · NPPES/CMS · Censo/ACS. La designación federal activa es, en sí misma, la certificación de que el pueblo de al lado no resuelve.</p>
+
+<h2 id="acto4">Por qué no llega el médico: lo que dice la data federal</h2>
+<p>El dinero está aprobado, la designación existe y 28 de los 33 pueblos del cupón ya tienen sitio. Entonces, ¿por qué no llega el médico? Bajamos el expediente oficial del NHSC (fuerza de servicio FY2025, HRSA) y la respuesta tiene números:</p>
+
+<div class="not-prose mt-4 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El hallazgo</p>
+  <p class="text-lg sm:text-xl font-black mt-1 leading-snug">Puerto Rico usa el programa federal de médicos a la tasa más baja de cualquier jurisdicción comparable: 2.5 clínicos NHSC por cada 100,000 habitantes. West Virginia, con la mitad de nuestra población, tiene 15.3 — seis veces más.</p>
+</div>
+
+<div class="not-prose grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+  <div class="bg-white border border-slate-200 rounded-xl p-4 text-center"><div class="text-2xl font-black text-slate-900">79</div><div class="text-xs text-slate-500 mt-1">clínicos NHSC en servicio en todo PR (FY2025)</div></div>
+  <div class="bg-white border-2 border-red-300 rounded-xl p-4 text-center"><div class="text-2xl font-black text-red-600">6</div><div class="text-xs text-slate-500 mt-1">médicos de cuidado primario NHSC en toda la isla</div></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4 text-center"><div class="text-2xl font-black text-slate-900">5</div><div class="text-xs text-slate-500 mt-1">psiquiatras NHSC (de 62 en "salud mental")</div></div>
+  <div class="bg-white border-2 border-amber-300 rounded-xl p-4 text-center"><div class="text-2xl font-black text-amber-600">6 de 79</div><div class="text-xs text-slate-500 mt-1">en sitios rurales: el cupón está en la montaña, el NHSC vive en el llano</div></div>
+</div>
+
+<h3 class="mt-6">Los tres ceros que nadie había contado</h3>
+<p>El repago de préstamos es solo UNO de los programas de la familia NHSC. Los otros tres, en Puerto Rico, están en cero absoluto (FY2025):</p>
+<div class="not-prose grid sm:grid-cols-3 gap-3 mt-3">
+  <div class="border border-slate-200 bg-white rounded-xl p-4"><div class="text-2xl font-black text-red-600">0</div><div class="text-sm font-bold text-slate-800 mt-1">Becas NHSC</div><p class="text-xs text-slate-600 mt-1">Cero estudiantes de medicina boricuas becados a cambio de servir en zonas designadas.</p></div>
+  <div class="border border-slate-200 bg-white rounded-xl p-4"><div class="text-2xl font-black text-red-600">0</div><div class="text-sm font-bold text-slate-800 mt-1">Students-to-Service</div><p class="text-xs text-slate-600 mt-1">Cero residentes en el programa que paga hasta $120,000 por comprometerse con un pueblo designado.</p></div>
+  <div class="border-2 border-amber-300 bg-amber-50/50 rounded-xl p-4"><div class="text-2xl font-black text-red-600">0</div><div class="text-sm font-bold text-slate-800 mt-1">SLRP: el programa estatal</div><p class="text-xs text-slate-600 mt-1">Más de 40 estados corren su propio programa de repago con <strong>pareo federal 1:1</strong>. Puerto Rico no lo tiene. Es dinero federal sin solicitar; la decisión es del Departamento de Salud, no del Congreso.</p></div>
+</div>
+
+<h3 class="mt-6">La prueba de que sí se puede está adentro</h3>
+<p>Donde el centro de salud lo trabaja, el programa funciona: <strong>Salud Integral en la Montaña</strong> (Aibonito 11, Naranjito 7, Morovis 5, Orocovis 2 participantes) y el corredor de <strong>Lares</strong> (Castañer + CISS, 9) concentran cerca de un tercio de todos los NHSC de la isla. Mientras tanto, <strong>21 de los 33 pueblos del cupón no tienen ni un participante</strong>. No es que el programa no funcione en Puerto Rico: es que la mayoría no lo está operando.</p>
+
+<p class="text-sm text-slate-700 mt-3"><strong>El análisis (y lo marcamos como análisis):</strong> el NHSC paga el préstamo, pero el sueldo lo pone el centro de salud — y con los planes pagando ~41% menos que en los estados, ese sueldo no compite. El repago cubre la diferencia un par de años; el resto de la carrera la pierde el médico. El incentivo federal asume un mercado de sueldos que en Puerto Rico no existe, y la mitad estatal de la maquinaria (SLRP, becas, dirección hacia lo rural) nunca se construyó. Le hicimos esta pregunta directamente a los centros que sí reclutan; publicaremos lo que respondan.</p>
+
+<p class="text-xs text-slate-400 mt-2">Fuentes: HRSA — NHSC Field Strength FY2025 (corte 30 sept 2025, archivo oficial) · HRSA BHW, mapa de sitios y participantes (julio 2026) · nhsc.hrsa.gov (SLRP). Comparativas calculadas por población del Censo. Un cabo pendiente, pedido por escrito: cuántos de los 30 waivers Conrad 30 (visas J-1 para médicos en zonas designadas) usa PR cada año.</p>
 
 <h2 id="escalera">Esto tiene arreglo: la escalera</h2>
 <p>Este récord no es para asustarte. Es para que se vea dónde está la palanca. No hay UNA solución mágica: hay una escalera, y lo potente es que <strong>los primeros escalones son casi gratis.</strong> De más barato a más caro:</p>
