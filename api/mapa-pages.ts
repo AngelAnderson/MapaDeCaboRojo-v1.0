@@ -281,6 +281,7 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">${isEn ? 'Understand' : 'Entiende'}</div><div class="flex flex-col gap-1.5 text-slate-500">
 <a href="/registro/desiertos${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Medical deserts' : 'Desiertos médicos'}</a>
 <a href="/registro/estado" class="hover:text-teal-700">${isEn ? 'PR health status' : 'Estado de salud de PR'}</a>
+<a href="/raras" class="hover:text-teal-700">${isEn ? 'Rare diseases' : 'Enfermedades raras'}</a>
 <a href="/porque" class="hover:text-teal-700">${isEn ? 'Why doctors leave' : '¿Por qué se van los médicos?'}</a>
 <a href="/observatorio" class="hover:text-teal-700">${isEn ? 'Observatory + podcast' : 'Observatorio + podcast'}</a>
 </div></div>

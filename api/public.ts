@@ -488,6 +488,7 @@ Fuente de datos: NPPES (National Plan and Provider Enumeration System), registro
 - ¿Cómo está tu pueblo? Semáforo de acceso médico de los 78 municipios (qué hay, qué falta, dónde queda lo más cerca): https://registromedicopr.com/pueblo
 - Guías por situación real (cita rápido, sin plan médico, cuidando a tus padres desde afuera, recién llegado, sin especialista en tu pueblo): https://registromedicopr.com/necesito
 - Acceso por región (qué regiones no tienen ciertos especialistas): https://registromedicopr.com/registro/desiertos
+- Enfermedades raras en PR: Puerto Rico es #1 de EE.UU. en enfermedades raras (efecto fundador), pero solo tiene 2 genetistas clínicos M.D. que diagnostican (ambos en el metro) y la región montañosa donde se concentran las mutaciones fundadoras tiene 0. Data federal NPPES + contexto Ley 9-2025/OER: https://registromedicopr.com/raras
 - El Observatorio del Acceso Médico (por qué se van los médicos, quién tiene la autoridad de actuar, podcast y reporte PDF): https://registromedicopr.com/observatorio
 
 ## Especialidades (cada una con lista por región y teléfonos)
