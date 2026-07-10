@@ -6148,8 +6148,8 @@ async function handleSigueElDinero(req: any, res: any) {
 }
 
 const FUNCIONARIOS: Record<string, any> = {
-  'alcalde-cabo-rojo': { nombre: 'Jorge Morales Wiscovitch', cargo: 'Alcalde de Cabo Rojo', tipo: 'alcalde', cargo_id: 'fd65244c-9ba5-4f31-bf72-c4dbde040912', promesasPublicas: true, ambito: 'Cabo Rojo', municipios: [{ nombre: 'Cabo Rojo', key: 'cabo rojo' }], firmaDistrito: 'cabo-rojo', expedientePublicado: '2026-07-05', termino: '2025–2028 · 2do término', eleccion: '2028-11-07' },
-  'representante-distrito-20': { nombre: 'Emilio Carlo Acosta', cargo: 'Representante · Cámara de PR · Distrito 20', tipo: 'representante', partido: 'PNP', cargo_id: 'b7c3ac60-5f99-4326-8a4d-e9eb8fd80c08', promesasPublicas: true, ambito: 'el Distrito 20 (Cabo Rojo, San Germán y Hormigueros)', municipios: [{ nombre: 'Cabo Rojo', key: 'cabo rojo' }, { nombre: 'San Germán', key: 'germ' }, { nombre: 'Hormigueros', key: 'hormigueros' }], firmaDistrito: 'distrito-20', expedientePublicado: '2026-07-05', termino: '2025–2028', terminoInicio: '2025-01-02', eleccion: '2028-11-07', sutraPerfil: 'https://sutra.oslpr.org/legisladores/M-953-AL' },
+  'alcalde-cabo-rojo': { nombre: 'Jorge Morales Wiscovitch', cargo: 'Alcalde de Cabo Rojo', tipo: 'alcalde', cargo_id: 'fd65244c-9ba5-4f31-bf72-c4dbde040912', promesasPublicas: true, ambito: 'Cabo Rojo', municipios: [{ nombre: 'Cabo Rojo', key: 'cabo rojo' }], firmaDistrito: 'cabo-rojo', expedientePublicado: '2026-07-05', notificado: '2026-07-09', termino: '2025–2028 · 2do término', eleccion: '2028-11-07' },
+  'representante-distrito-20': { nombre: 'Emilio Carlo Acosta', cargo: 'Representante · Cámara de PR · Distrito 20', tipo: 'representante', partido: 'PNP', cargo_id: 'b7c3ac60-5f99-4326-8a4d-e9eb8fd80c08', promesasPublicas: true, ambito: 'el Distrito 20 (Cabo Rojo, San Germán y Hormigueros)', municipios: [{ nombre: 'Cabo Rojo', key: 'cabo rojo' }, { nombre: 'San Germán', key: 'germ' }, { nombre: 'Hormigueros', key: 'hormigueros' }], firmaDistrito: 'distrito-20', expedientePublicado: '2026-07-05', notificado: '2026-07-09', termino: '2025–2028', terminoInicio: '2025-01-02', eleccion: '2028-11-07', sutraPerfil: 'https://sutra.oslpr.org/legisladores/M-953-AL' },
 }
 // Etiquetas cortas de medidas trackeadas (presentación; el texto completo vive en la DB, verificado contra SUTRA)
 const MEDIDA_LABEL: Record<string, string> = { RC0211: 'La luz en la PR-2', RC0210: 'Los solares abandonados', RCC0076: 'La escuela vocacional' }
@@ -6410,7 +6410,7 @@ ${verifSutra ? `<p class="text-xs text-slate-400 mt-3">Trámites verificados con
   </div>
   <p class="text-sm text-slate-700 mt-2">Este expediente puede ser reclamado por ${escapeHtml(cfg.nombre)} o su oficina. Su respuesta a cualquier punto — corrección, contexto, o lo que quiera que el distrito sepa — <strong>se publica aquí verbatim, con fecha, sin editar</strong>, al lado del dato. La regla es simétrica: registramos su versión con el mismo rigor que el récord.</p>
   <p class="text-sm mt-3"><a href="${claimMail}" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700 no-underline">Reclamar este expediente →</a></p>
-  <p class="text-xs text-slate-400 mt-2">Verificamos que la respuesta venga de la oficina (email oficial o declaración pública citable) antes de publicarla. Este contador corre solo.</p>
+  <p class="text-xs text-slate-400 mt-2">Verificamos que la respuesta venga de la oficina (email oficial o declaración pública citable) antes de publicarla. Este contador corre solo.${cfg.notificado ? ` <strong>Notificado a su oficina por correo el ${fmtF(cfg.notificado)}.</strong>` : ''}</p>
 </div>`
 
   // ===== T10: La Firma (la agenda se vuelve compromiso público firmable) =====
