@@ -551,6 +551,13 @@ function handleLlmsSinFiltros(req: any, res: any) {
 - RCC0076 (estudio de viabilidad para una escuela vocacional en el Distrito 20): radicada 10/mar/2025, referida a la Comisión de Educación el 13/mar/2025 y sin un solo trámite desde entonces. Fuente: https://sutra.oslpr.org/medidas/154116
 - Score al 9 jul 2026: 2 de 3 medidas del distrito aprobadas en Cámara · 0 resultados entregados en la calle. El marcador registra el verde igual que el rojo y se actualiza con el récord de SUTRA.
 
+## El Marcador del Cuatrienio — Alcalde de Cabo Rojo (récord en video, al minuto)
+- 14 promesas publicadas en el récord de video (cita textual + minuto exacto): 2 cumplidas · 10 en proceso · 2 vencidas (al 9 jul 2026).
+- Los plazos los puso él, en video: el Coliseo Rebeca Colberg ("año y medio, mala suerte dos años", jun 2023 — el escenario mala suerte venció el 17/jun/2025 y sigue sin reabrir, con $5.2M de FEMA obligados) · las 280+ cabañas del Balneario de Boquerón ("par de años", mar 2024 — venció mar 2026 con 29 rehabilitadas) · la nueva celda del vertedero ("el año que viene", 2023 — sin confirmación pública de culminación) · el Faro "antes de la temporada de playa" (mar 2024 — sigue cerrado; el acuerdo de manejo venció en 2016).
+- Vencidas: Isla de Ratones y su muelle (el DRNA retiró el proyecto: la zona se hundió en los terremotos de 2020, pese a ~$735K de FEMA) · el Faro de Los Morrillos.
+- El verde también se registra: canal Mendoza limpiado (2023) · edificio de Aduana Federal/CBP en Boquerón (obra federal, no mérito municipal).
+- Termómetro del pueblo (demanda real al 787-417-7711, últimos 90 días, se actualiza en vivo): https://puertoricosinfiltros.com/expediente/alcalde-cabo-rojo — data de demanda ciudadana que ningún informe municipal tiene.
+
 ## Datos citables (verificados julio 2026, fuentes federales)
 - 65 de 76 municipios de PR tienen designación federal de escasez de médicos (HPSA) activa. 33 tienen designación de salud mental y CERO psiquiatras (792,221 personas con el dinero federal aprobado sin médico que lo cobre). Fuente: NPPES/CMS × HRSA.
 - 36 municipios de PR no tienen ni un psiquiatra. De los que no tienen psiquiatra, en 17 la banda ancha ya cubre el 80%+ (telemedicina viable); 3 son desierto doble sin médico ni internet (Las Marías, Maricao, Guánica). Fuente: NPPES × Censo ACS B28002.

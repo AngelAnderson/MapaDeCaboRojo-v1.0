@@ -6109,7 +6109,7 @@ async function handleSigueElDinero(req: any, res: any) {
 }
 
 const FUNCIONARIOS: Record<string, any> = {
-  'alcalde-cabo-rojo': { nombre: 'Jorge Morales Wiscovitch', cargo: 'Alcalde de Cabo Rojo', tipo: 'alcalde', cargo_id: 'fd65244c-9ba5-4f31-bf72-c4dbde040912', promesasPublicas: true, ambito: 'Cabo Rojo', municipios: [{ nombre: 'Cabo Rojo', key: 'cabo rojo' }], firmaDistrito: 'cabo-rojo', expedientePublicado: '2026-07-05' },
+  'alcalde-cabo-rojo': { nombre: 'Jorge Morales Wiscovitch', cargo: 'Alcalde de Cabo Rojo', tipo: 'alcalde', cargo_id: 'fd65244c-9ba5-4f31-bf72-c4dbde040912', promesasPublicas: true, ambito: 'Cabo Rojo', municipios: [{ nombre: 'Cabo Rojo', key: 'cabo rojo' }], firmaDistrito: 'cabo-rojo', expedientePublicado: '2026-07-05', termino: '2025–2028 · 2do término', eleccion: '2028-11-07' },
   'representante-distrito-20': { nombre: 'Emilio Carlo Acosta', cargo: 'Representante · Cámara de PR · Distrito 20', tipo: 'representante', partido: 'PNP', cargo_id: 'b7c3ac60-5f99-4326-8a4d-e9eb8fd80c08', promesasPublicas: true, ambito: 'el Distrito 20 (Cabo Rojo, San Germán y Hormigueros)', municipios: [{ nombre: 'Cabo Rojo', key: 'cabo rojo' }, { nombre: 'San Germán', key: 'germ' }, { nombre: 'Hormigueros', key: 'hormigueros' }], firmaDistrito: 'distrito-20', expedientePublicado: '2026-07-05', termino: '2025–2028', terminoInicio: '2025-01-02', eleccion: '2028-11-07', sutraPerfil: 'https://sutra.oslpr.org/legisladores/M-953-AL' },
 }
 // Etiquetas cortas de medidas trackeadas (presentación; el texto completo vive en la DB, verificado contra SUTRA)
@@ -6121,18 +6121,24 @@ async function handleExpediente(req: any, res: any) {
   let promesas: any[] = []
   let respuestas: any[] = []
   let firmas: any[] = []
+  let demanda90: any[] = []
+  const grabMap: Record<string, any> = {}
   const munis: any[] = []
   try {
-    let pq: any = supabase.from('quien_responde_promesas').select('estado,promesa,fuente_que_paso,numero_medida,sutra_url,fecha_radicacion,tramite_estado,tramite_fecha,tramite_detalle,verificado_sutra').eq('cargo_id', cfg.cargo_id)
+    let pq: any = supabase.from('quien_responde_promesas').select('estado,promesa,cita,minuto,grabacion_id,fecha_grabacion,que_paso,fuente_que_paso,numero_medida,sutra_url,fecha_radicacion,tramite_estado,tramite_fecha,tramite_detalle,verificado_sutra,plazo_autoimpuesto,plazo_texto').eq('cargo_id', cfg.cargo_id)
     if (cfg.promesasPublicas) pq = pq.eq('publicable', true)
-    const [pp, rr, ffirmas] = await Promise.all([
+    const [pp, rr, ffirmas, gg, dd90] = await Promise.all([
       pq,
       supabase.from('funcionario_respuestas').select('respuesta,respondio_nombre,respondio_cargo,canal,evidencia_url,fecha_respuesta').eq('funcionario_slug', f).eq('publicable', true).eq('verificado', true).order('fecha_respuesta', { ascending: false }),
       cfg.firmaDistrito ? supabase.from('agenda_firmas').select('firmante_nombre,firmante_cargo,partido,fecha_firma,evidencia_url,compromiso_version').eq('distrito', cfg.firmaDistrito).eq('publicable', true).eq('verificado', true).order('fecha_firma', { ascending: true }) : Promise.resolve({ data: [] } as any),
+      cfg.tipo === 'alcalde' ? supabase.from('grabaciones').select('grabacion_id,video_url,clip_url') : Promise.resolve({ data: [] } as any),
+      cfg.tipo === 'alcalde' ? supabase.from('demand_signals_real').select('category,user_hash').gt('created_at', new Date(Date.now() - 90 * 86400000).toISOString()) : Promise.resolve({ data: [] } as any),
     ])
     promesas = pp.data || []
     respuestas = rr.data || []
     firmas = ffirmas.data || []
+    for (const g of (gg.data || [])) grabMap[g.grabacion_id] = g
+    demanda90 = dd90.data || []
     for (const m of cfg.municipios) {
       const [mm, ff, bb, dd] = await Promise.all([
         supabase.from('v_registro_municipio_intel').select('especialistas,psiquiatras,poblacion,poverty_pct,por_10k_hab,hpsa_salud_mental').ilike('municipio', `%${m.key}%`).maybeSingle(),
@@ -6191,8 +6197,68 @@ async function handleExpediente(req: any, res: any) {
   }).join('')
 
   const diasEleccion = cfg.eleccion ? dias(new Date().toISOString().slice(0, 10), cfg.eleccion) : 0
+
+  // ===== Marcador del Cuatrienio (alcalde): los relojes los puso él, en video =====
+  const tsLink = (url: string, minuto: string) => {
+    const m = parseInt(String(minuto || '').replace(/[^0-9]/g, ''), 10)
+    if (!url) return ''
+    if (isNaN(m)) return url
+    const secs = m * 60
+    const sep = url.includes('?') ? '&' : '?'
+    return /youtu\.?be|youtube/.test(url) ? `${url}${sep}t=${secs}s` : `${url}${sep}t=${secs}`
+  }
+  const relojes = promesas.filter((p: any) => p.plazo_autoimpuesto || p.estado === 'vencido')
+    .sort((a: any, b: any) => String(a.plazo_autoimpuesto || a.fecha_grabacion || '').localeCompare(String(b.plazo_autoimpuesto || b.fecha_grabacion || '')))
+  const cumplidas = promesas.filter((p: any) => p.estado === 'cumplido')
+  const masVieja = promesas.filter((p: any) => p.estado === 'en_proceso').sort((a: any, b: any) => String(a.fecha_grabacion || '').localeCompare(String(b.fecha_grabacion || '')))[0]
+  const relojCards = relojes.map((p: any) => {
+    const g = grabMap[p.grabacion_id] || {}
+    const vlink = g.video_url ? tsLink(g.video_url, p.minuto) : ''
+    const plazoVencido = p.plazo_autoimpuesto && p.plazo_autoimpuesto < hoy.toISOString().slice(0, 10)
+    const rojo = p.estado === 'vencido' || plazoVencido
+    const chip = p.estado === 'vencido'
+      ? `<span class="text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded-full px-3 py-1">Vencida</span>`
+      : plazoVencido
+        ? `<span class="text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded-full px-3 py-1">⏰ ${dias(p.plazo_autoimpuesto).toLocaleString('en-US')} días pasado su propio plazo</span>`
+        : `<span class="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-300 rounded-full px-3 py-1">Su plazo corre: ${fmtF(p.plazo_autoimpuesto)}</span>`
+    return `
+<div class="not-prose border-2 ${rojo ? 'border-red-200' : 'border-amber-200'} bg-white rounded-2xl p-5 mt-4">
+  <div class="flex items-start justify-between gap-3 flex-wrap">
+    <h3 class="text-lg font-black text-slate-900 max-w-xl" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(p.promesa)}</h3>
+    ${chip}
+  </div>
+  ${p.cita ? `<blockquote class="text-sm text-slate-600 italic border-l-4 border-slate-300 pl-4 mt-2">"${escapeHtml(p.cita)}"</blockquote>` : ''}
+  <p class="text-xs text-slate-500 mt-2">Dicho en video el ${fmtF(p.fecha_grabacion)}${vlink ? ` · <a href="${escapeHtml(vlink)}" target="_blank" rel="noopener" class="text-teal-700 font-semibold underline">véalo decirlo (minuto ${escapeHtml(p.minuto || '')}) ↗</a>` : p.minuto ? ` · minuto ${escapeHtml(p.minuto)} del video` : ''}</p>
+  ${p.plazo_texto ? `<p class="text-sm text-slate-800 mt-2"><strong>El plazo lo puso él:</strong> ${escapeHtml(p.plazo_texto)}.</p>` : ''}
+  ${p.que_paso ? `<p class="text-sm text-slate-700 mt-2"><strong>Qué pasó:</strong> ${escapeHtml(p.que_paso)}</p>` : ''}
+  ${/^https?:\/\//i.test(String(p.fuente_que_paso || '')) ? `<p class="text-xs mt-2"><a href="${escapeHtml(p.fuente_que_paso)}" target="_blank" rel="noopener" class="text-teal-700 font-semibold">Fuente de qué pasó ↗</a></p>` : ''}
+</div>`
+  }).join('')
+  const cumplidasHtml = cumplidas.map((p: any) => {
+    const g = grabMap[p.grabacion_id] || {}
+    const vlink = g.video_url ? tsLink(g.video_url, p.minuto) : ''
+    return `<li><strong>✓ ${escapeHtml(p.promesa)}</strong> (${fmtF(p.fecha_grabacion)}${vlink ? ` · <a href="${escapeHtml(vlink)}" target="_blank" rel="noopener" class="text-teal-700 underline">video ↗</a>` : ''})${p.que_paso ? ` — ${escapeHtml(p.que_paso)}` : ''}</li>`
+  }).join('')
+
   const promesasHtml = cfg.tipo === 'alcalde'
-    ? `<p>Dos vistas del mismo récord: <a href="/promesas" class="text-teal-700 font-semibold">el promesómetro</a> (todas las promesas por tema — basura, asfalto, policía, agua — con su estado), y <a href="/historial" class="text-teal-700 font-semibold">el historial</a> (${nP} con la cita textual y el enlace al minuto exacto del video: ${cnt('cumplido')} cumplida${cnt('cumplido') === 1 ? '' : 's'}, ${cnt('en_proceso')} en proceso, ${cnt('vencido')} vencida${cnt('vencido') === 1 ? '' : 's'}). Cada una dicha en un video público.</p>`
+    ? `
+<div class="not-prose bg-slate-900 text-white rounded-2xl p-5 sm:p-6 mt-3">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El Marcador del Cuatrienio · ${escapeHtml(cfg.termino || '')}</p>
+  <div class="flex flex-wrap items-baseline gap-x-6 gap-y-2 mt-2">
+    <div><span class="text-4xl font-black text-emerald-300" style="font-family:'Fraunces',Georgia,serif">${cnt('cumplido')}</span><span class="text-slate-300 text-sm ml-2">cumplidas</span></div>
+    <div><span class="text-4xl font-black" style="font-family:'Fraunces',Georgia,serif">${cnt('en_proceso')}</span><span class="text-slate-300 text-sm ml-2">en proceso</span></div>
+    <div><span class="text-4xl font-black text-red-400" style="font-family:'Fraunces',Georgia,serif">${cnt('vencido')}</span><span class="text-slate-300 text-sm ml-2">vencidas</span></div>
+  </div>
+  <p class="text-slate-300 text-sm mt-3"><strong class="text-white">Los relojes de este marcador no los pusimos nosotros — los puso él, en video.</strong> Cada promesa tiene la cita textual, el minuto exacto, y el plazo que él mismo dijo. Las promesas no expiran con la elección: lo dicho en 2021–2024 se le sigue el rastro en este término. Quedan <strong class="text-white">${diasEleccion.toLocaleString('en-US')} días</strong> para noviembre 2028.</p>
+</div>
+<p class="mt-4">Dos vistas del récord completo: <a href="/promesas" class="text-teal-700 font-semibold">el promesómetro</a> (todas por tema) y <a href="/historial" class="text-teal-700 font-semibold">el historial</a> (${nP} promesas con video al minuto). Abajo, <strong>los relojes que él mismo puso</strong>:</p>
+${relojCards}
+${masVieja ? `<p class="text-sm text-slate-600 mt-4">La promesa más vieja del récord aún en proceso: <strong>${escapeHtml(masVieja.promesa)}</strong> — dicha en video hace <strong>${dias(masVieja.fecha_grabacion).toLocaleString('en-US')} días</strong> (${fmtF(masVieja.fecha_grabacion)}).</p>` : ''}
+${cumplidas.length ? `<div class="not-prose border-2 border-emerald-200 bg-emerald-50/60 rounded-2xl p-5 mt-4"><p class="text-xs uppercase tracking-widest text-emerald-700 font-bold">El verde también se registra</p><ul class="text-sm text-slate-700 mt-2 space-y-2">${cumplidasHtml}</ul></div>` : ''}
+<div class="not-prose border-2 border-emerald-300 bg-emerald-50 rounded-2xl p-5 mt-4">
+  <p class="text-xs uppercase tracking-widest text-emerald-700 font-bold">La regla del verde</p>
+  <p class="text-slate-800 mt-1 text-sm"><strong>Este marcador premia igual que cobra.</strong> El día que el Coliseo reabra, que las cabañas pasen de 29, o que el Faro tenga acuerdo de manejo — se registra en verde, con fecha y fuente, para siempre. El camino más corto a un titular positivo en este récord es entregar la obra.</p>
+</div>`
     : `
 <div class="not-prose bg-slate-900 text-white rounded-2xl p-5 sm:p-6 mt-3">
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El Marcador del Término · ${escapeHtml(cfg.termino || '')}</p>
@@ -6254,6 +6320,36 @@ ${verifSutra ? `<p class="text-xs text-slate-400 mt-3">Trámites verificados con
 </div>`
   }
 
+  // ===== El termómetro del pueblo (alcalde): demanda real del *7711, en vivo — data que ningún informe municipal tiene =====
+  const dTotal = demanda90.length
+  const dUsers = new Set(demanda90.map((x: any) => x.user_hash)).size
+  const catCount: Record<string, number> = {}
+  for (const x of demanda90) if (x.category) catCount[x.category] = (catCount[x.category] || 0) + 1
+  const topCats = Object.entries(catCount).sort((a, b) => b[1] - a[1]).slice(0, 6)
+  const termometroHtml = cfg.tipo === 'alcalde' && dTotal ? `
+<h2>El termómetro del pueblo, en vivo</h2>
+<p class="text-slate-600 -mt-2">Ningún informe municipal tiene esta data: lo que los vecinos de verdad piden, con fecha, por el número del pueblo (787-417-7711). Se actualiza sola — la demanda no espera al próximo informe.</p>
+<div class="not-prose bg-slate-900 text-white rounded-2xl p-5 mt-3">
+  <div class="flex flex-wrap items-baseline gap-x-6 gap-y-2">
+    <div><span class="text-4xl font-black" style="font-family:'Fraunces',Georgia,serif">${dTotal.toLocaleString('en-US')}</span><span class="text-slate-300 text-sm ml-2">señales de demanda en 90 días</span></div>
+    <div><span class="text-4xl font-black" style="font-family:'Fraunces',Georgia,serif">${dUsers.toLocaleString('en-US')}</span><span class="text-slate-300 text-sm ml-2">vecinos distintos</span></div>
+  </div>
+  <div class="flex flex-wrap gap-2 mt-3">${topCats.map(([c, n]) => `<span class="text-xs font-bold bg-slate-800 border border-slate-700 text-teal-300 rounded-full px-3 py-1">${escapeHtml(c)} · ${n}</span>`).join('')}</div>
+</div>
+<p class="text-sm text-slate-700 mt-3">El pueblo también pide lo que el municipio no tiene: especialistas médicos (neumólogos y urólogos: <strong>cero en Cabo Rojo</strong> según el registro federal) mientras el sector de restaurantes está sobreofertado (1 por cada 242 residentes). Esa brecha es la que una política de patentes informada por data puede cerrar. <a href="/demanda" class="text-teal-700 font-semibold">Ver el récord de demanda →</a></p>` : ''
+
+  // Las preguntas que solo la alcaldía puede contestar (alcalde) — cada una se responde con el reclamo de arriba
+  const preguntasHtml = cfg.tipo === 'alcalde' ? `
+<div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-4">
+  <p class="text-xs uppercase tracking-widest text-slate-500 font-bold">Las preguntas que solo la alcaldía puede contestar</p>
+  <ol class="text-sm text-slate-700 mt-2 space-y-2 list-decimal pl-5">
+    <li><strong>FEMA:</strong> de los ${T.proy} proyectos con ${money(T.fema)} obligados, ¿cuántos están terminados y entregados? El récord federal muestra el dinero, no las obras.</li>
+    <li><strong>Agua:</strong> ¿cuál es el plan — y la fecha — para cerrar las 3 violaciones de salud activas (trihalometanos) que la EPA registra en Cabo Rojo?</li>
+    <li><strong>ARPA:</strong> de los $30 millones anunciados en video (jul 2021), el récord público confirma ~$2.5M transferidos a la AAA para El Combate. ¿Dónde está el desglose del resto?</li>
+  </ol>
+  <p class="text-xs text-slate-500 mt-3">Cualquiera de estas respuestas se publica arriba, verbatim, con fecha. El récord federal no las puede contestar — la alcaldía sí.</p>
+</div>` : ''
+
   // ===== T5: La respuesta del funcionario (Reclama tu expediente) =====
   const diasSinReclamar = cfg.expedientePublicado ? dias(cfg.expedientePublicado) : 0
   const claimMail = `mailto:angel@angelanderson.com?subject=${encodeURIComponent(`Reclamo el expediente: ${cfg.cargo}`)}&body=${encodeURIComponent(`Soy / represento la oficina de ${cfg.nombre}.\n\nRespondo al expediente publicado en puertoricosinfiltros.com/expediente/${f}.\n\nMi respuesta (se publica verbatim, con fecha y canal):\n\n`)}`
@@ -6297,16 +6393,18 @@ ${firmas.length
 
 <p class="text-lg text-slate-600 mt-4">Todo lo que el récord público dice sobre su gestión y el estado de ${escapeHtml(cfg.ambito)}, en un solo lugar y con la fuente al lado. Para el vecino que decide, el periodista que investiga, y cualquiera que quiera servir mejor.</p>
 
-<h2>Las promesas${cfg.tipo === 'representante' ? ': el marcador del término' : ''}</h2>
+<h2>Las promesas${cfg.tipo === 'representante' ? ': el marcador del término' : ': el marcador del cuatrienio'}</h2>
 ${promesasHtml}
 
 <h2>La respuesta del funcionario</h2>
 <p class="text-slate-600 -mt-2">El expediente tiene dos lados. Este es el suyo.</p>
 ${respuestaHtml}
+${preguntasHtml}
 
 <h2>El estado ${cfg.tipo === 'representante' ? 'del distrito' : 'de Cabo Rojo'}, en números</h2>
 <p class="text-slate-600 -mt-2">Lo que hereda, administra y le entrega a la gente. Cada número con su récord.</p>
 ${estadoHtml}
+${termometroHtml}
 
 <a href="/esencia" class="not-prose block border-2 border-amber-300 bg-amber-50 rounded-2xl p-5 mt-4 hover:bg-amber-100 transition-colors no-underline">
   <span class="text-xs uppercase tracking-widest text-amber-700 font-bold">El caso que define a Cabo Rojo</span>
@@ -6336,16 +6434,21 @@ ${firmaHtml}
     inLanguage: 'es', url: `https://puertoricosinfiltros.com/expediente/${f}`,
   }
   // OG card con el score vivo (motor /api/og, theme sinfiltros) — el screenshot de 2028 se sirve solo
+  const relojesVencidos = relojes.filter((p: any) => p.estado === 'vencido' || (p.plazo_autoimpuesto && p.plazo_autoimpuesto < hoy.toISOString().slice(0, 10))).length
   const ogExpediente = cfg.tipo === 'representante' && nP
     ? `https://puertoricosinfiltros.com/api/og?theme=sinfiltros&k=${encodeURIComponent(`El Expediente · Rep. Distrito 20${cfg.partido ? ' · ' + cfg.partido : ''}`)}&t=${encodeURIComponent(`${cfg.nombre}||el marcador del término`)}&sub=${encodeURIComponent(`${aprobadas} de ${nP} medidas del distrito aprobadas en Cámara · ${resultados} resultado${resultados === 1 ? '' : 's'} en la calle · quedan ${diasEleccion.toLocaleString('en-US')} días para nov 2028`)}&badge=${encodeURIComponent('Verificado contra SUTRA')}`
-    : OG_SINFILTROS
+    : cfg.tipo === 'alcalde' && nP
+      ? `https://puertoricosinfiltros.com/api/og?theme=sinfiltros&k=${encodeURIComponent('El Expediente · Alcalde de Cabo Rojo')}&t=${encodeURIComponent(`${cfg.nombre}||el marcador del cuatrienio`)}&sub=${encodeURIComponent(`${cnt('cumplido')} cumplidas · ${cnt('en_proceso')} en proceso · ${cnt('vencido')} vencidas — ${relojesVencidos} relojes que él mismo puso, ya pasados${dTotal ? ` · ${dTotal} señales del pueblo en 90 días` : ''}`)}&badge=${encodeURIComponent('Récord en video, al minuto')}`
+      : OG_SINFILTROS
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=3600')
   res.status(200).send(layout({
     title: `El Expediente: ${cfg.cargo} — promesas y estado, con la fuente al lado`,
     description: cfg.tipo === 'representante' && nP
       ? `El marcador del término de ${cfg.nombre}: ${aprobadas} de ${nP} medidas del distrito aprobadas en Cámara, ${resultados} resultados en la calle. Verificado contra SUTRA. Con la respuesta del funcionario y la agenda firmable.`
-      : `Todo el récord público de ${cfg.nombre} (${cfg.cargo}) y el estado de ${cfg.ambito}: promesas, recuperación federal, salud, agua, internet. Neutral y citable.`,
+      : cfg.tipo === 'alcalde' && nP
+        ? `El marcador del cuatrienio de ${cfg.nombre}: ${cnt('cumplido')} cumplidas, ${cnt('en_proceso')} en proceso, ${cnt('vencido')} vencidas — con los plazos que él mismo puso en video, al minuto. Más el termómetro de demanda del pueblo, en vivo.`
+        : `Todo el récord público de ${cfg.nombre} (${cfg.cargo}) y el estado de ${cfg.ambito}: promesas, recuperación federal, salud, agua, internet. Neutral y citable.`,
     slug: `expediente/${f}`, bodyHtml: body, jsonLd, ogImage: ogExpediente,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
