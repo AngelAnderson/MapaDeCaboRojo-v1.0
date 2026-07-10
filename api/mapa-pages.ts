@@ -5841,6 +5841,22 @@ ${items || '<p class="text-sm text-slate-400 italic">Data no disponible ahora.</
     <div class="bg-amber-50 border-t border-amber-200 px-4 py-2 text-sm text-slate-700"><strong>El número que nadie ha mostrado:</strong> repartido entre las ~1,652 unidades, cada casa o cuarto de lujo lleva <strong>~$343,000 de subsidio público</strong> (solo contando créditos estatales y exenciones municipales). Un planificador, en vista pública, lo estimó en más de $1 millón por unidad, y señaló que el subsidio supera la inversión que los propios desarrolladores dicen que harán.</div>
   </div>
 
+
+  <div class="border-2 border-teal-300 rounded-2xl overflow-hidden">
+    <div class="bg-teal-700 text-white px-4 py-2 text-sm font-black uppercase tracking-wide">👛 ¿Y esto qué significa pa' TU bolsillo?</div>
+    <div class="p-4 text-sm text-slate-700 space-y-2">
+      <p>Los millones no se sienten. Vamos a bajarlos a tu escala:</p>
+      <ul class="space-y-2">
+        <li><strong>$413 por contribuyente.</strong> Los $498M en créditos salen de impuestos que pagamos todos: tocan a ~$413 por cada persona que radica planilla en PR (cálculo CPI).</li>
+        <li><strong>$146 al año por cada caborrojeño, por 10 años.</strong> Los $69M que el municipio deja de cobrar, repartidos entre los 47,158 residentes. No es que te lo cobren a ti directo: es lo que deja de entrar a la caja que paga lo tuyo.</li>
+        <li><strong>De cada $3 del presupuesto del pueblo, $1.</strong> La exención equivale al 36% del presupuesto anual de Cabo Rojo ($19.2M). El CRIM y las patentes pagan el recogido de basura, las calles, el alumbrado y la policía municipal: los servicios que TÚ usas correrán 10 años sin ese tercio que el proyecto habría aportado.</li>
+        <li><strong>Qué compraban esos $69M:</strong> ~35 años de policía municipal, o la reconstrucción total de las calles, o una década completa de recogido de basura (análisis sobre cifras CPI).</li>
+        <li><strong>Y la vuelta que nadie te explicó:</strong> si el proyecto sube el valor de las propiedades de la zona, el CRIM puede retasar la TUYA. O sea: el proyecto paga 90% menos por 10 años, y el vecino de toda la vida puede terminar pagando MÁS. (Punto levantado en vista pública; el fact-check formal está pedido por escrito.)</li>
+      </ul>
+      <p class="text-slate-600">Esto no dice "no al proyecto". Dice: sin cláusulas amarradas, la certeza se la lleva el proyecto y el riesgo lo carga el residente. Por eso importan las <a href="#cuenta" class="text-teal-700 font-semibold">palancas de la calculadora</a>.</p>
+    </div>
+  </div>
+
   <div class="border border-slate-200 rounded-2xl overflow-hidden">
     <div class="bg-slate-900 text-white px-4 py-2 text-sm font-black uppercase tracking-wide">💧 Agua</div>
     <div class="p-4 text-sm text-slate-700 space-y-1">
