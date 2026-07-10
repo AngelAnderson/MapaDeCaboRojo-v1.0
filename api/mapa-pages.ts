@@ -5704,7 +5704,11 @@ async function handleAcueductos(req: any, res: any) {
 </div>
 
 <div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-5 text-sm text-slate-700">
-  <strong>De dónde sale esto:</strong> estos números viajaron por TV en julio 2026 (el analista Jorge Colberg, Jugando Pelota Dura). Este récord los verificó uno por uno contra la fuente primaria: el Plan Fiscal Certificado de la AAA. Todo lo que dijo el clip aparece en el documento. Y el documento dice más.
+  <strong>De dónde sale esto:</strong> estos números viajaron por TV el 8 de julio de 2026: el analista Jorge Colberg los presentó en Jugando Pelota Dura (TeleOnce) y el clip corrió por Facebook con más de 65,000 vistas. Este récord los verificó uno por uno contra la fuente primaria: el Plan Fiscal Certificado de la AAA. Todo lo que dijo el clip aparece en el documento. Y el documento dice más.
+  <div class="mt-3 flex flex-wrap gap-2">
+    <a href="https://www.youtube.com/watch?v=6EOkMUDwOwc&t=2085s" target="_blank" rel="noopener" data-prsf="verify" data-rec="acueductos" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700 no-underline">▶ Ve el segmento tú mismo, minuto 34:45 ↗</a>
+  </div>
+  <p class="text-xs text-slate-500 mt-2">Episodio completo del 8 jul 2026 en el canal oficial de Jugando Pelota Dura. El "91%" lo dice al minuto 38:17. El crédito es de ellos; la verificación contra el documento, nuestra.</p>
 </div>
 
 <h2 id="aumentos">Los aumentos, año por año</h2>
