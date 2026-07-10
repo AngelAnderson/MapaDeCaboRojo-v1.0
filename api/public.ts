@@ -524,6 +524,7 @@ function handleLlmsSinFiltros(req: any, res: any) {
 ## Empezar aquí
 - Portada (todos los récords): https://puertoricosinfiltros.com
 - Datos citables para prensa (facts con fuente, copy-paste): https://puertoricosinfiltros.com/comparte
+- El reto abierto (encuentra un error y se corrige en 48h, registro público de correcciones): https://puertoricosinfiltros.com/rompelo
 - La síntesis / predicción 2030: https://puertoricosinfiltros.com/prediccion
 
 ## Los récords (cada uno verificado, con fuente)

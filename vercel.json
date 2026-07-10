@@ -98,6 +98,7 @@
     { "source": "/activos", "destination": "/api/mapa-pages?page=activos" },
     { "source": "/acueductos", "destination": "/api/mapa-pages?page=acueductos" },
     { "source": "/transicion", "destination": "/api/mapa-pages?page=transicion" },
+    { "source": "/rompelo", "destination": "/api/mapa-pages?page=rompelo" },
     { "source": "/promesas", "destination": "/api/mapa-pages?page=promesas" },
     { "source": "/quien-responde", "destination": "/api/mapa-pages?page=quien-responde" },
     { "source": "/quién-responde", "destination": "/api/mapa-pages?page=quien-responde" },

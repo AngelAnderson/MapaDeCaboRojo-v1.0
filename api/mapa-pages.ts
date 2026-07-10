@@ -168,7 +168,7 @@ function layout(opts: {
 <p class="text-sm text-slate-500 mt-3">Y si solo viniste a mirar, está bien. No tienes que resolver a Puerto Rico hoy: el récord se queda aquí, guardado, para cuando te haga falta.</p>
 </div>
 <p class="text-base font-semibold text-slate-800 text-center">El récord público de Puerto Rico. El dato, con la fuente al lado.</p>
-<p class="text-xs text-slate-500 mt-1 text-center">Verificado uno por uno contra registros federales y públicos. Sin spin, sin relleno.</p>
+<p class="text-xs text-slate-500 mt-1 text-center">Verificado uno por uno contra registros federales y públicos. Sin spin, sin relleno. <a href="/rompelo" class="text-teal-700 font-semibold">¿Ves un error? Rómpelo →</a></p>
 <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6 text-xs">
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Salud</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a><a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a><a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a><a href="/telemedicina" class="hover:text-teal-700">Telemedicina</a><a href="/diabetes" class="hover:text-teal-700">Diabetes</a><a href="/registro-raras" class="hover:text-teal-700">Enfermedades raras</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/rendimiento" class="hover:text-teal-700">Rendimiento del dólar</a><a href="/cupon" class="hover:text-teal-700">Dinero sin cobrar</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/exposicion-ai" class="hover:text-teal-700">Exposición a la IA</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a><a href="/investigacion" class="hover:text-teal-700">Dinero de ciencia</a></div></div>
@@ -5728,6 +5728,8 @@ async function handleAcueductos(req: any, res: any) {
   <p class="text-xs text-slate-400 mt-3">Plan Fiscal Certificado de la AAA (Junta de Supervisión Fiscal, 27 jun 2025) · corte de fondos federales: 31 mar 2025.</p>
 </div>
 
+${shareRow({ text: 'El aumento del agua está aprobado hasta el 2039 (mínimo 2% al año). Y el 91% del dinero federal para reconstruir el sistema no ha llegado a la caja. Verificado contra el plan fiscal certificado, con la fuente al lado:', url: 'https://puertoricosinfiltros.com/acueductos', toWho: 'Al que se queja del recibo sin saber de dónde viene. Y al grupo de la familia.' })}
+
 <div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-5 text-sm text-slate-700">
   <strong>De dónde sale esto:</strong> estos números viajaron por TV el 8 de julio de 2026: el analista Jorge Colberg los presentó en Jugando Pelota Dura (TeleOnce) y el clip corrió por Facebook con más de 65,000 vistas. Este récord los verificó uno por uno contra la fuente primaria: el Plan Fiscal Certificado de la AAA. Todo lo que dijo el clip aparece en el documento. Y el documento dice más.
   <div class="mt-3 flex flex-wrap gap-2">
@@ -5944,6 +5946,8 @@ ${b.claims.map(cl => `
   <p class="text-slate-300 mt-2 text-sm leading-relaxed">Ese era el desembolso de los fondos FEMA por corporación en noviembre de 2024, dicho ante el comité de transición con los números de COR3. Y el director de la AEE, con $10,500 millones disponibles, puntuó su propia modernización: 3 de 10. Todo está en video. Todo tiene minuto.</p>
 </div>
 
+${shareRow({ text: 'En las vistas de transición el gobierno lo dijo en video: Educación había cobrado 2.3% de sus fondos FEMA, Acueductos 13.4%. Y de cada 2 galones de agua, 1 se pierde. Cada cita con el minuto exacto:', url: 'https://puertoricosinfiltros.com/transicion', toWho: 'Al que dice "eso nadie lo sabe". Aquí está el minuto.' })}
+
 <div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-5 text-sm text-slate-700">
   <strong>Qué es esto:</strong> la Ley 197 del 2002 obliga a cada transición de gobierno a rendir cuentas en vistas públicas. El Nuevo Día las transmitió completas en su canal de YouTube: 24 sesiones. Este récord las está minando una por una: la cita textual, quién la dijo, y el link al minuto exacto pa' que la oigas tú mismo. No es opinión: es lo que ellos mismos dijeron.
 </div>
@@ -6015,6 +6019,69 @@ ${SHARE_COPY_SCRIPT}
     title: 'La Transición 2024-2025: el gobierno, en su propia voz, cita por cita y al minuto',
     description: 'Las vistas públicas de la transición de gobierno de PR (nov-dic 2024), compiladas y verificadas: Educación 2.3% de desembolso FEMA, AAA 13.4%, AEE 15%, y el director de la AEE puntuando 3/10 su propia red. Cada cita con el minuto del video.',
     slug: 'transicion', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
+// /rompelo — el anti-hater invertido: las objeciones contestadas de frente + bug bounty cívico.
+// El registro de correcciones se publica (incluyendo las propias): la falsificabilidad ES la credibilidad.
+async function handleRompelo(req: any, res: any) {
+  const objeciones: [string, string][] = [
+    ['"¿Y quién eres tú?"', 'Un vecino de Cabo Rojo con calculadora. Pero esa es la parte buena: NO tienes que creerme. Cada número de este sitio lleva al lado el link del documento oficial o el minuto del video donde lo dijeron. No cites mi opinión: verifica la fuente tú mismo.'],
+    ['"Esto es política. Tú eres del otro partido."', 'El récord cubre administraciones de todos los partidos, y anota el verde igual que el rojo: aquí hay promesas cumplidas y logros reconocidos al lado de los plazos vencidos. El récord no tiene papeleta. Si un dato te incomoda, el problema no es el mensajero: es el documento.'],
+    ['"Eso está viejo / sacado de contexto"', 'Cada récord dice su fecha de corte, visible. Y cada link va al documento o al video COMPLETO, no a un recorte: el contexto entero está a un click. Cuando sale un corte más nuevo, el récord se actualiza y se anota.'],
+    ['"Eso lo hizo una AI"', 'Se construye con computadoras y se verifica contra la fuente primaria, dato por dato, por un humano que responde con su nombre. La prueba de que no es relleno automático es simple: encuentra UN error. El reto está abajo, con premio.'],
+    ['"¿Y tú qué ganas con esto?"', 'La misión está escrita y firmada: que Puerto Rico se pueda ver claro, porque solo lo que se ve se puede decidir. Léela completa en <a href="/#mision" class="text-teal-700 font-semibold">la portada</a>. Este sitio no vende nada ni cobra por ver el récord.'],
+  ]
+  const objHtml = objeciones.map(([o, r]) => `
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <p class="font-black text-slate-900">${o}</p>
+    <p class="text-sm text-slate-700 mt-1.5 leading-relaxed">${r}</p>
+  </div>`).join('')
+
+  const body = `
+<h1>Rómpelo, si puedes</h1>
+<p class="text-lg text-slate-600 mt-2">Este sitio está diseñado para que lo ataques. Cada número tiene su fuente al lado precisamente para eso. Aquí están las objeciones de siempre, contestadas de frente, y un reto abierto.</p>
+
+<h2 id="objeciones">Las 5 de siempre</h2>
+<div class="not-prose space-y-3 mt-3">${objHtml}</div>
+
+<h2 id="reto">El reto: encuentra un error</h2>
+<div class="not-prose bg-slate-900 text-white rounded-2xl p-5 mt-3">
+  <p class="text-xl font-black" style="font-family:'Fraunces',Georgia,serif">Encuentra un error de dato y se corrige en 48 horas. Con tu crédito.</p>
+  <p class="text-slate-300 mt-2 text-sm leading-relaxed">Un número, una fecha, una cita o una fuente que esté mal. Lo verificamos contra el documento; si tienes razón, se corrige, se anota en el registro de abajo, y tu nombre (si quieres) queda como quien lo pescó. Así es como un récord se vuelve más fuerte con cada ataque.</p>
+  <a href="mailto:angel@angelanderson.com?subject=Encontr%C3%A9%20un%20error%20en%20PRSF" class="inline-flex items-center gap-1 mt-3 bg-white text-slate-900 font-bold px-4 py-2 rounded-full hover:bg-slate-100 no-underline text-sm">Reportar un error →</a>
+</div>
+
+<h2 id="registro">Registro público de correcciones</h2>
+<p>La disciplina se prueba corrigiéndose en público. Estas son las correcciones hechas hasta ahora, incluyendo las que nos pescamos nosotros mismos:</p>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm">
+    <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Cuándo</th><th class="py-2 px-3">Qué se corrigió</th><th class="py-2 px-3">Quién lo pescó</th></tr></thead>
+    <tbody>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3 whitespace-nowrap">jul 2026</td><td class="py-2 px-3">Expediente del Distrito 20: el trámite de la RC0211 llevaba 2 meses desactualizado ("pendiente" cuando ya la Cámara la había aprobado). Se corrigió contra el récord de SUTRA.</td><td class="py-2 px-3 text-slate-500">Verificación interna</td></tr>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3 whitespace-nowrap">jul 2026</td><td class="py-2 px-3">Récord de demanda: un negocio pautado aparecía contado como "hueco sin proveedor". Se corrigió el conteo.</td><td class="py-2 px-3 text-slate-500">Verificación interna</td></tr>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3 whitespace-nowrap">jul 2026</td><td class="py-2 px-3">Historial de promesas: un video fechado 2021 era de 2023. Se pescó ANTES de publicar.</td><td class="py-2 px-3 text-slate-500">Verificación interna</td></tr>
+      <tr class="border-t border-slate-100 bg-teal-50/40"><td class="py-2 px-3 whitespace-nowrap">—</td><td class="py-2 px-3 font-semibold">Errores encontrados por lectores hasta ahora: 0. El primero sale aquí, con crédito.</td><td class="py-2 px-3 text-teal-700 font-bold">¿Tú?</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<h2 id="mañana">Cómo esto aguanta el tiempo</h2>
+<ul class="text-slate-700">
+  <li>Cada récord dice su <strong>fecha de corte</strong> y de dónde sale el próximo corte.</li>
+  <li>Las promesas con plazo tienen <strong>relojes</strong> que se re-verifican contra el récord oficial (no contra la memoria).</li>
+  <li>Todo está en <a href="/llms.txt" class="text-teal-700 font-semibold">llms.txt</a> y <a href="/civico.json" class="text-teal-700 font-semibold">JSON público</a>: si este sitio desaparece mañana, el método y la data quedan citables.</li>
+</ul>
+${shareRow({ text: 'Un sitio de datos de PR que te reta a encontrarle un error, con premio y registro público de correcciones:', url: 'https://puertoricosinfiltros.com/rompelo', toWho: 'Al que dice "eso debe ser fake". Que lo rompa, si puede.' })}
+${SHARE_COPY_SCRIPT}
+`
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'Rómpelo, si puedes — el reto abierto de Puerto Rico Sin Filtros',
+    description: 'Las 5 objeciones de siempre contestadas de frente + el reto: encuentra un error de dato y se corrige en 48 horas, con tu crédito, en el registro público de correcciones.',
+    slug: 'rompelo', bodyHtml: body, ogImage: OG_SINFILTROS,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
@@ -10662,6 +10729,7 @@ export default async function handler(req: any, res: any) {
     case 'basura': return await handleDatoRecord(req, res)
     case 'acueductos': return await handleAcueductos(req, res)
     case 'transicion': return await handleTransicion(req, res)
+    case 'rompelo': return await handleRompelo(req, res)
     case 'prediccion': return handlePrediccion(req, res)
     case 'costo-de-vida': return await handleCostoDeVida(req, res)
     case 'trabajo': return handleTrabajo(req, res)
