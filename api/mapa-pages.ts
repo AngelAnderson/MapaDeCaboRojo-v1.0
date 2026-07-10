@@ -4738,6 +4738,12 @@ async function handleRecuperacion(req: any, res: any) {
 <h2>Qué significa "obligado" (y qué NO dice esta página)</h2>
 <p>"Obligado" es el dinero que FEMA <strong>comprometió</strong> a un proyecto. No es necesariamente dinero ya gastado ni obra ya terminada: de hecho, de los proyectos que FEMA rastrea en su data de cierre, cerca del <strong>73% del dinero sigue en proyectos abiertos</strong> ocho años después. Esta página <strong>no</strong> afirma que un monto específico se "perdió" o "robó" — las bases de datos federales de FEMA no reconcilian a ese nivel de precisión. Lo que sí es sólido y verificable: cuánto se obligó a cada pueblo, y que el dinero de infraestructura fluyó a pueblos que siguen sin médicos.</p>
 
+${mientrasTanto([
+  `El número de tu municipio está en la tabla: guárdalo, es tu línea base. Cuando anuncien una obra, la pregunta no es dar las gracias, es "¿esto es parte de lo que ya estaba obligado?"`,
+  `Las ventanas federales cierran (la de vivienda, CDBG-DR, en septiembre de 2029). Si tu propiedad o tu comunidad tiene un reclamo pendiente, radícalo y documéntalo ahora, con fotos y papeles: sin expediente no hay ayuda.`,
+], [
+  `Una pregunta a tu alcalde, con el número de la tabla en la mano: de lo obligado a este municipio, ¿en qué se convirtió? Respuesta o silencio, las dos cosas cuentan.`,
+])}
 <p class="text-sm text-slate-500 mt-6">Fuente: OpenFEMA — Public Assistance Funded Projects Summaries (montos obligados) y Grant Award Activities (estatus de cierre), datos abiertos de FEMA. Cruzado con Censo 2020 y el registro médico NPPES. Julio 2026. <a href="/comparte" class="text-teal-700 font-semibold">Datos citables →</a> · <a href="/registro/estado" class="text-teal-700 font-semibold">Estado de salud →</a></p>
 `
   const faqLd = {
@@ -5191,6 +5197,25 @@ const OG_SINFILTROS = 'https://puertoricosinfiltros.com/api/og?theme=sinfiltros'
   + '&k=' + encodeURIComponent('El récord público verificado')
   + '&sub=' + encodeURIComponent('Los datos que nadie te enseñó. Para escoger el futuro, primero hay que verlo claro.')
   + '&site=puertoricosinfiltros.com'
+
+// El Mientras Tanto — doctrina PRSF (LOCKED 2026-07-10): todo récord cierra con dos carriles,
+// ESCUDO (cómo el dato te protege hoy, sin esperar a nadie) + PALANCA (la acción de 5 min que acelera).
+// Regla: si el escudo no sale DEL número del récord, no va. El gobierno se fiscaliza con relojes;
+// el vecino se protege con línea base.
+const mientrasTanto = (escudo: string[], palanca: string[]) => `
+<div class="not-prose grid sm:grid-cols-2 gap-3 mt-6" id="mientras-tanto">
+  <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5">
+    <p class="font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">🛡️ Protégete hoy</p>
+    <p class="text-xs text-slate-500 mt-0.5">Lo que este récord te defiende sin esperar a nadie.</p>
+    <ul class="mt-2 space-y-2 text-sm text-slate-700 list-disc pl-4">${escudo.map(e => `<li>${e}</li>`).join('')}</ul>
+  </div>
+  <div class="bg-teal-50 border border-teal-200 rounded-2xl p-5">
+    <p class="font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">⚡ Empuja, 5 minutos</p>
+    <p class="text-xs text-slate-500 mt-0.5">Una acción que acelera. Con el récord en la mano, no con coraje.</p>
+    <ul class="mt-2 space-y-2 text-sm text-slate-700 list-disc pl-4">${palanca.map(p => `<li>${p}</li>`).join('')}</ul>
+  </div>
+</div>
+<p class="not-prose text-xs text-slate-400 mt-2">Haz una cosa, no cargues el país entero. Si hoy no es el día, este récord sigue aquí mañana.</p>`
 
 async function handleSinFiltros(req: any, res: any) {
   // Números en vivo (mismo query + fallback verificado 2026-07-05 que /comparte).
@@ -5758,10 +5783,14 @@ ${citableCards}
   <li><a href="https://www.primerahora.com/noticias/gobierno-politica/notas/junta-certifica-presupuesto-de-la-aaa-con-aumento-a-partir-de-julio/" target="_blank" rel="noopener" data-prsf="verify" data-rec="acueductos" class="text-teal-700 font-semibold">Prensa: el aumento de 2% del 1 de julio de 2026 ↗</a></li>
 </ul>
 
-<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-5 mt-6">
-  <p class="font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">¿Y tú qué puedes hacer con esto?</p>
-  <p class="text-sm text-slate-700 mt-2 leading-relaxed">Nada urgente. Si quieres, una cosa: mira el desglose de tu próxima factura de la AAA (cargo de agua, alcantarillado y cargo fijo) y ya sabes por qué sube y hasta cuándo. Si tu agua no viene de la AAA sino de un acueducto comunal, tu récord es otro: <a href="/agua" class="text-teal-700 font-semibold">el del agua contra el récord federal de la EPA</a>. Y si esto le sirve a alguien que se queja del recibo sin saber de dónde viene, pásaselo. Si no, sigue tu camino.</p>
-</div>
+${mientrasTanto([
+  `Presupuesta el tope de una vez: el ajuste es mínimo 2% al año con tope acumulado de 30%. Una factura de $60 hoy es ~$78 en el peor escenario. Escríbelo en tu presupuesto y el aumento nunca te sorprende.`,
+  `Guarda tus facturas de estos meses. Con los contadores inteligentes la facturación pasa de estimada a consumo real, y la propia AAA admitió en vista pública que eso sube facturas. Tu historial es tu línea base para objetar.`,
+  `Si tu agua no viene de la AAA sino de un acueducto comunal, tu récord es otro: <a href="/agua" class="text-teal-700 font-semibold">la calidad contra el récord de la EPA</a>.`,
+], [
+  `La pregunta ya está redactada arriba: ¿cuánto ha subido el "recibido" desde el corte de marzo 2025? Mándasela a la AAA o a COR3. Respuesta o silencio, aquí se anota.`,
+  `O copia un citable (botón arriba) y pásaselo al que se queja del recibo sin saber de dónde viene.`,
+])}
 
 <p class="text-sm text-slate-500 mt-6">Este récord se corta al 31 de marzo de 2025 porque ese es el corte del documento certificado, el más reciente disponible. Cuando la AAA o la Junta publiquen un corte más nuevo, este récord se actualiza. ¿Ves un error? Escríbenos y se corrige con el documento en la mano.</p>
 ${SHARE_COPY_SCRIPT}
@@ -5962,10 +5991,13 @@ ${citableCards}
   <li>¿Ves un error en una cita o un número? Escríbenos y se corrige con el video en la mano: <a href="mailto:angel@angelanderson.com" class="text-teal-700 font-semibold">angel@angelanderson.com</a>.</li>
 </ul>
 
-<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-5 mt-6">
-  <p class="font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">¿Y tú qué haces con esto?</p>
-  <p class="text-sm text-slate-700 mt-2 leading-relaxed">Nada que te quite el día. Esto existe pa' que cuando alguien te diga "eso nadie lo sabe", tú tengas el minuto exacto donde lo dijeron ellos mismos. Si eres periodista o investigador, los citables de arriba son tuyos. Y si hoy no es el día de meterte 50 horas de vistas, tranquilo: pa' eso está este récord.</p>
-</div>
+${mientrasTanto([
+  `El reloj federal también es tuyo: los fondos CDBG-DR cierran en septiembre de 2029. Si tu familia, tu comunidad o tu negocio tiene un reclamo o proyecto de recuperación pendiente, radícalo ahora. En la propia vista quedó claro: el que no está dentro de un programa no existe para el programa.`,
+  `La lección de los toldos azules: sin titularidad no hubo ayuda. Título de propiedad, fotos del estado de tu casa y recibos, en una carpeta. Esa carpeta, armada antes de la próxima emergencia, es tu seguro.`,
+], [
+  `Pregunta por UN reloj vencido (las 27 escuelas, el CDT de Vieques, los $214M de ARPA de la AAA). Respuesta o silencio, las dos cosas son récord.`,
+  `Si eres periodista o investigador: los citables de arriba llevan el minuto del video. Ese trabajo ya está hecho, úsalo.`,
+])}
 ${SHARE_COPY_SCRIPT}
 `
   const jsonLd = {
@@ -6556,6 +6588,11 @@ async function handleSigueElDinero(req: any, res: any) {
 
 <div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 mt-5 text-sm text-slate-700"><strong>Método y límites:</strong> contratos federales de la agencia DHS/FEMA con lugar de ejecución en PR (2017–2025), vía USASpending.gov. Excluye el passthrough del Gobierno de PR (que sub-otorga a los municipios — esos son los fondos de <a href="/recuperacion" class="text-teal-700 font-semibold">/recuperacion</a>). <strong>Falta HUD CDBG-DR</strong> (~$20B más) — segunda pasada pendiente. Los montos son a nivel transacción (las modificaciones se suman), así que léelos como orden de magnitud, no centavo exacto.</div>
 
+${mientrasTanto([
+  `Si tienes negocio: hasta octubre de 2024 el reglamento federal PROHIBÍA dar preferencia a firmas locales. Ya no. Regístrate en SAM.gov y en los registros de licitadores ahora: el 87% se fue afuera, en parte, porque los locales no estaban en la fila. La fuente de ese cambio está en <a href="/transicion" class="text-teal-700 font-semibold">/transicion</a>, al minuto.`,
+], [
+  `Usa la calculadora del piso local de arriba y comparte el resultado con un dueño de negocio que licite. Un contratista local en la fila vale más que mil quejas del 87%.`,
+])}
 <p class="text-sm text-slate-500 mt-5">Fuente: USASpending.gov (Departamento de Seguridad Nacional / FEMA), lugar de ejecución Puerto Rico. Cada recipiente tiene su enlace de verificación (↗) en la tabla. Julio 2026.</p>
 `
   const jsonLd = {
@@ -6954,6 +6991,12 @@ async function handleDiabetes(req: any, res: any) {
   <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Municipio</th><th class="py-2 px-3 text-right">Diabetes</th><th class="py-2 px-3 text-right">Espec./10k</th><th class="py-2 px-3 text-right">Psiquiatras</th><th class="py-2 px-3 text-right">Pobreza</th></tr></thead><tbody>${rowHtml || '<tr><td colspan="5" class="py-3 px-3 text-slate-400 italic">Data no disponible ahora.</td></tr>'}</tbody></table>
 </div>
 
+${mientrasTanto([
+  `La única data municipal es del 2009: no esperes a que el sistema te mida. Si tu pueblo está en el tope de la tabla, la prueba de azúcar se hace en cualquier laboratorio con una orden del médico primario, sin especialista. Esa prueba es tu línea base.`,
+  `El especialista que no está en tu pueblo no cancela el cuidado: el laboratorio y la farmacia sí están. Empieza por lo que sí hay.`,
+], [
+  `Llévale el dato a tu médico primario o a tu farmacéutico: "mi pueblo está en la lista y no tiene especialista" cambia la conversación. Y el récord de que PR no se mide desde 2009 vive en <a href="/no-se-mide" class="text-teal-700 font-semibold">/no-se-mide</a>.`,
+])}
 <p class="text-sm text-slate-500 mt-5">Fuente: "Small-Area Variation in Diabetes Prevalence in Puerto Rico", CDC <em>Preventing Chronic Disease</em> (2009, modelo bayesiano sobre BRFSS, los 78 municipios) × registro federal NPPES (especialistas y psiquiatras). Verifícalo tú mismo en <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4537060/" target="_blank" rel="noopener" class="text-teal-700 font-semibold">el estudio del CDC ↗</a>. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a>.</p>
 `
   const jsonLd = {
@@ -7072,6 +7115,12 @@ async function handleTelemedicina(req: any, res: any) {
 
 <div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 mt-5 text-sm text-slate-700"><strong>Método y límites:</strong> "banda ancha" = hogares con suscripción de banda ancha de cualquier tipo (incluye plan de datos celular), medida estándar del Censo (tabla ACS B28002, estimados 2020–2024). No es lo mismo que cobertura de fibra fija. Los 0 psiquiatras salen del registro federal NPPES. Es un mapa de posibilidad, no una promesa de que la teleconsulta ya esté pasando.</div>
 
+${mientrasTanto([
+  `Si tu pueblo no tiene psiquiatra pero la banda ancha ya cubre el 80%+, la teleconsulta ES tu ruta hoy, no un plan B. No esperes a que el médico se mude. Y si es emocional y es ahora: Línea PAS, 988.`,
+  `En los 3 pueblos de desierto doble (Las Marías, Maricao, Guánica): la llamada telefónica también es telemedicina. El 988 funciona sin internet.`,
+], [
+  `Comparte el cruce con tu alcalde o tu junta: "el cable ya está, falta el servicio" es un pitch de una línea, y este récord lo respalda con el Censo.`,
+])}
 <p class="text-sm text-slate-500 mt-5">Fuente: U.S. Census Bureau, ACS 5-año (B28002) × registro federal NPPES/CMS. Verifícalo tú mismo en <a href="https://data.census.gov/table/ACSDT5Y2023.B28002?g=040XX00US72\$0500000" target="_blank" rel="noopener" class="text-teal-700 font-semibold">data.census.gov ↗</a>. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a>. Julio 2026.</p>
 `
   const jsonLd = {
