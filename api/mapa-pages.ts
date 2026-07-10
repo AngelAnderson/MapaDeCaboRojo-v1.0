@@ -171,7 +171,7 @@ function layout(opts: {
 <p class="text-xs text-slate-500 mt-1 text-center">Verificado uno por uno contra registros federales y públicos. Sin spin, sin relleno.</p>
 <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6 text-xs">
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Salud</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a><a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a><a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a><a href="/telemedicina" class="hover:text-teal-700">Telemedicina</a><a href="/diabetes" class="hover:text-teal-700">Diabetes</a><a href="/registro-raras" class="hover:text-teal-700">Enfermedades raras</a></div></div>
-<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/rendimiento" class="hover:text-teal-700">Rendimiento del dólar</a><a href="/cupon" class="hover:text-teal-700">Dinero sin cobrar</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/exposicion-ai" class="hover:text-teal-700">Exposición a la IA</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/rendimiento" class="hover:text-teal-700">Rendimiento del dólar</a><a href="/cupon" class="hover:text-teal-700">Dinero sin cobrar</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/exposicion-ai" class="hover:text-teal-700">Exposición a la IA</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a><a href="/investigacion" class="hover:text-teal-700">Dinero de ciencia</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Servicios</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/agua" class="hover:text-teal-700">Agua</a><a href="/luz" class="hover:text-teal-700">Luz</a><a href="/basura" class="hover:text-teal-700">Basura</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">El pueblo</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/demanda" class="hover:text-teal-700">Lo que busca PR</a><a href="/historial" class="hover:text-teal-700">Historial de promesas</a><a href="/promesas" class="hover:text-teal-700">Promesómetro</a><a href="/esencia" class="hover:text-teal-700">Proyecto Esencia</a><a href="/activos" class="hover:text-teal-700">Activos dormidos</a><a href="/no-se-mide" class="hover:text-teal-700">Lo que ni se mide</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Expedientes</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/expediente/alcalde-cabo-rojo" class="hover:text-teal-700">Alcalde de Cabo Rojo</a><a href="/expediente/representante-distrito-20" class="hover:text-teal-700">Rep. Distrito 20</a></div></div>
@@ -10220,6 +10220,122 @@ ${SHARE_COPY_SCRIPT}`
   }))
 }
 
+// ====================== /investigacion — El ADN más valioso de EE.UU. y el dinero que no llega (PRSF) ======================
+// Récord "sigue el dinero": financiamiento NIH FY2024 verificado contra NIH RePORTER (jul 2026), per cápita
+// vs estados de población similar. Cruza al eje raras/founder-effect. Cero data inventada.
+async function handleInvestigacion(req: any, res: any) {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=3600')
+
+  // NIH RePORTER, año fiscal 2024 (verificado esta sesión). Poblaciones: est. Censo 2024.
+  const filas = [
+    { st: 'Connecticut', pop: '3.6M', total: 861415834, pc: 239 },
+    { st: 'Iowa', pop: '3.2M', total: 248950413, pc: 78, twin: true },
+    { st: 'Arkansas', pop: '3.0M', total: 135004024, pc: 45 },
+    { st: 'Mississippi', pop: '2.9M', total: 91324345, pc: 31, pobre: true },
+    { st: 'Puerto Rico', pop: '3.2M', total: 89658072, pc: 28, self: true },
+  ]
+  const prPc = 28
+  const rowsHtml = filas.map(f => `
+    <tr class="border-t border-slate-100 ${f.self ? 'bg-red-50' : ''}">
+      <td class="py-2 px-3 ${f.self ? 'font-black text-red-800' : 'font-semibold text-slate-800'}">${f.st}${f.twin ? ' <span class="text-xs font-normal text-slate-400">(misma población que PR)</span>' : ''}${f.pobre ? ' <span class="text-xs font-normal text-slate-400">(el estado más pobre)</span>' : ''}</td>
+      <td class="py-2 px-3 text-right text-slate-600">${f.pop}</td>
+      <td class="py-2 px-3 text-right ${f.self ? 'font-bold text-red-700' : 'text-slate-700'}">$${(f.total/1e6).toFixed(0)}M</td>
+      <td class="py-2 px-3 text-right ${f.self ? 'font-black text-red-700' : 'font-semibold text-slate-800'}">$${f.pc}</td>
+      <td class="py-2 px-3 text-right text-slate-500">${f.self ? '—' : (f.pc/prPc).toFixed(1) + '×'}</td>
+    </tr>`).join('')
+
+  const iowaGap = 248950413 - 89658072
+
+  const citas = [
+    { t: 'Puerto Rico e Iowa tienen la misma población (3.2 millones). En el año fiscal 2024, los Institutos Nacionales de Salud (NIH) invirtieron $249 millones en Iowa y $90 millones en Puerto Rico. La misma gente, un tercio del dinero. (NIH RePORTER, FY2024)' },
+    { t: 'Puerto Rico recibe menos financiamiento de investigación de salud por persona ($28) que Mississippi, el estado más pobre de Estados Unidos ($31). Y eso que el ADN boricua, por el efecto fundador, es de los más valiosos del mundo para entender enfermedades genéticas. (NIH RePORTER, FY2024)' },
+    { t: 'La diferencia entre lo que NIH invirtió en Iowa y en Puerto Rico en un solo año (2024) fue de $159 millones. Puerto Rico, con la población founder-effect más estudiada de la nación, recibió $28 por persona. (NIH RePORTER, FY2024; registromedicopr.com/atlas)' },
+  ]
+  const citasHtml = citas.map(c => `
+    <div class="not-prose flex gap-3 items-start bg-white border border-slate-200 rounded-xl p-4 mb-2.5">
+      <div class="text-sm text-slate-700 flex-1">${escapeHtml(c.t)}</div>
+      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(c.t)}"><i class="fa-regular fa-copy"></i> Copiar</button>
+    </div>`).join('')
+
+  const body = `
+<div class="not-prose bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">Sigue el dinero</p>
+  <h1 class="text-2xl sm:text-3xl font-black mt-1 leading-tight" style="font-family:'Fraunces',Georgia,serif">El ADN más valioso de Estados Unidos, y el dinero de ciencia que no llega</h1>
+  <p class="text-slate-300 mt-1">Financiamiento de los Institutos Nacionales de Salud (NIH) · año fiscal 2024</p>
+</div>
+
+<p class="text-lg text-slate-600 mt-4">Puerto Rico es la jurisdicción de EE.UU. con más enfermedades raras, por el efecto fundador. Eso hace que el ADN boricua sea de los más estudiados del mundo para entender enfermedades genéticas. La pregunta natural: ¿cuánto invierte el gobierno federal en investigar esa salud? Fuimos a los números.</p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Puerto Rico e Iowa tienen la misma población. En 2024, el NIH invirtió $249 millones en Iowa y $90 millones en Puerto Rico.</p>
+  <p class="text-slate-300 mt-2 text-sm">La misma cantidad de gente. Un tercio del dinero. Una diferencia de $159 millones en un solo año.</p>
+</div>
+
+<h2>Lo que recibió cada estado de población parecida (NIH, 2024)</h2>
+<p class="text-slate-600 -mt-2">Por persona, con la fuente al lado. La última columna es cuántas veces más por persona que Puerto Rico.</p>
+<div class="not-prose mt-3 overflow-x-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm min-w-[520px]">
+    <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Lugar</th><th class="py-2 px-3 text-right">Población</th><th class="py-2 px-3 text-right">NIH 2024</th><th class="py-2 px-3 text-right">Por persona</th><th class="py-2 px-3 text-right">vs PR</th></tr></thead>
+    <tbody>${rowsHtml}</tbody>
+  </table>
+</div>
+<p class="text-sm text-slate-500 mt-2">Puerto Rico recibió <strong>$28 por persona</strong>: menos que Mississippi, el estado más pobre de la nación. Fuente: NIH RePORTER (año fiscal 2024, sumado proyecto por proyecto). Poblaciones: estimados del Censo.</p>
+
+<div class="not-prose bg-amber-50 border border-amber-200 rounded-2xl p-5 sm:p-6 my-6">
+  <p class="font-black text-amber-900 text-lg">Por qué esto duele doble</p>
+  <p class="text-sm text-amber-800 mt-1">El efecto fundador hace que en Puerto Rico ciertas enfermedades genéticas sean mucho más comunes y más "limpias" de estudiar que en cualquier otro lado. Es, literalmente, un laboratorio natural que el mundo necesita. Recibir el financiamiento más bajo por persona no es solo injusto para los boricuas: es una oportunidad científica que Estados Unidos está dejando sobre la mesa.</p>
+</div>
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-5 sm:p-6 my-6">
+  <p class="font-black text-teal-900 text-lg">El eje completo</p>
+  <p class="text-sm text-teal-800 mt-1">Tres récords, una misma historia: la enfermedad, la promesa y el dinero.</p>
+  <div class="flex flex-wrap gap-3 mt-3">
+    <a href="https://registromedicopr.com/atlas" class="inline-flex items-center gap-2 bg-teal-700 hover:bg-teal-800 text-white font-bold px-4 py-2 rounded-full text-sm"><i class="fa-solid fa-dna"></i> El Atlas de las fundadoras</a>
+    <a href="/registro-raras" class="inline-flex items-center gap-2 bg-white border border-teal-300 text-teal-800 font-bold px-4 py-2 rounded-full text-sm"><i class="fa-solid fa-clipboard-check"></i> El registro que prometió el gobierno</a>
+    <a href="https://registromedicopr.com/raras" class="inline-flex items-center gap-2 bg-white border border-teal-300 text-teal-800 font-bold px-4 py-2 rounded-full text-sm"><i class="fa-solid fa-user-doctor"></i> Quién diagnostica</a>
+  </div>
+</div>
+
+<h2>Datos citables</h2>
+<p class="text-slate-600 -mt-2">Cada dato con su fuente. Cópialo y úsalo: prensa, un legislador, un investigador que busque a dónde llevar su próximo estudio.</p>
+${citasHtml}
+
+${shareRow({ text: 'Puerto Rico e Iowa tienen la misma población. En 2024 el NIH invirtió $249M en Iowa y $90M en PR. PR recibe menos por persona que el estado más pobre de EE.UU., y tiene el ADN founder-effect más valioso de la nación. Los números, con la fuente al lado:', url: 'https://puertoricosinfiltros.com/investigacion', toWho: 'A un periodista, a un legislador, a un investigador. Es dinero federal de ciencia que no está llegando.' })}
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
+  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">El valor está aquí. Que la inversión lo alcance.</p>
+  <p class="mt-2 text-sm text-slate-600 italic">Todo con fuente. Neutral, no partidista. Se actualiza con el récord.</p>
+</div>
+
+<p class="text-sm text-slate-500 mt-6">Fuente: NIH RePORTER (reporter.nih.gov), año fiscal 2024, sumado proyecto por proyecto por estado el 10 de julio de 2026. Poblaciones: estimados del Censo de EE.UU. Este récord es neutral y no partidista. Julio 2026.</p>
+${SHARE_COPY_SCRIPT}`
+
+  const jsonLd = [
+    { '@context': 'https://schema.org', '@type': 'WebPage', name: 'El ADN más valioso de EE.UU. y el dinero de ciencia que no llega a Puerto Rico', url: 'https://puertoricosinfiltros.com/investigacion', inLanguage: 'es',
+      publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' } },
+    { '@context': 'https://schema.org', '@type': 'Dataset', name: 'Financiamiento NIH por estado de población similar, año fiscal 2024',
+      description: 'Financiamiento de los Institutos Nacionales de Salud (NIH) para Puerto Rico frente a estados de EE.UU. de población similar, en total y por persona, año fiscal 2024.',
+      url: 'https://puertoricosinfiltros.com/investigacion', inLanguage: 'es', license: 'https://creativecommons.org/licenses/by/4.0/',
+      creator: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+      isBasedOn: 'https://reporter.nih.gov' },
+    { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [
+      { '@type': 'Question', name: '¿Cuánto financiamiento de investigación de salud recibe Puerto Rico?', acceptedAnswer: { '@type': 'Answer', text: 'En el año fiscal 2024, los Institutos Nacionales de Salud (NIH) invirtieron cerca de $89.7 millones en 143 proyectos en Puerto Rico, unos $28 por persona: el más bajo entre jurisdicciones de población similar, por debajo de Mississippi, el estado más pobre de EE.UU. Iowa, con la misma población que PR, recibió $249 millones. Fuente: NIH RePORTER.' } },
+    ] },
+  ]
+
+  const og = `https://puertoricosinfiltros.com/api/og?theme=sinfiltros&k=${encodeURIComponent('Sigue el dinero · Ciencia')}&t=${encodeURIComponent('El ADN más valioso de EE.UU.||y el dinero que no llega')}&sub=${encodeURIComponent('PR e Iowa: misma población. NIH 2024: $249M a Iowa, $90M a PR. PR recibe menos por persona que Mississippi.')}&badge=${encodeURIComponent('NIH RePORTER · FY2024')}`
+
+  res.status(200).send(layout({
+    title: 'El ADN más valioso de EE.UU. y el dinero de ciencia que no llega a Puerto Rico',
+    description: 'Puerto Rico e Iowa tienen la misma población. En 2024 el NIH invirtió $249M en Iowa y $90M en PR. PR recibe menos por persona ($28) que Mississippi, el estado más pobre, pese a tener el ADN founder-effect más valioso de la nación. Datos NIH RePORTER, con la fuente al lado.',
+    slug: 'investigacion', bodyHtml: body, jsonLd, ogImage: og,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+    canonicalUrl: 'https://puertoricosinfiltros.com/investigacion',
+  }))
+}
+
 export default async function handler(req: any, res: any) {
   const page = String(req.query.page || '')
 
@@ -10246,6 +10362,7 @@ export default async function handler(req: any, res: any) {
     case 'raras': return await handleRaras(req, res)
     case 'atlas': return await handleAtlas(req, res)
     case 'oer': return await handleOER(req, res)
+    case 'investigacion': return await handleInvestigacion(req, res)
     case 'comparte': return await handleComparte(req, res)
     case 'porque': return await handleRegistroPorque(req, res)
     case 'recuperacion': return await handleRecuperacion(req, res)

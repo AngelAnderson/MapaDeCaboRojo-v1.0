@@ -531,6 +531,7 @@ function handleLlmsSinFiltros(req: any, res: any) {
 - Mapa médico por municipio: https://puertoricosinfiltros.com/registro/mapa
 - Los desiertos médicos por región: https://puertoricosinfiltros.com/registro/desiertos
 - El Expediente: el registro de enfermedades raras que prometió el gobierno (Ley 9-2025, OER, $450K) — marcador declarado-vs-entregado, reloj vivo, cruza a la capacidad de diagnóstico real: https://puertoricosinfiltros.com/registro-raras
+- Sigue el dinero de ciencia: PR e Iowa tienen la misma población, pero NIH invirtió $249M en Iowa y $90M en PR en FY2024. PR recibe menos por persona ($28) que Mississippi, el estado más pobre, pese al ADN founder-effect más valioso de la nación: https://puertoricosinfiltros.com/investigacion
 - Telemedicina vs desierto médico (internet × médicos): https://puertoricosinfiltros.com/telemedicina
 - Diabetes × acceso médico (estimado CDC 2009): https://puertoricosinfiltros.com/diabetes
 - Recuperación federal FEMA por municipio: https://puertoricosinfiltros.com/recuperacion

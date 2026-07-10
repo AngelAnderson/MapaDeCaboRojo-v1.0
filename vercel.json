@@ -89,6 +89,7 @@
     { "source": "/observatorio", "destination": "/api/mapa-pages?page=observatorio" },
     { "source": "/registro-raras", "destination": "/api/mapa-pages?page=oer" },
     { "source": "/oer", "destination": "/api/mapa-pages?page=oer" },
+    { "source": "/investigacion", "destination": "/api/mapa-pages?page=investigacion" },
     { "source": "/agua", "destination": "/api/mapa-pages?page=agua" },
     { "source": "/activos", "destination": "/api/mapa-pages?page=activos" },
     { "source": "/acueductos", "destination": "/api/mapa-pages?page=acueductos" },
