@@ -93,6 +93,7 @@
     { "source": "/agua", "destination": "/api/mapa-pages?page=agua" },
     { "source": "/activos", "destination": "/api/mapa-pages?page=activos" },
     { "source": "/acueductos", "destination": "/api/mapa-pages?page=acueductos" },
+    { "source": "/transicion", "destination": "/api/mapa-pages?page=transicion" },
     { "source": "/promesas", "destination": "/api/mapa-pages?page=promesas" },
     { "source": "/quien-responde", "destination": "/api/mapa-pages?page=quien-responde" },
     { "source": "/quién-responde", "destination": "/api/mapa-pages?page=quien-responde" },

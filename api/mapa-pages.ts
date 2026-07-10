@@ -5291,6 +5291,7 @@ async function handleSinFiltros(req: any, res: any) {
     <a href="/demanda" data-prsf="record" data-rec="idx-demanda" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Demanda</a>
     <a href="/agua" data-prsf="record" data-rec="idx-agua" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Agua</a>
     <a href="/acueductos" data-prsf="record" data-rec="idx-acueductos" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">El recibo del agua</a>
+    <a href="/transicion" data-prsf="record" data-rec="idx-transicion" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">La Transición</a>
     <a href="/luz" data-prsf="record" data-rec="idx-luz" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Luz</a>
     <a href="/basura" data-prsf="record" data-rec="idx-basura" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Basura</a>
     <a href="/telemedicina" data-prsf="record" data-rec="idx-telemedicina" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Telemedicina</a>
@@ -5391,6 +5392,17 @@ ${recordCards}
   <div class="mt-3 flex flex-wrap gap-2 text-sm">
     <a href="/acueductos" data-prsf="record" data-rec="acueductos" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">Ver el récord completo</a>
     <a href="https://oversightboard.pr.gov/fiscal-plans/" target="_blank" rel="noopener" data-prsf="verify" data-rec="acueductos" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Verifícalo tú mismo: el plan certificado ↗</a>
+  </div>
+</div>
+
+<div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-4">
+  <span class="text-xs font-bold text-teal-700 uppercase tracking-wide">La Transición</span>
+  <h3 class="text-xl font-black text-slate-900 mt-1" style="font-family:'Fraunces',Georgia,serif">El gobierno, en su propia voz, al minuto</h3>
+  <blockquote class="mt-2 text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3">En las vistas de transición 2024 el gobierno declaró su propio estado: Educación con 2.3% de desembolso FEMA, la AAA con 13.4%, la AEE con 15%, y el director de la AEE puntuando 3 de 10 su propia red. Más de 50 horas de video que nadie compiló. Cada cita con su minuto.</blockquote>
+  <p class="text-xs text-slate-500 mt-3"><strong>Fuente:</strong> vistas públicas de transición (Ley 197-2002) transmitidas por El Nuevo Día, nov-dic 2024, verificadas al minuto.</p>
+  <div class="mt-3 flex flex-wrap gap-2 text-sm">
+    <a href="/transicion" data-prsf="record" data-rec="transicion" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">Ver el récord completo</a>
+    <a href="https://www.youtube.com/@elnuevodia/streams" target="_blank" rel="noopener" data-prsf="verify" data-rec="transicion" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Verifícalo tú mismo: los videos ↗</a>
   </div>
 </div>
 
@@ -5765,6 +5777,208 @@ ${SHARE_COPY_SCRIPT}
     title: 'El recibo del agua, contra el récord: tarifas AAA hasta 2039 y el dinero federal sin llegar',
     description: 'Los aumentos de la AAA están aprobados hasta 2039 y suman $2,598 millones. El 91% del dinero federal identificado no ha llegado a la caja. Verificado contra el plan fiscal certificado, con la fuente al lado.',
     slug: 'acueductos', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
+// /transicion — La Transición 2024-2025: el gobierno, en su propia voz. Vistas públicas (Ley 197-2002)
+// transmitidas por El Nuevo Día. 24+ sesiones, 50+ horas. Citas verificadas al minuto contra los videos.
+// Fuentes: transcripts de Angel (Google Drive) + auto-captions ES verificados 2026-07-10. 3 días minados, resto pendiente.
+async function handleTransicion(req: any, res: any) {
+  const V1 = 'RguowcKS7wU', V2 = '3R8jwIec-Yg', V3 = 'jCoz2d5IJJA'
+  type Claim = { q: string; c: string; d: string; v?: string; t?: number }
+  type Bloque = { id: string; tag: string; titulo: string; nota?: string; claims: Claim[] }
+  const bloques: Bloque[] = [
+    {
+      id: 'cor3', tag: 'Día 1 · 20 nov 2024', titulo: 'COR3: el mapa del dinero federal',
+      claims: [
+        { q: 'Manuel Laboy Rivera, director ejecutivo de COR3', c: 'FEMA en todos sus programas ha obligado cerca de 50,000 millones, de los cuales han desembolsado el 48% de todos los programas', d: 'FEMA total (incluye emergencia a corto plazo): ~$50,000M obligados, 48% desembolsado. Entre dic 2020 y nov 2024 la obligación y el desembolso casi se duplicaron.', v: V1, t: 2605 },
+        { q: 'Intercambio del comité entrante con COR3', c: 'De los 39 [mil millones de asistencia pública y mitigación] hay 35.7 obligado y 10.6 que ya está desembolsado. Es correcto.', d: 'La reconstrucción de verdad (asistencia pública + mitigación): $39,000M asignados, $35,700M obligados, $10,600M desembolsados (27%). El total desembolsado de todo FEMA: $23,578M.', v: V1, t: 3728 },
+        { q: 'Miembro del comité entrante, citando los números de COR3', c: 'En el caso de la Autoridad de Energía Eléctrica apenas hay un 15% que se ha desembolsado, en el caso de la autoridad de acueductos solamente un 13.4, en el caso de Educación apenas 2.3% y en el caso de vivienda pública 25.7', d: 'Desembolso por corporación (nov 2024): AEE 15% · AAA 13.4% · Educación 2.3% · vivienda pública 25.7%. Preguntado si a ese paso se salva el dinero, Laboy: "yo creo que sí".', v: V1, t: 4420 },
+      ],
+    },
+    {
+      id: 'vivienda', tag: 'Día 2 · 21 nov 2024', titulo: 'Vivienda: $20,000 millones y los toldos azules',
+      claims: [
+        { q: 'William Rodríguez, secretario de la Vivienda', c: 'Se han comprometido sobre 8.5 billones en fondos DR, un 86% de la asignación total, y se han desembolsado cerca de 3.7 billones, más del 37%', d: 'CDBG-DR: 86% comprometido, 37% desembolsado. Mitigación (CDBG-MIT, $8,000M+): comprometido $4,100M, desembolsado $184M, cerca del 2%.', v: V2, t: 137 },
+        { q: 'William Rodríguez, secretario de la Vivienda', c: 'Desembolsado siempre es que se pagó, que hay dinero que salió de las arcas del departamento de la vivienda federal', d: 'Definición en récord: "desembolsado" no significa obra terminada ni llave entregada. El secretario no pudo dar la cifra de proyectos 100% terminados en la vista.', v: V2, t: 1933 },
+        { q: 'Interrogatorio al secretario de la Vivienda (toldos azules)', c: 'Son sobre 3,000, alrededor de 3,000... de esas, 1,939 entraron al programa', d: '7 años después de María: ~3,000 unidades con toldo azul identificadas, 1,939 en el programa. Nadie pudo decir cuántas personas, ni cuántos menores, viven bajo toldo azul hoy.', v: V2, t: 1616 },
+        { q: 'William Rodríguez, secretario de la Vivienda', c: 'El universo que nosotros podemos asistir... 12,886 que son familias que podemos asistir bajo nuestros programas', d: 'De ~50,000 unidades afectadas por María, el programa R3 solo puede asistir 12,886: ~10,000 terminadas y casi 3,000 pendientes "para el año que viene". El resto quedó fuera.', v: V2, t: 2102 },
+        { q: 'Comité entrante, leyendo la propia ponencia de Vivienda', c: 'Vivienda de interés social requeriría aumentar el ritmo de desembolso en 930%... créditos contributivos 572%, incubadoras 452%', d: 'Para gastar el dinero antes de los plazos (DR: sept 2029 · MIT: 2033), 7 programas necesitan acelerar su desembolso anual entre 122% y 930%.', v: V2, t: 1167 },
+        { q: 'Comité entrante, con el registro de contratos', c: 'IEM International con 101.7 millones e ICF con 51.5 millones en Vivienda... las mismas dos en COR3: ICF con 736.5, IEM con 69.6 millones', d: 'Las mismas consultoras cobran en Vivienda y en COR3. Laboy aclaró: $1,200M en 5 contratos de consultoría de COR3 es acumulado 2017-2024. Conecta con el récord de /sigue-el-dinero.', v: V2, t: 4276 },
+        { q: 'William Rodríguez, secretario de la Vivienda', c: 'Hasta el mes de octubre teníamos una prohibición... se elimina y estamos trabajando con enmienda para darle preferencia a las firmas locales', d: 'Hasta octubre 2024 el reglamento federal prohibía dar preferencia a firmas puertorriqueñas en la contratación de recuperación.', v: V2, t: 4940 },
+        { q: 'Presidente del comité entrante + secretario de la Vivienda', c: 'HUD junto con el correo de EE.UU. estima que en Puerto Rico hay aproximadamente 307,500 unidades de vivienda vacías', d: 'HUD/USPS estima 307,500 viviendas vacías en PR; el inventario propio de Vivienda lleva ~42,300 analizadas. Y en Villa Hugo 1 y 2 (Canóvanas), 3,000+ personas siguen sin luz ni agua 35 años después de Hugo.', v: V2, t: 6398 },
+      ],
+    },
+    {
+      id: 'energia', tag: 'Día 2 · 21 nov 2024 (tarde)', titulo: 'Energía: un 3 de 10, dicho por el propio director',
+      claims: [
+        { q: 'Josué Colón, director ejecutivo de la AEE, a pregunta directa', c: '¿En una escala del 1 al 10, dónde usted ve el proceso de la modernización del sistema eléctrico para el cual tenemos 10.5 billones? — Hoy está como en tres', d: 'Con $10,500M disponibles, el propio director de la AEE puntuó la modernización de la red: 3 de 10.', v: V2, t: 23868 },
+        { q: 'Panel de la AEE ante el comité', c: 'LUMA en proyectos tiene obligados 2.3 billones, pero en reembolsos ha recibido alrededor de 220 millones... Ese número la verdad que asusta', d: 'LUMA: $2,300M obligados y ~$220M reembolsados. La AEE sola, en proyectos permanentes, había logrado $400M+.', v: V2, t: 24190 },
+        { q: 'Intercambio sobre el manejo de vegetación', c: 'LUMA lo ha dicho, puede resolver el 50 o 60% de los apagones... — No existen el 1.2 billones... ellos lo que tienen son 18 millones aprobados solamente', d: 'El proyecto que según LUMA resolvería la mitad de los apagones estaba estimado en $1,200M; FEMA había aprobado $15-18M a nov 2024.', v: V2, t: 26719 },
+        { q: 'Manuel Laboy Rivera, director ejecutivo de COR3', c: 'Lo que haga mal LUMA al final es una responsabilidad de PREPA y del gobierno de Puerto Rico... seremos responsables de devolver el dinero', d: 'Riesgo estructural en récord: si el operador privado maneja mal fondos FEMA, el que devuelve el dinero es el pueblo, no el operador.', v: V2, t: 24609 },
+        { q: 'Josué Colón, director ejecutivo de la AEE', c: 'Desde que el sistema se quedó sin recursos [se han pagado] 413 millones... el sistema tiene un poco más de 12,000 beneficiarios', d: 'Pensiones de la AEE en default desde 2023: $413M pagados con fondos estatales y un préstamo que vencía el 31 de diciembre de 2024. Nómina de pensiones: ~$24-25M al mes.', v: V2, t: 19152 },
+      ],
+    },
+    {
+      id: 'aaa', tag: 'Día 3 · 22 nov 2024', titulo: 'AAA: 1 de cada 2 galones se pierde',
+      nota: 'Esta ponencia NO estaba en ningún transcript guardado. Se rescató de los captions del video el 10 de julio de 2026. Conecta directo con el récord del recibo: /acueductos.',
+      claims: [
+        { q: 'Comité entrante + Doriely Pagán, presidenta ejecutiva de la AAA', c: 'O sea que aproximadamente de cada dos galones uno se pierde en el camino — bueno, estos son la cuantificación que tenemos al momento', d: 'Pérdida física de agua: 53% al cierre del año fiscal 2024 (mejoró de 57% en 2021). Más la pérdida comercial (~10%): agua que llega pero no se factura. La AAA no lo refutó.', v: V3, t: 8835 },
+        { q: 'Doriely Pagán, presidenta ejecutiva de la AAA', c: 'Logramos la obligación en enero del 2021 de los 3.7 billones... hemos recibido reembolsos de 450 millones de fondo FEMA', d: 'FEMA/FAASt: $3,700M obligados en enero 2021, $450M de reembolso en 4 años (~12%). El plan fiscal certificado de 2025 lo confirma: $452M fue adelanto de capital de trabajo; la obra permanente reembolsada era $67M.', v: V3, t: 8426 },
+        { q: 'Comité entrante, leyendo la tabla de la AAA + Pagán', c: 'Son 7 billones, están en construcción 1.3 y completado 273 millones, lo que dice la tabla — correcto, sí', d: 'De la cartera activa de $7,100M (291 proyectos), había $273M en obra completada: cerca del 4%.', v: V3, t: 13105 },
+        { q: 'Vicepresidente de la AAA, bajo presión del comité (contadores inteligentes)', c: 'Significa que nuestra facturación ya no va a ser estimada, va a ser basada en el consumo', d: 'Admitido en récord: con los contadores nuevos las facturas van a subir al pasar de estimado a consumo real. La AAA rehusó revelar el costo unitario del contador en vista pública.', v: V3, t: 11265 },
+        { q: 'Comité entrante (fondos ARPA) + Pagán', c: '¿Ustedes firmaron qué cantidad? — 280 millones... como 280... 214. — Si no está el contrato cabe la posibilidad que el tesoro se lleve el dinero', d: '$214M de ARPA asignados a la AAA con deadline de contratos al 31 de diciembre de 2024; la presidenta no pudo confirmar en la vista que todo estuviera obligado.', v: V3, t: 12876 },
+        { q: 'Doriely Pagán, presidenta ejecutiva de la AAA', c: 'Hay operadores ahora mismo que pueden tener su licencia vencida, sin embargo estamos cobijados en que el supervisor tiene la licencia', d: 'La presidenta no supo decir cuántos de los ~700 operadores de planta tienen certificación vigente. En la represa La Plata funcionaban 4 de 7 bombas; cada bomba nueva cuesta $10-20M.', v: V3, t: 10265 },
+        { q: 'Doriely Pagán, presidenta ejecutiva de la AAA', c: 'Dentro del plan fiscal que ya está proyectado, sí, ahí contempla un ajuste de 2%', d: 'El aumento de tarifa venía anunciado desde esta vista. Se materializó: 2% el 1 de julio de 2026, con aumentos aprobados hasta 2039. El récord completo del recibo: /acueductos.', v: V3, t: 8723 },
+        { q: 'Doriely Pagán, presidenta ejecutiva de la AAA', c: 'En el 2016 la autoridad se quedó sin fuentes de financiamiento... hasta prácticamente el 2020 sin poder hacer una inversión sustancial', d: 'Admitido: 4 años sin inversión sustancial (2016-2020) y mantenimiento preventivo "cada 3 o 4 años, o por emergencia". El verde también se anota: refinanciamiento con ~$1,000M en ahorros y pérdida física bajando de 57% a 53%.', v: V3, t: 10080 },
+      ],
+    },
+    {
+      id: 'afi', tag: 'Día 3 · 22 nov 2024', titulo: 'AFI: las escuelas, los permisos y el 22%',
+      claims: [
+        { q: 'Eduardo Rivera Cruz, director ejecutivo de AFI', c: 'Se le entregaron ya 80 escuelas y a finales de diciembre se estarán entregando 55 adicionales para un total de 570... faltando 27 para el primer trimestre del año que viene', d: 'Columnas cortas ($484M): 570 escuelas entregadas a dic 2024, 27 pendientes con plazo Q1 2025.', v: V3, t: 1846 },
+        { q: 'Lcdo. Marcos Rodríguez Ema, comité entrante', c: '¿Alguna razón en particular que el 22% [de las subastas] se cancelen?', d: 'AFI: 601 subastas en 4 años, 384 adjudicadas ($903M) y 22% canceladas. La agencia lo atribuyó a subastas desiertas, escasez de materiales y de mano de obra.', v: V3, t: 2944 },
+        { q: 'Eduardo Rivera Cruz, director ejecutivo de AFI', c: 'A veces están dentro de los 30 días y otras sobrepasan, dos y tres meses, han habido algunos que duran años', d: 'Los endosos de agencias que la ley fija en 30 días tardan meses y hasta años. El permiso del muelle de Punta Santiago tardó más de 2 años.', v: V3, t: 3896 },
+        { q: 'Eduardo Rivera Cruz, director ejecutivo de AFI', c: 'Esta es una comunidad que llevaba más de 20 años sin agua potable... a 71 familias con una inversión de 2.6 millones', d: 'Sector Pajita Falcón (Aguas Buenas): 20+ años sin agua potable, resuelto con $2.6M. El dato duro no es el proyecto: es cuánto tardó en llegar.', v: V3, t: 1990 },
+      ],
+    },
+    {
+      id: 'dtop', tag: 'Día 3 · 22-23 nov 2024', titulo: 'Transportación: el ciberataque y el mismo operador',
+      nota: 'Estas citas salen de un fragmento del Q&amp;A de la tarde cuyo video exacto está pendiente de anclar al minuto. El dato es del récord; el link fino viene en la próxima pasada.',
+      claims: [
+        { q: 'Perito en ciberseguridad del comité entrante', c: 'El ataque cibernético que sufrió AutoExpreso en abril de 2022, más de dos semanas sin servicio... no entiendo cómo tenemos el mismo operador a este punto', d: 'El comité dejó en récord que tras el ciberataque de 2022 el operador de AutoExpreso seguía siendo el mismo, y rechazó "se robusteció" como respuesta sin certificación.' },
+        { q: 'Edwin González Montalvo, director ejecutivo de la ACT', c: 'Ya tenemos 13 de 22 pórticos completamente nuevos', d: 'AutoExpreso: 13 de 22 pórticos reconstruidos a nov 2024. Sin brigadas regulares de semáforos los fines de semana (solo emergencias): buscaban contrato privado 24/7.' },
+      ],
+    },
+  ]
+
+  const ytLink = (v?: string, t?: number) => v ? `https://www.youtube.com/watch?v=${v}${t ? `&t=${t}s` : ''}` : ''
+  const fmtT = (t?: number) => {
+    if (!t) return ''
+    const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60
+    return (h ? h + ':' : '') + String(m).padStart(h ? 2 : 1, '0') + ':' + String(s).padStart(2, '0')
+  }
+  const bloquesHtml = bloques.map(b => `
+<h2 id="${b.id}">${escapeHtml(b.titulo)}</h2>
+<p class="not-prose"><span class="inline-block text-xs font-bold text-teal-700 uppercase tracking-wide bg-teal-50 border border-teal-200 rounded-full px-3 py-1">${b.tag}</span></p>
+${b.nota ? `<div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-3 mt-3 text-sm text-slate-700">${b.nota.replace('/acueductos', '<a href="/acueductos" class="text-teal-700 font-semibold">/acueductos</a>')}</div>` : ''}
+<div class="not-prose space-y-3 mt-3">
+${b.claims.map(cl => `
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <blockquote class="text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3 italic">"${escapeHtml(cl.c)}"</blockquote>
+    <p class="text-xs text-slate-500 mt-2">${escapeHtml(cl.q)}</p>
+    <p class="text-sm text-slate-800 mt-2 leading-relaxed">${cl.d.replace('/acueductos', '<a href="/acueductos" class="text-teal-700 font-semibold">/acueductos</a>').replace('/sigue-el-dinero', '<a href="/sigue-el-dinero" class="text-teal-700 font-semibold">/sigue-el-dinero</a>')}</p>
+    ${cl.v ? `<a href="${ytLink(cl.v, cl.t)}" target="_blank" rel="noopener" data-prsf="verify" data-rec="transicion" class="inline-flex items-center gap-1 mt-2 text-sm font-bold text-teal-700 hover:underline">Óyelo tú mismo, minuto ${fmtT(cl.t)} ↗</a>` : ''}
+  </div>`).join('')}
+</div>`).join('')
+
+  // Las vistas completas — índice verificado contra el canal de El Nuevo Día (2026-07-10).
+  const videos: [string, string, number, string][] = [
+    ['20 nov 2024', V1, 15400, 'minada'], ['21 nov 2024', V2, 28407, 'minada'], ['22 nov 2024', V3, 14255, 'minada'],
+    ['22-23 nov 2024', 'XZGTyMNcr0o', 4541, ''], ['23 nov 2024', 'xhr3SrEjR7k', 10717, ''], ['23 nov 2024', 'ZvZmiREinbU', 1412, ''],
+    ['26 nov 2024', 'uUWb85Doki0', 16128, ''], ['3 dic 2024', 'EZvFDSu0sxU', 14412, ''], ['3 dic 2024', 'dCVlOodXNPw', 12158, ''],
+    ['3 dic 2024', 'On2Zg9QdWOo', 7479, ''], ['3 dic 2024', 'az9UhZBvLqs', 2672, ''], ['4 dic 2024', 'BJFs3kJgteM', 18688, ''],
+    ['4 dic 2024', 'bO6iQecGyjg', 22858, ''], ['5 dic 2024', 'XlnW6cFlJLM', 13501, ''],
+  ]
+  const dur = (s: number) => `${Math.floor(s / 3600)}h ${String(Math.round((s % 3600) / 60)).padStart(2, '0')}m`
+  const videoRows = videos.map(([f, id, s, st]) => `
+    <tr class="border-t border-slate-100">
+      <td class="py-2 px-3 font-semibold text-slate-800 whitespace-nowrap">${f}</td>
+      <td class="py-2 px-3 text-slate-600 whitespace-nowrap">${dur(s)}</td>
+      <td class="py-2 px-3">${st ? '<span class="text-teal-700 font-bold">✓ en el récord</span>' : '<span class="text-slate-400">pendiente de minar</span>'}</td>
+      <td class="py-2 px-3"><a href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener" data-prsf="verify" data-rec="transicion" class="text-teal-700 font-semibold hover:underline">ver ↗</a></td>
+    </tr>`).join('')
+
+  const citables = [
+    `En las vistas de transición 2024, la AAA aceptó en récord que de cada 2 galones de agua que produce, 1 se pierde en el camino (53% de pérdida física + ~10% comercial, FY2024). Video al minuto: youtube.com/watch?v=${V3}&t=8835s. Compilado en puertoricosinfiltros.com/transicion`,
+    `Desembolso de fondos FEMA por corporación, dicho en las vistas de transición (nov 2024): Educación 2.3%, AAA 13.4%, AEE 15%, vivienda pública 25.7%. Video al minuto: youtube.com/watch?v=${V1}&t=4420s. Compilado en puertoricosinfiltros.com/transicion`,
+    `El director de la AEE puntuó 3 de 10 la modernización de la red eléctrica, con $10,500M disponibles, en las vistas de transición (nov 2024). Video al minuto: youtube.com/watch?v=${V2}&t=23868s. Compilado en puertoricosinfiltros.com/transicion`,
+  ]
+  const citableCards = citables.map((c) => `
+    <div class="flex items-start gap-2 bg-white border border-slate-200 rounded-xl p-3 mt-2">
+      <p class="flex-1 text-sm text-slate-700 leading-relaxed">${escapeHtml(c)}</p>
+      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(c)}"><i class="fa-regular fa-copy"></i> Copiar</button>
+    </div>`).join('')
+
+  const body = `
+<h1>La Transición 2024-2025: el gobierno, en su propia voz</h1>
+<p class="text-lg text-slate-600 mt-2">En noviembre y diciembre de 2024, la ley obligó al gobierno saliente de Puerto Rico a sentarse y declarar, en vistas públicas transmitidas en vivo, el estado real de cada agencia. Más de 50 horas de testimonio. Nadie compiló ese récord. Aquí está, cita por cita, con el minuto del video al lado.</p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El dato</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Educación 2.3%. Acueductos 13.4%. Energía 15%.</p>
+  <p class="text-slate-300 mt-2 text-sm leading-relaxed">Ese era el desembolso de los fondos FEMA por corporación en noviembre de 2024, dicho ante el comité de transición con los números de COR3. Y el director de la AEE, con $10,500 millones disponibles, puntuó su propia modernización: 3 de 10. Todo está en video. Todo tiene minuto.</p>
+</div>
+
+<div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-5 text-sm text-slate-700">
+  <strong>Qué es esto:</strong> la Ley 197 del 2002 obliga a cada transición de gobierno a rendir cuentas en vistas públicas. El Nuevo Día las transmitió completas en su canal de YouTube: 24 sesiones. Este récord las está minando una por una: la cita textual, quién la dijo, y el link al minuto exacto pa' que la oigas tú mismo. No es opinión: es lo que ellos mismos dijeron.
+</div>
+
+${bloquesHtml}
+
+<h2 id="relojes">Los relojes que arrancaron en esas vistas</h2>
+<p>Promesas con fecha, hechas en récord. El tiempo ya pasó pa' varias. Estado al 10 de julio de 2026:</p>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm">
+    <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Lo prometido en la vista</th><th class="py-2 px-3">Plazo</th><th class="py-2 px-3">Estado</th></tr></thead>
+    <tbody>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3">AAA: ajuste de tarifa de 2% "ya en el plan fiscal"</td><td class="py-2 px-3 whitespace-nowrap">2025-2026</td><td class="py-2 px-3"><span class="text-teal-700 font-bold">✓ Cumplido</span>: 2% el 1 jul 2026, y aumentos aprobados hasta 2039 (<a href="/acueductos" class="text-teal-700 font-semibold">/acueductos</a>)</td></tr>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3">AFI: las últimas 27 escuelas de columnas cortas</td><td class="py-2 px-3 whitespace-nowrap">Q1 2025</td><td class="py-2 px-3 text-slate-500">Por verificar</td></tr>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3">Vivienda: ~3,000 familias R3 restantes</td><td class="py-2 px-3 whitespace-nowrap">2025</td><td class="py-2 px-3 text-slate-500">Por verificar</td></tr>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3">AFI: CDT Susana Centeno (Vieques), fases 2 y 3</td><td class="py-2 px-3 whitespace-nowrap">jun y dic 2025</td><td class="py-2 px-3 text-slate-500">Por verificar</td></tr>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3">AAA: contratos ARPA ($214M) firmados a tiempo</td><td class="py-2 px-3 whitespace-nowrap">31 dic 2024</td><td class="py-2 px-3 text-slate-500">Por verificar</td></tr>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3">Vivienda: cierre de fondos CDBG-DR</td><td class="py-2 px-3 whitespace-nowrap">sept 2029</td><td class="py-2 px-3 text-slate-500">Corriendo</td></tr>
+    </tbody>
+  </table>
+</div>
+<p class="text-sm text-slate-500 mt-2">Cada "por verificar" es trabajo pendiente de este récord, no una acusación. Cuando se verifique, se anota en verde o en rojo, igual que todo lo demás.</p>
+
+<h2 id="vistas">Las vistas completas (lo que falta por minar)</h2>
+<p>24 sesiones en el canal de El Nuevo Día. Tres están en este récord; el resto sigue ahí, público, esperando. Las sesiones de diciembre incluyen salud, educación, hacienda y seguridad.</p>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm">
+    <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Fecha</th><th class="py-2 px-3">Duración</th><th class="py-2 px-3">Estado</th><th class="py-2 px-3">Video</th></tr></thead>
+    <tbody>${videoRows}</tbody>
+  </table>
+</div>
+<p class="text-sm text-slate-500 mt-2">Más ~10 clips cortos del mismo canal. Índice verificado contra YouTube el 10 de julio de 2026.</p>
+
+<h2 id="local">El mismo ejercicio, a nivel de pueblo</h2>
+<p>Esta disciplina (la cita, el video, el minuto) ya corre pa' Cabo Rojo con las grabaciones públicas del municipio: <a href="/historial" class="text-teal-700 font-semibold">el historial de promesas del alcalde</a> y <a href="/expediente/alcalde-cabo-rojo" class="text-teal-700 font-semibold">el expediente completo</a>. La historia que cuentan las vistas estatales se repite en los pueblos.</p>
+
+<h2 id="citables">Citables (copia y pega, con fuente)</h2>
+${citableCards}
+
+<h2 id="metodo">Método y límites</h2>
+<ul class="text-slate-700">
+  <li>Las citas salen de transcripciones automáticas de los streams (limpiadas de ruido, sin cambiar números ni palabras clave) y cada una lleva su link al minuto pa' que la verifiques con tus oídos.</li>
+  <li>Los nombres de los miembros del comité se identifican por el audio; donde hay duda, se dice "miembro del comité" en vez de adivinar.</li>
+  <li>Tres de 24 sesiones están minadas. Esto es un récord vivo: crece sesión por sesión.</li>
+  <li>¿Ves un error en una cita o un número? Escríbenos y se corrige con el video en la mano: <a href="mailto:angel@angelanderson.com" class="text-teal-700 font-semibold">angel@angelanderson.com</a>.</li>
+</ul>
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-5 mt-6">
+  <p class="font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">¿Y tú qué haces con esto?</p>
+  <p class="text-sm text-slate-700 mt-2 leading-relaxed">Nada que te quite el día. Esto existe pa' que cuando alguien te diga "eso nadie lo sabe", tú tengas el minuto exacto donde lo dijeron ellos mismos. Si eres periodista o investigador, los citables de arriba son tuyos. Y si hoy no es el día de meterte 50 horas de vistas, tranquilo: pa' eso está este récord.</p>
+</div>
+${SHARE_COPY_SCRIPT}
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'La Transición Gubernamental 2024-2025 de Puerto Rico: el récord de las vistas públicas, cita por cita',
+    description: 'Compilación verificada de las vistas públicas de transición (Ley 197-2002) transmitidas por El Nuevo Día: declaraciones de COR3, Vivienda, AEE, AAA, AFI y DTOP con cita textual y minuto del video. Desembolso FEMA nov 2024: Educación 2.3%, AAA 13.4%, AEE 15%.',
+    creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/transicion',
+    keywords: ['transición gubernamental', 'Puerto Rico', 'Ley 197', 'FEMA', 'COR3', 'AAA', 'AEE', 'vistas públicas', '2024'],
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'La Transición 2024-2025: el gobierno, en su propia voz, cita por cita y al minuto',
+    description: 'Las vistas públicas de la transición de gobierno de PR (nov-dic 2024), compiladas y verificadas: Educación 2.3% de desembolso FEMA, AAA 13.4%, AEE 15%, y el director de la AEE puntuando 3/10 su propia red. Cada cita con el minuto del video.',
+    slug: 'transicion', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
@@ -10372,6 +10586,7 @@ export default async function handler(req: any, res: any) {
     case 'luz': return await handleDatoRecord(req, res)
     case 'basura': return await handleDatoRecord(req, res)
     case 'acueductos': return await handleAcueductos(req, res)
+    case 'transicion': return await handleTransicion(req, res)
     case 'prediccion': return handlePrediccion(req, res)
     case 'costo-de-vida': return await handleCostoDeVida(req, res)
     case 'trabajo': return handleTrabajo(req, res)

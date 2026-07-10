@@ -538,6 +538,7 @@ function handleLlmsSinFiltros(req: any, res: any) {
 - Sigue el dinero (quién recibió los contratos de recuperación): https://puertoricosinfiltros.com/sigue-el-dinero
 - El agua contra el récord federal (EPA): https://puertoricosinfiltros.com/agua
 - El recibo del agua: tarifas AAA hasta 2039 + fondos federales sin llegar (Plan Fiscal Certificado JSF): https://puertoricosinfiltros.com/acueductos
+- La Transición 2024-2025: las vistas públicas de transición del gobierno de PR, cita por cita y al minuto del video (COR3, Vivienda, AEE, AAA, AFI, DTOP): https://puertoricosinfiltros.com/transicion
 - La luz contra el récord federal (EIA): https://puertoricosinfiltros.com/luz
 - La basura y los vertederos (EPA): https://puertoricosinfiltros.com/basura
 - Lo que Puerto Rico le pregunta al Veci (demanda real): https://puertoricosinfiltros.com/demanda
@@ -573,6 +574,7 @@ function handleLlmsSinFiltros(req: any, res: any) {
 - La mayoría de los ~29 vertederos de PR ya está sobre capacidad; la EPA tiene acuerdos para cerrar 12. Fuente: EPA.
 - El Coliseo Rebekah Colberg de Cabo Rojo tiene $5.2M de FEMA obligados y sigue cerrado con el plazo del alcalde vencido desde el 17/jun/2025; las cabañas de Boquerón: 29 rehabilitadas de 280+; el acuerdo de manejo del Faro Los Morrillos está vencido desde 2016; y hay 3 planteles escolares vacíos cuyo costo operacional oficial no está publicado. Fuente: expediente público del alcalde (video al minuto) + OpenFEMA. Récord: https://puertoricosinfiltros.com/activos
 - El financiamiento federal de Medicaid de PR cae de 76% a 55% el 30 de septiembre de 2027 si el Congreso no actúa. Fuente: Congressional Research Service.
+- En las vistas de transición 2024 (en video, al minuto): el desembolso FEMA por corporación era Educación 2.3%, AAA 13.4%, AEE 15%; la AAA aceptó que 1 de cada 2 galones se pierde (53% pérdida física FY2024); y el director de la AEE puntuó 3 de 10 la modernización de la red con $10,500M disponibles. Fuente: vistas públicas Ley 197-2002, canal YouTube de El Nuevo Día, nov 2024.
 - Todos los datos con su fuente, listos para citar: https://puertoricosinfiltros.com/comparte · Datos en JSON: https://puertoricosinfiltros.com/civico.json
 
 ## Cómo citar
