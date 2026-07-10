@@ -543,6 +543,13 @@ function handleLlmsSinFiltros(req: any, res: any) {
 ## Los Expedientes (récord público de funcionarios, neutral y citable)
 - Alcalde de Cabo Rojo (Jorge Morales Wiscovitch): https://puertoricosinfiltros.com/expediente/alcalde-cabo-rojo
 - Representante Distrito 20 (Emilio Carlo Acosta — Cabo Rojo, San Germán, Hormigueros): https://puertoricosinfiltros.com/expediente/representante-distrito-20
+- Cada expediente incluye: el Marcador del Término (trámite de cada medida verificado contra SUTRA, con contadores de días), la respuesta on-record del funcionario (o el contador de días sin reclamar), y la Agenda firmable (compromiso público con seguimiento de fechas, sin endoso).
+
+## El Marcador del Término — Rep. Distrito 20 (verificado contra SUTRA el 9 jul 2026)
+- RC0210 (solares y estructuras abandonadas en Cabo Rojo, San Germán y Hormigueros): radicada 20/mar/2025, aprobada por la Cámara por unanimidad el 27/ene/2026 (313 días después). Informe de la investigación: pendiente. Fuente: https://sutra.oslpr.org/medidas/154353
+- RC0211 (falta de alumbrado en vías públicas del Distrito 20, incl. PR-2 km 167.2): radicada 20/mar/2025, aprobada por la Cámara por unanimidad el 4/may/2026 (410 días después). Informe de la investigación: pendiente. Fuente: https://sutra.oslpr.org/medidas/154354
+- RCC0076 (estudio de viabilidad para una escuela vocacional en el Distrito 20): radicada 10/mar/2025, referida a la Comisión de Educación el 13/mar/2025 y sin un solo trámite desde entonces. Fuente: https://sutra.oslpr.org/medidas/154116
+- Score al 9 jul 2026: 2 de 3 medidas del distrito aprobadas en Cámara · 0 resultados entregados en la calle. El marcador registra el verde igual que el rojo y se actualiza con el récord de SUTRA.
 
 ## Datos citables (verificados julio 2026, fuentes federales)
 - 65 de 76 municipios de PR tienen designación federal de escasez de médicos (HPSA) activa. 33 tienen designación de salud mental y CERO psiquiatras (792,221 personas con el dinero federal aprobado sin médico que lo cobre). Fuente: NPPES/CMS × HRSA.

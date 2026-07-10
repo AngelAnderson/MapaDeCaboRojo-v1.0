@@ -6320,6 +6320,8 @@ ${renderAlertas()}
 
 ${renderAgenda()}
 
+${firmaHtml}
+
 <div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
   <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Un expediente público, para que nadie decida a ciegas.</p>
   <p class="mt-2 text-sm text-slate-600 italic">Todo con fuente. Se actualiza con el récord. ¿Ves un error? Escríbenos.</p>
@@ -6333,12 +6335,18 @@ ${renderAgenda()}
     publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
     inLanguage: 'es', url: `https://puertoricosinfiltros.com/expediente/${f}`,
   }
+  // OG card con el score vivo (motor /api/og, theme sinfiltros) — el screenshot de 2028 se sirve solo
+  const ogExpediente = cfg.tipo === 'representante' && nP
+    ? `https://puertoricosinfiltros.com/api/og?theme=sinfiltros&k=${encodeURIComponent(`El Expediente · Rep. Distrito 20${cfg.partido ? ' · ' + cfg.partido : ''}`)}&t=${encodeURIComponent(`${cfg.nombre}||el marcador del término`)}&sub=${encodeURIComponent(`${aprobadas} de ${nP} medidas del distrito aprobadas en Cámara · ${resultados} resultado${resultados === 1 ? '' : 's'} en la calle · quedan ${diasEleccion.toLocaleString('en-US')} días para nov 2028`)}&badge=${encodeURIComponent('Verificado contra SUTRA')}`
+    : OG_SINFILTROS
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=3600')
   res.status(200).send(layout({
     title: `El Expediente: ${cfg.cargo} — promesas y estado, con la fuente al lado`,
-    description: `Todo el récord público de ${cfg.nombre} (${cfg.cargo}) y el estado de ${cfg.ambito}: promesas, recuperación federal, salud, agua, internet. Neutral y citable.`,
-    slug: `expediente/${f}`, bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    description: cfg.tipo === 'representante' && nP
+      ? `El marcador del término de ${cfg.nombre}: ${aprobadas} de ${nP} medidas del distrito aprobadas en Cámara, ${resultados} resultados en la calle. Verificado contra SUTRA. Con la respuesta del funcionario y la agenda firmable.`
+      : `Todo el récord público de ${cfg.nombre} (${cfg.cargo}) y el estado de ${cfg.ambito}: promesas, recuperación federal, salud, agua, internet. Neutral y citable.`,
+    slug: `expediente/${f}`, bodyHtml: body, jsonLd, ogImage: ogExpediente,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
