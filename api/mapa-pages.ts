@@ -5649,6 +5649,7 @@ async function handleEsencia(req: any, res: any) {
 <div class="not-prose mt-4 flex flex-wrap gap-2 text-xs">
   <a href="#numeros" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Los números</a>
   <a href="#proscons" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Lo mejor de cada lado</a>
+  <a href="#termometro" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">El termómetro (196 voces)</a>
   <a href="#cuenta" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">La cuenta + calculadora</a>
   <a href="#agua" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">El agua</a>
   <a href="#dueno" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">El dueño</a>
@@ -5693,6 +5694,32 @@ async function handleEsencia(req: any, res: any) {
 <p class="text-sm text-slate-600 mt-3"><strong>La diferencia honesta entre las dos columnas:</strong> los argumentos a favor descansan mayormente en <em>promesas</em> del proyecto; los de en contra, en el <em>expediente</em>. Eso no hace a unos falsos ni a otros ciertos: significa que unos se verifican después, y los otros ya se pueden verificar hoy. Las palancas de la <a href="#cuenta" class="text-teal-700 font-semibold">calculadora</a> son justo lo que convertiría las promesas en garantías.</p>
 
 
+
+<h2 id="termometro">El termómetro del pueblo: las 196 voces</h2>
+<p>Nadie ha medido qué piensa la gente sobre Esencia — no hay encuesta pública. Esto es lo más cercano que existe: en abril de 2026, un post sobre el proyecto se hizo viral en Facebook (2,300 reacciones, 1,100 compartidos, 542 comentarios en 21 horas). Leímos y clasificamos, uno por uno, a los <strong>196 comentaristas únicos</strong>. Este es el único sentimiento medido publicado sobre el proyecto:</p>
+
+<div class="not-prose grid grid-cols-3 gap-3 mt-4">
+  <div class="bg-white border-2 border-red-300 rounded-xl p-4 text-center"><div class="text-3xl font-black text-red-600">59%</div><div class="text-xs text-slate-600 mt-1">en contra (116 personas)</div></div>
+  <div class="bg-white border-2 border-emerald-300 rounded-xl p-4 text-center"><div class="text-3xl font-black text-emerald-600">11%</div><div class="text-xs text-slate-600 mt-1">a favor (22 personas)</div></div>
+  <div class="bg-white border-2 border-amber-300 rounded-xl p-4 text-center"><div class="text-3xl font-black text-amber-600">30%</div><div class="text-xs text-slate-600 mt-1">con matices, sin bando (58 personas)</div></div>
+</div>
+<p class="text-sm text-slate-700 mt-3"><strong>El dato más importante no es el 59.</strong> Es el 30: casi 1 de cada 3 personas no está en ningún bando — tiene dudas, preguntas o condiciones. Esa es exactamente la gente para la que existe esta página.</p>
+
+<h3 class="mt-5">De qué habla la gente cuando habla de Esencia (los 9 temas, medidos)</h3>
+<div class="not-prose mt-3 space-y-1.5">
+  <div class="flex items-center gap-2"><div class="w-40 text-xs font-semibold text-slate-700 text-right">Ambiental</div><div class="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden"><div class="bg-emerald-500 h-4 rounded-full" style="width:100%"></div></div><div class="text-xs text-slate-500 w-8">49</div></div>
+  <div class="flex items-center gap-2"><div class="w-40 text-xs font-semibold text-slate-700 text-right">El agua</div><div class="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden"><div class="bg-sky-500 h-4 rounded-full" style="width:88%"></div></div><div class="text-xs text-slate-500 w-8">43</div></div>
+  <div class="flex items-center gap-2"><div class="w-40 text-xs font-semibold text-slate-700 text-right">Derecho a protestar</div><div class="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden"><div class="bg-slate-400 h-4 rounded-full" style="width:71%"></div></div><div class="text-xs text-slate-500 w-8">35</div></div>
+  <div class="flex items-center gap-2"><div class="w-40 text-xs font-semibold text-slate-700 text-right">Corrupción (percepción)</div><div class="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden"><div class="bg-slate-400 h-4 rounded-full" style="width:59%"></div></div><div class="text-xs text-slate-500 w-8">29</div></div>
+  <div class="flex items-center gap-2"><div class="w-40 text-xs font-semibold text-slate-700 text-right">Político/partidista</div><div class="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden"><div class="bg-slate-400 h-4 rounded-full" style="width:59%"></div></div><div class="text-xs text-slate-500 w-8">29</div></div>
+  <div class="flex items-center gap-2"><div class="w-40 text-xs font-semibold text-slate-700 text-right">Empleo</div><div class="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden"><div class="bg-emerald-400 h-4 rounded-full" style="width:43%"></div></div><div class="text-xs text-slate-500 w-8">21</div></div>
+  <div class="flex items-center gap-2"><div class="w-40 text-xs font-semibold text-slate-700 text-right">Precedentes (Dorado, Vieques)</div><div class="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden"><div class="bg-slate-300 h-4 rounded-full" style="width:27%"></div></div><div class="text-xs text-slate-500 w-8">13</div></div>
+  <div class="flex items-center gap-2"><div class="w-40 text-xs font-semibold text-slate-700 text-right">Rumor de bancarrota</div><div class="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden"><div class="bg-slate-300 h-4 rounded-full" style="width:24%"></div></div><div class="text-xs text-slate-500 w-8">12</div></div>
+  <div class="flex items-center gap-2"><div class="w-40 text-xs font-semibold text-slate-700 text-right">Gentrificación</div><div class="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden"><div class="bg-slate-300 h-4 rounded-full" style="width:20%"></div></div><div class="text-xs text-slate-500 w-8">12</div></div>
+</div>
+<p class="text-sm text-slate-700 mt-3">Fíjate en el orden: <strong>lo ambiental y el agua dominan</strong> — no la política. El empleo (el argumento pro más fuerte) aparece en sexto lugar. Y el "rumor de bancarrota" que 12 personas repitieron, lo buscamos en PACER y <strong>no encontramos filing público</strong>: rumor sin verificar, no récord.</p>
+<p class="text-sm text-slate-600 mt-2">Un contraste que solo nosotros podemos medir: en el canal de utilidad del pueblo (el Veci, 787-417-7711, donde la gente busca plomeros, médicos y horarios), las menciones de Esencia son <strong>cero</strong>. El debate vive en el feed, no en la búsqueda: Esencia es, hasta ahora, un tema de identidad y no de necesidad diaria.</p>
+<div class="not-prose bg-slate-50 border border-slate-200 rounded-xl p-3 mt-3 text-xs text-slate-500"><strong>Método y límites (léelos):</strong> esto NO es una encuesta científica. Son los comentarios públicos de UN post viral (abril 2026), clasificados a mano uno por uno. La audiencia de Facebook no representa a todo el mundo, y quien comenta suele sentir más fuerte que quien calla. Lo publicamos porque es lo único medido que existe — si alguien hace una encuesta seria, la enlazamos aquí con gusto.</div>
 
 <h2 id="dueno">Quién es el dueño (registros públicos)</h2>
 <p>Esto no es teoría: es lo que dicen los registros corporativos de Puerto Rico y del Reino Unido.</p>
