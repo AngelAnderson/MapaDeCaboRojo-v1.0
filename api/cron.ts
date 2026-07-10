@@ -24,8 +24,10 @@ export default async function handler(req: any, res: any) {
         return await runVibe(res);
       case 'alertas':
         return await runAlertas(res);
+      case 'dato':
+        return await runDatoDelDia(res);
       default:
-        return res.status(400).json({ error: `Unknown job: ${job}. Use ?job=briefing|maintenance|vibe|alertas` });
+        return res.status(400).json({ error: `Unknown job: ${job}. Use ?job=briefing|maintenance|vibe|alertas|dato` });
     }
   } catch (error: any) {
     console.error(`Cron ${job} failed:`, error.message);
@@ -265,4 +267,50 @@ async function runVibe(res: any) {
   }]);
 
   return res.status(200).json({ success: true, updates });
+}
+
+
+// --- Dato del Día: rota un dato citable verificado a nightly_receipts (el Morning Dispatch lo lee) ---
+// Distribución gratis / growth loop: cada día un récord distinto queda copy-paste-ready para FB, con backlink.
+// Determinista por día del año (estable dentro del día, rota diario). Idempotente por run_date.
+const DATOS_DEL_DIA: Array<{ t: string; u: string }> = [
+  { t: 'El efecto fundador de Puerto Rico ha producido al menos 6 enfermedades genéticas con variante propia boricua documentada en la ciencia: Hermansky-Pudlak tipo 1 y tipo 3, síndrome TBCK, disquinesia ciliar RSPH4A, distrofia de cinturas SGCG y cáncer hereditario BRCA2. El mapa consolidado, en español y por pueblo:', u: 'https://registromedicopr.com/atlas' },
+  { t: 'Puerto Rico es #1 de EE.UU. en enfermedades raras, pero tiene 2 genetistas clínicos (M.D.) que diagnostican, casi todos en el metro. La región de la montaña, donde se concentran las mutaciones fundadoras, tiene 0. La lista de quién existe, con teléfono:', u: 'https://registromedicopr.com/raras' },
+  { t: 'Puerto Rico e Iowa tienen la misma población (3.2 millones). En 2024 el NIH invirtió $249 millones en Iowa y $90 millones en Puerto Rico. La misma gente, un tercio del dinero, pese al ADN founder-effect más valioso de la nación:', u: 'https://puertoricosinfiltros.com/investigacion' },
+  { t: 'El síndrome de Hermansky-Pudlak (un albinismo con problemas de sangrado) aparece en 1 de cada 1,800 personas en el noroeste de Puerto Rico. 1 de cada 21 bebés del noroeste es portador. No es trivia: dibuja un mapa por pueblo:', u: 'https://registromedicopr.com/atlas' },
+  { t: 'Una sola variante fundadora en el gen BRCA2 explica la mayoría del cáncer hereditario de seno y ovario en Puerto Rico. A diferencia de otras raras, esta SÍ se puede accionar: hay pruebas y prevención. Si hay varios casos en tu familia, se puede hacer algo hoy:', u: 'https://registromedicopr.com/atlas' },
+  { t: 'Diagnosticar una enfermedad rara en Puerto Rico toma de 2 a 10 años. A Melissmar López Pimentel le tomó 11 hasta llegar al síndrome TBCK, el "Síndrome Boricua". Si tu familia está en esa espera, la TBCK Foundation de PR acompaña. No se atraviesa solo:', u: 'https://registromedicopr.com/raras' },
+  { t: 'El registro oficial de enfermedades raras de PR (Ley 9-2025, $450K) sigue "en desarrollo": 42 enfermedades catalogadas, sin saber cuántas personas ni en qué pueblos. Mientras tanto, el mapa de quién puede diagnosticarlas ya existe, gratis. No hay que esperar al 2030:', u: 'https://puertoricosinfiltros.com/registro-raras' },
+  { t: 'Una sola variante fundadora en el gen RSPH4A explica 2 de cada 3 casos de disquinesia ciliar primaria en Puerto Rico, con cerca de 1,624 personas afectadas y mayor concentración en Mayagüez. Se confunde con asma por años:', u: 'https://registromedicopr.com/atlas' },
+  { t: 'Puerto Rico recibe menos financiamiento de investigación de salud por persona ($28) que Mississippi, el estado más pobre de EE.UU. ($31), pese a tener el ADN más valioso del país para entender enfermedades genéticas:', u: 'https://puertoricosinfiltros.com/investigacion' },
+];
+
+async function runDatoDelDia(res: any) {
+  const svc = createClient(
+    process.env.VITE_SUPABASE_URL || 'https://vprjteqgmanntvisjrvp.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  );
+  const now = new Date();
+  const runDate = now.toISOString().slice(0, 10);
+  // Idempotente: si ya hay Dato del Día de hoy, no dupliques.
+  const { data: existing } = await svc.from('nightly_receipts')
+    .select('id').eq('routine', 'dato-del-dia').eq('run_date', runDate).limit(1);
+  if (existing && existing.length) return res.status(200).json({ success: true, skipped: 'already exists for ' + runDate });
+
+  const startOfYear = Date.UTC(now.getUTCFullYear(), 0, 0);
+  const dayOfYear = Math.floor((now.getTime() - startOfYear) / 86400000);
+  const pick = DATOS_DEL_DIA[dayOfYear % DATOS_DEL_DIA.length];
+  const post = `${pick.t}\n\n🔗 ${pick.u}\n\n— Angel | Menos revolú, más sistema, mejor vida.`;
+
+  const summary = `📲 **Dato del Día** (${runDate}) — copia y pega en FB/IG/WhatsApp. Cada dato con su fuente y su backlink al récord.\n\n> ${pick.t}\n> 🔗 ${pick.u}`;
+
+  const { error } = await svc.from('nightly_receipts').insert({
+    routine: 'dato-del-dia',
+    run_date: runDate,
+    summary_md: summary,
+    drafts: [{ platform: 'facebook', text: post }],
+    reviewed_by_angel: false,
+  });
+  if (error) return res.status(200).json({ success: false, error: error.message });
+  return res.status(200).json({ success: true, run_date: runDate, dato_index: dayOfYear % DATOS_DEL_DIA.length, url: pick.u });
 }
