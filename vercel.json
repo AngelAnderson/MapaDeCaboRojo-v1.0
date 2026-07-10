@@ -57,6 +57,8 @@
     { "source": "/registro/estado", "destination": "/api/mapa-pages?page=registro-estado" },
     { "source": "/raras", "destination": "/api/mapa-pages?page=raras" },
     { "source": "/enfermedades-raras", "destination": "/api/mapa-pages?page=raras" },
+    { "source": "/atlas", "destination": "/api/mapa-pages?page=atlas" },
+    { "source": "/fundadoras", "destination": "/api/mapa-pages?page=atlas" },
     { "source": "/comparte", "destination": "/api/mapa-pages?page=comparte" },
     { "source": "/porque", "destination": "/api/mapa-pages?page=porque" },
     { "source": "/recuperacion", "destination": "/api/mapa-pages?page=recuperacion" },
