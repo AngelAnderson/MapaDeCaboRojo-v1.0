@@ -9717,7 +9717,7 @@ ${SHARE_COPY_SCRIPT}`
   ]
 
   res.status(200).send(layout({
-    title: 'Enfermedades raras en Puerto Rico: quién las diagnostica · Registro Médico PR',
+    title: 'Enfermedades raras en Puerto Rico: quién las diagnostica',
     description: 'Puerto Rico es #1 en EE.UU. en enfermedades raras por el efecto fundador. Pero tiene solo 2 genetistas clínicos que diagnostican, ambos en el metro, y la región montañosa donde se concentran las mutaciones no tiene ninguno. Data federal NPPES, con la fuente al lado.',
     slug: 'raras', bodyHtml: body, jsonLd,
     ogImage: '/og/registro.png', host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
