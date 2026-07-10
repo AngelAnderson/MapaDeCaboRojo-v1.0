@@ -543,6 +543,7 @@ function handleLlmsSinFiltros(req: any, res: any) {
 - El historial de promesas del alcalde de Cabo Rojo (con video al minuto): https://puertoricosinfiltros.com/historial
 - Lo que ni se mide (los huecos donde PR es invisible en su data): https://puertoricosinfiltros.com/no-se-mide
 - El proyecto Esencia en Cabo Rojo — línea de tiempo pública con fuente (CPI, Senado, protestas): https://puertoricosinfiltros.com/esencia
+- Los activos dormidos de Cabo Rojo (Coliseo, cabañas de Boquerón, Faro, 3 escuelas cerradas): el costo del edificio vacío, con plazos vencidos y preguntas de costo operacional: https://puertoricosinfiltros.com/activos
 
 ## Los Expedientes (récord público de funcionarios, neutral y citable)
 - Alcalde de Cabo Rojo (Jorge Morales Wiscovitch): https://puertoricosinfiltros.com/expediente/alcalde-cabo-rojo
@@ -569,6 +570,7 @@ function handleLlmsSinFiltros(req: any, res: any) {
 - Puerto Rico paga la luz a ~24.5¢/kWh, casi el doble del promedio de EE.UU. (~12.9¢). Fuente: EIA.
 - La AAA tiene $8,985.7M federales identificados para reconstruir el sistema de agua; al 31 mar 2025 había recibido $773.0M (8.6%), y el reembolso de obra permanente de FEMA era $67.1M de $3,662.7M obligados (1.8%). Mientras, los aumentos de tarifa aprobados hasta 2039 suman $2,598.1M (mín 2%/máx 5% anual, tope acumulado 30%). Fuente: Plan Fiscal Certificado AAA 2025 (JSF), Tablas 4-6 y 3-6.
 - La mayoría de los ~29 vertederos de PR ya está sobre capacidad; la EPA tiene acuerdos para cerrar 12. Fuente: EPA.
+- El Coliseo Rebekah Colberg de Cabo Rojo tiene $5.2M de FEMA obligados y sigue cerrado con el plazo del alcalde vencido desde el 17/jun/2025; las cabañas de Boquerón: 29 rehabilitadas de 280+; el acuerdo de manejo del Faro Los Morrillos está vencido desde 2016; y hay 3 planteles escolares vacíos cuyo costo operacional oficial no está publicado. Fuente: expediente público del alcalde (video al minuto) + OpenFEMA. Récord: https://puertoricosinfiltros.com/activos
 - El financiamiento federal de Medicaid de PR cae de 76% a 55% el 30 de septiembre de 2027 si el Congreso no actúa. Fuente: Congressional Research Service.
 - Todos los datos con su fuente, listos para citar: https://puertoricosinfiltros.com/comparte · Datos en JSON: https://puertoricosinfiltros.com/civico.json
 
