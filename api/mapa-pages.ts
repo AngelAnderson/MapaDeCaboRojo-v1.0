@@ -6109,20 +6109,30 @@ async function handleSigueElDinero(req: any, res: any) {
 }
 
 const FUNCIONARIOS: Record<string, any> = {
-  'alcalde-cabo-rojo': { nombre: 'Jorge Morales Wiscovitch', cargo: 'Alcalde de Cabo Rojo', tipo: 'alcalde', cargo_id: 'fd65244c-9ba5-4f31-bf72-c4dbde040912', promesasPublicas: true, ambito: 'Cabo Rojo', municipios: [{ nombre: 'Cabo Rojo', key: 'cabo rojo' }] },
-  'representante-distrito-20': { nombre: 'Emilio Carlo Acosta', cargo: 'Representante · Cámara de PR · Distrito 20', tipo: 'representante', partido: 'PNP', cargo_id: 'b7c3ac60-5f99-4326-8a4d-e9eb8fd80c08', promesasPublicas: true, ambito: 'el Distrito 20 (Cabo Rojo, San Germán y Hormigueros)', municipios: [{ nombre: 'Cabo Rojo', key: 'cabo rojo' }, { nombre: 'San Germán', key: 'germ' }, { nombre: 'Hormigueros', key: 'hormigueros' }] },
+  'alcalde-cabo-rojo': { nombre: 'Jorge Morales Wiscovitch', cargo: 'Alcalde de Cabo Rojo', tipo: 'alcalde', cargo_id: 'fd65244c-9ba5-4f31-bf72-c4dbde040912', promesasPublicas: true, ambito: 'Cabo Rojo', municipios: [{ nombre: 'Cabo Rojo', key: 'cabo rojo' }], firmaDistrito: 'cabo-rojo', expedientePublicado: '2026-07-05' },
+  'representante-distrito-20': { nombre: 'Emilio Carlo Acosta', cargo: 'Representante · Cámara de PR · Distrito 20', tipo: 'representante', partido: 'PNP', cargo_id: 'b7c3ac60-5f99-4326-8a4d-e9eb8fd80c08', promesasPublicas: true, ambito: 'el Distrito 20 (Cabo Rojo, San Germán y Hormigueros)', municipios: [{ nombre: 'Cabo Rojo', key: 'cabo rojo' }, { nombre: 'San Germán', key: 'germ' }, { nombre: 'Hormigueros', key: 'hormigueros' }], firmaDistrito: 'distrito-20', expedientePublicado: '2026-07-05', termino: '2025–2028', terminoInicio: '2025-01-02', eleccion: '2028-11-07', sutraPerfil: 'https://sutra.oslpr.org/legisladores/M-953-AL' },
 }
+// Etiquetas cortas de medidas trackeadas (presentación; el texto completo vive en la DB, verificado contra SUTRA)
+const MEDIDA_LABEL: Record<string, string> = { RC0211: 'La luz en la PR-2', RC0210: 'Los solares abandonados', RCC0076: 'La escuela vocacional' }
 async function handleExpediente(req: any, res: any) {
   const f = String(req.query?.f || 'alcalde-cabo-rojo')
   const cfg = FUNCIONARIOS[f] || FUNCIONARIOS['alcalde-cabo-rojo']
   const money = (x: number) => '$' + Number(x || 0).toLocaleString('en-US')
   let promesas: any[] = []
+  let respuestas: any[] = []
+  let firmas: any[] = []
   const munis: any[] = []
   try {
-    let pq: any = supabase.from('quien_responde_promesas').select('estado,promesa,fuente_que_paso').eq('cargo_id', cfg.cargo_id)
+    let pq: any = supabase.from('quien_responde_promesas').select('estado,promesa,fuente_que_paso,numero_medida,sutra_url,fecha_radicacion,tramite_estado,tramite_fecha,tramite_detalle,verificado_sutra').eq('cargo_id', cfg.cargo_id)
     if (cfg.promesasPublicas) pq = pq.eq('publicable', true)
-    const pp = await pq
+    const [pp, rr, ffirmas] = await Promise.all([
+      pq,
+      supabase.from('funcionario_respuestas').select('respuesta,respondio_nombre,respondio_cargo,canal,evidencia_url,fecha_respuesta').eq('funcionario_slug', f).eq('publicable', true).eq('verificado', true).order('fecha_respuesta', { ascending: false }),
+      cfg.firmaDistrito ? supabase.from('agenda_firmas').select('firmante_nombre,firmante_cargo,partido,fecha_firma,evidencia_url,compromiso_version').eq('distrito', cfg.firmaDistrito).eq('publicable', true).eq('verificado', true).order('fecha_firma', { ascending: true }) : Promise.resolve({ data: [] } as any),
+    ])
     promesas = pp.data || []
+    respuestas = rr.data || []
+    firmas = ffirmas.data || []
     for (const m of cfg.municipios) {
       const [mm, ff, bb, dd] = await Promise.all([
         supabase.from('v_registro_municipio_intel').select('especialistas,psiquiatras,poblacion,poverty_pct,por_10k_hab,hpsa_salud_mental').ilike('municipio', `%${m.key}%`).maybeSingle(),
@@ -6138,15 +6148,67 @@ async function handleExpediente(req: any, res: any) {
   const cnt = (s: string) => promesas.filter((p: any) => p.estado === s).length
   const tile = (num: string, label: string) => `<div class="bg-white border-2 border-slate-200 rounded-xl p-4 text-center"><div class="text-2xl font-black text-slate-900">${num}</div><div class="text-xs text-slate-600 mt-1">${label}</div></div>`
 
-  const repMedidas = promesas.map((p: any) => {
-    const okSrc = /^https?:\/\//i.test(String(p.fuente_que_paso || ''))
-    return `<li>${escapeHtml(p.promesa)}${okSrc ? ` · <a href="${escapeHtml(p.fuente_que_paso)}" target="_blank" rel="noopener" class="text-teal-700 underline">fuente ↗</a>` : ''}</li>`
+  // ===== El Marcador del Término (T3): contador vivo por medida, verificado contra SUTRA =====
+  const DAY = 86400000
+  const hoy = new Date()
+  const dias = (from: string, to?: string) => Math.max(0, Math.floor(((to ? new Date(to + 'T12:00:00') : hoy).getTime() - new Date(from + 'T12:00:00').getTime()) / DAY))
+  const fmtF = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('es-PR', { day: 'numeric', month: 'short', year: 'numeric' })
+  const aprobadas = promesas.filter((p: any) => p.tramite_estado === 'aprobada_camara').length
+  const resultados = cnt('cumplido')
+  const verifDates = promesas.map((p: any) => p.verificado_sutra).filter(Boolean).sort()
+  const verifSutra = verifDates.length ? verifDates[verifDates.length - 1] : ''
+
+  const marcadorCards = promesas.slice().sort((a: any, b: any) => String(a.numero_medida || '').localeCompare(String(b.numero_medida || ''))).map((p: any) => {
+    const label = MEDIDA_LABEL[p.numero_medida] || String(p.promesa || '').slice(0, 70)
+    const rad = p.fecha_radicacion
+    const aprobada = p.tramite_estado === 'aprobada_camara'
+    const chip = aprobada
+      ? `<span class="text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-300 rounded-full px-3 py-1">✓ Aprobada en Cámara · unanimidad</span>`
+      : `<span class="text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded-full px-3 py-1">⏳ ${rad ? dias(p.tramite_fecha || rad) : '—'} días sin un trámite</span>`
+    const reloj = aprobada
+      ? `Radicada el ${fmtF(rad)} · aprobada a los <strong>${dias(rad, p.tramite_fecha)} días</strong> (${fmtF(p.tramite_fecha)}) · la investigación lleva <strong>${dias(p.tramite_fecha)} días</strong> en comisión sin informe rendido.`
+      : `Radicada el ${fmtF(rad)} · referida a comisión el ${fmtF(p.tramite_fecha)} · desde entonces: <strong>${dias(p.tramite_fecha)} días sin un solo trámite</strong> en el récord.`
+    const paso = (done: boolean, txt: string, fecha?: string) => `<div class="flex items-center gap-1.5 ${done ? 'text-emerald-700' : 'text-slate-400'}"><span class="font-black">${done ? '✓' : '○'}</span><span>${txt}${fecha ? ` <span class="text-slate-400">(${fmtF(fecha)})</span>` : ''}</span></div>`
+    return `
+<div class="not-prose border-2 ${aprobada ? 'border-emerald-200' : 'border-red-200'} bg-white rounded-2xl p-5 mt-4">
+  <div class="flex items-start justify-between gap-3 flex-wrap">
+    <div>
+      <span class="text-xs font-bold text-slate-400 uppercase tracking-wide">${escapeHtml(p.numero_medida || 'Medida')}</span>
+      <h3 class="text-lg font-black text-slate-900 mt-0.5" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(label)}</h3>
+    </div>
+    ${chip}
+  </div>
+  <p class="text-sm text-slate-600 mt-2">${escapeHtml(String(p.promesa || ''))}</p>
+  <div class="flex flex-wrap gap-x-5 gap-y-1 text-xs mt-3">
+    ${paso(true, 'Radicada', rad)}
+    ${paso(aprobada, 'Aprobada en Cámara', aprobada ? p.tramite_fecha : undefined)}
+    ${paso(false, 'Resultado en la calle')}
+  </div>
+  <p class="text-sm text-slate-700 mt-3">${reloj}</p>
+  ${p.tramite_detalle ? `<p class="text-xs text-slate-500 mt-1.5">${escapeHtml(p.tramite_detalle)}</p>` : ''}
+  ${p.sutra_url ? `<p class="text-xs mt-2"><a href="${escapeHtml(p.sutra_url)}" target="_blank" rel="noopener" class="text-teal-700 font-semibold">Verifícalo en SUTRA ↗</a></p>` : ''}
+</div>`
   }).join('')
+
+  const diasEleccion = cfg.eleccion ? dias(new Date().toISOString().slice(0, 10), cfg.eleccion) : 0
   const promesasHtml = cfg.tipo === 'alcalde'
     ? `<p>Dos vistas del mismo récord: <a href="/promesas" class="text-teal-700 font-semibold">el promesómetro</a> (todas las promesas por tema — basura, asfalto, policía, agua — con su estado), y <a href="/historial" class="text-teal-700 font-semibold">el historial</a> (${nP} con la cita textual y el enlace al minuto exacto del video: ${cnt('cumplido')} cumplida${cnt('cumplido') === 1 ? '' : 's'}, ${cnt('en_proceso')} en proceso, ${cnt('vencido')} vencida${cnt('vencido') === 1 ? '' : 's'}). Cada una dicha en un video público.</p>`
-    : `<p><strong>${nP} medidas legislativas radicadas</strong>, verificadas contra el récord oficial de la Cámara (SUTRA):</p>
-<ul class="text-sm text-slate-700 list-disc pl-5 space-y-1 mt-2">${repMedidas}</ul>
-<p class="text-xs text-slate-400 mt-2">Son resoluciones de investigación/estudio radicadas en 2025 (aún no son leyes aprobadas). Cada una con su número de medida (R. de la C.) y su fuente oficial.</p>`
+    : `
+<div class="not-prose bg-slate-900 text-white rounded-2xl p-5 sm:p-6 mt-3">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El Marcador del Término · ${escapeHtml(cfg.termino || '')}</p>
+  <div class="flex flex-wrap items-baseline gap-x-6 gap-y-2 mt-2">
+    <div><span class="text-4xl font-black" style="font-family:'Fraunces',Georgia,serif">${aprobadas} de ${nP}</span><span class="text-slate-300 text-sm ml-2">medidas del distrito aprobadas en Cámara</span></div>
+    <div><span class="text-4xl font-black ${resultados === 0 ? 'text-amber-300' : 'text-emerald-300'}" style="font-family:'Fraunces',Georgia,serif">${resultados}</span><span class="text-slate-300 text-sm ml-2">resultado${resultados === 1 ? '' : 's'} en la calle</span></div>
+  </div>
+  <p class="text-slate-300 text-sm mt-3">Estas fechas corren bajo su reloj: quedan <strong class="text-white">${diasEleccion.toLocaleString('en-US')} días</strong> para las elecciones de noviembre 2028. Este marcador no opina — se actualiza con el récord de SUTRA, y registra el verde igual que el rojo.</p>
+</div>
+<p class="mt-4">Las <strong>${nP} medidas dirigidas al Distrito 20</strong> que forman su récord de promesas, cada una con su reloj${cfg.sutraPerfil ? ` (su <a href="${escapeHtml(cfg.sutraPerfil)}" target="_blank" rel="noopener" class="text-teal-700 font-semibold">perfil completo en SUTRA ↗</a> registra 70+ medidas en las que figura como autor o coautor)` : ''}:</p>
+${marcadorCards}
+<div class="not-prose border-2 border-emerald-300 bg-emerald-50 rounded-2xl p-5 mt-5">
+  <p class="text-xs uppercase tracking-widest text-emerald-700 font-bold">La regla del verde</p>
+  <p class="text-slate-800 mt-1 text-sm"><strong>Este marcador premia igual que cobra.</strong> El día que el informe de RC0210 o RC0211 se rinda, que la escuela vocacional se mueva, o que se radique medida sobre el precipicio de Medicaid (30 sep 2027) — este expediente lo registra en verde, con fecha, para siempre. El camino más corto a un titular positivo en este récord es ejecutar. Aplica para él y para cualquiera que aspire al escaño.</p>
+</div>
+${verifSutra ? `<p class="text-xs text-slate-400 mt-3">Trámites verificados contra SUTRA (Sistema Único de Trámite Legislativo) el ${fmtF(verifSutra)}. ¿Se movió algo después? <a href="mailto:angel@angelanderson.com?subject=${encodeURIComponent('Expediente D20: hay trámite nuevo')}" class="text-teal-700">Avísanos</a> y se actualiza.</p>` : ''}`
 
   let estadoHtml = ''
   if (cfg.tipo === 'representante') {
@@ -6192,6 +6254,40 @@ async function handleExpediente(req: any, res: any) {
 </div>`
   }
 
+  // ===== T5: La respuesta del funcionario (Reclama tu expediente) =====
+  const diasSinReclamar = cfg.expedientePublicado ? dias(cfg.expedientePublicado) : 0
+  const claimMail = `mailto:angel@angelanderson.com?subject=${encodeURIComponent(`Reclamo el expediente: ${cfg.cargo}`)}&body=${encodeURIComponent(`Soy / represento la oficina de ${cfg.nombre}.\n\nRespondo al expediente publicado en puertoricosinfiltros.com/expediente/${f}.\n\nMi respuesta (se publica verbatim, con fecha y canal):\n\n`)}`
+  const respuestaHtml = respuestas.length
+    ? respuestas.map((r: any) => `
+<div class="not-prose border-2 border-teal-300 bg-teal-50 rounded-2xl p-5 mt-4">
+  <div class="flex items-start justify-between gap-3 flex-wrap">
+    <span class="text-xs font-bold text-teal-700 uppercase tracking-wide">Respuesta on-record${r.canal ? ` · ${escapeHtml(r.canal)}` : ''}</span>
+    ${r.fecha_respuesta ? `<span class="text-xs text-slate-500">${fmtF(r.fecha_respuesta)}</span>` : ''}
+  </div>
+  <blockquote class="text-slate-800 mt-2 italic border-l-4 border-teal-400 pl-4">${escapeHtml(r.respuesta)}</blockquote>
+  <p class="text-xs text-slate-500 mt-2">— ${escapeHtml(r.respondio_nombre || cfg.nombre)}${r.respondio_cargo ? `, ${escapeHtml(r.respondio_cargo)}` : ''}. Publicada verbatim, sin editar.${r.evidencia_url ? ` <a href="${escapeHtml(r.evidencia_url)}" target="_blank" rel="noopener" class="text-teal-700 font-semibold">Evidencia ↗</a>` : ''}</p>
+</div>`).join('')
+    : `
+<div class="not-prose border-2 border-dashed border-slate-300 bg-slate-50 rounded-2xl p-5 mt-4">
+  <div class="flex items-start justify-between gap-3 flex-wrap">
+    <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Sin reclamar</span>
+    <span class="text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded-full px-3 py-1">${diasSinReclamar} días publicado · sin respuesta del funcionario</span>
+  </div>
+  <p class="text-sm text-slate-700 mt-2">Este expediente puede ser reclamado por ${escapeHtml(cfg.nombre)} o su oficina. Su respuesta a cualquier punto — corrección, contexto, o lo que quiera que el distrito sepa — <strong>se publica aquí verbatim, con fecha, sin editar</strong>, al lado del dato. La regla es simétrica: registramos su versión con el mismo rigor que el récord.</p>
+  <p class="text-sm mt-3"><a href="${claimMail}" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700 no-underline">Reclamar este expediente →</a></p>
+  <p class="text-xs text-slate-400 mt-2">Verificamos que la respuesta venga de la oficina (email oficial o declaración pública citable) antes de publicarla. Este contador corre solo.</p>
+</div>`
+
+  // ===== T10: La Firma (la agenda se vuelve compromiso público firmable) =====
+  const firmaHtml = cfg.firmaDistrito ? `
+<h2 id="firma">La Firma: la agenda se puede firmar</h2>
+<p class="text-slate-600 -mt-2">La agenda de arriba no es de ningún partido — sale de la data. Por eso <strong>cualquier funcionario o aspirante a servirle a ${escapeHtml(cfg.ambito)}</strong> puede comprometerse públicamente con ella. La firma se registra aquí con fecha y evidencia, y el marcador le da seguimiento contra cada fecha — el verde y el rojo por igual.</p>
+${firmas.length
+    ? `<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Firmante</th><th class="py-2 px-3">Cargo</th><th class="py-2 px-3">Fecha</th><th class="py-2 px-3">Evidencia</th></tr></thead><tbody>${firmas.map((s: any) => `<tr class="border-t border-slate-100"><td class="py-1.5 px-3 font-semibold text-slate-800">${escapeHtml(s.firmante_nombre)}${s.partido ? ` <span class="text-xs text-slate-400">(${escapeHtml(s.partido)})</span>` : ''}</td><td class="py-1.5 px-3 text-slate-600">${escapeHtml(s.firmante_cargo || '')}</td><td class="py-1.5 px-3 text-slate-600">${s.fecha_firma ? fmtF(s.fecha_firma) : ''}</td><td class="py-1.5 px-3">${s.evidencia_url ? `<a href="${escapeHtml(s.evidencia_url)}" target="_blank" rel="noopener" class="text-teal-700 font-semibold">ver ↗</a>` : '—'}</td></tr>`).join('')}</tbody></table></div>`
+    : `<div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-3"><p class="text-sm text-slate-700"><strong>Nadie la ha firmado todavía.</strong> El primero que firme — del partido que sea — queda en el récord como el primero. Eso no se borra.</p></div>`}
+<p class="text-sm mt-3"><a href="mailto:angel@angelanderson.com?subject=${encodeURIComponent(`Firmo la Agenda (${cfg.firmaDistrito})`)}&body=${encodeURIComponent('Nombre completo:\nCargo o aspiración:\nPartido (opcional):\nEvidencia pública de la firma (post, carta, o declaración):\n\nMe comprometo públicamente con la agenda que sale de la data, versión v1-2026-07, y acepto que este récord le dé seguimiento con fechas.')}" class="inline-flex items-center gap-1 bg-emerald-700 text-white font-bold px-4 py-2 rounded-full hover:bg-emerald-800 no-underline">Firmar la Agenda →</a></p>
+<p class="text-xs text-slate-400 mt-2">Registrar una firma no es un endoso: este récord no apoya candidatos, les da seguimiento. La firma se verifica con evidencia pública antes de publicarse (versión del compromiso: v1-2026-07).</p>` : ''
+
   const body = `
 <div class="not-prose bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El Expediente</p>
@@ -6201,8 +6297,12 @@ async function handleExpediente(req: any, res: any) {
 
 <p class="text-lg text-slate-600 mt-4">Todo lo que el récord público dice sobre su gestión y el estado de ${escapeHtml(cfg.ambito)}, en un solo lugar y con la fuente al lado. Para el vecino que decide, el periodista que investiga, y cualquiera que quiera servir mejor.</p>
 
-<h2>Las promesas</h2>
+<h2>Las promesas${cfg.tipo === 'representante' ? ': el marcador del término' : ''}</h2>
 ${promesasHtml}
+
+<h2>La respuesta del funcionario</h2>
+<p class="text-slate-600 -mt-2">El expediente tiene dos lados. Este es el suyo.</p>
+${respuestaHtml}
 
 <h2>El estado ${cfg.tipo === 'representante' ? 'del distrito' : 'de Cabo Rojo'}, en números</h2>
 <p class="text-slate-600 -mt-2">Lo que hereda, administra y le entrega a la gente. Cada número con su récord.</p>
@@ -7389,7 +7489,7 @@ ${[
     { label: 'Cero de todo', txt: `3 pueblos de Puerto Rico no tienen ni un especialista médico de ninguna clase: Maricao, Las Marías y Florida.` },
     { label: 'El más pobre', txt: `Guánica es el municipio más pobre de Puerto Rico (63.6% bajo el nivel de pobreza). Tiene la designación federal de salud mental con el puntaje máximo posible y cero psiquiatras.` },
     { label: 'Para médicos y psicólogos', txt: `Si eres psiquiatra, psicólogo o médico primario: el gobierno federal repaga tus préstamos estudiantiles (hasta $75,000 en primaria, $50,000 en salud mental) por ejercer donde hace falta. En 26 pueblos de PR no tendrías competencia local. El dinero ya está aprobado.`, tag: 'medicos' as const },
-    { label: 'La salida', txt: `Esto tiene arreglo sin dinero nuevo: la designación federal ya existe, el incentivo ya existe y la red de clínicas 330 ya existe. Falta inscribir el sitio donde el médico lo cobre. Piloto propuesto: Maricao y Las Marías con el Hospital de Castañer.`, tag: 'medicos' as const },
+    { label: 'La salida', txt: `Esto tiene arreglo sin dinero nuevo. Verificado contra HRSA (julio 2026): PR tiene 123 sitios NHSC activos donde un médico puede cobrar el repago de préstamos. De los 33 pueblos del cupón sin cobrar, 28 YA tienen sitio aprobado y aun así cero psiquiatras: lo que falta es el médico que reclame la oferta. Solo en 5 falta el papel: Añasco, Guánica, Guayanilla, Hormigueros y Loíza.`, tag: 'medicos' as const },
   ].map((f, i) => {
     const copyText = `${f.txt} Fuente: puertoricosinfiltros.com/registro/estado`
     const box = (f as any).tag === 'medicos' ? 'border-teal-300 bg-teal-50/40' : (f as any).tag === 'local' ? 'border-amber-300 bg-amber-50/40' : 'border-slate-200 bg-white'
@@ -7439,8 +7539,8 @@ ${[
 <div class="not-prose mt-4 space-y-3">
   <div class="border-l-4 border-teal-500 bg-white border border-slate-200 rounded-r-2xl p-4">
     <div class="flex items-center gap-2 flex-wrap"><span class="text-xs font-black uppercase tracking-wider bg-teal-600 text-white rounded-full px-2.5 py-0.5">Escalón 1 · semanas · ~$0</span></div>
-    <p class="font-bold text-slate-900 mt-2">El papel: inscribir sitios aprobados NHSC</p>
-    <p class="text-sm text-slate-700 mt-1">El repago de préstamos (hasta $75,000 primaria / $50,000 salud mental) <strong>ya está aprobado</strong>. Falta que el centro de salud del pueblo se inscriba como "sitio aprobado" donde el médico lo cobre. No requiere ley ni fondos nuevos: es papeleo ante HRSA. <strong>El piloto natural:</strong> Maricao + Las Marías con el Hospital General de Castañer. Y cada uno de los 33 cupones tiene su centro 330 regional como vehículo; la data está lista para la Oficina de Cuidado Primario del Departamento de Salud, que es quien radica.</p>
+    <p class="font-bold text-slate-900 mt-2">El papel y el médico (verificado contra la lista federal de sitios)</p>
+    <p class="text-sm text-slate-700 mt-1">El repago de préstamos (hasta $75,000 primaria / $50,000 salud mental) <strong>ya está aprobado</strong>. Y bajamos la lista federal de sitios donde un médico puede cobrarlo: <strong>PR tiene 123 sitios NHSC activos en 66 municipios</strong> (HRSA, julio 2026). El hallazgo que cambia el cuento: de los 33 pueblos del cupón, <strong>28 ya tienen sitio aprobado</strong> — Maricao y Las Marías incluidos (clínicas del Migrant Health Center; el Hospital de Castañer está activo en Lares y Jayuya) — <strong>y aun así, cero psiquiatras</strong>. Solo en <strong>5 pueblos falta el papel</strong>: Añasco, Guánica, Guayanilla, Hormigueros y Loíza. En esos 5, el paso es que su centro 330 regional inscriba un sitio (papeleo ante HRSA, no ley; la Oficina de Cuidado Primario del Departamento de Salud es quien radica). En los otros 28, el cuello de botella no es el formulario: <strong>es que ningún médico ha reclamado la oferta</strong>. Difundirla cuesta casi nada, y ahí entran los escalones 2 y 5.</p>
   </div>
   <div class="border-l-4 border-teal-400 bg-white border border-slate-200 rounded-r-2xl p-4">
     <div class="flex items-center gap-2 flex-wrap"><span class="text-xs font-black uppercase tracking-wider bg-teal-500 text-white rounded-full px-2.5 py-0.5">Escalón 2 · meses · costo bajo</span></div>
