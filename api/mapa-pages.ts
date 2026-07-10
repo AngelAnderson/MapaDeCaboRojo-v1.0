@@ -9563,6 +9563,169 @@ function handleAgua(req: any, res: any) {
   }))
 }
 
+// ====================== /raras — Enfermedades raras: quién las diagnostica en PR ======================
+// Récord canónico. Cruza la noticia (PR #1 de EE.UU. en enfermedades raras, Ley 9-2025/OER) con la
+// oferta real de genética clínica verificada contra NPPES (federal) + neurología por región (DB propia).
+// Data verificada esta sesión (jul 2026). Cero data inventada. Amplifica a TBCK Foundation, no la reemplaza.
+async function handleRaras(req: any, res: any) {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=300')
+
+  // --- Oferta de genética clínica en PR (NPPES, jul 2026) ---
+  // Solo direcciones de práctica EN PR. Excluidos PhD de laboratorio (170100000X, ~24) del conteo de
+  // "quién diagnostica pacientes" porque son investigación/lab, no clínica de rara-enfermedad.
+  const geneticistas = [
+    { n: 'Dr. Alberto Santiago Cornier', tax: 'Genética Clínica (M.D.)', mun: 'Santurce, San Juan', tel: '787-728-8316', npi: '1285763144' },
+    { n: 'Dra. Cristel Chapel Crespo', tax: 'Genética Clínica (M.D.)', mun: 'Manatí', tel: '787-621-3270', npi: '1275821555' },
+    { n: 'Dr. Simón E. Carlo', tax: 'Genética Molecular Clínica', mun: 'Santurce, San Juan', tel: '787-728-8316', npi: '1023139896' },
+    { n: 'Dra. Frances P. Vélez-Bartolomei', tax: 'Genética Bioquímica Clínica', mun: 'San Juan', tel: '787-728-8316', npi: '1083099220' },
+    { n: 'Yoliann Mojica Algarín, M.S.', tax: 'Consejería Genética', mun: 'San Juan', tel: '787-728-8316', npi: '1669353322' },
+    { n: 'Recinto de Ciencias Médicas (UPR)', tax: 'Programa de Genética Médica', mun: 'Río Piedras, San Juan', tel: '787-754-9165', npi: '1710275144' },
+  ]
+  const gRows = geneticistas.map(g => `
+    <tr class="border-b border-slate-100">
+      <td class="py-3 pr-3"><span class="font-semibold text-slate-800">${g.n}</span><br><span class="text-xs text-slate-500">${g.tax}</span></td>
+      <td class="py-3 pr-3 text-slate-600 whitespace-nowrap">${g.mun}</td>
+      <td class="py-3 pr-3 whitespace-nowrap"><a href="tel:${g.tel}" class="text-teal-700 font-semibold">${g.tel}</a></td>
+      <td class="py-3 text-right"><a href="https://npiregistry.cms.hhs.gov/provider-view/${g.npi}" target="_blank" rel="noopener" class="text-xs text-slate-400 hover:text-teal-700">NPI ${g.npi} ↗</a></td>
+    </tr>`).join('')
+
+  // --- Neurología por región (DB propia, NPI-verificada) ---
+  const neuroRegiones = [
+    { r: 'Metro (San Juan y alrededores)', neu: 108, ncir: 31, ped: 39 },
+    { r: 'Este', neu: 28, ncir: 6, ped: 10 },
+    { r: 'Oeste', neu: 16, ncir: 1, ped: 7 },
+    { r: 'Sur', neu: 7, ncir: 2, ped: 12 },
+    { r: 'Norte', neu: 6, ncir: 4, ped: 4 },
+    { r: 'Centro (la montaña)', neu: 1, ncir: 0, ped: 2 },
+  ]
+  const nRows = neuroRegiones.map(x => {
+    const alarma = x.r.startsWith('Centro')
+    return `
+    <tr class="border-b border-slate-100 ${alarma ? 'bg-red-50' : ''}">
+      <td class="py-2.5 pr-3 ${alarma ? 'font-bold text-red-800' : 'text-slate-700'}">${x.r}</td>
+      <td class="py-2.5 pr-3 text-center ${alarma ? 'font-black text-red-700' : 'text-slate-800'}">${x.neu}</td>
+      <td class="py-2.5 pr-3 text-center text-slate-600">${x.ncir}</td>
+      <td class="py-2.5 text-center text-slate-600">${x.ped}</td>
+    </tr>`
+  }).join('')
+
+  // --- Datos citables (botón Copiar por dato) ---
+  const citas = [
+    { t: 'Puerto Rico es la jurisdicción de EE.UU. con más enfermedades raras, por el efecto fundador de la mezcla taíno, española y africana. (El Vocero, 10 jul 2026; Ley 9-2025)' },
+    { t: 'El registro oficial de personas con enfermedades raras (Ley 9-2025, Oficina OER del Depto. de Salud, presupuesto $450,000) todavía está "en desarrollo": 42 enfermedades catalogadas, sin conteo de cuántas personas las padecen ni dónde viven. (El Vocero, 10 jul 2026)' },
+    { t: 'Puerto Rico tiene 2 genetistas clínicos (M.D.) con dirección de práctica en la isla que diagnostican pacientes, ambos en el corredor San Juan-Manatí. Contando subespecialidades de genética clínica, son 4, todos en San Juan/Santurce y Manatí. (Registro federal NPPES, jul 2026; registromedicopr.com/raras)' },
+    { t: 'La región central montañosa de Puerto Rico, donde se concentran mutaciones fundadoras como el albinismo y el síndrome HPS-3, tiene 1 neurólogo, 0 neurocirujanos y 0 genetistas para toda la región. (Registro federal NPPES, jul 2026; registromedicopr.com/raras)' },
+    { t: 'Diagnosticar una enfermedad rara en Puerto Rico toma entre 2 y 10 años ("odisea diagnóstica"). A Melissmar López Pimentel le tomó 11 años recibir el diagnóstico de síndrome TBCK, el "Síndrome Boricua". (El Vocero, 10 jul 2026)' },
+  ]
+  const citasHtml = citas.map((c) => `
+    <div class="not-prose flex gap-3 items-start bg-white border border-slate-200 rounded-xl p-4 mb-2.5">
+      <div class="text-sm text-slate-700 flex-1">${escapeHtml(c.t)}</div>
+      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(c.t)}"><i class="fa-regular fa-copy"></i> Copiar</button>
+    </div>`).join('')
+
+  const body = `
+<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <span class="text-slate-700">Enfermedades raras</span></nav>
+
+<h1 class="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">Puerto Rico, líder en enfermedades raras.<br><span class="text-teal-700">¿Y quién las diagnostica?</span></h1>
+<p class="text-lg text-slate-600 mt-3">El gobierno anunció que Puerto Rico es la jurisdicción de Estados Unidos con más enfermedades raras, y que va a construir un registro oficial de quién las padece. Este récord mira el otro lado del problema: la capacidad de diagnosticarlas que ya existe hoy, contada con data federal. Porque una enfermedad que nadie puede identificar es tan grave como una que no existe.</p>
+
+<div class="not-prose grid grid-cols-2 sm:grid-cols-4 gap-3 my-8">
+  <div class="bg-slate-900 text-white rounded-2xl p-4"><div class="text-3xl font-black">#1</div><div class="text-xs text-slate-300 mt-1">jurisdicción de EE.UU. en enfermedades raras</div></div>
+  <div class="bg-white border border-slate-200 rounded-2xl p-4"><div class="text-3xl font-black text-slate-900">42</div><div class="text-xs text-slate-500 mt-1">enfermedades catalogadas hasta hoy (de 7,000 en el mundo)</div></div>
+  <div class="bg-white border border-slate-200 rounded-2xl p-4"><div class="text-3xl font-black text-red-700">2</div><div class="text-xs text-slate-500 mt-1">genetistas clínicos (M.D.) que diagnostican, ambos en el metro</div></div>
+  <div class="bg-white border border-slate-200 rounded-2xl p-4"><div class="text-3xl font-black text-slate-900">2 a 10</div><div class="text-xs text-slate-500 mt-1">años que toma llegar a un diagnóstico ("odisea diagnóstica")</div></div>
+</div>
+
+<h2>Lo que dice la noticia</h2>
+<p>El 11 de abril de 2025 se firmó la <strong>Ley 9-2025</strong>, que creó la <strong>Oficina de Enlace para el Apoyo y Registro de Personas con Enfermedades Raras (OER)</strong>, adscrita al Departamento de Salud, con un presupuesto de <strong>$450,000</strong>. Su director, el Dr. Fernando Ocasio, explicó a El Vocero que la oficina "está desarrollando la interfase de lo que va a ser el registro" y que hasta el momento han identificado <strong>42 enfermedades raras</strong> en la isla, de las cerca de 7,000 catalogadas en el mundo.</p>
+<p>Una enfermedad se considera "rara" cuando afecta a menos de 2 de cada 10,000 personas. El presidente del Colegio de Médicos-Cirujanos, el Dr. Carlos Díaz, señaló que "el sistema no es ágil, no es rápido", y que las aseguradoras cuestionan y deniegan los estudios especializados que hacen falta para llegar al diagnóstico.</p>
+
+<h2>Por qué a los boricuas les toca más</h2>
+<p>La razón tiene nombre: el <strong>efecto fundador</strong>. La población de Puerto Rico viene de una mezcla de tres raíces (taína, española y africana) y de grupos que se quedaron aislados por generaciones. Cuando una mutación entra en un grupo pequeño y ese grupo crece más o menos entre sí, la mutación se vuelve mucho más común que en el resto del mundo.</p>
+<p>Eso hace que ciertas enfermedades genéticas raras sean, aquí, menos raras. El albinismo, por ejemplo, aparece en cerca de 1 de cada 20,000 personas en Puerto Rico, y el síndrome HPS-3 (un tipo de albinismo con problemas de sangrado) se concentra en pueblos específicos de la montaña: <strong>Comerío, Naranjito y Barranquitas</strong>. La genética boricua no es un dato de trivia. Dibuja un mapa.</p>
+
+<h2>El cuello de botella que nadie contó: quién puede diagnosticar</h2>
+<p>Para diagnosticar una enfermedad rara casi siempre hace falta un genetista clínico: un médico entrenado en leer el ADN y ponerle nombre a lo que otros especialistas no encuentran. Buscamos en el registro federal NPPES cuántos hay en Puerto Rico. Este es el conteo, verificado uno por uno (julio 2026):</p>
+
+<div class="not-prose overflow-x-auto my-5">
+<table class="w-full text-sm min-w-[520px]">
+  <thead><tr class="text-left text-xs uppercase tracking-wide text-slate-400 border-b border-slate-200"><th class="pb-2 pr-3 font-semibold">Quién</th><th class="pb-2 pr-3 font-semibold">Dónde</th><th class="pb-2 pr-3 font-semibold">Teléfono</th><th class="pb-2 font-semibold text-right">Verificar</th></tr></thead>
+  <tbody>${gRows}</tbody>
+</table>
+</div>
+<p class="text-sm text-slate-500 -mt-1">Los <strong>2</strong> genetistas clínicos (M.D.) que diagnostican pacientes están en Santurce y Manatí. Contando las subespecialidades de genética clínica (molecular y bioquímica), son 4, y <strong>cuatro de ellos comparten un mismo edificio en la Calle San Jorge de Santurce</strong>. Es decir: la genética clínica de todo Puerto Rico corre, en la práctica, desde un puñado de oficinas en el área metro. Fuente: registro federal NPPES (taxonomías 207SG0201X, 207SG0202X, 207SG0203X, 170300000X).</p>
+
+<h2>Y las mutaciones se concentran donde no hay nadie</h2>
+<p>Aquí es donde los dos mapas se cruzan. Las mutaciones fundadoras se concentran en la montaña. Los especialistas que las diagnostican y las manejan (genetistas, neurólogos, pediatras) se concentran en el metro. Miramos nuestra base de datos, verificada contra NPPES, para la región central montañosa:</p>
+
+<div class="not-prose overflow-x-auto my-5">
+<table class="w-full text-sm min-w-[480px]">
+  <thead><tr class="text-left text-xs uppercase tracking-wide text-slate-400 border-b border-slate-200"><th class="pb-2 pr-3 font-semibold">Región</th><th class="pb-2 pr-3 font-semibold text-center">Neurólogos</th><th class="pb-2 pr-3 font-semibold text-center">Neurocirujanos</th><th class="pb-2 font-semibold text-center">Pediatras</th></tr></thead>
+  <tbody>${nRows}</tbody>
+</table>
+</div>
+<p class="text-slate-700"><strong>La región central montañosa (la misma donde se concentran las mutaciones fundadoras) tiene 1 neurólogo, 0 neurocirujanos y 0 genetistas para toda la región.</strong> Una familia de Comerío o Barranquitas con un hijo que necesita un genetista maneja dos horas o más para llegar a Santurce. Eso, cuando ya saben que necesitan un genetista. La mayoría no lo sabe todavía. Ese es el verdadero significado de la "odisea diagnóstica": no es solo que la ciencia sea difícil, es que no se sabe a quién ver ni dónde está.</p>
+
+<h2>La odisea, en una familia con nombre</h2>
+<p>Melissmar López Pimentel nació en 2007. Sus padres pasaron <strong>11 años</strong> buscando respuestas antes de que, en 2018, le diagnosticaran el <strong>síndrome TBCK</strong>, una enfermedad neurogenética con una variante fundadora identificada en Puerto Rico. Por eso se le conoce como el <strong>"Síndrome Boricua"</strong> (la mutación p.R126X). En el mundo hay cerca de 100 casos diagnosticados; la fundación que crearon sus padres ha identificado alrededor de 21 familias solo en Puerto Rico.</p>
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-5 my-5">
+  <p class="font-bold text-teal-900">Si esto es tu familia, no estás solo</p>
+  <p class="text-sm text-teal-800 mt-1">Los padres de Melissmar fundaron la <strong>TBCK Foundation of PR</strong>, que acompaña a familias que enfrentan la incertidumbre después de un diagnóstico raro. Su trabajo es real y llegó antes que cualquier oficina del gobierno.</p>
+  <a href="https://www.tbckfoundation.org/es" target="_blank" rel="noopener" class="inline-flex items-center gap-2 mt-3 bg-teal-700 hover:bg-teal-800 text-white font-bold px-4 py-2 rounded-full text-sm"><i class="fa-solid fa-heart"></i> Conoce la TBCK Foundation</a>
+</div>
+
+<h2>Lo declarado vs. lo entregado</h2>
+<p>El gobierno se puso metas: infraestructura de datos interoperable y cubrir <strong>75% de los casos identificables para el 2030</strong>. Es una promesa buena. También es una promesa a cinco años, con $450,000, empezando desde 42 enfermedades catalogadas y sin saber todavía cuántas personas las padecen ni en qué pueblos viven. Vamos a seguirle el paso a esa promesa, año por año, en <a href="https://puertoricosinfiltros.com" class="text-teal-700 font-semibold">Puerto Rico Sin Filtros</a>. Este récord se queda con el otro lado: quién puede diagnosticar hoy, y dónde.</p>
+
+<h2>Datos citables</h2>
+<p class="text-slate-600 -mt-2">Cada dato con su fuente. Cópialo y úsalo (prensa, escuela, un mensaje a la familia). Si citas la parte de genetistas, el enlace es registromedicopr.com/raras.</p>
+${citasHtml}
+
+<div class="not-prose mt-8 bg-slate-900 rounded-2xl p-6 text-center text-white">
+  <p class="text-lg font-bold mb-1">¿Necesitas encontrar un especialista hoy?</p>
+  <p class="text-sm text-slate-300 mb-4">El registro te dice quién existe, en qué pueblo y con qué teléfono, verificado contra el gobierno federal. Sin cuenta, sin registro, gratis.</p>
+  <div class="flex flex-wrap gap-3 justify-center">
+    <a href="/registro" class="inline-flex items-center gap-2 bg-white text-slate-900 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-slate-100"><i class="fa-solid fa-magnifying-glass"></i> Buscar en el registro</a>
+    <a href="/pueblo" class="inline-flex items-center gap-2 bg-teal-700 text-white font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-800"><i class="fa-solid fa-location-dot"></i> El semáforo de tu pueblo</a>
+  </div>
+</div>
+
+${shareRow({ text: 'Puerto Rico es #1 en EE.UU. en enfermedades raras. Tiene 2 genetistas clínicos que diagnostican, ambos en el metro, y la región de la montaña (donde se concentran las mutaciones boricuas) tiene 0. La data federal, con la fuente al lado:', url: 'https://registromedicopr.com/raras', toWho: 'A quien tenga un caso raro en la familia, a un maestro, a un periodista de salud. Cada dato trae su fuente.' })}
+
+${regDisclaimer(false)}
+${SHARE_COPY_SCRIPT}`
+
+  const jsonLd = [
+    { '@context': 'https://schema.org', '@type': 'MedicalWebPage', name: 'Enfermedades raras en Puerto Rico: quién las diagnostica', url: 'https://registromedicopr.com/raras', inLanguage: 'es',
+      about: { '@type': 'MedicalCondition', name: 'Rare diseases / Enfermedades raras' },
+      publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' } },
+    { '@context': 'https://schema.org', '@type': 'Dataset', name: 'Genetistas clínicos y neurología por región en Puerto Rico',
+      description: 'Conteo verificado contra el registro federal NPPES de genetistas clínicos y neurólogos por región en Puerto Rico, en el contexto del liderato de la isla en enfermedades raras.',
+      url: 'https://registromedicopr.com/raras', inLanguage: 'es', license: 'https://creativecommons.org/licenses/by/4.0/',
+      creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+      isBasedOn: 'https://npiregistry.cms.hhs.gov' },
+    { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [
+      { '@type': 'Question', name: '¿Cuántos genetistas clínicos hay en Puerto Rico?', acceptedAnswer: { '@type': 'Answer', text: 'Según el registro federal NPPES (julio 2026), Puerto Rico tiene 2 genetistas clínicos (M.D.) con dirección de práctica en la isla que diagnostican pacientes, ambos en el corredor San Juan-Manatí. Contando subespecialidades de genética clínica (molecular y bioquímica), son 4, todos en el área metro y Manatí. Hay además 1 consejera genética en San Juan.' } },
+      { '@type': 'Question', name: '¿Por qué Puerto Rico tiene tantas enfermedades raras?', acceptedAnswer: { '@type': 'Answer', text: 'Por el efecto fundador: la mezcla taína, española y africana y el aislamiento de ciertos grupos hicieron que algunas mutaciones genéticas sean mucho más comunes en Puerto Rico que en el resto del mundo. Varias se concentran en pueblos específicos de la montaña, como el albinismo y el síndrome HPS-3 en Comerío, Naranjito y Barranquitas.' } },
+      { '@type': 'Question', name: '¿Qué es el Síndrome Boricua?', acceptedAnswer: { '@type': 'Answer', text: 'Es el síndrome TBCK, una enfermedad neurogenética rara con una variante fundadora (la mutación p.R126X) identificada en Puerto Rico. La TBCK Foundation of PR ha identificado alrededor de 21 familias en la isla.' } },
+    ] },
+    { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Registro Médico PR', item: 'https://registromedicopr.com/registro' },
+      { '@type': 'ListItem', position: 2, name: 'Enfermedades raras', item: 'https://registromedicopr.com/raras' },
+    ] },
+  ]
+
+  res.status(200).send(layout({
+    title: 'Enfermedades raras en Puerto Rico: quién las diagnostica · Registro Médico PR',
+    description: 'Puerto Rico es #1 en EE.UU. en enfermedades raras por el efecto fundador. Pero tiene solo 2 genetistas clínicos que diagnostican, ambos en el metro, y la región montañosa donde se concentran las mutaciones no tiene ninguno. Data federal NPPES, con la fuente al lado.',
+    slug: 'raras', bodyHtml: body, jsonLd,
+    ogImage: '/og/registro.png', host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+    canonicalUrl: 'https://registromedicopr.com/raras',
+    lang: 'es',
+  }))
+}
+
 export default async function handler(req: any, res: any) {
   const page = String(req.query.page || '')
 
@@ -9586,6 +9749,7 @@ export default async function handler(req: any, res: any) {
     case 'registro-desiertos': return await handleRegistroDesiertos(req, res)
     case 'registro-mapa': return await handleRegistroMapa(req, res)
     case 'registro-estado': return await handleRegistroEstado(req, res)
+    case 'raras': return await handleRaras(req, res)
     case 'comparte': return await handleComparte(req, res)
     case 'porque': return await handleRegistroPorque(req, res)
     case 'recuperacion': return await handleRecuperacion(req, res)
