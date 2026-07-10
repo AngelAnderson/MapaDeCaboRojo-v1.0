@@ -6087,10 +6087,11 @@ async function handleRetiro(req: any, res: any) {
     rows = data || []
   } catch (_) { /* fallback abajo */ }
   const top = rows.slice(0, 20)
+  const crIdx = rows.findIndex((r: any) => /cabo rojo/i.test(r.municipio || ''))
   const n = (x: any) => Number(x || 0).toLocaleString('en-US')
-  const tablaRows = top.length ? top.map((r: any, i: number) => `
-    <tr class="border-t border-slate-100 ${i < 5 ? 'bg-red-50/40' : ''}">
-      <td class="py-2 px-3 font-black text-slate-400">${i + 1}</td>
+  const fila = (r: any, i: number, hl = false) => `
+    <tr class="border-t border-slate-100 ${hl ? 'bg-teal-50/60' : (i < 5 ? 'bg-red-50/40' : '')}">
+      <td class="py-2 px-3 font-black ${hl ? 'text-teal-700' : 'text-slate-400'}">${i + 1}</td>
       <td class="py-2 px-3 font-semibold text-slate-800">${escapeHtml(r.municipio)} <span class="text-xs text-slate-400">${escapeHtml(r.region || '')}</span></td>
       <td class="py-2 px-3 text-right font-bold text-slate-900">${Number(r.huracan_index).toFixed(1)}</td>
       <td class="py-2 px-3 text-right text-slate-600">${Number(r.pct_65plus).toFixed(1)}%</td>
@@ -6098,7 +6099,11 @@ async function handleRetiro(req: any, res: any) {
       <td class="py-2 px-3 text-right text-slate-600">${Number(r.pobreza_65_pct).toFixed(1)}%</td>
       <td class="py-2 px-3 text-right text-slate-600">${r.especialistas}</td>
       <td class="py-2 px-3 text-right text-slate-600">${Number(r.pct_sin_internet).toFixed(0)}%</td>
-    </tr>`).join('') : `<tr><td colspan="8" class="py-3 px-3 text-slate-500 text-sm">Data en vivo no disponible ahora. Top 5 verificado (jul 2026): Guánica 82.0 · Las Marías 80.2 · Maunabo 71.4 · San Germán 71.4 · Sabana Grande 69.5.</td></tr>`
+    </tr>`
+  const crRow = (crIdx >= 20) ? `
+    <tr class="border-t border-slate-200"><td colspan="8" class="py-1 px-3 text-center text-slate-300 text-xs">· · ·</td></tr>
+    ${fila(rows[crIdx], crIdx, true)}` : ''
+  const tablaRows = top.length ? (top.map((r: any, i: number) => fila(r, i)).join('') + crRow) : `<tr><td colspan="8" class="py-3 px-3 text-slate-500 text-sm">Data en vivo no disponible ahora. Top 5 verificado (jul 2026): Guánica 82.0 · Las Marías 80.2 · Maunabo 71.4 · San Germán 71.4 · Sabana Grande 69.5.</td></tr>`
 
   const citables = [
     `En Puerto Rico, 4 de cada 10 personas mayores de 65 años viven en pobreza (39.4%). En Estados Unidos, 1 de cada 9 (11.2%). Fuente: Censo/ACS 2024 × registro federal, compilado en puertoricosinfiltros.com/retiro`,
@@ -6116,6 +6121,10 @@ async function handleRetiro(req: any, res: any) {
 <h1>El Huracán Lento</h1>
 <p class="text-lg text-slate-600 mt-2">Dónde la vejez, la pobreza y la ausencia del médico ya coinciden, municipio por municipio. No es una predicción: es una foto de hoy, con la fuente al lado.</p>
 
+<div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-4 text-sm text-slate-700">
+  <strong>¿En qué se diferencia de la <a href="/prediccion" class="text-teal-700 font-semibold">Predicción 2030</a>?</strong> La Predicción es la lectura: a dónde va Puerto Rico si nada cambia. Este récord es la evidencia: dónde YA está el golpe y a quién le toca primero, con número e índice por pueblo. La predicción se discute; esta tabla se verifica.
+</div>
+
 <div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">La bandera</p>
   <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">"El huracán que viene no es de lluvia ni viento. Es demográfica y burocracia."</p>
@@ -6127,15 +6136,23 @@ ${shareRow({ text: 'El huracán que viene no es de lluvia ni viento: es demográ
 <h2 id="ecuacion">La ecuación</h2>
 <p>El índice (0-100) junta, por municipio: <strong>cuán viejo</strong> (25%) + <strong>cuán pobre el viejo</strong> (25%) + <strong>cuán poquito ingreso de retiro</strong> (20%) + <strong>cuán lejos el médico</strong> (15%) + <strong>cuán desconectado del internet</strong> (15%). Nadie había cruzado estas cinco cosas. Ahora están cruzadas y son públicas.</p>
 
-<h2 id="hallazgos">Los 7 hallazgos</h2>
+<h2 id="hallazgos">Los 7 hallazgos (cada uno se copia con su fuente)</h2>
 <div class="not-prose space-y-3 mt-3">
-  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-sm text-slate-800 leading-relaxed"><strong class="text-slate-900">1 · 4 de cada 10 viejos de PR viven en pobreza.</strong> 39.4% de las 777,750 personas 65+ (EE.UU.: 11.2%). El viejo boricua tiene 3.5 veces más probabilidad de ser pobre que el americano promedio.</p></div>
-  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-sm text-slate-800 leading-relaxed"><strong class="text-slate-900">2 · La Resta del Retiro.</strong> El hogar retirado mediano de EE.UU. vive con $4,971/mes. En 14 municipios de PR, con menos de $1,500: Las Marías $1,317, Guánica $1,326, Comerío $1,337, San Sebastián $1,338, Maunabo $1,377. Cabo Rojo: $1,764, con 40.8% de sus viejos en pobreza.</p></div>
-  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-sm text-slate-800 leading-relaxed"><strong class="text-slate-900">3 · Viejos por psiquiatra.</strong> El metro tiene 1 psiquiatra por cada 844 personas mayores; el norte, 1 por cada 3,831. Y la depresión geriátrica es exactamente la condición que nadie diagnostica sin médico cerca.</p></div>
-  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-sm text-slate-800 leading-relaxed"><strong class="text-slate-900">4 · Pega primero en el oeste.</strong> 13 de los 15 municipios con el índice más alto están en el oeste y el sur: Guánica, Las Marías, Maunabo, San Germán, Sabana Grande encabezan. Son 352,350 personas; 90,132 tienen 65+.</p></div>
-  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-sm text-slate-800 leading-relaxed"><strong class="text-slate-900">5 · Los doblemente varados.</strong> La telemedicina es la única salida escalable donde no hay médico. Pero Maricao tiene 0 especialistas y 60.5% de hogares sin internet; Las Marías, 0 y 58.8%. Ni el médico llega, ni la telemedicina puede llegar. Sin broadband primero, la AI no salva a los pueblos que más la necesitan.</p></div>
-  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-sm text-slate-800 leading-relaxed"><strong class="text-slate-900">6 · La vejez ya no es futuro.</strong> 21 municipios ya tienen 25%+ de su población sobre los 65 (Hormigueros 30.2%, Rincón 27.9%, San Germán 27.8%, Lajas 27.3%). PR entero: 23.4% vs ~17.7% en EE.UU.</p></div>
-  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-sm text-slate-800 leading-relaxed"><strong class="text-slate-900">7 · El calendario del huracán.</strong> 30 sep 2027: el pareo federal de Medicaid cae de 76% a 55% si el Congreso no actúa. 2030: se proyecta que el 55% de los médicos activos se habrá retirado. Los pueblos que reciben ese golpe ya se pueden nombrar, uno por uno. Están en la tabla de abajo.</p></div>
+${[
+  ['1 · 4 de cada 10 viejos de PR viven en pobreza.', '39.4% de las 777,750 personas 65+ (EE.UU.: 11.2%). El viejo boricua tiene 3.5 veces más probabilidad de ser pobre que el americano promedio.'],
+  ['2 · La Resta del Retiro.', 'El hogar retirado mediano de EE.UU. vive con $4,971/mes. En 14 municipios de PR, con menos de $1,500: Las Marías $1,317, Guánica $1,326, Comerío $1,337, San Sebastián $1,338, Maunabo $1,377. Cabo Rojo: $1,764, con 40.8% de sus viejos en pobreza.'],
+  ['3 · Viejos por psiquiatra.', 'El metro tiene 1 psiquiatra por cada 844 personas mayores; el norte, 1 por cada 3,831. Y la depresión geriátrica es exactamente la condición que nadie diagnostica sin médico cerca.'],
+  ['4 · Pega primero en el oeste.', '13 de los 15 municipios con el índice más alto están en el oeste y el sur: Guánica, Las Marías, Maunabo, San Germán, Sabana Grande encabezan. Son 352,350 personas; 90,132 tienen 65+.'],
+  ['5 · Los doblemente varados.', 'La telemedicina es la única salida escalable donde no hay médico. Pero Maricao tiene 0 especialistas y 60.5% de hogares sin internet; Las Marías, 0 y 58.8%. Ni el médico llega, ni la telemedicina puede llegar. Sin broadband primero, la AI no salva a los pueblos que más la necesitan.'],
+  ['6 · La vejez ya no es futuro.', '21 municipios ya tienen 25%+ de su población sobre los 65 (Hormigueros 30.2%, Rincón 27.9%, San Germán 27.8%, Lajas 27.3%). PR entero: 23.4% vs ~17.7% en EE.UU.'],
+  ['7 · El calendario del huracán.', '30 sep 2027: el pareo federal de Medicaid cae de 76% a 55% si el Congreso no actúa. 2030: se proyecta que el 55% de los médicos activos se habrá retirado. Los pueblos que reciben ese golpe ya se pueden nombrar, uno por uno. Están en la tabla de abajo.'],
+].map(([t, d]) => `
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <div class="flex items-start gap-2">
+      <p class="flex-1 text-sm text-slate-800 leading-relaxed"><strong class="text-slate-900">${t}</strong> ${d}</p>
+      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(`${t.replace(/^\d+ · /, '')} ${d} Fuente: Censo/ACS 2024 × NPPES × HRSA, puertoricosinfiltros.com/retiro`)}"><i class="fa-regular fa-copy"></i> Copiar</button>
+    </div>
+  </div>`).join('')}
 </div>
 
 <h2 id="tabla">La tabla, municipio por municipio</h2>
@@ -6145,7 +6162,7 @@ ${shareRow({ text: 'El huracán que viene no es de lluvia ni viento: es demográ
     <tbody>${tablaRows}</tbody>
   </table>
 </div>
-<p class="text-sm text-slate-500 mt-2">Top 20 de 76. La tabla completa vive en la base de datos pública (tabla <code>pr_retiro_municipio</code>, lectura abierta). Fuentes: Censo/ACS 2024 (5 años) × NPPES/CMS × HRSA × ACS broadband, julio 2026.</p>
+<p class="text-sm text-slate-500 mt-2">Top 20 de 76, más Cabo Rojo con su posición real (fila verde). La tabla completa vive en la base de datos pública (tabla <code>pr_retiro_municipio</code>, lectura abierta). Fuentes: Censo/ACS 2024 (5 años) × NPPES/CMS × HRSA × ACS broadband, julio 2026.</p>
 
 ${mientrasTanto([
   `La Resta es personal: haz TU número hoy (Seguro Social + retiro + lo que entra, contra tus gastos fijos). El hogar retirado mediano de EE.UU. vive con $4,971 al mes; en 14 pueblos de PR, con menos de $1,500. Ese número tuyo decide más que cualquier plan de gobierno.`,
@@ -7552,6 +7569,10 @@ function handlePrediccion(req: any, res: any) {
 <div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular</p>
   <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Estamos reconstruyendo edificios para una población que se queda sin quien la atienda.</p>
+</div>
+
+<div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-4 text-sm text-slate-700">
+  Esta página es la <strong>lectura</strong>: a dónde va todo junto si nada cambia. La <strong>evidencia</strong> municipio por municipio (quién recibe el golpe primero, con índice y tabla) vive en su propio récord: <a href="/retiro" class="text-teal-700 font-semibold">El Huracán Lento →</a>
 </div>
 
 <div class="not-prose mt-5 bg-white border border-slate-200 rounded-2xl p-4">
