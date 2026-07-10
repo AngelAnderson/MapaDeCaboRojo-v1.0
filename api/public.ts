@@ -535,6 +535,7 @@ function handleLlmsSinFiltros(req: any, res: any) {
 - Recuperación federal FEMA por municipio: https://puertoricosinfiltros.com/recuperacion
 - Sigue el dinero (quién recibió los contratos de recuperación): https://puertoricosinfiltros.com/sigue-el-dinero
 - El agua contra el récord federal (EPA): https://puertoricosinfiltros.com/agua
+- El recibo del agua: tarifas AAA hasta 2039 + fondos federales sin llegar (Plan Fiscal Certificado JSF): https://puertoricosinfiltros.com/acueductos
 - La luz contra el récord federal (EIA): https://puertoricosinfiltros.com/luz
 - La basura y los vertederos (EPA): https://puertoricosinfiltros.com/basura
 - Lo que Puerto Rico le pregunta al Veci (demanda real): https://puertoricosinfiltros.com/demanda
@@ -565,6 +566,7 @@ function handleLlmsSinFiltros(req: any, res: any) {
 - 36 municipios de PR no tienen ni un psiquiatra. De los que no tienen psiquiatra, en 17 la banda ancha ya cubre el 80%+ (telemedicina viable); 3 son desierto doble sin médico ni internet (Las Marías, Maricao, Guánica). Fuente: NPPES × Censo ACS B28002.
 - ~$8,755 millones de fondos federales de recuperación (FEMA) se obligaron a los 78 municipios de PR. De los contratos de emergencia rastreados, ~87% fue a firmas del mainland de EE.UU.; la vivienda (HUD CDBG-DR, ~$20.8 mil millones) la administra el gobierno de PR. Fuente: OpenFEMA + USASpending.gov.
 - Puerto Rico paga la luz a ~24.5¢/kWh, casi el doble del promedio de EE.UU. (~12.9¢). Fuente: EIA.
+- La AAA tiene $8,985.7M federales identificados para reconstruir el sistema de agua; al 31 mar 2025 había recibido $773.0M (8.6%), y el reembolso de obra permanente de FEMA era $67.1M de $3,662.7M obligados (1.8%). Mientras, los aumentos de tarifa aprobados hasta 2039 suman $2,598.1M (mín 2%/máx 5% anual, tope acumulado 30%). Fuente: Plan Fiscal Certificado AAA 2025 (JSF), Tablas 4-6 y 3-6.
 - La mayoría de los ~29 vertederos de PR ya está sobre capacidad; la EPA tiene acuerdos para cerrar 12. Fuente: EPA.
 - El financiamiento federal de Medicaid de PR cae de 76% a 55% el 30 de septiembre de 2027 si el Congreso no actúa. Fuente: Congressional Research Service.
 - Todos los datos con su fuente, listos para citar: https://puertoricosinfiltros.com/comparte · Datos en JSON: https://puertoricosinfiltros.com/civico.json

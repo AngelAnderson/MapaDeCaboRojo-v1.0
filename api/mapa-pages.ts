@@ -5289,6 +5289,7 @@ async function handleSinFiltros(req: any, res: any) {
     <a href="/historial" data-prsf="record" data-rec="idx-historial" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Historial</a>
     <a href="/demanda" data-prsf="record" data-rec="idx-demanda" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Demanda</a>
     <a href="/agua" data-prsf="record" data-rec="idx-agua" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Agua</a>
+    <a href="/acueductos" data-prsf="record" data-rec="idx-acueductos" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">El recibo del agua</a>
     <a href="/luz" data-prsf="record" data-rec="idx-luz" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Luz</a>
     <a href="/basura" data-prsf="record" data-rec="idx-basura" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Basura</a>
     <a href="/telemedicina" data-prsf="record" data-rec="idx-telemedicina" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Telemedicina</a>
@@ -5366,6 +5367,17 @@ ${recordCards}
   <div class="mt-3 flex flex-wrap gap-2 text-sm">
     <a href="/agua" data-prsf="record" data-rec="agua" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">Ver el récord completo</a>
     <a href="https://www.epa.gov/ground-water-and-drinking-water" target="_blank" rel="noopener" data-prsf="verify" data-rec="agua" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Verifícalo tú mismo: EPA ↗</a>
+  </div>
+</div>
+
+<div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-4">
+  <span class="text-xs font-bold text-teal-700 uppercase tracking-wide">El recibo del agua</span>
+  <h3 class="text-xl font-black text-slate-900 mt-1" style="font-family:'Fraunces',Georgia,serif">Los aumentos hasta 2039 y el dinero federal sin llegar</h3>
+  <blockquote class="mt-2 text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3">Los aumentos de la AAA están aprobados hasta el 2039 y suman $2,598 millones del bolsillo del cliente. Mientras, de $8,985.7M federales identificados para reconstruir el sistema, habían llegado $773M (8.6%). El reembolso de obra real de FEMA: 1.8%.</blockquote>
+  <p class="text-xs text-slate-500 mt-3"><strong>Fuente:</strong> Plan Fiscal Certificado AAA 2025 (Junta de Supervisión Fiscal), corte 31 mar 2025.</p>
+  <div class="mt-3 flex flex-wrap gap-2 text-sm">
+    <a href="/acueductos" data-prsf="record" data-rec="acueductos" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">Ver el récord completo</a>
+    <a href="https://oversightboard.pr.gov/fiscal-plans/" target="_blank" rel="noopener" data-prsf="verify" data-rec="acueductos" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Verifícalo tú mismo: el plan certificado ↗</a>
   </div>
 </div>
 
@@ -5599,6 +5611,147 @@ async function handleDatoRecord(req: any, res: any) {
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
   res.status(200).send(layout({
     title: `${cfg.h1}`, description: cfg.hero, slug: page, bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
+// /acueductos — el recibo del agua contra el récord: aumentos de tarifa hasta 2039 + fondos federales
+// identificados vs recibidos. Fuente primaria: Plan Fiscal Certificado AAA 2025 (JSF, 27 jun 2025).
+// Data verificada página por página contra el PDF certificado el 2026-07-10. Corte del documento: 31 mar 2025.
+async function handleAcueductos(req: any, res: any) {
+  // Tabla 3-6 del plan (p.74): recaudo del ajuste de tarifa por año fiscal, en $M. FY = jul-jun.
+  const aumentos: [string, number][] = [
+    ['FY2026', 20.9], ['FY2027', 44.4], ['FY2028', 68.4], ['FY2029', 92.9], ['FY2030', 117.9],
+    ['FY2031', 143.3], ['FY2032', 169.1], ['FY2033', 195.3], ['FY2034', 222.0], ['FY2035', 249.1],
+    ['FY2036', 276.5], ['FY2037', 304.4], ['FY2038', 332.6], ['FY2039', 361.2],
+  ]
+  const maxA = 361.2
+  const barRows = aumentos.map(([fy, v]) => `
+    <div class="flex items-center gap-2 text-xs">
+      <span class="w-16 shrink-0 font-semibold text-slate-600">${fy}</span>
+      <div class="flex-1 bg-slate-100 rounded-full h-4 overflow-hidden"><div class="bg-teal-600 h-4 rounded-full" style="width:${Math.max(3, Math.round(v / maxA * 100))}%"></div></div>
+      <span class="w-16 shrink-0 text-right font-bold text-slate-800">$${v.toFixed(1)}M</span>
+    </div>`).join('')
+
+  // Tabla 4-6 del plan (p.84): identificado / obligado / recibido, en $M, al 31 mar 2025.
+  const fondos: [string, string, string, string][] = [
+    ['Obra permanente · FEMA (PA)', '3,662.7', '3,662.7', '67.1'],
+    ['Adelanto de capital de trabajo · FEMA', '·', '·', '452.1'],
+    ['Mitigación por desastre · FEMA (406)', '2,738.9', '1,071.0', '0'],
+    ['Mitigación HMGP · FEMA (404)', '421.6', '22.6', '10.3'],
+    ['CDBG-MIT · HUD', '349.5', '122.6', '0'],
+    ['CDBG-DR (pareo local) · HUD', '406.9', '400.0', '13.7'],
+    ['Costos administrativos (DAC) · FEMA', '213.6', '213.6', '0'],
+    ['SRF-SAHFI (Fiona) · EPA', '555.0', '545.0', '0'],
+    ['Desarrollo Rural · USDA (3 programas)', '46.7', '46.7', '46.7'],
+    ['CWSRF (regular + BIL) · EPA', '322.3', '282.0', '121.7'],
+    ['DWSRF (regular + BIL) · EPA', '268.5', '193.7', '61.4'],
+  ]
+  const fondosRows = fondos.map(([p, i, o, r]) => `
+    <tr class="border-t border-slate-100">
+      <td class="py-2 px-3 font-semibold text-slate-800">${p}</td>
+      <td class="py-2 px-3 text-right text-slate-600 whitespace-nowrap">${i}</td>
+      <td class="py-2 px-3 text-right text-slate-600 whitespace-nowrap">${o}</td>
+      <td class="py-2 px-3 text-right font-bold text-slate-900 whitespace-nowrap">${r}</td>
+    </tr>`).join('')
+
+  const FP_URL = 'https://oversightboard.pr.gov/fiscal-plans/'
+  const citables = [
+    `De $8,985.7 millones federales identificados para reconstruir el sistema de agua de PR, la AAA había recibido $773.0 millones (8.6%) al 31 de marzo de 2025. Y de ese dinero recibido, $452.1M fue un adelanto de capital de trabajo, no reembolso de obra: el reembolso de obra permanente de FEMA era $67.1M de $3,662.7M obligados (1.8%). Fuente: Plan Fiscal Certificado AAA 2025 (JSF), Tabla 4-6. puertoricosinfiltros.com/acueductos`,
+    `El ajuste de tarifa de la AAA recauda $20.9M en el año fiscal 2026 y sube cada año hasta $361.2M anuales en 2039. El total del período 2025-2039 es $2,598.1 millones. La regla: mínimo 2% y máximo 5% al año, con tope acumulado de 30% desde 2024. Fuente: Plan Fiscal Certificado AAA 2025 (JSF), Tabla 3-6. puertoricosinfiltros.com/acueductos`,
+    `Cada factura de agua también paga deuda: la AAA debía $3,840 millones al 31 de marzo de 2025 y su servicio de deuda 2025-2039 suma $3,788.5 millones, más que todos los aumentos de tarifa del mismo período juntos ($2,598.1M). Fuente: Plan Fiscal Certificado AAA 2025 (JSF), Tablas 2-9, 2-10 y 3-6. puertoricosinfiltros.com/acueductos`,
+  ]
+  const citableCards = citables.map((c) => `
+    <div class="flex items-start gap-2 bg-white border border-slate-200 rounded-xl p-3 mt-2">
+      <p class="flex-1 text-sm text-slate-700 leading-relaxed">${escapeHtml(c)}</p>
+      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(c)}"><i class="fa-regular fa-copy"></i> Copiar</button>
+    </div>`).join('')
+
+  const body = `
+<h1>El recibo del agua, contra el récord</h1>
+<p class="text-lg text-slate-600 mt-2">Los aumentos en la factura de la AAA están aprobados hasta el 2039. Mientras tanto, el 91% del dinero federal identificado para reconstruir el sistema no ha llegado a la caja. Aquí están los dos lados, con el documento certificado al lado.</p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El dato</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">$8,985.7 millones federales identificados. $773.0 millones recibidos: 8.6%.</p>
+  <p class="text-slate-300 mt-2 text-sm leading-relaxed">Y del lado del bolsillo: el ajuste de tarifa recauda $20.9M este año fiscal y sube cada año hasta $361.2M anuales en 2039. El total del período es $2,598.1 millones, un número que no se dijo en TV.</p>
+  <p class="text-xs text-slate-400 mt-3">Plan Fiscal Certificado de la AAA (Junta de Supervisión Fiscal, 27 jun 2025) · corte de fondos federales: 31 mar 2025.</p>
+</div>
+
+<div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-5 text-sm text-slate-700">
+  <strong>De dónde sale esto:</strong> estos números viajaron por TV en julio 2026 (el analista Jorge Colberg, Jugando Pelota Dura). Este récord los verificó uno por uno contra la fuente primaria: el Plan Fiscal Certificado de la AAA. Todo lo que dijo el clip aparece en el documento. Y el documento dice más.
+</div>
+
+<h2 id="aumentos">Los aumentos, año por año</h2>
+<p>La estructura de tarifa vigente (desde el 1 de julio de 2022) trae ajuste automático: <strong>mínimo 2% al año, máximo 5%</strong>, según la necesidad fiscal, con un <strong>tope acumulado de 30% contando desde 2024</strong>. El más reciente entró el 1 de julio de 2026: 2%. Esto es lo que el ajuste recauda por año fiscal (jul-jun), según el plan certificado:</p>
+<div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-3 space-y-1.5">${barRows}
+  <p class="text-xs text-slate-500 pt-2">En $ millones por año fiscal. Es acumulativo: cada barra incluye los ajustes de los años anteriores. Total del período FY2025-FY2039: <strong>$2,598.1 millones</strong>. Fuente: Tabla 3-6 y Exhibit del capítulo 3 del plan certificado.</p>
+</div>
+
+<h2 id="federal">El dinero federal: identificado, obligado, recibido</h2>
+<p>Las tres palabras importan. <strong>Identificado</strong> es dinero que existe para la AAA. <strong>Obligado</strong> es dinero ya comprometido por la agencia federal. <strong>Recibido</strong> es lo que llegó a la caja. Al 31 de marzo de 2025:</p>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm">
+    <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Programa</th><th class="py-2 px-3 text-right">Identificado ($M)</th><th class="py-2 px-3 text-right">Obligado ($M)</th><th class="py-2 px-3 text-right">Recibido ($M)</th></tr></thead>
+    <tbody>${fondosRows}
+      <tr class="border-t-2 border-slate-300 bg-slate-50"><td class="py-2 px-3 font-black text-slate-900">TOTAL</td><td class="py-2 px-3 text-right font-black text-slate-900">8,985.7</td><td class="py-2 px-3 text-right font-black text-slate-900">6,560.0</td><td class="py-2 px-3 text-right font-black text-slate-900">773.0</td></tr>
+    </tbody>
+  </table>
+</div>
+<p class="text-sm text-slate-500 mt-2">Fuente: Tabla 4-6 del Plan Fiscal Certificado AAA 2025. El adelanto de capital de trabajo ($452.1M) fue dinero adelantado para operar, no reembolso de obra construida.</p>
+
+<h2 id="no-dijo">Lo que el clip no dijo (y el documento sí)</h2>
+<div class="not-prose space-y-3 mt-3">
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-sm text-slate-800 leading-relaxed"><strong class="text-slate-900">1 · El reembolso de obra real es todavía más bajo.</strong> El "$773M recibido" incluye $452.1M que fue un adelanto de capital de trabajo. El reembolso de obra permanente de FEMA era <strong>$67.1M de $3,662.7M obligados: 1.8%</strong>, cinco años después del anuncio del FAASt ($4.1 mil millones, enero 2021).</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-sm text-slate-800 leading-relaxed"><strong class="text-slate-900">2 · El total de los aumentos es $2.6 mil millones, no $361M.</strong> Los $361.2M son lo que el ajuste recauda por año en 2039. Sumando el período completo 2025-2039, la tarifa recauda <strong>$2,598.1 millones</strong> del bolsillo del cliente.</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-sm text-slate-800 leading-relaxed"><strong class="text-slate-900">3 · Hay un tope que protege al cliente.</strong> El aumento no es infinito: la regla certificada es mínimo 2%, máximo 5% al año, con <strong>tope acumulado de 30%</strong> desde 2024. Con el mínimo de 2% al año, ese tope prácticamente se consume completo para 2039. Ejemplo aritmético: una factura de $60 al mes llega a unos $78 con el tope aplicado.</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-sm text-slate-800 leading-relaxed"><strong class="text-slate-900">4 · "No recibido" no es "perdido", pero el propio plan nombra el riesgo.</strong> El 73% del dinero ya está obligado (comprometido). El cuello es ejecutar la obra y cobrar el reembolso: la AAA paga primero y FEMA reembolsa después. El plan certificado lista como riesgo oficial los <em>"federal fund clawbacks"</em> (que el dinero federal se recorte o se devuelva) y la escasez de contratistas para ejecutar a tiempo.</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-sm text-slate-800 leading-relaxed"><strong class="text-slate-900">5 · Cada factura también paga deuda.</strong> La AAA debía <strong>$3,840 millones</strong> al 31 de marzo de 2025. El servicio de esa deuda en el período 2025-2039 suma <strong>$3,788.5 millones</strong>: más que todos los aumentos de tarifa del mismo período juntos.</p></div>
+</div>
+
+<h2 id="preguntas">Las preguntas que solo la AAA y COR3 pueden contestar</h2>
+<ul class="text-slate-700">
+  <li>¿Cuánto ha subido el "recibido" desde el corte del 31 de marzo de 2025? ¿Cuál es el número hoy?</li>
+  <li>¿Cuántos proyectos del FAASt están en construcción activa ahora mismo, y cuántos siguen en formulación?</li>
+  <li>De los $555M de SRF-SAHFI (Fiona) con $0 recibido, ¿ya se firmó el acuerdo de asistencia financiera?</li>
+  <li>Si hay un recorte federal (clawback), ¿el plan contempla otro aumento de tarifa para cubrir el hueco?</li>
+</ul>
+<p class="text-sm text-slate-600">Si la AAA o COR3 contestan con el récord, la respuesta se publica aquí textual. Este récord premia el verde igual que anota el rojo: obligar el 73% del dinero es un logro real del proceso, y así se dice.</p>
+
+<h2 id="citables">Citables (copia y pega, con fuente)</h2>
+${citableCards}
+
+<h2 id="verifica">Verifícalo tú mismo</h2>
+<ul class="text-slate-700">
+  <li><a href="${FP_URL}" target="_blank" rel="noopener" data-prsf="verify" data-rec="acueductos" class="text-teal-700 font-semibold">Plan Fiscal Certificado AAA 2025 (PDF, Junta de Supervisión Fiscal) ↗</a> · aumentos: Tabla 3-6 y capítulo 3.1.1 · fondos federales: Tabla 4-6 (p.84) · deuda: Tablas 2-9 y 2-10.</li>
+  <li><a href="https://www.acueductos.pr.gov/comunicados/jsf-aprueba-en-consenso-el-presupuesto-2026-y-el-plan-de-control-fiscal-2026-2039" target="_blank" rel="noopener" data-prsf="verify" data-rec="acueductos" class="text-teal-700 font-semibold">Comunicado oficial de la AAA sobre la certificación (27 jun 2025) ↗</a></li>
+  <li><a href="https://recovery.pr.gov/es" target="_blank" rel="noopener" data-prsf="verify" data-rec="acueductos" class="text-teal-700 font-semibold">Portal de transparencia de COR3 (recovery.pr.gov) ↗</a> · el estado de los fondos FEMA por agencia.</li>
+  <li><a href="https://www.primerahora.com/noticias/gobierno-politica/notas/junta-certifica-presupuesto-de-la-aaa-con-aumento-a-partir-de-julio/" target="_blank" rel="noopener" data-prsf="verify" data-rec="acueductos" class="text-teal-700 font-semibold">Prensa: el aumento de 2% del 1 de julio de 2026 ↗</a></li>
+</ul>
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-5 mt-6">
+  <p class="font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">¿Y tú qué puedes hacer con esto?</p>
+  <p class="text-sm text-slate-700 mt-2 leading-relaxed">Nada urgente. Si quieres, una cosa: mira el desglose de tu próxima factura de la AAA (cargo de agua, alcantarillado y cargo fijo) y ya sabes por qué sube y hasta cuándo. Si tu agua no viene de la AAA sino de un acueducto comunal, tu récord es otro: <a href="/agua" class="text-teal-700 font-semibold">el del agua contra el récord federal de la EPA</a>. Y si esto le sirve a alguien que se queja del recibo sin saber de dónde viene, pásaselo. Si no, sigue tu camino.</p>
+</div>
+
+<p class="text-sm text-slate-500 mt-6">Este récord se corta al 31 de marzo de 2025 porque ese es el corte del documento certificado, el más reciente disponible. Cuando la AAA o la Junta publiquen un corte más nuevo, este récord se actualiza. ¿Ves un error? Escríbenos y se corrige con el documento en la mano.</p>
+${SHARE_COPY_SCRIPT}
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'El recibo del agua de Puerto Rico contra el récord: tarifas AAA 2026-2039 y fondos federales',
+    description: 'Aumentos de tarifa de la AAA aprobados hasta 2039 ($2,598.1M en total) contra el uso de fondos federales: $8,985.7M identificados, $6,560.0M obligados, $773.0M recibidos (8.6%) al 31 de marzo de 2025. Fuente: Plan Fiscal Certificado AAA 2025 (Junta de Supervisión Fiscal).',
+    creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/acueductos',
+    keywords: ['AAA', 'PRASA', 'tarifa de agua', 'fondos federales', 'FEMA', 'plan fiscal', 'Puerto Rico'],
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'El recibo del agua, contra el récord: tarifas AAA hasta 2039 y el dinero federal sin llegar',
+    description: 'Los aumentos de la AAA están aprobados hasta 2039 y suman $2,598 millones. El 91% del dinero federal identificado no ha llegado a la caja. Verificado contra el plan fiscal certificado, con la fuente al lado.',
+    slug: 'acueductos', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
@@ -9960,6 +10113,7 @@ export default async function handler(req: any, res: any) {
     case 'sinfiltros-pulso': return await handleSinFiltrosPulso(req, res)
     case 'luz': return await handleDatoRecord(req, res)
     case 'basura': return await handleDatoRecord(req, res)
+    case 'acueductos': return await handleAcueductos(req, res)
     case 'prediccion': return handlePrediccion(req, res)
     case 'costo-de-vida': return await handleCostoDeVida(req, res)
     case 'trabajo': return handleTrabajo(req, res)
