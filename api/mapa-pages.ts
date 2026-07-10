@@ -9889,7 +9889,7 @@ ${SHARE_COPY_SCRIPT}`
     title: 'Enfermedades raras en Puerto Rico: quién las diagnostica',
     description: 'Puerto Rico es #1 en EE.UU. en enfermedades raras por el efecto fundador. Pero tiene solo 2 genetistas clínicos que diagnostican, ambos en el metro, y la región montañosa donde se concentran las mutaciones no tiene ninguno. Data federal NPPES, con la fuente al lado.',
     slug: 'raras', bodyHtml: body, jsonLd,
-    ogImage: '/og/registro.png', host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+    ogImage: `https://registromedicopr.com/api/og?theme=medico&k=${encodeURIComponent('Enfermedades raras · Puerto Rico')}&t=${encodeURIComponent('PR es #1 en enfermedades raras||¿y quién las diagnostica?')}&sub=${encodeURIComponent('2 genetistas clínicos que diagnostican, ambos en el metro. La montaña, donde se concentran las mutaciones fundadoras: cero.')}&badge=${encodeURIComponent('Data federal NPPES')}`, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
     canonicalUrl: 'https://registromedicopr.com/raras',
     lang: 'es',
   }))
@@ -10087,7 +10087,7 @@ ${SHARE_COPY_SCRIPT}`
     title: 'Atlas de las enfermedades fundadoras boricuas',
     description: 'El primer mapa consolidado, en español y por pueblo, de las enfermedades genéticas con variante fundadora propia de Puerto Rico: Hermansky-Pudlak, TBCK, disquinesia ciliar RSPH4A, distrofia SGCG, cáncer hereditario BRCA2. Con señales, quién diagnostica y fuente científica.',
     slug: 'atlas', bodyHtml: body, jsonLd,
-    ogImage: '/og/registro.png', host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+    ogImage: `https://registromedicopr.com/api/og?theme=medico&k=${encodeURIComponent('Registro Médico PR')}&t=${encodeURIComponent('El Atlas de las enfermedades||fundadoras boricuas')}&sub=${encodeURIComponent('6 condiciones con variante propia de Puerto Rico, por pueblo, con quién las diagnostica.')}&badge=${encodeURIComponent('Verificado con ciencia primaria')}`, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
     canonicalUrl: 'https://registromedicopr.com/atlas',
     lang: 'es',
   }))
