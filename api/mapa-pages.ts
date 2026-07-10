@@ -9956,21 +9956,24 @@ function handleAgua(req: any, res: any) {
 async function handleRaras(req: any, res: any) {
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=300')
+  const en = String(req.query.lang || '') === 'en'
+  const te = (es: string, eng: string) => en ? eng : es
+  const lp = en ? '?lang=en' : ''
+  const CANON = 'https://registromedicopr.com/raras'
 
   // --- Oferta de genética clínica en PR (NPPES, jul 2026) ---
-  // Solo direcciones de práctica EN PR. Excluidos PhD de laboratorio (170100000X, ~24) del conteo de
-  // "quién diagnostica pacientes" porque son investigación/lab, no clínica de rara-enfermedad.
+  const gTax = (k: string) => en ? ({ clin: 'Clinical Genetics (M.D.)', mol: 'Clinical Molecular Genetics', bio: 'Clinical Biochemical Genetics', couns: 'Genetic Counseling', prog: 'Medical Genetics Program' } as any)[k] : ({ clin: 'Genética Clínica (M.D.)', mol: 'Genética Molecular Clínica', bio: 'Genética Bioquímica Clínica', couns: 'Consejería Genética', prog: 'Programa de Genética Médica' } as any)[k]
   const geneticistas = [
-    { n: 'Dr. Alberto Santiago Cornier', tax: 'Genética Clínica (M.D.)', mun: 'Santurce, San Juan', tel: '787-728-8316', npi: '1285763144' },
-    { n: 'Dra. Cristel Chapel Crespo', tax: 'Genética Clínica (M.D.)', mun: 'Manatí', tel: '787-621-3270', npi: '1275821555' },
-    { n: 'Dr. Simón E. Carlo', tax: 'Genética Molecular Clínica', mun: 'Santurce, San Juan', tel: '787-728-8316', npi: '1023139896' },
-    { n: 'Dra. Frances P. Vélez-Bartolomei', tax: 'Genética Bioquímica Clínica', mun: 'San Juan', tel: '787-728-8316', npi: '1083099220' },
-    { n: 'Yoliann Mojica Algarín, M.S.', tax: 'Consejería Genética', mun: 'San Juan', tel: '787-728-8316', npi: '1669353322' },
-    { n: 'Recinto de Ciencias Médicas (UPR)', tax: 'Programa de Genética Médica', mun: 'Río Piedras, San Juan', tel: '787-754-9165', npi: '1710275144' },
+    { n: 'Dr. Alberto Santiago Cornier', tax: 'clin', mun: 'Santurce, San Juan', tel: '787-728-8316', npi: '1285763144' },
+    { n: 'Dra. Cristel Chapel Crespo', tax: 'clin', mun: 'Manatí', tel: '787-621-3270', npi: '1275821555' },
+    { n: 'Dr. Simón E. Carlo', tax: 'mol', mun: 'Santurce, San Juan', tel: '787-728-8316', npi: '1023139896' },
+    { n: 'Dra. Frances P. Vélez-Bartolomei', tax: 'bio', mun: 'San Juan', tel: '787-728-8316', npi: '1083099220' },
+    { n: 'Yoliann Mojica Algarín, M.S.', tax: 'couns', mun: 'San Juan', tel: '787-728-8316', npi: '1669353322' },
+    { n: 'Recinto de Ciencias Médicas (UPR)', tax: 'prog', mun: 'Río Piedras, San Juan', tel: '787-754-9165', npi: '1710275144' },
   ]
   const gRows = geneticistas.map(g => `
     <tr class="border-b border-slate-100">
-      <td class="py-3 pr-3"><span class="font-semibold text-slate-800">${g.n}</span><br><span class="text-xs text-slate-500">${g.tax}</span></td>
+      <td class="py-3 pr-3"><span class="font-semibold text-slate-800">${g.n}</span><br><span class="text-xs text-slate-500">${gTax(g.tax)}</span></td>
       <td class="py-3 pr-3 text-slate-600 whitespace-nowrap">${g.mun}</td>
       <td class="py-3 pr-3 whitespace-nowrap"><a href="tel:${g.tel}" class="text-teal-700 font-semibold">${g.tel}</a></td>
       <td class="py-3 text-right"><a href="https://npiregistry.cms.hhs.gov/provider-view/${g.npi}" target="_blank" rel="noopener" class="text-xs text-slate-400 hover:text-teal-700">NPI ${g.npi} ↗</a></td>
@@ -9978,138 +9981,140 @@ async function handleRaras(req: any, res: any) {
 
   // --- Neurología por región (DB propia, NPI-verificada) ---
   const neuroRegiones = [
-    { r: 'Metro (San Juan y alrededores)', neu: 108, ncir: 31, ped: 39 },
-    { r: 'Este', neu: 28, ncir: 6, ped: 10 },
-    { r: 'Oeste', neu: 16, ncir: 1, ped: 7 },
-    { r: 'Sur', neu: 7, ncir: 2, ped: 12 },
-    { r: 'Norte', neu: 6, ncir: 4, ped: 4 },
-    { r: 'Centro (la montaña)', neu: 1, ncir: 0, ped: 2 },
+    { r: te('Metro (San Juan y alrededores)', 'Metro (San Juan and around)'), neu: 108, ncir: 31, ped: 39, c: false },
+    { r: te('Este', 'East'), neu: 28, ncir: 6, ped: 10, c: false },
+    { r: te('Oeste', 'West'), neu: 16, ncir: 1, ped: 7, c: false },
+    { r: te('Sur', 'South'), neu: 7, ncir: 2, ped: 12, c: false },
+    { r: te('Norte', 'North'), neu: 6, ncir: 4, ped: 4, c: false },
+    { r: te('Centro (la montaña)', 'Central (the mountains)'), neu: 1, ncir: 0, ped: 2, c: true },
   ]
-  const nRows = neuroRegiones.map(x => {
-    const alarma = x.r.startsWith('Centro')
-    return `
-    <tr class="border-b border-slate-100 ${alarma ? 'bg-red-50' : ''}">
-      <td class="py-2.5 pr-3 ${alarma ? 'font-bold text-red-800' : 'text-slate-700'}">${x.r}</td>
-      <td class="py-2.5 pr-3 text-center ${alarma ? 'font-black text-red-700' : 'text-slate-800'}">${x.neu}</td>
+  const nRows = neuroRegiones.map(x => `
+    <tr class="border-b border-slate-100 ${x.c ? 'bg-red-50' : ''}">
+      <td class="py-2.5 pr-3 ${x.c ? 'font-bold text-red-800' : 'text-slate-700'}">${x.r}</td>
+      <td class="py-2.5 pr-3 text-center ${x.c ? 'font-black text-red-700' : 'text-slate-800'}">${x.neu}</td>
       <td class="py-2.5 pr-3 text-center text-slate-600">${x.ncir}</td>
       <td class="py-2.5 text-center text-slate-600">${x.ped}</td>
-    </tr>`
-  }).join('')
+    </tr>`).join('')
 
-  // --- Datos citables (botón Copiar por dato) ---
-  const citas = [
-    { t: 'Puerto Rico es la jurisdicción de EE.UU. con más enfermedades raras, por el efecto fundador de la mezcla taína, española y africana. No es una maldición del país: es la razón por la que la ciencia del mundo estudia el ADN boricua. (El Vocero, 10 jul 2026; Ley 9-2025)' },
-    { t: 'El registro oficial de enfermedades raras (Ley 9-2025, $450,000) todavía está "en desarrollo" y aún no dice cuántas personas las padecen ni en qué pueblos viven. Mientras tanto, el mapa de quién puede diagnosticarlas ya existe, gratis, en registromedicopr.com/raras. No hay que esperar hasta el 2030. (El Vocero, 10 jul 2026)' },
-    { t: 'Puerto Rico tiene 2 genetistas clínicos (M.D.) que diagnostican pacientes, 4 contando las subespecialidades, casi todos en el área metro. Están con nombre y teléfono en registromedicopr.com/raras: si crees que lo de un familiar es genético, esa lista es el primer paso concreto. (Registro federal NPPES, jul 2026)' },
-    { t: 'La región central montañosa, donde se concentran mutaciones fundadoras como el albinismo y el síndrome HPS-3, tiene 1 neurólogo y 0 genetistas. Si vives en la montaña, no tienes que adivinar a quién ir: registromedicopr.com/pueblo te dice quién hay y dónde queda lo más cerca. (Registro federal NPPES, jul 2026)' },
-    { t: 'Diagnosticar una enfermedad rara en Puerto Rico toma entre 2 y 10 años. A Melissmar López Pimentel le tomó 11 hasta llegar al síndrome TBCK, el "Síndrome Boricua". Si tu familia está en esa espera, la TBCK Foundation de PR acompaña a quienes ya la vivieron. No se atraviesa solo. (El Vocero, 10 jul 2026)' },
+  const citas = en ? [
+    'Puerto Rico is the U.S. jurisdiction with the most rare diseases, due to the founder effect of its Taíno, Spanish and African mix. It is not a curse: it is why the world studies Boricua DNA. (El Vocero, Jul 10 2026; Law 9-2025)',
+    'Puerto Rico\'s official rare-disease registry (Law 9-2025, $450,000) is still "in development" and does not yet say how many people are affected or where they live. Meanwhile, the map of who can diagnose them already exists, free, at registromedicopr.com/raras. No need to wait until 2030. (El Vocero, Jul 10 2026)',
+    'Puerto Rico has 2 clinical geneticists (M.D.) who diagnose patients, 4 counting subspecialties, nearly all in the metro area. They are listed with name and phone at registromedicopr.com/raras: if you suspect a relative\'s condition is genetic, that list is the concrete first step. (Federal NPPES registry, Jul 2026)',
+    'The central mountain region, where founder mutations like albinism and HPS-3 concentrate, has 1 neurologist and 0 geneticists. If you live in the mountains, you do not have to guess: registromedicopr.com/pueblo tells you who exists and where the nearest one is. (Federal NPPES registry, Jul 2026)',
+    'Diagnosing a rare disease in Puerto Rico takes 2 to 10 years. It took Melissmar López Pimentel 11 years to reach a diagnosis of TBCK syndrome, the "Boricua Syndrome". If your family is in that wait, the TBCK Foundation of PR walks with families who have lived it. You are not alone. (El Vocero, Jul 10 2026)',
+  ] : [
+    'Puerto Rico es la jurisdicción de EE.UU. con más enfermedades raras, por el efecto fundador de la mezcla taína, española y africana. No es una maldición del país: es la razón por la que la ciencia del mundo estudia el ADN boricua. (El Vocero, 10 jul 2026; Ley 9-2025)',
+    'El registro oficial de enfermedades raras (Ley 9-2025, $450,000) todavía está "en desarrollo" y aún no dice cuántas personas las padecen ni en qué pueblos viven. Mientras tanto, el mapa de quién puede diagnosticarlas ya existe, gratis, en registromedicopr.com/raras. No hay que esperar hasta el 2030. (El Vocero, 10 jul 2026)',
+    'Puerto Rico tiene 2 genetistas clínicos (M.D.) que diagnostican pacientes, 4 contando las subespecialidades, casi todos en el área metro. Están con nombre y teléfono en registromedicopr.com/raras: si crees que lo de un familiar es genético, esa lista es el primer paso concreto. (Registro federal NPPES, jul 2026)',
+    'La región central montañosa, donde se concentran mutaciones fundadoras como el albinismo y el síndrome HPS-3, tiene 1 neurólogo y 0 genetistas. Si vives en la montaña, no tienes que adivinar a quién ir: registromedicopr.com/pueblo te dice quién hay y dónde queda lo más cerca. (Registro federal NPPES, jul 2026)',
+    'Diagnosticar una enfermedad rara en Puerto Rico toma entre 2 y 10 años. A Melissmar López Pimentel le tomó 11 hasta llegar al síndrome TBCK, el "Síndrome Boricua". Si tu familia está en esa espera, la TBCK Foundation de PR acompaña a quienes ya la vivieron. No se atraviesa solo. (El Vocero, 10 jul 2026)',
   ]
-  const citasHtml = citas.map((c) => `
+  const citasHtml = citas.map((t) => `
     <div class="not-prose flex gap-3 items-start bg-white border border-slate-200 rounded-xl p-4 mb-2.5">
-      <div class="text-sm text-slate-700 flex-1">${escapeHtml(c.t)}</div>
-      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(c.t + '\n\n🔗 https://registromedicopr.com/raras')}"><i class="fa-regular fa-copy"></i> Copiar</button>
+      <div class="text-sm text-slate-700 flex-1">${escapeHtml(t)}</div>
+      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(t + '\n\n🔗 ' + CANON)}"><i class="fa-regular fa-copy"></i> ${te('Copiar', 'Copy')}</button>
     </div>`).join('')
 
   const body = `
-<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <span class="text-slate-700">Enfermedades raras</span></nav>
+<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro${lp}" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <span class="text-slate-700">${te('Enfermedades raras', 'Rare diseases')}</span> <span class="text-slate-300">·</span> <a href="${en ? '/raras' : '/raras?lang=en'}" class="hover:text-teal-700">${en ? 'Español' : 'English'}</a></nav>
 
-<h1 class="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">Puerto Rico, líder en enfermedades raras.<br><span class="text-teal-700">¿Y quién las diagnostica?</span></h1>
-<p class="text-lg text-slate-600 mt-3">El gobierno anunció que Puerto Rico es la jurisdicción de Estados Unidos con más enfermedades raras, y que va a construir un registro oficial de quién las padece. Este récord mira el otro lado del problema: la capacidad de diagnosticarlas que ya existe hoy, contada con data federal. Porque una enfermedad que nadie puede identificar es tan grave como una que no existe.</p>
+<h1 class="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">${te('Puerto Rico, líder en enfermedades raras.', 'Puerto Rico leads the U.S. in rare diseases.')}<br><span class="text-teal-700">${te('¿Y quién las diagnostica?', 'Who can diagnose them?')}</span></h1>
+<p class="text-lg text-slate-600 mt-3">${te('El gobierno anunció que Puerto Rico es la jurisdicción de Estados Unidos con más enfermedades raras, y que va a construir un registro oficial de quién las padece. Este récord mira el otro lado del problema: la capacidad de diagnosticarlas que ya existe hoy, contada con data federal. Porque una enfermedad que nadie puede identificar es tan grave como una que no existe.', 'The government announced that Puerto Rico is the U.S. jurisdiction with the most rare diseases, and that it will build an official registry of who has them. This record looks at the other side of the problem: the capacity to diagnose them that already exists today, counted with federal data. Because a disease no one can identify is as serious as one that does not exist.')}</p>
 
 <div class="not-prose grid grid-cols-2 sm:grid-cols-4 gap-3 my-8">
-  <div class="bg-slate-900 text-white rounded-2xl p-4"><div class="text-3xl font-black">#1</div><div class="text-xs text-slate-300 mt-1">jurisdicción de EE.UU. en enfermedades raras</div></div>
-  <div class="bg-white border border-slate-200 rounded-2xl p-4"><div class="text-3xl font-black text-slate-900">42</div><div class="text-xs text-slate-500 mt-1">enfermedades catalogadas hasta hoy (de 7,000 en el mundo)</div></div>
-  <div class="bg-white border border-slate-200 rounded-2xl p-4"><div class="text-3xl font-black text-red-700">2</div><div class="text-xs text-slate-500 mt-1">genetistas clínicos (M.D.) que diagnostican, ambos en el metro</div></div>
-  <div class="bg-white border border-slate-200 rounded-2xl p-4"><div class="text-3xl font-black text-slate-900">2 a 10</div><div class="text-xs text-slate-500 mt-1">años que toma llegar a un diagnóstico ("odisea diagnóstica")</div></div>
+  <div class="bg-slate-900 text-white rounded-2xl p-4"><div class="text-3xl font-black">#1</div><div class="text-xs text-slate-300 mt-1">${te('jurisdicción de EE.UU. en enfermedades raras', 'U.S. jurisdiction in rare diseases')}</div></div>
+  <div class="bg-white border border-slate-200 rounded-2xl p-4"><div class="text-3xl font-black text-slate-900">42</div><div class="text-xs text-slate-500 mt-1">${te('enfermedades catalogadas hasta hoy (de 7,000 en el mundo)', 'diseases catalogued so far (of 7,000 worldwide)')}</div></div>
+  <div class="bg-white border border-slate-200 rounded-2xl p-4"><div class="text-3xl font-black text-red-700">2</div><div class="text-xs text-slate-500 mt-1">${te('genetistas clínicos (M.D.) que diagnostican, ambos en el metro', 'clinical geneticists (M.D.) who diagnose, both in the metro')}</div></div>
+  <div class="bg-white border border-slate-200 rounded-2xl p-4"><div class="text-3xl font-black text-slate-900">${te('2 a 10', '2 to 10')}</div><div class="text-xs text-slate-500 mt-1">${te('años que toma llegar a un diagnóstico ("odisea diagnóstica")', 'years it takes to reach a diagnosis ("diagnostic odyssey")')}</div></div>
 </div>
 
-<h2>Lo que dice la noticia</h2>
-<p>El 11 de abril de 2025 se firmó la <strong>Ley 9-2025</strong>, que creó la <strong>Oficina de Enlace para el Apoyo y Registro de Personas con Enfermedades Raras (OER)</strong>, adscrita al Departamento de Salud, con un presupuesto de <strong>$450,000</strong>. Su director, el Dr. Fernando Ocasio, explicó a El Vocero que la oficina "está desarrollando la interfase de lo que va a ser el registro" y que hasta el momento han identificado <strong>42 enfermedades raras</strong> en la isla, de las cerca de 7,000 catalogadas en el mundo.</p>
-<p>Una enfermedad se considera "rara" cuando afecta a menos de 2 de cada 10,000 personas. El presidente del Colegio de Médicos-Cirujanos, el Dr. Carlos Díaz, señaló que "el sistema no es ágil, no es rápido", y que las aseguradoras cuestionan y deniegan los estudios especializados que hacen falta para llegar al diagnóstico.</p>
+<h2>${te('Lo que dice la noticia', 'What the news says')}</h2>
+<p>${te('El 11 de abril de 2025 se firmó la <strong>Ley 9-2025</strong>, que creó la <strong>Oficina de Enlace para el Apoyo y Registro de Personas con Enfermedades Raras (OER)</strong>, adscrita al Departamento de Salud, con un presupuesto de <strong>$450,000</strong>. Su director, el Dr. Fernando Ocasio, explicó a El Vocero que la oficina "está desarrollando la interfase de lo que va a ser el registro" y que hasta el momento han identificado <strong>42 enfermedades raras</strong> en la isla, de las cerca de 7,000 catalogadas en el mundo.', 'On April 11, 2025, <strong>Law 9-2025</strong> was signed, creating the <strong>Office for the Support and Registry of People with Rare Diseases (OER)</strong>, under the Department of Health, with a <strong>$450,000</strong> budget. Its director, Dr. Fernando Ocasio, told El Vocero that the office "is developing the interface for what will be the registry" and that so far it has identified <strong>42 rare diseases</strong> on the island, of the roughly 7,000 catalogued worldwide.')}</p>
+<p>${te('Una enfermedad se considera "rara" cuando afecta a menos de 2 de cada 10,000 personas. El presidente del Colegio de Médicos-Cirujanos, el Dr. Carlos Díaz, señaló que "el sistema no es ágil, no es rápido", y que las aseguradoras cuestionan y deniegan los estudios especializados que hacen falta para llegar al diagnóstico.', 'A disease is considered "rare" when it affects fewer than 2 in every 10,000 people. The president of the College of Physicians-Surgeons, Dr. Carlos Díaz, noted that "the system is not agile, not fast," and that insurers question and deny the specialized studies needed to reach a diagnosis.')}</p>
 
-<h2>Por qué a los boricuas les toca más</h2>
-<p>La razón tiene nombre: el <strong>efecto fundador</strong>. La población de Puerto Rico viene de una mezcla de tres raíces (taína, española y africana) y de grupos que se quedaron aislados por generaciones. Cuando una mutación entra en un grupo pequeño y ese grupo crece más o menos entre sí, la mutación se vuelve mucho más común que en el resto del mundo.</p>
-<p>Eso hace que ciertas enfermedades genéticas raras sean, aquí, menos raras. El albinismo, por ejemplo, aparece en cerca de 1 de cada 20,000 personas en Puerto Rico, y el síndrome HPS-3 (un tipo de albinismo con problemas de sangrado) se concentra en pueblos específicos de la montaña: <strong>Comerío, Naranjito y Barranquitas</strong>. La genética boricua no es un dato de trivia. Dibuja un mapa.</p>
+<h2>${te('Por qué a los boricuas les toca más', 'Why it hits Boricuas harder')}</h2>
+<p>${te('La razón tiene nombre: el <strong>efecto fundador</strong>. La población de Puerto Rico viene de una mezcla de tres raíces (taína, española y africana) y de grupos que se quedaron aislados por generaciones. Cuando una mutación entra en un grupo pequeño y ese grupo crece más o menos entre sí, la mutación se vuelve mucho más común que en el resto del mundo.', 'The reason has a name: the <strong>founder effect</strong>. Puerto Rico\'s population comes from a mix of three roots (Taíno, Spanish and African) and from groups that stayed isolated for generations. When a mutation enters a small group and that group grows more or less among itself, the mutation becomes far more common than in the rest of the world.')}</p>
+<p>${te('Eso hace que ciertas enfermedades genéticas raras sean, aquí, menos raras. El albinismo, por ejemplo, aparece en cerca de 1 de cada 20,000 personas en Puerto Rico, y el síndrome HPS-3 (un tipo de albinismo con problemas de sangrado) se concentra en pueblos específicos de la montaña: <strong>Comerío, Naranjito y Barranquitas</strong>. La genética boricua no es un dato de trivia. Dibuja un mapa.', 'That makes certain rare genetic diseases, here, less rare. Albinism, for example, appears in about 1 in 20,000 people in Puerto Rico, and HPS-3 syndrome (a type of albinism with bleeding problems) concentrates in specific mountain towns: <strong>Comerío, Naranjito and Barranquitas</strong>. Boricua genetics is not a trivia fact. It draws a map.')}</p>
 
-<h2 id="quien-diagnostica" class="scroll-mt-20">El cuello de botella que nadie contó: quién puede diagnosticar</h2>
-<p>Para diagnosticar una enfermedad rara casi siempre hace falta un genetista clínico: un médico entrenado en leer el ADN y ponerle nombre a lo que otros especialistas no encuentran. Buscamos en el registro federal NPPES cuántos hay en Puerto Rico. Este es el conteo, verificado uno por uno (julio 2026):</p>
+<h2 id="quien-diagnostica" class="scroll-mt-20">${te('El cuello de botella que nadie contó: quién puede diagnosticar', 'The bottleneck no one counted: who can diagnose')}</h2>
+<p>${te('Para diagnosticar una enfermedad rara casi siempre hace falta un genetista clínico: un médico entrenado en leer el ADN y ponerle nombre a lo que otros especialistas no encuentran. Buscamos en el registro federal NPPES cuántos hay en Puerto Rico. Este es el conteo, verificado uno por uno (julio 2026):', 'Diagnosing a rare disease almost always requires a clinical geneticist: a physician trained to read DNA and name what other specialists cannot find. We searched the federal NPPES registry for how many exist in Puerto Rico. This is the count, verified one by one (July 2026):')}</p>
 
 <div class="not-prose overflow-x-auto my-5">
 <table class="w-full text-sm min-w-[520px]">
-  <thead><tr class="text-left text-xs uppercase tracking-wide text-slate-400 border-b border-slate-200"><th class="pb-2 pr-3 font-semibold">Quién</th><th class="pb-2 pr-3 font-semibold">Dónde</th><th class="pb-2 pr-3 font-semibold">Teléfono</th><th class="pb-2 font-semibold text-right">Verificar</th></tr></thead>
+  <thead><tr class="text-left text-xs uppercase tracking-wide text-slate-400 border-b border-slate-200"><th class="pb-2 pr-3 font-semibold">${te('Quién', 'Who')}</th><th class="pb-2 pr-3 font-semibold">${te('Dónde', 'Where')}</th><th class="pb-2 pr-3 font-semibold">${te('Teléfono', 'Phone')}</th><th class="pb-2 font-semibold text-right">${te('Verificar', 'Verify')}</th></tr></thead>
   <tbody>${gRows}</tbody>
 </table>
 </div>
-<p class="text-sm text-slate-500 -mt-1">Los <strong>2</strong> genetistas clínicos (M.D.) que diagnostican pacientes están en Santurce y Manatí. Contando las subespecialidades de genética clínica (molecular y bioquímica), son 4, y <strong>cuatro de ellos comparten un mismo edificio en la Calle San Jorge de Santurce</strong>. Es decir: la genética clínica de todo Puerto Rico corre, en la práctica, desde un puñado de oficinas en el área metro. Fuente: registro federal NPPES (taxonomías 207SG0201X, 207SG0202X, 207SG0203X, 170300000X).</p>
+<p class="text-sm text-slate-500 -mt-1">${te('Los <strong>2</strong> genetistas clínicos (M.D.) que diagnostican pacientes están en Santurce y Manatí. Contando las subespecialidades de genética clínica (molecular y bioquímica), son 4, y <strong>cuatro de ellos comparten un mismo edificio en la Calle San Jorge de Santurce</strong>. Es decir: la genética clínica de todo Puerto Rico corre, en la práctica, desde un puñado de oficinas en el área metro. Fuente: registro federal NPPES (taxonomías 207SG0201X, 207SG0202X, 207SG0203X, 170300000X).', 'The <strong>2</strong> clinical geneticists (M.D.) who diagnose patients are in Santurce and Manatí. Counting the clinical genetics subspecialties (molecular and biochemical), there are 4, and <strong>four of them share the same building on Calle San Jorge in Santurce</strong>. In practice, clinical genetics for all of Puerto Rico runs from a handful of metro offices. Source: federal NPPES registry (taxonomies 207SG0201X, 207SG0202X, 207SG0203X, 170300000X).')}</p>
 
-<h2>Y las mutaciones se concentran donde no hay nadie</h2>
-<p>Aquí es donde los dos mapas se cruzan. Las mutaciones fundadoras se concentran en la montaña y en pueblos específicos. Los especialistas que las diagnostican y las manejan (genetistas, neurólogos, pediatras) se concentran en el metro. <a href="/atlas" class="text-teal-700 font-semibold">Mira el Atlas de las enfermedades fundadoras boricuas, una por una y con su pueblo →</a></p>
-<p>Miramos nuestra base de datos, verificada contra NPPES, para la región central montañosa:</p>
+<h2>${te('Y las mutaciones se concentran donde no hay nadie', 'And the mutations concentrate where no one is')}</h2>
+<p>${te('Aquí es donde los dos mapas se cruzan. Las mutaciones fundadoras se concentran en la montaña y en pueblos específicos. Los especialistas que las diagnostican y las manejan (genetistas, neurólogos, pediatras) se concentran en el metro.', 'This is where the two maps cross. Founder mutations concentrate in the mountains and in specific towns. The specialists who diagnose and manage them (geneticists, neurologists, pediatricians) concentrate in the metro.')} <a href="/atlas${lp}" class="text-teal-700 font-semibold">${te('Mira el Atlas de las enfermedades fundadoras boricuas, una por una y con su pueblo →', 'See the Atlas of Boricua founder diseases, one by one and by town →')}</a></p>
+<p>${te('Miramos nuestra base de datos, verificada contra NPPES, para la región central montañosa:', 'We looked at our database, verified against NPPES, for the central mountain region:')}</p>
 
 <div class="not-prose overflow-x-auto my-5">
 <table class="w-full text-sm min-w-[480px]">
-  <thead><tr class="text-left text-xs uppercase tracking-wide text-slate-400 border-b border-slate-200"><th class="pb-2 pr-3 font-semibold">Región</th><th class="pb-2 pr-3 font-semibold text-center">Neurólogos</th><th class="pb-2 pr-3 font-semibold text-center">Neurocirujanos</th><th class="pb-2 font-semibold text-center">Pediatras</th></tr></thead>
+  <thead><tr class="text-left text-xs uppercase tracking-wide text-slate-400 border-b border-slate-200"><th class="pb-2 pr-3 font-semibold">${te('Región', 'Region')}</th><th class="pb-2 pr-3 font-semibold text-center">${te('Neurólogos', 'Neurologists')}</th><th class="pb-2 pr-3 font-semibold text-center">${te('Neurocirujanos', 'Neurosurgeons')}</th><th class="pb-2 font-semibold text-center">${te('Pediatras', 'Pediatricians')}</th></tr></thead>
   <tbody>${nRows}</tbody>
 </table>
 </div>
-<p class="text-slate-700"><strong>La región central montañosa (la misma donde se concentran las mutaciones fundadoras) tiene 1 neurólogo, 0 neurocirujanos y 0 genetistas para toda la región.</strong> Una familia de Comerío o Barranquitas con un hijo que necesita un genetista maneja dos horas o más para llegar a Santurce. Eso, cuando ya saben que necesitan un genetista. La mayoría no lo sabe todavía. Ese es el verdadero significado de la "odisea diagnóstica": no es solo que la ciencia sea difícil, es que no se sabe a quién ver ni dónde está.</p>
+<p class="text-slate-700">${te('<strong>La región central montañosa (la misma donde se concentran las mutaciones fundadoras) tiene 1 neurólogo, 0 neurocirujanos y 0 genetistas para toda la región.</strong> Una familia de Comerío o Barranquitas con un hijo que necesita un genetista maneja dos horas o más para llegar a Santurce. Eso, cuando ya saben que necesitan un genetista. La mayoría no lo sabe todavía. Ese es el verdadero significado de la "odisea diagnóstica": no es solo que la ciencia sea difícil, es que no se sabe a quién ver ni dónde está.', '<strong>The central mountain region (the same one where founder mutations concentrate) has 1 neurologist, 0 neurosurgeons and 0 geneticists for the entire region.</strong> A family from Comerío or Barranquitas with a child who needs a geneticist drives two hours or more to reach Santurce. That is once they already know they need a geneticist. Most do not know yet. That is the real meaning of the "diagnostic odyssey": it is not only that the science is hard, it is that no one knows whom to see or where they are.')}</p>
 
-<h2>La odisea, en una familia con nombre</h2>
-<p>Melissmar López Pimentel nació en 2007. Sus padres pasaron <strong>11 años</strong> buscando respuestas antes de que, en 2018, le diagnosticaran el <strong>síndrome TBCK</strong>, una enfermedad neurogenética con una variante fundadora identificada en Puerto Rico. Por eso se le conoce como el <strong>"Síndrome Boricua"</strong> (la mutación p.R126X). En el mundo hay cerca de 100 casos diagnosticados; la fundación que crearon sus padres ha identificado alrededor de 21 familias solo en Puerto Rico.</p>
+<h2>${te('La odisea, en una familia con nombre', 'The odyssey, in a family with a name')}</h2>
+<p>${te('Melissmar López Pimentel nació en 2007. Sus padres pasaron <strong>11 años</strong> buscando respuestas antes de que, en 2018, le diagnosticaran el <strong>síndrome TBCK</strong>, una enfermedad neurogenética con una variante fundadora identificada en Puerto Rico. Por eso se le conoce como el <strong>"Síndrome Boricua"</strong> (la mutación p.R126X). En el mundo hay cerca de 100 casos diagnosticados; la fundación que crearon sus padres ha identificado alrededor de 21 familias solo en Puerto Rico.', 'Melissmar López Pimentel was born in 2007. Her parents spent <strong>11 years</strong> looking for answers before, in 2018, she was diagnosed with <strong>TBCK syndrome</strong>, a neurogenetic disease with a founder variant identified in Puerto Rico. That is why it is known as the <strong>"Boricua Syndrome"</strong> (the p.R126X mutation). There are about 100 diagnosed cases worldwide; the foundation her parents created has identified around 21 families in Puerto Rico alone.')}</p>
 <div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-5 my-5">
-  <p class="font-bold text-teal-900">Si esto es tu familia, no estás solo</p>
-  <p class="text-sm text-teal-800 mt-1">Los padres de Melissmar fundaron la <strong>TBCK Foundation of PR</strong>, que acompaña a familias que enfrentan la incertidumbre después de un diagnóstico raro. Su trabajo es real y llegó antes que cualquier oficina del gobierno.</p>
-  <a href="https://www.tbckfoundation.org/es" target="_blank" rel="noopener" class="inline-flex items-center gap-2 mt-3 bg-teal-700 hover:bg-teal-800 text-white font-bold px-4 py-2 rounded-full text-sm"><i class="fa-solid fa-heart"></i> Conoce la TBCK Foundation</a>
+  <p class="font-bold text-teal-900">${te('Si esto es tu familia, no estás solo', 'If this is your family, you are not alone')}</p>
+  <p class="text-sm text-teal-800 mt-1">${te('Los padres de Melissmar fundaron la <strong>TBCK Foundation of PR</strong>, que acompaña a familias que enfrentan la incertidumbre después de un diagnóstico raro. Su trabajo es real y llegó antes que cualquier oficina del gobierno.', 'Melissmar\'s parents founded the <strong>TBCK Foundation of PR</strong>, which walks with families facing uncertainty after a rare diagnosis. Their work is real and came before any government office.')}</p>
+  <a href="https://www.tbckfoundation.org/${en ? 'en' : 'es'}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 mt-3 bg-teal-700 hover:bg-teal-800 text-white font-bold px-4 py-2 rounded-full text-sm"><i class="fa-solid fa-heart"></i> ${te('Conoce la TBCK Foundation', 'Meet the TBCK Foundation')}</a>
 </div>
 
-<h2>Lo declarado vs. lo entregado</h2>
-<p>El gobierno se puso metas: infraestructura de datos interoperable y cubrir <strong>75% de los casos identificables para el 2030</strong>. Es una promesa buena. También es una promesa a cinco años, con $450,000, empezando desde 42 enfermedades catalogadas y sin saber todavía cuántas personas las padecen ni en qué pueblos viven. Vamos a seguirle el paso a esa promesa, año por año, en <a href="https://puertoricosinfiltros.com" class="text-teal-700 font-semibold">Puerto Rico Sin Filtros</a>. Este récord se queda con el otro lado: quién puede diagnosticar hoy, y dónde.</p>
+<h2>${te('Lo declarado vs. lo entregado', 'Promised vs. delivered')}</h2>
+<p>${te('El gobierno se puso metas: infraestructura de datos interoperable y cubrir <strong>75% de los casos identificables para el 2030</strong>. Es una promesa buena. También es una promesa a cinco años, con $450,000, empezando desde 42 enfermedades catalogadas y sin saber todavía cuántas personas las padecen ni en qué pueblos viven. Vamos a seguirle el paso a esa promesa, año por año, en <a href="https://puertoricosinfiltros.com" class="text-teal-700 font-semibold">Puerto Rico Sin Filtros</a>. Este récord se queda con el otro lado: quién puede diagnosticar hoy, y dónde.', 'The government set goals: interoperable data infrastructure and covering <strong>75% of identifiable cases by 2030</strong>. It is a good promise. It is also a five-year promise, with $450,000, starting from 42 catalogued diseases and not yet knowing how many people have them or in what towns they live. We will track that promise, year by year, at <a href="https://puertoricosinfiltros.com" class="text-teal-700 font-semibold">Puerto Rico Sin Filtros</a>. This record keeps the other side: who can diagnose today, and where.')}</p>
 
-<h2>Datos citables</h2>
-<p class="text-slate-600 -mt-2">Cada dato con su fuente. Cópialo y úsalo (prensa, escuela, un mensaje a la familia). Si citas la parte de genetistas, el enlace es registromedicopr.com/raras.</p>
+<h2>${te('Datos citables', 'Citable data')}</h2>
+<p class="text-slate-600 -mt-2">${te('Cada dato con su fuente. Cópialo y úsalo (prensa, escuela, un mensaje a la familia). Al copiar, se lleva el enlace de la página.', 'Each fact with its source. Copy it and use it (press, school, a message to the family). When you copy, it carries the page link.')}</p>
 ${citasHtml}
 
 <div class="not-prose mt-8 bg-slate-900 rounded-2xl p-6 text-center text-white">
-  <p class="text-lg font-bold mb-1">¿Necesitas encontrar un especialista hoy?</p>
-  <p class="text-sm text-slate-300 mb-4">El registro te dice quién existe, en qué pueblo y con qué teléfono, verificado contra el gobierno federal. Sin cuenta, sin registro, gratis.</p>
+  <p class="text-lg font-bold mb-1">${te('¿Necesitas encontrar un especialista hoy?', 'Need to find a specialist today?')}</p>
+  <p class="text-sm text-slate-300 mb-4">${te('El registro te dice quién existe, en qué pueblo y con qué teléfono, verificado contra el gobierno federal. Sin cuenta, sin registro, gratis.', 'The registry tells you who exists, in what town and with what phone, verified against the federal government. No account, no signup, free.')}</p>
   <div class="flex flex-wrap gap-3 justify-center">
-    <a href="/registro" class="inline-flex items-center gap-2 bg-white text-slate-900 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-slate-100"><i class="fa-solid fa-magnifying-glass"></i> Buscar en el registro</a>
-    <a href="/pueblo" class="inline-flex items-center gap-2 bg-teal-700 text-white font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-800"><i class="fa-solid fa-location-dot"></i> El semáforo de tu pueblo</a>
+    <a href="/registro${lp}" class="inline-flex items-center gap-2 bg-white text-slate-900 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-slate-100"><i class="fa-solid fa-magnifying-glass"></i> ${te('Buscar en el registro', 'Search the registry')}</a>
+    <a href="/pueblo${lp}" class="inline-flex items-center gap-2 bg-teal-700 text-white font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-800"><i class="fa-solid fa-location-dot"></i> ${te('El semáforo de tu pueblo', 'Your town\'s health map')}</a>
   </div>
 </div>
 
-${shareRow({ text: 'Puerto Rico es #1 en EE.UU. en enfermedades raras. Tiene 2 genetistas clínicos que diagnostican, ambos en el metro, y la región de la montaña (donde se concentran las mutaciones boricuas) tiene 0. La data federal, con la fuente al lado:', url: 'https://registromedicopr.com/raras', toWho: 'A quien tenga un caso raro en la familia, a un maestro, a un periodista de salud. Cada dato trae su fuente.' })}
+${shareRow({ text: te('Puerto Rico es #1 en EE.UU. en enfermedades raras. Tiene 2 genetistas clínicos que diagnostican, ambos en el metro, y la región de la montaña (donde se concentran las mutaciones boricuas) tiene 0. La data federal, con la fuente al lado:', 'Puerto Rico is #1 in the U.S. in rare diseases. It has 2 clinical geneticists who diagnose, both in the metro, and the mountain region (where Boricua mutations concentrate) has 0. Federal data, with the source next to it:'), url: CANON, toWho: te('A quien tenga un caso raro en la familia, a un maestro, a un periodista de salud. Cada dato trae su fuente.', 'To anyone with a rare case in the family, a teacher, a health reporter. Every fact carries its source.') })}
 
-${regDisclaimer(false)}
+${regDisclaimer(en)}
 ${SHARE_COPY_SCRIPT}`
 
   const jsonLd = [
-    { '@context': 'https://schema.org', '@type': 'MedicalWebPage', name: 'Enfermedades raras en Puerto Rico: quién las diagnostica', url: 'https://registromedicopr.com/raras', inLanguage: 'es',
+    { '@context': 'https://schema.org', '@type': 'MedicalWebPage', name: te('Enfermedades raras en Puerto Rico: quién las diagnostica', 'Rare diseases in Puerto Rico: who can diagnose them'), url: CANON, inLanguage: en ? 'en' : 'es',
       about: { '@type': 'MedicalCondition', name: 'Rare diseases / Enfermedades raras' },
       publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' } },
     { '@context': 'https://schema.org', '@type': 'Dataset', name: 'Genetistas clínicos y neurología por región en Puerto Rico',
       description: 'Conteo verificado contra el registro federal NPPES de genetistas clínicos y neurólogos por región en Puerto Rico, en el contexto del liderato de la isla en enfermedades raras.',
-      url: 'https://registromedicopr.com/raras', inLanguage: 'es', license: 'https://creativecommons.org/licenses/by/4.0/',
+      url: CANON, inLanguage: 'es', license: 'https://creativecommons.org/licenses/by/4.0/',
       creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
       isBasedOn: 'https://npiregistry.cms.hhs.gov' },
     { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [
-      { '@type': 'Question', name: '¿Cuántos genetistas clínicos hay en Puerto Rico?', acceptedAnswer: { '@type': 'Answer', text: 'Según el registro federal NPPES (julio 2026), Puerto Rico tiene 2 genetistas clínicos (M.D.) con dirección de práctica en la isla que diagnostican pacientes, ambos en el corredor San Juan-Manatí. Contando subespecialidades de genética clínica (molecular y bioquímica), son 4, todos en el área metro y Manatí. Hay además 1 consejera genética en San Juan.' } },
-      { '@type': 'Question', name: '¿Por qué Puerto Rico tiene tantas enfermedades raras?', acceptedAnswer: { '@type': 'Answer', text: 'Por el efecto fundador: la mezcla taína, española y africana y el aislamiento de ciertos grupos hicieron que algunas mutaciones genéticas sean mucho más comunes en Puerto Rico que en el resto del mundo. Varias se concentran en pueblos específicos de la montaña, como el albinismo y el síndrome HPS-3 en Comerío, Naranjito y Barranquitas.' } },
-      { '@type': 'Question', name: '¿Qué es el Síndrome Boricua?', acceptedAnswer: { '@type': 'Answer', text: 'Es el síndrome TBCK, una enfermedad neurogenética rara con una variante fundadora (la mutación p.R126X) identificada en Puerto Rico. La TBCK Foundation of PR ha identificado alrededor de 21 familias en la isla.' } },
+      { '@type': 'Question', name: te('¿Cuántos genetistas clínicos hay en Puerto Rico?', 'How many clinical geneticists are there in Puerto Rico?'), acceptedAnswer: { '@type': 'Answer', text: te('Según el registro federal NPPES (julio 2026), Puerto Rico tiene 2 genetistas clínicos (M.D.) con dirección de práctica en la isla que diagnostican pacientes, ambos en el corredor San Juan-Manatí. Contando subespecialidades de genética clínica (molecular y bioquímica), son 4, todos en el área metro y Manatí. Hay además 1 consejera genética en San Juan.', 'According to the federal NPPES registry (July 2026), Puerto Rico has 2 clinical geneticists (M.D.) with a practice address on the island who diagnose patients, both in the San Juan-Manatí corridor. Counting clinical genetics subspecialties (molecular and biochemical), there are 4, all in the metro area and Manatí. There is also 1 genetic counselor in San Juan.') } },
+      { '@type': 'Question', name: te('¿Por qué Puerto Rico tiene tantas enfermedades raras?', 'Why does Puerto Rico have so many rare diseases?'), acceptedAnswer: { '@type': 'Answer', text: te('Por el efecto fundador: la mezcla taína, española y africana y el aislamiento de ciertos grupos hicieron que algunas mutaciones genéticas sean mucho más comunes en Puerto Rico que en el resto del mundo. Varias se concentran en pueblos específicos de la montaña, como el albinismo y el síndrome HPS-3 en Comerío, Naranjito y Barranquitas.', 'Because of the founder effect: the Taíno, Spanish and African mix and the isolation of certain groups made some genetic mutations far more common in Puerto Rico than in the rest of the world. Several concentrate in specific mountain towns, like albinism and HPS-3 syndrome in Comerío, Naranjito and Barranquitas.') } },
+      { '@type': 'Question', name: te('¿Qué es el Síndrome Boricua?', 'What is the Boricua Syndrome?'), acceptedAnswer: { '@type': 'Answer', text: te('Es el síndrome TBCK, una enfermedad neurogenética rara con una variante fundadora (la mutación p.R126X) identificada en Puerto Rico. La TBCK Foundation of PR ha identificado alrededor de 21 familias en la isla.', 'It is TBCK syndrome, a rare neurogenetic disease with a founder variant (the p.R126X mutation) identified in Puerto Rico. The TBCK Foundation of PR has identified around 21 families on the island.') } },
     ] },
     { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Registro Médico PR', item: 'https://registromedicopr.com/registro' },
-      { '@type': 'ListItem', position: 2, name: 'Enfermedades raras', item: 'https://registromedicopr.com/raras' },
+      { '@type': 'ListItem', position: 2, name: te('Enfermedades raras', 'Rare diseases'), item: CANON },
     ] },
   ]
 
   res.status(200).send(layout({
-    title: 'Enfermedades raras en Puerto Rico: quién las diagnostica',
-    description: 'Puerto Rico es #1 en EE.UU. en enfermedades raras por el efecto fundador. Pero tiene solo 2 genetistas clínicos que diagnostican, ambos en el metro, y la región montañosa donde se concentran las mutaciones no tiene ninguno. Data federal NPPES, con la fuente al lado.',
+    title: te('Enfermedades raras en Puerto Rico: quién las diagnostica', 'Rare diseases in Puerto Rico: who can diagnose them'),
+    description: te('Puerto Rico es #1 en EE.UU. en enfermedades raras por el efecto fundador. Pero tiene solo 2 genetistas clínicos que diagnostican, ambos en el metro, y la región montañosa donde se concentran las mutaciones no tiene ninguno. Data federal NPPES, con la fuente al lado.', 'Puerto Rico is #1 in the U.S. in rare diseases due to the founder effect. But it has only 2 clinical geneticists who diagnose, both in the metro, and the mountain region where the mutations concentrate has none. Federal NPPES data, with the source next to it.'),
     slug: 'raras', bodyHtml: body, jsonLd,
     ogImage: `https://registromedicopr.com/api/og?theme=medico&k=${encodeURIComponent('Enfermedades raras · Puerto Rico')}&t=${encodeURIComponent('PR es #1 en enfermedades raras||¿y quién las diagnostica?')}&sub=${encodeURIComponent('2 genetistas clínicos que diagnostican, ambos en el metro. La montaña, donde se concentran las mutaciones fundadoras: cero.')}&badge=${encodeURIComponent('Data federal NPPES')}`, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
-    canonicalUrl: 'https://registromedicopr.com/raras',
-    lang: 'es',
+    canonicalUrl: CANON,
+    lang: en ? 'en' : 'es',
   }))
 }
 
@@ -10121,128 +10126,145 @@ ${SHARE_COPY_SCRIPT}`
 async function handleAtlas(req: any, res: any) {
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=300')
+  const en = String(req.query.lang || '') === 'en'
+  const te = (es: string, eng: string) => en ? eng : es
+  const lp = en ? '?lang=en' : ''
+  const CANON = 'https://registromedicopr.com/atlas'
 
   const condiciones = [
     {
       slug: 'hps1', emoji: '🧬',
-      nombre: 'Síndrome de Hermansky-Pudlak tipo 1',
-      comun: 'Un tipo de albinismo con problemas de sangrado',
-      gen: 'gen HPS1',
-      region: 'Noroeste (Aguadilla, Isabela, Quebradillas y alrededores)',
-      comunAqui: '1 de cada 1,800 personas en el noroeste. 1 de cada 21 bebés del noroeste es portador.',
-      senal: 'Piel y pelo muy claros, problemas de visión, moretones o sangrados fáciles. En la adultez puede afectar los pulmones.',
+      nombre: 'Síndrome de Hermansky-Pudlak tipo 1', nombreEn: 'Hermansky-Pudlak Syndrome type 1',
+      comun: 'Un tipo de albinismo con problemas de sangrado', comunEn: 'A type of albinism with bleeding problems',
+      gen: 'gen HPS1', genEn: 'HPS1 gene',
+      region: 'Noroeste (Aguadilla, Isabela, Quebradillas y alrededores)', regionEn: 'Northwest (Aguadilla, Isabela, Quebradillas and nearby)',
+      comunAqui: '1 de cada 1,800 personas en el noroeste. 1 de cada 21 bebés del noroeste es portador.', comunAquiEn: '1 in 1,800 people in the northwest. 1 in 21 newborns in the northwest is a carrier.',
+      senal: 'Piel y pelo muy claros, problemas de visión, moretones o sangrados fáciles. En la adultez puede afectar los pulmones.', senalEn: 'Very fair skin and hair, vision problems, easy bruising or bleeding. In adulthood it can affect the lungs.',
       apoyoN: 'HPS Network', apoyoUrl: 'https://www.hpsnetwork.org',
       fuente: 'Journal of the American Academy of Dermatology (2019); Nature Genetics',
       fuenteUrl: 'https://www.jaad.org/article/S0190-9622(19)31801-8/abstract',
     },
     {
       slug: 'hps3', emoji: '🏔️',
-      nombre: 'Síndrome de Hermansky-Pudlak tipo 3',
-      comun: 'Una forma más leve del mismo albinismo con sangrado',
-      gen: 'gen HPS3',
-      region: 'Centro montañoso (un aislado genético del centro de la isla: Comerío, Naranjito, Barranquitas)',
-      comunAqui: '1 de cada 32 bebés del centro de la isla es portador.',
-      senal: 'Parecido al tipo 1 pero por lo general más leve.',
+      nombre: 'Síndrome de Hermansky-Pudlak tipo 3', nombreEn: 'Hermansky-Pudlak Syndrome type 3',
+      comun: 'Una forma más leve del mismo albinismo con sangrado', comunEn: 'A milder form of the same albinism with bleeding',
+      gen: 'gen HPS3', genEn: 'HPS3 gene',
+      region: 'Centro montañoso (un aislado genético del centro de la isla: Comerío, Naranjito, Barranquitas)', regionEn: 'Central mountains (a genetic isolate of the island\'s center: Comerío, Naranjito, Barranquitas)',
+      comunAqui: '1 de cada 32 bebés del centro de la isla es portador.', comunAquiEn: '1 in 32 newborns in the island\'s center is a carrier.',
+      senal: 'Parecido al tipo 1 pero por lo general más leve.', senalEn: 'Similar to type 1 but usually milder.',
       apoyoN: 'HPS Network', apoyoUrl: 'https://www.hpsnetwork.org',
       fuente: 'Nature Genetics (2001): "mutación de un gen nuevo en un aislado genético del centro de PR"; OMIM 614072',
       fuenteUrl: 'https://www.nature.com/articles/ng576',
     },
     {
       slug: 'tbck', emoji: '👶',
-      nombre: 'Síndrome TBCK ("Síndrome Boricua")',
-      comun: 'Una enfermedad neurogenética de la niñez',
-      gen: 'gen TBCK, variante p.R126X',
-      region: 'Toda la isla; la variante fundadora fue identificada en Puerto Rico',
-      comunAqui: 'Cerca de 21 familias identificadas en PR, de unos 100 casos en todo el mundo.',
-      senal: 'Bebé con tono muscular muy bajo ("flojito"), epilepsia, retraso en el desarrollo, dificultad para hablar y para tragar.',
+      nombre: 'Síndrome TBCK ("Síndrome Boricua")', nombreEn: 'TBCK Syndrome ("Boricua Syndrome")',
+      comun: 'Una enfermedad neurogenética de la niñez', comunEn: 'A childhood neurogenetic disease',
+      gen: 'gen TBCK, variante p.R126X', genEn: 'TBCK gene, p.R126X variant',
+      region: 'Toda la isla; la variante fundadora fue identificada en Puerto Rico', regionEn: 'Islandwide; the founder variant was identified in Puerto Rico',
+      comunAqui: 'Cerca de 21 familias identificadas en PR, de unos 100 casos en todo el mundo.', comunAquiEn: 'About 21 families identified in PR, out of some 100 cases worldwide.',
+      senal: 'Bebé con tono muscular muy bajo ("flojito"), epilepsia, retraso en el desarrollo, dificultad para hablar y para tragar.', senalEn: 'Baby with very low muscle tone ("floppy"), epilepsy, developmental delay, trouble speaking and swallowing.',
       apoyoN: 'TBCK Foundation of PR', apoyoUrl: 'https://www.tbckfoundation.org/es',
       fuente: 'El Vocero (2026); TBCK Foundation of PR',
       fuenteUrl: 'https://www.tbckfoundation.org/es/sindrome-tbck',
     },
     {
       slug: 'rsph4a', emoji: '🫁',
-      nombre: 'Disquinesia ciliar primaria (variante RSPH4A)',
-      comun: 'Una enfermedad respiratoria crónica desde el nacimiento',
-      gen: 'gen RSPH4A, variante c.921+3_6delAAGT',
-      region: 'Más frecuente en el oeste. Mayagüez concentra cerca del 30% de los casos.',
-      comunAqui: 'La variante boricua explica 2 de cada 3 casos de esta enfermedad en PR. Se estima cerca de 1,624 personas afectadas.',
-      senal: 'Congestión, infecciones de oído y sinusitis desde bebé, tos crónica. Se confunde con asma o alergias por años.',
+      nombre: 'Disquinesia ciliar primaria (variante RSPH4A)', nombreEn: 'Primary Ciliary Dyskinesia (RSPH4A variant)',
+      comun: 'Una enfermedad respiratoria crónica desde el nacimiento', comunEn: 'A chronic respiratory disease from birth',
+      gen: 'gen RSPH4A, variante c.921+3_6delAAGT', genEn: 'RSPH4A gene, c.921+3_6delAAGT variant',
+      region: 'Más frecuente en el oeste. Mayagüez concentra cerca del 30% de los casos.', regionEn: 'Most common in the west. Mayagüez holds about 30% of cases.',
+      comunAqui: 'La variante boricua explica 2 de cada 3 casos de esta enfermedad en PR. Se estima cerca de 1,624 personas afectadas.', comunAquiEn: 'The Boricua variant explains 2 of every 3 cases of this disease in PR. An estimated 1,624 people affected.',
+      senal: 'Congestión, infecciones de oído y sinusitis desde bebé, tos crónica. Se confunde con asma o alergias por años.', senalEn: 'Congestion, ear infections and sinusitis from infancy, chronic cough. Mistaken for asthma or allergies for years.',
       apoyoN: '', apoyoUrl: '',
       fuente: 'Diagnostics (MDPI, 2021-2022); PMC / NIH',
       fuenteUrl: 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8415044/',
     },
     {
       slug: 'lgmd2c', emoji: '💪',
-      nombre: 'Distrofia muscular de cinturas tipo 2C',
-      comun: 'Una debilidad muscular que progresa despacio',
-      gen: 'gen SGCG, variante p.E263K',
-      region: 'Documentada como variante fundadora en la población puertorriqueña',
-      comunAqui: 'Variante fundadora en hispanos de Puerto Rico. Es una de las que la noticia describe como "parecida a la distrofia muscular".',
-      senal: 'Debilidad que avanza despacio en caderas y hombros: cuesta correr, subir escaleras o levantarse del piso.',
+      nombre: 'Distrofia muscular de cinturas tipo 2C', nombreEn: 'Limb-Girdle Muscular Dystrophy type 2C',
+      comun: 'Una debilidad muscular que progresa despacio', comunEn: 'A slowly progressing muscle weakness',
+      gen: 'gen SGCG, variante p.E263K', genEn: 'SGCG gene, p.E263K variant',
+      region: 'Documentada como variante fundadora en la población puertorriqueña', regionEn: 'Documented as a founder variant in the Puerto Rican population',
+      comunAqui: 'Variante fundadora en hispanos de Puerto Rico. Es una de las que la noticia describe como "parecida a la distrofia muscular".', comunAquiEn: 'Founder variant in Puerto Rican Hispanics. One of the conditions the news describes as "similar to muscular dystrophy".',
+      senal: 'Debilidad que avanza despacio en caderas y hombros: cuesta correr, subir escaleras o levantarse del piso.', senalEn: 'Slowly advancing weakness in hips and shoulders: hard to run, climb stairs, or get up from the floor.',
       apoyoN: '', apoyoUrl: '',
       fuente: 'PMC / NIH (2015): forma lentamente progresiva de LGMD2C por variante fundadora en SGCG',
       fuenteUrl: 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4367081/',
     },
     {
       slug: 'brca2', emoji: '🎗️',
-      nombre: 'Cáncer hereditario de seno y ovario (BRCA2 E1308X)',
-      comun: 'Un riesgo genético de cáncer que se hereda en la familia',
-      gen: 'gen BRCA2, variante E1308X',
-      region: 'Toda la isla; explica la mayoría de los casos hereditarios en PR',
-      comunAqui: 'Una sola variante fundadora explica la mayoría del cáncer hereditario de seno y ovario en Puerto Rico.',
-      senal: 'Varios casos de cáncer de seno u ovario en la misma familia, o a edad joven. Esta SÍ se puede accionar: hay pruebas genéticas y prevención.',
+      nombre: 'Cáncer hereditario de seno y ovario (BRCA2 E1308X)', nombreEn: 'Hereditary Breast and Ovarian Cancer (BRCA2 E1308X)',
+      comun: 'Un riesgo genético de cáncer que se hereda en la familia', comunEn: 'An inherited genetic cancer risk that runs in families',
+      gen: 'gen BRCA2, variante E1308X', genEn: 'BRCA2 gene, E1308X variant',
+      region: 'Toda la isla; explica la mayoría de los casos hereditarios en PR', regionEn: 'Islandwide; explains most hereditary cases in PR',
+      comunAqui: 'Una sola variante fundadora explica la mayoría del cáncer hereditario de seno y ovario en Puerto Rico.', comunAquiEn: 'A single founder variant explains most hereditary breast and ovarian cancer in Puerto Rico.',
+      senal: 'Varios casos de cáncer de seno u ovario en la misma familia, o a edad joven. Esta SÍ se puede accionar: hay pruebas genéticas y prevención.', senalEn: 'Several breast or ovarian cancer cases in the same family, or at a young age. This one CAN be acted on: there are genetic tests and prevention.',
       apoyoN: '', apoyoUrl: '',
       fuente: 'PMC / NIH (2018): "A Recurrent BRCA2 Mutation Explains the Majority of Hereditary Breast and Ovarian Cancer in Puerto Rico"',
       fuenteUrl: 'https://www.ncbi.nlm.nih.gov/pmc/articles/PMC6266560/',
     },
   ]
+  const pk = (c: any, f: string) => en ? (c[f + 'En'] || c[f]) : c[f]
 
-  const cards = condiciones.map(c => `
+  const cards = condiciones.map(c => {
+    const nombre = pk(c, 'nombre'), comun = pk(c, 'comun'), gen = pk(c, 'gen'), region = pk(c, 'region'), comunAqui = pk(c, 'comunAqui'), senal = pk(c, 'senal')
+    const copyText = en
+      ? `${nombre} (${gen}): ${comun}. In PR: ${comunAqui} Concentrated in: ${region}. Source: ${c.fuente}. \n\n🔗 https://registromedicopr.com/atlas?lang=en`
+      : `${nombre} (${gen}): ${comun}. En PR: ${comunAqui} Se concentra en: ${region}. Fuente: ${c.fuente}. \n\n🔗 https://registromedicopr.com/atlas`
+    return `
     <div id="${c.slug}" class="not-prose bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 scroll-mt-20">
       <div class="flex items-start gap-4">
         <div class="text-4xl leading-none">${c.emoji}</div>
         <div class="flex-1">
-          <h3 class="text-xl font-black text-slate-900 leading-tight">${c.nombre}</h3>
-          <p class="text-slate-500 mt-0.5">${c.comun} · <span class="text-slate-400">${c.gen}</span></p>
+          <h3 class="text-xl font-black text-slate-900 leading-tight">${nombre}</h3>
+          <p class="text-slate-500 mt-0.5">${comun} · <span class="text-slate-400">${gen}</span></p>
         </div>
       </div>
       <div class="mt-4 grid sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-        <div><span class="font-bold text-slate-700">Dónde se concentra</span><br><span class="text-slate-600">${c.region}</span></div>
-        <div><span class="font-bold text-slate-700">Qué tan común aquí</span><br><span class="text-slate-600">${c.comunAqui}</span></div>
-        <div class="sm:col-span-2"><span class="font-bold text-slate-700">Señales</span><br><span class="text-slate-600">${c.senal}</span></div>
+        <div><span class="font-bold text-slate-700">${te('Dónde se concentra', 'Where it concentrates')}</span><br><span class="text-slate-600">${region}</span></div>
+        <div><span class="font-bold text-slate-700">${te('Qué tan común aquí', 'How common here')}</span><br><span class="text-slate-600">${comunAqui}</span></div>
+        <div class="sm:col-span-2"><span class="font-bold text-slate-700">${te('Señales', 'Signs')}</span><br><span class="text-slate-600">${senal}</span></div>
       </div>
       <div class="mt-4 flex flex-wrap items-center gap-2">
-        <a href="/raras#quien-diagnostica" class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1.5 rounded-full text-xs hover:bg-teal-100"><i class="fa-solid fa-user-doctor"></i> Quién la diagnostica</a>
-        <a href="/pueblo" class="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-xs hover:bg-slate-100"><i class="fa-solid fa-location-dot"></i> Especialistas en tu pueblo</a>
-        ${c.apoyoN ? `<a href="${c.apoyoUrl}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 bg-rose-50 border border-rose-200 text-rose-700 font-semibold px-3 py-1.5 rounded-full text-xs hover:bg-rose-100"><i class="fa-solid fa-heart"></i> Apoyo: ${escapeHtml(c.apoyoN)}</a>` : ''}
-        <button type="button" class="share-copy inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-xs" data-copy="${escapeHtml(`${c.nombre} (${c.gen}): ${c.comun}. En PR: ${c.comunAqui} Se concentra en: ${c.region}. Fuente: ${c.fuente}. \n\n🔗 https://registromedicopr.com/atlas`)}"><i class="fa-regular fa-copy"></i> Copiar el dato</button>
+        <a href="/raras${lp}#quien-diagnostica" class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1.5 rounded-full text-xs hover:bg-teal-100"><i class="fa-solid fa-user-doctor"></i> ${te('Quién la diagnostica', 'Who can diagnose it')}</a>
+        <a href="/pueblo${lp}" class="inline-flex items-center gap-1.5 bg-slate-50 border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-xs hover:bg-slate-100"><i class="fa-solid fa-location-dot"></i> ${te('Especialistas en tu pueblo', 'Specialists in your town')}</a>
+        ${c.apoyoN ? `<a href="${c.apoyoUrl}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 bg-rose-50 border border-rose-200 text-rose-700 font-semibold px-3 py-1.5 rounded-full text-xs hover:bg-rose-100"><i class="fa-solid fa-heart"></i> ${te('Apoyo', 'Support')}: ${escapeHtml(c.apoyoN)}</a>` : ''}
+        <button type="button" class="share-copy inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-xs" data-copy="${escapeHtml(copyText)}"><i class="fa-regular fa-copy"></i> ${te('Copiar el dato', 'Copy the fact')}</button>
       </div>
-      <p class="text-xs text-slate-400 mt-3">Fuente: <a href="${c.fuenteUrl}" target="_blank" rel="noopener" class="hover:text-teal-700 underline">${escapeHtml(c.fuente)}</a></p>
-    </div>`).join('')
+      <p class="text-xs text-slate-400 mt-3">${te('Fuente', 'Source')}: <a href="${c.fuenteUrl}" target="_blank" rel="noopener" class="hover:text-teal-700 underline">${escapeHtml(c.fuente)}</a></p>
+    </div>`
+  }).join('')
 
-  const indice = condiciones.map(c => `<a href="#${c.slug}" class="inline-flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-sm hover:border-teal-400">${c.emoji} ${escapeHtml(c.nombre.split('(')[0].trim())}</a>`).join(' ')
+  const indice = condiciones.map(c => `<a href="#${c.slug}" class="inline-flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-sm hover:border-teal-400">${c.emoji} ${escapeHtml(pk(c, 'nombre').split('(')[0].trim())}</a>`).join(' ')
 
-  const citas = [
-    { t: 'El efecto fundador de Puerto Rico ha producido al menos 6 enfermedades genéticas con variante propia boricua documentada en la literatura científica: Hermansky-Pudlak tipo 1 y tipo 3, síndrome TBCK, disquinesia ciliar RSPH4A, distrofia de cinturas SGCG y cáncer hereditario BRCA2. El mapa consolidado, en español y por pueblo, está en registromedicopr.com/atlas.' },
-    { t: 'El síndrome de Hermansky-Pudlak (un albinismo con problemas de sangrado) aparece en 1 de cada 1,800 personas en el noroeste de Puerto Rico por efecto fundador. 1 de cada 21 bebés del noroeste es portador. (Journal of the American Academy of Dermatology, 2019; Nature Genetics)' },
-    { t: 'Una sola variante fundadora en el gen RSPH4A explica 2 de cada 3 casos de disquinesia ciliar primaria en Puerto Rico, con cerca de 1,624 personas afectadas y mayor concentración en Mayagüez. Se confunde con asma por años. (Diagnostics, MDPI)' },
-    { t: 'Una sola variante fundadora en el gen BRCA2 (E1308X) explica la mayoría del cáncer hereditario de seno y ovario en Puerto Rico. A diferencia de otras enfermedades raras, esta sí se puede accionar con pruebas genéticas y prevención. Si hay varios casos en tu familia, se puede hacer algo hoy. (PMC/NIH, 2018)' },
+  const citas = en ? [
+    'Puerto Rico\'s founder effect has produced at least 6 genetic diseases with their own Boricua variant documented in the scientific literature: Hermansky-Pudlak type 1 and type 3, TBCK syndrome, RSPH4A ciliary dyskinesia, SGCG limb-girdle dystrophy and BRCA2 hereditary cancer. The consolidated map, by town, is at registromedicopr.com/atlas.',
+    'Hermansky-Pudlak syndrome (an albinism with bleeding problems) appears in 1 in 1,800 people in northwestern Puerto Rico due to the founder effect. 1 in 21 newborns in the northwest is a carrier. (Journal of the American Academy of Dermatology, 2019; Nature Genetics)',
+    'A single founder variant in the RSPH4A gene explains 2 of every 3 cases of primary ciliary dyskinesia in Puerto Rico, with about 1,624 people affected and highest concentration in Mayagüez. It is mistaken for asthma for years. (Diagnostics, MDPI)',
+    'A single founder variant in the BRCA2 gene (E1308X) explains most hereditary breast and ovarian cancer in Puerto Rico. Unlike other rare diseases, this one CAN be acted on with genetic testing and prevention. If there are several cases in your family, something can be done today. (PMC/NIH, 2018)',
+  ] : [
+    'El efecto fundador de Puerto Rico ha producido al menos 6 enfermedades genéticas con variante propia boricua documentada en la literatura científica: Hermansky-Pudlak tipo 1 y tipo 3, síndrome TBCK, disquinesia ciliar RSPH4A, distrofia de cinturas SGCG y cáncer hereditario BRCA2. El mapa consolidado, en español y por pueblo, está en registromedicopr.com/atlas.',
+    'El síndrome de Hermansky-Pudlak (un albinismo con problemas de sangrado) aparece en 1 de cada 1,800 personas en el noroeste de Puerto Rico por efecto fundador. 1 de cada 21 bebés del noroeste es portador. (Journal of the American Academy of Dermatology, 2019; Nature Genetics)',
+    'Una sola variante fundadora en el gen RSPH4A explica 2 de cada 3 casos de disquinesia ciliar primaria en Puerto Rico, con cerca de 1,624 personas afectadas y mayor concentración en Mayagüez. Se confunde con asma por años. (Diagnostics, MDPI)',
+    'Una sola variante fundadora en el gen BRCA2 (E1308X) explica la mayoría del cáncer hereditario de seno y ovario en Puerto Rico. A diferencia de otras enfermedades raras, esta sí se puede accionar con pruebas genéticas y prevención. Si hay varios casos en tu familia, se puede hacer algo hoy. (PMC/NIH, 2018)',
   ]
-  const citasHtml = citas.map(c => `
+  const citaTail = en ? '\n\n🔗 https://registromedicopr.com/atlas?lang=en' : '\n\n🔗 https://registromedicopr.com/atlas'
+  const citasHtml = citas.map(t => `
     <div class="not-prose flex gap-3 items-start bg-white border border-slate-200 rounded-xl p-4 mb-2.5">
-      <div class="text-sm text-slate-700 flex-1">${escapeHtml(c.t)}</div>
-      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(c.t + '\n\n🔗 https://registromedicopr.com/atlas')}"><i class="fa-regular fa-copy"></i> Copiar</button>
+      <div class="text-sm text-slate-700 flex-1">${escapeHtml(t)}</div>
+      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(t + citaTail)}"><i class="fa-regular fa-copy"></i> ${te('Copiar', 'Copy')}</button>
     </div>`).join('')
 
   const body = `
-<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <a href="/raras" class="hover:text-teal-700">Enfermedades raras</a> <span class="text-slate-300">/</span> <span class="text-slate-700">Atlas</span></nav>
+<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro${lp}" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <a href="/raras${lp}" class="hover:text-teal-700">${te('Enfermedades raras', 'Rare diseases')}</a> <span class="text-slate-300">/</span> <span class="text-slate-700">Atlas</span> <span class="text-slate-300">·</span> <a href="${en ? '/atlas' : '/atlas?lang=en'}" class="hover:text-teal-700">${en ? 'Español' : 'English'}</a></nav>
 
-<h1 class="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">El Atlas de las enfermedades<br><span class="text-teal-700">fundadoras boricuas</span></h1>
-<p class="text-lg text-slate-600 mt-3">Un diagnóstico raro asusta, y muchas veces llega con la sensación de estar solo y de que nadie entiende. Este Atlas existe para lo contrario: para que veas que ya tiene nombre, ya tiene pueblo, y ya alguien sabe qué es. No es una maldición de Puerto Rico. Es la razón por la que la ciencia del mundo estudia el ADN boricua, y aquí lo tienes en cristiano, condición por condición, con su fuente al lado.</p>
+<h1 class="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">${te('El Atlas de las enfermedades<br><span class="text-teal-700">fundadoras boricuas</span>', 'The Atlas of Boricua<br><span class="text-teal-700">founder diseases</span>')}</h1>
+<p class="text-lg text-slate-600 mt-3">${te('Un diagnóstico raro asusta, y muchas veces llega con la sensación de estar solo y de que nadie entiende. Este Atlas existe para lo contrario: para que veas que ya tiene nombre, ya tiene pueblo, y ya alguien sabe qué es. No es una maldición de Puerto Rico. Es la razón por la que la ciencia del mundo estudia el ADN boricua, y aquí lo tienes en cristiano, condición por condición, con su fuente al lado.', 'A rare diagnosis is frightening, and it often arrives with the feeling of being alone and that no one understands. This Atlas exists for the opposite: so you can see that it already has a name, already has a town, and someone already knows what it is. It is not a curse on Puerto Rico. It is why the world studies Boricua DNA, and here it is in plain language, condition by condition, with the source next to it.')}</p>
 
 <div class="not-prose bg-slate-50 border border-slate-200 rounded-2xl p-5 my-6">
-  <p class="font-bold text-slate-800">¿Qué es una "enfermedad fundadora"?</p>
-  <p class="text-sm text-slate-600 mt-1">Cuando una mutación entra en un grupo pequeño de personas y ese grupo crece más o menos entre sí por generaciones, la mutación se vuelve mucho más común ahí que en el resto del mundo. Eso es el efecto fundador. En Puerto Rico dibujó un mapa: ciertas enfermedades raras se concentran en pueblos específicos. Aquí están las que la ciencia ya documentó.</p>
+  <p class="font-bold text-slate-800">${te('¿Qué es una "enfermedad fundadora"?', 'What is a "founder disease"?')}</p>
+  <p class="text-sm text-slate-600 mt-1">${te('Cuando una mutación entra en un grupo pequeño de personas y ese grupo crece más o menos entre sí por generaciones, la mutación se vuelve mucho más común ahí que en el resto del mundo. Eso es el efecto fundador. En Puerto Rico dibujó un mapa: ciertas enfermedades raras se concentran en pueblos específicos. Aquí están las que la ciencia ya documentó.', 'When a mutation enters a small group of people and that group grows more or less among itself over generations, the mutation becomes far more common there than in the rest of the world. That is the founder effect. In Puerto Rico it drew a map: certain rare diseases concentrate in specific towns. Here are the ones science has already documented.')}</p>
 </div>
 
 <div class="not-prose flex flex-wrap gap-2 my-6">${indice}</div>
@@ -10250,64 +10272,64 @@ async function handleAtlas(req: any, res: any) {
 <div class="not-prose space-y-4">${cards}</div>
 
 <div class="not-prose bg-amber-50 border border-amber-200 rounded-2xl p-5 sm:p-6 my-8">
-  <p class="font-black text-amber-900 text-lg">Señales de alerta desde la infancia</p>
-  <p class="text-sm text-amber-800 mt-1">La detección temprana es lo que acorta la odisea. Si un bebé o un niño muestra varias de estas señales, no es para asustarse, es para preguntar temprano:</p>
+  <p class="font-black text-amber-900 text-lg">${te('Señales de alerta desde la infancia', 'Warning signs from infancy')}</p>
+  <p class="text-sm text-amber-800 mt-1">${te('La detección temprana es lo que acorta la odisea. Si un bebé o un niño muestra varias de estas señales, no es para asustarse, es para preguntar temprano:', 'Early detection is what shortens the odyssey. If a baby or child shows several of these signs, it is not to panic, it is to ask early:')}</p>
   <ul class="text-sm text-amber-900 mt-3 grid sm:grid-cols-2 gap-x-6 gap-y-1.5 list-disc pl-5">
-    <li>Retraso en alcanzar hitos (sentarse, caminar, hablar)</li>
-    <li>Dificultad para alimentarse o para tragar</li>
-    <li>Convulsiones o movimientos involuntarios</li>
-    <li>Crecimiento deficiente o pérdida de peso inesperada</li>
-    <li>Infecciones frecuentes o severas</li>
-    <li>Varios casos parecidos en la familia</li>
+    <li>${te('Retraso en alcanzar hitos (sentarse, caminar, hablar)', 'Delay reaching milestones (sitting, walking, talking)')}</li>
+    <li>${te('Dificultad para alimentarse o para tragar', 'Trouble feeding or swallowing')}</li>
+    <li>${te('Convulsiones o movimientos involuntarios', 'Seizures or involuntary movements')}</li>
+    <li>${te('Crecimiento deficiente o pérdida de peso inesperada', 'Poor growth or unexpected weight loss')}</li>
+    <li>${te('Infecciones frecuentes o severas', 'Frequent or severe infections')}</li>
+    <li>${te('Varios casos parecidos en la familia', 'Several similar cases in the family')}</li>
   </ul>
-  <p class="text-sm text-amber-800 mt-3">Ninguna señal sola significa una enfermedad rara. Pero si vienen varias juntas, mencionárselo al pediatra temprano puede ahorrar años. Fuente: El Vocero (2026), Oficina de Enfermedades Raras.</p>
+  <p class="text-sm text-amber-800 mt-3">${te('Ninguna señal sola significa una enfermedad rara. Pero si vienen varias juntas, mencionárselo al pediatra temprano puede ahorrar años. Fuente: El Vocero (2026), Oficina de Enfermedades Raras.', 'No single sign means a rare disease. But if several come together, mentioning it to the pediatrician early can save years. Source: El Vocero (2026), Office for Rare Diseases.')}</p>
 </div>
 
 <div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
-  <p class="text-lg font-bold mb-1">Si algo de esto te suena a tu familia</p>
-  <p class="text-sm text-teal-100 mb-4">No tienes que resolverlo hoy ni entenderlo todo. Un primer paso concreto: ver quién puede diagnosticar y dónde queda lo más cerca de ti.</p>
+  <p class="text-lg font-bold mb-1">${te('Si algo de esto te suena a tu familia', 'If any of this sounds like your family')}</p>
+  <p class="text-sm text-teal-100 mb-4">${te('No tienes que resolverlo hoy ni entenderlo todo. Un primer paso concreto: ver quién puede diagnosticar y dónde queda lo más cerca de ti.', 'You do not have to solve it today or understand everything. One concrete first step: see who can diagnose and where the nearest one is to you.')}</p>
   <div class="flex flex-wrap gap-3 justify-center">
-    <a href="/raras#quien-diagnostica" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-solid fa-user-doctor"></i> Quién diagnostica en PR</a>
-    <a href="/pueblo" class="inline-flex items-center gap-2 bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-900"><i class="fa-solid fa-location-dot"></i> El semáforo de tu pueblo</a>
+    <a href="/raras${lp}#quien-diagnostica" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-solid fa-user-doctor"></i> ${te('Quién diagnostica en PR', 'Who diagnoses in PR')}</a>
+    <a href="/pueblo${lp}" class="inline-flex items-center gap-2 bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-900"><i class="fa-solid fa-location-dot"></i> ${te('El semáforo de tu pueblo', 'Your town\'s health map')}</a>
   </div>
 </div>
 
-<h2>Datos citables</h2>
-<p class="text-slate-600 -mt-2">Cada dato con su fuente y con algo que hacer. Cópialo y úsalo: un mensaje a la familia, una nota de prensa, una pregunta al médico.</p>
+<h2>${te('Datos citables', 'Citable data')}</h2>
+<p class="text-slate-600 -mt-2">${te('Cada dato con su fuente y con algo que hacer. Al copiar, se lleva el enlace de la página: un mensaje a la familia, una nota de prensa, una pregunta al médico.', 'Each fact with its source and something to do. When you copy, it carries the page link: a message to the family, a press note, a question for the doctor.')}</p>
 ${citasHtml}
 
-${shareRow({ text: 'El Atlas de las enfermedades fundadoras boricuas: 6 condiciones genéticas con variante propia de Puerto Rico, cada una con su pueblo, sus señales y quién la diagnostica. En cristiano y con la fuente al lado:', url: 'https://registromedicopr.com/atlas', toWho: 'A quien tenga un caso raro en la familia, a un pediatra, a un maestro. Puede ahorrarle a alguien años de no saber.' })}
+${shareRow({ text: te('El Atlas de las enfermedades fundadoras boricuas: 6 condiciones genéticas con variante propia de Puerto Rico, cada una con su pueblo, sus señales y quién la diagnostica. En cristiano y con la fuente al lado:', 'The Atlas of Boricua founder diseases: 6 genetic conditions with Puerto Rico\'s own variant, each with its town, its signs and who can diagnose it. In plain language and with the source next to it:'), url: CANON + (en ? '?lang=en' : ''), toWho: te('A quien tenga un caso raro en la familia, a un pediatra, a un maestro. Puede ahorrarle a alguien años de no saber.', 'To anyone with a rare case in the family, a pediatrician, a teacher. It can save someone years of not knowing.') })}
 
-${regDisclaimer(false)}
+${regDisclaimer(en)}
 ${SHARE_COPY_SCRIPT}`
 
   const jsonLd = [
-    { '@context': 'https://schema.org', '@type': 'MedicalWebPage', name: 'Atlas de las enfermedades fundadoras boricuas', url: 'https://registromedicopr.com/atlas', inLanguage: 'es',
+    { '@context': 'https://schema.org', '@type': 'MedicalWebPage', name: te('Atlas de las enfermedades fundadoras boricuas', 'Atlas of Boricua founder diseases'), url: CANON, inLanguage: en ? 'en' : 'es',
       publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
-      about: condiciones.map(c => ({ '@type': 'MedicalCondition', name: c.nombre, associatedAnatomy: undefined })) },
+      about: condiciones.map(c => ({ '@type': 'MedicalCondition', name: pk(c, 'nombre') })) },
     { '@context': 'https://schema.org', '@type': 'Dataset', name: 'Enfermedades genéticas con variante fundadora en Puerto Rico',
       description: 'Mapa consolidado de enfermedades con mutación fundadora documentada en Puerto Rico (HPS-1, HPS-3, TBCK, RSPH4A, LGMD2C/SGCG, BRCA2), con región de concentración, prevalencia y fuente científica primaria.',
-      url: 'https://registromedicopr.com/atlas', inLanguage: 'es', license: 'https://creativecommons.org/licenses/by/4.0/',
+      url: CANON, inLanguage: 'es', license: 'https://creativecommons.org/licenses/by/4.0/',
       creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' } },
     { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [
-      { '@type': 'Question', name: '¿Cuáles son las enfermedades fundadoras de Puerto Rico?', acceptedAnswer: { '@type': 'Answer', text: 'Entre las enfermedades con variante fundadora documentada en Puerto Rico están el síndrome de Hermansky-Pudlak tipo 1 (noroeste) y tipo 3 (centro montañoso), el síndrome TBCK o "Síndrome Boricua", la disquinesia ciliar primaria por RSPH4A (más frecuente en el oeste), la distrofia muscular de cinturas tipo 2C (SGCG) y el cáncer hereditario de seno y ovario por la variante BRCA2 E1308X.' } },
-      { '@type': 'Question', name: '¿Qué es una enfermedad fundadora?', acceptedAnswer: { '@type': 'Answer', text: 'Es una enfermedad genética cuya mutación se volvió mucho más común en un grupo por el efecto fundador: cuando una mutación entra en una población pequeña que crece relativamente aislada, se concentra. En Puerto Rico varias enfermedades raras se concentran en pueblos específicos.' } },
-      { '@type': 'Question', name: '¿El síndrome de Hermansky-Pudlak es común en Puerto Rico?', acceptedAnswer: { '@type': 'Answer', text: 'Sí. Por efecto fundador aparece en cerca de 1 de cada 1,800 personas en el noroeste de Puerto Rico, y 1 de cada 21 bebés del noroeste es portador del tipo 1. El tipo 3 se concentra en el centro montañoso.' } },
+      { '@type': 'Question', name: te('¿Cuáles son las enfermedades fundadoras de Puerto Rico?', 'What are the founder diseases of Puerto Rico?'), acceptedAnswer: { '@type': 'Answer', text: te('Entre las enfermedades con variante fundadora documentada en Puerto Rico están el síndrome de Hermansky-Pudlak tipo 1 (noroeste) y tipo 3 (centro montañoso), el síndrome TBCK o "Síndrome Boricua", la disquinesia ciliar primaria por RSPH4A (más frecuente en el oeste), la distrofia muscular de cinturas tipo 2C (SGCG) y el cáncer hereditario de seno y ovario por la variante BRCA2 E1308X.', 'Diseases with a documented founder variant in Puerto Rico include Hermansky-Pudlak syndrome type 1 (northwest) and type 3 (central mountains), TBCK syndrome or "Boricua Syndrome", primary ciliary dyskinesia from RSPH4A (most common in the west), limb-girdle muscular dystrophy type 2C (SGCG), and hereditary breast and ovarian cancer from the BRCA2 E1308X variant.') } },
+      { '@type': 'Question', name: te('¿Qué es una enfermedad fundadora?', 'What is a founder disease?'), acceptedAnswer: { '@type': 'Answer', text: te('Es una enfermedad genética cuya mutación se volvió mucho más común en un grupo por el efecto fundador: cuando una mutación entra en una población pequeña que crece relativamente aislada, se concentra. En Puerto Rico varias enfermedades raras se concentran en pueblos específicos.', 'It is a genetic disease whose mutation became far more common in a group through the founder effect: when a mutation enters a small population that grows relatively isolated, it concentrates. In Puerto Rico several rare diseases concentrate in specific towns.') } },
+      { '@type': 'Question', name: te('¿El síndrome de Hermansky-Pudlak es común en Puerto Rico?', 'Is Hermansky-Pudlak syndrome common in Puerto Rico?'), acceptedAnswer: { '@type': 'Answer', text: te('Sí. Por efecto fundador aparece en cerca de 1 de cada 1,800 personas en el noroeste de Puerto Rico, y 1 de cada 21 bebés del noroeste es portador del tipo 1. El tipo 3 se concentra en el centro montañoso.', 'Yes. Due to the founder effect it appears in about 1 in 1,800 people in northwestern Puerto Rico, and 1 in 21 newborns in the northwest is a carrier of type 1. Type 3 concentrates in the central mountains.') } },
     ] },
     { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Registro Médico PR', item: 'https://registromedicopr.com/registro' },
-      { '@type': 'ListItem', position: 2, name: 'Enfermedades raras', item: 'https://registromedicopr.com/raras' },
-      { '@type': 'ListItem', position: 3, name: 'Atlas de enfermedades fundadoras', item: 'https://registromedicopr.com/atlas' },
+      { '@type': 'ListItem', position: 2, name: te('Enfermedades raras', 'Rare diseases'), item: 'https://registromedicopr.com/raras' },
+      { '@type': 'ListItem', position: 3, name: te('Atlas de enfermedades fundadoras', 'Atlas of founder diseases'), item: CANON },
     ] },
   ]
 
   res.status(200).send(layout({
-    title: 'Atlas de las enfermedades fundadoras boricuas',
-    description: 'El primer mapa consolidado, en español y por pueblo, de las enfermedades genéticas con variante fundadora propia de Puerto Rico: Hermansky-Pudlak, TBCK, disquinesia ciliar RSPH4A, distrofia SGCG, cáncer hereditario BRCA2. Con señales, quién diagnostica y fuente científica.',
+    title: te('Atlas de las enfermedades fundadoras boricuas', 'Atlas of Boricua founder diseases'),
+    description: te('El primer mapa consolidado, en español y por pueblo, de las enfermedades genéticas con variante fundadora propia de Puerto Rico: Hermansky-Pudlak, TBCK, disquinesia ciliar RSPH4A, distrofia SGCG, cáncer hereditario BRCA2. Con señales, quién diagnostica y fuente científica.', 'The first consolidated map, by town, of the genetic diseases with Puerto Rico\'s own founder variant: Hermansky-Pudlak, TBCK, RSPH4A ciliary dyskinesia, SGCG dystrophy, BRCA2 hereditary cancer. With signs, who diagnoses, and scientific sources.'),
     slug: 'atlas', bodyHtml: body, jsonLd,
     ogImage: `https://registromedicopr.com/api/og?theme=medico&k=${encodeURIComponent('Registro Médico PR')}&t=${encodeURIComponent('El Atlas de las enfermedades||fundadoras boricuas')}&sub=${encodeURIComponent('6 condiciones con variante propia de Puerto Rico, por pueblo, con quién las diagnostica.')}&badge=${encodeURIComponent('Verificado con ciencia primaria')}`, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
-    canonicalUrl: 'https://registromedicopr.com/atlas',
-    lang: 'es',
+    canonicalUrl: CANON,
+    lang: en ? 'en' : 'es',
   }))
 }
 
