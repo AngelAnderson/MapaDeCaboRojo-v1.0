@@ -94,6 +94,8 @@
     { "source": "/registro-raras", "destination": "/api/mapa-pages?page=oer" },
     { "source": "/oer", "destination": "/api/mapa-pages?page=oer" },
     { "source": "/investigacion", "destination": "/api/mapa-pages?page=investigacion" },
+    { "source": "/prospecto", "destination": "/api/mapa-pages?page=prospecto" },
+    { "source": "/dossier", "destination": "/api/mapa-pages?page=prospecto" },
     { "source": "/agua", "destination": "/api/mapa-pages?page=agua" },
     { "source": "/activos", "destination": "/api/mapa-pages?page=activos" },
     { "source": "/acueductos", "destination": "/api/mapa-pages?page=acueductos" },

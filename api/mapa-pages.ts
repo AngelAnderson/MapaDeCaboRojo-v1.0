@@ -283,6 +283,7 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <a href="/registro/desiertos${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Medical deserts' : 'Desiertos médicos'}</a>
 <a href="/registro/estado" class="hover:text-teal-700">${isEn ? 'PR health status' : 'Estado de salud de PR'}</a>
 <a href="/raras" class="hover:text-teal-700">${isEn ? 'Rare diseases' : 'Enfermedades raras'}</a>
+<a href="/prospecto" class="hover:text-teal-700">${isEn ? 'Prospectus (research)' : 'Prospecto (investigación)'}</a>
 <a href="/atlas" class="hover:text-teal-700">${isEn ? 'Founder diseases atlas' : 'Atlas de fundadoras'}</a>
 <a href="/porque" class="hover:text-teal-700">${isEn ? 'Why doctors leave' : '¿Por qué se van los médicos?'}</a>
 <a href="/observatorio" class="hover:text-teal-700">${isEn ? 'Observatory + podcast' : 'Observatorio + podcast'}</a>
@@ -10899,6 +10900,129 @@ ${SHARE_COPY_SCRIPT}`
   }))
 }
 
+// ====================== /prospecto — El Dossier del Substrato: PR como oportunidad de genética (registromedicopr) ======================
+// Prospecto bilingüe dirigido a investigadores, fondos y prensa. Frame No Chasing: "aquí está el valor,
+// aquí está el mapa", sin pedir. Empaqueta efecto fundador + Atlas + brecha de genetistas + brecha NIH.
+// Todo verificado esta sesión (literatura primaria + NPPES + NIH RePORTER). Cero data inventada.
+async function handleProspecto(req: any, res: any) {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=300')
+  const en = String(req.query.lang || '') === 'en'
+  const te = (es: string, eng: string) => en ? eng : es
+  const lp = en ? '?lang=en' : ''
+  const CANON = 'https://registromedicopr.com/prospecto'
+
+  const stats = [
+    { big: '6', lab: te('enfermedades genéticas con variante fundadora propia de PR, documentadas en la literatura', 'genetic diseases with Puerto Rico\'s own founder variant, documented in the literature') },
+    { big: '2', lab: te('genetistas clínicos (M.D.) que diagnostican en toda la isla, casi todos en el metro', 'clinical geneticists (M.D.) who diagnose in the whole island, nearly all in the metro') },
+    { big: '$28', lab: te('por persona en fondos NIH (2024): lo más bajo de la nación, por debajo de Mississippi', 'per capita in NIH funding (2024): the lowest in the nation, below Mississippi') },
+    { big: '1/1,800', lab: te('personas en el noroeste tiene Hermansky-Pudlak, por efecto fundador (1/21 es portador)', 'people in the northwest has Hermansky-Pudlak, by founder effect (1 in 21 is a carrier)') },
+  ]
+  const statsHtml = stats.map(s => `<div class="bg-white border border-slate-200 rounded-2xl p-4"><div class="text-3xl font-black text-slate-900">${s.big}</div><div class="text-xs text-slate-500 mt-1">${s.lab}</div></div>`).join('')
+
+  const audiencias = [
+    { e: '🔬', h: te('Investigadores', 'Researchers'), p: te('Una población founder-effect con variantes "limpias" de estudiar, mapeada por pueblo, con la cohorte y la capacidad local ya identificadas. Lo que normalmente toma un año construir, ya está construido.', 'A founder-effect population with "clean" variants to study, mapped by town, with the cohort and local capacity already identified. What usually takes a year to build is already built.') },
+    { e: '💰', h: te('Fondos y filantropía en salud', 'Health funders & philanthropy'), p: te('La brecha de equidad con receipts: la jurisdicción #1 en enfermedades raras recibe el financiamiento de investigación más bajo por persona del país. Un caso de inversión de alto apalancamiento, verificable.', 'The equity gap with receipts: the #1 jurisdiction in rare diseases receives the lowest research funding per capita in the country. A high-leverage, verifiable investment case.') },
+    { e: '🤝', h: te('Organizaciones de pacientes', 'Patient advocacy'), p: te('El récord público que su causa no tenía: cada condición con su pueblo, su prevalencia y quién la diagnostica. Amplificamos, no competimos.', 'The public record their cause did not have: each condition with its town, its prevalence and who diagnoses it. We amplify, we do not compete.') },
+    { e: '🧫', h: te('Biotecnología / genómica', 'Biotech / genomics'), p: te('Poblaciones fundadoras aisladas son oro para descubrimiento de dianas y ensayos. Aquí está el mapa de dónde están, en español y verificado.', 'Isolated founder populations are gold for target discovery and trials. Here is the map of where they are, verified.') },
+    { e: '📰', h: te('Prensa', 'Press'), p: te('La historia completa con fuente en cada dato: la ciencia, la brecha de diagnóstico, la promesa del gobierno y el dinero que no llega. Copia y cita.', 'The full story with a source on every fact: the science, the diagnostic gap, the government promise and the money that does not arrive. Copy and cite.') },
+  ]
+  const audHtml = audiencias.map(a => `
+    <div class="not-prose bg-white border border-slate-200 rounded-2xl p-5">
+      <div class="text-3xl leading-none">${a.e}</div>
+      <p class="font-black text-slate-900 mt-2">${a.h}</p>
+      <p class="text-sm text-slate-600 mt-1">${a.p}</p>
+    </div>`).join('')
+
+  const citas = en ? [
+    'Puerto Rico is the U.S. jurisdiction with the most rare diseases, driven by a founder effect (64% European, 21% African, 15% Taíno ancestry). At least 6 diseases have a documented Puerto Rico-specific founder variant. It is, in effect, a natural genetics laboratory. Map: registromedicopr.com/atlas',
+    'Puerto Rico has only 2 clinical geneticists (M.D.) who diagnose patients, nearly all in the metro area, and the central mountain region where founder mutations concentrate has zero. (Federal NPPES registry, Jul 2026) registromedicopr.com/raras',
+    'Puerto Rico and Iowa have the same population (3.2M). In FY2024 the NIH invested $249M in Iowa and $90M in Puerto Rico. PR receives less research funding per capita ($28) than Mississippi, the poorest U.S. state, despite having the nation\'s most valuable founder-effect population. (NIH RePORTER) puertoricosinfiltros.com/investigacion',
+    'The infrastructure a research or funding team would normally spend a year building already exists and is maintained by hand: a map of 6 founder diseases by town, a registry of 6,247 NPPES-verified specialists, and real demand signals. registromedicopr.com/prospecto',
+  ] : [
+    'Puerto Rico es la jurisdicción de EE.UU. con más enfermedades raras, por un efecto fundador (64% ascendencia europea, 21% africana, 15% taína). Al menos 6 enfermedades tienen una variante fundadora propia de Puerto Rico documentada. Es, de hecho, un laboratorio natural de genética. Mapa: registromedicopr.com/atlas',
+    'Puerto Rico tiene solo 2 genetistas clínicos (M.D.) que diagnostican pacientes, casi todos en el área metro, y la región central montañosa donde se concentran las mutaciones fundadoras tiene cero. (Registro federal NPPES, jul 2026) registromedicopr.com/raras',
+    'Puerto Rico e Iowa tienen la misma población (3.2M). En el año fiscal 2024 el NIH invirtió $249M en Iowa y $90M en Puerto Rico. PR recibe menos financiamiento de investigación por persona ($28) que Mississippi, el estado más pobre, pese a tener la población founder-effect más valiosa de la nación. (NIH RePORTER) puertoricosinfiltros.com/investigacion',
+    'La infraestructura que un equipo de investigación o de fondos normalmente tomaría un año en construir ya existe y se mantiene a mano: un mapa de 6 enfermedades fundadoras por pueblo, un registro de 6,247 especialistas verificados contra NPPES, y señales de demanda reales. registromedicopr.com/prospecto',
+  ]
+  const citasHtml = citas.map(t => `
+    <div class="not-prose flex gap-3 items-start bg-white border border-slate-200 rounded-xl p-4 mb-2.5">
+      <div class="text-sm text-slate-700 flex-1">${escapeHtml(t)}</div>
+      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(t + '\n\n🔗 ' + CANON + (en ? '?lang=en' : ''))}"><i class="fa-regular fa-copy"></i> ${te('Copiar', 'Copy')}</button>
+    </div>`).join('')
+
+  const body = `
+<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro${lp}" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <span class="text-slate-700">${te('Prospecto', 'Prospectus')}</span> <span class="text-slate-300">·</span> <a href="${en ? '/prospecto' : '/prospecto?lang=en'}" class="hover:text-teal-700">${en ? 'Español' : 'English'}</a></nav>
+
+<div class="not-prose bg-slate-900 text-white rounded-2xl p-6 sm:p-8">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">${te('Prospecto público · Puerto Rico', 'Public prospectus · Puerto Rico')}</p>
+  <h1 class="text-2xl sm:text-4xl font-black mt-2 leading-tight">${te('La población genética más valiosa y menos estudiada de Estados Unidos.', 'The most valuable and least-studied genetics population in the United States.')}</h1>
+  <p class="text-slate-300 mt-3 text-lg">${te('Y el mapa que ya existe.', 'And the map that already exists.')}</p>
+</div>
+
+<div class="not-prose grid grid-cols-2 sm:grid-cols-4 gap-3 my-8">${statsHtml}</div>
+
+<h2>${te('La oportunidad', 'The opportunity')}</h2>
+<p>${te('Puerto Rico viene de una mezcla de tres raíces (taína, española y africana) y de grupos que se quedaron aislados por generaciones. Ese <strong>efecto fundador</strong> concentró mutaciones genéticas que en el resto del mundo son rarísimas, hasta el punto de que la isla es la jurisdicción de EE.UU. con más enfermedades raras. Para la ciencia, eso significa una cosa: un laboratorio natural donde las variantes son más comunes, más "limpias" de estudiar, y ya están mapeadas por pueblo.', 'Puerto Rico comes from a mix of three roots (Taíno, Spanish and African) and from groups that stayed isolated for generations. That <strong>founder effect</strong> concentrated genetic mutations that are extremely rare elsewhere, to the point that the island is the U.S. jurisdiction with the most rare diseases. For science, that means one thing: a natural laboratory where variants are more common, "cleaner" to study, and already mapped by town.')}</p>
+<p>${te('Al menos <strong>6 enfermedades con variante fundadora propia</strong> ya están documentadas en la literatura científica: Hermansky-Pudlak tipo 1 y tipo 3, síndrome TBCK ("Boricua"), disquinesia ciliar RSPH4A, distrofia de cinturas SGCG y cáncer hereditario BRCA2. El mapa consolidado, por pueblo, está en <a href="/atlas${lp}" class="text-teal-700 font-semibold">registromedicopr.com/atlas</a>.', 'At least <strong>6 diseases with their own founder variant</strong> are already documented in the scientific literature: Hermansky-Pudlak type 1 and type 3, TBCK ("Boricua") syndrome, RSPH4A ciliary dyskinesia, SGCG limb-girdle dystrophy and BRCA2 hereditary cancer. The consolidated map, by town, is at <a href="/atlas${lp}" class="text-teal-700 font-semibold">registromedicopr.com/atlas</a>.')}</p>
+
+<h2>${te('La paradoja: lo más valioso, lo menos financiado', 'The paradox: the most valuable, the least funded')}</h2>
+<p>${te('La isla que es un tesoro genético recibe la menor inversión de investigación del país. Puerto Rico e Iowa tienen la misma población (3.2 millones); en 2024 el NIH invirtió <strong>$249 millones en Iowa y $90 millones en Puerto Rico</strong>. Por persona, PR recibe $28: menos que Mississippi, el estado más pobre de la nación. Y a nivel local, solo <strong>2 genetistas clínicos</strong> diagnostican en toda la isla, casi todos en el metro; la montaña, donde se concentran las mutaciones fundadoras, tiene cero. Eso no es solo una injusticia: es una oportunidad de alto apalancamiento sobre la mesa.', 'The island that is a genetic treasure receives the lowest research investment in the country. Puerto Rico and Iowa have the same population (3.2 million); in 2024 the NIH invested <strong>$249 million in Iowa and $90 million in Puerto Rico</strong>. Per capita, PR receives $28: less than Mississippi, the poorest U.S. state. And locally, only <strong>2 clinical geneticists</strong> diagnose across the whole island, nearly all in the metro; the mountains, where founder mutations concentrate, have zero. That is not just an injustice: it is a high-leverage opportunity left on the table.')}</p>
+<p class="text-sm text-slate-500">${te('Detalle con fuente: la brecha de diagnóstico en', 'Sourced detail: the diagnostic gap at')} <a href="/raras${lp}" class="text-teal-700 font-semibold">registromedicopr.com/raras</a> · ${te('la brecha de dinero en', 'the funding gap at')} <a href="https://puertoricosinfiltros.com/investigacion" class="text-teal-700 font-semibold">puertoricosinfiltros.com/investigacion</a>.</p>
+
+<h2>${te('El mapa ya existe (y se mantiene a mano)', 'The map already exists (and is maintained by hand)')}</h2>
+<p>${te('Lo que un equipo de investigación o de fondos normalmente pasa un año construyendo, aquí ya está construido y verificado, uno por uno:', 'What a research or funding team normally spends a year building is already built and verified here, one by one:')}</p>
+<ul class="text-slate-700">
+  <li>${te('<strong>El Atlas de fundadoras</strong> — 6 condiciones por pueblo, con prevalencia y fuente científica primaria.', '<strong>The founder-disease Atlas</strong> — 6 conditions by town, with prevalence and primary scientific source.')}</li>
+  <li>${te('<strong>El registro de especialistas</strong> — 6,247 proveedores verificados contra el registro federal NPPES, por especialidad y municipio.', '<strong>The specialist registry</strong> — 6,247 providers verified against the federal NPPES registry, by specialty and municipality.')}</li>
+  <li>${te('<strong>El semáforo de los 78 municipios</strong> — dónde hay capacidad y dónde no, granular a nivel pueblo.', '<strong>The 78-municipality health map</strong> — where there is capacity and where there is not, at town granularity.')}</li>
+  <li>${te('<strong>Señales de demanda reales</strong> — qué busca la gente y no encuentra, del bot local *7711.', '<strong>Real demand signals</strong> — what people search for and do not find, from the local *7711 line.')}</li>
+</ul>
+
+<h2>${te('Para quién es esto', 'Who this is for')}</h2>
+<div class="not-prose grid sm:grid-cols-2 gap-3 my-4">${audHtml}</div>
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 my-8">
+  <p class="font-black text-teal-900 text-lg">${te('La puerta', 'The door')}</p>
+  <p class="text-sm text-teal-800 mt-1">${te('Esta data es pública y gratis. La mantenemos nosotros, a mano, desde Cabo Rojo. No vendemos un reporte ni pedimos nada. Si vas a traer investigación, financiamiento o cobertura a Puerto Rico, este es tu mapa de arranque. Si quieres hablar, la puerta está abierta.', 'This data is public and free. We maintain it by hand, from Cabo Rojo. We are not selling a report or asking for anything. If you are bringing research, funding, or coverage to Puerto Rico, this is your starting map. If you want to talk, the door is open.')}</p>
+  <a href="mailto:angel@angelanderson.com?subject=${encodeURIComponent(te('Prospecto genética PR', 'PR genetics prospectus'))}" class="inline-flex items-center gap-2 mt-3 bg-teal-700 hover:bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm"><i class="fa-solid fa-envelope"></i> angel@angelanderson.com</a>
+</div>
+
+<h2>${te('Datos citables', 'Citable data')}</h2>
+<p class="text-slate-600 -mt-2">${te('Cada dato con su fuente. Al copiar, se lleva el enlace.', 'Each fact with its source. When you copy, it carries the link.')}</p>
+${citasHtml}
+
+${shareRow({ text: te('Puerto Rico: la población genética más valiosa y menos estudiada de EE.UU. 6 enfermedades fundadoras documentadas, 2 genetistas clínicos, el financiamiento NIH más bajo del país. El valor y el mapa, con la fuente al lado:', 'Puerto Rico: the most valuable and least-studied genetics population in the U.S. 6 documented founder diseases, 2 clinical geneticists, the lowest NIH funding in the nation. The value and the map, with the source next to it:'), url: CANON + (en ? '?lang=en' : ''), toWho: te('A un investigador, a un fondo de salud, a un periodista, a una farmacéutica. Puede traer recursos reales a PR.', 'To a researcher, a health funder, a journalist, a pharma team. It can bring real resources to PR.') })}
+
+<p class="text-sm text-slate-500 mt-6">${te('Fuentes: literatura científica primaria (JAAD, Nature Genetics, MDPI Diagnostics, PMC/NIH) · registro federal NPPES · NIH RePORTER (FY2024) · El Vocero (10 jul 2026). Licencia CC BY 4.0: usa los datos gratis, solo cita la fuente. Mantenido por Angel Anderson desde Cabo Rojo, Puerto Rico.', 'Sources: primary scientific literature (JAAD, Nature Genetics, MDPI Diagnostics, PMC/NIH) · federal NPPES registry · NIH RePORTER (FY2024) · El Vocero (Jul 10 2026). CC BY 4.0 license: use the data free, just cite the source. Maintained by Angel Anderson from Cabo Rojo, Puerto Rico.')}</p>
+${SHARE_COPY_SCRIPT}`
+
+  const jsonLd = [
+    { '@context': 'https://schema.org', '@type': 'Report', name: te('Puerto Rico: la población genética más valiosa y menos estudiada de EE.UU.', 'Puerto Rico: the most valuable and least-studied genetics population in the U.S.'),
+      url: CANON, inLanguage: en ? 'en' : 'es', license: 'https://creativecommons.org/licenses/by/4.0/',
+      author: { '@type': 'Person', name: 'Angel Anderson' },
+      publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+      about: [{ '@type': 'Thing', name: 'Founder effect' }, { '@type': 'MedicalCondition', name: 'Rare diseases' }, { '@type': 'Thing', name: 'Health research funding disparity' }] },
+    { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [
+      { '@type': 'Question', name: te('¿Por qué es valiosa la genética de Puerto Rico para la investigación?', 'Why is Puerto Rico\'s genetics valuable for research?'), acceptedAnswer: { '@type': 'Answer', text: te('Por el efecto fundador (mezcla taína, española y africana y aislamiento), varias mutaciones genéticas son mucho más comunes en Puerto Rico que en el resto del mundo, con al menos 6 enfermedades de variante fundadora propia documentadas. Eso hace de la isla un laboratorio natural para estudiar esas variantes, ya mapeadas por pueblo.', 'Due to the founder effect (Taíno, Spanish and African mix and isolation), several genetic mutations are far more common in Puerto Rico than in the rest of the world, with at least 6 diseases of their own founder variant documented. This makes the island a natural laboratory to study those variants, already mapped by town.') } },
+      { '@type': 'Question', name: te('¿Cuánto financiamiento de investigación recibe Puerto Rico?', 'How much research funding does Puerto Rico receive?'), acceptedAnswer: { '@type': 'Answer', text: te('En el año fiscal 2024, el NIH invirtió cerca de $90 millones en Puerto Rico, unos $28 por persona: el más bajo entre jurisdicciones de población similar, por debajo de Mississippi. Iowa, con la misma población, recibió $249 millones. Fuente: NIH RePORTER.', 'In FY2024, the NIH invested about $90 million in Puerto Rico, roughly $28 per capita: the lowest among jurisdictions of similar population, below Mississippi. Iowa, with the same population, received $249 million. Source: NIH RePORTER.') } },
+    ] },
+    { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Registro Médico PR', item: 'https://registromedicopr.com/registro' },
+      { '@type': 'ListItem', position: 2, name: te('Prospecto', 'Prospectus'), item: CANON },
+    ] },
+  ]
+
+  res.status(200).send(layout({
+    title: te('Puerto Rico: la población genética más valiosa y menos estudiada de EE.UU.', 'Puerto Rico: the most valuable and least-studied genetics population in the U.S.'),
+    description: te('Prospecto público: Puerto Rico es la jurisdicción #1 de EE.UU. en enfermedades raras por el efecto fundador, con 6 variantes propias documentadas, solo 2 genetistas clínicos y el financiamiento NIH más bajo del país. El valor y el mapa que ya existe, para investigadores, fondos y prensa.', 'Public prospectus: Puerto Rico is the #1 U.S. jurisdiction in rare diseases due to the founder effect, with 6 documented own variants, only 2 clinical geneticists and the lowest NIH funding in the country. The value and the map that already exists, for researchers, funders and press.'),
+    slug: 'prospecto', bodyHtml: body, jsonLd,
+    ogImage: `https://registromedicopr.com/api/og?theme=medico&k=${encodeURIComponent(te('Prospecto público · Puerto Rico', 'Public prospectus · Puerto Rico'))}&t=${encodeURIComponent(te('La genética más valiosa||y menos estudiada de EE.UU.', 'The most valuable, least-studied||genetics population in the U.S.'))}&sub=${encodeURIComponent(te('6 enfermedades fundadoras · 2 genetistas clínicos · el financiamiento NIH más bajo del país. El valor y el mapa.', '6 founder diseases · 2 clinical geneticists · the lowest NIH funding in the nation. The value and the map.'))}&badge=${encodeURIComponent(te('Verificado · CC BY', 'Verified · CC BY'))}`,
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com', canonicalUrl: CANON,
+    lang: en ? 'en' : 'es',
+  }))
+}
+
 export default async function handler(req: any, res: any) {
   const page = String(req.query.page || '')
 
@@ -10926,6 +11050,7 @@ export default async function handler(req: any, res: any) {
     case 'atlas': return await handleAtlas(req, res)
     case 'oer': return await handleOER(req, res)
     case 'investigacion': return await handleInvestigacion(req, res)
+    case 'prospecto': return await handleProspecto(req, res)
     case 'comparte': return await handleComparte(req, res)
     case 'porque': return await handleRegistroPorque(req, res)
     case 'recuperacion': return await handleRecuperacion(req, res)
