@@ -101,6 +101,7 @@
     { "source": "/acueductos", "destination": "/api/mapa-pages?page=acueductos" },
     { "source": "/transicion", "destination": "/api/mapa-pages?page=transicion" },
     { "source": "/contradicciones", "destination": "/api/mapa-pages?page=contradicciones" },
+    { "source": "/semaforo-fema", "destination": "/api/mapa-pages?page=semaforo-fema" },
     { "source": "/rompelo", "destination": "/api/mapa-pages?page=rompelo" },
     { "source": "/retiro", "destination": "/api/mapa-pages?page=retiro" },
     { "source": "/huracan-lento", "destination": "/api/mapa-pages?page=retiro" },

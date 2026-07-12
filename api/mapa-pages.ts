@@ -5259,6 +5259,12 @@ async function handleSinFiltros(req: any, res: any) {
       verUrl: '/contradicciones', verificaUrl: '/rompelo', verificaText: 'Cómo se corrige un error aquí', tag: 'El formato',
     },
     {
+      titulo: 'El Semáforo FEMA de Cabo Rojo',
+      brecha: '121 proyectos de FEMA en el pueblo, $34.5M obligados — y $14.3M llevan más de 5 años aprobados sin cerrarse. El Coliseo: $5.5M desde 2020 y el expediente federal sigue "pendiente de alcance". Proyecto por proyecto, con reloj y semáforo.',
+      fuente: 'OpenFEMA (Public Assistance v2), corrida 12 jul 2026. "Obligado" no es "gastado" — el récord lo dice claro.',
+      verUrl: '/semaforo-fema', verificaUrl: 'https://www.fema.gov/openfema-data-page/public-assistance-funded-project-details-v2', verificaText: 'El dataset federal', tag: 'Cabo Rojo',
+    },
+    {
       titulo: 'El cupón federal sin cobrar',
       brecha: `El gobierno federal ya declaró en escasez a ${g.conHpsa} de los 76 municipios de PR y ya aprobó el dinero para atraer médicos. ${g.cupon} de ellos tienen el dinero de salud mental aprobado y CERO psiquiatras: ${n(g.cuponPob)} personas con el cupón sin cobrar.`,
       fuente: 'Cruce NPPES/CMS × archivos HRSA × Censo/ACS, verificado municipio por municipio, julio 2026.',
@@ -6330,6 +6336,136 @@ ${SHARE_COPY_SCRIPT}
 // /expediente/:slug — el dossier público de un funcionario: sus promesas + el estado de su pueblo, todo citable.
 // v1: alcalde de Cabo Rojo (plantilla replicable a cualquier funcionario/distrito).
 // /esencia — la línea de tiempo pública del proyecto Esencia en Cabo Rojo. Neutral, solo hechos con fuente.
+// /semaforo-fema — El Semáforo FEMA de Cabo Rojo: los 121 proyectos, proyecto por proyecto, con reloj.
+// Fuente: OpenFEMA PublicAssistanceFundedProjectsDetails v2 (tabla pr_fema_projects_cr, corrida 12 jul 2026).
+// Honestidad del dato: "obligado" = dinero aprobado y comprometido. OpenFEMA NO publica desembolso por
+// proyecto — este récord nunca dice "gastado". Ese hueco se anota, no se disimula.
+async function handleSemaforoFema(req: any, res: any) {
+  let rows: any[] = []
+  try {
+    const { data } = await supabase.from('pr_fema_projects_cr')
+      .select('disaster,titulo,dcc,categoria,project_status,process_step,fed_obligado,primera_obligacion,county,es_municipio')
+      .order('fed_obligado', { ascending: false })
+    rows = data || []
+  } catch (_) { /* empty */ }
+  const now = Date.now()
+  const anos = (d: string | null) => d ? (now - new Date(d + 'T12:00:00Z').getTime()) / 31557600000 : 0
+  const cerrado = (r: any) => /closed out/i.test(String(r.process_step || ''))
+  const abiertos = rows.filter(r => !cerrado(r))
+  const viejosAbiertos = abiertos.filter(r => anos(r.primera_obligacion) > 5)
+  const dineroParado = viejosAbiertos.reduce((s, r) => s + (Number(r.fed_obligado) || 0), 0)
+  const totalObl = rows.reduce((s, r) => s + (Number(r.fed_obligado) || 0), 0)
+  const M = (v: number) => `$${(v / 1e6).toFixed(1)}M`
+  const semaforo = (r: any) => {
+    if (cerrado(r)) return ['🟢', 'Cerrado', 'text-emerald-700']
+    if (/pending/i.test(String(r.process_step || '')) && anos(r.primera_obligacion) > 5) return ['🔴', String(r.process_step), 'text-red-700']
+    if (anos(r.primera_obligacion) > 5) return ['🔴', 'Obligado, sin cerrar', 'text-red-700']
+    return ['🟡', String(r.process_step || 'Obligado'), 'text-amber-700']
+  }
+  const catAgg: Record<string, { n: number; tot: number; label: string }> = {}
+  for (const r of rows) {
+    const k = r.dcc || '?'
+    catAgg[k] = catAgg[k] || { n: 0, tot: 0, label: r.categoria || k }
+    catAgg[k].n++; catAgg[k].tot += Number(r.fed_obligado) || 0
+  }
+  const CAT_ES: Record<string, string> = { A: 'Remoción de escombros', B: 'Medidas de emergencia', C: 'Carreteras y puentes', E: 'Edificios y equipo', F: 'Utilidades', G: 'Parques, canchas y recreación', Z: 'Costos administrativos' }
+  const catRows = Object.entries(catAgg).sort((a, b) => b[1].tot - a[1].tot).map(([k, v]) => `
+    <tr class="border-t border-slate-100"><td class="py-2 px-3 font-semibold text-slate-800">${escapeHtml(CAT_ES[k] || v.label)}</td><td class="py-2 px-3 text-right">${v.n}</td><td class="py-2 px-3 text-right font-bold">${M(v.tot)}</td></tr>`).join('')
+  const topRows = rows.slice(0, 25).map(r => {
+    const [luz, paso, cls] = semaforo(r)
+    const a = anos(r.primera_obligacion)
+    return `
+    <tr class="border-t border-slate-100 ${!cerrado(r) && a > 5 ? 'bg-red-50/40' : ''}">
+      <td class="py-2 px-3 text-slate-800">${escapeHtml(String(r.titulo).replace(/^MCAB\d+ - /, ''))}${r.es_municipio === false ? ' <span class="text-[10px] text-slate-400">(no municipal)</span>' : ''}</td>
+      <td class="py-2 px-3 text-xs text-slate-500 whitespace-nowrap">${r.disaster === 4339 ? 'María' : r.disaster === 4671 ? 'Fiona' : `DR-${r.disaster}`}</td>
+      <td class="py-2 px-3 text-right font-bold whitespace-nowrap">${M(Number(r.fed_obligado) || 0)}</td>
+      <td class="py-2 px-3 text-right whitespace-nowrap">${a ? a.toFixed(1) + ' años' : '—'}</td>
+      <td class="py-2 px-3 text-xs ${cls} font-semibold whitespace-nowrap">${luz} ${escapeHtml(String(paso))}</td>
+    </tr>`
+  }).join('')
+  const coliseoDias = Math.max(0, Math.ceil((new Date('2026-09-20T12:00:00Z').getTime() - now) / 86400000))
+
+  const body = `
+<h1>El Semáforo FEMA de Cabo Rojo</h1>
+<p class="text-lg text-slate-600 mt-2">Cada proyecto de FEMA del pueblo, con su dinero, su fecha y su paso del proceso — pa' que el Coliseo deje de ser "un caso" y sea una fila de una tabla que cualquiera puede leer. <strong>Todo sale del récord federal, verificable con un click.</strong></p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El dato</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">${rows.length} proyectos · ${M(totalObl)} obligados. Y ${viejosAbiertos.length} llevan más de 5 años aprobados sin cerrarse: ${M(dineroParado)} parados.</p>
+  <p class="text-slate-300 mt-2 text-sm leading-relaxed">"Obligado" significa aprobado y comprometido por FEMA — no gastado. El récord federal no publica cuánto se ha construido de verdad, y eso también se anota. La categoría #1 de dinero en Cabo Rojo: parques y canchas (${M(catAgg['G']?.tot || 0)}).</p>
+</div>
+
+${shareRow({ text: `El récord FEMA de Cabo Rojo, proyecto por proyecto: ${rows.length} proyectos, ${M(totalObl)} obligados, y ${viejosAbiertos.length} llevan 5+ años aprobados sin cerrarse (${M(dineroParado)}). El Coliseo: $5.5M desde 2020 y el expediente sigue "pendiente de alcance". Verifícalo:`, url: 'https://puertoricosinfiltros.com/semaforo-fema', toWho: 'Al que pregunta por qué la cancha sigue cerrá si "el dinero está".' })}
+
+${contradiccionInline({
+  dicenC: 'Vamos a usar los $5.2 millones de FEMA del Coliseo Rebekah Colberg [antes del 20 de septiembre de 2026]',
+  dicenQ: 'Alcalde de Cabo Rojo, en cámara — el reloj del récord corre',
+  dicenUrl: 'https://youtu.be/WpizUMfP3rc',
+  recordD: `El récord federal (OpenFEMA, jun 2026): el proyecto MCAB005 del Coliseo tiene $5.5M obligados desde julio 2020 — 6 años — y su paso de proceso sigue en "Pending PDMG Scope & Cost Routing": ni el alcance final está cerrado. Quedan ${coliseoDias} días pa'l plazo. Las obras empezaron en febrero 2026.`,
+  fuentes: [['OpenFEMA — el dataset federal, verificable', 'https://www.fema.gov/openfema-data-page/public-assistance-funded-project-details-v2'], ['El expediente del alcalde, con el reloj', '/expediente/alcalde-cabo-rojo']],
+  brecha: `$5.5M · 6 años obligados · ${coliseoDias} días pa'l plazo federal`,
+})}
+
+<h2>Los proyectos más grandes (top 25 de ${rows.length})</h2>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm">
+    <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Proyecto</th><th class="py-2 px-3">Desastre</th><th class="py-2 px-3 text-right">Fed. obligado</th><th class="py-2 px-3 text-right">Años desde obligación</th><th class="py-2 px-3">Semáforo</th></tr></thead>
+    <tbody>${topRows}</tbody>
+  </table>
+</div>
+<p class="text-sm text-slate-500 mt-2">🟢 cerrado · 🟡 obligado, en proceso normal · 🔴 más de 5 años sin cerrar. Los años corren desde la primera obligación hasta hoy, calculados al momento en que abres esta página. Fila marcada "(no municipal)" = solicitante privado o estatal dentro del municipio.</p>
+
+<h2>A dónde fue el dinero, por categoría</h2>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm">
+    <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Categoría</th><th class="py-2 px-3 text-right">Proyectos</th><th class="py-2 px-3 text-right">Fed. obligado</th></tr></thead>
+    <tbody>${catRows}</tbody>
+  </table>
+</div>
+
+<h2>Las banderas del récord</h2>
+<ul class="text-slate-700">
+  <li><strong>El Coliseo (MCAB005):</strong> $5.5M obligados desde julio 2020, y el paso del proceso sigue en "Pending PDMG Scope & Cost Routing". El complejo Rebekah Colberg completo suma ~$7.5M entre María y Fiona (coliseo, pista, canchas de tenis, área recreativa).</li>
+  <li><strong>Cayo Ratones:</strong> los dos proyectos ($651K el muelle + $84K estructuras) aparecen bajo una agencia estatal con el prefijo <em>"Not Compliant"</em> en el propio título del récord federal — la bandera de cumplimiento la puso FEMA, no nosotros. El proyecto se retiró: el cayo se hundió en 2020.</li>
+  <li><strong>La foto de conjunto:</strong> María dejó $23.2M obligados (2017) y Fiona $10.0M (2022). De los ${abiertos.length} proyectos sin cerrar, ${viejosAbiertos.length} pasaron los 5 años.</li>
+</ul>
+
+<h2>Método y límites (léelo antes de citar)</h2>
+<ul class="text-slate-700">
+  <li>Fuente: OpenFEMA, dataset público "Public Assistance Funded Project Details v2", filtrado por county = Cabo Rojo (${rows.length - 2} proyectos) + los 2 de Cayo Ratones que el récord federal codifica como "Statewide". Corrida: 12 de julio de 2026.</li>
+  <li><strong>"Obligado" no es "gastado".</strong> OpenFEMA no publica el desembolso por proyecto — no existe el campo. Por eso este récord nunca dice "se gastaron"; dice "se obligaron". Cuánto se ha construido de verdad es un hueco de data que pertenece a <a href="/no-se-mide" class="text-teal-700 font-semibold">/no-se-mide</a>.</li>
+  <li>Los proyectos de agencias estatales EN Cabo Rojo (DRNA, DTOP, AEE) se codifican "Statewide" en el récord federal — esta tabla subestima la inversión física total en el pueblo. Se dice claro pa' que nadie lo use mal.</li>
+  <li>¿Un número está mal? Se corrige en público: <a href="/rompelo" class="text-teal-700 font-semibold">/rompelo</a>.</li>
+</ul>
+
+${mientrasTanto([
+  `Si tu cancha, parque o camino lleva años "en proceso", ya no estás a ciegas: está en esta tabla con su monto y su paso exacto del proceso. Guarda el nombre del proyecto — preguntar con el nombre y el número cambia la conversación.`,
+  `La lección de Cayo Ratones: el dinero obligado no es obra hecha, y hasta puede devolverse. Antes de celebrar un anuncio de "fondos asignados", busca la fila aquí y mira el semáforo.`,
+], [
+  `Pregunta por UN proyecto con nombre en la próxima asamblea o por escrito al municipio: "¿En qué paso está el MCAB005 del Coliseo y cuándo se cierra?" Respuesta o silencio, las dos cosas son récord.`,
+  `Si eres periodista: esta tabla es el índice de historias de Cabo Rojo con la fuente federal ya filtrada. Cada fila roja es una pregunta sin hacer.`,
+])}
+${SHARE_COPY_SCRIPT}
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'El Semáforo FEMA de Cabo Rojo: los proyectos de recuperación federal, proyecto por proyecto',
+    description: `Los ${rows.length} proyectos de FEMA (Public Assistance) de Cabo Rojo, PR: $${(totalObl / 1e6).toFixed(1)}M obligados, ${viejosAbiertos.length} proyectos con más de 5 años sin cerrar. Coliseo Rebekah Colberg: $5.5M obligados desde 2020, aún pendiente de alcance. Fuente: OpenFEMA v2.`,
+    creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/semaforo-fema',
+    keywords: ['FEMA', 'Cabo Rojo', 'recuperación', 'María', 'Fiona', 'Coliseo Rebekah Colberg', 'OpenFEMA'],
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=21600, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'El Semáforo FEMA de Cabo Rojo: 121 proyectos, con reloj y paso del proceso',
+    description: 'Cada proyecto FEMA de Cabo Rojo con su dinero, años desde la obligación y paso del proceso: $34.5M obligados, $14.3M con más de 5 años sin cerrar, y el Coliseo ($5.5M desde 2020) todavía pendiente de alcance. Fuente: OpenFEMA, verificable.',
+    slug: 'semaforo-fema', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
 // contradiccionInline — bloque reusable pa' marcar UNA contradicción dentro de un récord individual.
 // La versión compacta del par del Marcador (/contradicciones): DICEN | RÉCORD | BRECHA, con fuentes activas.
 function contradiccionInline(o: { dicenC: string; dicenQ: string; dicenUrl?: string; recordD: string; fuentes: Array<[string, string]>; brecha: string }) {
@@ -6360,7 +6496,7 @@ function contradiccionInline(o: { dicenC: string; dicenQ: string; dicenUrl?: str
 // Formato: LO QUE DICEN (cita, quién, fecha, fuente activa) | LO QUE DICE EL RÉCORD (dato, fuentes activas) | LA BRECHA.
 // Regla del verde obligatoria: el marcador también anota lo cumplido, o esto es cinismo y no récord.
 async function handleContradicciones(req: any, res: any) {
-  type Par = { tipo: string; titulo: string; dicenC: string; dicenQ: string; dicenUrl?: string; recordD: string; fuentes: Array<[string, string]>; brecha: string; rec: string }
+  type Par = { tipo: string; corto: string; titulo: string; dicenC: string; dicenQ: string; dicenUrl?: string; recordD: string; fuentes: Array<[string, string]>; brecha: string; rec: string }
   const TIPOS: Record<string, [string, string]> = {
     promesa: ['Promesa con fecha, vencida', 'bg-red-100 text-red-800 border-red-200'],
     narrativa: ['El cuento vs el número', 'bg-amber-100 text-amber-800 border-amber-200'],
@@ -6370,7 +6506,7 @@ async function handleContradicciones(req: any, res: any) {
   }
   const pares: Par[] = [
     {
-      tipo: 'promesa', titulo: 'La luz "affordable" que iba a ahorrar $150 millones al año',
+      tipo: 'promesa', corto: 'LUMA y la luz', titulo: 'La luz "affordable" que iba a ahorrar $150 millones al año',
       dicenC: 'LUMA will not only provide safe, reliable and affordable electricity service... [reducción estimada de] $150 millones anuales en costos del sistema',
       dicenQ: 'Wayne Stensby (CEO de LUMA) y la Autoridad P3, junio 2020 · comunicado oficial',
       dicenUrl: 'http://lumapr.com/wp-content/uploads/2020/08/LUMA-Press-Release-1.pdf',
@@ -6379,7 +6515,7 @@ async function handleContradicciones(req: any, res: any) {
       brecha: '1.9x el precio, 6 años después de "affordable"', rec: '/luz',
     },
     {
-      tipo: 'promesa', titulo: 'La ley que mandó reciclar 35%... en el 2006',
+      tipo: 'promesa', corto: 'Reciclaje 35%', titulo: 'La ley que mandó reciclar 35%... en el 2006',
       dicenC: 'Para el año 2006 el volumen de desperdicios depositados en los vertederos se reduzca en un treinta y cinco por ciento (35%)',
       dicenQ: 'Ley 70 de 1992, texto de ley (meta reajustada por la Ley 254-2004)',
       dicenUrl: 'https://www.lexjuris.com/lexlex/Leyes2004/lexl2004254.htm',
@@ -6388,7 +6524,7 @@ async function handleContradicciones(req: any, res: any) {
       brecha: '34 años de ley, y la meta del 2006 sigue sin llegar', rec: '/basura',
     },
     {
-      tipo: 'agencia', titulo: '"El agua es segura" — dice el que pierde 1 de cada 2 galones',
+      tipo: 'agencia', corto: 'AAA: "agua segura"', titulo: '"El agua es segura" — dice el que pierde 1 de cada 2 galones',
       dicenC: 'El agua de la AAA es segura y no representa un riesgo para la salud... nivel de cumplimiento de calidad que asciende al 98 por ciento',
       dicenQ: 'AAA, guía oficial de comunicaciones (docs.pr.gov, 2019 — vigente)',
       dicenUrl: 'https://docs.pr.gov/files/AAA/Comunicaciones/Documentos/GUIA%20PREGUNTAS%20Y%20RESPUESTAS%20CALIDAD%20AGUA%202019.pdf',
@@ -6397,7 +6533,7 @@ async function handleContradicciones(req: any, res: any) {
       brecha: '98% de cumplimiento en el papel · 13 violaciones activas en el récord federal', rec: '/agua',
     },
     {
-      tipo: 'agencia', titulo: 'AutoExpreso: "actuó inmediatamente" — "No fue inmediato. Discrepo."',
+      tipo: 'agencia', corto: 'AutoExpreso', titulo: 'AutoExpreso: "actuó inmediatamente" — "No fue inmediato. Discrepo."',
       dicenC: 'La compañía inmediatamente actuó, se tenía resguardo... los datos no se vieron comprometidos',
       dicenQ: 'Funcionaria de la ACT, vistas de transición, 23 nov 2024',
       dicenUrl: 'https://www.youtube.com/watch?v=ZvZmiREinbU&t=1206s',
@@ -6406,7 +6542,7 @@ async function handleContradicciones(req: any, res: any) {
       brecha: 'Las dos versiones del mismo hecho, grabadas con 25 segundos de diferencia', rec: '/transicion',
     },
     {
-      tipo: 'agencia', titulo: 'El 3 de 10 con $10,500 millones en la mesa',
+      tipo: 'agencia', corto: 'AEE: 3 de 10', titulo: 'El 3 de 10 con $10,500 millones en la mesa',
       dicenC: '¿En una escala del 1 al 10, dónde usted ve el proceso de la modernización del sistema eléctrico para el cual tenemos 10.5 billones? — Hoy está como en tres',
       dicenQ: 'Josué Colón, director ejecutivo de la AEE, a pregunta directa · vistas de transición, nov 2024',
       dicenUrl: 'https://www.youtube.com/watch?v=3R8jwIec-Yg&t=23868s',
@@ -6415,7 +6551,7 @@ async function handleContradicciones(req: any, res: any) {
       brecha: '$10,500M disponibles · autonota: 3/10', rec: '/transicion',
     },
     {
-      tipo: 'narrativa', titulo: 'El proyecto "turístico" que es 70% casas',
+      tipo: 'narrativa', corto: 'Esencia', titulo: 'El proyecto "turístico" que es 70% casas',
       dicenC: 'Desarrollo responsable y ecoamigable... [créditos contributivos turísticos bajo la Ley 74-2010]',
       dicenQ: 'Proponentes de Esencia (conocelaverdad.com) · decreto firmado dic 2020',
       recordD: 'Reportado como ~70% residencial (1,132 casas vs 520 unidades de hotel) con ~$498M en créditos contributivos turísticos. La propia AAA informó por carta (26 sep 2024) que no puede suplir el agua que pide. Y no hay cláusula que obligue los 2,000 empleos prometidos: si no llegan, los créditos no se devuelven.',
@@ -6423,16 +6559,16 @@ async function handleContradicciones(req: any, res: any) {
       brecha: '$498M garantizados al proyecto · 0 empleos garantizados al pueblo', rec: '/esencia',
     },
     {
-      tipo: 'narrativa', titulo: '1.3 millones de personas sin Walgreens — "todos nosotros podemos ir, menos ellos"',
+      tipo: 'narrativa', corto: 'Walgreens y Vital', titulo: '1.3 millones de personas sin Walgreens — "todos nosotros podemos ir, menos ellos"',
       dicenC: 'Nosotros hemos establecido [en los contratos]: any willing provider — cualquier proveedor que esté disponible para estar en la red',
       dicenQ: 'Funcionario de Salud, vistas de transición, 3 dic 2024',
       dicenUrl: 'https://www.youtube.com/watch?v=az9UhZBvLqs&t=1424s',
-      recordD: 'En la misma vista, ASES: "el Plan Vital es el único mercado, con 1 millón 300 mil vidas, que no puede acceder ese proveedor... todos nosotros podemos ir, menos los pacientes de Vital." Los 300,000 de Medicare Advantage sí pueden. La decisión se pospuso "para que la nueva administración la tome" — y a julio 2026 no hay decisión pública.',
+      recordD: 'En la misma vista, ASES: "el Plan Vital es el único mercado, con 1 millón 300 mil vidas, que no puede acceder ese proveedor... todos nosotros podemos ir, menos los pacientes de Vital." Los 300,000 de Medicare Advantage sí pueden. La decisión se pospuso "para que la nueva administración la tome" — y a julio 2026 no hay decisión pública. En el oeste la cuenta es así: Cabo Rojo tiene ~15 farmacias de comunidad y 1 Walgreens; si tu plan es Vital, tu red es la farmacia de la esquina — el Walgreens no te puede despachar salvo emergencia declarada.',
       fuentes: [['ASES en la vista, al minuto', 'https://www.youtube.com/watch?v=az9UhZBvLqs&t=1734s'], ['"Any willing provider", al minuto', 'https://www.youtube.com/watch?v=az9UhZBvLqs&t=1424s'], ['El récord de la vista completa', 'https://puertoricosinfiltros.com/transicion']],
       brecha: 'La regla dice "cualquier proveedor" · la práctica excluye al 41% de PR', rec: '/transicion',
     },
     {
-      tipo: 'creencia', titulo: '"No hay dinero pa\' traer médicos" — el dinero lleva años aprobado',
+      tipo: 'creencia', corto: 'Médicos: el cupón', titulo: '"No hay dinero pa\' traer médicos" — el dinero lleva años aprobado',
       dicenC: 'No hay recursos para atraer médicos a los pueblos (la creencia que se repite en cada tertulia)',
       dicenQ: 'Creencia popular — con razones históricas, pero sin verificar',
       recordD: 'El gobierno federal ya declaró en escasez a 65 de 76 municipios y ya aprobó el dinero: repago de préstamos hasta $75,000. 33 municipios tienen el dinero de salud mental aprobado y CERO psiquiatras — 792,221 personas con el cupón sin cobrar. PR usa el programa 6 veces menos que West Virginia, y el SLRP con pareo federal 1:1 nunca se solicitó.',
@@ -6440,7 +6576,7 @@ async function handleContradicciones(req: any, res: any) {
       brecha: 'El dinero existe. Lo que no existe es quien lo reclame.', rec: '/registro/estado',
     },
     {
-      tipo: 'creencia', titulo: '"Esas ayudas no son pa\' uno" — $310 millones al año sin cobrar',
+      tipo: 'creencia', corto: 'Crédito por Hijos', titulo: '"Esas ayudas no son pa\' uno" — $310 millones al año sin cobrar',
       dicenC: 'Eso no es para mí (la regla vieja: antes de 2021, solo familias con 3+ hijos cualificaban en PR — nadie avisó cuando cambió)',
       dicenQ: 'Creencia instalada — 81,000 familias actúan según ella cada año',
       recordD: 'Desde 2021 el Crédito por Hijos aplica en PR desde el primer hijo: hasta $1,700 reembolsable por hijo aunque no tengas ingresos, reclamable hasta 3 años atrás. Se reclaman $1,450M; quedan ~$310M al año en la mesa. Cuando sí se cobró, la pobreza infantil bajó de 55% a 39%.',
@@ -6448,7 +6584,7 @@ async function handleContradicciones(req: any, res: any) {
       brecha: '1 de cada 4 dólares elegibles se queda sin reclamar', rec: '/cupon',
     },
     {
-      tipo: 'dinero', titulo: '"El dinero llegó a PR" — 87¢ de cada dólar salió pa\'l mainland',
+      tipo: 'dinero', corto: '87¢ pa\'l mainland', titulo: '"El dinero llegó a PR" — 87¢ de cada dólar salió pa\'l mainland',
       dicenC: 'Miles de millones federales llegaron a reconstruir a Puerto Rico (la narrativa de cada anuncio de obligación)',
       dicenQ: 'Narrativa oficial de la recuperación, 2017-2026',
       recordD: 'De cada dólar de contrato de recuperación rastreado en USASpending, ~87 centavos fueron a firmas de afuera. Una sola consultora de Denver: $238M por asesorar cómo gastar el dinero de FEMA. Más de $700M en gestión y consultoría — no en obra física.',
@@ -6456,7 +6592,7 @@ async function handleContradicciones(req: any, res: any) {
       brecha: '87% del flujo de contratos salió de la isla', rec: '/sigue-el-dinero',
     },
     {
-      tipo: 'dinero', titulo: 'Iowa: misma gente que PR. NIH: $249M pa\' Iowa, $90M pa\' PR.',
+      tipo: 'dinero', corto: 'NIH: Iowa vs PR', titulo: 'Iowa: misma gente que PR. NIH: $249M pa\' Iowa, $90M pa\' PR.',
       dicenC: 'La inversión federal de investigación sigue al mérito científico (la presunción del sistema)',
       dicenQ: 'Presunción estructural — nadie la dice porque nadie la revisa',
       recordD: 'NIH FY2024, sumado proyecto por proyecto: Iowa (3.2M de habitantes, igual que PR) recibió $249M; PR recibió $90M — $28 por persona, menos que Mississippi ($31), el estado más pobre. Y PR tiene la población founder-effect más valiosa de EE.UU. pa\' genética.',
@@ -6464,7 +6600,7 @@ async function handleContradicciones(req: any, res: any) {
       brecha: '$159M de diferencia en UN año, con la misma población', rec: '/investigacion',
     },
     {
-      tipo: 'promesa', titulo: 'El Faro "reabre en unos meses" — sigue cerrado',
+      tipo: 'promesa', corto: 'El Faro', titulo: 'El Faro "reabre en unos meses" — sigue cerrado',
       dicenC: 'Vamos a reabrir el Faro en unos meses [con fondos de Fiona]',
       dicenQ: 'Alcalde de Cabo Rojo, 2024, en cámara',
       dicenUrl: 'https://youtu.be/-HKfFUfE9nk',
@@ -6473,7 +6609,7 @@ async function handleContradicciones(req: any, res: any) {
       brecha: '"Unos meses" → 2+ años, y el acuerdo vencido desde 2016', rec: '/historial',
     },
     {
-      tipo: 'narrativa', titulo: 'El "94% de convicción" que el propio sistema no puede calcular',
+      tipo: 'narrativa', corto: 'Justicia: el 94%', titulo: 'El "94% de convicción" que el propio sistema no puede calcular',
       dicenC: '94% de convicción en el cuatrienio',
       dicenQ: 'Departamento de Justicia de PR — la métrica estrella',
       recordD: 'En las vistas de transición: "¿Cuánto es el por ciento de convicción real desde los radicados? Que dudo que sea 94% — El sistema no provee esa data." El 94% solo cuenta los casos que llegan a juicio. La tasa real desde que se radica no se puede calcular: el sistema del DJ no la produce.',
@@ -6481,7 +6617,7 @@ async function handleContradicciones(req: any, res: any) {
       brecha: 'La métrica excluye por diseño todo caso que muere antes de juicio', rec: '/transicion',
     },
     {
-      tipo: 'dinero', titulo: '$100 millones pa\' la costa (2023) — $0 desembolsado (dic 2024)',
+      tipo: 'dinero', corto: '$100M de la costa', titulo: '$100 millones pa\' la costa (2023) — $0 desembolsado (dic 2024)',
       dicenC: '[Los $100M transferidos al DRNA en 2023 para mitigar la erosión costera — anunciados como acción climática]',
       dicenQ: 'Gobierno de PR, 2023',
       recordD: 'Comité de Expertos de Cambio Climático, en récord: "No se han utilizado, no se han desembolsado esos 100 millones todavía." Mientras, el DRNA operaba con 43% de las plazas vacías y el Cuerpo de Vigilantes a la mitad (300 de 600). Y el plan de cambio climático radicado en abril 2024 sigue sin aprobarse: la Cámara pospuso el análisis a diciembre 2026.',
@@ -6489,7 +6625,7 @@ async function handleContradicciones(req: any, res: any) {
       brecha: '$0 de $100M, año y medio después del anuncio', rec: '/transicion',
     },
     {
-      tipo: 'narrativa', titulo: 'Medicaid: "no lo vamos a permitir" — la promesa es de voluntad, no de solución',
+      tipo: 'narrativa', corto: 'Medicaid 2027', titulo: 'Medicaid: "no lo vamos a permitir" — la promesa es de voluntad, no de solución',
       dicenC: 'Eso no lo vamos a permitir... Estoy confiada en que el trabajo que vamos a estar haciendo en conjunto nos va a llevar a la meta',
       dicenQ: 'Gobernadora Jenniffer González, 28 mayo 2026 (WIPR)',
       dicenUrl: 'https://wipr.pr/gobernadora-presenta-defensa-de-los-fondos-federales-de-salud/',
@@ -6498,7 +6634,16 @@ async function handleContradicciones(req: any, res: any) {
       brecha: 'La confianza no es un estatuto: el reloj corre al 30 sep 2027', rec: '/prediccion',
     },
     {
-      tipo: 'creencia', titulo: 'El rumor que el récord también mata: "el desarrollador está en bancarrota"',
+      tipo: 'promesa', corto: 'La vocacional de papel', titulo: 'La vocacional que el distrito pide en papel — a un sistema que no levanta una escuela desde 2010',
+      dicenC: 'Ordenar al Departamento de Educación un estudio de viabilidad para establecer una escuela vocacional en el Distrito 20',
+      dicenQ: 'RCC0076, radicada por el Rep. del Distrito 20 el 10 mar 2025 (SUTRA)',
+      dicenUrl: 'https://sutra.oslpr.org/medidas/154116',
+      recordD: 'La resolución fue referida a la Comisión de Educación el 13 de marzo de 2025 y desde entonces no tiene un solo trámite en el récord. Mientras, AFI admitió en las vistas de transición que la última escuela nueva que construyó fue en 2010 ("¿Cuántas mantiene? — Ninguna. Ninguna."). Y la demanda del oficio es real: electricistas y plomeros están entre lo más buscado del *7711 sin respuesta local.',
+      fuentes: [['El trámite en SUTRA', 'https://sutra.oslpr.org/medidas/154116'], ['AFI: "Ninguna. Ninguna.", al minuto', 'https://www.youtube.com/watch?v=XZGTyMNcr0o&t=4000s'], ['El Marcador del Término del Distrito 20', 'https://puertoricosinfiltros.com/expediente/representante-distrito-20']],
+      brecha: 'Dos niveles de gobierno, la misma escuela: uno la pide en papel dormido, el otro no construye una desde 2010', rec: '/expediente/representante-distrito-20',
+    },
+    {
+      tipo: 'creencia', corto: 'El rumor (PACER)', titulo: 'El rumor que el récord también mata: "el desarrollador está en bancarrota"',
       dicenC: 'El desarrollador de Esencia está en bancarrota (repetido por 12 personas en el post viral de abril 2026)',
       dicenQ: 'Creencia popular del bando opositor',
       recordD: 'Lo buscamos en PACER y no encontramos filing público: rumor sin verificar, no récord. Este marcador corta en las dos direcciones — si el dato no aguanta la fuente, no entra, venga del bando que venga.',
@@ -6551,11 +6696,17 @@ async function handleContradicciones(req: any, res: any) {
   <p class="text-slate-300 mt-2 text-sm leading-relaxed">Cada par sale de un récord de este sitio, con su fuente primaria — y cada fuente es un link vivo: el PDF oficial, el minuto del video, la base federal. Si un lado está mal, se corrige en público (<a href="/rompelo" class="text-teal-300 font-semibold">/rompelo</a>). Y ojo: la contradicción a veces es del gobierno, a veces de una agencia, y a veces es tuya — el marcador corta pa' todos lados.</p>
 </div>
 
+<div class="not-prose mt-4 flex flex-wrap gap-2 text-xs">
+${pares.map((p, i) => `<a href="#par-${i + 1}" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">${escapeHtml(p.corto)}</a>`).join('')}
+<a href="#verde" class="bg-emerald-50 border border-emerald-200 rounded-full px-3 py-1.5 font-semibold text-emerald-800 hover:bg-emerald-100">La regla del verde</a>
+<a href="#metodo" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Método</a>
+</div>
+
 ${shareRow({ text: 'Lo que dicen vs lo que dice el récord, con la fuente al lado: LUMA prometió luz "affordable" en 2020 (pagamos casi el doble que EE.UU.), la ley mandó reciclar 35% pa\'l 2006 (vamos por ~12%), y la AAA dice "agua segura al 98%" con 13 violaciones activas en el oeste. El marcador completo:', url: 'https://puertoricosinfiltros.com/contradicciones', toWho: 'Al que le dijeron "eso es opinión". No: es la brecha entre la cita y el documento.' })}
 
 ${parCards}
 
-<h2>La regla del verde (lo que evita que esto sea cinismo)</h2>
+<h2 id="verde">La regla del verde (lo que evita que esto sea cinismo)</h2>
 <p>Un marcador que solo anota fallos no es récord: es campaña. Estos pares también están en el marcador, en verde:</p>
 <div class="not-prose grid sm:grid-cols-2 gap-3 mt-3">
   <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4"><p class="font-bold text-slate-800 m-0">El sueldo de la policía municipal de Cabo Rojo: prometido ~$2,000, cumplido.</p><p class="text-sm text-slate-600 mt-1">El presupuesto 2025-26 lo pone en $2,180/mes. Prometido en video (jun 2023), verificado contra el documento. <a href="/promesas" class="text-teal-700 font-semibold">El historial →</a></p></div>
@@ -6564,7 +6715,7 @@ ${parCards}
   <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4"><p class="font-bold text-slate-800 m-0">Multas ambientales de ~$44M cerradas por $1.65M, ya pagado.</p><p class="text-sm text-slate-600 mt-1">Y el ingreso bruto agrícola subió ~45% en el cuatrienio. El verde también se anota. <a href="https://www.youtube.com/watch?v=BJFs3kJgteM&t=11608s" target="_blank" rel="noopener" class="text-teal-700 font-semibold">Al minuto ↗</a></p></div>
 </div>
 
-<h2>Método y límites</h2>
+<h2 id="metodo">Método y límites</h2>
 <ul class="text-slate-700">
   <li>Cada par sale de un récord publicado de este sitio; el link "el récord completo" lleva a la fuente primaria y al contexto entero.</li>
   <li>Toda fuente citada es un link activo: el PDF oficial, el minuto exacto del video, o la base de datos federal donde tú mismo puedes verificar.</li>
@@ -7500,6 +7651,31 @@ ${preguntasHtml}
 <p class="text-slate-600 -mt-2">Lo que hereda, administra y le entrega a la gente. Cada número con su récord.</p>
 ${estadoHtml}
 ${termometroHtml}
+${cfg.tipo === 'alcalde' ? `
+<h2 id="contralora">La nota de la Contralora (OCPR)</h2>
+<p class="text-slate-600 -mt-2">Lo que la auditora del Estado ya dejó por escrito sobre el municipio — y lo que todavía no ha mirado. Ningún hallazgo es interpretación nuestra: cada uno tiene su informe oficial con link.</p>
+<div class="not-prose space-y-3 mt-3">
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <p class="font-bold text-slate-800 m-0">🗑️ El vertedero operó sin plan de operaciones aprobado</p>
+    <p class="text-sm text-slate-700 mt-1">Informe OC-24-04 (2023): el vertedero operó sin plan aprobado por la Junta de Calidad Ambiental, sin procedimientos de emergencia ni seguro de responsabilidad; el contrato con el operador terminó en diciembre 2021, y el municipio tuvo que recobrarle $78,355. Toda promesa sobre la celda nueva se lee contra este récord.</p>
+    <p class="text-xs text-slate-400 mt-1.5"><a href="https://iapconsulta.ocpr.gov.pr/OpenDoc.aspx?id=b45d0571-d4ba-4075-87d8-f85313849746&nombre=OC-24-04" target="_blank" rel="noopener" data-prsf="verify" data-rec="expediente-contralora" class="text-teal-700 font-semibold">El informe oficial (PDF) ↗</a></p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <p class="font-bold text-slate-800 m-0">🏚️ Tasaciones municipales con tasadores sin licencia</p>
+    <p class="text-sm text-slate-700 mt-1">Mismo informe: el municipio contrató tasaciones de propiedades con evaluadores no licenciados — referido a Justicia. Toca directo el tema de los solares y usufructos: cualquier venta o cesión montada sobre esas tasaciones queda en duda documentada.</p>
+    <p class="text-xs text-slate-400 mt-1.5"><a href="https://iapconsulta.ocpr.gov.pr/OpenDoc.aspx?id=b45d0571-d4ba-4075-87d8-f85313849746&nombre=OC-24-04" target="_blank" rel="noopener" data-prsf="verify" data-rec="expediente-contralora" class="text-teal-700 font-semibold">OC-24-04 (PDF) ↗</a></p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <p class="font-bold text-slate-800 m-0">💻 "Cabo Rojo City": $149,431 perdidos en plataformas digitales</p>
+    <p class="text-sm text-slate-700 mt-1">Contratos de "Smart City" cancelados por el déficit municipal, sin utilidad realizada. Y del informe más reciente (OC-24-29, 2024): $17,625 pagados en exceso a un ex alcalde (referido a Justicia) y $171,501 en un acuerdo por demanda de discrimen político, con 4 demandas más pendientes por $974,650.</p>
+    <p class="text-xs text-slate-400 mt-1.5"><a href="https://iapconsulta.ocpr.gov.pr/OpenDoc.aspx?id=4473ce84-ffde-4c10-9c1f-e4f08045bcaf&nombre=OC-24-29" target="_blank" rel="noopener" data-prsf="verify" data-rec="expediente-contralora" class="text-teal-700 font-semibold">OC-24-29 (PDF) ↗</a></p>
+  </div>
+  <div class="bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
+    <p class="font-bold text-slate-900 m-0">⏳ Lo que la Contralora todavía NO ha mirado</p>
+    <p class="text-sm text-slate-700 mt-1">El último informe de Cabo Rojo audita hasta el <strong>31 de julio de 2022</strong>. Todo el período de los fondos grandes de FEMA y ARPA — y de la administración actual — está sin auditoría pública. De los municipios del oeste, Cabo Rojo tiene la ventana sin auditar más grande: Lajas ya fue auditado hasta jun 2024 y San Germán hasta dic 2024. Por ciclo normal de la OCPR, el próximo informe de Cabo Rojo está al caer — y va a cubrir exactamente los años de este expediente.</p>
+    <p class="text-xs text-slate-400 mt-1.5">Contexto regional: los 5 municipios del oeste auditados 2020-2026 recibieron opinión "cualificada" — ninguno favorable. <a href="https://www.ocpr.gov.pr/" target="_blank" rel="noopener" data-prsf="verify" data-rec="expediente-contralora" class="text-teal-700 font-semibold">ocpr.gov.pr ↗</a></p>
+  </div>
+</div>` : ''}
 
 <a href="/esencia" class="not-prose block border-2 border-amber-300 bg-amber-50 rounded-2xl p-5 mt-4 hover:bg-amber-100 transition-colors no-underline">
   <span class="text-xs uppercase tracking-widest text-amber-700 font-bold">El caso que define a Cabo Rojo</span>
@@ -9272,13 +9448,13 @@ const CIVIC_STATUS: Record<string, [string, string]> = {
 type Promesa = { topic: string; text: string; quien: string; src: [string, string] | null; status: string; detail: string; feat?: boolean; deadline?: string }
 const PROMESAS_CABOROJO: Promesa[] = [
   // 🗑️ BASURA Y VERTEDERO
-  { topic: '🗑️ Basura y vertedero', text: 'Nueva celda del vertedero "con capacidad de diez años". Dijo que ya se celebró la presubasta.', quien: 'Alcalde Morales · mar 2024', src: ['https://youtu.be/-HKfFUfE9nk', 'CaboRojo.com'], status: 'ESPERANDO', detail: '', feat: true },
+  { topic: '🗑️ Basura y vertedero', text: 'Nueva celda del vertedero "con capacidad de diez años". Dijo que ya se celebró la presubasta.', quien: 'Alcalde Morales · mar 2024', src: ['https://youtu.be/-HKfFUfE9nk', 'CaboRojo.com'], status: 'ESPERANDO', detail: 'verificado jul 2026: el préstamo USDA de $2.2M pa\' la celda es de feb 2020 (administración anterior); desde entonces, cero rastro público de subasta adjudicada o construcción. La "presubasta" de mar 2024 no tiene documento público. Y la Contralora documentó que el vertedero operó SIN plan de operaciones aprobado (OC-24-04).', feat: true },
   { topic: '🗑️ Basura y vertedero', text: 'El vertedero ya no es vertedero: ahora es "centro de transbordo" que lleva la basura a Mayagüez.', quien: 'Alcalde Morales · 2024', src: null, status: 'EMPEZO', detail: '' },
   { topic: '🗑️ Basura y vertedero', text: '3 excavadoras, 1 siempre en el vertedero montando la basura para Mayagüez.', quien: 'Alcalde Morales · 2023', src: null, status: 'ESPERANDO', detail: '' },
   { topic: '🗑️ Basura y vertedero', text: 'Querella Virtual del municipio para reportar escombros que no recogieron.', quien: 'Alcalde Morales · 2023', src: null, status: 'EMPEZO', detail: 'el portal existe (ciudadcaborojo.com) · falta ver si contestan — test ciudadano en curso jul 2026' },
-  { topic: '🗑️ Basura y vertedero', text: 'Canon de $200/año a los alquileres a corto plazo (~1,000 unidades en 2023) para cubrir el recogido de basura que dejan los turistas.', quien: 'Ex-legislador municipal · 2024', src: null, status: 'ESPERANDO', detail: 'si se cobra completo son ~$200,000/año · ¿se está cobrando y a dónde va?' },
+  { topic: '🗑️ Basura y vertedero', text: 'Canon de $200/año a los alquileres a corto plazo (~1,000 unidades en 2023) para cubrir el recogido de basura que dejan los turistas.', quien: 'Ex-legislador municipal · 2024', src: ['https://www.lexjuris.com/ordenanzas/Cabo%20Rojo/2025-2026/OM-37-2025-2026.pdf', 'Ordenanza OM-37'], status: 'EMPEZO', detail: 'verificado jul 2026: la ordenanza existe — Ord. 26 (2022-23) lo fijó en $250/año desde ago 2023, y la OM-37 (abr 2026) lo SUBIÓ a $500/año. Lo que NO cuadra: el ingreso (~1,000 unidades × $250 ≈ $250K/año) no aparece como línea nombrada en el presupuesto público FY2024-25. ¿Cuánto entró y a dónde va?' },
   { topic: '🗑️ Basura y vertedero', text: 'Limpieza "2.0": sacaron 4,000 yardas de escombro con 450 voluntarios.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
-  { topic: '🗑️ Basura y vertedero', text: 'Ordenanza de un fee de $250 al año (escombros/manejo).', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
+  { topic: '🗑️ Basura y vertedero', text: 'Ordenanza de un fee de $250 al año (escombros/manejo).', quien: 'Alcalde Morales · 2024', src: ['https://ciudadcaborojo.com/en/documentos-formularios/proyecto-de-alojamientos/', 'Municipio'], status: 'HECHO', detail: 'es la Ord. 26 (2022-23): $250/año a facilidades de alojamiento desde ago 2023 — y en abr 2026 se duplicó a $500 (OM-37). Si la promesa era un fee general de escombros a residencias, eso no existe: la OM-34 (2025-26) PROHÍBE tirar escombros, no cobra por recogerlos.' },
   // 🕳️ HOYOS, ASFALTO Y CARRETERAS
   { topic: '🕳️ Hoyos, asfalto y carreteras', text: '"El 90% de los caminos del pueblo estaban destruidos, ya llevamos un 60% mejorado." La tonelada subió de $99 a $129.', quien: 'Alcalde Morales · mar 2024', src: ['https://youtu.be/-HKfFUfE9nk', 'CaboRojo.com'], status: 'EMPEZO', detail: 'dice 60% · verifícalo en tu calle', feat: true },
   { topic: '🕳️ Hoyos, asfalto y carreteras', text: 'Asfaltaron la carretera 308 (parte) y la de Bajajá (completa).', quien: 'Alcalde Morales · 2024', src: null, status: 'EMPEZO', detail: '' },
@@ -9287,11 +9463,11 @@ const PROMESAS_CABOROJO: Promesa[] = [
   { topic: '🕳️ Hoyos, asfalto y carreteras', text: 'Cerca de $9 millones invertidos en caminos + un camión de bacheo.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
   // 👮 POLICÍA Y SEGURIDAD
   { topic: '👮 Policía y seguridad', text: 'Subir el sueldo de la policía de ~$1,800 a cerca de $2,000, "y el año que viene un poco más".', quien: 'Alcalde Morales · jun 2023', src: ['https://youtu.be/x7LX3y4otNQ', 'CaboRojo.com'], status: 'HECHO', detail: 'presupuesto 2025-26 lo pone en $2,180/mes', feat: true },
-  { topic: '👮 Policía y seguridad', text: '"La policía estuvo en 60 y pico, ya está en 20 y pico." Prometió 6 patrullas y chalecos nuevos.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: 'récord del propio alcalde', feat: true },
+  { topic: '👮 Policía y seguridad', text: '"La policía estuvo en 60 y pico, ya está en 20 y pico." Prometió 6 patrullas y chalecos nuevos.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: 'verificado jul 2026: las únicas subastas de vehículos publicadas (mar 2025) son guaguas de transporte colectivo con fondos FTA — no patrullas. Sin rastro de las 6.', feat: true },
   { topic: '👮 Policía y seguridad', text: '3 cadetes nuevos listos para marzo, y otra academia de 10 más.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
-  { topic: '👮 Policía y seguridad', text: 'Comprar tasers y cámaras en el pecho (body cams) para los policías.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
-  { topic: '👮 Policía y seguridad', text: 'Cámaras de vigilancia 24 horas en Boquerón y en el sector del vertedero.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
-  { topic: '👮 Policía y seguridad', text: 'Una guagua de rescate (400 galones de agua, 75 de espuma).', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
+  { topic: '👮 Policía y seguridad', text: 'Comprar tasers y cámaras en el pecho (body cams) para los policías.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: 'verificado jul 2026: sin rastro — la subasta 068CR de armería es genérica, y el presupuesto de la Policía Municipal FY2024-25 ($1.42M) es esencialmente nómina.' },
+  { topic: '👮 Policía y seguridad', text: 'Cámaras de vigilancia 24 horas en Boquerón y en el sector del vertedero.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: 'verificado jul 2026: sin rastro — el aviso de subasta general 2025-26 tiene 48 renglones y ninguno es de cámaras de vigilancia; nada en ordenanzas ni prensa. Ya en 2023 había prometido "nueva subasta que comienza en julio" pa\' cámaras (video, min 8:39).' },
+  { topic: '👮 Policía y seguridad', text: 'Una guagua de rescate (400 galones de agua, 75 de espuma).', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: 'verificado jul 2026: el renglón 069CR de la subasta general es de artículos de emergencia, no un vehículo. Un camión así ronda $300-500K y el presupuesto de OMME ($419K) no lo aguanta sin fondos externos — de los que no hay rastro.' },
   // 💧 AGUA
   { topic: '💧 Agua', text: 'Un sistema de bombeo de $8 millones que "va a proteger de por vida la Bahía de Boquerón".', quien: 'Alcalde Morales · mar 2024', src: ['https://youtu.be/-HKfFUfE9nk', 'CaboRojo.com'], status: 'EMPEZO', detail: '$7.8M asignados, ~70% a mar 2026', feat: true },
   { topic: '💧 Agua', text: 'Llevar las aguas a las plantas de Villataína y de ahí a Lajas.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
@@ -9305,13 +9481,13 @@ const PROMESAS_CABOROJO: Promesa[] = [
   { topic: '🏀 Deporte, escuelas y plaza', text: 'Usar los $5.2M de FEMA del Coliseo Rebekah Colberg antes del 20 de septiembre de 2026.', quien: 'Municipio · límite 20 sept 2026', src: ['https://youtu.be/WpizUMfP3rc', 'alcalde en cámara'], status: 'EMPEZO', detail: 'obras empezaron feb 2026 · reloj corriendo', feat: true , deadline: '2026-09-20' },
   { topic: '🏀 Deporte, escuelas y plaza', text: 'Canchas profesionales en la Rebeca Colberg + 2 bleachers para 400 fanáticos.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
   { topic: '🏀 Deporte, escuelas y plaza', text: 'Pequeñas ligas: 200+ niños con una inversión de $22,000. Sistema profesional de voleibol ($5,000) "ya llegó".', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
-  { topic: '🏀 Deporte, escuelas y plaza', text: '$20 millones para la escuela Inés María Mendoza.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
-  { topic: '🏀 Deporte, escuelas y plaza', text: 'Un mini estadio de fútbol: 300 butacas y camerinos. La plaza "va a quedar preciosa" (faltan permisos).', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '' },
+  { topic: '🏀 Deporte, escuelas y plaza', text: '$20 millones para la escuela Inés María Mendoza.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: 'verificado jul 2026: sin rastro del dinero ni de la obra — cero proyectos FEMA pa\' esa escuela en el récord federal, cero subasta, cero anuncio del DE. La escuela opera normal.' },
+  { topic: '🏀 Deporte, escuelas y plaza', text: 'Un mini estadio de fútbol: 300 butacas y camerinos. La plaza "va a quedar preciosa" (faltan permisos).', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: 'verificado jul 2026: cero rastro en subastas, ordenanzas, FEMA o prensa. El estadio de balompié se prometió desde 2021 con los $15M de CDBG-DR (video, min 21:36).' },
   { topic: '🏀 Deporte, escuelas y plaza', text: 'Damas de llaves (ayuda a personas): de 22 que había, ya cerca de 90.', quien: 'Alcalde Morales · 2024', src: null, status: 'EMPEZO', detail: '' },
   // 🏚️ ESTORBOS PÚBLICOS Y CASCO URBANO (entrevista propiedades abandonadas, CaboRojo.com)
-  { topic: '🏚️ Estorbos públicos y casco urbano', text: 'Estacionamiento para los placeros: demoler "prontito" el edificio a punto de caerse al lado de la Plaza del Mercado. "Uno de nuestros compromisos de campaña."', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: 'compromiso de campaña, en cámara', feat: true },
+  { topic: '🏚️ Estorbos públicos y casco urbano', text: 'Estacionamiento para los placeros: demoler "prontito" el edificio a punto de caerse al lado de la Plaza del Mercado. "Uno de nuestros compromisos de campaña."', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: 'compromiso de campaña, en cámara. Verificado jul 2026: sin demolición ni subasta; lo único nuevo de la Plaza es un reglamento administrativo (OM-25). Los 27 locales siguen rentados.', feat: true },
   { topic: '🏚️ Estorbos públicos y casco urbano', text: 'Revocación de usufructos en el casco urbano: "más de 100 unidades" trabajadas, y con las ventas "podemos comenzar a tumbar de inmediato casi 100 propiedades".', quien: 'Alcalde Morales · 2024', src: null, status: 'EMPEZO', detail: '' },
-  { topic: '🏚️ Estorbos públicos y casco urbano', text: '16 solares a subasta (sobres cerrados): solo 2 se vendieron. Prometió que los demás vuelven a subasta, con regla de construir en 1 año o se devuelve el dinero.', quien: 'Alcalde Morales · 2024', src: null, status: 'ESPERANDO', detail: '¿cuándo es la próxima subasta?' },
+  { topic: '🏚️ Estorbos públicos y casco urbano', text: '16 solares a subasta (sobres cerrados): solo 2 se vendieron. Prometió que los demás vuelven a subasta, con regla de construir en 1 año o se devuelve el dinero.', quien: 'Alcalde Morales · 2024', src: ['https://www.lexjuris.com/ordenanzas/Cabo%20Rojo/2024-2025/OM-27-2024-2025.pdf', 'Ordenanza OM-27'], status: 'EMPEZO', detail: 'verificado jul 2026: la re-subasta ocurrió y fracasó — jul 2024, sep 2024 y mar 2025, las TRES desiertas (lo dice la propia OM-27). Ahora los solares se venden por cotización directa, con menos competencia pública. ¿Cuántos de los 14 se han vendido? Sin publicar. Y la Contralora ya había señalado tasaciones municipales con tasadores sin licencia (OC-24-04).' },
   // 💰 DINERO Y PRESUPUESTO
   { topic: '💰 Dinero y presupuesto', text: 'Endoso condicionado a Esencia: la condición es que el proyecto tenga su propia agua.', quien: 'Alcaldía · 2024', src: ['https://youtu.be/85V_v2cBj1s', 'CaboRojo.com'], status: 'ESPERANDO', detail: '', feat: true },
   { topic: '💰 Dinero y presupuesto', text: 'Esencia pagará CRIM y arbitrios: "más de $20 millones en 10 años para las arcas municipales". Y: "el municipio lo va a fiscalizar".', quien: 'Alcalde Morales · ponencia vistas Esencia', src: null, status: 'ESPERANDO', detail: 'número verificable año a año si el proyecto va', feat: true },
@@ -9597,6 +9773,11 @@ function handlePromesas(_req: any, res: any) {
 <h1 class="mt-4">Todo lo que el alcalde dijo en cámara.</h1>
 
 <p class="text-lg text-slate-600 mt-3"><strong>¿Qué es esto?</strong> Es la lista de lo que el alcalde de Cabo Rojo prometió o dijo en sus entrevistas con nosotros (2023-2024). Lo guardamos con su video. Aquí está, una por una. Tú decides cuál se hizo y cuál no.</p>
+
+<div class="not-prose bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 mt-4">
+  <p class="text-xs uppercase tracking-widest text-amber-700 font-bold m-0">El marco que lo explica todo (verificado jul 2026)</p>
+  <p class="text-sm text-slate-800 mt-1.5 leading-relaxed">El propio presupuesto municipal FY2024-25 lleva una certificación firmada del Director de Finanzas: <em>"No se llevarán a cabo obras y mejoras permanentes con cargo al Fondo General... cualquier obra o mejora será con cargo a fondos especiales (recursos externos)."</em> Traducción: toda promesa de obra de esta lista depende de dinero externo (FEMA, ARPA, CDBG, USDA) que se puede rastrear — y este récord lo rastrea, una por una. <a href="https://docs.pr.gov/files/OGP/Website_OGP/Presupuestos-Municipales/2024-2025/Cabo-Rojo-2025.pdf" target="_blank" rel="noopener" data-prsf="verify" data-rec="promesas" class="text-teal-700 font-semibold">El presupuesto (PDF, OGP) ↗</a> · <a href="/semaforo-fema" class="text-teal-700 font-semibold">El semáforo FEMA del pueblo →</a></p>
+</div>
 
 <div class="not-prose mt-5 grid grid-cols-4 gap-2 text-center">
   <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3"><div class="text-2xl font-black text-emerald-700">${cc.HECHO}</div><div class="text-xs font-bold text-emerald-800">✅ HECHO</div></div>
@@ -11431,6 +11612,7 @@ export default async function handler(req: any, res: any) {
     case 'transicion': return await handleTransicion(req, res)
     case 'rompelo': return await handleRompelo(req, res)
     case 'contradicciones': return await handleContradicciones(req, res)
+    case 'semaforo-fema': return await handleSemaforoFema(req, res)
     case 'retiro': return await handleRetiro(req, res)
     case 'prediccion': return handlePrediccion(req, res)
     case 'costo-de-vida': return await handleCostoDeVida(req, res)
