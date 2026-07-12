@@ -6315,6 +6315,234 @@ ${SHARE_COPY_SCRIPT}
 // /expediente/:slug — el dossier público de un funcionario: sus promesas + el estado de su pueblo, todo citable.
 // v1: alcalde de Cabo Rojo (plantilla replicable a cualquier funcionario/distrito).
 // /esencia — la línea de tiempo pública del proyecto Esencia en Cabo Rojo. Neutral, solo hechos con fuente.
+// /contradicciones — El Marcador de Contradicciones (PREVIEW · ángulo Carlin, 12 jul 2026).
+// Formato: LO QUE DICEN (cita, quién, fecha, fuente) | LO QUE DICE EL RÉCORD (dato, fuente) | LA BRECHA.
+// Regla del verde obligatoria: el marcador también anota lo cumplido, o esto es cinismo y no récord.
+async function handleContradicciones(req: any, res: any) {
+  type Par = { tipo: string; titulo: string; dicenC: string; dicenQ: string; recordD: string; recordF: string; brecha: string; rec: string; video?: string }
+  const TIPOS: Record<string, [string, string]> = {
+    promesa: ['Promesa con fecha, vencida', 'bg-red-100 text-red-800 border-red-200'],
+    narrativa: ['El cuento vs el número', 'bg-amber-100 text-amber-800 border-amber-200'],
+    creencia: ['Lo que "todo el mundo sabe" vs lo que es', 'bg-sky-100 text-sky-800 border-sky-200'],
+    agencia: ['La agencia contra sí misma', 'bg-purple-100 text-purple-800 border-purple-200'],
+    dinero: ['Declarado vs entregado', 'bg-emerald-100 text-emerald-800 border-emerald-200'],
+  }
+  const pares: Par[] = [
+    {
+      tipo: 'promesa', titulo: 'La luz "affordable" que iba a ahorrar $150 millones al año',
+      dicenC: 'LUMA will not only provide safe, reliable and affordable electricity service... [reducción estimada de] $150 millones anuales en costos del sistema',
+      dicenQ: 'Wayne Stensby (CEO de LUMA) y la Autoridad P3, junio 2020 · comunicado oficial (lumapr.com)',
+      recordD: 'PR paga ~24.5¢/kWh contra ~12.9¢ el promedio de EE.UU. (EIA 2023) — casi el doble. Y en las vistas de transición (nov 2024), el proyecto que según LUMA "resolvería el 50-60% de los apagones" tenía $18M aprobados de los $1,200M que costaba.',
+      recordF: 'EIA 2023 · vistas de transición, video al minuto en /transicion',
+      brecha: '1.9x el precio, 6 años después de "affordable"', rec: '/luz',
+    },
+    {
+      tipo: 'promesa', titulo: 'La ley que mandó reciclar 35%... en el 2006',
+      dicenC: 'Para el año 2006 el volumen de desperdicios depositados en los vertederos se reduzca en un treinta y cinco por ciento (35%)',
+      dicenQ: 'Ley 70 de 1992 (texto de ley, meta reajustada por la Ley 254-2004)',
+      recordD: 'PR recicla ~10-14%. De 27 vertederos operando, solo 7 cumplían la reglamentación según el propio exdirector de Desperdicios Sólidos, en récord. En 2021 se prometió cerrar 7 con $31M de ARPA "en los próximos dos años"; siguen operando.',
+      recordF: 'Vistas de transición (dic 2024) · EPA · récord /basura',
+      brecha: '34 años de ley, y la meta del 2006 sigue sin llegar', rec: '/basura',
+    },
+    {
+      tipo: 'agencia', titulo: '"El agua es segura" — dice el que pierde 1 de cada 2 galones',
+      dicenC: 'El agua de la AAA es segura y no representa un riesgo para la salud... nivel de cumplimiento de calidad que asciende al 98 por ciento',
+      dicenQ: 'AAA, guía oficial de comunicaciones (docs.pr.gov, 2019 — vigente)',
+      recordD: 'El récord federal de la EPA: 13 violaciones de salud del agua activas en el oeste — Cabo Rojo con 3 (trihalometanos). Y en las vistas de transición la propia AAA aceptó que de cada 2 galones que produce, 1 se pierde (53% físico + ~10% comercial).',
+      recordF: 'EPA SDWIS · vistas de transición nov 2024, minuto en /transicion',
+      brecha: '98% de cumplimiento en el papel · 13 violaciones activas en el récord federal', rec: '/agua',
+    },
+    {
+      tipo: 'agencia', titulo: 'AutoExpreso: "actuó inmediatamente" — "No fue inmediato. Discrepo."',
+      dicenC: 'La compañía inmediatamente actuó, se tenía resguardo... los datos no se vieron comprometidos',
+      dicenQ: 'Funcionaria de la ACT, vistas de transición, 23 nov 2024',
+      recordD: 'La perito en ciberseguridad del comité, una frase después: "No fue inmediato. Se tardó más de dos semanas. Hay compañías que hubieran desaparecido del mapa con ese tipo de respuesta... no entiendo cómo tenemos el mismo operador. Discrepo." El sistema databa de ~año 2000 — admitido en la misma vista.',
+      recordF: 'Video de la vista, minuto 20:06 y 20:31 — óyelo tú mismo en /transicion',
+      brecha: 'Las dos versiones del mismo hecho, grabadas con 25 segundos de diferencia', rec: '/transicion', video: 'https://www.youtube.com/watch?v=ZvZmiREinbU&t=1206s',
+    },
+    {
+      tipo: 'agencia', titulo: 'El 3 de 10 con $10,500 millones en la mesa',
+      dicenC: '¿En una escala del 1 al 10, dónde usted ve el proceso de la modernización del sistema eléctrico para el cual tenemos 10.5 billones? — Hoy está como en tres',
+      dicenQ: 'Josué Colón, director ejecutivo de la AEE, a pregunta directa · vistas de transición, nov 2024',
+      recordD: 'No hace falta oposición cuando el propio director puntúa 3 de 10. En la misma vista: Educación había desembolsado 2.3% de sus fondos FEMA, la AAA 13.4%, la AEE 15%. Preguntado si a ese paso el dinero se salva, el director de COR3: "yo creo que sí".',
+      recordF: 'Video de la vista, minuto exacto en /transicion',
+      brecha: '$10,500M disponibles · autonota: 3/10', rec: '/transicion', video: 'https://www.youtube.com/watch?v=3R8jwIec-Yg&t=23868s',
+    },
+    {
+      tipo: 'narrativa', titulo: 'El proyecto "turístico" que es 70% casas',
+      dicenC: 'Desarrollo responsable y ecoamigable... [créditos contributivos turísticos bajo la Ley 74-2010]',
+      dicenQ: 'Proponentes de Esencia (conocelaverdad.com) · decreto firmado dic 2020',
+      recordD: 'Reportado como ~70% residencial (1,132 casas vs 520 unidades de hotel) con ~$498M en créditos contributivos turísticos. La propia AAA informó por carta (26 sep 2024) que no puede suplir el agua que pide. Y no hay cláusula que obligue los 2,000 empleos prometidos: si no llegan, los créditos no se devuelven.',
+      recordF: 'CPI · DIA p.89 · análisis del decreto — todo en /esencia',
+      brecha: '$498M garantizados al proyecto · 0 empleos garantizados al pueblo', rec: '/esencia',
+    },
+    {
+      tipo: 'narrativa', titulo: '1.3 millones de personas sin Walgreens — "todos nosotros podemos ir, menos ellos"',
+      dicenC: 'Nosotros hemos establecido [en los contratos]: any willing provider — cualquier proveedor que esté disponible para estar en la red',
+      dicenQ: 'Funcionario de Salud, vistas de transición, 3 dic 2024',
+      recordD: 'En la misma vista, ASES: "el Plan Vital es el único mercado, con 1 millón 300 mil vidas, que no puede acceder ese proveedor... todos nosotros podemos ir, menos los pacientes de Vital." Los 300,000 de Medicare Advantage sí pueden. La decisión se pospuso "para que la nueva administración la tome".',
+      recordF: 'Video de la vista, minuto en /transicion',
+      brecha: 'La regla dice "cualquier proveedor" · la práctica excluye al 41% de PR', rec: '/transicion', video: 'https://www.youtube.com/watch?v=az9UhZBvLqs&t=1734s',
+    },
+    {
+      tipo: 'creencia', titulo: '"No hay dinero pa\' traer médicos" — el dinero lleva años aprobado',
+      dicenC: 'No hay recursos para atraer médicos a los pueblos (la creencia que se repite en cada tertulia)',
+      dicenQ: 'Creencia popular — con razones históricas, pero sin verificar',
+      recordD: 'El gobierno federal ya declaró en escasez a 65 de 76 municipios y ya aprobó el dinero: repago de préstamos hasta $75,000. 33 municipios tienen el dinero de salud mental aprobado y CERO psiquiatras — 792,221 personas con el cupón sin cobrar. PR usa el programa 6 veces menos que West Virginia, y el SLRP con pareo federal 1:1 nunca se solicitó.',
+      recordF: 'HRSA × NPPES × Censo, verificado municipio por municipio (jul 2026)',
+      brecha: 'El dinero existe. Lo que no existe es quien lo reclame.', rec: '/registro/estado',
+    },
+    {
+      tipo: 'creencia', titulo: '"Esas ayudas no son pa\' uno" — $310 millones al año sin cobrar',
+      dicenC: 'Eso no es para mí (la regla vieja: antes de 2021, solo familias con 3+ hijos cualificaban en PR — nadie avisó cuando cambió)',
+      dicenQ: 'Creencia instalada — 81,000 familias actúan según ella cada año',
+      recordD: 'Desde 2021 el Crédito por Hijos aplica en PR desde el primer hijo: hasta $1,700 reembolsable por hijo aunque no tengas ingresos, reclamable hasta 3 años atrás. Se reclaman $1,450M; quedan ~$310M al año en la mesa. Cuando sí se cobró, la pobreza infantil bajó de 55% a 39%.',
+      recordF: 'Tesoro/IRS · Instituto del Desarrollo de la Juventud',
+      brecha: '1 de cada 4 dólares elegibles se queda sin reclamar', rec: '/cupon',
+    },
+    {
+      tipo: 'dinero', titulo: '"El dinero llegó a PR" — 87¢ de cada dólar salió pa\'l mainland',
+      dicenC: 'Miles de millones federales llegaron a reconstruir a Puerto Rico (la narrativa de cada anuncio de obligación)',
+      dicenQ: 'Narrativa oficial de la recuperación, 2017-2026',
+      recordD: 'De cada dólar de contrato de recuperación rastreado en USASpending, ~87 centavos fueron a firmas de afuera. Una sola consultora de Denver: $238M por asesorar cómo gastar el dinero de FEMA. Más de $700M en gestión y consultoría — no en obra física.',
+      recordF: 'USASpending.gov (DHS/FEMA, lugar de ejecución PR, 2017-2025)',
+      brecha: '87% del flujo de contratos salió de la isla', rec: '/sigue-el-dinero',
+    },
+    {
+      tipo: 'dinero', titulo: 'Iowa: misma gente que PR. NIH: $249M pa\' Iowa, $90M pa\' PR.',
+      dicenC: 'La inversión federal de investigación sigue al mérito científico (la presunción del sistema)',
+      dicenQ: 'Presunción estructural — nadie la dice porque nadie la revisa',
+      recordD: 'NIH FY2024, sumado proyecto por proyecto: Iowa (3.2M de habitantes, igual que PR) recibió $249M; PR recibió $90M — $28 por persona, menos que Mississippi ($31), el estado más pobre. Y PR tiene la población founder-effect más valiosa de EE.UU. pa\' genética.',
+      recordF: 'NIH RePORTER FY2024, verificado vía API',
+      brecha: '$159M de diferencia en UN año, con la misma población', rec: '/investigacion',
+    },
+    {
+      tipo: 'promesa', titulo: 'El Faro "reabre en unos meses" — sigue cerrado',
+      dicenC: 'Vamos a reabrir el Faro en unos meses [con fondos de Fiona]',
+      dicenQ: 'Alcalde de Cabo Rojo, 2024, en cámara (el video, al minuto, está en el récord)',
+      recordD: 'Cerrado a 2026. En la misma entrevista el alcalde admitió que el municipio dejó vencer el acuerdo de manejo en 2016. El expediente completo corre en /expediente/alcalde-cabo-rojo con cada plazo que él mismo puso en video.',
+      recordF: 'Grabaciones públicas verificadas · /historial',
+      brecha: '"Unos meses" → 2+ años, y el acuerdo vencido desde 2016', rec: '/historial',
+    },
+    {
+      tipo: 'narrativa', titulo: 'El "94% de convicción" que el propio sistema no puede calcular',
+      dicenC: '94% de convicción en el cuatrienio',
+      dicenQ: 'Departamento de Justicia de PR — la métrica estrella',
+      recordD: 'En las vistas de transición: "¿Cuánto es el por ciento de convicción real desde los radicados? Que dudo que sea 94% — El sistema no provee esa data." El 94% solo cuenta los casos que llegan a juicio. La tasa real desde que se radica no se puede calcular: el sistema del DJ no la produce.',
+      recordF: 'Video de la vista, minuto en /transicion',
+      brecha: 'La métrica excluye por diseño todo caso que muere antes de juicio', rec: '/transicion', video: 'https://www.youtube.com/watch?v=uUWb85Doki0&t=14141s',
+    },
+    {
+      tipo: 'dinero', titulo: '$100 millones pa\' la costa (2023) — $0 desembolsado (dic 2024)',
+      dicenC: '[Los $100M transferidos al DRNA en 2023 para mitigar la erosión costera — anunciados como acción climática]',
+      dicenQ: 'Gobierno de PR, 2023',
+      recordD: 'Comité de Expertos de Cambio Climático, en récord: "No se han utilizado, no se han desembolsado esos 100 millones todavía." Mientras, el DRNA operaba con 43% de las plazas vacías y el Cuerpo de Vigilantes a la mitad (300 de 600).',
+      recordF: 'Vistas de transición, dic 2024 — minuto en /transicion',
+      brecha: '$0 de $100M, año y medio después del anuncio', rec: '/transicion', video: 'https://www.youtube.com/watch?v=BJFs3kJgteM&t=2621s',
+    },
+    {
+      tipo: 'creencia', titulo: 'El rumor que el récord también mata: "el desarrollador está en bancarrota"',
+      dicenC: 'El desarrollador de Esencia está en bancarrota (repetido por 12 personas en el post viral de abril 2026)',
+      dicenQ: 'Creencia popular del bando opositor',
+      recordD: 'Lo buscamos en PACER y no encontramos filing público: rumor sin verificar, no récord. Este marcador corta en las dos direcciones — si el dato no aguanta la fuente, no entra, venga del bando que venga.',
+      recordF: 'PACER, verificado abril 2026',
+      brecha: 'La contradicción también puede ser tuya', rec: '/esencia',
+    },
+  ]
+  const tipoChip = (t: string) => {
+    const [label, cls] = TIPOS[t] || TIPOS.narrativa
+    return `<span class="text-[11px] font-bold rounded-full px-2.5 py-0.5 border ${cls}">${label}</span>`
+  }
+  const parCards = pares.map((p, i) => {
+    const copyTxt = `${p.titulo}. DICEN: "${p.dicenC}" (${p.dicenQ}). EL RÉCORD: ${p.recordD} Fuente: ${p.recordF}. puertoricosinfiltros.com${p.rec}`
+    return `
+  <div class="not-prose bg-white border border-slate-200 rounded-2xl overflow-hidden mt-5" id="par-${i + 1}">
+    <div class="px-4 pt-4 flex items-start justify-between gap-3 flex-wrap">
+      <p class="font-black text-slate-900 text-lg leading-snug flex-1" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(p.titulo)}</p>
+      ${tipoChip(p.tipo)}
+    </div>
+    <div class="grid sm:grid-cols-2 gap-0 mt-3">
+      <div class="p-4 bg-slate-50 border-t border-slate-200 sm:border-r">
+        <p class="text-[11px] uppercase tracking-widest font-bold text-slate-400">Lo que dicen</p>
+        <blockquote class="text-slate-700 italic leading-relaxed mt-1.5 border-l-4 border-slate-300 pl-3">"${escapeHtml(p.dicenC)}"</blockquote>
+        <p class="text-xs text-slate-500 mt-2">${escapeHtml(p.dicenQ)}</p>
+      </div>
+      <div class="p-4 border-t border-slate-200">
+        <p class="text-[11px] uppercase tracking-widest font-bold text-teal-600">Lo que dice el récord</p>
+        <p class="text-slate-800 leading-relaxed mt-1.5">${escapeHtml(p.recordD)}</p>
+        <p class="text-xs text-slate-500 mt-2">Fuente: ${escapeHtml(p.recordF)}</p>
+      </div>
+    </div>
+    <div class="bg-slate-900 text-white px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+      <p class="font-bold text-sm sm:text-base m-0"><span class="text-teal-300 text-[11px] uppercase tracking-widest font-bold mr-2">La brecha</span>${escapeHtml(p.brecha)}</p>
+      <div class="flex items-center gap-2 shrink-0">
+        ${p.video ? `<a href="${p.video}" target="_blank" rel="noopener" data-prsf="verify" data-rec="contradicciones" class="text-teal-300 text-xs font-bold hover:underline">óyelo tú mismo ↗</a>` : ''}
+        <a href="${p.rec}" class="text-teal-300 text-xs font-bold hover:underline">el récord completo →</a>
+        <button type="button" class="share-copy inline-flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white font-bold px-3 py-1.5 rounded-full text-xs" data-copy="${escapeHtml(copyTxt)}"><i class="fa-regular fa-copy"></i> Copiar</button>
+      </div>
+    </div>
+  </div>`
+  }).join('')
+
+  const body = `
+<h1>El Marcador de Contradicciones</h1>
+<p class="text-lg text-slate-600 mt-2">Este sitio dejó de discutir opiniones. Lo que hace es más simple: pone <strong>lo que dicen</strong> al lado de <strong>lo que dice el récord</strong>, con la fuente, y deja que tú midas la brecha. Ni el gobierno ni la oposición ni la tertulia — el documento.</p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">Cómo se lee</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Izquierda: la promesa, el cuento o la creencia. Derecha: el número verificado. Abajo: la brecha.</p>
+  <p class="text-slate-300 mt-2 text-sm leading-relaxed">Cada par sale de un récord de este sitio, con su fuente primaria. Si un lado está mal, se corrige en público (<a href="/rompelo" class="text-teal-300 font-semibold">/rompelo</a>). Y ojo: la contradicción a veces es del gobierno, a veces de una agencia, y a veces es tuya — el marcador corta pa' todos lados.</p>
+</div>
+
+${shareRow({ text: 'Lo que dicen vs lo que dice el récord, con la fuente al lado: LUMA prometió luz "affordable" en 2020 (pagamos casi el doble que EE.UU.), la ley mandó reciclar 35% pa\'l 2006 (vamos por ~12%), y la AAA dice "agua segura al 98%" con 13 violaciones activas en el oeste. El marcador completo:', url: 'https://puertoricosinfiltros.com/contradicciones', toWho: 'Al que le dijeron "eso es opinión". No: es la brecha entre la cita y el documento.' })}
+
+${parCards}
+
+<h2>La regla del verde (lo que evita que esto sea cinismo)</h2>
+<p>Un marcador que solo anota fallos no es récord: es campaña. Estos pares también están en el marcador, en verde:</p>
+<div class="not-prose grid sm:grid-cols-2 gap-3 mt-3">
+  <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4"><p class="font-bold text-slate-800 m-0">El sueldo de la policía municipal de Cabo Rojo: prometido ~$2,000, cumplido.</p><p class="text-sm text-slate-600 mt-1">El presupuesto 2025-26 lo pone en $2,180/mes. Prometido en video (jun 2023), verificado contra el documento.</p></div>
+  <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4"><p class="font-bold text-slate-800 m-0">Las residencias médicas: de ~218 a 528 plazas en un cuatrienio.</p><p class="text-sm text-slate-600 mt-1">Con 50 más aprobadas. Dicho en las vistas de transición y anotado igual que lo malo.</p></div>
+  <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4"><p class="font-bold text-slate-800 m-0">La pérdida de agua bajó de 57% a 53%.</p><p class="text-sm text-slate-600 mt-1">Sigue siendo 1 de cada 2 galones — pero la dirección importa y se anota.</p></div>
+  <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4"><p class="font-bold text-slate-800 m-0">Multas ambientales de ~$44M cerradas por $1.65M, ya pagado.</p><p class="text-sm text-slate-600 mt-1">Y el ingreso bruto agrícola subió ~45% en el cuatrienio. El verde también se anota.</p></div>
+</div>
+
+<h2>Método y límites</h2>
+<ul class="text-slate-700">
+  <li>Cada par sale de un récord publicado de este sitio; el link "el récord completo" lleva a la fuente primaria y al contexto entero.</li>
+  <li>Las citas de video llevan el minuto exacto — "óyelo tú mismo" no es un eslogan, es un link.</li>
+  <li>Un comediante lo dijo mejor que nosotros: <em>"Dejé el circo y me puse a marcar las contradicciones."</em> Esa es la disciplina: no el show, la brecha.</li>
+  <li>¿Un par está mal armado? Se corrige en público, con tu crédito: <a href="/rompelo" class="text-teal-700 font-semibold">/rompelo</a>.</li>
+</ul>
+
+${mientrasTanto([
+  `La brecha más cara pa' tu bolsillo hoy es la del Crédito por Hijos: hasta $1,700 por hijo, reclamable 3 años atrás, aunque no tengas ingresos. Si conoces una familia que no radica "porque eso no es pa' ellos", mándale el récord: /cupon.`,
+  `Antes de compartir un dato que te indigna, hazle lo que este marcador le hace al gobierno: búscale la fuente. Si no aparece, no lo pases — el rumor de la bancarrota de arriba murió así.`,
+], [
+  `Copia UN par de esta página (botón Copiar) y pégalo donde se esté dando el argumento sin datos. Un par con fuente cambia una conversación entera.`,
+  `Si eres periodista: cada par de arriba es un titular con las dos fuentes ya verificadas. Ese trabajo está hecho, úsalo.`,
+])}
+${SHARE_COPY_SCRIPT}
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'El Marcador de Contradicciones de Puerto Rico: lo que dicen vs lo que dice el récord',
+    description: 'Pares verificados de declaraciones oficiales, promesas y creencias populares contra el dato primario que las contradice: LUMA "affordable" vs 24.5¢/kWh, Ley 70-1992 (35% reciclaje pa\'l 2006) vs ~12%, AAA "agua segura 98%" vs 13 violaciones EPA activas, y más. Cada par con fuente.',
+    creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/contradicciones',
+    keywords: ['contradicciones', 'Puerto Rico', 'promesas', 'LUMA', 'AAA', 'reciclaje', 'datos verificados'],
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=600')
+  res.status(200).send(layout({
+    title: 'El Marcador de Contradicciones: lo que dicen vs lo que dice el récord de PR',
+    description: 'LUMA prometió luz "affordable" (pagamos casi el doble que EE.UU.). La ley mandó reciclar 35% pa\'l 2006 (vamos por ~12%). La AAA dice "agua segura al 98%" (13 violaciones activas). Cada par con su fuente, y el verde también se anota.',
+    slug: 'contradicciones', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
 async function handleEsencia(req: any, res: any) {
   let rows: any[] = []
   try {
@@ -11103,6 +11331,7 @@ export default async function handler(req: any, res: any) {
     case 'acueductos': return await handleAcueductos(req, res)
     case 'transicion': return await handleTransicion(req, res)
     case 'rompelo': return await handleRompelo(req, res)
+    case 'contradicciones': return await handleContradicciones(req, res)
     case 'retiro': return await handleRetiro(req, res)
     case 'prediccion': return handlePrediccion(req, res)
     case 'costo-de-vida': return await handleCostoDeVida(req, res)
