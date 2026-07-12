@@ -5857,6 +5857,7 @@ ${SHARE_COPY_SCRIPT}
 async function handleTransicion(req: any, res: any) {
   const V1 = 'RguowcKS7wU', V2 = '3R8jwIec-Yg', V3 = 'jCoz2d5IJJA'
   const V4 = 'uUWb85Doki0', V5 = 'dCVlOodXNPw', V6 = 'BJFs3kJgteM'
+  const V7 = 'XZGTyMNcr0o', V8 = 'ZvZmiREinbU', V9 = 'az9UhZBvLqs'
   type Claim = { q: string; c: string; d: string; v?: string; t?: number }
   type Bloque = { id: string; tag: string; titulo: string; nota?: string; claims: Claim[] }
   const bloques: Bloque[] = [
@@ -5907,19 +5908,27 @@ async function handleTransicion(req: any, res: any) {
     },
     {
       id: 'afi', tag: 'Día 3 · 22 nov 2024', titulo: 'AFI: las escuelas, los permisos y el 22%',
+      nota: 'Corrección (12 jul 2026): los links al minuto de este bloque apuntaban a la sesión larga del día; el video correcto es el segmento de la tarde. Re-anclados y verificados contra los captions. El error está anotado en /rompelo.',
       claims: [
-        { q: 'Eduardo Rivera Cruz, director ejecutivo de AFI', c: 'Se le entregaron ya 80 escuelas y a finales de diciembre se estarán entregando 55 adicionales para un total de 570... faltando 27 para el primer trimestre del año que viene', d: 'Columnas cortas ($484M): 570 escuelas entregadas a dic 2024, 27 pendientes con plazo Q1 2025.', v: V3, t: 1846 },
-        { q: 'Lcdo. Marcos Rodríguez Ema, comité entrante', c: '¿Alguna razón en particular que el 22% [de las subastas] se cancelen?', d: 'AFI: 601 subastas en 4 años, 384 adjudicadas ($903M) y 22% canceladas. La agencia lo atribuyó a subastas desiertas, escasez de materiales y de mano de obra.', v: V3, t: 2944 },
-        { q: 'Eduardo Rivera Cruz, director ejecutivo de AFI', c: 'A veces están dentro de los 30 días y otras sobrepasan, dos y tres meses, han habido algunos que duran años', d: 'Los endosos de agencias que la ley fija en 30 días tardan meses y hasta años. El permiso del muelle de Punta Santiago tardó más de 2 años.', v: V3, t: 3896 },
-        { q: 'Eduardo Rivera Cruz, director ejecutivo de AFI', c: 'Esta es una comunidad que llevaba más de 20 años sin agua potable... a 71 familias con una inversión de 2.6 millones', d: 'Sector Pajita Falcón (Aguas Buenas): 20+ años sin agua potable, resuelto con $2.6M. El dato duro no es el proyecto: es cuánto tardó en llegar.', v: V3, t: 1990 },
+        { q: 'Eduardo Rivera Cruz, director ejecutivo de AFI', c: 'Se le entregaron ya 80 escuelas y a finales de diciembre se estarán entregando 55 adicionales para un total de 570... faltando 27 para el primer trimestre del año que viene', d: 'Columnas cortas ($484M): 570 escuelas entregadas a dic 2024, 27 pendientes con plazo Q1 2025.', v: V7, t: 1846 },
+        { q: 'Lcdo. Marcos Rodríguez Ema, comité entrante', c: '¿Alguna razón en particular que el 22% [de las subastas] se cancelen?', d: 'AFI: 601 subastas en 4 años, 384 adjudicadas ($903M) y 22% canceladas. La agencia lo atribuyó a subastas desiertas, escasez de materiales y de mano de obra — y a que el "bonding capacity" de las afianzadoras está llegando a su límite.', v: V7, t: 2944 },
+        { q: 'Eduardo Rivera Cruz, director ejecutivo de AFI', c: 'A veces están dentro de los 30 días y otras sobrepasan, dos y tres meses, han habido algunos que duran años', d: 'Los endosos de agencias que la ley fija en 30 días tardan meses y hasta años. El permiso del muelle de Punta Santiago tardó más de 2 años — con $18.8M ya asignados, esperando un sello.', v: V7, t: 3892 },
+        { q: 'Eduardo Rivera Cruz, director ejecutivo de AFI', c: 'Esta es una comunidad que llevaba más de 20 años sin agua potable... a 71 familias con una inversión de 2.6 millones', d: 'Sector Pajita Falcón (Aguas Buenas): 20+ años sin agua potable, resuelto con $2.6M. El dato duro no es el proyecto: es cuánto tardó en llegar.', v: V7, t: 1995 },
+        { q: 'Eduardo Rivera Cruz, director ejecutivo de AFI, a pregunta directa', c: '¿Cuántas escuelas tiene AFI asignadas para darle mantenimiento? — Ninguna. Ninguna... La última fueron Siglo XXI, eso fue en el 2010', d: 'AFI refuerza escuelas por emergencia (597 en columnas cortas) pero no mantiene ninguna, y la última escuela nueva que construyó fue en 2010. Reforzar no es construir: 14 años sin levantar una escuela desde cero.', v: V7, t: 4000 },
+        { q: 'Verónica Ferraiuoli, presidenta del comité entrante', c: 'El director enfatizó que está haciendo la fase inicial de 2.1 millones, pero el proyecto realmente es de 38 millones de dólares', d: 'El proyecto de arrecifes artificiales se presentó por su fase de diseño (~$2.4M); el costo total ($38M) salió por pregunta de seguimiento, no en la ponencia. La firma del diseño: Tetra Tech — la propia presidenta notó que "estuvo en las noticias recientemente".', v: V7, t: 3222 },
+        { q: 'Eduardo Rivera Cruz, director ejecutivo de AFI (el verde también se anota)', c: 'En 45 días podemos publicar una subasta y adjudicarla... nosotros emitimos nuestros propios cheques, un promedio de 45 días', d: 'AFI adjudica en 45 días y paga a contratistas en ~45 días — por eso, según su director, no tiene tantas subastas desiertas. Con 24 empleados y $3.2M de presupuesto operacional movió $903M en obra. La pregunta que dejó la vista: ¿por qué ese modelo no se replica?', v: V7, t: 4196 },
       ],
     },
     {
       id: 'dtop', tag: 'Día 3 · 22-23 nov 2024', titulo: 'Transportación: el ciberataque y el mismo operador',
-      nota: 'Estas citas salen de un fragmento del Q&amp;A de la tarde cuyo video exacto está pendiente de anclar al minuto. El dato es del récord; el link fino viene en la próxima pasada.',
+      nota: 'Actualización (12 jul 2026): el Q&amp;A de la tarde ya está anclado al minuto — cada cita de este bloque tiene su link verificado contra los captions del video.',
       claims: [
-        { q: 'Perito en ciberseguridad del comité entrante', c: 'El ataque cibernético que sufrió AutoExpreso en abril de 2022, más de dos semanas sin servicio... no entiendo cómo tenemos el mismo operador a este punto', d: 'El comité dejó en récord que tras el ciberataque de 2022 el operador de AutoExpreso seguía siendo el mismo, y rechazó "se robusteció" como respuesta sin certificación.' },
-        { q: 'Edwin González Montalvo, director ejecutivo de la ACT', c: 'Ya tenemos 13 de 22 pórticos completamente nuevos', d: 'AutoExpreso: 13 de 22 pórticos reconstruidos a nov 2024. Sin brigadas regulares de semáforos los fines de semana (solo emergencias): buscaban contrato privado 24/7.' },
+        { q: 'La funcionaria de la ACT vs la perito en ciberseguridad del comité, en vivo', c: 'La compañía inmediatamente actuó, se tenía resguardo... — No fue inmediato. Se tardó más de dos semanas. Hay compañías que hubieran desaparecido del mapa con ese tipo de respuesta... Discrepo', d: 'La contradicción quedó grabada: "actuó inmediatamente" contra "más de dos semanas sin servicio" por el ciberataque de AutoExpreso de abril 2022 — dicho una frase después de la otra, en la misma vista.', v: V8, t: 1206 },
+        { q: 'Perito en ciberseguridad del comité entrante', c: 'El pueblo de Puerto Rico fue paciente en aceptar eso, y yo no entiendo cómo tenemos el mismo operador a este punto', d: 'Tras el ciberataque de 2022, el operador de AutoExpreso seguía siendo el mismo. El comité rechazó "se robusteció" como respuesta: "esa cualificación para mí no es suficiente".', v: V8, t: 1231 },
+        { q: 'Funcionaria de la ACT, sobre la causa del ciberataque', c: 'El sistema sí es un sistema que viene desde los 2000, o sea que estaba expuesto a eso', d: 'Admitido en récord: la infraestructura de AutoExpreso databa de ~año 2000. El "robustecimiento" posterior se afirmó sin certificación ni métrica en la vista.', v: V8, t: 1264 },
+        { q: 'Funcionaria de la ACT', c: 'Ya tenemos 13 de 22 pórticos completamente nuevos', d: 'AutoExpreso: 13 de 22 pórticos reconstruidos a nov 2024 (59%). El único número duro de avance que dejó el segmento.', v: V8, t: 1289 },
+        { q: 'Funcionario de Transportación (semáforos)', c: 'Por eso los fines de semana no hay disponible... nuestras brigadas salen por emergencia... estamos buscando ese apoyo adicional de privadas', d: 'En récord: sin brigadas regulares de semáforos los fines de semana, 4 brigadas pa\' toda la isla, la regional de Guayama sin técnicos propios, y los camiones canasto se compraron con ARPA "porque no teníamos".', v: V8, t: 1086 },
+        { q: 'Funcionario de Transportación + la perito del comité (CESCO Digital)', c: 'Están cumpliendo con todos los estándares de seguridad que les requiere la industria... — no hay como tal un porcentaje que ellos cumplen', d: 'CESCO Digital (la puerta de la "ciudadanía digital" de PR, 120,000 registros de donantes de órganos): cumplimiento afirmado sin métrica, sin confirmación de pen-test, y la pregunta de si cumple la Ley 40 de Ciberseguridad quedó sin contestar en el segmento.', v: V8, t: 922 },
       ],
     },
     {
@@ -5940,6 +5949,15 @@ async function handleTransicion(req: any, res: any) {
         { q: 'Roxanna Rosario Serrano, directora ejecutiva de ASES', c: 'Hubo unos préstamos que se mantuvieron en el BGF... la obligación del BGF es hacer esfuerzos razonables pero no tiene ninguna obligación de recobrar', d: 'ASES le debe $189M de principal + $98M de intereses al Banco Gubernamental de Fomento; la junta aprobó buscar condonación ante la JSF.', v: V5, t: 3806 },
         { q: 'Dr. Carlos Mellado, secretario de Salud', c: 'La Junta contrató a FTI Consulting para completar este análisis, ya culminaron pero la Junta todavía no ha compartido sus resultados con el gobierno', d: 'El estudio de necesidad de especialidades médicas (la llave de los decretos contributivos y el pago de préstamos estudiantiles de médicos) estaba TERMINADO y retenido por la JSF. Los médicos que pagaron bajo la Ley 47 seguían en limbo.', v: V5, t: 4590 },
         { q: 'Dr. Carlos Mellado, secretario de Salud (el verde también se anota)', c: 'De 200 plazas de residencias médicas en 2021 aumentamos a 528 al día de hoy, y se le añaden 50 que ya están aprobadas', d: 'Las residencias médicas subieron de ~218 a 528 plazas en el cuatrienio, con 50 más aprobadas. PR seguía sin residencia de cirugía cardiotorácica.', v: V5, t: 5388 },
+      ],
+    },
+    {
+      id: 'salud2', tag: 'Día 7 · 3 dic 2024 (la misma vista, tras el receso)', titulo: 'Salud, parte 2: 1.3 millones sin Walgreens y las contraseñas sin arreglar',
+      claims: [
+        { q: 'Funcionaria de ASES (red de farmacias del Plan Vital)', c: 'El plan vital es el único mercado, que tiene 1 millón 300 mil vidas, que no puede acceder ese proveedor... todos nosotros podemos ir, menos los pacientes de Vital', d: '1,300,000 beneficiarios del Plan Vital (el 41% de PR) no pueden usar Walgreens; los 300,000 de Medicare Advantage sí. Walgreens ha servido a Vital solo bajo estados de emergencia desde 2017. La decisión se pospuso "para que la nueva administración la pueda tomar".', v: V9, t: 1734 },
+        { q: 'Lcdo. Mata (ASEM / Centro Médico)', c: 'Yo llevo 13 años en Centro Médico, nunca había visto que se hiciera un ejercicio entre las dos partes de cuánto se debe y cuántos son los costos', d: 'Primer ejercicio de conciliación asegurador-hospital en 13 años: brecha estimada de $25-35M, y el Recinto de Ciencias Médicas (tercero validador) concluyó que aun esa cifra estaba subestimada. La aseguradora subió tarifas 30% — sin cubrir todavía el costo real del Hospital de Trauma. Su portafolio de inversiones: "200 y pico millones".', v: V9, t: 1051 },
+        { q: 'Director de Informática del Depto. de Salud, a pregunta de la Dra. Jordán (hallazgo TI-2116)', c: 'Sí, porque no lo hemos completado, no le hemos sometido completamente el informe a hoy', d: 'Política de contraseñas y auditoría en los servidores principales de Salud: hallazgo de seguridad abierto por más de 2 años, admitido en vivo. Y los contratos con proveedores externos de aplicaciones no tenían cláusulas de respaldo (backup) de las bases de datos.', v: V9, t: 2199 },
+        { q: 'Funcionario de Salud (récords médicos electrónicos)', c: 'Ya la fase del MMIS culmina en verano... la fase del récord médico electrónico Health Information Exchange para recibir todos los proveedores', d: 'Promesa en récord: la fase final del sistema que unificaría los récords médicos (MMIS/HIE) culminaría "en verano" de 2025, y el proyecto de interconexión de los 3 sistemas paralelos del Departamento arrancaría "el próximo año". El reloj está en la tabla de abajo.', v: V9, t: 2631 },
       ],
     },
     {
@@ -5977,9 +5995,9 @@ ${b.claims.map(cl => `
   // Las vistas completas — índice verificado contra el canal de El Nuevo Día (2026-07-10).
   const videos: [string, string, number, string][] = [
     ['20 nov 2024', V1, 15400, 'minada'], ['21 nov 2024', V2, 28407, 'minada'], ['22 nov 2024', V3, 14255, 'minada'],
-    ['22-23 nov 2024', 'XZGTyMNcr0o', 4541, ''], ['23 nov 2024', 'xhr3SrEjR7k', 10717, ''], ['23 nov 2024', 'ZvZmiREinbU', 1412, ''],
+    ['22-23 nov 2024', V7, 4541, 'minada'], ['23 nov 2024', 'xhr3SrEjR7k', 10717, ''], ['23 nov 2024', V8, 1412, 'minada'],
     ['26 nov 2024', V4, 16128, 'minada'], ['3 dic 2024', 'EZvFDSu0sxU', 14412, ''], ['3 dic 2024', V5, 12158, 'minada'],
-    ['3 dic 2024', 'On2Zg9QdWOo', 7479, ''], ['3 dic 2024', 'az9UhZBvLqs', 2672, ''], ['4 dic 2024', V6, 18688, 'minada'],
+    ['3 dic 2024', 'On2Zg9QdWOo', 7479, ''], ['3 dic 2024', V9, 2672, 'minada'], ['4 dic 2024', V6, 18688, 'minada'],
     ['4 dic 2024', 'bO6iQecGyjg', 22858, ''], ['5 dic 2024', 'XlnW6cFlJLM', 13501, ''],
   ]
   const dur = (s: number) => `${Math.floor(s / 3600)}h ${String(Math.round((s % 3600) / 60)).padStart(2, '0')}m`
@@ -5995,6 +6013,9 @@ ${b.claims.map(cl => `
     `En las vistas de transición 2024, la AAA aceptó en récord que de cada 2 galones de agua que produce, 1 se pierde en el camino (53% de pérdida física + ~10% comercial, FY2024). Video al minuto: youtube.com/watch?v=${V3}&t=8835s. Compilado en puertoricosinfiltros.com/transicion`,
     `Desembolso de fondos FEMA por corporación, dicho en las vistas de transición (nov 2024): Educación 2.3%, AAA 13.4%, AEE 15%, vivienda pública 25.7%. Video al minuto: youtube.com/watch?v=${V1}&t=4420s. Compilado en puertoricosinfiltros.com/transicion`,
     `El director de la AEE puntuó 3 de 10 la modernización de la red eléctrica, con $10,500M disponibles, en las vistas de transición (nov 2024). Video al minuto: youtube.com/watch?v=${V2}&t=23868s. Compilado en puertoricosinfiltros.com/transicion`,
+    `En las vistas de transición quedó grabada la contradicción: la ACT dijo que tras el ciberataque de AutoExpreso (2022) "la compañía inmediatamente actuó" y la perito del comité la corrigió en vivo: "No fue inmediato. Se tardó más de dos semanas... y tenemos el mismo operador". Video al minuto: youtube.com/watch?v=${V8}&t=1206s. Compilado en puertoricosinfiltros.com/transicion`,
+    `1,300,000 beneficiarios del Plan Vital no pueden usar Walgreens; los 300,000 de Medicare Advantage sí. Dicho por ASES en las vistas de transición (dic 2024): "todos nosotros podemos ir, menos los pacientes de Vital". Video al minuto: youtube.com/watch?v=${V9}&t=1734s. Compilado en puertoricosinfiltros.com/transicion`,
+    `AFI ante el comité de transición: la última escuela nueva que construyó fue en 2010, y no le da mantenimiento a ninguna ("¿Cuántas? — Ninguna. Ninguna."). Video al minuto: youtube.com/watch?v=${V7}&t=4000s. Compilado en puertoricosinfiltros.com/transicion`,
   ]
   const citableCards = citables.map((c) => `
     <div class="flex items-start gap-2 bg-white border border-slate-200 rounded-xl p-3 mt-2">
@@ -6035,6 +6056,9 @@ ${bloquesHtml}
       <tr class="border-t border-slate-100"><td class="py-2 px-3">Justicia: Registro de la Propiedad "al día"</td><td class="py-2 px-3 whitespace-nowrap">jun-jul 2025</td><td class="py-2 px-3 text-slate-500">Por verificar</td></tr>
       <tr class="border-t border-slate-100"><td class="py-2 px-3">Agricultura: abasto de café asegurado solo hasta feb 2025; pidió subir el precio ~$50/quintal "de inmediato"</td><td class="py-2 px-3 whitespace-nowrap">feb 2025</td><td class="py-2 px-3 text-slate-500">Por verificar</td></tr>
       <tr class="border-t border-slate-100"><td class="py-2 px-3">DRNA: plan de cambio climático se auto-aprueba si la legislatura no actúa</td><td class="py-2 px-3 whitespace-nowrap">30 jun 2025</td><td class="py-2 px-3 text-slate-500">Por verificar</td></tr>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3">Salud: unificación de récords médicos (MMIS/HIE) "culmina en verano"</td><td class="py-2 px-3 whitespace-nowrap">verano 2025</td><td class="py-2 px-3 text-slate-500">Por verificar</td></tr>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3">Plan Vital: decisión sobre Walgreens en la red, dejada "a la nueva administración"</td><td class="py-2 px-3 whitespace-nowrap">2025</td><td class="py-2 px-3 text-slate-500">Por verificar</td></tr>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3">AFI: demolición de las 5 estructuras de Puerta de Tierra "en los próximos dos meses"</td><td class="py-2 px-3 whitespace-nowrap">ene-feb 2025</td><td class="py-2 px-3 text-slate-500">Por verificar</td></tr>
       <tr class="border-t border-slate-100"><td class="py-2 px-3">Justicia: albergue de víctimas fase 2 (ARPA) o se pierden los fondos</td><td class="py-2 px-3 whitespace-nowrap">31 dic 2026</td><td class="py-2 px-3 text-slate-500">Corriendo</td></tr>
       <tr class="border-t border-slate-100"><td class="py-2 px-3">Vivienda: cierre de fondos CDBG-DR</td><td class="py-2 px-3 whitespace-nowrap">sept 2029</td><td class="py-2 px-3 text-slate-500">Corriendo</td></tr>
     </tbody>
@@ -6043,7 +6067,7 @@ ${bloquesHtml}
 <p class="text-sm text-slate-500 mt-2">Cada "por verificar" es trabajo pendiente de este récord, no una acusación. Cuando se verifique, se anota en verde o en rojo, igual que todo lo demás.</p>
 
 <h2 id="vistas">Las vistas completas (lo que falta por minar)</h2>
-<p>24 sesiones en el canal de El Nuevo Día. Seis están en este récord; el resto sigue ahí, público, esperando (3 no tienen captions disponibles todavía). Faltan educación, hacienda y seguridad, entre otras.</p>
+<p>24 sesiones en el canal de El Nuevo Día. Nueve están en este récord; el resto sigue ahí, público, esperando (4 no tienen captions disponibles todavía — se reintenta cada pasada). Faltan educación, hacienda y seguridad, entre otras.</p>
 <div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
   <table class="w-full text-sm">
     <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Fecha</th><th class="py-2 px-3">Duración</th><th class="py-2 px-3">Estado</th><th class="py-2 px-3">Video</th></tr></thead>
@@ -6062,7 +6086,7 @@ ${citableCards}
 <ul class="text-slate-700">
   <li>Las citas salen de transcripciones automáticas de los streams (limpiadas de ruido, sin cambiar números ni palabras clave) y cada una lleva su link al minuto pa' que la verifiques con tus oídos.</li>
   <li>Los nombres de los miembros del comité se identifican por el audio; donde hay duda, se dice "miembro del comité" en vez de adivinar.</li>
-  <li>Seis de 24 sesiones están minadas. Esto es un récord vivo: crece sesión por sesión.</li>
+  <li>Nueve de 24 sesiones están minadas. Esto es un récord vivo: crece sesión por sesión.</li>
   <li>¿Ves un error en una cita o un número? Escríbenos y se corrige con el video en la mano: <a href="mailto:angel@angelanderson.com" class="text-teal-700 font-semibold">angel@angelanderson.com</a>.</li>
 </ul>
 
@@ -6078,7 +6102,7 @@ ${SHARE_COPY_SCRIPT}
   const jsonLd = {
     '@context': 'https://schema.org', '@type': 'Dataset',
     name: 'La Transición Gubernamental 2024-2025 de Puerto Rico: el récord de las vistas públicas, cita por cita',
-    description: 'Compilación verificada de las vistas públicas de transición (Ley 197-2002) transmitidas por El Nuevo Día: declaraciones de COR3, Vivienda, AEE, AAA, AFI y DTOP con cita textual y minuto del video. Desembolso FEMA nov 2024: Educación 2.3%, AAA 13.4%, AEE 15%.',
+    description: 'Compilación verificada de las vistas públicas de transición (Ley 197-2002) transmitidas por El Nuevo Día: declaraciones de COR3, Vivienda, AEE, AAA, AFI, DTOP, Justicia, Salud/ASES y DRNA con cita textual y minuto del video. Desembolso FEMA nov 2024: Educación 2.3%, AAA 13.4%, AEE 15%. 1.3M vidas del Plan Vital sin acceso a Walgreens.',
     creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
     publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
     isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/transicion',
@@ -6260,6 +6284,7 @@ async function handleRompelo(req: any, res: any) {
   <table class="w-full text-sm">
     <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Cuándo</th><th class="py-2 px-3">Qué se corrigió</th><th class="py-2 px-3">Quién lo pescó</th></tr></thead>
     <tbody>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3 whitespace-nowrap">12 jul 2026</td><td class="py-2 px-3">Récord de la Transición: los 4 links "óyelo tú mismo" del bloque de AFI apuntaban al video de la sesión larga del día en vez del segmento correcto de la tarde. Se re-anclaron los minutos y se verificaron contra los captions de ambos videos.</td><td class="py-2 px-3 text-slate-500">Verificación interna</td></tr>
       <tr class="border-t border-slate-100"><td class="py-2 px-3 whitespace-nowrap">jul 2026</td><td class="py-2 px-3">Expediente del Distrito 20: el trámite de la RC0211 llevaba 2 meses desactualizado ("pendiente" cuando ya la Cámara la había aprobado). Se corrigió contra el récord de SUTRA.</td><td class="py-2 px-3 text-slate-500">Verificación interna</td></tr>
       <tr class="border-t border-slate-100"><td class="py-2 px-3 whitespace-nowrap">jul 2026</td><td class="py-2 px-3">Récord de demanda: un negocio pautado aparecía contado como "hueco sin proveedor". Se corrigió el conteo.</td><td class="py-2 px-3 text-slate-500">Verificación interna</td></tr>
       <tr class="border-t border-slate-100"><td class="py-2 px-3 whitespace-nowrap">jul 2026</td><td class="py-2 px-3">Historial de promesas: un video fechado 2021 era de 2023. Se pescó ANTES de publicar.</td><td class="py-2 px-3 text-slate-500">Verificación interna</td></tr>
@@ -6344,6 +6369,8 @@ async function handleEsencia(req: any, res: any) {
   <a href="#video" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">El panel en video</a>
   <a href="#lados" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Los dos lados</a>
 </div>
+
+${shareRow({ text: 'El expediente de Esencia (Cabo Rojo), con la fuente al lado de cada dato: ~$498M en créditos contributivos, la propia AAA dijo por carta que no puede suplir el agua, y no hay cláusula que obligue los 2,000 empleos. Los dos lados, verificables:', url: 'https://puertoricosinfiltros.com/esencia', toWho: 'Al del grupo que dice "eso son 2,000 empleos" y al que dice "eso es un desastre". Aquí está el récord completo, pa\' los dos.' })}
 
 <h2 id="numeros">Qué es, en números</h2>
 <div class="not-prose grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
@@ -6727,6 +6754,7 @@ ${items || '<p class="text-sm text-slate-400 italic">Data no disponible ahora.</
 
 
 <p class="text-sm text-slate-500 mt-5">Fuentes primarias: <a href="https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/" target="_blank" rel="noopener" class="text-teal-700">CPI — créditos contributivos</a> · <a href="https://periodismoinvestigativo.com/2025/06/esencia-project-puerto-rico-environmental-damage/" target="_blank" rel="noopener" class="text-teal-700">CPI — historial global</a> · <a href="https://periodismoinvestigativo.com/2025/03/esencia-project-cabo-rojo-hearings/" target="_blank" rel="noopener" class="text-teal-700">CPI — inversionistas</a> · <a href="https://www.metro.pr/noticias/2026/03/28/miles-protestan-en-el-viejo-san-juan-contra-proyecto-esencia-en-cabo-rojo/" target="_blank" rel="noopener" class="text-teal-700">Metro PR</a> · <a href="https://therealdeal.com/magazine/april-2025/meet-the-little-known-developer-behind-a-2b-reuben-brother-development/" target="_blank" rel="noopener" class="text-teal-700">The Real Deal</a>. ¿Ves un error o falta un hito? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a>. Actualizado julio 2026.</p>
+${SHARE_COPY_SCRIPT}
 `
   const jsonLd = {
     '@context': 'https://schema.org', '@type': 'Dataset',
@@ -7308,12 +7336,14 @@ function handleNoSeMide(req: any, res: any) {
   const body = `
 <h1>Lo que ni se mide</h1>
 <p class="text-lg text-slate-600 mt-2">Todos los récords de este sitio nacen de un dato. Esta página es lo contrario: los <strong>huecos</strong> donde Puerto Rico es invisible en su propia data — no porque el problema no exista, sino porque nadie lo cuenta. <strong>Lo que ni se mide no se puede arreglar.</strong> Nombrar el hueco es el primer paso.</p>
+${shareRow({ text: 'Lo que Puerto Rico NI MIDE: cuánta diabetes hay por pueblo (última data municipal: 2009), cuántas horas sin luz pasa tu barrio, cuánto le queda de vida a cada vertedero. Los huecos, nombrados uno por uno:', url: 'https://puertoricosinfiltros.com/no-se-mide', toWho: 'Al que pregunta "¿y eso dónde se ve?" La respuesta honesta: no se ve, porque nadie lo cuenta.' })}
 ${cards}
 <div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
   <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Un pueblo que no se mide no se puede defender.</p>
   <p class="mt-2 text-sm text-slate-600 italic">¿Conoces una fuente que llene uno de estos huecos? Escríbenos y la verificamos.</p>
 </div>
 <p class="text-sm text-slate-500 mt-6">Cada hueco se cierra en cuanto aparezca una fuente primaria verificable por municipio. Algunos ya tienen la tubería montada esperando la data. Julio 2026.</p>
+${SHARE_COPY_SCRIPT}
 `
   const jsonLd = {
     '@context': 'https://schema.org', '@type': 'Article',
@@ -7468,12 +7498,14 @@ async function handleHistorial(req: any, res: any) {
   const body = `
 <h1>El historial: promesas con recibo</h1>
 <p class="text-lg text-slate-600 mt-2">Cada promesa aquí se dijo en un video público, con el minuto exacto anotado. Cuando una vence sin cumplirse, se anota. Cuando se cumple, también. <strong>No es cacería: es memoria.</strong> El pueblo tiene derecho a recordar lo que se le dijo.</p>
+${shareRow({ text: 'Las promesas públicas de Cabo Rojo, cada una con el video y el minuto exacto donde se dijo — las cumplidas en verde y las vencidas con su reloj:', url: 'https://puertoricosinfiltros.com/historial', toWho: 'Al que dice "aquí nunca se sabe qué prometieron". Aquí está, con recibo.' })}
 ${rows.length ? items : '<div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 mt-4 text-sm text-slate-700">Verificando el próximo lote de promesas. Vuelve pronto.</div>'}
 <div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
   <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Recordar lo que se prometió no es pelea. Es orden.</p>
   <p class="mt-2 text-sm text-slate-600 italic">¿Sabes de una promesa pública que falta o ya se cumplió? Escríbenos.</p>
 </div>
 <p class="text-sm text-slate-500 mt-6">Solo se publica lo verificado contra la grabación pública y el estado real del proyecto. Faltan promesas por revisar antes de entrar. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a> y se corrige. Julio 2026.</p>
+${SHARE_COPY_SCRIPT}
 `
   const jsonLd = {
     '@context': 'https://schema.org', '@type': 'Dataset',
@@ -7590,6 +7622,8 @@ function handlePrediccion(req: any, res: any) {
   <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Estamos reconstruyendo edificios para una población que se queda sin quien la atienda.</p>
 </div>
 
+${shareRow({ text: 'La predicción 2030 pa\' Puerto Rico, armada solo con data federal: estamos reconstruyendo edificios para una población que se queda sin quien la atienda. Cada número con su fuente:', url: 'https://puertoricosinfiltros.com/prediccion', toWho: 'Al que planifica a 5 años: dónde vivir, dónde montar el negocio, dónde envejecer.' })}
+
 <div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-4 text-sm text-slate-700">
   Esta página es la <strong>lectura</strong>: a dónde va todo junto si nada cambia. La <strong>evidencia</strong> municipio por municipio (quién recibe el golpe primero, con índice y tabla) vive en su propio récord: <a href="/retiro" class="text-teal-700 font-semibold">El Huracán Lento →</a>
 </div>
@@ -7645,6 +7679,7 @@ ${renderAlertas()}
 </div>
 
 <p class="text-sm text-slate-500 mt-6">Cómo se hizo: síntesis de los récords verificados de este sitio (NPPES/CMS, HRSA, OpenFEMA, EPA, Censo/ACS, El Veci *7711), asistida por IA sobre esas fuentes primarias. Los números son verificables en cada récord enlazado; las conexiones y proyecciones son análisis. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a> y se corrige. Julio 2026.</p>
+${SHARE_COPY_SCRIPT}
 `
   const jsonLd = {
     '@context': 'https://schema.org', '@type': 'Report',
@@ -7742,6 +7777,8 @@ async function handleCostoDeVida(req: any, res: any) {
   <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Ganas cerca de un tercio, pero pagas como si ganaras el doble.</p>
 </div>
 
+${shareRow({ text: 'El costo de vida en PR, sin filtro: ingreso mediano ~$25,000 (vs $81,600 en EE.UU.), la luz al doble, la comida 15-30% más cara — y el propio gobierno admitió en 2025 que no sabe cuánto cuesta la canasta básica. Los números con fuente:', url: 'https://puertoricosinfiltros.com/costo-de-vida', toWho: 'Al que está sacando la cuenta de quedarse, irse o volver.' })}
+
 <div class="not-prose mt-5 bg-white border border-slate-200 rounded-2xl p-4">
   <div class="flex items-start gap-3">
     <div class="text-2xl leading-none">🎧</div>
@@ -7797,6 +7834,7 @@ ${costoPanel}
 </div>
 
 <p class="text-sm text-slate-500 mt-6">Cómo se hizo: ingreso y pobreza del Censo/ACS (Encuesta sobre la Comunidad de PR); precios de la canasta de DACO (Orden 2021-012); tarifa de luz de la EIA vía el récord <a href="/luz" class="text-teal-700">/luz</a>; el sobrecosto de comestibles se atribuye al costo de envío bajo la Ley Jones (mecanismo verificable; los porcentajes exactos son estimados de mercado). Las conexiones son análisis. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a> y se corrige. Julio 2026.</p>
+${SHARE_COPY_SCRIPT}
 `
   const jsonLd = {
     '@context': 'https://schema.org', '@type': 'Report',
@@ -7985,6 +8023,8 @@ function handleCupon(req: any, res: any) {
   <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Unas 81,000 familias dejan sin cobrar cerca de $310 millones al año. Dinero elegible. Sin reclamar.</p>
 </div>
 
+${shareRow({ text: 'Unas 81,000 familias en PR dejan sin cobrar ~$310 millones AL AÑO del Crédito por Hijos. Hasta $1,700 por hijo aunque no tengas ingresos, y se puede reclamar hasta 3 años atrás. Cómo se cobra, paso a paso:', url: 'https://puertoricosinfiltros.com/cupon', toWho: 'A cualquiera con hijos que no radica planilla porque "eso no es pa\' mí". Desde 2021 sí es.' })}
+
 <h2>1. La cuenta, sin filtro</h2>
 <div class="not-prose grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
   <div class="rounded-xl bg-white border border-slate-200 p-4">
@@ -8061,6 +8101,7 @@ function handleCupon(req: any, res: any) {
 </div>
 
 <p class="text-sm text-slate-500 mt-6">Cómo se hizo: familias elegibles y potencial ($1,760M · 304,000 familias · 565,000 niños) del Instituto del Desarrollo de la Juventud (economista María Enchautegui). Reclamado real ($1,450M · 223,000 familias, 2024) del Departamento del Tesoro federal / IRS. Monto por hijo y reglas del IRS (CTC/ACTC, planilla 1040-SS). Caída de pobreza infantil 55%→39% del IDJ. El "sin cobrar" (~$310M · ~81,000 familias) es la resta potencial−reclamado: fuentes y años distintos, cifra direccional. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a> y se corrige. Julio 2026.</p>
+${SHARE_COPY_SCRIPT}
 `
   const jsonLd = {
     '@context': 'https://schema.org', '@type': 'Report',
