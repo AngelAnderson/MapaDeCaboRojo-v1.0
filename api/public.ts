@@ -551,6 +551,7 @@ function handleLlmsSinFiltros(req: any, res: any) {
 - Lo que ni se mide (los huecos donde PR es invisible en su data): https://puertoricosinfiltros.com/no-se-mide
 - El proyecto Esencia en Cabo Rojo — línea de tiempo pública con fuente (CPI, Senado, protestas): https://puertoricosinfiltros.com/esencia
 - Los activos dormidos de Cabo Rojo (Coliseo, cabañas de Boquerón, Faro, 3 escuelas cerradas): el costo del edificio vacío, con plazos vencidos y preguntas de costo operacional: https://puertoricosinfiltros.com/activos
+- Funciona: el registro de lo que se movió — casos verificados donde hablar en récord precedió acción del gobierno (caso ancla: entrevista a paramédico sep 2023 → contrato 9-1-1 municipal citando esa entrevista, 360 días, minuto a minuto): https://puertoricosinfiltros.com/funciona
 
 ## Los Expedientes (récord público de funcionarios, neutral y citable)
 - Alcalde de Cabo Rojo (Jorge Morales Wiscovitch): https://puertoricosinfiltros.com/expediente/alcalde-cabo-rojo

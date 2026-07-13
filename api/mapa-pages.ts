@@ -5288,6 +5288,12 @@ async function handleSinFiltros(req: any, res: any) {
       fuente: 'NPPES/CMS × Censo 2020, municipio por municipio.',
       verUrl: '/registro/desiertos', verificaUrl: 'https://npiregistry.cms.hhs.gov/', verificaText: 'Registro federal NPPES', tag: 'Salud',
     },
+    {
+      titulo: 'Funciona: el registro de lo que se movió',
+      brecha: 'El otro lado de la regla del verde: cuando hablar en récord movió algo, aquí queda la prueba. Caso ancla: un paramédico describió el hueco del 9-1-1 en cámara (2023); 360 días después el director de Manejo de Emergencias citó esa entrevista y reportó el contrato — primera respuesta municipal y una ambulancia adicional. Minuto a minuto.',
+      fuente: 'Dos videos con cita verbatim y deep-link al minuto exacto. El que quiera pesarlo, tiene los dos lados.',
+      verUrl: '/funciona', verificaUrl: 'https://www.youtube.com/watch?v=si5SGxxpzqs', verificaText: 'El video de la respuesta', tag: 'El verde',
+    },
   ]
 
   const recordCards = records.map((r, i) => {
@@ -5340,6 +5346,7 @@ async function handleSinFiltros(req: any, res: any) {
     <a href="/esencia" data-prsf="record" data-rec="idx-esencia" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Esencia</a>
     <a href="/activos" data-prsf="record" data-rec="idx-activos" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Activos dormidos</a>
     <a href="/no-se-mide" data-prsf="record" data-rec="idx-no-se-mide" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Lo que ni se mide</a>
+    <a href="/funciona" data-prsf="record" data-rec="idx-funciona" class="inline-block bg-emerald-50 border border-emerald-300 rounded-full px-3 py-1.5 font-semibold text-emerald-800 hover:bg-emerald-100">✓ Funciona</a>
   </div>
 </div>
 
@@ -5868,6 +5875,124 @@ ${SHARE_COPY_SCRIPT}
     title: 'El recibo del agua, contra el récord: tarifas AAA hasta 2039 y el dinero federal sin llegar',
     description: 'Los aumentos de la AAA están aprobados hasta 2039 y suman $2,598 millones. El 91% del dinero federal identificado no ha llegado a la caja. Verificado contra el plan fiscal certificado, con la fuente al lado.',
     slug: 'acueductos', bodyHtml: body, jsonLd: [jsonLd, jsonLdVideo], ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
+// /funciona — El Registro de Lo Que Se Movió: la regla del verde hecha récord completo.
+// Prueba documentada de que hablar en récord mueve gobierno. Caso ancla: entrevista a paramédico (sep 2023)
+// → un año después el director de Manejo de Emergencias trae ESA entrevista él mismo y reporta el contrato 9-1-1.
+// Citas verbatim verificadas contra auto-captions 2026-07-13. Receipts: Outbox/Estrategia/PRSF-Efecto-Record-911-Receipts-2026-07-13.md
+// Regla de honestidad: el director NO dice literal "gracias a la entrevista" — la cadena se presenta tal cual.
+async function handleFunciona(req: any, res: any) {
+  const LEO = 'IiEiq__IqTM', DIR = 'si5SGxxpzqs'
+  const citables = [
+    `28 de septiembre de 2023: un paramédico dijo en cámara que en Cabo Rojo "no contamos con un sistema municipal" para llegar a la emergencia, y que la llamada al 9-1-1 entraba primero a San Juan, después a Mayagüez, y de ahí se repartía. 23 de septiembre de 2024: el director de Manejo de Emergencias del municipio, citando esa entrevista, reporta el contrato con el 9-1-1 — la emergencia ahora entra directo al municipio. 360 días, minuto a minuto: puertoricosinfiltros.com/funciona`,
+    `"Me acuerdo que hace varios meses atrás vi una entrevista con Leo, que es paramédico... Pues mira, nosotros logramos el contrato con el 9-1-1." El funcionario trajo la entrevista él mismo. El reclamo original y la respuesta, ambos en video con el minuto exacto: puertoricosinfiltros.com/funciona`,
+  ]
+  const citableCards = citables.map((c) => `
+    <div class="flex items-start gap-2 bg-white border border-slate-200 rounded-xl p-3 mt-2">
+      <p class="flex-1 text-sm text-slate-700 leading-relaxed">${escapeHtml(c)}</p>
+      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(c)}"><i class="fa-regular fa-copy"></i> Copiar</button>
+    </div>`).join('')
+
+  const quote = (q: string, who: string, url: string, label: string) => `
+  <div class="bg-white border border-slate-200 rounded-xl p-4 mt-3">
+    <blockquote class="text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3 m-0">"${q}"</blockquote>
+    <p class="text-xs text-slate-500 mt-2">${who} · <a href="${url}" target="_blank" rel="noopener" data-prsf="verify" data-rec="funciona" class="text-teal-700 font-semibold">${label} ↗</a></p>
+  </div>`
+
+  const body = `
+<h1>Funciona: el registro de lo que se movió</h1>
+<p class="text-lg text-slate-600 mt-2">Este sitio le pone reloj a lo que no se cumple. Esta página es el otro lado de la misma regla: cuando hablar en récord movió algo, aquí queda la prueba — quién lo dijo, qué pasó, y cuántos días tomó. Minuto a minuto.</p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El dato</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">360 días entre el reclamo en cámara y el contrato del 9-1-1.</p>
+  <p class="text-slate-300 mt-2 text-sm leading-relaxed">Un paramédico describió el hueco en septiembre de 2023. Un año después, el director de Manejo de Emergencias del municipio trajo esa entrevista él mismo — nadie se la mencionó — y contestó con el contrato: la emergencia ahora entra directo al municipio. Los dos momentos están en video, con el minuto exacto.</p>
+</div>
+
+${shareRow({ text: 'Hablar en récord funcionó. Un paramédico dijo el problema en cámara (2023). Un año después el director de Manejo de Emergencias citó esa entrevista y reportó el contrato del 9-1-1. La prueba, minuto a minuto:', url: 'https://puertoricosinfiltros.com/funciona', toWho: `Al que dice "quejarse no sirve pa' na". Aquí está el contraejemplo, con reloj.` })}
+
+<h2 id="cadena">La cadena, paso por paso</h2>
+
+<div class="not-prose bg-white border-2 border-slate-200 rounded-2xl p-4 sm:p-5 mt-4">
+  <p class="text-xs font-bold text-slate-500 uppercase tracking-wide">Paso 1 · El reclamo — 28 de septiembre de 2023</p>
+  <h3 class="text-lg font-black text-slate-900 mt-1 mb-2" style="font-family:'Fraunces',Georgia,serif">Leo Rodríguez, paramédico, describe el hueco</h3>
+  <div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-950" style="aspect-ratio:16/9"><iframe src="https://www.youtube-nocookie.com/embed/${LEO}" title="Problemas en el sistema de emergencias médicas en Puerto Rico" loading="lazy" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen class="w-full h-full" style="border:0"></iframe></div>
+  ${quote('La falta de recursos para ayudar a esa unidad a llegar al incidente... en Cabo Rojo no contamos con un sistema municipal para poder ayudar a la unidad a que llegue al incidente en el menor tiempo posible.', 'Leo Rodríguez, paramédico', `https://youtube.com/watch?v=${LEO}&t=345`, 'Al minuto 5:45')}
+  ${quote('En caso de que llames al 9-1-1, la llamada entra primero a San Juan, el despacho central de emergencias médicas, luego de ahí pasa al despacho de Mayagüez, y después el despacho se va a encargar de repartir ese caso a la unidad que esté más cercana o disponible.', 'El flujo de la llamada, antes', `https://youtube.com/watch?v=${LEO}&t=374`, 'Al minuto 6:14')}
+  ${quote('La única unidad disponible en horas de la madrugada es la estatal, y la tenemos sumamente lejana... está en Boquerón.', 'Tres ambulancias, de madrugada una sola', `https://youtube.com/watch?v=${LEO}&t=180`, 'Al minuto 3:00')}
+</div>
+
+<div class="not-prose bg-teal-50 border-2 border-teal-300 rounded-2xl p-4 sm:p-5 mt-4">
+  <p class="text-xs font-bold text-teal-700 uppercase tracking-wide">Paso 2 · La respuesta — 23 de septiembre de 2024 (360 días después)</p>
+  <h3 class="text-lg font-black text-slate-900 mt-1 mb-2" style="font-family:'Fraunces',Georgia,serif">El director de Manejo de Emergencias trae la entrevista él mismo</h3>
+  <div class="rounded-xl overflow-hidden border border-slate-200 bg-slate-950" style="aspect-ratio:16/9"><iframe src="https://www.youtube-nocookie.com/embed/${DIR}" title="Cómo Cabo Rojo mejoró sus respuestas de emergencia" loading="lazy" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen class="w-full h-full" style="border:0"></iframe></div>
+  ${quote('Me acuerdo que hace varios meses atrás vi una entrevista con Leo, una entrevista que le hiciste a Leo, que es paramédico, que estás hablando del servicio de ambulancia... Pues mira, nosotros logramos el contrato con el 9-1-1.', 'Director de la Oficina de Manejo de Emergencias, Cabo Rojo', `https://youtube.com/watch?v=${DIR}&t=0`, 'Desde el segundo 0')}
+  ${quote('En aquel segmento, la primera respuesta que se estaba hablando era emergencias médicas estatal o las ambulancias privadas... ahora la primera respuesta va a ser el municipio, lo que es emergencias médicas municipal. Nosotros conocemos todas las calles de Cabo Rojo.', 'El antes y el después, anclado por él mismo a aquella entrevista', `https://youtube.com/watch?v=${DIR}&t=30`, 'Al minuto 0:30')}
+  ${quote('Antes cuando tú te comunicabas con el sistema del 9-1-1, ellos se iban a comunicar con la ambulancia más cercana del área... ahora la emergencia entra automáticamente, directamente al municipio, entra a nosotros, al manejo de emergencias, y nosotros somos los que vamos a cubrir la emergencia.', 'Qué cambió con el contrato', `https://youtube.com/watch?v=${DIR}&t=246`, 'Al minuto 4:06')}
+  ${quote('Adicional a que se hizo el contrato con el 9-1-1, nos dieron también una ambulancia, nos equiparon con una ambulancia. Estamos en miras de hacer estas ambulancias tipo 3.', 'El bono: una ambulancia adicional', `https://youtube.com/watch?v=${DIR}&t=61`, 'Al minuto 1:01')}
+</div>
+
+<div class="not-prose bg-amber-50 border border-amber-200 rounded-xl p-4 mt-5 text-sm text-slate-700">
+  <strong>Lo que este récord dice y lo que no dice.</strong> El director no dice la frase "esto fue gracias a la entrevista". Lo que el video muestra es esto: él trajo la entrevista del paramédico por iniciativa propia, la usó como el "antes", y contestó con el contrato como el "después". La cadena se presenta tal cual — el que quiera pesarla, tiene los dos videos y los minutos. Así se trabaja aquí: <a href="/rompelo" class="text-teal-700 font-semibold">si ves un error, rómpelo</a>.
+</div>
+
+<h2 id="verde">Por qué existe esta página</h2>
+<p>La regla del verde de este sitio dice que el récord premia igual que cobra. <a href="/historial" class="text-teal-700 font-semibold">El historial de promesas</a> y <a href="/contradicciones" class="text-teal-700 font-semibold">el marcador de contradicciones</a> anotan lo que no cuadra. Esta página anota lo contrario: el municipio identificó el hueco que un vecino describió en cámara y lo cerró con un contrato, una ambulancia adicional y primera respuesta municipal. Eso es un verde real, y así se dice.</p>
+<p>Y prueba algo más grande: <strong>el récord público no es decoración</strong>. Cuando un problema queda descrito en cámara, con detalle y sin coraje, deja de ser rumor y se vuelve algo que un funcionario puede agarrar y resolver. Aquí pasó.</p>
+
+<h2 id="espera">Casos en espera de evidencia</h2>
+<p class="text-sm text-slate-600">Hay más casos donde una publicación precedió una acción del municipio (hoyos reportados, un cable guindando de un poste). No entran al registro hasta tener las dos puntas documentadas: la publicación con fecha y la evidencia del arreglo con fecha. Cuando estén, se añaden. Así de aburrido es el estándar, y por eso se puede citar.</p>
+
+<h2 id="citables">Citables (copia y pega, con fuente)</h2>
+${citableCards}
+
+${mientrasTanto([
+  `Si llamas al 9-1-1 desde Cabo Rojo, la primera respuesta hoy es municipal — paramédicos que conocen las calles y los callejones del pueblo. Eso es lo que cambió; saberlo es tuyo.`,
+  `El reclamo con detalle vale más que la queja con coraje: el paramédico dio horarios, distancias y el flujo de la llamada. Ese es el formato que un funcionario puede agarrar y resolver.`,
+], [
+  `¿Viste algo en tu pueblo que debería estar en récord? Escríbele al Veci al 787-417-7711 con el detalle. Lo dicho con fecha y detalle se puede verificar; lo verificado se puede mover.`,
+  `¿Eres funcionario y cerraste un hueco que está en estos récords? Responde con la evidencia y se publica aquí, en verde, textual: <a href="/rompelo" class="text-teal-700 font-semibold">cómo se registra</a>.`,
+])}
+${SHARE_COPY_SCRIPT}
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'Funciona: el registro de lo que se movió — casos donde hablar en récord precedió acción del gobierno',
+    description: 'Registro verificado de casos donde un reclamo documentado en cámara precedió una acción oficial. Caso ancla: entrevista a paramédico de Cabo Rojo (sep 2023) sobre el sistema de emergencias → 360 días después el director de Manejo de Emergencias municipal cita esa entrevista y reporta el contrato 9-1-1 con primera respuesta municipal. Citas verbatim con minuto exacto.',
+    creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/funciona',
+    keywords: ['9-1-1', 'emergencias médicas', 'Cabo Rojo', 'paramédicos', 'ambulancias', 'rendición de cuentas', 'Puerto Rico'],
+  }
+  const jsonLdVideos = [
+    {
+      '@context': 'https://schema.org', '@type': 'VideoObject',
+      name: 'Problemas en el sistema de emergencias médicas en Puerto Rico: escasez de paramédicos y equipo',
+      description: 'Entrevista al paramédico Leo Rodríguez sobre el sistema de emergencias médicas en Cabo Rojo: tres agencias, tiempos de respuesta, el flujo de la llamada al 9-1-1 y la falta de un sistema municipal. El detonante documentado del contrato 9-1-1 municipal.',
+      embedUrl: `https://www.youtube-nocookie.com/embed/${LEO}`, contentUrl: `https://www.youtube.com/watch?v=${LEO}`,
+      thumbnailUrl: `https://i.ytimg.com/vi/${LEO}/hqdefault.jpg`, uploadDate: '2023-09-28',
+      inLanguage: 'es', isAccessibleForFree: true,
+      publisher: { '@type': 'Organization', name: 'CaboRojo.com', url: 'https://caborojo.com' },
+    },
+    {
+      '@context': 'https://schema.org', '@type': 'VideoObject',
+      name: 'Cómo Cabo Rojo mejoró sus respuestas de emergencia',
+      description: 'El director de la Oficina de Manejo de Emergencias de Cabo Rojo cita la entrevista al paramédico Leo Rodríguez y reporta el contrato con el 9-1-1: primera respuesta municipal y una ambulancia adicional.',
+      embedUrl: `https://www.youtube-nocookie.com/embed/${DIR}`, contentUrl: `https://www.youtube.com/watch?v=${DIR}`,
+      thumbnailUrl: `https://i.ytimg.com/vi/${DIR}/hqdefault.jpg`, uploadDate: '2024-09-23',
+      inLanguage: 'es', isAccessibleForFree: true,
+      publisher: { '@type': 'Organization', name: 'CaboRojo.com', url: 'https://caborojo.com' },
+    },
+  ]
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'Funciona: el registro de lo que se movió — la prueba de que hablar en récord mueve gobierno',
+    description: 'Un paramédico describió el hueco del 9-1-1 en cámara (2023). Un año después, el director de Manejo de Emergencias citó esa entrevista y reportó el contrato. La cadena completa, minuto a minuto.',
+    slug: 'funciona', bodyHtml: body, jsonLd: [jsonLd, ...jsonLdVideos] as any, ogImage: OG_SINFILTROS,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
@@ -11613,6 +11738,7 @@ export default async function handler(req: any, res: any) {
     case 'rompelo': return await handleRompelo(req, res)
     case 'contradicciones': return await handleContradicciones(req, res)
     case 'semaforo-fema': return await handleSemaforoFema(req, res)
+    case 'funciona': return await handleFunciona(req, res)
     case 'retiro': return await handleRetiro(req, res)
     case 'prediccion': return handlePrediccion(req, res)
     case 'costo-de-vida': return await handleCostoDeVida(req, res)
