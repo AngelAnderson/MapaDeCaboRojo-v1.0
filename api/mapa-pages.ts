@@ -6394,13 +6394,21 @@ async function handleSaludQueFalta(req: any, res: any) {
   const cr = { d: dental.find(r => /cabo rojo/i.test(r.municipio)), m: mental.find(r => /cabo rojo/i.test(r.municipio)) }
   const n = (x: any) => Number(x || 0).toLocaleString('en-US')
 
+  // Traduce el FTE federal a lenguaje de vecino. 0 = "Ninguno". <1 = "Menos de 1". >=1 = número redondeado.
+  const fmtProv = (fte: number) => {
+    const f = Number(fte)
+    if (f === 0) return { txt: 'Ninguno', cls: 'text-red-600' }
+    if (f < 1) return { txt: 'Menos de 1', cls: 'text-red-600' }
+    return { txt: Math.round(f).toString(), cls: 'text-slate-700' }
+  }
   const filaMental = (r: any, i: number) => {
     const hl = /cabo rojo/i.test(r.municipio)
+    const p = fmtProv(r.fte)
     return `<tr class="border-t border-slate-100 ${hl ? 'bg-teal-50/60' : (Number(r.fte) === 0 ? 'bg-red-50/40' : '')}">
       <td class="py-2 px-3 font-semibold ${hl ? 'text-teal-700' : 'text-slate-800'}">${escapeHtml(r.municipio)}</td>
-      <td class="py-2 px-3 text-right font-bold ${Number(r.fte) === 0 ? 'text-red-600' : 'text-slate-700'}">${Number(r.fte).toFixed(3)}</td>
-      <td class="py-2 px-3 text-right text-slate-600">${Number(r.shortage).toFixed(1)}</td>
-      <td class="py-2 px-3 text-right font-bold text-slate-900">${r.score}</td>
+      <td class="py-2 px-3 text-right font-bold ${p.cls}">${p.txt}</td>
+      <td class="py-2 px-3 text-right text-slate-700">${Math.max(1, Math.round(Number(r.shortage)))}</td>
+      <td class="py-2 px-3 text-right"><span class="inline-block px-2 py-0.5 rounded-md font-bold text-xs ${r.score >= 20 ? 'bg-red-100 text-red-700' : r.score >= 15 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}">${r.score}/26</span></td>
       <td class="py-2 px-3 text-right text-slate-400 text-xs">${escapeHtml(r.last_update || '')}</td>
     </tr>`
   }
@@ -6411,7 +6419,7 @@ async function handleSaludQueFalta(req: any, res: any) {
   const citables = [
     `El gobierno federal certificó escasez de salud mental en 52 municipios de Puerto Rico. En ${zeroM || 44} de ellos, el conteo de proveedores a tiempo completo da CERO. Fuente: HRSA HPSA Find, compilado en puertoricosinfiltros.com/salud-que-falta`,
     `Puerto Rico necesita ${sumShort(mental).toFixed(0) || 70} proveedores de salud mental y ${sumShort(dental).toFixed(0) || 297} dentistas más para llegar a la meta federal mínima. El dinero para reclutarlos ya está aprobado. Fuente: HRSA, puertoricosinfiltros.com/salud-que-falta`,
-    `Cabo Rojo: certificación federal de escasez dental (score ${cr.d?.score || 24}/26) y de salud mental (score ${cr.m?.score || 22}/26, ${cr.m ? Number(cr.m.fte).toFixed(3) : '0.175'} proveedores para ${cr.m ? n(cr.m.pop) : '38,629'} personas). Fuente: HRSA 2023, puertoricosinfiltros.com/salud-que-falta`,
+    `Cabo Rojo: el gobierno federal certifica menos de 1 proveedor de salud mental a tiempo completo (${cr.m ? Number(cr.m.fte).toFixed(3) : '0.175'} exacto) para ${cr.m ? n(cr.m.pop) : '38,629'} personas de bajos ingresos, un nivel de escasez de ${cr.m?.score || 22} sobre 26. Fuente: HRSA HPSA Find 2023, puertoricosinfiltros.com/salud-que-falta`,
   ]
   const citableCards = citables.map(c => `
     <div class="flex items-start gap-2 bg-white border border-slate-200 rounded-xl p-3 mt-2">
@@ -6431,6 +6439,24 @@ async function handleSaludQueFalta(req: any, res: any) {
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular</p>
   <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">En ${zeroM || 44} municipios de Puerto Rico, el conteo federal de proveedores de salud mental da cero. Y el dinero para llenarlos lleva años aprobado.</p>
 </div>
+
+<h2 id="que-significa">Qué significan estos números (en cristiano)</h2>
+<p>La lista federal usa tres números por pueblo. Cada uno responde una pregunta simple:</p>
+<div class="not-prose grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+  <div class="rounded-xl border border-slate-200 bg-white p-4">
+    <p class="font-bold text-slate-900">👥 Proveedores</p>
+    <p class="text-sm text-slate-600 mt-1">Cuántos proveedores a tiempo completo hay atendiendo a la población de bajos ingresos del pueblo. En esta tabla lo decimos claro: <strong>"Ninguno"</strong> o <strong>"Menos de 1"</strong>. El gobierno lo escribe con decimales (ej. 0.18) porque cuenta horas: si tres proveedores dedican juntos menos de un día completo a la semana, eso suma menos de "uno".</p>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-4">
+    <p class="font-bold text-slate-900">➕ Faltan</p>
+    <p class="text-sm text-slate-600 mt-1">Cuántos proveedores más harían falta para llegar a la <strong>meta mínima federal</strong> (un proveedor por cada X personas). Si dice "faltan 2", el gobierno mismo calcula que ese pueblo necesita 2 proveedores más de los que tiene.</p>
+  </div>
+  <div class="rounded-xl border border-slate-200 bg-white p-4">
+    <p class="font-bold text-slate-900">📊 Nivel de escasez (score)</p>
+    <p class="text-sm text-slate-600 mt-1">Una nota de <strong>0 a 26</strong>: mientras más alto, peor la escasez. La calcula HRSA combinando cuánta gente hay por proveedor, cuánta pobreza, y qué tan lejos queda el próximo médico. <strong>20 o más es grave.</strong> Cabo Rojo está en ${cr.m?.score || 22} para salud mental.</p>
+  </div>
+</div>
+<p class="mt-3 text-sm text-slate-600">Ejemplo con Cabo Rojo: <strong>"Menos de 1"</strong> proveedor de salud mental (el número federal exacto es ${cr.m ? Number(cr.m.fte).toFixed(3) : '0.175'}) para ${cr.m ? n(cr.m.pop) : '38,629'} personas de bajos ingresos. Eso es <strong>1 proveedor por cada ${cr.m?.ratio ? escapeHtml(String(cr.m.ratio).replace(':1', '')) : '220,737'} personas</strong>. La meta federal es 1 por cada 30,000. Por eso el nivel de escasez llega a ${cr.m?.score || 22} de 26.</p>
 
 ${shareRow({ text: `El gobierno federal certificó escasez de salud mental en 52 pueblos de PR. En ${zeroM || 44} el conteo da CERO proveedores. El dinero para reclutarlos ya está aprobado hace años. La tabla con la fuente:`, url: 'https://puertoricosinfiltros.com/salud-que-falta', toWho: 'Al que no consigue cita. Al médico joven que decide dónde ejercer. Al alcalde que no sabe que su pueblo está certificado.' })}
 
@@ -6455,14 +6481,52 @@ ${shareRow({ text: `El gobierno federal certificó escasez de salud mental en 52
 </div>
 <p class="mt-3 text-sm text-slate-600"><strong>El dato que duele:</strong> Puerto Rico usa el NHSC a razón de 2.5 médicos por cada 100,000 habitantes. West Virginia, con el mismo programa federal, a 15.3 — seis veces más. El detalle municipio por municipio, en <a href="/registro/estado" class="text-teal-700 font-semibold">el estado de los médicos →</a></p>
 
+<h2 id="quien-mantiene">¿Quién hizo esta lista, y de cuándo es?</h2>
+<p>Esta no es una lista nuestra. La mantiene el gobierno federal, y así funciona la cadena:</p>
+<ol class="mt-2">
+  <li><strong>HRSA</strong> (Health Resources and Services Administration, la agencia federal de recursos de salud) es quien <strong>certifica y publica</strong> las designaciones de escasez. Su herramienta pública es <a href="https://data.hrsa.gov/topics/health-workforce/shortage-areas/hpsa-find" rel="nofollow" class="text-teal-700 font-semibold">HPSA Find</a>. Ahí cualquiera busca un pueblo y ve los mismos números que esta página.</li>
+  <li>Pero HRSA no cuenta los médicos por su cuenta. La data la <strong>somete la Primary Care Office (PCO) del Departamento de Salud de Puerto Rico</strong>: es el eslabón local que prepara y renueva las solicitudes de designación. Si la PCO no somete data fresca, la designación se queda vieja o se pierde.</li>
+  <li>El conteo de proveedores debajo de todo sale de <strong>registros federales auto-reportados (NPPES)</strong> más fuentes estatales. Ese es el punto débil: nadie da de baja al médico que se fue o se retiró (<a href="https://www.cms.gov/files/document/nppes-frequently-asked-questions.pdf" rel="nofollow" class="text-teal-700">CMS lo documenta</a>), así que la escasez real suele ser peor que la certificada.</li>
+</ol>
+<p class="mt-2"><strong>¿De cuándo es?</strong> Las designaciones de Puerto Rico en esta página se actualizaron por última vez entre <strong>2022 y 2023</strong> (la fecha exacta está en la columna "Actualizado" de la tabla). HRSA las revisa cada pocos años. Nosotros re-verificamos automáticamente cada tres meses contra su servidor; si algún número cambia, se actualiza aquí.</p>
+
+<div class="not-prose bg-slate-50 border border-slate-200 rounded-xl p-4 mt-4">
+  <p class="text-sm font-bold text-slate-800">Para verificarlo tú mismo (2 minutos):</p>
+  <ol class="text-sm text-slate-600 mt-2 space-y-1 list-decimal pl-5">
+    <li>Abre <a href="https://data.hrsa.gov/topics/health-workforce/shortage-areas/hpsa-find" rel="nofollow" class="text-teal-700 font-semibold">data.hrsa.gov → HPSA Find</a></li>
+    <li>Filtra: State = Puerto Rico, Discipline = Mental Health (o Dental, o Primary Care)</li>
+    <li>Busca tu pueblo. Verás el mismo score, los mismos proveedores, la misma fecha.</li>
+  </ol>
+  <p class="text-xs text-slate-500 mt-2">Fuentes completas: <a href="https://data.hrsa.gov" rel="nofollow" class="text-teal-700">HRSA</a> · <a href="https://www.salud.pr.gov" rel="nofollow" class="text-teal-700">Depto. de Salud PR (PCO)</a> · <a href="https://nppes.cms.hhs.gov" rel="nofollow" class="text-teal-700">NPPES (CMS)</a> · metodología HPSA en <a href="https://bhw.hrsa.gov/workforce-shortage-areas/shortage-designation" rel="nofollow" class="text-teal-700">bhw.hrsa.gov</a>.</p>
+</div>
+
+<h2 id="quien-lee">¿Quién debe leer esto, y qué hace con ella?</h2>
+<p>Esta página sirve a cinco personas distintas, y a cada una le pide algo diferente:</p>
+<div class="not-prose space-y-2 mt-3">
+  ${[
+    ['🏠 El residente', 'Si llevas meses sin conseguir cita, aquí ves que no es tu culpa: es una escasez que el gobierno federal ya certificó. Para lo urgente de salud mental, la Línea PAS (988) funciona 24/7. Para buscar quién sí atiende, registromedicopr.com.'],
+    ['🏛️ El alcalde', 'Tu pueblo está certificado como zona de escasez, con score y fecha. Dos acciones: (1) pregunta en tu municipio cuándo fue la última vez que se sometió data a la PCO del Depto. de Salud — data vieja = menos fondos; (2) usa la certificación para reclutar: al médico que venga, el gobierno federal le paga hasta $75,000 de préstamos.'],
+    ['🏛️ El representante / legislador', 'La palanca legislativa concreta: el SLRP (pareo estatal de repago de préstamos) está en CERO en PR — es dinero federal 1:1 que el Depto. de Salud no está activando. Preguntar por qué, y empujar su activación, llena plazas sin presupuesto nuevo.'],
+    ['🩺 El médico o estudiante de medicina', 'Ejercer en un pueblo certificado te paga hasta $75,000 de préstamos (NHSC), más bono de 10% en Medicare. La lista de dónde aplica es esta tabla. nhsc.hrsa.gov.'],
+    ['📰 El periodista', 'Todo aquí es verificable en la fuente federal (los pasos están arriba). Los ángulos con dueño: por qué el SLRP está en cero, si PR usa sus 30 visas J-1 al año, y por qué se reconstruyen edificios en pueblos que se quedan sin médico. Cada número trae botón de copiar con su fuente.'],
+  ].map(([who, what]) => `
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <p class="font-bold text-slate-900">${who}</p>
+    <p class="text-sm text-slate-600 mt-1">${what}</p>
+  </div>`).join('')}
+</div>
+
 <h2 id="tabla">Salud mental, municipio por municipio</h2>
-<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+<div class="not-prose bg-slate-50 border border-slate-200 rounded-lg p-3 mt-3 text-xs text-slate-600">
+  <strong>Cómo leer la tabla:</strong> <strong>Proveedores</strong> = cuántos hay a tiempo completo ("Ninguno" o "Menos de 1" cuando el gobierno cuenta menos de una plaza completa). <strong>Faltan</strong> = cuántos más para la meta federal mínima. <strong>Escasez</strong> = la nota de 0 a 26 (rojo = 20+, grave).
+</div>
+<div class="not-prose mt-2 overflow-auto border border-slate-200 rounded-xl">
   <table class="w-full text-sm">
-    <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Municipio</th><th class="py-2 px-3 text-right">Proveedores (FTE)</th><th class="py-2 px-3 text-right">Faltan</th><th class="py-2 px-3 text-right">Score</th><th class="py-2 px-3 text-right">Actualizado</th></tr></thead>
+    <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Municipio</th><th class="py-2 px-3 text-right">Proveedores</th><th class="py-2 px-3 text-right">Faltan</th><th class="py-2 px-3 text-right">Escasez</th><th class="py-2 px-3 text-right">Actualizado</th></tr></thead>
     <tbody>${mentalRows}</tbody>
   </table>
 </div>
-<p class="text-sm text-slate-500 mt-2">Las 52 designaciones de salud mental de PR (dental: ${dental.length || 77} municipios; primaria: ${primary.length || 20}). Fila verde = Cabo Rojo. Data en la tabla pública <code>pr_hpsa_designations</code>, refrescada contra el servidor de HRSA. Designaciones 2022-2023.</p>
+<p class="text-sm text-slate-500 mt-2">Las 52 designaciones de salud mental de PR (dental: ${dental.length || 77} municipios; primaria: ${primary.length || 20}). Fila verde = Cabo Rojo. Data en la tabla pública <code>pr_hpsa_designations</code>, refrescada contra el servidor de HRSA cada trimestre. Designaciones 2022-2023.</p>
 
 <h2 id="citables">Para copiar y compartir</h2>
 ${citableCards}
