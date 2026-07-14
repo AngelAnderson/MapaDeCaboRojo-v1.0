@@ -2784,7 +2784,13 @@ async function handle_admin_salud(req: any, res: any) {
   // ---- Acción: refrescar contra HRSA on-demand ----
   let flash = '';
   if ((req.query?.action as string) === 'refresh') {
-    try {
+    // CSRF guard: el refresh cambia estado, así que exige que la navegación venga de nuestro propio sitio
+    // (defensa en profundidad sobre la cookie SameSite=Lax). Sin Referer válido, no ejecuta.
+    const ref = String(req.headers?.referer || req.headers?.origin || '');
+    const sameOrigin = /^https?:\/\/(puertoricosinfiltros\.com|[a-z0-9-]+\.vercel\.app|mapadecaborojo\.com|localhost)/i.test(ref);
+    if (!sameOrigin) {
+      flash = '⚠️ Refresco bloqueado: la acción tiene que iniciarse desde el propio panel (protección CSRF). Abre /admin/salud y usa el botón.';
+    } else try {
       const BASE = 'https://gisportal.hrsa.gov/server/rest/services/Shortage/HealthProfessionalShortageAreas_FS/MapServer';
       const FIELDS = 'HPSA_NM,HPSA_SCORE,HPSA_FTE,HPSA_SHORTAGE,HPSA_FORMAL_RATIO,HPSA_DESIGNATION_POP,HPSA_DESIG_LAST_UPD_DT_TXT';
       const cleanMuni = (nm: string) => String(nm || '').replace(/^(LI|MUA|MUP|GEO)\s*-\s*/, '').replace(/\s+Municipio.*$/, '').trim();
