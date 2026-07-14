@@ -30,8 +30,10 @@ export default async function handler(req: any, res: any) {
         return await runHpsaRefresh(res);
       case 'registro-qc':
         return await runRegistroQc(res);
+      case 'salud-atencion':
+        return await runSaludAtencion(res);
       default:
-        return res.status(400).json({ error: `Unknown job: ${job}. Use ?job=briefing|maintenance|vibe|alertas|dato|hpsa-refresh|registro-qc` });
+        return res.status(400).json({ error: `Unknown job: ${job}. Use ?job=briefing|maintenance|vibe|alertas|dato|hpsa-refresh|registro-qc|salud-atencion` });
     }
   } catch (error: any) {
     console.error(`Cron ${job} failed:`, error.message);
@@ -288,6 +290,73 @@ const DATOS_DEL_DIA: Array<{ t: string; u: string }> = [
   { t: 'Una sola variante fundadora en el gen RSPH4A explica 2 de cada 3 casos de disquinesia ciliar primaria en Puerto Rico, con cerca de 1,624 personas afectadas y mayor concentración en Mayagüez. Se confunde con asma por años:', u: 'https://registromedicopr.com/atlas' },
   { t: 'Puerto Rico recibe menos financiamiento de investigación de salud por persona ($28) que Mississippi, el estado más pobre de EE.UU. ($31), pese a tener el ADN más valioso del país para entender enfermedades genéticas:', u: 'https://puertoricosinfiltros.com/investigacion' },
 ];
+
+// --- Salud Atención: email semanal (lunes) con lo que necesita revisión en la data HPSA (Tier 2) ---
+// El admin /admin/salud te muestra esto cuando entras; este cron te lo LLEVA sin que tengas que entrar.
+// Cruce completo contra el registro (psiquiatra + dentista) para cazar discrepancias solo.
+async function runSaludAtencion(res: any) {
+  const svc = createClient(
+    process.env.VITE_SUPABASE_URL || 'https://vprjteqgmanntvisjrvp.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  );
+  const RESEND = process.env.RESEND_API_KEY || '';
+  const yearOf = (s: string) => parseInt(String(s || '').slice(0, 4), 10) || 0;
+  const norm = (s: string) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').trim();
+
+  const { data: rows } = await svc.from('pr_hpsa_designations').select('discipline,municipio,score,fte,shortage,last_update,manual_status').limit(400);
+  const all = rows || [];
+  const { data: log } = await svc.from('nightly_receipts').select('run_date,summary_md').eq('routine', 'hpsa-refresh').eq('reviewed_by_angel', false).order('run_date', { ascending: false }).limit(10);
+
+  // Cruce completo: por disciplina, pueblos que HPSA marca 0 pero el registro SÍ tiene proveedor
+  const DISC_SUBS: Record<string, string[]> = { mental: ['psiquiatra', 'psicólogo'], dental: ['dentista'] };
+  const discrepancias: string[] = [];
+  for (const [disc, subs] of Object.entries(DISC_SUBS)) {
+    const { data: provs } = await svc.from('places').select('municipality').eq('category', 'HEALTH').in('subcategory', subs).not('npi', 'is', null);
+    const towns = new Set((provs || []).map((p: any) => norm(p.municipality)));
+    for (const r of all.filter((x: any) => x.discipline === disc && Number(x.fte) === 0 && x.manual_status !== 'ok')) {
+      if (towns.has(norm(r.municipio))) discrepancias.push(`${r.municipio} (${disc}): HRSA dice 0, el registro tiene proveedor listado`);
+    }
+  }
+  const stale = all.filter((r: any) => (2026 - yearOf(r.last_update)) >= 3 && r.manual_status !== 'ok');
+  const pending = all.filter((r: any) => r.manual_status === 'verificar');
+  const unreviewed = (log || []).length;
+
+  const items: string[] = [];
+  if (unreviewed) items.push(`🆕 <b>${unreviewed}</b> cambio(s) de HRSA sin revisar.`);
+  if (discrepancias.length) items.push(`🔀 <b>${discrepancias.length}</b> discrepancia(s) HPSA vs registro:<br><small>${discrepancias.slice(0, 10).map(escH).join('<br>')}</small>`);
+  if (pending.length) items.push(`⏳ <b>${pending.length}</b> fila(s) marcada(s) "verificar" pendientes: ${pending.slice(0, 8).map((r: any) => escH(r.municipio)).join(', ')}.`);
+  if (stale.length) items.push(`🕰️ <b>${stale.length}</b> designación(es) sin actualizar en HRSA hace 3+ años.`);
+
+  const runDate = new Date().toISOString().slice(0, 10);
+  const bodyHtml = items.length
+    ? `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#0f172a">
+<p style="font-size:13px;color:#64748b">Salud que falta · revisión semanal · ${runDate}</p>
+<h2 style="margin:6px 0">⚡ ${items.length} cosa(s) que necesitan tu atención</h2>
+<ul style="padding-left:18px;line-height:1.8">${items.map(i => `<li>${i}</li>`).join('')}</ul>
+<p style="margin-top:16px"><a href="https://puertoricosinfiltros.com/admin/salud" style="background:#0d9488;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600">Abrir el panel →</a></p>
+<p style="font-size:12px;color:#94a3b8;margin-top:14px">La data se refresca sola cada trimestre. Este email te avisa entre refrescos si algo pide tu ojo. - Angel</p></div>`
+    : `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#0f172a">
+<p style="font-size:13px;color:#64748b">Salud que falta · revisión semanal · ${runDate}</p>
+<h2 style="margin:6px 0;color:#166534">✅ Todo al día</h2>
+<p>Sin cambios de HRSA sin revisar, sin discrepancias con el registro, sin pendientes. La data pública está sólida.</p>
+<p style="font-size:12px;color:#94a3b8">- Angel | Menos revolú, más sistema, mejor vida.</p></div>`;
+
+  if (RESEND) {
+    try {
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${RESEND}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: 'Puerto Rico Sin Filtros <newsletter@mapadecaborojo.com>',
+          to: 'angel@angelanderson.com',
+          subject: items.length ? `⚡ Salud que falta: ${items.length} para revisar` : `✅ Salud que falta: todo al día`,
+          html: bodyHtml,
+        }),
+      });
+    } catch (e: any) { return res.status(200).json({ success: false, error: e?.message }); }
+  }
+  return res.status(200).json({ success: true, items: items.length, discrepancias: discrepancias.length, stale: stale.length, pending: pending.length, unreviewed });
+}
 
 // --- HPSA Refresh: re-verifica el barrido de designaciones de escasez de PR contra HRSA (trimestral) ---
 // Las designaciones HPSA se revisan cada pocos años; sin esto, pr_hpsa_designations (y /salud-que-falta) se
