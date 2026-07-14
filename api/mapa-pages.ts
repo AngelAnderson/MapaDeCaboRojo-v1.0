@@ -2727,6 +2727,8 @@ const PR_PLANS: Array<{ v: string; l: string }> = [
   { v: 'humana', l: 'Humana' },
   { v: 'medicare', l: 'Medicare Original' },
 ]
+const PR_PLAN_VALS = new Set(PR_PLANS.map(p => p.v))
+function planLabel(v: string): string { return (PR_PLANS.find(p => p.v === v) || { l: v }).l }
 
 // Mapa síntoma → especialidad (búsqueda en cristiano: "me falta el aire" → neumólogo).
 // Keywords normalizados (minúscula, sin acentos). u:1 = puede ser emergencia → warning 911.
@@ -4042,6 +4044,10 @@ async function handleEspecialista(req: any, res: any) {
     others = data || []
   }
 
+  // Planes reportados por vecinos (crowdsource, distinto de accepted_plans = oficina confirmó)
+  const { data: planRep } = await supabase.from('v_plan_reports').select('plan,reportes').eq('place_id', place.id)
+  const reportedPlans = (planRep || []).filter((r: any) => Number(r.reportes) > 0).sort((a: any, b: any) => b.reportes - a.reportes)
+
   const mapsEmbed = (place.lat && place.lon)
     ? `https://maps.google.com/maps?q=${place.lat},${place.lon}&z=15&output=embed`
     : `https://maps.google.com/maps?q=${encodeURIComponent((place.address || (muni + ', Puerto Rico')))}&z=13&output=embed`
@@ -4065,8 +4071,26 @@ async function handleEspecialista(req: any, res: any) {
     <div class="bg-white border border-slate-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${T.npiH}</div><div class="text-slate-900 font-mono mt-1">${escapeHtml(npi)} <a href="https://npiregistry.cms.hhs.gov/provider-view/${escapeHtml(npi)}" target="_blank" rel="noopener" class="text-teal-600 text-sm font-sans font-semibold ml-2">verificar en el registro federal →</a></div></div>
     ${(Array.isArray(place.accepted_plans) && place.accepted_plans.length)
       ? `<div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-emerald-700 font-bold">${lang === 'en' ? '✓ Plans the office confirmed' : '✓ Planes que la oficina confirmó'}</div><div class="text-emerald-900 font-semibold mt-1">${escapeHtml((place.accepted_plans as string[]).join(' · '))}</div><div class="text-xs text-emerald-700 mt-1">${lang === 'en' ? 'Confirmed by the office itself. Plans change: confirm again when you call.' : 'Confirmado por la propia oficina. Los planes cambian: vuelve a confirmar cuando llames.'}</div></div>`
-      : `<div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${lang === 'en' ? 'Does this office take your plan?' : '¿Aceptan tu plan?'}</div><div class="text-slate-700 text-sm mt-1">${lang === 'en' ? 'Nobody has confirmed this office’s plans yet. Ask when you call. Work at this office? Confirm them below, free.' : 'Nadie ha confirmado los planes de esta oficina todavía. Pregunta cuando llames. ¿Trabajas en esta oficina? Confírmalos abajo, gratis.'}</div></div>`}
-  </div>`
+      : `<div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${lang === 'en' ? 'Does this office take your plan?' : '¿Aceptan tu plan?'}</div><div class="text-slate-700 text-sm mt-1">${lang === 'en' ? 'Nobody has confirmed this office’s plans yet. Ask when you call, then help the next person below.' : 'Nadie ha confirmado los planes de esta oficina todavía. Pregunta cuando llames, y ayuda al próximo abajo.'}</div></div>`}
+    ${reportedPlans.length ? `<div class="bg-sky-50 border border-sky-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-sky-700 font-bold">${lang === 'en' ? 'Neighbors report this office takes' : 'Vecinos reportan que aquí aceptan'}</div><div class="text-sky-900 font-semibold mt-1">${reportedPlans.map((r: any) => `${escapeHtml(planLabel(r.plan))}${Number(r.reportes) > 1 ? ` <span class="text-xs text-sky-600">(${r.reportes})</span>` : ''}`).join(' · ')}</div><div class="text-xs text-sky-700 mt-1">${lang === 'en' ? 'Reported by people who called, not confirmed by the office. Always double-check when you call.' : 'Reportado por gente que llamó, no confirmado por la oficina. Siempre verifica cuando llames.'}</div></div>` : ''}
+  </div>
+
+  <div class="not-prose mt-4 bg-white border border-slate-200 rounded-2xl p-5">
+    <p class="font-bold text-slate-800 text-sm">${lang === 'en' ? '📞 Did you call? Help the next person' : '📞 ¿Llamaste? Ayuda al próximo'}</p>
+    <p class="text-sm text-slate-500 mt-1">${lang === 'en' ? 'Tap the plans they told you they accept. 5 seconds. This is how the whole town fills the answer nobody else has.' : 'Toca los planes que te dijeron que aceptan. 5 segundos. Así es que el pueblo entero llena la respuesta que nadie más tiene.'}</p>
+    <div id="pr-chips" class="flex flex-wrap gap-2 mt-3" data-place="${escapeHtml(place.id)}">
+      ${PR_PLANS.map(p => `<button type="button" class="pr-chip inline-flex items-center gap-1.5 bg-slate-100 hover:bg-sky-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-sm" data-plan="${escapeHtml(p.v)}">${escapeHtml(p.l)}</button>`).join('')}
+    </div>
+    <div id="pr-ok" hidden class="mt-2 text-sm text-emerald-700 font-semibold">✓ ${lang === 'en' ? 'Thank you. You just helped the next person who searches.' : 'Gracias. Acabas de ayudar al próximo que busque.'}</div>
+  </div>
+  <script>
+  (function(){var box=document.getElementById('pr-chips');if(!box)return;var pid=box.getAttribute('data-place');
+  box.addEventListener('click',function(e){var b=e.target.closest('.pr-chip');if(!b||b.disabled)return;
+    b.disabled=true;b.className='pr-chip inline-flex items-center gap-1.5 bg-sky-600 border border-sky-600 text-white font-semibold px-3 py-1.5 rounded-full text-sm';
+    try{gtag('event','plan_report',{plan:b.getAttribute('data-plan')})}catch(_){}
+    fetch('/api/mapa-pages?page=plan-report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({place_id:pid,plan:b.getAttribute('data-plan')})}).catch(function(){});
+    document.getElementById('pr-ok').hidden=false;});})();
+  </script>`
 
   const othersHtml = others.length ? `<h2>${escapeHtml(T.othersH)}</h2>
     <div class="not-prose grid sm:grid-cols-2 gap-2 mt-2">
@@ -4247,6 +4271,22 @@ ${b.wants_vitrina ? '<strong>⭐ Quiere que lo llamen sobre La Vitrina Especiali
   } catch {
     res.status(200).send(JSON.stringify({ ok: false }))
   }
+}
+
+// =============== Plan report (crowdsource "¿acepta mi plan?" por pacientes) ===============
+// Cada vecino que llamó reporta el plan que le dijeron. 1-tap. Valida contra allowlist de 7 planes PR.
+async function handlePlanReport(req: any, res: any) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8')
+  try {
+    const b = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}')
+    const placeId = String(b.place_id || '').trim()
+    const plan = String(b.plan || '').trim().toLowerCase()
+    if (!/^[0-9a-f-]{36}$/.test(placeId) || !PR_PLAN_VALS.has(plan)) { res.status(200).send(JSON.stringify({ ok: false })); return }
+    const fwd = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'anon'
+    const ipHash = createHash('sha256').update(fwd + '|' + placeId).digest('hex').slice(0, 32)
+    await supabase.from('plan_reports').upsert({ place_id: placeId, plan, ip_hash: ipHash }, { onConflict: 'place_id,plan,ip_hash', ignoreDuplicates: true })
+    res.status(200).send(JSON.stringify({ ok: true }))
+  } catch { res.status(200).send(JSON.stringify({ ok: false })) }
 }
 
 // =============== Conserje intent capture (diáspora funnel, NO price on site) ===============
@@ -12378,6 +12418,7 @@ export default async function handler(req: any, res: any) {
     case 'registro-search': return await handleRegistroSearch(req, res)
     case 'especialista': return await handleEspecialista(req, res)
     case 'especialista-claim': return await handleEspecialistaClaim(req, res)
+    case 'plan-report': return await handlePlanReport(req, res)
     case 'conserje-intent': return await handleConserjeIntent(req, res)
     case 'registro-lead': return await handleRegistroLead(req, res)
     case 'registro-desiertos': return await handleRegistroDesiertos(req, res)
