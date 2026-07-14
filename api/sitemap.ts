@@ -209,6 +209,21 @@ export default async function handler(req: any, res: any) {
       });
     });
 
+    // Registro Médico PR — specialty × TOWN pages: capturan la demanda "[especialidad] [pueblo]"
+    // (ej. "neurologo cabo rojo"). Pueblos de mayor demanda/población × especialidades.
+    const REG_TOWN_SLUGS = ['san-juan','bayamon','carolina','caguas','ponce','mayaguez','arecibo','guaynabo','cabo-rojo','san-german','aguadilla','humacao','fajardo','manati','hormigueros','lajas','sabana-grande','yauco','cayey','vega-baja','san-sebastian','cataño'].map((t) => t.normalize('NFD').replace(/[̀-ͯ]/g, ''));
+    SPEC_URLS.forEach((s) => {
+      REG_TOWN_SLUGS.forEach((town) => {
+        urls.push(`
+        <url>
+          <loc>${REG_BASE}/registro/${s}/${town}</loc>
+          <changefreq>monthly</changefreq>
+          <priority>0.5</priority>
+        </url>
+      `);
+      });
+    });
+
     // Category pages
     const categories = ['restaurantes', 'playas', 'salud', 'farmacia', 'dentista', 'veterinario', 'medico', 'hospital', 'laboratorio', 'optica', 'salud-mental', 'quiropractico', 'gimnasio', 'fisiatra', 'hospedaje', 'servicios', 'compras', 'entretenimiento', 'turismo', 'deportes', 'belleza', 'automotriz', 'marina', 'educacion', 'gobierno', 'helados', 'panaderia', 'pizza', 'mariscos', 'lavanderia', 'cafe', 'barberia', 'peluqueria', 'imprenta'];
     categories.forEach((cat) => {

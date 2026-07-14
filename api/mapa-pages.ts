@@ -10137,6 +10137,16 @@ const SPEC_INFO_EN: Record<string, { treats: string; whenToGo: string; note: str
 const SPEC_BY_URL: Record<string, typeof REGISTRY_SPECS[number]> = {}
 REGISTRY_SPECS.forEach(x => { SPEC_BY_URL[specToUrl(x.s)] = x })
 const HUB_REGIONS = ['Oeste', 'Norte', 'Centro', 'Sur', 'Este', 'Metro'] as const
+// Main towns per region → chips on the region hub that link the /registro/:spec/:pueblo pages
+// (internal crawl path + user shortcut to "[especialidad] [pueblo]").
+const REGION_TOWNS: Record<string, Array<[string, string]>> = {
+  Oeste: [['mayaguez', 'Mayagüez'], ['cabo-rojo', 'Cabo Rojo'], ['san-german', 'San Germán'], ['aguadilla', 'Aguadilla'], ['hormigueros', 'Hormigueros'], ['lajas', 'Lajas'], ['sabana-grande', 'Sabana Grande'], ['san-sebastian', 'San Sebastián']],
+  Metro: [['san-juan', 'San Juan'], ['bayamon', 'Bayamón'], ['carolina', 'Carolina'], ['guaynabo', 'Guaynabo'], ['catano', 'Cataño']],
+  Norte: [['arecibo', 'Arecibo'], ['manati', 'Manatí'], ['vega-baja', 'Vega Baja'], ['hatillo', 'Hatillo']],
+  Sur: [['ponce', 'Ponce'], ['yauco', 'Yauco'], ['guayama', 'Guayama'], ['juana-diaz', 'Juana Díaz']],
+  Este: [['caguas', 'Caguas'], ['humacao', 'Humacao'], ['fajardo', 'Fajardo'], ['cayey', 'Cayey']],
+  Centro: [['aibonito', 'Aibonito'], ['barranquitas', 'Barranquitas'], ['utuado', 'Utuado'], ['orocovis', 'Orocovis']],
+}
 const REGION_BY_URL: Record<string, string> = { oeste: 'Oeste', norte: 'Norte', centro: 'Centro', sur: 'Sur', este: 'Este', metro: 'Metro' }
 const REGION_FULL: Record<string, string> = {
   Oeste: 'el oeste (Mayagüez, Cabo Rojo, Aguadilla)', Norte: 'el norte (Arecibo, Manatí, Hatillo)',
@@ -10274,6 +10284,7 @@ ${regDisclaimer(en)}`
 ${info.treats ? `<p class="text-slate-600 mt-1">${escapeHtml(info.treats)} ${escapeHtml(info.whenToGo)}</p>` : ''}
 ${noteHtml}
 ${providers.length ? `<div class="not-prose mt-5 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${thead}<tbody>${provRows}</tbody></table></div>` : `<div class="not-prose mt-5 bg-amber-50 border border-amber-200 rounded-xl p-5"><p class="text-amber-900 font-semibold">${t(`No hay ${escapeHtml(x.l.toLowerCase())} verificados en ${escapeHtml(region)}.`, `No verified ${escapeHtml(labelLow)} in ${escapeHtml(region)}.`)}</p><p class="text-sm text-amber-800 mt-1">${t('Te va a tocar viajar. Mira los de', 'You will have to travel. See those in')} <a href="/registro/${specUrl}/metro${lp}" class="font-semibold underline">${t('el área metro', 'the metro area')} (${metroCount}) →</a></p></div>`}
+${REGION_TOWNS[region] ? `<div class="not-prose mt-5"><div class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">${t('Por pueblo', 'By town')}</div><div class="flex flex-wrap gap-2">${REGION_TOWNS[region].map(([ts, tn]) => `<a href="/registro/${specUrl}/${ts}${lp}" class="inline-flex items-center bg-white border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-sm hover:border-teal-400 hover:text-teal-700">${escapeHtml(x.l)} ${t('en', 'in')} ${escapeHtml(tn)}</a>`).join('')}</div></div>` : ''}
 <p class="not-prose mt-4 text-sm"><a href="/registro/${specUrl}${lp}" class="text-teal-700 font-semibold">${t(`Ver los ${total} ${escapeHtml(x.l.toLowerCase())} de toda la isla →`, `See all ${total} ${escapeHtml(labelLow)} across the island →`)}</a></p>`
   } else {
     answerFirst = t(`En Puerto Rico hay <strong>${total} ${escapeHtml(x.l.toLowerCase())}</strong> verificados contra el registro federal NPPES, distribuidos por región.`, `Puerto Rico has <strong>${total} verified ${escapeHtml(labelLow)}</strong> in the federal NPPES registry, spread across regions.`)
