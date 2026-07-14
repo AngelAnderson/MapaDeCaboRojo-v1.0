@@ -31,6 +31,7 @@
     { "source": "/sitemap.xml", "destination": "/api/sitemap" },
     { "source": "/marca", "destination": "/api/marca" },
     { "source": "/ia", "destination": "/api/ia" },
+    { "source": "/admin/salud", "destination": "/api/pages?page=admin-salud" },
     { "source": "/admin/municipio", "destination": "/api/pages?page=admin-municipio" },
     { "source": "/admin/lifecycle-queue", "destination": "/api/pages?page=admin-lifecycle-queue" },
     { "source": "/evento/:slug", "destination": "/api/pages?page=evento&slug=:slug" },

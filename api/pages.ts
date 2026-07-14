@@ -2758,6 +2758,94 @@ function loginPage(reason: string): string {
 </body></html>`;
 }
 
+// ============ /admin/salud — panel privado de la data HPSA (solo Angel) ============
+// Ver el barrido completo, el historial de cambios, y refrescar contra HRSA on-demand.
+// NO es público: la data se muestra en el sitio, pero el control/edición vive aquí, tras ADMIN_SECRET.
+async function handle_admin_salud(req: any, res: any) {
+  if (!ADMIN_SECRET) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.status(500).send(loginPage('ADMIN_MUNICIPIO_SECRET no está configurado en Vercel.'));
+    return;
+  }
+  const queryKey = (req.query?.key as string) || '';
+  const cookieKey = readCookie(req, COOKIE_NAME) || '';
+  if (queryKey && queryKey === ADMIN_SECRET) {
+    res.setHeader('Set-Cookie', `${COOKIE_NAME}=${encodeURIComponent(queryKey)}; HttpOnly; Secure; SameSite=Lax; Path=/admin; Max-Age=2592000`);
+    res.setHeader('Location', '/admin/salud');
+    res.status(302).end();
+    return;
+  }
+  if (cookieKey !== ADMIN_SECRET) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.status(401).send(loginPage(queryKey ? 'Secret incorrecto.' : 'Entra el secret administrativo para continuar.').replace(/\/admin\/municipio/g, '/admin/salud'));
+    return;
+  }
+
+  // ---- Acción: refrescar contra HRSA on-demand ----
+  let flash = '';
+  if ((req.query?.action as string) === 'refresh') {
+    try {
+      const BASE = 'https://gisportal.hrsa.gov/server/rest/services/Shortage/HealthProfessionalShortageAreas_FS/MapServer';
+      const FIELDS = 'HPSA_NM,HPSA_SCORE,HPSA_FTE,HPSA_SHORTAGE,HPSA_FORMAL_RATIO,HPSA_DESIGNATION_POP,HPSA_DESIG_LAST_UPD_DT_TXT';
+      const cleanMuni = (nm: string) => String(nm || '').replace(/^(LI|MUA|MUP|GEO)\s*-\s*/, '').replace(/\s+Municipio.*$/, '').trim();
+      const fresh: any[] = [];
+      for (const [disc, layer] of [['dental', 2], ['mental', 6], ['primary', 10]] as Array<[string, number]>) {
+        const url = `${BASE}/${layer}/query?where=${encodeURIComponent("PRIMARY_STATE_NM='Puerto Rico'")}&outFields=${encodeURIComponent(FIELDS)}&returnGeometry=false&f=json&resultRecordCount=3000`;
+        const r = await fetch(url);
+        const d: any = await r.json();
+        for (const f of (d.features || [])) {
+          const a = f.attributes;
+          fresh.push({ discipline: disc, hpsa_name: a.HPSA_NM, municipio: cleanMuni(a.HPSA_NM), score: a.HPSA_SCORE, fte: a.HPSA_FTE, shortage: a.HPSA_SHORTAGE, ratio: a.HPSA_FORMAL_RATIO, pop: a.HPSA_DESIGNATION_POP, last_update: a.HPSA_DESIG_LAST_UPD_DT_TXT, refreshed_at: new Date().toISOString() });
+        }
+      }
+      if (fresh.length < 50) { flash = `⚠️ Barrido corto (${fresh.length}) — HRSA pudo estar caída. No se tocó la data.`; }
+      else {
+        const { error } = await supabase.from('pr_hpsa_designations').upsert(fresh, { onConflict: 'discipline,hpsa_name' });
+        flash = error ? `❌ Error al guardar: ${error.message}` : `✅ Refrescado: ${fresh.length} designaciones actualizadas contra HRSA.`;
+      }
+    } catch (e: any) { flash = `❌ ${e?.message || 'error de red con HRSA'}`; }
+  }
+
+  // ---- Data ----
+  const { data: rows } = await supabase.from('pr_hpsa_designations').select('discipline,municipio,score,fte,shortage,ratio,pop,last_update,refreshed_at').order('discipline').order('score', { ascending: false });
+  const { data: log } = await supabase.from('nightly_receipts').select('run_date,summary_md,reviewed_by_angel').eq('routine', 'hpsa-refresh').order('run_date', { ascending: false }).limit(8);
+  const all = rows || [];
+  const byDisc = (d: string) => all.filter((r: any) => r.discipline === d);
+  const zero = (d: string) => byDisc(d).filter((r: any) => Number(r.fte) === 0).length;
+  const sumShort = (d: string) => byDisc(d).reduce((t: number, r: any) => t + (Number(r.shortage) || 0), 0);
+  const lastRefresh = all.reduce((m: string, r: any) => r.refreshed_at > m ? r.refreshed_at : m, '');
+  const e = (s: any) => esc(String(s ?? ''));
+  const card = (n: any, l: string, red = false) => `<div style="flex:1;min-width:130px;background:${red ? '#fef2f2' : '#f8fafc'};border:1px solid ${red ? '#fecaca' : '#e2e8f0'};border-radius:10px;padding:14px;"><div style="font-size:26px;font-weight:800;color:${red ? '#dc2626' : '#0f172a'};">${n}</div><div style="font-size:12px;color:#64748b;">${l}</div></div>`;
+  const tableRows = all.map((r: any) => `<tr style="border-top:1px solid #f1f5f9;"><td style="padding:6px 10px;font-weight:600;">${e(r.municipio)}</td><td style="padding:6px 10px;color:#64748b;">${e(r.discipline)}</td><td style="padding:6px 10px;text-align:right;font-weight:700;color:${Number(r.fte) === 0 ? '#dc2626' : '#0f172a'};">${Number(r.fte) === 0 ? 'Ninguno' : Number(r.fte) < 1 ? '<1' : Math.round(Number(r.fte))}</td><td style="padding:6px 10px;text-align:right;">${Math.max(1, Math.round(Number(r.shortage)))}</td><td style="padding:6px 10px;text-align:right;">${r.score}/26</td><td style="padding:6px 10px;text-align:right;color:#94a3b8;font-size:12px;">${e(r.last_update)}</td></tr>`).join('');
+  const logRows = (log || []).map((l: any) => `<div style="border-left:3px solid ${l.reviewed_by_angel ? '#cbd5e1' : '#0d9488'};padding:8px 12px;margin:6px 0;background:#f8fafc;border-radius:0 8px 8px 0;"><div style="font-size:11px;color:#64748b;">${e(l.run_date)} ${l.reviewed_by_angel ? '' : '· 🆕 sin revisar'}</div><div style="font-size:13px;color:#334155;white-space:pre-wrap;">${e(String(l.summary_md).slice(0, 400))}</div></div>`).join('') || '<p style="color:#94a3b8;font-size:13px;">Sin cambios registrados aún. El cron trimestral escribe aquí solo cuando HRSA cambia algo.</p>';
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.status(200).send(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Admin · Salud (HPSA)</title>
+<style>body{font-family:-apple-system,sans-serif;background:#f1f5f9;color:#0f172a;margin:0;padding:24px;}a{color:#0d9488;}.wrap{max-width:1000px;margin:0 auto;}</style></head><body><div class="wrap">
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+<h1 style="margin:0;font-size:22px;">🩺 Admin · Salud que falta <span style="font-size:13px;color:#64748b;font-weight:400;">(data HPSA privada)</span></h1>
+<a href="/admin/salud?action=refresh" style="background:#0d9488;color:#fff;padding:9px 16px;border-radius:8px;font-weight:600;text-decoration:none;">↻ Refrescar contra HRSA ahora</a>
+</div>
+${flash ? `<div style="margin:14px 0;padding:12px 16px;border-radius:8px;background:${flash.startsWith('✅') ? '#f0fdf4' : '#fef2f2'};border:1px solid ${flash.startsWith('✅') ? '#bbf7d0' : '#fecaca'};font-size:14px;">${e(flash)}</div>` : ''}
+<p style="font-size:13px;color:#64748b;">Última actualización de la data: <strong>${lastRefresh ? new Date(lastRefresh).toLocaleString('es-PR') : '—'}</strong> · El cron corre solo cada trimestre (1ro ene/abr/jul/oct). Este botón lo fuerza cuando quieras. La página pública lee de esta misma data. <a href="https://puertoricosinfiltros.com/salud-que-falta" target="_blank">Ver la página pública →</a></p>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin:16px 0;">
+${card(all.length, 'designaciones totales')}
+${card(zero('mental'), 'pueblos sin salud mental', true)}
+${card(Math.round(sumShort('mental')), 'faltan (salud mental)')}
+${card(zero('dental'), 'pueblos sin dentista', true)}
+${card(Math.round(sumShort('dental')), 'faltan (dentistas)')}
+${card(byDisc('primary').length, 'designaciones primaria')}
+</div>
+<h2 style="font-size:16px;margin-top:24px;">Historial de cambios (lo que HRSA movió)</h2>
+${logRows}
+<h2 style="font-size:16px;margin-top:24px;">La data completa (${all.length} filas)</h2>
+<div style="overflow:auto;background:#fff;border:1px solid #e2e8f0;border-radius:10px;max-height:600px;">
+<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead style="position:sticky;top:0;background:#f8fafc;"><tr style="text-align:left;color:#64748b;font-size:11px;text-transform:uppercase;"><th style="padding:8px 10px;">Municipio</th><th style="padding:8px 10px;">Disciplina</th><th style="padding:8px 10px;text-align:right;">Proveedores</th><th style="padding:8px 10px;text-align:right;">Faltan</th><th style="padding:8px 10px;text-align:right;">Score</th><th style="padding:8px 10px;text-align:right;">Actualizado (HRSA)</th></tr></thead><tbody>${tableRows}</tbody></table>
+</div>
+<p style="margin-top:24px;font-size:12px;color:#94a3b8;">Otros paneles: <a href="/admin/municipio">/admin/municipio</a> · <a href="/admin/lifecycle-queue">/admin/lifecycle-queue</a></p>
+</div></body></html>`);
+}
+
 async function handle_admin_municipio(req: any, res: any) {
   // ============ AUTH ============
   if (!ADMIN_SECRET) {
@@ -6196,6 +6284,7 @@ export default async function handler(req: any, res: any) {
     case 'demanda': return handle_demanda(req, res);
     case 'intelligence': return handle_intelligence(req, res);
     case 'evento': return handle_evento(req, res);
+    case 'admin-salud': return handle_admin_salud(req, res);
     case 'admin-municipio': return handle_admin_municipio(req, res);
     case 'admin-lifecycle-queue': return handle_admin_lifecycle_queue(req, res);
     case 'pueblo-en-numeros': return handle_pueblo_en_numeros(req, res);
