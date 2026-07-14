@@ -7020,6 +7020,65 @@ function contradiccionInline(o: { dicenC: string; dicenQ: string; dicenUrl?: str
 // /contradicciones — El Marcador de Contradicciones (LIVE tras dale de Angel, 12 jul 2026).
 // Formato: LO QUE DICEN (cita, quién, fecha, fuente activa) | LO QUE DICE EL RÉCORD (dato, fuentes activas) | LA BRECHA.
 // Regla del verde obligatoria: el marcador también anota lo cumplido, o esto es cinismo y no récord.
+// /metodologia — página de verificación PRIVADA para prensa (noindex + llave). Anti-copiones:
+// no linkeada en el menú, no indexada por Google. El link con ?k= se le manda al reportero.
+function handleMetodologia(req: any, res: any) {
+  const KEY = process.env.METODOLOGIA_KEY || 'prsf-metodo-2026'
+  const given = String(req.query?.k || '')
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow')
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  if (given !== KEY) {
+    res.status(401).send(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="robots" content="noindex"><title>Privado</title><style>body{font-family:-apple-system,sans-serif;background:#0f172a;color:#e2e8f0;padding:80px 24px;text-align:center}</style></head><body><h1 style="font-size:20px">Página de verificación para prensa</h1><p style="color:#94a3b8;font-size:14px;max-width:420px;margin:12px auto">Esta página es privada. Si eres periodista o investigador y quieres verificar las fuentes y la metodología, escribe a <a href="mailto:angel@angelanderson.com" style="color:#5eead4">angel@angelanderson.com</a> y te comparto el acceso.</p></body></html>`)
+    return
+  }
+  const src = (tema: string, fuente: string, url: string) => `<tr style="border-top:1px solid #e2e8f0"><td style="padding:8px 10px;font-weight:600">${tema}</td><td style="padding:8px 10px">${fuente}</td><td style="padding:8px 10px"><a href="${url}" style="color:#0d9488" target="_blank" rel="noopener">verificar ↗</a></td></tr>`
+  res.status(200).send(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex, nofollow"><title>Metodología · Puerto Rico Sin Filtros (prensa)</title>
+<style>body{font-family:-apple-system,sans-serif;background:#f8fafc;color:#0f172a;margin:0;padding:32px 20px;line-height:1.6}.w{max-width:760px;margin:0 auto}h1{font-size:26px;margin:0 0 4px}h2{font-size:19px;margin-top:32px;border-bottom:2px solid #0d9488;padding-bottom:4px}table{width:100%;border-collapse:collapse;font-size:14px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;margin-top:8px}code{background:#e2e8f0;padding:1px 5px;border-radius:4px;font-size:13px}a{color:#0d9488}.box{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:16px;margin-top:12px}</style></head><body><div class="w">
+<p style="font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:#0d9488;font-weight:700">Documento para prensa · no indexado · no distribuir el enlace</p>
+<h1>Cómo se hace Puerto Rico Sin Filtros</h1>
+<p style="color:#475569">Cada dato del sitio sale de una fuente pública verificable. Esta página te da la fuente, el método y la fórmula, para que verifiques por tu cuenta antes de citar. Si algo no cuadra, escríbeme y se corrige: <a href="mailto:angel@angelanderson.com">angel@angelanderson.com</a>.</p>
+
+<h2>1. Las fuentes, por tema</h2>
+<table><thead><tr style="background:#f1f5f9;text-align:left;font-size:12px;text-transform:uppercase;color:#64748b"><th style="padding:8px 10px">Tema</th><th style="padding:8px 10px">Fuente oficial</th><th style="padding:8px 10px"></th></tr></thead><tbody>
+${src('Escasez médica (HPSA)', 'HRSA — HPSA Find', 'https://data.hrsa.gov/topics/health-workforce/shortage-areas/hpsa-find')}
+${src('Médicos / proveedores', 'NPPES (CMS)', 'https://nppes.cms.hhs.gov')}
+${src('Metodología de escasez', 'HRSA — Shortage Designation', 'https://bhw.hrsa.gov/workforce-shortage-areas/shortage-designation')}
+${src('Agua (calidad)', 'EPA — SDWIS', 'https://www.epa.gov/ground-water-and-drinking-water')}
+${src('Luz (precio)', 'EIA — Puerto Rico', 'https://www.eia.gov/electricity/state/puertorico/')}
+${src('Recuperación FEMA', 'OpenFEMA (v2)', 'https://www.fema.gov/openfema-data-page/public-assistance-funded-projects-details-v2')}
+${src('Contratos federales', 'USASpending.gov', 'https://www.usaspending.gov')}
+${src('Investigación NIH', 'NIH RePORTER', 'https://reporter.nih.gov')}
+${src('Demografía / pobreza', 'Censo / ACS', 'https://data.census.gov')}
+${src('Trámite legislativo', 'SUTRA (Cámara)', 'https://sutra.oslpr.org')}
+${src('Promesas en video', 'Vistas públicas / YouTube (al minuto)', 'https://puertoricosinfiltros.com/historial')}
+</tbody></table>
+
+<h2>2. Cómo se compila cada récord</h2>
+<div class="box">
+<p><strong>Récords de datos federales (salud, agua, luz, FEMA):</strong> se jala el dato crudo de la API oficial, se guarda en una tabla pública con su fecha de origen, y se re-verifica automáticamente (la de salud, cada trimestre contra HRSA). Nunca se edita el número federal; si un vecino reporta un cambio, se añade como <em>nota local</em> aparte, fechada, sin borrar el dato oficial.</p>
+<p style="margin-top:8px"><strong>Expedientes de funcionarios:</strong> cada promesa lleva la cita textual, la fecha, y el minuto exacto del video donde se dijo. Los trámites legislativos se verifican contra SUTRA. Nada se marca "incumplido" sin fuente de qué pasó.</p>
+</div>
+
+<h2>3. La fórmula del grado</h2>
+<div class="box">
+<p><strong>El grado solo califica lo que ya se puede verificar hoy.</strong> Lo que sigue con tiempo (en proceso) no se cuenta ni a favor ni en contra: se muestra aparte.</p>
+<p style="margin-top:8px"><strong>Alcalde:</strong> <code>grado = cumplidas ÷ (cumplidas + vencidas)</code></p>
+<p><strong>Legislador:</strong> <code>grado = resultados en la calle ÷ medidas aprobadas en Cámara</code></p>
+<p style="margin-top:8px">Escala: A ≥90% · B ≥75% · C ≥60% · D ≥40% · F &lt;40%. Sin nada cerrado todavía = "sin calificar". Cada expediente muestra el cálculo con sus números al lado.</p>
+<p style="margin-top:8px;color:#475569;font-size:14px">Por qué así: es la fórmula más conservadora y la más difícil de refutar. No premia ni castiga lo que aún no vence. Un funcionario sube su grado de una sola forma: entregando.</p>
+</div>
+
+<h2>4. Verifícalo tú mismo en 2 minutos</h2>
+<div class="box">
+<p><strong>Escasez médica:</strong> abre <a href="https://data.hrsa.gov/topics/health-workforce/shortage-areas/hpsa-find" target="_blank" rel="noopener">HPSA Find</a> → State = Puerto Rico → Discipline = Mental Health (o Dental) → busca el pueblo. Verás el mismo score, proveedores y fecha que publicamos.</p>
+<p style="margin-top:8px"><strong>Una promesa en video:</strong> cada tarjeta del expediente tiene el enlace "véalo decirlo (minuto X)" que abre el video oficial en el segundo exacto.</p>
+<p style="margin-top:8px"><strong>Un trámite legislativo:</strong> el enlace a SUTRA en cada medida abre el trámite oficial de la Cámara.</p>
+</div>
+
+<p style="margin-top:32px;font-size:13px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:16px">Angel Anderson · Cabo Rojo, PR · <a href="mailto:angel@angelanderson.com">angel@angelanderson.com</a>. Esta página no está indexada ni linkeada públicamente: es para verificación de prensa. Si vas a citar el trabajo, un crédito a puertoricosinfiltros.com ayuda a que se sostenga.</p>
+</div></body></html>`)
+}
+
 async function handleContradicciones(req: any, res: any) {
   type Par = { tipo: string; corto: string; titulo: string; dicenC: string; dicenQ: string; dicenUrl?: string; recordD: string; fuentes: Array<[string, string]>; brecha: string; rec: string }
   const TIPOS: Record<string, [string, string]> = {
@@ -8021,6 +8080,27 @@ async function handleExpediente(req: any, res: any) {
     return `<li><strong>✓ ${escapeHtml(p.promesa)}</strong> (${fmtF(p.fecha_grabacion)}${vlink ? ` · <a href="${escapeHtml(vlink)}" target="_blank" rel="noopener" class="text-teal-700 underline">video ↗</a>` : ''})${p.que_paso ? ` — ${escapeHtml(p.que_paso)}` : ''}</li>`
   }).join('')
 
+  // ===== El Grado (Boletín) — Opción A: solo lo verificable cuenta. Fórmula pública en /metodologia =====
+  const gNum = cfg.tipo === 'alcalde' ? cnt('cumplido') : resultados
+  const gDen = cfg.tipo === 'alcalde' ? (cnt('cumplido') + cnt('vencido')) : aprobadas
+  const gPct = gDen > 0 ? Math.round(100 * gNum / gDen) : null
+  const gInfo = gPct === null ? { l: '—', t: 'Sin calificar (nada cerrado aún)', c: 'text-slate-400' }
+    : gPct >= 90 ? { l: 'A', t: 'Cumple', c: 'text-emerald-300' }
+    : gPct >= 75 ? { l: 'B', t: 'Cumple con rezago', c: 'text-emerald-300' }
+    : gPct >= 60 ? { l: 'C', t: 'A medias', c: 'text-amber-300' }
+    : gPct >= 40 ? { l: 'D', t: 'En deuda', c: 'text-orange-300' }
+    : { l: 'F', t: 'Incumple', c: 'text-red-400' }
+  const gExpl = cfg.tipo === 'alcalde'
+    ? `De lo ya resuelto (${cnt('cumplido')} cumplida(s) + ${cnt('vencido')} vencida(s)), cumplió el ${gPct ?? 0}%. Las ${cnt('en_proceso')} en proceso no se califican todavía.`
+    : `De sus ${aprobadas} medida(s) aprobada(s) en Cámara, ${resultados} tiene(n) resultado en la calle (${gPct ?? 0}%).`
+  const gradeBadge = `<div class="mt-4 flex items-center gap-4 border-t border-white/10 pt-4">
+  <div class="text-6xl font-black ${gInfo.c} leading-none" style="font-family:'Fraunces',Georgia,serif">${gInfo.l}</div>
+  <div>
+    <p class="text-base font-bold text-white">${gInfo.t}${gPct !== null ? ` · ${gPct}%` : ''}</p>
+    <p class="text-xs text-slate-300 mt-0.5">${gExpl} <a href="/metodologia" class="text-teal-300 underline">Cómo se calcula →</a></p>
+  </div>
+</div>`
+
   // En proceso sin plazo propio (gestiones/expectativas que no son "reloj que él puso" ni cumplidas/vencidas) — ej: el hospital
   const enProcesoOtras = promesas.filter((p: any) => p.estado === 'en_proceso' && !p.plazo_autoimpuesto && p.promesa !== (masVieja?.promesa))
   const enProcesoOtrasHtml = enProcesoOtras.map((p: any) => {
@@ -8047,7 +8127,8 @@ async function handleExpediente(req: any, res: any) {
     <div><span class="text-4xl font-black" style="font-family:'Fraunces',Georgia,serif">${cnt('en_proceso')}</span><span class="text-slate-300 text-sm ml-2">en proceso</span></div>
     <div><span class="text-4xl font-black text-red-400" style="font-family:'Fraunces',Georgia,serif">${cnt('vencido')}</span><span class="text-slate-300 text-sm ml-2">vencidas</span></div>
   </div>
-  <p class="text-slate-300 text-sm mt-3"><strong class="text-white">Los relojes de este marcador no los pusimos nosotros — los puso él, en video.</strong> Cada promesa tiene la cita textual, el minuto exacto, y el plazo que él mismo dijo. Las promesas no expiran con la elección: lo dicho en 2021–2024 se le sigue el rastro en este término. Quedan <strong class="text-white">${diasEleccion.toLocaleString('en-US')} días</strong> para noviembre 2028.</p>
+  ${gradeBadge}
+<p class="text-slate-300 text-sm mt-3"><strong class="text-white">Los relojes de este marcador no los pusimos nosotros — los puso él, en video.</strong> Cada promesa tiene la cita textual, el minuto exacto, y el plazo que él mismo dijo. Las promesas no expiran con la elección: lo dicho en 2021–2024 se le sigue el rastro en este término. Quedan <strong class="text-white">${diasEleccion.toLocaleString('en-US')} días</strong> para noviembre 2028.</p>
 </div>
 <p class="mt-4">Dos vistas del récord completo: <a href="/promesas" class="text-teal-700 font-semibold">el promesómetro</a> (todas por tema) y <a href="/historial" class="text-teal-700 font-semibold">el historial</a> (${nP} promesas con video al minuto). Abajo, <strong>los relojes que él mismo puso</strong>:</p>
 ${relojCards}
@@ -8065,7 +8146,8 @@ ${cumplidas.length ? `<div class="not-prose border-2 border-emerald-200 bg-emera
     <div><span class="text-4xl font-black" style="font-family:'Fraunces',Georgia,serif">${aprobadas} de ${nP}</span><span class="text-slate-300 text-sm ml-2">medidas del distrito aprobadas en Cámara</span></div>
     <div><span class="text-4xl font-black ${resultados === 0 ? 'text-amber-300' : 'text-emerald-300'}" style="font-family:'Fraunces',Georgia,serif">${resultados}</span><span class="text-slate-300 text-sm ml-2">resultado${resultados === 1 ? '' : 's'} en la calle</span></div>
   </div>
-  <p class="text-slate-300 text-sm mt-3">Estas fechas corren bajo su reloj: quedan <strong class="text-white">${diasEleccion.toLocaleString('en-US')} días</strong> para las elecciones de noviembre 2028. Este marcador no opina — se actualiza con el récord de SUTRA, y registra el verde igual que el rojo.</p>
+  ${gradeBadge}
+<p class="text-slate-300 text-sm mt-3">Estas fechas corren bajo su reloj: quedan <strong class="text-white">${diasEleccion.toLocaleString('en-US')} días</strong> para las elecciones de noviembre 2028. Este marcador no opina — se actualiza con el récord de SUTRA, y registra el verde igual que el rojo.</p>
 </div>
 <p class="mt-4">Las <strong>${nP} medidas dirigidas al Distrito 20</strong> que forman su récord de promesas, cada una con su reloj${cfg.sutraPerfil ? ` (su <a href="${escapeHtml(cfg.sutraPerfil)}" target="_blank" rel="noopener" class="text-teal-700 font-semibold">perfil completo en SUTRA ↗</a> registra 70+ medidas en las que figura como autor o coautor)` : ''}:</p>
 ${marcadorCards}
@@ -12316,6 +12398,7 @@ export default async function handler(req: any, res: any) {
     case 'acueductos': return await handleAcueductos(req, res)
     case 'transicion': return await handleTransicion(req, res)
     case 'rompelo': return await handleRompelo(req, res)
+    case 'metodologia': return handleMetodologia(req, res)
     case 'contradicciones': return await handleContradicciones(req, res)
     case 'semaforo-fema': return await handleSemaforoFema(req, res)
     case 'funciona': return await handleFunciona(req, res)

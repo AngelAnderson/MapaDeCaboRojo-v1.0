@@ -115,6 +115,7 @@
     { "source": "/activos", "destination": "/api/mapa-pages?page=activos" },
     { "source": "/acueductos", "destination": "/api/mapa-pages?page=acueductos" },
     { "source": "/transicion", "destination": "/api/mapa-pages?page=transicion" },
+    { "source": "/metodologia", "destination": "/api/mapa-pages?page=metodologia" },
     { "source": "/contradicciones", "destination": "/api/mapa-pages?page=contradicciones" },
     { "source": "/semaforo-fema", "destination": "/api/mapa-pages?page=semaforo-fema" },
     { "source": "/rompelo", "destination": "/api/mapa-pages?page=rompelo" },
