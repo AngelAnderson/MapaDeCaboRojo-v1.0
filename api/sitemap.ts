@@ -149,7 +149,8 @@ export default async function handler(req: any, res: any) {
     // + aliados + facilidades NPI-2. Excluye viejos negocios de salud de CR con NPI que no son del registro.
     const SPECIALIST_SUBS = ['cardiólogo','psiquiatra','fisiatra','ginecólogo','pediatra','dermatólogo','gastroenterólogo','oftalmólogo','ortopeda','neurologo','urólogo','endocrinologo','nefrólogo','neumólogo','oncólogo','reumatólogo','geriatra','otorrinolaringólogo','infectólogo','alergista','medicina de emergencia','cirujano general','anestesiólogo','radiólogo','neurocirujano','cirujano plástico','cirujano torácico','coloproctólogo','manejo de dolor','psicólogo','optómetra','podiatra','dentista','internista','medicina de familia','terapeuta del habla','terapista físico','terapista ocupacional','quiropractico','consejero','trabajador social','terapeuta de familia','nutricionista','physician assistant','enfermera practicante','audiólogo','partera','farmacéutico','hospital','cuidado en el hogar','hospicio','hogar de envejecientes','centro de diálisis','urgent care','clínica comunitaria'];
     const specialists: any[] = [];
-    for (let page = 0; page < 10; page++) {
+    // 25 pages × 1000 = 25,000 capacity (registry = ~20,600 providers; sitemap protocol cap is 50k/file).
+    for (let page = 0; page < 25; page++) {
       const { data } = await supabase
         .from('places')
         .select('slug')
