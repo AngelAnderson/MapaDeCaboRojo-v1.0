@@ -69,6 +69,7 @@
     { "source": "/sinfiltros/pulso", "destination": "/api/mapa-pages?page=sinfiltros-pulso" },
     { "source": "/luz", "destination": "/api/mapa-pages?page=luz" },
     { "source": "/basura", "destination": "/api/mapa-pages?page=basura" },
+    { "source": "/buscar", "destination": "/api/mapa-pages?page=buscar" },
     { "source": "/prediccion", "destination": "/api/mapa-pages?page=prediccion" },
     { "source": "/costo-de-vida", "destination": "/api/mapa-pages?page=costo-de-vida" },
     { "source": "/trabajo", "destination": "/api/mapa-pages?page=trabajo" },

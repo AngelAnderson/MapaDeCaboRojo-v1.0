@@ -146,6 +146,7 @@ function layout(opts: {
 <span class="font-black tracking-tight">Puerto Rico <span class="text-teal-700">Sin Filtros</span></span>
 </a>
 <nav class="hidden md:flex gap-5 text-sm text-slate-600">
+<a href="/buscar" class="hover:text-teal-700" title="Buscar"><i class="fa-solid fa-magnifying-glass"></i> Buscar</a>
 <a href="/decidir" class="font-bold text-teal-700 hover:text-teal-800">¿Me quedo?</a>
 <a href="/#records" class="hover:text-teal-700">Récords</a>
 <a href="/#expedientes" class="hover:text-teal-700">Expedientes</a>
@@ -8207,6 +8208,95 @@ ${AGENDA.map((a, i) => `
 
 // /prediccion — la síntesis: qué dicen todos los récords juntos si no hacemos nada.
 // Números verificados (con enlace a su récord); las conexiones/proyecciones son análisis, no profecía.
+
+// /buscar — búsqueda instantánea sobre el índice de récords PRSF (client-side, cero dependencias).
+// Cada búsqueda se loggea a prsf_events (event=search) — las búsquedas sin resultado son señal de qué récord falta.
+function handleBuscar(req: any, res: any) {
+  const INDEX = [
+    { u: '/decidir', t: '¿Me quedo o me voy?', d: 'La decisión grande con los números al lado', k: 'quedarme irme mudarme diaspora regresar volver decision' },
+    { u: '/prediccion', t: 'Predicción 2030', d: 'Lo que dicen todos los récords juntos si nada cambia', k: 'futuro 2030 proyeccion sintesis lectura' },
+    { u: '/retiro', t: 'El Huracán Lento', d: 'Envejecimiento + médicos + internet, municipio por municipio', k: 'huracan retiro viejos envejecer pension 65 pobreza municipios tabla evidencia' },
+    { u: '/registro/estado', t: 'El estado de los médicos', d: 'Cuántos médicos hay y por qué no llega el que falta', k: 'medicos doctores especialistas psiquiatras dentistas escasez nhsc hpsa salud cupon' },
+    { u: '/cupon', t: 'El cupón sin cobrar', d: 'Dinero federal de salud aprobado que nadie reclama', k: 'cupon dinero federal salud mental prestamos 75000 nhsc fondos' },
+    { u: '/contradicciones', t: 'El Marcador de Contradicciones', d: 'Lo que dicen vs lo que muestra el récord, con fuente', k: 'contradiccion dicen mienten brecha marcador' },
+    { u: '/esencia', t: 'Expediente Esencia', d: 'El proyecto de $2B en Boquerón, los dos lados con récord', k: 'esencia boqueron desarrollo turismo 2 billones dia exencion' },
+    { u: '/acueductos', t: 'El recibo del agua', d: 'Tarifas, fondos federales y deuda de la AAA', k: 'aaa agua acueductos tarifa recibo aumento deuda' },
+    { u: '/agua', t: 'Calidad del agua', d: 'Violaciones EPA activas, sistema por sistema', k: 'agua calidad epa violaciones trihalometanos thm potable' },
+    { u: '/luz', t: 'La luz', d: 'Precio y confiabilidad eléctrica, con la fuente federal', k: 'luz electricidad luma aee apagones kwh tarifa energia solar' },
+    { u: '/basura', t: 'La basura', d: 'Vertederos y reciclaje, el récord contra la meta', k: 'basura vertederos reciclaje residuos landfill' },
+    { u: '/transicion', t: 'Las vistas de transición', d: 'Lo que las agencias admitieron bajo juramento, al minuto', k: 'transicion vistas agencias cor3 vivienda aee dtop admisiones video' },
+    { u: '/semaforo-fema', t: 'Semáforo FEMA Cabo Rojo', d: '121 proyectos FEMA: obligado vs cerrado', k: 'fema recuperacion proyectos coliseo obligado fondos cabo rojo' },
+    { u: '/recuperacion', t: 'La recuperación federal', d: 'Cuánto llegó y cuánto se ha usado, por municipio', k: 'fema recuperacion maria desembolso obligado fondos' },
+    { u: '/sigue-el-dinero', t: 'Sigue el dinero', d: 'A dónde van los contratos y fondos federales', k: 'dinero contratos federales mainland usaspending hud fuga' },
+    { u: '/promesas', t: 'Historial de promesas', d: 'Lo prometido en video contra lo entregado, al minuto', k: 'promesas alcalde video cumplio plazos coliseo cabanas' },
+    { u: '/expediente/alcalde-cabo-rojo', t: 'Expediente: Alcalde de Cabo Rojo', d: 'El Marcador del Cuatrienio, con sus propios plazos', k: 'alcalde cabo rojo expediente marcador promesas' },
+    { u: '/expediente/representante-distrito-20', t: 'Expediente: Representante D20', d: 'El Marcador del Término, medida por medida', k: 'representante distrito 20 camara medidas expediente carlo' },
+    { u: '/funciona', t: 'Cuando funciona', d: 'Casos donde hablar en récord movió al gobierno', k: 'funciona verde 911 paramedico resultado exito' },
+    { u: '/investigacion', t: 'Investigación NIH', d: 'PR recibe $28/persona en fondos NIH; Iowa, $78', k: 'nih investigacion ciencia fondos raras adn founder' },
+    { u: '/registro-raras', t: 'Expediente enfermedades raras', d: 'La Ley 9-2025 y el registro OER, declarado vs entregado', k: 'raras enfermedades oer ley 9 2025 registro' },
+    { u: '/diabetes', t: 'Diabetes', d: 'El dato que existe y el que falta', k: 'diabetes cdc salud cronica' },
+    { u: '/telemedicina', t: 'Telemedicina', d: 'Quién puede y quién no (internet × médicos)', k: 'telemedicina internet broadband acceso' },
+    { u: '/demanda', t: 'La demanda real', d: 'Lo que la gente busca y no encuentra (El Veci *7711)', k: 'demanda veci busquedas negocio plomero electricista' },
+    { u: '/costo-de-vida', t: '¿El sueldo rinde?', d: 'Ingreso contra costo real de vivir en PR', k: 'costo vida sueldo ingreso canasta ipc inflacion' },
+    { u: '/trabajo', t: 'El trabajo', d: 'Participación laboral y cómo subir de valor', k: 'trabajo empleo participacion laboral salario ai' },
+    { u: '/exposicion-ai', t: 'Exposición a la AI', d: 'Qué trabajos de PR toca la AI primero', k: 'ai inteligencia artificial empleos automatizacion' },
+    { u: '/historial', t: 'Historial en video', d: 'Declaraciones públicas al minuto', k: 'historial video declaraciones grabaciones minuto' },
+    { u: '/no-se-mide', t: 'Lo que no se mide', d: 'Los datos que PR no recoge (y eso también es dato)', k: 'no se mide gaps datos faltan gobernanza' },
+    { u: '/rompelo', t: 'Rómpelo', d: 'Objeciones contestadas + registro público de correcciones', k: 'rompelo objeciones quien eres correcciones errores confianza' },
+    { u: '/comparte', t: 'Datos citables', d: 'Números listos pa\' copiar, con fuente', k: 'citas citables copiar prensa compartir' },
+    { u: '/mision', t: 'La misión', d: 'Qué es este sitio y qué no es', k: 'mision quienes somos acerca proposito' },
+  ]
+  const body = `
+<h1>Buscar en el récord</h1>
+<p class="text-lg text-slate-600 mt-2">Escribe lo que te preocupa (agua, luz, médicos, FEMA, el alcalde...) y te llevo al récord con la fuente al lado.</p>
+<div class="not-prose mt-5">
+  <input id="q" type="search" autofocus placeholder="Ej: agua, psiquiatras, promesas, FEMA..." autocomplete="off"
+    class="w-full text-lg px-5 py-4 rounded-2xl border-2 border-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white" />
+  <div id="results" class="mt-4 space-y-2"></div>
+  <p id="empty" class="hidden mt-4 text-sm text-slate-600 bg-amber-50 border border-amber-200 rounded-xl p-4">Ese récord todavía no existe — y que lo buscaste ya quedó anotado: así decidimos cuál construir próximo. Mientras tanto, <a href="/#records" class="text-teal-700 font-semibold">mira todos los récords</a> o <a href="mailto:angel@angelanderson.com" class="text-teal-700 font-semibold">sugiérelo</a>.</p>
+</div>
+<script>
+(function(){
+  var IDX = ${JSON.stringify(INDEX)};
+  var norm = function(x){ return (x||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); };
+  IDX.forEach(function(r){ r._h = norm(r.t + ' ' + r.d + ' ' + r.k); });
+  var q = document.getElementById('q'), out = document.getElementById('results'), empty = document.getElementById('empty');
+  var logT = null;
+  function render(list){
+    out.innerHTML = list.map(function(r){
+      return '<a href="' + r.u + '" class="block bg-white border border-slate-200 rounded-xl p-4 hover:border-teal-400 hover:shadow-sm transition">' +
+        '<div class="font-bold text-slate-900">' + r.t + '</div>' +
+        '<div class="text-sm text-slate-600 mt-0.5">' + r.d + '</div>' +
+        '<div class="text-xs text-teal-700 mt-1">puertoricosinfiltros.com' + r.u + '</div></a>';
+    }).join('');
+  }
+  function search(){
+    var terms = norm(q.value).split(/\s+/).filter(Boolean);
+    if (!terms.length) { render(IDX); empty.classList.add('hidden'); return; }
+    var hits = IDX.filter(function(r){ return terms.every(function(t){ return r._h.indexOf(t) >= 0; }); });
+    render(hits);
+    empty.classList.toggle('hidden', hits.length > 0);
+    clearTimeout(logT);
+    logT = setTimeout(function(){
+      try { fetch('/api/mapa-pages?page=sinfiltros-log', { method: 'POST', keepalive: true, headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: hits.length ? 'search' : 'search_no_result', record: 'buscar', target: q.value.slice(0,120) }) }); } catch(e) {}
+    }, 900);
+  }
+  q.addEventListener('input', search);
+  render(IDX);
+  try { var pre = new URLSearchParams(location.search).get('q'); if (pre) { q.value = pre; search(); } } catch(e) {}
+})();
+</script>
+`
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'Buscar — Puerto Rico Sin Filtros',
+    description: 'Busca en el récord público de Puerto Rico: agua, luz, médicos, FEMA, promesas — cada dato con su fuente.',
+    slug: 'buscar', bodyHtml: body,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
 function handlePrediccion(req: any, res: any) {
   const body = `
 <h1>Predicción 2030: lo que dicen todos los récords juntos</h1>
@@ -11752,6 +11842,7 @@ export default async function handler(req: any, res: any) {
     case 'semaforo-fema': return await handleSemaforoFema(req, res)
     case 'funciona': return await handleFunciona(req, res)
     case 'retiro': return await handleRetiro(req, res)
+    case 'buscar': return handleBuscar(req, res)
     case 'prediccion': return handlePrediccion(req, res)
     case 'costo-de-vida': return await handleCostoDeVida(req, res)
     case 'trabajo': return handleTrabajo(req, res)
