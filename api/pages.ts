@@ -2761,6 +2761,16 @@ function loginPage(reason: string): string {
 // ============ /admin/salud — panel privado de la data HPSA (solo Angel) ============
 // Ver el barrido completo, el historial de cambios, y refrescar contra HRSA on-demand.
 // NO es público: la data se muestra en el sitio, pero el control/edición vive aquí, tras ADMIN_SECRET.
+// CSRF: parsea el header como URL y compara hostname con igualdad estricta contra un allowlist fijo.
+// (Un regex por substring dejaba pasar puertoricosinfiltros.com.evil.com y cualquier *.vercel.app.)
+function adminSameOrigin(req: any): boolean {
+  const ref = String(req.headers?.referer || req.headers?.origin || '');
+  let host = '';
+  try { host = new URL(ref).hostname.toLowerCase().replace(/\.$/, ''); } catch { return false; }
+  const ALLOWED = new Set(['puertoricosinfiltros.com', 'mapadecaborojo.com', 'localhost']);
+  return ALLOWED.has(host) || (!!process.env.VERCEL_URL && host === String(process.env.VERCEL_URL).toLowerCase());
+}
+
 async function handle_admin_salud(req: any, res: any) {
   if (!ADMIN_SECRET) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
@@ -2786,9 +2796,7 @@ async function handle_admin_salud(req: any, res: any) {
   if ((req.query?.action as string) === 'refresh') {
     // CSRF guard: el refresh cambia estado, así que exige que la navegación venga de nuestro propio sitio
     // (defensa en profundidad sobre la cookie SameSite=Lax). Sin Referer válido, no ejecuta.
-    const ref = String(req.headers?.referer || req.headers?.origin || '');
-    const sameOrigin = /^https?:\/\/(puertoricosinfiltros\.com|[a-z0-9-]+\.vercel\.app|mapadecaborojo\.com|localhost)/i.test(ref);
-    if (!sameOrigin) {
+    if (!adminSameOrigin(req)) {
       flash = '⚠️ Refresco bloqueado: la acción tiene que iniciarse desde el propio panel (protección CSRF). Abre /admin/salud y usa el botón.';
     } else try {
       const BASE = 'https://gisportal.hrsa.gov/server/rest/services/Shortage/HealthProfessionalShortageAreas_FS/MapServer';
@@ -2814,9 +2822,7 @@ async function handle_admin_salud(req: any, res: any) {
 
   // ---- Acción: editar/corregir una fila (POST, CSRF-safe) ----
   if (req.method === 'POST' && (req.query?.action as string) === 'edit') {
-    const ref = String(req.headers?.referer || req.headers?.origin || '');
-    const sameOrigin = /^https?:\/\/(puertoricosinfiltros\.com|[a-z0-9-]+\.vercel\.app|mapadecaborojo\.com|localhost)/i.test(ref);
-    if (!sameOrigin) { res.status(403).json({ error: 'CSRF: origen inválido' }); return; }
+    if (!adminSameOrigin(req)) { res.status(403).json({ error: 'CSRF: origen inválido' }); return; }
     const b = req.body && typeof req.body === 'object' ? req.body : (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })();
     const id = parseInt(String(b.id || ''), 10);
     const status = ['ok', 'verificar', 'cerrado', 'corregido'].includes(String(b.manual_status)) ? String(b.manual_status) : null;
