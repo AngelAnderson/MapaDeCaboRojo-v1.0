@@ -28,8 +28,10 @@ export default async function handler(req: any, res: any) {
         return await runDatoDelDia(res);
       case 'hpsa-refresh':
         return await runHpsaRefresh(res);
+      case 'registro-qc':
+        return await runRegistroQc(res);
       default:
-        return res.status(400).json({ error: `Unknown job: ${job}. Use ?job=briefing|maintenance|vibe|alertas|dato|hpsa-refresh` });
+        return res.status(400).json({ error: `Unknown job: ${job}. Use ?job=briefing|maintenance|vibe|alertas|dato|hpsa-refresh|registro-qc` });
     }
   } catch (error: any) {
     console.error(`Cron ${job} failed:`, error.message);
@@ -353,6 +355,55 @@ async function runHpsaRefresh(res: any) {
     });
   }
   return res.status(200).json({ success: true, refreshed: fresh.length, changes: changes.length, detail: changes.slice(0, 20) });
+}
+
+// --- Registro QC mensual: monitor de frescura (read-only) → recibo en nightly_receipts ---
+// Corre el 1ro de cada mes. NO muta data (ingesta de proveedores nuevos = skill /registro-sync manual).
+// Vigila: duplicados, regiones nulas, backlog de embeddings, y que la disparidad siga intacta.
+const REGISTRO_SUBS_QC = ['cardiólogo','psiquiatra','fisiatra','ginecólogo','pediatra','dermatólogo','gastroenterólogo','oftalmólogo','ortopeda','neurologo','urólogo','endocrinologo','nefrólogo','neumólogo','oncólogo','reumatólogo','geriatra','otorrinolaringólogo','infectólogo','alergista','medicina de emergencia','cirujano general','anestesiólogo','radiólogo','neurocirujano','cirujano plástico','cirujano torácico','coloproctólogo','manejo de dolor','psicólogo','optómetra','podiatra','dentista','internista','medicina de familia','terapeuta del habla','terapista físico','terapista ocupacional','quiropractico','consejero','trabajador social','terapeuta de familia','nutricionista','physician assistant','enfermera practicante','audiólogo','partera','farmacéutico','hospital','cuidado en el hogar','hospicio','hogar de envejecientes','centro de diálisis','urgent care','clínica comunitaria'];
+
+async function runRegistroQc(res: any) {
+  const svc = createClient(
+    process.env.VITE_SUPABASE_URL || 'https://vprjteqgmanntvisjrvp.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  );
+  const runDate = new Date().toISOString().slice(0, 10);
+  const { data: existing } = await svc.from('nightly_receipts')
+    .select('id').eq('routine', 'registro-qc').eq('run_date', runDate).limit(1);
+  if (existing && existing.length) return res.status(200).json({ success: true, skipped: 'already ' + runDate });
+
+  // Conteo total scoped + integridad + disparidad ancla. Consultas simples via PostgREST (sin RPC nueva).
+  const [{ count: total }, { count: nullRegion }, { count: nullEmbed }, { count: nullSlug }] = await Promise.all([
+    svc.from('places').select('id', { count: 'exact', head: true }).not('npi', 'is', null).eq('status', 'open').in('subcategory', REGISTRO_SUBS_QC),
+    svc.from('places').select('id', { count: 'exact', head: true }).not('npi', 'is', null).is('region', null),
+    svc.from('places').select('id', { count: 'exact', head: true }).not('npi', 'is', null).is('embedding', null).in('subcategory', REGISTRO_SUBS_QC),
+    svc.from('places').select('id', { count: 'exact', head: true }).not('npi', 'is', null).is('slug', null).in('subcategory', REGISTRO_SUBS_QC),
+  ]);
+  // Disparidad ancla (la vista pinned a 32): Loíza debe seguir ~0.8, San Juan ~68.9
+  const { data: anchor } = await svc.from('v_registro_muni_ratio')
+    .select('municipio,especialistas,por_10k_hab').in('municipio', ['Loíza', 'San Juan', 'Cabo Rojo']);
+  const loiza = (anchor || []).find((a: any) => a.municipio === 'Loíza');
+  const sj = (anchor || []).find((a: any) => a.municipio === 'San Juan');
+  const disparidadOk = loiza && sj && Number(loiza.por_10k_hab) < 2 && Number(sj.por_10k_hab) > 50;
+
+  const flags: string[] = [];
+  if ((nullSlug || 0) > 0) flags.push(`🔴 ${nullSlug} proveedores sin slug (no tienen página)`);
+  if ((nullRegion || 0) > 15) flags.push(`🟡 ${nullRegion} filas sin región (>15, revisar backfill)`);
+  if ((nullEmbed || 0) > 1000) flags.push(`🟡 ${nullEmbed} sin embedding — corre \`gh workflow run regen-embeddings.yml -R AngelAnderson/Vecinoai\``);
+  if (!disparidadOk) flags.push(`🔴 DISPARIDAD ROTA: la vista v_registro_muni_ratio ya no da los números ancla (Loíza<2, SJ>50). Revisar que sigue pinned a las 32.`);
+
+  const summary = `🩺 **Registro Médico PR — QC mensual** (${runDate})\n\n` +
+    `- Total verificado (56 categorías): **${(total || 0).toLocaleString('en-US')}**\n` +
+    `- Disparidad ancla: Loíza ${loiza?.por_10k_hab ?? '?'}/10k · San Juan ${sj?.por_10k_hab ?? '?'}/10k → ${disparidadOk ? '✅ intacta' : '🔴 ROTA'}\n` +
+    `- Sin slug: ${nullSlug || 0} · sin región: ${nullRegion || 0} · sin embedding: ${nullEmbed || 0}\n\n` +
+    (flags.length ? `**Acciones:**\n${flags.map(f => `- ${f}`).join('\n')}` : `✅ Todo verde. Pa' añadir proveedores nuevos de NPPES: corre el skill \`/registro-sync\`.`);
+
+  const { error } = await svc.from('nightly_receipts').insert({
+    routine: 'registro-qc', run_date: runDate, summary_md: summary,
+    actions: flags, reviewed_by_angel: false,
+  });
+  if (error) return res.status(200).json({ success: false, error: error.message });
+  return res.status(200).json({ success: true, run_date: runDate, total, flags: flags.length });
 }
 
 async function runDatoDelDia(res: any) {
