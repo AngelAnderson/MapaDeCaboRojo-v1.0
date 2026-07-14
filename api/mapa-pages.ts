@@ -6436,7 +6436,7 @@ async function handleSaludQueFalta(req: any, res: any) {
   let rows: any[] = []
   try {
     const { data } = await supabase.from('pr_hpsa_designations')
-      .select('discipline,municipio,score,fte,shortage,ratio,pop,last_update')
+      .select('discipline,municipio,score,fte,shortage,ratio,pop,last_update,manual_status,manual_note')
       .order('score', { ascending: false }).limit(400)
     rows = data || []
   } catch (_) {}
@@ -6460,7 +6460,7 @@ async function handleSaludQueFalta(req: any, res: any) {
     const hl = /cabo rojo/i.test(r.municipio)
     const p = fmtProv(r.fte)
     return `<tr class="border-t border-slate-100 ${hl ? 'bg-teal-50/60' : (Number(r.fte) === 0 ? 'bg-red-50/40' : '')}">
-      <td class="py-2 px-3 font-semibold ${hl ? 'text-teal-700' : 'text-slate-800'}">${escapeHtml(r.municipio)}</td>
+      <td class="py-2 px-3 font-semibold ${hl ? 'text-teal-700' : 'text-slate-800'}">${escapeHtml(r.municipio)}${r.manual_status==='cerrado'||r.manual_note?`<span class="block text-xs font-normal text-amber-700 italic">${r.manual_status==='cerrado'?'⚠️ ':''}${escapeHtml(r.manual_note||'esta entrada cambió — verificar')}</span>`:''}</td>
       <td class="py-2 px-3 text-right font-bold ${p.cls}">${p.txt}</td>
       <td class="py-2 px-3 text-right text-slate-700">${Math.max(1, Math.round(Number(r.shortage)))}</td>
       <td class="py-2 px-3 text-right"><span class="inline-block px-2 py-0.5 rounded-md font-bold text-xs ${r.score >= 20 ? 'bg-red-100 text-red-700' : r.score >= 15 ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}">${r.score}/26</span></td>

@@ -2812,27 +2812,91 @@ async function handle_admin_salud(req: any, res: any) {
     } catch (e: any) { flash = `❌ ${e?.message || 'error de red con HRSA'}`; }
   }
 
+  // ---- Acción: editar/corregir una fila (POST, CSRF-safe) ----
+  if (req.method === 'POST' && (req.query?.action as string) === 'edit') {
+    const ref = String(req.headers?.referer || req.headers?.origin || '');
+    const sameOrigin = /^https?:\/\/(puertoricosinfiltros\.com|[a-z0-9-]+\.vercel\.app|mapadecaborojo\.com|localhost)/i.test(ref);
+    if (!sameOrigin) { res.status(403).json({ error: 'CSRF: origen inválido' }); return; }
+    const b = req.body && typeof req.body === 'object' ? req.body : (() => { try { return JSON.parse(req.body || '{}'); } catch { return {}; } })();
+    const id = parseInt(String(b.id || ''), 10);
+    const status = ['ok', 'verificar', 'cerrado', 'corregido'].includes(String(b.manual_status)) ? String(b.manual_status) : null;
+    const note = String(b.manual_note || '').slice(0, 500) || null;
+    if (id) {
+      await supabase.from('pr_hpsa_designations').update({ manual_status: status, manual_note: note, reviewed_at: new Date().toISOString() }).eq('id', id);
+    }
+    res.setHeader('Location', '/admin/salud'); res.status(303).end(); return;
+  }
+
   // ---- Data ----
-  const { data: rows } = await supabase.from('pr_hpsa_designations').select('discipline,municipio,score,fte,shortage,ratio,pop,last_update,refreshed_at').order('discipline').order('score', { ascending: false });
+  const { data: rows } = await supabase.from('pr_hpsa_designations').select('id,discipline,municipio,score,fte,shortage,ratio,pop,last_update,refreshed_at,manual_status,manual_note,reviewed_at').order('discipline').order('score', { ascending: false });
   const { data: log } = await supabase.from('nightly_receipts').select('run_date,summary_md,reviewed_by_angel').eq('routine', 'hpsa-refresh').order('run_date', { ascending: false }).limit(8);
+  // Cruce proactivo: pueblos que HPSA marca 0 salud mental pero el registro SÍ tiene un proveedor listado (o al revés) = discrepancia a investigar
+  const { data: psychProviders } = await supabase.from('places').select('municipality').eq('category', 'HEALTH').eq('subcategory', 'psiquiatra').not('npi', 'is', null);
+  const townsWithPsych = new Set((psychProviders || []).map((p: any) => String(p.municipality || '').toLowerCase().trim()));
   const all = rows || [];
   const byDisc = (d: string) => all.filter((r: any) => r.discipline === d);
   const zero = (d: string) => byDisc(d).filter((r: any) => Number(r.fte) === 0).length;
   const sumShort = (d: string) => byDisc(d).reduce((t: number, r: any) => t + (Number(r.shortage) || 0), 0);
   const lastRefresh = all.reduce((m: string, r: any) => r.refreshed_at > m ? r.refreshed_at : m, '');
   const e = (s: any) => esc(String(s ?? ''));
+  const yearOf = (s: string) => parseInt(String(s || '').slice(0, 4), 10) || 0;
+  const thisYear = 2026;
+
+  // ---- Panel proactivo: "Necesita tu atención" (autónomo — el admin te dice qué mirar, no al revés) ----
+  const flagStale = all.filter((r: any) => (thisYear - yearOf(r.last_update)) >= 3 && r.manual_status !== 'ok');
+  const flagPending = all.filter((r: any) => r.manual_status === 'verificar');
+  const flagDiscrepancy = byDisc('mental').filter((r: any) => Number(r.fte) === 0 && townsWithPsych.has(String(r.municipio).toLowerCase().trim()) && r.manual_status !== 'ok');
+  const flagUnreviewedLog = (log || []).filter((l: any) => !l.reviewed_by_angel).length;
+  const atencion: string[] = [];
+  if (flagUnreviewedLog) atencion.push(`🆕 <strong>${flagUnreviewedLog}</strong> cambio(s) de HRSA sin revisar (abajo, en el historial).`);
+  if (flagDiscrepancy.length) atencion.push(`🔀 <strong>${flagDiscrepancy.length}</strong> pueblo(s) donde HRSA dice 0 psiquiatras pero el registro SÍ tiene uno listado — verifica cuál está al día: ${flagDiscrepancy.slice(0, 6).map((r: any) => e(r.municipio)).join(', ')}.`);
+  if (flagPending.length) atencion.push(`⏳ <strong>${flagPending.length}</strong> fila(s) que marcaste "verificar" y siguen pendientes: ${flagPending.slice(0, 6).map((r: any) => e(r.municipio)).join(', ')}.`);
+  if (flagStale.length) atencion.push(`🕰️ <strong>${flagStale.length}</strong> designación(es) sin actualizarse en HRSA hace 3+ años — la escasez real pudo empeorar. Considera notarlas.`);
+  const atencionHtml = atencion.length
+    ? `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:16px;margin:16px 0;"><div style="font-weight:800;color:#92400e;margin-bottom:8px;">⚡ Necesita tu atención</div><ul style="margin:0;padding-left:18px;font-size:14px;color:#78350f;line-height:1.7;">${atencion.map(a => `<li>${a}</li>`).join('')}</ul></div>`
+    : `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:12px;padding:14px;margin:16px 0;font-size:14px;color:#166534;">✅ Todo al día. HRSA sin cambios sin revisar, sin discrepancias con el registro, sin pendientes.</div>`;
+
   const card = (n: any, l: string, red = false) => `<div style="flex:1;min-width:130px;background:${red ? '#fef2f2' : '#f8fafc'};border:1px solid ${red ? '#fecaca' : '#e2e8f0'};border-radius:10px;padding:14px;"><div style="font-size:26px;font-weight:800;color:${red ? '#dc2626' : '#0f172a'};">${n}</div><div style="font-size:12px;color:#64748b;">${l}</div></div>`;
-  const tableRows = all.map((r: any) => `<tr style="border-top:1px solid #f1f5f9;"><td style="padding:6px 10px;font-weight:600;">${e(r.municipio)}</td><td style="padding:6px 10px;color:#64748b;">${e(r.discipline)}</td><td style="padding:6px 10px;text-align:right;font-weight:700;color:${Number(r.fte) === 0 ? '#dc2626' : '#0f172a'};">${Number(r.fte) === 0 ? 'Ninguno' : Number(r.fte) < 1 ? '<1' : Math.round(Number(r.fte))}</td><td style="padding:6px 10px;text-align:right;">${Math.max(1, Math.round(Number(r.shortage)))}</td><td style="padding:6px 10px;text-align:right;">${r.score}/26</td><td style="padding:6px 10px;text-align:right;color:#94a3b8;font-size:12px;">${e(r.last_update)}</td></tr>`).join('');
+  const statusBadge = (r: any) => {
+    const s = r.manual_status;
+    if (s === 'cerrado') return '<span style="background:#fee2e2;color:#b91c1c;padding:1px 6px;border-radius:5px;font-size:11px;">cerrado</span>';
+    if (s === 'verificar') return '<span style="background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:5px;font-size:11px;">verificar</span>';
+    if (s === 'corregido') return '<span style="background:#dbeafe;color:#1e40af;padding:1px 6px;border-radius:5px;font-size:11px;">corregido</span>';
+    if (s === 'ok') return '<span style="background:#dcfce7;color:#166534;padding:1px 6px;border-radius:5px;font-size:11px;">ok</span>';
+    return '';
+  };
+  const tableRows = all.map((r: any) => `<tr style="border-top:1px solid #f1f5f9;${r.manual_status === 'cerrado' ? 'opacity:.55;' : ''}">
+    <td style="padding:6px 10px;font-weight:600;">${e(r.municipio)} ${statusBadge(r)}${r.manual_note ? `<div style="font-size:11px;color:#78716c;font-style:italic;">📝 ${e(r.manual_note)}</div>` : ''}</td>
+    <td style="padding:6px 10px;color:#64748b;">${e(r.discipline)}</td>
+    <td style="padding:6px 10px;text-align:right;font-weight:700;color:${Number(r.fte) === 0 ? '#dc2626' : '#0f172a'};">${Number(r.fte) === 0 ? 'Ninguno' : Number(r.fte) < 1 ? '<1' : Math.round(Number(r.fte))}</td>
+    <td style="padding:6px 10px;text-align:right;">${Math.max(1, Math.round(Number(r.shortage)))}</td>
+    <td style="padding:6px 10px;text-align:right;">${r.score}/26</td>
+    <td style="padding:6px 10px;text-align:right;color:#94a3b8;font-size:12px;">${e(r.last_update)}</td>
+    <td style="padding:4px 8px;"><details><summary style="cursor:pointer;color:#0d9488;font-size:12px;">editar</summary>
+      <form method="POST" action="/admin/salud?action=edit" style="margin-top:6px;display:flex;flex-direction:column;gap:4px;min-width:200px;">
+        <input type="hidden" name="id" value="${r.id}">
+        <select name="manual_status" style="font-size:12px;padding:3px;border:1px solid #cbd5e1;border-radius:5px;">
+          <option value="">(sin estado)</option>
+          <option value="ok" ${r.manual_status === 'ok' ? 'selected' : ''}>ok — verificado, correcto</option>
+          <option value="verificar" ${r.manual_status === 'verificar' ? 'selected' : ''}>verificar — dudoso</option>
+          <option value="cerrado" ${r.manual_status === 'cerrado' ? 'selected' : ''}>cerrado — ya no aplica</option>
+          <option value="corregido" ${r.manual_status === 'corregido' ? 'selected' : ''}>corregido — edité el dato</option>
+        </select>
+        <input type="text" name="manual_note" maxlength="500" placeholder="Nota (ej: vecino avisó que cerró)" value="${e(r.manual_note)}" style="font-size:12px;padding:3px;border:1px solid #cbd5e1;border-radius:5px;">
+        <button type="submit" style="font-size:12px;background:#0d9488;color:#fff;border:none;border-radius:5px;padding:4px;cursor:pointer;">Guardar</button>
+      </form></details></td>
+  </tr>`).join('');
   const logRows = (log || []).map((l: any) => `<div style="border-left:3px solid ${l.reviewed_by_angel ? '#cbd5e1' : '#0d9488'};padding:8px 12px;margin:6px 0;background:#f8fafc;border-radius:0 8px 8px 0;"><div style="font-size:11px;color:#64748b;">${e(l.run_date)} ${l.reviewed_by_angel ? '' : '· 🆕 sin revisar'}</div><div style="font-size:13px;color:#334155;white-space:pre-wrap;">${e(String(l.summary_md).slice(0, 400))}</div></div>`).join('') || '<p style="color:#94a3b8;font-size:13px;">Sin cambios registrados aún. El cron trimestral escribe aquí solo cuando HRSA cambia algo.</p>';
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.status(200).send(`<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Admin · Salud (HPSA)</title>
-<style>body{font-family:-apple-system,sans-serif;background:#f1f5f9;color:#0f172a;margin:0;padding:24px;}a{color:#0d9488;}.wrap{max-width:1000px;margin:0 auto;}</style></head><body><div class="wrap">
+<style>body{font-family:-apple-system,sans-serif;background:#f1f5f9;color:#0f172a;margin:0;padding:24px;}a{color:#0d9488;}.wrap{max-width:1040px;margin:0 auto;}details summary{list-style:none;}</style></head><body><div class="wrap">
 <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
 <h1 style="margin:0;font-size:22px;">🩺 Admin · Salud que falta <span style="font-size:13px;color:#64748b;font-weight:400;">(data HPSA privada)</span></h1>
 <a href="/admin/salud?action=refresh" style="background:#0d9488;color:#fff;padding:9px 16px;border-radius:8px;font-weight:600;text-decoration:none;">↻ Refrescar contra HRSA ahora</a>
 </div>
 ${flash ? `<div style="margin:14px 0;padding:12px 16px;border-radius:8px;background:${flash.startsWith('✅') ? '#f0fdf4' : '#fef2f2'};border:1px solid ${flash.startsWith('✅') ? '#bbf7d0' : '#fecaca'};font-size:14px;">${e(flash)}</div>` : ''}
+${atencionHtml}
 <p style="font-size:13px;color:#64748b;">Última actualización de la data: <strong>${lastRefresh ? new Date(lastRefresh).toLocaleString('es-PR') : '—'}</strong> · El cron corre solo cada trimestre (1ro ene/abr/jul/oct). Este botón lo fuerza cuando quieras. La página pública lee de esta misma data. <a href="https://puertoricosinfiltros.com/salud-que-falta" target="_blank">Ver la página pública →</a></p>
 <div style="display:flex;gap:10px;flex-wrap:wrap;margin:16px 0;">
 ${card(all.length, 'designaciones totales')}
@@ -2844,9 +2908,9 @@ ${card(byDisc('primary').length, 'designaciones primaria')}
 </div>
 <h2 style="font-size:16px;margin-top:24px;">Historial de cambios (lo que HRSA movió)</h2>
 ${logRows}
-<h2 style="font-size:16px;margin-top:24px;">La data completa (${all.length} filas)</h2>
-<div style="overflow:auto;background:#fff;border:1px solid #e2e8f0;border-radius:10px;max-height:600px;">
-<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead style="position:sticky;top:0;background:#f8fafc;"><tr style="text-align:left;color:#64748b;font-size:11px;text-transform:uppercase;"><th style="padding:8px 10px;">Municipio</th><th style="padding:8px 10px;">Disciplina</th><th style="padding:8px 10px;text-align:right;">Proveedores</th><th style="padding:8px 10px;text-align:right;">Faltan</th><th style="padding:8px 10px;text-align:right;">Score</th><th style="padding:8px 10px;text-align:right;">Actualizado (HRSA)</th></tr></thead><tbody>${tableRows}</tbody></table>
+<h2 style="font-size:16px;margin-top:24px;">La data completa (${all.length} filas) — <span style="font-size:13px;color:#64748b;font-weight:400;">click "editar" para corregir o notar cualquier fila. Tus notas sobreviven el refresh de HRSA.</span></h2>
+<div style="overflow:auto;background:#fff;border:1px solid #e2e8f0;border-radius:10px;max-height:640px;">
+<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead style="position:sticky;top:0;background:#f8fafc;"><tr style="text-align:left;color:#64748b;font-size:11px;text-transform:uppercase;"><th style="padding:8px 10px;">Municipio</th><th style="padding:8px 10px;">Disciplina</th><th style="padding:8px 10px;text-align:right;">Proveedores</th><th style="padding:8px 10px;text-align:right;">Faltan</th><th style="padding:8px 10px;text-align:right;">Score</th><th style="padding:8px 10px;text-align:right;">Actualizado</th><th style="padding:8px 10px;"></th></tr></thead><tbody>${tableRows}</tbody></table>
 </div>
 <p style="margin-top:24px;font-size:12px;color:#94a3b8;">Otros paneles: <a href="/admin/municipio">/admin/municipio</a> · <a href="/admin/lifecycle-queue">/admin/lifecycle-queue</a></p>
 </div></body></html>`);
