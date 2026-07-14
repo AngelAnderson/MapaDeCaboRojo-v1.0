@@ -123,8 +123,8 @@ function layout(opts: {
   const langHref = `/${opts.slug}?lang=${isEn ? 'es' : 'en'}`
   const canonicalBase = opts.canonicalHost || (isPRSF ? 'https://puertoricosinfiltros.com' : isReg ? 'https://registromedicopr.com' : SITE_URL)
   const brandName = isPRSF ? 'Puerto Rico Sin Filtros' : isReg ? 'Registro Médico PR' : 'Mapa de Cabo Rojo'
-  // registromedicopr.com has its own GA4 property — keep its data clean/separate from Mapa.
-  const GA = isReg ? 'G-P1H28B6EET' : 'G-6KBMV0LKQ4'
+  // Each domain has its own GA4 property — keep data clean/separate from Mapa.
+  const GA = isReg ? 'G-P1H28B6EET' : isPRSF ? 'G-S848YPDVZT' : 'G-6KBMV0LKQ4'
   const canonical = opts.canonicalUrl || `${canonicalBase}/${opts.slug}`
   const jsonLd = opts.jsonLd
     ? `<script type="application/ld+json">${JSON.stringify(opts.jsonLd)}</script>`
