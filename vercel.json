@@ -59,6 +59,7 @@
     { "source": "/registro/desiertos", "destination": "/api/mapa-pages?page=registro-desiertos" },
     { "source": "/registro/mapa", "destination": "/api/mapa-pages?page=registro-mapa" },
     { "source": "/registro/estado", "destination": "/api/mapa-pages?page=registro-estado" },
+    { "source": "/cambios", "destination": "/api/mapa-pages?page=cambios" },
     { "source": "/raras", "destination": "/api/mapa-pages?page=raras" },
     { "source": "/enfermedades-raras", "destination": "/api/mapa-pages?page=raras" },
     { "source": "/atlas", "destination": "/api/mapa-pages?page=atlas" },

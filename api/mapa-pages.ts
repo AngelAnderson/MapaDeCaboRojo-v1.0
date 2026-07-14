@@ -3404,6 +3404,83 @@ async function handleRegistroAlert(req: any, res: any) {
   }
 }
 
+// =============== /cambios — historial y roadmap del registro (registromedicopr.com) ===============
+async function handleCambios(req: any, res: any) {
+  // Live count so "última actualización" siempre cuadra con la data real
+  const { count: npiCount } = await supabase
+    .from('places').select('id', { count: 'exact', head: true })
+    .not('npi', 'is', null).eq('status', 'open')
+    .in('subcategory', REGISTRY_SPECS.map(x => x.s))
+  const total = (npiCount ?? 20700).toLocaleString('en-US')
+
+  const body = `
+<h1>Historial del registro</h1>
+<p class="text-lg text-slate-600 mt-2">Esto no es un estudio engavetado. Es una herramienta viva. Aquí queda el récord de cada actualización, con fecha, pa' que sepas qué tan fresco está lo que ves.</p>
+
+<div class="not-prose mt-4 flex flex-wrap gap-2 text-xs">
+  <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-shield-halved"></i> ${total} verificados hoy</span>
+  <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-clock-rotate-left"></i> Última actualización: 13 julio 2026</span>
+</div>
+
+<h2>Cómo empezó</h2>
+<p>Esto empezó como un favor. Un conocido me preguntó por un especialista y le pasé una lista que yo había armado pa' mí, verificada contra el registro federal NPPES. Si le servía a él, le servía a cualquiera. La publiqué gratis.</p>
+<p>Después pasó algo que no esperaba: médicos escribiéndome "yo no aparezco, añádeme" y vecinos reportando quién faltaba. Este historial existe porque el registro se mantiene así, entre todos.</p>
+
+<h2>El récord</h2>
+<div class="not-prose space-y-4 mt-4">
+  <div class="bg-white border-2 border-teal-300 rounded-xl p-5">
+    <div class="text-xs font-bold uppercase tracking-widest text-teal-700 mb-1">13 julio 2026 · Última actualización</div>
+    <p class="font-bold text-slate-900">La actualización más grande hasta la fecha: +14,368 proveedores y facilidades.</p>
+    <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
+      <li><strong>Dentistas (1,631)</strong> — por primera vez, todos los de PR, por pueblo.</li>
+      <li><strong>Médicos de cabecera</strong> — internistas (1,110) y medicina de familia (596). La pregunta #1.</li>
+      <li><strong>13 profesiones aliadas</strong> — terapeutas del habla (1,167), terapistas físicos y ocupacionales, trabajadores sociales clínicos (2,301), consejeros, nutricionistas (402), PAs, enfermeras practicantes, audiólogos, parteras, quiroprácticos y farmacéuticos (3,369).</li>
+      <li><strong>Facilidades (nuevo)</strong> — 222 hospitales, 203 agencias de cuidado en el hogar, 103 clínicas comunitarias que te atienden sin plan, 72 hospicios, 58 urgent care, 40 hogares de envejecientes y 10 centros de diálisis.</li>
+    </ul>
+    <p class="text-sm text-slate-500 mt-2">El registro pasó de 32 a 56 categorías y de ~6,300 a ~${total} verificados contra el gobierno federal.</p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-xl p-5">
+    <div class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">Julio 2026</div>
+    <p class="text-sm text-slate-600">Filtro "¿acepta mi plan?", guías por situación (/necesito), semáforo de los 78 pueblos (/pueblo), alertas por pueblo, búsqueda por síntoma, y el mapa de enfermedades fundadoras boricuas (/atlas y /raras).</p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-xl p-5">
+    <div class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">Junio 2026</div>
+    <p class="text-sm text-slate-600">Nace el registro público: 32 especialidades, 6,247 especialistas verificados NPPES, una página por doctor, el observatorio de desiertos médicos y el mapa interactivo por municipio.</p>
+  </div>
+</div>
+
+<h2>Lo que viene</h2>
+<p class="text-sm text-slate-500">Sin fechas prometidas. Se publica cuando está verificado, no antes.</p>
+<ul>
+  <li><strong>Calidad, no solo existencia</strong> — estrellas e inspecciones federales (CMS Care Compare) pa' hospitales, hogares de envejecientes y agencias de cuidado en el hogar.</li>
+  <li><strong>"¿Acepta mi plan?" completo</strong> — llenado por la comunidad, oficina por oficina.</li>
+  <li><strong>Alertas por pueblo</strong> — te aviso cuando llegue el especialista que le falta al tuyo.</li>
+</ul>
+
+<h2>Úsalo hoy</h2>
+<p>Busca por especialidad y pueblo en <a href="/registro">el registro</a>, o textea el nombre del especialista (DENTISTA, INTERNISTA, CLINICA…) al <strong>787-417-7711</strong> y el Veci te contesta. Gratis, sin cuenta.</p>
+<p>Si tu médico no aparece, <a href="/registro#claim">dímelo y lo verifico</a>. Así es que esto crece.</p>
+`
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600')
+  res.status(200).send(layout({
+    title: 'Historial y roadmap · Registro Médico PR',
+    description: `Récord de cada actualización del registro médico verificado de Puerto Rico. Última: 13 julio 2026 — 56 categorías, ${total} proveedores y facilidades verificados contra NPPES.`,
+    slug: 'cambios',
+    ogImage: '/og/registro.png',
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+    canonicalUrl: 'https://registromedicopr.com/cambios',
+    bodyHtml: body,
+    jsonLd: {
+      '@context': 'https://schema.org', '@type': 'WebPage',
+      url: 'https://registromedicopr.com/cambios',
+      name: 'Historial y roadmap · Registro Médico PR',
+      dateModified: '2026-07-13', inLanguage: 'es',
+      description: 'Historial de actualizaciones del registro médico verificado de Puerto Rico.',
+    },
+  }))
+}
+
 async function handleRegistro(req: any, res: any) {
   const en = String(req.query.lang || '') === 'en'
   const t = (es: string, env: string) => en ? env : es
@@ -3439,7 +3516,7 @@ async function handleRegistro(req: any, res: any) {
 <div class="not-prose mt-3 flex flex-wrap gap-2 text-xs">
   <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-shield-halved"></i> ${t('NPI federal verificado', 'Federal NPI verified')}</span>
   <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-list-check"></i> ${REGISTRY_SPECS.length} ${t('especialidades', 'specialties')}</span>
-  <span class="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-calendar-check"></i> ${t('Actualizado julio 2026', 'Updated July 2026')}</span>
+  <a href="/cambios" class="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1 rounded-full hover:border-teal-400"><i class="fa-solid fa-calendar-check"></i> ${t('Última actualización: 13 jul 2026 →', 'Last updated: Jul 13, 2026 →')}</a>
 </div>
 
 <div id="reg-tool" class="not-prose mt-5 bg-white border-2 border-teal-300 rounded-2xl p-6 shadow-sm scroll-mt-24">
@@ -11935,6 +12012,7 @@ export default async function handler(req: any, res: any) {
     case 'esencia': return await handleEsencia(req, res)
     case 'activos': return handleActivos(req, res, { layout, escapeHtml })
     case 'registro-hub': return await handleRegistroHub(req, res)
+    case 'cambios': return await handleCambios(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)
     case 'civico-json': return handleCivicoJson(req, res)
