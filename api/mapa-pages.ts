@@ -6566,7 +6566,17 @@ ${shareRow({ text: `El gobierno federal certificó escasez de salud mental en 52
     <tbody>${mentalRows}</tbody>
   </table>
 </div>
-<p class="text-sm text-slate-500 mt-2">Las 52 designaciones de salud mental de PR (dental: ${dental.length || 77} municipios; primaria: ${primary.length || 20}). Fila verde = Cabo Rojo. Data en la tabla pública <code>pr_hpsa_designations</code>, refrescada contra el servidor de HRSA cada trimestre. Designaciones 2022-2023.</p>
+<p class="text-sm text-slate-500 mt-2">Las 52 designaciones de salud mental de PR. Fila verde = Cabo Rojo. Designaciones 2022-2023.</p>
+
+<h2 id="tabla-dental">Dental, municipio por municipio</h2>
+<p class="text-sm text-slate-600 mb-2">La escasez dental es aún más amplia: <strong>${dental.length || 77} municipios</strong> designados (casi toda la isla), <strong>faltan ${sumShort(dental).toFixed(0) || 297} dentistas</strong> para la meta federal mínima.</p>
+<div class="not-prose overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm">
+    <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Municipio</th><th class="py-2 px-3 text-right">Proveedores</th><th class="py-2 px-3 text-right">Faltan</th><th class="py-2 px-3 text-right">Escasez</th><th class="py-2 px-3 text-right">Actualizado</th></tr></thead>
+    <tbody>${dental.length ? dental.sort((a, b) => (b.score - a.score)).map(filaMental).join('') : `<tr><td colspan="5" class="py-3 px-3 text-slate-500 text-sm">Data en vivo no disponible ahora. Verificado jul 2026: 77 municipios designados, faltan ~297 dentistas.</td></tr>`}</tbody>
+  </table>
+</div>
+<p class="text-sm text-slate-500 mt-2">Data en la tabla pública <code>pr_hpsa_designations</code> (${rows.length || 149} designaciones: ${dental.length || 77} dental, ${mental.length || 52} salud mental, ${primary.length || 20} primaria), re-verificada contra el servidor de HRSA cada trimestre. <strong>Última verificación: julio 2026.</strong></p>
 
 <h2 id="citables">Para copiar y compartir</h2>
 ${citableCards}
@@ -6590,20 +6600,54 @@ ${mientrasTanto(
 <p class="text-sm text-slate-500 mt-6">Cómo se hizo: barrido completo de las designaciones HPSA de Puerto Rico desde el servidor de mapas de HRSA (gisportal.hrsa.gov), guardado en la tabla pública <code>pr_hpsa_designations</code> y refrescado periódicamente. Los números son verificables en HPSA Find. Designaciones federales 2022-2023. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a>. Julio 2026.</p>
 ${SHARE_COPY_SCRIPT}
 `
+  const nZeroM = zeroM || 44
+  const publisher = { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' }
+  const author = { '@type': 'Person', name: 'Angel Anderson' }
+  const citation = [
+    { '@type': 'CreativeWork', name: 'HRSA HPSA Find — Health Professional Shortage Areas', url: 'https://data.hrsa.gov/topics/health-workforce/shortage-areas/hpsa-find' },
+    { '@type': 'CreativeWork', name: 'NPPES — National Plan & Provider Enumeration System (CMS)', url: 'https://nppes.cms.hhs.gov' },
+    { '@type': 'CreativeWork', name: 'HRSA — Shortage Designation Methodology', url: 'https://bhw.hrsa.gov/workforce-shortage-areas/shortage-designation' },
+  ]
   const jsonLd = {
-    '@context': 'https://schema.org', '@type': 'Report',
-    name: 'La salud que falta: las designaciones federales de escasez médica de Puerto Rico',
-    about: 'Barrido completo de las áreas de escasez de profesionales de salud (HPSA) de Puerto Rico, con el dinero federal aprobado para resolverlas.',
-    author: { '@type': 'Person', name: 'Angel Anderson' },
-    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
-    inLanguage: 'es', datePublished: '2026-07-13', url: 'https://puertoricosinfiltros.com/salud-que-falta',
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Report', '@id': 'https://puertoricosinfiltros.com/salud-que-falta#report',
+        name: 'La salud que falta: las designaciones federales de escasez médica de Puerto Rico',
+        about: 'Barrido completo de las áreas de escasez de profesionales de salud (HPSA) de Puerto Rico, con el dinero federal aprobado para resolverlas.',
+        author, publisher, citation, inLanguage: 'es',
+        datePublished: '2026-07-13', dateModified: '2026-07-14',
+        url: 'https://puertoricosinfiltros.com/salud-que-falta',
+      },
+      {
+        '@type': 'Dataset', '@id': 'https://puertoricosinfiltros.com/salud-que-falta#dataset',
+        name: 'Designaciones HPSA de escasez de salud de Puerto Rico',
+        description: `Las ${rows.length || 149} designaciones federales de área de escasez de profesionales de salud (HPSA) activas en Puerto Rico: ${dental.length || 77} dental, ${mental.length || 52} salud mental, ${primary.length || 20} cuidado primario. Por municipio: proveedores a tiempo completo, faltantes para la meta federal, y score de escasez.`,
+        creator: author, publisher, license: 'https://www.usa.gov/government-works',
+        isBasedOn: 'https://data.hrsa.gov/topics/health-workforce/shortage-areas/hpsa-find',
+        spatialCoverage: { '@type': 'Place', name: 'Puerto Rico' },
+        temporalCoverage: '2022/2023', dateModified: '2026-07-14',
+        variableMeasured: ['proveedores a tiempo completo (FTE)', 'proveedores faltantes para la meta federal', 'HPSA score de escasez (0-26)'],
+        url: 'https://puertoricosinfiltros.com/salud-que-falta',
+      },
+      {
+        '@type': 'FAQPage', '@id': 'https://puertoricosinfiltros.com/salud-que-falta#faq',
+        mainEntity: [
+          { '@type': 'Question', name: '¿Qué significa que un pueblo tenga "menos de 1" o "ningún" proveedor?', acceptedAnswer: { '@type': 'Answer', text: 'Es el conteo federal de proveedores a tiempo completo (FTE) atendiendo a la población de bajos ingresos. El gobierno cuenta horas: si varios proveedores juntos dedican menos de una jornada completa, suma menos de "uno". "Ninguno" significa que no hay proveedor certificado atendiendo a esa población.' } },
+          { '@type': 'Question', name: '¿Qué significa "faltan 2" proveedores?', acceptedAnswer: { '@type': 'Answer', text: 'Es cuántos proveedores más harían falta para llegar a la meta mínima federal (un proveedor por cada X personas). Lo calcula HRSA.' } },
+          { '@type': 'Question', name: '¿Qué es el score de escasez de 0 a 26?', acceptedAnswer: { '@type': 'Answer', text: 'Es la nota que asigna HRSA combinando cuánta gente hay por proveedor, cuánta pobreza, y qué tan lejos queda el próximo médico. Mientras más alto, peor la escasez. 20 o más es grave.' } },
+          { '@type': 'Question', name: '¿Quién mantiene esta lista y de cuándo es?', acceptedAnswer: { '@type': 'Answer', text: 'HRSA (agencia federal) certifica y publica las designaciones vía HPSA Find. La data la somete la Primary Care Office del Departamento de Salud de Puerto Rico; el conteo de proveedores sale de registros federales auto-reportados (NPPES). Las designaciones de PR se actualizaron entre 2022 y 2023.' } },
+        ],
+      },
+    ],
   }
+  const ogImage = `https://puertoricosinfiltros.com/api/og?theme=sinfiltros&t=${encodeURIComponent('La salud|| que falta')}&k=${encodeURIComponent(`${nZeroM} pueblos de PR: cero salud mental`)}&sub=${encodeURIComponent('El gobierno federal lo certificó. El dinero para arreglarlo lleva años aprobado.')}&site=puertoricosinfiltros.com/salud-que-falta`
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
   res.status(200).send(layout({
     title: 'La salud que falta — las zonas de escasez médica de Puerto Rico, con el dinero que las arregla',
-    description: `El gobierno federal certificó escasez de salud mental en 52 municipios de PR; en ${zeroM || 44} el conteo da cero. El dinero para reclutar médicos ya está aprobado. La tabla completa, con la fuente.`,
-    slug: 'salud-que-falta', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    description: `El gobierno federal certificó escasez de salud mental en 52 municipios de PR; en ${nZeroM} el conteo da cero. El dinero para reclutar médicos ya está aprobado. La tabla completa, con la fuente.`,
+    slug: 'salud-que-falta', bodyHtml: body, jsonLd, ogImage,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
