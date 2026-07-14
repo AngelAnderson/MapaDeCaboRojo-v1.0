@@ -240,6 +240,20 @@ export default async function handler(req: any, res: any) {
     (place.amenities && place.amenities.npi) ||
     null;
 
+  // De-cannibalization: this same NPPES provider also lives on registromedicopr.com
+  // (the dedicated medical property). Two of Angel's own domains hosting the same
+  // provider splits authority → mapa (older domain) was winning medical queries that
+  // registro should own. Canonical → registro consolidates the signal. Gated on npi so
+  // non-NPPES health places (gyms, some shops) that registro does NOT serve keep their
+  // own canonical (never point a canonical at a 404). Allowlist = individual clinicians
+  // only (registro's /especialista route). Orgs like farmacia/hospital/laboratorio 302
+  // on that route, so they stay self-canonical. Verified live: dentista/fisiatra/
+  // quiropractico → 200; farmacia → 302 (excluded).
+  const REG_ESPECIALISTA_TYPES = new Set(['medico', 'dentista', 'salud-mental', 'quiropractico', 'fisiatra', 'optica']);
+  const regCanonical: string | null = (npi && REG_ESPECIALISTA_TYPES.has(type))
+    ? `https://registromedicopr.com/especialista/${esc(place.slug || place.id)}`
+    : null;
+
   // Data quality (cross-referenced against Google Places)
   // See scripts/verify-pharmacies.mjs and Outbox/PharmaAPI/nppes-quality-audit.md
   const qualityScore: number | null = place.data_quality_score ?? null;
@@ -354,10 +368,10 @@ export default async function handler(req: any, res: any) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${esc(title)}</title>
   <meta name="description" content="${description}">
-  <link rel="canonical" href="${pageUrl}">
-  <link rel="alternate" hreflang="es-PR" href="${pageUrlEs}">
+  <link rel="canonical" href="${regCanonical || pageUrl}">
+  ${regCanonical ? '' : `<link rel="alternate" hreflang="es-PR" href="${pageUrlEs}">
   <link rel="alternate" hreflang="en-US" href="${pageUrlEn}">
-  <link rel="alternate" hreflang="x-default" href="${pageUrlEs}">
+  <link rel="alternate" hreflang="x-default" href="${pageUrlEs}">`}
 
   <!-- Open Graph -->
   <meta property="og:type" content="business.business">
