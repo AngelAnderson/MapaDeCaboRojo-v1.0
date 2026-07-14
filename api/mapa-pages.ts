@@ -2664,6 +2664,7 @@ const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:n
   {s:'psicólogo',l:'Psicólogo (terapia)',e:'🧠',kw:'PSICOLOGO',md:false,t:1170,r:{Oeste:162,Norte:99,Centro:21,Sur:140,Este:159,Metro:588}},
   {s:'optómetra',l:'Optómetra (examen de vista)',e:'👓',kw:'OPTOMETRA',md:false,t:530,r:{Oeste:76,Norte:41,Centro:10,Sur:59,Este:82,Metro:262}},
   {s:'podiatra',l:'Podiatra (pies)',e:'🦶',kw:'PODIATRA',md:false,t:57,r:{Oeste:6,Norte:2,Centro:1,Sur:6,Este:9,Metro:33}},
+  {s:'dentista',l:'Dentista (dientes)',e:'🦷',kw:'DENTISTA',md:false,t:1631,r:{Oeste:197,Norte:115,Centro:39,Sur:156,Este:251,Metro:873}},
 ]
 
 const REG_PODCAST_URL = 'https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/especialistas-fantasma-desiertos.m4a'
@@ -9388,13 +9389,14 @@ const SPEC_INFO: Record<string, { treats: string; whenToGo: string; note: string
   'psicólogo': { treats: 'El profesional que te ayuda con terapia y a hablar de lo que sientes.', whenToGo: 'Cuando quieres apoyo, terapia o herramientas para manejar la ansiedad o el estrés.', note: 'Tiene licencia, pero no es médico (MD) y no receta medicamentos.' },
   'optómetra': { treats: 'El profesional que examina la vista y receta espejuelos o lentes de contacto.', whenToGo: 'Cuando ves borroso o te toca el examen anual de la vista.', note: 'Tiene licencia, pero no es médico (MD). Para operación o enfermedad del ojo, vas al oftalmólogo.' },
   'podiatra': { treats: 'El profesional que cuida los pies y los tobillos.', whenToGo: 'Cuando tienes dolor de pies, uñas enterradas, callos o problemas del pie por diabetes.', note: 'Tiene licencia, pero no es médico (MD); es especialista del pie.' },
+  'dentista': { treats: 'El doctor de los dientes, las encías y la boca.', whenToGo: 'Para la limpieza cada 6 meses, dolor de muela, caries o problemas de encías.', note: 'Es doctor en medicina dental (DMD), no médico (MD). Incluye ortodoncistas y otras especialidades dentales.' },
 }
 function specToUrl(sub: string): string {
   return sub.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 // English specialty labels (for ?lang=en on hub pages) — keyed by subcategory slug.
 const SPEC_LABEL_EN: Record<string, string> = {
-  'cardiólogo':'Cardiologist','psiquiatra':'Psychiatrist','fisiatra':'Physiatrist (Rehab)','ginecólogo':'OB-GYN','pediatra':'Pediatrician','dermatólogo':'Dermatologist','gastroenterólogo':'Gastroenterologist','oftalmólogo':'Ophthalmologist (Eye MD)','ortopeda':'Orthopedic Surgeon','neurologo':'Neurologist','urólogo':'Urologist','endocrinologo':'Endocrinologist (Diabetes)','nefrólogo':'Nephrologist (Kidney)','neumólogo':'Pulmonologist (Lungs)','oncólogo':'Oncologist / Hematologist','reumatólogo':'Rheumatologist (Arthritis)','geriatra':'Geriatrician','otorrinolaringólogo':'ENT (Ear, Nose & Throat)','infectólogo':'Infectious Disease','alergista':'Allergist / Immunologist','medicina de emergencia':'Emergency Medicine','cirujano general':'General Surgeon','anestesiólogo':'Anesthesiologist','radiólogo':'Radiologist','neurocirujano':'Neurosurgeon','cirujano plástico':'Plastic Surgeon','cirujano torácico':'Thoracic Surgeon','coloproctólogo':'Colorectal Surgeon','manejo de dolor':'Pain Management','psicólogo':'Psychologist','optómetra':'Optometrist','podiatra':'Podiatrist',
+  'cardiólogo':'Cardiologist','psiquiatra':'Psychiatrist','fisiatra':'Physiatrist (Rehab)','ginecólogo':'OB-GYN','pediatra':'Pediatrician','dermatólogo':'Dermatologist','gastroenterólogo':'Gastroenterologist','oftalmólogo':'Ophthalmologist (Eye MD)','ortopeda':'Orthopedic Surgeon','neurologo':'Neurologist','urólogo':'Urologist','endocrinologo':'Endocrinologist (Diabetes)','nefrólogo':'Nephrologist (Kidney)','neumólogo':'Pulmonologist (Lungs)','oncólogo':'Oncologist / Hematologist','reumatólogo':'Rheumatologist (Arthritis)','geriatra':'Geriatrician','otorrinolaringólogo':'ENT (Ear, Nose & Throat)','infectólogo':'Infectious Disease','alergista':'Allergist / Immunologist','medicina de emergencia':'Emergency Medicine','cirujano general':'General Surgeon','anestesiólogo':'Anesthesiologist','radiólogo':'Radiologist','neurocirujano':'Neurosurgeon','cirujano plástico':'Plastic Surgeon','cirujano torácico':'Thoracic Surgeon','coloproctólogo':'Colorectal Surgeon','manejo de dolor':'Pain Management','psicólogo':'Psychologist','optómetra':'Optometrist','podiatra':'Podiatrist','dentista':'Dentist',
 }
 // English specialty explainers (for ?lang=en on hub pages).
 const SPEC_INFO_EN: Record<string, { treats: string; whenToGo: string; note: string }> = {
@@ -9430,6 +9432,7 @@ const SPEC_INFO_EN: Record<string, { treats: string; whenToGo: string; note: str
   'psicólogo':{treats:'The licensed professional who helps you through therapy and talking about what you feel.',whenToGo:'When you want support, therapy, or tools to manage anxiety or stress.',note:'They are licensed, but they are not a medical doctor (MD) and cannot prescribe medication.'},
   'optómetra':{treats:'The professional who examines your vision and prescribes glasses or contact lenses.',whenToGo:'When your vision is blurry or it is time for your yearly eye exam.',note:'They are licensed, but they are not a medical doctor (MD). For surgery or eye disease, see an ophthalmologist.'},
   'podiatra':{treats:'The professional who cares for your feet and ankles.',whenToGo:'When you have foot pain, ingrown nails, calluses, or foot problems from diabetes.',note:'They are licensed, but they are not a medical doctor (MD); they are a foot specialist.'},
+  'dentista':{treats:'The doctor for your teeth, gums, and mouth.',whenToGo:'For your cleaning every 6 months, a toothache, cavities, or gum problems.',note:'They hold a dental degree (DMD), not an MD. Includes orthodontists and other dental specialties.'},
 }
 const SPEC_BY_URL: Record<string, typeof REGISTRY_SPECS[number]> = {}
 REGISTRY_SPECS.forEach(x => { SPEC_BY_URL[specToUrl(x.s)] = x })
