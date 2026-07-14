@@ -2573,7 +2573,7 @@ function handleAcceso(_req: any, res: any) {
 </div>
 
 <h2>Cómo lo medimos</h2>
-<p>Conteo de médicos: registro federal <strong>NPPES / CMS</strong> (board-certificados, por código de taxonomía, individuos con práctica en Puerto Rico, junio 2026). Cada NPI es público y verificable. Población: <strong>Censo Decenal 2020 (U.S. Census Bureau)</strong>. Mantenido a mano, uno por uno. Si encuentras un dato viejo, dínoslo y se corrige.</p>
+<p>Conteo de médicos: registro federal <strong>NPPES / CMS</strong> (board-certificados, por código de taxonomía, individuos con práctica en Puerto Rico, junio 2026). Cada NPI es público y verificable. Población: <strong>Censo Decenal 2020 (U.S. Census Bureau)</strong>. Cruzado por municipio contra el registro federal. Si encuentras un dato viejo, dínoslo y se corrige.</p>
 <p class="text-sm text-slate-600">¿Periodista o plan médico? Esta data es citable. <a href="mailto:angel@angelanderson.com" class="text-teal-600 hover:underline">angel@angelanderson.com</a>.</p>
 
 <div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
@@ -3489,12 +3489,12 @@ async function handleRegistro(req: any, res: any) {
   const allied = REGISTRY_SPECS.filter(x => !x.md && !x.org)
   const orgs = REGISTRY_SPECS.filter(x => x.org)
   // Live count — accurate + auto-updating (page is cached s-maxage=3600, so ~1 query/hour).
-  // Only the 32 verified NPPES specialties count as "registry specialists".
+  // Las 56 categorías del registro (REGISTRY_SPECS) cuentan como "verificados".
   const { count: npiCount } = await supabase
     .from('places').select('id', { count: 'exact', head: true })
     .not('npi', 'is', null).eq('status', 'open')
     .in('subcategory', REGISTRY_SPECS.map(x => x.s))
-  const totalVerified = (npiCount ?? 6247).toLocaleString('en-US')
+  const totalVerified = (npiCount ?? 20618).toLocaleString('en-US')
 
   const optionsHtml = REGISTRY_SPECS.map(x =>
     `<option value="${escapeHtml(x.s)}">${x.e} ${escapeHtml(en ? (SPEC_LABEL_EN[x.s] || x.l) : x.l)} (${x.t})</option>`).join('')
@@ -3796,7 +3796,7 @@ async function handleRegistro(req: any, res: any) {
 
 <h2 id="como-se-hizo">${t('Cómo se hizo (y por qué puedes confiar)', 'How it was made (and why you can trust it)')}</h2>
 <p>${t('Cada persona en este registro existe en el <strong>NPPES</strong> (National Plan and Provider Enumeration System), el registro oficial del gobierno federal de EE.UU. — el mismo que usan Medicare y los planes médicos. Tomamos solo <strong>proveedores individuales con práctica en Puerto Rico</strong>, por código de taxonomía (la especialidad oficial), y lo pusimos en español, por región. El <strong>NPI</strong> de cada uno es un número público que cualquiera puede verificar.', 'Every person in this registry exists in the <strong>NPPES</strong> (National Plan and Provider Enumeration System), the official US federal registry that Medicare and health plans use. We took only <strong>individual providers practicing in Puerto Rico</strong>, by taxonomy code (the official specialty), and organized them by region. Each <strong>NPI</strong> is a public number anyone can verify.')}</p>
-<p class="text-sm text-slate-600">${t('Lo que no encontrarás en ningún otro sitio: el gobierno tiene la data, pero enterrada, en inglés, sin organizar por pueblo. La pusimos clara, en un solo sitio, a mano. Si ves un dato viejo o un especialista que ya no ejerce, dínoslo y se corrige — ', 'What you won\'t find anywhere else: the government has the data, but buried, in English, not organized by town. We made it clear, in one place, by hand. See something outdated or a provider who no longer practices here? Tell us and we fix it — ')}<a href="mailto:angel@angelanderson.com" class="text-teal-600 hover:underline">angel@angelanderson.com</a>.</p>
+<p class="text-sm text-slate-600">${t('Lo que no encontrarás en ningún otro sitio: el gobierno tiene la data, pero enterrada, en inglés, sin organizar por pueblo. La pusimos clara, en un solo sitio, en español y por pueblo. Si ves un dato viejo o un especialista que ya no ejerce, dínoslo y se corrige — ', 'What you won\'t find anywhere else: the government has the data, but buried, in English, not organized by town. We made it clear, in one place, in Spanish and by town. See something outdated or a provider who no longer practices here? Tell us and we fix it — ')}<a href="mailto:angel@angelanderson.com" class="text-teal-600 hover:underline">angel@angelanderson.com</a>.</p>
 <p class="text-sm text-slate-600"><strong>${t('¿Periodista, plan médico, o investigador?', 'Journalist, health plan, or researcher?')}</strong> ${t('Esta data es citable y hay acceso programático. Escríbenos.', 'This data is citable and programmatic access is available. Reach out.')}</p>
 
 ${regDisclaimer(en)}
@@ -3941,7 +3941,7 @@ async function handleEspecialista(req: any, res: any) {
     return
   }
 
-  // Registry integrity: only the 32 verified NPPES specialties get a specialist page.
+  // Registry integrity: only the 56 registry categories (REGISTRY_SPECS) get a profile page.
   // Non-registry NPI rows (old Cabo Rojo health businesses: farmacia, spa, etc.) → back to /registro.
   if (!REGISTRY_SUBS.has(place.subcategory)) {
     res.statusCode = 302
@@ -4361,7 +4361,7 @@ Tengo un dataset verificado contra el NPPES federal sobre el acceso a especialis
 - La fuerza medica cayo de ~14,500 (2009) a ~9,800; salen 365-500 medicos al año (JAMA jun 2025).
 - El centro de la isla tiene 9 de 32 especialidades en cero: cero neumologos vs 84 en el metro (Registro Medico PR / NPPES, jul 2026).
 - PR tiene 42 zonas de escasez (HPSA) de cuidado primario; en FY2025 solo 34 clinicos usaron el repago federal NHSC, 1.77 millones en toda la isla (HRSA).
-- De 6,247 especialistas verificados, uno solo tiene publico que plan medico acepta.
+- De más de 20,000 proveedores verificados, solo 2 tienen publico que plan medico aceptan.
 
 El angulo: no es que "falten medicos" en abstracto. Es pago federal y concentracion en el metro, y hay palancas concretas que reportar (P. del S. 15, NHSC, designaciones HPSA). Te paso el dataset por pueblo, las fuentes y quien puede hablar.
 
@@ -4383,7 +4383,7 @@ Contacto: Angel Anderson - angel@angelanderson.com - registromedicopr.com/observ
   <ol class="grid md:grid-cols-3 gap-4 text-sm list-none m-0 p-0">
     <li><span class="text-2xl font-black text-teal-300">1</span><br><strong>No faltan médicos por vagancia.</strong> Medicare le paga a PR ~40% menos, el médico gana ~$67 mil menos al año, y se va.</li>
     <li><span class="text-2xl font-black text-teal-300">2</span><br><strong>Los que quedan están casi todos en el metro.</strong> La montaña tiene especialidades enteras en cero. El mapa está abajo.</li>
-    <li><span class="text-2xl font-black text-teal-300">3</span><br><strong>Nadie sabe qué médico coge qué plan.</strong> De 6,247 especialistas, uno solo tiene ese dato público. Eso lo estamos llenando entre todos.</li>
+    <li><span class="text-2xl font-black text-teal-300">3</span><br><strong>Nadie sabe qué médico coge qué plan.</strong> De más de 20,000 proveedores, solo 2 tienen ese dato público. Eso lo estamos llenando entre todos.</li>
   </ol>
 </div>
 
@@ -4555,10 +4555,10 @@ Contacto: Angel Anderson - angel@angelanderson.com - registromedicopr.com/observ
     <li>· La fuerza médica cayó de ~14,500 (2009) a ~9,800; salen 365-500 médicos al año (JAMA jun 2025)</li>
     <li>· El Centro de la isla tiene 9 de 32 especialidades en cero: cero neumólogos vs 84 en el metro (Registro Médico PR, verificado contra NPPES, jul 2026)</li>
     <li>· PR tiene 42 zonas de escasez (HPSA) de cuidado primario; en FY2025 solo 34 clínicos usaron el repago federal NHSC, $1.77M en toda la isla (HRSA)</li>
-    <li>· De 6,247 especialistas verificados, uno solo tiene público qué plan médico acepta (Registro Médico PR)</li>
+    <li>· De más de 20,000 proveedores verificados, solo 2 tienen público qué plan médico aceptan (Registro Médico PR)</li>
   </ul>
   <div class="mt-3 flex flex-wrap items-center gap-2">
-    <button class="share-copy inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-full text-xs" data-copy="Cifras del Observatorio del Acceso Médico de PR (registromedicopr.com/observatorio, jul 2026): Medicare le paga a PR ~38-41% menos que al continente (STAT 2024; JAMA jun 2025). Fuerza médica: de ~14,500 (2009) a ~9,800; salen 365-500/año (JAMA). El Centro de la isla: 9 de 32 especialidades en cero; cero neumólogos vs 84 en el metro (Registro Médico PR/NPPES). PR tiene 42 HPSAs de cuidado primario; solo 34 clínicos usaron el NHSC en FY2025, $1.77M (HRSA). De 6,247 especialistas verificados, 1 tiene público qué plan acepta. Contacto y dataset por pueblo: angel@angelanderson.com"><i class="fa-solid fa-copy"></i> Copiar las cifras</button>
+    <button class="share-copy inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-full text-xs" data-copy="Cifras del Observatorio del Acceso Médico de PR (registromedicopr.com/observatorio, jul 2026): Medicare le paga a PR ~38-41% menos que al continente (STAT 2024; JAMA jun 2025). Fuerza médica: de ~14,500 (2009) a ~9,800; salen 365-500/año (JAMA). El Centro de la isla: 9 de 32 especialidades en cero; cero neumólogos vs 84 en el metro (Registro Médico PR/NPPES). PR tiene 42 HPSAs de cuidado primario; solo 34 clínicos usaron el NHSC en FY2025, $1.77M (HRSA). De más de 20,000 proveedores verificados, solo 2 tienen público qué plan aceptan. Contacto y dataset por pueblo: angel@angelanderson.com"><i class="fa-solid fa-copy"></i> Copiar las cifras</button>
     <a href="${REG_PODCAST_URL}" class="inline-flex items-center gap-1.5 bg-white border border-slate-300 text-slate-700 font-bold px-4 py-2 rounded-full text-xs hover:bg-slate-100"><i class="fa-solid fa-headphones"></i> Audio 13 min</a>
     <a href="${REG_REPORT_URL}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 bg-white border border-slate-300 text-slate-700 font-bold px-4 py-2 rounded-full text-xs hover:bg-slate-100"><i class="fa-solid fa-file-pdf"></i> Reporte PDF</a>
   </div>
@@ -4675,8 +4675,8 @@ async function handleRegistroDesiertos(req: any, res: any) {
   const FALLBACK_BARS: MuniRatio[] = [
     { municipio: 'San Juan', poblacion: 318441, especialistas: 2193, por_10k_hab: 68.9 },
     { municipio: 'Ponce', poblacion: 132502, especialistas: 500, por_10k_hab: 37.7 },
-    { municipio: 'Mayagüez', poblacion: 77255, especialistas: 281, por_10k_hab: 36.4 },
-    { municipio: 'Cabo Rojo', poblacion: 48988, especialistas: 99, por_10k_hab: 20.2 },
+    { municipio: 'Mayagüez', poblacion: 77255, especialistas: 279, por_10k_hab: 36.1 },
+    { municipio: 'Cabo Rojo', poblacion: 48988, especialistas: 32, por_10k_hab: 6.5 },
     { municipio: 'Arroyo', poblacion: 18046, especialistas: 4, por_10k_hab: 2.2 },
     { municipio: 'Jayuya', poblacion: 15045, especialistas: 2, por_10k_hab: 1.3 },
     { municipio: 'Guánica', poblacion: 16783, especialistas: 2, por_10k_hab: 1.2 },
@@ -4934,7 +4934,7 @@ async function handleRegistroPorque(req: any, res: any) {
 
 <p><i>(Las 29 especialidades completas están en el apéndice.)</i></p>
 
-<blockquote style="border-left:3px solid #0d9488;padding-left:10px;color:#334155"><b>El médico fantasma.</b> Aquí está la trampa que hace que nadie vea la crisis clara: <b>estos números son un techo, no un piso.</b> Tener un número federal (NPI) no es estar viendo pacientes. Pregúntale a cualquier vecino mayor y te dice <i>&quot;mi doctor se fue pa&#x27; Estados Unidos&quot;</i> — pero ese doctor sigue apareciendo como activo en el registro federal, porque el NPI no se apaga cuando uno se va. La prueba: el estudio de FARO cuenta <b>84</b> endocrinólogos activos; el registro federal cuenta <b>158</b> con NPI. Esos 74 de diferencia son fantasmas: número vivo, médico que ya no está. <b>Lo que de verdad queda atendiendo es aún menos que esta tabla.</b> Y esa es exactamente la razón por la que este registro se verifica a mano, uno por uno: los directorios federales están 45-52% equivocados, y nadie los revisa.</blockquote>
+<blockquote style="border-left:3px solid #0d9488;padding-left:10px;color:#334155"><b>El médico fantasma.</b> Aquí está la trampa que hace que nadie vea la crisis clara: <b>estos números son un techo, no un piso.</b> Tener un número federal (NPI) no es estar viendo pacientes. Pregúntale a cualquier vecino mayor y te dice <i>&quot;mi doctor se fue pa&#x27; Estados Unidos&quot;</i> — pero ese doctor sigue apareciendo como activo en el registro federal, porque el NPI no se apaga cuando uno se va. La prueba: el estudio de FARO cuenta <b>84</b> endocrinólogos activos; el registro federal cuenta <b>158</b> con NPI. Esos 74 de diferencia son fantasmas: número vivo, médico que ya no está. <b>Lo que de verdad queda atendiendo es aún menos que esta tabla.</b> Y esa es exactamente la razón por la que cada perfil enlaza su NPI federal pa' que lo confirmes tú, y la comunidad corrige al que ya no está: los directorios federales están 45-52% equivocados, y nadie más los revisa.</blockquote>
 
 <p>Este informe explica las 3 piezas de esa matemática — la fórmula, el peaje y la mesada — y qué se puede hacer, hoy, con nombre y apellido.</p>
 
@@ -5180,7 +5180,7 @@ async function handleComparte(req: any, res: any) {
     { q: '¿Cuánto dinero federal para atraer médicos se está quedando sin reclamar en Puerto Rico?', a: `${g.cupon} municipios de PR tienen una designación federal de salud mental activa (que destraba repago de préstamos del NHSC y bono de Medicare) y a la vez CERO psiquiatras ejerciendo. Son ${n(g.cuponPob)} personas con el dinero aprobado y sin médico que lo cobre.`, srcText: 'Cruce NPPES/CMS × archivos HRSA, verificado municipio por municipio (ver el detalle).', srcUrl: 'https://registromedicopr.com/registro/estado' },
     { q: '¿Cuántos pueblos de Puerto Rico no tienen ni un solo especialista médico?', a: `${g.cero} municipios de PR no tienen ni un especialista médico de ninguna clase con práctica declarada: Maricao, Las Marías y Florida.`, srcText: 'Registro federal NPPES/CMS por municipio (ver el mapa).', srcUrl: 'https://registromedicopr.com/registro/mapa' },
     { q: '¿Le llegó dinero de recuperación a los pueblos que no tienen médicos?', a: 'Sí, pero solo el de cemento. $3,469 millones de fondos federales de recuperación (FEMA) fueron a los 33 municipios de PR que tienen designación de salud mental activa y cero psiquiatras. Se reconstruyeron edificios, carreteras y sistemas de agua. No llegó ni un médico de la mente. Ejemplo: Jayuya recibió $424 millones y tiene 2 especialistas y cero psiquiatras.', srcText: 'OpenFEMA (Public Assistance) × NPPES/CMS × HRSA, julio 2026.', srcUrl: 'https://www.fema.gov/openfema-data-page/public-assistance-funded-projects-summaries-v1' },
-    { q: '¿Cómo está Cabo Rojo de médicos comparado con sus vecinos del oeste?', a: 'Cabo Rojo está entre los pueblos mejor servidos del oeste: 99 especialistas y 3 psiquiatras, con el hub de Mayagüez a unos 20 minutos. Pero está rodeado de desiertos: a menos de una hora, en la montaña, Maricao y Las Marías no tienen ni un especialista de ninguna clase.', srcText: 'NPPES/CMS × Censo 2020 (ver el mapa).', srcUrl: 'https://registromedicopr.com/registro/mapa', tag: 'local' },
+    { q: '¿Cómo está Cabo Rojo de médicos comparado con sus vecinos del oeste?', a: 'Cabo Rojo tiene 32 especialistas y 3 psiquiatras (6.5 por cada 10,000 habitantes), y se apoya en el hub de Mayagüez, a unos 20 minutos, que concentra 279. Pero está rodeado de desiertos: a menos de una hora, en la montaña, Maricao y Las Marías no tienen ni un especialista de ninguna clase.', srcText: 'NPPES/CMS × Censo 2020 (ver el mapa).', srcUrl: 'https://registromedicopr.com/registro/mapa', tag: 'local' },
     { q: '¿Cuántos pueblos del oeste no tienen ni un psiquiatra?', a: 'Seis municipios del oeste no tienen ni un psiquiatra: Maricao, Las Marías, Hormigueros, Añasco, Lajas y Moca. Todo el oeste depende de los 26 psiquiatras de Mayagüez. Y Añasco recibió $316 millones de fondos federales de recuperación sin un solo psiquiatra en el pueblo.', srcText: 'NPPES/CMS × HRSA × OpenFEMA (ver el estado).', srcUrl: 'https://registromedicopr.com/registro/estado', tag: 'local' },
     { q: '¿Cuántos puertorriqueños viven en un municipio sin psiquiatra?', a: `${g.sinPsiq} municipios de PR no tienen ni un psiquiatra con práctica declarada. Son ${n(g.sinPsiqPob)} personas, cerca de 1 de cada 3 puertorriqueños.`, srcText: 'Registro federal NPPES/CMS (ver el estado, pueblo por pueblo).', srcUrl: 'https://registromedicopr.com/registro/estado' },
     { q: '¿Qué tan concentrados están los especialistas médicos en San Juan?', a: 'San Juan concentra alrededor del 35% de todos los especialistas médicos de Puerto Rico con cerca del 10% de la población de la isla.', srcText: 'NPPES/CMS × Censo 2020 (ver el mapa).', srcUrl: 'https://registromedicopr.com/registro/mapa' },
@@ -5241,7 +5241,7 @@ ${factCards}
 
 <h2>El médico fantasma (por qué el número real es aún más bajo)</h2>
 <div class="not-prose border-l-4 border-amber-500 bg-amber-50 rounded-r-xl p-4 mt-2">
-<p class="text-slate-700 leading-relaxed">Antes de que alguien diga "tu data está mal porque cuenta médicos que ya se fueron": tiene razón a medias, y eso hace la crisis <strong>peor</strong>, no mejor. Estos conteos vienen del registro federal (NPPES), y <strong>tener un número federal (NPI) no es estar viendo pacientes.</strong> Pregúntale a cualquier vecino mayor y te dice "mi doctor se fue pa' Estados Unidos" — pero ese doctor sigue apareciendo como activo, porque el NPI no se apaga cuando uno se va. La prueba: un estudio de FARO cuenta 84 endocrinólogos activos; el registro federal cuenta 158. Esos 74 de diferencia son fantasmas. <strong>Lo que de verdad queda atendiendo es aún menos que lo que muestran estos números.</strong> Por eso este registro se verifica a mano, uno por uno: los directorios federales están 45-52% equivocados, y nadie los revisa.</p>
+<p class="text-slate-700 leading-relaxed">Antes de que alguien diga "tu data está mal porque cuenta médicos que ya se fueron": tiene razón a medias, y eso hace la crisis <strong>peor</strong>, no mejor. Estos conteos vienen del registro federal (NPPES), y <strong>tener un número federal (NPI) no es estar viendo pacientes.</strong> Pregúntale a cualquier vecino mayor y te dice "mi doctor se fue pa' Estados Unidos" — pero ese doctor sigue apareciendo como activo, porque el NPI no se apaga cuando uno se va. La prueba: un estudio de FARO cuenta 84 endocrinólogos activos; el registro federal cuenta 158. Esos 74 de diferencia son fantasmas. <strong>Lo que de verdad queda atendiendo es aún menos que lo que muestran estos números.</strong> Por eso cada perfil enlaza su NPI federal pa' que lo confirmes tú, y la comunidad corrige al que ya no está: los directorios federales están 45-52% equivocados, y nadie más los revisa.</p>
 </div>
 
 <h2>Cómo citar</h2>
@@ -12003,12 +12003,12 @@ async function handleProspecto(req: any, res: any) {
     'Puerto Rico is the U.S. jurisdiction with the most rare diseases, driven by a founder effect (64% European, 21% African, 15% Taíno ancestry). At least 6 diseases have a documented Puerto Rico-specific founder variant. It is, in effect, a natural genetics laboratory. Map: registromedicopr.com/atlas',
     'Puerto Rico has only 2 clinical geneticists (M.D.) who diagnose patients, nearly all in the metro area, and the central mountain region where founder mutations concentrate has zero. (Federal NPPES registry, Jul 2026) registromedicopr.com/raras',
     'Puerto Rico and Iowa have the same population (3.2M). In FY2024 the NIH invested $249M in Iowa and $90M in Puerto Rico. PR receives less research funding per capita ($28) than Mississippi, the poorest U.S. state, despite having the nation\'s most valuable founder-effect population. (NIH RePORTER) puertoricosinfiltros.com/investigacion',
-    'The infrastructure a research or funding team would normally spend a year building already exists and is maintained by hand: a map of 6 founder diseases by town, a registry of 20,000+ NPPES-verified providers and facilities across 56 categories, and real demand signals. registromedicopr.com/prospecto',
+    'The infrastructure a research or funding team would normally spend a year building already exists, verified against federal sources: a map of 6 founder diseases by town, a registry of 20,000+ NPPES-verified providers and facilities across 56 categories, and real demand signals. registromedicopr.com/prospecto',
   ] : [
     'Puerto Rico es la jurisdicción de EE.UU. con más enfermedades raras, por un efecto fundador (64% ascendencia europea, 21% africana, 15% taína). Al menos 6 enfermedades tienen una variante fundadora propia de Puerto Rico documentada. Es, de hecho, un laboratorio natural de genética. Mapa: registromedicopr.com/atlas',
     'Puerto Rico tiene solo 2 genetistas clínicos (M.D.) que diagnostican pacientes, casi todos en el área metro, y la región central montañosa donde se concentran las mutaciones fundadoras tiene cero. (Registro federal NPPES, jul 2026) registromedicopr.com/raras',
     'Puerto Rico e Iowa tienen la misma población (3.2M). En el año fiscal 2024 el NIH invirtió $249M en Iowa y $90M en Puerto Rico. PR recibe menos financiamiento de investigación por persona ($28) que Mississippi, el estado más pobre, pese a tener la población founder-effect más valiosa de la nación. (NIH RePORTER) puertoricosinfiltros.com/investigacion',
-    'La infraestructura que un equipo de investigación o de fondos normalmente tomaría un año en construir ya existe y se mantiene a mano: un mapa de 6 enfermedades fundadoras por pueblo, un registro de 20,000+ proveedores y facilidades verificados contra NPPES en 56 categorías, y señales de demanda reales. registromedicopr.com/prospecto',
+    'La infraestructura que un equipo de investigación o de fondos normalmente tomaría un año en construir ya existe, verificada contra fuentes federales: un mapa de 6 enfermedades fundadoras por pueblo, un registro de 20,000+ proveedores y facilidades verificados contra NPPES en 56 categorías, y señales de demanda reales. registromedicopr.com/prospecto',
   ]
   const citasHtml = citas.map(t => `
     <div class="not-prose flex gap-3 items-start bg-white border border-slate-200 rounded-xl p-4 mb-2.5">
@@ -12035,8 +12035,8 @@ async function handleProspecto(req: any, res: any) {
 <p>${te('La isla que es un tesoro genético recibe la menor inversión de investigación del país. Puerto Rico e Iowa tienen la misma población (3.2 millones); en 2024 el NIH invirtió <strong>$249 millones en Iowa y $90 millones en Puerto Rico</strong>. Por persona, PR recibe $28: menos que Mississippi, el estado más pobre de la nación. Y a nivel local, solo <strong>2 genetistas clínicos</strong> diagnostican en toda la isla, casi todos en el metro; la montaña, donde se concentran las mutaciones fundadoras, tiene cero. Eso no es solo una injusticia: es una oportunidad de alto apalancamiento sobre la mesa.', 'The island that is a genetic treasure receives the lowest research investment in the country. Puerto Rico and Iowa have the same population (3.2 million); in 2024 the NIH invested <strong>$249 million in Iowa and $90 million in Puerto Rico</strong>. Per capita, PR receives $28: less than Mississippi, the poorest U.S. state. And locally, only <strong>2 clinical geneticists</strong> diagnose across the whole island, nearly all in the metro; the mountains, where founder mutations concentrate, have zero. That is not just an injustice: it is a high-leverage opportunity left on the table.')}</p>
 <p class="text-sm text-slate-500">${te('Detalle con fuente: la brecha de diagnóstico en', 'Sourced detail: the diagnostic gap at')} <a href="/raras${lp}" class="text-teal-700 font-semibold">registromedicopr.com/raras</a> · ${te('la brecha de dinero en', 'the funding gap at')} <a href="https://puertoricosinfiltros.com/investigacion" class="text-teal-700 font-semibold">puertoricosinfiltros.com/investigacion</a>.</p>
 
-<h2>${te('El mapa ya existe (y se mantiene a mano)', 'The map already exists (and is maintained by hand)')}</h2>
-<p>${te('Lo que un equipo de investigación o de fondos normalmente pasa un año construyendo, aquí ya está construido y verificado, uno por uno:', 'What a research or funding team normally spends a year building is already built and verified here, one by one:')}</p>
+<h2>${te('El mapa ya existe (y se verifica contra fuentes federales)', 'The map already exists (and is verified against federal sources)')}</h2>
+<p>${te('Lo que un equipo de investigación o de fondos normalmente pasa un año construyendo, aquí ya está construido y verificado contra el registro federal NPPES:', 'What a research or funding team normally spends a year building is already built here, verified against the federal NPPES registry:')}</p>
 <ul class="text-slate-700">
   <li>${te('<strong>El Atlas de fundadoras</strong> — 6 condiciones por pueblo, con prevalencia y fuente científica primaria.', '<strong>The founder-disease Atlas</strong> — 6 conditions by town, with prevalence and primary scientific source.')}</li>
   <li>${te('<strong>El registro médico</strong> — 20,000+ proveedores y facilidades verificados contra el registro federal NPPES, en 56 categorías, por especialidad y municipio.', '<strong>The medical registry</strong> — 20,000+ providers and facilities verified against the federal NPPES registry, across 56 categories, by specialty and municipality.')}</li>
@@ -12049,7 +12049,7 @@ async function handleProspecto(req: any, res: any) {
 
 <div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 my-8">
   <p class="font-black text-teal-900 text-lg">${te('La puerta', 'The door')}</p>
-  <p class="text-sm text-teal-800 mt-1">${te('Esta data es pública y gratis. La mantenemos nosotros, a mano, desde Cabo Rojo. No vendemos un reporte ni pedimos nada. Si vas a traer investigación, financiamiento o cobertura a Puerto Rico, este es tu mapa de arranque. Si quieres hablar, la puerta está abierta.', 'This data is public and free. We maintain it by hand, from Cabo Rojo. We are not selling a report or asking for anything. If you are bringing research, funding, or coverage to Puerto Rico, this is your starting map. If you want to talk, the door is open.')}</p>
+  <p class="text-sm text-teal-800 mt-1">${te('Esta data es pública y gratis. La mantenemos nosotros desde Cabo Rojo, verificada contra el registro federal. No vendemos un reporte ni pedimos nada. Si vas a traer investigación, financiamiento o cobertura a Puerto Rico, este es tu mapa de arranque. Si quieres hablar, la puerta está abierta.', 'This data is public and free. We maintain it ourselves from Cabo Rojo, verified against the federal registry. We are not selling a report or asking for anything. If you are bringing research, funding, or coverage to Puerto Rico, this is your starting map. If you want to talk, the door is open.')}</p>
   <a href="mailto:angel@angelanderson.com?subject=${encodeURIComponent(te('Prospecto genética PR', 'PR genetics prospectus'))}" class="inline-flex items-center gap-2 mt-3 bg-teal-700 hover:bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm"><i class="fa-solid fa-envelope"></i> angel@angelanderson.com</a>
 </div>
 

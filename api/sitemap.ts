@@ -145,8 +145,9 @@ export default async function handler(req: any, res: any) {
     });
 
     // Registro Médico PR — one page per verified specialist (NPPES). Paginate past the 1000-row cap.
-    // Only the 32 verified specialties (excludes old Cabo Rojo health businesses that also carry an NPI).
-    const SPECIALIST_SUBS = ['cardiólogo','psiquiatra','fisiatra','ginecólogo','pediatra','dermatólogo','gastroenterólogo','oftalmólogo','ortopeda','neurologo','urólogo','endocrinologo','nefrólogo','neumólogo','oncólogo','reumatólogo','geriatra','otorrinolaringólogo','infectólogo','alergista','medicina de emergencia','cirujano general','anestesiólogo','radiólogo','neurocirujano','cirujano plástico','cirujano torácico','coloproctólogo','manejo de dolor','psicólogo','optómetra','podiatra'];
+    // Las 56 categorías del registro (Fase 2, jul 2026): 32 especialistas + dentista + primaria
+    // + aliados + facilidades NPI-2. Excluye viejos negocios de salud de CR con NPI que no son del registro.
+    const SPECIALIST_SUBS = ['cardiólogo','psiquiatra','fisiatra','ginecólogo','pediatra','dermatólogo','gastroenterólogo','oftalmólogo','ortopeda','neurologo','urólogo','endocrinologo','nefrólogo','neumólogo','oncólogo','reumatólogo','geriatra','otorrinolaringólogo','infectólogo','alergista','medicina de emergencia','cirujano general','anestesiólogo','radiólogo','neurocirujano','cirujano plástico','cirujano torácico','coloproctólogo','manejo de dolor','psicólogo','optómetra','podiatra','dentista','internista','medicina de familia','terapeuta del habla','terapista físico','terapista ocupacional','quiropractico','consejero','trabajador social','terapeuta de familia','nutricionista','physician assistant','enfermera practicante','audiólogo','partera','farmacéutico','hospital','cuidado en el hogar','hospicio','hogar de envejecientes','centro de diálisis','urgent care','clínica comunitaria'];
     const specialists: any[] = [];
     for (let page = 0; page < 10; page++) {
       const { data } = await supabase
