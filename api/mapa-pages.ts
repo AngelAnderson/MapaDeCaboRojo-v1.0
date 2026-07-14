@@ -2632,7 +2632,7 @@ async function handleAccesoLog(req: any, res: any) {
 // specialists a normal person can read. Counts embedded (updated at ingest);
 // provider lists are LIVE from the DB via ?page=registro-data.
 // Matrix order: [total, Oeste, Norte, Centro, Sur, Este, Metro]
-const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:number;r:Record<string,number>}> = [
+const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:number;r:Record<string,number>;org?:boolean}> = [
   {s:'cardiólogo',l:'Cardiólogo',e:'❤️',kw:'CARDIOLOGO',md:true,t:339,r:{Oeste:27,Norte:30,Centro:3,Sur:39,Este:46,Metro:180}},
   {s:'psiquiatra',l:'Psiquiatra',e:'🧠',kw:'PSIQUIATRA',md:true,t:474,r:{Oeste:46,Norte:20,Centro:7,Sur:37,Este:61,Metro:303}},
   {s:'fisiatra',l:'Fisiatra',e:'🩺',kw:'FISIATRA',md:true,t:251,r:{Oeste:21,Norte:16,Centro:3,Sur:20,Este:41,Metro:150}},
@@ -2666,6 +2666,29 @@ const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:n
   {s:'optómetra',l:'Optómetra (examen de vista)',e:'👓',kw:'OPTOMETRA',md:false,t:530,r:{Oeste:76,Norte:41,Centro:10,Sur:59,Este:82,Metro:262}},
   {s:'podiatra',l:'Podiatra (pies)',e:'🦶',kw:'PODIATRA',md:false,t:57,r:{Oeste:6,Norte:2,Centro:1,Sur:6,Este:9,Metro:33}},
   {s:'dentista',l:'Dentista (dientes)',e:'🦷',kw:'DENTISTA',md:false,t:1631,r:{Oeste:197,Norte:115,Centro:39,Sur:156,Este:251,Metro:873}},
+  // ── Fase 2 (jul 2026): primaria + allied + facilidades NPI-2 ──
+  {s:'internista',l:'Internista (medicina interna)',e:'🩺',kw:'INTERNISTA',md:true,t:1110,r:{Oeste:188,Norte:59,Centro:18,Sur:163,Este:131,Metro:551}},
+  {s:'medicina de familia',l:'Médico de Familia',e:'👨‍👩‍👧',kw:'FAMILIA',md:true,t:596,r:{Oeste:98,Norte:82,Centro:11,Sur:62,Este:74,Metro:269}},
+  {s:'terapeuta del habla',l:'Terapeuta del Habla',e:'🗣️',kw:'HABLA',md:false,t:1167,r:{Oeste:152,Norte:132,Centro:25,Sur:112,Este:205,Metro:540}},
+  {s:'terapista físico',l:'Terapista Físico',e:'🏃',kw:'TERAPIA',md:false,t:604,r:{Oeste:100,Norte:65,Centro:14,Sur:48,Este:73,Metro:304}},
+  {s:'terapista ocupacional',l:'Terapista Ocupacional',e:'🖐️',kw:'OCUPACIONAL',md:false,t:502,r:{Oeste:69,Norte:56,Centro:10,Sur:47,Este:75,Metro:245}},
+  {s:'quiropractico',l:'Quiropráctico',e:'🦴',kw:'QUIROPRACTICO',md:false,t:612,r:{Oeste:79,Norte:59,Centro:9,Sur:68,Este:95,Metro:302}},
+  {s:'consejero',l:'Consejero Profesional',e:'💬',kw:'CONSEJERO',md:false,t:608,r:{Oeste:53,Norte:45,Centro:18,Sur:90,Este:110,Metro:292}},
+  {s:'trabajador social',l:'Trabajador Social Clínico',e:'🤝',kw:'TRABAJADOR',md:false,t:2301,r:{Oeste:291,Norte:191,Centro:99,Sur:410,Este:390,Metro:918}},
+  {s:'terapeuta de familia',l:'Terapeuta de Pareja y Familia',e:'👥',kw:'PAREJA',md:false,t:16,r:{Oeste:3,Norte:1,Centro:0,Sur:0,Este:3,Metro:9}},
+  {s:'nutricionista',l:'Nutricionista / Dietista',e:'🥗',kw:'NUTRICIONISTA',md:false,t:402,r:{Oeste:34,Norte:22,Centro:6,Sur:31,Este:71,Metro:237}},
+  {s:'physician assistant',l:'Physician Assistant (PA)',e:'🩺',kw:'PA',md:false,t:464,r:{Oeste:82,Norte:37,Centro:9,Sur:73,Este:68,Metro:195}},
+  {s:'enfermera practicante',l:'Enfermera(o) Practicante (NP)',e:'💉',kw:'NP',md:false,t:132,r:{Oeste:1,Norte:8,Centro:1,Sur:6,Este:23,Metro:93}},
+  {s:'audiólogo',l:'Audiólogo (audición)',e:'👂',kw:'AUDIOLOGO',md:false,t:127,r:{Oeste:13,Norte:13,Centro:2,Sur:8,Este:23,Metro:68}},
+  {s:'partera',l:'Partera (midwife)',e:'🤱',kw:'PARTERA',md:false,t:21,r:{Oeste:3,Norte:2,Centro:1,Sur:2,Este:4,Metro:9}},
+  {s:'farmacéutico',l:'Farmacéutico',e:'💊',kw:'FARMACEUTICO',md:false,t:3369,r:{Oeste:475,Norte:296,Centro:88,Sur:397,Este:511,Metro:1601}},
+  {s:'hospital',l:'Hospital',e:'🏥',kw:'HOSPITAL',md:false,org:true,t:222,r:{Oeste:32,Norte:17,Centro:4,Sur:32,Este:23,Metro:114}},
+  {s:'cuidado en el hogar',l:'Cuidado en el Hogar (home health)',e:'🏠',kw:'HOGAR',md:false,org:true,t:203,r:{Oeste:27,Norte:16,Centro:3,Sur:30,Este:33,Metro:94}},
+  {s:'hospicio',l:'Hospicio',e:'🕊️',kw:'HOSPICIO',md:false,org:true,t:72,r:{Oeste:13,Norte:12,Centro:2,Sur:6,Este:11,Metro:28}},
+  {s:'hogar de envejecientes',l:'Hogar de Envejecientes (SNF)',e:'👴',kw:'ENVEJECIENTES',md:false,org:true,t:40,r:{Oeste:6,Norte:1,Centro:0,Sur:4,Este:7,Metro:22}},
+  {s:'centro de diálisis',l:'Centro de Diálisis',e:'🫘',kw:'DIALISIS',md:false,org:true,t:10,r:{Oeste:1,Norte:0,Centro:0,Sur:0,Este:2,Metro:7}},
+  {s:'urgent care',l:'Urgent Care (urgencias)',e:'⏱️',kw:'URGENTE',md:false,org:true,t:58,r:{Oeste:12,Norte:8,Centro:2,Sur:8,Este:9,Metro:19}},
+  {s:'clínica comunitaria',l:'Clínica Comunitaria (FQHC/330)',e:'🏘️',kw:'CLINICA',md:false,org:true,t:103,r:{Oeste:36,Norte:13,Centro:5,Sur:13,Este:11,Metro:25}},
 ]
 
 const REG_PODCAST_URL = 'https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/especialistas-fantasma-desiertos.m4a'
@@ -3385,7 +3408,8 @@ async function handleRegistro(req: any, res: any) {
   const en = String(req.query.lang || '') === 'en'
   const t = (es: string, env: string) => en ? env : es
   const md = REGISTRY_SPECS.filter(x => x.md)
-  const allied = REGISTRY_SPECS.filter(x => !x.md)
+  const allied = REGISTRY_SPECS.filter(x => !x.md && !x.org)
+  const orgs = REGISTRY_SPECS.filter(x => x.org)
   // Live count — accurate + auto-updating (page is cached s-maxage=3600, so ~1 query/hour).
   // Only the 32 verified NPPES specialties count as "registry specialists".
   const { count: npiCount } = await supabase
@@ -3496,9 +3520,15 @@ async function handleRegistro(req: any, res: any) {
 </div>
 
 <div class="not-prose mt-8 text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">${t('Otros proveedores de salud licenciados (no son médicos MD)', 'Other licensed health providers (not medical doctors / MDs)')}</div>
-<p class="not-prose text-sm text-slate-500 mb-3">${t('Psicólogos, optómetras y podiatras tienen licencia y NPI federal, pero no son médicos. Los separamos pa\' que sepas exactamente a quién vas.', 'Psychologists, optometrists, and podiatrists are licensed and have a federal NPI, but they are not medical doctors. We list them separately so you know exactly who you are seeing.')}</p>
+<p class="not-prose text-sm text-slate-500 mb-3">${t('Psicólogos, dentistas, terapistas, nutricionistas y más: tienen licencia y NPI federal, pero no son médicos MD. Los separamos pa\' que sepas exactamente a quién vas.', 'Psychologists, dentists, therapists, nutritionists, and more: licensed with a federal NPI, but not medical doctors. We list them separately so you know exactly who you are seeing.')}</p>
 <div class="not-prose grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
   ${allied.map(card).join('')}
+</div>
+
+<div class="not-prose mt-8 text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">${t('Facilidades y organizaciones de salud (NPI-2)', 'Health facilities and organizations (NPI-2)')}</div>
+<p class="not-prose text-sm text-slate-500 mb-3">${t('Hospitales, clínicas comunitarias, cuidado en el hogar, hospicios y más — organizaciones verificadas contra el registro federal.', 'Hospitals, community health centers, home health, hospices, and more — organizations verified against the federal registry.')}</p>
+<div class="not-prose grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+  ${orgs.map(card).join('')}
 </div>
 
 <div class="not-prose mt-10 bg-gradient-to-br from-amber-50 to-white border-2 border-amber-200 rounded-2xl p-6">
@@ -9489,6 +9519,28 @@ const SPEC_INFO: Record<string, { treats: string; whenToGo: string; note: string
   'optómetra': { treats: 'El profesional que examina la vista y receta espejuelos o lentes de contacto.', whenToGo: 'Cuando ves borroso o te toca el examen anual de la vista.', note: 'Tiene licencia, pero no es médico (MD). Para operación o enfermedad del ojo, vas al oftalmólogo.' },
   'podiatra': { treats: 'El profesional que cuida los pies y los tobillos.', whenToGo: 'Cuando tienes dolor de pies, uñas enterradas, callos o problemas del pie por diabetes.', note: 'Tiene licencia, pero no es médico (MD); es especialista del pie.' },
   'dentista': { treats: 'El doctor de los dientes, las encías y la boca.', whenToGo: 'Para la limpieza cada 6 meses, dolor de muela, caries o problemas de encías.', note: 'Es doctor en medicina dental (DMD), no médico (MD). Incluye ortodoncistas y otras especialidades dentales.' },
+  'internista': { treats: 'El médico de cabecera de los adultos: ve el cuadro completo de tu salud.', whenToGo: 'Para tu chequeo anual, condiciones crónicas como presión o azúcar, y cuando no sabes a qué especialista ir.', note: 'Es el punto de partida. Él te refiere al especialista si hace falta.' },
+  'medicina de familia': { treats: 'El médico que atiende a toda la familia, de niños a abuelos.', whenToGo: 'Para chequeos, condiciones del día a día y seguimiento de toda la casa con un mismo médico.', note: '' },
+  'terapeuta del habla': { treats: 'El profesional que ayuda con el habla, el lenguaje y hasta con tragar.', whenToGo: 'Cuando el nene no habla como se espera pa\' su edad, o después de un derrame que afectó el habla.', note: 'Tiene licencia, pero no es médico (MD).' },
+  'terapista físico': { treats: 'El profesional que te ayuda a recuperar fuerza y movimiento con ejercicios.', whenToGo: 'Después de una operación, una caída o una lesión, cuando el médico te receta terapia.', note: 'Tiene licencia, pero no es médico (MD).' },
+  'terapista ocupacional': { treats: 'El profesional que te ayuda a volver a hacer las tareas de la vida diaria.', whenToGo: 'Después de un derrame o lesión, cuando cuesta vestirse, cocinar o trabajar como antes.', note: 'Tiene licencia, pero no es médico (MD).' },
+  'quiropractico': { treats: 'El profesional que ajusta la espalda y las coyunturas.', whenToGo: 'Cuando tienes dolor de espalda o cuello y quieres tratamiento sin medicamento.', note: 'Es doctor en quiropráctica (DC), no médico (MD).' },
+  'consejero': { treats: 'El profesional que da consejería y apoyo emocional.', whenToGo: 'Cuando necesitas hablar con alguien: estrés, duelo, ansiedad o problemas de la vida.', note: 'Tiene licencia, pero no es médico (MD) y no receta medicamentos.' },
+  'trabajador social': { treats: 'El profesional que ayuda con salud mental y a navegar servicios y ayudas.', whenToGo: 'Cuando necesitas terapia o ayuda coordinando servicios pa\' ti o un familiar.', note: 'Tiene licencia, pero no es médico (MD).' },
+  'terapeuta de familia': { treats: 'El profesional de terapia de pareja y de familia.', whenToGo: 'Cuando la pareja o la familia necesita ayuda pa\' comunicarse y resolver.', note: 'Tiene licencia, pero no es médico (MD).' },
+  'nutricionista': { treats: 'El profesional que te ayuda a comer pa\' tu condición: diabetes, presión, peso.', whenToGo: 'Cuando el médico te dice "tienes que cambiar la dieta" y no sabes por dónde empezar.', note: 'Tiene licencia, pero no es médico (MD).' },
+  'physician assistant': { treats: 'Profesional que atiende pacientes bajo supervisión médica: examina, diagnostica y receta.', whenToGo: 'Cuando necesitas cita rápido — muchas veces el PA te ve antes que el médico.', note: 'No es médico (MD), pero puede recetar en PR.' },
+  'enfermera practicante': { treats: 'Enfermera(o) con grado avanzado que examina, diagnostica y da seguimiento.', whenToGo: 'Pa\' chequeos y condiciones comunes, muchas veces con cita más rápida que el médico.', note: 'No es médico (MD).' },
+  'audiólogo': { treats: 'El profesional de la audición: pruebas de oído y audífonos.', whenToGo: 'Cuando no oyes bien, te pitan los oídos, o pa\' la prueba de audición del nene.', note: 'Tiene licencia, pero no es médico (MD). Pa\' infección u operación de oído, vas al otorrino.' },
+  'partera': { treats: 'La profesional que acompaña el embarazo y el parto.', whenToGo: 'Cuando buscas un parto acompañado y seguimiento del embarazo con enfoque natural.', note: 'Certificada, pero no es médico (MD). Trabaja en coordinación con obstetras.' },
+  'farmacéutico': { treats: 'El profesional de los medicamentos: dosis, interacciones y consejo.', whenToGo: 'Cuando tienes dudas de un medicamento nuevo o tomas varios a la vez.', note: 'Tiene licencia y NPI federal, pero no es médico (MD).' },
+  'hospital': { treats: 'Hospital con sala de emergencia y servicios médicos.', whenToGo: 'En una emergencia de verdad, o cuando te refieren pa\' admisión, operación o pruebas.', note: 'Organización verificada con NPI federal (NPI-2).' },
+  'cuidado en el hogar': { treats: 'Agencia que manda enfermeras y terapistas a tu casa.', whenToGo: 'Cuando un familiar no puede salir de la casa y necesita cuidado médico en el hogar.', note: 'Organización verificada con NPI federal (NPI-2). Clave si cuidas a tus padres desde afuera.' },
+  'hospicio': { treats: 'Cuidado de comodidad y dignidad pa\' pacientes en etapa final.', whenToGo: 'Cuando el médico dice que el tratamiento ya no cura, y la meta es calidad de vida y estar en paz.', note: 'Organización verificada con NPI federal (NPI-2).' },
+  'hogar de envejecientes': { treats: 'Facilidad con enfermería 24/7 pa\' personas que necesitan cuidado continuo.', whenToGo: 'Cuando un familiar necesita más cuidado del que se puede dar en la casa.', note: 'Organización verificada con NPI federal (NPI-2).' },
+  'centro de diálisis': { treats: 'Centro donde se hace la diálisis de riñón.', whenToGo: 'Cuando el nefrólogo indica diálisis — busca el centro más cerca de tu pueblo.', note: 'Organización verificada con NPI federal (NPI-2).' },
+  'urgent care': { treats: 'Clínica pa\' lo que no aguanta hasta el lunes pero no es pa\' 911.', whenToGo: 'Cortadas, fiebre alta, torceduras — sin cita y sin el tapón de la sala de emergencia.', note: 'Organización verificada con NPI federal (NPI-2). Si es de vida o muerte, llama al 911.' },
+  'clínica comunitaria': { treats: 'Centro de salud comunitario (FQHC/330) que atiende aunque no tengas plan.', whenToGo: 'Cuando no tienes plan médico o el dinero está corto — cobran según tu ingreso.', note: 'Organización verificada con NPI federal (NPI-2). Nadie se queda sin atender por no poder pagar.' },
 }
 function specToUrl(sub: string): string {
   return sub.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -9496,6 +9548,7 @@ function specToUrl(sub: string): string {
 // English specialty labels (for ?lang=en on hub pages) — keyed by subcategory slug.
 const SPEC_LABEL_EN: Record<string, string> = {
   'cardiólogo':'Cardiologist','psiquiatra':'Psychiatrist','fisiatra':'Physiatrist (Rehab)','ginecólogo':'OB-GYN','pediatra':'Pediatrician','dermatólogo':'Dermatologist','gastroenterólogo':'Gastroenterologist','oftalmólogo':'Ophthalmologist (Eye MD)','ortopeda':'Orthopedic Surgeon','neurologo':'Neurologist','urólogo':'Urologist','endocrinologo':'Endocrinologist (Diabetes)','nefrólogo':'Nephrologist (Kidney)','neumólogo':'Pulmonologist (Lungs)','oncólogo':'Oncologist / Hematologist','reumatólogo':'Rheumatologist (Arthritis)','geriatra':'Geriatrician','otorrinolaringólogo':'ENT (Ear, Nose & Throat)','infectólogo':'Infectious Disease','alergista':'Allergist / Immunologist','medicina de emergencia':'Emergency Medicine','cirujano general':'General Surgeon','anestesiólogo':'Anesthesiologist','radiólogo':'Radiologist','neurocirujano':'Neurosurgeon','cirujano plástico':'Plastic Surgeon','cirujano torácico':'Thoracic Surgeon','coloproctólogo':'Colorectal Surgeon','manejo de dolor':'Pain Management','psicólogo':'Psychologist','optómetra':'Optometrist','podiatra':'Podiatrist','dentista':'Dentist',
+  'internista':'Internal Medicine','medicina de familia':'Family Medicine','terapeuta del habla':'Speech-Language Pathologist','terapista físico':'Physical Therapist','terapista ocupacional':'Occupational Therapist','quiropractico':'Chiropractor','consejero':'Professional Counselor','trabajador social':'Clinical Social Worker','terapeuta de familia':'Marriage & Family Therapist','nutricionista':'Dietitian / Nutritionist','physician assistant':'Physician Assistant (PA)','enfermera practicante':'Nurse Practitioner (NP)','audiólogo':'Audiologist','partera':'Midwife','farmacéutico':'Pharmacist','hospital':'Hospital','cuidado en el hogar':'Home Health Agency','hospicio':'Hospice','hogar de envejecientes':'Nursing Home (SNF)','centro de diálisis':'Dialysis Center','urgent care':'Urgent Care','clínica comunitaria':'Community Health Center (FQHC)',
 }
 // English specialty explainers (for ?lang=en on hub pages).
 const SPEC_INFO_EN: Record<string, { treats: string; whenToGo: string; note: string }> = {
@@ -9532,6 +9585,28 @@ const SPEC_INFO_EN: Record<string, { treats: string; whenToGo: string; note: str
   'optómetra':{treats:'The professional who examines your vision and prescribes glasses or contact lenses.',whenToGo:'When your vision is blurry or it is time for your yearly eye exam.',note:'They are licensed, but they are not a medical doctor (MD). For surgery or eye disease, see an ophthalmologist.'},
   'podiatra':{treats:'The professional who cares for your feet and ankles.',whenToGo:'When you have foot pain, ingrown nails, calluses, or foot problems from diabetes.',note:'They are licensed, but they are not a medical doctor (MD); they are a foot specialist.'},
   'dentista':{treats:'The doctor for your teeth, gums, and mouth.',whenToGo:'For your cleaning every 6 months, a toothache, cavities, or gum problems.',note:'They hold a dental degree (DMD), not an MD. Includes orthodontists and other dental specialties.'},
+  'internista':{treats:'The primary care doctor for adults: sees the full picture of your health.',whenToGo:'For your yearly checkup, chronic conditions like blood pressure or diabetes, and when you don\'t know which specialist to see.',note:'This is the starting point. They refer you to a specialist if needed.'},
+  'medicina de familia':{treats:'The doctor who cares for the whole family, from kids to grandparents.',whenToGo:'For checkups, everyday conditions, and follow-up for the whole household with one doctor.',note:''},
+  'terapeuta del habla':{treats:'The professional who helps with speech, language, and even swallowing.',whenToGo:'When a child isn\'t talking as expected for their age, or after a stroke that affected speech.',note:'Licensed, but not a medical doctor (MD).'},
+  'terapista físico':{treats:'The professional who helps you regain strength and movement with exercises.',whenToGo:'After surgery, a fall, or an injury, when your doctor prescribes therapy.',note:'Licensed, but not a medical doctor (MD).'},
+  'terapista ocupacional':{treats:'The professional who helps you get back to daily-life tasks.',whenToGo:'After a stroke or injury, when dressing, cooking, or working is hard again.',note:'Licensed, but not a medical doctor (MD).'},
+  'quiropractico':{treats:'The professional who adjusts your back and joints.',whenToGo:'When you have back or neck pain and want treatment without medication.',note:'A doctor of chiropractic (DC), not an MD.'},
+  'consejero':{treats:'The professional who provides counseling and emotional support.',whenToGo:'When you need someone to talk to: stress, grief, anxiety, or life problems.',note:'Licensed, but not a medical doctor (MD); does not prescribe medication.'},
+  'trabajador social':{treats:'The professional who helps with mental health and navigating services.',whenToGo:'When you need therapy or help coordinating services for yourself or a family member.',note:'Licensed, but not a medical doctor (MD).'},
+  'terapeuta de familia':{treats:'The couples and family therapy professional.',whenToGo:'When a couple or family needs help communicating and working things out.',note:'Licensed, but not a medical doctor (MD).'},
+  'nutricionista':{treats:'The professional who helps you eat for your condition: diabetes, blood pressure, weight.',whenToGo:'When your doctor says "you need to change your diet" and you don\'t know where to start.',note:'Licensed, but not a medical doctor (MD).'},
+  'physician assistant':{treats:'A professional who sees patients under physician supervision: examines, diagnoses, prescribes.',whenToGo:'When you need an appointment fast — the PA can often see you before the doctor.',note:'Not an MD, but can prescribe in PR.'},
+  'enfermera practicante':{treats:'A nurse with an advanced degree who examines, diagnoses, and follows up.',whenToGo:'For checkups and common conditions, often with a faster appointment than the doctor.',note:'Not an MD.'},
+  'audiólogo':{treats:'The hearing professional: hearing tests and hearing aids.',whenToGo:'When you can\'t hear well, your ears ring, or for a child\'s hearing test.',note:'Licensed, but not an MD. For an ear infection or surgery, see an ENT.'},
+  'partera':{treats:'The professional who accompanies pregnancy and birth.',whenToGo:'When you want a supported birth and pregnancy care with a natural approach.',note:'Certified, but not an MD. Works in coordination with OB-GYNs.'},
+  'farmacéutico':{treats:'The medication professional: doses, interactions, and advice.',whenToGo:'When you have questions about a new medication or take several at once.',note:'Licensed with a federal NPI, but not an MD.'},
+  'hospital':{treats:'A hospital with an emergency room and medical services.',whenToGo:'In a true emergency, or when referred for admission, surgery, or tests.',note:'Organization verified with a federal NPI (NPI-2).'},
+  'cuidado en el hogar':{treats:'An agency that sends nurses and therapists to your home.',whenToGo:'When a family member can\'t leave home and needs medical care there.',note:'Organization verified with a federal NPI (NPI-2). Key if you care for your parents from afar.'},
+  'hospicio':{treats:'Comfort and dignity care for patients at the end of life.',whenToGo:'When the doctor says treatment can no longer cure, and the goal is quality of life and peace.',note:'Organization verified with a federal NPI (NPI-2).'},
+  'hogar de envejecientes':{treats:'A facility with 24/7 nursing for people who need continuous care.',whenToGo:'When a family member needs more care than can be given at home.',note:'Organization verified with a federal NPI (NPI-2).'},
+  'centro de diálisis':{treats:'A center where kidney dialysis is performed.',whenToGo:'When your nephrologist orders dialysis — find the center closest to your town.',note:'Organization verified with a federal NPI (NPI-2).'},
+  'urgent care':{treats:'A clinic for what can\'t wait until Monday but isn\'t a 911 emergency.',whenToGo:'Cuts, high fever, sprains — no appointment and no ER wait.',note:'Organization verified with a federal NPI (NPI-2). If it\'s life-threatening, call 911.'},
+  'clínica comunitaria':{treats:'A community health center (FQHC/330) that sees you even without insurance.',whenToGo:'When you don\'t have a health plan or money is tight — they charge based on your income.',note:'Organization verified with a federal NPI (NPI-2). No one is turned away for inability to pay.'},
 }
 const SPEC_BY_URL: Record<string, typeof REGISTRY_SPECS[number]> = {}
 REGISTRY_SPECS.forEach(x => { SPEC_BY_URL[specToUrl(x.s)] = x })
