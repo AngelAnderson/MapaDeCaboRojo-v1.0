@@ -8021,6 +8021,23 @@ async function handleExpediente(req: any, res: any) {
     return `<li><strong>✓ ${escapeHtml(p.promesa)}</strong> (${fmtF(p.fecha_grabacion)}${vlink ? ` · <a href="${escapeHtml(vlink)}" target="_blank" rel="noopener" class="text-teal-700 underline">video ↗</a>` : ''})${p.que_paso ? ` — ${escapeHtml(p.que_paso)}` : ''}</li>`
   }).join('')
 
+  // En proceso sin plazo propio (gestiones/expectativas que no son "reloj que él puso" ni cumplidas/vencidas) — ej: el hospital
+  const enProcesoOtras = promesas.filter((p: any) => p.estado === 'en_proceso' && !p.plazo_autoimpuesto && p.promesa !== (masVieja?.promesa))
+  const enProcesoOtrasHtml = enProcesoOtras.map((p: any) => {
+    const src = String(p.fuente_que_paso || '').split(' | ').find((s: string) => /^https?:\/\//i.test(s.trim())) || ''
+    return `
+<div class="not-prose border-2 border-amber-200 bg-white rounded-2xl p-5 mt-4">
+  <div class="flex items-start justify-between gap-3 flex-wrap">
+    <h3 class="text-lg font-black text-slate-900 max-w-xl" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(p.promesa)}</h3>
+    <span class="text-xs font-bold text-amber-700 bg-amber-50 border border-amber-300 rounded-full px-3 py-1">En proceso</span>
+  </div>
+  ${p.cita ? `<blockquote class="text-sm text-slate-600 italic border-l-4 border-slate-300 pl-4 mt-2">"${escapeHtml(p.cita)}"</blockquote>` : ''}
+  ${p.plazo_texto ? `<p class="text-xs text-slate-500 mt-2">${escapeHtml(p.plazo_texto)}</p>` : ''}
+  ${p.que_paso ? `<p class="text-sm text-slate-700 mt-2"><strong>Qué pasó:</strong> ${escapeHtml(p.que_paso)}</p>` : ''}
+  ${src ? `<p class="text-xs mt-2"><a href="${escapeHtml(src)}" target="_blank" rel="noopener" class="text-teal-700 font-semibold">Fuente ↗</a></p>` : ''}
+</div>`
+  }).join('')
+
   const promesasHtml = cfg.tipo === 'alcalde'
     ? `
 <div class="not-prose bg-slate-900 text-white rounded-2xl p-5 sm:p-6 mt-3">
@@ -8035,6 +8052,7 @@ async function handleExpediente(req: any, res: any) {
 <p class="mt-4">Dos vistas del récord completo: <a href="/promesas" class="text-teal-700 font-semibold">el promesómetro</a> (todas por tema) y <a href="/historial" class="text-teal-700 font-semibold">el historial</a> (${nP} promesas con video al minuto). Abajo, <strong>los relojes que él mismo puso</strong>:</p>
 ${relojCards}
 ${masVieja ? `<p class="text-sm text-slate-600 mt-4">La promesa más vieja del récord aún en proceso: <strong>${escapeHtml(masVieja.promesa)}</strong> — dicha en video hace <strong>${dias(masVieja.fecha_grabacion).toLocaleString('en-US')} días</strong> (${fmtF(masVieja.fecha_grabacion)}).</p>` : ''}
+${enProcesoOtras.length ? `<p class="mt-5 text-sm font-bold text-slate-700 uppercase tracking-wide">Otras gestiones en proceso (sin plazo propio)</p>${enProcesoOtrasHtml}` : ''}
 ${cumplidas.length ? `<div class="not-prose border-2 border-emerald-200 bg-emerald-50/60 rounded-2xl p-5 mt-4"><p class="text-xs uppercase tracking-widest text-emerald-700 font-bold">El verde también se registra</p><ul class="text-sm text-slate-700 mt-2 space-y-2">${cumplidasHtml}</ul></div>` : ''}
 <div class="not-prose border-2 border-emerald-300 bg-emerald-50 rounded-2xl p-5 mt-4">
   <p class="text-xs uppercase tracking-widest text-emerald-700 font-bold">La regla del verde</p>
