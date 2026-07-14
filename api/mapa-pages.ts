@@ -7031,6 +7031,16 @@ async function handleContradicciones(req: any, res: any) {
   }
   const pares: Par[] = [
     {
+      tipo: 'narrativa', corto: 'El hospital de Cabo Rojo', titulo: 'Aseguraron "continuidad de servicios"; la sala de emergencias general del pueblo sigue cerrada 8 horas cada noche',
+      dicenC: 'El hospital no cerrará y habrá continuidad de los servicios médicos en la región. El alcalde añadió que esperaba que la nueva administración extendiera la sala de emergencias de 7am-11pm a 24 horas.',
+      dicenQ: 'Secretario de Salud Víctor Ramos y alcalde Jorge Morales Wiscovitch · Primera Hora, 16 oct 2025',
+      dicenUrl: 'https://www.primerahora.com/noticias/gobierno-politica/notas/alcalde-de-cabo-rojo-y-salud-aseguran-que-hospital-continuara-en-operaciones/',
+      recordD: 'A julio de 2026, el rótulo en el propio hospital muestra la sala de emergencias general todavía en 7am-11pm: la extensión a 24 horas que el alcalde esperaba no ocurrió. El hospital cambió de manos (ahora Hospital Oasis de Vida / CRMC, bajo nueva administración local) y su página oficial sigue "en construcción", sin publicar horarios ni servicios. La unidad psiquiátrica de crisis sí es 24h; la sala de emergencias médica general, no.',
+      fuentes: [['El anuncio de la venta y el nuevo nombre (Metro, dic 2025)', 'https://www.metro.pr/noticias/2025/12/01/hospital-psiquiatrico-en-cabo-rojo-ahora-sera-hospital-oasis-de-vida/'], ['La salud que falta en Cabo Rojo (el récord federal)', 'https://puertoricosinfiltros.com/salud-que-falta']],
+      brecha: '"Continuidad" no es "24 horas": el pueblo con una de las poblaciones más envejecidas del oeste tiene su única sala de emergencias general cerrada de 11pm a 7am',
+      rec: '/salud-que-falta',
+    },
+    {
       tipo: 'promesa', corto: 'LUMA y la luz', titulo: 'La luz "affordable" que iba a ahorrar $150 millones al año',
       dicenC: 'LUMA will not only provide safe, reliable and affordable electricity service... [reducción estimada de] $150 millones anuales en costos del sistema',
       dicenQ: 'Wayne Stensby (CEO de LUMA) y la Autoridad P3, junio 2020 · comunicado oficial',
