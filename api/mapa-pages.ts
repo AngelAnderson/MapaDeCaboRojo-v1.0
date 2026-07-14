@@ -10151,10 +10151,10 @@ async function resolveMuni(slug: string): Promise<{ name: string; region: string
   if (!MUNI_CACHE) {
     MUNI_CACHE = new Map()
     try {
-      const { data } = await supabase.from('places')
-        .select('municipality,region').eq('category', 'HEALTH')
-        .not('npi', 'is', null).not('municipality', 'is', null)
-        .order('municipality', { ascending: true }).limit(9000)
+      // v_health_munis = distinct municipalities (135 rows) — avoids the PostgREST 1000-row
+      // cap that silently truncated a select over all ~20k HEALTH providers.
+      const { data } = await supabase.from('v_health_munis')
+        .select('municipality,region').limit(500)
       for (const r of (data || [])) {
         if (!r.municipality) continue
         const s = specToUrl(r.municipality)
