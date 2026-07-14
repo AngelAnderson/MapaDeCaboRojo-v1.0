@@ -145,16 +145,13 @@ function layout(opts: {
 </div>
 <span class="font-black tracking-tight">Puerto Rico <span class="text-teal-700">Sin Filtros</span></span>
 </a>
-<nav class="hidden md:flex gap-5 text-sm text-slate-600">
-<a href="/buscar" class="hover:text-teal-700" title="Buscar"><i class="fa-solid fa-magnifying-glass"></i> Buscar</a>
-<a href="/decidir" class="font-bold text-teal-700 hover:text-teal-800">¿Me quedo?</a>
+<nav class="hidden md:flex items-center gap-6 text-sm text-slate-600">
 <a href="/#records" class="hover:text-teal-700">Récords</a>
 <a href="/#expedientes" class="hover:text-teal-700">Expedientes</a>
-<a href="/prediccion" class="hover:text-teal-700">Predicción</a>
-<a href="/salud-que-falta" class="hover:text-teal-700">Salud que falta</a>
-<a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a>
-<a href="/comparte" class="hover:text-teal-700">Datos citables</a>
+<a href="/decidir" class="font-bold text-teal-700 hover:text-teal-800">¿Me quedo?</a>
+<a href="/buscar" class="inline-flex items-center gap-1.5 bg-slate-900 text-white hover:bg-slate-700 px-3 py-1.5 rounded-lg font-semibold" title="Buscar en el récord"><i class="fa-solid fa-magnifying-glass"></i> Buscar</a>
 </nav>
+<a href="/buscar" class="md:hidden text-slate-600 hover:text-teal-700 text-lg" title="Buscar" aria-label="Buscar"><i class="fa-solid fa-magnifying-glass"></i></a>
 </div>
 </header>`
   const prsfFooter = `
