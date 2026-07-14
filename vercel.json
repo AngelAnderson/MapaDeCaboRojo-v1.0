@@ -15,6 +15,10 @@
       "schedule": "30 12 * * *"
     },
     {
+      "path": "/api/cron?job=hpsa-refresh",
+      "schedule": "0 8 1 1,4,7,10 *"
+    },
+    {
       "path": "/api/cron?job=dato",
       "schedule": "0 11 * * *"
     }
@@ -107,6 +111,7 @@
     { "source": "/rompelo", "destination": "/api/mapa-pages?page=rompelo" },
     { "source": "/funciona", "destination": "/api/mapa-pages?page=funciona" },
     { "source": "/retiro", "destination": "/api/mapa-pages?page=retiro" },
+    { "source": "/salud-que-falta", "destination": "/api/mapa-pages?page=salud-que-falta" },
     { "source": "/huracan-lento", "destination": "/api/mapa-pages?page=retiro" },
     { "source": "/promesas", "destination": "/api/mapa-pages?page=promesas" },
     { "source": "/quien-responde", "destination": "/api/mapa-pages?page=quien-responde" },

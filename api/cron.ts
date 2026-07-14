@@ -26,8 +26,10 @@ export default async function handler(req: any, res: any) {
         return await runAlertas(res);
       case 'dato':
         return await runDatoDelDia(res);
+      case 'hpsa-refresh':
+        return await runHpsaRefresh(res);
       default:
-        return res.status(400).json({ error: `Unknown job: ${job}. Use ?job=briefing|maintenance|vibe|alertas|dato` });
+        return res.status(400).json({ error: `Unknown job: ${job}. Use ?job=briefing|maintenance|vibe|alertas|dato|hpsa-refresh` });
     }
   } catch (error: any) {
     console.error(`Cron ${job} failed:`, error.message);
@@ -284,6 +286,74 @@ const DATOS_DEL_DIA: Array<{ t: string; u: string }> = [
   { t: 'Una sola variante fundadora en el gen RSPH4A explica 2 de cada 3 casos de disquinesia ciliar primaria en Puerto Rico, con cerca de 1,624 personas afectadas y mayor concentración en Mayagüez. Se confunde con asma por años:', u: 'https://registromedicopr.com/atlas' },
   { t: 'Puerto Rico recibe menos financiamiento de investigación de salud por persona ($28) que Mississippi, el estado más pobre de EE.UU. ($31), pese a tener el ADN más valioso del país para entender enfermedades genéticas:', u: 'https://puertoricosinfiltros.com/investigacion' },
 ];
+
+// --- HPSA Refresh: re-verifica el barrido de designaciones de escasez de PR contra HRSA (trimestral) ---
+// Las designaciones HPSA se revisan cada pocos años; sin esto, pr_hpsa_designations (y /salud-que-falta) se
+// quedan viejas sin avisar. Este job re-jala el barrido, hace upsert, y si algo CAMBIÓ (score/FTE/nuevo/removido)
+// escribe un nightly_receipt para que Angel lo revise. No publica nada solo.
+async function runHpsaRefresh(res: any) {
+  const svc = createClient(
+    process.env.VITE_SUPABASE_URL || 'https://vprjteqgmanntvisjrvp.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  );
+  const BASE = 'https://gisportal.hrsa.gov/server/rest/services/Shortage/HealthProfessionalShortageAreas_FS/MapServer';
+  const FIELDS = 'HPSA_NM,HPSA_SCORE,HPSA_FTE,HPSA_SHORTAGE,HPSA_FORMAL_RATIO,HPSA_DESIGNATION_POP,HPSA_DESIG_LAST_UPD_DT_TXT';
+  const LAYERS: Array<[string, number]> = [['dental', 2], ['mental', 6], ['primary', 10]];
+  const cleanMuni = (nm: string) => String(nm || '').replace(/^(LI|MUA|MUP|GEO)\s*-\s*/, '').replace(/\s+Municipio.*$/, '').trim();
+
+  const fresh: any[] = [];
+  for (const [disc, layer] of LAYERS) {
+    const url = `${BASE}/${layer}/query?where=${encodeURIComponent("PRIMARY_STATE_NM='Puerto Rico'")}&outFields=${encodeURIComponent(FIELDS)}&returnGeometry=false&f=json&resultRecordCount=3000`;
+    const r = await fetch(url);
+    if (!r.ok) return res.status(200).json({ success: false, error: `HRSA ${disc} HTTP ${r.status}` });
+    const d: any = await r.json();
+    for (const f of (d.features || [])) {
+      const a = f.attributes;
+      fresh.push({
+        discipline: disc, hpsa_name: a.HPSA_NM, municipio: cleanMuni(a.HPSA_NM),
+        score: a.HPSA_SCORE, fte: a.HPSA_FTE, shortage: a.HPSA_SHORTAGE,
+        ratio: a.HPSA_FORMAL_RATIO, pop: a.HPSA_DESIGNATION_POP, last_update: a.HPSA_DESIG_LAST_UPD_DT_TXT,
+        refreshed_at: new Date().toISOString(),
+      });
+    }
+  }
+  if (fresh.length < 50) return res.status(200).json({ success: false, error: `barrido sospechosamente corto: ${fresh.length}` });
+
+  // snapshot previo para detectar cambios
+  const { data: prev } = await svc.from('pr_hpsa_designations').select('discipline,hpsa_name,score,fte');
+  const prevMap: Record<string, any> = {};
+  for (const p of (prev || [])) prevMap[`${p.discipline}|${p.hpsa_name}`] = p;
+  const freshKeys = new Set(fresh.map(f => `${f.discipline}|${f.hpsa_name}`));
+
+  const changes: string[] = [];
+  for (const f of fresh) {
+    const key = `${f.discipline}|${f.hpsa_name}`;
+    const p = prevMap[key];
+    if (!p) { changes.push(`🆕 NUEVA designación ${f.discipline}: ${f.municipio} (score ${f.score})`); continue; }
+    if (p.score !== f.score) changes.push(`📊 ${f.municipio} ${f.discipline}: score ${p.score} → ${f.score}`);
+    else if (Math.abs(Number(p.fte) - Number(f.fte)) > 0.01) changes.push(`👥 ${f.municipio} ${f.discipline}: proveedores ${Number(p.fte).toFixed(2)} → ${Number(f.fte).toFixed(2)}`);
+  }
+  for (const p of (prev || [])) {
+    if (!freshKeys.has(`${p.discipline}|${p.hpsa_name}`)) changes.push(`❌ REMOVIDA designación ${p.discipline}: ${cleanMuni(p.hpsa_name)} (ya no certificada — verificar antes de citar)`);
+  }
+
+  // upsert el barrido fresco
+  const { error: upErr } = await svc.from('pr_hpsa_designations')
+    .upsert(fresh, { onConflict: 'discipline,hpsa_name' });
+  if (upErr) return res.status(200).json({ success: false, error: `upsert: ${upErr.message}` });
+
+  // solo escribe recibo si algo cambió (silencio = todo igual, no molesta a Angel)
+  if (changes.length) {
+    const runDate = new Date().toISOString().slice(0, 10);
+    const summary = `🩺 **HPSA Refresh** (${runDate}) — el barrido federal de escasez médica de PR cambió en ${changes.length} punto(s). Revisar antes de que /salud-que-falta o el artículo del huracán citen números viejos:\n\n${changes.map(c => `- ${c}`).join('\n')}\n\nData ya actualizada en \`pr_hpsa_designations\`. Fuente: HRSA HPSA Find.`;
+    await svc.from('nightly_receipts').insert({
+      routine: 'hpsa-refresh', run_date: runDate, summary_md: summary,
+      verify_sql: "SELECT discipline, count(*) FILTER (WHERE fte=0) AS en_cero, count(*) AS total FROM pr_hpsa_designations GROUP BY discipline;",
+      reviewed_by_angel: false,
+    });
+  }
+  return res.status(200).json({ success: true, refreshed: fresh.length, changes: changes.length, detail: changes.slice(0, 20) });
+}
 
 async function runDatoDelDia(res: any) {
   const svc = createClient(

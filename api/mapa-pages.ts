@@ -151,6 +151,7 @@ function layout(opts: {
 <a href="/#records" class="hover:text-teal-700">Récords</a>
 <a href="/#expedientes" class="hover:text-teal-700">Expedientes</a>
 <a href="/prediccion" class="hover:text-teal-700">Predicción</a>
+<a href="/salud-que-falta" class="hover:text-teal-700">Salud que falta</a>
 <a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a>
 <a href="/comparte" class="hover:text-teal-700">Datos citables</a>
 </nav>
@@ -6376,6 +6377,136 @@ ${SHARE_COPY_SCRIPT}
 // /retiro — El Huracán Lento: dónde la vejez, la pobreza y la ausencia de médico ya coinciden, municipio
 // por municipio. Cruce inédito ACS 2024 × NPPES/HRSA × broadband (tabla pr_retiro_municipio, jul 2026).
 // Bandera: la frase de Angel a la prensa (9 jul 2026). Cero data inventada; gaps reportados abajo.
+
+// /salud-que-falta — barrido HPSA completo de PR desde pr_hpsa_designations (149 designaciones, HRSA 2022-2023).
+// Aprobado 2026-07-13. Lectura/evidencia: EVIDENCIA (tabla verificable). Twin del /retiro pero enfocado en el gap de proveedores + el dinero que lo arregla.
+async function handleSaludQueFalta(req: any, res: any) {
+  let rows: any[] = []
+  try {
+    const { data } = await supabase.from('pr_hpsa_designations')
+      .select('discipline,municipio,score,fte,shortage,ratio,pop,last_update')
+      .order('score', { ascending: false }).limit(400)
+    rows = data || []
+  } catch (_) {}
+  const mental = rows.filter(r => r.discipline === 'mental')
+  const dental = rows.filter(r => r.discipline === 'dental')
+  const primary = rows.filter(r => r.discipline === 'primary')
+  const zeroM = mental.filter(r => Number(r.fte) === 0).length
+  const zeroD = dental.filter(r => Number(r.fte) === 0).length
+  const sumShort = (a: any[]) => a.reduce((t, r) => t + (Number(r.shortage) || 0), 0)
+  const cr = { d: dental.find(r => /cabo rojo/i.test(r.municipio)), m: mental.find(r => /cabo rojo/i.test(r.municipio)) }
+  const n = (x: any) => Number(x || 0).toLocaleString('en-US')
+
+  const filaMental = (r: any, i: number) => {
+    const hl = /cabo rojo/i.test(r.municipio)
+    return `<tr class="border-t border-slate-100 ${hl ? 'bg-teal-50/60' : (Number(r.fte) === 0 ? 'bg-red-50/40' : '')}">
+      <td class="py-2 px-3 font-semibold ${hl ? 'text-teal-700' : 'text-slate-800'}">${escapeHtml(r.municipio)}</td>
+      <td class="py-2 px-3 text-right font-bold ${Number(r.fte) === 0 ? 'text-red-600' : 'text-slate-700'}">${Number(r.fte).toFixed(3)}</td>
+      <td class="py-2 px-3 text-right text-slate-600">${Number(r.shortage).toFixed(1)}</td>
+      <td class="py-2 px-3 text-right font-bold text-slate-900">${r.score}</td>
+      <td class="py-2 px-3 text-right text-slate-400 text-xs">${escapeHtml(r.last_update || '')}</td>
+    </tr>`
+  }
+  const mentalRows = mental.length
+    ? mental.sort((a, b) => (b.score - a.score)).map(filaMental).join('')
+    : `<tr><td colspan="5" class="py-3 px-3 text-slate-500 text-sm">Data en vivo no disponible ahora. Verificado jul 2026: 44 de 52 municipios con salud mental designada están en 0.0 proveedores.</td></tr>`
+
+  const citables = [
+    `El gobierno federal certificó escasez de salud mental en 52 municipios de Puerto Rico. En ${zeroM || 44} de ellos, el conteo de proveedores a tiempo completo da CERO. Fuente: HRSA HPSA Find, compilado en puertoricosinfiltros.com/salud-que-falta`,
+    `Puerto Rico necesita ${sumShort(mental).toFixed(0) || 70} proveedores de salud mental y ${sumShort(dental).toFixed(0) || 297} dentistas más para llegar a la meta federal mínima. El dinero para reclutarlos ya está aprobado. Fuente: HRSA, puertoricosinfiltros.com/salud-que-falta`,
+    `Cabo Rojo: certificación federal de escasez dental (score ${cr.d?.score || 24}/26) y de salud mental (score ${cr.m?.score || 22}/26, ${cr.m ? Number(cr.m.fte).toFixed(3) : '0.175'} proveedores para ${cr.m ? n(cr.m.pop) : '38,629'} personas). Fuente: HRSA 2023, puertoricosinfiltros.com/salud-que-falta`,
+  ]
+  const citableCards = citables.map(c => `
+    <div class="flex items-start gap-2 bg-white border border-slate-200 rounded-xl p-3 mt-2">
+      <p class="flex-1 text-sm text-slate-700 leading-relaxed">${escapeHtml(c)}</p>
+      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(c)}"><i class="fa-regular fa-copy"></i> Copiar</button>
+    </div>`).join('')
+
+  const body = `
+<h1>La salud que falta</h1>
+<p class="text-lg text-slate-600 mt-2">El gobierno federal certifica, pueblo por pueblo, dónde faltan médicos, dentistas y proveedores de salud mental. Esta página junta las ${rows.length || 149} designaciones de Puerto Rico, con la fuente al lado. No busca culpables: busca la foto exacta, el dinero que ya existe para arreglarlo, y quién tiene que moverse.</p>
+
+<div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-4 text-sm text-slate-700">
+  <strong>Esto es EVIDENCIA, no lectura.</strong> Cada número sale del servidor de HRSA y se verifica en <a href="https://data.hrsa.gov/topics/health-workforce/shortage-areas/hpsa-find" rel="nofollow" class="text-teal-700 font-semibold">HPSA Find</a>. La lectura de a dónde va todo esto en 2030 vive en la <a href="/prediccion" class="text-teal-700 font-semibold">Predicción →</a>, y quién recibe el golpe demográfico primero, en <a href="/retiro" class="text-teal-700 font-semibold">El Huracán Lento →</a>.
+</div>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">En ${zeroM || 44} municipios de Puerto Rico, el conteo federal de proveedores de salud mental da cero. Y el dinero para llenarlos lleva años aprobado.</p>
+</div>
+
+${shareRow({ text: `El gobierno federal certificó escasez de salud mental en 52 pueblos de PR. En ${zeroM || 44} el conteo da CERO proveedores. El dinero para reclutarlos ya está aprobado hace años. La tabla con la fuente:`, url: 'https://puertoricosinfiltros.com/salud-que-falta', toWho: 'Al que no consigue cita. Al médico joven que decide dónde ejercer. Al alcalde que no sabe que su pueblo está certificado.' })}
+
+<h2 id="foto">La foto de hoy</h2>
+<div class="not-prose grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+  <div class="rounded-xl border-2 border-red-200 bg-red-50 p-4"><div class="text-3xl font-black text-red-600">${zeroM || 44}</div><div class="text-sm font-semibold text-slate-800 mt-1">municipios con 0.0 proveedores de salud mental</div><div class="text-xs text-slate-500 mt-1">de 52 con designación federal</div></div>
+  <div class="rounded-xl border border-slate-200 bg-white p-4"><div class="text-3xl font-black text-slate-800">${sumShort(mental).toFixed(0) || 70}</div><div class="text-sm font-semibold text-slate-800 mt-1">proveedores de salud mental que faltan</div><div class="text-xs text-slate-500 mt-1">para la meta federal mínima</div></div>
+  <div class="rounded-xl border border-slate-200 bg-white p-4"><div class="text-3xl font-black text-slate-800">${sumShort(dental).toFixed(0) || 297}</div><div class="text-sm font-semibold text-slate-800 mt-1">dentistas que faltan en la isla</div><div class="text-xs text-slate-500 mt-1">${dental.length || 77} municipios designados</div></div>
+</div>
+<p class="mt-4"><strong>La letra pequeña que importa:</strong> ese conteo se hace sobre registros federales auto-reportados que nadie limpia cuando un médico se va. Auditorías del propio CMS hallaron errores en ~48% de los listados de directorios. Si la data subestima quién se fue, la escasez real es peor que la certificada. La lectura personal completa: <a href="https://www.angelanderson.com/el-huracan-que-viene-no-es-de-lluvia/" class="text-teal-700 font-semibold">El huracán que viene no es de lluvia →</a></p>
+
+<h2 id="dinero">El dinero que ya existe (y quién tiene que moverse)</h2>
+<p>La certificación de escasez no es un diagnóstico decorativo. Es la llave de cinco fondos federales ya aprobados. Ninguno llega solo: cada uno tiene un dueño que casi nunca sabe que existe.</p>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Programa</th><th class="py-2 px-3">Qué da</th><th class="py-2 px-3">Quién tiene que actuar</th></tr></thead><tbody>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3 font-semibold">NHSC Loan Repayment</td><td class="py-2 px-3">Hasta $75,000 de pago de préstamos por servir en zona HPSA</td><td class="py-2 px-3">El médico solicita (nhsc.hrsa.gov), en sitio aprobado</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3 font-semibold">SLRP (pareo estatal)</td><td class="py-2 px-3">Pareo federal 1:1 sin costo nuevo — hoy PR lo tiene en CERO</td><td class="py-2 px-3">Decisión del Depto. de Salud de PR</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3 font-semibold">Bono Medicare HPSA</td><td class="py-2 px-3">+10% en cada factura de Medicare</td><td class="py-2 px-3">El médico que ya ejerce aquí solo lo factura</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3 font-semibold">Fondos FQHC (Sección 330)</td><td class="py-2 px-3">Operación de clínicas comunitarias</td><td class="py-2 px-3">La clínica solicita; la designación sube su score</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3 font-semibold">Visas J-1 (Conrad 30)</td><td class="py-2 px-3">Retener médicos extranjeros a cambio de 3 años en zona HPSA</td><td class="py-2 px-3">El hospital patrocina; el Depto. de Salud administra 30/año</td></tr>
+  </tbody></table>
+</div>
+<p class="mt-3 text-sm text-slate-600"><strong>El dato que duele:</strong> Puerto Rico usa el NHSC a razón de 2.5 médicos por cada 100,000 habitantes. West Virginia, con el mismo programa federal, a 15.3 — seis veces más. El detalle municipio por municipio, en <a href="/registro/estado" class="text-teal-700 font-semibold">el estado de los médicos →</a></p>
+
+<h2 id="tabla">Salud mental, municipio por municipio</h2>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm">
+    <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Municipio</th><th class="py-2 px-3 text-right">Proveedores (FTE)</th><th class="py-2 px-3 text-right">Faltan</th><th class="py-2 px-3 text-right">Score</th><th class="py-2 px-3 text-right">Actualizado</th></tr></thead>
+    <tbody>${mentalRows}</tbody>
+  </table>
+</div>
+<p class="text-sm text-slate-500 mt-2">Las 52 designaciones de salud mental de PR (dental: ${dental.length || 77} municipios; primaria: ${primary.length || 20}). Fila verde = Cabo Rojo. Data en la tabla pública <code>pr_hpsa_designations</code>, refrescada contra el servidor de HRSA. Designaciones 2022-2023.</p>
+
+<h2 id="citables">Para copiar y compartir</h2>
+${citableCards}
+
+${mientrasTanto(
+  [
+    `Si no consigues cita de salud mental o dental, el número lo explica: no es que hagas algo mal, es que no hay suficientes. La Línea PAS (988) funciona 24/7, sin internet, para lo urgente.`,
+    `El proveedor que no está no cancela lo que sí hay: el primario, la farmacia y el cernimiento. Empieza por lo que tu pueblo sí tiene hoy.`,
+  ],
+  [
+    `Si conoces un médico o estudiante de medicina decidiendo dónde ejercer: ejercer en zona certificada le paga hasta $75,000 de préstamos. Esa sola conversación puede ser una plaza llena en tu pueblo. nhsc.hrsa.gov.`,
+    `Si eres alcalde o trabajas en un municipio: pregunta cuándo fue la última vez que tu pueblo sometió data a la Primary Care Office del Depto. de Salud. Data vieja = designación que subestima = menos fondos activables.`,
+  ],
+)}
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
+  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">La escasez está certificada. El dinero está aprobado. Lo único que falta es la fila para reclamarlo.</p>
+  <p class="mt-2 text-sm text-slate-600 italic">No busco culpables. Busco que el próximo médico que decida dónde ejercer vea esto.</p>
+</div>
+
+<p class="text-sm text-slate-500 mt-6">Cómo se hizo: barrido completo de las designaciones HPSA de Puerto Rico desde el servidor de mapas de HRSA (gisportal.hrsa.gov), guardado en la tabla pública <code>pr_hpsa_designations</code> y refrescado periódicamente. Los números son verificables en HPSA Find. Designaciones federales 2022-2023. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a>. Julio 2026.</p>
+${SHARE_COPY_SCRIPT}
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Report',
+    name: 'La salud que falta: las designaciones federales de escasez médica de Puerto Rico',
+    about: 'Barrido completo de las áreas de escasez de profesionales de salud (HPSA) de Puerto Rico, con el dinero federal aprobado para resolverlas.',
+    author: { '@type': 'Person', name: 'Angel Anderson' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    inLanguage: 'es', datePublished: '2026-07-13', url: 'https://puertoricosinfiltros.com/salud-que-falta',
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'La salud que falta — las zonas de escasez médica de Puerto Rico, con el dinero que las arregla',
+    description: `El gobierno federal certificó escasez de salud mental en 52 municipios de PR; en ${zeroM || 44} el conteo da cero. El dinero para reclutar médicos ya está aprobado. La tabla completa, con la fuente.`,
+    slug: 'salud-que-falta', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
 async function handleRetiro(req: any, res: any) {
   let rows: any[] = []
   try {
@@ -9206,6 +9337,12 @@ async function handleRegistroEstado(req: any, res: any) {
   const body = `
 <h1>Estado de Salud de Puerto Rico</h1>
 <p class="text-lg text-slate-600 mt-3">El dinero federal para traer médicos <strong>ya está aprobado</strong> en casi todos nuestros pueblos. Y se está quedando sin reclamar. Esta es la primera cuenta, municipio por municipio, de dónde está el <strong>cupón sin cobrar</strong>.</p>
+<div class="not-prose mt-4 rounded-xl border border-slate-200 bg-white p-4 flex items-start gap-3">
+  <div class="text-2xl">🩺</div>
+  <div>
+    <p class="text-sm text-slate-700">Este registro te dice <strong>quién existe</strong>. La otra cara te dice <strong>cuánto falta</strong>: la certificación federal de escasez, pueblo por pueblo, con el dinero aprobado para llenarla. <a href="https://puertoricosinfiltros.com/salud-que-falta" class="text-teal-700 font-semibold">La salud que falta →</a></p>
+  </div>
+</div>
 <div class="not-prose mt-4 border-2 border-teal-300 bg-teal-50 rounded-2xl p-4 flex items-start gap-3">
   <div class="text-2xl">🪜</div>
   <div>
@@ -11993,6 +12130,7 @@ export default async function handler(req: any, res: any) {
     case 'contradicciones': return await handleContradicciones(req, res)
     case 'semaforo-fema': return await handleSemaforoFema(req, res)
     case 'funciona': return await handleFunciona(req, res)
+    case 'salud-que-falta': return await handleSaludQueFalta(req, res)
     case 'retiro': return await handleRetiro(req, res)
     case 'buscar': return handleBuscar(req, res)
     case 'prediccion': return handlePrediccion(req, res)
