@@ -3211,9 +3211,10 @@ ${SHARE_COPY_SCRIPT}`
   const regionCap = PUEBLO_REGION_CAP[town.region] || town.region
   const pageUrl = `https://registromedicopr.com/pueblo/${slug}`
 
-  const [{ data: specRows }, { data: hpsaRows }] = await Promise.all([
+  const [{ data: specRows }, { data: hpsaRows }, { data: provRows }] = await Promise.all([
     supabase.from('v_registro_muni_spec').select('subcategory,n').eq('municipio', town.municipio),
     supabase.from('hpsa_designations').select('discipline,score').eq('municipio', town.municipio).order('score', { ascending: false }),
+    supabase.rpc('registro_providers_by_muni', { muni: town.municipio }),
   ])
   const present = (specRows || [])
     .filter((r: any) => REGISTRY_BYSUB[r.subcategory])
@@ -3224,10 +3225,48 @@ ${SHARE_COPY_SCRIPT}`
   const missing = PUEBLO_HIGH_NEED.filter(s => !presentSet.has(s)).map(s => REGISTRY_BYSUB[s]).filter(Boolean)
 
   const specLbl = (x: any) => en ? (SPEC_LABEL_EN[x.s] || x.l) : x.l
+  // Chips saltan al ancla de su categoría en el directorio de nombres (no al hub estatal).
   const presentChips = present.map(p => {
     const x = REGISTRY_BYSUB[p.sub]
-    return `<a href="/registro/${specToUrl(p.sub)}${lp}" class="inline-flex items-center gap-1.5 bg-white border border-teal-200 text-teal-800 font-semibold px-3 py-1.5 rounded-full text-sm hover:bg-teal-50">${x.e} ${escapeHtml(specLbl(x))} <span class="font-black">${p.n}</span></a>`
+    return `<a href="#dir-${specToUrl(p.sub)}" class="inline-flex items-center gap-1.5 bg-white border border-teal-200 text-teal-800 font-semibold px-3 py-1.5 rounded-full text-sm hover:bg-teal-50">${x.e} ${escapeHtml(specLbl(x))} <span class="font-black">${p.n}</span></a>`
   }).join(' ')
+
+  // ── Directorio con nombres: cada proveedor del pueblo, por categoría (alfabética), nombre → perfil ──
+  const CAP_PER_CAT = 250
+  const byCat: Record<string, Array<{ name: string; slug: string; phone: string | null }>> = {}
+  for (const r of (provRows || []) as any[]) {
+    if (!REGISTRY_BYSUB[r.subcategory]) continue
+    ;(byCat[r.subcategory] = byCat[r.subcategory] || []).push({ name: r.name, slug: r.slug, phone: r.phone })
+  }
+  const dirCatKeys = Object.keys(byCat).sort((a, b) => specLbl(REGISTRY_BYSUB[a]).localeCompare(specLbl(REGISTRY_BYSUB[b]), 'es'))
+  const cleanName = (n: string) => n.replace(/^Dr\(a\)\.\s*/, '')
+  const dirBlocks = dirCatKeys.map(sub => {
+    const x = REGISTRY_BYSUB[sub]
+    const list = byCat[sub]
+    const shown = list.slice(0, CAP_PER_CAT)
+    const rows = shown.map(pr => {
+      const tel = pr.phone ? `<a href="tel:${escapeHtml(pr.phone.replace(/[^0-9+]/g, ''))}" class="text-slate-400 hover:text-teal-700 text-xs whitespace-nowrap">${escapeHtml(pr.phone)}</a>` : ''
+      return `<li class="flex items-baseline justify-between gap-3 py-1 border-b border-slate-50">
+        <a href="/especialista/${encodeURIComponent(pr.slug)}${lp}" class="text-teal-700 hover:underline text-sm">${escapeHtml(cleanName(pr.name))}</a>${tel}</li>`
+    }).join('')
+    const overflow = list.length > CAP_PER_CAT
+      ? `<li class="pt-2 text-xs text-slate-500">${te(`+ ${list.length - CAP_PER_CAT} más. `, `+ ${list.length - CAP_PER_CAT} more. `)}<a href="/registro/${specToUrl(sub)}/${specToUrl(regionCap)}${lp}" class="text-teal-700 font-semibold">${te('Ver todos en el ' + regionCap + ' →', 'See all in ' + regionCap + ' →')}</a></li>`
+      : ''
+    return `<details id="dir-${specToUrl(sub)}" class="group border border-slate-200 rounded-xl overflow-hidden scroll-mt-24">
+      <summary class="cursor-pointer select-none px-4 py-3 bg-slate-50 hover:bg-slate-100 flex items-center justify-between gap-2">
+        <span class="font-bold text-slate-800 text-sm">${x.e} ${escapeHtml(specLbl(x))}</span>
+        <span class="text-xs text-slate-500 font-semibold">${list.length} <i class="fa-solid fa-chevron-down group-open:rotate-180 transition ml-1"></i></span>
+      </summary>
+      <ul class="px-4 py-2">${rows}${overflow}</ul>
+    </details>`
+  }).join('')
+  const directorio = dirCatKeys.length ? `
+<h2 id="directorio">${te(`Directorio completo de ${escapeHtml(town.municipio)}`, `Full directory of ${escapeHtml(town.municipio)}`)}</h2>
+<p class="text-slate-600 -mt-2">${te('Cada nombre por categoría, en orden alfabético. Toca uno pa\' ver su perfil, teléfono y el enlace pa\' verificar su NPI en el registro federal.', 'Every name by category, alphabetical. Tap one for their profile, phone, and the link to verify their NPI in the federal registry.')}</p>
+<div class="not-prose mt-3 grid gap-2.5">${dirBlocks}</div>
+<div class="not-prose mt-3 bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-500 leading-relaxed">
+  ⚠️ ${te('Esta lista sale del registro federal NPPES: son los que tienen un número NPI activo. El NPI no se apaga cuando un proveedor se retira o se muda, así que la lista es un <strong>techo</strong>, no un piso — puede incluir a alguno que ya no ejerce aquí. Por eso cada nombre enlaza su NPI federal pa\' que lo confirmes. ¿Sabes de alguno que ya no está? ', 'This list comes from the federal NPPES registry: these are the ones with an active NPI number. An NPI does not turn off when a provider retires or moves, so the list is a <strong>ceiling</strong>, not a floor — it may include someone no longer practicing here. That is why each name links its federal NPI so you can confirm it. Know of one who is no longer here? ')}<a href="mailto:angel@angelanderson.com?subject=Correccion%20registro%20${encodeURIComponent(town.municipio)}" class="text-teal-700 font-semibold">${te('Dínoslo y se corrige.', 'Tell us and we fix it.')}</a>
+</div>` : ''
 
   const missingRows = missing.map((x: any) => {
     const regionN = (x.r as any)[regionCap] || 0
@@ -3309,7 +3348,8 @@ fetch('/api/mapa-pages?page=registro-alert',{method:'POST',headers:{'Content-Typ
 ${hpsaBlock}
 ${present.length ? `<h2>${te(`Lo que HAY en ${escapeHtml(town.municipio)}`, `What ${escapeHtml(town.municipio)} HAS`)}</h2>
 <p class="text-slate-600 -mt-2">${te("Toca cualquiera pa' ver la lista completa con nombres y teléfonos.", 'Tap any to see the full list with names and phone numbers.')}</p>
-<div class="not-prose mt-3 flex flex-wrap gap-2">${presentChips}</div>` : `<h2>${te(`En ${escapeHtml(town.municipio)} no hay especialistas verificados`, `${escapeHtml(town.municipio)} has no verified specialists`)}</h2>
+<div class="not-prose mt-3 flex flex-wrap gap-2">${presentChips}</div>
+${directorio}` : `<h2>${te(`En ${escapeHtml(town.municipio)} no hay especialistas verificados`, `${escapeHtml(town.municipio)} has no verified specialists`)}</h2>
 <p class="text-slate-600 -mt-2">${te(`Ninguno de los ${REGISTRY_SPECS.length} tipos del registro tiene práctica verificada aquí. No es que la gente no se enferme: es que toca viajar. Abajo te digo a dónde.`, `None of the registry's ${REGISTRY_SPECS.length} specialist types has a verified practice here. It is not that people do not get sick: it is that they have to travel. Below is where to.`)}</p>`}
 ${missing.length ? `<h2>${te('Lo que NO hay (y dónde queda lo más cerca)', 'What is MISSING (and where the nearest one is)')}</h2>
 <p class="text-slate-600 -mt-2">${te(`De los especialistas que más se buscan, estos no tienen práctica verificada en ${escapeHtml(town.municipio)}:`, `Of the most sought-after specialists, these have no verified practice in ${escapeHtml(town.municipio)}:`)}</p>
@@ -9719,7 +9759,8 @@ async function handleRegistroMapa(req: any, res: any) {
       +curLine+badges
       +(top.length?'<div class="mt-2 text-xs text-slate-500 font-bold uppercase tracking-wide">Lo que hay</div><ul class="text-sm text-slate-700">'+top.map(function(s){return '<li>'+esc(s)+' · <b>'+mx[s]+'</b></li>'}).join('')+'</ul>':'<div class="mt-2 text-sm text-red-700 font-semibold">Ni un especialista con práctica declarada en este municipio.</div>')
       +'<div class="mt-3 flex flex-col gap-1.5">'
-      +'<a class="text-sm font-bold text-white bg-teal-700 hover:bg-teal-800 rounded-full px-3 py-1.5 text-center" href="https://wa.me/17874177711?text='+encodeURIComponent(kw)+'">Escríbele '+kw+' al Veci</a>'
+      +'<a class="text-sm font-bold text-white bg-teal-700 hover:bg-teal-800 rounded-full px-3 py-1.5 text-center" href="/pueblo/'+encodeURIComponent(x.m.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-'))+'">Ver el directorio con nombres de '+esc(x.m)+' →</a>'
+      +'<a class="text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-full px-3 py-1.5 text-center" href="https://wa.me/17874177711?text='+encodeURIComponent(kw)+'">Escríbele '+kw+' al Veci</a>'
       +(cur?'<a class="text-sm font-semibold text-teal-700 text-center hover:underline" href="/registro/'+encodeURIComponent(cur.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-'))+'">Ver todos los '+esc(cur)+'s de PR →</a>':'<a class="text-sm font-semibold text-teal-700 text-center hover:underline" href="/registro">Buscar en el registro →</a>')
       +'</div>';
     el.classList.remove('hidden');
