@@ -10144,13 +10144,35 @@ const REGION_FULL: Record<string, string> = {
   Este: 'el este (Caguas, Humacao, Fajardo)', Metro: 'el área metro (San Juan y alrededores)',
 }
 
+// Resolve a municipality slug (e.g. "cabo-rojo") → {name, region}, cached per instance.
+// Powers town-level hub pages /registro/:spec/:municipio that target "[especialidad] [pueblo]" demand.
+let MUNI_CACHE: Map<string, { name: string; region: string }> | null = null
+async function resolveMuni(slug: string): Promise<{ name: string; region: string } | null> {
+  if (!MUNI_CACHE) {
+    MUNI_CACHE = new Map()
+    try {
+      const { data } = await supabase.from('places')
+        .select('municipality,region').eq('category', 'HEALTH')
+        .not('npi', 'is', null).not('municipality', 'is', null)
+        .order('municipality', { ascending: true }).limit(9000)
+      for (const r of (data || [])) {
+        if (!r.municipality) continue
+        const s = specToUrl(r.municipality)
+        if (!MUNI_CACHE.has(s)) MUNI_CACHE.set(s, { name: r.municipality, region: r.region || '' })
+      }
+    } catch { /* leave cache empty; town mode just 302s to the spec hub */ }
+  }
+  return MUNI_CACHE.get(slug) || null
+}
+
 async function handleRegistroHub(req: any, res: any) {
   const specUrl = String(req.query.spec || '').toLowerCase()
   const regionUrl = String(req.query.region || '').toLowerCase()
   const x = SPEC_BY_URL[specUrl]
   if (!x) { res.statusCode = 302; res.setHeader('Location', '/registro'); res.end(); return }
   const region = regionUrl ? (REGION_BY_URL[regionUrl] || '') : ''
-  if (regionUrl && !region) { res.statusCode = 302; res.setHeader('Location', `/registro/${specUrl}`); res.end(); return }
+  // A non-region 2nd segment may be a municipality (e.g. /registro/neurologo/cabo-rojo) —
+  // handled as "town mode" after the shared vars below. Only 302 if it's neither.
 
   const en = String(req.query.lang || '') === 'en'
   const t = (es: string, env: string) => en ? env : es
@@ -10164,6 +10186,61 @@ async function handleRegistroHub(req: any, res: any) {
   const regionCount = region ? ((x.r as any)[region] || 0) : 0
   const metroCount = x.r.Metro || 0
   const isMD = x.md
+
+  // ── Town mode: /registro/:spec/:municipio — targets "[especialidad] [pueblo]" searches ──
+  if (regionUrl && !region) {
+    const muni = await resolveMuni(regionUrl)
+    if (!muni) { res.statusCode = 302; res.setHeader('Location', `/registro/${specUrl}${lp}`); res.end(); return }
+    const muniSlug = specToUrl(muni.name)
+    const townReg = muni.region || ''
+    const [inTownRes, inRegionRes] = await Promise.all([
+      supabase.from('places').select('name,municipality,slug,phone').eq('subcategory', x.s).eq('category', 'HEALTH').not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').eq('municipality', muni.name).order('name', { ascending: true }).limit(80),
+      townReg ? supabase.from('places').select('name,municipality,slug,phone').eq('subcategory', x.s).eq('category', 'HEALTH').not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').eq('region', townReg).order('municipality', { ascending: true }).limit(120) : Promise.resolve({ data: [] as any[] }),
+    ])
+    const inTown = (inTownRes.data || [])
+    const nearby = ((inRegionRes as any).data || []).filter((p: any) => p.municipality !== muni.name)
+    const rowsOf = (list: any[]) => list.map((p: any) => `<tr class="border-t border-slate-100"><td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td><td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '—')}</td><td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="text-teal-700 font-semibold whitespace-nowrap">${escapeHtml(p.phone)}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td></tr>`).join('')
+    const theadT = `<thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(label)}</th><th class="py-2 px-3">${t('Pueblo', 'Town')}</th><th class="py-2 px-3 text-right">${t('Teléfono', 'Phone')}</th></tr></thead>`
+    const titleT = t(`${x.l} en ${muni.name}, Puerto Rico — verificados`, `${label} in ${muni.name}, Puerto Rico — verified`)
+    const descT = inTown.length
+      ? t(`¿Hay ${x.l.toLowerCase()} en ${muni.name}? Sí: ${inTown.length} verificado${inTown.length === 1 ? '' : 's'} contra el registro federal NPPES, con teléfono.`, `${label} in ${muni.name}, PR — ${inTown.length} verified against the federal NPPES registry, with phone numbers.`)
+      : t(`¿Hay ${x.l.toLowerCase()} en ${muni.name}? El registro federal no muestra ninguno con oficina ahí; te decimos los más cercanos, con teléfono.`, `${label} in ${muni.name}, PR — none with a local office per the federal registry; see the nearest ones.`)
+    const answerT = inTown.length
+      ? t(`En ${escapeHtml(muni.name)} hay <strong>${inTown.length} ${escapeHtml(x.l.toLowerCase())}${inTown.length === 1 ? '' : 's'}</strong> con oficina, verificado${inTown.length === 1 ? '' : 's'} contra el registro federal NPPES.`, `${escapeHtml(muni.name)} has <strong>${inTown.length} verified ${escapeHtml(labelLow)}${inTown.length === 1 ? '' : 's'}</strong> with a local office.`)
+      : t(`El registro federal <strong>no muestra ningún ${escapeHtml(x.l.toLowerCase())}</strong> con oficina en ${escapeHtml(muni.name)}.${nearby.length ? ` Los más cercanos están ${townReg ? `en el ${escapeHtml(townReg)}` : 'en tu región'}:` : ''}`, `The federal registry shows <strong>no ${escapeHtml(labelLow)}</strong> with an office in ${escapeHtml(muni.name)}.`)
+    const breadcrumbT = `<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro${lp}" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <a href="/registro/${specUrl}${lp}" class="hover:text-teal-700">${escapeHtml(label)}</a> <span class="text-slate-300">/</span> <span class="text-slate-700">${escapeHtml(muni.name)}</span></nav>`
+    let bodyT = `${breadcrumbT}
+<h1>${x.e} ${escapeHtml(label)} ${t('en', 'in')} ${escapeHtml(muni.name)}, Puerto Rico</h1>
+<p class="text-lg text-slate-600 mt-2">${answerT}</p>
+${info.treats ? `<p class="text-slate-600 mt-1">${escapeHtml(info.treats)} ${escapeHtml(info.whenToGo)}</p>` : ''}
+${info.note ? `<p class="text-sm text-slate-500 mt-1"><i class="fa-solid fa-circle-info text-teal-600"></i> ${escapeHtml(info.note)}</p>` : ''}`
+    if (inTown.length) bodyT += `<div class="not-prose mt-5 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${theadT}<tbody>${rowsOf(inTown)}</tbody></table></div>`
+    if (nearby.length) bodyT += `<h2 class="mt-6">${t('También cerca', 'Also nearby')}${townReg ? ` — ${t('en el', 'in')} ${escapeHtml(townReg)}` : ''}</h2><div class="not-prose mt-2 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${theadT}<tbody>${rowsOf(nearby.slice(0, 60))}</tbody></table></div>`
+    if (!inTown.length && !nearby.length) bodyT += `<div class="not-prose mt-5 bg-amber-50 border border-amber-200 rounded-xl p-5"><p class="text-amber-900 font-semibold">${t(`No hay ${escapeHtml(x.l.toLowerCase())} verificados cerca de ${escapeHtml(muni.name)}.`, `No verified ${escapeHtml(labelLow)} near ${escapeHtml(muni.name)}.`)}</p><p class="text-sm text-amber-800 mt-1"><a href="/registro/${specUrl}/metro${lp}" class="font-semibold underline">${t('Mira el área metro', 'See the metro area')} (${metroCount}) →</a></p></div>`
+    bodyT += `<p class="not-prose mt-4 text-sm"><a href="/registro/${specUrl}${lp}" class="text-teal-700 font-semibold">${t(`Ver los ${x.t} ${escapeHtml(x.l.toLowerCase())} de toda la isla →`, `See all ${x.t} ${escapeHtml(labelLow)} across the island →`)}</a></p>
+${antesDeLlamar({ specLabel: x.l, en })}
+<div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white"><p class="text-lg font-bold mb-1">${t('¿No sabes a cuál ir?', 'Not sure which one to see?')}</p><p class="text-sm text-teal-100 mb-4">${t('Escríbele al Veci. Te dice quién hay cerca y sus teléfonos. Al', 'Text El Veci. He tells you who is nearby and their phone numbers. At')} <strong>${PHONE_CTA}</strong>:</p><a href="https://wa.me/17874177711?text=${x.kw}" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${x.kw}</a></div>
+${regDisclaimer(en)}`
+    const canonicalPathT = `registro/${specUrl}/${muniSlug}`
+    const allT = [...inTown, ...nearby]
+    const itemListT = allT.slice(0, 50).map((p: any, i: number) => ({ '@type': 'ListItem', position: i + 1, name: cleanProviderName(p.name), url: `https://registromedicopr.com/especialista/${encodeURIComponent(p.slug)}` }))
+    const jsonLdT: any[] = [
+      { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Registro Médico PR', item: 'https://registromedicopr.com' },
+        { '@type': 'ListItem', position: 2, name: x.l, item: `https://registromedicopr.com/registro/${specUrl}` },
+        { '@type': 'ListItem', position: 3, name: muni.name, item: `https://registromedicopr.com/${canonicalPathT}` },
+      ] },
+      { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [
+        { '@type': 'Question', name: `¿Hay ${x.l.toLowerCase()} en ${muni.name}?`, acceptedAnswer: { '@type': 'Answer', text: inTown.length ? `Sí. En ${muni.name} hay ${inTown.length} ${x.l.toLowerCase()} verificado${inTown.length === 1 ? '' : 's'} contra el registro federal NPPES.` : `El registro federal NPPES no muestra ningún ${x.l.toLowerCase()} con oficina en ${muni.name}.${nearby.length && townReg ? ` Los más cercanos están en el ${townReg}.` : ''}` } },
+        { '@type': 'Question', name: `¿Qué hace un ${x.l.toLowerCase()}?`, acceptedAnswer: { '@type': 'Answer', text: `${info.treats} ${info.whenToGo}` } },
+      ] },
+      ...(itemListT.length ? [{ '@context': 'https://schema.org', '@type': 'ItemList', name: titleT, numberOfItems: allT.length, itemListElement: itemListT }] : []),
+    ]
+    res.setHeader('Content-Type', 'text/html; charset=utf-8')
+    res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+    res.status(200).send(layout({ title: titleT, description: descT, slug: canonicalPathT, bodyHtml: bodyT, jsonLd: jsonLdT, ogImage: '/og/registro.png', host: req.headers?.host, canonicalHost: 'https://registromedicopr.com', lang: en ? 'en' : 'es' }))
+    return
+  }
 
   // provider list (this specialty, optionally this region)
   let q = supabase.from('places')
