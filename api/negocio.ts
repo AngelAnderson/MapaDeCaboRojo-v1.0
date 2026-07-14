@@ -128,10 +128,14 @@ export default async function handler(req: any, res: any) {
 
   const baseUrl = 'https://mapadecaborojo.com';
   const pageUrl = `${baseUrl}/negocio/${esc(place.slug || place.id)}`;
-  const title = `${esc(place.name)} | Cabo Rojo, Puerto Rico`;
+  // Use the business's REAL municipality (was hardcoded "Cabo Rojo" — hurt CTR + local
+  // relevance for every business outside CR, e.g. "penfed mayaguez" showing "| Cabo Rojo").
+  const muniRaw = place.municipality || 'Cabo Rojo';
+  const muni = esc(muniRaw);
+  const title = `${esc(place.name)} | ${muni}, Puerto Rico`;
   const description = place.description
     ? esc(place.description).slice(0, 160)
-    : `Descubre ${esc(place.name)} en Cabo Rojo, Puerto Rico. Horarios, dirección, teléfono y más.`;
+    : `Descubre ${esc(place.name)} en ${muni}, Puerto Rico. Horarios, dirección, teléfono y más.`;
   // Sin foto propia -> tarjeta de marca generada (nombre + categoría), no un default genérico.
   const ogCard = `${baseUrl}/api/og?t=${encodeURIComponent(place.name)}&k=${encodeURIComponent(place.subcategory || place.category || 'Cabo Rojo')}`;
   const image = place.image_url || ogCard;
@@ -154,7 +158,7 @@ export default async function handler(req: any, res: any) {
     address: {
       '@type': 'PostalAddress',
       streetAddress: place.address || undefined,
-      addressLocality: 'Cabo Rojo',
+      addressLocality: muniRaw,
       addressRegion: 'Puerto Rico',
       addressCountry: 'PR',
     },
