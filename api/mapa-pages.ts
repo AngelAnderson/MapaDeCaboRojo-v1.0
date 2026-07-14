@@ -3233,10 +3233,10 @@ ${SHARE_COPY_SCRIPT}`
 
   // ── Directorio con nombres: cada proveedor del pueblo, por categoría (alfabética), nombre → perfil ──
   const CAP_PER_CAT = 250
-  const byCat: Record<string, Array<{ name: string; slug: string; phone: string | null }>> = {}
+  const byCat: Record<string, Array<{ name: string; slug: string; phone: string | null; rating: number | null }>> = {}
   for (const r of (provRows || []) as any[]) {
     if (!REGISTRY_BYSUB[r.subcategory]) continue
-    ;(byCat[r.subcategory] = byCat[r.subcategory] || []).push({ name: r.name, slug: r.slug, phone: r.phone })
+    ;(byCat[r.subcategory] = byCat[r.subcategory] || []).push({ name: r.name, slug: r.slug, phone: r.phone, rating: r.cms_rating != null ? Number(r.cms_rating) : null })
   }
   const dirCatKeys = Object.keys(byCat).sort((a, b) => specLbl(REGISTRY_BYSUB[a]).localeCompare(specLbl(REGISTRY_BYSUB[b]), 'es'))
   const cleanName = (n: string) => n.replace(/^Dr\(a\)\.\s*/, '')
@@ -3246,8 +3246,9 @@ ${SHARE_COPY_SCRIPT}`
     const shown = list.slice(0, CAP_PER_CAT)
     const rows = shown.map(pr => {
       const tel = pr.phone ? `<a href="tel:${escapeHtml(pr.phone.replace(/[^0-9+]/g, ''))}" class="text-slate-400 hover:text-teal-700 text-xs whitespace-nowrap">${escapeHtml(pr.phone)}</a>` : ''
+      const stars = pr.rating != null ? `<span class="text-amber-500 text-xs whitespace-nowrap" title="${te('Calificación federal CMS', 'Federal CMS rating')}: ${pr.rating}/5">${starRating(pr.rating)} <span class="text-slate-400">${pr.rating}</span></span>` : ''
       return `<li class="flex items-baseline justify-between gap-3 py-1 border-b border-slate-50">
-        <a href="/especialista/${encodeURIComponent(pr.slug)}${lp}" class="text-teal-700 hover:underline text-sm">${escapeHtml(cleanName(pr.name))}</a>${tel}</li>`
+        <a href="/especialista/${encodeURIComponent(pr.slug)}${lp}" class="text-teal-700 hover:underline text-sm">${escapeHtml(cleanName(pr.name))}</a><span class="flex items-center gap-2">${stars}${tel}</span></li>`
     }).join('')
     const overflow = list.length > CAP_PER_CAT
       ? `<li class="pt-2 text-xs text-slate-500">${te(`+ ${list.length - CAP_PER_CAT} más. `, `+ ${list.length - CAP_PER_CAT} more. `)}<a href="/registro/${specToUrl(sub)}/${specToUrl(regionCap)}${lp}" class="text-teal-700 font-semibold">${te('Ver todos en el ' + regionCap + ' →', 'See all in ' + regionCap + ' →')}</a></li>`
@@ -3440,6 +3441,16 @@ async function handleRegistroAlert(req: any, res: any) {
   } catch {
     res.status(200).send(JSON.stringify({ ok: false }))
   }
+}
+
+// Estrellas CMS (1-5, medias soportadas) → FontAwesome. Fuente: CMS Care Compare.
+function starRating(r: number): string {
+  const full = Math.floor(r), half = r - full >= 0.5
+  let s = ''
+  for (let i = 0; i < full; i++) s += '<i class="fa-solid fa-star"></i>'
+  if (half) s += '<i class="fa-solid fa-star-half-stroke"></i>'
+  for (let i = full + (half ? 1 : 0); i < 5; i++) s += '<i class="fa-regular fa-star"></i>'
+  return s
 }
 
 // =============== /cambios — historial y roadmap del registro (registromedicopr.com) ===============
@@ -3963,7 +3974,7 @@ async function handleEspecialista(req: any, res: any) {
 
   const { data: place } = await supabase
     .from('places')
-    .select('id,name,subcategory,municipality,region,phone,address,npi,lat,lon,slug,last_verified_at,accepted_plans')
+    .select('id,name,subcategory,municipality,region,phone,address,npi,lat,lon,slug,last_verified_at,accepted_plans,cms_rating,cms_rating_type')
     .eq('slug', slug).not('npi', 'is', null).maybeSingle()
 
   if (!place) {
@@ -4119,12 +4130,16 @@ async function handleEspecialista(req: any, res: any) {
     <p class="text-lg text-slate-600 mt-1">${escapeHtml(specLabel)} · ${escapeHtml(muni)}${region ? ` · ${escapeHtml(region)}` : ''}</p>
     <div class="mt-3 flex flex-wrap gap-2">
       <span class="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full text-sm"><i class="fa-solid fa-shield-halved"></i> ${T.verified}</span>
+      ${place.cms_rating != null ? `<span class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 font-semibold px-3 py-1 rounded-full text-sm"><span class="text-amber-500">${starRating(Number(place.cms_rating))}</span> ${Number(place.cms_rating)}/5 ${lang === 'en' ? 'CMS rating' : 'estrellas CMS'}</span>` : ''}
       ${isMD ? '' : '<span class="inline-flex items-center gap-2 bg-slate-100 border border-slate-200 text-slate-600 font-semibold px-3 py-1 rounded-full text-sm">Proveedor licenciado (no es médico MD)</span>'}
       ${verifiedDate ? `<span class="inline-flex items-center gap-2 bg-slate-50 border border-slate-200 text-slate-500 px-3 py-1 rounded-full text-xs">Verificado ${escapeHtml(verifiedDate)}</span>` : ''}
     </div>
   </div>
 </div>
 
+${place.cms_rating != null ? `<div class="not-prose mt-4 bg-amber-50 border border-amber-200 rounded-2xl p-4">
+  <p class="text-sm text-amber-900"><span class="text-amber-500 text-base">${starRating(Number(place.cms_rating))}</span> <strong>${Number(place.cms_rating)} de 5 estrellas</strong> ${lang === 'en' ? 'in the federal CMS quality rating' : 'en la calificación federal de calidad de CMS'} (${place.cms_rating_type === 'overall' ? (lang === 'en' ? 'overall rating' : 'calificación general') : (lang === 'en' ? 'quality of patient care' : 'calidad del cuidado al paciente')}). ${lang === 'en' ? 'This is the U.S. government\'s own rating, updated 2026. Compare on Medicare Care Compare.' : 'Es la calificación del propio gobierno federal, actualizada en 2026. Compara en Medicare Care Compare.'} <a href="https://www.medicare.gov/care-compare/" target="_blank" rel="noopener" class="text-teal-700 font-semibold hover:underline">medicare.gov/care-compare →</a></p>
+</div>` : ''}
 ${actionBtns}
 ${dataRows}
 
