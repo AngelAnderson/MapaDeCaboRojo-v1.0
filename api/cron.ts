@@ -431,6 +431,38 @@ async function runHpsaRefresh(res: any) {
 // Vigila: duplicados, regiones nulas, backlog de embeddings, y que la disparidad siga intacta.
 const REGISTRO_SUBS_QC = ['cardiólogo','psiquiatra','fisiatra','ginecólogo','pediatra','dermatólogo','gastroenterólogo','oftalmólogo','ortopeda','neurologo','urólogo','endocrinologo','nefrólogo','neumólogo','oncólogo','reumatólogo','geriatra','otorrinolaringólogo','infectólogo','alergista','medicina de emergencia','cirujano general','anestesiólogo','radiólogo','neurocirujano','cirujano plástico','cirujano torácico','coloproctólogo','manejo de dolor','psicólogo','optómetra','podiatra','dentista','internista','medicina de familia','terapeuta del habla','terapista físico','terapista ocupacional','quiropractico','consejero','trabajador social','terapeuta de familia','nutricionista','physician assistant','enfermera practicante','audiólogo','partera','farmacéutico','hospital','cuidado en el hogar','hospicio','hogar de envejecientes','centro de diálisis','urgent care','clínica comunitaria'];
 
+// Refresca estrellas CMS Care Compare (SNF + home health). Additivo/seguro. Devuelve # actualizados.
+function cmsToks(s: string): Set<string> {
+  const n = String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+    .replace(/\b(inc|llc|corp|psc|the|de|del|la|los|las|y|and|of|pr|puerto|rico|home|care|health|services?|servicios?|salud|hogar|centro|program|programa)\b/g, ' ')
+  return new Set(n.replace(/[^a-z0-9]+/g, ' ').split(' ').filter(w => w.length > 2))
+}
+async function refreshCmsRatings(svc: any): Promise<{ updated: number; error?: string }> {
+  try {
+    const pull = async (ds: string, rf: string): Promise<Array<{ toks: Set<string>; val: number }>> => {
+      const u = `https://data.cms.gov/provider-data/api/1/datastore/query/${ds}/0?conditions[0][property]=state&conditions[0][value]=PR&conditions[0][operator]==&limit=500`
+      const d = await (await fetch(u)).json()
+      const out: Array<{ toks: Set<string>; val: number }> = []
+      for (const r of (d.results || [])) { const v = parseFloat(r[rf]); if (!isNaN(v)) out.push({ toks: cmsToks(r.provider_name), val: v }) }
+      return out
+    }
+    const [snf, hh] = await Promise.all([pull('4pq5-n9py', 'overall_rating'), pull('6jpm-sxkc', 'quality_of_patient_care_star_rating')])
+    let updated = 0
+    for (const [sub, list, rtype] of [['hogar de envejecientes', snf, 'overall'], ['cuidado en el hogar', hh, 'quality_of_care']] as const) {
+      const { data: ours } = await svc.from('places').select('id,name,cms_rating').eq('subcategory', sub).not('npi', 'is', null).eq('status', 'open').limit(500)
+      for (const o of (ours || [])) {
+        const ot = Array.from(cmsToks(o.name)); let best: number | null = null, bestSc = 0
+        for (const c of list) { let sc = 0; for (const t of ot) if (c.toks.has(t)) sc++; if (sc > bestSc) { bestSc = sc; best = c.val } }
+        if (best != null && bestSc >= 2 && Number(o.cms_rating) !== best) {
+          await svc.from('places').update({ cms_rating: best, cms_rating_type: rtype, cms_rating_date: runMonth() }).eq('id', o.id); updated++
+        }
+      }
+    }
+    return { updated }
+  } catch (e: any) { return { updated: 0, error: e.message } }
+}
+function runMonth(): string { return new Date().toISOString().slice(0, 7) }
+
 async function runRegistroQc(res: any) {
   const svc = createClient(
     process.env.VITE_SUPABASE_URL || 'https://vprjteqgmanntvisjrvp.supabase.co',
@@ -455,15 +487,24 @@ async function runRegistroQc(res: any) {
   const sj = (anchor || []).find((a: any) => a.municipio === 'San Juan');
   const disparidadOk = loiza && sj && Number(loiza.por_10k_hab) < 2 && Number(sj.por_10k_hab) > 50;
 
+  // Auto-mantenimiento seguro: dedup (conservador, reversible) + refresh de estrellas CMS (additivo).
+  let deduped = 0, dedupErr = '';
+  try { const { data } = await svc.rpc('registro_dedup'); deduped = Number(data) || 0; } catch (e: any) { dedupErr = e.message; }
+  const cms = await refreshCmsRatings(svc);
+  const { count: cmsRated } = await svc.from('places').select('id', { count: 'exact', head: true }).not('cms_rating', 'is', null);
+
   const flags: string[] = [];
   if ((nullSlug || 0) > 0) flags.push(`🔴 ${nullSlug} proveedores sin slug (no tienen página)`);
   if ((nullRegion || 0) > 15) flags.push(`🟡 ${nullRegion} filas sin región (>15, revisar backfill)`);
   if ((nullEmbed || 0) > 1000) flags.push(`🟡 ${nullEmbed} sin embedding — corre \`gh workflow run regen-embeddings.yml -R AngelAnderson/Vecinoai\``);
   if (!disparidadOk) flags.push(`🔴 DISPARIDAD ROTA: la vista v_registro_muni_ratio ya no da los números ancla (Loíza<2, SJ>50). Revisar que sigue pinned a las 32.`);
+  if (dedupErr) flags.push(`🟡 dedup falló: ${dedupErr}`);
+  if (cms.error) flags.push(`🟡 refresh CMS falló: ${cms.error}`);
 
   const summary = `🩺 **Registro Médico PR — QC mensual** (${runDate})\n\n` +
     `- Total verificado (56 categorías): **${(total || 0).toLocaleString('en-US')}**\n` +
     `- Disparidad ancla: Loíza ${loiza?.por_10k_hab ?? '?'}/10k · San Juan ${sj?.por_10k_hab ?? '?'}/10k → ${disparidadOk ? '✅ intacta' : '🔴 ROTA'}\n` +
+    `- Dedup: ${deduped} nuevo(s) duplicado(s) marcado(s) este mes · Estrellas CMS: ${cms.updated} actualizada(s), ${cmsRated || 0} facilidades calificadas\n` +
     `- Sin slug: ${nullSlug || 0} · sin región: ${nullRegion || 0} · sin embedding: ${nullEmbed || 0}\n\n` +
     (flags.length ? `**Acciones:**\n${flags.map(f => `- ${f}`).join('\n')}` : `✅ Todo verde. Pa' añadir proveedores nuevos de NPPES: corre el skill \`/registro-sync\`.`);
 
