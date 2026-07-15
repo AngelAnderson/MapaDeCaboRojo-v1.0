@@ -8967,7 +8967,7 @@ ${SHARE_COPY_SCRIPT}
   });
   q.addEventListener('input', search);
   out.innerHTML = PAGES.map(cardPage).join('');
-  try { var pre = new URLSearchParams(location.search).get('q'); if (pre) { q.value = pre; search(); } } catch(e) {}
+  try { var pre = new URLSearchParams(location.search).get('q'); if (pre) { q.value = pre; search(); if (norm(pre).split(/\\s+/).filter(Boolean).length > 1) { askWrap.classList.remove('hidden'); ask(); } } } catch(e) {}
 })();
 </script>
 `
