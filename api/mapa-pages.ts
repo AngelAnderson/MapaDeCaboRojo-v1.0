@@ -5251,7 +5251,7 @@ ${articleHtml}
 // Cada dato = pregunta + respuesta con fuente y fecha. FAQPage schema (lo que los LLM citan) + Dataset.
 const COMPARTE_G_DEFAULT = { conHpsa: 65, cupon: 33, cuponPob: 792221, bajo5: 39, bajo5Pob: 1046856, sinPsiq: 36, sinPsiqPob: 930159, cero: 3 }
 type CitableFact = { q: string; a: string; srcText: string; srcUrl: string; tag?: 'medicos' | 'local' }
-function citableFacts(g = COMPARTE_G_DEFAULT): CitableFact[] {
+export function citableFacts(g = COMPARTE_G_DEFAULT): CitableFact[] {
   const n = (x: number) => x.toLocaleString('en-US')
   return [
     { q: '¿Cuántos municipios de Puerto Rico están declarados en escasez de médicos por el gobierno federal?', a: `${g.conHpsa} de los 76 municipios de Puerto Rico (sin Vieques y Culebra) tienen una designación federal de escasez de profesionales de la salud (HPSA) activa, de cuidado primario o salud mental.`, srcText: 'Archivos oficiales de HRSA (Health Resources & Services Administration), designaciones activas, julio 2026.', srcUrl: 'https://data.hrsa.gov/tools/shortage-area/hpsa-find' },
@@ -6209,13 +6209,12 @@ ${SHARE_COPY_SCRIPT}
 // /transicion — La Transición 2024-2025: el gobierno, en su propia voz. Vistas públicas (Ley 197-2002)
 // transmitidas por El Nuevo Día. 24+ sesiones, 50+ horas. Citas verificadas al minuto contra los videos.
 // Fuentes: transcripts de Angel (Google Drive) + auto-captions ES verificados 2026-07-10. 3 días minados, resto pendiente.
-async function handleTransicion(req: any, res: any) {
-  const V1 = 'RguowcKS7wU', V2 = '3R8jwIec-Yg', V3 = 'jCoz2d5IJJA'
-  const V4 = 'uUWb85Doki0', V5 = 'dCVlOodXNPw', V6 = 'BJFs3kJgteM'
-  const V7 = 'XZGTyMNcr0o', V8 = 'ZvZmiREinbU', V9 = 'az9UhZBvLqs'
-  type Claim = { q: string; c: string; d: string; v?: string; t?: number }
-  type Bloque = { id: string; tag: string; titulo: string; nota?: string; claims: Claim[] }
-  const bloques: Bloque[] = [
+const V1 = 'RguowcKS7wU', V2 = '3R8jwIec-Yg', V3 = 'jCoz2d5IJJA'
+const V4 = 'uUWb85Doki0', V5 = 'dCVlOodXNPw', V6 = 'BJFs3kJgteM'
+const V7 = 'XZGTyMNcr0o', V8 = 'ZvZmiREinbU', V9 = 'az9UhZBvLqs'
+type Claim = { q: string; c: string; d: string; v?: string; t?: number }
+type Bloque = { id: string; tag: string; titulo: string; nota?: string; claims: Claim[] }
+export const TRANSICION_BLOQUES: Bloque[] = [
     {
       id: 'cor3', tag: 'Día 1 · 20 nov 2024', titulo: 'COR3: el mapa del dinero federal',
       claims: [
@@ -6325,8 +6324,10 @@ async function handleTransicion(req: any, res: any) {
         { q: 'Ramón González, secretario de Agricultura (el verde también se anota)', c: 'Tenían multas acumuladas por alrededor de 44 millones, logramos una transacción con la EPA y el Departamento de Justicia por 1.65 millones, ya pagado', d: 'Multas ambientales históricas de ~$44M se cerraron por $1.65M. Y el ingreso bruto agrícola subió ~45% en el cuatrienio, con la primera alza en cuerdas sembradas en décadas.', v: V6, t: 11608 },
       ],
     },
-  ]
+]
 
+async function handleTransicion(req: any, res: any) {
+  const bloques = TRANSICION_BLOQUES
   const ytLink = (v?: string, t?: number) => v ? `https://www.youtube.com/watch?v=${v}${t ? `&t=${t}s` : ''}` : ''
   const fmtT = (t?: number) => {
     if (!t) return ''
@@ -7134,7 +7135,7 @@ const CONTRA_TIPOS: Record<string, [string, string]> = {
     agencia: ['La agencia contra sí misma', 'bg-purple-100 text-purple-800 border-purple-200'],
     dinero: ['Declarado vs entregado', 'bg-emerald-100 text-emerald-800 border-emerald-200'],
 }
-const CONTRA_PARES: Par[] = [
+export const CONTRA_PARES: Par[] = [
     {
       tipo: 'narrativa', corto: 'El hospital de Cabo Rojo', titulo: 'Aseguraron "continuidad de servicios"; la sala de emergencias general del pueblo sigue cerrada 8 horas cada noche',
       dicenC: 'El hospital no cerrará y habrá continuidad de los servicios médicos en la región. El alcalde añadió que esperaba que la nueva administración extendiera la sala de emergencias de 7am-11pm a 24 horas.',
@@ -8769,8 +8770,7 @@ ${AGENDA.map((a, i) => `
 
 // /buscar — búsqueda instantánea sobre el índice de récords PRSF (client-side, cero dependencias).
 // Cada búsqueda se loggea a prsf_events (event=search) — las búsquedas sin resultado son señal de qué récord falta.
-function handleBuscar(req: any, res: any) {
-  const INDEX = [
+export const BUSCAR_INDEX = [
     { u: '/decidir', t: '¿Me quedo o me voy?', d: 'La decisión grande con los números al lado', k: 'quedarme irme mudarme diaspora regresar volver decision' },
     { u: '/prediccion', t: 'Predicción 2030', d: 'Lo que dicen todos los récords juntos si nada cambia', k: 'futuro 2030 proyeccion sintesis lectura' },
     { u: '/retiro', t: 'El Huracán Lento', d: 'Envejecimiento + médicos + internet, municipio por municipio', k: 'huracan retiro viejos envejecer pension 65 pobreza municipios tabla evidencia' },
@@ -8803,9 +8803,13 @@ function handleBuscar(req: any, res: any) {
     { u: '/rompelo', t: 'Rómpelo', d: 'Objeciones contestadas + registro público de correcciones', k: 'rompelo objeciones quien eres correcciones errores confianza' },
     { u: '/comparte', t: 'Datos citables', d: 'Números listos pa\' copiar, con fuente', k: 'citas citables copiar prensa compartir' },
     { u: '/mision', t: 'La misión', d: 'Qué es este sitio y qué no es', k: 'mision quienes somos acerca proposito' },
-  ]
-  // Tier 2: además de las páginas, se buscan los datos citables (/comparte) y las contradicciones —
-  // la búsqueda devuelve la respuesta con su fuente, no solo el link.
+]
+
+// Tier 2: además de las páginas, se buscan los datos citables (/comparte) y las contradicciones —
+// la búsqueda devuelve la respuesta con su fuente, no solo el link.
+// Tier 3: "Pregúntale al récord" — RAG sobre prsf_facts (ver handleBuscarIa).
+function handleBuscar(req: any, res: any) {
+  const INDEX = BUSCAR_INDEX
   const DATOS = citableFacts().map((f) => ({ t: f.q, a: f.a, s: f.srcText, su: f.srcUrl }))
   const CONTRAS = CONTRA_PARES.map((p, i) => ({ t: p.titulo, c: p.corto, b: p.brecha, d: p.recordD.slice(0, 220), u: `/contradicciones#par-${i + 1}` }))
   const jsafe = (x: any) => JSON.stringify(x).replace(/</g, '\\u003c')
@@ -8815,6 +8819,11 @@ function handleBuscar(req: any, res: any) {
 <div class="not-prose mt-5">
   <input id="q" type="search" autofocus placeholder="Ej: agua, psiquiatras, Medicaid, LUMA, el alcalde..." autocomplete="off"
     class="w-full text-lg px-5 py-4 rounded-2xl border-2 border-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white" />
+  <div id="ask-wrap" class="hidden mt-3">
+    <button id="ask-btn" type="button" class="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-700 text-white font-bold px-4 py-2.5 rounded-xl text-sm"><i class="fa-solid fa-wand-magic-sparkles"></i> Pregúntale al récord</button>
+    <span class="text-xs text-slate-500 ml-2">compone la respuesta cruzando los récords, con fuentes</span>
+  </div>
+  <div id="ask-out" class="hidden mt-3"></div>
   <div id="results" class="mt-4 space-y-2"></div>
   <p id="near" class="hidden mt-2 text-xs text-slate-500">No hubo resultado exacto con todas las palabras — esto es lo más cercano:</p>
   <p id="empty" class="hidden mt-4 text-sm text-slate-600 bg-amber-50 border border-amber-200 rounded-xl p-4">Ese récord todavía no existe — y que lo buscaste ya quedó anotado: así decidimos cuál construir próximo. Mientras tanto, <a href="/#records" class="text-teal-700 font-semibold">mira todos los récords</a> o <a href="mailto:angel@angelanderson.com" class="text-teal-700 font-semibold">sugiérelo</a>.</p>
@@ -8910,6 +8919,51 @@ ${SHARE_COPY_SCRIPT}
       try { fetch('/api/mapa-pages?page=sinfiltros-log', { method: 'POST', keepalive: true, headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: hits.length ? 'search' : 'search_no_result', record: 'buscar', target: q.value.slice(0,120) }) }); } catch(e) {}
     }, 900);
   }
+  // ---- Tier 3: Pregúntale al récord (RAG con fuentes) ----
+  var askWrap = document.getElementById('ask-wrap'), askOut = document.getElementById('ask-out'), askBtn = document.getElementById('ask-btn');
+  function kindLabel(k){ return k === 'dato' ? 'Dato verificado' : k === 'contradiccion' ? 'Contradicción' : k === 'cita_video' ? 'En video, al minuto' : 'Récord'; }
+  function factCard(f, i){
+    var links = '';
+    if (f.fuente_url) links += '<a href="' + esc(f.fuente_url) + '" target="_blank" rel="noopener" class="text-teal-700 font-semibold hover:underline mr-3">La fuente ↗</a>';
+    if (f.record_url) links += '<a href="' + esc(f.record_url) + '" class="text-teal-700 font-semibold hover:underline">El récord completo →</a>';
+    return '<div class="bg-white border border-slate-200 rounded-xl p-3.5">' +
+      '<div class="text-[11px] font-bold uppercase tracking-widest text-slate-400">[' + (i + 1) + '] · ' + kindLabel(f.kind) + '</div>' +
+      '<div class="font-bold text-slate-900 text-sm mt-0.5">' + esc(f.titulo) + '</div>' +
+      '<div class="text-sm text-slate-600 mt-1">' + esc(f.texto) + '</div>' +
+      '<div class="text-xs mt-2">' + links + '</div></div>';
+  }
+  function ask(){
+    var query = q.value.trim();
+    if (query.length < 3) return;
+    askOut.classList.remove('hidden');
+    askOut.innerHTML = '<div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-500"><i class="fa-solid fa-circle-notch fa-spin"></i> Cruzando los récords...</div>';
+    fetch('/api/mapa-pages?page=buscar-ia&q=' + encodeURIComponent(query))
+      .then(function(r){ return r.json(); })
+      .then(function(j){
+        var html = '';
+        if (j.answer) {
+          var a = esc(j.answer).replace(/\\[(\\d+)\\]/g, '<sup class="text-teal-700 font-bold">[$1]</sup>');
+          html += '<div class="bg-slate-900 text-white rounded-2xl p-5">' +
+            '<div class="text-[11px] font-bold uppercase tracking-widest text-teal-300">La respuesta del récord</div>' +
+            '<div class="mt-2 text-[15px] leading-relaxed">' + a + '</div>' +
+            '<div class="text-[11px] text-slate-400 mt-3">Compuesta solo desde datos verificados del sitio. Si un número está mal, se corrige: escríbelo en /rompelo.</div></div>';
+        }
+        if (j.facts && j.facts.length) {
+          html += '<div class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mt-3 mb-2">' + (j.answer ? 'Las fuentes' : 'Lo que dice el récord (verbatim)') + '</div>' +
+            '<div class="space-y-2">' + j.facts.map(factCard).join('') + '</div>';
+        }
+        if (!html) html = '<div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-slate-600">El récord todavía no tiene datos pa\\' contestar eso — y la pregunta quedó anotada pa\\' decidir qué récord construir próximo.</div>';
+        askOut.innerHTML = html;
+      })
+      .catch(function(){ askOut.innerHTML = '<div class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-slate-600">No se pudo componer la respuesta. Intenta de nuevo.</div>'; });
+  }
+  askBtn.addEventListener('click', ask);
+  q.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); ask(); } });
+  q.addEventListener('input', function(){
+    var terms = norm(q.value).split(/\\s+/).filter(Boolean);
+    askWrap.classList.toggle('hidden', terms.length < 2 && q.value.indexOf('?') < 0);
+    if (!q.value.trim()) askOut.classList.add('hidden');
+  });
   q.addEventListener('input', search);
   out.innerHTML = PAGES.map(cardPage).join('');
   try { var pre = new URLSearchParams(location.search).get('q'); if (pre) { q.value = pre; search(); } } catch(e) {}
@@ -8924,6 +8978,50 @@ ${SHARE_COPY_SCRIPT}
     slug: 'buscar', bodyHtml: body,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
+}
+
+// /buscar-ia — Tier 3: "Pregúntale al récord". RAG sobre prsf_facts (129 facts verificados:
+// datos citables + contradicciones + citas de video al minuto + páginas). Compone una respuesta
+// SOLO desde los facts recuperados, cada afirmación con [n] → fuente. Si no da, lo dice.
+// Regenerar el índice tras editar récords: npx tsx scripts/prsf-ingest-facts.mts
+async function handleBuscarIa(req: any, res: any) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8')
+  res.setHeader('Cache-Control', 'no-store')
+  const q = String(req.query?.q || '').slice(0, 200).trim()
+  if (q.length < 3) return res.status(400).json({ error: 'query muy corta' })
+  const OPENAI_KEY = process.env.OPENAI_API_KEY || ''
+  const fetchJson = async (url: string, body: any, ms: number) => {
+    const ctrl = new AbortController(); const to = setTimeout(() => ctrl.abort(), ms)
+    try {
+      const r = await fetch(url, { method: 'POST', signal: ctrl.signal, headers: { Authorization: `Bearer ${OPENAI_KEY}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      if (!r.ok) throw new Error('openai ' + r.status)
+      return await r.json()
+    } finally { clearTimeout(to) }
+  }
+  try {
+    const emb = await fetchJson('https://api.openai.com/v1/embeddings', { model: 'text-embedding-3-small', dimensions: 768, input: q }, 6000)
+    const vec = emb.data[0].embedding
+    const { data: facts, error } = await supabase.rpc('prsf_match_facts', { query_embedding: vec, match_count: 8 })
+    if (error) throw new Error(error.message)
+    const good = (facts || []).filter((f: any) => f.similarity > 0.25).slice(0, 6)
+    if (!good.length) return res.status(200).json({ answer: null, facts: [] })
+    const ctx = good.map((f: any, i: number) => `[${i + 1}] ${f.titulo}\n${f.texto}\nFuente: ${f.fuente_texto || ''} ${f.fuente_url || ''}`).join('\n\n')
+    let answer: string | null = null
+    try {
+      const chat = await fetchJson('https://api.openai.com/v1/chat/completions', {
+        model: 'gpt-4o-mini', temperature: 0.2, max_tokens: 350,
+        messages: [
+          { role: 'system', content: 'Eres el buscador de Puerto Rico Sin Filtros, un sitio de récord público verificado. Contesta en español boricua claro y neutral, máximo 120 palabras. REGLAS ESTRICTAS: (1) usa SOLO los datos numerados que te doy — cero conocimiento externo, cero opinión política; (2) cada afirmación termina con su referencia [n]; (3) si los datos no contestan la pregunta, di exactamente qué parte no está en el récord; (4) no inventes números ni fechas; (5) no uses el guion largo.' },
+          { role: 'user', content: `Pregunta: ${q}\n\nDatos del récord:\n${ctx}` },
+        ],
+      }, 9000)
+      answer = chat.choices?.[0]?.message?.content || null
+    } catch (_) { /* sin LLM: el UI muestra los facts verbatim */ }
+    try { await supabase.from('prsf_events').insert({ event: 'ask', record: 'buscar', target: q.slice(0, 120) }) } catch (_) {}
+    return res.status(200).json({ answer, facts: good.map((f: any) => ({ kind: f.kind, titulo: f.titulo, texto: f.texto, fuente_texto: f.fuente_texto, fuente_url: f.fuente_url, record_url: f.record_url })) })
+  } catch (e: any) {
+    return res.status(200).json({ answer: null, facts: [], error: String(e?.message || e).slice(0, 120) })
+  }
 }
 
 function handlePrediccion(req: any, res: any) {
@@ -12615,6 +12713,7 @@ export default async function handler(req: any, res: any) {
     case 'salud-que-falta': return await handleSaludQueFalta(req, res)
     case 'retiro': return await handleRetiro(req, res)
     case 'buscar': return handleBuscar(req, res)
+    case 'buscar-ia': return await handleBuscarIa(req, res)
     case 'prediccion': return handlePrediccion(req, res)
     case 'costo-de-vida': return await handleCostoDeVida(req, res)
     case 'trabajo': return handleTrabajo(req, res)
