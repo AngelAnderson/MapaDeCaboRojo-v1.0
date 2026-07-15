@@ -3245,10 +3245,18 @@ ${SHARE_COPY_SCRIPT}`
 
   // ── Directorio con nombres: cada proveedor del pueblo, por categoría (alfabética), nombre → perfil ──
   const CAP_PER_CAT = 250
-  const byCat: Record<string, Array<{ name: string; slug: string; phone: string | null; rating: number | null }>> = {}
+  const byCat: Record<string, Array<{ name: string; slug: string; phone: string | null; rating: number | null; accepting: boolean | null; verifiedAt: string | null; waitNote: string | null }>> = {}
   for (const r of (provRows || []) as any[]) {
     if (!REGISTRY_BYSUB[r.subcategory]) continue
-    ;(byCat[r.subcategory] = byCat[r.subcategory] || []).push({ name: r.name, slug: r.slug, phone: r.phone, rating: r.cms_rating != null ? Number(r.cms_rating) : null })
+    ;(byCat[r.subcategory] = byCat[r.subcategory] || []).push({ name: r.name, slug: r.slug, phone: r.phone, rating: r.cms_rating != null ? Number(r.cms_rating) : null, accepting: r.accepting_patients ?? null, verifiedAt: r.status_verified_at || null, waitNote: r.wait_note || null })
+  }
+  const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+  const mesAno = (d: string) => { const m = String(d).match(/^(\d{4})-(\d{2})/); return m ? `${MESES_CORTOS[Number(m[2]) - 1]} ${m[1]}` : '' }
+  // Badge "¿está cogiendo pacientes?" — el dato verificado por teléfono que NPPES no tiene
+  const acceptBadge = (pr: { accepting: boolean | null; verifiedAt: string | null; waitNote: string | null }) => {
+    if (pr.accepting === true) return `<span class="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-2 py-0.5 text-[11px] font-bold whitespace-nowrap" title="${escapeHtml(pr.waitNote || '')}">✓ ${te('cogiendo pacientes', 'accepting patients')}${pr.verifiedAt ? ` · ${mesAno(pr.verifiedAt)}` : ''}</span>`
+    if (pr.accepting === false) return `<span class="inline-flex items-center gap-1 bg-red-50 text-red-700 border border-red-200 rounded-full px-2 py-0.5 text-[11px] font-bold whitespace-nowrap" title="${escapeHtml(pr.waitNote || '')}">✗ ${te('no está cogiendo', 'not accepting')}${pr.verifiedAt ? ` · ${mesAno(pr.verifiedAt)}` : ''}</span>`
+    return ''
   }
   const dirCatKeys = Object.keys(byCat).sort((a, b) => specLbl(REGISTRY_BYSUB[a]).localeCompare(specLbl(REGISTRY_BYSUB[b]), 'es'))
   const cleanName = (n: string) => n.replace(/^Dr\(a\)\.\s*/, '')
@@ -3260,7 +3268,7 @@ ${SHARE_COPY_SCRIPT}`
       const tel = pr.phone ? `<a href="tel:${escapeHtml(pr.phone.replace(/[^0-9+]/g, ''))}" class="text-slate-400 hover:text-teal-700 text-xs whitespace-nowrap">${escapeHtml(pr.phone)}</a>` : ''
       const stars = pr.rating != null ? `<span class="text-amber-500 text-xs whitespace-nowrap" title="${te('Calificación federal CMS', 'Federal CMS rating')}: ${pr.rating}/5">${starRating(pr.rating)} <span class="text-slate-400">${pr.rating}</span></span>` : ''
       return `<li class="flex items-baseline justify-between gap-3 py-1 border-b border-slate-50">
-        <a href="/especialista/${encodeURIComponent(pr.slug)}${lp}" class="text-teal-700 hover:underline text-sm">${escapeHtml(cleanName(pr.name))}</a><span class="flex items-center gap-2">${stars}${tel}</span></li>`
+        <a href="/especialista/${encodeURIComponent(pr.slug)}${lp}" class="text-teal-700 hover:underline text-sm">${escapeHtml(cleanName(pr.name))}</a><span class="flex items-center gap-2">${acceptBadge(pr)}${stars}${tel}</span></li>`
     }).join('')
     const overflow = list.length > CAP_PER_CAT
       ? `<li class="pt-2 text-xs text-slate-500">${te(`+ ${list.length - CAP_PER_CAT} más. `, `+ ${list.length - CAP_PER_CAT} more. `)}<a href="/registro/${specToUrl(sub)}/${specToUrl(regionCap)}${lp}" class="text-teal-700 font-semibold">${te('Ver todos en el ' + regionCap + ' →', 'See all in ' + regionCap + ' →')}</a></li>`
