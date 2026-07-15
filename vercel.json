@@ -81,6 +81,7 @@
     { "source": "/porque", "destination": "/api/mapa-pages?page=porque" },
     { "source": "/recuperacion", "destination": "/api/mapa-pages?page=recuperacion" },
     { "source": "/sinfiltros/pulso", "destination": "/api/mapa-pages?page=sinfiltros-pulso" },
+    { "source": "/notas", "destination": "/api/mapa-pages?page=boletin" },
     { "source": "/boletin", "destination": "/api/mapa-pages?page=boletin" },
     { "source": "/luz", "destination": "/api/mapa-pages?page=luz" },
     { "source": "/basura", "destination": "/api/mapa-pages?page=basura" },
