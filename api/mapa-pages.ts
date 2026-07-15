@@ -3301,6 +3301,11 @@ ${SHARE_COPY_SCRIPT}`
   const hpsaLbl = (d: string) => en ? (HPSA_DISC_EN[d] || d) : (HPSA_DISC_ES[d] || d)
   const ratioN = (r: string | null) => { const m = String(r || '').match(/^(\d+)/); return m ? Number(m[1]).toLocaleString('en-US') : '' }
   const specN = (sub: string) => present.find(p => p.sub === sub)?.n || 0
+  // Números pulsables: el conteo salta a los nombres reales en el directorio de abajo (#dir-<spec>).
+  // Solo se enlaza si hay proveedores (si n=0 el ancla no existe).
+  const specLink = (sub: string, html: string) => specN(sub) > 0
+    ? `<a href="#dir-${specToUrl(sub)}" class="underline decoration-dotted decoration-teal-500 underline-offset-2 hover:text-teal-800" title="${te('Ver los nombres', 'See the names')}">${html}</a>`
+    : html
   const hpsaDental = hpsa.find(h => h.discipline === 'dental')
   const hpsaMental = hpsa.find(h => h.discipline === 'mental')
 
@@ -3329,19 +3334,19 @@ ${SHARE_COPY_SCRIPT}`
 </div>`
   const contraCards: string[] = []
   if (hpsaDental && specN('dentista') > 0) contraCards.push(contraCard(
-    te(`${escapeHtml(town.municipio)} tiene <strong>${specN('dentista')} dentistas</strong> en el registro federal.`, `${escapeHtml(town.municipio)} has <strong>${specN('dentista')} dentists</strong> in the federal registry.`),
+    te(`${escapeHtml(town.municipio)} tiene ${specLink('dentista', `<strong>${specN('dentista')} dentistas</strong>`)} en el registro federal.`, `${escapeHtml(town.municipio)} has ${specLink('dentista', `<strong>${specN('dentista')} dentists</strong>`)} in the federal registry.`),
     te(`Y aun así es <strong>zona federal de escasez dental: ${hpsaDental.score} de 25 puntos</strong>, de los scores más altos que existen.`, `And it is still a <strong>federal dental shortage area: ${hpsaDental.score} of 25 points</strong>, among the highest scores there are.`),
     te(`¿Cómo pueden ser ciertas las dos? La designación mide el acceso de la población de bajos ingresos${hpsaDental.ratio ? `: <strong>${ratioN(hpsaDental.ratio)} personas por dentista disponible</strong> pa' ese grupo` : ''}. Hay dentistas. Lo que falta es cita pa'l que paga con el plan del gobierno.`, `How can both be true? The designation measures access for the low-income population${hpsaDental.ratio ? `: <strong>${ratioN(hpsaDental.ratio)} people per available dentist</strong> for that group` : ''}. There are dentists. What is missing is an appointment for those on the government plan.`)))
   if (hpsaMental) contraCards.push(contraCard(
-    te(`<strong>${specN('psiquiatra')} psiquiatra${specN('psiquiatra') === 1 ? '' : 's'} y ${specN('psicólogo')} psicólogo${specN('psicólogo') === 1 ? '' : 's'}</strong> en el registro.`, `<strong>${specN('psiquiatra')} psychiatrist${specN('psiquiatra') === 1 ? '' : 's'} and ${specN('psicólogo')} psychologist${specN('psicólogo') === 1 ? '' : 's'}</strong> in the registry.`),
+    te(`${specLink('psiquiatra', `<strong>${specN('psiquiatra')} psiquiatra${specN('psiquiatra') === 1 ? '' : 's'}</strong>`)} y ${specLink('psicólogo', `<strong>${specN('psicólogo')} psicólogo${specN('psicólogo') === 1 ? '' : 's'}</strong>`)} en el registro.`, `${specLink('psiquiatra', `<strong>${specN('psiquiatra')} psychiatrist${specN('psiquiatra') === 1 ? '' : 's'}</strong>`)} and ${specLink('psicólogo', `<strong>${specN('psicólogo')} psychologist${specN('psicólogo') === 1 ? '' : 's'}</strong>`)} in the registry.`),
     te(`Pa' la población de bajos ingresos, el conteo federal da <strong>${ratioN(hpsaMental.ratio)} personas por cada proveedor</strong> de salud mental disponible.`, `For the low-income population, the federal count comes to <strong>${ratioN(hpsaMental.ratio)} people per available</strong> mental health provider.`),
     hpsaMental.manual_note
       ? escapeHtml(hpsaMental.manual_note)
       : te('La designación mide citas ambulatorias disponibles pa\' bajos ingresos, no el total de oficinas. Por eso el número federal y la lista de arriba pueden decir cosas distintas y las dos ser ciertas.', 'The designation measures outpatient appointments available to low-income patients, not total offices. That is why the federal number and the list above can say different things and both be true.')))
   const escasos = specN('cardiólogo') + specN('oncólogo') + specN('neurologo')
   if (specN('farmacéutico') >= 10 && escasos > 0 && escasos <= 5) contraCards.push(contraCard(
-    te(`<strong>${specN('farmacéutico')} farmacéuticos</strong> pa' despacharte la receta.`, `<strong>${specN('farmacéutico')} pharmacists</strong> to fill your prescription.`),
-    te(`<strong>${specN('cardiólogo')} cardiólogo${specN('cardiólogo') === 1 ? '' : 's'}, ${specN('oncólogo')} oncólogo${specN('oncólogo') === 1 ? '' : 's'} y ${specN('neurologo')} neurólogo${specN('neurologo') === 1 ? '' : 's'}</strong> pa' escribirla.`, `<strong>${specN('cardiólogo')} cardiologist${specN('cardiólogo') === 1 ? '' : 's'}, ${specN('oncólogo')} oncologist${specN('oncólogo') === 1 ? '' : 's'}, and ${specN('neurologo')} neurologist${specN('neurologo') === 1 ? '' : 's'}</strong> to write it.`),
+    te(`${specLink('farmacéutico', `<strong>${specN('farmacéutico')} farmacéuticos</strong>`)} pa' despacharte la receta.`, `${specLink('farmacéutico', `<strong>${specN('farmacéutico')} pharmacists</strong>`)} to fill your prescription.`),
+    te(`${specLink('cardiólogo', `<strong>${specN('cardiólogo')} cardiólogo${specN('cardiólogo') === 1 ? '' : 's'}</strong>`)}, ${specLink('oncólogo', `<strong>${specN('oncólogo')} oncólogo${specN('oncólogo') === 1 ? '' : 's'}</strong>`)} y ${specLink('neurologo', `<strong>${specN('neurologo')} neurólogo${specN('neurologo') === 1 ? '' : 's'}</strong>`)} pa' escribirla.`, `${specLink('cardiólogo', `<strong>${specN('cardiólogo')} cardiologist${specN('cardiólogo') === 1 ? '' : 's'}</strong>`)}, ${specLink('oncólogo', `<strong>${specN('oncólogo')} oncologist${specN('oncólogo') === 1 ? '' : 's'}</strong>`)}, and ${specLink('neurologo', `<strong>${specN('neurologo')} neurologist${specN('neurologo') === 1 ? '' : 's'}</strong>`)} to write it.`),
     te('La cadena está completa al final y rota al principio: el medicamento llega fácil, la receta no.', 'The chain is complete at the end and broken at the start: the medicine arrives easily, the prescription does not.')))
   const contradiccionesBlock = contraCards.length ? `
 <h2 id="contradicciones">${te('Los números que no cuadran (hasta que ves el tercero)', 'The numbers that do not add up (until you see the third one)')}</h2>
