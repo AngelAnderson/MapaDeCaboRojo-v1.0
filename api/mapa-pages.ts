@@ -10247,14 +10247,14 @@ async function handleRegistroMapa(req: any, res: any) {
       supabase.from('v_registro_muni_ratio').select('*').neq('region', 'islas').range(0, 200),
       supabase.from('municipalities').select('name,lat,lon').range(0, 200),
       supabase.from('v_registro_muni_spec').select('*').range(0, 2999),
-      supabase.from('hpsa_designations').select('municipio,discipline,score').range(0, 499),
+      supabase.from('pr_hpsa_designations').select('municipio,discipline,score').range(0, 499),
     ])
     const coords: Record<string, { lat: number; lon: number }> = {}
     for (const m of (mm.data || [])) coords[norm(m.name)] = { lat: Number(m.lat), lon: Number(m.lon) }
     for (const h of (hp.data || [])) {
       const k = norm(h.municipio)
       hpsa[k] = hpsa[k] || {}
-      const key = h.discipline === 'primaria' ? 'pc' : h.discipline === 'salud_mental' ? 'mh' : null
+      const key = h.discipline === 'primary' ? 'pc' : h.discipline === 'mental' ? 'mh' : null
       if (key) (hpsa[k] as any)[key] = Math.max((hpsa[k] as any)[key] || 0, Number(h.score) || 0)
     }
     for (const r of (mx.data || [])) {
