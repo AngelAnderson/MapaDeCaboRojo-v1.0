@@ -5249,26 +5249,11 @@ ${articleHtml}
 
 // =============== /comparte — Datos citables (press kit + LLM-quotable + SEO) ===============
 // Cada dato = pregunta + respuesta con fuente y fecha. FAQPage schema (lo que los LLM citan) + Dataset.
-async function handleComparte(req: any, res: any) {
-  let g = { conHpsa: 65, cupon: 33, cuponPob: 792221, bajo5: 39, bajo5Pob: 1046856, sinPsiq: 36, sinPsiqPob: 930159, cero: 3 }
-  try {
-    const { data } = await supabase.from('v_registro_municipio_intel').select('poblacion,especialistas,psiquiatras,hpsa_primaria,hpsa_salud_mental,cupon_mh_sin_cobrar,por_10k_hab').range(0, 100)
-    if (data && data.length >= 70) {
-      const cup = data.filter((r: any) => r.cupon_mh_sin_cobrar)
-      const b5 = data.filter((r: any) => Number(r.por_10k_hab) < 5)
-      const sp = data.filter((r: any) => Number(r.psiquiatras) === 0)
-      g = {
-        conHpsa: data.filter((r: any) => r.hpsa_primaria > 0 || r.hpsa_salud_mental > 0).length,
-        cupon: cup.length, cuponPob: cup.reduce((s: number, r: any) => s + Number(r.poblacion), 0),
-        bajo5: b5.length, bajo5Pob: b5.reduce((s: number, r: any) => s + Number(r.poblacion), 0),
-        sinPsiq: sp.length, sinPsiqPob: sp.reduce((s: number, r: any) => s + Number(r.poblacion), 0),
-        cero: data.filter((r: any) => Number(r.especialistas) === 0).length,
-      }
-    }
-  } catch (_) { /* fallback */ }
+const COMPARTE_G_DEFAULT = { conHpsa: 65, cupon: 33, cuponPob: 792221, bajo5: 39, bajo5Pob: 1046856, sinPsiq: 36, sinPsiqPob: 930159, cero: 3 }
+type CitableFact = { q: string; a: string; srcText: string; srcUrl: string; tag?: 'medicos' | 'local' }
+function citableFacts(g = COMPARTE_G_DEFAULT): CitableFact[] {
   const n = (x: number) => x.toLocaleString('en-US')
-
-  const FACTS: Array<{ q: string; a: string; srcText: string; srcUrl: string; tag?: 'medicos' | 'local' }> = [
+  return [
     { q: '¿Cuántos municipios de Puerto Rico están declarados en escasez de médicos por el gobierno federal?', a: `${g.conHpsa} de los 76 municipios de Puerto Rico (sin Vieques y Culebra) tienen una designación federal de escasez de profesionales de la salud (HPSA) activa, de cuidado primario o salud mental.`, srcText: 'Archivos oficiales de HRSA (Health Resources & Services Administration), designaciones activas, julio 2026.', srcUrl: 'https://data.hrsa.gov/tools/shortage-area/hpsa-find' },
     { q: '¿Cuánto dinero federal para atraer médicos se está quedando sin reclamar en Puerto Rico?', a: `${g.cupon} municipios de PR tienen una designación federal de salud mental activa (que destraba repago de préstamos del NHSC y bono de Medicare) y a la vez CERO psiquiatras ejerciendo. Son ${n(g.cuponPob)} personas con el dinero aprobado y sin médico que lo cobre.`, srcText: 'Cruce NPPES/CMS × archivos HRSA, verificado municipio por municipio (ver el detalle).', srcUrl: 'https://registromedicopr.com/registro/estado' },
     { q: '¿Cuántos pueblos de Puerto Rico no tienen ni un solo especialista médico?', a: `${g.cero} municipios de PR no tienen ni un especialista médico de ninguna clase con práctica declarada: Maricao, Las Marías y Florida.`, srcText: 'Registro federal NPPES/CMS por municipio (ver el mapa).', srcUrl: 'https://registromedicopr.com/registro/mapa' },
@@ -5293,6 +5278,27 @@ async function handleComparte(req: any, res: any) {
     { q: '¿Está limpia el agua en el oeste de Puerto Rico?', a: 'El récord federal de la EPA muestra 13 violaciones de salud del agua activas en el oeste de PR: Cabo Rojo con 3 (trihalometanos) y los acueductos comunitarios de San Germán (Periche, Río Piedras y Méndez) con 8.', srcText: 'EPA (SDWIS), récord federal del agua potable (ver el récord).', srcUrl: 'https://puertoricosinfiltros.com/agua', tag: 'local' },
     { q: '¿Qué le pasa a Puerto Rico para 2030 si no cambia nada?', a: 'Se reconstruye el ladrillo mientras se pierde el recurso humano para servirlo: el Medicaid federal cae de 76% a 55% el 30 de septiembre de 2027, el 55% de los médicos se retira para 2030, y la inteligencia artificial empieza a cortar los trabajos de pantalla que sostienen a las familias que no se fueron de la isla.', srcText: 'Síntesis de récords verificados (ver la predicción).', srcUrl: 'https://puertoricosinfiltros.com/prediccion' },
   ]
+}
+
+async function handleComparte(req: any, res: any) {
+  let g = { ...COMPARTE_G_DEFAULT }
+  try {
+    const { data } = await supabase.from('v_registro_municipio_intel').select('poblacion,especialistas,psiquiatras,hpsa_primaria,hpsa_salud_mental,cupon_mh_sin_cobrar,por_10k_hab').range(0, 100)
+    if (data && data.length >= 70) {
+      const cup = data.filter((r: any) => r.cupon_mh_sin_cobrar)
+      const b5 = data.filter((r: any) => Number(r.por_10k_hab) < 5)
+      const sp = data.filter((r: any) => Number(r.psiquiatras) === 0)
+      g = {
+        conHpsa: data.filter((r: any) => r.hpsa_primaria > 0 || r.hpsa_salud_mental > 0).length,
+        cupon: cup.length, cuponPob: cup.reduce((s: number, r: any) => s + Number(r.poblacion), 0),
+        bajo5: b5.length, bajo5Pob: b5.reduce((s: number, r: any) => s + Number(r.poblacion), 0),
+        sinPsiq: sp.length, sinPsiqPob: sp.reduce((s: number, r: any) => s + Number(r.poblacion), 0),
+        cero: data.filter((r: any) => Number(r.especialistas) === 0).length,
+      }
+    }
+  } catch (_) { /* fallback */ }
+  const n = (x: number) => x.toLocaleString('en-US')
+  const FACTS = citableFacts(g)
 
   const heroClaim = `El dinero federal para traer médicos a Puerto Rico ya está aprobado y no se cobra. ${g.conHpsa} de 76 municipios tienen designación federal de escasez activa; ${g.cupon} tienen el dinero de salud mental aprobado y cero psiquiatras, para ${n(g.cuponPob)} personas. Verificado pueblo por pueblo contra el registro federal. Fuente: registromedicopr.com/registro/estado`
 
@@ -7120,16 +7126,15 @@ ${src('Promesas en video', 'Vistas públicas / YouTube (al minuto)', 'https://pu
 </div></body></html>`)
 }
 
-async function handleContradicciones(req: any, res: any) {
-  type Par = { tipo: string; corto: string; titulo: string; dicenC: string; dicenQ: string; dicenUrl?: string; recordD: string; fuentes: Array<[string, string]>; brecha: string; rec: string }
-  const TIPOS: Record<string, [string, string]> = {
+type Par = { tipo: string; corto: string; titulo: string; dicenC: string; dicenQ: string; dicenUrl?: string; recordD: string; fuentes: Array<[string, string]>; brecha: string; rec: string }
+const CONTRA_TIPOS: Record<string, [string, string]> = {
     promesa: ['Promesa con fecha, vencida', 'bg-red-100 text-red-800 border-red-200'],
     narrativa: ['El cuento vs el número', 'bg-amber-100 text-amber-800 border-amber-200'],
     creencia: ['Lo que "todo el mundo sabe" vs lo que es', 'bg-sky-100 text-sky-800 border-sky-200'],
     agencia: ['La agencia contra sí misma', 'bg-purple-100 text-purple-800 border-purple-200'],
     dinero: ['Declarado vs entregado', 'bg-emerald-100 text-emerald-800 border-emerald-200'],
-  }
-  const pares: Par[] = [
+}
+const CONTRA_PARES: Par[] = [
     {
       tipo: 'narrativa', corto: 'El hospital de Cabo Rojo', titulo: 'Aseguraron "continuidad de servicios"; la sala de emergencias general del pueblo sigue cerrada 8 horas cada noche',
       dicenC: 'El hospital no cerrará y habrá continuidad de los servicios médicos en la región. El alcalde añadió que esperaba que la nueva administración extendiera la sala de emergencias de 7am-11pm a 24 horas.',
@@ -7285,7 +7290,11 @@ async function handleContradicciones(req: any, res: any) {
       fuentes: [['El termómetro del pueblo (196 voces, método y límites)', 'https://puertoricosinfiltros.com/esencia']],
       brecha: 'La contradicción también puede ser tuya', rec: '/esencia',
     },
-  ]
+]
+
+async function handleContradicciones(req: any, res: any) {
+  const TIPOS = CONTRA_TIPOS
+  const pares = CONTRA_PARES
   const tipoChip = (t: string) => {
     const [label, cls] = TIPOS[t] || TIPOS.narrativa
     return `<span class="text-[11px] font-bold rounded-full px-2.5 py-0.5 border ${cls}">${label}</span>`
@@ -8795,35 +8804,106 @@ function handleBuscar(req: any, res: any) {
     { u: '/comparte', t: 'Datos citables', d: 'Números listos pa\' copiar, con fuente', k: 'citas citables copiar prensa compartir' },
     { u: '/mision', t: 'La misión', d: 'Qué es este sitio y qué no es', k: 'mision quienes somos acerca proposito' },
   ]
+  // Tier 2: además de las páginas, se buscan los datos citables (/comparte) y las contradicciones —
+  // la búsqueda devuelve la respuesta con su fuente, no solo el link.
+  const DATOS = citableFacts().map((f) => ({ t: f.q, a: f.a, s: f.srcText, su: f.srcUrl }))
+  const CONTRAS = CONTRA_PARES.map((p, i) => ({ t: p.titulo, c: p.corto, b: p.brecha, d: p.recordD.slice(0, 220), u: `/contradicciones#par-${i + 1}` }))
+  const jsafe = (x: any) => JSON.stringify(x).replace(/</g, '\\u003c')
   const body = `
 <h1>Buscar en el récord</h1>
-<p class="text-lg text-slate-600 mt-2">Escribe lo que te preocupa (agua, luz, médicos, FEMA, el alcalde...) y te llevo al récord con la fuente al lado.</p>
+<p class="text-lg text-slate-600 mt-2">Escribe lo que te preocupa (agua, luz, médicos, FEMA, el alcalde...). Si el dato existe, te lo doy aquí mismo con la fuente y botón de copiar — y el récord completo al lado.</p>
 <div class="not-prose mt-5">
-  <input id="q" type="search" autofocus placeholder="Ej: agua, psiquiatras, promesas, FEMA..." autocomplete="off"
+  <input id="q" type="search" autofocus placeholder="Ej: agua, psiquiatras, Medicaid, LUMA, el alcalde..." autocomplete="off"
     class="w-full text-lg px-5 py-4 rounded-2xl border-2 border-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white" />
   <div id="results" class="mt-4 space-y-2"></div>
+  <p id="near" class="hidden mt-2 text-xs text-slate-500">No hubo resultado exacto con todas las palabras — esto es lo más cercano:</p>
   <p id="empty" class="hidden mt-4 text-sm text-slate-600 bg-amber-50 border border-amber-200 rounded-xl p-4">Ese récord todavía no existe — y que lo buscaste ya quedó anotado: así decidimos cuál construir próximo. Mientras tanto, <a href="/#records" class="text-teal-700 font-semibold">mira todos los récords</a> o <a href="mailto:angel@angelanderson.com" class="text-teal-700 font-semibold">sugiérelo</a>.</p>
 </div>
+${SHARE_COPY_SCRIPT}
 <script>
 (function(){
-  var IDX = ${JSON.stringify(INDEX)};
-  var norm = function(x){ return (x||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); };
-  IDX.forEach(function(r){ r._h = norm(r.t + ' ' + r.d + ' ' + r.k); });
-  var q = document.getElementById('q'), out = document.getElementById('results'), empty = document.getElementById('empty');
+  var PAGES = ${jsafe(INDEX)};
+  var DATOS = ${jsafe(DATOS)};
+  var CONTRAS = ${jsafe(CONTRAS)};
+  var norm = function(x){ return (x||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,''); };
+  var esc = function(x){ var d = document.createElement('div'); d.textContent = x || ''; return d.innerHTML; };
+  // Cada documento: kind + campos con peso (el título pesa más que el cuerpo).
+  var DOCS = [];
+  PAGES.forEach(function(r){ DOCS.push({ kind: 'page', r: r, f: [[norm(r.t), 4], [norm(r.k), 3], [norm(r.d), 1]] }); });
+  DATOS.forEach(function(r){ DOCS.push({ kind: 'dato', r: r, f: [[norm(r.t), 3], [norm(r.a), 1], [norm(r.s), 1]] }); });
+  CONTRAS.forEach(function(r){ DOCS.push({ kind: 'contra', r: r, f: [[norm(r.t), 3], [norm(r.c), 3], [norm(r.b), 2], [norm(r.d), 1]] }); });
+  function termScore(doc, t){
+    var s = 0;
+    for (var i = 0; i < doc.f.length; i++){
+      var txt = doc.f[i][0], w = doc.f[i][1], idx = txt.indexOf(t);
+      if (idx < 0) continue;
+      s += w;
+      var prev = idx === 0 ? '' : txt.charAt(idx - 1);
+      if (idx === 0 || !/[a-z0-9]/.test(prev)) s += 1;
+    }
+    return s;
+  }
+  function rank(terms, requireAll){
+    var out = [];
+    DOCS.forEach(function(doc){
+      var total = 0, matched = 0;
+      for (var i = 0; i < terms.length; i++){
+        var s = termScore(doc, terms[i]);
+        if (s > 0) matched++;
+        total += s;
+      }
+      if (requireAll ? matched === terms.length : matched > 0) out.push({ doc: doc, score: total + matched * 2 });
+    });
+    out.sort(function(a, b){ return b.score - a.score; });
+    return out;
+  }
+  function cardPage(r){
+    return '<a href="' + r.u + '" class="block bg-white border border-slate-200 rounded-xl p-4 hover:border-teal-400 hover:shadow-sm transition">' +
+      '<div class="font-bold text-slate-900">' + esc(r.t) + '</div>' +
+      '<div class="text-sm text-slate-600 mt-0.5">' + esc(r.d) + '</div>' +
+      '<div class="text-xs text-teal-700 mt-1">puertoricosinfiltros.com' + r.u + '</div></a>';
+  }
+  function cardDato(r){
+    var copy = r.a + ' Fuente: ' + r.s + ' Vía puertoricosinfiltros.com/buscar';
+    return '<div class="bg-teal-50/60 border border-teal-200 rounded-xl p-4">' +
+      '<div class="text-[11px] font-bold uppercase tracking-widest text-teal-700">Dato verificado</div>' +
+      '<div class="font-bold text-slate-900 mt-1">' + esc(r.t) + '</div>' +
+      '<div class="text-sm text-slate-700 mt-1.5">' + esc(r.a) + '</div>' +
+      '<div class="flex items-center gap-3 mt-3 flex-wrap">' +
+      '<button type="button" class="share-copy inline-flex items-center gap-1.5 bg-teal-700 hover:bg-teal-800 text-white font-bold px-3.5 py-2 rounded-lg text-xs" data-copy="' + esc(copy) + '"><i class="fa-regular fa-copy"></i> Copiar con fuente</button>' +
+      '<a href="' + esc(r.su) + '" target="_blank" rel="noopener" class="text-xs text-teal-700 font-semibold hover:underline">La fuente ↗</a>' +
+      '</div></div>';
+  }
+  function cardContra(r){
+    return '<a href="' + r.u + '" class="block bg-white border border-amber-300 rounded-xl p-4 hover:border-amber-500 hover:shadow-sm transition">' +
+      '<div class="text-[11px] font-bold uppercase tracking-widest text-amber-700">Contradicción en el marcador</div>' +
+      '<div class="font-bold text-slate-900 mt-1">' + esc(r.t) + '</div>' +
+      '<div class="text-sm text-slate-600 mt-1">La brecha: ' + esc(r.b) + '</div>' +
+      '<div class="text-xs text-teal-700 mt-1.5">Ver el par completo (dicen vs el récord) →</div></a>';
+  }
+  var q = document.getElementById('q'), out = document.getElementById('results'), empty = document.getElementById('empty'), near = document.getElementById('near');
   var logT = null;
-  function render(list){
-    out.innerHTML = list.map(function(r){
-      return '<a href="' + r.u + '" class="block bg-white border border-slate-200 rounded-xl p-4 hover:border-teal-400 hover:shadow-sm transition">' +
-        '<div class="font-bold text-slate-900">' + r.t + '</div>' +
-        '<div class="text-sm text-slate-600 mt-0.5">' + r.d + '</div>' +
-        '<div class="text-xs text-teal-700 mt-1">puertoricosinfiltros.com' + r.u + '</div></a>';
-    }).join('');
+  function renderRanked(ranked){
+    var datos = [], contras = [], pages = [];
+    ranked.forEach(function(h){
+      if (h.doc.kind === 'dato' && datos.length < 4) datos.push(cardDato(h.doc.r));
+      else if (h.doc.kind === 'contra' && contras.length < 3) contras.push(cardContra(h.doc.r));
+      else if (h.doc.kind === 'page' && pages.length < 8) pages.push(cardPage(h.doc.r));
+    });
+    var html = '';
+    if (datos.length) html += '<div class="space-y-2">' + datos.join('') + '</div>';
+    if (contras.length) html += '<div class="space-y-2 mt-2">' + contras.join('') + '</div>';
+    if (pages.length) html += (html ? '<div class="text-[11px] font-bold uppercase tracking-widest text-slate-400 mt-4 mb-2">Los récords</div>' : '') + '<div class="space-y-2">' + pages.join('') + '</div>';
+    out.innerHTML = html;
   }
   function search(){
-    var terms = norm(q.value).split(/\s+/).filter(Boolean);
-    if (!terms.length) { render(IDX); empty.classList.add('hidden'); return; }
-    var hits = IDX.filter(function(r){ return terms.every(function(t){ return r._h.indexOf(t) >= 0; }); });
-    render(hits);
+    var terms = norm(q.value).split(/\\s+/).filter(Boolean);
+    near.classList.add('hidden');
+    if (!terms.length) { out.innerHTML = PAGES.map(cardPage).join(''); empty.classList.add('hidden'); return; }
+    var hits = rank(terms, true), fuzzy = false;
+    if (!hits.length && terms.length > 1) { hits = rank(terms, false); fuzzy = hits.length > 0; }
+    renderRanked(hits);
+    near.classList.toggle('hidden', !fuzzy);
     empty.classList.toggle('hidden', hits.length > 0);
     clearTimeout(logT);
     logT = setTimeout(function(){
@@ -8831,7 +8911,7 @@ function handleBuscar(req: any, res: any) {
     }, 900);
   }
   q.addEventListener('input', search);
-  render(IDX);
+  out.innerHTML = PAGES.map(cardPage).join('');
   try { var pre = new URLSearchParams(location.search).get('q'); if (pre) { q.value = pre; search(); } } catch(e) {}
 })();
 </script>
