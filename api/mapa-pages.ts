@@ -3305,7 +3305,7 @@ ${SHARE_COPY_SCRIPT}`
   // ── EL ESPEJO: la experiencia vivida antes del dato (solo pueblos con designación) ──
   const espejoBlock = hpsa.length ? `
 <div class="not-prose mt-5 bg-slate-900 rounded-2xl p-6 text-white">
-  <p class="text-xl sm:text-2xl font-black leading-snug">${te('¿Llamaste a varias oficinas y nadie te devolvió la llamada?', 'Called several offices and nobody called you back?')}</p>
+  <p class="text-xl sm:text-2xl font-black leading-snug">${te('¿Llamaste a varias oficinas y nadie te devolvió la llamada? ¿O llamaste y el número ya no existe?', 'Called several offices and nobody called you back? Or called and the number no longer exists?')}</p>
   <p class="mt-2 text-slate-200 leading-relaxed">${te(`No es que estés haciendo algo mal. El gobierno federal ya midió lo que te está pasando en ${escapeHtml(town.municipio)}: ${hpsa.length === 1 ? 'una designación oficial de escasez' : hpsa.length + ' designaciones oficiales de escasez'} (${hpsa.map(h => `${escapeHtml(hpsaLbl(h.discipline))}, ${h.score} de 25 puntos`).join('; ')}). Lo que vives tiene nombre, número y fecha. Aquí está, en cristiano.`, `It is not that you are doing something wrong. The federal government already measured what is happening to you in ${escapeHtml(town.municipio)}: ${hpsa.length === 1 ? 'an official shortage designation' : hpsa.length + ' official shortage designations'} (${hpsa.map(h => `${escapeHtml(hpsaLbl(h.discipline))}, ${h.score} of 25 points`).join('; ')}). What you are living has a name, a number, and a date. Here it is, in plain language.`)}</p>
 </div>` : ''
 
@@ -3338,7 +3338,10 @@ ${SHARE_COPY_SCRIPT}`
   const contradiccionesBlock = contraCards.length ? `
 <h2 id="contradicciones">${te('Los números que no cuadran (hasta que ves el tercero)', 'The numbers that do not add up (until you see the third one)')}</h2>
 <p class="text-slate-600 -mt-2">${te('Lo oficial y lo que ves, lado a lado. Ninguno está mintiendo; miden cosas distintas. La línea de abajo explica cuál.', 'The official record and what you see, side by side. Neither one is lying; they measure different things. The line below each card explains which.')}</p>
-<div class="not-prose mt-3 grid gap-3">${contraCards.join('')}</div>` : ''
+<div class="not-prose mt-3 grid gap-3">${contraCards.join('')}</div>
+<div class="not-prose mt-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
+  <p class="text-xs text-amber-900 leading-relaxed">⚠️ <strong>${te('Y un detalle que casi nadie sabe:', 'And a detail almost nobody knows:')}</strong> ${te('el gobierno federal no borra a nadie del registro por su cuenta. Cuando un médico o dentista se retira, se muda o cierra la oficina, le toca a él sacarse del sistema, y muchos nunca lo hacen. Por eso estos conteos son un <strong>techo, no un piso</strong>: la escasez real puede ser peor de lo que dice el número. Y por eso la gente llama a una oficina "del registro" y se encuentra con que ya cerró. Cada nombre de abajo enlaza su NPI federal pa\' que lo confirmes antes de dar el viaje.', 'the federal government does not remove anyone from the registry on its own. When a doctor or dentist retires, moves, or closes the office, it is on them to take themselves out of the system, and many never do. That is why these counts are a <strong>ceiling, not a floor</strong>: the real shortage can be worse than the number says. And it is why people call an office "in the registry" and find it already closed. Every name below links its federal NPI so you can confirm before making the trip.')}</p>
+</div>` : ''
 
   // ── EL DINERO: la designación no es diagnóstico, es una llave (NHSC + lo que ya entra) ──
   const moneyLocal = HPSA_MONEY_LOCAL[town.municipio]
@@ -7163,6 +7166,107 @@ function contradiccionInline(o: { dicenC: string; dicenQ: string; dicenUrl?: str
 // Regla del verde obligatoria: el marcador también anota lo cumplido, o esto es cinismo y no récord.
 // /metodologia — página de verificación PRIVADA para prensa (noindex + llave). Anti-copiones:
 // no linkeada en el menú, no indexada por Google. El link con ?k= se le manda al reportero.
+// ── El Boletín de Notas de Puerto Rico ──────────────────────────────────────
+// Metas MÍNIMAS federales con grade A-F calculado (nunca opinado). Data vive
+// en metas_minimas (Supabase); el vigilante semanal la refresca. 3 caras leen
+// la misma tabla: PRSF /boletin (esta), banner en registro, página CR.com.
+async function handleBoletin(req: any, res: any) {
+  const { data: metas, error } = await supabase
+    .from('metas_minimas')
+    .select('*')
+    .order('grade', { ascending: false })
+  if (error || !metas || metas.length === 0) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8')
+    res.status(200).send(layout({
+      title: 'El Boletín de Notas de Puerto Rico',
+      description: 'Las metas mínimas federales que Puerto Rico cumple o no, con nota calculada y fuente al lado.',
+      slug: 'boletin', bodyHtml: '<p>El boletín se está calculando. Vuelve pronto.</p>',
+      host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+    }))
+    return
+  }
+
+  const gradePoints: Record<string, number> = { A: 4, B: 3, C: 2, D: 1, F: 0 }
+  const gpa = (metas.reduce((s: number, m: any) => s + (gradePoints[(m.grade || 'F').trim()] ?? 0), 0) / metas.length).toFixed(1)
+  const gradeColor = (g: string) => {
+    const gg = (g || 'F').trim()
+    return gg === 'A' || gg === 'B' ? 'bg-emerald-600' : gg === 'C' ? 'bg-amber-500' : 'bg-red-600'
+  }
+  const fmtFecha = (d: string) => { try { return new Date(d + 'T12:00:00Z').toLocaleDateString('es-PR', { month: 'long', year: 'numeric' }) } catch { return d } }
+
+  const cards = metas.map((m: any) => {
+    const g = (m.grade || 'F').trim()
+    const cr = m.valor_por_pueblo && m.valor_por_pueblo['cabo rojo']
+    return `
+    <div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-4" id="${escapeHtml(m.id)}">
+      <div class="flex items-start gap-4">
+        <div class="${gradeColor(g)} text-white rounded-2xl w-16 h-16 flex items-center justify-center text-4xl font-black shrink-0" style="font-family:'Fraunces',Georgia,serif" aria-label="Nota ${escapeHtml(g)}">${escapeHtml(g)}</div>
+        <div>
+          <span class="text-xs font-bold text-teal-700 uppercase tracking-wide">${escapeHtml(m.categoria)}</span>
+          <h3 class="text-xl font-black text-slate-900 mt-1" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(m.meta_texto)}</h3>
+          <p class="text-sm text-slate-600 mt-1"><strong>El mínimo federal:</strong> ${escapeHtml(m.estandar_federal)} · PR cumple el <strong>${escapeHtml(String(m.pct_minimo))}%</strong> del mínimo.</p>
+        </div>
+      </div>
+      <blockquote class="mt-3 text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3"><strong>La contradicción:</strong> ${escapeHtml(m.contradiccion)}</blockquote>
+      <p class="text-sm text-slate-700 mt-3"><strong>Lo que cuesta no moverse:</strong> ${escapeHtml(m.costo_inaccion)}</p>
+      <p class="text-sm text-slate-700 mt-2"><strong>En tu casa:</strong> ${escapeHtml(m.espejo)}</p>
+      ${cr ? `<p class="text-sm text-slate-700 mt-2"><strong>En Cabo Rojo:</strong> ${escapeHtml(String(cr.texto || ''))}</p>` : ''}
+      <p class="text-xs text-slate-500 mt-3"><strong>Fuente:</strong> <a href="${escapeHtml(m.fuente_url)}" target="_blank" rel="noopener" data-prsf="verify" data-rec="boletin-${escapeHtml(m.id)}" class="text-teal-700">${escapeHtml(m.fuente_nombre)} ↗</a> · data de ${escapeHtml(fmtFecha(m.fuente_fecha))}</p>
+      <details class="mt-2 text-xs text-slate-500"><summary class="cursor-pointer font-semibold">Cómo se calculó esta nota</summary><p class="mt-1">${escapeHtml(m.metodologia)} La escala es fija: 100% o más del mínimo = A · 80-99 = B · 60-79 = C · 40-59 = D · menos de 40 = F.</p></details>
+      <div class="mt-3 flex flex-wrap gap-2 text-sm">
+        ${m.accion_url ? `<a href="${escapeHtml(m.accion_url)}" data-prsf="record" data-rec="boletin-${escapeHtml(m.id)}" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">${escapeHtml(m.accion_texto)}</a>` : `<span class="inline-flex items-center gap-1 bg-slate-100 text-slate-800 font-semibold px-4 py-2 rounded-full">${escapeHtml(m.accion_texto)}</span>`}
+        <button class="copy-btn inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400" data-cite="Puerto Rico cumple el ${escapeHtml(String(m.pct_minimo))}% del mínimo federal de ${escapeHtml(m.categoria.toLowerCase())} (nota ${escapeHtml(g)}). Fuente: ${escapeHtml(m.fuente_nombre)}, vía puertoricosinfiltros.com/boletin" onclick="navigator.clipboard.writeText(this.getAttribute('data-cite'));this.textContent='Copiado ✓'">Cita esto</button>
+      </div>
+    </div>`
+  }).join('')
+
+  const body = `
+<div class="not-prose text-center mt-2">
+  <p class="text-xs font-bold text-teal-700 uppercase tracking-wide">El récord público de Puerto Rico</p>
+  <h1 class="text-4xl font-black text-slate-900 mt-1" style="font-family:'Fraunces',Georgia,serif">El Boletín de Notas de Puerto Rico</h1>
+  <p class="mt-3 text-slate-700 max-w-2xl mx-auto">Estas no son metas ambiciosas. Son las metas <strong>MÍNIMAS</strong> del gobierno federal: el piso, lo menos que se supone. Cada nota está calculada de la data, con la fuente al lado. Nadie opinó aquí.</p>
+  <div class="inline-flex items-center gap-3 bg-slate-900 text-white rounded-2xl px-6 py-4 mt-5">
+    <span class="text-sm font-semibold uppercase tracking-wide">Promedio general</span>
+    <span class="text-4xl font-black" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(gpa)}</span>
+    <span class="text-sm text-slate-300">de 4.0</span>
+  </div>
+</div>
+${cards}
+<h2 class="mt-8">Cómo se verifica</h2>
+<p>Cada meta sale de un estándar federal publicado (HRSA, EPA, EIA) y de data federal o pública. La nota es una fórmula fija sobre el porcentaje del mínimo cumplido; la misma pa' todas las categorías. Cada card tiene su metodología abierta. <strong>¿Ves un error? Escríbenos y se corrige, en público.</strong></p>
+<p class="text-sm text-slate-600">¿Cambió una nota? Cada cambio queda en el historial público. Sugiere una meta que falte: <a href="mailto:angel@angelanderson.com?subject=Meta%20pa'l%20Bolet%C3%ADn" class="text-teal-700 font-semibold">angel@angelanderson.com</a> o textea al <strong>787-417-7711</strong>.</p>
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
+  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">No es que estemos mal "en general". Es que hay notas, con nombre y fuente.</p>
+  <p class="mt-2 text-sm text-slate-600 italic">Saber la nota es el primer paso pa' subirla. Si te sirve, úsalo. Si no, sigue tu camino.</p>
+</div>`
+
+  const faqLd = {
+    '@context': 'https://schema.org', '@type': 'FAQPage',
+    mainEntity: metas.map((m: any) => ({
+      '@type': 'Question',
+      name: `¿Puerto Rico cumple la meta mínima federal de ${m.categoria.toLowerCase()}?`,
+      acceptedAnswer: { '@type': 'Answer', text: `Puerto Rico cumple el ${m.pct_minimo}% del mínimo federal (nota ${(m.grade || '').trim()}). ${m.estandar_federal} Fuente: ${m.fuente_nombre}, ${m.fuente_fecha}.` },
+    })),
+  }
+  const datasetLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'El Boletín de Notas de Puerto Rico — metas mínimas federales con nota calculada',
+    description: `Notas A-F calculadas del porcentaje del mínimo federal cumplido en ${metas.map((m: any) => m.categoria.toLowerCase()).join(', ')}. Promedio general: ${gpa} de 4.0. Fuentes: HRSA, EPA, EIA, NPPES/CMS.`,
+    creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/boletin',
+    keywords: ['Puerto Rico', 'metas federales', 'HPSA', 'agua potable', 'SAIDI', 'boletín de notas', 'transparencia'],
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
+  res.status(200).send(layout({
+    title: 'El Boletín de Notas de Puerto Rico — las metas mínimas federales, con nota y fuente',
+    description: `Las metas MÍNIMAS federales que PR cumple o no: salud mental, dental, agua y energía, con nota A-F calculada de la data. Promedio general: ${gpa} de 4.0. Cada nota con su fuente al lado.`,
+    slug: 'boletin', bodyHtml: body, jsonLd: [datasetLd, faqLd] as any,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
 function handleMetodologia(req: any, res: any) {
   const KEY = process.env.METODOLOGIA_KEY || 'prsf-metodo-2026'
   const given = String(req.query?.k || '')
@@ -12792,6 +12896,7 @@ export default async function handler(req: any, res: any) {
     case 'porque': return await handleRegistroPorque(req, res)
     case 'recuperacion': return await handleRecuperacion(req, res)
     case 'sinfiltros': return await handleSinFiltros(req, res)
+    case 'boletin': return await handleBoletin(req, res)
     case 'sinfiltros-log': return await handleSinFiltrosLog(req, res)
     case 'sinfiltros-pulso': return await handleSinFiltrosPulso(req, res)
     case 'luz': return await handleDatoRecord(req, res)
