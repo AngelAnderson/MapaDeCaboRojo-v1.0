@@ -7215,10 +7215,10 @@ async function handleBoletin(req: any, res: any) {
           <p class="text-sm text-slate-600 mt-1"><strong>El mínimo federal:</strong> ${escapeHtml(m.estandar_federal)} · PR cumple el <strong>${escapeHtml(String(m.pct_minimo))}%</strong> del mínimo.</p>
         </div>
       </div>
-      ${m.contexto ? `<p class="text-sm text-slate-600 mt-3 bg-slate-50 rounded-xl p-3"><strong class="text-slate-800 uppercase text-xs tracking-wide block mb-1">Si llegas sin contexto</strong>${escapeHtml(m.contexto)}</p>` : ''}
-      <blockquote class="mt-3 text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3"><strong class="uppercase text-xs tracking-wide text-teal-700 block mb-1">La contradicción</strong>${escapeHtml(m.contradiccion)}</blockquote>
-      <p class="text-sm text-slate-700 mt-3 border-l-4 border-red-400 pl-3"><strong class="uppercase text-xs tracking-wide text-red-700 block mb-1">El enemigo, claro: lo que cuesta esperar</strong>${escapeHtml(m.costo_inaccion)}</p>
-      <p class="text-sm text-slate-700 mt-3 border-l-4 border-amber-400 pl-3"><strong class="uppercase text-xs tracking-wide text-amber-700 block mb-1">El espejo: tu casa, hoy</strong>${escapeHtml(m.espejo)}</p>
+      ${m.contexto ? `<p class="text-sm text-slate-600 mt-3 bg-slate-50 rounded-xl p-3"><strong class="text-slate-800 uppercase text-xs tracking-wide block mb-1">En dos líneas</strong>${escapeHtml(m.contexto)}</p>` : ''}
+      <blockquote class="mt-3 text-slate-800 leading-relaxed border-l-4 border-teal-500 pl-3"><strong class="uppercase text-xs tracking-wide text-teal-700 block mb-1">Lo que no cuadra</strong>${escapeHtml(m.contradiccion)}</blockquote>
+      <p class="text-sm text-slate-700 mt-3 border-l-4 border-red-400 pl-3"><strong class="uppercase text-xs tracking-wide text-red-700 block mb-1">Lo que cuesta esperar</strong>${escapeHtml(m.costo_inaccion)}</p>
+      <p class="text-sm text-slate-700 mt-3 border-l-4 border-amber-400 pl-3"><strong class="uppercase text-xs tracking-wide text-amber-700 block mb-1">En tu casa, hoy</strong>${escapeHtml(m.espejo)}</p>
       ${cr ? `<p class="text-sm text-slate-700 mt-2 pl-3"><strong>En Cabo Rojo:</strong> ${escapeHtml(String(cr.texto || ''))}</p>` : ''}
       <p class="text-sm text-slate-700 mt-3 border-l-4 border-emerald-500 pl-3"><strong class="uppercase text-xs tracking-wide text-emerald-700 block mb-1">Qué puedes hacer hoy, con lo que hay</strong>${escapeHtml(m.accion_texto)}${m.accion_url ? ' (el botón de abajo te lleva).' : ''}</p>
       ${m.que_falta ? `<p class="text-sm text-slate-600 mt-3 border-l-4 border-slate-300 pl-3"><strong class="uppercase text-xs tracking-wide text-slate-500 block mb-1">Qué falta saber antes de moverse</strong>${escapeHtml(m.que_falta)}</p>` : ''}
