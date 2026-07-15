@@ -2947,6 +2947,21 @@ async function handle_admin_municipio(req: any, res: any) {
     return;
   }
 
+  // ============ POST: one-tap actions (authenticated by cookie above) ============
+  if (req.method === 'POST') {
+    const body = req.body || {};
+    const act = body.action || req.query?.action;
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    if (act === 'mark-verified' && body.id) {
+      const { error } = await supabase.from('places').update({ last_verified_at: new Date().toISOString() }).eq('id', body.id);
+      if (error) { res.status(500).json({ ok: false, error: error.message }); return; }
+      res.status(200).json({ ok: true });
+      return;
+    }
+    res.status(400).json({ ok: false, error: 'unknown action' });
+    return;
+  }
+
   // ============ AUTHENTICATED — fetch data ============
   try {
     const [
@@ -3149,15 +3164,21 @@ async function handle_admin_municipio(req: any, res: any) {
         <div style="font-size:11px;color:#64748b;margin-top:2px;">${(c.fresh_90d || 0).toLocaleString('es-PR')} de ${(c.open_count || 0).toLocaleString('es-PR')} verif. en 90d</div>
       </div>
       <div>
-        <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:600;margin-bottom:6px;">Top 10 verificaciones más viejas (re-walk targets)</div>
+        <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;font-weight:600;margin-bottom:6px;">Top 10 verificaciones más viejas — abre el mapa, confirma, un toque pa' marcar</div>
         <table>
-          <thead><tr><th>Negocio</th><th style="text-align:right;">Días sin verificar</th><th></th></tr></thead>
+          <thead><tr><th>Negocio</th><th style="text-align:right;">Días</th><th style="text-align:right;">Acción</th></tr></thead>
           <tbody>
-          ${staleRes.slice(0, 10).map((p: any) => `<tr>
+          ${staleRes.slice(0, 10).map((p: any) => {
+            const maps = p.gmaps_url || `https://www.google.com/maps/search/${encodeURIComponent((p.name || '') + ' Cabo Rojo Puerto Rico')}`;
+            return `<tr id="fr-${esc(p.id)}">
             <td><a href="/negocio/${esc(p.slug)}" style="color:#5eead4;text-decoration:none;">${esc(p.name)}</a> <span style="color:#64748b;">· ${esc(p.category || '')}</span></td>
-            <td style="text-align:right;color:${p.days_since_verified > 365 ? '#dc2626' : '#cbd5e1'};font-weight:600;">${p.days_since_verified === 9999 ? 'nunca' : p.days_since_verified + 'd'}</td>
-            <td>${p.gmaps_url ? `<a href="${esc(p.gmaps_url)}" target="_blank" style="background:#0d9488;color:#fff;padding:3px 9px;border-radius:6px;text-decoration:none;font-size:10px;font-weight:600;">→ verificar</a>` : ''}</td>
-          </tr>`).join('')}
+            <td class="fr-days" style="text-align:right;color:${p.days_since_verified > 365 ? '#dc2626' : '#cbd5e1'};font-weight:600;">${p.days_since_verified === 9999 ? 'nunca' : p.days_since_verified + 'd'}</td>
+            <td style="text-align:right;white-space:nowrap;">
+              <a href="${esc(maps)}" target="_blank" style="background:#334155;color:#e2e8f0;padding:4px 9px;border-radius:6px;text-decoration:none;font-size:10px;font-weight:600;">📍 Maps</a>
+              <button type="button" onclick="verif('${esc(p.id)}',this)" style="background:#0d9488;color:#fff;border:0;padding:4px 9px;border-radius:6px;font-size:10px;font-weight:700;cursor:pointer;margin-left:4px;">✓ Verifiqué</button>
+            </td>
+          </tr>`;
+          }).join('')}
           </tbody>
         </table>
       </div>
@@ -3258,6 +3279,33 @@ async function handle_admin_municipio(req: any, res: any) {
   </div>
 
 </div>
+
+<script>
+async function verif(id, btn){
+  var orig = btn.textContent;
+  btn.disabled = true; btn.textContent = '…';
+  try{
+    var r = await fetch('/admin/municipio', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action:'mark-verified', id: id }) });
+    var j = await r.json();
+    if (j && j.ok){
+      var row = document.getElementById('fr-' + id);
+      if (row){
+        row.style.transition = 'opacity .4s';
+        row.style.opacity = '0.4';
+        var d = row.querySelector('.fr-days');
+        if (d){ d.innerHTML = '<span style="color:#16a34a;font-weight:700;">hoy</span>'; }
+      }
+      btn.textContent = '✓ hoy'; btn.style.background = '#16a34a';
+    } else {
+      btn.textContent = 'error'; btn.disabled = false;
+      setTimeout(function(){ btn.textContent = orig; }, 1800);
+    }
+  } catch(e){
+    btn.textContent = 'error'; btn.disabled = false;
+    setTimeout(function(){ btn.textContent = orig; }, 1800);
+  }
+}
+</script>
 
 </body>
 </html>`;
