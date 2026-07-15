@@ -333,13 +333,16 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 </footer>`
 
   return `<!DOCTYPE html>
-<html lang="es-PR">
+<html lang="${isEn ? 'en' : 'es-PR'}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${escapeHtml(opts.title)} · ${brandName}</title>
 <meta name="description" content="${escapeHtml(opts.description)}">
 <link rel="canonical" href="${canonical}">
+${isReg ? `<link rel="alternate" hreflang="es-PR" href="${canonical}">
+<link rel="alternate" hreflang="en" href="${canonical}${canonical.includes('?') ? '&' : '?'}lang=en">
+<link rel="alternate" hreflang="x-default" href="${canonical}">` : ''}
 ${isPRSF ? '<meta name="google-site-verification" content="N42qvVBU_PKj99wLrOAEelsysbx3cT_ZtNgD5iFzXQk">' : ''}
 <meta property="og:title" content="${escapeHtml(opts.title)}">
 <meta property="og:description" content="${escapeHtml(opts.description)}">
@@ -4128,13 +4131,13 @@ async function handleEspecialista(req: any, res: any) {
   const pageUrl = `https://registromedicopr.com/especialista/${encodeURIComponent(place.slug)}`
 
   const T = lang === 'en' ? {
-    sub: `${specLabel} in ${muni}, Puerto Rico. Verified against the U.S. federal NPPES registry.`,
+    sub: `${specLabel} in ${muni}, Puerto Rico.${place.phone ? ` Phone: ${place.phone}.` : ''}${place.address ? ' Address on file.' : ''} Verified against the U.S. federal NPPES registry${verifiedDate ? ` (${verifiedDate})` : ''}.`,
     verified: 'Verified · federal NPI', call: 'Call', wa: 'WhatsApp', veci: 'Ask El Veci',
     addr: 'Address', regionH: 'Region', specialtyH: 'Specialty', npiH: 'Federal NPI',
     othersH: `Other ${specLabel.toLowerCase()}s in ${regionLabel || 'PR'}`,
     claimH: 'Is this your profile?', notFound: 'Not who you were looking for?',
   } : {
-    sub: `${specLabel} en ${muni}, Puerto Rico. Verificado contra el registro federal NPPES de EE.UU.`,
+    sub: `${specLabel} en ${muni}, Puerto Rico.${place.phone ? ` Teléfono: ${place.phone}.` : ''}${place.address ? ' Dirección disponible.' : ''} Verificado contra el registro federal NPPES de EE.UU.${verifiedDate ? ` (${verifiedDate})` : ''}`,
     verified: 'Verificado · NPI federal', call: 'Llamar', wa: 'WhatsApp', veci: 'Pregúntale al Veci',
     addr: 'Dirección', regionH: 'Región', specialtyH: 'Especialidad', npiH: 'NPI federal',
     othersH: `Otros ${specLabel.toLowerCase()} en el ${regionLabel || 'PR'}`,
@@ -4325,7 +4328,7 @@ ${SHARE_COPY_SCRIPT}
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
   res.status(200).send(layout({
-    title: `${name} — ${specLabel} en ${muni}, PR`,
+    title: lang === 'en' ? `${name} — ${specLabel} in ${muni}, PR | Phone & Address` : `${name} — ${specLabel} en ${muni}, PR | Teléfono y Dirección`,
     description: T.sub,
     slug: `especialista/${place.slug}`,
     bodyHtml: body,
