@@ -3118,7 +3118,15 @@ ${regDisclaimer(en)}
 // places.region crudo (lección 2026-07-05: el mapeo municipio→región de places produce artefactos).
 const PUEBLO_REGION_CAP: Record<string, string> = { metro: 'Metro', oeste: 'Oeste', norte: 'Norte', sur: 'Sur', este: 'Este', centro: 'Centro' }
 const PUEBLO_HIGH_NEED = ['psiquiatra', 'cardiólogo', 'pediatra', 'ginecólogo', 'geriatra', 'neumólogo', 'endocrinologo', 'oncólogo', 'neurologo', 'gastroenterólogo']
-const HPSA_DISC_ES: Record<string, string> = { 'Primary Care': 'cuidado primario', 'Dental Health': 'salud dental', 'Mental Health': 'salud mental' }
+const HPSA_DISC_ES: Record<string, string> = { 'Primary Care': 'cuidado primario', 'Dental Health': 'salud dental', 'Mental Health': 'salud mental', primary: 'cuidado primario', dental: 'salud dental', mental: 'salud mental' }
+const HPSA_DISC_EN: Record<string, string> = { primary: 'primary care', dental: 'dental health', mental: 'mental health' }
+// Dinero local ya entrando por la designación (bullets por municipio, con fecha + fuente — refresh manual semestral)
+const HPSA_MONEY_LOCAL: Record<string, { es: string; en: string }> = {
+  'Cabo Rojo': {
+    es: 'Las clínicas comunitarias ya lo están usando: Migrant Health Center, con dos sitios en Cabo Rojo, recibió <strong>$4 millones federales pa\' salud mental comunitaria</strong> (2023-2027) y <strong>$600,000 pa\' expandir servicios de conducta</strong> (2024). Fuente: USASpending.gov, consultado jul 2026.',
+    en: 'Community clinics are already using it: Migrant Health Center, with two sites in Cabo Rojo, received <strong>$4 million in federal funds for community mental health</strong> (2023-2027) and <strong>$600,000 to expand behavioral services</strong> (2024). Source: USASpending.gov, retrieved Jul 2026.',
+  },
+}
 function puebloSemaforo(por10k: number): { e: string; label: string; bg: string; bd: string } {
   if (por10k >= 15) return { e: '🟢', label: 'acceso alto', bg: '#ecfdf5', bd: '#6ee7b7' }
   if (por10k >= 5) return { e: '🟡', label: 'acceso medio', bg: '#fffbeb', bd: '#fcd34d' }
@@ -3217,7 +3225,7 @@ ${SHARE_COPY_SCRIPT}`
 
   const [{ data: specRows }, { data: hpsaRows }, { data: provRows }] = await Promise.all([
     supabase.from('v_registro_muni_spec').select('subcategory,n').eq('municipio', town.municipio),
-    supabase.from('hpsa_designations').select('discipline,score').eq('municipio', town.municipio).order('score', { ascending: false }),
+    supabase.from('pr_hpsa_designations').select('discipline,score,ratio,fte,shortage,manual_note').eq('municipio', town.municipio).order('score', { ascending: false }),
     supabase.rpc('registro_providers_by_muni', { muni: town.municipio }),
   ])
   const present = (specRows || [])
@@ -3281,10 +3289,85 @@ ${SHARE_COPY_SCRIPT}`
     return `<li class="flex gap-2.5 items-start"><span class="text-red-500 font-black mt-0.5">✗</span><span class="text-sm text-slate-700"><strong>${x.e} ${escapeHtml(specLbl(x))}:</strong> ${te('aquí no hay ninguno verificado;', 'none verified here;')} ${near}</span></li>`
   }).join('')
 
-  const hpsaBlock = (hpsaRows && hpsaRows.length) ? `
+  const hpsa = (hpsaRows || []) as Array<{ discipline: string; score: number; ratio: string | null; fte: string | null; shortage: string | null; manual_note: string | null }>
+  const hpsaLbl = (d: string) => en ? (HPSA_DISC_EN[d] || d) : (HPSA_DISC_ES[d] || d)
+  const ratioN = (r: string | null) => { const m = String(r || '').match(/^(\d+)/); return m ? Number(m[1]).toLocaleString('en-US') : '' }
+  const specN = (sub: string) => present.find(p => p.sub === sub)?.n || 0
+  const hpsaDental = hpsa.find(h => h.discipline === 'dental')
+  const hpsaMental = hpsa.find(h => h.discipline === 'mental')
+
+  const hpsaBlock = hpsa.length ? `
 <div class="not-prose mt-6 bg-indigo-50 border border-indigo-200 rounded-2xl p-5">
   <p class="font-bold text-indigo-900 text-base">🏛️ ${te('El gobierno federal ya reconoció la escasez aquí', 'The federal government already recognized the shortage here')}</p>
-  <p class="text-sm text-indigo-800 mt-1">${escapeHtml(town.municipio)} ${te(`tiene ${hpsaRows.length === 1 ? 'una designación federal activa' : hpsaRows.length + ' designaciones federales activas'} de escasez de proveedores (HPSA):`, `has ${hpsaRows.length === 1 ? 'an active federal provider-shortage designation' : hpsaRows.length + ' active federal provider-shortage designations'} (HPSA):`)} ${hpsaRows.map((h: any) => `${escapeHtml(en ? h.discipline : (HPSA_DISC_ES[h.discipline] || h.discipline))} (${te('puntuación', 'score')} ${escapeHtml(String(h.score))}/25)`).join(' · ')}. ${te('Eso no es opinión nuestra: es HRSA, la agencia federal de salud.', 'That is not our opinion: it is HRSA, the federal health agency.')} <a href="/registro/estado" class="font-semibold underline">${te('Lo que eso significa y el dinero que trae →', 'What that means and the money it brings →')}</a></p>
+  <p class="text-sm text-indigo-800 mt-1">${escapeHtml(town.municipio)} ${te(`tiene ${hpsa.length === 1 ? 'una designación federal activa' : hpsa.length + ' designaciones federales activas'} de escasez de proveedores (HPSA):`, `has ${hpsa.length === 1 ? 'an active federal provider-shortage designation' : hpsa.length + ' active federal provider-shortage designations'} (HPSA):`)} ${hpsa.map(h => `${escapeHtml(hpsaLbl(h.discipline))} (${te('puntuación', 'score')} ${escapeHtml(String(h.score))}/25)`).join(' · ')}. ${te('Eso no es opinión nuestra: es HRSA, la agencia federal de salud.', 'That is not our opinion: it is HRSA, the federal health agency.')} <a href="/registro/estado" class="font-semibold underline">${te('Lo que eso significa y el dinero que trae →', 'What that means and the money it brings →')}</a></p>
+</div>` : ''
+
+  // ── EL ESPEJO: la experiencia vivida antes del dato (solo pueblos con designación) ──
+  const espejoBlock = hpsa.length ? `
+<div class="not-prose mt-5 bg-slate-900 rounded-2xl p-6 text-white">
+  <p class="text-xl sm:text-2xl font-black leading-snug">${te('¿Llamaste a varias oficinas y nadie te devolvió la llamada?', 'Called several offices and nobody called you back?')}</p>
+  <p class="mt-2 text-slate-200 leading-relaxed">${te(`No es que estés haciendo algo mal. El gobierno federal ya midió lo que te está pasando en ${escapeHtml(town.municipio)}: ${hpsa.length === 1 ? 'una designación oficial de escasez' : hpsa.length + ' designaciones oficiales de escasez'} (${hpsa.map(h => `${escapeHtml(hpsaLbl(h.discipline))}, ${h.score} de 25 puntos`).join('; ')}). Lo que vives tiene nombre, número y fecha. Aquí está, en cristiano.`, `It is not that you are doing something wrong. The federal government already measured what is happening to you in ${escapeHtml(town.municipio)}: ${hpsa.length === 1 ? 'an official shortage designation' : hpsa.length + ' official shortage designations'} (${hpsa.map(h => `${escapeHtml(hpsaLbl(h.discipline))}, ${h.score} of 25 points`).join('; ')}). What you are living has a name, a number, and a date. Here it is, in plain language.`)}</p>
+</div>` : ''
+
+  // ── LAS CONTRADICCIONES: lo oficial y lo que ves, lado a lado. Cero editorial en las columnas;
+  //    la fricción la pone el lector y la línea de resolución la aterriza. Data-driven → los 78 heredan. ──
+  const contraCard = (izq: string, der: string, resol: string) => `
+<div class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+  <div class="grid sm:grid-cols-2">
+    <div class="p-4 border-b sm:border-b-0 sm:border-r border-slate-100"><div class="text-[11px] font-black uppercase tracking-wide text-slate-400 mb-1">${te('Lo que ves', 'What you see')}</div><p class="text-sm text-slate-800 font-semibold leading-snug">${izq}</p></div>
+    <div class="p-4 bg-indigo-50/50"><div class="text-[11px] font-black uppercase tracking-wide text-indigo-400 mb-1">${te('Lo oficial', 'The official record')}</div><p class="text-sm text-slate-800 font-semibold leading-snug">${der}</p></div>
+  </div>
+  <div class="px-4 py-3 bg-slate-50 border-t border-slate-100"><p class="text-xs text-slate-600 leading-relaxed">${resol}</p></div>
+</div>`
+  const contraCards: string[] = []
+  if (hpsaDental && specN('dentista') > 0) contraCards.push(contraCard(
+    te(`${escapeHtml(town.municipio)} tiene <strong>${specN('dentista')} dentistas</strong> en el registro federal.`, `${escapeHtml(town.municipio)} has <strong>${specN('dentista')} dentists</strong> in the federal registry.`),
+    te(`Y aun así es <strong>zona federal de escasez dental: ${hpsaDental.score} de 25 puntos</strong>, de los scores más altos que existen.`, `And it is still a <strong>federal dental shortage area: ${hpsaDental.score} of 25 points</strong>, among the highest scores there are.`),
+    te(`¿Cómo pueden ser ciertas las dos? La designación mide el acceso de la población de bajos ingresos${hpsaDental.ratio ? `: <strong>${ratioN(hpsaDental.ratio)} personas por dentista disponible</strong> pa' ese grupo` : ''}. Hay dentistas. Lo que falta es cita pa'l que paga con el plan del gobierno.`, `How can both be true? The designation measures access for the low-income population${hpsaDental.ratio ? `: <strong>${ratioN(hpsaDental.ratio)} people per available dentist</strong> for that group` : ''}. There are dentists. What is missing is an appointment for those on the government plan.`)))
+  if (hpsaMental) contraCards.push(contraCard(
+    te(`<strong>${specN('psiquiatra')} psiquiatra${specN('psiquiatra') === 1 ? '' : 's'} y ${specN('psicólogo')} psicólogo${specN('psicólogo') === 1 ? '' : 's'}</strong> en el registro.`, `<strong>${specN('psiquiatra')} psychiatrist${specN('psiquiatra') === 1 ? '' : 's'} and ${specN('psicólogo')} psychologist${specN('psicólogo') === 1 ? '' : 's'}</strong> in the registry.`),
+    te(`Pa' la población de bajos ingresos, el conteo federal da <strong>${ratioN(hpsaMental.ratio)} personas por cada proveedor</strong> de salud mental disponible.`, `For the low-income population, the federal count comes to <strong>${ratioN(hpsaMental.ratio)} people per available</strong> mental health provider.`),
+    hpsaMental.manual_note
+      ? escapeHtml(hpsaMental.manual_note)
+      : te('La designación mide citas ambulatorias disponibles pa\' bajos ingresos, no el total de oficinas. Por eso el número federal y la lista de arriba pueden decir cosas distintas y las dos ser ciertas.', 'The designation measures outpatient appointments available to low-income patients, not total offices. That is why the federal number and the list above can say different things and both be true.')))
+  const escasos = specN('cardiólogo') + specN('oncólogo') + specN('neurologo')
+  if (specN('farmacéutico') >= 10 && escasos > 0 && escasos <= 5) contraCards.push(contraCard(
+    te(`<strong>${specN('farmacéutico')} farmacéuticos</strong> pa' despacharte la receta.`, `<strong>${specN('farmacéutico')} pharmacists</strong> to fill your prescription.`),
+    te(`<strong>${specN('cardiólogo')} cardiólogo${specN('cardiólogo') === 1 ? '' : 's'}, ${specN('oncólogo')} oncólogo${specN('oncólogo') === 1 ? '' : 's'} y ${specN('neurologo')} neurólogo${specN('neurologo') === 1 ? '' : 's'}</strong> pa' escribirla.`, `<strong>${specN('cardiólogo')} cardiologist${specN('cardiólogo') === 1 ? '' : 's'}, ${specN('oncólogo')} oncologist${specN('oncólogo') === 1 ? '' : 's'}, and ${specN('neurologo')} neurologist${specN('neurologo') === 1 ? '' : 's'}</strong> to write it.`),
+    te('La cadena está completa al final y rota al principio: el medicamento llega fácil, la receta no.', 'The chain is complete at the end and broken at the start: the medicine arrives easily, the prescription does not.')))
+  const contradiccionesBlock = contraCards.length ? `
+<h2 id="contradicciones">${te('Los números que no cuadran (hasta que ves el tercero)', 'The numbers that do not add up (until you see the third one)')}</h2>
+<p class="text-slate-600 -mt-2">${te('Lo oficial y lo que ves, lado a lado. Ninguno está mintiendo; miden cosas distintas. La línea de abajo explica cuál.', 'The official record and what you see, side by side. Neither one is lying; they measure different things. The line below each card explains which.')}</p>
+<div class="not-prose mt-3 grid gap-3">${contraCards.join('')}</div>` : ''
+
+  // ── EL DINERO: la designación no es diagnóstico, es una llave (NHSC + lo que ya entra) ──
+  const moneyLocal = HPSA_MONEY_LOCAL[town.municipio]
+  const nhscBullets: string[] = []
+  if (hpsaMental) nhscBullets.push(te(
+    `Un <strong>psicólogo, consejero, trabajador social clínico o psiquiatra</strong> que atienda aquí puede cualificar pa' que el gobierno federal le pague <strong>hasta $50,000 del préstamo estudiantil</strong> (National Health Service Corps, 2 años de servicio).`,
+    `A <strong>psychologist, counselor, clinical social worker, or psychiatrist</strong> practicing here can qualify for the federal government to repay <strong>up to $50,000 of their student loans</strong> (National Health Service Corps, 2 years of service).`))
+  if (hpsaDental) nhscBullets.push(te(
+    `Un <strong>dentista o higienista dental</strong>, lo mismo: hasta $50,000, y el score ${hpsaDental.score}/25 de ${escapeHtml(town.municipio)} compite arriba en la lista de prioridad.`,
+    `A <strong>dentist or dental hygienist</strong>, the same: up to $50,000, and ${escapeHtml(town.municipio)}'s ${hpsaDental.score}/25 score competes near the top of the priority list.`))
+  if (hpsa.find(h => h.discipline === 'primary')) nhscBullets.push(te(
+    `En <strong>cuidado primario</strong> el repago llega <strong>hasta $75,000</strong>, más $5,000 adicionales por atender en español.`,
+    `In <strong>primary care</strong> the repayment reaches <strong>up to $75,000</strong>, plus an additional $5,000 for serving Spanish speakers.`))
+  if (moneyLocal) nhscBullets.push(en ? moneyLocal.en : moneyLocal.es)
+  const dineroBlock = hpsa.length ? `
+<h2 id="dinero-hpsa">${te('El diagnóstico ya viene con dinero', 'The diagnosis already comes with money')}</h2>
+<p class="text-slate-600 -mt-2">${te('Esta información siempre fue pública. Estaba regada en cuatro bases de datos federales, en inglés. Nosotros solo la juntamos y la pusimos en cristiano.', 'This information was always public. It was scattered across four federal databases, in English. We just gathered it and put it in plain language.')}</p>
+<div class="not-prose mt-3 bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-5">
+  <p class="text-sm text-slate-800 font-semibold">${te('Lo que casi nadie sabe: una designación de escasez no es solo un diagnóstico. Es una llave. Activa dinero federal real:', 'What almost nobody knows: a shortage designation is not just a diagnosis. It is a key. It unlocks real federal money:')}</p>
+  <ul class="mt-3 space-y-2.5">${nhscBullets.map(b => `<li class="flex gap-2.5 items-start text-sm text-slate-700 leading-relaxed"><span class="text-emerald-600 font-black mt-0.5">💵</span><span>${b}</span></li>`).join('')}</ul>
+  <p class="text-sm text-slate-800 font-bold mt-4">${te('El problema ya está reconocido y financiado. Lo que falta no es diagnóstico. Es que más profesionales sepan que la llave existe.', 'The problem is already recognized and funded. What is missing is not a diagnosis. It is more professionals knowing the key exists.')}</p>
+  <p class="text-xs text-slate-500 mt-3">${te('¿Eres profesional de la salud? Mira si tu sitio cualifica:', 'Are you a health professional? See if your site qualifies:')} <a href="https://nhsc.hrsa.gov/loan-repayment/nhsc-loan-repayment-program" target="_blank" rel="noopener" class="text-emerald-700 font-bold underline">nhsc.hrsa.gov</a> · ${te('Cifras ciclo FY2026 (HRSA), verificadas jul 2026.', 'FY2026 cycle figures (HRSA), verified Jul 2026.')}</p>
+</div>` : ''
+
+  // ── Aterrizaje Veci (solo Cabo Rojo: el bot vive ahí) ──
+  const veciBlock = town.municipio === 'Cabo Rojo' ? `
+<div class="not-prose mt-6 bg-teal-50 border-2 border-teal-200 rounded-2xl p-5">
+  <p class="font-bold text-teal-900 text-base">💬 ${te('¿No consigues cita? Pregúntale al Veci', 'Cannot get an appointment? Ask El Veci')}</p>
+  <p class="text-sm text-teal-800 mt-1">${te('Textea <strong>DENTISTA</strong> o <strong>PSICOLOGO</strong> al <a href="sms:7874177711" class="font-bold underline">787-417-7711</a> y El Veci te contesta con quién hay en el pueblo, 24 horas, gratis. Y si lo que buscas no aparece, te avisa cuando llegue.', 'Text <strong>DENTISTA</strong> or <strong>PSICOLOGO</strong> to <a href="sms:7874177711" class="font-bold underline">787-417-7711</a> and El Veci replies with who is in town, 24 hours, free. And if what you need is not there yet, it lets you know when it arrives.')}</p>
 </div>` : ''
 
   // 📋 Datos citables del pueblo — cada dato con botón Copiar y la fuente pegada (prensa, alcaldías, IA)
@@ -3299,9 +3382,12 @@ ${SHARE_COPY_SCRIPT}`
   if (missing.length) datos.push(te(
     `En ${town.municipio} no hay práctica verificada de: ${missing.map((x: any) => x.l).join(', ')}.`,
     `${town.municipio} has no verified practice of: ${missing.map((x: any) => (SPEC_LABEL_EN[x.s] || x.l)).join(', ')}.`))
-  if (hpsaRows && hpsaRows.length) datos.push(te(
-    `${town.municipio} tiene designación federal de escasez (HPSA) activa de ${hpsaRows.map((h: any) => `${HPSA_DISC_ES[h.discipline] || h.discipline} (puntuación ${h.score}/25)`).join(' y ')}, según HRSA.`,
-    `${town.municipio} has an active federal shortage designation (HPSA) for ${hpsaRows.map((h: any) => `${h.discipline} (score ${h.score}/25)`).join(' and ')}, per HRSA.`))
+  if (hpsa.length) datos.push(te(
+    `${town.municipio} tiene designación federal de escasez (HPSA) activa de ${hpsa.map(h => `${HPSA_DISC_ES[h.discipline] || h.discipline} (puntuación ${h.score}/25${h.ratio ? `, ${ratioN(h.ratio)} personas de bajos ingresos por proveedor` : ''})`).join(' y ')}, según HRSA.`,
+    `${town.municipio} has an active federal shortage designation (HPSA) for ${hpsa.map(h => `${HPSA_DISC_EN[h.discipline] || h.discipline} (score ${h.score}/25${h.ratio ? `, ${ratioN(h.ratio)} low-income residents per provider` : ''})`).join(' and ')}, per HRSA.`))
+  if (hpsa.length) datos.push(te(
+    `La designación HPSA de ${town.municipio} activa el repago federal de préstamos NHSC: hasta $50,000 por 2 años pa' proveedores de ${hpsa.map(h => HPSA_DISC_ES[h.discipline] || h.discipline).join(' y ')} que atiendan en zona designada (HRSA, ciclo FY2026).`,
+    `${town.municipio}'s HPSA designation unlocks federal NHSC loan repayment: up to $50,000 per 2 years for ${hpsa.map(h => HPSA_DISC_EN[h.discipline] || h.discipline).join(' and ')} providers serving the designated area (HRSA, FY2026 cycle).`))
   const datosHtml = datos.map(d => `
     <div class="flex gap-3 items-start bg-white border border-slate-200 rounded-xl p-4">
       <div class="flex-1"><p class="text-sm text-slate-800">${escapeHtml(d)}</p><p class="text-xs text-slate-400 mt-1">${escapeHtml(fuente)}</p></div>
@@ -3350,7 +3436,11 @@ fetch('/api/mapa-pages?page=registro-alert',{method:'POST',headers:{'Content-Typ
   </div>
   ${psiqNote}
 </div>
+${espejoBlock}
 ${hpsaBlock}
+${contradiccionesBlock}
+${dineroBlock}
+${veciBlock}
 ${present.length ? `<h2>${te(`Lo que HAY en ${escapeHtml(town.municipio)}`, `What ${escapeHtml(town.municipio)} HAS`)}</h2>
 <p class="text-slate-600 -mt-2">${te("Toca cualquiera pa' ver la lista completa con nombres y teléfonos.", 'Tap any to see the full list with names and phone numbers.')}</p>
 <div class="not-prose mt-3 flex flex-wrap gap-2">${presentChips}</div>
@@ -3388,6 +3478,8 @@ ${SHARE_COPY_SCRIPT}`
         acceptedAnswer: { '@type': 'Answer', text: `${town.municipio} tiene ${town.especialistas} especialistas médicos verificados contra el registro federal NPPES, es decir ${town.por.toFixed(1)} por cada 10,000 habitantes. La mediana de Puerto Rico es ${mediana.toFixed(1)}. Ocupa el puesto ${rank} de 78 municipios.` } },
       ...(missing.length ? [{ '@type': 'Question', name: `¿Qué especialistas médicos faltan en ${town.municipio}?`,
         acceptedAnswer: { '@type': 'Answer', text: `Según el registro federal NPPES, en ${town.municipio} no hay práctica verificada de: ${missing.map((x: any) => x.l).join(', ')}. Los más cercanos suelen estar en la región ${regionCap} o en el área metro. Detalle: ${pageUrl}` } }] : []),
+      ...(hpsa.length ? [{ '@type': 'Question', name: `¿Por qué ${town.municipio} es zona federal de escasez médica (HPSA)?`,
+        acceptedAnswer: { '@type': 'Answer', text: `${town.municipio} tiene ${hpsa.length === 1 ? 'una designación HPSA activa' : hpsa.length + ' designaciones HPSA activas'} de HRSA: ${hpsa.map(h => `${HPSA_DISC_ES[h.discipline] || h.discipline} (puntuación ${h.score}/25${h.ratio ? `, ${ratioN(h.ratio)} personas de bajos ingresos por proveedor disponible` : ''})`).join(' y ')}. La designación mide el acceso de la población de bajos ingresos, no el total de oficinas, y activa incentivos federales como el repago de préstamos NHSC (hasta $50,000 por 2 años). Detalle: ${pageUrl}` } }] : []),
     ] },
     { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
       { '@type': 'ListItem', position: 1, name: 'Registro Médico PR', item: 'https://registromedicopr.com/registro' },
