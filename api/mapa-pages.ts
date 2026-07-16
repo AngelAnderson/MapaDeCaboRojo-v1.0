@@ -686,7 +686,7 @@ ${failBanner}
     bodyHtml: body,
     jsonLd: {
       '@context': 'https://schema.org',
-      '@type': 'Dataset',
+      '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: `${SITE_URL}/transparencia`, encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
       name: 'Mapa de Cabo Rojo · Transparencia Metrics',
       description: 'Live verification metrics for the Cabo Rojo directory.',
       url: `${SITE_URL}/transparencia`,
@@ -1507,7 +1507,7 @@ ${subscribeForm('senales-del-pueblo', { audience: 'general' })}
     bodyHtml: body,
     jsonLd: {
       '@context': 'https://schema.org',
-      '@type': 'Dataset',
+      '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: `${SITE_URL}/senales-del-pueblo`, encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
       name: 'Señales del pueblo · Demanda local Cabo Rojo',
       description: 'Live demand signals from bot searches + directory queries for Cabo Rojo, PR. Top searches, recent verifications, demand-supply gaps.',
       url: `${SITE_URL}/senales-del-pueblo`,
@@ -3234,7 +3234,7 @@ ${shareRow({ text: te(`¿Cuántos médicos especialistas tiene tu pueblo? Los 78
 ${regDisclaimer(en)}
 ${SHARE_COPY_SCRIPT}`
     const jsonLd = [
-      { '@context': 'https://schema.org', '@type': 'Dataset', name: 'Acceso a especialistas médicos por municipio de Puerto Rico',
+      { '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com', encodingFormat: 'text/html' }, name: 'Acceso a especialistas médicos por municipio de Puerto Rico',
         description: `Los 78 municipios de Puerto Rico rankeados por especialistas médicos verificados (NPPES) por cada 10,000 habitantes. Mediana de la isla: ${mediana.toFixed(1)}. ${rojos} municipios bajo 5 por 10,000. ${ceros.length} municipios con cero especialistas.`,
         url: 'https://registromedicopr.com/pueblo', inLanguage: 'es', license: 'https://creativecommons.org/licenses/by/4.0/',
         creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' } },
@@ -3308,7 +3308,7 @@ ${SHARE_COPY_SCRIPT}`
     const list = byCat[sub]
     const shown = list.slice(0, CAP_PER_CAT)
     const rows = shown.map(pr => {
-      const tel = pr.phone ? `<a href="tel:${escapeHtml(pr.phone.replace(/[^0-9+]/g, ''))}" class="text-slate-400 hover:text-teal-700 text-xs whitespace-nowrap">${escapeHtml(pr.phone)}</a>` : ''
+      const tel = pr.phone ? `<a href="tel:${escapeHtml(pr.phone.replace(/[^0-9+]/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-full whitespace-nowrap"><i class="fa-solid fa-phone"></i> ${te('Llamar', 'Call')}</a>` : ''
       const stars = pr.rating != null ? `<span class="text-amber-500 text-xs whitespace-nowrap" title="${te('Calificación federal CMS', 'Federal CMS rating')}: ${pr.rating}/5">${starRating(pr.rating)} <span class="text-slate-400">${pr.rating}</span></span>` : ''
       return `<li class="flex items-baseline justify-between gap-3 py-1 border-b border-slate-50">
         <a href="/especialista/${encodeURIComponent(pr.slug)}${lp}" class="text-teal-700 hover:underline text-sm">${escapeHtml(cleanName(pr.name))}</a><span class="flex items-center gap-2">${acceptBadge(pr)}${stars}${tel}</span></li>`
@@ -3527,7 +3527,7 @@ ${regDisclaimer(en)}
 ${SHARE_COPY_SCRIPT}`
 
   const jsonLd = [
-    { '@context': 'https://schema.org', '@type': 'Dataset',
+    { '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
       name: `Acceso a especialistas médicos en ${town.municipio}, Puerto Rico`,
       description: `${town.municipio} tiene ${town.especialistas} especialistas médicos verificados (NPPES) para ${town.poblacion.toLocaleString('en-US')} habitantes: ${town.por.toFixed(1)} por cada 10,000 (mediana de PR: ${mediana.toFixed(1)}). Puesto ${rank} de 78 municipios.`,
       url: pageUrl, inLanguage: 'es', spatialCoverage: { '@type': 'Place', name: `${town.municipio}, Puerto Rico` },
@@ -3826,11 +3826,11 @@ async function handleRegistro(req: any, res: any) {
   <h3 class="text-xl font-black text-slate-900 mt-2">${t('¿Buscas esto por un familiar, desde lejos?', 'Doing this for a relative, from far away?')}</h3>
   <p class="text-slate-600 mt-2 text-[15px] leading-relaxed">${t('Yo pasé por esto. Llamé buscando un especialista y me dieron cita para meses. Si estás fuera de Puerto Rico cuidando a tus papás, o aquí sin tiempo pa\' dar vueltas, cuéntame qué necesitas y te escribo yo mismo. Sin compromiso.', 'I have been through this. I called for a specialist and got an appointment months out. If you live outside Puerto Rico caring for your parents, or here with no time to chase calls, tell me what you need and I will write you back myself. No obligation.')}</p>
   <form id="cj-form" class="mt-4 grid gap-3">
-    <input id="cj-name" type="text" placeholder="${t('Tu nombre', 'Your name')}" class="w-full rounded-lg border border-slate-300 p-3 text-base">
-    <textarea id="cj-need" rows="3" placeholder="${t('¿A quién cuidas y qué especialista necesitas? Ej: mi mamá en Cabo Rojo necesita un neumólogo.', 'Who are you caring for and which specialist? e.g. my mom in Cabo Rojo needs a pulmonologist.')}" class="w-full rounded-lg border border-slate-300 p-3 text-base"></textarea>
+    <input id="cj-name" type="text" placeholder="${t('Tu nombre', 'Your name')}" aria-label="${t('Tu nombre', 'Your name')}" class="w-full rounded-lg border border-slate-300 p-3 text-base">
+    <textarea id="cj-need" rows="3" placeholder="${t('¿A quién cuidas y qué especialista necesitas? Ej: mi mamá en Cabo Rojo necesita un neumólogo.', 'Who are you caring for and which specialist? e.g. my mom in Cabo Rojo needs a pulmonologist.')}" aria-label="${t('Qué necesitas', 'What you need')}" class="w-full rounded-lg border border-slate-300 p-3 text-base"></textarea>
     <div class="grid sm:grid-cols-2 gap-3">
-      <input id="cj-email" type="email" placeholder="${t('Tu email', 'Your email')}" class="w-full rounded-lg border border-slate-300 p-3 text-base">
-      <input id="cj-wa" type="tel" placeholder="${t('WhatsApp (opcional)', 'WhatsApp (optional)')}" class="w-full rounded-lg border border-slate-300 p-3 text-base">
+      <input id="cj-email" type="email" placeholder="${t('Tu email', 'Your email')}" aria-label="${t('Tu email', 'Your email')}" class="w-full rounded-lg border border-slate-300 p-3 text-base">
+      <input id="cj-wa" type="tel" placeholder="${t('WhatsApp (opcional)', 'WhatsApp (optional)')}" aria-label="${t('WhatsApp (opcional)', 'WhatsApp (optional)')}" class="w-full rounded-lg border border-slate-300 p-3 text-base">
     </div>
     <button id="cj-send" type="submit" class="w-full sm:w-auto justify-self-start bg-amber-600 hover:bg-amber-700 text-white font-bold px-6 py-3 rounded-full text-base">${t('Cuéntame — te escribo', 'Tell me — I will write you')}</button>
   </form>
@@ -3888,7 +3888,7 @@ async function handleRegistro(req: any, res: any) {
           list=list.slice().sort(function(a,b){return (planMatch(b.plans,plan)?1:0)-(planMatch(a.plans,plan)?1:0);});
         }
         var rows=list.map(function(p){
-          var tel=p.phone?('<a href="tel:'+esc(p.phone.replace(/[^0-9]/g,''))+'" style="color:#0f766e;font-weight:700;white-space:nowrap;">'+esc(p.phone)+'</a>'):'<span style="color:#94a3b8;">sin teléfono</span>';
+          var tel=p.phone?('<a href="tel:'+esc(p.phone.replace(/[^0-9]/g,''))+'" style="display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:40px;box-sizing:border-box;padding:8px 14px;background:#0d9488;color:#fff;font-weight:700;font-size:13px;border-radius:9999px;text-decoration:none;white-space:nowrap;">📞 Llamar</a>'):'<span style="color:#94a3b8;">sin teléfono</span>';
           var nm=p.slug?('<a href="/especialista/'+encodeURIComponent(p.slug)+'" style="color:#0f172a;font-weight:600;text-decoration:none;border-bottom:1px dotted #94a3b8;">'+esc(p.name)+'</a>'):esc(p.name);
           var badge='';
           if(plan&&planMatch(p.plans,plan)){nm+='<div style="font-size:11px;color:#059669;font-weight:700;margin-top:2px;">✓ la oficina confirmó que acepta '+esc(PLAN_LABELS[plan]||plan)+'</div>';}
@@ -3976,7 +3976,7 @@ async function handleRegistro(req: any, res: any) {
     if(!list.length)return '<div style="color:#64748b;font-size:14px;padding:6px 0;">No hay nadie con ese nombre en el registro. Prueba con el apellido, o escoge la especialidad abajo.</div>';
     var rows=list.map(function(p){
       var lab=(BYID[p.subcategory]&&BYID[p.subcategory].l)||p.subcategory;
-      var tel=p.phone?('<a href="tel:'+esc(p.phone.replace(/[^0-9]/g,''))+'" style="color:#0f766e;font-weight:700;white-space:nowrap;">'+esc(p.phone)+'</a>'):'<span style="color:#94a3b8;">sin teléfono</span>';
+      var tel=p.phone?('<a href="tel:'+esc(p.phone.replace(/[^0-9]/g,''))+'" style="display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:40px;box-sizing:border-box;padding:8px 14px;background:#0d9488;color:#fff;font-weight:700;font-size:13px;border-radius:9999px;text-decoration:none;white-space:nowrap;">📞 Llamar</a>'):'<span style="color:#94a3b8;">sin teléfono</span>';
       var nm=p.slug?('<a href="/especialista/'+encodeURIComponent(p.slug)+'" style="color:#0f172a;font-weight:600;text-decoration:none;border-bottom:1px dotted #94a3b8;">'+esc(p.name)+'</a>'):esc(p.name);
       return '<tr style="border-top:1px solid #e2e8f0;"><td style="padding:7px 8px;font-weight:600;color:#0f172a;">'+nm+'</td><td style="padding:7px 8px;color:#475569;">'+esc(lab)+'</td><td style="padding:7px 8px;color:#475569;">'+esc(p.municipality||'—')+'</td><td style="padding:7px 8px;text-align:right;">'+tel+'</td></tr>';
     }).join('');
@@ -5023,7 +5023,7 @@ ${ratioSection}
 
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'Dataset',
+    '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com/registro/desiertos', encodingFormat: 'text/html' },
     name: 'Desiertos médicos de Puerto Rico por región',
     description: `${totalDeserts.length} combinaciones de especialidad y región sin ningún proveedor, según el registro federal NPPES/CMS. Datos abiertos de acceso a especialistas en Puerto Rico, en español.`,
     creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
@@ -5121,7 +5121,7 @@ ${mientrasTanto([
     ],
   }
   const datasetLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset',
+    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/recuperacion', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'Fondos federales de recuperación de Puerto Rico por municipio (FEMA)',
     description: 'Cuánto dinero federal de recuperación (FEMA Public Assistance) se ha obligado a cada municipio de Puerto Rico, por habitante, con estatus de cierre y cruce con el acceso a médicos. Fuente: OpenFEMA × Censo × NPPES.',
     creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
@@ -5542,7 +5542,7 @@ ${factCards}
     mainEntity: FACTS.map(f => ({ '@type': 'Question', name: f.q, acceptedAnswer: { '@type': 'Answer', text: `${f.a} Fuente: ${f.srcText}` } })),
   }
   const datasetLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset',
+    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com/comparte', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'Datos citables de acceso médico en Puerto Rico',
     description: `${g.conHpsa} de 76 municipios de PR con designación federal de escasez activa, ${g.cupon} con el cupón de salud mental sin cobrar (${n(g.cuponPob)} personas), 3 municipios sin ningún especialista. Fuentes: NPPES/CMS, HRSA, Censo.`,
     creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
@@ -5917,7 +5917,7 @@ ${recordCards}
 <!-- logging PRSF movido al layout (isPRSF): page_view + record/verify/cite + audio_play + outbound_click -->
 `
   const datasetLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset',
+    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'Puerto Rico Sin Filtros — récord público de datos verificados de PR',
     description: `Datos verificados de Puerto Rico con fuente primaria: ${g.conHpsa} de 76 municipios con escasez de médicos declarada por el gobierno federal, ${g.cupon} con el cupón de salud mental sin cobrar (${n(g.cuponPob)} personas), ${g.cero} municipios sin ningún especialista. Fuentes: NPPES/CMS, HRSA, OpenFEMA, Censo.`,
     creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
@@ -6057,7 +6057,7 @@ ${shareRow({ text: cfg.share, url: `https://puertoricosinfiltros.com/${page}`, t
 <p class="text-sm text-slate-500 mt-5">Verifícalo tú mismo en <a href="${cfg.verify}" target="_blank" rel="noopener" class="text-teal-700 font-semibold">${cfg.verifyText} ↗</a>. Cada fila trae su enlace a la fuente primaria. ¿Ves un error? Escríbenos y se corrige.</p>
 `
   const jsonLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset',
+    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/${page}', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: cfg.h1, description: cfg.hero,
     creator: { '@type': 'Person', name: 'Angel Anderson' },
     publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
@@ -6220,7 +6220,7 @@ ${mientrasTanto([
 ${SHARE_COPY_SCRIPT}
 `
   const jsonLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset',
+    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/acueductos', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'El recibo del agua de Puerto Rico contra el récord: tarifas AAA 2026-2039 y fondos federales',
     description: 'Aumentos de tarifa de la AAA aprobados hasta 2039 ($2,598.1M en total) contra el uso de fondos federales: $8,985.7M identificados, $6,560.0M obligados, $773.0M recibidos (8.6%) al 31 de marzo de 2025. Fuente: Plan Fiscal Certificado AAA 2025 (Junta de Supervisión Fiscal).',
     creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
@@ -6329,7 +6329,7 @@ ${mientrasTanto([
 ${SHARE_COPY_SCRIPT}
 `
   const jsonLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset',
+    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/funciona', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'Funciona: el registro de lo que se movió — casos donde hablar en récord precedió acción del gobierno',
     description: 'Registro verificado de casos donde un reclamo documentado en cámara precedió una acción oficial. Caso ancla: entrevista a paramédico de Cabo Rojo (sep 2023) sobre el sistema de emergencias → 360 días después el director de Manejo de Emergencias municipal cita esa entrevista y reporta el contrato 9-1-1 con primera respuesta municipal. Citas verbatim con minuto exacto.',
     creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
@@ -6617,7 +6617,7 @@ ${mientrasTanto([
 ${SHARE_COPY_SCRIPT}
 `
   const jsonLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset',
+    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/transicion', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'La Transición Gubernamental 2024-2025 de Puerto Rico: el récord de las vistas públicas, cita por cita',
     description: 'Compilación verificada de las vistas públicas de transición (Ley 197-2002) transmitidas por El Nuevo Día: declaraciones de COR3, Vivienda, AEE, AAA, AFI, DTOP, Justicia, Salud/ASES y DRNA con cita textual y minuto del video. Desembolso FEMA nov 2024: Educación 2.3%, AAA 13.4%, AEE 15%. 1.3M vidas del Plan Vital sin acceso a Walgreens.',
     creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
@@ -6844,7 +6844,7 @@ ${SHARE_COPY_SCRIPT}
         url: 'https://puertoricosinfiltros.com/salud-que-falta',
       },
       {
-        '@type': 'Dataset', '@id': 'https://puertoricosinfiltros.com/salud-que-falta#dataset',
+        '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/salud-que-falta', encodingFormat: 'text/html' }, '@id': 'https://puertoricosinfiltros.com/salud-que-falta#dataset',
         name: 'Designaciones HPSA de escasez de salud de Puerto Rico',
         description: `Las ${rows.length || 149} designaciones federales de área de escasez de profesionales de salud (HPSA) activas en Puerto Rico: ${dental.length || 77} dental, ${mental.length || 52} salud mental, ${primary.length || 20} cuidado primario. Por municipio: proveedores a tiempo completo, faltantes para la meta federal, y score de escasez.`,
         creator: author, publisher, license: 'https://www.usa.gov/government-works',
@@ -6985,7 +6985,7 @@ ${citableCards}
 ${SHARE_COPY_SCRIPT}
 `
   const jsonLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset',
+    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/retiro', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'El Huracán Lento: vejez, pobreza y ausencia de médico por municipio de Puerto Rico',
     description: 'Cruce inédito por municipio: población 65+, pobreza 65+ (39.4% PR vs 11.2% US), ingreso mensual del hogar retirado, especialistas médicos y hogares sin internet. 13 de los 15 municipios más golpeados están en el oeste y sur de PR. Fuentes: ACS 2024, NPPES/CMS, HRSA.',
     creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
@@ -7182,7 +7182,7 @@ ${mientrasTanto([
 ${SHARE_COPY_SCRIPT}
 `
   const jsonLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset',
+    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/semaforo-fema', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'El Semáforo FEMA de Cabo Rojo: los proyectos de recuperación federal, proyecto por proyecto',
     description: `Los ${rows.length} proyectos de FEMA (Public Assistance) de Cabo Rojo, PR: $${(totalObl / 1e6).toFixed(1)}M obligados, ${viejosAbiertos.length} proyectos con más de 5 años sin cerrar. Coliseo Rebekah Colberg: $5.5M obligados desde 2020, aún pendiente de alcance. Fuente: OpenFEMA v2.`,
     creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
@@ -7317,7 +7317,7 @@ ${cards}
     })),
   }
   const datasetLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset',
+    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/notas', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'Las Notas de Puerto Rico — metas mínimas federales con nota calculada',
     description: `Notas A-F calculadas del porcentaje del mínimo federal cumplido en ${metas.map((m: any) => m.categoria.toLowerCase()).join(', ')}. Promedio general: ${gpa} de 4.0. Fuentes: HRSA, EPA, EIA, NPPES/CMS.`,
     creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
@@ -7643,7 +7643,7 @@ ${mientrasTanto([
 ${SHARE_COPY_SCRIPT}
 `
   const jsonLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset',
+    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/contradicciones', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'El Marcador de Contradicciones de Puerto Rico: lo que dicen vs lo que dice el récord',
     description: 'Pares verificados de declaraciones oficiales, promesas y creencias populares contra el dato primario que las contradice: LUMA "affordable" vs 24.5¢/kWh, Ley 70-1992 (35% reciclaje pa\'l 2006) vs ~12%, AAA "agua segura 98%" vs 13 violaciones EPA activas, y más. Cada par con fuente activa.',
     creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
@@ -8111,7 +8111,7 @@ ${items || '<p class="text-sm text-slate-400 italic">Data no disponible ahora.</
 ${SHARE_COPY_SCRIPT}
 `
   const jsonLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset',
+    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/esencia', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'Línea de tiempo del proyecto Esencia en Cabo Rojo',
     description: 'Cronología pública y con fuente del proyecto de desarrollo Esencia en Cabo Rojo: decretos contributivos, investigaciones del CPI, medidas del Senado y protestas.',
     creator: { '@type': 'Person', name: 'Angel Anderson' },
@@ -8247,7 +8247,7 @@ ${mientrasTanto([
 <p class="text-sm text-slate-500 mt-5">Fuente: USASpending.gov (Departamento de Seguridad Nacional / FEMA), lugar de ejecución Puerto Rico. Cada recipiente tiene su enlace de verificación (↗) en la tabla. Julio 2026.</p>
 `
   const jsonLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset',
+    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/sigue-el-dinero', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'Sigue el dinero: recipientes de la recuperación federal de Puerto Rico',
     description: `De los contratos federales de recuperación de PR rastreados, ~${pctFuera}% fue a firmas de afuera de la isla. CH2M/CDM (Denver) sola recibió $238M en asesoría. Fuente: USASpending × FEMA.`,
     creator: { '@type': 'Person', name: 'Angel Anderson' },
@@ -8718,7 +8718,7 @@ ${mientrasTanto([
 <p class="text-sm text-slate-500 mt-5">Fuente: "Small-Area Variation in Diabetes Prevalence in Puerto Rico", CDC <em>Preventing Chronic Disease</em> (2009, modelo bayesiano sobre BRFSS, los 78 municipios) × registro federal NPPES (especialistas y psiquiatras). Verifícalo tú mismo en <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC4537060/" target="_blank" rel="noopener" class="text-teal-700 font-semibold">el estudio del CDC ↗</a>. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a>.</p>
 `
   const jsonLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset',
+    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/diabetes', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'Diabetes por municipio vs. acceso médico en Puerto Rico',
     description: 'Prevalencia de diabetes por municipio de PR (estimado CDC 2009) cruzada con especialistas y psiquiatras (NPPES). Lajas 18% con 0 psiquiatras; Florida 15.7% con 0 especialistas.',
     creator: { '@type': 'Person', name: 'Angel Anderson' },
@@ -8845,7 +8845,7 @@ ${mientrasTanto([
 <p class="text-sm text-slate-500 mt-5">Fuente: U.S. Census Bureau, ACS 5-año (B28002) × registro federal NPPES/CMS. Verifícalo tú mismo en <a href="https://data.census.gov/table/ACSDT5Y2023.B28002?g=040XX00US72\$0500000" target="_blank" rel="noopener" class="text-teal-700 font-semibold">data.census.gov ↗</a>. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a>. Julio 2026.</p>
 `
   const jsonLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset',
+    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/telemedicina', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'Telemedicina posible vs desierto médico en Puerto Rico',
     description: `De los 36 municipios de PR sin psiquiatra, ${viable} ya tienen banda ancha ≥80% (telemedicina viable), ${doble} son desierto doble (ni médico ni internet). Fuentes: ACS B28002 × NPPES.`,
     creator: { '@type': 'Person', name: 'Angel Anderson' },
@@ -8928,7 +8928,7 @@ ${rows.length ? items : '<div class="not-prose bg-amber-50 border border-amber-2
 ${SHARE_COPY_SCRIPT}
 `
   const jsonLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset',
+    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/historial', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'Historial de promesas públicas de Cabo Rojo — con timestamp de video',
     description: 'Promesas públicas rastreadas con la cita y el minuto exacto del video donde se hicieron, y qué pasó con cada una.',
     creator: { '@type': 'Person', name: 'Angel Anderson' },
@@ -9681,7 +9681,7 @@ function handleExposicionAi(req: any, res: any) {
 <p class="text-sm text-slate-500 mt-6">Cómo se hizo: ocupación por municipio del Censo/ACS (tabla C24010, vía Census Reporter); exposición por ocupación de la literatura publicada (Eloundou et al. 2023; AIOE de Felten/Raj/Seamans). Modelo direccional, transparente y reproducible: cualquiera con las dos fuentes lo recalcula. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a> y se corrige. Julio 2026.</p>
 `
   const jsonLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset',
+    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/exposicion-ai', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'Índice de Exposición a la Inteligencia Artificial por municipio de Puerto Rico',
     description: 'Ranking de los 78 municipios de PR por exposición de sus empleos a la inteligencia artificial, cruzando la composición ocupacional del Censo (ACS C24010) con índices de exposición por ocupación (Eloundou 2023; AIOE).',
     creator: { '@type': 'Person', name: 'Angel Anderson' },
@@ -9904,7 +9904,7 @@ function handleRendimiento(req: any, res: any) {
 <p class="text-sm text-slate-500 mt-6">Cómo se hizo: ingreso mediano del hogar (B19013) y renta bruta mediana (B25064) por municipio, Censo/ACS 2024 5-años, vía Census Reporter. La carga de vivienda (renta×12÷ingreso) es la métrica estándar federal. Modelo transparente y reproducible. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a> y se corrige. Julio 2026.</p>
 `
   const jsonLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset',
+    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/rendimiento', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'Rendimiento del dólar por municipio de Puerto Rico (carga de vivienda)',
     description: 'Ranking de los 78 municipios de PR por cuánto del ingreso mediano local se va en renta (renta bruta mediana × 12 ÷ ingreso mediano del hogar), Censo/ACS 2024 5-años (B19013 + B25064).',
     creator: { '@type': 'Person', name: 'Angel Anderson' },
@@ -10284,7 +10284,7 @@ ${[
 <p class="text-sm text-slate-500 mt-6">Fuente: NPPES/CMS (proveedores) × archivos HRSA (designaciones HPSA) × Censo/ACS (pobreza, edad), cruzados municipio por municipio, julio 2026. <a href="/registro/mapa" class="text-teal-700 font-semibold">Ver el mapa →</a> · <a href="/registro/desiertos" class="text-teal-700 font-semibold">Los desiertos →</a></p>
 `
   const jsonLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset',
+    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com/registro/estado', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'Estado de Salud de Puerto Rico — designaciones de escasez sin redimir por municipio',
     description: `${agg.conHpsa} de 76 municipios de PR tienen designación federal de escasez activa; ${agg.cupon} tienen el cupón de salud mental sin cobrar (${agg.cuponPob.toLocaleString('en-US')} personas). Cruce NPPES × HRSA × Censo, municipio por municipio.`,
     creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
@@ -10434,7 +10434,7 @@ async function handleRegistroMapa(req: any, res: any) {
 </script>
 `
   const jsonLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset',
+    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com/registro/mapa', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'Mapa de médicos especialistas de Puerto Rico por municipio',
     description: 'Mapa interactivo: cuántos especialistas médicos verificados (NPPES/CMS) hay en cada municipio de Puerto Rico, densidad por 10,000 habitantes, y designaciones federales de escasez (HRSA) activas.',
     creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
@@ -10634,10 +10634,14 @@ async function resolveMuni(slug: string): Promise<{ name: string; region: string
 }
 
 async function handleRegistroHub(req: any, res: any) {
-  const specUrl = String(req.query.spec || '').toLowerCase()
-  const regionUrl = String(req.query.region || '').toLowerCase()
+  // Normalize incoming slug the same way specToUrl() built SPEC_BY_URL's keys — strip accents
+  // (á/é/í/ó/ú/ñ) so /registro/cardiólogo matches the 'cardiologo' key instead of 302ing to /registro.
+  // Previously req.query.spec (raw, accented, from the Vercel rewrite) was only .toLowerCase()'d,
+  // which never matched the accent-stripped SPEC_BY_URL keys — a silent 302 on every accented URL.
+  const specUrl = specToUrl(String(req.query.spec || ''))
+  const regionUrl = specToUrl(String(req.query.region || ''))
   const x = SPEC_BY_URL[specUrl]
-  if (!x) { res.statusCode = 302; res.setHeader('Location', '/registro'); res.end(); return }
+  if (!x) { res.statusCode = 301; res.setHeader('Location', '/registro'); res.end(); return }
   const region = regionUrl ? (REGION_BY_URL[regionUrl] || '') : ''
   // A non-region 2nd segment may be a municipality (e.g. /registro/neurologo/cabo-rojo) —
   // handled as "town mode" after the shared vars below. Only 302 if it's neither.
@@ -10658,7 +10662,7 @@ async function handleRegistroHub(req: any, res: any) {
   // ── Town mode: /registro/:spec/:municipio — targets "[especialidad] [pueblo]" searches ──
   if (regionUrl && !region) {
     const muni = await resolveMuni(regionUrl)
-    if (!muni) { res.statusCode = 302; res.setHeader('Location', `/registro/${specUrl}${lp}`); res.end(); return }
+    if (!muni) { res.statusCode = 301; res.setHeader('Location', `/registro/${specUrl}${lp}`); res.end(); return }
     const muniSlug = specToUrl(muni.name)
     const townReg = muni.region || ''
     const [inTownRes, inRegionRes] = await Promise.all([
@@ -10667,7 +10671,7 @@ async function handleRegistroHub(req: any, res: any) {
     ])
     const inTown = (inTownRes.data || [])
     const nearby = ((inRegionRes as any).data || []).filter((p: any) => p.municipality !== muni.name)
-    const rowsOf = (list: any[]) => list.map((p: any) => `<tr class="border-t border-slate-100"><td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td><td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '—')}</td><td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="text-teal-700 font-semibold whitespace-nowrap">${escapeHtml(p.phone)}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td></tr>`).join('')
+    const rowsOf = (list: any[]) => list.map((p: any) => `<tr class="border-t border-slate-100"><td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td><td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '—')}</td><td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-full whitespace-nowrap"><i class="fa-solid fa-phone"></i> ${t('Llamar', 'Call')}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td></tr>`).join('')
     const theadT = `<thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(label)}</th><th class="py-2 px-3">${t('Pueblo', 'Town')}</th><th class="py-2 px-3 text-right">${t('Teléfono', 'Phone')}</th></tr></thead>`
     const titleT = t(`${x.l} en ${muni.name}, Puerto Rico — verificados`, `${label} in ${muni.name}, Puerto Rico — verified`)
     const descT = inTown.length
@@ -10722,7 +10726,7 @@ ${regDisclaimer(en)}`
   const provRows = providers.map(p => `<tr class="border-t border-slate-100">
     <td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td>
     <td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '—')}</td>
-    <td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="text-teal-700 font-semibold whitespace-nowrap">${escapeHtml(p.phone)}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td>
+    <td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-full whitespace-nowrap"><i class="fa-solid fa-phone"></i> ${t('Llamar', 'Call')}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td>
   </tr>`).join('')
   const thead = `<thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(label)}</th><th class="py-2 px-3">${t('Pueblo', 'Town')}</th><th class="py-2 px-3 text-right">${t('Teléfono', 'Phone')}</th></tr></thead>`
 
@@ -11199,7 +11203,7 @@ ${CIVIC_FORM_SCRIPT}
 `
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'Dataset',
+    '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'Promesas del alcalde de Cabo Rojo en cámara',
     description: 'Lista de compromisos y declaraciones del alcalde de Cabo Rojo en entrevistas públicas de video (2023-2024), organizada por tema con su estado. No-partidista.',
     creator: { '@type': 'Organization', name: 'mapadecaborojo.com' },
@@ -11583,7 +11587,7 @@ ${CIVIC_FORM_SCRIPT}
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
-      { '@type': 'Dataset', name: 'Lista de problemas reales de Cabo Rojo', description: 'Demanda ciudadana real (9,016 búsquedas al asistente vecinal *7711) cruzada con el récord público de fondos, recuperación e infraestructura del municipio de Cabo Rojo.', creator: { '@type': 'Organization', name: 'mapadecaborojo.com' }, spatialCoverage: { '@type': 'Place', name: 'Cabo Rojo, Puerto Rico' }, isAccessibleForFree: true },
+      { '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works', name: 'Lista de problemas reales de Cabo Rojo', description: 'Demanda ciudadana real (9,016 búsquedas al asistente vecinal *7711) cruzada con el récord público de fondos, recuperación e infraestructura del municipio de Cabo Rojo.', creator: { '@type': 'Organization', name: 'mapadecaborojo.com' }, spatialCoverage: { '@type': 'Place', name: 'Cabo Rojo, Puerto Rico' }, isAccessibleForFree: true },
       { '@type': 'FAQPage', mainEntity: [
         { '@type': 'Question', name: '¿En qué distrito representativo está Cabo Rojo?', acceptedAnswer: { '@type': 'Answer', text: 'Cabo Rojo está en el Distrito Representativo 20, junto a Hormigueros y San Germán. El representante actual es Emilio Carlo Acosta (PNP), desde enero de 2025.' } },
         { '@type': 'Question', name: '¿Quién es el alcalde de Cabo Rojo?', acceptedAnswer: { '@type': 'Answer', text: 'Jorge A. Morales Wiscovitch (PNP), en el cargo desde enero de 2021, con término hasta enero de 2029.' } },
@@ -11725,7 +11729,7 @@ ${CIVIC_FORM_SCRIPT}
 `
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'Dataset',
+    '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'Quién Responde — estructura de gobierno de Cabo Rojo',
     description: 'Quién representa a un residente de Cabo Rojo (municipal, estatal, federal y cuerpos no electos), de qué responde cada cargo por ley, y cómo contactarlo. No-partidista.',
     creator: { '@type': 'Organization', name: 'mapadecaborojo.com' },
@@ -12173,7 +12177,7 @@ function handleAgua(req: any, res: any) {
 
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'Dataset',
+    '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'Calidad del agua potable — Cabo Rojo y pueblos aledaños (récord EPA)',
     description: 'Violaciones de salud del agua potable por sistema comunitario en Cabo Rojo y pueblos del oeste de Puerto Rico, verificadas contra la base de datos federal EPA SDWIS. Separa violaciones activas de resueltas.',
     creator: { '@type': 'Organization', name: 'Mapa de Cabo Rojo' },
@@ -12222,7 +12226,7 @@ async function handleRaras(req: any, res: any) {
     <tr class="border-b border-slate-100">
       <td class="py-3 pr-3"><span class="font-semibold text-slate-800">${g.n}</span><br><span class="text-xs text-slate-500">${gTax(g.tax)}</span></td>
       <td class="py-3 pr-3 text-slate-600 whitespace-nowrap">${g.mun}</td>
-      <td class="py-3 pr-3 whitespace-nowrap"><a href="tel:${g.tel}" class="text-teal-700 font-semibold">${g.tel}</a></td>
+      <td class="py-3 pr-3 whitespace-nowrap"><a href="tel:${g.tel.replace(/\D/g, '')}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-full whitespace-nowrap"><i class="fa-solid fa-phone"></i> ${te('Llamar', 'Call')}</a></td>
       <td class="py-3 text-right"><a href="https://npiregistry.cms.hhs.gov/provider-view/${g.npi}" target="_blank" rel="noopener" class="text-xs text-slate-400 hover:text-teal-700">NPI ${g.npi} ↗</a></td>
     </tr>`).join('')
 
@@ -12339,7 +12343,7 @@ ${SHARE_COPY_SCRIPT}`
     { '@context': 'https://schema.org', '@type': 'MedicalWebPage', name: te('Enfermedades raras en Puerto Rico: quién las diagnostica', 'Rare diseases in Puerto Rico: who can diagnose them'), url: CANON, inLanguage: en ? 'en' : 'es',
       about: { '@type': 'MedicalCondition', name: 'Rare diseases / Enfermedades raras' },
       publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' } },
-    { '@context': 'https://schema.org', '@type': 'Dataset', name: 'Genetistas clínicos y neurología por región en Puerto Rico',
+    { '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com', encodingFormat: 'text/html' }, name: 'Genetistas clínicos y neurología por región en Puerto Rico',
       description: 'Conteo verificado contra el registro federal NPPES de genetistas clínicos y neurólogos por región en Puerto Rico, en el contexto del liderato de la isla en enfermedades raras.',
       url: CANON, inLanguage: 'es', license: 'https://creativecommons.org/licenses/by/4.0/',
       creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
@@ -12554,7 +12558,7 @@ ${SHARE_COPY_SCRIPT}`
     { '@context': 'https://schema.org', '@type': 'MedicalWebPage', name: te('Atlas de las enfermedades fundadoras boricuas', 'Atlas of Boricua founder diseases'), url: CANON, inLanguage: en ? 'en' : 'es',
       publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
       about: condiciones.map(c => ({ '@type': 'MedicalCondition', name: pk(c, 'nombre') })) },
-    { '@context': 'https://schema.org', '@type': 'Dataset', name: 'Enfermedades genéticas con variante fundadora en Puerto Rico',
+    { '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com', encodingFormat: 'text/html' }, name: 'Enfermedades genéticas con variante fundadora en Puerto Rico',
       description: 'Mapa consolidado de enfermedades con mutación fundadora documentada en Puerto Rico (HPS-1, HPS-3, TBCK, RSPH4A, LGMD2C/SGCG, BRCA2), con región de concentración, prevalencia y fuente científica primaria.',
       url: CANON, inLanguage: 'es', license: 'https://creativecommons.org/licenses/by/4.0/',
       creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' } },
@@ -12802,7 +12806,7 @@ ${SHARE_COPY_SCRIPT}`
   const jsonLd = [
     { '@context': 'https://schema.org', '@type': 'WebPage', name: 'El ADN más valioso de EE.UU. y el dinero de ciencia que no llega a Puerto Rico', url: 'https://puertoricosinfiltros.com/investigacion', inLanguage: 'es',
       publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' } },
-    { '@context': 'https://schema.org', '@type': 'Dataset', name: 'Financiamiento NIH por estado de población similar, año fiscal 2024',
+    { '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com', encodingFormat: 'text/html' }, name: 'Financiamiento NIH por estado de población similar, año fiscal 2024',
       description: 'Financiamiento de los Institutos Nacionales de Salud (NIH) para Puerto Rico frente a estados de EE.UU. de población similar, en total y por persona, año fiscal 2024.',
       url: 'https://puertoricosinfiltros.com/investigacion', inLanguage: 'es', license: 'https://creativecommons.org/licenses/by/4.0/',
       creator: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
