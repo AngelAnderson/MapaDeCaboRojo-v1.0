@@ -3621,7 +3621,7 @@ async function handleCambios(req: any, res: any) {
 
 <div class="not-prose mt-4 flex flex-wrap gap-2 text-xs">
   <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-shield-halved"></i> ${total} verificados hoy</span>
-  <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-clock-rotate-left"></i> Última actualización: 13 julio 2026</span>
+  <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-clock-rotate-left"></i> Última actualización: 16 julio 2026</span>
 </div>
 
 <h2>Cómo empezó</h2>
@@ -3631,7 +3631,16 @@ async function handleCambios(req: any, res: any) {
 <h2>El récord</h2>
 <div class="not-prose space-y-4 mt-4">
   <div class="bg-white border-2 border-teal-300 rounded-xl p-5">
-    <div class="text-xs font-bold uppercase tracking-widest text-teal-700 mb-1">13 julio 2026 · Última actualización</div>
+    <div class="text-xs font-bold uppercase tracking-widest text-teal-700 mb-1">16 julio 2026 · Última actualización</div>
+    <p class="font-bold text-slate-900">5 categorías nuevas — una la pidió un vecino por texto.</p>
+    <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
+      <li><strong>Naturópatas (142)</strong> y <strong>acupunturistas (10)</strong> — medicina natural y alternativa, pedido real de un usuario del Veci.</li>
+      <li><strong>El cajón "dentista" se abrió:</strong> dentistas pediátricos (93), ortodoncistas (88) y cirujanos orales y maxilofaciales (52) ahora tienen su propia página.</li>
+    </ul>
+    <p class="text-sm text-slate-500 mt-2">280 proveedores nuevos + 105 reclasificados por su especialidad federal. 61 categorías en total.</p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-xl p-5">
+    <div class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">13 julio 2026</div>
     <p class="font-bold text-slate-900">La actualización más grande hasta la fecha: +14,368 proveedores y facilidades.</p>
     <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
       <li><strong>Dentistas (1,631)</strong> — por primera vez, todos los de PR, por pueblo.</li>
