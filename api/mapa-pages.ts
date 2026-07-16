@@ -273,6 +273,7 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <div class="max-w-4xl mx-auto px-4">
 <p class="text-base font-semibold text-teal-800 text-center">${isEn ? 'The verified registry of Puerto Rico medical specialists.' : 'El registro verificado de especialistas médicos de Puerto Rico.'}</p>
 <p class="text-xs text-slate-500 mt-1 text-center">${isEn ? 'Every name verified against the federal NPPES/CMS registry. By specialty, region, and town.' : 'Cada nombre verificado contra el registro federal NPPES/CMS. Por especialidad, región y pueblo.'}</p>
+<p class="mt-4 text-xs text-slate-500 text-center max-w-md mx-auto">${isEn ? 'RegistroMedicoPR.com does not guarantee appointments. It does not replace doctors, health plans, or the government. It does something more basic: so the next person does not have to start blind.' : 'RegistroMedicoPR.com no garantiza citas. No reemplaza a los médicos, a los planes ni al gobierno. Hace algo más básico: que la próxima persona no empiece a ciegas.'}</p>
 <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6 text-xs">
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">${isEn ? 'Find' : 'Busca'}</div><div class="flex flex-col gap-1.5 text-slate-500">
 <a href="/registro${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Find a specialist' : 'Buscar especialista'}</a>
