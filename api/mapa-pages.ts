@@ -35,6 +35,29 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
+// =============== In-memory per-IP rate limiter (best-effort, serverless-instance scoped) ===============
+// Not a durable/global limiter (each warm Vercel instance keeps its own map) — good enough to blunt
+// scripted abuse of search/form endpoints without adding infra. Self-cleans old buckets on each call
+// so it never grows unbounded within an instance's lifetime.
+const _rateBuckets = new Map<string, number[]>()
+function getClientIp(req: any): string {
+  return String(req.headers?.['x-forwarded-for'] || req.headers?.['x-real-ip'] || '').split(',')[0].trim().slice(0, 64) || 'unknown'
+}
+// Returns true if the request should be BLOCKED (over limit).
+function isRateLimited(key: string, limit: number, windowMs: number): boolean {
+  const now = Date.now()
+  const cutoff = now - windowMs
+  const hits = (_rateBuckets.get(key) || []).filter(t => t > cutoff)
+  if (hits.length >= limit) { _rateBuckets.set(key, hits); return true }
+  hits.push(now)
+  _rateBuckets.set(key, hits)
+  // Occasional cleanup so the map doesn't grow unbounded on long-lived warm instances.
+  if (_rateBuckets.size > 5000) {
+    for (const [k, v] of _rateBuckets) { if (!v.some(t => t > cutoff)) _rateBuckets.delete(k) }
+  }
+  return false
+}
+
 // Newsletter subscribe form — reusable across pages.
 // Native form submission with progressive enhancement via inline JS for fetch + inline status.
 function subscribeForm(source: string, opts?: { compact?: boolean; audience?: string }): string {
@@ -4092,10 +4115,18 @@ async function handleRegistroData(req: any, res: any) {
 async function handleRegistroSearch(req: any, res: any) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8')
   try {
-    const q = String(req.query.q || '').trim()
+    // Rate limit: 20 searches / 30s per IP — enough for real typing, blunt scripted scraping.
+    const ip = getClientIp(req)
+    if (isRateLimited(`registro-search:${ip}`, 20, 30_000)) {
+      res.status(429).send(JSON.stringify({ providers: [], error: 'rate_limited' })); return
+    }
+    // Cap input length before any processing — free-text field, no reason to accept megabytes.
+    const q = String(req.query.q || '').trim().slice(0, 80)
     if (q.length < 3) { res.status(200).send(JSON.stringify({ providers: [] })); return }
-    // strip PostgREST/ilike metacharacters so the pattern stays a literal substring
-    const safe = q.replace(/[%,()*]/g, ' ').trim()
+    // strip PostgREST/ilike metacharacters (including underscore, the single-char wildcard) so the
+    // pattern stays a literal substring — % , ( ) * _ all have meaning to ilike/PostgREST otherwise.
+    const safe = q.replace(/[%_,()*]/g, ' ').trim()
+    if (safe.length < 3) { res.status(200).send(JSON.stringify({ providers: [] })); return }
     const { data } = await supabase
       .from('places')
       .select('name,subcategory,municipality,phone,region,slug')
@@ -4453,14 +4484,26 @@ async function handlePlanReport(req: any, res: any) {
 // =============== Conserje intent capture (diáspora funnel, NO price on site) ===============
 // Captura de intención del home de registro. El doc de posicionamiento manda: "confirmar
 // realidad + capturar intención", sin precio. Angel hace follow-up por email/texto. 2026-06-30.
+// Strips characters with no legitimate use in a name/need/contact field but that matter in an
+// HTML/JS render context (<, >) — defense in depth alongside escapeHtml() at every render site.
+function stripAngleBrackets(s: string): string {
+  return s.replace(/[<>]/g, '').trim()
+}
+
 async function handleConserjeIntent(req: any, res: any) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8')
   try {
+    // Rate limit: 5 submits / 10min per IP — a real vecino fills this once, not repeatedly.
+    const ip = getClientIp(req)
+    if (isRateLimited(`conserje-intent:${ip}`, 5, 10 * 60_000)) {
+      res.status(429).send(JSON.stringify({ ok: false, error: 'rate_limited' })); return
+    }
     const b = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}')
-    const name = String(b.name || '').slice(0, 120).trim()
-    const email = String(b.email || '').slice(0, 160).trim()
-    const whatsapp = String(b.whatsapp || '').slice(0, 40).trim()
-    const need = String(b.need || '').slice(0, 1000).trim()
+    const name = stripAngleBrackets(String(b.name || '').slice(0, 120))
+    const emailRaw = String(b.email || '').slice(0, 160).trim()
+    const email = emailRaw && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(emailRaw) ? emailRaw : ''
+    const whatsapp = String(b.whatsapp || '').replace(/[^0-9+()\-\s]/g, '').slice(0, 40).trim()
+    const need = stripAngleBrackets(String(b.need || '').slice(0, 1000))
     // Necesita al menos un modo de contacto + algo de contexto
     if ((!email && !whatsapp) || (!need && !name)) { res.status(400).send(JSON.stringify({ ok: false })); return }
     await supabase.from('conserje_intent').insert({
@@ -4501,6 +4544,11 @@ WhatsApp: ${escapeHtml(whatsapp || '—')}</p>
 async function handleRegistroLead(req: any, res: any) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8')
   try {
+    // Rate limit: 10 submits / 10min per IP — bounds POST-spam of the insert path itself,
+    // independent of the existing per-IP email-send throttle below.
+    if (isRateLimited(`registro-lead:${getClientIp(req)}`, 10, 10 * 60_000)) {
+      res.status(429).send(JSON.stringify({ ok: false, error: 'rate_limited' })); return
+    }
     const b = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}')
     const email = String(b.email || '').slice(0, 160).trim().toLowerCase()
     if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { res.status(400).send(JSON.stringify({ ok: false })); return }
@@ -4518,7 +4566,7 @@ async function handleRegistroLead(req: any, res: any) {
     // ON CONFLICT DO NOTHING + select: returns the row ONLY if this request inserted it.
     const { data: inserted, error: upsertErr } = await supabase.from('registro_leads').upsert({
       email,
-      name: String(b.name || '').slice(0, 120).trim() || null,
+      name: stripAngleBrackets(String(b.name || '').slice(0, 120)) || null,
       region: String(b.region || '').slice(0, 40).trim() || null,
       lang: String(b.lang || 'es').slice(0, 5),
       wants_alerts: b.wants_alerts !== false,
