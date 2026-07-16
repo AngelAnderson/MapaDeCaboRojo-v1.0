@@ -4033,6 +4033,14 @@ async function handleRegistro(req: any, res: any) {
 })();
 </script>
 
+<div class="not-prose mt-10 mb-2">
+  <h2 class="text-xl font-bold text-slate-900 mb-1">${t('Por qué existe esto', 'Why this exists')}</h2>
+  <p class="text-sm text-slate-600 mb-4">${t('Nos dijeron en mayo que la cita era para octubre. Esta es la historia, en 3 minutos.', 'In May we were told the appointment would be in October. Here is the story, in 3 minutes.')}</p>
+  <div class="mx-auto" style="max-width:360px;aspect-ratio:9/16;">
+    <iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/4gu4-h8Ji7Q" title="Por qué existe RegistroMedicoPR" style="width:100%;height:100%;border:0;border-radius:16px;" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+  </div>
+</div>
+
 <h2 id="como-se-hizo">${t('Cómo se hizo (y por qué puedes confiar)', 'How it was made (and why you can trust it)')}</h2>
 <p>${t('Cada persona en este registro existe en el <strong>NPPES</strong> (National Plan and Provider Enumeration System), el registro oficial del gobierno federal de EE.UU. — el mismo que usan Medicare y los planes médicos. Tomamos solo <strong>proveedores individuales con práctica en Puerto Rico</strong>, por código de taxonomía (la especialidad oficial), y lo pusimos en español, por región. El <strong>NPI</strong> de cada uno es un número público que cualquiera puede verificar.', 'Every person in this registry exists in the <strong>NPPES</strong> (National Plan and Provider Enumeration System), the official US federal registry that Medicare and health plans use. We took only <strong>individual providers practicing in Puerto Rico</strong>, by taxonomy code (the official specialty), and organized them by region. Each <strong>NPI</strong> is a public number anyone can verify.')}</p>
 <p class="text-sm text-slate-600">${t('Lo que no encontrarás en ningún otro sitio: el gobierno tiene la data, pero enterrada, en inglés, sin organizar por pueblo. La pusimos clara, en un solo sitio, en español y por pueblo. Si ves un dato viejo o un especialista que ya no ejerce, dínoslo y se corrige — ', 'What you won\'t find anywhere else: the government has the data, but buried, in English, not organized by town. We made it clear, in one place, in Spanish and by town. See something outdated or a provider who no longer practices here? Tell us and we fix it — ')}<a href="mailto:angel@angelanderson.com" class="text-teal-600 hover:underline">angel@angelanderson.com</a>.</p>
