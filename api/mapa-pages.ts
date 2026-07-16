@@ -35,27 +35,31 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
-// =============== In-memory per-IP rate limiter (best-effort, serverless-instance scoped) ===============
-// Not a durable/global limiter (each warm Vercel instance keeps its own map) — good enough to blunt
-// scripted abuse of search/form endpoints without adding infra. Self-cleans old buckets on each call
-// so it never grows unbounded within an instance's lifetime.
-const _rateBuckets = new Map<string, number[]>()
+// =============== Per-IP rate limiter (Supabase-backed, shared across serverless instances) ===============
+// An in-memory-per-instance version was tried first and confirmed ineffective in prod: Vercel
+// spins a fresh lambda per request under any real burst (verified via distinct x-vercel-id per
+// call), so in-memory counters never accumulate. This uses the `mapa_rate_hits` table (migration
+// 20260716180000_mapa_rate_hits.sql, project vprjteqgmanntvisjrvp) as a shared counter instead:
+// one row inserted per request, counted within a rolling window, self-pruned by a 5-min cron.
 function getClientIp(req: any): string {
   return String(req.headers?.['x-forwarded-for'] || req.headers?.['x-real-ip'] || '').split(',')[0].trim().slice(0, 64) || 'unknown'
 }
-// Returns true if the request should be BLOCKED (over limit).
-function isRateLimited(key: string, limit: number, windowMs: number): boolean {
-  const now = Date.now()
-  const cutoff = now - windowMs
-  const hits = (_rateBuckets.get(key) || []).filter(t => t > cutoff)
-  if (hits.length >= limit) { _rateBuckets.set(key, hits); return true }
-  hits.push(now)
-  _rateBuckets.set(key, hits)
-  // Occasional cleanup so the map doesn't grow unbounded on long-lived warm instances.
-  if (_rateBuckets.size > 5000) {
-    for (const [k, v] of _rateBuckets) { if (!v.some(t => t > cutoff)) _rateBuckets.delete(k) }
+// Returns true if the request should be BLOCKED (over limit). Fails OPEN (allows the request)
+// if the rate-limit table itself is unreachable — a Supabase blip must not take down the
+// search/form endpoints entirely; the existing per-field length caps still bound the damage.
+async function isRateLimited(bucket: string, ip: string, limit: number, windowMs: number): Promise<boolean> {
+  try {
+    const since = new Date(Date.now() - windowMs).toISOString()
+    const { count, error } = await supabase.from('mapa_rate_hits')
+      .select('id', { count: 'exact', head: true })
+      .eq('bucket', bucket).eq('ip', ip).gte('created_at', since)
+    if (error) return false
+    if ((count ?? 0) >= limit) return true
+    await supabase.from('mapa_rate_hits').insert({ bucket, ip })
+    return false
+  } catch {
+    return false
   }
-  return false
 }
 
 // Newsletter subscribe form — reusable across pages.
@@ -4117,7 +4121,7 @@ async function handleRegistroSearch(req: any, res: any) {
   try {
     // Rate limit: 20 searches / 30s per IP — enough for real typing, blunt scripted scraping.
     const ip = getClientIp(req)
-    if (isRateLimited(`registro-search:${ip}`, 20, 30_000)) {
+    if (await isRateLimited('registro-search', ip, 20, 30_000)) {
       res.status(429).send(JSON.stringify({ providers: [], error: 'rate_limited' })); return
     }
     // Cap input length before any processing — free-text field, no reason to accept megabytes.
@@ -4495,7 +4499,7 @@ async function handleConserjeIntent(req: any, res: any) {
   try {
     // Rate limit: 5 submits / 10min per IP — a real vecino fills this once, not repeatedly.
     const ip = getClientIp(req)
-    if (isRateLimited(`conserje-intent:${ip}`, 5, 10 * 60_000)) {
+    if (await isRateLimited('conserje-intent', ip, 5, 10 * 60_000)) {
       res.status(429).send(JSON.stringify({ ok: false, error: 'rate_limited' })); return
     }
     const b = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}')
@@ -4546,7 +4550,7 @@ async function handleRegistroLead(req: any, res: any) {
   try {
     // Rate limit: 10 submits / 10min per IP — bounds POST-spam of the insert path itself,
     // independent of the existing per-IP email-send throttle below.
-    if (isRateLimited(`registro-lead:${getClientIp(req)}`, 10, 10 * 60_000)) {
+    if (await isRateLimited('registro-lead', getClientIp(req), 10, 10 * 60_000)) {
       res.status(429).send(JSON.stringify({ ok: false, error: 'rate_limited' })); return
     }
     const b = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}')
