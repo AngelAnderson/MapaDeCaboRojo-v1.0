@@ -46,6 +46,7 @@
     { "source": "/turismo", "destination": "/api/pages?page=turismo" },
     { "source": "/cultura", "destination": "/api/pages?page=cultura" },
     { "source": "/demanda", "destination": "/api/pages?page=demanda" },
+    { "source": "/carro", "destination": "/api/carro" },
     { "source": "/veci", "destination": "/api/pages?page=veci" },
     { "source": "/veci.vcf", "destination": "/api/pages?page=veci&vcf=1" },
     { "source": "/api/intelligence", "destination": "/api/pages?page=intelligence" },
