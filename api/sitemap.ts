@@ -188,7 +188,7 @@ export default async function handler(req: any, res: any) {
     });
 
     // Registro Médico PR — specialty + specialty×region HUB pages (224 list pages, strong SEO)
-    const SPEC_URLS = ['cardiologo','psiquiatra','fisiatra','ginecologo','pediatra','dermatologo','gastroenterologo','oftalmologo','ortopeda','neurologo','urologo','endocrinologo','nefrologo','neumologo','oncologo','reumatologo','geriatra','otorrinolaringologo','infectologo','alergista','medicina-de-emergencia','cirujano-general','anestesiologo','radiologo','neurocirujano','cirujano-plastico','cirujano-toracico','coloproctologo','manejo-de-dolor','psicologo','optometra','podiatra'];
+    const SPEC_URLS = ['cardiologo','psiquiatra','fisiatra','ginecologo','pediatra','dermatologo','gastroenterologo','oftalmologo','ortopeda','neurologo','urologo','endocrinologo','nefrologo','neumologo','oncologo','reumatologo','geriatra','otorrinolaringologo','infectologo','alergista','medicina-de-emergencia','cirujano-general','anestesiologo','radiologo','neurocirujano','cirujano-plastico','cirujano-toracico','coloproctologo','manejo-de-dolor','psicologo','optometra','podiatra','dentista','dentista-pediatrico','ortodoncista','cirujano-oral','naturopata','acupunturista'];
     const HUB_REGION_SLUGS = ['oeste','norte','centro','sur','este','metro'];
     SPEC_URLS.forEach((s) => {
       urls.push(`
