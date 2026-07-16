@@ -147,7 +147,7 @@ export default async function handler(req: any, res: any) {
     // Registro Médico PR — one page per verified specialist (NPPES). Paginate past the 1000-row cap.
     // Las 56 categorías del registro (Fase 2, jul 2026): 32 especialistas + dentista + primaria
     // + aliados + facilidades NPI-2. Excluye viejos negocios de salud de CR con NPI que no son del registro.
-    const SPECIALIST_SUBS = ['cardiólogo','psiquiatra','fisiatra','ginecólogo','pediatra','dermatólogo','gastroenterólogo','oftalmólogo','ortopeda','neurologo','urólogo','endocrinologo','nefrólogo','neumólogo','oncólogo','reumatólogo','geriatra','otorrinolaringólogo','infectólogo','alergista','medicina de emergencia','cirujano general','anestesiólogo','radiólogo','neurocirujano','cirujano plástico','cirujano torácico','coloproctólogo','manejo de dolor','psicólogo','optómetra','podiatra','dentista','internista','medicina de familia','terapeuta del habla','terapista físico','terapista ocupacional','quiropractico','consejero','trabajador social','terapeuta de familia','nutricionista','physician assistant','enfermera practicante','audiólogo','partera','farmacéutico','hospital','cuidado en el hogar','hospicio','hogar de envejecientes','centro de diálisis','urgent care','clínica comunitaria','dentista pediátrico','ortodoncista','cirujano oral','naturópata','acupunturista'];
+    const SPECIALIST_SUBS = ['cardiólogo','psiquiatra','fisiatra','ginecólogo','pediatra','dermatólogo','gastroenterólogo','oftalmólogo','ortopeda','neurologo','urólogo','endocrinologo','nefrólogo','neumólogo','oncólogo','reumatólogo','geriatra','otorrinolaringólogo','infectólogo','alergista','medicina de emergencia','cirujano general','anestesiólogo','radiólogo','neurocirujano','cirujano plástico','cirujano torácico','coloproctólogo','manejo de dolor','psicólogo','optómetra','podiatra','dentista','internista','medicina de familia','terapeuta del habla','terapista físico','terapista ocupacional','quiropractico','consejero','trabajador social','terapeuta de familia','nutricionista','physician assistant','enfermera practicante','audiólogo','partera','farmacéutico','hospital','cuidado en el hogar','hospicio','hogar de envejecientes','centro de diálisis','urgent care','clínica comunitaria','dentista pediátrico','ortodoncista','cirujano oral','naturópata','acupunturista','neonatólogo','cirujano vascular'];
     const specialists: any[] = [];
     // 25 pages × 1000 = 25,000 capacity (registry = ~20,600 providers; sitemap protocol cap is 50k/file).
     for (let page = 0; page < 25; page++) {
@@ -188,7 +188,8 @@ export default async function handler(req: any, res: any) {
     });
 
     // Registro Médico PR — specialty + specialty×region HUB pages (224 list pages, strong SEO)
-    const SPEC_URLS = ['cardiologo','psiquiatra','fisiatra','ginecologo','pediatra','dermatologo','gastroenterologo','oftalmologo','ortopeda','neurologo','urologo','endocrinologo','nefrologo','neumologo','oncologo','reumatologo','geriatra','otorrinolaringologo','infectologo','alergista','medicina-de-emergencia','cirujano-general','anestesiologo','radiologo','neurocirujano','cirujano-plastico','cirujano-toracico','coloproctologo','manejo-de-dolor','psicologo','optometra','podiatra','dentista','dentista-pediatrico','ortodoncista','cirujano-oral','naturopata','acupunturista'];
+    // Derivado de SPECIALIST_SUBS (single source) — mata el drift de listas hardcoded.
+    const SPEC_URLS = SPECIALIST_SUBS.map((x) => x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
     const HUB_REGION_SLUGS = ['oeste','norte','centro','sur','este','metro'];
     SPEC_URLS.forEach((s) => {
       urls.push(`
