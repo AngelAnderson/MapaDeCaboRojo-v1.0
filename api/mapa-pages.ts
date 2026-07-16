@@ -426,6 +426,37 @@ html.dark #rg-result [style*="background:#ecfdf5"]{background:#064e3b !important
 html.dark #rg-result [style*="background:#fffbeb"]{background:#451a03 !important;border-color:#b45309 !important;}
 html.dark #rg-result [style*="background:#fef2f2"]{background:#450a0a !important;border-color:#b91c1c !important;}
 html.dark #rg-search-result button[style]{background:#1e293b !important;border-color:#0f766e !important;color:#5eead4 !important;}
+/* Full-coverage dark overrides — every color token used by reg pages (audit 2026-07-16: dark-on-dark text) */
+html.dark .text-teal-600{color:#2dd4bf !important;}
+html.dark .text-teal-900{color:#99f6e4 !important;}
+html.dark .text-emerald-700,html.dark .text-emerald-600{color:#34d399 !important;}
+html.dark .text-emerald-900{color:#a7f3d0 !important;}
+html.dark .text-amber-600,html.dark .text-amber-500{color:#fbbf24 !important;}
+html.dark .text-red-800{color:#fca5a5 !important;}
+html.dark .text-red-500,html.dark .text-red-400{color:#f87171 !important;}
+html.dark .text-rose-800,html.dark .text-rose-700,html.dark .text-rose-600{color:#fda4af !important;}
+html.dark .text-blue-800,html.dark .text-blue-700,html.dark .text-blue-600{color:#93c5fd !important;}
+html.dark .text-sky-900,html.dark .text-sky-800,html.dark .text-sky-700,html.dark .text-sky-600{color:#7dd3fc !important;}
+html.dark .text-indigo-900,html.dark .text-indigo-800{color:#a5b4fc !important;}
+html.dark .text-purple-800{color:#d8b4fe !important;}
+html.dark .bg-slate-200{background-color:#334155 !important;}
+html.dark .bg-teal-100{background-color:#134e4a !important;}
+html.dark .bg-emerald-100{background-color:#064e3b !important;}
+html.dark .bg-amber-100{background-color:#451a03 !important;}
+html.dark .bg-rose-50,html.dark .bg-rose-100{background-color:#4c0519 !important;}
+html.dark .bg-blue-50{background-color:#172554 !important;}
+html.dark .bg-sky-50,html.dark .bg-sky-100{background-color:#082f49 !important;}
+html.dark .bg-indigo-50{background-color:#1e1b4b !important;}
+html.dark .bg-purple-100{background-color:#3b0764 !important;}
+html.dark .bg-fuchsia-50{background-color:#4a044e !important;}
+html.dark .border-rose-200{border-color:#be123c !important;}
+html.dark .border-blue-200{border-color:#1d4ed8 !important;}
+html.dark .border-sky-200{border-color:#0369a1 !important;}
+html.dark .border-indigo-200{border-color:#4338ca !important;}
+html.dark .border-purple-200{border-color:#7e22ce !important;}
+html.dark .border-emerald-300,html.dark .border-emerald-400{border-color:#047857 !important;}
+html.dark .border-amber-400,html.dark .border-amber-500{border-color:#b45309 !important;}
+html.dark [class*="from-teal-50"],html.dark [class*="from-amber-50"],html.dark [class*="from-brand-50"]{background-image:none !important;background-color:#1e293b !important;}
 </style>` : ''}
 ${jsonLd}
 </head>
