@@ -5141,6 +5141,26 @@ ${ratioSection}
 
 // =============== /espejo — El Espejo: cómo pedimos cuentas (público, registromedicopr.com) ===============
 async function handleEspejo(req: any, res: any) {
+  // La serie histórica en vivo — "el tiempo que nadie puede comprar" se publica, no se guarda
+  let serieHtml = ''
+  try {
+    const { data: snaps } = await supabase.from('registro_snapshots').select('snapshot_date,n,subcategory').neq('subcategory', '_total').range(0, 9999)
+    const byDate: Record<string, number> = {}
+    for (const r of (snaps || [])) byDate[(r as any).snapshot_date] = (byDate[(r as any).snapshot_date] || 0) + ((r as any).n || 0)
+    const dates = Object.keys(byDate).sort()
+    if (dates.length) {
+      const rows = dates.map((d, i) => {
+        const delta = i > 0 ? byDate[d] - byDate[dates[i - 1]] : null
+        const f = new Date(d + 'T12:00:00').toLocaleDateString('es-PR', { day: 'numeric', month: 'long', year: 'numeric' })
+        return `<tr class="border-t border-slate-100"><td class="py-2 px-3 text-slate-700">${f}</td><td class="py-2 px-3 text-right font-bold text-slate-900">${byDate[d].toLocaleString('en-US')}</td><td class="py-2 px-3 text-right ${delta === null ? 'text-slate-400' : delta >= 0 ? 'text-teal-700 font-bold' : 'text-red-600 font-bold'}">${delta === null ? 'línea base' : (delta >= 0 ? '+' : '') + delta.toLocaleString('en-US')}</td></tr>`
+      }).join('')
+      serieHtml = `
+<h2>La serie: lo que nadie puede comprar</h2>
+<p>Un directorio se copia en una tarde. Lo que no se puede copiar es la historia: cada medición queda grabada con fecha, y el próximo punto se toma automático el día 1 de cada mes. Cuando un médico deja de aceptar pacientes, un teléfono muere o una especialidad pierde gente, aquí queda el récord de cuándo.</p>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Medición</th><th class="py-2 px-3 text-right">Proveedores en el registro</th><th class="py-2 px-3 text-right">Cambio</th></tr></thead><tbody>${rows}</tbody></table></div>
+<p class="text-xs text-slate-500 mt-2">Cada punto guarda el detalle por pueblo y especialidad (2,000+ filas por medición). La pregunta que esta tabla va a contestar con los años: ¿Puerto Rico está ganando o perdiendo acceso a salud, pueblo por pueblo?</p>`
+    }
+  } catch { /* la página funciona sin la serie */ }
   const body = `
 <h1>🪞 El Espejo: cómo pedimos cuentas</h1>
 <p class="text-lg text-slate-600 mt-2">Un dato suelto se ignora. Dos datos cruzados, no. Esta página explica el método de este sitio: qué fuentes usamos, cómo las cruzamos, y por qué volvemos cada tres meses con el mismo número a preguntar si algo cambió.</p>
@@ -5164,6 +5184,8 @@ async function handleEspejo(req: any, res: any) {
   <li><strong>Dinero vs. recetas</strong> = la pregunta que tienes derecho a hacer: ¿el médico que más recibe de una farmacéutica es el que más receta su producto? No es acusación; es correlación publicada con el récord al lado.</li>
   <li><strong>Calidad vs. silencio</strong> = la decisión a ciegas. Las estrellas federales de cada hogar de envejecientes del oeste, puestas donde una familia las vea antes de decidir.</li>
 </ul>
+
+${serieHtml}
 
 <h2>Las reglas (pa' que esto ayude y no sea coraje suelto)</h2>
 <ul>
