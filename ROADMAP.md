@@ -4,7 +4,7 @@
 
 **Norte operativo:** cada pieza pasa El Filtro (¿convierte revolú en acción útil? ¿mueve dinero/paz/tiempo/comunidad/futuro?) y la regla 3-Pagos (no se construye SKU nuevo sin 3 clientes pagando).
 
-*Actualizado: 2026-07-09.*
+*Actualizado: 2026-07-18.*
 
 ---
 
@@ -17,6 +17,7 @@
 - **Registro médico:** 6,300+ especialistas verificados · 32 especialidades × 5 regiones · desiertos · observatorio
 - **Registro médico — capa de utilidad e intención (jul 8-9):** filtro "¿acepta mi plan?" (honesto: ✓ solo confirmado) · búsqueda por síntoma con guard 911 · 5 guías /necesito · checklist antes-de-llamar · botón WA a mami/papi · disclaimer canon · **semáforo /pueblo de los 78 municipios** (qué hay/qué falta/HPSA/datos citables) · alertas por pueblo con cron que cierra el loop (`registro_alerts`) · bilingüe ES/EN completo · nav desktop 3+Más · menú mobile hamburguesa · footer 4 columnas
 - **Ambient agents:** 15+ crons (digest 7am, canary, GSC pulse, watchdog de crons, learning gaps…)
+- **fabrica-seo — Tier 3+4 SEO (jul 18):** motor nocturno GSC → escribe títulos/meta mejorados (`places.seo_title/seo_description`, máx. 3/noche) como experimentos con baseline; a los 14d re-mide CTR y decide solo kept/revert. Cron `fabrica-seo-nightly` 4:45am AT · tabla `seo_experiments` · recibo en `nightly_receipts`. Páginas /negocio con fórmula CTR + FAQPage schema + "Abierto ahora" real (commit `acdccbf`).
 
 ---
 

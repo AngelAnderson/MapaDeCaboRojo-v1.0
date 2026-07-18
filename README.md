@@ -28,6 +28,10 @@ Cada récord junta data pública verificable + data propia del substrato, y cier
 
 Regla de data: todo per cápita sale de las vistas canónicas (`v_registro_muni_ratio` / `v_registro_muni_spec`), nunca de `places.region` crudo.
 
+## El motor SEO que se auto-repara (fabrica-seo)
+
+Cada noche (4:45am AT) la edge function `fabrica-seo` (repo Vecinoai) lee Search Console, encuentra páginas "borde de página 1" (posición 3-15, impresiones reales, CTR flojo) y escribe título/meta mejorados a `places.seo_title/seo_description` (máx. 3/noche). Cada cambio es un **experimento** en `seo_experiments` con baseline; a los 14 días el motor re-mide el CTR contra GSC y decide solo: se queda (`kept`) o **revierte automáticamente** (`reverted`). Recibo diario en `nightly_receipts` (routine `fabrica-seo`). Las páginas `/negocio` y `/farmacia` respetan los overrides; sin override usan la fórmula CTR (`Nombre en Pueblo · Teléfono, Horario y Dirección`) + FAQPage JSON-LD + badge "Abierto ahora" calculado en tiempo real (AST).
+
 ## El motor de demanda
 
 Demanda real medida por dos canales independientes y triangulada:
@@ -43,7 +47,7 @@ Vistas en Supabase: `v_demanda_oeste` (message-level, PII, **acceso solo service
 
 ## Para dueños de negocio
 
-Aparecer en el directorio verificado es **gratis** — [ponte en el mapa](https://wa.me/17874177711?text=Quiero%20mi%20negocio%20en%20el%20mapa). Destacarte tiene precio claro: [La Vitrina desde $40](https://caborojo.com/patrocina).
+Aparecer en el directorio verificado es **gratis** — [ponte en el mapa](https://wa.me/17874177711?text=Quiero%20mi%20negocio%20en%20el%20mapa). Destacarte tiene precio claro: [La Vitrina — $799/año](https://caborojo.com/patrocina).
 
 ---
 
