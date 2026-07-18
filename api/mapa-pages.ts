@@ -7880,6 +7880,14 @@ async function handleEsencia(req: any, res: any) {
   <p class="text-slate-300 mt-2 text-sm">Presentado como turístico; reportado como ~70% residencial. Controlado desde Londres. El DRNA lo rechazó; OGPe aprobó su Declaración de Impacto Ambiental con 46 condiciones.</p>
 </div>
 
+<div class="not-prose mt-5 bg-amber-50 border-2 border-amber-300 rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-amber-700 font-bold">Ahora mismo · julio 2026</p>
+  <p class="font-bold text-slate-800 mt-1">El proyecto entró en la fase de <strong>consulta de ubicación</strong> ante OGPe.</p>
+  <p class="text-sm text-slate-600 mt-2">El 16 de julio de 2026 vecinos de Boquerón reportaron rótulos anunciando la consulta. Es el paso donde OGPe decide si permite el proyecto en terrenos que hoy no son urbanizables: según la Coalición Defiende a Cabo Rojo, ~40% es Suelo Rústico Especialmente Protegido-Ecológico y ~50% Suelo Rústico bajo el Plan de Uso de Terrenos vigente. La coalición y el Comité PIP de Cabo Rojo exigen vistas públicas presenciales en Cabo Rojo (el Reglamento Conjunto 2023, secciones 2.1.10.1 y 2.2.3.19, contempla vistas que garanticen participación).</p>
+  <p class="text-sm text-slate-600 mt-2"><strong>Qué puede hacer un vecino:</strong> en una consulta de ubicación cualquier persona puede someter comentarios por escrito ante OGPe y participar en las vistas cuando se anuncien. El número de caso aparece en el rótulo puesto en el terreno; si le tomas foto, <a href="mailto:angel@angelanderson.com" class="text-teal-700 underline font-semibold">envíanosla</a> y lo publicamos aquí con las instrucciones pa' comentar.</p>
+  <p class="text-xs text-slate-400 mt-2">Fuente: <a href="https://noticel.com/en/ultima-hora/20260716/exigen-llevar-a-vistas-publicas-consulta-de-ubicacion-de-esencia/" target="_blank" rel="noopener" class="text-teal-700 underline">NotiCel, 16 jul 2026 ↗</a> · Comunicado Comité PIP Cabo Rojo, 17 jul 2026</p>
+</div>
+
 <div class="not-prose mt-5 bg-white border border-slate-200 rounded-2xl p-4">
   <p class="text-sm font-bold text-slate-700 mb-2">🎧 Escúchalo: "Lujo sin agua" — el expediente de Esencia en audio (dos voces, 15 min)</p>
   <audio controls preload="none" class="w-full" src="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/esencia-lujo-sin-agua.m4a">Tu navegador no puede reproducir el audio. <a href="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/esencia-lujo-sin-agua.m4a" class="text-teal-700 font-semibold">Descárgalo</a>.</audio>
