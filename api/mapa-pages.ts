@@ -2756,9 +2756,12 @@ const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:n
   {s:'cuidado en el hogar',l:'Cuidado en el Hogar (home health)',e:'🏠',kw:'HOGAR',md:false,org:true,t:203,r:{Oeste:27,Norte:16,Centro:3,Sur:30,Este:33,Metro:94}},
   {s:'hospicio',l:'Hospicio',e:'🕊️',kw:'HOSPICIO',md:false,org:true,t:72,r:{Oeste:13,Norte:12,Centro:2,Sur:6,Este:11,Metro:28}},
   {s:'hogar de envejecientes',l:'Hogar de Envejecientes (SNF)',e:'👴',kw:'ENVEJECIENTES',md:false,org:true,t:40,r:{Oeste:6,Norte:1,Centro:0,Sur:4,Este:7,Metro:22}},
-  {s:'centro de diálisis',l:'Centro de Diálisis',e:'🫘',kw:'DIALISIS',md:false,org:true,t:10,r:{Oeste:1,Norte:0,Centro:0,Sur:0,Este:2,Metro:7}},
+  {s:'centro de diálisis',l:'Centro de Diálisis',e:'🫘',kw:'DIALISIS',md:false,org:true,t:70,r:{Oeste:12,Norte:4,Centro:1,Sur:10,Este:16,Metro:27}},
   {s:'urgent care',l:'Urgent Care (urgencias)',e:'⏱️',kw:'URGENTE',md:false,org:true,t:58,r:{Oeste:12,Norte:8,Centro:2,Sur:8,Este:9,Metro:19}},
   {s:'clínica comunitaria',l:'Clínica Comunitaria (FQHC/330)',e:'🏘️',kw:'CLINICA',md:false,org:true,t:103,r:{Oeste:36,Norte:13,Centro:5,Sur:13,Este:11,Metro:25}},
+  {s:'laboratorio clínico',l:'Laboratorio Clínico (pruebas y análisis)',e:'🧪',kw:'LABORATORIO',md:false,org:true,t:1173,r:{Oeste:276,Norte:139,Centro:30,Sur:127,Este:176,Metro:425}},
+  {s:'radiología',l:'Radiología e Imágenes (rayos X, MRI, CT)',e:'🩻',kw:'RADIOGRAFIA',md:false,org:true,t:252,r:{Oeste:34,Norte:18,Centro:2,Sur:22,Este:29,Metro:147}},
+  {s:'ambulancia',l:'Ambulancia / Transporte Médico',e:'🚑',kw:'AMBULANCIA',md:false,org:true,t:877,r:{Oeste:232,Norte:129,Centro:45,Sur:102,Este:131,Metro:238}},
 ]
 
 const REG_PODCAST_URL = 'https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/especialistas-fantasma-desiertos.m4a'
