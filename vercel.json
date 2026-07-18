@@ -1,4 +1,3 @@
-
 {
   "trailingSlash": false,
   "crons": [
@@ -32,129 +31,505 @@
     }
   ],
   "rewrites": [
-    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
-    { "source": "/marca", "destination": "/api/marca" },
-    { "source": "/ia", "destination": "/api/ia" },
-    { "source": "/admin/salud", "destination": "/api/pages?page=admin-salud" },
-    { "source": "/admin/municipio", "destination": "/api/pages?page=admin-municipio" },
-    { "source": "/admin/lifecycle-queue", "destination": "/api/pages?page=admin-lifecycle-queue" },
-    { "source": "/evento/:slug", "destination": "/api/pages?page=evento&slug=:slug" },
-    { "source": "/me-conviene", "destination": "/api/pages?page=me-conviene" },
-    { "source": "/pueblo-en-numeros", "destination": "/api/pages?page=pueblo-en-numeros" },
-    { "source": "/sistema", "destination": "/api/pages?page=sistema" },
-    { "source": "/municipio", "destination": "/api/pages?page=municipio" },
-    { "source": "/turismo", "destination": "/api/pages?page=turismo" },
-    { "source": "/cultura", "destination": "/api/pages?page=cultura" },
-    { "source": "/demanda", "destination": "/api/pages?page=demanda" },
-    { "source": "/carro", "destination": "/api/carro" },
-    { "source": "/veci", "destination": "/api/pages?page=veci" },
-    { "source": "/veci.vcf", "destination": "/api/pages?page=veci&vcf=1" },
-    { "source": "/api/intelligence", "destination": "/api/pages?page=intelligence" },
-    { "source": "/negocio/:slug", "destination": "/api/negocio?slug=:slug" },
-    { "source": "/farmacia/:slug", "destination": "/api/farmacia?slug=:slug&type=farmacia" },
-    { "source": "/dentista/:slug", "destination": "/api/farmacia?slug=:slug&type=dentista" },
-    { "source": "/veterinario/:slug", "destination": "/api/farmacia?slug=:slug&type=veterinario" },
-    { "source": "/medico/:slug", "destination": "/api/farmacia?slug=:slug&type=medico" },
-    { "source": "/hospital/:slug", "destination": "/api/farmacia?slug=:slug&type=hospital" },
-    { "source": "/laboratorio/:slug", "destination": "/api/farmacia?slug=:slug&type=laboratorio" },
-    { "source": "/optica/:slug", "destination": "/api/farmacia?slug=:slug&type=optica" },
-    { "source": "/salud-mental/:slug", "destination": "/api/farmacia?slug=:slug&type=salud-mental" },
-    { "source": "/quiropractico/:slug", "destination": "/api/farmacia?slug=:slug&type=quiropractico" },
-    { "source": "/gimnasio/:slug", "destination": "/api/farmacia?slug=:slug&type=gimnasio" },
-    { "source": "/fisiatra/:slug", "destination": "/api/farmacia?slug=:slug&type=fisiatra" },
-    { "source": "/categoria/:cat", "destination": "/api/categoria?cat=:cat" },
-    { "source": "/playas/defensa-y-limpieza", "destination": "/api/mapa-pages?page=defensa-y-limpieza" },
-    { "source": "/acceso", "destination": "/api/mapa-pages?page=acceso" },
-    { "source": "/registro", "destination": "/api/mapa-pages?page=registro" },
-    { "source": "/pueblo", "destination": "/api/mapa-pages?page=pueblo" },
-    { "source": "/pueblo/:m", "destination": "/api/mapa-pages?page=pueblo&m=:m" },
-    { "source": "/necesito", "destination": "/api/mapa-pages?page=necesito" },
-    { "source": "/necesito/:intent", "destination": "/api/mapa-pages?page=necesito&intent=:intent" },
-    { "source": "/registro/desiertos", "destination": "/api/mapa-pages?page=registro-desiertos" },
-    { "source": "/espejo", "destination": "/api/mapa-pages?page=espejo" },
-    { "source": "/registro/mapa", "destination": "/api/mapa-pages?page=registro-mapa" },
-    { "source": "/registro/estado", "destination": "/api/mapa-pages?page=registro-estado" },
-    { "source": "/cambios", "destination": "/api/mapa-pages?page=cambios" },
-    { "source": "/raras", "destination": "/api/mapa-pages?page=raras" },
-    { "source": "/enfermedades-raras", "destination": "/api/mapa-pages?page=raras" },
-    { "source": "/atlas", "destination": "/api/mapa-pages?page=atlas" },
-    { "source": "/fundadoras", "destination": "/api/mapa-pages?page=atlas" },
-    { "source": "/comparte", "destination": "/api/mapa-pages?page=comparte" },
-    { "source": "/porque", "destination": "/api/mapa-pages?page=porque" },
-    { "source": "/recuperacion", "destination": "/api/mapa-pages?page=recuperacion" },
-    { "source": "/sinfiltros/pulso", "destination": "/api/mapa-pages?page=sinfiltros-pulso" },
-    { "source": "/notas", "destination": "/api/mapa-pages?page=boletin" },
-    { "source": "/boletin", "destination": "/api/mapa-pages?page=boletin" },
-    { "source": "/luz", "destination": "/api/mapa-pages?page=luz" },
-    { "source": "/basura", "destination": "/api/mapa-pages?page=basura" },
-    { "source": "/buscar", "destination": "/api/mapa-pages?page=buscar" },
-    { "source": "/prediccion", "destination": "/api/mapa-pages?page=prediccion" },
-    { "source": "/costo-de-vida", "destination": "/api/mapa-pages?page=costo-de-vida" },
-    { "source": "/trabajo", "destination": "/api/mapa-pages?page=trabajo" },
-    { "source": "/exposicion-ai", "destination": "/api/mapa-pages?page=exposicion-ai" },
-    { "source": "/rendimiento", "destination": "/api/mapa-pages?page=rendimiento" },
-    { "source": "/cupon", "destination": "/api/mapa-pages?page=cupon" },
-    { "source": "/credito-por-hijos", "destination": "/api/mapa-pages?page=cupon" },
-    { "source": "/demanda-real", "destination": "/api/mapa-pages?page=demanda-real" },
-    { "source": "/decidir", "destination": "/api/mapa-pages?page=decidir" },
-    { "source": "/historial", "destination": "/api/mapa-pages?page=historial" },
-    { "source": "/telemedicina", "destination": "/api/mapa-pages?page=telemedicina" },
-    { "source": "/no-se-mide", "destination": "/api/mapa-pages?page=no-se-mide" },
-    { "source": "/diabetes", "destination": "/api/mapa-pages?page=diabetes" },
-    { "source": "/sigue-el-dinero", "destination": "/api/mapa-pages?page=sigue-el-dinero" },
-    { "source": "/esencia", "destination": "/api/mapa-pages?page=esencia" },
-    { "source": "/expediente/:slug", "destination": "/api/mapa-pages?page=expediente&f=:slug" },
-    { "source": "/expediente", "destination": "/api/mapa-pages?page=expediente" },
-    { "source": "/sinfiltros", "destination": "/api/mapa-pages?page=sinfiltros" },
-    { "source": "/registro/:spec/:region", "destination": "/api/mapa-pages?page=registro-hub&spec=:spec&region=:region" },
-    { "source": "/registro/:spec", "destination": "/api/mapa-pages?page=registro-hub&spec=:spec" },
-    { "source": "/especialista/:slug", "destination": "/api/mapa-pages?page=especialista&slug=:slug" },
-    { "source": "/observatorio", "destination": "/api/mapa-pages?page=observatorio" },
-    { "source": "/registro-raras", "destination": "/api/mapa-pages?page=oer" },
-    { "source": "/oer", "destination": "/api/mapa-pages?page=oer" },
-    { "source": "/investigacion", "destination": "/api/mapa-pages?page=investigacion" },
-    { "source": "/prospecto", "destination": "/api/mapa-pages?page=prospecto" },
-    { "source": "/dossier", "destination": "/api/mapa-pages?page=prospecto" },
-    { "source": "/agua", "destination": "/api/mapa-pages?page=agua" },
-    { "source": "/activos", "destination": "/api/mapa-pages?page=activos" },
-    { "source": "/acueductos", "destination": "/api/mapa-pages?page=acueductos" },
-    { "source": "/transicion", "destination": "/api/mapa-pages?page=transicion" },
-    { "source": "/metodologia", "destination": "/api/mapa-pages?page=metodologia" },
-    { "source": "/contradicciones", "destination": "/api/mapa-pages?page=contradicciones" },
-    { "source": "/semaforo-fema", "destination": "/api/mapa-pages?page=semaforo-fema" },
-    { "source": "/rompelo", "destination": "/api/mapa-pages?page=rompelo" },
-    { "source": "/funciona", "destination": "/api/mapa-pages?page=funciona" },
-    { "source": "/retiro", "destination": "/api/mapa-pages?page=retiro" },
-    { "source": "/salud-que-falta", "destination": "/api/mapa-pages?page=salud-que-falta" },
-    { "source": "/huracan-lento", "destination": "/api/mapa-pages?page=retiro" },
-    { "source": "/promesas", "destination": "/api/mapa-pages?page=promesas" },
-    { "source": "/quien-responde", "destination": "/api/mapa-pages?page=quien-responde" },
-    { "source": "/quién-responde", "destination": "/api/mapa-pages?page=quien-responde" },
-    { "source": "/civico.json", "destination": "/api/mapa-pages?page=civico-json" },
-    { "source": "/mision", "destination": "/api/mapa-pages?page=mision" },
-    { "source": "/transparencia", "destination": "/api/mapa-pages?page=transparencia" },
-    { "source": "/equipo", "destination": "/api/mapa-pages?page=equipo" },
-    { "source": "/vision", "destination": "/api/mapa-pages?page=vision" },
-    { "source": "/moonshots", "destination": "/api/mapa-pages?page=moonshots" },
-    { "source": "/mira-la-vuelta", "destination": "/api/mapa-pages?page=mira-la-vuelta" },
-    { "source": "/pon-tu-negocio-en-el-mapa", "destination": "/api/mapa-pages?page=pon-tu-negocio-en-el-mapa" },
-    { "source": "/tienda", "destination": "/api/mapa-pages?page=tienda" },
-    { "source": "/senales-del-pueblo", "destination": "/api/mapa-pages?page=senales-del-pueblo" },
-    { "source": "/señales-del-pueblo", "destination": "/api/mapa-pages?page=senales-del-pueblo" },
-    { "source": "/menos-revolu", "destination": "/api/mapa-pages?page=menos-revolu" },
-    { "source": "/menos-revolú", "destination": "/api/mapa-pages?page=menos-revolu" },
-    { "source": "/preguntas", "destination": "/api/mapa-pages?page=preguntas" },
-    { "source": "/faq", "destination": "/api/mapa-pages?page=preguntas" },
-    { "source": "/historia", "destination": "/api/mapa-pages?page=historia" },
-    { "source": "/api/subscribe", "destination": "/api/mapa-pages?page=subscribe" },
-    { "source": "/llms.txt", "destination": "/api/public?action=llms" },
-    { "source": "/llms-full.txt", "destination": "/api/public?action=llms-full" },
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/clasico/index.html" }
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/marca",
+      "destination": "/api/marca"
+    },
+    {
+      "source": "/ia",
+      "destination": "/api/ia"
+    },
+    {
+      "source": "/admin/salud",
+      "destination": "/api/pages?page=admin-salud"
+    },
+    {
+      "source": "/admin/municipio",
+      "destination": "/api/pages?page=admin-municipio"
+    },
+    {
+      "source": "/admin/lifecycle-queue",
+      "destination": "/api/pages?page=admin-lifecycle-queue"
+    },
+    {
+      "source": "/evento/:slug",
+      "destination": "/api/pages?page=evento&slug=:slug"
+    },
+    {
+      "source": "/me-conviene",
+      "destination": "/api/pages?page=me-conviene"
+    },
+    {
+      "source": "/pueblo-en-numeros",
+      "destination": "/api/pages?page=pueblo-en-numeros"
+    },
+    {
+      "source": "/sistema",
+      "destination": "/api/pages?page=sistema"
+    },
+    {
+      "source": "/municipio",
+      "destination": "/api/pages?page=municipio"
+    },
+    {
+      "source": "/turismo",
+      "destination": "/api/pages?page=turismo"
+    },
+    {
+      "source": "/cultura",
+      "destination": "/api/pages?page=cultura"
+    },
+    {
+      "source": "/demanda",
+      "destination": "/api/pages?page=demanda"
+    },
+    {
+      "source": "/carro",
+      "destination": "/api/carro"
+    },
+    {
+      "source": "/veci",
+      "destination": "/api/pages?page=veci"
+    },
+    {
+      "source": "/veci.vcf",
+      "destination": "/api/pages?page=veci&vcf=1"
+    },
+    {
+      "source": "/api/intelligence",
+      "destination": "/api/pages?page=intelligence"
+    },
+    {
+      "source": "/negocio/:slug",
+      "destination": "/api/negocio?slug=:slug"
+    },
+    {
+      "source": "/farmacia/:slug",
+      "destination": "/api/farmacia?slug=:slug&type=farmacia"
+    },
+    {
+      "source": "/dentista/:slug",
+      "destination": "/api/farmacia?slug=:slug&type=dentista"
+    },
+    {
+      "source": "/veterinario/:slug",
+      "destination": "/api/farmacia?slug=:slug&type=veterinario"
+    },
+    {
+      "source": "/medico/:slug",
+      "destination": "/api/farmacia?slug=:slug&type=medico"
+    },
+    {
+      "source": "/hospital/:slug",
+      "destination": "/api/farmacia?slug=:slug&type=hospital"
+    },
+    {
+      "source": "/laboratorio/:slug",
+      "destination": "/api/farmacia?slug=:slug&type=laboratorio"
+    },
+    {
+      "source": "/optica/:slug",
+      "destination": "/api/farmacia?slug=:slug&type=optica"
+    },
+    {
+      "source": "/salud-mental/:slug",
+      "destination": "/api/farmacia?slug=:slug&type=salud-mental"
+    },
+    {
+      "source": "/quiropractico/:slug",
+      "destination": "/api/farmacia?slug=:slug&type=quiropractico"
+    },
+    {
+      "source": "/gimnasio/:slug",
+      "destination": "/api/farmacia?slug=:slug&type=gimnasio"
+    },
+    {
+      "source": "/fisiatra/:slug",
+      "destination": "/api/farmacia?slug=:slug&type=fisiatra"
+    },
+    {
+      "source": "/categoria/:cat",
+      "destination": "/api/categoria?cat=:cat"
+    },
+    {
+      "source": "/playas/defensa-y-limpieza",
+      "destination": "/api/mapa-pages?page=defensa-y-limpieza"
+    },
+    {
+      "source": "/acceso",
+      "destination": "/api/mapa-pages?page=acceso"
+    },
+    {
+      "source": "/registro",
+      "destination": "/api/mapa-pages?page=registro"
+    },
+    {
+      "source": "/pueblo",
+      "destination": "/api/mapa-pages?page=pueblo"
+    },
+    {
+      "source": "/pueblo/:m",
+      "destination": "/api/mapa-pages?page=pueblo&m=:m"
+    },
+    {
+      "source": "/necesito",
+      "destination": "/api/mapa-pages?page=necesito"
+    },
+    {
+      "source": "/necesito/:intent",
+      "destination": "/api/mapa-pages?page=necesito&intent=:intent"
+    },
+    {
+      "source": "/registro/desiertos",
+      "destination": "/api/mapa-pages?page=registro-desiertos"
+    },
+    {
+      "source": "/espejo",
+      "destination": "/api/mapa-pages?page=espejo"
+    },
+    {
+      "source": "/registro/mapa",
+      "destination": "/api/mapa-pages?page=registro-mapa"
+    },
+    {
+      "source": "/registro/estado",
+      "destination": "/api/mapa-pages?page=registro-estado"
+    },
+    {
+      "source": "/cambios",
+      "destination": "/api/mapa-pages?page=cambios"
+    },
+    {
+      "source": "/raras",
+      "destination": "/api/mapa-pages?page=raras"
+    },
+    {
+      "source": "/enfermedades-raras",
+      "destination": "/api/mapa-pages?page=raras"
+    },
+    {
+      "source": "/atlas",
+      "destination": "/api/mapa-pages?page=atlas"
+    },
+    {
+      "source": "/fundadoras",
+      "destination": "/api/mapa-pages?page=atlas"
+    },
+    {
+      "source": "/comparte",
+      "destination": "/api/mapa-pages?page=comparte"
+    },
+    {
+      "source": "/porque",
+      "destination": "/api/mapa-pages?page=porque"
+    },
+    {
+      "source": "/recuperacion",
+      "destination": "/api/mapa-pages?page=recuperacion"
+    },
+    {
+      "source": "/sinfiltros/pulso",
+      "destination": "/api/mapa-pages?page=sinfiltros-pulso"
+    },
+    {
+      "source": "/notas",
+      "destination": "/api/mapa-pages?page=boletin"
+    },
+    {
+      "source": "/boletin",
+      "destination": "/api/mapa-pages?page=boletin"
+    },
+    {
+      "source": "/luz",
+      "destination": "/api/mapa-pages?page=luz"
+    },
+    {
+      "source": "/basura",
+      "destination": "/api/mapa-pages?page=basura"
+    },
+    {
+      "source": "/buscar",
+      "destination": "/api/mapa-pages?page=buscar"
+    },
+    {
+      "source": "/prediccion",
+      "destination": "/api/mapa-pages?page=prediccion"
+    },
+    {
+      "source": "/costo-de-vida",
+      "destination": "/api/mapa-pages?page=costo-de-vida"
+    },
+    {
+      "source": "/trabajo",
+      "destination": "/api/mapa-pages?page=trabajo"
+    },
+    {
+      "source": "/exposicion-ai",
+      "destination": "/api/mapa-pages?page=exposicion-ai"
+    },
+    {
+      "source": "/rendimiento",
+      "destination": "/api/mapa-pages?page=rendimiento"
+    },
+    {
+      "source": "/cupon",
+      "destination": "/api/mapa-pages?page=cupon"
+    },
+    {
+      "source": "/credito-por-hijos",
+      "destination": "/api/mapa-pages?page=cupon"
+    },
+    {
+      "source": "/demanda-real",
+      "destination": "/api/mapa-pages?page=demanda-real"
+    },
+    {
+      "source": "/decidir",
+      "destination": "/api/mapa-pages?page=decidir"
+    },
+    {
+      "source": "/historial",
+      "destination": "/api/mapa-pages?page=historial"
+    },
+    {
+      "source": "/telemedicina",
+      "destination": "/api/mapa-pages?page=telemedicina"
+    },
+    {
+      "source": "/no-se-mide",
+      "destination": "/api/mapa-pages?page=no-se-mide"
+    },
+    {
+      "source": "/diabetes",
+      "destination": "/api/mapa-pages?page=diabetes"
+    },
+    {
+      "source": "/sigue-el-dinero",
+      "destination": "/api/mapa-pages?page=sigue-el-dinero"
+    },
+    {
+      "source": "/esencia",
+      "destination": "/api/mapa-pages?page=esencia"
+    },
+    {
+      "source": "/expediente/:slug",
+      "destination": "/api/mapa-pages?page=expediente&f=:slug"
+    },
+    {
+      "source": "/expediente",
+      "destination": "/api/mapa-pages?page=expediente"
+    },
+    {
+      "source": "/sinfiltros",
+      "destination": "/api/mapa-pages?page=sinfiltros"
+    },
+    {
+      "source": "/registro/:spec/:region",
+      "destination": "/api/mapa-pages?page=registro-hub&spec=:spec&region=:region"
+    },
+    {
+      "source": "/registro/:spec",
+      "destination": "/api/mapa-pages?page=registro-hub&spec=:spec"
+    },
+    {
+      "source": "/especialista/:slug",
+      "destination": "/api/mapa-pages?page=especialista&slug=:slug"
+    },
+    {
+      "source": "/observatorio",
+      "destination": "/api/mapa-pages?page=observatorio"
+    },
+    {
+      "source": "/registro-raras",
+      "destination": "/api/mapa-pages?page=oer"
+    },
+    {
+      "source": "/oer",
+      "destination": "/api/mapa-pages?page=oer"
+    },
+    {
+      "source": "/investigacion",
+      "destination": "/api/mapa-pages?page=investigacion"
+    },
+    {
+      "source": "/prospecto",
+      "destination": "/api/mapa-pages?page=prospecto"
+    },
+    {
+      "source": "/dossier",
+      "destination": "/api/mapa-pages?page=prospecto"
+    },
+    {
+      "source": "/agua",
+      "destination": "/api/mapa-pages?page=agua"
+    },
+    {
+      "source": "/activos",
+      "destination": "/api/mapa-pages?page=activos"
+    },
+    {
+      "source": "/acueductos",
+      "destination": "/api/mapa-pages?page=acueductos"
+    },
+    {
+      "source": "/transicion",
+      "destination": "/api/mapa-pages?page=transicion"
+    },
+    {
+      "source": "/metodologia",
+      "destination": "/api/mapa-pages?page=metodologia"
+    },
+    {
+      "source": "/contradicciones",
+      "destination": "/api/mapa-pages?page=contradicciones"
+    },
+    {
+      "source": "/semaforo-fema",
+      "destination": "/api/mapa-pages?page=semaforo-fema"
+    },
+    {
+      "source": "/rompelo",
+      "destination": "/api/mapa-pages?page=rompelo"
+    },
+    {
+      "source": "/funciona",
+      "destination": "/api/mapa-pages?page=funciona"
+    },
+    {
+      "source": "/retiro",
+      "destination": "/api/mapa-pages?page=retiro"
+    },
+    {
+      "source": "/salud-que-falta",
+      "destination": "/api/mapa-pages?page=salud-que-falta"
+    },
+    {
+      "source": "/huracan-lento",
+      "destination": "/api/mapa-pages?page=retiro"
+    },
+    {
+      "source": "/promesas",
+      "destination": "/api/mapa-pages?page=promesas"
+    },
+    {
+      "source": "/quien-responde",
+      "destination": "/api/mapa-pages?page=quien-responde"
+    },
+    {
+      "source": "/quién-responde",
+      "destination": "/api/mapa-pages?page=quien-responde"
+    },
+    {
+      "source": "/civico.json",
+      "destination": "/api/mapa-pages?page=civico-json"
+    },
+    {
+      "source": "/mision",
+      "destination": "/api/mapa-pages?page=mision"
+    },
+    {
+      "source": "/transparencia",
+      "destination": "/api/mapa-pages?page=transparencia"
+    },
+    {
+      "source": "/equipo",
+      "destination": "/api/mapa-pages?page=equipo"
+    },
+    {
+      "source": "/vision",
+      "destination": "/api/mapa-pages?page=vision"
+    },
+    {
+      "source": "/moonshots",
+      "destination": "/api/mapa-pages?page=moonshots"
+    },
+    {
+      "source": "/mira-la-vuelta",
+      "destination": "/api/mapa-pages?page=mira-la-vuelta"
+    },
+    {
+      "source": "/pon-tu-negocio-en-el-mapa",
+      "destination": "/api/mapa-pages?page=pon-tu-negocio-en-el-mapa"
+    },
+    {
+      "source": "/tienda",
+      "destination": "/api/mapa-pages?page=tienda"
+    },
+    {
+      "source": "/senales-del-pueblo",
+      "destination": "/api/mapa-pages?page=senales-del-pueblo"
+    },
+    {
+      "source": "/señales-del-pueblo",
+      "destination": "/api/mapa-pages?page=senales-del-pueblo"
+    },
+    {
+      "source": "/menos-revolu",
+      "destination": "/api/mapa-pages?page=menos-revolu"
+    },
+    {
+      "source": "/menos-revolú",
+      "destination": "/api/mapa-pages?page=menos-revolu"
+    },
+    {
+      "source": "/preguntas",
+      "destination": "/api/mapa-pages?page=preguntas"
+    },
+    {
+      "source": "/faq",
+      "destination": "/api/mapa-pages?page=preguntas"
+    },
+    {
+      "source": "/historia",
+      "destination": "/api/mapa-pages?page=historia"
+    },
+    {
+      "source": "/api/subscribe",
+      "destination": "/api/mapa-pages?page=subscribe"
+    },
+    {
+      "source": "/llms.txt",
+      "destination": "/api/public?action=llms"
+    },
+    {
+      "source": "/llms-full.txt",
+      "destination": "/api/public?action=llms-full"
+    },
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/clasico/index.html"
+    }
   ],
   "functions": {
     "api/*.ts": {
       "maxDuration": 60
     }
-  }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ]
 }
