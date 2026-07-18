@@ -3734,6 +3734,9 @@ async function handleCambios(req: any, res: any) {
   }))
 }
 
+// Última actualización del registro — UN solo sitio que editar (se muestra en home + /cambios)
+const REG_LAST_UPDATE = { es: '18 jul 2026', en: 'Jul 18, 2026' }
+
 async function handleRegistro(req: any, res: any) {
   const en = String(req.query.lang || '') === 'en'
   const t = (es: string, env: string) => en ? env : es
@@ -3776,7 +3779,7 @@ async function handleRegistro(req: any, res: any) {
 <div class="not-prose mt-3 flex flex-wrap gap-2 text-xs">
   <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-shield-halved"></i> ${t('NPI federal verificado', 'Federal NPI verified')}</span>
   <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-list-check"></i> ${REGISTRY_SPECS.length} ${t('especialidades', 'specialties')}</span>
-  <a href="/cambios" class="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1 rounded-full hover:border-teal-400"><i class="fa-solid fa-calendar-check"></i> ${t('Última actualización: 13 jul 2026 →', 'Last updated: Jul 13, 2026 →')}</a>
+  <a href="/cambios" class="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1 rounded-full hover:border-teal-400"><i class="fa-solid fa-calendar-check"></i> ${t(`Última actualización: ${REG_LAST_UPDATE.es} →`, `Last updated: ${REG_LAST_UPDATE.en} →`)}</a>
 </div>
 
 <div id="reg-tool" class="not-prose mt-5 bg-white border-2 border-teal-300 rounded-2xl p-6 shadow-sm scroll-mt-24">
