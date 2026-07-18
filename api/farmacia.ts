@@ -217,10 +217,15 @@ export default async function handler(req: any, res: any) {
   const localizedLabel       = (lang === 'en' && T.labelEn?.[type]) ? T.labelEn[type] : config.label;
   const localizedLabelPlural = (lang === 'en' && T.labelPluralEn?.[type]) ? T.labelPluralEn[type] : config.labelPlural;
   const nameAlreadyHasLabel = place.name.toLowerCase().includes(localizedLabel.toLowerCase());
-  const title       = nameAlreadyHasLabel ? `${placeName} — Cabo Rojo | MapaDeCaboRojo` : `${placeName} — ${T.titleSuffix(localizedLabel)}`;
-  const description = place.description
-    ? esc(place.description).slice(0, 160)
-    : T.descFallback(placeName, localizedLabel);
+  // seo_title/seo_description: overrides written by the fabrica-seo nightly engine (ES only)
+  const title       = (lang !== 'en' && place.seo_title)
+    ? esc(place.seo_title)
+    : nameAlreadyHasLabel ? `${placeName} — Cabo Rojo | MapaDeCaboRojo` : `${placeName} — ${T.titleSuffix(localizedLabel)}`;
+  const description = (lang !== 'en' && place.seo_description)
+    ? esc(place.seo_description).slice(0, 160)
+    : place.description
+      ? esc(place.description).slice(0, 160)
+      : T.descFallback(placeName, localizedLabel);
   const image       = place.image_url || 'https://mapadecaborojo.com/og-default.png';
   const hoursText   = formatHours(place.opening_hours);
   const openNow     = isCurrentlyOpen(place.opening_hours);
