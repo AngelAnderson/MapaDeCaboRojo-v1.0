@@ -5144,9 +5144,13 @@ async function handleEspejo(req: any, res: any) {
   // La serie histórica en vivo — "el tiempo que nadie puede comprar" se publica, no se guarda
   let serieHtml = ''
   try {
-    const { data: snaps } = await supabase.from('registro_snapshots').select('snapshot_date,n,subcategory').neq('subcategory', '_total').range(0, 9999)
     const byDate: Record<string, number> = {}
-    for (const r of (snaps || [])) byDate[(r as any).snapshot_date] = (byDate[(r as any).snapshot_date] || 0) + ((r as any).n || 0)
+    // paginar explícito — el cap de 1000 de PostgREST truncaba la serie (2K+ filas por medición)
+    for (let off = 0; off < 20000; off += 1000) {
+      const { data: snaps } = await supabase.from('registro_snapshots').select('snapshot_date,n,subcategory').neq('subcategory', '_total').range(off, off + 999)
+      for (const r of (snaps || [])) byDate[(r as any).snapshot_date] = (byDate[(r as any).snapshot_date] || 0) + ((r as any).n || 0)
+      if (!snaps || snaps.length < 1000) break
+    }
     const dates = Object.keys(byDate).sort()
     if (dates.length) {
       const rows = dates.map((d, i) => {
