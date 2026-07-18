@@ -71,6 +71,7 @@
     { "source": "/necesito", "destination": "/api/mapa-pages?page=necesito" },
     { "source": "/necesito/:intent", "destination": "/api/mapa-pages?page=necesito&intent=:intent" },
     { "source": "/registro/desiertos", "destination": "/api/mapa-pages?page=registro-desiertos" },
+    { "source": "/espejo", "destination": "/api/mapa-pages?page=espejo" },
     { "source": "/registro/mapa", "destination": "/api/mapa-pages?page=registro-mapa" },
     { "source": "/registro/estado", "destination": "/api/mapa-pages?page=registro-estado" },
     { "source": "/cambios", "destination": "/api/mapa-pages?page=cambios" },

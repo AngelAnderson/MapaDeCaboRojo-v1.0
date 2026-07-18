@@ -198,7 +198,7 @@ function layout(opts: {
 <p class="text-base font-semibold text-slate-800 text-center">El récord público de Puerto Rico. El dato, con la fuente al lado.</p>
 <p class="text-xs text-slate-500 mt-1 text-center">Verificado uno por uno contra registros federales y públicos. Sin spin, sin relleno. <a href="/rompelo" class="text-teal-700 font-semibold">¿Ves un error? Rómpelo →</a></p>
 <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6 text-xs">
-<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Salud</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a><a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a><a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a><a href="/telemedicina" class="hover:text-teal-700">Telemedicina</a><a href="/diabetes" class="hover:text-teal-700">Diabetes</a><a href="/registro-raras" class="hover:text-teal-700">Enfermedades raras</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Salud</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a><a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a><a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a><a href="/espejo" class="hover:text-teal-700">El Espejo</a><a href="/telemedicina" class="hover:text-teal-700">Telemedicina</a><a href="/diabetes" class="hover:text-teal-700">Diabetes</a><a href="/registro-raras" class="hover:text-teal-700">Enfermedades raras</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/rendimiento" class="hover:text-teal-700">Rendimiento del dólar</a><a href="/cupon" class="hover:text-teal-700">Dinero sin cobrar</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/exposicion-ai" class="hover:text-teal-700">Exposición a la IA</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a><a href="/investigacion" class="hover:text-teal-700">Dinero de ciencia</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Servicios</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/agua" class="hover:text-teal-700">Agua</a><a href="/acueductos" class="hover:text-teal-700">El recibo del agua</a><a href="/luz" class="hover:text-teal-700">Luz</a><a href="/basura" class="hover:text-teal-700">Basura</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">El pueblo</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/contradicciones" class="hover:text-teal-700">Contradicciones</a><a href="/transicion" class="hover:text-teal-700">Vistas de transición</a><a href="/funciona" class="hover:text-teal-700">Cuando funciona</a><a href="/semaforo-fema" class="hover:text-teal-700">Semáforo FEMA</a><a href="/demanda" class="hover:text-teal-700">Lo que busca PR</a><a href="/historial" class="hover:text-teal-700">Historial de promesas</a><a href="/promesas" class="hover:text-teal-700">Promesómetro</a><a href="/esencia" class="hover:text-teal-700">Proyecto Esencia</a><a href="/activos" class="hover:text-teal-700">Activos dormidos</a><a href="/retiro" class="hover:text-teal-700">El Huracán Lento</a><a href="/no-se-mide" class="hover:text-teal-700">Lo que ni se mide</a></div></div>
@@ -3738,6 +3738,13 @@ async function handleRegistro(req: any, res: any) {
     .in('subcategory', REGISTRY_SPECS.map(x => x.s))
   const totalVerified = (npiCount ?? 20618).toLocaleString('en-US')
 
+  // Pueblos pa'l buscador (v_health_munis evita el cap de 1000 filas)
+  let muniNames: string[] = []
+  try {
+    const { data: mdata } = await supabase.from('v_health_munis').select('municipality').limit(200)
+    muniNames = Array.from(new Set((mdata || []).map((r: any) => r.municipality).filter(Boolean)))
+  } catch { /* buscador funciona sin pueblos */ }
+
   const optionsHtml = REGISTRY_SPECS.map(x =>
     `<option value="${escapeHtml(x.s)}">${x.e} ${escapeHtml(en ? (SPEC_LABEL_EN[x.s] || x.l) : x.l)} (${x.t})</option>`).join('')
 
@@ -3967,6 +3974,7 @@ async function handleRegistro(req: any, res: any) {
   // --- Free-text search: symptom chips + specialty chips (instant) + provider names (debounced) ---
   var srch=document.getElementById('rg-search'),srchOut=document.getElementById('rg-search-result');
   var SYM=${JSON.stringify(SYMPTOM_MAP)};
+  var MUNIS=${JSON.stringify(muniNames)};
   function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');}
   function symChips(qn){
     if(qn.length<3)return '';
@@ -3989,6 +3997,26 @@ async function handleRegistro(req: any, res: any) {
       +(urgent?'<div style="font-size:12px;color:#b91c1c;font-weight:700;margin-top:8px;">⚠️ Si te dio de repente y fuerte, eso no espera cita: 911 o sala de emergencias primero.</div>':'')
       +'<div style="font-size:11px;color:#64748b;margin-top:6px;">Orientación general, no diagnóstico. Tu médico primario decide el referido.</div>'
       +'</div>';
+  }
+  function slugc(s){return norm(s).replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
+  function muniDetect(qn){
+    var hit=null;
+    MUNIS.forEach(function(m){var mn=norm(m);if(qn.indexOf(mn)>=0||(qn.length>=4&&mn.indexOf(qn)===0)){if(!hit||mn.length>norm(hit).length)hit=m;}});
+    return hit;
+  }
+  function muniChips(qn){
+    var m=muniDetect(qn);if(!m)return '';
+    var rest=qn.replace(norm(m),' ').replace(/\s+/g,' ').trim();
+    var specs=rest.length>=3?SPECS.filter(function(x){return norm(x.l).indexOf(rest)>=0||norm(x.s).indexOf(rest)>=0;}).slice(0,4):[];
+    if(!specs.length){
+      var POP=['internista','medicina de familia','pediatra','dentista','laboratorio clínico','farmacéutico'];
+      specs=POP.map(function(s){return SPECS.filter(function(z){return z.s===s;})[0];}).filter(Boolean);
+    }
+    return '<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;margin-bottom:10px;">'
+      +'<div style="font-size:13px;color:#92400e;font-weight:700;margin-bottom:7px;">📍 '+esc(m)+' — busca por pueblo:</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:6px;">'
+      +specs.map(function(x){return '<a href="/registro/'+slugc(x.s)+'/'+slugc(m)+'" style="background:#0f766e;border:1px solid #0f766e;color:#fff;font-weight:700;font-size:13px;padding:6px 13px;border-radius:999px;text-decoration:none;">'+x.e+' '+esc(x.l)+' en '+esc(m)+'</a>';}).join('')
+      +'</div></div>';
   }
   function specChips(qn){
     var hits=SPECS.filter(function(x){return norm(x.l).indexOf(qn)>=0||norm(x.s).indexOf(qn)>=0;}).slice(0,8);
@@ -4018,7 +4046,7 @@ async function handleRegistro(req: any, res: any) {
     var q=srch.value.trim(),qn=norm(q);
     clearTimeout(st);
     if(qn.length<2){srchOut.innerHTML='';return;}
-    var chips=symChips(qn)+specChips(qn);
+    var chips=muniChips(qn)+symChips(qn)+specChips(qn);
     srchOut.innerHTML=chips+(q.length>=3?'<div style="color:#64748b;font-size:14px;padding:6px 0;">Buscando "'+esc(q)+'"…</div>':'');
     bindJumps();
     if(q.length<3)return;
@@ -4027,10 +4055,10 @@ async function handleRegistro(req: any, res: any) {
         .then(function(r){return r.json();})
         .then(function(d){
           if(srch.value.trim()!==q)return; // stale response
-          srchOut.innerHTML=symChips(qn)+specChips(qn)+renderProviders((d&&d.providers)||[],d&&d.capped,q);
+          srchOut.innerHTML=muniChips(qn)+symChips(qn)+specChips(qn)+renderProviders((d&&d.providers)||[],d&&d.capped,q);
           bindJumps();
         })
-        .catch(function(){srchOut.innerHTML=symChips(qn)+specChips(qn)+'<div style="color:#dc2626;font-size:14px;">No se pudo buscar. Intenta de nuevo.</div>';bindJumps();});
+        .catch(function(){srchOut.innerHTML=muniChips(qn)+symChips(qn)+specChips(qn)+'<div style="color:#dc2626;font-size:14px;">No se pudo buscar. Intenta de nuevo.</div>';bindJumps();});
     },280);
   });
 })();
@@ -5106,6 +5134,59 @@ ${ratioSection}
     bodyHtml: body,
     jsonLd,
     ogImage: '/og/desiertos.png',
+    host: req.headers?.host,
+    canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
+// =============== /espejo — El Espejo: cómo pedimos cuentas (público, registromedicopr.com) ===============
+async function handleEspejo(req: any, res: any) {
+  const body = `
+<h1>🪞 El Espejo: cómo pedimos cuentas</h1>
+<p class="text-lg text-slate-600 mt-2">Un dato suelto se ignora. Dos datos cruzados, no. Esta página explica el método de este sitio: qué fuentes usamos, cómo las cruzamos, y por qué volvemos cada tres meses con el mismo número a preguntar si algo cambió.</p>
+
+<h2>Las 6 capas</h2>
+<p class="text-slate-600 -mt-2">Cada una contesta una pregunta distinta. Ninguna es opinión: todas son récord público, verificable por cualquiera.</p>
+<div class="not-prose mt-3 grid sm:grid-cols-2 gap-3">
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><div class="font-bold text-slate-900">1 · El papel</div><p class="text-sm text-slate-600 mt-1">El registro federal NPPES: quién existe oficialmente, con qué especialidad, dónde. Es la base de este sitio.</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><div class="font-bold text-slate-900">2 · La realidad</div><p class="text-sm text-slate-600 mt-1">Llamadas de verificación: ¿contesta el teléfono? ¿acepta pacientes nuevos? ¿cuánto tarda la cita? Lo que ningún directorio mide.</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><div class="font-bold text-slate-900">3 · La demanda</div><p class="text-sm text-slate-600 mt-1">Lo que los vecinos buscan de verdad, por el 787-417-7711 y por la web. Con fecha y sin nombres. Nadie más tiene este dato.</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><div class="font-bold text-slate-900">4 · El dinero</div><p class="text-sm text-slate-600 mt-1">Open Payments: cada pago de farmacéuticas a médicos de PR es récord federal público desde 2013. En 2024 fueron $7.4 millones.</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><div class="font-bold text-slate-900">5 · La calidad</div><p class="text-sm text-slate-600 mt-1">Las estrellas y las inspecciones federales de hospitales, hogares de envejecientes y centros de diálisis. Existen; casi nadie las mira antes de decidir.</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><div class="font-bold text-slate-900">6 · Lo que el gobierno ya sabe</div><p class="text-sm text-slate-600 mt-1">Las designaciones federales de escasez de médicos y los que se han ido de PR, con fecha. El récord de cuánto tiempo lleva esto siendo un problema conocido.</p></div>
+</div>
+
+<h2>Los cruces</h2>
+<p>Ahí está el espejo. Ejemplos:</p>
+<ul>
+  <li><strong>Papel vs. realidad</strong> = el directorio fantasma. Cuántos de los que aparecen listados de verdad contestan y aceptan pacientes.</li>
+  <li><strong>Papel vs. demanda</strong> = el desierto verdadero. No "cuántos hay", sino cuántos disponibles hay por cada persona que busca. Hoy: Cabo Rojo tiene 0 neumólogos, 0 centros de radiología y 0 centros de diálisis, y la gente los busca. <a href="/registro/desiertos" class="text-teal-600">Mira los desiertos →</a></li>
+  <li><strong>Dinero vs. recetas</strong> = la pregunta que tienes derecho a hacer: ¿el médico que más recibe de una farmacéutica es el que más receta su producto? No es acusación; es correlación publicada con el récord al lado.</li>
+  <li><strong>Calidad vs. silencio</strong> = la decisión a ciegas. Las estrellas federales de cada hogar de envejecientes del oeste, puestas donde una familia las vea antes de decidir.</li>
+</ul>
+
+<h2>Las reglas (pa' que esto ayude y no sea coraje suelto)</h2>
+<ul>
+  <li><strong>Cada pieza termina con qué puedes hacer HOY.</strong> El teléfono del que sí contesta, la clínica que atiende sin plan, la pregunta exacta pa' tu médico. Señalar sin dar salida es más ruido.</li>
+  <li><strong>Récord citado, cero adjetivos.</strong> El que queda mal es el número, no nosotros. Cada afirmación trae su fuente federal.</li>
+  <li><strong>La rendición de cuentas es la repetición.</strong> No es un artículo viral: es el mismo número, actualizado cada trimestre, preguntando "¿mejoró?". Cuando la respuesta es no, eso también se publica.</li>
+  <li><strong>Si un dato está malo, se corrige.</strong> Escríbenos y queda arreglado con nota de cuándo y por qué.</li>
+</ul>
+
+<div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
+  <p class="text-lg font-bold mb-1">¿Viste algo que no cuadra?</p>
+  <p class="text-sm text-teal-100 mb-4">Un médico que no aparece, un teléfono malo, un dato que conoces de primera mano. Eso alimenta el espejo. Escríbele al Veci al <strong>787-417-7711</strong>:</p>
+  <a href="https://wa.me/17874177711?text=ESPEJO" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ESPEJO</a>
+</div>
+<p class="text-xs text-slate-500 mt-6">Fuentes: NPPES/CMS (proveedores), CMS Open Payments (pagos), CMS Care Compare (calidad), HRSA (escasez). Todas federales, públicas y verificables. La capa de demanda es propia y anónima.</p>`
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'El Espejo: cómo pedimos cuentas — Registro Médico PR',
+    description: 'El método: 6 capas de récord público cruzadas (quién existe, quién contesta, qué busca la gente, quién paga, qué calidad hay, qué ya sabe el gobierno) y las reglas pa\' que ayude de verdad.',
+    slug: 'espejo',
+    bodyHtml: body,
+    jsonLd: [{ '@context': 'https://schema.org', '@type': 'WebPage', name: 'El Espejo: cómo pedimos cuentas', url: 'https://registromedicopr.com/espejo' }],
     host: req.headers?.host,
     canonicalHost: 'https://registromedicopr.com',
   }))
@@ -10796,6 +10877,27 @@ ${regDisclaimer(en)}`
   const noteHtml = info.note ? `<p class="text-sm text-slate-500 mt-1"><i class="fa-solid fa-circle-info text-teal-600"></i> ${escapeHtml(info.note)}</p>` : ''
   const breadcrumb = `<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro${lp}" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <a href="/registro/${specUrl}${lp}" class="hover:text-teal-700">${escapeHtml(label)}</a>${region ? ` <span class="text-slate-300">/</span> <span class="text-slate-700">${escapeHtml(region)}</span>` : ''}</nav>`
 
+  // Por pueblo (data-driven) — pa'l hub isla. Los pueblos son la unidad real de búsqueda
+  // (feedback Angel 2026-07-18: "los pueblos deben ser una mejor manera de identificar").
+  let townChips = ''
+  if (!region) {
+    try {
+      const muniCounts: Record<string, number> = {}
+      for (let off = 0; off < 4000; off += 1000) {
+        const { data: mrows } = await supabase.from('places').select('municipality')
+          .eq('subcategory', x.s).eq('category', 'HEALTH').not('npi', 'is', null).eq('status', 'open')
+          .range(off, off + 999)
+        for (const r of (mrows || [])) { if ((r as any).municipality) muniCounts[(r as any).municipality] = (muniCounts[(r as any).municipality] || 0) + 1 }
+        if (!mrows || mrows.length < 1000) break
+      }
+      const townsAll = Object.entries(muniCounts).sort((a, b) => b[1] - a[1])
+      const top = townsAll.slice(0, 30)
+      if (top.length) townChips = `<h2>${t('Por pueblo', 'By town')}</h2>
+<p class="text-slate-600 -mt-2">${t('Toca tu pueblo pa\' ver quién hay ahí mismo, con teléfono.', 'Tap your town to see who is right there, with phone numbers.')}</p>
+<div class="not-prose mt-3 flex flex-wrap gap-2">${top.map(([m, n]) => `<a href="/registro/${specUrl}/${specToUrl(m)}${lp}" class="inline-flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-sm hover:border-teal-400 hover:text-teal-700">${escapeHtml(m)} <span class="text-teal-700 font-black">${n}</span></a>`).join('')}${townsAll.length > 30 ? `<span class="text-xs text-slate-400 self-center">+${townsAll.length - 30} ${t('pueblos más', 'more towns')}</span>` : ''}</div>`
+    } catch { /* chips are optional */ }
+  }
+
   let body: string, title: string, description: string, answerFirst: string
   if (region) {
     answerFirst = regionCount > 0
@@ -10833,6 +10935,7 @@ ${noteHtml}
 <h2>${t('Por región', 'By region')}</h2>
 <p class="text-slate-600 -mt-2">${t('Cuántos hay en cada región. Toca una para ver la lista con teléfonos.', 'How many in each region. Tap one to see the list with phone numbers.')}</p>
 <div class="not-prose mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">${regionCards}</div>
+${townChips}
 <h2>${t(`Los ${total} ${escapeHtml(x.l.toLowerCase())} de Puerto Rico`, `All ${total} ${escapeHtml(labelLow)} in Puerto Rico`)}</h2>
 <div class="not-prose mt-2 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${thead}<tbody>${provRows}</tbody></table></div>
 ${providers.length >= 200 ? `<p class="text-xs text-slate-500 mt-2">${t('Mostrando los primeros 200. Usa las regiones de arriba para ver la lista completa de tu zona.', 'Showing the first 200. Use the regions above to see the full list for your area.')}</p>` : ''}`
@@ -13035,6 +13138,7 @@ export default async function handler(req: any, res: any) {
     case 'conserje-intent': return await handleConserjeIntent(req, res)
     case 'registro-lead': return await handleRegistroLead(req, res)
     case 'registro-desiertos': return await handleRegistroDesiertos(req, res)
+    case 'espejo': return await handleEspejo(req, res)
     case 'registro-mapa': return await handleRegistroMapa(req, res)
     case 'registro-estado': return await handleRegistroEstado(req, res)
     case 'raras': return await handleRaras(req, res)
