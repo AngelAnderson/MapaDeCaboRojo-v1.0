@@ -64,6 +64,15 @@ const VeciHero: React.FC<Props> = ({ places, onSelectPlace, onClose, onShowNumer
       const data = await res.json();
       setReply(data.reply || null);
       setResults(Array.isArray(data.results) ? data.results.slice(0, 3) : []);
+      // Telemetry: search + zero-hits are decision data (web-veci also logs to
+      // demand_signals server-side; this adds the frontend/GA layer)
+      try {
+        fetch('/api/public?action=log-search', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ q: clean, hits: data.resultCount ?? 0, source: 'clasico-hero' }),
+        });
+        (window as any).gtag?.('event', 'veci_ask', { search_term: clean, results: data.resultCount ?? 0 });
+      } catch { /* never block UX on telemetry */ }
     } catch {
       setError(true);
     } finally {

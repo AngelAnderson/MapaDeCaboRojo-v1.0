@@ -444,6 +444,8 @@ export default async function handler(req: any, res: any) {
   const action = (req.query.action as string || 'places').toLowerCase();
 
   switch (action) {
+    case 'log-search':
+      return handleLogSearch(req, res);
     case 'llms':
       return handleLlms(req, res);
     case 'llms-full':
@@ -456,6 +458,22 @@ export default async function handler(req: any, res: any) {
     default:
       return handlePlaces(req, res);
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ACTION: log-search  (frontend search telemetry — every search on the 3D home /
+// classic SPA lands in api_logs so zero-hit queries become decision data instead
+// of disappearing. Views: v_mapa_search_log / v_mapa_search_gaps.)
+// ═══════════════════════════════════════════════════════════════════════════════
+async function handleLogSearch(req: any, res: any) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
+  const body = req.body || {};
+  const q = String(body.q || '').trim().slice(0, 120);
+  const hits = Number.isFinite(+body.hits) ? Math.max(0, Math.min(9999, +body.hits)) : null;
+  const source = /^[a-z0-9_-]{1,24}$/.test(String(body.source || '')) ? body.source : 'unknown';
+  if (q.length < 2) return res.status(400).json({ error: 'q too short' });
+  await logApiCall(`search:${source}`, 'POST', q, req.headers['user-agent'] as string, req.headers['x-forwarded-for'] as string, hits);
+  return res.status(204).end();
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

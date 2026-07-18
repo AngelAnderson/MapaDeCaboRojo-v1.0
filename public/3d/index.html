@@ -421,10 +421,21 @@ function flyToPlace(f){
 
 // ===== search =====
 const sEl=document.getElementById('search'), rEl=document.getElementById('results');
+// Telemetría: el query FINAL (debounce 1.2s) va a api_logs + GA4. Los cero-hits
+// son la data de decisión (qué busca la gente que el mapa no tiene).
+let _logT=null;
+function logSearch(q,hits,source){
+  clearTimeout(_logT);
+  _logT=setTimeout(()=>{
+    try{fetch('/api/public?action=log-search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q,hits,source})});}catch(_){}
+    try{if(typeof gtag==='function')gtag('event','search',{search_term:q,results:hits,source});}catch(_){}
+  },1200);
+}
 sEl.addEventListener('input',()=>{
   const q=norm(sEl.value.trim());
   if(q.length<2){rEl.style.display='none';return;}
   const hits=FEATS.filter(f=>f.properties._s.includes(q)).sort((a,b)=>(b.properties.f||0)-(a.properties.f||0)||(b.properties.r-a.properties.r)).slice(0,8);
+  logSearch(sEl.value.trim(),hits.length,'home3d');
   rEl.innerHTML = hits.length? hits.map(f=>{
     const p=f.properties, st=openState(p.h);
     return `<div class="res" data-i="${FEATS.indexOf(f)}"><div class="rn">${p.n} ${p.f?'<span class="badge f">RECOMENDADO</span>':''}</div><div class="rm">${p.r>0?'★ '+p.r+' · ':''}${(CATS[p.c]||{}).l}${st?` · <span class="${st.open?'op':'cl'}">${st.open?'abierto':'cerrado'}</span>`:''}</div></div>`;
@@ -434,6 +445,7 @@ sEl.addEventListener('input',()=>{
 // Enter = ask the real Veci engine (same brain as *7711 — synonyms, sponsors, curación)
 sEl.addEventListener('keydown',e=>{ if(e.key==='Enter'&&sEl.value.trim().length>=2){e.preventDefault();askVeci(sEl.value.trim());} });
 async function askVeci(q){
+  try{if(typeof gtag==='function')gtag('event','veci_ask',{search_term:q});}catch(_){}
   rEl.innerHTML='<div class="res rm">El Veci está buscando…</div>'; rEl.style.display='block';
   try{
     const res=await fetch('https://vprjteqgmanntvisjrvp.supabase.co/functions/v1/web-veci',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q})});
@@ -447,6 +459,8 @@ async function askVeci(q){
   }
 }
 rEl.addEventListener('click',e=>{
+  const tel=e.target.closest('a[href^="tel:"]');
+  if(tel){try{if(typeof gtag==='function')gtag('event','tel_click',{phone:tel.getAttribute('href').slice(4),search_term:sEl.value.trim()});}catch(_){}return;}
   if(e.target.closest('#ask-veci')){askVeci(sEl.value.trim());return;}
   const d=e.target.closest('.res'); if(!d||!d.dataset.i) return;
   rEl.style.display='none'; sEl.value='';
@@ -464,6 +478,7 @@ const INTENT_META={
   eventos:{t:'📅 Próximos eventos'}
 };
 document.querySelectorAll('.chip[data-int]').forEach(ch=>{
+  ch.addEventListener('click',()=>{try{if(typeof gtag==='function')gtag('event','chip_click',{intent:ch.dataset.int});}catch(_){}});
   ch.onclick=()=>selectIntent(curIntent===ch.dataset.int?null:ch.dataset.int);
 });
 document.getElementById('c-open').onclick=function(){
