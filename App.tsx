@@ -24,6 +24,7 @@ const AlertSubscribeModal = lazy(() => import('./components/AlertSubscribeModal'
 const SubmitEventModal = lazy(() => import('./components/SubmitEventModal'));
 const CommandMenu = lazy(() => import('./components/CommandMenu'));
 import PuebloEnNumeros from './components/PuebloEnNumeros';
+import VeciHero from './components/VeciHero';
 // DemandFeed removed from homepage May 19 (Angel: not useful). Component still in /components.
 import AudienceToggle from './components/AudienceToggle';
 import { isFresh } from './utils/freshness';
@@ -67,6 +68,8 @@ const MainApp: React.FC = () => {
   // Hero "Cabo Rojo en Números": session-only dismiss (no localStorage).
   // Refresh brings it back — Angel flagged that persisting dismiss hid the moat data permanently.
   const [showHero, setShowHero] = useState<boolean>(true);
+  // 'veci' = the answering hero (default); 'numeros' = the stats view (reachable from the hero)
+  const [heroView, setHeroView] = useState<'veci' | 'numeros'>('veci');
   const [audienceMode, setAudienceModeState] = useState<AudienceMode>(() => getAudienceMode());
   const handleAudienceChange = React.useCallback((m: AudienceMode) => {
     setAudienceModeState(m);
@@ -404,10 +407,19 @@ const MainApp: React.FC = () => {
         {/* Constrained between top floating pill and the BottomNav (~6rem). Section scrolls internally if content overflows. */}
         {activeTab === 'map' && showHero && !loading && publishedPlaces.length > 0 && (
           <div className="absolute inset-x-3 md:left-1/2 md:right-auto md:-translate-x-1/2 top-44 md:top-32 bottom-28 md:bottom-24 z-[1450] md:w-[640px] max-w-[calc(100vw-1.5rem)] pointer-events-auto animate-slide-up flex flex-col">
-            <PuebloEnNumeros
-              places={publishedPlaces}
-              onClose={dismissHero}
-            />
+            {heroView === 'veci' ? (
+              <VeciHero
+                places={publishedPlaces}
+                onSelectPlace={handleMarkerSelect}
+                onClose={dismissHero}
+                onShowNumeros={() => setHeroView('numeros')}
+              />
+            ) : (
+              <PuebloEnNumeros
+                places={publishedPlaces}
+                onClose={dismissHero}
+              />
+            )}
           </div>
         )}
 

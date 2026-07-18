@@ -139,7 +139,7 @@
     <div><b id="st-v">0</b>verificados 90d</div>
   </div>
   <div id="searchwrap">
-    <input id="search" type="text" placeholder="Busca: pizza, plomero, Tino's, Boquerón..." autocomplete="off">
+    <input id="search" type="text" placeholder="¿Qué necesitas resolver hoy? plomero, pizza, médico…" autocomplete="off">
     <div id="results"></div>
   </div>
 </div>
@@ -428,10 +428,26 @@ sEl.addEventListener('input',()=>{
   rEl.innerHTML = hits.length? hits.map(f=>{
     const p=f.properties, st=openState(p.h);
     return `<div class="res" data-i="${FEATS.indexOf(f)}"><div class="rn">${p.n} ${p.f?'<span class="badge f">RECOMENDADO</span>':''}</div><div class="rm">${p.r>0?'★ '+p.r+' · ':''}${(CATS[p.c]||{}).l}${st?` · <span class="${st.open?'op':'cl'}">${st.open?'abierto':'cerrado'}</span>`:''}</div></div>`;
-  }).join('') : `<div class="res"><a href="${VECI(sEl.value.trim())}" target="_blank" style="color:#25D366;text-decoration:none;font-weight:700">No está en el mapa todavía. Textea "${sEl.value.trim()}" al Veci →</a></div>`;
+  }).join('') : `<div class="res" id="ask-veci" style="color:#2dd4bf;font-weight:700">💬 Pregúntale al Veci aquí mismo →</div>`;
   rEl.style.display='block';
 });
+// Enter = ask the real Veci engine (same brain as *7711 — synonyms, sponsors, curación)
+sEl.addEventListener('keydown',e=>{ if(e.key==='Enter'&&sEl.value.trim().length>=2){e.preventDefault();askVeci(sEl.value.trim());} });
+async function askVeci(q){
+  rEl.innerHTML='<div class="res rm">El Veci está buscando…</div>'; rEl.style.display='block';
+  try{
+    const res=await fetch('https://vprjteqgmanntvisjrvp.supabase.co/functions/v1/web-veci',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q})});
+    const d=await res.json();
+    const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const rows=(d.results||[]).slice(0,3).map(r=>`<div class="res"><div class="rn">${esc(r.name)} ${r.sponsor?'<span class="badge f">RECOMENDADO</span>':''}${r.verified?' <span style="color:#34d399;font-size:10px;font-weight:800">✓ verificado</span>':''}</div><div class="rm">${r.address?esc(r.address)+' · ':''}${r.phone?`<a href="tel:${esc(r.phone)}" style="color:#2dd4bf;font-weight:700;text-decoration:none">📞 ${esc(r.phone)}</a>`:''}</div></div>`).join('');
+    const first=esc((d.reply||'').split('\n')[0]);
+    rEl.innerHTML=(rows||`<div class="res rm">${first||'No lo tengo claro todavía.'}</div>`)+`<div class="res"><a href="${VECI(q)}" target="_blank" style="color:#25D366;text-decoration:none;font-weight:700">💬 Sigue la conversación con el Veci por WhatsApp →</a></div>`;
+  }catch(_){
+    rEl.innerHTML=`<div class="res"><a href="${VECI(q)}" target="_blank" style="color:#25D366;text-decoration:none;font-weight:700">Se trabó la búsqueda — textea "${q}" al Veci →</a></div>`;
+  }
+}
 rEl.addEventListener('click',e=>{
+  if(e.target.closest('#ask-veci')){askVeci(sEl.value.trim());return;}
   const d=e.target.closest('.res'); if(!d||!d.dataset.i) return;
   rEl.style.display='none'; sEl.value='';
   flyToPlace(FEATS[+d.dataset.i]);
