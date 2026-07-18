@@ -7895,6 +7895,7 @@ async function handleEsencia(req: any, res: any) {
 </div>
 
 <div class="not-prose mt-4 flex flex-wrap gap-2 text-xs">
+  <a href="#citables" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">📋 Datos citables</a>
   <a href="#numeros" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Los números</a>
   <a href="#proscons" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Lo mejor de cada lado</a>
   <a href="#termometro" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">El termómetro (196 voces)</a>
@@ -7916,6 +7917,30 @@ ${contradiccionInline({
   fuentes: [['CPI — créditos turísticos a proyecto ~70% residencial', 'https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/'], ['La carta de la AAA (sección del agua, abajo)', '#agua']],
   brecha: '$498M garantizados al proyecto · 0 empleos garantizados al pueblo',
 })}
+
+${(() => {
+  const CITABLES_ESENCIA: Array<[string, string, string]> = [
+    ['La Compañía de Turismo aprobó ~$498 millones en créditos contributivos turísticos para el proyecto Esencia en Cabo Rojo — un proyecto reportado como ~70% residencial (1,132 residencias vs 520 unidades de hotel).', 'CPI, octubre 2025', 'https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/'],
+    ['La propia AAA informó por carta (26 sep 2024) que la Planta de Filtros Betances no tiene capacidad para suplir la demanda de agua de Esencia, estimada en 1.25 a 2 millones de galones por día. En junio 2026 lo reiteró.', 'Carta AAA vía CPI · NotiCel, 18 jun 2026', 'https://noticel.com/noticias/20260618/aaa-carece-de-la-capacidad-para-suplir-la-demanda-de-agua-requerida-por-esencia/'],
+    ['Esencia recibió además una exención de ~90% en contribuciones sobre la propiedad (CRIM) por 10 años, más exenciones estatales y municipales.', 'CPI, octubre 2025', 'https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/'],
+    ['Según la Coalición Defiende a Cabo Rojo, ~40% de los terrenos de Esencia son Suelo Rústico Especialmente Protegido-Ecológico y ~50% Suelo Rústico — no urbanizables bajo el Plan de Uso de Terrenos vigente. La consulta de ubicación ante OGPe se anunció con rótulos en julio 2026.', 'NotiCel, 16 jul 2026', 'https://noticel.com/en/ultima-hora/20260716/exigen-llevar-a-vistas-publicas-consulta-de-ubicacion-de-esencia/'],
+    ['El DRNA rechazó el proyecto Esencia en septiembre 2025. En diciembre 2025, OGPe aprobó su Declaración de Impacto Ambiental con 46 condiciones adicionales.', 'El Nuevo Día, dic 2025', 'https://www.elnuevodia.com/noticias/locales/notas/avanza-esencia-ogpe-aprueba-declaracion-de-impacto-ambiental-del-megaproyecto-en-cabo-rojo/'],
+    ['El Tribunal de Apelaciones determinó en octubre 2025 que la notificación del DRNA sobre la certificación de deslinde de Esencia fue "defectuosa e inadecuada".', 'Récord judicial, oct 2025', 'https://puertoricosinfiltros.com/esencia'],
+    ['No existe cláusula contractual que obligue la creación de los 2,000 empleos prometidos por Esencia: si no llegan, los ~$498M en créditos no se devuelven.', 'CPI, octubre 2025', 'https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/'],
+    ['El Senado de Puerto Rico aprobó dos medidas de investigación sobre el proyecto Esencia el 31 de marzo de 2026.', 'Metro PR, 31 mar 2026', 'https://www.metro.pr/noticias/2026/03/31/senado-aprueba-dos-medidas-de-investigacion-sobre-proyecto-esencia-en-cabo-rojo/'],
+  ]
+  const cards = CITABLES_ESENCIA.map(([dato, fuente, url]) => {
+    const copyText = `${dato} (Fuente: ${fuente} — ${url}. Récord completo: puertoricosinfiltros.com/esencia)`
+    return `<div class="bg-white border border-slate-200 rounded-xl p-4 flex items-start justify-between gap-3">
+      <div><p class="text-sm text-slate-700 m-0">${escapeHtml(dato)}</p>
+      <p class="text-xs text-slate-400 mt-1.5 mb-0">Fuente: <a href="${escapeHtml(url)}" target="_blank" rel="noopener" class="text-teal-700 underline">${escapeHtml(fuente)} ↗</a></p></div>
+      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="${escapeHtml(copyText)}"><i class="fa-regular fa-copy"></i> Copiar</button>
+    </div>`
+  }).join('')
+  return `<h2 id="citables">📋 Datos citables — copia y pega con la fuente incluida</h2>
+<p>Cada dato sale con su fuente y el link al récord. Úsalo en un grupo de FB, un chat, una columna, o donde haga falta. Copiar no es opinar: es citar.</p>
+<div class="not-prose flex flex-col gap-2 mt-3">${cards}</div>`
+})()}
 
 <h2 id="numeros">Qué es, en números</h2>
 <div class="not-prose grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
@@ -8060,6 +8085,21 @@ ${items || '<p class="text-sm text-slate-400 italic">Data no disponible ahora.</
   <a href="https://youtu.be/6jlNJt87rDM" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Dra. Dimaris Acosta Mercado: análisis científico del peligro ambiental</a>
   <a href="https://youtu.be/OoRZA-pWciU" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Javier O. Torres: por qué la agricultura del suroeste está en riesgo</a>
   <a href="https://youtu.be/g0Aw5aD_rf4" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Reniel Rodríguez Ramos: la amenaza a sitios arqueológicos</a>
+</div>
+
+<h3 class="mt-6">La videoteca del expediente</h3>
+<p class="text-sm text-slate-600">Más voces en récord — expertos, funcionarios y los dos lados. Cada video es fuente primaria de esta página:</p>
+<div class="not-prose flex flex-col gap-2 mt-3">
+  <a href="https://youtu.be/yUXgf0wzTrs" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ El proyecto Esencia explicado por un geólogo — caliza, la urbanización más grande de PR, y ~100 sitios taínos en el terreno</a>
+  <a href="https://youtu.be/HvPKlXI6tBM" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Pozos, permisos y créditos — $497M sin un solo permiso, y el aviso cuya dirección era una tienda en Boquerón</a>
+  <a href="https://youtu.be/Ndw3ukIvhhQ" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Túbal Padilla Galiano (abogado ambiental) sobre Esencia</a>
+  <a href="https://youtu.be/_XmdnivWhu4" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Lo que pocos saben del proyecto Esencia — el embalse, los ecosistemas, el informe oficial</a>
+  <a href="https://youtu.be/N8sc3t9upnQ" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Esencia: lo que no te dijeron — la compilación</a>
+  <a href="https://youtu.be/Ub_W1BmgeE0" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Un desarrollo multimillonario en Cabo Rojo — el cuadro general</a>
+  <a href="https://youtu.be/3HVutYUMlMw" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ ¿Cementar nuestras costas? — el argumento crítico</a>
+  <a href="https://youtu.be/W9LznI4_KS8" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Pros y contras ambientales del proyecto en Boquerón — los dos lados</a>
+  <a href="https://youtu.be/85V_v2cBj1s" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Alcalde de Cabo Rojo: "Esencia es un reto y una oportunidad" — la voz a favor, en récord</a>
+  <a href="https://youtu.be/e7OzVGbIpO0" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Alcalde de San Germán apoya el proyecto — la visión regional a favor</a>
 </div>
 
 <h2>Lo que falta — y lo que se pide por escrito</h2>
