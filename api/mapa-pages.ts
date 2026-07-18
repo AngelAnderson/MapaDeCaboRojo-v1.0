@@ -3653,7 +3653,7 @@ async function handleCambios(req: any, res: any) {
 
 <div class="not-prose mt-4 flex flex-wrap gap-2 text-xs">
   <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-shield-halved"></i> ${total} verificados hoy</span>
-  <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-clock-rotate-left"></i> Última actualización: 16 julio 2026</span>
+  <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-clock-rotate-left"></i> Última actualización: 18 julio 2026</span>
 </div>
 
 <h2>Cómo empezó</h2>
@@ -3663,7 +3663,17 @@ async function handleCambios(req: any, res: any) {
 <h2>El récord</h2>
 <div class="not-prose space-y-4 mt-4">
   <div class="bg-white border-2 border-teal-300 rounded-xl p-5">
-    <div class="text-xs font-bold uppercase tracking-widest text-teal-700 mb-1">16 julio 2026 · Última actualización</div>
+    <div class="text-xs font-bold uppercase tracking-widest text-teal-700 mb-1">18 julio 2026 · Última actualización</div>
+    <p class="font-bold text-slate-900">Las facilidades que faltaban + el registro ahora se navega por pueblo.</p>
+    <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
+      <li><strong>4 categorías nuevas, isla completa:</strong> laboratorios clínicos (1,173), ambulancias y transporte médico (877), radiología e imágenes (252), y los centros de diálisis subieron de 10 a 70.</li>
+      <li><strong>Por pueblo:</strong> cada categoría ahora muestra sus pueblos con el número real, y el buscador entiende tu municipio ("laboratorio cabo rojo" te lleva directo).</li>
+      <li><strong><a href="/espejo" class="text-teal-700">El Espejo</a>:</strong> publicamos el método y la serie histórica — cada medición queda grabada con fecha, la próxima se toma automática el día 1.</li>
+    </ul>
+    <p class="text-sm text-slate-500 mt-2">+2,677 facilidades nuevas. 65 categorías en total.</p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-xl p-5">
+    <div class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">16 julio 2026</div>
     <p class="font-bold text-slate-900">5 categorías nuevas — una la pidió un vecino por texto.</p>
     <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
       <li><strong>Naturópatas (142)</strong> y <strong>acupunturistas (10)</strong> — medicina natural y alternativa, pedido real de un usuario del Veci.</li>
@@ -3708,7 +3718,7 @@ async function handleCambios(req: any, res: any) {
   res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600')
   res.status(200).send(layout({
     title: 'Historial y roadmap · Registro Médico PR',
-    description: `Récord de cada actualización del registro médico verificado de Puerto Rico. Última: 13 julio 2026 — 56 categorías, ${total} proveedores y facilidades verificados contra NPPES.`,
+    description: `Récord de cada actualización del registro médico verificado de Puerto Rico. Última: 18 julio 2026 — 65 categorías, ${total} proveedores y facilidades verificados contra NPPES.`,
     slug: 'cambios',
     ogImage: '/og/registro.png',
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
@@ -3718,7 +3728,7 @@ async function handleCambios(req: any, res: any) {
       '@context': 'https://schema.org', '@type': 'WebPage',
       url: 'https://registromedicopr.com/cambios',
       name: 'Historial y roadmap · Registro Médico PR',
-      dateModified: '2026-07-13', inLanguage: 'es',
+      dateModified: '2026-07-18', inLanguage: 'es',
       description: 'Historial de actualizaciones del registro médico verificado de Puerto Rico.',
     },
   }))
@@ -3772,7 +3782,7 @@ async function handleRegistro(req: any, res: any) {
 <div id="reg-tool" class="not-prose mt-5 bg-white border-2 border-teal-300 rounded-2xl p-6 shadow-sm scroll-mt-24">
   <label class="block">
     <span class="text-sm font-bold text-slate-700"><i class="fa-solid fa-magnifying-glass text-teal-600"></i> ${t('Busca por nombre o especialidad', 'Search by name or specialty')}</span>
-    <input id="rg-search" type="search" autocomplete="off" placeholder="${t('El nombre de tu médico, \'cardiólogo\', o lo que sientes: \'me falta el aire\'…', 'Your doctor\'s name, \'cardiologist\', or what you feel: \'chest pain\'…')}" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-base">
+    <input id="rg-search" type="search" autocomplete="off" aria-label="Busca tu médico, especialidad, pueblo o síntoma" placeholder="${t('El nombre de tu médico, \'cardiólogo\', o lo que sientes: \'me falta el aire\'…', 'Your doctor\'s name, \'cardiologist\', or what you feel: \'chest pain\'…')}" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-base">
   </label>
   <div id="rg-search-result" class="mt-3"></div>
   <div class="flex items-center gap-3 my-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -13057,12 +13067,12 @@ async function handleProspecto(req: any, res: any) {
     'Puerto Rico is the U.S. jurisdiction with the most rare diseases, driven by a founder effect (64% European, 21% African, 15% Taíno ancestry). At least 6 diseases have a documented Puerto Rico-specific founder variant. It is, in effect, a natural genetics laboratory. Map: registromedicopr.com/atlas',
     'Puerto Rico has only 2 clinical geneticists (M.D.) who diagnose patients, nearly all in the metro area, and the central mountain region where founder mutations concentrate has zero. (Federal NPPES registry, Jul 2026) registromedicopr.com/raras',
     'Puerto Rico and Iowa have the same population (3.2M). In FY2024 the NIH invested $249M in Iowa and $90M in Puerto Rico. PR receives less research funding per capita ($28) than Mississippi, the poorest U.S. state, despite having the nation\'s most valuable founder-effect population. (NIH RePORTER) puertoricosinfiltros.com/investigacion',
-    'The infrastructure a research or funding team would normally spend a year building already exists, verified against federal sources: a map of 6 founder diseases by town, a registry of 20,000+ NPPES-verified providers and facilities across 56 categories, and real demand signals. registromedicopr.com/prospecto',
+    'The infrastructure a research or funding team would normally spend a year building already exists, verified against federal sources: a map of 6 founder diseases by town, a registry of 20,000+ NPPES-verified providers and facilities across 65 categories, and real demand signals. registromedicopr.com/prospecto',
   ] : [
     'Puerto Rico es la jurisdicción de EE.UU. con más enfermedades raras, por un efecto fundador (64% ascendencia europea, 21% africana, 15% taína). Al menos 6 enfermedades tienen una variante fundadora propia de Puerto Rico documentada. Es, de hecho, un laboratorio natural de genética. Mapa: registromedicopr.com/atlas',
     'Puerto Rico tiene solo 2 genetistas clínicos (M.D.) que diagnostican pacientes, casi todos en el área metro, y la región central montañosa donde se concentran las mutaciones fundadoras tiene cero. (Registro federal NPPES, jul 2026) registromedicopr.com/raras',
     'Puerto Rico e Iowa tienen la misma población (3.2M). En el año fiscal 2024 el NIH invirtió $249M en Iowa y $90M en Puerto Rico. PR recibe menos financiamiento de investigación por persona ($28) que Mississippi, el estado más pobre, pese a tener la población founder-effect más valiosa de la nación. (NIH RePORTER) puertoricosinfiltros.com/investigacion',
-    'La infraestructura que un equipo de investigación o de fondos normalmente tomaría un año en construir ya existe, verificada contra fuentes federales: un mapa de 6 enfermedades fundadoras por pueblo, un registro de 20,000+ proveedores y facilidades verificados contra NPPES en 56 categorías, y señales de demanda reales. registromedicopr.com/prospecto',
+    'La infraestructura que un equipo de investigación o de fondos normalmente tomaría un año en construir ya existe, verificada contra fuentes federales: un mapa de 6 enfermedades fundadoras por pueblo, un registro de 20,000+ proveedores y facilidades verificados contra NPPES en 65 categorías, y señales de demanda reales. registromedicopr.com/prospecto',
   ]
   const citasHtml = citas.map(t => `
     <div class="not-prose flex gap-3 items-start bg-white border border-slate-200 rounded-xl p-4 mb-2.5">
@@ -13093,7 +13103,7 @@ async function handleProspecto(req: any, res: any) {
 <p>${te('Lo que un equipo de investigación o de fondos normalmente pasa un año construyendo, aquí ya está construido y verificado contra el registro federal NPPES:', 'What a research or funding team normally spends a year building is already built here, verified against the federal NPPES registry:')}</p>
 <ul class="text-slate-700">
   <li>${te('<strong>El Atlas de fundadoras</strong> — 6 condiciones por pueblo, con prevalencia y fuente científica primaria.', '<strong>The founder-disease Atlas</strong> — 6 conditions by town, with prevalence and primary scientific source.')}</li>
-  <li>${te('<strong>El registro médico</strong> — 20,000+ proveedores y facilidades verificados contra el registro federal NPPES, en 56 categorías, por especialidad y municipio.', '<strong>The medical registry</strong> — 20,000+ providers and facilities verified against the federal NPPES registry, across 56 categories, by specialty and municipality.')}</li>
+  <li>${te('<strong>El registro médico</strong> — 20,000+ proveedores y facilidades verificados contra el registro federal NPPES, en 65 categorías, por especialidad y municipio.', '<strong>The medical registry</strong> — 20,000+ providers and facilities verified against the federal NPPES registry, across 65 categories, by specialty and municipality.')}</li>
   <li>${te('<strong>El semáforo de los 78 municipios</strong> — dónde hay capacidad y dónde no, granular a nivel pueblo.', '<strong>The 78-municipality health map</strong> — where there is capacity and where there is not, at town granularity.')}</li>
   <li>${te('<strong>Señales de demanda reales</strong> — qué busca la gente y no encuentra, del bot local *7711.', '<strong>Real demand signals</strong> — what people search for and do not find, from the local *7711 line.')}</li>
 </ul>

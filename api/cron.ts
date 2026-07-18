@@ -502,7 +502,7 @@ async function runRegistroQc(res: any) {
   if (cms.error) flags.push(`🟡 refresh CMS falló: ${cms.error}`);
 
   const summary = `🩺 **Registro Médico PR — QC mensual** (${runDate})\n\n` +
-    `- Total verificado (56 categorías): **${(total || 0).toLocaleString('en-US')}**\n` +
+    `- Total verificado (65 categorías): **${(total || 0).toLocaleString('en-US')}**\n` +
     `- Disparidad ancla: Loíza ${loiza?.por_10k_hab ?? '?'}/10k · San Juan ${sj?.por_10k_hab ?? '?'}/10k → ${disparidadOk ? '✅ intacta' : '🔴 ROTA'}\n` +
     `- Dedup: ${deduped} nuevo(s) duplicado(s) marcado(s) este mes · Estrellas CMS: ${cms.updated} actualizada(s), ${cmsRated || 0} facilidades calificadas\n` +
     `- Sin slug: ${nullSlug || 0} · sin región: ${nullRegion || 0} · sin embedding: ${nullEmbed || 0}\n\n` +
