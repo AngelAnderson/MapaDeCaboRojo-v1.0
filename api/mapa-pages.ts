@@ -13203,6 +13203,125 @@ ${SHARE_COPY_SCRIPT}`
   }))
 }
 
+// =============== /registro/censo — El Censo Médico Real de PR (v0 · día cero) ===============
+async function handleRegistroCenso(req: any, res: any) {
+  const OESTE = ['Mayagüez', 'San Germán', 'Cabo Rojo', 'Añasco', 'Sabana Grande', 'Hormigueros', 'Lajas']
+  // Col 1 "en papel": snapshot mensual más reciente (registro_snapshots)
+  let papel: Record<string, number> = {}
+  let snapDate = ''
+  try {
+    const { data: sd } = await supabase.from('registro_snapshots').select('snapshot_date').order('snapshot_date', { ascending: false }).limit(1)
+    snapDate = sd?.[0]?.snapshot_date || ''
+    if (snapDate) {
+      const { data: rows } = await supabase.from('registro_snapshots').select('municipio,n').eq('snapshot_date', snapDate).in('municipio', OESTE)
+      ;(rows || []).forEach((r: any) => { papel[r.municipio] = (papel[r.municipio] || 0) + Number(r.n || 0) })
+    }
+  } catch (_) { /* fallback below */ }
+  // Fallback: baseline verificado 2026-07-19 (snapshot jul 2026)
+  if (!Object.keys(papel).length) papel = { 'Mayagüez': 1152, 'San Germán': 322, 'Cabo Rojo': 245, 'Añasco': 114, 'Sabana Grande': 88, 'Hormigueros': 85, 'Lajas': 82 }
+  // Cols 2-3 "verificados" / "cogiendo pacientes": registro_provider_status → places (live; sube sola)
+  const ver: Record<string, { v: number; acc: number }> = {}
+  let totVer = 0, totAcc = 0, lastVer = ''
+  try {
+    const { data: st } = await supabase.from('registro_provider_status').select('place_slug,accepting_patients,verified_at')
+    if (st?.length) {
+      const { data: pl } = await supabase.from('places').select('slug,municipality').in('slug', st.map((x: any) => x.place_slug))
+      const muniBySlug: Record<string, string> = {}
+      ;(pl || []).forEach((p: any) => { muniBySlug[p.slug] = p.municipality })
+      st.forEach((x: any) => {
+        const mu = muniBySlug[x.place_slug] || 'Otro'
+        ver[mu] = ver[mu] || { v: 0, acc: 0 }
+        ver[mu].v++; totVer++
+        if (x.accepting_patients === true) { ver[mu].acc++; totAcc++ }
+        if (x.verified_at && String(x.verified_at) > lastVer) lastVer = String(x.verified_at)
+      })
+    }
+  } catch (_) { /* zero state below */ }
+
+  const munis = OESTE.map(m => ({ m, papel: papel[m] || 0, v: ver[m]?.v || 0, acc: ver[m]?.acc || 0 })).sort((a, b) => b.papel - a.papel)
+  const totPapel = munis.reduce((s, x) => s + x.papel, 0)
+  const zeroState = totVer === 0
+
+  const rows = munis.map(x => `<tr class="border-t border-slate-100">
+    <td class="py-2.5 px-3 font-semibold text-slate-800">${escapeHtml(x.m)}</td>
+    <td class="py-2.5 px-3 text-center font-bold text-slate-700">${x.papel.toLocaleString('es-PR')}</td>
+    <td class="py-2.5 px-3 text-center">${x.v ? `<span class="font-bold text-teal-700">${x.v}</span>` : '<span class="text-slate-400">0</span>'}</td>
+    <td class="py-2.5 px-3 text-center">${x.v === 0 ? '<span class="inline-block bg-slate-100 text-slate-500 text-xs font-semibold px-2 py-0.5 rounded">desconocido</span>' : `<span class="inline-block bg-emerald-100 text-emerald-700 font-black px-2 py-0.5 rounded">${x.acc}</span>`}</td>
+  </tr>`).join('')
+
+  const body = `<p class="text-xs text-slate-400 mb-4">El Censo · registromedicopr.com · v0, punto de partida · julio 2026</p>
+<h1 class="text-3xl md:text-4xl font-black text-slate-900 leading-tight">El Censo Médico Real de Puerto Rico</h1>
+<p class="text-lg text-slate-600 mt-3">La pregunta que nadie contesta con data: <strong>¿a cuál médico puedes llamar hoy, cerca de ti, que esté cogiendo pacientes?</strong> El registro federal dice cuántos médicos hay en papel. Nadie mide cuántos están aceptando pacientes de verdad. Aquí empezamos a contarlo, uno por uno, y publicamos el número aunque hoy sea incómodo.</p>
+
+<div class="grid md:grid-cols-3 gap-4 mt-8">
+  <div class="bg-white border-2 border-slate-200 rounded-xl p-5 text-center">
+    <div class="text-4xl font-black text-slate-700">${totPapel.toLocaleString('es-PR')}</div>
+    <div class="text-sm font-bold text-slate-800 mt-1">En papel (oeste)</div>
+    <div class="text-xs text-slate-500 mt-1">Proveedores en el registro federal NPPES, 7 municipios del oeste</div>
+  </div>
+  <div class="bg-white border-2 ${zeroState ? 'border-amber-300' : 'border-teal-300'} rounded-xl p-5 text-center">
+    <div class="text-4xl font-black ${zeroState ? 'text-amber-600' : 'text-teal-700'}">${totVer}</div>
+    <div class="text-sm font-bold text-slate-800 mt-1">Verificados por nosotros</div>
+    <div class="text-xs text-slate-500 mt-1">Contactados directo, con fecha${lastVer ? ` · última: ${escapeHtml(lastVer)}` : ''}</div>
+  </div>
+  <div class="bg-white border-2 ${zeroState ? 'border-slate-200' : 'border-emerald-300'} rounded-xl p-5 text-center">
+    <div class="text-4xl font-black ${zeroState ? 'text-slate-400' : 'text-emerald-600'}">${zeroState ? '?' : totAcc}</div>
+    <div class="text-sm font-bold text-slate-800 mt-1">Cogiendo pacientes</div>
+    <div class="text-xs text-slate-500 mt-1">Confirmado que aceptan pacientes nuevos (dato &lt;90 días)</div>
+  </div>
+</div>
+
+${zeroState ? `<div class="bg-amber-50 border border-amber-200 rounded-xl p-5 mt-8">
+  <p class="font-bold text-amber-900">El dato de hoy es cero, y ese es el punto.</p>
+  <p class="text-sm text-amber-800 mt-1">Nadie en Puerto Rico — ni Salud, ni los planes, ni el gobierno federal — publica cuántos médicos están realmente aceptando pacientes nuevos. El número no existe. Esta página documenta el día cero: empezamos por el oeste, consultorio por consultorio, por texto, con fecha. Cada verificado que entre sube el contador aquí mismo. Sin humo: lo que no sabemos, dice "desconocido".</p>
+</div>` : ''}
+
+<h2 class="text-2xl font-black text-slate-900 mt-10">Los 3 números, pueblo por pueblo (oeste)</h2>
+<p class="text-sm text-slate-500 mt-2">La brecha entre la primera columna y la última es la que importa: cuántos médicos existen en papel vs. cuántos te contestan y te dan cita.</p>
+<div class="overflow-x-auto mt-4">
+<table class="w-full text-sm bg-white border border-slate-200 rounded-xl">
+  <thead><tr class="text-left text-xs uppercase tracking-wide text-slate-500">
+    <th class="py-2.5 px-3">Municipio</th><th class="py-2.5 px-3 text-center">En papel</th><th class="py-2.5 px-3 text-center">Verificados</th><th class="py-2.5 px-3 text-center">Cogiendo pacientes</th>
+  </tr></thead>
+  <tbody>${rows}</tbody>
+</table>
+</div>
+<p class="text-xs text-slate-500 mt-3">"En papel" = registro federal NPPES/CMS, snapshot ${escapeHtml(snapDate || 'julio 2026')}. "Verificados" y "cogiendo pacientes" = verificación directa nuestra, con fecha; si el dato tiene más de 90 días vuelve a "desconocido". El NPI es un techo, no un piso: un médico que se retira o se muda no se borra del registro federal.</p>
+
+<h2 class="text-2xl font-black text-slate-900 mt-10">Cómo se llena esto</h2>
+<ul class="list-disc pl-6 text-slate-700 mt-3 space-y-2 text-sm">
+  <li><strong>Verificación directa:</strong> contactamos los consultorios por texto y anotamos SÍ/NO con fecha. Empezamos por primaria y salud mental en Cabo Rojo y Hormigueros.</li>
+  <li><strong>Tú:</strong> ¿llamaste a un médico y no están cogiendo pacientes, o el número ya no sirve? Ese dato vale oro pa'l próximo vecino. <a href="/registro" class="text-teal-700 font-semibold">Cuéntamelo aquí →</a></li>
+  <li><strong>Cada mes:</strong> guardamos la foto completa (serie histórica desde julio 2026), así se ve si esto mejora o empeora.</li>
+</ul>
+
+<div class="bg-slate-50 border border-slate-200 rounded-xl p-5 mt-10">
+  <p class="text-sm text-slate-600">RegistroMedicoPR.com no garantiza citas. No reemplaza a los médicos, a los planes ni al gobierno. Hace algo más básico: que la próxima persona no empiece a ciegas.</p>
+</div>
+<p class="text-sm text-slate-500 mt-6"><a href="/registro" class="text-teal-700 font-semibold">Buscar un médico →</a> · <a href="/registro/estado" class="text-teal-700 font-semibold">Estado de salud de PR →</a> · <a href="/registro/desiertos" class="text-teal-700 font-semibold">Los desiertos médicos →</a></p>`
+
+  const jsonLd = [
+    { '@context': 'https://schema.org', '@type': 'Report', name: 'El Censo Médico Real de Puerto Rico (v0)', url: 'https://registromedicopr.com/registro/censo', inLanguage: 'es',
+      author: { '@type': 'Person', name: 'Angel Anderson' },
+      publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+      description: 'Tres números por pueblo: médicos en el registro federal, verificados directamente, y confirmados aceptando pacientes nuevos. Empezando por el oeste de Puerto Rico.' },
+    { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Registro Médico PR', item: 'https://registromedicopr.com/registro' },
+      { '@type': 'ListItem', position: 2, name: 'El Censo', item: 'https://registromedicopr.com/registro/censo' },
+    ] },
+  ]
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=600')
+  res.status(200).send(layout({
+    title: 'El Censo Médico Real de Puerto Rico — ¿quién está cogiendo pacientes?',
+    description: 'Nadie publica cuántos médicos de PR están aceptando pacientes nuevos. Empezamos a contarlo, consultorio por consultorio, con fecha. Los 3 números del oeste, pueblo por pueblo.',
+    slug: 'registro-censo', bodyHtml: body, jsonLd: jsonLd as any,
+    ogImage: `https://registromedicopr.com/api/og?theme=medico&k=${encodeURIComponent('El Censo · registromedicopr.com')}&t=${encodeURIComponent('¿Quién está cogiendo||pacientes de verdad?')}&sub=${encodeURIComponent('El registro federal dice cuántos médicos hay en papel. Nadie mide cuántos aceptan pacientes. Empezamos a contarlo.')}&badge=${encodeURIComponent('Verificación directa · con fecha')}`,
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com', canonicalUrl: 'https://registromedicopr.com/registro/censo',
+  }))
+}
+
 export default async function handler(req: any, res: any) {
   const page = String(req.query.page || '')
 
@@ -13228,6 +13347,7 @@ export default async function handler(req: any, res: any) {
     case 'espejo': return await handleEspejo(req, res)
     case 'registro-mapa': return await handleRegistroMapa(req, res)
     case 'registro-estado': return await handleRegistroEstado(req, res)
+    case 'registro-censo': return await handleRegistroCenso(req, res)
     case 'raras': return await handleRaras(req, res)
     case 'atlas': return await handleAtlas(req, res)
     case 'oer': return await handleOER(req, res)

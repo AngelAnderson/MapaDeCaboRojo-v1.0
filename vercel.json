@@ -200,6 +200,10 @@
       "destination": "/api/mapa-pages?page=registro-estado"
     },
     {
+      "source": "/registro/censo",
+      "destination": "/api/mapa-pages?page=registro-censo"
+    },
+    {
       "source": "/cambios",
       "destination": "/api/mapa-pages?page=cambios"
     },
