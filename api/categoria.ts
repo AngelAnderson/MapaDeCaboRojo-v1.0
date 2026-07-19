@@ -6,7 +6,7 @@ const supabase = createClient(
   process.env.VITE_SUPABASE_ANON_KEY || ''
 );
 
-async function logApiCall(endpoint: string, method: string | null, query: string | null, userAgent: string | null, ip: string | null, responseCount: number | null) {
+async function logApiCall(endpoint: string, method: string | null, query: string | null, userAgent: string | null, ip: string | null, responseCount: number | null, referrer?: string | null) {
   try {
     await supabase.from('api_logs').insert({
       endpoint,
@@ -14,7 +14,8 @@ async function logApiCall(endpoint: string, method: string | null, query: string
       query,
       user_agent: (userAgent || '').substring(0, 500),
       ip: (ip || '').substring(0, 45),
-      response_count: responseCount
+      response_count: responseCount,
+      referrer: (referrer || '').substring(0, 500) || null
     });
   } catch {} // fire-and-forget, never block the response
 }
@@ -777,6 +778,14 @@ export default async function handler(req: any, res: any) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6KBMV0LKQ4"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-6KBMV0LKQ4');
+  </script>
   <title>${esc(title)}</title>
   <meta name="description" content="${esc(description)}">
   <link rel="canonical" href="${pageUrl}">
@@ -1225,6 +1234,6 @@ export default async function handler(req: any, res: any) {
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=86400');
-  logApiCall('categoria', null, cat, req.headers['user-agent'] as string, req.headers['x-forwarded-for'] as string, filtered.length);
+  logApiCall('categoria', null, cat, req.headers['user-agent'] as string, req.headers['x-forwarded-for'] as string, filtered.length, req.headers['referer'] as string);
   return res.status(200).send(html);
 }

@@ -6,7 +6,7 @@ const supabase = createClient(
   process.env.VITE_SUPABASE_ANON_KEY || ''
 );
 
-async function logApiCall(endpoint: string, method: string | null, query: string | null, userAgent: string | null, ip: string | null, responseCount: number | null) {
+async function logApiCall(endpoint: string, method: string | null, query: string | null, userAgent: string | null, ip: string | null, responseCount: number | null, referrer?: string | null) {
   try {
     await supabase.from('api_logs').insert({
       endpoint,
@@ -14,7 +14,8 @@ async function logApiCall(endpoint: string, method: string | null, query: string
       query,
       user_agent: (userAgent || '').substring(0, 500),
       ip: (ip || '').substring(0, 45),
-      response_count: responseCount
+      response_count: responseCount,
+      referrer: (referrer || '').substring(0, 500) || null
     });
   } catch {} // fire-and-forget, never block the response
 }
@@ -92,7 +93,7 @@ async function handlePlaces(req: any, res: any) {
 
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=3600');
-  logApiCall('places', null, q, req.headers['user-agent'] as string, req.headers['x-forwarded-for'] as string, shaped.length);
+  logApiCall('places', null, q, req.headers['user-agent'] as string, req.headers['x-forwarded-for'] as string, shaped.length, req.headers['referer'] as string);
   return res.status(200).json({
     total,
     results: shaped,
@@ -472,7 +473,7 @@ async function handleLogSearch(req: any, res: any) {
   const hits = Number.isFinite(+body.hits) ? Math.max(0, Math.min(9999, +body.hits)) : null;
   const source = /^[a-z0-9_-]{1,24}$/.test(String(body.source || '')) ? body.source : 'unknown';
   if (q.length < 2) return res.status(400).json({ error: 'q too short' });
-  await logApiCall(`search:${source}`, 'POST', q, req.headers['user-agent'] as string, req.headers['x-forwarded-for'] as string, hits);
+  await logApiCall(`search:${source}`, 'POST', q, req.headers['user-agent'] as string, req.headers['x-forwarded-for'] as string, hits, req.headers['referer'] as string);
   return res.status(204).end();
 }
 
