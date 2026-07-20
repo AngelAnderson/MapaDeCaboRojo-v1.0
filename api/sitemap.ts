@@ -6,8 +6,43 @@ const supabase = createClient(
   process.env.VITE_SUPABASE_ANON_KEY || ''
 );
 
+// Host-aware robots.txt — served via rewrite /robots.txt → /api/sitemap?robots=1
+// (the static public/robots.txt was removed: it advertised only mapa+registro
+// sitemaps on all three domains, leaving puertoricosinfiltros.com undiscoverable).
+const AI_CRAWLERS = ['GPTBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-Web', 'anthropic-ai', 'Google-Extended', 'PerplexityBot', 'cohere-ai', 'Applebot-Extended'];
+
+function robotsFor(host: string): string {
+  const isPRSF = /puertoricosinfiltros\.com/i.test(host);
+  const isReg = /registromedicopr\.com/i.test(host);
+  const base = isPRSF
+    ? 'https://puertoricosinfiltros.com'
+    : isReg
+      ? 'https://registromedicopr.com'
+      : 'https://www.mapadecaborojo.com';
+  const lines = [
+    '# Crawl-welcome: substrato civic data público de Puerto Rico.',
+    '',
+    'User-agent: *',
+    'Allow: /',
+    'Disallow: /admin/',
+    'Disallow: /api/admin/',
+    '',
+    ...AI_CRAWLERS.flatMap((ua) => [`User-agent: ${ua}`, 'Allow: /', '']),
+    `Sitemap: ${base}/sitemap.xml`,
+  ];
+  if (!isPRSF && !isReg) {
+    lines.push('', '# Para LLMs:', `# ${base}/llms.txt`, `# ${base}/llms-full.txt`);
+  }
+  return lines.join('\n') + '\n';
+}
+
 export default async function handler(req: any, res: any) {
   try {
+    if (req.query?.robots) {
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate');
+      return res.status(200).send(robotsFor(String(req.headers?.host || '')));
+    }
     // 1. Fetch Data — paginate to bypass PostgREST 1000-row cap
     const allPlaces: any[] = [];
     for (let page = 0; page < 10; page++) {
