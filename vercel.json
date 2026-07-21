@@ -236,6 +236,10 @@
       "destination": "/api/mapa-pages?page=porque"
     },
     {
+      "source": "/puedo-volver",
+      "destination": "/api/mapa-pages?page=registro-puedo-volver"
+    },
+    {
       "source": "/recuperacion",
       "destination": "/api/mapa-pages?page=recuperacion"
     },

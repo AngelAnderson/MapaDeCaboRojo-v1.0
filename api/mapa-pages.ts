@@ -5593,6 +5593,105 @@ ${articleHtml}
   }))
 }
 
+// =============== /puedo-volver — diáspora landing: números reales antes de decidir ===============
+async function handleRegistroPuedoVolver(req: any, res: any) {
+  // Top specialties for the diáspora "should I move back / bring my parents" question, linked
+  // to the existing /registro/:spec/:region hub pages (specToUrl handles the slug — same helper
+  // handleRegistroHub uses to match SPEC_BY_URL, so these links are guaranteed to resolve).
+  const PICKS: Array<[string, string]> = [
+    ['cardiólogo', '❤️'],
+    ['nefrólogo', '🫘'],
+    ['endocrinologo', '🩸'],
+    ['geriatra', '🧓'],
+    ['pediatra', '🧒'],
+    ['ginecólogo', '🩺'],
+  ]
+  const region = 'oeste'
+  const picksHtml = PICKS.map(([spec, emoji]) => {
+    const info = SPEC_INFO[spec]
+    const display = spec.charAt(0).toUpperCase() + spec.slice(1)
+    return `<a href="/registro/${specToUrl(spec)}/${region}" class="not-prose flex items-center gap-3 bg-white border border-slate-200 rounded-xl p-4 hover:border-teal-400 hover:shadow-sm transition">
+      <span class="text-2xl">${emoji}</span>
+      <span class="flex-1">
+        <span class="block font-bold text-slate-900">${escapeHtml(display)} en el oeste</span>
+        <span class="block text-xs text-slate-500">${escapeHtml(info?.treats || '')}</span>
+      </span>
+      <span class="text-teal-600 text-sm font-semibold whitespace-nowrap">Ver →</span>
+    </a>`
+  }).join('')
+
+  const body = `<p class="text-xs text-slate-400 mb-4">registromedicopr.com · data verificada contra el registro federal · julio 2026</p>
+<h1>¿Puedo volver? ¿Puedo traer a los míos?</h1>
+
+<p>Esa es la pregunta que de verdad te estás haciendo, no "¿cuántos médicos hay en Puerto Rico", sino "¿va a haber alguien pa' mi mamá, pa' mis hijos, pa' mí, cuando lo necesitemos?"</p>
+
+<div class="not-prose my-5 bg-teal-50 border border-teal-200 rounded-xl p-5">
+<p class="font-black text-slate-900 mb-1">120 días de búsquedas reales en el registro, del oeste de la isla:</p>
+<ul class="text-sm text-slate-700 mt-2 space-y-1 list-disc ml-5">
+<li><b>Cardiólogo:</b> cerca de 1 de cada 3 búsquedas no encontró resultado en la zona.</li>
+<li><b>Nefrólogo:</b> la mitad de las búsquedas se quedó sin resultado.</li>
+<li><b>Endocrinólogo:</b> cerca del 60% sin resultado.</li>
+<li><b>Geriatra:</b> solo 4 en todo el oeste de Puerto Rico.</li>
+</ul>
+<p class="text-slate-700 text-sm mt-3">Antes de decidir, mira los números reales, no la corazonada.</p>
+</div>
+
+<p>No es pa' asustarte, es pa' que decidas con data. Aquí abajo tienes el conteo real de las especialidades que más se preguntan, verificado contra el registro federal, con teléfono de quien sí atiende hoy en el oeste.</p>
+
+<div class="not-prose grid sm:grid-cols-2 gap-3 mt-6">
+${picksHtml}
+</div>
+
+<p class="text-sm text-slate-500 mt-6">¿Buscas otra especialidad o otra región? <a href="/registro" class="text-teal-600 hover:underline">El registro completo está aquí</a>.</p>
+
+${regDisclaimer(false)}
+
+<div class="not-prose mt-8 bg-slate-900 text-white rounded-2xl p-6">
+  <p class="text-lg font-bold">📍 Avísame cuando haya un especialista nuevo cerca de los míos</p>
+  <p class="text-sm text-slate-300 mt-1">Deja tu correo. Te aviso si llega un especialista a tu zona o si sale data nueva. Sin spam, sin cuenta.</p>
+  <form id="pv-form" class="mt-3 flex flex-col sm:flex-row gap-2">
+    <input id="pv-email" type="email" required placeholder="tu@correo.com" class="flex-1 rounded-lg px-3 py-2 text-slate-900" aria-label="Tu correo" />
+    <button type="submit" class="bg-teal-500 hover:bg-teal-400 text-slate-900 font-bold rounded-lg px-5 py-2">Avísame</button>
+  </form>
+  <p id="pv-done" class="text-sm text-teal-300 mt-2 hidden"></p>
+  <p class="text-[11px] text-slate-400 mt-2">Un email solo cuando de verdad te sirve.</p>
+</div>
+<script>
+(function(){var f=document.getElementById('pv-form');if(!f)return;f.addEventListener('submit',function(e){e.preventDefault();var em=(document.getElementById('pv-email').value||'').trim();if(!/.+@.+\\..+/.test(em)){alert('Escribe un email válido.');return;}var b=f.querySelector('button');b.disabled=true;b.textContent='...';fetch('/api/mapa-pages?page=registro-lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,source:'puedo-volver',lang:'es'})}).then(function(r){return r.json()}).then(function(){f.classList.add('hidden');var d=document.getElementById('pv-done');d.classList.remove('hidden');d.textContent='✅ Listo. Te aviso cuando haya algo nuevo cerca de los tuyos.';}).catch(function(){b.disabled=false;b.textContent='Avísame';alert('Hubo un error, intenta de nuevo.');});});})();
+</script>
+<div class="not-prose mt-4 bg-teal-700 rounded-2xl p-6 text-center text-white">
+  <p class="text-lg font-bold mb-1">¿Buscas un especialista cerca?</p>
+  <p class="text-sm text-teal-100 mb-4">El registro te dice quién hay y dónde, verificado contra el gobierno federal.</p>
+  <a href="/registro" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50">Ir al registro</a>
+</div>`
+
+  const articleLd = {
+    '@context': 'https://schema.org', '@type': 'Article',
+    headline: '¿Puedo volver a Puerto Rico? Los médicos que hay de verdad',
+    description: 'Antes de decidir si volver o traer a la familia a Puerto Rico, los números reales de acceso médico en el oeste, verificados contra el registro federal.',
+    author: { '@type': 'Person', name: 'Angel Anderson' },
+    publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+    datePublished: '2026-07-21', dateModified: '2026-07-21', inLanguage: 'es',
+    mainEntityOfPage: 'https://registromedicopr.com/puedo-volver',
+  }
+  const faqLd = {
+    '@context': 'https://schema.org', '@type': 'FAQPage',
+    mainEntity: [
+      { '@type': 'Question', name: '¿Puedo volver a Puerto Rico y conseguir médico para mi familia?', acceptedAnswer: { '@type': 'Answer', text: 'Depende de la especialidad y la región. En el oeste, cerca de 1 de cada 3 búsquedas de cardiólogo y la mitad de las búsquedas de nefrólogo no encuentran resultado, y solo hay 4 geriatras en toda la región (registromedicopr.com, 120 días de data, julio 2026). Antes de decidir, verifica tu especialidad y tu pueblo en el registro.' } },
+      { '@type': 'Question', name: '¿Hay geriatras en el oeste de Puerto Rico para cuidar a mis padres?', acceptedAnswer: { '@type': 'Answer', text: 'Solo 4 geriatras con práctica declarada en todo el oeste de Puerto Rico, según el registro federal NPPES verificado en registromedicopr.com.' } },
+      { '@type': 'Question', name: '¿Cómo sé si hay especialista antes de mudarme de vuelta?', acceptedAnswer: { '@type': 'Answer', text: 'Busca la especialidad y la región en registromedicopr.com/registro. El conteo está verificado contra el registro federal NPPES/CMS, con teléfono de cada proveedor. También puedes suscribirte para que te avisen si llega un especialista nuevo a tu zona.' } },
+    ],
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: '¿Puedo volver a Puerto Rico? Los médicos que hay de verdad | Registro Médico PR',
+    description: 'Antes de decidir si volver o traer a los tuyos, mira los números reales de acceso médico en el oeste de Puerto Rico, verificados contra el registro federal.',
+    slug: 'puedo-volver', bodyHtml: body, jsonLd: [articleLd, faqLd] as any, ogImage: '/og/desiertos.png',
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
 // =============== /comparte — Datos citables (press kit + LLM-quotable + SEO) ===============
 // Cada dato = pregunta + respuesta con fuente y fecha. FAQPage schema (lo que los LLM citan) + Dataset.
 const COMPARTE_G_DEFAULT = { conHpsa: 65, cupon: 33, cuponPob: 792221, bajo5: 39, bajo5Pob: 1046856, sinPsiq: 36, sinPsiqPob: 930159, cero: 3 }
@@ -13357,6 +13456,7 @@ export default async function handler(req: any, res: any) {
     case 'prospecto': return await handleProspecto(req, res)
     case 'comparte': return await handleComparte(req, res)
     case 'porque': return await handleRegistroPorque(req, res)
+    case 'registro-puedo-volver': return await handleRegistroPuedoVolver(req, res)
     case 'recuperacion': return await handleRecuperacion(req, res)
     case 'sinfiltros': return await handleSinFiltros(req, res)
     case 'boletin': return await handleBoletin(req, res)
