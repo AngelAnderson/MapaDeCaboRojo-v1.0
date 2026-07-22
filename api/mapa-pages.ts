@@ -17,6 +17,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { createHash, createHmac, timingSafeEqual } from 'crypto'
 import { handleActivos } from './_lib/activos.js'
+import { handleBarrios } from './_lib/barrios.js'
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || 'https://vprjteqgmanntvisjrvp.supabase.co',
@@ -13491,6 +13492,8 @@ export default async function handler(req: any, res: any) {
     case 'sigue-el-dinero': return await handleSigueElDinero(req, res)
     case 'esencia': return await handleEsencia(req, res)
     case 'activos': return handleActivos(req, res, { layout, escapeHtml })
+    case 'barrios': return await handleBarrios(req, res, { layout, escapeHtml, supabase })
+    case 'barrio': return await handleBarrios(req, res, { layout, escapeHtml, supabase })
     case 'registro-hub': return await handleRegistroHub(req, res)
     case 'cambios': return await handleCambios(req, res)
     case 'observatorio': return await handleObservatorio(req, res)

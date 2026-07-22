@@ -160,6 +160,14 @@
       "destination": "/api/categoria?cat=:cat"
     },
     {
+      "source": "/barrios",
+      "destination": "/api/mapa-pages?page=barrios"
+    },
+    {
+      "source": "/barrio/:b",
+      "destination": "/api/mapa-pages?page=barrio&b=:b"
+    },
+    {
       "source": "/playas/defensa-y-limpieza",
       "destination": "/api/mapa-pages?page=defensa-y-limpieza"
     },
