@@ -41,7 +41,30 @@ const LEAFLET_TAGS = `
 .brr-tip .tip-body{padding:8px 12px;font-size:12px;color:#334155;background:#fff}
 .brr-marker{display:flex;align-items:center;justify-content:center;font-size:14px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
 .leaflet-container{font-family:inherit}
+.brr-pop-body{font-size:13px}
+.brr-pop-body .pop-head{font-weight:900;font-size:15px;margin-bottom:2px}
+.brr-pop-body a.pop-btn{display:inline-block;margin-top:8px;color:#fff;font-weight:700;padding:6px 14px;border-radius:999px;text-decoration:none}
+.brr-hint{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:600;background:rgba(15,23,42,.85);color:#fff;font-size:12px;padding:6px 14px;border-radius:999px;opacity:0;transition:opacity .3s;pointer-events:none}
+.brr-hint.show{opacity:1}
+a:focus-visible,button:focus-visible{outline:3px solid #0f766e;outline-offset:2px;border-radius:8px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.sr-only-focusable:focus{position:static;width:auto;height:auto;padding:8px 16px;margin:0;overflow:visible;clip:auto;white-space:normal;background:#0f766e;color:#fff;border-radius:8px;display:inline-block}
 </style>`
+
+// JS compartido: en touch, un dedo scrollea la página (pan con dos dedos) y el tap abre popup en vez de navegar.
+const MOBILE_MAP_JS = `
+  var isTouch=('ontouchstart' in window)||navigator.maxTouchPoints>0;
+  function setupTouch(map,el){
+    if(!isTouch)return;
+    map.dragging.disable();
+    var hint=document.createElement('div');hint.className='brr-hint';hint.textContent='Usa dos dedos pa\\' mover el mapa';el.appendChild(hint);
+    var t;
+    el.addEventListener('touchstart',function(e){
+      if(e.touches.length>=2){map.dragging.enable();hint.classList.remove('show');}
+      else{hint.classList.add('show');clearTimeout(t);t=setTimeout(function(){hint.classList.remove('show')},1600);}
+    },{passive:true});
+    el.addEventListener('touchend',function(e){if(e.touches.length<2){map.dragging.disable();}},{passive:true});
+  }`
 
 export async function handleBarrios(req: any, res: any, deps: Deps) {
   const { layout, escapeHtml, supabase } = deps
@@ -86,11 +109,12 @@ export async function handleBarrios(req: any, res: any, deps: Deps) {
     const body = `
 <h1>Los barrios de Cabo Rojo</h1>
 <p class="text-lg text-slate-600 mt-2">Cabo Rojo no es un solo sitio: son 9 barrios, cada uno con su color y su vuelta. Pasa el mouse pa' ver qué hay; toca el tuyo pa' entrar.</p>
+<p class="not-prose"><a href="#lista-barrios" class="sr-only sr-only-focusable">Saltar el mapa e ir a la lista de barrios</a></p>
 <div class="not-prose mt-5 rounded-2xl overflow-hidden border border-slate-200 shadow-lg relative" style="height:520px">
-  <div id="bmap" style="height:100%"></div>
+  <div id="bmap" style="height:100%" role="application" aria-label="Mapa interactivo de los 9 barrios de Cabo Rojo. La misma información está en la lista de barrios debajo del mapa."></div>
   <div class="absolute bottom-3 left-3 z-[500] bg-white/95 rounded-xl px-3 py-2 shadow text-xs text-slate-600 hidden sm:block">💡 Pasa el mouse por un barrio · toca pa' entrar</div>
 </div>
-<div class="not-prose mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">${cards}</div>
+<div id="lista-barrios" class="not-prose mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">${cards}</div>
 <div class="not-prose mt-8 bg-teal-700 text-white rounded-2xl p-6 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
   <div>
     <div class="text-xl font-black">¿No sabes en qué barrio queda lo que buscas?</div>
@@ -103,19 +127,29 @@ ${LEAFLET_TAGS}
 <script>
 (function(){
   var META=${JSON.stringify(Object.fromEntries(clientMeta.map(m => [m.slug, m])))};
+  ${''/* touch helpers */}${MOBILE_MAP_JS.trim()}
   var map=L.map('bmap',{scrollWheelZoom:false}).setView([18.05,-67.13],11);
+  setupTouch(map,document.getElementById('bmap'));
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap &copy; CARTO'}).addTo(map);
   fetch('/barrios-caborojo.geojson').then(function(r){return r.json()}).then(function(gj){
     var layer=L.geoJSON(gj,{
       style:function(f){var m=META[f.properties.slug]||{};return{color:'#fff',weight:2.5,fillColor:m.color||'#14b8a6',fillOpacity:0.55}},
       onEachFeature:function(f,l){
         var m=META[f.properties.slug]||{};
-        var tip='<div class="tip-head" style="background:'+(m.color||'#0f766e')+'">'+(m.emoji||'')+' '+m.name+' · '+(m.total||0)+' lugares</div>'
-          +'<div class="tip-body">'+(m.tops||[]).join(' · ')+'<br><span style="color:#94a3b8">'+(m.tagline||'')+'</span><br><b style="color:'+(m.color||'#0f766e')+'">Toca pa\\' entrar →</b></div>';
-        l.bindTooltip(tip,{sticky:true,className:'brr-tip',opacity:1});
+        if(!isTouch){
+          var tip='<div class="tip-head" style="background:'+(m.color||'#0f766e')+'">'+(m.emoji||'')+' '+m.name+' · '+(m.total||0)+' lugares</div>'
+            +'<div class="tip-body">'+(m.tops||[]).join(' · ')+'<br><span style="color:#94a3b8">'+(m.tagline||'')+'</span><br><b style="color:'+(m.color||'#0f766e')+'">Toca pa\\' entrar →</b></div>';
+          l.bindTooltip(tip,{sticky:true,className:'brr-tip',opacity:1});
+          l.on('click',function(){window.location='/barrio/'+f.properties.slug});
+        }else{
+          // Móvil: el tap enseña la info; navegar es el botón del popup, no el tap.
+          var pop='<div class="brr-pop-body"><div class="pop-head" style="color:'+(m.color||'#0f766e')+'">'+(m.emoji||'')+' '+m.name+'</div>'
+            +(m.total||0)+' lugares verificados<br>'+(m.tops||[]).join(' · ')
+            +'<br><a class="pop-btn" style="background:'+(m.color||'#0f766e')+'" href="/barrio/'+f.properties.slug+'">Entrar al barrio →</a></div>';
+          l.bindPopup(pop,{closeButton:true,autoPan:true});
+        }
         l.on('mouseover',function(){l.setStyle({fillOpacity:0.8,weight:3.5});l.bringToFront()});
         l.on('mouseout',function(){l.setStyle({fillOpacity:0.55,weight:2.5})});
-        l.on('click',function(){window.location='/barrio/'+f.properties.slug});
         // Label permanente en el centro del barrio
         try{
           var c=l.getBounds().getCenter();
@@ -173,8 +207,9 @@ ${LEAFLET_TAGS}
   <div class="mt-3 flex flex-wrap gap-2">${chips}</div>
   <div class="mt-2 text-sm font-bold">${rows.length} lugares verificados a mano</div>
 </div>
-<div class="not-prose mt-5 rounded-2xl overflow-hidden border border-slate-200 shadow-lg" style="height:380px"><div id="bmap" style="height:100%"></div></div>
-${sections}
+<p class="not-prose"><a href="#lista-lugares" class="sr-only sr-only-focusable">Saltar el mapa e ir a la lista de lugares</a></p>
+<div class="not-prose mt-5 rounded-2xl overflow-hidden border border-slate-200 shadow-lg relative" style="height:380px"><div id="bmap" style="height:100%" role="application" aria-label="Mapa de ${escapeHtml(barrio.name)} con sus lugares verificados. La misma información está en la lista debajo del mapa."></div></div>
+<div id="lista-lugares">${sections}</div>
 <div class="not-prose mt-10 text-white rounded-2xl p-6" style="background:${barrio.color}">
   <div class="text-xl font-black">¿Buscas algo en ${escapeHtml(barrio.short)} y no aparece?</div>
   <p class="mt-1 text-white/85 text-sm">Antes de dar vueltas, escríbele al Veci. Contesta 24/7 con lo verificado.</p>
@@ -189,7 +224,9 @@ ${LEAFLET_TAGS}
 <script>
 (function(){
   var COLOR=${JSON.stringify(barrio.color)};
+  ${''/* touch helpers */}${MOBILE_MAP_JS.trim()}
   var map=L.map('bmap',{scrollWheelZoom:false}).setView([18.05,-67.13],12);
+  setupTouch(map,document.getElementById('bmap'));
   L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap &copy; CARTO'}).addTo(map);
   var pts=[${markers}];
   fetch('/barrios-caborojo.geojson').then(function(r){return r.json()}).then(function(gj){
@@ -200,8 +237,13 @@ ${LEAFLET_TAGS}
     var layer=L.geoJSON({type:'FeatureCollection',features:feat},{style:{color:COLOR,weight:3,fillColor:COLOR,fillOpacity:0.15}}).addTo(map);
     map.fitBounds(layer.getBounds(),{padding:[16,16]});
     pts.forEach(function(p){
-      L.marker([p[0],p[1]],{icon:L.divIcon({className:'brr-marker',html:p[4],iconSize:[20,20]})})
-        .addTo(map).bindTooltip(p[2]).on('click',function(){window.location=p[3]});
+      var mk=L.marker([p[0],p[1]],{icon:L.divIcon({className:'brr-marker',html:p[4],iconSize:[20,20]}),alt:p[2]}).addTo(map);
+      if(!isTouch){
+        mk.bindTooltip(p[2]).on('click',function(){window.location=p[3]});
+      }else{
+        // Móvil: el tap enseña el nombre; navegar es el botón, no el tap.
+        mk.bindPopup('<div class="brr-pop-body"><div class="pop-head">'+p[4]+' '+p[2]+'</div><a class="pop-btn" style="background:'+COLOR+'" href="'+p[3]+'">Ver el lugar →</a></div>');
+      }
     });
   });
 })();
