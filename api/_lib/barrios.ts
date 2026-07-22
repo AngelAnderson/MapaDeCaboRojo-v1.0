@@ -12,15 +12,15 @@
 type Deps = { layout: (opts: any) => string; escapeHtml: (s: string) => string; supabase: any }
 
 export const BARRIOS: Array<{ slug: string; name: string; short: string; tagline: string; emoji: string; color: string; kw: string }> = [
-  { slug: 'pueblo', name: 'El Pueblo (Centro)', short: 'El Pueblo', tagline: 'El casco urbano: la plaza, el comercio de siempre y la vida de calle.', emoji: '🏛️', color: '#8b5cf6', kw: 'PUEBLO' },
-  { slug: 'boqueron', name: 'Boquerón', short: 'Boquerón', tagline: 'El poblado, la playa y El Combate. Donde el fin de semana vive.', emoji: '🏖️', color: '#e85a3a', kw: 'BOQUERON' },
-  { slug: 'miradero', name: 'Miradero', short: 'Miradero', tagline: 'Puerto Real y la pesca. El barrio que mira al mar por oficio.', emoji: '🎣', color: '#f28c3b', kw: 'MIRADERO' },
-  { slug: 'guanajibo', name: 'Guanajibo', short: 'Guanajibo', tagline: 'Joyuda y la milla de oro del marisco.', emoji: '🦀', color: '#2a9db5', kw: 'JOYUDA' },
-  { slug: 'pedernales', name: 'Pedernales', short: 'Pedernales', tagline: 'El campo entre el pueblo y la costa.', emoji: '🌄', color: '#7fa86f', kw: 'PEDERNALES' },
-  { slug: 'bajura', name: 'Bajura', short: 'Bajura', tagline: 'La entrada norte, camino a Mayagüez.', emoji: '🛣️', color: '#f5b82e', kw: 'BAJURA' },
-  { slug: 'monte-grande', name: 'Monte Grande', short: 'Monte Grande', tagline: 'Comunidad de monte con vida propia.', emoji: '⛰️', color: '#1d5c7a', kw: 'MONTEGRANDE' },
-  { slug: 'llanos-tuna', name: 'Llanos Tuna', short: 'Llanos Tuna', tagline: 'Los llanos del este, tierra adentro.', emoji: '🌾', color: '#d9a05b', kw: 'LLANOSTUNA' },
-  { slug: 'llanos-costa', name: 'Llanos Costa', short: 'Llanos Costa', tagline: 'El Faro, Los Morrillos y las salinas. El sur abierto.', emoji: '🗼', color: '#1f4e79', kw: 'ELFARO' },
+  { slug: 'pueblo', name: 'El Pueblo (Centro)', short: 'El Pueblo', tagline: 'El casco urbano: la plaza, el comercio de siempre y la vida de calle.', emoji: '🏛️', color: '#8b5cf6', kw: 'BARRIO PUEBLO' },
+  { slug: 'boqueron', name: 'Boquerón', short: 'Boquerón', tagline: 'El poblado, la playa y El Combate. Donde el fin de semana vive.', emoji: '🏖️', color: '#e85a3a', kw: 'BARRIO BOQUERON' },
+  { slug: 'miradero', name: 'Miradero', short: 'Miradero', tagline: 'Puerto Real y la pesca. El barrio que mira al mar por oficio.', emoji: '🎣', color: '#f28c3b', kw: 'BARRIO MIRADERO' },
+  { slug: 'guanajibo', name: 'Guanajibo', short: 'Guanajibo', tagline: 'Joyuda y la milla de oro del marisco.', emoji: '🦀', color: '#2a9db5', kw: 'BARRIO JOYUDA' },
+  { slug: 'pedernales', name: 'Pedernales', short: 'Pedernales', tagline: 'El campo entre el pueblo y la costa.', emoji: '🌄', color: '#7fa86f', kw: 'BARRIO PEDERNALES' },
+  { slug: 'bajura', name: 'Bajura', short: 'Bajura', tagline: 'La entrada norte, camino a Mayagüez.', emoji: '🛣️', color: '#f5b82e', kw: 'BARRIO BAJURA' },
+  { slug: 'monte-grande', name: 'Monte Grande', short: 'Monte Grande', tagline: 'Comunidad de monte con vida propia.', emoji: '⛰️', color: '#1d5c7a', kw: 'BARRIO MONTE GRANDE' },
+  { slug: 'llanos-tuna', name: 'Llanos Tuna', short: 'Llanos Tuna', tagline: 'Los llanos del este, tierra adentro.', emoji: '🌾', color: '#d9a05b', kw: 'BARRIO LLANOS TUNA' },
+  { slug: 'llanos-costa', name: 'Llanos Costa', short: 'Llanos Costa', tagline: 'El Faro, Los Morrillos y las salinas. El sur abierto.', emoji: '🗼', color: '#1f4e79', kw: 'BARRIO LLANOS COSTA' },
 ]
 
 const CAT_EMOJI: Record<string, string> = {
@@ -130,7 +130,7 @@ ${LEAFLET_TAGS}
     res.status(200).send(layout({
       title: 'Los 9 barrios de Cabo Rojo — mapa interactivo con lugares verificados',
       description: 'Toca tu barrio y mira qué hay: negocios, playas y servicios verificados a mano. Boquerón, Joyuda, Puerto Real, El Combate y más.',
-      slug: 'barrios', bodyHtml: body, jsonLd, host: req.headers?.host,
+      slug: 'barrios', bodyHtml: body, jsonLd, ogImage: '/og/barrios/brand.png', host: req.headers?.host,
     }))
     return
   }
@@ -180,6 +180,11 @@ ${sections}
   <p class="mt-1 text-white/85 text-sm">Antes de dar vueltas, escríbele al Veci. Contesta 24/7 con lo verificado.</p>
   <a href="https://wa.me/17874177711?text=${encodeURIComponent(barrio.kw)}" class="inline-block mt-3 bg-white font-bold px-5 py-2.5 rounded-full" style="color:${barrio.color}">Escríbele ${escapeHtml(barrio.kw)} al 787-417-7711</a>
 </div>
+<div class="not-prose mt-4 bg-slate-100 border border-slate-200 rounded-2xl p-5">
+  <div class="font-black text-slate-800">¿Qué falta en ${escapeHtml(barrio.short)}?</div>
+  <p class="text-sm text-slate-600 mt-1">Si tienes que salir del barrio a buscar algo, eso es un dato que vale. Cuéntamelo y queda anotado.</p>
+  <a href="https://wa.me/17874177711?text=${encodeURIComponent('En ' + barrio.short + ' falta ')}" class="inline-block mt-2 text-sm font-bold text-teal-700">Dime qué falta → 787-417-7711</a>
+</div>
 ${LEAFLET_TAGS}
 <script>
 (function(){
@@ -206,6 +211,6 @@ ${LEAFLET_TAGS}
   res.status(200).send(layout({
     title: `${barrio.name}, Cabo Rojo — ${rows.length} lugares verificados en el barrio`,
     description: `${barrio.tagline} Negocios, playas y servicios de ${barrio.name} verificados a mano, con mapa. Si falta algo, textea al 787-417-7711.`,
-    slug: `barrio/${slug}`, bodyHtml: body, jsonLd, host: req.headers?.host,
+    slug: `barrio/${slug}`, bodyHtml: body, jsonLd, ogImage: `/og/barrios/${slug}.png`, host: req.headers?.host,
   }))
 }

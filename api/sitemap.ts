@@ -139,6 +139,16 @@ export default async function handler(req: any, res: any) {
       { slug: 'me-conviene', priority: 0.7, changefreq: 'monthly' },
       { slug: 'municipio', priority: 0.6, changefreq: 'weekly' },
       { slug: 'cultura', priority: 0.8, changefreq: 'monthly' },               // curated cultural directory · 30 verified places
+      { slug: 'barrios', priority: 0.9, changefreq: 'weekly' },                // mapa interactivo de los 9 barrios
+      { slug: 'barrio/pueblo', priority: 0.8, changefreq: 'weekly' },
+      { slug: 'barrio/boqueron', priority: 0.8, changefreq: 'weekly' },
+      { slug: 'barrio/miradero', priority: 0.8, changefreq: 'weekly' },
+      { slug: 'barrio/guanajibo', priority: 0.8, changefreq: 'weekly' },
+      { slug: 'barrio/pedernales', priority: 0.8, changefreq: 'weekly' },
+      { slug: 'barrio/bajura', priority: 0.8, changefreq: 'weekly' },
+      { slug: 'barrio/monte-grande', priority: 0.8, changefreq: 'weekly' },
+      { slug: 'barrio/llanos-tuna', priority: 0.8, changefreq: 'weekly' },
+      { slug: 'barrio/llanos-costa', priority: 0.8, changefreq: 'weekly' },
     ]
     narrativePages.forEach(({ slug, priority, changefreq }) => {
       urls.push(`
