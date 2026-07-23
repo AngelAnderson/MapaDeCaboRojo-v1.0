@@ -4472,7 +4472,8 @@ ${SHARE_COPY_SCRIPT}
     slug: `especialista/${place.slug}`,
     bodyHtml: body,
     jsonLd,
-    ogImage: '/og/registro.png',
+    // Tarjeta OG personalizada por proveedor (motor /api/og, theme medico) — cubre todo el registro
+    ogImage: `https://registromedicopr.com/api/og?theme=medico&t=${encodeURIComponent(name)}&k=${encodeURIComponent(specLabel)}&sub=${encodeURIComponent(`${muni}, Puerto Rico · NPI ${npi}`)}&badge=${encodeURIComponent('Verificado NPPES')}&site=registromedicopr.com`,
     host: req.headers?.host,
     canonicalHost: 'https://registromedicopr.com',
     lang,
