@@ -10684,13 +10684,17 @@ async function handleRegistroMapa(req: any, res: any) {
 
   const body = `
 <h1>El mapa de los médicos de Puerto Rico</h1>
-<p class="text-lg text-slate-600 mt-3">Cada círculo es un municipio. <strong>Escoge el especialista que buscas</strong> y el mapa te dice dónde hay, cuántos, y dónde no hay ninguno. Todo verificado contra el registro federal NPPES — pueblo por pueblo, no por promedio.</p>
+<p class="text-lg text-slate-600 mt-3">Cada círculo es un municipio. <strong>Escoge el especialista que buscas y tu pueblo</strong>, y el mapa te dice si lo tienes cerca — o te traza la línea al pueblo más cercano que sí lo tiene, con la distancia. Todo verificado contra el registro federal NPPES, pueblo por pueblo, no por promedio.</p>
 
 <div class="not-prose mt-4 flex flex-wrap items-center gap-3">
   <label class="text-sm font-bold text-slate-700" for="spec-sel">¿Qué buscas?</label>
   <select id="spec-sel" class="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white min-w-[220px]"><option value="">Todos los especialistas</option></select>
+  <label class="text-sm font-bold text-slate-700" for="town-sel">¿De qué pueblo eres?</label>
+  <select id="town-sel" class="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white min-w-[180px]"><option value="">Todo PR</option></select>
   <span class="text-xs text-slate-500 hidden sm:inline">Toca un pueblo pa'l detalle</span>
 </div>
+
+<div id="resolver" class="not-prose hidden mt-3 rounded-2xl border p-4"></div>
 
 <div class="not-prose relative mt-3">
   <div id="reg-map" style="height:520px" class="rounded-2xl border border-slate-200 z-0"></div>
@@ -10722,7 +10726,44 @@ async function handleRegistroMapa(req: any, res: any) {
   var specs={};Object.values(D.matrix).forEach(function(o){Object.keys(o).forEach(function(s){specs[s]=(specs[s]||0)+o[s]})});
   var sel=document.getElementById('spec-sel');
   Object.keys(specs).sort().forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s+' ('+specs[s]+')';sel.appendChild(o)});
-  var markers=[];var cur='';
+  var townSel=document.getElementById('town-sel');
+  D.munis.slice().sort(function(a,b){return a.m.localeCompare(b.m,'es')}).forEach(function(x){var o=document.createElement('option');o.value=x.m;o.textContent=x.m;townSel.appendChild(o)});
+  var markers=[];var cur='';var town='';var line=null;
+  function haversine(a,b){var R=6371,dLat=(b.lat-a.lat)*Math.PI/180,dLon=(b.lon-a.lon)*Math.PI/180,la1=a.lat*Math.PI/180,la2=b.lat*Math.PI/180;var h=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.sin(dLon/2)*Math.sin(dLon/2)*Math.cos(la1)*Math.cos(la2);return R*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h))}
+  function nHere(x){return cur?((D.matrix[x.m]||{})[cur]||0):x.n}
+  function resolver(){
+    var box=document.getElementById('resolver');
+    if(line){map.removeLayer(line);line=null}
+    if(!town){box.className='not-prose hidden mt-3 rounded-2xl border p-4';return}
+    var me=D.munis.filter(function(x){return x.m===town})[0];if(!me){box.className='not-prose hidden mt-3 rounded-2xl border p-4';return}
+    var kw=cur?(D.kw[cur]||cur.toUpperCase().split(' ')[0]):'ESPECIALISTA';
+    var label=cur?esc(cur):'especialista';
+    var hereN=nHere(me);
+    var waLink=function(t){return 'https://wa.me/17874177711?text='+encodeURIComponent(t)};
+    if(hereN>0){
+      box.className='not-prose mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4';
+      box.innerHTML='<div class="text-emerald-900"><b>'+esc(town)+'</b> tiene <b>'+hereN+'</b> '+label+(hereN>1?'s':'')+' con práctica declarada.</div>'
+        +'<div class="mt-2 flex flex-wrap gap-2"><a class="text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-full px-3 py-1.5" href="'+waLink(kw)+'">Escríbele '+kw+' al Veci</a>'
+        +'<a class="text-sm font-bold text-white bg-teal-700 hover:bg-teal-800 rounded-full px-3 py-1.5" href="/pueblo/'+encodeURIComponent(town.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-'))+'">Ver los nombres en '+esc(town)+' →</a></div>';
+      map.setView([me.lat,me.lon],10);return;
+    }
+    // desierto: buscar el más cercano que sí lo tenga
+    var best=null,bd=Infinity;
+    D.munis.forEach(function(x){if(x.m===town)return;if(nHere(x)<=0)return;var d=haversine(me,x);if(d<bd){bd=d;best=x}});
+    if(!best){
+      box.className='not-prose mt-3 rounded-2xl border border-red-200 bg-red-50 p-4';
+      box.innerHTML='<div class="text-red-900">Ningún municipio de PR tiene un <b>'+label+'</b> con práctica declarada en el registro federal.</div>';
+      return;
+    }
+    var mins=Math.round(bd/0.7); // ~42 km/h promedio carretera PR
+    box.className='not-prose mt-3 rounded-2xl border border-amber-300 bg-amber-50 p-4';
+    box.innerHTML='<div class="text-amber-900"><b>'+esc(town)+'</b> no tiene ni un '+label+' declarado.</div>'
+      +'<div class="mt-1 text-slate-800">El más cercano está en <b>'+esc(best.m)+'</b> ('+((D.matrix[best.m]||{})[cur]||best.n)+' '+label+(((D.matrix[best.m]||{})[cur]||best.n)>1?'s':'')+') — a <b>~'+bd.toFixed(0)+' km</b>, unos '+mins+' min en carro.</div>'
+      +'<div class="mt-2 flex flex-wrap gap-2"><a class="text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-full px-3 py-1.5" href="'+waLink(kw)+'">Escríbele '+kw+' al Veci</a>'
+      +'<a class="text-sm font-bold text-white bg-teal-700 hover:bg-teal-800 rounded-full px-3 py-1.5" href="/pueblo/'+encodeURIComponent(best.m.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-'))+'">Ver los nombres en '+esc(best.m)+' →</a></div>';
+    line=L.polyline([[me.lat,me.lon],[best.lat,best.lon]],{color:'#0f766e',weight:3,dashArray:'6,6',opacity:0.8}).addTo(map);
+    try{map.fitBounds(line.getBounds().pad(0.4))}catch(_){}
+  }
   function colorFor(x){
     if(cur){var n=(D.matrix[x.m]||{})[cur]||0;return n===0?{c:'#7f1d1d',f:0.15}:n>=10?{c:'#10b981',f:0.75}:n>=3?{c:'#f59e0b',f:0.75}:{c:'#dc2626',f:0.75}}
     return x.n===0?{c:'#7f1d1d',f:0.15}:x.r10k>=20?{c:'#10b981',f:0.7}:x.r10k>=8?{c:'#f59e0b',f:0.7}:{c:'#dc2626',f:0.7}
@@ -10762,7 +10803,8 @@ async function handleRegistroMapa(req: any, res: any) {
       m.addTo(map);markers.push(m);
     });
   }
-  sel.addEventListener('change',function(){cur=sel.value;draw()});
+  sel.addEventListener('change',function(){cur=sel.value;draw();resolver()});
+  townSel.addEventListener('change',function(){town=townSel.value;resolver()});
   draw();
 })();
 </script>
