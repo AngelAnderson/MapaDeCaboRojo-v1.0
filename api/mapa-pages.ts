@@ -10684,14 +10684,14 @@ async function handleRegistroMapa(req: any, res: any) {
 
   const body = `
 <h1>El mapa de los médicos de Puerto Rico</h1>
-<p class="text-lg text-slate-600 mt-3">Cada círculo es un municipio. <strong>Escoge el especialista que buscas y tu pueblo</strong>, y el mapa te dice si lo tienes cerca — o te traza la línea al pueblo más cercano que sí lo tiene, con la distancia. Todo verificado contra el registro federal NPPES, pueblo por pueblo, no por promedio.</p>
+<p class="text-lg text-slate-600 mt-3">Cada círculo es un municipio. <strong>Escoge tu pueblo</strong> (o usa tu ubicación) y mira qué alcanzas en ~30 min de carro. <strong>Escoge además un especialista</strong> y el mapa te traza la línea al más cercano que sí lo tiene, con la distancia. Todo verificado contra el registro federal NPPES, pueblo por pueblo, no por promedio.</p>
 
 <div class="not-prose mt-4 flex flex-wrap items-center gap-3">
   <label class="text-sm font-bold text-slate-700" for="spec-sel">¿Qué buscas?</label>
   <select id="spec-sel" class="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white min-w-[220px]"><option value="">Todos los especialistas</option></select>
   <label class="text-sm font-bold text-slate-700" for="town-sel">¿De qué pueblo eres?</label>
   <select id="town-sel" class="border border-slate-300 rounded-lg px-3 py-2 text-sm bg-white min-w-[180px]"><option value="">Todo PR</option></select>
-  <span class="text-xs text-slate-500 hidden sm:inline">Toca un pueblo pa'l detalle</span>
+  <button id="geo-btn" type="button" class="text-sm font-semibold text-teal-700 border border-teal-300 rounded-lg px-3 py-2 hover:bg-teal-50">📍 Usar mi ubicación</button>
 </div>
 
 <div id="resolver" class="not-prose hidden mt-3 rounded-2xl border p-4"></div>
@@ -10731,13 +10731,32 @@ async function handleRegistroMapa(req: any, res: any) {
   var markers=[];var cur='';var town='';var line=null;
   function haversine(a,b){var R=6371,dLat=(b.lat-a.lat)*Math.PI/180,dLon=(b.lon-a.lon)*Math.PI/180,la1=a.lat*Math.PI/180,la2=b.lat*Math.PI/180;var h=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.sin(dLon/2)*Math.sin(dLon/2)*Math.cos(la1)*Math.cos(la2);return R*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h))}
   function nHere(x){return cur?((D.matrix[x.m]||{})[cur]||0):x.n}
+  var RADIO_KM=21; // ~30 min a 42 km/h en carretera PR
+  function chips(arr,cls){return arr.map(function(t){return '<span class="inline-block '+cls+' rounded-full px-2 py-0.5 text-xs font-semibold mr-1 mb-1">'+esc(t)+'</span>'}).join('')}
+  function catchment(me){
+    var box=document.getElementById('resolver');
+    var reach=D.munis.filter(function(x){return haversine(me,x)<=RADIO_KM});
+    var agg={};reach.forEach(function(x){var mx=D.matrix[x.m]||{};Object.keys(mx).forEach(function(s){agg[s]=(agg[s]||0)+mx[s]})});
+    var all=Object.keys(specs);var have=Object.keys(agg);
+    var topHave=have.slice().sort(function(a,b){return agg[b]-agg[a]}).slice(0,8);
+    var missing=all.filter(function(s){return !agg[s]}).sort(function(a,b){return specs[b]-specs[a]});
+    var totalDocs=have.reduce(function(a,s){return a+agg[s]},0);
+    box.className='not-prose mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4';
+    box.innerHTML='<div class="text-slate-900">Desde <b>'+esc(town)+'</b>, en <b>~30 min</b> de carro (radio '+RADIO_KM+' km) alcanzas <b>'+reach.length+'</b> pueblo'+(reach.length===1?'':'s')+' y <b>'+totalDocs+'</b> especialistas.</div>'
+      +'<div class="mt-1 text-slate-700">Tienes acceso a <b>'+have.length+' de '+all.length+'</b> tipos de especialista.</div>'
+      +(topHave.length?'<div class="mt-2 text-xs font-bold uppercase tracking-wide text-slate-500">Lo más disponible cerca</div><div class="mt-1">'+chips(topHave,'bg-emerald-100 text-emerald-800')+'</div>':'')
+      +(missing.length?'<div class="mt-3 text-xs font-bold uppercase tracking-wide text-slate-500">Lo que NO alcanzas ni en 30 min</div><div class="mt-1">'+chips(missing.slice(0,14),'bg-red-100 text-red-800')+(missing.length>14?'<span class="text-xs text-slate-500">+'+(missing.length-14)+' más</span>':'')+'</div>':'<div class="mt-2 text-sm text-emerald-800 font-semibold">Alcanzas todos los tipos de especialista en 30 min. Raro en PR.</div>')
+      +'<div class="mt-3 text-sm text-slate-600">Escoge un especialista arriba pa\\' ver el más cercano exacto y escribirle al Veci.</div>';
+    map.setView([me.lat,me.lon],9);
+  }
   function resolver(){
     var box=document.getElementById('resolver');
     if(line){map.removeLayer(line);line=null}
     if(!town){box.className='not-prose hidden mt-3 rounded-2xl border p-4';return}
     var me=D.munis.filter(function(x){return x.m===town})[0];if(!me){box.className='not-prose hidden mt-3 rounded-2xl border p-4';return}
-    var kw=cur?(D.kw[cur]||cur.toUpperCase().split(' ')[0]):'ESPECIALISTA';
-    var label=cur?esc(cur):'especialista';
+    if(!cur){catchment(me);return}
+    var kw=D.kw[cur]||cur.toUpperCase().split(' ')[0];
+    var label=esc(cur);
     var hereN=nHere(me);
     var waLink=function(t){return 'https://wa.me/17874177711?text='+encodeURIComponent(t)};
     if(hereN>0){
@@ -10803,9 +10822,28 @@ async function handleRegistroMapa(req: any, res: any) {
       m.addTo(map);markers.push(m);
     });
   }
-  sel.addEventListener('change',function(){cur=sel.value;draw();resolver()});
-  townSel.addEventListener('change',function(){town=townSel.value;resolver()});
+  function syncUrl(){var p=[];if(cur)p.push('spec='+encodeURIComponent(cur));if(town)p.push('pueblo='+encodeURIComponent(town));try{history.replaceState(null,'','/registro/mapa'+(p.length?('?'+p.join('&')):''))}catch(_){}}
+  sel.addEventListener('change',function(){cur=sel.value;draw();resolver();syncUrl()});
+  townSel.addEventListener('change',function(){town=townSel.value;resolver();syncUrl()});
+  var geoBtn=document.getElementById('geo-btn');
+  geoBtn.addEventListener('click',function(){
+    if(!navigator.geolocation){geoBtn.textContent='No disponible';return}
+    var orig=geoBtn.textContent;geoBtn.textContent='Buscando…';geoBtn.disabled=true;
+    navigator.geolocation.getCurrentPosition(function(pos){
+      var me={lat:pos.coords.latitude,lon:pos.coords.longitude},best=null,bd=Infinity;
+      D.munis.forEach(function(x){var d=haversine(me,x);if(d<bd){bd=d;best=x}});
+      geoBtn.textContent=orig;geoBtn.disabled=false;
+      if(best){town=best.m;townSel.value=best.m;resolver();syncUrl()}
+    },function(){geoBtn.textContent=orig;geoBtn.disabled=false});
+  });
+  // deep-link: ?spec= &pueblo= dejan cada resultado citeable/compartible
+  try{var q=new URLSearchParams(location.search);
+    var qs=q.get('spec'),qp=q.get('pueblo');
+    if(qs){for(var i=0;i<sel.options.length;i++){if(sel.options[i].value.toLowerCase()===qs.toLowerCase()){sel.value=sel.options[i].value;cur=sel.value;break}}}
+    if(qp){for(var j=0;j<townSel.options.length;j++){if(townSel.options[j].value.toLowerCase()===qp.toLowerCase()){townSel.value=townSel.options[j].value;town=townSel.value;break}}}
+  }catch(_){}
   draw();
+  if(town)resolver();
 })();
 </script>
 `
