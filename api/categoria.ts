@@ -437,6 +437,44 @@ export default async function handler(req: any, res: any) {
   }
   const zoneMap = new Map<string, Zone>();
   if (isRestaurant) for (const p of filtered) zoneMap.set(p.id, zoneOf(p));
+
+  // Tipo de negocio (producto) + bandera food truck — "foodtruck es foodtruck, helado es helado" (Angel 2026-07-24)
+  type FoodType = { key: string; label: string; emoji: string };
+  function typeOf(p: any): FoodType {
+    const hay = `${(p.subcategory || '').toLowerCase()} ${(p.name || '').toLowerCase()} ${(Array.isArray(p.tags) ? p.tags.join(' ') : '').toLowerCase()}`;
+    const has = (...xs: string[]) => xs.some(x => hay.includes(x));
+    if (has('helado', 'ice cream', 'mantecado', 'creamery', 'gelato', 'frozen', 'açaí', 'acai', 'frappe')) return { key: 'heladeria', label: 'Heladerías y postres', emoji: '🍦' };
+    if (has('panad', 'bakery', 'reposter', 'pastry', 'bizcocho', 'cake', 'pastel', 'dulce')) return { key: 'panaderia', label: 'Panaderías y repostería', emoji: '🥖' };
+    if (has('café', 'cafe', 'coffee', 'brunch', 'cafeter')) return { key: 'cafe', label: 'Cafés y brunch', emoji: '☕' };
+    if (has('pizza', 'pizzer')) return { key: 'pizza', label: 'Pizzerías', emoji: '🍕' };
+    if (has('marisco', 'seafood', 'pescad', 'ostion', 'ostión')) return { key: 'mariscos', label: 'Mariscos', emoji: '🦞' };
+    if (has('gastrobar', 'bar &', '& bar', 'cervec', 'tapas', 'pub', 'grill house', 'rooftop')) return { key: 'bar', label: 'Bares y grills', emoji: '🍻' };
+    if (has('pincho', 'burger', 'hamburgues', 'hot dog', 'hot_dog', 'sandwich', 'sándwich', 'empanadilla', 'taco', 'cuchifrito', 'lechonera', 'fritura', 'comida rápida', 'comida rapida', 'fast')) return { key: 'rapida', label: 'Comida rápida y chinchorro', emoji: '🍢' };
+    return { key: 'mesa', label: 'Restaurantes de mesa', emoji: '🍽️' };
+  }
+  const typeMap = new Map<string, FoodType>();
+  const ftSet = new Set<string>();
+  if (isRestaurant) {
+    for (const p of filtered) {
+      typeMap.set(p.id, typeOf(p));
+      const sub = (p.subcategory || '').toLowerCase();
+      const tgs = Array.isArray(p.tags) ? p.tags.join(' ').toLowerCase() : '';
+      if (sub.includes('food truck') || sub.includes('foodtruck') || tgs.includes('food truck') || tgs.includes('foodtruck')) ftSet.add(p.id);
+    }
+  }
+  const TYPE_ORDER = ['mesa', 'mariscos', 'pizza', 'cafe', 'panaderia', 'heladeria', 'bar', 'rapida'];
+  const typeCounts = new Map<string, { label: string; emoji: string; n: number }>();
+  if (isRestaurant) {
+    for (const p of filtered) {
+      const t = typeMap.get(p.id)!;
+      const cur = typeCounts.get(t.key);
+      if (cur) cur.n++; else typeCounts.set(t.key, { label: t.label, emoji: t.emoji, n: 1 });
+    }
+  }
+  const typeGroups = TYPE_ORDER.filter(k => typeCounts.has(k)).map(k => ({ key: k, ...typeCounts.get(k)! }));
+  const ftCount = ftSet.size;
+  // La Selección = curados editorialmente (sponsor_weight >= 20). Los que "valen la vuelta".
+  const seleccionSet = new Set<string>(isRestaurant ? filtered.filter((p: any) => (Number(p.sponsor_weight) || 0) >= 20).map((p: any) => p.id) : []);
   const ZONE_ORDER = ['joyuda', 'boqueron', 'combate', 'puerto-real', 'pueblo'];
   const zoneCounts = new Map<string, { label: string; emoji: string; n: number }>();
   if (isRestaurant) {
@@ -690,9 +728,13 @@ export default async function handler(req: any, res: any) {
         const oneLinerHtml = (isHealth && p.one_liner)
           ? `<p style="font-size:0.8rem;color:#475569;margin:0 0 0.45rem;line-height:1.4;">${esc(p.one_liner)}</p>`
           : '';
+        const isSel = seleccionSet.has(p.id);
         const dataSpec = isHealth
           ? ` data-specialty="${esc((specMap.get(p.id) || { key: 'otros' }).key)}"`
-          : (isRestaurant ? ` data-zone="${esc((zoneMap.get(p.id) || { key: 'pueblo' }).key)}"` : '');
+          : (isRestaurant ? ` data-zone="${esc((zoneMap.get(p.id) || { key: 'pueblo' }).key)}" data-type="${esc((typeMap.get(p.id) || { key: 'mesa' }).key)}" data-ft="${ftSet.has(p.id) ? '1' : '0'}" data-sel="${isSel ? '1' : '0'}"` : '');
+        const selRibbon = isSel
+          ? `<div style="position:absolute;top:0;left:0;background:linear-gradient(135deg,#f59e0b,#ea580c);color:white;font-size:0.62rem;font-weight:800;letter-spacing:0.04em;padding:0.25rem 0.6rem;border-bottom-right-radius:10px;text-transform:uppercase;z-index:2;box-shadow:0 1px 4px rgba(0,0,0,0.25);">⭐ La Selección</div>`
+          : '';
         const servesCR = Array.isArray(p.tags) && p.tags.includes('sirve-cabo-rojo');
         const inCR = (p.address || '').toLowerCase().includes('cabo rojo');
         const locHtml = (servesCR && !inCR)
@@ -722,7 +764,8 @@ export default async function handler(req: any, res: any) {
                </a>`
             : '');
         return `
-        <div${dataSpec} style="background:white;border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.07);transition:box-shadow 0.2s;">
+        <div${dataSpec} style="position:relative;background:white;border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.07);transition:box-shadow 0.2s;${isSel ? 'outline:2px solid #f59e0b;outline-offset:-1px;' : ''}">
+          ${selRibbon}
           <a href="${detailPath}" style="display:block;text-decoration:none;color:inherit;">
             ${p.image_url
               ? `<div style="width:100%;height:160px;background:linear-gradient(135deg,#0d9488,#f97316);display:flex;align-items:center;justify-content:center;font-size:2.5rem;" data-emoji="${esc(emoji)}"><img src="${esc(p.image_url)}" alt="${esc(p.name)}" style="width:100%;height:160px;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none';this.parentElement.textContent=this.parentElement.dataset.emoji"></div>`
@@ -824,53 +867,88 @@ export default async function handler(req: any, res: any) {
     { slug: 'panaderia', label: 'Panaderías', emoji: '🥖' },
     { slug: 'helados', label: 'Heladerías', emoji: '🍦' },
   ];
+  const selCount = seleccionSet.size;
   const restaurantHtml = (isRestaurant && filtered.length > 0) ? `
+    ${selCount > 0 ? `
+    <div class="sel-note">
+      <h2>⭐ La Selección de Cabo Rojo</h2>
+      <p>Los ${selCount} de arriba, marcados en dorado, son los que valen la vuelta: cocina de mesa, mariscos frente al mar y sitios que ponen el nombre del pueblo en alto. No es publicidad — es criterio. El resto lo tienes completo aquí abajo, filtrado por tipo y zona.</p>
+    </div>` : ''}
     <div class="triage">
-      <h2>🍽️ ¿Por dónde vas a comer?</h2>
-      <div class="pills" id="zone-pills" style="margin-bottom:0.85rem;">
-        <button type="button" class="sb-pill active" data-zone-filter="all">Todos (${filtered.length})</button>
-        ${zoneGroups.map(g => `<button type="button" class="sb-pill" data-zone-filter="${g.key}">${g.emoji} ${esc(g.label)} (${g.n})</button>`).join('')}
-        <button type="button" class="sb-pill" data-zone-filter="open-now" id="open-now-pill" style="border-color:#22c55e;color:#15803d;">🟢 Abierto ahora</button>
+      <h2>🍽️ ¿Qué buscas hoy?</h2>
+      <p class="triage-lbl">Por tipo</p>
+      <div class="pills" id="type-pills">
+        <button type="button" class="sb-pill active" data-type-filter="all">Todo (${filtered.length})</button>
+        ${typeGroups.map(g => `<button type="button" class="sb-pill" data-type-filter="${g.key}">${g.emoji} ${esc(g.label)} (${g.n})</button>`).join('')}
+        ${ftCount > 0 ? `<button type="button" class="sb-pill" data-type-filter="ft">🚚 Food Trucks (${ftCount})</button>` : ''}
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:0.85rem;">
+      <p class="triage-lbl">Por zona</p>
+      <div class="pills" id="zone-pills">
+        <button type="button" class="sb-pill active" data-zone-filter="all">Toda</button>
+        ${zoneGroups.map(g => `<button type="button" class="sb-pill" data-zone-filter="${g.key}">${g.emoji} ${esc(g.label)} (${g.n})</button>`).join('')}
+      </div>
+      <label class="open-toggle"><input type="checkbox" id="open-now-chk"> 🟢 Solo abiertos ahora</label>
+      <p class="result-count" id="result-count"></p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin:0.35rem 0 0.85rem;">
         ${FOOD_SUBPAGES.map(s => `<a href="${baseUrl}/categoria/${s.slug}" style="display:inline-flex;align-items:center;gap:5px;background:white;border:1px solid #cbd5e1;border-radius:20px;padding:5px 13px;font-size:0.82rem;color:#334155;text-decoration:none;">${s.emoji} ${esc(s.label)} →</a>`).join('')}
       </div>
       <a class="triage-veci" href="https://wa.me/17874177711?text=${encodeURIComponent('COMIDA: ')}">¿Antojo y no sabes dónde? Dile a El Veci → 787-417-7711</a>
     </div>
     <style>
+      .sel-note { background:linear-gradient(135deg,#fffbeb,#fef3c7); border:1px solid #fcd34d; border-left:4px solid #f59e0b; border-radius:12px; padding:1rem 1.25rem; margin-bottom:1rem; }
+      .sel-note h2 { font-size:1.05rem; font-weight:700; color:#92400e; margin-bottom:0.35rem; }
+      .sel-note p { font-size:0.88rem; color:#78350f; line-height:1.5; margin:0; }
       .triage { background:linear-gradient(135deg,#fff7ed,#fefce8); border:1px solid #fed7aa; border-radius:14px; padding:1.1rem 1.25rem; margin-bottom:1.25rem; }
-      .triage h2 { font-size:1.05rem; font-weight:700; color:#9a3412; margin-bottom:0.7rem; }
+      .triage h2 { font-size:1.05rem; font-weight:700; color:#9a3412; margin-bottom:0.6rem; }
+      .triage-lbl { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#c2683a; margin:0.5rem 0 0.4rem; }
       .triage-veci { display:block; background:#0d9488; color:white; text-decoration:none; text-align:center; padding:0.7rem 1rem; border-radius:10px; font-weight:600; font-size:0.9rem; }
       .pills { display:flex; flex-wrap:wrap; gap:8px; }
       .sb-pill { background:white; border:1.5px solid #fdba74; color:#9a3412; padding:7px 14px; border-radius:999px; font-size:0.85rem; cursor:pointer; font-weight:600; transition:all 0.15s; }
       .sb-pill:hover { background:#ffedd5; }
       .sb-pill.active { background:#ea580c; color:white; border-color:#ea580c; }
+      .open-toggle { display:inline-flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:#15803d; margin:0.85rem 0 0.2rem; cursor:pointer; }
+      .result-count { font-size:0.78rem; color:#9a3412; margin:0.5rem 0 0; min-height:1rem; }
     </style>
     <script>
     (function(){
       function init(){
-        var wrap = document.getElementById('zone-pills');
-        if (!wrap) return;
-        function apply(key){
-          var cards = document.querySelectorAll('.grid [data-zone]');
+        var state = { type:'all', zone:'all', open:false };
+        var typeWrap = document.getElementById('type-pills');
+        var zoneWrap = document.getElementById('zone-pills');
+        var chk = document.getElementById('open-now-chk');
+        var countEl = document.getElementById('result-count');
+        if (!typeWrap || !zoneWrap) return;
+        function apply(){
+          var cards = document.querySelectorAll('.grid [data-type]');
+          var shown = 0;
           for (var i=0;i<cards.length;i++){
-            var c = cards[i], show;
-            if (key === 'all') show = true;
-            else if (key === 'open-now') {
-              var st = c.querySelector('.open-status');
-              show = !!(st && st.textContent.indexOf('🟢') === 0);
-            }
-            else show = c.getAttribute('data-zone') === key;
-            c.style.display = show ? '' : 'none';
+            var c = cards[i], ok = true;
+            if (state.type === 'ft') { if (c.getAttribute('data-ft') !== '1') ok = false; }
+            else if (state.type !== 'all' && c.getAttribute('data-type') !== state.type) ok = false;
+            if (ok && state.zone !== 'all' && c.getAttribute('data-zone') !== state.zone) ok = false;
+            if (ok && state.open) { var st = c.querySelector('.open-status'); if (!(st && st.textContent.indexOf('🟢') === 0)) ok = false; }
+            c.style.display = ok ? '' : 'none';
+            if (ok) shown++;
           }
-          var ps = wrap.querySelectorAll('.sb-pill');
-          for (var j=0;j<ps.length;j++){ ps[j].classList.toggle('active', ps[j].getAttribute('data-zone-filter')===key); }
-          try { gtag('event', 'restaurantes_zone_filter', { zone: key }); } catch(e) {}
+          if (countEl) countEl.textContent = shown + (shown === 1 ? ' sitio' : ' sitios') + ' con este filtro';
         }
-        var btns = wrap.querySelectorAll('[data-zone-filter]');
-        for (var k=0;k<btns.length;k++){
-          btns[k].addEventListener('click', function(e){ e.preventDefault(); apply(this.getAttribute('data-zone-filter')); var g=document.querySelector('.grid'); if(g) g.scrollIntoView({behavior:'smooth',block:'start'}); });
+        function bind(wrap, attr, key){
+          var btns = wrap.querySelectorAll('['+attr+']');
+          for (var k=0;k<btns.length;k++){
+            btns[k].addEventListener('click', function(e){
+              e.preventDefault();
+              state[key] = this.getAttribute(attr);
+              var ps = wrap.querySelectorAll('.sb-pill');
+              for (var j=0;j<ps.length;j++){ ps[j].classList.toggle('active', ps[j]===this); }
+              apply();
+              var g=document.querySelector('.grid'); if(g) g.scrollIntoView({behavior:'smooth',block:'start'});
+              try { gtag('event','restaurantes_filter',{ type: state.type, zone: state.zone, open: state.open }); } catch(err) {}
+            });
+          }
         }
+        bind(typeWrap, 'data-type-filter', 'type');
+        bind(zoneWrap, 'data-zone-filter', 'zone');
+        if (chk) chk.addEventListener('change', function(){ state.open = chk.checked; apply(); });
       }
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
     })();
@@ -1187,10 +1265,11 @@ export default async function handler(req: any, res: any) {
     })() : ''}
 
     <div style="background:linear-gradient(135deg,#0d9488 0%,#f97316 100%);border-radius:12px;padding:1.75rem 1.5rem;text-align:center;margin-bottom:2rem;">
-      <h2 style="color:white;font-size:1.2rem;font-weight:700;margin-bottom:0.5rem;">¿Tienes ${detailRoute && HEALTH_CTA_NOUN[cat] ? `${HEALTH_CTA_NOUN[cat].article} ${HEALTH_CTA_NOUN[cat].noun}` : 'un negocio'} en Cabo Rojo?</h2>
+      <h2 style="color:white;font-size:1.2rem;font-weight:700;margin-bottom:0.5rem;">${isRestaurant ? '¿Tu restaurante debería estar en La Selección?' : `¿Tienes ${detailRoute && HEALTH_CTA_NOUN[cat] ? `${HEALTH_CTA_NOUN[cat].article} ${HEALTH_CTA_NOUN[cat].noun}` : 'un negocio'} en Cabo Rojo?`}</h2>
       <p style="color:rgba(255,255,255,0.9);font-size:0.9rem;margin-bottom:1rem;">${(() => {
         const totalUsers = demandRows.reduce((s, r) => s + r.users, 0);
         const totalFailed = demandRows.reduce((s, r) => s + r.failed, 0);
+        if (isRestaurant) return `Así se ve un negocio que la gente encuentra primero: arriba, con foto, horario y reseñas a la vista. Los de arriba no pagaron por el orden — se lo ganaron. Si quieres que tu restaurante aparezca donde la gente decide dónde comer, La Vitrina te pone ahí. $799/año.`;
         if (totalFailed >= 2) return `${totalFailed} vecinos buscaron y NO encontraron resultado este trimestre. Destaca con La Vitrina — apareces primero, servicios y fotos visibles. $799/año.`;
         if (totalUsers >= 3) return `${totalUsers} vecinos buscaron ${displayName.toLowerCase()} en El Veci este trimestre. Destaca con La Vitrina — apareces primero. $799/año.`;
         return `Destaca con La Vitrina — servicios, fotos, reviews, y apareces primero. $799/año.`;
