@@ -473,8 +473,6 @@ export default async function handler(req: any, res: any) {
   }
   const typeGroups = TYPE_ORDER.filter(k => typeCounts.has(k)).map(k => ({ key: k, ...typeCounts.get(k)! }));
   const ftCount = ftSet.size;
-  // La Selección = curados editorialmente (sponsor_weight >= 20). Los que "valen la vuelta".
-  const seleccionSet = new Set<string>(isRestaurant ? filtered.filter((p: any) => (Number(p.sponsor_weight) || 0) >= 20).map((p: any) => p.id) : []);
   const ZONE_ORDER = ['joyuda', 'boqueron', 'combate', 'puerto-real', 'pueblo'];
   const zoneCounts = new Map<string, { label: string; emoji: string; n: number }>();
   if (isRestaurant) {
@@ -728,13 +726,9 @@ export default async function handler(req: any, res: any) {
         const oneLinerHtml = (isHealth && p.one_liner)
           ? `<p style="font-size:0.8rem;color:#475569;margin:0 0 0.45rem;line-height:1.4;">${esc(p.one_liner)}</p>`
           : '';
-        const isSel = seleccionSet.has(p.id);
         const dataSpec = isHealth
           ? ` data-specialty="${esc((specMap.get(p.id) || { key: 'otros' }).key)}"`
-          : (isRestaurant ? ` data-zone="${esc((zoneMap.get(p.id) || { key: 'pueblo' }).key)}" data-type="${esc((typeMap.get(p.id) || { key: 'mesa' }).key)}" data-ft="${ftSet.has(p.id) ? '1' : '0'}" data-sel="${isSel ? '1' : '0'}"` : '');
-        const selRibbon = isSel
-          ? `<div style="position:absolute;top:0;left:0;background:linear-gradient(135deg,#f59e0b,#ea580c);color:white;font-size:0.62rem;font-weight:800;letter-spacing:0.04em;padding:0.25rem 0.6rem;border-bottom-right-radius:10px;text-transform:uppercase;z-index:2;box-shadow:0 1px 4px rgba(0,0,0,0.25);">⭐ La Selección</div>`
-          : '';
+          : (isRestaurant ? ` data-zone="${esc((zoneMap.get(p.id) || { key: 'pueblo' }).key)}" data-type="${esc((typeMap.get(p.id) || { key: 'mesa' }).key)}" data-ft="${ftSet.has(p.id) ? '1' : '0'}"` : '');
         const servesCR = Array.isArray(p.tags) && p.tags.includes('sirve-cabo-rojo');
         const inCR = (p.address || '').toLowerCase().includes('cabo rojo');
         const locHtml = (servesCR && !inCR)
@@ -764,8 +758,7 @@ export default async function handler(req: any, res: any) {
                </a>`
             : '');
         return `
-        <div${dataSpec} style="position:relative;background:white;border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.07);transition:box-shadow 0.2s;${isSel ? 'outline:2px solid #f59e0b;outline-offset:-1px;' : ''}">
-          ${selRibbon}
+        <div${dataSpec} style="position:relative;background:white;border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.07);transition:box-shadow 0.2s;">
           <a href="${detailPath}" style="display:block;text-decoration:none;color:inherit;">
             ${p.image_url
               ? `<div style="width:100%;height:160px;background:linear-gradient(135deg,#0d9488,#f97316);display:flex;align-items:center;justify-content:center;font-size:2.5rem;" data-emoji="${esc(emoji)}"><img src="${esc(p.image_url)}" alt="${esc(p.name)}" style="width:100%;height:160px;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none';this.parentElement.textContent=this.parentElement.dataset.emoji"></div>`
@@ -867,13 +860,7 @@ export default async function handler(req: any, res: any) {
     { slug: 'panaderia', label: 'Panaderías', emoji: '🥖' },
     { slug: 'helados', label: 'Heladerías', emoji: '🍦' },
   ];
-  const selCount = seleccionSet.size;
   const restaurantHtml = (isRestaurant && filtered.length > 0) ? `
-    ${selCount > 0 ? `
-    <div class="sel-note">
-      <h2>⭐ La Selección de Cabo Rojo</h2>
-      <p>Los ${selCount} de arriba, marcados en dorado, son los que valen la vuelta: cocina de mesa, mariscos frente al mar y sitios que ponen el nombre del pueblo en alto. No es publicidad — es criterio. El resto lo tienes completo aquí abajo, filtrado por tipo y zona.</p>
-    </div>` : ''}
     <div class="triage">
       <h2>🍽️ ¿Qué buscas hoy?</h2>
       <p class="triage-lbl">Por tipo</p>
@@ -887,7 +874,8 @@ export default async function handler(req: any, res: any) {
         <button type="button" class="sb-pill active" data-zone-filter="all">Toda</button>
         ${zoneGroups.map(g => `<button type="button" class="sb-pill" data-zone-filter="${g.key}">${g.emoji} ${esc(g.label)} (${g.n})</button>`).join('')}
       </div>
-      <label class="open-toggle"><input type="checkbox" id="open-now-chk"> 🟢 Solo abiertos ahora</label>
+      <label class="open-toggle"><input type="checkbox" id="open-now-chk"> 🟢 Esconder los cerrados</label>
+      <p class="open-count" id="open-count"></p>
       <p class="result-count" id="result-count"></p>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin:0.35rem 0 0.85rem;">
         ${FOOD_SUBPAGES.map(s => `<a href="${baseUrl}/categoria/${s.slug}" style="display:inline-flex;align-items:center;gap:5px;background:white;border:1px solid #cbd5e1;border-radius:20px;padding:5px 13px;font-size:0.82rem;color:#334155;text-decoration:none;">${s.emoji} ${esc(s.label)} →</a>`).join('')}
@@ -895,9 +883,6 @@ export default async function handler(req: any, res: any) {
       <a class="triage-veci" href="https://wa.me/17874177711?text=${encodeURIComponent('COMIDA: ')}">¿Antojo y no sabes dónde? Dile a El Veci → 787-417-7711</a>
     </div>
     <style>
-      .sel-note { background:linear-gradient(135deg,#fffbeb,#fef3c7); border:1px solid #fcd34d; border-left:4px solid #f59e0b; border-radius:12px; padding:1rem 1.25rem; margin-bottom:1rem; }
-      .sel-note h2 { font-size:1.05rem; font-weight:700; color:#92400e; margin-bottom:0.35rem; }
-      .sel-note p { font-size:0.88rem; color:#78350f; line-height:1.5; margin:0; }
       .triage { background:linear-gradient(135deg,#fff7ed,#fefce8); border:1px solid #fed7aa; border-radius:14px; padding:1.1rem 1.25rem; margin-bottom:1.25rem; }
       .triage h2 { font-size:1.05rem; font-weight:700; color:#9a3412; margin-bottom:0.6rem; }
       .triage-lbl { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#c2683a; margin:0.5rem 0 0.4rem; }
@@ -907,7 +892,8 @@ export default async function handler(req: any, res: any) {
       .sb-pill:hover { background:#ffedd5; }
       .sb-pill.active { background:#ea580c; color:white; border-color:#ea580c; }
       .open-toggle { display:inline-flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:#15803d; margin:0.85rem 0 0.2rem; cursor:pointer; }
-      .result-count { font-size:0.78rem; color:#9a3412; margin:0.5rem 0 0; min-height:1rem; }
+      .open-count { font-size:0.82rem; font-weight:700; color:#15803d; margin:0.3rem 0 0; min-height:1rem; }
+      .result-count { font-size:0.78rem; color:#9a3412; margin:0.35rem 0 0; min-height:1rem; }
     </style>
     <script>
     (function(){
@@ -949,6 +935,18 @@ export default async function handler(req: any, res: any) {
         bind(typeWrap, 'data-type-filter', 'type');
         bind(zoneWrap, 'data-zone-filter', 'zone');
         if (chk) chk.addEventListener('change', function(){ state.open = chk.checked; apply(); });
+        // Autónomo: los abiertos AHORA flotan arriba (preserva el orden curado dentro de cada grupo).
+        // Corre tras el 'load' para que los badges de horario ya estén recomputados en hora de PR.
+        function openFirst(){
+          var grid = document.querySelector('.grid'); if(!grid) return;
+          var cards = Array.prototype.slice.call(grid.querySelectorAll('[data-type]'));
+          var open = [], rest = [];
+          cards.forEach(function(c){ var st = c.querySelector('.open-status'); if (st && st.textContent.indexOf('🟢') === 0) open.push(c); else rest.push(c); });
+          if (!open.length) return;
+          open.concat(rest).forEach(function(c){ grid.appendChild(c); });
+          var n = document.getElementById('open-count'); if (n) n.textContent = open.length + (open.length === 1 ? ' abierto ahora mismo' : ' abiertos ahora mismo') + ' · arriba';
+        }
+        if (document.readyState === 'complete') openFirst(); else window.addEventListener('load', openFirst);
       }
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
     })();
@@ -1302,6 +1300,7 @@ export default async function handler(req: any, res: any) {
               const ph = p.phone ? p.phone.replace(/\D/g, '').slice(-10) : null;
               return ph && ph.length === 10 ? ph : null;
             })(),
+            emoji: isRestaurant ? (typeMap.get(p.id) || { emoji: '🍽️' }).emoji : emoji,
             detailPath: (HEALTH_DETAIL_ROUTES[cat] || null)
               ? `/${HEALTH_DETAIL_ROUTES[cat]}/${p.slug || p.id}`
               : `/negocio/${p.slug || p.id}`,
@@ -1340,12 +1339,14 @@ export default async function handler(req: any, res: any) {
           '<a href="' + escHtml(p.detailPath) + '">Ver perfil →</a>',
         ].filter(Boolean).join('<br>');
 
+        // Marcador tipo "pin": círculo blanco con el emoji del tipo (más legible que el pin genérico)
+        var glyph = p.emoji || '📍';
         var icon = L.divIcon({
           className: '',
-          html: '<div style="width:28px;height:28px;background:' + teal + ';border:2.5px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;font-size:12px;">📍</div>',
-          iconSize: [28, 28],
-          iconAnchor: [14, 14],
-          popupAnchor: [0, -16],
+          html: '<div style="width:34px;height:34px;background:white;border:2.5px solid ' + teal + ';border-radius:50% 50% 50% 4px;transform:rotate(45deg);box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;"><span style="transform:rotate(-45deg);font-size:16px;line-height:1;">' + glyph + '</span></div>',
+          iconSize: [34, 34],
+          iconAnchor: [17, 32],
+          popupAnchor: [0, -30],
         });
 
         var marker = L.marker([p.lat, p.lon], { icon: icon })
