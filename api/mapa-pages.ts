@@ -10733,6 +10733,7 @@ async function handleRegistroMapa(req: any, res: any) {
   function nHere(x){return cur?((D.matrix[x.m]||{})[cur]||0):x.n}
   var RADIO_KM=21; // ~30 min a 42 km/h en carretera PR
   function chips(arr,cls){return arr.map(function(t){return '<span class="inline-block '+cls+' rounded-full px-2 py-0.5 text-xs font-semibold mr-1 mb-1">'+esc(t)+'</span>'}).join('')}
+  function hatch(){return '<div class="mt-3 pt-2 border-t border-slate-200 text-xs text-slate-500">¿No eres de '+esc(town)+'? Cambia tu pueblo arriba 👆 o toca <b>📍 Usar mi ubicación</b>.</div>'}
   function catchment(me){
     var box=document.getElementById('resolver');
     var reach=D.munis.filter(function(x){return haversine(me,x)<=RADIO_KM});
@@ -10746,13 +10747,13 @@ async function handleRegistroMapa(req: any, res: any) {
       +'<div class="mt-1 text-slate-700">Tienes acceso a <b>'+have.length+' de '+all.length+'</b> tipos de especialista.</div>'
       +(topHave.length?'<div class="mt-2 text-xs font-bold uppercase tracking-wide text-slate-500">Lo más disponible cerca</div><div class="mt-1">'+chips(topHave,'bg-emerald-100 text-emerald-800')+'</div>':'')
       +(missing.length?'<div class="mt-3 text-xs font-bold uppercase tracking-wide text-slate-500">Lo que NO alcanzas ni en 30 min</div><div class="mt-1">'+chips(missing.slice(0,14),'bg-red-100 text-red-800')+(missing.length>14?'<span class="text-xs text-slate-500">+'+(missing.length-14)+' más</span>':'')+'</div>':'<div class="mt-2 text-sm text-emerald-800 font-semibold">Alcanzas todos los tipos de especialista en 30 min. Raro en PR.</div>')
-      +'<div class="mt-3 text-sm text-slate-600">Escoge un especialista arriba pa\\' ver el más cercano exacto y escribirle al Veci.</div>';
+      +'<div class="mt-3 text-sm text-slate-600">Escoge un especialista arriba pa\\' ver el más cercano exacto y escribirle al Veci.</div>'+hatch();
     map.setView([me.lat,me.lon],9);
   }
   function resolver(){
     var box=document.getElementById('resolver');
     if(line){map.removeLayer(line);line=null}
-    if(!town){box.className='not-prose hidden mt-3 rounded-2xl border p-4';return}
+    if(!town){box.className='not-prose mt-3 rounded-2xl border border-teal-200 bg-teal-50 p-4';box.innerHTML='<div class="text-teal-900">👋 <b>¿De qué pueblo eres?</b> Escógelo arriba o toca <b>📍 Usar mi ubicación</b> pa\\' ver qué especialistas tienes cerca — y a cuánto está el más cercano.</div>';return}
     var me=D.munis.filter(function(x){return x.m===town})[0];if(!me){box.className='not-prose hidden mt-3 rounded-2xl border p-4';return}
     if(!cur){catchment(me);return}
     var kw=D.kw[cur]||cur.toUpperCase().split(' ')[0];
@@ -10763,7 +10764,7 @@ async function handleRegistroMapa(req: any, res: any) {
       box.className='not-prose mt-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-4';
       box.innerHTML='<div class="text-emerald-900"><b>'+esc(town)+'</b> tiene <b>'+hereN+'</b> '+label+(hereN>1?'s':'')+' con práctica declarada.</div>'
         +'<div class="mt-2 flex flex-wrap gap-2"><a class="text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-full px-3 py-1.5" href="'+waLink(kw)+'">Escríbele '+kw+' al Veci</a>'
-        +'<a class="text-sm font-bold text-white bg-teal-700 hover:bg-teal-800 rounded-full px-3 py-1.5" href="/pueblo/'+encodeURIComponent(town.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-'))+'">Ver los nombres en '+esc(town)+' →</a></div>';
+        +'<a class="text-sm font-bold text-white bg-teal-700 hover:bg-teal-800 rounded-full px-3 py-1.5" href="/pueblo/'+encodeURIComponent(town.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-'))+'">Ver los nombres en '+esc(town)+' →</a></div>'+hatch();
       map.setView([me.lat,me.lon],10);return;
     }
     // desierto: buscar el más cercano que sí lo tenga
@@ -10779,7 +10780,7 @@ async function handleRegistroMapa(req: any, res: any) {
     box.innerHTML='<div class="text-amber-900"><b>'+esc(town)+'</b> no tiene ni un '+label+' declarado.</div>'
       +'<div class="mt-1 text-slate-800">El más cercano está en <b>'+esc(best.m)+'</b> ('+((D.matrix[best.m]||{})[cur]||best.n)+' '+label+(((D.matrix[best.m]||{})[cur]||best.n)>1?'s':'')+') — a <b>~'+bd.toFixed(0)+' km</b>, unos '+mins+' min en carro.</div>'
       +'<div class="mt-2 flex flex-wrap gap-2"><a class="text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-full px-3 py-1.5" href="'+waLink(kw)+'">Escríbele '+kw+' al Veci</a>'
-      +'<a class="text-sm font-bold text-white bg-teal-700 hover:bg-teal-800 rounded-full px-3 py-1.5" href="/pueblo/'+encodeURIComponent(best.m.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-'))+'">Ver los nombres en '+esc(best.m)+' →</a></div>';
+      +'<a class="text-sm font-bold text-white bg-teal-700 hover:bg-teal-800 rounded-full px-3 py-1.5" href="/pueblo/'+encodeURIComponent(best.m.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-'))+'">Ver los nombres en '+esc(best.m)+' →</a></div>'+hatch();
     line=L.polyline([[me.lat,me.lon],[best.lat,best.lon]],{color:'#0f766e',weight:3,dashArray:'6,6',opacity:0.8}).addTo(map);
     try{map.fitBounds(line.getBounds().pad(0.4))}catch(_){}
   }
@@ -10843,7 +10844,7 @@ async function handleRegistroMapa(req: any, res: any) {
     if(qp){for(var j=0;j<townSel.options.length;j++){if(townSel.options[j].value.toLowerCase()===qp.toLowerCase()){townSel.value=townSel.options[j].value;town=townSel.value;break}}}
   }catch(_){}
   draw();
-  if(town)resolver();
+  resolver();
 })();
 </script>
 `
