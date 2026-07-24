@@ -874,7 +874,7 @@ export default async function handler(req: any, res: any) {
         <button type="button" class="sb-pill active" data-zone-filter="all">Toda</button>
         ${zoneGroups.map(g => `<button type="button" class="sb-pill" data-zone-filter="${g.key}">${g.emoji} ${esc(g.label)} (${g.n})</button>`).join('')}
       </div>
-      <label class="open-toggle"><input type="checkbox" id="open-now-chk"> 🟢 Esconder los cerrados</label>
+      <label class="open-toggle"><input type="checkbox" id="open-now-chk"> 🟢 Ver solo los que están abiertos ahora mismo</label>
       <p class="open-count" id="open-count"></p>
       <p class="result-count" id="result-count"></p>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin:0.35rem 0 0.85rem;">
