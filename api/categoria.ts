@@ -424,6 +424,37 @@ export default async function handler(req: any, res: any) {
       intro: `Cuando necesitas flyers pa'l negocio, un banner pa'l evento o stickers, esto es lo que hay. ${filtered.length} imprentas y servicios de rotulación que sirven Cabo Rojo, con su teléfono. ¿Cuál te hace el trabajo rápido? Escríbele IMPRENTA a El Veci al 787-417-7711.`,
     },
   };
+  // ── Restaurantes tier-up (2026-07-24): zona + abierto-ahora + sub-páginas + FAQ ──
+  const isRestaurant = cat === 'restaurante' || cat === 'restaurantes';
+  type Zone = { key: string; label: string; emoji: string };
+  function zoneOf(p: any): Zone {
+    const hay = `${(p.address || '').toLowerCase()} ${(p.name || '').toLowerCase()}`;
+    if (hay.includes('joyuda') || hay.includes('carr 102') || hay.includes('carr. 102') || hay.includes('pr-102')) return { key: 'joyuda', label: 'Joyuda', emoji: '🦞' };
+    if (hay.includes('boquer')) return { key: 'boqueron', label: 'Boquerón', emoji: '🌅' };
+    if (hay.includes('combate')) return { key: 'combate', label: 'El Combate', emoji: '🏖️' };
+    if (hay.includes('puerto real')) return { key: 'puerto-real', label: 'Puerto Real', emoji: '⚓' };
+    return { key: 'pueblo', label: 'Pueblo y alrededores', emoji: '🏘️' };
+  }
+  const zoneMap = new Map<string, Zone>();
+  if (isRestaurant) for (const p of filtered) zoneMap.set(p.id, zoneOf(p));
+  const ZONE_ORDER = ['joyuda', 'boqueron', 'combate', 'puerto-real', 'pueblo'];
+  const zoneCounts = new Map<string, { label: string; emoji: string; n: number }>();
+  if (isRestaurant) {
+    for (const p of filtered) {
+      const z = zoneMap.get(p.id)!;
+      const cur = zoneCounts.get(z.key);
+      if (cur) cur.n++; else zoneCounts.set(z.key, { label: z.label, emoji: z.emoji, n: 1 });
+    }
+  }
+  const zoneGroups = ZONE_ORDER.filter(k => zoneCounts.has(k)).map(k => ({ key: k, ...zoneCounts.get(k)! }));
+
+  if (isRestaurant) {
+    CATEGORY_SEO.restaurante = CATEGORY_SEO.restaurantes = {
+      title: 'Restaurantes en Cabo Rojo — Joyuda, Boquerón, El Combate y el pueblo',
+      description: `${filtered.length} restaurantes en Cabo Rojo, PR con teléfono, horario y rating real. Mariscos en Joyuda, ambiente en Boquerón, atardecer en El Combate y la comida criolla del pueblo — mira cuál está abierto antes de salir.`,
+      intro: `En Cabo Rojo se come por zona: mariscos frente al mar en Joyuda, el ambiente del poblado de Boquerón, el atardecer de El Combate y la comida criolla del pueblo. Aquí tienes ${filtered.length} restaurantes verificados con teléfono, horario y rating real — filtra por zona, mira cuál está abierto ahora, y llama antes de dar la vuelta en balde. ¿No sabes cuál escoger? Escríbele COMIDA a El Veci al 787-417-7711.`,
+    };
+  }
   const catSeo = CATEGORY_SEO[cat];
 
   const baseUrl = 'https://www.mapadecaborojo.com';
@@ -596,6 +627,16 @@ export default async function handler(req: any, res: any) {
       ...(topRated ? [{ q: `¿Cuál es el ${singular} mejor evaluado en Cabo Rojo?`, a: `${topRated.name} tiene ${topRated.google_rating}/5 estrellas${topRated.google_review_count ? ` (${topRated.google_review_count} reseñas)` : ''}.` }] : []),
       { q: `¿Cómo encuentro un ${singular} cerca de mí en Cabo Rojo?`, a: `Explora la lista aquí en MapaDeCaboRojo.com o textea "${displayName}" al 787-417-7711 para que El Veci te recomiende al momento.` },
     ];
+  } else if (isRestaurant) {
+    const joyudaN = zoneCounts.get('joyuda')?.n || 0;
+    const boqueronN = zoneCounts.get('boqueron')?.n || 0;
+    faqItems = [
+      { q: '¿Dónde se come mariscos en Cabo Rojo?', a: `La zona clásica de mariscos es Joyuda, la "milla de oro del buen comer" en la carretera 102${joyudaN ? ` — aquí tienes ${joyudaN} restaurantes de esa zona` : ''}. También hay mariscos en Boquerón y El Combate. Mira la lista completa en mapadecaborojo.com/categoria/mariscos o textea MARISCOS al 787-417-7711.` },
+      { q: '¿Cuántos restaurantes hay en Cabo Rojo?', a: `Hay ${filtered.length} restaurantes listados en Cabo Rojo, Puerto Rico en MapaDeCaboRojo.com, con teléfono, horario y rating real, organizados por zona: Joyuda, Boquerón, El Combate, Puerto Real y el pueblo.` },
+      ...(topRated ? [{ q: '¿Cuál es el restaurante mejor evaluado en Cabo Rojo?', a: `${topRated.name} tiene ${topRated.google_rating}/5 estrellas${topRated.google_review_count ? ` (${topRated.google_review_count} reseñas)` : ''}.` }] : []),
+      { q: '¿Qué restaurantes hay en el poblado de Boquerón?', a: `El poblado de Boquerón tiene ${boqueronN || 'varios'} restaurantes listados — desde pinchos y ostiones en la calle hasta restaurantes frente a la bahía. Usa el filtro "Boquerón" en esta página para verlos.` },
+      { q: '¿Cómo sé cuál restaurante está abierto ahora en Cabo Rojo?', a: `Cada restaurante en esta página muestra si está abierto o cerrado en tiempo real (hora de Puerto Rico). También puedes textear COMIDA al 787-417-7711 y El Veci te dice qué está abierto cerca de ti.` },
+    ];
   }
 
   const faqSchema = faqItems.length > 0 ? {
@@ -649,7 +690,9 @@ export default async function handler(req: any, res: any) {
         const oneLinerHtml = (isHealth && p.one_liner)
           ? `<p style="font-size:0.8rem;color:#475569;margin:0 0 0.45rem;line-height:1.4;">${esc(p.one_liner)}</p>`
           : '';
-        const dataSpec = isHealth ? ` data-specialty="${esc((specMap.get(p.id) || { key: 'otros' }).key)}"` : '';
+        const dataSpec = isHealth
+          ? ` data-specialty="${esc((specMap.get(p.id) || { key: 'otros' }).key)}"`
+          : (isRestaurant ? ` data-zone="${esc((zoneMap.get(p.id) || { key: 'pueblo' }).key)}"` : '');
         const servesCR = Array.isArray(p.tags) && p.tags.includes('sirve-cabo-rojo');
         const inCR = (p.address || '').toLowerCase().includes('cabo rojo');
         const locHtml = (servesCR && !inCR)
@@ -767,6 +810,66 @@ export default async function handler(req: any, res: any) {
         var btns = document.querySelectorAll('[data-filter]');
         for (var k=0;k<btns.length;k++){
           btns[k].addEventListener('click', function(e){ e.preventDefault(); apply(this.getAttribute('data-filter')); var g=document.querySelector('.grid'); if(g) g.scrollIntoView({behavior:'smooth',block:'start'}); });
+        }
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+    })();
+    </script>` : '';
+
+  // ── Restaurantes: zona pills + abierto-ahora + chips a sub-páginas de comida ──
+  const FOOD_SUBPAGES = [
+    { slug: 'mariscos', label: 'Mariscos', emoji: '🦞' },
+    { slug: 'pizza', label: 'Pizzerías', emoji: '🍕' },
+    { slug: 'cafe', label: 'Cafés y Brunch', emoji: '☕' },
+    { slug: 'panaderia', label: 'Panaderías', emoji: '🥖' },
+    { slug: 'helados', label: 'Heladerías', emoji: '🍦' },
+  ];
+  const restaurantHtml = (isRestaurant && filtered.length > 0) ? `
+    <div class="triage">
+      <h2>🍽️ ¿Por dónde vas a comer?</h2>
+      <div class="pills" id="zone-pills" style="margin-bottom:0.85rem;">
+        <button type="button" class="sb-pill active" data-zone-filter="all">Todos (${filtered.length})</button>
+        ${zoneGroups.map(g => `<button type="button" class="sb-pill" data-zone-filter="${g.key}">${g.emoji} ${esc(g.label)} (${g.n})</button>`).join('')}
+        <button type="button" class="sb-pill" data-zone-filter="open-now" id="open-now-pill" style="border-color:#22c55e;color:#15803d;">🟢 Abierto ahora</button>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:0.85rem;">
+        ${FOOD_SUBPAGES.map(s => `<a href="${baseUrl}/categoria/${s.slug}" style="display:inline-flex;align-items:center;gap:5px;background:white;border:1px solid #cbd5e1;border-radius:20px;padding:5px 13px;font-size:0.82rem;color:#334155;text-decoration:none;">${s.emoji} ${esc(s.label)} →</a>`).join('')}
+      </div>
+      <a class="triage-veci" href="https://wa.me/17874177711?text=${encodeURIComponent('COMIDA: ')}">¿Antojo y no sabes dónde? Dile a El Veci → 787-417-7711</a>
+    </div>
+    <style>
+      .triage { background:linear-gradient(135deg,#fff7ed,#fefce8); border:1px solid #fed7aa; border-radius:14px; padding:1.1rem 1.25rem; margin-bottom:1.25rem; }
+      .triage h2 { font-size:1.05rem; font-weight:700; color:#9a3412; margin-bottom:0.7rem; }
+      .triage-veci { display:block; background:#0d9488; color:white; text-decoration:none; text-align:center; padding:0.7rem 1rem; border-radius:10px; font-weight:600; font-size:0.9rem; }
+      .pills { display:flex; flex-wrap:wrap; gap:8px; }
+      .sb-pill { background:white; border:1.5px solid #fdba74; color:#9a3412; padding:7px 14px; border-radius:999px; font-size:0.85rem; cursor:pointer; font-weight:600; transition:all 0.15s; }
+      .sb-pill:hover { background:#ffedd5; }
+      .sb-pill.active { background:#ea580c; color:white; border-color:#ea580c; }
+    </style>
+    <script>
+    (function(){
+      function init(){
+        var wrap = document.getElementById('zone-pills');
+        if (!wrap) return;
+        function apply(key){
+          var cards = document.querySelectorAll('.grid [data-zone]');
+          for (var i=0;i<cards.length;i++){
+            var c = cards[i], show;
+            if (key === 'all') show = true;
+            else if (key === 'open-now') {
+              var st = c.querySelector('.open-status');
+              show = !!(st && st.textContent.indexOf('🟢') === 0);
+            }
+            else show = c.getAttribute('data-zone') === key;
+            c.style.display = show ? '' : 'none';
+          }
+          var ps = wrap.querySelectorAll('.sb-pill');
+          for (var j=0;j<ps.length;j++){ ps[j].classList.toggle('active', ps[j].getAttribute('data-zone-filter')===key); }
+          try { gtag('event', 'restaurantes_zone_filter', { zone: key }); } catch(e) {}
+        }
+        var btns = wrap.querySelectorAll('[data-zone-filter]');
+        for (var k=0;k<btns.length;k++){
+          btns[k].addEventListener('click', function(e){ e.preventDefault(); apply(this.getAttribute('data-zone-filter')); var g=document.querySelector('.grid'); if(g) g.scrollIntoView({behavior:'smooth',block:'start'}); });
         }
       }
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
@@ -1044,7 +1147,7 @@ export default async function handler(req: any, res: any) {
 
     <a class="back" href="${baseUrl}">← Volver al mapa</a>
 
-    ${isSaludUmbrella ? saludTriageHtml : `<div class="cta-bar">
+    ${isSaludUmbrella ? saludTriageHtml : isRestaurant ? restaurantHtml : `<div class="cta-bar">
       <p>¿Buscas algo específico? Pregúntale a El Veci.</p>
       <a href="https://wa.me/17874177711?text=${encodeURIComponent(displayName)}">Textea al 787-417-7711</a>
     </div>`}
