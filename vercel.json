@@ -529,6 +529,21 @@
     }
   ],
   "functions": {
+    "api/negocio.ts": {
+      "maxDuration": 15
+    },
+    "api/farmacia.ts": {
+      "maxDuration": 15
+    },
+    "api/categoria.ts": {
+      "maxDuration": 15
+    },
+    "api/pages.ts": {
+      "maxDuration": 15
+    },
+    "api/mapa-pages.ts": {
+      "maxDuration": 25
+    },
     "api/*.ts": {
       "maxDuration": 60
     }

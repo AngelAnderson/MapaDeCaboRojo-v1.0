@@ -19,9 +19,25 @@ import { createHash, createHmac, timingSafeEqual } from 'crypto'
 import { handleActivos } from './_lib/activos.js'
 import { handleBarrios } from './_lib/barrios.js'
 
+// Hard ceiling on every PostgREST call. Without it a stalled connection hangs the
+// await forever and Vercel kills the whole function at maxDuration — that is how 34
+// requests burned 60s each between Jul 15-25 2026 instead of failing in seconds.
+// Kept well under the function maxDuration so a handler can still render a fallback.
+const DB_TIMEOUT_MS = 8000
+
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || 'https://vprjteqgmanntvisjrvp.supabase.co',
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '',
+  {
+    global: {
+      fetch: (input: any, init: any = {}) => {
+        const deadline = AbortSignal.timeout(DB_TIMEOUT_MS)
+        // Never clobber a caller-supplied signal — combine both.
+        const signal = init?.signal ? AbortSignal.any([init.signal, deadline]) : deadline
+        return fetch(input, { ...init, signal })
+      },
+    },
+  },
 )
 
 const SITE_URL = 'https://mapadecaborojo.com'
@@ -11153,15 +11169,11 @@ ${regDisclaimer(en)}`
   let townChips = ''
   if (!region) {
     try {
-      const muniCounts: Record<string, number> = {}
-      for (let off = 0; off < 4000; off += 1000) {
-        const { data: mrows } = await supabase.from('places').select('municipality')
-          .eq('subcategory', x.s).eq('category', 'HEALTH').not('npi', 'is', null).eq('status', 'open')
-          .range(off, off + 999)
-        for (const r of (mrows || [])) { if ((r as any).municipality) muniCounts[(r as any).municipality] = (muniCounts[(r as any).municipality] || 0) + 1 }
-        if (!mrows || mrows.length < 1000) break
-      }
-      const townsAll = Object.entries(muniCounts).sort((a, b) => b[1] - a[1])
+      // Was 4 sequential round-trips pulling up to 4,000 rows just to count them in JS.
+      // registro_town_counts aggregates in Postgres in one call (~4ms via idx_places_registro).
+      const { data: mrows } = await supabase.rpc('registro_town_counts', { p_sub: x.s })
+      const townsAll: [string, number][] = (mrows || [])
+        .map((r: any) => [r.municipality as string, Number(r.n)] as [string, number])
       const top = townsAll.slice(0, 30)
       if (top.length) townChips = `<h2>${t('Por pueblo', 'By town')}</h2>
 <p class="text-slate-600 -mt-2">${t('Toca tu pueblo pa\' ver quién hay ahí mismo, con teléfono.', 'Tap your town to see who is right there, with phone numbers.')}</p>
