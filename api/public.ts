@@ -427,6 +427,27 @@ async function handleLive3d(req: any, res: any) {
     (data || []).forEach((pl: any) => { if (pl.slug) featured.push(pl.slug); });
   }
 
+  // Eventos EN VIVO. Antes venían horneados dentro de public/3d/index.html: los 8
+  // que había el 10 de junio se quedaron ahí, y el 26 de julio el mapa seguía
+  // diciendo "8 eventos en los próximos 21 días" con todos vencidos hace un mes.
+  // Horneado = miente por diseño. Esto se jala en cada carga; si sale vacío, el
+  // chip de Eventos se esconde solo en vez de enseñar un calendario muerto.
+  const { data: evData } = await supabase
+    .from('events')
+    .select('title,start_time,location_name,municipality,category,map_link')
+    .eq('status', 'published')
+    .eq('family_friendly', true)
+    .gte('start_time', new Date().toISOString())
+    .lte('start_time', new Date(Date.now() + 90 * 86400000).toISOString())
+    .order('start_time')
+    .limit(30);
+  // La tabla events no guarda lat/lon (solo location_name + map_link), así que
+  // los eventos salen como lista, no como pines. Pedir lat,lon aquí hacía que
+  // PostgREST devolviera error y la lista llegara vacía sin avisar.
+  const eventos = (evData || []).map((e: any) => ({
+    n: e.title, d: e.start_time, l: e.location_name, m: e.municipality, url: e.map_link,
+  }));
+
   // Conteos vivos para la portada. Se cuentan, no se hornean, porque el número
   // que sale en pantalla es el que Angel cita en los posts: si se hornea, miente.
   const contar = (fn: (qb: any) => any) =>
@@ -445,7 +466,7 @@ async function handleLive3d(req: any, res: any) {
 
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
   res.setHeader('Content-Type', 'application/json');
-  return res.status(200).json({ demand, featured, conteos, generated: new Date().toISOString() });
+  return res.status(200).json({ demand, featured, conteos, eventos, generated: new Date().toISOString() });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
