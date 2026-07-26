@@ -189,9 +189,13 @@
 
   function tarjeta(r){
     var li=document.createElement('li'); li.className='card';
+    // 10 filas de la tabla no tienen municipio. Sin este guard salía una etiqueta
+    // gris vacía al lado del nombre, que se lee como si algo estuviera roto.
+    var muni=(r.municipality||'').trim();
     var etiqueta='';
     if(r.is_featured) etiqueta='<span class="tag rec">Recomendado</span>';
-    else if(r.alcance!=='cabo_rojo') etiqueta='<span class="tag fuera">'+esc(r.municipality)+'</span>';
+    else if(r.alcance!=='cabo_rojo'&&muni) etiqueta='<span class="tag fuera">'+esc(muni)+'</span>';
+    else if(r.alcance!=='cabo_rojo') etiqueta='<span class="tag fuera">fuera de Cabo Rojo</span>';
 
     var meta=[];
     if(r.subcategory) meta.push(esc(r.subcategory));
