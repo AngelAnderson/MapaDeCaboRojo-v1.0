@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d9488">
+<title>Mapa de Cabo Rojo · ¿Qué buscas?</title>
+<meta name="description" content="Busca quién resuelve en Cabo Rojo: negocios, oficios, farmacias, médicos. Escribe lo que necesitas y te decimos quién lo hace. Gratis, sin cuenta.">
+<link rel="canonical" href="https://www.mapadecaborojo.com/">
+<meta property="og:title" content="Mapa de Cabo Rojo">
+<meta property="og:description" content="Escribe lo que buscas. Te decimos quién resuelve en Cabo Rojo.">
+<meta property="og:url" content="https://www.mapadecaborojo.com/">
+<meta property="og:image" content="https://www.mapadecaborojo.com/og/mapa-3d.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="es_PR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://www.mapadecaborojo.com/og/mapa-3d.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-6KBMV0LKQ4"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-6KBMV0LKQ4');</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"WebSite","name":"Mapa de Cabo Rojo","url":"https://www.mapadecaborojo.com/","inLanguage":"es-PR","potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://www.mapadecaborojo.com/?q={search_term_string}"},"query-input":"required name=search_term_string"}}
+</script>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --teal:#0d9488; --teal-dark:#0f766e; --coral:#f97316;
+    --canvas:#faf9f7; --paper:#fff; --ink:#1c1917; --ink-soft:#57534e; --ink-mut:#a8a29e;
+    --line:#e7e5e4; --shadow:0 1px 2px rgba(28,25,23,.06),0 8px 24px rgba(28,25,23,.06);
+  }
+  html{-webkit-text-size-adjust:100%}
+  body{font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+       background:var(--canvas);color:var(--ink);line-height:1.5;min-height:100vh}
+  h1,h2,.disp{font-family:'Fraunces',Georgia,serif;letter-spacing:-.02em}
+  a{color:inherit}
+  .wrap{max-width:640px;margin:0 auto;padding:0 20px}
+
+  header{background:linear-gradient(150deg,var(--teal),var(--teal-dark));color:#fff;
+         padding:34px 0 30px;text-align:center}
+  header h1{font-size:1.6rem;font-weight:700;margin-bottom:6px}
+  header p{opacity:.9;font-size:1rem}
+
+  /* ── buscador ── */
+  .searchbox{margin-top:20px;position:relative;text-align:left}
+  #q{width:100%;padding:16px 16px 16px 46px;font-size:17px;font-family:inherit;
+     border:1px solid var(--line);border-radius:14px;background:var(--paper);color:var(--ink);
+     box-shadow:var(--shadow);outline:none}
+  #q::placeholder{color:var(--ink-mut)}
+  #q:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(13,148,136,.16)}
+  .searchbox .ico{position:absolute;left:16px;top:16px;font-size:17px;opacity:.5;pointer-events:none}
+  .searchbox .spin{position:absolute;right:16px;top:17px;width:16px;height:16px;border:2px solid var(--line);
+     border-top-color:var(--teal);border-radius:50%;animation:sp .7s linear infinite;display:none}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .searchbox.busy .spin{display:block}
+
+  .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;justify-content:center}
+  .chip{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);color:#fff;
+        border-radius:999px;padding:6px 13px;font-size:.85rem;font-weight:600;cursor:pointer;
+        font-family:inherit;transition:background .15s}
+  .chip:hover,.chip:focus-visible{background:rgba(255,255,255,.3)}
+
+  /* ── resultados ── */
+  main{padding:22px 0 60px}
+  #res{list-style:none;display:grid;gap:10px}
+  .card{background:var(--paper);border:1px solid var(--line);border-radius:14px;
+        box-shadow:var(--shadow);overflow:hidden}
+  .card a.hit{display:block;padding:14px 16px;text-decoration:none}
+  .card a.hit:hover{background:#f5f5f4}
+  .nm{font-weight:700;font-size:1.02rem;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+  .meta{font-size:.87rem;color:var(--ink-soft);margin-top:3px}
+  .tag{font-size:.68rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+       padding:2px 8px;border-radius:999px;white-space:nowrap}
+  .tag.rec{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa}
+  .tag.fuera{background:#f5f5f4;color:var(--ink-soft);border:1px solid var(--line)}
+  .acts{display:flex;gap:8px;padding:0 16px 13px;flex-wrap:wrap}
+  .act{font-size:.85rem;font-weight:600;text-decoration:none;padding:7px 13px;border-radius:9px;
+       border:1px solid var(--line);color:var(--teal-dark);background:#fff}
+  .act.tel{background:var(--teal);color:#fff;border-color:var(--teal)}
+
+  .note{font-size:.85rem;color:var(--ink-soft);margin:14px 2px 8px;font-weight:600}
+  .vacio{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:22px 18px;
+         box-shadow:var(--shadow);text-align:center}
+  .vacio h2{font-size:1.1rem;margin-bottom:6px}
+  .vacio p{font-size:.94rem;color:var(--ink-soft);margin-bottom:14px}
+
+  .btn{display:inline-block;background:var(--coral);color:#fff;text-decoration:none;
+       padding:11px 20px;border-radius:10px;font-weight:700;font-size:.95rem}
+
+  /* ── pulso ── */
+  .panel{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px;
+         box-shadow:var(--shadow);margin-top:26px}
+  .panel h2{font-size:1.12rem;margin-bottom:3px}
+  .panel .sub{font-size:.85rem;color:var(--ink-soft);margin-bottom:13px}
+  .pulso{display:flex;flex-wrap:wrap;gap:8px}
+  .pterm{background:#f5f5f4;border:1px solid var(--line);border-radius:10px;padding:7px 12px;
+         font-size:.88rem;font-weight:600;cursor:pointer;font-family:inherit;color:var(--ink)}
+  .pterm:hover{border-color:var(--teal);color:var(--teal-dark)}
+  .pterm b{color:var(--ink-mut);font-weight:600;margin-left:5px;font-size:.8rem}
+  .pterm.hueco{background:#fff7ed;border-color:#fed7aa}
+
+  .dos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+  .tile{display:block;text-decoration:none;background:var(--paper);border:1px solid var(--line);
+        border-radius:14px;padding:15px;box-shadow:var(--shadow)}
+  .tile:hover{border-color:var(--teal)}
+  .tile .t{font-weight:700;font-size:.98rem;margin-bottom:2px}
+  .tile .d{font-size:.83rem;color:var(--ink-soft)}
+  @media(max-width:420px){.dos{grid-template-columns:1fr}}
+
+  footer{text-align:center;padding:26px 20px 40px;color:var(--ink-mut);font-size:.82rem;line-height:1.7}
+  footer a{color:var(--teal-dark);font-weight:600}
+  .conteo{font-variant-numeric:tabular-nums}
+
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>Mapa de Cabo Rojo</h1>
+    <p>Escribe lo que buscas. Te decimos quién lo resuelve.</p>
+    <div class="searchbox" id="sb">
+      <span class="ico">🔍</span>
+      <input id="q" type="search" autocomplete="off" enterkeyhint="search"
+             placeholder="plomero, farmacia, pizza, dentista…"
+             aria-label="Buscar negocios en Cabo Rojo">
+      <span class="spin" aria-hidden="true"></span>
+    </div>
+    <div class="chips" id="chips"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <p class="note" id="note" hidden></p>
+  <ul id="res"></ul>
+
+  <div id="inicio">
+    <div class="panel">
+      <h2>El Pulso del Pueblo</h2>
+      <p class="sub">Lo que tus vecinos le preguntaron al Veci este mes. Data real, no relleno.</p>
+      <div class="pulso" id="pulso"><span class="sub">Cargando…</span></div>
+    </div>
+
+    <div class="dos">
+      <a class="tile" href="/3d">
+        <div class="t">⛰ Ver el mapa 3D</div>
+        <div class="d">El pueblo entero en relieve</div>
+      </a>
+      <a class="tile" href="https://wa.me/17874177711?text=Hola%20Veci" target="_blank" rel="noopener">
+        <div class="t">💬 Escríbele al Veci</div>
+        <div class="d">787-417-7711 · gratis, 24/7</div>
+      </a>
+    </div>
+  </div>
+</main>
+
+<footer class="wrap">
+  <p id="conteo" class="conteo"></p>
+  <p style="margin-top:8px">
+    <a href="/3d">Mapa 3D</a> ·
+    <a href="/pueblo-en-numeros">El pueblo en números</a> ·
+    <a href="/negocio/nuevo">Añade tu negocio</a> ·
+    <a href="/clasico">Versión clásica</a>
+  </p>
+  <p style="margin-top:10px;color:var(--ink-mut)">Verificado a mano, uno por uno, desde Cabo Rojo.</p>
+</footer>
+
+<script>
+(function(){
+  var q=document.getElementById('q'), sb=document.getElementById('sb'),
+      res=document.getElementById('res'), note=document.getElementById('note'),
+      inicio=document.getElementById('inicio');
+
+  var ATAJOS=['farmacia','plomero','dentista','pizza','gasolinera','ferretería','mecánico','panadería'];
+  var chips=document.getElementById('chips');
+  ATAJOS.forEach(function(t){
+    var b=document.createElement('button'); b.className='chip'; b.type='button'; b.textContent=t;
+    b.onclick=function(){ q.value=t; buscar(t); q.focus(); };
+    chips.appendChild(b);
+  });
+
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+  function tel(t){ return String(t||'').replace(/[^\d+]/g,''); }
+
+  function tarjeta(r){
+    var li=document.createElement('li'); li.className='card';
+    var etiqueta='';
+    if(r.is_featured) etiqueta='<span class="tag rec">Recomendado</span>';
+    else if(r.alcance!=='cabo_rojo') etiqueta='<span class="tag fuera">'+esc(r.municipality)+'</span>';
+
+    var meta=[];
+    if(r.subcategory) meta.push(esc(r.subcategory));
+    if(r.google_rating>0) meta.push('★ '+r.google_rating);
+    if(r.alcance==='cabo_rojo'&&r.address) meta.push(esc(String(r.address).split(',')[0]));
+
+    var acciones='<a class="act" href="/negocio/'+encodeURIComponent(r.slug)+'">Ver detalles</a>';
+    if(r.phone) acciones='<a class="act tel" href="tel:'+esc(tel(r.phone))+'">Llamar</a>'+acciones;
+
+    li.innerHTML='<a class="hit" href="/negocio/'+encodeURIComponent(r.slug)+'">'+
+      '<div class="nm">'+esc(r.name)+etiqueta+'</div>'+
+      (meta.length?'<div class="meta">'+meta.join(' · ')+'</div>':'')+
+      '</a><div class="acts">'+acciones+'</div>';
+    return li;
+  }
+
+  function vacio(term){
+    var li=document.createElement('li'); li.className='vacio';
+    li.innerHTML='<h2>Eso todavía no lo tengo</h2>'+
+      '<p>Nadie ha registrado “'+esc(term)+'” por aquí. El Veci sí puede buscarte la vuelta a mano.</p>'+
+      '<a class="btn" target="_blank" rel="noopener" href="https://wa.me/17874177711?text='+
+      encodeURIComponent('Busco '+term+' en Cabo Rojo')+'">Preguntarle al Veci</a>';
+    return li;
+  }
+
+  var ultimo=0;
+  function pintar(term,data,idPeticion){
+    if(idPeticion<ultimo) return;   // llegó tarde, ya hay una búsqueda más nueva
+    ultimo=idPeticion;
+    res.innerHTML='';
+    var r=(data&&data.results)||[];
+    inicio.hidden=true;
+    if(!r.length){ note.hidden=true; res.appendChild(vacio(term)); return; }
+
+    var enCR=r.filter(function(x){return x.alcance==='cabo_rojo';}).length;
+    note.hidden=false;
+    note.textContent = enCR ? (enCR+(enCR===1?' en Cabo Rojo':' en Cabo Rojo')+(r.length>enCR?' · '+(r.length-enCR)+' cerca':''))
+                            : 'En Cabo Rojo no hay. Esto es lo más cerca:';
+    r.forEach(function(x){ res.appendChild(tarjeta(x)); });
+  }
+
+  var timer=null, contador=0;
+  function buscar(term){
+    term=String(term||'').trim();
+    if(term.length<2){ limpiar(); return; }
+    var id=++contador;
+    sb.classList.add('busy');
+    fetch('/api/public?action=buscar&q='+encodeURIComponent(term))
+      .then(function(r){ return r.ok?r.json():{results:[]}; })
+      .then(function(d){ pintar(term,d,id); })
+      .catch(function(){ pintar(term,{results:[]},id); })
+      .finally(function(){ if(id===contador) sb.classList.remove('busy'); });
+    if(window.gtag) gtag('event','search',{search_term:term});
+  }
+
+  function limpiar(){ res.innerHTML=''; note.hidden=true; inicio.hidden=false; }
+
+  q.addEventListener('input',function(){
+    clearTimeout(timer);
+    var v=q.value;
+    if(v.trim().length<2){ limpiar(); return; }
+    timer=setTimeout(function(){ buscar(v); },220);
+  });
+  q.addEventListener('keydown',function(e){ if(e.key==='Enter'){ clearTimeout(timer); buscar(q.value); q.blur(); } });
+
+  // ?q= en el URL (SearchAction de schema.org + links compartidos)
+  var pre=new URLSearchParams(location.search).get('q');
+  if(pre){ q.value=pre; buscar(pre); }
+
+  // pulso + conteos vivos
+  fetch('/api/public?action=live3d').then(function(r){ return r.ok?r.json():null; }).then(function(d){
+    if(!d) return;
+    var cont=document.getElementById('pulso');
+    if(d.demand&&d.demand.length){
+      cont.innerHTML='';
+      d.demand.forEach(function(x){
+        var b=document.createElement('button'); b.type='button';
+        b.className='pterm'+(x.supply===0?' hueco':'');
+        b.innerHTML=esc(x.t)+'<b>'+x.n+'</b>';
+        b.onclick=function(){ q.value=x.t; buscar(x.t); window.scrollTo({top:0,behavior:'smooth'}); };
+        cont.appendChild(b);
+      });
+    } else { cont.innerHTML='<span class="sub">El pulso vuelve en un rato.</span>'; }
+
+    var c=d.conteos;
+    if(c&&c.cabo_rojo){
+      document.getElementById('conteo').textContent=
+        c.cabo_rojo.toLocaleString('es-PR')+' negocios de Cabo Rojo · '+
+        c.oeste.toLocaleString('es-PR')+' en el oeste · '+
+        c.pr.toLocaleString('es-PR')+' en todo Puerto Rico';
+    }
+  }).catch(function(){});
+})();
+</script>
+</body>
+</html>

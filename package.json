@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build && node scripts/make-3d-home.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "snapshot:3d": "node scripts/make-3d-snapshot.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.46.0",

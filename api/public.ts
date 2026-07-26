@@ -393,44 +393,96 @@ async function handleMcp(req: any, res: any) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 async function handleLive3d(req: any, res: any) {
-  // demand needs service role (demand_signals is not anon-readable); slugs work with anon
-  const svc = createClient(
-    process.env.VITE_SUPABASE_URL || '',
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''
-  );
-  const [oppsRes, rxRes] = await Promise.all([
-    svc.rpc('get_demand_opportunities'),
+  // La demanda sale de pulso_cache, no de get_demand_opportunities().
+  // Ese RPC tarda 9.6 s y lee demand_signals (no es anon-readable), así que en
+  // producción reventaba el timeout de 8 s del rol anon y "El Pulso del Pueblo"
+  // salía en blanco todos los días. pulso_cache es una tabla de 19 filas que
+  // refresca el cron `pulso-cache-refresh` (jobid 169, cada hora al :17).
+  const [pulsoRes, rxRes] = await Promise.all([
+    supabase.from('pulso_cache').select('label,demand_30d,supply').order('posicion').limit(7),
     supabase.from('demand_supply_map').select('label,supply_rx').eq('active', true),
   ]);
   const rxByLabel: Record<string, string> = {};
   (rxRes.data || []).forEach((r: any) => { rxByLabel[r.label] = r.supply_rx; });
-  const opps: any[] = Array.isArray(oppsRes.data) ? oppsRes.data : [];
-  const demand = opps
-    .filter((o: any) => Number(o.demand_30d) > 0)
-    .sort((a: any, b: any) => Number(b.demand_30d) - Number(a.demand_30d))
-    .slice(0, 7)
-    .map((o: any) => ({ t: o.label, n: Number(o.demand_30d), rx: rxByLabel[o.label] || null, supply: Number(o.supply) }));
+  const demand = (pulsoRes.data || []).map((o: any) => ({
+    t: o.label, n: Number(o.demand_30d), rx: rxByLabel[o.label] || null, supply: Number(o.supply),
+  }));
 
-  // all open+published slugs (paginated past the 1000-row default) + featured
-  const open: string[] = [];
+  // Solo los negocios RECOMENDADOS del oeste. Antes esto mandaba la lista completa
+  // de slugs open+published para que el 3D borrara los pines cerrados: 27,107 slugs,
+  // 918 KB, en cada carga de la portada. El 99% eran proveedores de salud del registro
+  // federal que ni siquiera tienen pin en el mapa (el snapshot es solo el oeste).
+  // Ahora el snapshot se regenera con `npm run snapshot:3d` (ya sale sin cerrados),
+  // y esto solo manda lo que cambia seguido: quién está recomendado.
   const featured: string[] = [];
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase
+  {
+    const { data } = await supabase
       .from('places')
-      .select('slug,is_featured')
+      .select('slug')
       .eq('status', 'open')
       .eq('visibility', 'published')
-      .range(from, from + 999);
-    if (error || !data || data.length === 0) break;
-    data.forEach((pl: any) => {
-      if (pl.slug) { open.push(pl.slug); if (pl.is_featured) featured.push(pl.slug); }
-    });
-    if (data.length < 1000) break;
+      .eq('is_featured', true)
+      .in('municipality', OESTE)
+      .limit(200);
+    (data || []).forEach((pl: any) => { if (pl.slug) featured.push(pl.slug); });
   }
+
+  // Conteos vivos para la portada. Se cuentan, no se hornean, porque el número
+  // que sale en pantalla es el que Angel cita en los posts: si se hornea, miente.
+  const contar = (fn: (qb: any) => any) =>
+    fn(supabase.from('places').select('id', { count: 'exact', head: true })
+      .eq('visibility', 'published').eq('status', 'open'));
+  const [crRes, oesteRes, prRes] = await Promise.all([
+    contar((qb: any) => qb.eq('municipality', 'Cabo Rojo')),
+    contar((qb: any) => qb.in('municipality', OESTE)),
+    contar((qb: any) => qb),
+  ]);
+  const conteos = {
+    cabo_rojo: crRes.count ?? null,
+    oeste: oesteRes.count ?? null,
+    pr: prRes.count ?? null,
+  };
 
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
   res.setHeader('Content-Type', 'application/json');
-  return res.status(200).json({ demand, open, featured, generated: new Date().toISOString() });
+  return res.status(200).json({ demand, featured, conteos, generated: new Date().toISOString() });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ACTION: buscar  (búsqueda viva de la portada — pega contra la tabla, no contra
+// un snapshot horneado. Cabo Rojo primero, el oeste después, el resto de PR al
+// final, cada resultado etiquetado con su alcance para que la portada lo diga.)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const OESTE = ['Cabo Rojo', 'Mayagüez', 'San Germán', 'Lajas', 'Hormigueros', 'Sabana Grande'];
+
+async function handleBuscar(req: any, res: any) {
+  const q = String(req.query.q || '').trim().slice(0, 80);
+  const rawLimit = parseInt(String(req.query.limit || '12'), 10);
+  const limit = Math.min(Math.max(1, isNaN(rawLimit) ? 12 : rawLimit), 30);
+
+  if (q.length < 2) {
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(200).json({ q, results: [] });
+  }
+
+  const { data, error } = await supabase.rpc('mapa_buscar', { q, lim: limit });
+  if (error) {
+    console.error('[buscar] rpc error:', error.message);
+    return res.status(500).json({ error: 'Error buscando', results: [] });
+  }
+
+  const results = data || [];
+  // Telemetría: las búsquedas sin resultado son demanda real sin servir.
+  // Vistas: v_mapa_search_log / v_mapa_search_gaps.
+  logApiCall('search:home', 'GET', q,
+    req.headers['user-agent'] || null,
+    (req.headers['x-forwarded-for'] || '').split(',')[0] || null,
+    results.length,
+    req.headers['referer'] || null);
+
+  res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+  return res.status(200).json({ q, results });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -455,6 +507,8 @@ export default async function handler(req: any, res: any) {
       return handleMcp(req, res);
     case 'live3d':
       return handleLive3d(req, res);
+    case 'buscar':
+      return handleBuscar(req, res);
     case 'places':
     default:
       return handlePlaces(req, res);
