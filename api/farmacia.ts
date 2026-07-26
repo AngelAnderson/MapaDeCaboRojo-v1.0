@@ -319,7 +319,7 @@ export default async function handler(req: any, res: any) {
 
   // Street View fallback when no image
   const streetViewSrc = (place.lat && place.lon)
-    ? `https://maps.googleapis.com/maps/api/streetview?size=720x300&location=${place.lat},${place.lon}&fov=90&key=${process.env.VITE_GOOGLE_API_KEY || ''}`
+    ? `https://maps.googleapis.com/maps/api/streetview?size=720x300&location=${place.lat},${place.lon}&fov=90&key=${process.env.GOOGLE_API_KEY || process.env.VITE_GOOGLE_API_KEY || ''}`
     : null;
 
   // Google Maps embed — uses coordinates if available, falls back to address search
