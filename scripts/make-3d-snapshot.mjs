@@ -54,7 +54,8 @@ function horasCompactas(oh) {
 
 const COLS = 'slug,name,category,subcategory,municipality,barrio,book_barrio,lat,lon,' +
              'phone,contact_info,google_rating,google_review_count,one_liner,tags,' +
-             'opening_hours,is_featured,sponsor_weight,last_verified_at';
+             'opening_hours,is_featured,sponsor_weight,last_verified_at,' +
+             'is_emergency_resource,emergency_type';
 
 // El mapa muestra "verificados 90d". Antes esa cifra salía en 0 siempre porque el
 // snapshot no traía el dato: el contador leía una propiedad que nadie escribía.
@@ -102,6 +103,16 @@ const features = filas
     if (p.is_featured || (p.sponsor_weight || 0) > 80) props.f = 1;
     const ver = p.last_verified_at ? Date.parse(p.last_verified_at) : NaN;
     if (Number.isFinite(ver) && ver >= HACE_90D) props.v = 1;
+    // El chip 🚨 Emergencia filtra por 'e' y afina por 'et'. El snapshot viejo
+    // marcaba 703 lugares como recurso de emergencia (incluyendo dentistas) con
+    // solo 4 tipos: se calculaba por categoría al hornear, no se leía de la base.
+    // Aquí sale de is_emergency_resource / emergency_type, que están curados:
+    // farmacia, ambulancia, hospital, gasolinera, sala de urgencia, policía,
+    // bomberos, defensa civil, psiquiátrico.
+    if (p.is_emergency_resource) {
+      props.e = 1;
+      if (p.emergency_type) props.et = p.emergency_type;
+    }
     return { type: 'Feature', geometry: { type: 'Point', coordinates: [p.lon, p.lat] }, properties: props };
   });
 
