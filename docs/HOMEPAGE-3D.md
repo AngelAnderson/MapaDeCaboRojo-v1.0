@@ -1,47 +1,80 @@
-# Homepage = Mapa 3D · SPA clásico archivado en /clasico
+# Homepage = portada de búsqueda · Mapa 3D en /3d · SPA clásico en /clasico
 
-**Decisión de Angel: 2026-06-10.** El mapa 3D standalone es la homepage de
-mapadecaborojo.com. El SPA Vite/React original ("El Veci — El Copiloto del
-Pueblo") NO se borró: vive en **`/clasico`** y se puede restaurar como home
-en un solo commit (ver § Revert).
+**Decisión Angel 2026-06-10:** el mapa 3D pasó a ser la homepage.
+**Decisión Angel 2026-07-26 (Tier 3):** la homepage deja de ser el mapa. Ahora es
+una portada de búsqueda. El mapa 3D no se mata, pasa a ser atracción en `/3d`.
 
-## Cómo funciona (3 piezas)
+## Por qué cambió (data de 30 días, no opinión)
+
+| Señal | Número |
+|---|---|
+| Búsquedas en la portada 3D | 513 |
+| De esas, sin resultado | 140 (27%) |
+| Fallas donde el negocio SÍ estaba en la base | varias ("el rey de los monchis", "air bnb", "billar", "el taller") |
+| Peso de la portada | ~2 MB (1.1 MB HTML + 918 KB de JSON) |
+| Visitas a páginas de negocio | 33,171 |
+| Búsquedas en el buscador del SPA clásico | 2 |
+
+La portada buscaba contra un snapshot horneado el 10 de junio, no contra la tabla.
+Y el JSON de 918 KB bajaba los 27,107 slugs de `places` completa solo para saber
+quién estaba abierto: el 96% eran proveedores de salud de todo PR que ni pin tienen.
+
+## Cómo funciona (4 piezas)
 
 | Pieza | Qué hace |
 |---|---|
-| `public/3d/index.html` | El mapa 3D completo, self-contained (MapLibre + 3,432 places embebidos + data viva vía `/api/public?action=live3d`). Vite lo copia a `dist/3d/`. |
-| `scripts/make-3d-home.mjs` | Postbuild (corre en `npm run build` después de `vite build`): mueve `dist/index.html` (SPA) → `dist/clasico/index.html` y copia `dist/3d/index.html` → `dist/index.html`. |
-| `vercel.json` catch-all | `/(.*)` → `/clasico/index.html` (las rutas sueltas siguen cayendo en el SPA, como antes). El resto de rewrites (negocio/categoria/farmacia/evento/api/...) NO cambió. |
+| `public/home/index.html` | La portada. 14 KB, self-contained. Busca contra `/api/public?action=buscar` (RPC `mapa_buscar`, ~27 ms) y jala pulso + conteos de `?action=live3d`. |
+| `public/3d/index.html` | El mapa 3D, self-contained (MapLibre + snapshot embebido). Vite lo copia a `dist/3d/`. |
+| `scripts/make-3d-snapshot.mjs` | Regenera el snapshot embebido desde Supabase. `npm run snapshot:3d`. |
+| `scripts/make-3d-home.mjs` | Postbuild: `dist/index.html` (SPA) → `dist/clasico/index.html`, y `dist/home/index.html` → `dist/index.html`. |
 
 ## Mapa de rutas resultante
 
-- `/` → mapa 3D (servido del filesystem, `dist/index.html`)
-- `/3d` → el mismo mapa 3D (los deep links del bot `mapadecaborojo.com/3d#lugar/<slug>` siguen funcionando; canonical de ambas copias apunta a `/`)
-- `/clasico` → SPA clásico completo (assets en `/assets/*` son absolutos, funciona igual)
-- `/negocio/:slug`, `/categoria/:cat`, `/pueblo-en-numeros`, `/demanda`, etc. → sin cambios (server-rendered, api/*)
-- Rutas desconocidas → SPA clásico (catch-all), igual que siempre
+- `/` → portada de búsqueda
+- `/3d` → mapa 3D (los deep links del bot `mapadecaborojo.com/3d#lugar/<slug>` siguen funcionando)
+- `/clasico` → SPA clásico completo
+- `/negocio/:slug`, `/categoria/:cat`, etc. → sin cambios (server-rendered, api/*)
+- Rutas desconocidas → SPA clásico (catch-all)
 
-## Enlaces cruzados
+## El snapshot del 3D
 
-- El 3D tiene botón **🗂 Clásico** (controles abajo-izquierda) → `/clasico`
-- El SPA tiene botón **⛰ 3D** (header) → `/3d`
-- El fallback sin-WebGL del 3D manda a `/clasico` (NO a `/`, evita loop)
-- Google Analytics `G-6KBMV0LKQ4` está en AMBAS páginas
+Es estático a propósito (el mapa carga sin esperar red). **Se regenera con
+`npm run snapshot:3d`**, no a mano. Antes no había script: se quedó 46 días sin
+tocar y acumuló 85 negocios fantasma, 18 cerrados, y le faltaban 49 de Cabo Rojo.
 
-## ⏪ REVERT (volver el SPA a homepage)
+Alcance: Cabo Rojo + Mayagüez + San Germán + Lajas + Hormigueros + Sabana Grande.
+El resto de PR (los ~23k proveedores del registro federal NPPES) NO entra al mapa:
+se llega por búsqueda y por el Veci, no por pin.
 
-Un commit, 3 cambios:
+**Los stats del 3D separan Cabo Rojo del oeste a propósito.** Decir "3,466 de Cabo
+Rojo" sería mentira: 2,522 son de los pueblos vecinos. Los números al 2026-07-26:
+944 en Cabo Rojo · 3,466 en el oeste · 208 verificados en los últimos 90 días.
 
-1. **package.json** — `"build": "vite build && node scripts/make-3d-home.mjs"` → `"build": "vite build"`
-2. **vercel.json** — catch-all `"destination": "/clasico/index.html"` → `"/index.html"`
-3. **public/3d/index.html** — (opcional, SEO) canonical y og:url de vuelta a `https://www.mapadecaborojo.com/3d`; el fallback sin-WebGL de vuelta a `https://www.mapadecaborojo.com`
+## Base de datos (migraciones que sostienen esto)
 
-`git push` y listo: `/` vuelve a ser el SPA, `/3d` sigue siendo el mapa 3D, `/clasico` deja de existir (404 → catch-all → SPA, inofensivo). Nada se pierde porque el SPA nunca se movió de sitio en el repo — el swap pasa solo en build time.
+- `mapa_buscar(q, lim)` — búsqueda viva, Cabo Rojo primero, oeste después, resto de
+  PR al final, cada fila etiquetada con `alcance`. Dos pasadas: todas las palabras,
+  y si sale vacía, cualquiera de las palabras.
+- `immutable_unaccent()` + `idx_places_name_unaccent_trgm` — búsqueda sin acentos.
+  La data está mezclada ("Encarnacion" sin tilde en 10 filas, "Encarnación" en 1).
+- `pulso_cache` + `pulso_refresh()` + cron `pulso-cache-refresh` (jobid 169, cada
+  hora al :17) — "El Pulso del Pueblo" salía vacío porque lo alimentaba
+  `get_demand_opportunities()`, que tarda 9.6 s y revienta el timeout de 8 s de anon.
 
-Commit de referencia del cambio original: buscar `feat(home): el mapa 3D es la homepage` en git log.
+## ⏪ REVERT
+
+**Volver el mapa 3D a homepage:** en `scripts/make-3d-home.mjs`, cambiar `HOME` de
+`'dist/home/index.html'` a `'dist/3d/index.html'`, y devolver el canonical y og:url
+de `public/3d/index.html` a `https://www.mapadecaborojo.com/`.
+
+**Volver el SPA a homepage:** quitar `node scripts/make-3d-home.mjs` del `build` en
+package.json y devolver el catch-all de vercel.json a `/index.html`.
 
 ## Gotchas conocidos
 
-- **Límite Vercel Hobby: 12/12 serverless functions.** Cualquier `.ts` nuevo bajo `api/` (fuera de `api/_lib/`) ROMPE el deploy. Helpers compartidos van en `api/_lib/` (con underscore).
-- El snapshot de places del 3D es estático (generado 2026-06-10, 3,432 lugares tras quitar 8 con coords en el agua — ver `Outbox/Mapa/Auditoria-Coordenadas-Agua-2026-06-10.md` en Dropbox/Claude). La data viva (`live3d`) refresca demanda, cierres y featured, pero NO agrega negocios nuevos — para eso hay que regenerar el snapshot.
-- El SW de raíz (`public/sw.js`) es self-destroying; el 3D no registra SW.
+- **Límite de serverless functions de Vercel.** Cualquier `.ts` nuevo bajo `api/`
+  (fuera de `api/_lib/`) cuenta. Helpers compartidos van en `api/_lib/` (con underscore).
+- El SW de raíz (`public/sw.js`) es self-destroying; ni el 3D ni la portada registran SW.
+- **El 3D no se puede verificar en navegador headless**: sin WebGL cae al fallback
+  "necesita un navegador más nuevo". Hay que mirarlo en un navegador real.
+- Google Analytics `G-6KBMV0LKQ4` está en la portada, en el 3D y en el clásico.
