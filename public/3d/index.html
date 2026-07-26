@@ -41,7 +41,9 @@
   .res:hover{background:#14b8a622}
   .res .rn{font-weight:600}
   .res .rm{font-size:10.5px;color:var(--mut)}
-  #info{top:14px;left:322px;width:320px;max-height:calc(100vh - 28px);z-index:6;display:none;flex-direction:column;overflow:hidden}
+  /* 124px abajo = la barra de modos (bottom:64 + alto) + aire. Sin esto las
+     ultimas filas de resultados quedan escondidas detras de los 3 botones. */
+  #info{top:14px;left:322px;width:320px;max-height:calc(100vh - 138px);z-index:6;display:none;flex-direction:column;overflow:hidden}
   #info header{padding:12px 15px 9px;border-bottom:1px solid var(--line)}
   #info header h3{margin:0;font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px}
   #info header .sum{font-size:10.5px;color:var(--mut);margin-top:3px}
@@ -84,7 +86,30 @@
   .chip.emer.sel{background:var(--red);border-color:var(--red);color:#fff}
   .chip.toggle{border-style:dashed}
   .chip.toggle.sel{background:#34d399;border-color:#34d399;color:#06281f}
-  #ctrls{bottom:14px;left:14px;display:flex;flex-direction:column;gap:6px;z-index:6;padding:8px}
+  /* ── los 3 modos ── */
+  #modos{bottom:64px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:7;
+     padding:9px 10px;max-width:94vw}
+  .modo{cursor:pointer;background:#ffffff0d;border:1px solid #ffffff26;border-radius:12px;
+     padding:9px 14px;font-family:inherit;color:var(--txt);text-align:left;transition:.15s;
+     display:flex;flex-direction:column;gap:1px;min-width:0}
+  .modo b{font-size:13px;font-weight:800;white-space:nowrap}
+  .modo span{font-size:10.5px;color:var(--mut);white-space:nowrap}
+  .modo:hover{background:#ffffff1a;border-color:var(--teal)}
+  .modo.sel{background:var(--teal);border-color:var(--teal)}
+  .modo.sel b,.modo.sel span{color:#06281f}
+  .modo.emer.sel{background:var(--red);border-color:var(--red)}
+  .modo.emer.sel b,.modo.emer.sel span{color:#fff}
+  /* los chips finos solo salen cuando el modo los pide */
+  #chips{display:none}
+  #chips.abierto{display:flex}
+  /* el cockpit de mapa se esconde detras de "Mas" */
+  #b-mas{bottom:14px;left:14px;z-index:7;cursor:pointer;background:#ffffff0d;
+     border:1px solid #ffffff1f;color:var(--txt);border-radius:10px;padding:7px 12px;
+     font-size:12px;font-family:inherit;font-weight:600}
+  #b-mas:hover{background:var(--teal);border-color:var(--teal);color:#06281f}
+  #ctrls{display:none}
+  #ctrls.abierto{display:flex}
+  #ctrls{bottom:52px;left:14px;flex-direction:column;gap:6px;z-index:6;padding:8px}
   #ctrls button{cursor:pointer;background:#ffffff0d;border:1px solid #ffffff1f;color:var(--txt);border-radius:10px;padding:7px 12px;font-size:12px;font-family:inherit;font-weight:600;transition:.15s;text-align:left}
   #ctrls button:hover{background:var(--teal);border-color:var(--teal);color:#06281f}
   #ctrls button.on{background:var(--orange);border-color:var(--orange);color:#3b1604}
@@ -118,8 +143,17 @@
     #b-pulso{display:block}
     #pulso.mob{display:block;top:auto;bottom:118px;left:10px;right:10px;width:auto;max-height:46vh;overflow-y:auto;z-index:8}
     #info{left:10px;right:10px;width:auto;top:auto;bottom:118px;max-height:46vh;border-radius:16px 16px 12px 12px}
-    #chips{bottom:62px;left:10px;right:10px;transform:none;max-width:none;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;-webkit-overflow-scrolling:touch}
-    #ctrls{flex-direction:row;bottom:10px;left:10px;right:10px;overflow-x:auto}
+    /* Movil: los 3 modos mandan y viven abajo, donde llega el pulgar.
+       Los chips finos suben encima, y el cockpit queda detras de "Mas". */
+    #modos{bottom:10px;left:10px;right:10px;transform:none;max-width:none;gap:6px;padding:8px}
+    .modo{flex:1;align-items:center;text-align:center;padding:8px 6px;min-width:0}
+    .modo b{font-size:12px;white-space:normal}
+    .modo span{display:none}
+    #chips{bottom:78px;left:10px;right:10px;transform:none;max-width:none;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;-webkit-overflow-scrolling:touch}
+    /* al borde derecho, a media altura: no choca con el brand (arriba),
+       los chips (bottom:78) ni los modos (bottom:10) */
+    #b-mas{bottom:auto;left:auto;right:10px;top:50%}
+    #ctrls{flex-direction:row;bottom:132px;left:10px;right:10px;overflow-x:auto}
     #ctrls button{white-space:nowrap;font-size:11px;padding:7px 10px}
     #tcard h2{font-size:22px} #tcard{bottom:130px}
   }
@@ -132,12 +166,14 @@
 
 <div id="brand" class="panel">
   <h1>Mapa de <b>Cabo Rojo</b> · 3D</h1>
-  <p>El directorio del pueblo, verificado uno a uno.</p>
+  <p>Cada negocio de este mapa lo revisamos a mano, uno por uno.</p>
+  <!-- Los guiones no son adorno: hasta que corre pintarStats() esto decia "0 en
+       Cabo Rojo", y un directorio que abre diciendo cero se lee como vacio. -->
   <div id="stats">
-    <div><b id="st-cr">0</b>en Cabo Rojo</div>
-    <div><b id="st-n">0</b>en el oeste</div>
-    <div><b id="st-r">0</b>rating prom.</div>
-    <div><b id="st-v">0</b>verificados 90d</div>
+    <div><b id="st-cr">—</b>negocios en Cabo Rojo</div>
+    <div><b id="st-n">—</b>en todo el oeste</div>
+    <div><b id="st-r">—</b>estrellas en promedio</div>
+    <div><b id="st-v">—</b>revisados hace poco</div>
   </div>
   <div id="searchwrap">
     <input id="search" type="text" placeholder="¿Qué necesitas resolver hoy? plomero, pizza, médico…" autocomplete="off">
@@ -156,10 +192,19 @@
 </div>
 
 <div id="pulso" class="panel">
-  <h2>El Pulso del Pueblo</h2>
-  <div class="sub">Esto es lo que tus vecinos están buscando ahora mismo · data real del Veci</div>
+  <h2>Lo que el pueblo buscó este mes</h2>
+  <div class="sub">El número dice cuántos vecinos buscaron eso.</div>
   <div id="terms"></div>
   <a id="vecibtn" href="https://wa.me/17874177711?text=Hola%20Veci" target="_blank">💬 ¿Tú también buscas algo? Textea al Veci</a>
+</div>
+
+<!-- Tres modos. Antes habia 12 controles planos y el vecino tenia que decidir
+     cual de todos era el suyo. Ahora se entra por una de tres preguntas y los
+     controles finos aparecen solo cuando hacen falta. -->
+<div id="modos" class="panel">
+  <button class="modo" data-modo="ahora"><b>Abierto ahora</b><span>Quién está atendiendo</span></button>
+  <button class="modo" data-modo="necesito"><b>Necesito algo</b><span>Busca quién lo resuelve</span></button>
+  <button class="modo emer" data-modo="luz"><b>Si se va la luz</b><span>Farmacia, gas, hospital</span></button>
 </div>
 
 <div id="chips" class="panel">
@@ -170,6 +215,8 @@
   <div class="chip" data-int="eventos" id="c-eventos" style="display:none">📅 Eventos</div>
   <div class="chip emer" data-int="emergencia">🚨 Emergencia</div>
 </div>
+
+<button id="b-mas" class="panel" type="button" aria-expanded="false">⚙ Más</button>
 
 <div id="ctrls" class="panel">
   <button id="b-near">📍 Cerca de mí</button>
@@ -401,7 +448,7 @@ function fmtDate(d){
 function openPlace(p,coords,setHash=true){
   closePopup();
   const st=openState(p.h);
-  const stars = p.r>0 ? `<span class="st">★ ${p.r}</span>${p.rc?` <span style="opacity:.6">(${p.rc})</span>`:''}` : 'sin rating';
+  const stars = p.r>0 ? `<span class="st">★ ${p.r}</span>${p.rc?` <span style="opacity:.6">(${p.rc})</span>`:''}` : 'sin estrellas todavía';
   const badges = `${p.v?'<span class="badge v">VERIFICADO</span>':''} ${p.f?'<span class="badge f">RECOMENDADO</span>':''}`;
   let html = p.i?`<img class="pp-img" src="${p.i}" loading="lazy" onerror="this.remove()">`:'';
   html += `<div class="pp-body"><div class="pp-name">${p.n} ${badges}</div>`;
@@ -489,6 +536,54 @@ document.querySelectorAll('.chip[data-int]').forEach(ch=>{
   ch.addEventListener('click',()=>{try{if(typeof gtag==='function')gtag('event','chip_click',{intent:ch.dataset.int});}catch(_){}});
   ch.onclick=()=>selectIntent(curIntent===ch.dataset.int?null:ch.dataset.int);
 });
+// ── Los 3 modos ──────────────────────────────────────────────────────────────
+// No reemplazan el motor: lo manejan. Cada modo prende los mismos intents y
+// filtros de siempre, pero el vecino escoge entre 3 preguntas en vez de 12
+// botones. Los chips finos (comer/playa/salud) salen solo dentro de "Necesito".
+var modoActual=null, hayEventos=false;
+function setOpenOnly(v){
+  if(openOnly===v) return;
+  document.getElementById('c-open').click();   // reusa el handler real, no duplica estado
+}
+// Que chips finos se ven, segun el modo. Vive aparte porque los eventos llegan
+// async y hay que re-aplicarlo sin re-disparar los filtros del mapa.
+function aplicarChips(){
+  var chips=document.getElementById('chips');
+  if(!modoActual || modoActual==='luz'){ chips.classList.remove('abierto'); return; }
+  chips.classList.add('abierto');
+  var finos = modoActual==='necesito' ? ['comer','playa','salud'] : (hayEventos?['eventos']:[]);
+  document.querySelectorAll('.chip[data-int]').forEach(function(c){
+    c.style.display = finos.indexOf(c.dataset.int)>=0 ? '' : 'none';
+  });
+}
+function setModo(m){
+  modoActual = (modoActual===m) ? null : m;
+  document.querySelectorAll('.modo').forEach(function(b){
+    b.classList.toggle('sel', b.dataset.modo===modoActual);
+  });
+  if(modoActual==='ahora'){
+    selectIntent(null); setOpenOnly(true);
+  } else if(modoActual==='necesito'){
+    selectIntent(null); setOpenOnly(false);
+    var s=document.getElementById('search'); if(s && window.innerWidth>780) s.focus();
+  } else if(modoActual==='luz'){
+    setOpenOnly(false); selectIntent('emergencia');
+  } else {
+    selectIntent(null); setOpenOnly(false);
+  }
+  aplicarChips();
+}
+document.querySelectorAll('.modo').forEach(function(b){
+  b.onclick=function(){
+    try{ if(typeof gtag==='function') gtag('event','modo_click',{modo:b.dataset.modo}); }catch(_){}
+    setModo(b.dataset.modo);
+  };
+});
+document.getElementById('b-mas').onclick=function(){
+  var c=document.getElementById('ctrls'), ab=c.classList.toggle('abierto');
+  this.setAttribute('aria-expanded', ab?'true':'false');
+};
+
 document.getElementById('c-open').onclick=function(){
   openOnly=!openOnly; this.classList.toggle('sel',openOnly);
   recomputeOpen(); map.getSource('places').setData(PLACES);
@@ -618,7 +713,11 @@ fetch('/api/public?action=live3d').then(r=>r.ok?r.json():null).then(d=>{
     // El chip solo existe si hay algo que enseñar. Un calendario vacío grita
     // "esto está abandonado" más fuerte que no tener calendario.
     const ch=document.getElementById('c-eventos');
-    if(ch) ch.style.display = EVENTOS.length ? '' : 'none';
+    hayEventos = EVENTOS.length > 0;
+    if(ch) ch.style.display = hayEventos ? '' : 'none';
+    // Los eventos llegan async. Si el vecino ya escogio un modo, hay que
+    // re-aplicar su visibilidad o el chip aparece donde no toca.
+    aplicarChips();
   }
   if(Array.isArray(d.featured)){
     const fSet=new Set(d.featured);
