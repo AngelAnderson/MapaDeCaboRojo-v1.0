@@ -402,8 +402,16 @@ const map = new maplibregl.Map({
 // El +/- solo en pantalla grande. En teléfono estorbaba: vivía en bottom-right,
 // justo encima de los chips y los modos, así que al intentar girar el mapa con
 // el pulgar le dabas a un botón. En teléfono se hace pinch y ya.
+//
+// OJO: maplibre solo acepta 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'.
+// Le pasé 'right' y no tiró un error claro: tiró "Cannot read properties of
+// undefined (reading 'appendChild')" en medio del script, lo que dejó
+// `const colorExpr` sin inicializar y mató setupLayers() entero. Resultado: el
+// mapa cargaba sin un solo pin y sin volar a Cabo Rojo. Va envuelto en try por
+// si algún día cambia la API: un botón de zoom no puede tumbar el mapa.
 if(window.innerWidth > 780){
-  map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'right');
+  try{ map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'bottom-right'); }
+  catch(e){ console.warn('[3d] no se pudo montar el control de zoom:', e && e.message); }
 }
 const colorExpr = ['match',['get','c'], ...Object.entries(CATS).flatMap(([k,v])=>[k,v.c]), '#6b7280'];
 
@@ -486,7 +494,7 @@ function setupLayers(){
       'text-field':['concat',['get','n'],'\n',['get','cuando']],'text-font':['Noto Sans Bold'],'text-size':12,
       'text-offset':[0,1.3],'text-anchor':'top','text-max-width':14},
       paint:{'text-color':'#92400e','text-halo-color':'#fff','text-halo-width':1.8}});
-  }catch(e){}
+  }catch(e){ console.warn('[3d] capas de eventos/etiquetas no montaron:', e && e.message); }
   applyFilters();
   map.on('click','dots',e=>openPlace(e.features[0].properties, e.features[0].geometry.coordinates));
   map.on('click','ev-dot',e=>{
@@ -499,7 +507,17 @@ function setupLayers(){
   map.on('mouseleave','dots',()=>map.getCanvas().style.cursor='');
 }
 map.on('load',()=>{
-  setupLayers();
+  // setupLayers() monta TODAS las capas de datos. Si tira, el mapa se queda con
+  // el basemap y ni un pin, y hasta hoy eso pasaba en silencio: un 'right' mal
+  // puesto en un control de zoom dejó el mapa vacío y nadie se enteró hasta que
+  // Angel mandó un screenshot. Un mapa sin pines tiene que gritar, no callarse.
+  try{
+    setupLayers();
+  }catch(err){
+    console.error('[3d] setupLayers falló:', err);
+    toast('El mapa no pudo cargar los negocios. Prueba el buscador de arriba o escríbele al Veci al 787-417-7711.');
+    try{ if(typeof gtag==='function') gtag('event','mapa_sin_capas',{motivo:String(err && err.message).slice(0,120)}); }catch(_){}
+  }
   let t0=performance.now();
   (function pulse(now){
     try{ if(map.getLayer('sponsor-pulse')){
