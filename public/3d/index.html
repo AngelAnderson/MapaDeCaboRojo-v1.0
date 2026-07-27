@@ -118,6 +118,15 @@
   #tcard{position:absolute;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);text-align:center;z-index:7;opacity:0;transition:all .8s;pointer-events:none}
   /* El bloque de "qué hacer" cuando se va la luz. Va dentro del panel de la
      lista, arriba de los pines, porque el consejo llega antes que el mapa. */
+  /* Control de tiempo: la cuarta dimensión. Ocupa el mismo sitio donde antes
+     estaba la fila de chips que repetía lo que los modos ya decían. */
+  #tiempo{bottom:78px;left:50%;transform:translateX(-50%);display:flex;gap:5px;align-items:center;
+          padding:7px 10px;z-index:6}
+  #tiempo .t-lbl{font-size:10.5px;color:var(--mut);font-weight:700;margin-right:3px;white-space:nowrap}
+  .t-op{background:none;border:1px solid var(--line);color:var(--mut);border-radius:99px;
+        padding:5px 12px;font-size:11.5px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap}
+  .t-op:hover{color:var(--txt);border-color:var(--teal)}
+  .t-op.sel{background:var(--teal);border-color:var(--teal);color:#04201d}
   .ayuda-luz{background:#fff7ed14;border:1px solid #fb923c55;border-radius:11px;padding:11px 13px;margin:0 2px 9px}
   .ayuda-luz b{display:block;font-size:12.5px;color:var(--orange);margin-bottom:6px}
   .ayuda-luz ol{margin:0;padding-left:17px}
@@ -148,19 +157,24 @@
     #stats{display:none}
     #pulso{display:none}
     #b-pulso{display:block}
-    #pulso.mob{display:block;top:auto;bottom:118px;left:10px;right:10px;width:auto;max-height:46vh;overflow-y:auto;z-index:8}
-    #info{left:10px;right:10px;width:auto;top:auto;bottom:118px;max-height:46vh;border-radius:16px 16px 12px 12px}
+    #pulso.mob{display:block;top:auto;bottom:152px;left:10px;right:10px;width:auto;max-height:42vh;overflow-y:auto;z-index:8}
+    #info{left:10px;right:10px;width:auto;top:auto;bottom:152px;max-height:42vh;border-radius:16px 16px 12px 12px}
     /* Movil: los 3 modos mandan y viven abajo, donde llega el pulgar.
        Los chips finos suben encima, y el cockpit queda detras de "Mas". */
     #modos{bottom:10px;left:10px;right:10px;transform:none;max-width:none;gap:6px;padding:8px}
     .modo{flex:1;align-items:center;text-align:center;padding:8px 6px;min-width:0}
     .modo b{font-size:12px;white-space:normal}
     .modo span{display:none}
-    #chips{bottom:78px;left:10px;right:10px;transform:none;max-width:none;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;-webkit-overflow-scrolling:touch}
+    /* El control de tiempo va justo encima de los modos: es lo segundo que se
+       toca, no lo último. Los chips de categoría son contextuales y suben. */
+    #tiempo{bottom:70px;left:10px;right:10px;transform:none;justify-content:center;padding:6px 8px}
+    #tiempo .t-lbl{display:none}
+    .t-op{flex:1;text-align:center;padding:6px 4px}
+    #chips{bottom:110px;left:10px;right:10px;transform:none;max-width:none;flex-wrap:nowrap;overflow-x:auto;justify-content:flex-start;-webkit-overflow-scrolling:touch}
     /* al borde derecho, a media altura: no choca con el brand (arriba),
        los chips (bottom:78) ni los modos (bottom:10) */
     #b-mas{bottom:auto;left:auto;right:10px;top:50%}
-    #ctrls{flex-direction:row;bottom:132px;left:10px;right:10px;overflow-x:auto}
+    #ctrls{flex-direction:row;bottom:152px;left:10px;right:10px;overflow-x:auto}
     #ctrls button{white-space:nowrap;font-size:11px;padding:7px 10px}
     #tcard h2{font-size:22px} #tcard{bottom:130px}
   }
@@ -214,13 +228,25 @@
   <button class="modo emer" data-modo="luz"><b>Si se va la luz</b><span>Farmacia, gas, hospital</span></button>
 </div>
 
+<!-- LA CUARTA DIMENSIÓN. Aquí vivía una fila de chips que repetía lo que los
+     modos ya decían ("Abierto ahora" estaba en los dos sitios). En su lugar va
+     el control de tiempo: mismo espacio en pantalla, pero ahora hace algo que
+     ningún otro mapa hace. Las categorías (comer, playa, salud) no se pierden:
+     salen dentro de "Necesito algo", que es donde se buscan. -->
+<div id="tiempo" class="panel">
+  <span class="t-lbl">Ver el pueblo</span>
+  <button class="t-op sel" data-momento="ahora">ahora</button>
+  <button class="t-op" data-momento="noche">esta noche</button>
+  <button class="t-op" data-momento="finde">el finde</button>
+</div>
+
+<!-- Las categorías, ya no como cromo permanente sino dentro del modo que las
+     pide. Un toque más profundo, 34px menos de pantalla comida todo el tiempo. -->
 <div id="chips" class="panel">
-  <div class="chip toggle" id="c-open">● Abierto ahora</div>
-  <div class="chip" data-int="comer">🍽 Comer ahora</div>
-  <div class="chip" data-int="playa">🏖 Playa hoy</div>
+  <div class="chip" data-int="comer">🍽 Comer</div>
+  <div class="chip" data-int="playa">🏖 Playa</div>
   <div class="chip" data-int="salud">💊 Salud</div>
   <div class="chip" data-int="eventos" id="c-eventos" style="display:none">📅 Eventos</div>
-  <div class="chip emer" data-int="emergencia">🚨 Emergencia</div>
 </div>
 
 <button id="b-mas" class="panel" type="button" aria-expanded="false">⚙ Más</button>
@@ -290,17 +316,46 @@ const VECI = n => `https://wa.me/17874177711?text=${encodeURIComponent('info '+n
 
 // ===== horarios (siempre hora de Puerto Rico, no la del browser del visitante) =====
 function astDate(){ try{ return new Date(new Date().toLocaleString('en-US',{timeZone:'America/Puerto_Rico'})); }catch(e){ return new Date(); } }
-function openState(h){
+// ===== la cuarta dimensión: el tiempo =====
+// El mapa no enseña solo lo que está abierto AHORA. MOMENTO mueve el mapa por el
+// tiempo: 'ahora', 'noche' (hoy 8pm) o 'finde' (el próximo sábado 2pm). Google te
+// dice qué está abierto ahora mismo; ninguno te deja caminar el pueblo hacia el
+// sábado antes de salir de tu casa.
+let MOMENTO='ahora';
+const DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+
+function momentoDate(){
+  const base=astDate();
+  if(MOMENTO==='noche'){ const d=new Date(base); d.setHours(20,0,0,0); return d; }
+  if(MOMENTO==='finde'){
+    const d=new Date(base);
+    // 6 = sábado. Si hoy es sábado se queda hoy; si no, salta al próximo.
+    const faltan=(6-d.getDay()+7)%7;
+    d.setDate(d.getDate()+faltan); d.setHours(14,0,0,0); return d;
+  }
+  return base;
+}
+function momentoLabel(){
+  if(MOMENTO==='ahora') return 'ahora mismo';
+  const d=momentoDate(), H=d.getHours()%12||12, ap=d.getHours()>=12?'pm':'am';
+  return DIAS[d.getDay()]+' '+H+ap;
+}
+
+function openState(h, cuando){
   if(!h) return null;
-  const seg=h.split('|')[astDate().getDay()];
-  if(seg===undefined||seg==='') return {open:false,label:'Cerrado hoy'};
+  const ref = cuando || momentoDate();
+  const seg=h.split('|')[ref.getDay()];
+  if(seg===undefined||seg==='') return {open:false,label: MOMENTO==='ahora' ? 'Cerrado hoy' : 'Cerrado ese día'};
   if(seg==='24') return {open:true,label:'Abierto 24 horas'};
   const m=seg.match(/^(\d{2})(\d{2})-(\d{2})(\d{2})$/); if(!m) return null;
-  const now=astDate(), nm=now.getHours()*60+now.getMinutes();
+  const nm=ref.getHours()*60+ref.getMinutes();
   const om=(+m[1])*60+(+m[2]), cm=(+m[3])*60+(+m[4]);
   const fmt=mm=>{let H=Math.floor(mm/60),M=mm%60,ap=H>=12?'pm':'am';H=H%12||12;return H+(M?':'+String(M).padStart(2,'0'):'')+ap};
   let open = cm<om ? (nm>=om||nm<cm) : (nm>=om&&nm<cm);
-  return {open, label: open?`Abierto · cierra ${fmt(cm)}`:`Cerrado · abre ${fmt(om)}`};
+  const ahora = MOMENTO==='ahora';
+  return {open, label: open
+    ? (ahora?`Abierto · cierra ${fmt(cm)}`:`Abre ${fmt(om)}, cierra ${fmt(cm)}`)
+    : (ahora?`Cerrado · abre ${fmt(om)}`:`Cerrado ${momentoLabel()}`)};
 }
 
 // ===== init data =====
@@ -419,8 +474,14 @@ function setupLayers(){
       'text-field':['get','n'],'text-font':['Noto Sans Regular'],'text-size':12,
       'text-offset':[0,1.4],'text-anchor':'top','text-max-width':12},
       paint:{'text-color':curStyle==='noche'?'#FFD700':'#92400e','text-halo-color':curStyle==='noche'?'#0f172a':'#ffffff','text-halo-width':1.8}});
+    // Dorado y grande si cae en el momento que estás mirando; apagado y chico si
+    // es más adelante. Así el mapa contesta "¿qué hay ESTE finde?" sin esconder
+    // lo que viene después.
     map.addLayer({id:'ev-dot',type:'circle',source:'events',layout:{visibility:'none'},paint:{
-      'circle-color':'#FFD700','circle-radius':9,'circle-stroke-width':2.5,'circle-stroke-color':'#92400e'}});
+      'circle-color':['case',['==',['get','dentro'],1],'#FFD700','#94a3b8'],
+      'circle-radius':['case',['==',['get','dentro'],1],11,6],
+      'circle-stroke-width':2.5,
+      'circle-stroke-color':['case',['==',['get','dentro'],1],'#92400e','#475569']}});
     map.addLayer({id:'ev-label',type:'symbol',source:'events',layout:{visibility:'none',
       'text-field':['concat',['get','n'],'\n',['get','cuando']],'text-font':['Noto Sans Bold'],'text-size':12,
       'text-offset':[0,1.3],'text-anchor':'top','text-max-width':14},
@@ -556,7 +617,11 @@ document.querySelectorAll('.chip[data-int]').forEach(ch=>{
 var modoActual=null, hayEventos=false;
 function setOpenOnly(v){
   if(openOnly===v) return;
-  document.getElementById('c-open').click();   // reusa el handler real, no duplica estado
+  openOnly=v;
+  recomputeOpen();
+  try{ map.getSource('places').setData(PLACES); }catch(e){}
+  applyFilters();
+  if(curIntent && curIntent!=='eventos') renderList();
 }
 // Que chips finos se ven, segun el modo. Vive aparte porque los eventos llegan
 // async y hay que re-aplicarlo sin re-disparar los filtros del mapa.
@@ -564,7 +629,7 @@ function aplicarChips(){
   var chips=document.getElementById('chips');
   if(!modoActual || modoActual==='luz'){ chips.classList.remove('abierto'); return; }
   chips.classList.add('abierto');
-  var finos = modoActual==='necesito' ? ['comer','playa','salud'] : (hayEventos?['eventos']:[]);
+  var finos = modoActual==='necesito' ? ['comer','playa','salud'].concat(hayEventos?['eventos']:[]) : (hayEventos?['eventos']:[]);
   document.querySelectorAll('.chip[data-int]').forEach(function(c){
     c.style.display = finos.indexOf(c.dataset.int)>=0 ? '' : 'none';
   });
@@ -597,19 +662,65 @@ document.getElementById('b-mas').onclick=function(){
   this.setAttribute('aria-expanded', ab?'true':'false');
 };
 
-document.getElementById('c-open').onclick=function(){
-  openOnly=!openOnly; this.classList.toggle('sel',openOnly);
-  recomputeOpen(); map.getSource('places').setData(PLACES);
-  applyFilters(); if(curIntent && curIntent!=='eventos') renderList();
-  if(openOnly) toast('Mostrando solo lo que está abierto ahora mismo (804 con horario verificado).');
-};
+// El control de tiempo. Cambiar el momento recalcula QUIÉN ESTÁ ABIERTO a esa
+// hora y qué eventos caen en esa ventana. El mapa entero se mueve en el tiempo.
+document.querySelectorAll('.t-op').forEach(function(b){
+  b.onclick=function(){
+    if(MOMENTO===b.dataset.momento) return;
+    MOMENTO=b.dataset.momento;
+    document.querySelectorAll('.t-op').forEach(function(x){ x.classList.toggle('sel', x===b); });
+    try{ if(typeof gtag==='function') gtag('event','momento_click',{momento:MOMENTO}); }catch(_){}
+    recomputeOpen();
+    try{ map.getSource('places').setData(PLACES); }catch(e){}
+    pintarEventos();
+    applyFilters();
+    if(curIntent && curIntent!=='eventos') renderList();
+    if(curIntent==='eventos') renderEvents();
+    toast(MOMENTO==='ahora' ? 'Viendo el pueblo ahora mismo.'
+         : 'Viendo el pueblo el '+momentoLabel()+'. Lo abierto y los eventos son de esa hora.');
+  };
+});
+// Los eventos con coordenadas se dibujan como pines dorados, PRENDIDOS de
+// entrada. Antes había que apretar un chip para ver una lista sin ubicación:
+// dos toques para enterarte de que las Fiestas Patronales son en la Plaza.
+// Un evento es un lugar y una fecha, y el mapa ya sabe dibujar lugares.
+//
+// La ventana del momento decide cuáles se resaltan. Los eventos son pocos y
+// espaciados: si el finde no hay ninguno, se siguen viendo los que vienen (en
+// gris) en vez de dejar el mapa vacío y que parezca roto.
+function ventanaMomento(){
+  const d=momentoDate();
+  if(MOMENTO==='noche'){ const a=new Date(d); a.setHours(17,0,0,0); const b=new Date(d); b.setHours(23,59,59,999); return [a,b]; }
+  if(MOMENTO==='finde'){
+    const a=new Date(d); a.setDate(a.getDate()-(a.getDay()===0?0:a.getDay()-6)); a.setHours(0,0,0,0);
+    const b=new Date(a); b.setDate(b.getDate()+1); b.setHours(23,59,59,999); return [a,b];
+  }
+  const a=new Date(d), b=new Date(d); b.setHours(b.getHours()+6); return [a,b];
+}
+function pintarEventos(){
+  const [ini,fin]=ventanaMomento();
+  EVENTS = {type:'FeatureCollection', features: EVENTOS
+    .filter(function(e){ return e.lat!=null && e.lon!=null; })
+    .map(function(e,i){
+      const t=Date.parse(e.d);
+      const dentro = Number.isFinite(t) && t>=ini.getTime() && t<=fin.getTime();
+      return {type:'Feature',
+        geometry:{type:'Point',coordinates:[e.lon,e.lat]},
+        properties:{n:e.n, d:e.d, l:e.l||e.m||'', i:i, cuando:fmtDate(e.d), dentro:dentro?1:0}}; })};
+  try{
+    const src=map.getSource('events');
+    if(src) src.setData(EVENTS);
+    else map.once('load',function(){ const s2=map.getSource('events'); if(s2) s2.setData(EVENTS); });
+    if(EVENTS.features.length) setEvVisible(true);
+  }catch(e){}
+}
 function setEvVisible(v){ try{['ev-dot','ev-label'].forEach(id=>map.getLayer(id)&&map.setLayoutProperty(id,'visibility',v?'visible':'none'));}catch(e){} }
 function selectIntent(k,setHash=true){
   curIntent=k; emerType=null;
   document.querySelectorAll('.chip[data-int]').forEach(c=>c.classList.toggle('sel',c.dataset.int===k));
   const info=document.getElementById('info');
   setEvVisible(k==='eventos');
-  if(k==='comer' && !openOnly){ openOnly=true; document.getElementById('c-open').classList.add('sel'); recomputeOpen(); }
+  if(k==='comer' && !openOnly){ openOnly=true; recomputeOpen(); }
   applyFilters();
   if(setHash) history.replaceState(null,'',k?('#ir/'+k):'#');
   if(!k){ info.style.display='none'; return; }
@@ -745,21 +856,7 @@ fetch('/api/public?action=live3d').then(r=>r.ok?r.json():null).then(d=>{
     // re-aplicar su visibilidad o el chip aparece donde no toca.
     aplicarChips();
 
-    // Los que traen coordenadas se dibujan como pines dorados, PRENDIDOS de
-    // entrada. Antes había que apretar un chip para ver una lista sin ubicación:
-    // dos toques para enterarte de que las Fiestas Patronales son en la Plaza.
-    // Un evento es un lugar y una fecha, y el mapa ya sabe dibujar lugares.
-    EVENTS = {type:'FeatureCollection', features: EVENTOS
-      .filter(function(e){ return e.lat!=null && e.lon!=null; })
-      .map(function(e,i){ return {type:'Feature',
-        geometry:{type:'Point',coordinates:[e.lon,e.lat]},
-        properties:{n:e.n, d:e.d, l:e.l||e.m||'', i:i, cuando:fmtDate(e.d)}}; })};
-    try{
-      const src=map.getSource('events');
-      if(src) src.setData(EVENTS);
-      else map.once('load',function(){ const s2=map.getSource('events'); if(s2) s2.setData(EVENTS); });
-      if(EVENTS.features.length) setEvVisible(true);
-    }catch(e){}
+    pintarEventos();
   }
   if(Array.isArray(d.featured)){
     const fSet=new Set(d.featured);
@@ -925,7 +1022,7 @@ document.getElementById('b-reset').onclick=()=>{
   clearTour(); selectIntent(null); closePopup();
   if(userMarker){ userMarker.remove(); userMarker=null; }
   document.getElementById('pulso').classList.remove('mob');
-  openOnly=false; document.getElementById('c-open').classList.remove('sel'); applyFilters();
+  openOnly=false; applyFilters();
   map.getSource('match')&&map.getSource('match').setData({type:'FeatureCollection',features:[]});
   document.querySelectorAll('.term').forEach(x=>x.classList.remove('active'));
   history.replaceState(null,'','#');
