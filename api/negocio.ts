@@ -47,6 +47,32 @@ function formatHours(opening_hours: any): string {
   return 'No disponible';
 }
 
+// The DB stores phones in E.164 (+17875551234). Showing that raw reads like a
+// database dump to the business owner looking at their own listing. Display it
+// the way a boricua writes it; the tel: href keeps the raw value.
+function formatPhone(raw: string): string {
+  const d = (raw || '').replace(/\D/g, '');
+  const ten = d.length === 11 && d.startsWith('1') ? d.slice(1) : d;
+  if (ten.length !== 10) return raw;
+  return `${ten.slice(0, 3)}-${ten.slice(3, 6)}-${ten.slice(6)}`;
+}
+
+// `category` is an internal English enum. It was rendering verbatim on a
+// Spanish-language page ("ACTIVITY" on a fishing charter).
+const CATEGORY_LABELS: Record<string, string> = {
+  FOOD: 'Comida', SERVICE: 'Servicio', SHOPPING: 'Tiendas', HEALTH: 'Salud',
+  SIGHTS: 'Qué ver', BEAUTY: 'Belleza', CULTURE: 'Cultura', AUTO: 'Autos',
+  ACTIVITY: 'Actividad', EDUCATION: 'Educación', LODGING: 'Hospedaje',
+  NIGHTLIFE: 'Vida nocturna', BEACH: 'Playa', LOGISTICS: 'Náutico',
+  GOVERNMENT: 'Gobierno', EMERGENCY: 'Emergencia', HISTORY: 'Historia',
+  PROJECT: 'Proyecto',
+};
+function categoryLabel(place: any): string {
+  if (place.subcategory) return place.subcategory;
+  const key = (place.category || '').toUpperCase();
+  return CATEGORY_LABELS[key] || 'Negocio';
+}
+
 function formatAmenity(amenities: any, key: string): string {
   if (!amenities || typeof amenities !== 'object') return 'No especificado';
   const val = amenities[key];
@@ -172,7 +198,14 @@ export default async function handler(req: any, res: any) {
   // Sin foto propia -> tarjeta de marca generada (nombre + categoría), no un default genérico.
   const ogCard = `${baseUrl}/api/og?t=${encodeURIComponent(place.name)}&k=${encodeURIComponent(place.subcategory || place.category || 'Cabo Rojo')}`;
   const image = place.image_url || ogCard;
-  const hoursText = formatHours(place.opening_hours);
+  // `opening_hours` (jsonb) is the structured source, but many places only carry
+  // the free-text `hours` column ("Por cita", "Lun a Vie 8am"). Falling back to it
+  // beats printing "No disponible" at a business that told us its schedule.
+  const structuredHours = formatHours(place.opening_hours);
+  const hoursText = structuredHours !== 'No disponible'
+    ? structuredHours
+    : (place.hours ? esc(place.hours) : 'No disponible');
+  const hoursKnown = hoursText !== 'No disponible';
   const openNow = isOpenNow(place.opening_hours);
   // openNow (computed from hours) wins over the coarse status flag when available
   const isOpen = openNow !== null ? openNow : place.status === 'open';
@@ -235,14 +268,14 @@ export default async function handler(req: any, res: any) {
         '@type': 'Question',
         name: `¿Está abierto ${place.name} hoy?`,
         acceptedAnswer: { '@type': 'Answer', text: isOpen
-          ? `${place.name} aparece como abierto. Horario: ${formatHours(place.opening_hours)}.`
-          : `${place.name} aparece como cerrado actualmente. Comunícate al ${place.phone || '787-417-7711'} para confirmar.` },
+          ? `${place.name} aparece como abierto.${hoursKnown ? ` Horario: ${hoursText}.` : ''}`
+          : `${place.name} aparece como cerrado actualmente. Comunícate al ${place.phone ? formatPhone(place.phone) : '787-417-7711'} para confirmar.` },
       },
       {
         '@type': 'Question',
         name: `¿Cuál es el teléfono de ${place.name}?`,
         acceptedAnswer: { '@type': 'Answer', text: place.phone
-          ? `El teléfono de ${place.name} es ${place.phone}.`
+          ? `El teléfono de ${place.name} es ${formatPhone(place.phone)}.`
           : `Textea ${place.name} al 787-417-7711 y El Veci te consigue el contacto.` },
       },
     ],
@@ -334,7 +367,7 @@ export default async function handler(req: any, res: any) {
         : `<div class="hero-img-placeholder">📍</div>`}
       <div class="hero-body">
         <div>
-          <span class="badge">${esc(place.category || 'Negocio')}</span>
+          <span class="badge">${esc(categoryLabel(place))}</span>
           <span class="badge ${isOpen ? 'status-open' : 'status-closed'}">${openLabel}</span>
         </div>
         <h1>${esc(place.name)}</h1>
@@ -346,8 +379,8 @@ export default async function handler(req: any, res: any) {
     <div class="info-card">
       <h2>Información</h2>
       ${place.address ? `<div class="info-row"><span class="info-label">📍 Dirección</span><span class="info-value">${esc(place.address)}</span></div>` : ''}
-      ${place.phone ? `<div class="info-row"><span class="info-label">📞 Teléfono</span><span class="info-value"><a href="tel:${esc(place.phone)}">${esc(place.phone)}</a></span></div>` : ''}
-      <div class="info-row"><span class="info-label">🕐 Horario</span><span class="info-value">${hoursText}</span></div>
+      ${place.phone ? `<div class="info-row"><span class="info-label">📞 Teléfono</span><span class="info-value"><a href="tel:${esc(place.phone)}">${esc(formatPhone(place.phone))}</a></span></div>` : ''}
+      ${hoursKnown ? `<div class="info-row"><span class="info-label">🕐 Horario</span><span class="info-value">${hoursText}</span></div>` : ''}
       ${place.website ? `<div class="info-row"><span class="info-label">🌐 Web</span><span class="info-value"><a href="${esc(place.website)}" target="_blank" rel="noopener">${esc(place.website)}</a></span></div>` : ''}
       ${place.gmaps_url ? `<div class="info-row"><span class="info-label">🗺️ Google Maps</span><span class="info-value"><a href="${esc(place.gmaps_url)}" target="_blank" rel="noopener">Ver en Maps</a></span></div>` : ''}
     </div>
@@ -372,12 +405,20 @@ export default async function handler(req: any, res: any) {
       </div>
       <div class="faq-item">
         <h3>¿Está abierto ${esc(place.name)} hoy?</h3>
-        <p>${isOpen ? `${esc(place.name)} aparece como abierto. Horario: ${hoursText}. Verifica directamente antes de visitar.` : `${esc(place.name)} aparece como cerrado actualmente. Comunícate al ${place.phone || '787-417-7711'} para confirmar.`}</p>
+        <p>${isOpen
+          ? `${esc(place.name)} aparece como abierto.${hoursKnown ? ` Horario: ${hoursText}.` : ''} Verifica directamente antes de visitar${place.phone ? `, al ${esc(formatPhone(place.phone))}` : ''}.`
+          : `${esc(place.name)} aparece como cerrado actualmente. Comunícate al ${place.phone ? esc(formatPhone(place.phone)) : '787-417-7711'} para confirmar.`}</p>
       </div>
       <div class="faq-item">
+        <h3>¿Cuál es el teléfono de ${esc(place.name)}?</h3>
+        <p>${place.phone
+          ? `El teléfono de ${esc(place.name)} es <a href="tel:${esc(place.phone)}">${esc(formatPhone(place.phone))}</a>.`
+          : `Todavía no tenemos el teléfono. Textea <strong>${esc(place.name)}</strong> al 787-417-7711 y El Veci te consigue el contacto.`}</p>
+      </div>
+      ${parking !== 'No especificado' ? `<div class="faq-item">
         <h3>¿Tiene estacionamiento ${esc(place.name)}?</h3>
         <p>Estacionamiento: ${parking}. Para más detalles, textea <strong>${esc(place.name)}</strong> al 787-417-7711.</p>
-      </div>
+      </div>` : ''}
     </div>
 
     <div class="map-link">
