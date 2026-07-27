@@ -9750,6 +9750,10 @@ function handleUltimaCifra(req: any, res: any) {
 
 ${shareRow({ text: 'El conteo oficial dice que PR ganó casi 7,000 negocios. Es verdad. Lo que no dice es que ese conteo se quedó congelado en el año pico y el dinero que lo pagó ya cayó 55%. Con la fuente al lado:', url: 'https://puertoricosinfiltros.com/ultima-cifra', toWho: 'Al que decide con números: dueño de negocio, municipio, prensa.' })}
 
+<div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mb-4 text-sm text-slate-700">
+  Capítulo 1. El capítulo 2 es <a href="/numero-mas-nuevo" class="text-teal-700 font-semibold">El número más nuevo que existe →</a>
+</div>
+
 <h2>Esto en 4 frases</h2>
 <ol>
   <li>Después del huracán María, a Puerto Rico le entró una montaña de dinero federal.</li>
@@ -9898,6 +9902,127 @@ ${shareRow({ text: 'El conteo oficial dice que PR ganó casi 7,000 negocios. Es 
     title: 'La última buena cifra — el conteo de negocios de PR se congeló en el año pico',
     description: 'El Censo dice que Puerto Rico ganó casi 7,000 negocios entre 2017 y 2023. Es verdad. Lo que no dice es que esa serie termina en el año pico del dinero federal, que ya cayó 55%. Con la fuente al lado.',
     slug: 'ultima-cifra', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
+// /numero-mas-nuevo — Capítulo 2: el rezago de los datos. Cuál es el dato más nuevo que existe
+// de cada fuente y qué edad tiene. Abre con un error propio (cité la serie de desempleo equivocada
+// en /ultima-cifra). Edades medidas en vivo el 2026-07-27.
+function handleNumeroMasNuevo(req: any, res: any) {
+  const body = `
+<h1>El número más nuevo que existe</h1>
+<p class="text-lg text-slate-600 mt-2">En Puerto Rico se decide con cifras viejas. No porque alguien las esconda, sino porque <strong>llegan tarde y nadie mira la fecha.</strong></p>
+
+<div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-4 text-sm text-slate-700">
+  Capítulo 2. El capítulo 1 es <a href="/ultima-cifra" class="text-teal-700 font-semibold">La última buena cifra →</a>
+</div>
+
+${shareRow({ text: 'Cuando alguien te da un número sobre Puerto Rico, la pregunta no es si es verdad. Casi siempre es verdad. La pregunta es de cuándo es. Fui fuente por fuente a medirlo:', url: 'https://puertoricosinfiltros.com/numero-mas-nuevo', toWho: 'Al que cita números: prensa, municipio, dueño de negocio.' })}
+
+<h2>Empiezo por un error mío</h2>
+<p>Hace 2 días publiqué el capítulo 1 de esto. Escribí que el desempleo de Puerto Rico había subido de 5.3% a 6.4% entre abril y junio, y lo presenté como la primera grieta de lo que venía.</p>
+<p><strong>Estaba equivocado.</strong></p>
+<p>Ese número sale de una serie que <strong>no</strong> corrige el efecto de las temporadas. En Puerto Rico el desempleo sube todos los veranos, cuando los estudiantes salen a buscar trabajo. La serie que sí lo corrige, que es la que sirve para ver tendencia, dice otra cosa: <strong>13 meses plana, entre 5.6% y 5.8%.</strong></p>
+<p>Yo no estaba viendo una crisis. Estaba viendo el verano.</p>
+<p>Y lo peor no fue el número. Al lado le puse un enlace que decía "compruébalo tú". <strong>Ese enlace llevaba a la otra serie.</strong> Cualquiera que hiciera clic veía 5.8%, no 6.4%. Lo encontré por casualidad, 2 horas después, buscando material para este capítulo. Ya está corregido.</p>
+<blockquote>Cuento esto porque es exactamente el tema. En Puerto Rico hay más de un número oficial para la misma cosa, casi ninguno está fresco, y casi nadie mira cuál está citando.</blockquote>
+
+<h2>1. La pregunta que nadie hace</h2>
+<p>Cuando alguien te dice un número sobre Puerto Rico, la pregunta no es si es verdad. Casi siempre es verdad. La pregunta es: <strong>¿de cuándo es?</strong></p>
+<p>Fui fuente por fuente a averiguarlo. No a leer lo que dicen los reportes, sino a preguntarle a cada sistema cuál es el dato más nuevo que tiene guardado. Esto es lo que hay hoy, 27 de julio de 2026:</p>
+<div class="not-prose overflow-auto border border-slate-200 rounded-xl mt-3 mb-4">
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Qué mide</th><th class="py-2 px-3">Dato más nuevo</th><th class="py-2 px-3 text-right">Edad</th></tr></thead><tbody>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Cuántos negocios hay, pueblo por pueblo</td><td class="py-2 px-3">2023</td><td class="py-2 px-3 text-right font-bold text-coral-700">3 años</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Población, ingreso, edad (ACS)</td><td class="py-2 px-3">2024</td><td class="py-2 px-3 text-right">2 años</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Censo completo de población</td><td class="py-2 px-3">2020</td><td class="py-2 px-3 text-right font-bold text-coral-700">6 años</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Desempleo</td><td class="py-2 px-3">junio 2026</td><td class="py-2 px-3 text-right">1 mes</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Contratos federales</td><td class="py-2 px-3">esta semana</td><td class="py-2 px-3 text-right">días</td></tr>
+  </tbody></table>
+</div>
+<p>Mira la primera fila y la última. El dinero federal se puede ver casi en vivo. El conteo de negocios que ese dinero produjo tiene 3 años. <strong>Son las 2 mitades de la misma historia, y una llega 3 años después que la otra.</strong></p>
+
+<h2>2. La regla incómoda</h2>
+<p>Ordena esa tabla por velocidad y sale un patrón que no debería existir:</p>
+<div class="not-prose mt-4 mb-4 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-lg sm:text-xl font-black leading-snug">Mientras más lento se actualiza un número, más peso carga en las decisiones.</p>
+</div>
+<p>El censo de población tiene 6 años y de él dependen fondos federales, distritos electorales y planes de escuelas. El desempleo se actualiza todos los meses y casi nadie lo usa para decidir nada.</p>
+<p>No es coincidencia. Los números que mueven dinero grande son caros de producir, así que se producen poco. Y como se producen poco, cuando por fin salen, todo el mundo los usa por años. Incluyendo los años en que ya dejaron de ser verdad.</p>
+<p><strong>Puerto Rico está tomando decisiones de 2026 con una foto de 2020 y un conteo de negocios de 2023.</strong></p>
+
+<h2>3. La segunda trampa: 2 números para la misma cosa</h2>
+<p>Esta es la que me mordió a mí.</p>
+<p>El desempleo de Puerto Rico se publica en 2 series: la cruda y la ajustada por temporada. Las 2 son de la misma oficina federal, las 2 son correctas, y para junio de 2026 dan <strong>6.4%</strong> y <strong>5.8%</strong>.</p>
+<p>Esa diferencia, medio punto, es más grande que casi cualquier movimiento real de un mes. Quien quiera contar una historia de crisis usa la primera. Quien quiera contar una de estabilidad usa la segunda. Ninguno de los 2 está mintiendo.</p>
+<p>Pasa igual en otros sitios. Hay cifras preliminares y revisadas. Hay dólares de hoy y dólares ajustados por inflación. Hay "obligado" y "desembolsado", que en dinero federal no son ni parecido.</p>
+<p><strong>Cuando te den un número, pregunta cuál de las versiones es.</strong> Si quien te lo da no sabe contestarte eso, no sabe lo que te está diciendo.</p>
+
+<h2>4. La tercera: el portal de datos de Puerto Rico está caído</h2>
+<p>Esto lo comprobé hoy, y me sorprendió.</p>
+<p><code>data.pr.gov</code>, el portal de datos abiertos del gobierno de Puerto Rico, <strong>devuelve error 404.</strong> No está lento. No está desactualizado. No está.</p>
+<p>Quiero ser justo, porque la historia completa es menos dramática que el titular. El <strong>Instituto de Estadísticas de Puerto Rico</strong> sí está vivo, publicando, con material de 2025. La Junta de Planificación también responde. No es que Puerto Rico se haya quedado sin estadísticas.</p>
+<p>Lo que se cayó fue <strong>la puerta fácil</strong>: el sitio donde cualquiera bajaba una tabla sin pedir permiso ni saber a qué agencia escribirle.</p>
+<p>Y ahí está el detalle que importa. Cuando la puerta fácil se cierra, la data no desaparece: <strong>se vuelve privilegio de quien sabe dónde buscar.</strong> El que tiene tiempo, contactos o costumbre la consigue igual. El vecino, el dueño de negocio y el periodista de pueblo, no.</p>
+
+<h2>5. Qué hacer con un número que te dan</h2>
+<p>No hace falta ser economista. Con 3 preguntas se cae casi todo lo que circula:</p>
+<ol>
+  <li><strong>¿De cuándo es?</strong> No cuándo lo publicaron. De cuándo son los datos. Un reporte de 2026 puede estar contando 2023.</li>
+  <li><strong>¿Cuál versión es?</strong> Crudo o ajustado. Preliminar o revisado. Obligado o desembolsado. Si hay más de una versión, hay más de una respuesta.</li>
+  <li><strong>¿Puedo abrir la fuente ahora mismo?</strong> Si el que te lo dice no te puede enseñar dónde lo sacó, en un enlace que abra, trátalo como una opinión. Puede ser una opinión correcta. Sigue siendo una opinión.</li>
+</ol>
+<p>Yo fallé la 3 en mi propio capítulo 1. El enlace estaba, pero no llevaba al número. <strong>Poner el enlace no basta: hay que abrirlo y confirmar que dice lo que tú dijiste.</strong></p>
+
+<h2>6. Lo que este capítulo no dice</h2>
+<ul>
+  <li><strong>No digo que los datos estén manipulados.</strong> Digo que llegan tarde y que hay más de una versión. Son problemas distintos, y este es el aburrido.</li>
+  <li><strong>No digo que Puerto Rico no tenga estadísticas.</strong> El Instituto está vivo y trabajando. Lo que está caído es el portal de datos abiertos.</li>
+  <li><strong>No revisé todas las fuentes</strong>, revisé las que sostienen las decisiones de dinero y población. Puede haber otras peores y otras mejores.</li>
+  <li><strong>La tabla de edades es de hoy.</strong> Cuando el Censo publique el conteo de negocios de 2024, esa primera fila cambia. Ojalá cambie pronto.</li>
+</ul>
+
+<h2>7. Por qué esto importa más de lo que parece</h2>
+<p>En el <a href="/ultima-cifra" class="text-teal-700 font-semibold">capítulo 1</a> conté que a Puerto Rico le entró una montaña de dinero federal, que con ese dinero abrieron casi 7,000 negocios, y que ese dinero ya bajó 55%.</p>
+<p>La parte que hace eso peligroso no es el dinero. Es que <strong>el conteo de negocios se congeló en 2023, el mejor año</strong>, y no se actualiza hasta 2027. Durante 2 años, cualquiera que consulte la cifra oficial va a ver una economía creciendo. Con evidencia. De fuente seria. Y vieja.</p>
+<p>Eso no es una teoría sobre Puerto Rico. Es una propiedad del calendario de publicación, y se puede verificar en 2 minutos.</p>
+<div class="not-prose mt-4 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-lg sm:text-xl font-black leading-snug">El número no tiene que ser falso para llevarte a la decisión equivocada. Basta con que sea de antes.</p>
+</div>
+
+<h2>Cómo comprobar todo esto</h2>
+<div class="not-prose overflow-auto border border-slate-200 rounded-xl mt-3 mb-4">
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Qué</th><th class="py-2 px-3">Dónde</th></tr></thead><tbody>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Conteo de negocios</td><td class="py-2 px-3"><a href="https://data.census.gov/table/CBP2023.CB2300CBP?q=Puerto+Rico" rel="nofollow" class="text-teal-700 font-semibold">data.census.gov</a></td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Desempleo, serie ajustada</td><td class="py-2 px-3"><a href="https://data.bls.gov/timeseries/LASST720000000000003" rel="nofollow" class="text-teal-700 font-semibold">LASST720000000000003</a></td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Desempleo, serie cruda</td><td class="py-2 px-3"><a href="https://data.bls.gov/timeseries/LAUST720000000000003" rel="nofollow" class="text-teal-700 font-semibold">LAUST720000000000003</a></td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Contratos federales</td><td class="py-2 px-3"><a href="https://www.usaspending.gov/state/puerto-rico/latest" rel="nofollow" class="text-teal-700 font-semibold">usaspending.gov</a></td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Instituto de Estadísticas de PR</td><td class="py-2 px-3"><a href="https://estadisticas.pr" rel="nofollow" class="text-teal-700 font-semibold">estadisticas.pr</a></td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Portal de datos abiertos de PR</td><td class="py-2 px-3"><code>data.pr.gov</code> (404 al 27 de julio de 2026)</td></tr>
+  </tbody></table>
+</div>
+<p class="text-sm text-slate-600">Todas las edades de la tabla se midieron consultando cada fuente el 27 de julio de 2026. Si alguna cambió, escríbeme y la actualizo.</p>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Article',
+    headline: 'El número más nuevo que existe: el rezago de los datos con que se decide en Puerto Rico',
+    inLanguage: 'es', datePublished: '2026-07-27',
+    author: { '@type': 'Person', name: 'Angel F. Anderson' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros' },
+    url: 'https://puertoricosinfiltros.com/numero-mas-nuevo',
+    isAccessibleForFree: true,
+    citation: [
+      'https://data.census.gov/table/CBP2023.CB2300CBP?q=Puerto+Rico',
+      'https://data.bls.gov/timeseries/LASST720000000000003',
+      'https://www.usaspending.gov/state/puerto-rico/latest',
+    ],
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'El número más nuevo que existe — el rezago de los datos en Puerto Rico',
+    description: 'El conteo de negocios de PR tiene 3 años. El censo tiene 6. Los contratos federales se ven en vivo. Mientras más lento el número, más peso carga en las decisiones. Con la fuente al lado.',
+    slug: 'numero-mas-nuevo', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
@@ -13730,6 +13855,7 @@ export default async function handler(req: any, res: any) {
     case 'buscar-ia': return await handleBuscarIa(req, res)
     case 'prediccion': return handlePrediccion(req, res)
     case 'ultima-cifra': return handleUltimaCifra(req, res)
+    case 'numero-mas-nuevo': return handleNumeroMasNuevo(req, res)
     case 'costo-de-vida': return await handleCostoDeVida(req, res)
     case 'trabajo': return handleTrabajo(req, res)
     case 'decidir': return handleDecidir(req, res)

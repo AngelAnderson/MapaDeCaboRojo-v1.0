@@ -232,6 +232,10 @@
       "destination": "/api/mapa-pages?page=ultima-cifra"
     },
     {
+      "source": "/numero-mas-nuevo",
+      "destination": "/api/mapa-pages?page=numero-mas-nuevo"
+    },
+    {
       "source": "/trabajo",
       "destination": "/api/mapa-pages?page=trabajo"
     },
