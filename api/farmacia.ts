@@ -318,8 +318,17 @@ export default async function handler(req: any, res: any) {
   const trackWa   = `onclick="try{gtag('event','click_whatsapp_practice',{place:'${esc(place.slug || place.id)}',type:'${type}'})}catch(e){}"`;
 
   // Street View fallback when no image
-  const streetViewSrc = (place.lat && place.lon)
-    ? `https://maps.googleapis.com/maps/api/streetview?size=720x300&location=${place.lat},${place.lon}&fov=90&key=${process.env.VITE_GOOGLE_API_KEY || ''}`
+  // ⚠️ ESTA URL SE IMPRIME EN EL <img src> DEL HTML PÚBLICO. Cualquier llave que
+  // se ponga aquí queda visible en "ver código fuente". NUNCA una llave de servidor.
+  // Usa SOLO una llave dedicada a Street View Static, restringida por HTTP referrer
+  // a los dominios del proyecto. Si no está definida, no se pinta imagen (hay
+  // placeholder en el onerror) — preferimos sin foto que con llave filtrada.
+  // Sin llave NO se arma la URL: antes se armaba igual con key= vacío, o sea que
+  // la promesa del comentario ("no se pinta imagen") no la cumplía el código —
+  // pedía una imagen que Google rechaza y caía al placeholder por el onerror.
+  const streetViewKey = process.env.GOOGLE_STREETVIEW_PUBLIC_KEY || '';
+  const streetViewSrc = (streetViewKey && place.lat && place.lon)
+    ? `https://maps.googleapis.com/maps/api/streetview?size=720x300&location=${place.lat},${place.lon}&fov=90&key=${encodeURIComponent(streetViewKey)}`
     : null;
 
   // Google Maps embed — uses coordinates if available, falls back to address search

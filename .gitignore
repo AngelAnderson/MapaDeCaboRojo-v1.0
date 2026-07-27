@@ -132,4 +132,9 @@ dist-ssr/
 # Personal workspace (not code)
 .claude/
 Outbox/
+
+# Cualquier .env, incluidos los que los patrones de arriba no pescan
+# (.env.staging, .env.backup, .env.dev). .env.example se exceptua a proposito:
+# es la plantilla sin valores y tiene que viajar con el repo.
 .env*
+!.env.example

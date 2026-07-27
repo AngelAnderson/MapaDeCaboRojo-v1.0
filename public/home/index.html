@@ -81,6 +81,12 @@
   .act.tel{background:var(--teal);color:#fff;border-color:var(--teal)}
 
   .note{font-size:.85rem;color:var(--ink-soft);margin:14px 2px 8px;font-weight:600}
+  /* Salida visible de los resultados. Sin esto el unico camino de vuelta era el
+     back del browser, que como la busqueda no tocaba el URL sacaba del sitio. */
+  .volver{display:block;margin:16px 0 0;background:var(--paper);border:1px solid var(--line);
+     border-radius:10px;padding:11px 16px;font-family:inherit;font-size:.95rem;font-weight:700;
+     color:var(--ink);cursor:pointer;box-shadow:var(--shadow)}
+  .volver:hover{border-color:var(--coral);color:var(--coral)}
   .vacio{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:22px 18px;
          box-shadow:var(--shadow);text-align:center}
   .vacio h2{font-size:1.1rem;margin-bottom:6px}
@@ -141,13 +147,14 @@
 </header>
 
 <main class="wrap">
+  <button type="button" class="volver" id="volver" hidden>← Volver al inicio</button>
   <p class="note" id="note" hidden></p>
   <ul id="res"></ul>
 
   <div id="inicio">
     <div class="panel">
-      <h2>El Pulso del Pueblo</h2>
-      <p class="sub">Lo que tus vecinos le preguntaron al Veci este mes. Data real, no relleno.</p>
+      <h2>Lo que el pueblo buscó este mes</h2>
+      <p class="sub">El número dice cuántos vecinos buscaron eso. Toca uno para ver quién lo resuelve.</p>
       <div class="pulso" id="pulso"><span class="sub">Cargando…</span></div>
     </div>
 
@@ -187,7 +194,8 @@
 (function(){
   var q=document.getElementById('q'), sb=document.getElementById('sb'),
       res=document.getElementById('res'), note=document.getElementById('note'),
-      inicio=document.getElementById('inicio');
+      inicio=document.getElementById('inicio'),
+      volver=document.getElementById('volver');
 
   var ATAJOS=['farmacia','plomero','dentista','pizza','gasolinera','ferretería','mecánico','panadería'];
   var chips=document.getElementById('chips');
@@ -247,6 +255,7 @@
     res.innerHTML='';
     var r=(data&&data.results)||[];
     inicio.hidden=true;
+    volver.hidden=false;
     if(!r.length){ note.hidden=true; res.appendChild(vacio(term)); return; }
 
     var enCR=r.filter(function(x){return x.alcance==='cabo_rojo';}).length;
@@ -270,7 +279,22 @@
     if(window.gtag) gtag('event','search',{search_term:term});
   }
 
-  function limpiar(){ res.innerHTML=''; note.hidden=true; inicio.hidden=false; }
+  function limpiar(){ res.innerHTML=''; note.hidden=true; inicio.hidden=false; volver.hidden=true; }
+
+  // Volver al inicio: dos caminos, porque la gente usa los dos.
+  // (1) el boton visible, para quien no sabe que existe el back del browser;
+  // (2) el back de verdad, que ahora funciona porque cada busqueda deliberada
+  //     (chip o Enter) empuja una entrada al historial con ?q=.
+  function irAlInicio(push){
+    q.value=''; limpiar();
+    if(push!==false && location.search) history.pushState({inicio:1},'',location.pathname);
+    q.focus();
+  }
+  volver.onclick=function(){ irAlInicio(); };
+  window.addEventListener('popstate',function(){
+    var t=new URLSearchParams(location.search).get('q');
+    if(t){ q.value=t; buscar(t); } else { q.value=''; limpiar(); }
+  });
 
   q.addEventListener('input',function(){
     clearTimeout(timer);
@@ -294,7 +318,13 @@
         var b=document.createElement('button'); b.type='button';
         b.className='pterm'+(x.supply===0?' hueco':'');
         b.innerHTML=esc(x.t)+'<b>'+x.n+'</b>';
-        b.onclick=function(){ q.value=x.t; buscar(x.t); window.scrollTo({top:0,behavior:'smooth'}); };
+        b.onclick=function(){
+          q.value=x.t;
+          // Entrada de historial: tocar un chip es navegar, y el back tiene que
+          // devolver a la portada en vez de sacar del sitio.
+          history.pushState({q:x.t},'','?q='+encodeURIComponent(x.t));
+          buscar(x.t); window.scrollTo({top:0,behavior:'smooth'});
+        };
         cont.appendChild(b);
       });
     } else { cont.innerHTML='<span class="sub">El pulso vuelve en un rato.</span>'; }

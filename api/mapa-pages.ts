@@ -5177,13 +5177,15 @@ async function handleEspejo(req: any, res: any) {
   // La serie histórica en vivo — "el tiempo que nadie puede comprar" se publica, no se guarda
   let serieHtml = ''
   try {
+    // Antes esto paginaba registro_snapshots de 1,000 en 1,000 (hoy 6,606 filas =
+    // 7 viajes de ida y vuelta) para traerse todas las filas y sumarlas en JS, y
+    // producir 3 números. Postgres lo agrega en una sola llamada. Misma familia del
+    // bug que mató 34 requests a los 60s el 2026-07-26: contar en JS lo que le toca
+    // al agregado en SQL. Verificado fila por fila contra el loop viejo antes de
+    // cambiarlo (mismos totales en las 3 fechas).
     const byDate: Record<string, number> = {}
-    // paginar explícito — el cap de 1000 de PostgREST truncaba la serie (2K+ filas por medición)
-    for (let off = 0; off < 20000; off += 1000) {
-      const { data: snaps } = await supabase.from('registro_snapshots').select('snapshot_date,n,subcategory').neq('subcategory', '_total').range(off, off + 999)
-      for (const r of (snaps || [])) byDate[(r as any).snapshot_date] = (byDate[(r as any).snapshot_date] || 0) + ((r as any).n || 0)
-      if (!snaps || snaps.length < 1000) break
-    }
+    const { data: serie } = await supabase.rpc('registro_serie_historica')
+    for (const r of (serie || [])) byDate[(r as any).snapshot_date] = Number((r as any).total) || 0
     const dates = Object.keys(byDate).sort()
     if (dates.length) {
       const rows = dates.map((d, i) => {
