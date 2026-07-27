@@ -225,7 +225,11 @@ export default async function handler(req: any, res: any) {
   let placesQuery = supabase
     .from('places')
     .select('id,name,slug,category,subcategory,image_url,phone,address,municipality,google_rating,google_review_count,status,plan,sponsor_weight,tags,services,opening_hours,lat,lon,npi,one_liner,is_emergency_resource')
-    .eq('status', 'open');
+    .eq('status', 'open')
+    // Lista negra: quien busca POR NOMBRE los encuentra (ficha propia y pin en el mapa
+    // siguen vivos), pero quien busca una CATEGORÍA no los recibe como recomendación.
+    // Mismo criterio que ya aplican los RPCs de búsqueda del bot.
+    .neq('quality_tier', 'hidden');
   if (isRegionHealth) {
     placesQuery = placesQuery.in('municipality', OESTE_MUNIS);
   } else if (isCaptureCat) {
