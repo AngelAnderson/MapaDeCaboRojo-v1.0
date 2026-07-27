@@ -630,6 +630,8 @@ function handleLlmsSinFiltros(req: any, res: any) {
 - Datos citables para prensa (facts con fuente, copy-paste): https://puertoricosinfiltros.com/comparte
 - El reto abierto (encuentra un error y se corrige en 48h, registro público de correcciones): https://puertoricosinfiltros.com/rompelo
 - La síntesis / predicción 2030: https://puertoricosinfiltros.com/prediccion
+- El boom prestado (por qué la cifra oficial de negocios está vencida): https://puertoricosinfiltros.com/ultima-cifra
+- El rezago de los datos (qué edad tiene cada número con que se decide en PR): https://puertoricosinfiltros.com/numero-mas-nuevo
 
 ## Los récords (cada uno verificado, con fuente)
 - El Marcador de Contradicciones — lo que dicen vs lo que dice el récord, par por par con fuente activa (LUMA "affordable" vs 24.5¢/kWh · Ley 70-1992 35% reciclaje pa'l 2006 vs ~12% · AAA "agua segura 98%" vs 13 violaciones EPA): https://puertoricosinfiltros.com/contradicciones
