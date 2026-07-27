@@ -434,18 +434,19 @@ async function handleLive3d(req: any, res: any) {
   // chip de Eventos se esconde solo en vez de enseñar un calendario muerto.
   const { data: evData } = await supabase
     .from('events')
-    .select('title,start_time,location_name,municipality,category,map_link')
+    .select('title,start_time,location_name,municipality,category,map_link,lat,lon')
     .eq('status', 'published')
     .eq('family_friendly', true)
     .gte('start_time', new Date().toISOString())
     .lte('start_time', new Date(Date.now() + 90 * 86400000).toISOString())
     .order('start_time')
     .limit(30);
-  // La tabla events no guarda lat/lon (solo location_name + map_link), así que
-  // los eventos salen como lista, no como pines. Pedir lat,lon aquí hacía que
-  // PostgREST devolviera error y la lista llegara vacía sin avisar.
+  // Ahora sí traen lat/lon (migración events_coordenadas), así que el mapa puede
+  // dibujarlos como pines en vez de esconderlos detrás de un chip. Un evento es
+  // un lugar y una fecha: el mapa ya sabe dibujar lugares.
   const eventos = (evData || []).map((e: any) => ({
     n: e.title, d: e.start_time, l: e.location_name, m: e.municipality, url: e.map_link,
+    lat: e.lat, lon: e.lon,
   }));
 
   // Conteos vivos para la portada. Se cuentan, no se hornean, porque el número

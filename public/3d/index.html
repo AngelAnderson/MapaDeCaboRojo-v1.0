@@ -116,6 +116,13 @@
   #ctrls button.rec{background:var(--red);border-color:var(--red);color:#fff;animation:blink 1.2s infinite}
   @keyframes blink{50%{opacity:.65}}
   #tcard{position:absolute;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);text-align:center;z-index:7;opacity:0;transition:all .8s;pointer-events:none}
+  /* El bloque de "qué hacer" cuando se va la luz. Va dentro del panel de la
+     lista, arriba de los pines, porque el consejo llega antes que el mapa. */
+  .ayuda-luz{background:#fff7ed14;border:1px solid #fb923c55;border-radius:11px;padding:11px 13px;margin:0 2px 9px}
+  .ayuda-luz b{display:block;font-size:12.5px;color:var(--orange);margin-bottom:6px}
+  .ayuda-luz ol{margin:0;padding-left:17px}
+  .ayuda-luz li{font-size:11.5px;color:var(--txt);line-height:1.5;margin-bottom:3px}
+  .ayuda-luz a{display:inline-block;margin-top:7px;font-size:11.5px;color:var(--teal);font-weight:700;text-decoration:none}
   #tcard h2{margin:0;font-size:32px;font-weight:800;text-shadow:0 2px 24px #000c}
   #tcard p{margin:4px 0 0;font-size:14px;color:#f1f5f9;text-shadow:0 1px 12px #000}
   #tcard.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -226,6 +233,7 @@
   <button id="b-3d" class="on">⛰ 3D</button>
   <button id="b-style">☾ Noche</button>
   <button id="b-reset">⌂ Reset</button>
+  <button onclick="location.href='/'" title="Volver al buscador de Cabo Rojo">🏠 Inicio</button>
   <button onclick="location.href='/clasico'" title="Directorio clásico con búsqueda avanzada">🗂 Clásico</button>
   <button onclick="location.href='/tienda'" title="La tienda del Mapa: La Vitrina, el libro AJORÁO, El Conserje">🛒 Tienda</button>
 </div>
@@ -336,7 +344,12 @@ const map = new maplibregl.Map({
   center: SHOT?[SHOT[0],SHOT[1]]:[-66.9,18.18], zoom: SHOT?(SHOT[2]||14):8.2, pitch: SHOT?(SHOT[3]??62):0, bearing: SHOT?(SHOT[4]||0):0,
   attributionControl:{compact:true}, antialias:true, preserveDrawingBuffer:ADMIN
 });
-map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'bottom-right');
+// El +/- solo en pantalla grande. En teléfono estorbaba: vivía en bottom-right,
+// justo encima de los chips y los modos, así que al intentar girar el mapa con
+// el pulgar le dabas a un botón. En teléfono se hace pinch y ya.
+if(window.innerWidth > 780){
+  map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'right');
+}
 const colorExpr = ['match',['get','c'], ...Object.entries(CATS).flatMap(([k,v])=>[k,v.c]), '#6b7280'];
 
 let curIntent=null, openOnly=false, emerType=null, curPopup=null;
@@ -409,7 +422,7 @@ function setupLayers(){
     map.addLayer({id:'ev-dot',type:'circle',source:'events',layout:{visibility:'none'},paint:{
       'circle-color':'#FFD700','circle-radius':9,'circle-stroke-width':2.5,'circle-stroke-color':'#92400e'}});
     map.addLayer({id:'ev-label',type:'symbol',source:'events',layout:{visibility:'none',
-      'text-field':['get','n'],'text-font':['Noto Sans Bold'],'text-size':12,
+      'text-field':['concat',['get','n'],'\n',['get','cuando']],'text-font':['Noto Sans Bold'],'text-size':12,
       'text-offset':[0,1.3],'text-anchor':'top','text-max-width':14},
       paint:{'text-color':'#92400e','text-halo-color':'#fff','text-halo-width':1.8}});
   }catch(e){}
@@ -630,7 +643,20 @@ function renderList(){
       tc.appendChild(d);
     });
   }
-  document.getElementById('list').innerHTML = top.map(f=>{
+  // "Si se va la luz" no puede ser solo un filtro de pines. Cuando se va la luz
+  // no quieres un mapa, quieres saber qué hacer. Tres líneas, nada de sermón, y
+  // el permiso de irte. Todo verificable: no se inventa ningún teléfono.
+  const ayudaLuz = (curIntent==='emergencia') ? `<div class="ayuda-luz">
+      <b>Si se fue la luz</b>
+      <ol>
+        <li>Llama antes de salir. Muchas abren con generador, pero no todas.</li>
+        <li>La gasolina se acaba primero. Si la vas a necesitar, ve temprano.</li>
+        <li>¿Medicamento que necesita nevera? La farmacia te dice cuánto aguanta.</li>
+      </ol>
+      <a href="https://wa.me/17874177711?text=${encodeURIComponent('Se fue la luz, necesito ')}" target="_blank" rel="noopener">¿No ves lo que necesitas? Escríbele al Veci</a>
+    </div>` : '';
+
+  document.getElementById('list').innerHTML = ayudaLuz + top.map(f=>{
     const p=f.properties, st=openState(p.h);
     return `<div class="item ${p.f?'feat':''}" data-i="${FEATS.indexOf(f)}">
       ${p.i?`<img class="thumb" src="${p.i}" loading="lazy" onerror="this.classList.add('ph');this.outerHTML='<div class=\\'thumb ph\\'>📷</div>'">`:`<div class="thumb ph" title="Aún sin foto en el mapa">📷</div>`}
@@ -718,6 +744,22 @@ fetch('/api/public?action=live3d').then(r=>r.ok?r.json():null).then(d=>{
     // Los eventos llegan async. Si el vecino ya escogio un modo, hay que
     // re-aplicar su visibilidad o el chip aparece donde no toca.
     aplicarChips();
+
+    // Los que traen coordenadas se dibujan como pines dorados, PRENDIDOS de
+    // entrada. Antes había que apretar un chip para ver una lista sin ubicación:
+    // dos toques para enterarte de que las Fiestas Patronales son en la Plaza.
+    // Un evento es un lugar y una fecha, y el mapa ya sabe dibujar lugares.
+    EVENTS = {type:'FeatureCollection', features: EVENTOS
+      .filter(function(e){ return e.lat!=null && e.lon!=null; })
+      .map(function(e,i){ return {type:'Feature',
+        geometry:{type:'Point',coordinates:[e.lon,e.lat]},
+        properties:{n:e.n, d:e.d, l:e.l||e.m||'', i:i, cuando:fmtDate(e.d)}}; })};
+    try{
+      const src=map.getSource('events');
+      if(src) src.setData(EVENTS);
+      else map.once('load',function(){ const s2=map.getSource('events'); if(s2) s2.setData(EVENTS); });
+      if(EVENTS.features.length) setEvVisible(true);
+    }catch(e){}
   }
   if(Array.isArray(d.featured)){
     const fSet=new Set(d.featured);
