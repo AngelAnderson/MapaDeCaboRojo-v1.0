@@ -9741,20 +9741,20 @@ ${SHARE_COPY_SCRIPT}
 function handleUltimaCifra(req: any, res: any) {
   const body = `
 <h1>La última buena cifra</h1>
-<p class="text-lg text-slate-600 mt-2">A Puerto Rico le entró mucho dinero de afuera después de María. Con ese dinero abrieron miles de negocios. <strong>Ese dinero ya bajó más de la mitad.</strong> Pero la cifra oficial que todo el mundo cita se quedó congelada en el mejor año, y no se actualiza hasta 2027.</p>
+<p class="text-lg text-slate-600 mt-2">A Puerto Rico le entró mucho dinero de afuera después de María. Con ese dinero abrieron miles de negocios. <strong>Ese dinero ya bajó 55%.</strong> Pero la cifra oficial que todo el mundo cita se quedó congelada en el mejor año, y no se actualiza hasta 2027.</p>
 
 <div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular</p>
-  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Puerto Rico va a pasar dos años hablando de una economía que ya no existe.</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Puerto Rico va a pasar 2 años hablando de una economía que ya no existe.</p>
 </div>
 
 ${shareRow({ text: 'El conteo oficial dice que PR ganó casi 7,000 negocios. Es verdad. Lo que no dice es que ese conteo se quedó congelado en el año pico y el dinero que lo pagó ya cayó 55%. Con la fuente al lado:', url: 'https://puertoricosinfiltros.com/ultima-cifra', toWho: 'Al que decide con números: dueño de negocio, municipio, prensa.' })}
 
-<h2>Esto en cuatro frases</h2>
+<h2>Esto en 4 frases</h2>
 <ol>
   <li>Después del huracán María, a Puerto Rico le entró una montaña de dinero federal.</li>
   <li>Con ese dinero abrieron miles de negocios nuevos. Eso es real y se puede comprobar.</li>
-  <li>Ese dinero ya bajó más de la mitad.</li>
+  <li>Ese dinero ya bajó 55%.</li>
   <li>La cifra oficial que todo el mundo cita se quedó congelada en el mejor año.</li>
 </ol>
 
@@ -9772,14 +9772,14 @@ ${shareRow({ text: 'El conteo oficial dice que PR ganó casi 7,000 negocios. Es 
 
 <h2>1. Lo que dicen los números oficiales</h2>
 <p>La Oficina del Censo cuenta cuántos negocios con empleados hay en cada pueblo. Es el conteo que usan los bancos y la prensa para decir si una economía va bien o mal.</p>
-<p>Entre 2017 y 2023, Puerto Rico ganó <strong>casi 7,000 negocios</strong>. De los 76 pueblos que se pueden comparar, <strong>solo dos perdieron</strong>. Los otros 74 ganaron. Cabo Rojo ganó cerca de 150.</p>
+<p>Entre 2017 y 2023, Puerto Rico ganó <strong>casi 7,000 negocios</strong>. De los 76 pueblos que se pueden comparar, <strong>solo 2 perdieron</strong>. Los otros 74 ganaron. Cabo Rojo ganó cerca de 150.</p>
 <p>Ese dato es correcto. Lo comprobé yo, y no era lo que esperaba encontrar.</p>
-<p>Aquí hay que aclarar algo, porque es la primera objeción que sale: <strong>el conteo de 2017 se tomó en marzo, seis meses ANTES de María.</strong> Lo dice la metodología del Censo: se cuenta la semana del 12 de marzo, y Puerto Rico usa el mismo formato. Quiere decir que no estamos comparando contra un año destruido, sino contra un año normal. El crecimiento es de verdad, no es levantarse de un hoyo.</p>
+<p>Aquí hay que aclarar algo, porque es la primera objeción que sale: <strong>el conteo de 2017 se tomó en marzo, 6 meses ANTES de María.</strong> Lo dice la metodología del Censo: se cuenta la semana del 12 de marzo, y Puerto Rico usa el mismo formato. Quiere decir que no estamos comparando contra un año destruido, sino contra un año normal. El crecimiento es de verdad, no es levantarse de un hoyo.</p>
 <div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-4 mb-4 text-sm text-slate-700">
   <strong>Compruébalo tú:</strong> entra a <a href="https://data.census.gov/table/CBP2023.CB2300CBP?q=Puerto+Rico" rel="nofollow" class="text-teal-700 font-semibold">data.census.gov</a>, busca Puerto Rico y compara 2017 con 2023. Son 43,688 contra 50,332. La <a href="https://www.census.gov/programs-surveys/cbp/technical-documentation/methodology.html" rel="nofollow" class="text-teal-700 font-semibold">metodología está aquí</a>.
 </div>
-<p>Ahora mira <strong>cuáles</strong> negocios crecieron. El grupo que más creció fue <strong>la construcción: 6 de cada 10 negocios más que en 2017</strong>. El segundo fue el de ingenieros, consultores y administradores de proyectos. Esos dos son exactamente los que viven de arreglar lo que rompió el huracán.</p>
-<p>Y hay un detalle que cuenta la historia completa. En educación <strong>abrieron más escuelas y academias, pero se perdió casi la quinta parte de los empleos</strong>. Más letreros, menos gente trabajando. Eso pasa cuando un número total sube mientras lo de adentro se daña: <strong>el total te tranquiliza y te esconde el problema.</strong></p>
+<p>Ahora mira <strong>cuáles</strong> negocios crecieron. El grupo que más creció fue <strong>la construcción: 6 de cada 10 negocios más que en 2017</strong>. El segundo fue el de ingenieros, consultores y administradores de proyectos. Esos 2 son exactamente los que viven de arreglar lo que rompió el huracán.</p>
+<p>Y hay un detalle que cuenta la historia completa. En educación <strong>abrieron más escuelas y academias, pero se perdió 17% de los empleos</strong>. Más letreros, menos gente trabajando. Eso pasa cuando un número total sube mientras lo de adentro se daña: <strong>el total te tranquiliza y te esconde el problema.</strong></p>
 
 <h2>2. De dónde salió ese dinero</h2>
 <p>Después de María, el gobierno federal empezó a firmar contratos en Puerto Rico. Carreteras, techos, escuelas, sistema eléctrico. Ese dinero ya pasó su mejor momento y viene de bajada:</p>
@@ -9790,24 +9790,24 @@ ${shareRow({ text: 'El conteo oficial dice que PR ganó casi 7,000 negocios. Es 
   <tr class="border-t border-slate-100"><td class="py-2 px-3 font-semibold">2025</td><td class="py-2 px-3 text-right"><strong>$920 millones</strong></td></tr>
   </tbody></table>
 </div>
-<p><strong>En dos años se cayó más de la mitad.</strong></p>
-<p>Ahora junta las dos cosas. Los negocios de construcción crecieron 60% mientras ese dinero entraba. El dinero ya bajó a menos de la mitad. Los negocios todavía están ahí. Eso no se queda así: un negocio de construcción sin contratos no sobrevive por lealtad.</p>
+<p><strong>En 2 años se cayó 55%.</strong></p>
+<p>Ahora junta las 2 cosas. Los negocios de construcción crecieron 60% mientras ese dinero entraba. El dinero ya bajó 55%. Los negocios todavía están ahí. Eso no se queda así: un negocio de construcción sin contratos no sobrevive por lealtad.</p>
 <div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-4 mb-4 text-sm text-slate-700">
   <strong>Compruébalo tú:</strong> <a href="https://www.usaspending.gov/state/puerto-rico/latest" rel="nofollow" class="text-teal-700 font-semibold">usaspending.gov/state/puerto-rico</a>, la página donde el gobierno federal publica cada dólar que gasta. Compara los años. Y para ver a dónde fue a parar ese dinero: <a href="/sigue-el-dinero" class="text-teal-700 font-semibold">Sigue el dinero →</a>
 </div>
 
 <h2>3. Por qué nadie lo ve venir</h2>
 <p>Esta es la parte que engaña hasta a gente que sabe del tema.</p>
-<p><strong>El conteo de negocios más reciente que existe es el de 2023.</strong> No hay de 2024. No hay de 2025. La Oficina del Censo se tarda dos o tres años en publicarlo. Y 2023 fue justo el año en que el dinero federal llegó a su punto más alto.</p>
+<p><strong>El conteo de negocios más reciente que existe es el de 2023.</strong> No hay de 2024. No hay de 2025. La Oficina del Censo se tarda 2 o 3 años en publicarlo. Y 2023 fue justo el año en que el dinero federal llegó a su punto más alto.</p>
 <p>Entonces, durante todo 2026 y buena parte de 2027, cualquiera que busque la cifra oficial va a encontrar una economía creciendo. Con evidencia. De fuente seria. Y equivocada.</p>
 <p>No es que los números mientan. Es que llegan tarde, y llegan tarde justo cuando la cosa cambia de dirección.</p>
 <blockquote>Es como mirar una estrella. La ves brillando, pero esa luz salió hace años. Puede que ya no esté ahí.</blockquote>
 
 <h2>4. La otra mitad del problema</h2>
 <p>Mientras esto pasa en la economía, pasa algo distinto en la salud, y eso no depende de ningún contrato. Ya está contado en detalle, pueblo por pueblo, en <a href="/prediccion" class="text-teal-700 font-semibold">Predicción 2030</a> y en <a href="/huracan-lento" class="text-teal-700 font-semibold">El Huracán Lento</a>. No lo repito aquí.</p>
-<p>Lo que sí hace falta traer, porque se repite igualito, es el truco de la sección 1. El conteo total de "profesionales de la salud" en PR <strong>no baja</strong>: sube un poquito. Sube porque entran nutricionistas, quiroprácticos y trabajadores sociales. Todos hacen falta. Ninguno hace lo mismo. Mientras tanto, los que atienden lo básico pierden alrededor de un tercio de sus médicos.</p>
+<p>Lo que sí hace falta traer, porque se repite igualito, es el truco de la sección 1. El conteo total de "profesionales de la salud" en PR <strong>no baja</strong>: sube un poquito. Sube porque entran nutricionistas, quiroprácticos y trabajadores sociales. Todos hacen falta. Ninguno hace lo mismo. Mientras tanto, los que atienden lo básico pierden alrededor de 1 de cada 3 médicos.</p>
 <p><strong>Un quiropráctico no atiende un parto.</strong> El total te tranquiliza y te esconde el problema. Exactamente igual que con el conteo de negocios.</p>
-<p>Y hay un detalle que junta las dos mitades. El Censo publica de dónde viene la gente que se muda a cada pueblo. Los que están regresando a Cabo Rojo vienen de Illinois, Pensilvania y Wisconsin: boricuas mayores, volviendo a su pueblo a envejecer. <strong>Están llegando más personas que van a necesitar médico, justo cuando se están yendo los médicos.</strong></p>
+<p>Y hay un detalle que junta las 2 mitades. El Censo publica de dónde viene la gente que se muda a cada pueblo. Los que están regresando a Cabo Rojo vienen de Illinois, Pensilvania y Wisconsin: boricuas mayores, volviendo a su pueblo a envejecer. <strong>Están llegando más personas que van a necesitar médico, justo cuando se están yendo los médicos.</strong></p>
 <div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-4 mb-4 text-sm text-slate-700">
   <strong>Compruébalo tú:</strong> <a href="https://data.cms.gov/provider-data/dataset/mj5m-pzi6" rel="nofollow" class="text-teal-700 font-semibold">data.cms.gov</a> (filtra por estado PR, la columna del año de graduación da la edad) y <a href="https://www.census.gov/topics/population/migration/guidance/county-to-county-migration-flows.html" rel="nofollow" class="text-teal-700 font-semibold">Censo, movimientos de pueblo a pueblo</a>.
 </div>
@@ -9815,7 +9815,7 @@ ${shareRow({ text: 'El conteo oficial dice que PR ganó casi 7,000 negocios. Es 
 <h2>5. La primera señal todavía no aparece (y eso hay que decirlo)</h2>
 <p>Si lo que digo es cierto, la primera grieta tiene que verse en los empleos antes que en cualquier conteo de negocios, porque despedir gente es más rápido que cerrar un negocio. Así que fui a mirar. <strong>Todavía no está.</strong></p>
 <p>Y aquí pasó algo que vale más que el dato, porque es la trampa de este récord completa, en chiquito.</p>
-<p>El desempleo de Puerto Rico se publica en <strong>dos series oficiales distintas</strong>. Una es el número crudo. La otra le quita el efecto de las temporadas (los estudiantes que salen a buscar trabajo en verano, la Navidad, la zafra). Las dos son del gobierno federal. Las dos son correctas. Y dicen cosas muy distintas:</p>
+<p>El desempleo de Puerto Rico se publica en <strong>2 series oficiales distintas</strong>. Una es el número crudo. La otra le quita el efecto de las temporadas (los estudiantes que salen a buscar trabajo en verano, la Navidad, la zafra). Las 2 son del gobierno federal. Las 2 son correctas. Y dicen cosas muy distintas:</p>
 <div class="not-prose overflow-auto border border-slate-200 rounded-xl mt-3 mb-4">
   <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Serie</th><th class="py-2 px-3 text-right">Abril 2026</th><th class="py-2 px-3 text-right">Junio 2026</th><th class="py-2 px-3 text-right">Cambio</th></tr></thead><tbody>
   <tr class="border-t border-slate-100"><td class="py-2 px-3">Número crudo</td><td class="py-2 px-3 text-right">5.3%</td><td class="py-2 px-3 text-right">6.4%</td><td class="py-2 px-3 text-right font-semibold text-coral-700">+1.1</td></tr>
@@ -9823,20 +9823,20 @@ ${shareRow({ text: 'El conteo oficial dice que PR ganó casi 7,000 negocios. Es 
   </tbody></table>
 </div>
 <p>El número crudo parece una alarma. No lo es: en Puerto Rico el desempleo sube todos los veranos, cuando los estudiantes salen a buscar trabajo. Para eso existe el ajuste, para quitar lo que pasa todos los años y dejar ver lo que de verdad cambió.</p>
-<p>Y la serie ajustada, la que sirve para ver tendencia, <strong>lleva trece meses plana entre 5.6% y 5.8%.</strong></p>
+<p>Y la serie ajustada, la que sirve para ver tendencia, <strong>lleva 13 meses plana entre 5.6% y 5.8%.</strong></p>
 <blockquote>La grieta que yo esperaba ver todavía no está. Lo digo porque si solo publico los números que me dan la razón, esto no vale nada.</blockquote>
-<p><strong>Qué hay que mirar, en concreto:</strong> si la serie ajustada rompe <strong>6.0% y se queda ahí tres meses seguidos</strong>, eso sí es la grieta. Si no rompe, mi lectura del calendario estaba adelantada, y hay que decirlo también.</p>
+<p><strong>Qué hay que mirar, en concreto:</strong> si la serie ajustada rompe <strong>6.0% y se queda ahí 3 meses seguidos</strong>, eso sí es la grieta. Si no rompe, mi lectura del calendario estaba adelantada, y hay que decirlo también.</p>
 <div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-4 mb-4 text-sm text-slate-700">
   <strong>Compruébalo tú:</strong> la serie ajustada es <a href="https://data.bls.gov/timeseries/LASST720000000000003" rel="nofollow" class="text-teal-700 font-semibold">LASST720000000000003</a> y la cruda es <a href="https://data.bls.gov/timeseries/LAUST720000000000003" rel="nofollow" class="text-teal-700 font-semibold">LAUST720000000000003</a>. Se actualizan todos los meses. Ojo con cuál te citan.
 </div>
 
 <h2>6. Lo que te van a decir cuando cuentes esto</h2>
-<p><strong>"Pero si aquí todo el mundo sabe que la cosa está mala."</strong><br>Las dos cosas son ciertas a la vez, y por eso confunde. Se fue gente del país Y abrieron negocios. Lo que pasa es que esos negocios los pagó dinero de afuera, con fecha de vencimiento. Sentir que la cosa está mala no es lo mismo que poder probar qué se va a romper y cuándo. Lo segundo es lo que falta.</p>
+<p><strong>"Pero si aquí todo el mundo sabe que la cosa está mala."</strong><br>Las 2 cosas son ciertas a la vez, y por eso confunde. Se fue gente del país Y abrieron negocios. Lo que pasa es que esos negocios los pagó dinero de afuera, con fecha de vencimiento. Sentir que la cosa está mala no es lo mismo que poder probar qué se va a romper y cuándo. Lo segundo es lo que falta.</p>
 <p><strong>"Eso lo dice el gobierno de aquí y yo no le creo."</strong><br>Ninguna cifra de esta página sale del gobierno de Puerto Rico. Todas salen de oficinas federales: Censo, USAspending, Estadísticas Laborales y Medicare. Los enlaces están arriba.</p>
 <p><strong>"Tú inventaste esos números."</strong><br>Los archivos están arriba para bajar. Están en el servidor del Censo, no en el mío. Busca las filas del estado 72 y cuenta. Si te da distinto, escríbeme y lo corrijo en público.</p>
 <p><strong>"Si hay más negocios, entonces estamos bien."</strong><br>Depende de quién los paga. Un negocio que vive de un contrato que se acaba no es lo mismo que uno que vive de sus clientes. La pregunta no es cuántos hay, es de dónde viene el dinero.</p>
 <p><strong>"Eso mismo dijeron hace años y no pasó nada."</strong><br>Justo. Por eso te digo qué tiene que pasar para que yo esté equivocado:</p>
-<blockquote>Si el conteo de negocios de 2024 y 2025, cuando salga, muestra que la construcción <strong>siguió creciendo</strong> aunque el dinero federal bajó más de la mitad, entonces me equivoqué, y lo voy a escribir aquí mismo.</blockquote>
+<blockquote>Si el conteo de negocios de 2024 y 2025, cuando salga, muestra que la construcción <strong>siguió creciendo</strong> aunque el dinero federal bajó 55%, entonces me equivoqué, y lo voy a escribir aquí mismo.</blockquote>
 <p>Una predicción que no se puede probar equivocada no vale nada. Esta sí se puede.</p>
 
 <h2>7. Lo que esta página no puede probar</h2>
