@@ -201,7 +201,7 @@
   var chips=document.getElementById('chips');
   ATAJOS.forEach(function(t){
     var b=document.createElement('button'); b.className='chip'; b.type='button'; b.textContent=t;
-    b.onclick=function(){ q.value=t; buscar(t); q.focus(); };
+    b.onclick=function(){ q.value=t; buscar(t,true); q.focus(); };
     chips.appendChild(b);
   });
 
@@ -265,8 +265,22 @@
     r.forEach(function(x){ res.appendChild(tarjeta(x)); });
   }
 
-  var timer=null, contador=0;
-  function buscar(term){
+  var timer=null, contador=0, timerLog=null, ultimoLogueado='';
+
+  // La búsqueda dispara en cada tecla (se siente viva), pero SOLO se registra
+  // la que el vecino terminó de escribir. Sin esto, "jireh auto kool" entraba a
+  // api_logs seis veces como seis búsquedas distintas ("jireh", "jireh au",
+  // "jireh aut"...), y esa tabla es de donde sale la señal de demanda: los
+  // prefijos la vuelven basura. Se registra a 1.2s de silencio, o de una vez
+  // cuando la búsqueda es deliberada (Enter o chip).
+  function registrar(term){
+    if(!term || term===ultimoLogueado) return;
+    ultimoLogueado=term;
+    fetch('/api/public?action=buscar&log=1&q='+encodeURIComponent(term)).catch(function(){});
+    if(window.gtag) gtag('event','search',{search_term:term});
+  }
+
+  function buscar(term,deliberada){
     term=String(term||'').trim();
     if(term.length<2){ limpiar(); return; }
     var id=++contador;
@@ -276,7 +290,10 @@
       .then(function(d){ pintar(term,d,id); })
       .catch(function(){ pintar(term,{results:[]},id); })
       .finally(function(){ if(id===contador) sb.classList.remove('busy'); });
-    if(window.gtag) gtag('event','search',{search_term:term});
+
+    clearTimeout(timerLog);
+    if(deliberada) registrar(term);
+    else timerLog=setTimeout(function(){ registrar(term); },1200);
   }
 
   function limpiar(){ res.innerHTML=''; note.hidden=true; inicio.hidden=false; volver.hidden=true; }
@@ -293,7 +310,7 @@
   volver.onclick=function(){ irAlInicio(); };
   window.addEventListener('popstate',function(){
     var t=new URLSearchParams(location.search).get('q');
-    if(t){ q.value=t; buscar(t); } else { q.value=''; limpiar(); }
+    if(t){ q.value=t; buscar(t,true); } else { q.value=''; limpiar(); }
   });
 
   q.addEventListener('input',function(){
@@ -302,11 +319,11 @@
     if(v.trim().length<2){ limpiar(); return; }
     timer=setTimeout(function(){ buscar(v); },220);
   });
-  q.addEventListener('keydown',function(e){ if(e.key==='Enter'){ clearTimeout(timer); buscar(q.value); q.blur(); } });
+  q.addEventListener('keydown',function(e){ if(e.key==='Enter'){ clearTimeout(timer); buscar(q.value,true); q.blur(); } });
 
   // ?q= en el URL (SearchAction de schema.org + links compartidos)
   var pre=new URLSearchParams(location.search).get('q');
-  if(pre){ q.value=pre; buscar(pre); }
+  if(pre){ q.value=pre; buscar(pre,true); }
 
   // pulso + conteos vivos
   fetch('/api/public?action=live3d').then(function(r){ return r.ok?r.json():null; }).then(function(d){
@@ -323,7 +340,7 @@
           // Entrada de historial: tocar un chip es navegar, y el back tiene que
           // devolver a la portada en vez de sacar del sitio.
           history.pushState({q:x.t},'','?q='+encodeURIComponent(x.t));
-          buscar(x.t); window.scrollTo({top:0,behavior:'smooth'});
+          buscar(x.t,true); window.scrollTo({top:0,behavior:'smooth'});
         };
         cont.appendChild(b);
       });

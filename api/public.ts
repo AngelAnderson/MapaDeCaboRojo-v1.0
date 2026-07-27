@@ -494,13 +494,20 @@ async function handleBuscar(req: any, res: any) {
   }
 
   const results = data || [];
-  // Telemetría: las búsquedas sin resultado son demanda real sin servir.
-  // Vistas: v_mapa_search_log / v_mapa_search_gaps.
-  logApiCall('search:home', 'GET', q,
-    req.headers['user-agent'] || null,
-    (req.headers['x-forwarded-for'] || '').split(',')[0] || null,
-    results.length,
-    req.headers['referer'] || null);
+
+  // Telemetría: las búsquedas sin resultado son demanda real sin servir
+  // (vistas v_mapa_search_log / v_mapa_search_gaps). Pero SOLO se registra la
+  // búsqueda que el vecino terminó de escribir: la portada manda log=1 cuando
+  // pasa 1.2s sin teclear, o de una vez si apretó Enter o un chip. Sin esto,
+  // "jireh auto kool" entraba seis veces como seis búsquedas distintas y los
+  // prefijos ("jireh", "jireh au"…) convertían la señal de demanda en basura.
+  if (req.query.log === '1') {
+    logApiCall('search:home', 'GET', q,
+      req.headers['user-agent'] || null,
+      (req.headers['x-forwarded-for'] || '').split(',')[0] || null,
+      results.length,
+      req.headers['referer'] || null);
+  }
 
   res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
   return res.status(200).json({ q, results });
