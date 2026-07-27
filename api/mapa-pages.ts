@@ -9827,6 +9827,11 @@ ${shareRow({ text: 'Te van a decir que la economía de Puerto Rico creció. Es v
 </div>
 <p>Y aquí está la parte que da alivio, porque es la única de todo este documento que no depende de que nadie te dé permiso: <strong>la columna de la derecha no necesita fondos federales, ni obra, ni que el gobierno haga algo.</strong> Información está en 0.47x y se abre con una computadora y un cliente de afuera. Servicios profesionales en 0.46x. Nadie tiene que aprobarte nada.</p>
 <p>No hace falta que Cabo Rojo tenga menos restaurantes. Hace falta que tenga más negocios que puedan cobrarle a alguien que vive en otro sitio.</p>
+<div class="not-prose bg-sand-50 border-l-4 border-teal-600 rounded-r-xl p-4 mt-4 mb-4 text-sm text-slate-700">
+  <p class="font-bold mb-1">Aviso de interés, porque toca decirlo</p>
+  <p>Yo hago parte de ese trabajo que falta: consultoría, servicios profesionales y software, desde Cabo Rojo. O sea que este capítulo describe un hueco que a mí me conviene que exista.</p>
+  <p class="mt-2">Por eso los enlaces están arriba y los archivos crudos también. <strong>No tienes que creerme a mí: baja la data y cuenta tú.</strong> Si el número te da distinto, escríbeme y lo corrijo en público.</p>
+</div>
 <div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-4 mb-4 text-sm text-slate-700">
   <strong>Compruébalo tú:</strong> son los establecimientos de Cabo Rojo (condado 023) contra el total de Puerto Rico, divididos por población, del <a href="https://data.census.gov/table/CBP2023.CB2300CBP?q=Puerto+Rico" rel="nofollow" class="text-teal-700 font-semibold">Censo, CBP 2023</a>. <strong>Ojo con el límite:</strong> CBP solo cuenta negocios con nómina, así que el que trabaja solo no aparece. Eso probablemente subestima justo la columna de la derecha, que es donde más gente trabaja por su cuenta. Si acaso, la brecha real es menor de lo que dice la tabla, pero la dirección es la misma.
 </div>
