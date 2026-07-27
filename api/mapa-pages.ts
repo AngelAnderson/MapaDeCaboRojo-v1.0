@@ -300,13 +300,9 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <span class="font-black tracking-tight">Mapa de Cabo Rojo</span>
 </a>
 <nav class="hidden md:flex gap-4 text-sm text-slate-600 flex-wrap">
-<a href="/menos-revolu" class="hover:text-teal-600">Menos Revolú</a>
-<a href="/tienda" class="hover:text-teal-600 font-semibold text-teal-700">Tienda</a>
 <a href="/pon-tu-negocio-en-el-mapa" class="hover:text-teal-600 font-semibold text-teal-700">Pon tu negocio</a>
-<a href="/mira-la-vuelta" class="hover:text-teal-600">Mira la vuelta</a>
-<a href="/senales-del-pueblo" class="hover:text-teal-600">Señales</a>
-<a href="/transparencia" class="hover:text-teal-600">Transparencia</a>
-<a href="/equipo" class="hover:text-teal-600">Equipo</a>
+<a href="/tienda" class="hover:text-teal-600 font-semibold text-teal-700">Tienda</a>
+<a href="/barrios" class="hover:text-teal-600">Barrios</a>
 </nav>
 </div>
 </header>`
@@ -362,18 +358,11 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 </div>
 
 <div class="mt-6 flex justify-center gap-4 text-xs text-slate-500 flex-wrap">
-<a href="/menos-revolu" class="hover:text-teal-600 font-semibold">Menos Revolú</a>
+<a href="/pon-tu-negocio-en-el-mapa" class="hover:text-teal-600 font-semibold text-teal-700">Pon tu negocio</a>
 <a href="/tienda" class="hover:text-teal-600 font-semibold text-teal-700">Tienda</a>
+<a href="/barrios" class="hover:text-teal-600">Barrios</a>
 <a href="/mision" class="hover:text-teal-600">Misión</a>
-<a href="/pon-tu-negocio-en-el-mapa" class="hover:text-teal-600">Pon tu negocio</a>
-<a href="/mira-la-vuelta" class="hover:text-teal-600">Mira la vuelta</a>
-<a href="/senales-del-pueblo" class="hover:text-teal-600">Señales del pueblo</a>
-<a href="/transparencia" class="hover:text-teal-600">Transparencia</a>
 <a href="/equipo" class="hover:text-teal-600">Equipo</a>
-<a href="/historia" class="hover:text-teal-600">Historia</a>
-<a href="/vision" class="hover:text-teal-600">Visión</a>
-<a href="/preguntas" class="hover:text-teal-600">Preguntas</a>
-<a href="/moonshots" class="hover:text-teal-600">Moonshots</a>
 </div>
 <p class="mt-4 text-xs text-slate-400">Textea al <strong>${PHONE_CTA}</strong> · El Veci te contesta. Si te sirve, llégate. Si no, sigue tu camino.</p>
 </div>

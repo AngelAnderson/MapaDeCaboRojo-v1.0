@@ -64,38 +64,6 @@
       "destination": "/api/pages?page=evento&slug=:slug"
     },
     {
-      "source": "/me-conviene",
-      "destination": "/api/pages?page=me-conviene"
-    },
-    {
-      "source": "/pueblo-en-numeros",
-      "destination": "/api/pages?page=pueblo-en-numeros"
-    },
-    {
-      "source": "/sistema",
-      "destination": "/api/pages?page=sistema"
-    },
-    {
-      "source": "/municipio",
-      "destination": "/api/pages?page=municipio"
-    },
-    {
-      "source": "/turismo",
-      "destination": "/api/pages?page=turismo"
-    },
-    {
-      "source": "/cultura",
-      "destination": "/api/pages?page=cultura"
-    },
-    {
-      "source": "/demanda",
-      "destination": "/api/pages?page=demanda"
-    },
-    {
-      "source": "/carro",
-      "destination": "/api/carro"
-    },
-    {
       "source": "/veci",
       "destination": "/api/pages?page=veci"
     },
@@ -168,14 +136,6 @@
       "destination": "/api/mapa-pages?page=barrio&b=:b"
     },
     {
-      "source": "/playas/defensa-y-limpieza",
-      "destination": "/api/mapa-pages?page=defensa-y-limpieza"
-    },
-    {
-      "source": "/acceso",
-      "destination": "/api/mapa-pages?page=acceso"
-    },
-    {
       "source": "/registro",
       "destination": "/api/mapa-pages?page=registro"
     },
@@ -232,10 +192,6 @@
       "destination": "/api/mapa-pages?page=atlas"
     },
     {
-      "source": "/fundadoras",
-      "destination": "/api/mapa-pages?page=atlas"
-    },
-    {
       "source": "/comparte",
       "destination": "/api/mapa-pages?page=comparte"
     },
@@ -264,14 +220,6 @@
       "destination": "/api/mapa-pages?page=boletin"
     },
     {
-      "source": "/luz",
-      "destination": "/api/mapa-pages?page=luz"
-    },
-    {
-      "source": "/basura",
-      "destination": "/api/mapa-pages?page=basura"
-    },
-    {
       "source": "/buscar",
       "destination": "/api/mapa-pages?page=buscar"
     },
@@ -280,56 +228,16 @@
       "destination": "/api/mapa-pages?page=prediccion"
     },
     {
-      "source": "/costo-de-vida",
-      "destination": "/api/mapa-pages?page=costo-de-vida"
-    },
-    {
       "source": "/trabajo",
       "destination": "/api/mapa-pages?page=trabajo"
-    },
-    {
-      "source": "/exposicion-ai",
-      "destination": "/api/mapa-pages?page=exposicion-ai"
-    },
-    {
-      "source": "/rendimiento",
-      "destination": "/api/mapa-pages?page=rendimiento"
     },
     {
       "source": "/cupon",
       "destination": "/api/mapa-pages?page=cupon"
     },
     {
-      "source": "/credito-por-hijos",
-      "destination": "/api/mapa-pages?page=cupon"
-    },
-    {
-      "source": "/demanda-real",
-      "destination": "/api/mapa-pages?page=demanda-real"
-    },
-    {
       "source": "/decidir",
       "destination": "/api/mapa-pages?page=decidir"
-    },
-    {
-      "source": "/historial",
-      "destination": "/api/mapa-pages?page=historial"
-    },
-    {
-      "source": "/telemedicina",
-      "destination": "/api/mapa-pages?page=telemedicina"
-    },
-    {
-      "source": "/no-se-mide",
-      "destination": "/api/mapa-pages?page=no-se-mide"
-    },
-    {
-      "source": "/diabetes",
-      "destination": "/api/mapa-pages?page=diabetes"
-    },
-    {
-      "source": "/sigue-el-dinero",
-      "destination": "/api/mapa-pages?page=sigue-el-dinero"
     },
     {
       "source": "/esencia",
@@ -372,10 +280,6 @@
       "destination": "/api/mapa-pages?page=oer"
     },
     {
-      "source": "/investigacion",
-      "destination": "/api/mapa-pages?page=investigacion"
-    },
-    {
       "source": "/prospecto",
       "destination": "/api/mapa-pages?page=prospecto"
     },
@@ -384,24 +288,12 @@
       "destination": "/api/mapa-pages?page=prospecto"
     },
     {
-      "source": "/agua",
-      "destination": "/api/mapa-pages?page=agua"
-    },
-    {
-      "source": "/activos",
-      "destination": "/api/mapa-pages?page=activos"
-    },
-    {
       "source": "/acueductos",
       "destination": "/api/mapa-pages?page=acueductos"
     },
     {
       "source": "/transicion",
       "destination": "/api/mapa-pages?page=transicion"
-    },
-    {
-      "source": "/metodologia",
-      "destination": "/api/mapa-pages?page=metodologia"
     },
     {
       "source": "/contradicciones",
@@ -420,28 +312,8 @@
       "destination": "/api/mapa-pages?page=funciona"
     },
     {
-      "source": "/retiro",
-      "destination": "/api/mapa-pages?page=retiro"
-    },
-    {
       "source": "/salud-que-falta",
       "destination": "/api/mapa-pages?page=salud-que-falta"
-    },
-    {
-      "source": "/huracan-lento",
-      "destination": "/api/mapa-pages?page=retiro"
-    },
-    {
-      "source": "/promesas",
-      "destination": "/api/mapa-pages?page=promesas"
-    },
-    {
-      "source": "/quien-responde",
-      "destination": "/api/mapa-pages?page=quien-responde"
-    },
-    {
-      "source": "/qui\u00e9n-responde",
-      "destination": "/api/mapa-pages?page=quien-responde"
     },
     {
       "source": "/civico.json",
@@ -452,24 +324,8 @@
       "destination": "/api/mapa-pages?page=mision"
     },
     {
-      "source": "/transparencia",
-      "destination": "/api/mapa-pages?page=transparencia"
-    },
-    {
       "source": "/equipo",
       "destination": "/api/mapa-pages?page=equipo"
-    },
-    {
-      "source": "/vision",
-      "destination": "/api/mapa-pages?page=vision"
-    },
-    {
-      "source": "/moonshots",
-      "destination": "/api/mapa-pages?page=moonshots"
-    },
-    {
-      "source": "/mira-la-vuelta",
-      "destination": "/api/mapa-pages?page=mira-la-vuelta"
     },
     {
       "source": "/pon-tu-negocio-en-el-mapa",
@@ -478,30 +334,6 @@
     {
       "source": "/tienda",
       "destination": "/api/mapa-pages?page=tienda"
-    },
-    {
-      "source": "/senales-del-pueblo",
-      "destination": "/api/mapa-pages?page=senales-del-pueblo"
-    },
-    {
-      "source": "/se\u00f1ales-del-pueblo",
-      "destination": "/api/mapa-pages?page=senales-del-pueblo"
-    },
-    {
-      "source": "/menos-revolu",
-      "destination": "/api/mapa-pages?page=menos-revolu"
-    },
-    {
-      "source": "/menos-revol\u00fa",
-      "destination": "/api/mapa-pages?page=menos-revolu"
-    },
-    {
-      "source": "/preguntas",
-      "destination": "/api/mapa-pages?page=preguntas"
-    },
-    {
-      "source": "/faq",
-      "destination": "/api/mapa-pages?page=preguntas"
     },
     {
       "source": "/historia",
@@ -565,6 +397,218 @@
           "value": "strict-origin-when-cross-origin"
         }
       ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/acceso",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/activos",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/agua",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/basura",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/carro",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/costo-de-vida",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/credito-por-hijos",
+      "destination": "/cupon",
+      "permanent": true
+    },
+    {
+      "source": "/cultura",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/demanda",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/demanda-real",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/diabetes",
+      "destination": "/registro",
+      "permanent": true
+    },
+    {
+      "source": "/exposicion-ai",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/faq",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/fundadoras",
+      "destination": "/atlas",
+      "permanent": true
+    },
+    {
+      "source": "/historial",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/huracan-lento",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/investigacion",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/luz",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/me-conviene",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/menos-revolu",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/menos-revolú",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/metodologia",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/mira-la-vuelta",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/moonshots",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/municipio",
+      "destination": "/pueblo",
+      "permanent": true
+    },
+    {
+      "source": "/no-se-mide",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/playas/defensa-y-limpieza",
+      "destination": "/barrios",
+      "permanent": true
+    },
+    {
+      "source": "/preguntas",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/promesas",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/pueblo-en-numeros",
+      "destination": "/pueblo",
+      "permanent": true
+    },
+    {
+      "source": "/quien-responde",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/quién-responde",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/rendimiento",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/retiro",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/senales-del-pueblo",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/señales-del-pueblo",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sigue-el-dinero",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/sistema",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/telemedicina",
+      "destination": "/registro",
+      "permanent": true
+    },
+    {
+      "source": "/transparencia",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/turismo",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/vision",
+      "destination": "/",
+      "permanent": true
     }
   ]
 }
