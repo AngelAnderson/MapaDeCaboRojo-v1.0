@@ -9743,6 +9743,14 @@ function handleUltimaCifra(req: any, res: any) {
 <h1>La última buena cifra</h1>
 <p class="text-lg text-slate-600 mt-2">A Puerto Rico le entró mucho dinero de afuera después de María. Con ese dinero abrieron miles de negocios. <strong>Ese dinero ya bajó 55%.</strong> Pero la cifra oficial que todo el mundo cita se quedó congelada en el mejor año, y no se actualiza hasta 2027.</p>
 
+<div class="not-prose mt-5 bg-teal-900 text-white rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-teal-200 font-bold">Si decides con números, esto es para ti</p>
+  <p class="text-sm text-teal-100 mt-1">Dueño de negocio, municipio, prensa. Si no es tu caso, no pierdas el rato: cierra tranquilo.</p>
+  <p class="text-xl sm:text-2xl font-black mt-3 leading-snug">Contesta esto hoy: ¿puedes cobrarle a alguien que vive lejos?</p>
+  <p class="text-teal-100 mt-2">Si la respuesta es no, estás en el 79% de Cabo Rojo que solo cobra si alguien llega. <strong class="text-white">Y tienes cerca de 2 años para arreglarlo.</strong></p>
+  <p class="text-xs text-teal-200/80 mt-3">Lo de abajo es la prueba de por qué. Si ya me crees, no hace falta que sigas leyendo: abre el carril que cobra de afuera y ya.</p>
+</div>
+
 <div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular</p>
   <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Puerto Rico va a pasar 2 años hablando de una economía que ya no existe.</p>
@@ -9863,35 +9871,17 @@ ${shareRow({ text: 'Te van a decir que la economía de Puerto Rico creció. Es v
 <p>Entonces, durante todo 2026 y buena parte de 2027, cualquiera que busque la cifra oficial va a encontrar una economía creciendo. Con evidencia. De fuente seria. Y equivocada.</p>
 <p>No es que los números mientan. Es que llegan tarde, y llegan tarde justo cuando la cosa cambia de dirección.</p>
 <blockquote>Es como mirar una estrella. La ves brillando, pero esa luz salió hace años. Puede que ya no esté ahí.</blockquote>
+<h3>Y por eso el reloj corre ahora</h3>
+<p>Junta las 2 cosas que acabas de leer. El dinero viejo <strong>todavía está saliendo</strong>, y la cifra oficial va a seguir diciendo "crecimiento" <strong>hasta 2027</strong>.</p>
+<p>Eso te da cerca de <strong>2 años</strong> en los que todavía hay clientes, todavía hay flujo, y todavía nadie ha tocado la alarma. Ese es el colchón.</p>
+<p>Montar un carril que cobre de afuera mientras todavía entra dinero es una decisión. Montarlo cuando ya no entra es una emergencia, sin efectivo y con el pueblo apretado. <strong>Es el mismo trabajo, y cuesta el doble.</strong></p>
+<p>Por eso importa hoy y no el año que viene: no porque la cosa esté mala ahora, sino porque <strong>ahora es cuando todavía se puede hacer con calma.</strong></p>
 
-<h2>5. La otra mitad del problema</h2>
-<p>Mientras esto pasa en la economía, pasa algo distinto en la salud, y eso no depende de ningún contrato. Ya está contado en detalle, pueblo por pueblo, en <a href="/prediccion" class="text-teal-700 font-semibold">Predicción 2030</a> y en <a href="/huracan-lento" class="text-teal-700 font-semibold">El Huracán Lento</a>. No lo repito aquí.</p>
-<p>Lo que sí hace falta traer, porque se repite igualito, es el truco de la sección 1. El conteo total de "profesionales de la salud" en PR <strong>no baja</strong>: sube un poquito. Sube porque entran nutricionistas, quiroprácticos y trabajadores sociales. Todos hacen falta. Ninguno hace lo mismo. Mientras tanto, los que atienden lo básico pierden alrededor de 1 de cada 3 médicos.</p>
-<p><strong>Un quiropráctico no atiende un parto.</strong> El total te tranquiliza y te esconde el problema. Exactamente igual que con el conteo de negocios.</p>
-<p>Y hay un detalle que junta las 2 mitades. El Censo publica de dónde viene la gente que se muda a cada pueblo. Los que están regresando a Cabo Rojo vienen de Illinois, Pensilvania y Wisconsin: boricuas mayores, volviendo a su pueblo a envejecer. <strong>Están llegando más personas que van a necesitar médico, justo cuando se están yendo los médicos.</strong></p>
-<div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-4 mb-4 text-sm text-slate-700">
-  <strong>Compruébalo tú:</strong> <a href="https://data.cms.gov/provider-data/dataset/mj5m-pzi6" rel="nofollow" class="text-teal-700 font-semibold">data.cms.gov</a> (filtra por estado PR, la columna del año de graduación da la edad) y <a href="https://www.census.gov/topics/population/migration/guidance/county-to-county-migration-flows.html" rel="nofollow" class="text-teal-700 font-semibold">Censo, movimientos de pueblo a pueblo</a>.
-</div>
+<p class="text-sm text-slate-600"><strong>La otra mitad de esto pasa en la salud</strong>, y no depende de ningún contrato: se está yendo quien atiende justo cuando está llegando gente mayor a envejecer aquí. Está contado pueblo por pueblo en <a href="/prediccion" class="text-teal-700 font-semibold">Predicción 2030</a> y <a href="/huracan-lento" class="text-teal-700 font-semibold">El Huracán Lento</a>.</p>
 
-<h2>6. La primera señal todavía no aparece (y eso hay que decirlo)</h2>
-<p>Si lo que digo es cierto, la primera grieta tiene que verse en los empleos antes que en cualquier conteo de negocios, porque despedir gente es más rápido que cerrar un negocio. Así que fui a mirar. <strong>Todavía no está.</strong></p>
-<p>Y aquí pasó algo que vale más que el dato, porque es la trampa de este récord completa, en chiquito.</p>
-<p>El desempleo de Puerto Rico se publica en <strong>2 series oficiales distintas</strong>. Una es el número crudo. La otra le quita el efecto de las temporadas (los estudiantes que salen a buscar trabajo en verano, la Navidad, la zafra). Las 2 son del gobierno federal. Las 2 son correctas. Y dicen cosas muy distintas:</p>
-<div class="not-prose overflow-auto border border-slate-200 rounded-xl mt-3 mb-4">
-  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Serie</th><th class="py-2 px-3 text-right">Abril 2026</th><th class="py-2 px-3 text-right">Junio 2026</th><th class="py-2 px-3 text-right">Cambio</th></tr></thead><tbody>
-  <tr class="border-t border-slate-100"><td class="py-2 px-3">Número crudo</td><td class="py-2 px-3 text-right">5.3%</td><td class="py-2 px-3 text-right">6.4%</td><td class="py-2 px-3 text-right font-semibold text-coral-700">+1.1</td></tr>
-  <tr class="border-t border-slate-100"><td class="py-2 px-3">Ajustado por temporada</td><td class="py-2 px-3 text-right">5.6%</td><td class="py-2 px-3 text-right">5.8%</td><td class="py-2 px-3 text-right font-semibold">+0.2</td></tr>
-  </tbody></table>
-</div>
-<p>El número crudo parece una alarma. No lo es: en Puerto Rico el desempleo sube todos los veranos, cuando los estudiantes salen a buscar trabajo. Para eso existe el ajuste, para quitar lo que pasa todos los años y dejar ver lo que de verdad cambió.</p>
-<p>Y la serie ajustada, la que sirve para ver tendencia, <strong>lleva 13 meses plana entre 5.6% y 5.8%.</strong></p>
-<blockquote>La grieta que yo esperaba ver todavía no está. Lo digo porque si solo publico los números que me dan la razón, esto no vale nada.</blockquote>
-<p><strong>Qué hay que mirar, en concreto:</strong> si la serie ajustada rompe <strong>6.0% y se queda ahí 3 meses seguidos</strong>, eso sí es la grieta. Si no rompe, mi lectura del calendario estaba adelantada, y hay que decirlo también.</p>
-<div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-4 mb-4 text-sm text-slate-700">
-  <strong>Compruébalo tú:</strong> la serie ajustada es <a href="https://data.bls.gov/timeseries/LASST720000000000003" rel="nofollow" class="text-teal-700 font-semibold">LASST720000000000003</a> y la cruda es <a href="https://data.bls.gov/timeseries/LAUST720000000000003" rel="nofollow" class="text-teal-700 font-semibold">LAUST720000000000003</a>. Se actualizan todos los meses. Ojo con cuál te citan.
-</div>
+<p class="text-sm text-slate-600"><strong>¿Ya se está viendo en los empleos?</strong> Todavía no. Fui a mirar, me equivoqué al leerlo la primera vez, y lo cuento completo en <a href="/numero-mas-nuevo" class="text-teal-700 font-semibold">el capítulo 2</a>.</p>
 
-<h2>7. Lo que te van a decir cuando cuentes esto</h2>
+<h2>5. Lo que te van a decir cuando cuentes esto</h2>
 <p><strong>"Pero si aquí todo el mundo sabe que la cosa está mala."</strong><br>Las 2 cosas son ciertas a la vez, y por eso confunde. Se fue gente del país Y abrieron negocios. Lo que pasa es que esos negocios los pagó dinero de afuera, con fecha de vencimiento. Sentir que la cosa está mala no es lo mismo que poder probar qué se va a romper y cuándo. Lo segundo es lo que falta.</p>
 <p><strong>"Eso lo dice el gobierno de aquí y yo no le creo."</strong><br>Ninguna cifra de esta página sale del gobierno de Puerto Rico. Todas salen de oficinas federales: Censo, USAspending, Estadísticas Laborales y Medicare. Los enlaces están arriba.</p>
 <p><strong>"Tú inventaste esos números."</strong><br>Los archivos están arriba para bajar. Están en el servidor del Censo, no en el mío. Busca las filas del estado 72 y cuenta. Si te da distinto, escríbeme y lo corrijo en público.</p>
@@ -9900,7 +9890,7 @@ ${shareRow({ text: 'Te van a decir que la economía de Puerto Rico creció. Es v
 <blockquote>Si el conteo de negocios de 2024 y 2025, cuando salga, muestra que la construcción <strong>siguió creciendo</strong> aunque el dinero federal bajó 55%, entonces me equivoqué, y lo voy a escribir aquí mismo.</blockquote>
 <p>Una predicción que no se puede probar equivocada no vale nada. Esta sí se puede.</p>
 
-<h2>8. Lo que esta página no puede probar</h2>
+<h2>6. Lo que esta página no puede probar</h2>
 <p>Un récord que no dice dónde falla no se puede tomar en serio. Estos son los huecos:</p>
 <ul>
   <li><strong>Los contratos no son todo el dinero.</strong> Hay otros fondos federales, mucho más grandes, que van por otro camino y no están en esa tabla. La bajada de contratos sirve como aviso temprano, no como el total.</li>
@@ -9912,28 +9902,11 @@ ${shareRow({ text: 'Te van a decir que la economía de Puerto Rico creció. Es v
 </ul>
 <p>Nada de esto cambia hacia dónde va la cosa. Cambia cuándo llega.</p>
 
-<h2>9. Qué hacer con esto</h2>
+<h2>7. Qué hacer con esto</h2>
 <p>No hay que asustarse. Hay que dejar de usar un número vencido para decidir.</p>
 <p><strong>Si tienes un negocio, 2 preguntas:</strong> primera, mira de dónde vino tu dinero desde 2018. Si tu cliente ha sido, aunque sea de rebote, una obra de reconstrucción, esa entrada tiene fecha de vencimiento. Segunda, y es la que decide: <strong>¿puedes cobrarle a alguien que vive en otro sitio?</strong> Si la respuesta es no, estás en el 79%. No hay que cerrar nada: hay que abrir un carril que cobre de afuera, aunque empiece chiquito.</p>
 <p><strong>Si decides en un municipio:</strong> los grupos que más crecieron son los que más rápido van a caer. Construcción y servicios profesionales se miran primero, no de último.</p>
 <p><strong>Si eres del pueblo y ya:</strong> el número que te va a importar antes que ninguno es cuántos médicos de cabecera quedan donde tú vives. Ese lo puedes buscar hoy mismo.</p>
-
-<h2>Apéndice: las tablas completas</h2>
-<p>Para quien quiera todos los números. Fuente: Census County Business Patterns, 2017 y 2023.</p>
-<div class="not-prose overflow-auto border border-slate-200 rounded-xl mt-3 mb-4">
-  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Grupo</th><th class="py-2 px-3 text-right">2017</th><th class="py-2 px-3 text-right">2023</th><th class="py-2 px-3 text-right">Negocios</th><th class="py-2 px-3 text-right">Empleos</th></tr></thead><tbody>
-  <tr class="border-t border-slate-100"><td class="py-2 px-3">Construcción</td><td class="py-2 px-3 text-right">1,734</td><td class="py-2 px-3 text-right">2,773</td><td class="py-2 px-3 text-right font-semibold">+59.9%</td><td class="py-2 px-3 text-right">+76.4%</td></tr>
-  <tr class="border-t border-slate-100"><td class="py-2 px-3">Servicios profesionales y técnicos</td><td class="py-2 px-3 text-right">4,442</td><td class="py-2 px-3 text-right">5,971</td><td class="py-2 px-3 text-right font-semibold">+34.4%</td><td class="py-2 px-3 text-right">+27.4%</td></tr>
-  <tr class="border-t border-slate-100"><td class="py-2 px-3">Hoteles y restaurantes</td><td class="py-2 px-3 text-right">4,706</td><td class="py-2 px-3 text-right">5,933</td><td class="py-2 px-3 text-right">+26.1%</td><td class="py-2 px-3 text-right">+8.6%</td></tr>
-  <tr class="border-t border-slate-100"><td class="py-2 px-3">Manufactura</td><td class="py-2 px-3 text-right">1,749</td><td class="py-2 px-3 text-right">2,014</td><td class="py-2 px-3 text-right">+15.2%</td><td class="py-2 px-3 text-right">+5.2%</td></tr>
-  <tr class="border-t border-slate-100"><td class="py-2 px-3">Tiendas</td><td class="py-2 px-3 text-right">9,326</td><td class="py-2 px-3 text-right">10,025</td><td class="py-2 px-3 text-right">+7.5%</td><td class="py-2 px-3 text-right">+3.1%</td></tr>
-  <tr class="border-t border-slate-100"><td class="py-2 px-3">Salud y asistencia social</td><td class="py-2 px-3 text-right">7,682</td><td class="py-2 px-3 text-right">8,243</td><td class="py-2 px-3 text-right">+7.3%</td><td class="py-2 px-3 text-right">+7.6%</td></tr>
-  <tr class="border-t border-slate-100"><td class="py-2 px-3">Información</td><td class="py-2 px-3 text-right">703</td><td class="py-2 px-3 text-right">730</td><td class="py-2 px-3 text-right">+3.8%</td><td class="py-2 px-3 text-right font-semibold text-coral-700">−8.8%</td></tr>
-  <tr class="border-t border-slate-100"><td class="py-2 px-3">Educación</td><td class="py-2 px-3 text-right">841</td><td class="py-2 px-3 text-right">867</td><td class="py-2 px-3 text-right">+3.1%</td><td class="py-2 px-3 text-right font-semibold text-coral-700">−17.2%</td></tr>
-  <tr class="border-t border-slate-100 bg-slate-50"><td class="py-2 px-3 font-bold">Total</td><td class="py-2 px-3 text-right font-bold">43,688</td><td class="py-2 px-3 text-right font-bold">50,332</td><td class="py-2 px-3 text-right font-bold">+15.2%</td><td class="py-2 px-3"></td></tr>
-  </tbody></table>
-</div>
-<p class="text-sm text-slate-600">Contratos federales por año fiscal: 2017 $990M · 2018 $4,600M · 2019 $1,130M · 2020 $1,120M · 2021 $710M · 2022 $1,500M · 2023 $2,030M · 2024 $1,480M · 2025 $920M · 2026 $770M (año incompleto).</p>
 
 <h2>Fuentes</h2>
 <p class="text-sm text-slate-600">Census County Business Patterns 2017 y 2023 · USAspending.gov, contratos con lugar de ejecución en Puerto Rico · Medicare (CMS), lista nacional de médicos, filas de PR · Censo, movimientos de pueblo a pueblo 2022 · Oficina de Estadísticas Laborales, serie de desempleo de PR. Todas las cifras salieron de consultas directas a esas fuentes. Ninguna viene del reporte de otra persona.</p>
