@@ -109,6 +109,13 @@
   .tile .d{font-size:.83rem;color:var(--ink-soft)}
   @media(max-width:420px){.dos{grid-template-columns:1fr}}
 
+  /* La puerta del dueño: presente pero callada. 90% utilidad, 10% venta. */
+  .dueno{display:block;text-decoration:none;margin-top:12px;padding:15px 17px;border-radius:14px;
+         background:#fff7ed;border:1px solid #fed7aa;box-shadow:var(--shadow)}
+  .dueno:hover{border-color:var(--coral)}
+  .dueno .t{font-weight:700;font-size:.98rem;color:#9a3412;margin-bottom:2px}
+  .dueno .d{font-size:.86rem;color:var(--ink-soft)}
+
   footer{text-align:center;padding:26px 20px 40px;color:var(--ink-mut);font-size:.82rem;line-height:1.7}
   footer a{color:var(--teal-dark);font-weight:600}
   .conteo{font-variant-numeric:tabular-nums}
@@ -154,6 +161,14 @@
         <div class="d">787-417-7711 · gratis, 24/7</div>
       </a>
     </div>
+
+    <!-- La puerta del dueño. Estaba en /pon-tu-negocio-en-el-mapa con CERO visitas
+         en 56 días en los tres dominios: existía pero no se llegaba desde ningún
+         lado. Va aquí porque la portada es el 53% del tráfico del sitio. -->
+    <a class="dueno" href="/pon-tu-negocio-en-el-mapa">
+      <div class="t">¿Tienes negocio en Cabo Rojo?</div>
+      <div class="d">Ponlo en el mapa donde la gente ya está buscando. Verificarte es gratis.</div>
+    </a>
   </div>
 </main>
 
@@ -214,10 +229,14 @@
 
   function vacio(term){
     var li=document.createElement('li'); li.className='vacio';
+    // Una búsqueda sin resultado es dos cosas a la vez: un vecino sin resolver
+    // y un hueco de mercado. Se le habla a los dos, en ese orden.
     li.innerHTML='<h2>Eso todavía no lo tengo</h2>'+
       '<p>Nadie ha registrado “'+esc(term)+'” por aquí. El Veci sí puede buscarte la vuelta a mano.</p>'+
       '<a class="btn" target="_blank" rel="noopener" href="https://wa.me/17874177711?text='+
-      encodeURIComponent('Busco '+term+' en Cabo Rojo')+'">Preguntarle al Veci</a>';
+      encodeURIComponent('Busco '+term+' en Cabo Rojo')+'">Preguntarle al Veci</a>'+
+      '<p style="margin:14px 0 0;font-size:.85rem">¿Tú resuelves esto? '+
+      '<a href="/pon-tu-negocio-en-el-mapa" style="color:var(--teal-dark);font-weight:600">Ponte en el mapa</a>.</p>';
     return li;
   }
 

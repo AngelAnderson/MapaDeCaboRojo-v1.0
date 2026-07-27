@@ -132,3 +132,4 @@ dist-ssr/
 # Personal workspace (not code)
 .claude/
 Outbox/
+.env*

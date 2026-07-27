@@ -1208,13 +1208,13 @@ function handlePonTuNegocio(_req: any, res: any) {
   const body = `
 <h1>Pon tu negocio donde la gente ya está buscando.</h1>
 
-<p class="text-lg text-slate-600 mt-4">Si tu negocio no aparece cuando alguien lo está buscando — estás perdiendo oportunidades. El mapa pone tu nombre frente a personas con intención.</p>
+<p class="text-lg text-slate-600 mt-4">Si tu negocio no aparece cuando alguien lo está buscando, esa persona llama al otro. El mapa pone tu nombre frente a personas con intención.</p>
 
 <!-- WIIFM 3-chip -->
 <div class="grid sm:grid-cols-3 gap-3 mt-6 not-prose">
   <div class="bg-teal-50 border border-teal-200 rounded-lg p-4">
     <div class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-2">¿Qué significa?</div>
-    <p class="text-sm text-slate-700 leading-snug">Cuando alguien busca lo que tú vendes — apareces. No es solo "estar en un mapa". Es aparecer en el momento correcto.</p>
+    <p class="text-sm text-slate-700 leading-snug">Cuando alguien busca lo que tú vendes, apareces. No es solo "estar en un mapa". Es aparecer en el momento correcto.</p>
   </div>
   <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
     <div class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">¿Por qué importa?</div>
@@ -1229,9 +1229,9 @@ function handlePonTuNegocio(_req: any, res: any) {
 <h2>Cómo funciona</h2>
 <p>El mapa ayuda a que residentes y visitantes encuentren negocios locales por:</p>
 <ul>
-<li><strong>Ubicación</strong> — qué queda cerca de donde están</li>
-<li><strong>Categoría</strong> — qué tipo de servicio necesitan</li>
-<li><strong>Intención</strong> — qué problema están tratando de resolver ahora mismo</li>
+<li><strong>Ubicación</strong>: qué queda cerca de donde están</li>
+<li><strong>Categoría</strong>: qué tipo de servicio necesitan</li>
+<li><strong>Intención</strong>: qué problema están tratando de resolver ahora mismo</li>
 </ul>
 
 <p>No es solo "estar en un mapa". Es aparecer en el momento correcto: cuando alguien quiere comer, comprar, visitar, llamar, llegar o resolver algo específico.</p>
@@ -1239,7 +1239,7 @@ function handlePonTuNegocio(_req: any, res: any) {
 <h2>La frase de venta</h2>
 <blockquote>No es pagar por aparecer. Es pagar por no seguir escondido.</blockquote>
 
-<p>El badge "verificado" es gratis si alguien (Angel o Noelia) llama a tu negocio y confirma que sigue abierto. La Vitrina es opcional — pa' los que quieren más visibilidad y aparecer primero en su categoría.</p>
+<p>El badge "verificado" es gratis si alguien (Angel o Noelia) llama a tu negocio y confirma que sigue abierto. La Vitrina es opcional, pa' los que quieren más visibilidad y aparecer primero en su categoría.</p>
 
 <h2>Qué incluye tu ficha de negocio</h2>
 <ul>
@@ -1276,13 +1276,13 @@ function handlePonTuNegocio(_req: any, res: any) {
 
 <h2>Por qué este mapa y no Google</h2>
 <p><strong>Google tiene datos. Facebook tiene ruido. Nosotros tenemos contexto local.</strong></p>
-<p>No somos visitantes mirando un mapa — somos vecinos leyendo la vuelta. La verificación humana sostenida es lo que diferencia este directorio: cada negocio se confirma a mano, no se copia automático.</p>
+<p>No somos visitantes mirando un mapa. Somos vecinos leyendo la vuelta. La verificación humana sostenida es lo que diferencia este directorio: cada negocio se confirma a mano, no se copia automático.</p>
 <p>Lee más: <a href="/equipo" class="text-teal-600 hover:underline">cómo funciona el equipo</a> · <a href="/transparencia" class="text-teal-600 hover:underline">los números en vivo</a> · <a href="/mision" class="text-teal-600 hover:underline">por qué existe</a>.</p>
 
 <div class="bg-teal-50 border border-teal-200 rounded-lg p-6 mt-8 text-center">
 <p class="text-lg font-semibold">¿Listo pa' que la gente que ya busca te encuentre?</p>
 <p class="mt-2"><a href="sms:+17874177711?body=NEGOCIO" class="text-teal-600 font-bold underline">Textea NEGOCIO + tu nombre al ${PHONE_CTA}</a></p>
-<p class="text-sm text-slate-600 mt-2 italic">Si te sirve, llégate. Si no, sigue tu camino — el directorio sigue funcionando con o sin ti.</p>
+<p class="text-sm text-slate-600 mt-2 italic">Si te sirve, llégate. Si no, sigue tu camino. El directorio sigue funcionando con o sin ti.</p>
 </div>
 `
 
