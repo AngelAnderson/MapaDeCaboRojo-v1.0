@@ -9800,14 +9800,45 @@ ${shareRow({ text: 'Te van a decir que la economía de Puerto Rico creció. Es v
   <strong>Compruébalo tú:</strong> <a href="https://www.usaspending.gov/state/puerto-rico/latest" rel="nofollow" class="text-teal-700 font-semibold">usaspending.gov/state/puerto-rico</a>, la página donde el gobierno federal publica cada dólar que gasta. Compara los años. Y para ver a dónde fue a parar ese dinero: <a href="/sigue-el-dinero" class="text-teal-700 font-semibold">Sigue el dinero →</a>
 </div>
 
-<h2>3. Por qué nadie lo ve venir</h2>
+<h2>3. El dato que nadie ha publicado: a quién le puede vender Cabo Rojo</h2>
+<p>Hasta aquí conté lo que se acaba. Esta parte es la que sirve, y no la ha publicado nadie porque hay que sentarse a calcularla negocio por negocio, sector por sector.</p>
+<p>Cabo Rojo se ve lleno de negocios. <strong>Tiene menos que el promedio de Puerto Rico:</strong> 13.7 por cada 1,000 habitantes contra 15.7.</p>
+<p>Pero el número que importa no es cuántos hay. Es <strong>a quién le pueden vender</strong>. Y ahí está todo:</p>
+<div class="not-prose mt-4 mb-4 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-xl sm:text-2xl font-black leading-snug">79% de los negocios de Cabo Rojo solo le pueden vender a quien esté parado enfrente.</p>
+  <p class="text-teal-200 mt-2 text-sm">En Puerto Rico completo son 68%. Cabo Rojo depende más que el resto de la isla de que alguien llegue.</p>
+</div>
+<p>Mira las 2 listas, una al lado de la otra. Son el mismo pueblo:</p>
+<div class="not-prose overflow-auto border border-slate-200 rounded-xl mt-3 mb-4">
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Lo que sobra</th><th class="py-2 px-3 text-right">vs PR</th><th class="py-2 px-3">Lo que falta</th><th class="py-2 px-3 text-right">vs PR</th></tr></thead><tbody>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Hospedaje</td><td class="py-2 px-3 text-right font-bold">4.5x</td><td class="py-2 px-3">Consultoría gerencial</td><td class="py-2 px-3 text-right font-bold text-coral-700">0.25x</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Tiendas de comida especializada</td><td class="py-2 px-3 text-right font-bold">3.5x</td><td class="py-2 px-3">Ingeniería y arquitectura</td><td class="py-2 px-3 text-right font-bold text-coral-700">0.41x</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Hoteles y moteles</td><td class="py-2 px-3 text-right font-bold">3.1x</td><td class="py-2 px-3">Finanzas y seguros</td><td class="py-2 px-3 text-right font-bold text-coral-700">0.41x</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Barras</td><td class="py-2 px-3 text-right font-bold">2.5x</td><td class="py-2 px-3">Servicios profesionales</td><td class="py-2 px-3 text-right font-bold text-coral-700">0.46x</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Restaurantes</td><td class="py-2 px-3 text-right">1.3x</td><td class="py-2 px-3">Información (software, medios, datos)</td><td class="py-2 px-3 text-right font-bold text-coral-700">0.47x</td></tr>
+  </tbody></table>
+</div>
+<p>Ahora lee la columna de la derecha otra vez, despacio.</p>
+<p><strong>Todo lo que falta se le puede vender a alguien que nunca ponga un pie en Cabo Rojo.</strong> Un plano se manda por correo. Un análisis se entrega por pantalla. Un software se vende en cualquier país.</p>
+<p><strong>Todo lo que sobra depende de que alguien maneje hasta aquí.</strong></p>
+<p>Ahí está la trampa completa del capítulo. El pueblo se llenó de negocios que solo cobran si alguien llega, justo en los años en que lo que traía a la gente era un contrato federal con fecha de vencimiento. Cuando ese dinero se va, no se va solo el contrato: se va el que llenaba el restaurante.</p>
+<div class="not-prose mt-4 mb-4 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-lg sm:text-xl font-black leading-snug">Un negocio que le vende al mundo no depende de que el turista venga, ni de que FEMA firme.</p>
+</div>
+<p>Y aquí está la parte que da alivio, porque es la única de todo este documento que no depende de que nadie te dé permiso: <strong>la columna de la derecha no necesita fondos federales, ni obra, ni que el gobierno haga algo.</strong> Información está en 0.47x y se abre con una computadora y un cliente de afuera. Servicios profesionales en 0.46x. Nadie tiene que aprobarte nada.</p>
+<p>No hace falta que Cabo Rojo tenga menos restaurantes. Hace falta que tenga más negocios que puedan cobrarle a alguien que vive en otro sitio.</p>
+<div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-4 mb-4 text-sm text-slate-700">
+  <strong>Compruébalo tú:</strong> son los establecimientos de Cabo Rojo (condado 023) contra el total de Puerto Rico, divididos por población, del <a href="https://data.census.gov/table/CBP2023.CB2300CBP?q=Puerto+Rico" rel="nofollow" class="text-teal-700 font-semibold">Censo, CBP 2023</a>. <strong>Ojo con el límite:</strong> CBP solo cuenta negocios con nómina, así que el que trabaja solo no aparece. Eso probablemente subestima justo la columna de la derecha, que es donde más gente trabaja por su cuenta. Si acaso, la brecha real es menor de lo que dice la tabla, pero la dirección es la misma.
+</div>
+
+<h2>4. Por qué nadie lo ve venir</h2>
 <p>Esta es la parte que engaña hasta a gente que sabe del tema.</p>
 <p><strong>El conteo de negocios más reciente que existe es el de 2023.</strong> No hay de 2024. No hay de 2025. La Oficina del Censo se tarda 2 o 3 años en publicarlo. Y 2023 fue justo el año en que el dinero federal llegó a su punto más alto.</p>
 <p>Entonces, durante todo 2026 y buena parte de 2027, cualquiera que busque la cifra oficial va a encontrar una economía creciendo. Con evidencia. De fuente seria. Y equivocada.</p>
 <p>No es que los números mientan. Es que llegan tarde, y llegan tarde justo cuando la cosa cambia de dirección.</p>
 <blockquote>Es como mirar una estrella. La ves brillando, pero esa luz salió hace años. Puede que ya no esté ahí.</blockquote>
 
-<h2>4. La otra mitad del problema</h2>
+<h2>5. La otra mitad del problema</h2>
 <p>Mientras esto pasa en la economía, pasa algo distinto en la salud, y eso no depende de ningún contrato. Ya está contado en detalle, pueblo por pueblo, en <a href="/prediccion" class="text-teal-700 font-semibold">Predicción 2030</a> y en <a href="/huracan-lento" class="text-teal-700 font-semibold">El Huracán Lento</a>. No lo repito aquí.</p>
 <p>Lo que sí hace falta traer, porque se repite igualito, es el truco de la sección 1. El conteo total de "profesionales de la salud" en PR <strong>no baja</strong>: sube un poquito. Sube porque entran nutricionistas, quiroprácticos y trabajadores sociales. Todos hacen falta. Ninguno hace lo mismo. Mientras tanto, los que atienden lo básico pierden alrededor de 1 de cada 3 médicos.</p>
 <p><strong>Un quiropráctico no atiende un parto.</strong> El total te tranquiliza y te esconde el problema. Exactamente igual que con el conteo de negocios.</p>
@@ -9816,7 +9847,7 @@ ${shareRow({ text: 'Te van a decir que la economía de Puerto Rico creció. Es v
   <strong>Compruébalo tú:</strong> <a href="https://data.cms.gov/provider-data/dataset/mj5m-pzi6" rel="nofollow" class="text-teal-700 font-semibold">data.cms.gov</a> (filtra por estado PR, la columna del año de graduación da la edad) y <a href="https://www.census.gov/topics/population/migration/guidance/county-to-county-migration-flows.html" rel="nofollow" class="text-teal-700 font-semibold">Censo, movimientos de pueblo a pueblo</a>.
 </div>
 
-<h2>5. La primera señal todavía no aparece (y eso hay que decirlo)</h2>
+<h2>6. La primera señal todavía no aparece (y eso hay que decirlo)</h2>
 <p>Si lo que digo es cierto, la primera grieta tiene que verse en los empleos antes que en cualquier conteo de negocios, porque despedir gente es más rápido que cerrar un negocio. Así que fui a mirar. <strong>Todavía no está.</strong></p>
 <p>Y aquí pasó algo que vale más que el dato, porque es la trampa de este récord completa, en chiquito.</p>
 <p>El desempleo de Puerto Rico se publica en <strong>2 series oficiales distintas</strong>. Una es el número crudo. La otra le quita el efecto de las temporadas (los estudiantes que salen a buscar trabajo en verano, la Navidad, la zafra). Las 2 son del gobierno federal. Las 2 son correctas. Y dicen cosas muy distintas:</p>
@@ -9834,7 +9865,7 @@ ${shareRow({ text: 'Te van a decir que la economía de Puerto Rico creció. Es v
   <strong>Compruébalo tú:</strong> la serie ajustada es <a href="https://data.bls.gov/timeseries/LASST720000000000003" rel="nofollow" class="text-teal-700 font-semibold">LASST720000000000003</a> y la cruda es <a href="https://data.bls.gov/timeseries/LAUST720000000000003" rel="nofollow" class="text-teal-700 font-semibold">LAUST720000000000003</a>. Se actualizan todos los meses. Ojo con cuál te citan.
 </div>
 
-<h2>6. Lo que te van a decir cuando cuentes esto</h2>
+<h2>7. Lo que te van a decir cuando cuentes esto</h2>
 <p><strong>"Pero si aquí todo el mundo sabe que la cosa está mala."</strong><br>Las 2 cosas son ciertas a la vez, y por eso confunde. Se fue gente del país Y abrieron negocios. Lo que pasa es que esos negocios los pagó dinero de afuera, con fecha de vencimiento. Sentir que la cosa está mala no es lo mismo que poder probar qué se va a romper y cuándo. Lo segundo es lo que falta.</p>
 <p><strong>"Eso lo dice el gobierno de aquí y yo no le creo."</strong><br>Ninguna cifra de esta página sale del gobierno de Puerto Rico. Todas salen de oficinas federales: Censo, USAspending, Estadísticas Laborales y Medicare. Los enlaces están arriba.</p>
 <p><strong>"Tú inventaste esos números."</strong><br>Los archivos están arriba para bajar. Están en el servidor del Censo, no en el mío. Busca las filas del estado 72 y cuenta. Si te da distinto, escríbeme y lo corrijo en público.</p>
@@ -9843,7 +9874,7 @@ ${shareRow({ text: 'Te van a decir que la economía de Puerto Rico creció. Es v
 <blockquote>Si el conteo de negocios de 2024 y 2025, cuando salga, muestra que la construcción <strong>siguió creciendo</strong> aunque el dinero federal bajó 55%, entonces me equivoqué, y lo voy a escribir aquí mismo.</blockquote>
 <p>Una predicción que no se puede probar equivocada no vale nada. Esta sí se puede.</p>
 
-<h2>7. Lo que esta página no puede probar</h2>
+<h2>8. Lo que esta página no puede probar</h2>
 <p>Un récord que no dice dónde falla no se puede tomar en serio. Estos son los huecos:</p>
 <ul>
   <li><strong>Los contratos no son todo el dinero.</strong> Hay otros fondos federales, mucho más grandes, que van por otro camino y no están en esa tabla. La bajada de contratos sirve como aviso temprano, no como el total.</li>
@@ -9855,9 +9886,9 @@ ${shareRow({ text: 'Te van a decir que la economía de Puerto Rico creció. Es v
 </ul>
 <p>Nada de esto cambia hacia dónde va la cosa. Cambia cuándo llega.</p>
 
-<h2>8. Qué hacer con esto</h2>
+<h2>9. Qué hacer con esto</h2>
 <p>No hay que asustarse. Hay que dejar de usar un número vencido para decidir.</p>
-<p><strong>Si tienes un negocio:</strong> mira de dónde vino tu dinero desde 2018. Si tu cliente ha sido, aunque sea de rebote, una obra de reconstrucción, esa entrada tiene fecha de vencimiento. Eso no es una opinión sobre la economía: es una pregunta sobre tu lista de clientes, y la puedes contestar hoy.</p>
+<p><strong>Si tienes un negocio, 2 preguntas:</strong> primera, mira de dónde vino tu dinero desde 2018. Si tu cliente ha sido, aunque sea de rebote, una obra de reconstrucción, esa entrada tiene fecha de vencimiento. Segunda, y es la que decide: <strong>¿puedes cobrarle a alguien que vive en otro sitio?</strong> Si la respuesta es no, estás en el 79%. No hay que cerrar nada: hay que abrir un carril que cobre de afuera, aunque empiece chiquito.</p>
 <p><strong>Si decides en un municipio:</strong> los grupos que más crecieron son los que más rápido van a caer. Construcción y servicios profesionales se miran primero, no de último.</p>
 <p><strong>Si eres del pueblo y ya:</strong> el número que te va a importar antes que ninguno es cuántos médicos de cabecera quedan donde tú vives. Ese lo puedes buscar hoy mismo.</p>
 
