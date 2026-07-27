@@ -9812,12 +9812,22 @@ ${shareRow({ text: 'El conteo oficial dice que PR ganó casi 7,000 negocios. Es 
   <strong>Compruébalo tú:</strong> <a href="https://data.cms.gov/provider-data/dataset/mj5m-pzi6" rel="nofollow" class="text-teal-700 font-semibold">data.cms.gov</a> (filtra por estado PR, la columna del año de graduación da la edad) y <a href="https://www.census.gov/topics/population/migration/guidance/county-to-county-migration-flows.html" rel="nofollow" class="text-teal-700 font-semibold">Censo, movimientos de pueblo a pueblo</a>.
 </div>
 
-<h2>5. La primera señal de que ya empezó</h2>
-<p>Si lo que digo es cierto, la primera grieta tiene que verse en los empleos antes que en cualquier conteo de negocios. Porque despedir gente es más rápido que cerrar un negocio.</p>
-<p>Desempleo en Puerto Rico: <strong>5.3% en abril de 2026</strong>, <strong>6.4% en junio</strong>. Subió más de un punto en dos meses.</p>
-<p>Te lo digo derecho: <strong>son tres meses, y tres meses no son una tendencia.</strong> Puede ser ruido. Pero es exactamente el lugar y el momento donde esto tenía que aparecer primero. Por eso lo pongo, y por eso hay que mirarlo todos los meses.</p>
+<h2>5. La primera señal todavía no aparece (y eso hay que decirlo)</h2>
+<p>Si lo que digo es cierto, la primera grieta tiene que verse en los empleos antes que en cualquier conteo de negocios, porque despedir gente es más rápido que cerrar un negocio. Así que fui a mirar. <strong>Todavía no está.</strong></p>
+<p>Y aquí pasó algo que vale más que el dato, porque es la trampa de este récord completa, en chiquito.</p>
+<p>El desempleo de Puerto Rico se publica en <strong>dos series oficiales distintas</strong>. Una es el número crudo. La otra le quita el efecto de las temporadas (los estudiantes que salen a buscar trabajo en verano, la Navidad, la zafra). Las dos son del gobierno federal. Las dos son correctas. Y dicen cosas muy distintas:</p>
+<div class="not-prose overflow-auto border border-slate-200 rounded-xl mt-3 mb-4">
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Serie</th><th class="py-2 px-3 text-right">Abril 2026</th><th class="py-2 px-3 text-right">Junio 2026</th><th class="py-2 px-3 text-right">Cambio</th></tr></thead><tbody>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Número crudo</td><td class="py-2 px-3 text-right">5.3%</td><td class="py-2 px-3 text-right">6.4%</td><td class="py-2 px-3 text-right font-semibold text-coral-700">+1.1</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Ajustado por temporada</td><td class="py-2 px-3 text-right">5.6%</td><td class="py-2 px-3 text-right">5.8%</td><td class="py-2 px-3 text-right font-semibold">+0.2</td></tr>
+  </tbody></table>
+</div>
+<p>El número crudo parece una alarma. No lo es: en Puerto Rico el desempleo sube todos los veranos, cuando los estudiantes salen a buscar trabajo. Para eso existe el ajuste, para quitar lo que pasa todos los años y dejar ver lo que de verdad cambió.</p>
+<p>Y la serie ajustada, la que sirve para ver tendencia, <strong>lleva trece meses plana entre 5.6% y 5.8%.</strong></p>
+<blockquote>La grieta que yo esperaba ver todavía no está. Lo digo porque si solo publico los números que me dan la razón, esto no vale nada.</blockquote>
+<p><strong>Qué hay que mirar, en concreto:</strong> si la serie ajustada rompe <strong>6.0% y se queda ahí tres meses seguidos</strong>, eso sí es la grieta. Si no rompe, mi lectura del calendario estaba adelantada, y hay que decirlo también.</p>
 <div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-4 mb-4 text-sm text-slate-700">
-  <strong>Compruébalo tú:</strong> <a href="https://data.bls.gov/timeseries/LASST720000000000003" rel="nofollow" class="text-teal-700 font-semibold">data.bls.gov</a>, la serie oficial de desempleo de PR. Se actualiza todos los meses.
+  <strong>Compruébalo tú:</strong> la serie ajustada es <a href="https://data.bls.gov/timeseries/LASST720000000000003" rel="nofollow" class="text-teal-700 font-semibold">LASST720000000000003</a> y la cruda es <a href="https://data.bls.gov/timeseries/LAUST720000000000003" rel="nofollow" class="text-teal-700 font-semibold">LAUST720000000000003</a>. Se actualizan todos los meses. Ojo con cuál te citan.
 </div>
 
 <h2>6. Lo que te van a decir cuando cuentes esto</h2>
