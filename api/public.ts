@@ -465,7 +465,11 @@ async function handleLive3d(req: any, res: any) {
     pr: prRes.count ?? null,
   };
 
-  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+  // 10 minutos, no una hora. Esto alimenta el Pulso, los conteos y los eventos
+  // del mapa: cuando se añade un evento (hoy entraron 9 de una sentada) tardaba
+  // hasta 60 minutos en aparecer, y la prueba de humo lo leía como si el
+  // resolver de coordenadas estuviera roto. La data viva tiene que llegar viva.
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=600, stale-while-revalidate=3600');
   res.setHeader('Content-Type', 'application/json');
   return res.status(200).json({ demand, featured, conteos, eventos, generated: new Date().toISOString() });
 }
