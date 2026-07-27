@@ -9827,6 +9827,27 @@ ${shareRow({ text: 'Te van a decir que la economía de Puerto Rico creció. Es v
 </div>
 <p>Y aquí está la parte que da alivio, porque es la única de todo este documento que no depende de que nadie te dé permiso: <strong>la columna de la derecha no necesita fondos federales, ni obra, ni que el gobierno haga algo.</strong> Información está en 0.47x y se abre con una computadora y un cliente de afuera. Servicios profesionales en 0.46x. Nadie tiene que aprobarte nada.</p>
 <p>No hace falta que Cabo Rojo tenga menos restaurantes. Hace falta que tenga más negocios que puedan cobrarle a alguien que vive en otro sitio.</p>
+<h3>Y no es solo Cabo Rojo: es el oeste entero</h3>
+<p>Corrí el mismo cálculo para los 78 municipios. Cabo Rojo sale en el <strong>puesto 56 de 73</strong>, donde 1 es el menos dependiente. Pero lo que importa no es el puesto, es que <strong>el oeste completo está en la misma esquina:</strong></p>
+<div class="not-prose overflow-auto border border-slate-200 rounded-xl mt-3 mb-4">
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Municipio</th><th class="py-2 px-3 text-right">Solo le vende a quien llega</th></tr></thead><tbody>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Cataño</td><td class="py-2 px-3 text-right font-bold text-teal-700">43.6%</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">San Juan</td><td class="py-2 px-3 text-right font-bold text-teal-700">55.9%</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Guaynabo</td><td class="py-2 px-3 text-right font-bold text-teal-700">56.0%</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Dorado</td><td class="py-2 px-3 text-right font-bold text-teal-700">57.4%</td></tr>
+  <tr class="border-t border-slate-100 bg-slate-50"><td class="py-2 px-3 text-slate-500 text-xs" colspan="2">— el oeste completo cae aquí abajo —</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Mayagüez</td><td class="py-2 px-3 text-right">74.3%</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Aguadilla</td><td class="py-2 px-3 text-right">75.2%</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3"><strong>Cabo Rojo</strong></td><td class="py-2 px-3 text-right font-bold">79.2%</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">San Germán</td><td class="py-2 px-3 text-right">80.3%</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-2 px-3">Guánica</td><td class="py-2 px-3 text-right font-bold text-coral-700">86.6%</td></tr>
+  </tbody></table>
+</div>
+<p>Mayagüez es la ciudad grande del oeste y está en 74.3%. <strong>No hay a dónde mudarse dentro de la región para escaparse de esto.</strong> La economía que le vende a alguien de afuera está concentrada en el área metro, y ya.</p>
+<p>Eso deja 2 caminos, y solo 1 depende de ti: esperar a que el oeste cambie, o ser tú el negocio que le cobra a alguien que vive lejos. <strong>Globalizar el pueblo no es traer gente. Es venderle a quien nunca va a venir.</strong></p>
+<div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-4 mb-4 text-sm text-slate-700">
+  <strong>Nota del cálculo:</strong> son 73 de los 78 municipios. Los otros 5 quedaron fuera porque tienen tan pocos establecimientos en estos sectores que el Censo suprime las celdas o el porcentaje se vuelve ruido. Mismo archivo del Censo enlazado arriba.
+</div>
 <div class="not-prose bg-sand-50 border-l-4 border-teal-600 rounded-r-xl p-4 mt-4 mb-4 text-sm text-slate-700">
   <p class="font-bold mb-1">Aviso de interés, porque toca decirlo</p>
   <p>Yo hago parte de ese trabajo que falta: consultoría, servicios profesionales y software, desde Cabo Rojo. O sea que este capítulo describe un hueco que a mí me conviene que exista.</p>
