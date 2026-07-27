@@ -232,7 +232,7 @@ function layout(opts: {
 <div class="bg-slate-900 text-white rounded-2xl p-6 sm:p-8">
 <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">Pásalo por la máquina</p>
 <div class="text-xl sm:text-2xl font-black mt-1 leading-snug">Antes de creer o compartir — a favor o en contra</div>
-<p class="text-slate-300 mt-2 text-sm">Esta página es el récord. Un récord solo sirve si lo usas para pensar por tu cuenta. Antes de creer o regar cualquier cosa, pásala por estas seis preguntas:</p>
+<p class="text-slate-300 mt-2 text-sm">Esta página es el récord. Un récord solo sirve si lo usas para pensar por tu cuenta. Antes de creer o regar cualquier cosa, pásala por estas 6 preguntas:</p>
 <div class="grid sm:grid-cols-2 gap-x-6 gap-y-2.5 mt-4">
 <div class="flex gap-2.5 items-start"><span class="text-teal-300 font-black">1</span><span class="text-sm text-slate-100">¿De dónde salió esto de verdad?</span></div>
 <div class="flex gap-2.5 items-start"><span class="text-teal-300 font-black">2</span><span class="text-sm text-slate-100">¿Es un hecho, una opinión, o un susto?</span></div>
