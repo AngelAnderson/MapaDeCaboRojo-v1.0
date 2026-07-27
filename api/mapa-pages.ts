@@ -9748,7 +9748,7 @@ function handleUltimaCifra(req: any, res: any) {
   <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Puerto Rico va a pasar 2 años hablando de una economía que ya no existe.</p>
 </div>
 
-${shareRow({ text: 'El conteo oficial dice que PR ganó casi 7,000 negocios. Es verdad. Lo que no dice es que ese conteo se quedó congelado en el año pico y el dinero que lo pagó ya cayó 55%. Con la fuente al lado:', url: 'https://puertoricosinfiltros.com/ultima-cifra', toWho: 'Al que decide con números: dueño de negocio, municipio, prensa.' })}
+${shareRow({ text: 'Te van a decir que la economía de Puerto Rico creció. Es verdad, y por eso engaña.\n\nEse conteo se congeló en 2023. El dinero que lo pagó ya cayó 55%.\n\nSi tu negocio vive de la reconstrucción, esto es sobre ti.', url: 'https://puertoricosinfiltros.com/ultima-cifra', toWho: 'Al que decide con números: dueño de negocio, municipio, prensa.' })}
 
 <div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mb-4 text-sm text-slate-700">
   Capítulo 1. El capítulo 2 es <a href="/numero-mas-nuevo" class="text-teal-700 font-semibold">El número más nuevo que existe →</a>
@@ -9880,6 +9880,7 @@ ${shareRow({ text: 'El conteo oficial dice que PR ganó casi 7,000 negocios. Es 
 
 <h2>Fuentes</h2>
 <p class="text-sm text-slate-600">Census County Business Patterns 2017 y 2023 · USAspending.gov, contratos con lugar de ejecución en Puerto Rico · Medicare (CMS), lista nacional de médicos, filas de PR · Censo, movimientos de pueblo a pueblo 2022 · Oficina de Estadísticas Laborales, serie de desempleo de PR. Todas las cifras salieron de consultas directas a esas fuentes. Ninguna viene del reporte de otra persona.</p>
+${SHARE_COPY_SCRIPT}
 `
   const jsonLd = {
     '@context': 'https://schema.org', '@type': 'Article',
@@ -9901,7 +9902,10 @@ ${shareRow({ text: 'El conteo oficial dice que PR ganó casi 7,000 negocios. Es 
   res.status(200).send(layout({
     title: 'La última buena cifra — el conteo de negocios de PR se congeló en el año pico',
     description: 'El Censo dice que Puerto Rico ganó casi 7,000 negocios entre 2017 y 2023. Es verdad. Lo que no dice es que esa serie termina en el año pico del dinero federal, que ya cayó 55%. Con la fuente al lado.',
-    slug: 'ultima-cifra', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    slug: 'ultima-cifra', bodyHtml: body, jsonLd, ogImage: 'https://puertoricosinfiltros.com/api/og?theme=sinfiltros&site=puertoricosinfiltros.com'
+      + '&k=' + encodeURIComponent('El boom prestado')
+      + '&t=' + encodeURIComponent('PR ganó 7,000 negocios.||El dinero que los pagó cayó 55%.')
+      + '&sub=' + encodeURIComponent('Y el conteo oficial se congeló en el año pico. Con la fuente al lado.'),
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
@@ -9918,7 +9922,7 @@ function handleNumeroMasNuevo(req: any, res: any) {
   Capítulo 2. El capítulo 1 es <a href="/ultima-cifra" class="text-teal-700 font-semibold">La última buena cifra →</a>
 </div>
 
-${shareRow({ text: 'Cuando alguien te da un número sobre Puerto Rico, la pregunta no es si es verdad. Casi siempre es verdad. La pregunta es de cuándo es. Fui fuente por fuente a medirlo:', url: 'https://puertoricosinfiltros.com/numero-mas-nuevo', toWho: 'Al que cita números: prensa, municipio, dueño de negocio.' })}
+${shareRow({ text: 'Te dan un número de Puerto Rico. Casi siempre es verdad.\n\nCasi nunca es de ahora.\n\nEl conteo de negocios tiene 3 años. El censo tiene 6. Y data.pr.gov está caído.\n\nAntes de creerte el próximo número, pregunta de cuándo es.', url: 'https://puertoricosinfiltros.com/numero-mas-nuevo', toWho: 'Al que cita números: prensa, municipio, dueño de negocio.' })}
 
 <h2>Empiezo por un error mío</h2>
 <p>Hace 2 días publiqué el capítulo 1 de esto. Escribí que el desempleo de Puerto Rico había subido de 5.3% a 6.4% entre abril y junio, y lo presenté como la primera grieta de lo que venía.</p>
@@ -10002,6 +10006,7 @@ ${shareRow({ text: 'Cuando alguien te da un número sobre Puerto Rico, la pregun
   </tbody></table>
 </div>
 <p class="text-sm text-slate-600">Todas las edades de la tabla se midieron consultando cada fuente el 27 de julio de 2026. Si alguna cambió, escríbeme y la actualizo.</p>
+${SHARE_COPY_SCRIPT}
 `
   const jsonLd = {
     '@context': 'https://schema.org', '@type': 'Article',
@@ -10022,7 +10027,10 @@ ${shareRow({ text: 'Cuando alguien te da un número sobre Puerto Rico, la pregun
   res.status(200).send(layout({
     title: 'El número más nuevo que existe — el rezago de los datos en Puerto Rico',
     description: 'El conteo de negocios de PR tiene 3 años. El censo tiene 6. Los contratos federales se ven en vivo. Mientras más lento el número, más peso carga en las decisiones. Con la fuente al lado.',
-    slug: 'numero-mas-nuevo', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    slug: 'numero-mas-nuevo', bodyHtml: body, jsonLd, ogImage: 'https://puertoricosinfiltros.com/api/og?theme=sinfiltros&site=puertoricosinfiltros.com'
+      + '&k=' + encodeURIComponent('El número más nuevo que existe')
+      + '&t=' + encodeURIComponent('El conteo de negocios tiene 3 años.||El censo tiene 6.')
+      + '&sub=' + encodeURIComponent('Mientras más lento el número, más peso carga en las decisiones.'),
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
