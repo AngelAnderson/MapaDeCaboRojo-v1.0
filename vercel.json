@@ -168,6 +168,10 @@
       "destination": "/api/mapa-pages?page=registro-mapa"
     },
     {
+      "source": "/marcador",
+      "destination": "/api/mapa-pages?page=marcador"
+    },
+    {
       "source": "/registro/estado",
       "destination": "/api/mapa-pages?page=registro-estado"
     },

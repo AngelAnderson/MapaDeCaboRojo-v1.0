@@ -215,7 +215,7 @@ function layout(opts: {
 <p class="text-base font-semibold text-slate-800 text-center">El récord público de Puerto Rico. El dato, con la fuente al lado.</p>
 <p class="text-xs text-slate-500 mt-1 text-center">Verificado uno por uno contra registros federales y públicos. Sin spin, sin relleno. <a href="/rompelo" class="text-teal-700 font-semibold">¿Ves un error? Rómpelo →</a></p>
 <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6 text-xs">
-<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Salud</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a><a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a><a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a><a href="/espejo" class="hover:text-teal-700">El Espejo</a><a href="/telemedicina" class="hover:text-teal-700">Telemedicina</a><a href="/diabetes" class="hover:text-teal-700">Diabetes</a><a href="/registro-raras" class="hover:text-teal-700">Enfermedades raras</a><a href="https://www.recallradarpr.com" class="hover:text-teal-700">Recalls FDA (RecallRadarPR)</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Salud</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/marcador" class="hover:text-teal-700">El Marcador</a><a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a><a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a><a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a><a href="/espejo" class="hover:text-teal-700">El Espejo</a><a href="/telemedicina" class="hover:text-teal-700">Telemedicina</a><a href="/diabetes" class="hover:text-teal-700">Diabetes</a><a href="/registro-raras" class="hover:text-teal-700">Enfermedades raras</a><a href="https://www.recallradarpr.com" class="hover:text-teal-700">Recalls FDA (RecallRadarPR)</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/rendimiento" class="hover:text-teal-700">Rendimiento del dólar</a><a href="/cupon" class="hover:text-teal-700">Dinero sin cobrar</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/exposicion-ai" class="hover:text-teal-700">Exposición a la IA</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a><a href="/investigacion" class="hover:text-teal-700">Dinero de ciencia</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Servicios</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/agua" class="hover:text-teal-700">Agua</a><a href="/acueductos" class="hover:text-teal-700">El recibo del agua</a><a href="/luz" class="hover:text-teal-700">Luz</a><a href="/basura" class="hover:text-teal-700">Basura</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">El pueblo</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/contradicciones" class="hover:text-teal-700">Contradicciones</a><a href="/transicion" class="hover:text-teal-700">Vistas de transición</a><a href="/funciona" class="hover:text-teal-700">Cuando funciona</a><a href="/semaforo-fema" class="hover:text-teal-700">Semáforo FEMA</a><a href="/demanda" class="hover:text-teal-700">Lo que busca PR</a><a href="/historial" class="hover:text-teal-700">Historial de promesas</a><a href="/promesas" class="hover:text-teal-700">Promesómetro</a><a href="/esencia" class="hover:text-teal-700">Proyecto Esencia</a><a href="/activos" class="hover:text-teal-700">Activos dormidos</a><a href="/retiro" class="hover:text-teal-700">El Huracán Lento</a><a href="/no-se-mide" class="hover:text-teal-700">Lo que ni se mide</a></div></div>
@@ -10984,6 +10984,248 @@ ${[
   }))
 }
 
+// =============== /marcador — El Marcador de Salud PR: 6 números con dueño ===============
+// Tesis: PR no tiene escasez de médicos, tiene escasez de condiciones. Los 3 escapes propuestos
+// (que vengan / telemedicina / que llegue dinero) mueren en la misma piedra, y se prueba con data.
+// El producto no es la denuncia: es el marcador que no se mueve hasta que alguien lo mueve.
+// Data live de marcador_salud (historial = "sin moverse desde"). Fallback verificado 2026-07-28.
+async function handleMarcador(req: any, res: any) {
+  type M = { metric_key: string; orden: number; label: string; valor: number | null; valor_txt: string | null; unidad: string | null; meta_valor: number | null; meta_txt: string | null; dueno: string; accion: string; fuente: string | null; fuente_url: string | null; nota: string | null; medido_on: string }
+
+  const fallback: M[] = [
+    { metric_key: 'cupon_sin_cobrar', orden: 1, label: 'Pueblos con el cupón de salud mental sin cobrar', valor: 33, valor_txt: null, unidad: 'municipios', meta_valor: 0, meta_txt: '0', dueno: 'Departamento de Salud de PR + los centros 330', accion: 'Que en cada uno de esos pueblos un clínico reclame el repago de préstamos ya aprobado.', fuente: 'HRSA (designaciones HPSA) × NPPES/CMS', fuente_url: 'https://data.hrsa.gov/tools/shortage-area/hpsa-find', nota: 'Designación federal de salud mental activa y cero psiquiatras con práctica declarada.', medido_on: '2026-07-28' },
+    { metric_key: 'cero_especialistas', orden: 2, label: 'Pueblos con cero especialistas de toda clase', valor: 3, valor_txt: null, unidad: 'municipios', meta_valor: 0, meta_txt: '0', dueno: 'Departamento de Salud + el municipio', accion: 'Clínica itinerante o telemedicina desde el centro del pueblo. No hace falta que el médico se mude.', fuente: 'NPPES/CMS, registro federal', fuente_url: 'https://npiregistry.cms.hhs.gov/', nota: 'Maricao, Las Marías y Florida.', medido_on: '2026-07-28' },
+    { metric_key: 'sin_sitio_nhsc', orden: 3, label: 'Pueblos del cupón sin sitio NHSC aprobado', valor: 5, valor_txt: null, unidad: 'municipios', meta_valor: 0, meta_txt: '0', dueno: 'Oficina de Cuidado Primario, Departamento de Salud', accion: 'Radicar ante HRSA para que un centro 330 regional inscriba un sitio. Es papeleo, no ley, no presupuesto.', fuente: 'HRSA BHW, mapa de sitios NHSC', fuente_url: 'https://nhsc.hrsa.gov/', nota: 'Añasco, Guánica, Guayanilla, Hormigueros y Loíza.', medido_on: '2026-07-28' },
+    { metric_key: 'nhsc_por_100k', orden: 4, label: 'Clínicos NHSC por cada 100,000 habitantes', valor: 2.5, valor_txt: null, unidad: 'clínicos/100k', meta_valor: 15.3, meta_txt: '15.3 (nivel West Virginia)', dueno: 'Departamento de Salud + los centros 330', accion: 'Operar el programa: reclutar, inscribir sitios y dirigir participantes hacia lo rural.', fuente: 'HRSA — NHSC Field Strength FY2025', fuente_url: 'https://nhsc.hrsa.gov/', nota: 'West Virginia tiene la mitad de nuestra población y 15.3. PR: 79 clínicos, solo 6 de cuidado primario.', medido_on: '2026-07-28' },
+    { metric_key: 'comparten_telefono', orden: 5, label: 'Proveedores que comparten teléfono con otro proveedor', valor: 40.9, valor_txt: null, unidad: '%', meta_valor: 15, meta_txt: 'bajo 15%', dueno: 'Los planes médicos', accion: 'Dejar de medir la red contando nombres. Publicar cuántos de sus proveedores de verdad contestan.', fuente: 'Este registro, sobre NPPES', fuente_url: 'https://registromedicopr.com/registro/estado', nota: 'Un directorio con cientos de nombres detrás del mismo teléfono no es una red, es una lista.', medido_on: '2026-07-28' },
+    { metric_key: 'slrp_solicitado', orden: 6, label: '¿Puerto Rico solicitó el SLRP con pareo federal 1 a 1?', valor: 0, valor_txt: 'No', unidad: null, meta_valor: 1, meta_txt: 'Sí', dueno: 'Departamento de Salud de PR', accion: 'Solicitarlo. Más de 40 estados ya lo corren. Y al ser estatal, PR puede pagar en condiciones (energía, agua, internet, techo) y no solo en cheque.', fuente: 'HRSA BHW — State Loan Repayment Program', fuente_url: 'https://nhsc.hrsa.gov/loan-repayment/state-loan-repayment-program', nota: 'Pendiente de confirmación directa con HRSA. Lo marcamos sin confirmar hasta que respondan.', medido_on: '2026-07-28' },
+  ]
+
+  // Última medición por métrica + desde cuándo NO se mueve (corrida contigua con el mismo valor)
+  let metrics: M[] = fallback
+  const desde: Record<string, string> = {}
+  try {
+    const { data } = await supabase.from('marcador_salud').select('*').order('medido_on', { ascending: false }).range(0, 500)
+    if (data && data.length) {
+      const byKey: Record<string, any[]> = {}
+      for (const r of data) (byKey[r.metric_key] = byKey[r.metric_key] || []).push(r)
+      const out: M[] = []
+      for (const k of Object.keys(byKey)) {
+        const serie = byKey[k] // ya viene desc por fecha
+        const cur = serie[0]
+        let stuck = cur.medido_on
+        for (const r of serie) { if (String(r.valor) === String(cur.valor)) stuck = r.medido_on; else break }
+        desde[k] = stuck
+        out.push({ ...cur, valor: cur.valor === null ? null : Number(cur.valor), meta_valor: cur.meta_valor === null ? null : Number(cur.meta_valor) } as M)
+      }
+      if (out.length >= 6) metrics = out
+    }
+  } catch (_) { /* fallback */ }
+  metrics.sort((a, b) => a.orden - b.orden)
+  for (const m of metrics) if (!desde[m.metric_key]) desde[m.metric_key] = m.medido_on
+
+  const fecha = (s: string) => {
+    const mm = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+    const p = String(s).slice(0, 10).split('-')
+    return p.length === 3 ? `${Number(p[2])} de ${mm[Number(p[1]) - 1]} de ${p[0]}` : String(s)
+  }
+  const dias = (s: string) => Math.max(0, Math.round((Date.now() - new Date(String(s).slice(0, 10) + 'T12:00:00Z').getTime()) / 86400000))
+
+  // Los 4 municipios del oeste que Angel pidió, con lectura local
+  type T = { municipio: string; poblacion: number; especialistas: number; psiquiatras: number; pct_65plus: number; pobreza: number; sin_internet: number; hpsa_mh: number; nhsc: number }
+  let towns: T[] = [
+    { municipio: 'Cabo Rojo', poblacion: 48988, especialistas: 99, psiquiatras: 3, pct_65plus: 24.8, pobreza: 38.4, sin_internet: 18.8, hpsa_mh: 22, nhsc: 1 },
+    { municipio: 'Mayagüez', poblacion: 77255, especialistas: 281, psiquiatras: 26, pct_65plus: 26.7, pobreza: 53.3, sin_internet: 12.8, hpsa_mh: 21, nhsc: 7 },
+    { municipio: 'San Germán', poblacion: 33264, especialistas: 78, psiquiatras: 3, pct_65plus: 27.8, pobreza: 49.6, sin_internet: 43.6, hpsa_mh: 18, nhsc: 0 },
+    { municipio: 'Hormigueros', poblacion: 16614, especialistas: 9, psiquiatras: 0, pct_65plus: 30.2, pobreza: 37.0, sin_internet: 14.9, hpsa_mh: 20, nhsc: 0 },
+  ]
+  try {
+    const { data: td } = await supabase.from('pr_retiro_municipio').select('municipio,poblacion,especialistas,psiquiatras,pct_65plus,pobreza_gen_pct,pct_sin_internet,hpsa_mh').in('municipio', ['Cabo Rojo', 'Mayagüez', 'San Germán', 'Hormigueros'])
+    const { data: nd } = await supabase.from('pr_nhsc_sites').select('municipio').range(0, 300)
+    if (td && td.length === 4) {
+      const norm = (s: string) => (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+      const counts: Record<string, number> = {}
+      for (const n of (nd || [])) counts[norm(n.municipio)] = (counts[norm(n.municipio)] || 0) + 1
+      const order = ['Cabo Rojo', 'Mayagüez', 'San Germán', 'Hormigueros']
+      towns = order.map(o => {
+        const r: any = td.find((x: any) => x.municipio === o)
+        return { municipio: r.municipio, poblacion: +r.poblacion, especialistas: +r.especialistas, psiquiatras: +r.psiquiatras, pct_65plus: +r.pct_65plus, pobreza: +r.pobreza_gen_pct, sin_internet: +r.pct_sin_internet, hpsa_mh: +r.hpsa_mh, nhsc: counts[norm(r.municipio)] || 0 }
+      })
+    }
+  } catch (_) { /* fallback */ }
+
+  const lectura: Record<string, string> = {
+    'Cabo Rojo': 'Casi 49,000 personas, 99 especialistas y solo 3 psiquiatras. Tiene sitio aprobado y designación federal de salud mental activa. O sea: el cupón se puede cobrar aquí mañana y nadie lo ha cobrado.',
+    'Mayagüez': 'Aguanta a toda la región. Sus 26 psiquiatras son los únicos de un radio enorme, y 6 pueblos del oeste dependen de ellos. Eso no es abundancia, es un punto único de fallo.',
+    'San Germán': '43.6% de los hogares no tiene internet, la peor cifra de los 4. Ahí muere el argumento de la telemedicina, y encima no tiene sitio NHSC aprobado.',
+    'Hormigueros': 'El pueblo más viejo de los 4 (30.2% pasa de 65) y el único con cero psiquiatras. Está en la lista de los 5 a los que ni el papel les falta radicar. Es el más arreglable de todos.',
+  }
+
+  const scoreHtml = metrics.map(m => {
+    const val = m.valor_txt ? escapeHtml(m.valor_txt) : (m.valor === null ? '—' : (Number.isInteger(m.valor) ? String(m.valor) : m.valor.toFixed(1)))
+    const meta = m.meta_txt ? escapeHtml(m.meta_txt) : (m.meta_valor === null ? '—' : String(m.meta_valor))
+    const d = dias(desde[m.metric_key])
+    return `<div class="border border-slate-200 bg-white rounded-2xl p-4 sm:p-5">
+  <div class="flex items-start justify-between gap-4">
+    <div class="min-w-0">
+      <p class="text-xs font-bold uppercase tracking-wider text-slate-400 m-0">Marcador ${m.orden}</p>
+      <p class="font-black text-slate-900 leading-snug mt-0.5 m-0">${escapeHtml(m.label)}</p>
+    </div>
+    <div class="text-right shrink-0">
+      <div class="text-3xl sm:text-4xl font-black text-red-600 leading-none">${val}<span class="text-sm text-slate-400 font-bold">${m.unidad && !m.valor_txt ? ' ' + escapeHtml(m.unidad) : ''}</span></div>
+      <div class="text-xs text-slate-500 mt-1">meta: <strong class="text-teal-700">${meta}</strong></div>
+    </div>
+  </div>
+  <div class="mt-3 grid sm:grid-cols-[auto,1fr] gap-x-3 gap-y-1 text-sm">
+    <div class="text-xs font-bold uppercase tracking-wide text-teal-700 sm:pt-0.5">Le toca a</div><div class="text-slate-800 font-semibold">${escapeHtml(m.dueno)}</div>
+    <div class="text-xs font-bold uppercase tracking-wide text-slate-400 sm:pt-0.5">Qué mueve esto</div><div class="text-slate-700">${escapeHtml(m.accion)}</div>
+  </div>
+  ${m.nota ? `<p class="text-xs text-slate-500 mt-2 m-0">${escapeHtml(m.nota)}</p>` : ''}
+  <div class="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+    <span class="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-800 font-bold rounded-full px-2.5 py-0.5">⏳ sin moverse desde el ${fecha(desde[m.metric_key])}${d > 0 ? ` (${d} ${d === 1 ? 'día' : 'días'})` : ''}</span>
+    ${m.fuente_url ? `<a href="${escapeHtml(m.fuente_url)}" target="_blank" rel="noopener" class="text-slate-500 hover:text-teal-700">Verifícalo: ${escapeHtml(m.fuente || 'fuente')} ↗</a>` : ''}
+  </div>
+</div>`
+  }).join('')
+
+  const townHtml = towns.map(t => `<div class="border ${t.psiquiatras === 0 ? 'border-red-300 bg-red-50/40' : 'border-slate-200 bg-white'} rounded-2xl p-4">
+  <div class="flex items-baseline justify-between gap-2">
+    <p class="font-black text-slate-900 m-0">${escapeHtml(t.municipio)}</p>
+    <p class="text-xs text-slate-500 m-0">${t.poblacion.toLocaleString('en-US')} hab.</p>
+  </div>
+  <div class="grid grid-cols-4 gap-2 mt-3 text-center">
+    <div><div class="text-lg font-black text-slate-800">${t.especialistas}</div><div class="text-[10px] uppercase tracking-wide text-slate-400 leading-tight">especialistas</div></div>
+    <div><div class="text-lg font-black ${t.psiquiatras === 0 ? 'text-red-600' : 'text-slate-800'}">${t.psiquiatras}</div><div class="text-[10px] uppercase tracking-wide text-slate-400 leading-tight">psiquiatras</div></div>
+    <div><div class="text-lg font-black ${t.nhsc === 0 ? 'text-red-600' : 'text-teal-700'}">${t.nhsc}</div><div class="text-[10px] uppercase tracking-wide text-slate-400 leading-tight">sitios NHSC</div></div>
+    <div><div class="text-lg font-black text-slate-800">${t.sin_internet.toFixed(1)}%</div><div class="text-[10px] uppercase tracking-wide text-slate-400 leading-tight">sin internet</div></div>
+  </div>
+  <p class="text-sm text-slate-700 mt-3 m-0">${escapeHtml(lectura[t.municipio] || '')}</p>
+  <p class="text-xs text-slate-400 mt-2 m-0">Designación federal de salud mental: ${t.hpsa_mh}/25 · pobreza ${t.pobreza.toFixed(1)}% · 65+ ${t.pct_65plus.toFixed(1)}%</p>
+</div>`).join('')
+
+  const body = `
+<h1>El Marcador</h1>
+<p class="text-lg text-slate-600 mt-3">Denuncias sobre la falta de médicos hay muchas. Marcador con dueño no hay ninguno. Estos son <strong>6 números</strong>, cada uno con la persona o entidad a la que le toca moverlo, y la fecha desde la cual no se mueve.</p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold m-0">La tesis</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug m-0">Puerto Rico no tiene escasez de médicos. Tiene escasez de condiciones.</p>
+  <p class="text-sm text-slate-300 mt-3 m-0">El programa federal que trae médicos fue diseñado para el rural de Estados Unidos, donde lo que falta es <strong class="text-white">distancia</strong>. Aquí no falta distancia. Falta <strong class="text-white">piso</strong>. Por eso lo usamos 6 veces menos que West Virginia, y después nos dicen que no lo aprovechamos.</p>
+</div>
+
+<h2>El marcador</h2>
+<p class="text-slate-600 -mt-2">Ninguno de estos 6 se mueve solo. Cada uno tiene un dueño distinto, y ninguno necesita dinero nuevo para empezar.</p>
+<div class="not-prose mt-4 space-y-3">${scoreHtml}</div>
+
+<h2>Las 3 salidas que ya se intentaron, y por qué se caen</h2>
+<p class="text-slate-600 -mt-2">Esta es la parte que cambia el cuento. No es que no se haya intentado. Es que las 3 salidas que siempre se proponen mueren en la misma piedra.</p>
+<div class="not-prose mt-4 space-y-3">
+  <div class="border-l-4 border-red-400 bg-white border border-slate-200 rounded-r-2xl p-4">
+    <p class="font-black text-slate-900 m-0">Salida 1: "que vengan médicos"</p>
+    <p class="text-sm text-slate-700 mt-1 m-0">El incentivo es dinero, pero el costo de vivir aquí no es dinero, es aguante. El repago llega hasta $75,000. La luz en Puerto Rico cuesta <strong>45.6% más</strong> que el promedio de Estados Unidos (24.36 contra 16.73 centavos por kilovatio hora). Y se va. Un cheque de 2 años no compensa una carrera entera.</p>
+    <p class="text-xs text-slate-400 mt-2 m-0">Fuente: EIA, Electric Power Monthly 2025.</p>
+  </div>
+  <div class="border-l-4 border-red-400 bg-white border border-slate-200 rounded-r-2xl p-4">
+    <p class="font-black text-slate-900 m-0">Salida 2: "telemedicina"</p>
+    <p class="text-sm text-slate-700 mt-1 m-0">Muere justo donde más hace falta. En <strong>Maricao, 60.5%</strong> de los hogares no tiene internet. En <strong>Las Marías, 58.8%</strong>. Y son 2 de los 3 pueblos de Puerto Rico con cero especialistas de toda clase. La salida digital falla exactamente en los pueblos que la necesitan.</p>
+    <p class="text-xs text-slate-400 mt-2 m-0">Fuente: Censo/ACS 5 años, tabla B28002. Salva la idea una versión distinta: telemedicina <em>desde la clínica del pueblo</em>, que necesita internet en 1 edificio y no en cada casa.</p>
+  </div>
+  <div class="border-l-4 border-red-400 bg-white border border-slate-200 rounded-r-2xl p-4">
+    <p class="font-black text-slate-900 m-0">Salida 3: "que llegue dinero"</p>
+    <p class="text-sm text-slate-700 mt-1 m-0">Ya llegó, pero de ladrillo. <strong>$3,469 millones</strong> de fondos federales de recuperación entraron a los mismos 33 pueblos que no tienen ni un psiquiatra. Jayuya recibió $424 millones y tiene 2 especialistas y cero psiquiatras. Le llegó el cemento. No le llegó el médico.</p>
+    <p class="text-xs text-slate-400 mt-2 m-0">Fuente: OpenFEMA (Public Assistance, monto obligado) cruzado con este registro. El dinero de FEMA es de infraestructura, no de salud. Se muestra para dimensionar que el dinero de ladrillo sí fluyó.</p>
+  </div>
+</div>
+
+<h2>El orden es el mensaje</h2>
+<p>No es que todo el mundo haga todo. Es una <strong>secuencia</strong>, y llevamos años atascados porque se está empezando por el final.</p>
+<div class="not-prose my-4 bg-teal-50 border-2 border-teal-200 rounded-2xl p-5 text-center">
+  <p class="text-base sm:text-lg font-black text-teal-900 m-0 leading-relaxed">piso → papel → paquete → médico → directorio que no miente</p>
+</div>
+<p>Traer un médico antes del piso es exactamente lo que ya se intentó. No fallamos en ejecutar. <strong>Fallamos en el orden.</strong></p>
+
+<h2>Quién hace qué</h2>
+<div class="not-prose mt-4 space-y-3">
+  <div class="border border-slate-200 bg-white rounded-2xl p-4">
+    <p class="text-xs font-black uppercase tracking-wider text-teal-700 m-0">1 · Gobierno de PR</p>
+    <p class="font-bold text-slate-900 mt-1 m-0">Solicitar el SLRP y pagar en condiciones, no en cheque</p>
+    <p class="text-sm text-slate-700 mt-1 m-0">Es la llave que abre todo lo demás. El programa federal te obliga a pagar en cheque. El estatal <strong>lo diseñas tú</strong>: energía que no se va, agua, internet y techo en la clínica. Eso sí compite contra una oferta en Orlando. El pareo lo pone el federal, 1 a 1, así que la excusa del presupuesto no aplica.</p>
+  </div>
+  <div class="border border-slate-200 bg-white rounded-2xl p-4">
+    <p class="text-xs font-black uppercase tracking-wider text-teal-700 m-0">2 · Los municipios</p>
+    <p class="font-bold text-slate-900 mt-1 m-0">Primero el papel, después el paquete de aterrizaje</p>
+    <p class="text-sm text-slate-700 mt-1 m-0">A 5 pueblos les falta hasta el papel: Añasco, Guánica, Guayanilla, Hormigueros y Loíza. Guánica es el municipio más pobre de Puerto Rico, con la puntuación federal de salud mental casi en el máximo, y ni el formulario tiene radicado. A los otros 28 no les falta papel: les falta armar el paquete. <strong>El primer pueblo que lo arme se lleva los médicos de toda su región.</strong></p>
+  </div>
+  <div class="border border-slate-200 bg-white rounded-2xl p-4">
+    <p class="text-xs font-black uppercase tracking-wider text-teal-700 m-0">3 · Los planes médicos</p>
+    <p class="font-bold text-slate-900 mt-1 m-0">Dejar de contar nombres y empezar a contar quién contesta</p>
+    <p class="text-sm text-slate-700 mt-1 m-0">La ley les exige red adecuada, y la miden contando nombres. Nuestro conteo dice que eso es ficción: <strong>40.9%</strong> de los 23,398 proveedores comparte teléfono con otro. Hay <strong>254 centralitas</strong> con 6 o más proveedores detrás del mismo número, y una sola con <strong>543</strong>. Un directorio con cientos de nombres que llevan al mismo teléfono que nadie contesta no es una red. Es una lista.</p>
+  </div>
+  <div class="border border-slate-200 bg-white rounded-2xl p-4">
+    <p class="text-xs font-black uppercase tracking-wider text-teal-700 m-0">4 · Los médicos y psicólogos</p>
+    <p class="font-bold text-slate-900 mt-1 m-0">No vuelvas por patria. Vuelve con condiciones</p>
+    <p class="text-sm text-slate-700 mt-1 m-0">El mensaje no es "regresa". Es: el dinero <strong>ya está aprobado</strong> ($75,000 en primaria, $50,000 en salud mental) y en 26 pueblos no tendrías competencia local. No lo aceptes solo. Exige el paquete completo antes de firmar, porque el cheque se lo come la luz. Y si ya estás aquí: corrige tu ficha, que es gratis y arregla el directorio para el próximo vecino.</p>
+  </div>
+  <div class="border-2 border-teal-300 bg-teal-50/60 rounded-2xl p-4">
+    <p class="text-xs font-black uppercase tracking-wider text-teal-700 m-0">5 · Cada uno de nosotros</p>
+    <p class="font-bold text-slate-900 mt-1 m-0">3 cosas, ninguna toma más de un minuto</p>
+    <ol class="text-sm text-slate-700 mt-2 mb-0 pl-5 space-y-1">
+      <li><strong>Mira tu pueblo.</strong> Si sale en cero, lo sabes antes de necesitarlo y no en la emergencia.</li>
+      <li><strong>Corrige un dato.</strong> Si tu doctor se retiró, cambió de número o ya no coge pacientes, dilo. Eso arregla el directorio para el que venga detrás.</li>
+      <li><strong>Haz la pregunta.</strong> Al centro de salud de tu pueblo: "¿ustedes son sitio aprobado del NHSC?" Y al que te pida el voto: "¿Puerto Rico solicitó el SLRP?" Las dos tienen respuesta de sí o no, y casi nadie las ha hecho.</li>
+    </ol>
+  </div>
+</div>
+
+<h2>El oeste, en 4 pueblos</h2>
+<p class="text-slate-600 -mt-2">La misma cuenta, cerca de casa. Sirve para ver que esto no es un problema de la montaña lejana.</p>
+<div class="not-prose mt-4 grid sm:grid-cols-2 gap-3">${townHtml}</div>
+<p class="text-sm text-slate-600 mt-3">Los 4 tienen designación federal de salud mental activa. Y aun así el retrato cambia por completo de un pueblo al otro: Mayagüez sostiene a toda la región con sus 26 psiquiatras, mientras Hormigueros no tiene ninguno y encima le falta el papel. <a href="/registro/estado" class="text-teal-700 font-semibold">Los 76 municipios, rankeados →</a></p>
+
+<div class="not-prose mt-8 bg-slate-900 text-white rounded-2xl p-6">
+  <p class="text-lg font-bold m-0">📍 ¿Te aviso cuando el marcador se mueva?</p>
+  <p class="text-sm text-slate-300 mt-1 m-0">Deja tu correo. Te escribo solo cuando uno de los 6 números cambie de verdad. Sin spam, sin cuenta.</p>
+  <form id="mc-form" class="mt-3 flex flex-col sm:flex-row gap-2">
+    <input id="mc-email" type="email" required placeholder="tu@correo.com" class="flex-1 rounded-lg px-3 py-2 text-slate-900" aria-label="Tu correo" />
+    <button type="submit" class="bg-teal-500 hover:bg-teal-400 text-slate-900 font-bold rounded-lg px-5 py-2">Avísame</button>
+  </form>
+  <p id="mc-done" class="text-sm text-teal-300 mt-2 hidden"></p>
+</div>
+<script>
+(function(){var f=document.getElementById('mc-form');if(!f)return;f.addEventListener('submit',function(e){e.preventDefault();var em=(document.getElementById('mc-email').value||'').trim();if(!/.+@.+\\..+/.test(em)){alert('Escribe un email válido.');return;}var b=f.querySelector('button');b.disabled=true;b.textContent='...';fetch('/api/mapa-pages?page=registro-lead',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,source:'marcador',lang:'es'})}).then(function(r){return r.json()}).then(function(){f.classList.add('hidden');var d=document.getElementById('mc-done');d.classList.remove('hidden');d.textContent='✅ Listo. Te aviso cuando alguno de los 6 se mueva.';}).catch(function(){b.disabled=false;b.textContent='Avísame';alert('Hubo un error, intenta de nuevo.');});});})();
+</script>
+
+<h2>Lo que todavía no podemos jurar</h2>
+<p>Dos cosas que preferimos decir antes de que alguien las use para tumbar el resto:</p>
+<ul>
+  <li><strong>El SLRP.</strong> Que Puerto Rico nunca lo haya solicitado sale del expediente de HRSA (FY2025). Es la acusación más fuerte de esta página, así que la pedimos por escrito a HRSA y publicamos la respuesta llegue como llegue. Hasta entonces va marcada como sin confirmar.</li>
+  <li><strong>El conteo de psiquiatras.</strong> Sale del registro federal NPPES, que dice quién declaró práctica en el pueblo. Un profesional que atienda sin declararlo ahí no aparece. Si conoces uno, <a href="/rompelo" class="text-teal-700 font-semibold">rómpelo</a> y lo corregimos con tu nombre en el récord.</li>
+</ul>
+
+<p class="text-sm text-slate-500 mt-6">Fuentes: HRSA (designaciones HPSA y sitios NHSC) × NPPES/CMS (proveedores) × Censo/ACS (pobreza, edad, internet) × EIA (electricidad) × OpenFEMA (recuperación), cruzados municipio por municipio. Medición del ${fecha(metrics[0]?.medido_on || '2026-07-28')}. Esta página no garantiza citas ni reemplaza a médicos, planes o gobierno. Hace algo más básico: que la próxima persona no empiece a ciegas.</p>
+<p class="text-sm text-slate-600"><a href="/registro/estado" class="text-teal-700 font-semibold">El expediente completo, pueblo por pueblo →</a> · <a href="/comparte" class="text-teal-700 font-semibold">Datos citables →</a></p>
+`
+
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'El Marcador de Salud de Puerto Rico — 6 indicadores con responsable asignado',
+    description: 'Seis indicadores verificables del acceso a salud en Puerto Rico, cada uno con la entidad responsable de moverlo y la fecha desde la que no cambia. Cruce HRSA × NPPES × Censo × EIA × OpenFEMA.',
+    creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+    distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com/marcador', encodingFormat: 'text/html' },
+    license: 'https://www.usa.gov/government-works', isAccessibleForFree: true, inLanguage: 'es',
+    url: 'https://registromedicopr.com/marcador',
+    keywords: ['acceso a salud Puerto Rico', 'escasez de médicos', 'HPSA', 'NHSC', 'SLRP', 'salud mental Puerto Rico'],
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=21600, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'El Marcador — 6 números de la salud de PR, cada uno con dueño',
+    description: 'Puerto Rico no tiene escasez de médicos, tiene escasez de condiciones. Seis indicadores verificables, con la entidad responsable de mover cada uno y la fecha desde la que no se mueven.',
+    slug: 'marcador', bodyHtml: body, jsonLd, ogImage: '/og/desiertos.png',
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
 // =============== /registro/mapa — Mapa interactivo de médicos por municipio ===============
 // Grano MUNICIPIO (la región promedia y esconde). Data live: v_registro_muni_ratio (totales) +
 // municipalities (coords) + v_registro_muni_spec (matriz especialidad) + hpsa_designations (cupón federal).
@@ -13876,6 +14118,7 @@ export default async function handler(req: any, res: any) {
     case 'espejo': return await handleEspejo(req, res)
     case 'registro-mapa': return await handleRegistroMapa(req, res)
     case 'registro-estado': return await handleRegistroEstado(req, res)
+    case 'marcador': return await handleMarcador(req, res)
     case 'registro-censo': return await handleRegistroCenso(req, res)
     case 'raras': return await handleRaras(req, res)
     case 'atlas': return await handleAtlas(req, res)
