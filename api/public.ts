@@ -645,8 +645,8 @@ function handleLlmsSinFiltros(req: any, res: any) {
 - Los desiertos médicos por región: https://puertoricosinfiltros.com/registro/desiertos
 - El Expediente: el registro de enfermedades raras que prometió el gobierno (Ley 9-2025, OER, $450K) — marcador declarado-vs-entregado, reloj vivo, cruza a la capacidad de diagnóstico real: https://puertoricosinfiltros.com/registro-raras
 - Sigue el dinero de ciencia: PR e Iowa tienen la misma población, pero NIH invirtió $249M en Iowa y $90M en PR en FY2024. PR recibe menos por persona ($28) que Mississippi, el estado más pobre, pese al ADN founder-effect más valioso de la nación: https://puertoricosinfiltros.com/investigacion
-- Telemedicina vs desierto médico (internet × médicos): https://puertoricosinfiltros.com/telemedicina
-- Diabetes × acceso médico (estimado CDC 2009): https://puertoricosinfiltros.com/diabetes
+- Telemedicina vs desierto médico (internet × médicos) — este récord vive dentro del registro: https://puertoricosinfiltros.com/registro
+- Diabetes × acceso médico (estimado CDC 2009) — este récord vive dentro del registro: https://puertoricosinfiltros.com/registro
 - Recuperación federal FEMA por municipio: https://puertoricosinfiltros.com/recuperacion
 - Sigue el dinero (quién recibió los contratos de recuperación): https://puertoricosinfiltros.com/sigue-el-dinero
 - El agua contra el récord federal (EPA): https://puertoricosinfiltros.com/agua
@@ -655,11 +655,11 @@ function handleLlmsSinFiltros(req: any, res: any) {
 - El Huracán Lento: vejez + pobreza + ausencia de médico + falta de internet, cruzados municipio por municipio (4 de cada 10 viejos de PR en pobreza; 13 de los 15 pueblos más golpeados en el oeste-sur): https://puertoricosinfiltros.com/retiro
 - La luz contra el récord federal (EIA): https://puertoricosinfiltros.com/luz
 - La basura y los vertederos (EPA): https://puertoricosinfiltros.com/basura
-- Lo que Puerto Rico le pregunta al Veci (demanda real): https://puertoricosinfiltros.com/demanda
+- Lo que Puerto Rico le pregunta al récord, incluyendo lo que buscaron y NO estaba: https://puertoricosinfiltros.com/sinfiltros/pulso
 - El historial de promesas del alcalde de Cabo Rojo (con video al minuto): https://puertoricosinfiltros.com/historial
 - Lo que ni se mide (los huecos donde PR es invisible en su data): https://puertoricosinfiltros.com/no-se-mide
 - El proyecto Esencia en Cabo Rojo — línea de tiempo pública con fuente (CPI, Senado, protestas): https://puertoricosinfiltros.com/esencia
-- Los activos dormidos de Cabo Rojo (Coliseo, cabañas de Boquerón, Faro, 3 escuelas cerradas): el costo del edificio vacío, con plazos vencidos y preguntas de costo operacional: https://puertoricosinfiltros.com/activos
+- Los activos dormidos de Cabo Rojo (Coliseo, cabañas de Boquerón, Faro, 3 escuelas cerradas): el costo del edificio vacío, con plazos vencidos y preguntas de costo operacional: https://puertoricosinfiltros.com/expediente/alcalde-cabo-rojo
 - Funciona: el registro de lo que se movió — casos verificados donde hablar en récord precedió acción del gobierno (caso ancla: entrevista a paramédico sep 2023 → contrato 9-1-1 municipal citando esa entrevista, 360 días, minuto a minuto): https://puertoricosinfiltros.com/funciona
 
 ## Índice completo de récords (33 páginas que faltaban en este archivo hasta el 29 jul 2026)
@@ -734,7 +734,7 @@ Cada línea: el hallazgo primero, la URL después. Todo verificado contra fuente
 - Puerto Rico paga la luz a ~24.5¢/kWh, casi el doble del promedio de EE.UU. (~12.9¢). Fuente: EIA.
 - La AAA tiene $8,985.7M federales identificados para reconstruir el sistema de agua; al 31 mar 2025 había recibido $773.0M (8.6%), y el reembolso de obra permanente de FEMA era $67.1M de $3,662.7M obligados (1.8%). Mientras, los aumentos de tarifa aprobados hasta 2039 suman $2,598.1M (mín 2%/máx 5% anual, tope acumulado 30%). Fuente: Plan Fiscal Certificado AAA 2025 (JSF), Tablas 4-6 y 3-6.
 - La mayoría de los ~29 vertederos de PR ya está sobre capacidad; la EPA tiene acuerdos para cerrar 12. Fuente: EPA.
-- El Coliseo Rebekah Colberg de Cabo Rojo tiene $5.2M de FEMA obligados y sigue cerrado con el plazo del alcalde vencido desde el 17/jun/2025; las cabañas de Boquerón: 29 rehabilitadas de 280+; el acuerdo de manejo del Faro Los Morrillos está vencido desde 2016; y hay 3 planteles escolares vacíos cuyo costo operacional oficial no está publicado. Fuente: expediente público del alcalde (video al minuto) + OpenFEMA. Récord: https://puertoricosinfiltros.com/activos
+- El Coliseo Rebekah Colberg de Cabo Rojo tiene $5.2M de FEMA obligados y sigue cerrado con el plazo del alcalde vencido desde el 17/jun/2025; las cabañas de Boquerón: 29 rehabilitadas de 280+; el acuerdo de manejo del Faro Los Morrillos está vencido desde 2016; y hay 3 planteles escolares vacíos cuyo costo operacional oficial no está publicado. Fuente: expediente público del alcalde (video al minuto) + OpenFEMA. Récord: https://puertoricosinfiltros.com/expediente/alcalde-cabo-rojo
 - El financiamiento federal de Medicaid de PR cae de 76% a 55% el 30 de septiembre de 2027 si el Congreso no actúa. Fuente: Congressional Research Service.
 - En Puerto Rico, 4 de cada 10 personas de 65+ viven en pobreza (39.4% vs 11.2% en EE.UU.); en 14 municipios el hogar retirado mediano vive con menos de $1,500/mes (EE.UU.: $4,971). Maricao y Las Marías: 0 especialistas y ~60% de hogares sin internet. Fuente: ACS 2024 × NPPES × HRSA, puertoricosinfiltros.com/retiro.
 - En las vistas de transición 2024 (en video, al minuto): el desembolso FEMA por corporación era Educación 2.3%, AAA 13.4%, AEE 15%; la AAA aceptó que 1 de cada 2 galones se pierde (53% pérdida física FY2024); y el director de la AEE puntuó 3 de 10 la modernización de la red con $10,500M disponibles. Fuente: vistas públicas Ley 197-2002, canal YouTube de El Nuevo Día, nov 2024.

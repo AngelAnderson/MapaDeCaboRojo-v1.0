@@ -640,6 +640,22 @@ async function runRutas(req: any, res: any) {
   let fuente = 'BUSCAR_INDEX';
   if (!rutas.length) { rutas = RUTAS_RESPALDO; fuente = 'respaldo (BUSCAR_INDEX no cargo)'; }
 
+  // llms.txt es la otra superficie que promete URLs, y hasta el 29 jul 2026 nadie la
+  // vigilaba: tenia 4 links muertos (/activos y /demanda tiraban a home, /diabetes y
+  // /telemedicina a /registro) mientras el canary daba todo verde, porque solo miraba
+  // BUSCAR_INDEX. Un modelo que lea llms.txt y siga un link a home no vuelve.
+  let deLlms = 0;
+  try {
+    const t = await fetch(`${BASE}/llms.txt`, { headers: { 'User-Agent': 'prsf-rutas-canary' } }).then(r => r.ok ? r.text() : '');
+    const urls = new Set((t.match(/https:\/\/puertoricosinfiltros\.com\/[^\s)\],]*/g) || [])
+      .map(u => u.replace(/[.,;]+$/, '').replace(BASE, '').split('#')[0])
+      .filter(u => u.length > 1));
+    const nuevas = [...urls].filter(u => !rutas.includes(u));
+    rutas = rutas.concat(nuevas);
+    deLlms = nuevas.length;
+    if (deLlms) fuente += ` + llms.txt (${deLlms} URLs que solo viven ahi)`;
+  } catch { /* si llms.txt no responde, el canary sigue con BUSCAR_INDEX */ }
+
   type Chk = { u: string; status: number; soft: boolean; to: string };
   const checks: Chk[] = [];
   for (let i = 0; i < rutas.length; i += 6) {
@@ -678,7 +694,7 @@ async function runRutas(req: any, res: any) {
             reply_to: 'angel@angelanderson.com',
             subject: `🚨 ${rotas.length} récord${rotas.length === 1 ? '' : 's'} de PRSF no abre${rotas.length === 1 ? '' : 'n'}`,
             html: `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#0f172a">
-<p>PRSF anuncia ${resumen.total} récords. ${rotas.length} no abre${rotas.length === 1 ? '' : 'n'} ahora mismo:</p>
+<p>PRSF anuncia ${resumen.total} URLs entre el buscador y llms.txt${deLlms ? ` (${deLlms} de ellas solo viven en llms.txt)` : ''}. ${rotas.length} no abre${rotas.length === 1 ? '' : 'n'} ahora mismo:</p>
 <ul style="padding-left:18px">${rotas.map(fila).join('')}</ul>
 <p style="font-size:14px;color:#475569">Casi siempre es lo mismo: el handler existe y el <code>case</code> está en el switch, pero falta el rewrite en <code>vercel.json</code>, o hay un redirect a <code>/</code> que lo tapa. Un récord que no abre no se puede citar, y a Google se le está diciendo que la URL ya no existe.</p>
 ${conocidas.length ? `<p style="font-size:13px;color:#64748b">Conocidas y aceptadas (no cuentan): ${conocidas.map(c => `<code>${escH(c.u)}</code> — ${escH(RUTAS_CONOCIDAS[c.u])}`).join('; ')}</p>` : ''}
@@ -691,7 +707,7 @@ ${conocidas.length ? `<p style="font-size:13px;color:#64748b">Conocidas y acepta
   }
 
   return res.status(200).json({
-    success: true, dry_run: dryRun, fuente, ...resumen,
+    success: true, dry_run: dryRun, fuente, urls_solo_en_llms: deLlms, ...resumen,
     rotas: rotas.map(c => ({ ruta: c.u, status: c.status, soft_404: c.soft, to: c.to })),
     conocidas: conocidas.map(c => ({ ruta: c.u, status: c.status, razon: RUTAS_CONOCIDAS[c.u] })),
     email: rotas.length && !dryRun ? 'enviado si hay RESEND_API_KEY' : 'no (silencio)',
