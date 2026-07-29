@@ -4378,6 +4378,17 @@ async function handleEspecialista(req: any, res: any) {
       </div>
       <input name="corrected_phone" placeholder="¿El teléfono de arriba está mal? Pon el correcto aquí" class="w-full rounded-lg border border-amber-300 p-2.5 text-sm">
       <input name="accepted_plans" placeholder="Planes que aceptas (ej: MMM, Triple-S, Plan Medicare, First Medical...)" class="w-full rounded-lg border border-amber-300 p-2.5 text-sm">
+      <!-- 2026-07-29: los 2 datos que la gente busca y que no existen en ninguna base
+           publica. 97% de las fichas no tiene horario; 2 de 26,325 dicen si aceptan
+           pacientes. No se compran: hay que preguntarlos, y el dueno es quien sabe. -->
+      <input name="horario" placeholder="Horario (ej: lun-vie 8am-4pm, sábado por cita)" class="w-full rounded-lg border border-amber-300 p-2.5 text-sm">
+      <div class="flex flex-wrap items-center gap-4 text-sm text-amber-900 bg-amber-50 rounded-lg p-2.5">
+        <span class="font-semibold">¿Estás aceptando pacientes nuevos?</span>
+        <label class="flex items-center gap-1.5"><input type="radio" name="acepta_pacientes" value="si"> Sí</label>
+        <label class="flex items-center gap-1.5"><input type="radio" name="acepta_pacientes" value="no"> No</label>
+        <label class="flex items-center gap-1.5"><input type="radio" name="acepta_pacientes" value=""> Depende</label>
+      </div>
+      <input name="website" placeholder="Página web o Facebook (opcional)" class="w-full rounded-lg border border-amber-300 p-2.5 text-sm">
       <label class="flex items-center gap-2 text-sm text-amber-900"><input type="checkbox" name="wants_vitrina" class="rounded"> Me interesa que me contacten para mantener mi perfil al día</label>
       <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-5 py-2.5 rounded-lg text-sm">Enviar confirmación</button>
       <div id="claim-status" class="text-sm hidden"></div>
@@ -4501,6 +4512,11 @@ async function handleEspecialistaClaim(req: any, res: any) {
       contact_email: String(b.contact_email || '').slice(0, 120) || null,
       corrected_phone: String(b.corrected_phone || '').slice(0, 40) || null,
       accepted_plans: plans.length ? plans : null,
+      // 2026-07-29 — horario y "acepta pacientes nuevos". 'depende' llega vacío y
+      // se guarda como null a propósito: null significa "no sabemos", no "no acepta".
+      horario: String(b.horario || '').slice(0, 300) || null,
+      acepta_pacientes: b.acepta_pacientes === 'si' ? true : b.acepta_pacientes === 'no' ? false : null,
+      website: String(b.website || '').slice(0, 200) || null,
       wants_vitrina: !!b.wants_vitrina,
       source: 'especialista_page',
     })
@@ -4518,6 +4534,9 @@ async function handleEspecialistaClaim(req: any, res: any) {
 Tel: ${escapeHtml(String(b.contact_phone || '—'))} · Email: ${escapeHtml(String(b.contact_email || '—'))}<br>
 Tel corregido: ${escapeHtml(String(b.corrected_phone || '—'))}<br>
 Planes: ${escapeHtml(plans.join(', ') || '—')}<br>
+<strong>Horario:</strong> ${escapeHtml(String(b.horario || '—'))}<br>
+<strong>Acepta pacientes nuevos:</strong> ${b.acepta_pacientes === 'si' ? 'SÍ' : b.acepta_pacientes === 'no' ? 'NO' : 'no contestó'}<br>
+Web: ${escapeHtml(String(b.website || '—'))}<br>
 ${b.wants_vitrina ? '<strong>⭐ Quiere que lo llamen sobre La Vitrina Especialista</strong>' : ''}</p>
 <p style="color:#64748b;font-size:12px">provider_claims · registromedicopr.com</p>`,
           }),
