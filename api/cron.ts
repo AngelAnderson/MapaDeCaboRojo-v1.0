@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { BUSCAR_INDEX } from './_lib/buscar-index';
 import { GoogleGenAI } from "@google/genai";
 
 const supabase = createClient(
@@ -556,9 +557,11 @@ async function runDatoDelDia(res: any) {
 // un record nuevo entra al chequeo solo — no hay segunda lista que se desincronice.
 // Callado por defecto: solo escribe cuando algo se rompe. Alerta por delta, no digest.
 const RUTAS_CONOCIDAS: Record<string, string> = {
-  '/diabetes': 'consolidado a /registro (decisión de Angel)',
-  '/telemedicina': 'consolidado a /registro (decisión de Angel)',
-  '/demanda': 'sin handler en PRSF; el radar vive en mapadecaborojo.com/demanda — decisión de arquitectura pendiente',
+  // La poda 72761fe los mando a /registro. Son records de salud y el registro es su casa,
+  // asi que se respeta hasta que Angel diga lo contrario. Si algun dia se revierten, se
+  // borran de aqui y el canary los empieza a vigilar solo.
+  '/diabetes': 'la poda 72761fe lo mando a /registro (records de salud viven en el registro)',
+  '/telemedicina': 'la poda 72761fe lo mando a /registro (records de salud viven en el registro)',
 };
 // Marca del SPA: si una ruta de PRSF devuelve 200 pero sirve esto, es soft-404 con el sitio
 // equivocado. Ese fue el modo de fallo silencioso de /cuatro-economias antes del rewrite.
@@ -631,14 +634,10 @@ ${tabla('Lo buscaron y sí estaba', conRes, 'Confirma qué está sirviendo.')}
 async function runRutas(req: any, res: any) {
   const BASE = 'https://puertoricosinfiltros.com';
   const dryRun = req?.query?.dry_run === '1';
-  // Import perezoso: mapa-pages es un modulo pesado y cargarlo arriba tumbaba TODA la
-  // funcion de crons (los otros 7 jobs incluidos). Aqui, si falla, solo degrada este job.
-  let rutas: string[] = [];
+  // BUSCAR_INDEX vive en api/_lib (archivo chico) justo para poder importarlo aqui sin
+  // arrastrar mapa-pages, que tumbaba la funcion entera. Una sola lista, sin desincronizar.
+  let rutas: string[] = (BUSCAR_INDEX as any[]).map(x => x.u).filter((u: string) => typeof u === 'string' && u.startsWith('/'));
   let fuente = 'BUSCAR_INDEX';
-  try {
-    const mod: any = await import('./mapa-pages');
-    rutas = (mod.BUSCAR_INDEX || []).map((x: any) => x.u).filter((u: string) => typeof u === 'string' && u.startsWith('/'));
-  } catch { /* cae al respaldo */ }
   if (!rutas.length) { rutas = RUTAS_RESPALDO; fuente = 'respaldo (BUSCAR_INDEX no cargo)'; }
 
   type Chk = { u: string; status: number; soft: boolean; to: string };

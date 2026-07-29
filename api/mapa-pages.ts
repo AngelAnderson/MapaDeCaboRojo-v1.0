@@ -9484,67 +9484,8 @@ ${AGENDA.map((a, i) => `
 
 // /buscar — búsqueda instantánea sobre el índice de récords PRSF (client-side, cero dependencias).
 // Cada búsqueda se loggea a prsf_events (event=search) — las búsquedas sin resultado son señal de qué récord falta.
-export const BUSCAR_INDEX = [
-    { u: '/decidir', t: '¿Me quedo o me voy?', d: 'La decisión grande con los números al lado', k: 'quedarme irme mudarme diaspora regresar volver decision' },
-    { u: '/prediccion', t: 'Predicción 2030', d: 'Lo que dicen todos los récords juntos si nada cambia', k: 'futuro 2030 proyeccion sintesis lectura' },
-    { u: '/retiro', t: 'El Huracán Lento', d: 'Envejecimiento + médicos + internet, municipio por municipio', k: 'huracan retiro viejos envejecer pension 65 pobreza municipios tabla evidencia' },
-    { u: '/registro/estado', t: 'El estado de los médicos', d: 'Cuántos médicos hay y por qué no llega el que falta', k: 'medicos doctores especialistas psiquiatras dentistas escasez nhsc hpsa salud cupon' },
-    { u: '/cupon', t: 'El cupón sin cobrar', d: 'Dinero federal de salud aprobado que nadie reclama', k: 'cupon dinero federal salud mental prestamos 75000 nhsc fondos' },
-    { u: '/contradicciones', t: 'El Marcador de Contradicciones', d: 'Lo que dicen vs lo que muestra el récord, con fuente', k: 'contradiccion dicen mienten brecha marcador' },
-    { u: '/esencia', t: 'Expediente Esencia', d: 'El proyecto de $2B en Boquerón, los dos lados con récord', k: 'esencia boqueron desarrollo turismo 2 billones dia exencion' },
-    { u: '/acueductos', t: 'El recibo del agua', d: 'Tarifas, fondos federales y deuda de la AAA', k: 'aaa agua acueductos tarifa recibo aumento deuda' },
-    { u: '/agua', t: 'Calidad del agua', d: 'Violaciones EPA activas, sistema por sistema', k: 'agua calidad epa violaciones trihalometanos thm potable' },
-    { u: '/luz', t: 'La luz', d: 'Precio y confiabilidad eléctrica, con la fuente federal', k: 'luz electricidad luma aee apagones kwh tarifa energia solar' },
-    { u: '/basura', t: 'La basura', d: 'Vertederos y reciclaje, el récord contra la meta', k: 'basura vertederos reciclaje residuos landfill' },
-    { u: '/transicion', t: 'Las vistas de transición', d: 'Lo que las agencias admitieron bajo juramento, al minuto', k: 'transicion vistas agencias cor3 vivienda aee dtop admisiones video' },
-    { u: '/semaforo-fema', t: 'Semáforo FEMA Cabo Rojo', d: '121 proyectos FEMA: obligado vs cerrado', k: 'fema recuperacion proyectos coliseo obligado fondos cabo rojo' },
-    { u: '/recuperacion', t: 'La recuperación federal', d: 'Cuánto llegó y cuánto se ha usado, por municipio', k: 'fema recuperacion maria desembolso obligado fondos' },
-    { u: '/sigue-el-dinero', t: 'Sigue el dinero', d: 'A dónde van los contratos y fondos federales', k: 'dinero contratos federales mainland usaspending hud fuga' },
-    { u: '/promesas', t: 'Historial de promesas', d: 'Lo prometido en video contra lo entregado, al minuto', k: 'promesas alcalde video cumplio plazos coliseo cabanas' },
-    { u: '/expediente/alcalde-cabo-rojo', t: 'Expediente: Alcalde de Cabo Rojo', d: 'El Marcador del Cuatrienio, con sus propios plazos', k: 'alcalde cabo rojo expediente marcador promesas' },
-    { u: '/expediente/representante-distrito-20', t: 'Expediente: Representante D20', d: 'El Marcador del Término, medida por medida', k: 'representante distrito 20 camara medidas expediente carlo' },
-    { u: '/funciona', t: 'Cuando funciona', d: 'Casos donde hablar en récord movió al gobierno', k: 'funciona verde 911 paramedico resultado exito' },
-    { u: '/investigacion', t: 'Investigación NIH', d: 'PR recibe $28/persona en fondos NIH; Iowa, $78', k: 'nih investigacion ciencia fondos raras adn founder' },
-    { u: '/registro-raras', t: 'Expediente enfermedades raras', d: 'La Ley 9-2025 y el registro OER, declarado vs entregado', k: 'raras enfermedades oer ley 9 2025 registro' },
-    { u: '/diabetes', t: 'Diabetes', d: 'El dato que existe y el que falta', k: 'diabetes cdc salud cronica' },
-    { u: '/telemedicina', t: 'Telemedicina', d: 'Quién puede y quién no (internet × médicos)', k: 'telemedicina internet broadband acceso' },
-    { u: '/demanda', t: 'La demanda real', d: 'Lo que la gente busca y no encuentra (El Veci *7711)', k: 'demanda veci busquedas negocio plomero electricista' },
-    { u: '/costo-de-vida', t: '¿El sueldo rinde?', d: 'Ingreso contra costo real de vivir en PR', k: 'costo vida sueldo ingreso canasta ipc inflacion' },
-    { u: '/trabajo', t: 'El trabajo', d: 'Participación laboral y cómo subir de valor', k: 'trabajo empleo participacion laboral salario ai' },
-    { u: '/exposicion-ai', t: 'Exposición a la AI', d: 'Qué trabajos de PR toca la AI primero', k: 'ai inteligencia artificial empleos automatizacion' },
-    { u: '/cuatro-economias', t: 'Las 4 economías de PR', d: 'Los 78 municipios clasificados: quién aguantó y quién no', k: 'economia municipios poblacion negocios oeste censo qcew cuatro' },
-    { u: '/historial', t: 'Historial en video', d: 'Declaraciones públicas al minuto', k: 'historial video declaraciones grabaciones minuto' },
-    { u: '/no-se-mide', t: 'Lo que no se mide', d: 'Los datos que PR no recoge (y eso también es dato)', k: 'no se mide gaps datos faltan gobernanza' },
-    { u: '/rompelo', t: 'Rómpelo', d: 'Objeciones contestadas + registro público de correcciones', k: 'rompelo objeciones quien eres correcciones errores confianza' },
-    { u: '/comparte', t: 'Datos citables', d: 'Números listos pa\' copiar, con fuente', k: 'citas citables copiar prensa compartir' },
-    { u: '/mision', t: 'La misión', d: 'Qué es este sitio y qué no es', k: 'mision quienes somos acerca proposito' },
-  // 2026-07-29 — 34 rutas vivas no estaban en el indice, o sea eran invisibles pa'l
-  // buscador. /salud-que-falta era la 6ta pagina mas visitada del sitio y no salia.
-  // Keywords sin acento a proposito: norm() los quita antes de comparar.
-  { u: '/salud-que-falta', t: 'La salud que falta', d: 'Las zonas de escasez médica de PR y el dinero que las arregla', k: 'salud falta escasez hpsa zonas medicos dinero arregla desierto' },
-  { u: '/pueblo', t: '¿Cómo está tu pueblo?', d: 'Semáforo de acceso médico de los 78 municipios', k: 'pueblo municipio semaforo acceso medico 78 municipios mi pueblo' },
-  { u: '/registro/desiertos', t: 'Los desiertos médicos', d: 'Regiones de PR sin especialistas', k: 'desierto desiertos medicos regiones sin especialistas vacio' },
-  { u: '/registro/mapa', t: 'El mapa de los médicos', d: 'Especialistas por municipio, en mapa', k: 'mapa medicos especialistas municipio ver mapa' },
-  { u: '/registro/censo', t: 'El Censo Médico Real', d: '¿Quién está cogiendo pacientes de verdad?', k: 'censo medico pacientes nuevos cogiendo aceptando cita' },
-  { u: '/registro', t: 'Registro de Especialistas', d: 'Los especialistas médicos de PR, verificado y en español', k: 'registro especialistas medicos directorio buscar doctor' },
-  { u: '/puedo-volver', t: '¿Puedo volver a Puerto Rico?', d: 'Los médicos que hay de verdad, si estás pensando regresar', k: 'volver regresar mudarme diaspora retorno medicos' },
-  { u: '/porque', t: '¿Por qué se van los médicos?', d: 'La matemática del éxodo médico, con fuente', k: 'porque se van medicos exodo fuga sueldo reembolso medicare' },
-  { u: '/necesito', t: '¿Cuál es tu situación?', d: 'Guías pa\' resolver lo médico en PR', k: 'necesito ayuda situacion guia resolver como hago' },
-  { u: '/marcador', t: 'El Marcador de la salud', d: '6 números de la salud de PR, cada uno con dueño', k: 'marcador numeros salud dueno responsable score' },
-  { u: '/espejo', t: 'El Espejo', d: 'Cómo pedimos cuentas, y cómo nos las piden a nosotros', k: 'espejo cuentas accountability metodo transparencia' },
-  { u: '/notas', t: 'Las Notas de Puerto Rico', d: 'Las metas mínimas federales, con nota y fuente', k: 'notas boletin metas federales calificacion nota' },
-  { u: '/numero-mas-nuevo', t: 'El número más nuevo que existe', d: 'El rezago de los datos en PR', k: 'numero nuevo rezago viejo desactualizado data stale' },
-  { u: '/ultima-cifra', t: 'La última buena cifra', d: 'El conteo de negocios de PR se congeló en el año pico', k: 'ultima cifra negocios conteo congelado qcew' },
-  { u: '/raras', t: 'Enfermedades raras en PR', d: 'Quién las diagnostica', k: 'raras enfermedades diagnostica genetica' },
-  { u: '/oer', t: 'El Expediente OER', d: 'El registro de enfermedades raras que prometió el gobierno', k: 'oer expediente raras registro ley 9 prometio' },
-  { u: '/atlas', t: 'Atlas de enfermedades fundadoras', d: 'Las enfermedades fundadoras boricuas', k: 'atlas fundadoras geneticas boricuas adn founder' },
-  { u: '/dossier', t: 'La población genética más valiosa', d: 'PR: el ADN más valioso y menos estudiado de EE.UU.', k: 'dossier genetica adn poblacion valiosa estudiada nih' },
-  { u: '/observatorio', t: 'Observatorio Cívico de Cabo Rojo', d: 'El pulso cívico del pueblo', k: 'observatorio civico cabo rojo pulso pueblo' },
-  { u: '/barrios', t: 'Los 9 barrios de Cabo Rojo', d: 'Mapa interactivo con lugares verificados', k: 'barrios cabo rojo mapa boqueron combate joyuda pedernales' },
-  { u: '/transicion#energia', t: 'Energía: el 3 de 10 del propio director', d: 'Lo que la AEE admitió en vista pública, y dónde está hoy', k: 'luz luma aee vista transicion 3 de 10 zar energia gao modernizacion colon apagon vegetacion pensiones' },
-  { u: '/sinfiltros/pulso', t: 'Pulso', d: 'Qué mira Puerto Rico Sin Filtros', k: 'pulso analytics que miran visitas' },
-  { u: '/cambios', t: 'Historial y roadmap', d: 'Qué cambió y qué viene', k: 'cambios roadmap historial changelog viene' },
-]
+export { BUSCAR_INDEX } from './_lib/buscar-index'
+import { BUSCAR_INDEX } from './_lib/buscar-index'
 
 // Tier 2: además de las páginas, se buscan los datos citables (/comparte) y las contradicciones —
 // la búsqueda devuelve la respuesta con su fuente, no solo el link.
