@@ -18,6 +18,7 @@ import { createClient } from '@supabase/supabase-js'
 import { createHash, createHmac, timingSafeEqual } from 'crypto'
 import { handleActivos } from './_lib/activos.js'
 import { handleBarrios } from './_lib/barrios.js'
+import { handleRentas } from './_lib/rentas.js'
 
 // Hard ceiling on every PostgREST call. Without it a stalled connection hangs the
 // await forever and Vercel kills the whole function at maxDuration — that is how 34
@@ -14183,6 +14184,7 @@ export default async function handler(req: any, res: any) {
     case 'activos': return handleActivos(req, res, { layout, escapeHtml })
     case 'barrios': return await handleBarrios(req, res, { layout, escapeHtml, supabase })
     case 'barrio': return await handleBarrios(req, res, { layout, escapeHtml, supabase })
+    case 'rentas': return await handleRentas(req, res, { layout, escapeHtml, supabase })
     case 'registro-hub': return await handleRegistroHub(req, res)
     case 'cambios': return await handleCambios(req, res)
     case 'observatorio': return await handleObservatorio(req, res)

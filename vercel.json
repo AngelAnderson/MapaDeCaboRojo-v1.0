@@ -136,6 +136,10 @@
       "destination": "/api/mapa-pages?page=barrio&b=:b"
     },
     {
+      "source": "/rentas",
+      "destination": "/api/mapa-pages?page=rentas"
+    },
+    {
       "source": "/registro",
       "destination": "/api/mapa-pages?page=registro"
     },
