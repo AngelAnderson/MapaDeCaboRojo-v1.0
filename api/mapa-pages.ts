@@ -9551,16 +9551,105 @@ ${SHARE_COPY_SCRIPT}
   PAGES.forEach(function(r){ DOCS.push({ kind: 'page', r: r, f: [[norm(r.t), 4], [norm(r.k), 3], [norm(r.d), 1]] }); });
   DATOS.forEach(function(r){ DOCS.push({ kind: 'dato', r: r, f: [[norm(r.t), 3], [norm(r.a), 1], [norm(r.s), 1]] }); });
   CONTRAS.forEach(function(r){ DOCS.push({ kind: 'contra', r: r, f: [[norm(r.t), 3], [norm(r.c), 3], [norm(r.b), 2], [norm(r.d), 1]] }); });
-  function termScore(doc, t){
-    var s = 0;
-    for (var i = 0; i < doc.f.length; i++){
-      var txt = doc.f[i][0], w = doc.f[i][1], idx = txt.indexOf(t);
-      if (idx < 0) continue;
-      s += w;
-      var prev = idx === 0 ? '' : txt.charAt(idx - 1);
-      if (idx === 0 || !/[a-z0-9]/.test(prev)) s += 1;
+  // --- Search v2 (2026-07-29) ---------------------------------------------------
+  // Antes era substring puro: "medicos" no encontraba "médico", "apagon" no encontraba
+  // /luz, y un dedazo devolvia cero. Tres capas, todas del lado del cliente:
+  //   1. stem  — se corta el plural/genero de LA BUSQUEDA, no de los documentos. Como
+  //              el stem es prefijo de la palabra completa, indexOf('medic') pega en
+  //              "medico", "medicos" y "medicina" de una. Cero costo de indice.
+  //   2. SYN   — sinonimos y como habla la gente de verdad ("apagon", "se fue la luz",
+  //              "cuanto cobra la AEE"). Mismo patron que SYNONYMS_QUICK del Veci.
+  //   3. typos — si un termino no pega en NINGUN documento, se busca la palabra mas
+  //              cercana del vocabulario a distancia 1 (2 si es larga) y se sustituye.
+  // La gente escribe frases, no keywords: "se fue la luz", "a donde se fue el dinero".
+  // Sin esto, el fallback de "cualquier termino" hacia match con 'de'/'el'/'mi' y
+  // devolvia las 54 paginas ordenadas al azar. Se botan antes de rankear.
+  var STOP = {a:1,al:1,ante:1,con:1,como:1,cual:1,cuando:1,cuanto:1,de:1,del:1,donde:1,dos:1,el:1,ella:1,ellos:1,en:1,es:1,esa:1,ese:1,eso:1,esta:1,este:1,esto:1,fue:1,ha:1,hay:1,la:1,las:1,le:1,lo:1,los:1,mas:1,me:1,mi:1,mis:1,muy:1,ni:1,no:1,nos:1,o:1,para:1,pero:1,por:1,pr:1,que:1,quien:1,se:1,si:1,sin:1,sobre:1,son:1,su:1,sus:1,te:1,tiene:1,tu:1,un:1,una:1,uno:1,y:1,ya:1,yo:1};
+  function useful(terms){
+    var keep = terms.filter(function(t){ return !STOP[t]; });
+    return keep.length ? keep : terms;   // si TODO era stopword, se busca tal cual
+  }
+  function stem(w){
+    if (w.length < 5) return w;
+    if (/ces$/.test(w)) return w.slice(0, -3) + 'z';   // luces -> luz
+    if (/[^aeiou]es$/.test(w)) return w.slice(0, -2);  // apagones -> apagon
+    if (/s$/.test(w)) w = w.slice(0, -1);              // medicos -> medico
+    if (/[oa]$/.test(w) && w.length > 5) w = w.slice(0, -1); // medico -> medic
+    return w;
+  }
+  var SYN = {
+    electricidad: 'luz', apagon: 'luz', apagones: 'luz', kilovatio: 'luz', kwh: 'luz',
+    aee: 'luz', prepa: 'luz', luma: 'luz', generador: 'luz', planta: 'luz', energia: 'luz',
+    doctor: 'medico', doctora: 'medico', especialista: 'medico', pediatra: 'medico',
+    cita: 'medico', referido: 'medico', plan: 'medico', vital: 'medico', ases: 'medico',
+    acueducto: 'agua', aaa: 'agua', salidero: 'agua', potable: 'agua', cisterna: 'agua',
+    huracan: 'fema', maria: 'fema', reconstruccion: 'fema', escombro: 'fema', cor3: 'fema',
+    alcalde: 'promesas', prometio: 'promesas', municipio: 'pueblo', ayuntamiento: 'pueblo',
+    mudarme: 'volver', irme: 'volver', regresar: 'volver', diaspora: 'volver',
+    sueldo: 'costo', salario: 'costo', caro: 'costo', gasolina: 'costo', comida: 'costo',
+    vertedero: 'basura', reciclaje: 'basura', chatarra: 'basura',
+    corrupcion: 'contradicciones', mentira: 'contradicciones', mintio: 'contradicciones',
+  };
+  function expand(t){
+    var out = [t], st = stem(t);
+    if (st !== t) out.push(st);
+    if (SYN[t]) out.push(SYN[t]);
+    if (SYN[st]) out.push(SYN[st]);
+    return out;
+  }
+  // Vocabulario pa' corregir dedazos: todas las palabras >=4 letras de todos los campos.
+  var VOCAB = (function(){
+    var seen = {};
+    DOCS.forEach(function(d){
+      d.f.forEach(function(pair){
+        pair[0].split(/[^a-z0-9]+/).forEach(function(w){ if (w.length >= 4) seen[w] = 1; });
+      });
+    });
+    return Object.keys(seen);
+  })();
+  function ed(a, b, max){
+    if (Math.abs(a.length - b.length) > max) return max + 1;
+    var prev = [], cur = [], i, j;
+    for (j = 0; j <= b.length; j++) prev[j] = j;
+    for (i = 1; i <= a.length; i++){
+      cur[0] = i; var best = i;
+      for (j = 1; j <= b.length; j++){
+        cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a.charAt(i - 1) === b.charAt(j - 1) ? 0 : 1));
+        if (cur[j] < best) best = cur[j];
+      }
+      if (best > max) return max + 1;
+      prev = cur.slice();
     }
-    return s;
+    return prev[b.length];
+  }
+  function fixTypo(t){
+    if (t.length < 4) return null;
+    var max = t.length >= 7 ? 2 : 1, best = null, bd = max + 1;
+    for (var i = 0; i < VOCAB.length; i++){
+      var d = ed(t, VOCAB[i], max);
+      if (d < bd) { bd = d; best = VOCAB[i]; if (d === 1) break; }
+    }
+    return bd <= max ? best : null;
+  }
+  // Un termino pega si CUALQUIERA de sus variantes (original, stem, sinonimo) pega.
+  function termScore(doc, t){
+    var vars = doc._v ? doc._v[t] : null;
+    if (!vars) { vars = expand(t); doc._v = doc._v || {}; doc._v[t] = vars; }
+    var best = 0;
+    for (var k = 0; k < vars.length; k++){
+      var s = 0, v = vars[k];
+      for (var i = 0; i < doc.f.length; i++){
+        var txt = doc.f[i][0], w = doc.f[i][1], idx = txt.indexOf(v);
+        if (idx < 0) continue;
+        s += w;
+        var prev = idx === 0 ? '' : txt.charAt(idx - 1);
+        if (idx === 0 || !/[a-z0-9]/.test(prev)) s += 1;
+      }
+      // La palabra tal cual vale mas que el stem, y el stem mas que el sinonimo.
+      if (s > 0) s = s - k * 0.5;
+      if (s > best) best = s;
+    }
+    return best;
   }
   function rank(terms, requireAll){
     var out = [];
@@ -9619,8 +9708,19 @@ ${SHARE_COPY_SCRIPT}
     var terms = norm(q.value).split(/\\s+/).filter(Boolean);
     near.classList.add('hidden');
     if (!terms.length) { out.innerHTML = PAGES.map(cardPage).join(''); empty.classList.add('hidden'); return; }
+    terms = useful(terms);
     var hits = rank(terms, true), fuzzy = false;
     if (!hits.length && terms.length > 1) { hits = rank(terms, false); fuzzy = hits.length > 0; }
+    // Ultimo recurso: si no pego nada, quizas fue un dedazo. Se corrige cada termino
+    // contra el vocabulario y se reintenta una sola vez.
+    if (!hits.length) {
+      var fixed = terms.map(function(t){ return fixTypo(t) || t; });
+      if (fixed.join(' ') !== terms.join(' ')) {
+        hits = rank(fixed, true);
+        if (!hits.length && fixed.length > 1) hits = rank(fixed, false);
+        fuzzy = hits.length > 0;
+      }
+    }
     renderRanked(hits);
     near.classList.toggle('hidden', !fuzzy);
     empty.classList.toggle('hidden', hits.length > 0);
