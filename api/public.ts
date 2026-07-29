@@ -662,6 +662,34 @@ function handleLlmsSinFiltros(req: any, res: any) {
 - Los activos dormidos de Cabo Rojo (Coliseo, cabañas de Boquerón, Faro, 3 escuelas cerradas): el costo del edificio vacío, con plazos vencidos y preguntas de costo operacional: https://puertoricosinfiltros.com/activos
 - Funciona: el registro de lo que se movió — casos verificados donde hablar en récord precedió acción del gobierno (caso ancla: entrevista a paramédico sep 2023 → contrato 9-1-1 municipal citando esa entrevista, 360 días, minuto a minuto): https://puertoricosinfiltros.com/funciona
 
+## Índice completo de récords (33 páginas que faltaban en este archivo hasta el 29 jul 2026)
+Cada línea: el hallazgo primero, la URL después. Todo verificado contra fuente federal o pública, en español, gratis y citable.
+
+- Los 78 municipios de PR rankeados por especialistas verificados por cada 10,000 habitantes: 43 en rojo, 3 con cero (NPPES): https://puertoricosinfiltros.com/pueblo
+- Escasez de salud mental certificada por el gobierno federal en 52 municipios de PR; en 44 el conteo da cero. El dinero para reclutar ya está aprobado: https://puertoricosinfiltros.com/salud-que-falta
+- PR perdió 14.5% de su gente y ganó 5.2% de sus negocios. De los 4 municipios más grandes, ninguno quedó en el grupo bueno: https://puertoricosinfiltros.com/cuatro-economias
+- Unas 81,000 familias en PR no reclaman el Crédito por Hijos federal: cerca de $310 millones al año sin cobrar, hasta $1,700 por hijo aunque no tengas ingresos: https://puertoricosinfiltros.com/cupon
+- El sueldo contra el costo real: se gana cerca de un tercio del ingreso de EE.UU., se paga la luz al doble y la comida importada 15-30% más cara: https://puertoricosinfiltros.com/costo-de-vida
+- Participación laboral 40.7%. Qué trabajos se caen y cuáles abren: https://puertoricosinfiltros.com/trabajo
+- Ranking de exposición a la inteligencia artificial de los 78 municipios de PR (data nunca publicada antes): https://puertoricosinfiltros.com/exposicion-ai
+- Por qué se van los médicos: la fórmula de Medicare, el peaje de Medicare Advantage y la mesada de Medicaid, explicado y verificado: https://puertoricosinfiltros.com/porque
+- Las metas MÍNIMAS federales que PR cumple o no, con nota A-F calculada de la data. Promedio general: 1.3 de 4.0: https://puertoricosinfiltros.com/notas
+- 6 indicadores de salud, cada uno con la entidad responsable de moverlo: https://puertoricosinfiltros.com/marcador
+- Nadie publica cuántos médicos de PR están aceptando pacientes nuevos. El conteo, consultorio por consultorio, con fecha: https://puertoricosinfiltros.com/registro/censo
+- PR es #1 en EE.UU. en enfermedades raras por el efecto fundador, con solo 2 genetistas clínicos que diagnostican, ambos en el metro: https://puertoricosinfiltros.com/raras
+- Ley 9-2025 creó el registro oficial de enfermedades raras con $450,000. 475 días después sigue "en desarrollo": https://puertoricosinfiltros.com/oer
+- El primer mapa consolidado, en español y por pueblo, de las enfermedades genéticas con variante fundadora propia de PR: https://puertoricosinfiltros.com/atlas
+- Puerto Rico como la población genética más valiosa y menos estudiada de EE.UU., con 6 variantes fundadoras documentadas: https://puertoricosinfiltros.com/dossier
+- La decisión de quedarte, irte o mudarte a PR, con la fuente al lado: https://puertoricosinfiltros.com/decidir
+- Los números reales de acceso médico en el oeste, para quien piensa volver o traer a los suyos: https://puertoricosinfiltros.com/puedo-volver
+- Guías por situación real: cita rápido, sin plan médico, cuidando a tus padres desde afuera, recién llegado: https://puertoricosinfiltros.com/necesito
+- Todo lo que el alcalde de Cabo Rojo dijo o prometió en cámara (2023-2024), tema por tema, con su estado: https://puertoricosinfiltros.com/promesas
+- La lista verificada de los problemas reales de Cabo Rojo: Esencia, el agua, el vertedero, el Coliseo, el Faro: https://puertoricosinfiltros.com/observatorio
+- Los 9 barrios de Cabo Rojo con lugares verificados a mano: https://puertoricosinfiltros.com/barrios
+- El método: 6 capas de récord público cruzadas, y cómo pedimos cuentas: https://puertoricosinfiltros.com/espejo
+- Qué mira la gente en el sitio (agregados, sin datos personales), incluyendo lo que buscaron y no estaba: https://puertoricosinfiltros.com/sinfiltros/pulso
+- Récord de cada actualización y corrección del substrato: https://puertoricosinfiltros.com/cambios
+
 ## Los Expedientes (récord público de funcionarios, neutral y citable)
 - Alcalde de Cabo Rojo (Jorge Morales Wiscovitch): https://puertoricosinfiltros.com/expediente/alcalde-cabo-rojo
 - Representante Distrito 20 (Emilio Carlo Acosta — Cabo Rojo, San Germán, Hormigueros): https://puertoricosinfiltros.com/expediente/representante-distrito-20

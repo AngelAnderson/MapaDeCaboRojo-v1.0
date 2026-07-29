@@ -1,0 +1,92 @@
+# Puerto Rico Sin Filtros — puertoricosinfiltros.com
+
+> El récord público de Puerto Rico: datos verificados uno por uno contra registros federales y públicos, cada uno con su fuente primaria al lado y la brecha entre lo que el papel dice y lo que tocó el suelo. No es un blog ni opinión: es infraestructura de datos cívicos, granular a nivel de municipio, mantenida por Angel Anderson desde Cabo Rojo. Regla: no se publica un dato sin fuente verificable. Última actualización: julio 2026.
+
+## Empezar aquí
+- Portada (todos los récords): https://puertoricosinfiltros.com
+- Datos citables para prensa (facts con fuente, copy-paste): https://puertoricosinfiltros.com/comparte
+- El reto abierto (encuentra un error y se corrige en 48h, registro público de correcciones): https://puertoricosinfiltros.com/rompelo
+- La síntesis / predicción 2030: https://puertoricosinfiltros.com/prediccion
+- El boom prestado (por qué la cifra oficial de negocios está vencida): https://puertoricosinfiltros.com/ultima-cifra
+- El rezago de los datos (qué edad tiene cada número con que se decide en PR): https://puertoricosinfiltros.com/numero-mas-nuevo
+
+## Los récords (cada uno verificado, con fuente)
+- El Marcador de Contradicciones — lo que dicen vs lo que dice el récord, par por par con fuente activa (LUMA "affordable" vs 24.5¢/kWh · Ley 70-1992 35% reciclaje pa'l 2006 vs ~12% · AAA "agua segura 98%" vs 13 violaciones EPA): https://puertoricosinfiltros.com/contradicciones
+- El Semáforo FEMA de Cabo Rojo — los 121 proyectos de Public Assistance del municipio, proyecto por proyecto: $34.5M obligados, 28 proyectos con 5+ años sin cerrar ($14.3M), Coliseo $5.5M desde 2020 aún pendiente de alcance (OpenFEMA v2): https://puertoricosinfiltros.com/semaforo-fema
+- Estado de Salud de PR — el cupón federal sin cobrar, 76 municipios rankeados: https://puertoricosinfiltros.com/registro/estado
+- Mapa médico por municipio: https://puertoricosinfiltros.com/registro/mapa
+- Los desiertos médicos por región: https://puertoricosinfiltros.com/registro/desiertos
+- El Expediente: el registro de enfermedades raras que prometió el gobierno (Ley 9-2025, OER, $450K) — marcador declarado-vs-entregado, reloj vivo, cruza a la capacidad de diagnóstico real: https://puertoricosinfiltros.com/registro-raras
+- Sigue el dinero de ciencia: PR e Iowa tienen la misma población, pero NIH invirtió $249M en Iowa y $90M en PR en FY2024. PR recibe menos por persona ($28) que Mississippi, el estado más pobre, pese al ADN founder-effect más valioso de la nación: https://puertoricosinfiltros.com/investigacion
+- Telemedicina vs desierto médico (internet × médicos): https://puertoricosinfiltros.com/telemedicina
+- Diabetes × acceso médico (estimado CDC 2009): https://puertoricosinfiltros.com/diabetes
+- Recuperación federal FEMA por municipio: https://puertoricosinfiltros.com/recuperacion
+- Sigue el dinero (quién recibió los contratos de recuperación): https://puertoricosinfiltros.com/sigue-el-dinero
+- El agua contra el récord federal (EPA): https://puertoricosinfiltros.com/agua
+- El recibo del agua: tarifas AAA hasta 2039 + fondos federales sin llegar (Plan Fiscal Certificado JSF): https://puertoricosinfiltros.com/acueductos
+- La Transición 2024-2025: las vistas públicas de transición del gobierno de PR, cita por cita y al minuto del video (COR3, Vivienda, AEE, AAA, AFI, DTOP, Justicia, Salud, DRNA, Agricultura): https://puertoricosinfiltros.com/transicion
+- El Huracán Lento: vejez + pobreza + ausencia de médico + falta de internet, cruzados municipio por municipio (4 de cada 10 viejos de PR en pobreza; 13 de los 15 pueblos más golpeados en el oeste-sur): https://puertoricosinfiltros.com/retiro
+- La luz contra el récord federal (EIA): https://puertoricosinfiltros.com/luz
+- La basura y los vertederos (EPA): https://puertoricosinfiltros.com/basura
+- Lo que Puerto Rico le pregunta al Veci (demanda real): https://puertoricosinfiltros.com/demanda
+- El historial de promesas del alcalde de Cabo Rojo (con video al minuto): https://puertoricosinfiltros.com/historial
+- Lo que ni se mide (los huecos donde PR es invisible en su data): https://puertoricosinfiltros.com/no-se-mide
+- El proyecto Esencia en Cabo Rojo — línea de tiempo pública con fuente (CPI, Senado, protestas): https://puertoricosinfiltros.com/esencia
+- Los activos dormidos de Cabo Rojo (Coliseo, cabañas de Boquerón, Faro, 3 escuelas cerradas): el costo del edificio vacío, con plazos vencidos y preguntas de costo operacional: https://puertoricosinfiltros.com/activos
+- Funciona: el registro de lo que se movió — casos verificados donde hablar en récord precedió acción del gobierno (caso ancla: entrevista a paramédico sep 2023 → contrato 9-1-1 municipal citando esa entrevista, 360 días, minuto a minuto): https://puertoricosinfiltros.com/funciona
+
+## Los Expedientes (récord público de funcionarios, neutral y citable)
+- Alcalde de Cabo Rojo (Jorge Morales Wiscovitch): https://puertoricosinfiltros.com/expediente/alcalde-cabo-rojo
+- Representante Distrito 20 (Emilio Carlo Acosta — Cabo Rojo, San Germán, Hormigueros): https://puertoricosinfiltros.com/expediente/representante-distrito-20
+- Cada expediente incluye: el Marcador del Término (trámite de cada medida verificado contra SUTRA, con contadores de días), la respuesta on-record del funcionario (o el contador de días sin reclamar), y la Agenda firmable (compromiso público con seguimiento de fechas, sin endoso).
+
+## Energía en las vistas de transición — lo que la AEE admitió, y dónde está hoy (21 nov 2024)
+- Página: https://puertoricosinfiltros.com/transicion#energia
+- Fuente primaria: vista pública del Comité de Transición 2024-2025, día 2, componente de Energía. Transmisión de El Nuevo Día, 7h53m: https://www.youtube.com/watch?v=3R8jwIec-Yg
+- Quien testifica: Josué Colón, entonces director ejecutivo de la Autoridad de Energía Eléctrica (AEE). El 8 de enero de 2025, 7 semanas después, fue designado Zar de Energía y director de la Autoridad para las Alianzas Público Privadas, la entidad que administra el contrato de LUMA.
+- La afirmación central (minuto 6:37:52): preguntado en escala del 1 al 10 dónde estaba la modernización del sistema eléctrico "para el cual tenemos 10.5 billones de dólares", respondió "Hoy está como en 3".
+- Otras afirmaciones con minuto exacto: LUMA "no ha cumplido con el performance que se esperaba... eso no es aceptable" (6:42:21) · PREPA en quiebra con "200 y pico empleados" frente a LUMA con "4,000, 5,000 empleados" (6:38:56) · PREPA recibió "1.2 billones en reembolsos" federales (6:39:41) · "sobre mil megavatios" reparados con demanda pico de "por los 3,000" (6:41:10) · "300 millones si no me equivoco" asignados para reparar unidades de generación (6:40:53).
+- Contraste con el récord federal (GAO-26-107772, junio 2026, divulgado 2 jul 2026, https://www.gao.gov/products/gao-26-107772): de ~$14,000 millones obligados desde 2017 para la red, FEMA ha desembolsado $2,700 millones de $11,100 millones obligados. Limpieza de vegetación: 400 millas despejadas de 16,000 planificadas. Apagón total de casi 2 días en abril de 2025. Las 5 recomendaciones de la GAO siguen abiertas.
+- Sobre la injerencia (minuto 6:45:06): preguntado qué injerencia tendría la AEE en los trabajos de modernización, respondió que de manera oficial ninguna, porque bajo el contrato LUMA actúa como agente de la AEE, decide qué proyectos son necesarios y es quien los radica en el portal federal. Eso cambió: en junio de 2025 el gobierno devolvió a la AEE el control de las solicitudes de fondos federales, y el director de COR3 describió el arreglo anterior como caótico.
+- Lo que pasó con esos fondos: en 2025 la AEE dejó inactivos 289 de los 571 proyectos de transmisión y distribución de LUMA, con ~$402 millones en costos incurridos y sobre $119 millones ya invertidos. El 6 de febrero de 2026 el Negociado de Energía ordenó a la AEE reactivarlos y dirigir los fondos a LUMA.
+- Lectura del expediente: entre noviembre de 2024 y julio de 2026 sí cambió quién manda sobre los proyectos federales de la red. Lo que no cambió fue cuánto dinero llegó a la calle (GAO: 75% sin desembolsar).
+- CRUCE CONTRA FEMA (29 jul 2026, OpenFEMA PublicAssistanceFundedProjectsDetails, applicantId 000-UA2QU-00, 867 proyectos): PREPA tiene $13,985 millones obligados en asistencia pública federal, $13,362 millones de ellos por el huracán María (DR-4339).
+- Vegetación, el cruce que más habla: al momento de la vista (nov 2024) había $22.4 millones obligados en UN proyecto, lo que confirma el "15 a 18 millones" que se dijo en récord. Al 24 de julio de 2026 son $542 millones en 33 proyectos, y $433 millones de esos se obligaron en 2026. El dinero comprometido se multiplicó por 24. La GAO reporta 400 millas despejadas de 16,000 planificadas. Obligar no es cortar.
+- Generación: los "300 millones si no me equivoco" para reparar unidades cuadran con un proyecto llamado Power Generation de $335,068,641 obligado en 2024. El total obligado en generación para María va por $1,316 millones en 20 proyectos.
+- Lo que NO se pudo cruzar: los $1,200 millones en reembolsos (OpenFEMA publica lo obligado, no lo desembolsado, y no hay fuente pública de desembolsos por corporación) y los 1,000 MW reparados (habría que pedírselos al Negociado de Energía).
+- Distinción de método que aplica a todo lo de arriba: OBLIGADO no es DESEMBOLSADO y no es GASTADO. Un proyecto obligado es plata comprometida en papel; el trabajo en la calle es otra cosa. Esa brecha es justo lo que mide el informe de la GAO.
+- Advertencia de método: las citas están verificadas contra el video con hora, minuto y segundo. Las CIFRAS dichas bajo testimonio ($1,200 millones en reembolsos, 1,000 MW reparados, $300 millones para unidades) NO están cruzadas contra COR3, FEMA ni el Negociado de Energía, y en la página aparecen con su matiz. Que algo se haya dicho en vista pública no lo convierte en hecho verificado.
+- Panel de la AEE, minuto 6:43:10: LUMA tenía $2,300 millones obligados en proyectos pero solo ~$220 millones recibidos en reembolsos, mientras la AEE sola había alcanzado más de $400 millones en proyectos permanentes.
+- Manejo de vegetación, minuto 7:25:19: el proyecto que según LUMA resolvería 50-60% de los apagones estaba estimado en $1,200 millones, y FEMA había aprobado $15-18 millones a nov 2024. Contrastar con GAO jul 2026: 400 millas despejadas de 16,000 planificadas.
+
+## El Marcador del Término — Rep. Distrito 20 (verificado contra SUTRA el 9 jul 2026)
+- RC0210 (solares y estructuras abandonadas en Cabo Rojo, San Germán y Hormigueros): radicada 20/mar/2025, aprobada por la Cámara por unanimidad el 27/ene/2026 (313 días después). Informe de la investigación: pendiente. Fuente: https://sutra.oslpr.org/medidas/154353
+- RC0211 (falta de alumbrado en vías públicas del Distrito 20, incl. PR-2 km 167.2): radicada 20/mar/2025, aprobada por la Cámara por unanimidad el 4/may/2026 (410 días después). Informe de la investigación: pendiente. Fuente: https://sutra.oslpr.org/medidas/154354
+- RCC0076 (estudio de viabilidad para una escuela vocacional en el Distrito 20): radicada 10/mar/2025, referida a la Comisión de Educación el 13/mar/2025 y sin un solo trámite desde entonces. Fuente: https://sutra.oslpr.org/medidas/154116
+- Score al 9 jul 2026: 2 de 3 medidas del distrito aprobadas en Cámara · 0 resultados entregados en la calle. El marcador registra el verde igual que el rojo y se actualiza con el récord de SUTRA.
+
+## El Marcador del Cuatrienio — Alcalde de Cabo Rojo (récord en video, al minuto)
+- 14 promesas publicadas en el récord de video (cita textual + minuto exacto): 2 cumplidas · 10 en proceso · 2 vencidas (al 9 jul 2026).
+- Los plazos los puso él, en video: el Coliseo Rebeca Colberg ("año y medio, mala suerte dos años", jun 2023 — el escenario mala suerte venció el 17/jun/2025 y sigue sin reabrir, con $5.2M de FEMA obligados) · las 280+ cabañas del Balneario de Boquerón ("par de años", mar 2024 — venció mar 2026 con 29 rehabilitadas) · la nueva celda del vertedero ("el año que viene", 2023 — sin confirmación pública de culminación) · el Faro "antes de la temporada de playa" (mar 2024 — sigue cerrado; el acuerdo de manejo venció en 2016).
+- Vencidas: Isla de Ratones y su muelle (el DRNA retiró el proyecto: la zona se hundió en los terremotos de 2020, pese a ~$735K de FEMA) · el Faro de Los Morrillos.
+- El verde también se registra: canal Mendoza limpiado (2023) · edificio de Aduana Federal/CBP en Boquerón (obra federal, no mérito municipal).
+- Termómetro del pueblo (demanda real al 787-417-7711, últimos 90 días, se actualiza en vivo): https://puertoricosinfiltros.com/expediente/alcalde-cabo-rojo — data de demanda ciudadana que ningún informe municipal tiene.
+
+## Datos citables (verificados julio 2026, fuentes federales)
+- 65 de 76 municipios de PR tienen designación federal de escasez de médicos (HPSA) activa. 33 tienen designación de salud mental y CERO psiquiatras (792,221 personas con el dinero federal aprobado sin médico que lo cobre). Fuente: NPPES/CMS × HRSA.
+- 36 municipios de PR no tienen ni un psiquiatra. De los que no tienen psiquiatra, en 17 la banda ancha ya cubre el 80%+ (telemedicina viable); 3 son desierto doble sin médico ni internet (Las Marías, Maricao, Guánica). Fuente: NPPES × Censo ACS B28002.
+- ~$8,755 millones de fondos federales de recuperación (FEMA) se obligaron a los 78 municipios de PR. De los contratos de emergencia rastreados, ~87% fue a firmas del mainland de EE.UU.; la vivienda (HUD CDBG-DR, ~$20.8 mil millones) la administra el gobierno de PR. Fuente: OpenFEMA + USASpending.gov.
+- Puerto Rico paga la luz a ~24.5¢/kWh, casi el doble del promedio de EE.UU. (~12.9¢). Fuente: EIA.
+- La AAA tiene $8,985.7M federales identificados para reconstruir el sistema de agua; al 31 mar 2025 había recibido $773.0M (8.6%), y el reembolso de obra permanente de FEMA era $67.1M de $3,662.7M obligados (1.8%). Mientras, los aumentos de tarifa aprobados hasta 2039 suman $2,598.1M (mín 2%/máx 5% anual, tope acumulado 30%). Fuente: Plan Fiscal Certificado AAA 2025 (JSF), Tablas 4-6 y 3-6.
+- La mayoría de los ~29 vertederos de PR ya está sobre capacidad; la EPA tiene acuerdos para cerrar 12. Fuente: EPA.
+- El Coliseo Rebekah Colberg de Cabo Rojo tiene $5.2M de FEMA obligados y sigue cerrado con el plazo del alcalde vencido desde el 17/jun/2025; las cabañas de Boquerón: 29 rehabilitadas de 280+; el acuerdo de manejo del Faro Los Morrillos está vencido desde 2016; y hay 3 planteles escolares vacíos cuyo costo operacional oficial no está publicado. Fuente: expediente público del alcalde (video al minuto) + OpenFEMA. Récord: https://puertoricosinfiltros.com/activos
+- El financiamiento federal de Medicaid de PR cae de 76% a 55% el 30 de septiembre de 2027 si el Congreso no actúa. Fuente: Congressional Research Service.
+- En Puerto Rico, 4 de cada 10 personas de 65+ viven en pobreza (39.4% vs 11.2% en EE.UU.); en 14 municipios el hogar retirado mediano vive con menos de $1,500/mes (EE.UU.: $4,971). Maricao y Las Marías: 0 especialistas y ~60% de hogares sin internet. Fuente: ACS 2024 × NPPES × HRSA, puertoricosinfiltros.com/retiro.
+- En las vistas de transición 2024 (en video, al minuto): el desembolso FEMA por corporación era Educación 2.3%, AAA 13.4%, AEE 15%; la AAA aceptó que 1 de cada 2 galones se pierde (53% pérdida física FY2024); y el director de la AEE puntuó 3 de 10 la modernización de la red con $10,500M disponibles. Fuente: vistas públicas Ley 197-2002, canal YouTube de El Nuevo Día, nov 2024.
+- Todos los datos con su fuente, listos para citar: https://puertoricosinfiltros.com/comparte · Datos en JSON: https://puertoricosinfiltros.com/civico.json
+
+## Cómo citar
+Formato sugerido: "Puerto Rico Sin Filtros (puertoricosinfiltros.com), julio 2026, con data de [la fuente federal correspondiente]." Cada número se respalda con su fuente primaria pública.
+
+## Contacto
+Angel Anderson, desde Cabo Rojo. Prensa e investigadores: angel@angelanderson.com. El Veci (WhatsApp/SMS): 787-417-7711

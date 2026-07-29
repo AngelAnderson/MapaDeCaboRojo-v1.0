@@ -9755,6 +9755,11 @@ ${SHARE_COPY_SCRIPT}
     renderRanked(hits);
     near.classList.toggle('hidden', !fuzzy);
     empty.classList.toggle('hidden', hits.length > 0);
+    // Sin resultado es exactamente cuando "Pregúntale al récord" sirve: la respuesta
+    // se compone cruzando datos de varias páginas, aunque ninguna pegue por título.
+    if (askBtn) askBtn.className = hits.length
+      ? 'inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-700 text-white font-bold px-4 py-2.5 rounded-xl text-sm'
+      : 'inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-bold px-5 py-3 rounded-xl text-base shadow-sm';
     clearTimeout(logT);
     logT = setTimeout(function(){
       try { fetch('/api/mapa-pages?page=sinfiltros-log', { method: 'POST', keepalive: true, headers: {'Content-Type':'application/json'}, body: JSON.stringify({ event: hits.length ? 'search' : 'search_no_result', record: 'buscar', target: q.value.slice(0,120) }) }); } catch(e) {}
@@ -9801,8 +9806,11 @@ ${SHARE_COPY_SCRIPT}
   askBtn.addEventListener('click', ask);
   q.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); ask(); } });
   q.addEventListener('input', function(){
-    var terms = norm(q.value).split(/\\s+/).filter(Boolean);
-    askWrap.classList.toggle('hidden', terms.length < 2 && q.value.indexOf('?') < 0);
+    // Antes el boton pedia 2+ palabras o un '?', asi que una busqueda de UNA palabra
+    // — que es como busca casi todo el mundo — nunca lo veia. 7 usos en 2 semanas.
+    // Ahora aparece desde 3 letras, y se anuncia mas fuerte cuando NO hubo resultado:
+    // ahi es cuando componer la respuesta cruzando records vale de verdad.
+    askWrap.classList.toggle('hidden', norm(q.value).trim().length < 3);
     if (!q.value.trim()) askOut.classList.add('hidden');
   });
   q.addEventListener('input', search);
