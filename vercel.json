@@ -28,6 +28,10 @@
     {
       "path": "/api/cron?job=registro-qc",
       "schedule": "7 8 1 * *"
+    },
+    {
+      "path": "/api/cron?job=rutas",
+      "schedule": "0 9 * * *"
     }
   ],
   "rewrites": [

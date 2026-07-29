@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenAI } from "@google/genai";
+import { BUSCAR_INDEX } from './mapa-pages';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -32,8 +33,10 @@ export default async function handler(req: any, res: any) {
         return await runRegistroQc(res);
       case 'salud-atencion':
         return await runSaludAtencion(res);
+      case 'rutas':
+        return await runRutas(req, res);
       default:
-        return res.status(400).json({ error: `Unknown job: ${job}. Use ?job=briefing|maintenance|vibe|alertas|dato|hpsa-refresh|registro-qc|salud-atencion` });
+        return res.status(400).json({ error: `Unknown job: ${job}. Use ?job=briefing|maintenance|vibe|alertas|dato|hpsa-refresh|registro-qc|salud-atencion|rutas` });
     }
   } catch (error: any) {
     console.error(`Cron ${job} failed:`, error.message);
@@ -544,4 +547,81 @@ async function runDatoDelDia(res: any) {
   });
   if (error) return res.status(200).json({ success: false, error: error.message });
   return res.status(200).json({ success: true, run_date: runDate, dato_index: dayOfYear % DATOS_DEL_DIA.length, url: pick.u });
+}
+
+// --- Rutas vivas: guardarraíl contra el bug de clase que costó 12 records ---
+// PRSF anunciaba 33 records en BUSCAR_INDEX y 12 no abrían (redirect a home por falta
+// de rewrite). Sobrevivió meses porque nada miraba. Esto mira. Lee BUSCAR_INDEX, así que
+// un record nuevo entra al chequeo solo — no hay segunda lista que se desincronice.
+// Callado por defecto: solo escribe cuando algo se rompe. Alerta por delta, no digest.
+const RUTAS_CONOCIDAS: Record<string, string> = {
+  '/diabetes': 'consolidado a /registro (decisión de Angel)',
+  '/telemedicina': 'consolidado a /registro (decisión de Angel)',
+  '/demanda': 'sin handler en PRSF; el radar vive en mapadecaborojo.com/demanda — decisión de arquitectura pendiente',
+};
+// Marca del SPA: si una ruta de PRSF devuelve 200 pero sirve esto, es soft-404 con el sitio
+// equivocado. Ese fue el modo de fallo silencioso de /cuatro-economias antes del rewrite.
+const SPA_MARK = 'El Veci — El Copiloto del Pueblo';
+
+async function runRutas(req: any, res: any) {
+  const BASE = 'https://puertoricosinfiltros.com';
+  const dryRun = req?.query?.dry_run === '1';
+  const rutas = BUSCAR_INDEX.map((x: any) => x.u).filter((u: string) => typeof u === 'string' && u.startsWith('/'));
+
+  type Chk = { u: string; status: number; soft: boolean; to: string };
+  const checks: Chk[] = [];
+  for (let i = 0; i < rutas.length; i += 6) {
+    const lote = await Promise.all(rutas.slice(i, i + 6).map(async (u: string): Promise<Chk> => {
+      try {
+        const r = await fetch(BASE + u, { redirect: 'manual', headers: { 'User-Agent': 'prsf-rutas-canary' } });
+        let soft = false;
+        if (r.status === 200) {
+          const body = await r.text().catch(() => '');
+          soft = body.includes(SPA_MARK);
+        }
+        return { u, status: r.status, soft, to: r.headers.get('location') || '' };
+      } catch (e: any) {
+        return { u, status: 0, soft: false, to: e?.message || 'fetch error' };
+      }
+    }));
+    checks.push(...lote);
+  }
+
+  const rotas = checks.filter(c => (c.status !== 200 || c.soft) && !(c.u in RUTAS_CONOCIDAS));
+  const conocidas = checks.filter(c => (c.status !== 200 || c.soft) && (c.u in RUTAS_CONOCIDAS));
+  const resumen = { total: checks.length, ok: checks.filter(c => c.status === 200 && !c.soft).length, rotas: rotas.length, conocidas: conocidas.length };
+
+  // Silencio cuando todo está bien. Solo escribe si algo se rompió de verdad.
+  if (rotas.length && !dryRun) {
+    const RESEND = process.env.RESEND_API_KEY || '';
+    if (RESEND) {
+      const fila = (c: Chk) => `<li style="margin:6px 0"><code>${escH(c.u)}</code> — ${c.soft ? '<strong>200 pero sirve el sitio equivocado</strong> (soft-404)' : `<strong>HTTP ${c.status}</strong>${c.to ? ` → ${escH(c.to)}` : ''}`}</li>`;
+      try {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${RESEND}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: 'Puerto Rico Sin Filtros <newsletter@mapadecaborojo.com>',
+            to: 'angel@angelanderson.com',
+            reply_to: 'angel@angelanderson.com',
+            subject: `🚨 ${rotas.length} récord${rotas.length === 1 ? '' : 's'} de PRSF no abre${rotas.length === 1 ? '' : 'n'}`,
+            html: `<div style="font-family:sans-serif;max-width:560px;margin:0 auto;color:#0f172a">
+<p>PRSF anuncia ${resumen.total} récords. ${rotas.length} no abre${rotas.length === 1 ? '' : 'n'} ahora mismo:</p>
+<ul style="padding-left:18px">${rotas.map(fila).join('')}</ul>
+<p style="font-size:14px;color:#475569">Casi siempre es lo mismo: el handler existe y el <code>case</code> está en el switch, pero falta el rewrite en <code>vercel.json</code>, o hay un redirect a <code>/</code> que lo tapa. Un récord que no abre no se puede citar, y a Google se le está diciendo que la URL ya no existe.</p>
+${conocidas.length ? `<p style="font-size:13px;color:#64748b">Conocidas y aceptadas (no cuentan): ${conocidas.map(c => `<code>${escH(c.u)}</code> — ${escH(RUTAS_CONOCIDAS[c.u])}`).join('; ')}</p>` : ''}
+<p style="font-size:13px;color:#64748b">cron rutas · lee BUSCAR_INDEX, no una lista aparte<br>- Angel | Menos revolú, más sistema, mejor vida.</p>
+</div>`,
+          }),
+        });
+      } catch { /* best-effort */ }
+    }
+  }
+
+  return res.status(200).json({
+    success: true, dry_run: dryRun, ...resumen,
+    rotas: rotas.map(c => ({ ruta: c.u, status: c.status, soft_404: c.soft, to: c.to })),
+    conocidas: conocidas.map(c => ({ ruta: c.u, status: c.status, razon: RUTAS_CONOCIDAS[c.u] })),
+    email: rotas.length && !dryRun ? 'enviado si hay RESEND_API_KEY' : 'no (silencio)',
+  });
 }
