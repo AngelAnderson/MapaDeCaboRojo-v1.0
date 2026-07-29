@@ -5378,6 +5378,18 @@ async function handleRegistroPorque(req: any, res: any) {
 
 <p><i>Por Angel Anderson · registromedicopr.com · julio 2026</i></p>
 
+<div class="not-prose my-5 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+<p class="text-xs uppercase tracking-widest text-teal-300 font-bold m-0">Si solo lees esto</p>
+<p class="text-lg sm:text-xl font-black mt-2 leading-snug m-0">A Puerto Rico le pagan menos que a cualquier estado por atender al mismo enfermo. No es un error. Es una fórmula, y es legal.</p>
+<ul class="text-sm text-slate-300 mt-3 mb-0 pl-5 list-disc space-y-1.5">
+<li>Por eso <strong class="text-white">la hora del médico vale menos aquí cada año</strong>, mientras la renta, la nómina y el seguro le suben. No se van por avaricia. Se van por resta.</li>
+<li>En 2009 había <strong class="text-white">14,500 médicos</strong>. Para 2020 quedaban <strong class="text-white">9,000</strong>. Hoy hay <strong class="text-white">3 pueblos</strong> sin un solo especialista de ninguna clase.</li>
+<li>No se ha arreglado porque <strong class="text-white">no hay nada que arreglar en el sentido legal</strong>: el sistema está haciendo justo lo que la ley dice. Eso está en el §5.</li>
+<li><strong class="text-white">Sí hay salida, y parte no depende de Washington.</strong> Está en el §7, con nombre y apellido.</li>
+</ul>
+<p class="text-xs text-slate-400 mt-3 m-0">Todo lo de abajo lleva su número, su fecha y su fuente. Si algo no cuadra, <a href="/rompelo" class="text-teal-300 underline">rómpelo</a> y lo corregimos.</p>
+</div>
+
 <blockquote style="border-left:3px solid #0d9488;padding-left:10px;color:#334155">Pagamos los mismos impuestos de Medicare que cualquier ciudadano en Florida. Recibimos el nivel de fondos de Medicare más bajo de la nación. Esto no es opinión: cada número de este informe tiene fecha y fuente, y cualquiera puede verificarlos. No es misterio, es matemática de nómina.</blockquote>
 
 <hr>
@@ -5428,7 +5440,7 @@ async function handleRegistroPorque(req: any, res: any) {
 
 <h2>§1 · La Fórmula (cómo empezó)</h2>
 
-<p><b>Versión abuela:</b> <i>Washington decidió que atender a un enfermo en Puerto Rico &quot;vale menos&quot; que atender al mismo enfermo en Ohio. Lo decidió una fórmula, no un debate.</i></p>
+<p><b>Traducido:</b> <i>Washington decidió que atender a un enfermo en Puerto Rico &quot;vale menos&quot; que atender al mismo enfermo en Ohio. Lo decidió una fórmula, no un debate.</i></p>
 
 <p>Medicare no paga igual en todos lados. Ajusta sus tarifas por área usando unos índices (los &quot;GPCI&quot;) que miden &quot;lo que cuesta practicar medicina&quot; en cada lugar: salarios, renta, seguros. Suena justo. La trampa: <b>la fórmula usa los salarios locales como termómetro del costo.</b> Como en PR los salarios son bajos, la fórmula concluye &quot;allá es barato practicar&quot; y paga bajo. Y como paga bajo, los salarios se quedan bajos. Un perro mordiéndose la cola, con sello federal. Puerto Rico tuvo los tres índices <b>más bajos de toda la nación</b>.</p>
 
@@ -5438,7 +5450,7 @@ async function handleRegistroPorque(req: any, res: any) {
 
 <h2>§2 · El Peaje (dónde vive el 40% hoy)</h2>
 
-<p><b>Versión abuela:</b> <i>El gobierno federal manda el dinero de tus médicos por correo. El cartero es una aseguradora. El cartero decide cuánto te llega.</i></p>
+<p><b>Traducido:</b> <i>El gobierno federal manda el dinero de tus médicos por correo. El cartero es una aseguradora. El cartero decide cuánto te llega.</i></p>
 
 <p>En Puerto Rico, <b>~94% de los beneficiarios de Medicare están en Medicare Advantage</b> — la penetración más alta de la nación (el promedio nacional es ~55%). ¿Por qué? La aseguradora sale a buscar cabezas. ¿Cómo convence a una población donde el ingreso es bajo? Premium $0 + dental + espejuelos + transporte + la tarjetita de compra. Para alguien con $900 de Seguro Social, eso es irresistible. No es que los boricuas amen los planes: es que Medicare tradicional aquí es impagable (deducibles, sin Medigap barato) y el plan regala cosas visibles.</p>
 
@@ -5452,7 +5464,7 @@ async function handleRegistroPorque(req: any, res: any) {
 
 <h2>§3 · La Mesada (Medicaid / Vital)</h2>
 
-<p><b>Versión abuela:</b> <i>A los estados, Washington les dice: &quot;de cada dólar que gastes curando a tus pobres, yo pongo la mayoría — gastes lo que gastes.&quot; A Puerto Rico le dice: &quot;toma una mesada. Cuando se acabe, se acabó — aunque la gente siga enferma.&quot;</i></p>
+<p><b>Traducido:</b> <i>A los estados, Washington les dice: &quot;de cada dólar que gastes curando a tus pobres, yo pongo la mayoría — gastes lo que gastes.&quot; A Puerto Rico le dice: &quot;toma una mesada. Cuando se acabe, se acabó — aunque la gente siga enferma.&quot;</i></p>
 
 <p>Así funciona para un estado: el gobierno federal paga un <b>porcentaje de TODO el gasto de Medicaid, sin tope</b>. El porcentaje depende de cuán pobre es el estado — mientras más pobre, más pone Washington (el máximo por ley es 83%). Misisipi, el estado más pobre, recibe ~77%.</p>
 
@@ -5467,7 +5479,7 @@ async function handleRegistroPorque(req: any, res: any) {
 
 <h2>§4 · La Compresión (por qué se van — y no es avaricia)</h2>
 
-<p><b>Versión abuela:</b> <i>Al médico le llevan 25 años pagándole lo mismo por hora, mientras la luz, la renta y la nómina le suben todos los años. Tú también te irías.</i></p>
+<p><b>Traducido:</b> <i>Al médico le llevan 25 años pagándole lo mismo por hora, mientras la luz, la renta y la nómina le suben todos los años. Tú también te irías.</i></p>
 
 <p>No es avaricia, es compresión. La tarifa base de Medicare (el &quot;conversion factor&quot;) lleva más de 20 años prácticamente congelada a nivel nacional. Entre 2001 y 2025, el pago de Medicare al médico quedó plano mientras <b>el costo de operar una práctica subió 59%</b>. Ajustado por inflación, el médico cobra hoy <b>33% MENOS</b> por el mismo procedimiento que en 2001. <i>(AMA, 2025.)</i></p>
 
@@ -5477,15 +5489,15 @@ async function handleRegistroPorque(req: any, res: any) {
 
 <h2>§5 · ¿Y esto es legal? Sí. Y por eso no se ha arreglado.</h2>
 
-<p><b>Versión abuela:</b> <i>El que reparte el dinero no nos debe nada en las elecciones. Y el Tribunal Supremo dijo que eso está bien.</i></p>
+<p><b>Traducido:</b> <i>El que reparte el dinero no nos debe nada en las elecciones. Y el Tribunal Supremo dijo que eso está bien.</i></p>
 
 <p>La pregunta que todo el mundo hace: ¿esto no es discriminación? La respuesta incómoda: <b>es desigualdad legalizada.</b> La Constitución tiene una Cláusula Territorial que le permite al Congreso tratar a los territorios distinto que a los estados, y el Tribunal Supremo lo ha sostenido — la última vez en <i>Estados Unidos v. Vaello Madero</i> (2022).</p>
 
 <p>¿Y por qué el Congreso no lo arregla, si es tan obvio? Porque un congresista de Florida que permita que le bajen Medicare a sus viejos pierde el puesto. <b>Con los viejos de PR, nadie pierde nada. No hay precio político por abandonarnos.</b> PR no tiene senadores ni voto presidencial. La única palanca que nos queda es la vergüenza pública con data indiscutible — y los mecanismos administrativos que no requieren al Congreso (ver §7). La corrección de 2017 se ganó exactamente así.</p>
 
-<h2>§6 · Los malcriaos del plan (la parte que nadie quiere decir)</h2>
+<h2>§6 · La parte que nadie quiere decir</h2>
 
-<p><b>Versión abuela:</b> <i>Al médico de aquí le enseñaron un solo negocio: facturarle al plan. Cuando el plan paga hambre, no conoce otro camino que el avión.</i></p>
+<p><b>Traducido:</b> <i>Al médico de aquí le enseñaron un solo negocio: facturarle al plan. Cuando el plan paga hambre, no conoce otro camino que el avión.</i></p>
 
 <p>Sí existen otros modelos de negocio para un médico:</p>
 
@@ -11437,9 +11449,15 @@ async function handleMarcador(req: any, res: any) {
 <p class="text-lg text-slate-600 mt-3">Denuncias sobre la falta de médicos hay muchas. Marcador con dueño no hay ninguno. Estos son <strong>6 números</strong>, cada uno con la persona o entidad a la que le toca moverlo, y la fecha desde la cual no se mueve.</p>
 
 <div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
-  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold m-0">La tesis</p>
-  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug m-0">Puerto Rico no tiene escasez de médicos. Tiene escasez de condiciones.</p>
-  <p class="text-sm text-slate-300 mt-3 m-0">El programa federal que trae médicos fue diseñado para el rural de Estados Unidos, donde lo que falta es <strong class="text-white">distancia</strong>. Aquí no falta distancia. Falta <strong class="text-white">piso</strong>. Por eso lo usamos 6 veces menos que West Virginia, y después nos dicen que no lo aprovechamos.</p>
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold m-0">Si solo lees esto</p>
+  <p class="text-xl sm:text-2xl font-black mt-2 leading-snug m-0">Puerto Rico no tiene escasez de médicos. Tiene escasez de condiciones.</p>
+  <ul class="text-sm text-slate-300 mt-3 mb-0 pl-5 list-disc space-y-1.5">
+    <li><strong class="text-white">No es que falte el dinero.</strong> Hay 7 programas federales para traer médicos aquí, y 2 de ellos en Puerto Rico están en cero.</li>
+    <li><strong class="text-white">Ninguno paga lo que duele.</strong> Le pagan la deuda de estudio al médico. Nadie le paga el sueldo. El repago se acaba en 2 años y la carrera dura 30.</li>
+    <li>El programa federal fue diseñado para el rural de Estados Unidos, donde lo que falta es <strong class="text-white">distancia</strong>. Aquí falta <strong class="text-white">piso</strong>: luz al doble, agua con violaciones, sueldos que no compiten.</li>
+    <li><strong class="text-white">Ya hay pueblos aquí que lo resolvieron.</strong> Aibonito, Naranjito, Morovis y Lares. No inventaron nada, lo trabajaron. Están en el punto 3 de "quién hace qué".</li>
+  </ul>
+  <p class="text-sm text-slate-200 mt-3 m-0">Abajo hay <strong class="text-white">6 números</strong>. Cada uno dice quién lo tiene que mover y desde cuándo nadie lo mueve.</p>
 </div>
 
 <h2>El marcador</h2>
