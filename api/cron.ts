@@ -34,8 +34,10 @@ export default async function handler(req: any, res: any) {
         return await runSaludAtencion(res);
       case 'rutas':
         return await runRutas(req, res);
+      case 'busquedas':
+        return await runBusquedas(res);
       default:
-        return res.status(400).json({ error: `Unknown job: ${job}. Use ?job=briefing|maintenance|vibe|alertas|dato|hpsa-refresh|registro-qc|salud-atencion|rutas` });
+        return res.status(400).json({ error: `Unknown job: ${job}. Use ?job=briefing|maintenance|vibe|alertas|dato|hpsa-refresh|registro-qc|salud-atencion|rutas|busquedas` });
     }
   } catch (error: any) {
     console.error(`Cron ${job} failed:`, error.message);
@@ -564,6 +566,67 @@ const SPA_MARK = 'El Veci — El Copiloto del Pueblo';
 // Respaldo si BUSCAR_INDEX no carga. Se desincroniza con el tiempo: el email lo dice
 // cuando se usa, para que se note en vez de fingir cobertura completa.
 const RUTAS_RESPALDO = ['/agua','/basura','/costo-de-vida','/cuatro-economias','/cupon','/exposicion-ai','/historial','/investigacion','/luz','/no-se-mide','/prediccion','/promesas','/recuperacion','/retiro','/rompelo','/sigue-el-dinero','/trabajo'];
+
+// Lo que PR le pregunto al record esta semana y el record no tenia. Es la unica
+// cola de trabajo del sitio que no sale de una corazonada: sale de gente que vino,
+// pregunto, y se fue con las manos vacias. Si no llega por email, nadie la mira.
+// Los eventos 'search'/'search_no_result' se empezaron a guardar el 29 jul 2026
+// (antes el whitelist de sinfiltros-log los botaba en silencio).
+async function runBusquedas(res: any) {
+  const RESEND = process.env.RESEND_API_KEY || '';
+  const desde = new Date(Date.now() - 7 * 864e5).toISOString();
+  const { data, error } = await supabase
+    .from('prsf_events').select('event,target,created_at')
+    .in('event', ['search', 'search_no_result', 'ask'])
+    .gte('created_at', desde).limit(5000);
+  if (error) return res.status(500).json({ error: error.message });
+
+  const agg: Record<string, { n: number; sin: number; ask: number }> = {};
+  for (const r of (data || [])) {
+    const k = String(r.target || '').trim().toLowerCase();
+    if (!k) continue;
+    agg[k] = agg[k] || { n: 0, sin: 0, ask: 0 };
+    agg[k].n++;
+    if (r.event === 'search_no_result') agg[k].sin++;
+    if (r.event === 'ask') agg[k].ask++;
+  }
+  const filas = Object.entries(agg).sort((a, b) => (b[1].sin - a[1].sin) || (b[1].n - a[1].n));
+  const sinRes = filas.filter(([, v]) => v.sin > 0);
+  const conRes = filas.filter(([, v]) => v.sin === 0 && v.ask === 0).slice(0, 12);
+  const preguntas = filas.filter(([, v]) => v.ask > 0).slice(0, 12);
+
+  // Semana sin busquedas = no se manda nada. Un email vacio entrena a ignorarlo.
+  if (!filas.length) return res.status(200).json({ ok: true, skipped: 'sin busquedas esta semana' });
+
+  const tabla = (t: string, rows: [string, { n: number; sin: number; ask: number }][], nota: string) => rows.length ? `
+<p style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#64748b;margin:22px 0 4px">${t}</p>
+<p style="font-size:13px;color:#64748b;margin:0 0 8px">${nota}</p>
+<table style="width:100%;border-collapse:collapse;font-size:14px">${rows.map(([k, v]) => `<tr style="border-top:1px solid #e2e8f0"><td style="padding:6px 0;color:#0f172a">${escH(k)}</td><td style="padding:6px 0;text-align:right;color:#64748b;white-space:nowrap">${v.n}${v.n > 1 ? ' veces' : ' vez'}</td></tr>`).join('')}</table>` : '';
+
+  const html = `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;color:#0f172a">
+<p style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#0f766e;margin:0">Puerto Rico Sin Filtros · últimos 7 días</p>
+<h2 style="margin:6px 0 2px;font-size:22px">Lo que te preguntaron y no tenías</h2>
+<p style="font-size:15px;color:#334155;margin:0 0 4px"><strong>${sinRes.length}</strong> búsqueda${sinRes.length === 1 ? '' : 's'} sin resultado · <strong>${filas.length}</strong> búsquedas en total.</p>
+${tabla('La lista de qué construir', sinRes.slice(0, 20), 'Vinieron, preguntaron, y no encontraron. Si algo se repite, ese es el próximo récord.')}
+${tabla('Le preguntaron al récord (botón de IA)', preguntas, 'Preguntas completas, no keywords. Aquí se ve cómo piensa la gente.')}
+${tabla('Lo buscaron y sí estaba', conRes, 'Confirma qué está sirviendo.')}
+<p style="font-size:14px;margin-top:24px"><a href="https://puertoricosinfiltros.com/sinfiltros/pulso" style="color:#0f766e;font-weight:700">Ver el pulso completo →</a></p>
+<p style="font-size:13px;color:#64748b;margin-top:18px">Solo agregados, sin datos personales. Si una semana no hay búsquedas, este correo no sale.<br>- Angel | Menos revolú, más sistema, mejor vida.</p>
+</div>`;
+
+  if (!RESEND) return res.status(200).json({ ok: true, dry: true, sinResultado: sinRes.length, total: filas.length });
+  const r = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${RESEND}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: 'Puerto Rico Sin Filtros <newsletter@mapadecaborojo.com>',
+      to: 'angel@angelanderson.com',
+      subject: sinRes.length ? `${sinRes.length} cosa${sinRes.length === 1 ? '' : 's'} que te preguntaron y no tenías` : `${filas.length} búsquedas esta semana, todas encontraron algo`,
+      html,
+    }),
+  });
+  return res.status(200).json({ ok: r.ok, status: r.status, sinResultado: sinRes.length, total: filas.length });
+}
 
 async function runRutas(req: any, res: any) {
   const BASE = 'https://puertoricosinfiltros.com';
