@@ -3176,7 +3176,7 @@ ${regDisclaimer(en)}`
 <div class="not-prose mt-5 space-y-3">${stepsHtml}</div>
 ${antesDeLlamar({ en })}
 ${specChips ? `<h2>${te('Especialistas que suelen tocar en esto', 'Specialists usually involved here')}</h2>
-<p class="text-slate-600 -mt-2">${te('Cada uno con cuántos hay en la isla, por región y con teléfono, verificados contra el registro federal.', 'Each with how many exist on the island, by region and with phone numbers, verified against the federal registry.')}</p>
+<p class="text-slate-600 -mt-2">${te('Cada uno con cuántos hay en la isla, por región y con teléfono, según el registro federal.', 'Each with how many exist on the island, by region and with phone numbers, according to the federal registry.')}</p>
 <div class="not-prose mt-3 flex flex-wrap gap-2">${specChips}</div>` : ''}
 <div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
   <p class="text-lg font-bold mb-1">${te("¿Sigues trancao'?", 'Still stuck?')}</p>
@@ -3687,7 +3687,17 @@ async function handleCambios(req: any, res: any) {
 <h2>El récord</h2>
 <div class="not-prose space-y-4 mt-4">
   <div class="bg-white border-2 border-teal-300 rounded-xl p-5">
-    <div class="text-xs font-bold uppercase tracking-widest text-teal-700 mb-1">18 julio 2026 · Última actualización</div>
+    <div class="text-xs font-bold uppercase tracking-widest text-teal-700 mb-1">28 julio 2026 · Última actualización</div>
+    <p class="font-bold text-slate-900">Entraron 2,364 proveedores más del registro federal, y cambiamos una palabra que nos quedaba grande.</p>
+    <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
+      <li><strong>Ingesta de NPPES:</strong> los proveedores con NPI federal en el registro subieron de 23,398 a <strong>25,762</strong>.</li>
+      <li><strong>Dejamos de decir "verificados".</strong> Antes cada categoría decía "339 verificados en PR". Eso daba a entender que habíamos llamado a cada uno, y no es verdad: la inmensa mayoría viene del registro federal tal cual. Ahora dice <strong>"con NPI en PR"</strong>, que es exactamente lo que es. Lo nuestro no es haberlos verificado uno por uno, es <strong>haberlos puesto en orden en español</strong>, por pueblo y con el teléfono al lado. Cuando un dato sí lo verificamos a mano, lo decimos aparte y con fecha.</li>
+      <li><strong>Efecto colateral honesto:</strong> como el registro creció, el porcentaje de proveedores que comparten teléfono subió de 40.9% a 43.6%. Ese número subió por mejor cobertura, no porque el directorio empeorara. Está anotado en <a href="/marcador" class="text-teal-700 font-semibold">El Marcador</a>.</li>
+    </ul>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-xl p-5">
+    <div class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">18 julio 2026</div>
     <p class="font-bold text-slate-900">Las facilidades que faltaban + el registro ahora se navega por pueblo.</p>
     <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
       <li><strong>4 categorías nuevas, isla completa:</strong> laboratorios clínicos (1,173), ambulancias y transporte médico (877), radiología e imágenes (252), y los centros de diálisis subieron de 10 a 70.</li>
@@ -3759,7 +3769,7 @@ async function handleCambios(req: any, res: any) {
 }
 
 // Última actualización del registro — UN solo sitio que editar (se muestra en home + /cambios)
-const REG_LAST_UPDATE = { es: '18 jul 2026', en: 'Jul 18, 2026' }
+const REG_LAST_UPDATE = { es: '28 jul 2026', en: 'Jul 28, 2026' }
 
 async function handleRegistro(req: any, res: any) {
   const en = String(req.query.lang || '') === 'en'
@@ -3791,17 +3801,25 @@ async function handleRegistro(req: any, res: any) {
         <span class="font-bold text-slate-900 text-sm leading-tight">${x.e} ${escapeHtml(en ? (SPEC_LABEL_EN[x.s] || x.l) : x.l)}</span>
         <span class="text-teal-700 font-black text-lg">${x.t}</span>
       </div>
-      <div class="text-xs text-slate-500 mt-1">${t('verificados en PR · toca pa\' ver la lista', 'verified in PR · tap to see the list')}</div>
+      <div class="text-xs text-slate-500 mt-1">${t('con NPI en PR · toca pa\' ver la lista', 'with federal NPI in PR · tap to see the list')}</div>
     </a>`
   }
 
   const body = `
 <h1>${t('Registro de Especialistas Médicos de Puerto Rico', 'Registry of Puerto Rico Medical Specialists')}</h1>
 
-<p class="text-lg text-slate-600 mt-2">${t(`Encuentra tu especialista por especialidad y región. <strong>${totalVerified} verificados</strong> contra el registro federal NPPES. En español, gratis, sin cuenta.`, `Find your specialist by specialty and region. <strong>${totalVerified} verified</strong> against the federal NPPES registry. Free, no account needed.`)}</p>
+<p class="text-lg text-slate-600 mt-2">${t(`Encuentra tu especialista por especialidad y región. <strong>${totalVerified} proveedores</strong> del registro federal NPPES, puestos en orden en español: por pueblo, por especialidad y con el teléfono al lado. Gratis, sin cuenta.`, `Find your specialist by specialty and region. <strong>${totalVerified} providers</strong> from the federal NPPES registry, organized in Spanish: by town, by specialty, with the phone number. Free, no account needed.`)}</p>
+
+<div class="not-prose mt-4 rounded-xl border-2 border-slate-800 bg-slate-900 text-white p-4 flex items-start gap-3">
+  <div class="text-2xl leading-none">📊</div>
+  <div class="flex-1 min-w-0">
+    <p class="font-black m-0">${t('¿Y por qué faltan tantos?', 'Why are so many missing?')}</p>
+    <p class="text-sm text-slate-300 mt-1 m-0">${t('Puerto Rico no tiene escasez de médicos. Tiene escasez de condiciones. Lo contamos en 6 números, cada uno con quién lo tiene que mover y desde cuándo nadie lo mueve.', 'Puerto Rico does not have a doctor shortage. It has a conditions shortage. We counted it in 6 numbers, each with who has to move it and how long nobody has.')} <a href="/marcador" class="text-teal-300 font-bold underline">${t('Ver El Marcador →', 'See The Scoreboard →')}</a></p>
+  </div>
+</div>
 
 <div class="not-prose mt-3 flex flex-wrap gap-2 text-xs">
-  <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-shield-halved"></i> ${t('NPI federal verificado', 'Federal NPI verified')}</span>
+  <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-shield-halved"></i> ${t('Del registro federal NPI', 'From the federal NPI registry')}</span>
   <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-list-check"></i> ${REGISTRY_SPECS.length} ${t('especialidades', 'specialties')}</span>
   <a href="/cambios" class="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1 rounded-full hover:border-teal-400"><i class="fa-solid fa-calendar-check"></i> ${t(`Última actualización: ${REG_LAST_UPDATE.es} →`, `Last updated: ${REG_LAST_UPDATE.en} →`)}</a>
 </div>
@@ -3876,7 +3894,7 @@ async function handleRegistro(req: any, res: any) {
 </div>
 
 <h2>${t(`Las ${REGISTRY_SPECS.length} especialidades del registro`, `The ${REGISTRY_SPECS.length} specialties in the registry`)}</h2>
-<p class="text-slate-600 -mt-2">${t('El número es cuántos hay <strong>en toda la isla</strong>, verificados contra el registro federal. Toca cualquiera pa\' ver dónde están y sus teléfonos.', 'The number is how many there are <strong>across the whole island</strong>, verified against the federal registry. Tap any to see where they are and their phone numbers.')}</p>
+<p class="text-slate-600 -mt-2">${t('El número es cuántos hay <strong>en toda la isla</strong> según el registro federal. Toca cualquiera pa\' ver dónde están y sus teléfonos.', 'The number is how many there are <strong>across the whole island</strong> according to the federal registry. Tap any to see where they are and their phone numbers.')}</p>
 
 <div class="not-prose mt-4 text-xs font-bold uppercase tracking-widest text-teal-700 mb-3">${t('Médicos especialistas', 'Medical specialists')}</div>
 <div class="not-prose grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
