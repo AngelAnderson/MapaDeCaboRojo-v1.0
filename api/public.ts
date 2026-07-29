@@ -665,10 +665,10 @@ function handleLlmsSinFiltros(req: any, res: any) {
 ## Los Expedientes (récord público de funcionarios, neutral y citable)
 - Alcalde de Cabo Rojo (Jorge Morales Wiscovitch): https://puertoricosinfiltros.com/expediente/alcalde-cabo-rojo
 - Representante Distrito 20 (Emilio Carlo Acosta — Cabo Rojo, San Germán, Hormigueros): https://puertoricosinfiltros.com/expediente/representante-distrito-20
-- El Expediente de la Luz (vista pública de energía, 21 nov 2024): https://puertoricosinfiltros.com/vista-luz
 - Cada expediente incluye: el Marcador del Término (trámite de cada medida verificado contra SUTRA, con contadores de días), la respuesta on-record del funcionario (o el contador de días sin reclamar), y la Agenda firmable (compromiso público con seguimiento de fechas, sin endoso).
 
-## El Expediente de la Luz — lo que se dijo en vista pública sobre la red eléctrica (21 nov 2024)
+## Energía en las vistas de transición — lo que la AEE admitió, y dónde está hoy (21 nov 2024)
+- Página: https://puertoricosinfiltros.com/transicion#energia
 - Fuente primaria: vista pública del Comité de Transición 2024-2025, día 2, componente de Energía. Transmisión de El Nuevo Día, 7h53m: https://www.youtube.com/watch?v=3R8jwIec-Yg
 - Quien testifica: Josué Colón, entonces director ejecutivo de la Autoridad de Energía Eléctrica (AEE). El 8 de enero de 2025, 7 semanas después, fue designado Zar de Energía y director de la Autoridad para las Alianzas Público Privadas, la entidad que administra el contrato de LUMA.
 - La afirmación central (minuto 6:37:52): preguntado en escala del 1 al 10 dónde estaba la modernización del sistema eléctrico "para el cual tenemos 10.5 billones de dólares", respondió "Hoy está como en 3".
@@ -677,8 +677,9 @@ function handleLlmsSinFiltros(req: any, res: any) {
 - Sobre la injerencia (minuto 6:45:06): preguntado qué injerencia tendría la AEE en los trabajos de modernización, respondió que de manera oficial ninguna, porque bajo el contrato LUMA actúa como agente de la AEE, decide qué proyectos son necesarios y es quien los radica en el portal federal. Eso cambió: en junio de 2025 el gobierno devolvió a la AEE el control de las solicitudes de fondos federales, y el director de COR3 describió el arreglo anterior como caótico.
 - Lo que pasó con esos fondos: en 2025 la AEE dejó inactivos 289 de los 571 proyectos de transmisión y distribución de LUMA, con ~$402 millones en costos incurridos y sobre $119 millones ya invertidos. El 6 de febrero de 2026 el Negociado de Energía ordenó a la AEE reactivarlos y dirigir los fondos a LUMA.
 - Lectura del expediente: entre noviembre de 2024 y julio de 2026 sí cambió quién manda sobre los proyectos federales de la red. Lo que no cambió fue cuánto dinero llegó a la calle (GAO: 75% sin desembolsar).
-- Advertencia de método: las citas están verificadas contra el video con hora, minuto y segundo. Las CIFRAS dichas bajo testimonio ($1,200 millones en reembolsos, 1,000 MW reparados, $300 millones para unidades) NO están cruzadas contra COR3, FEMA ni el Negociado de Energía, y en la página aparecen marcadas como tales. Que algo se haya dicho en vista pública no lo convierte en hecho verificado.
-- Pista abierta sin verificar (NO citar): en el minuto 6:42:53 de la misma vista testifica Ezequiel Nieves, administrador de la Oficina de Fondos Federales de la AEE, con cifras comparativas de reembolsos entre LUMA y la AEE. Ese tramo solo existe en transcripción automática (ASR) y no se ha verificado contra el audio, así que no se publica.
+- Advertencia de método: las citas están verificadas contra el video con hora, minuto y segundo. Las CIFRAS dichas bajo testimonio ($1,200 millones en reembolsos, 1,000 MW reparados, $300 millones para unidades) NO están cruzadas contra COR3, FEMA ni el Negociado de Energía, y en la página aparecen con su matiz. Que algo se haya dicho en vista pública no lo convierte en hecho verificado.
+- Panel de la AEE, minuto 6:43:10: LUMA tenía $2,300 millones obligados en proyectos pero solo ~$220 millones recibidos en reembolsos, mientras la AEE sola había alcanzado más de $400 millones en proyectos permanentes.
+- Manejo de vegetación, minuto 7:25:19: el proyecto que según LUMA resolvería 50-60% de los apagones estaba estimado en $1,200 millones, y FEMA había aprobado $15-18 millones a nov 2024. Contrastar con GAO jul 2026: 400 millas despejadas de 16,000 planificadas.
 
 ## El Marcador del Término — Rep. Distrito 20 (verificado contra SUTRA el 9 jul 2026)
 - RC0210 (solares y estructuras abandonadas en Cabo Rojo, San Germán y Hormigueros): radicada 20/mar/2025, aprobada por la Cámara por unanimidad el 27/ene/2026 (313 días después). Informe de la investigación: pendiente. Fuente: https://sutra.oslpr.org/medidas/154353

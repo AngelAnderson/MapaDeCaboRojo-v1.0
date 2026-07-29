@@ -6071,11 +6071,6 @@ async function handleSinFiltros(req: any, res: any) {
     <p class="text-lg font-black mt-1 leading-snug text-slate-900" style="font-family:'Fraunces',Georgia,serif">Cabo Rojo · San Germán · Hormigueros →</p>
     <p class="text-slate-600 mt-1 text-sm">Emilio Carlo Acosta: medidas + estado del distrito ($140M FEMA, Hormigueros sin psiquiatra).</p>
   </a>
-  <a href="/vista-luz" data-prsf="record" data-rec="expediente-vista-luz" class="block border-2 border-red-300 bg-red-50 rounded-2xl p-5 hover:bg-red-100 transition-colors no-underline sm:col-span-2">
-    <span class="text-xs uppercase tracking-widest text-red-700 font-bold">Vista pública · Energía</span>
-    <p class="text-lg font-black mt-1 leading-snug text-slate-900" style="font-family:'Fraunces',Georgia,serif">El Expediente de la Luz: el 3 de 10 que nadie oyó →</p>
-    <p class="text-slate-600 mt-1 text-sm">21 de noviembre de 2024: quien dirigía la AEE le puso 3 de 10 a la modernización eléctrica, en cámara. 20 meses después, la GAO dice que el 75% del dinero sigue sin desembolsar. Cada afirmación con su minuto exacto.</p>
-  </a>
 </div>
 
 <h2 id="records">Los récords</h2>
@@ -6717,7 +6712,11 @@ const V1 = 'RguowcKS7wU', V2 = '3R8jwIec-Yg', V3 = 'jCoz2d5IJJA'
 const V4 = 'uUWb85Doki0', V5 = 'dCVlOodXNPw', V6 = 'BJFs3kJgteM'
 const V7 = 'XZGTyMNcr0o', V8 = 'ZvZmiREinbU', V9 = 'az9UhZBvLqs'
 type Claim = { q: string; c: string; d: string; v?: string; t?: number }
-type Bloque = { id: string; tag: string; titulo: string; nota?: string; claims: Claim[] }
+// `hoy` = el seguimiento. La vista registra lo que se dijo en nov-dic 2024; esto registra
+// donde esta esa misma cosa hoy, con fuente. Sin esto el record es un archivo; con esto
+// es un marcador. Cada item: fecha del hecho, que paso, y el link pa' verificarlo.
+type Seguimiento = { f: string; t: string; u?: string }
+type Bloque = { id: string; tag: string; titulo: string; nota?: string; claims: Claim[]; hoy?: Seguimiento[] }
 export const TRANSICION_BLOQUES: Bloque[] = [
     {
       id: 'cor3', tag: 'Día 1 · 20 nov 2024', titulo: 'COR3: el mapa del dinero federal',
@@ -6748,6 +6747,14 @@ export const TRANSICION_BLOQUES: Bloque[] = [
         { q: 'Intercambio sobre el manejo de vegetación', c: 'LUMA lo ha dicho, puede resolver el 50 o 60% de los apagones... — No existen el 1.2 billones... ellos lo que tienen son 18 millones aprobados solamente', d: 'El proyecto que según LUMA resolvería la mitad de los apagones estaba estimado en $1,200M; FEMA había aprobado $15-18M a nov 2024.', v: V2, t: 26719 },
         { q: 'Manuel Laboy Rivera, director ejecutivo de COR3', c: 'Lo que haga mal LUMA al final es una responsabilidad de PREPA y del gobierno de Puerto Rico... seremos responsables de devolver el dinero', d: 'Riesgo estructural en récord: si el operador privado maneja mal fondos FEMA, el que devuelve el dinero es el pueblo, no el operador.', v: V2, t: 24609 },
         { q: 'Josué Colón, director ejecutivo de la AEE', c: 'Desde que el sistema se quedó sin recursos [se han pagado] 413 millones... el sistema tiene un poco más de 12,000 beneficiarios', d: 'Pensiones de la AEE en default desde 2023: $413M pagados con fondos estatales y un préstamo que vencía el 31 de diciembre de 2024. Nómina de pensiones: ~$24-25M al mes.', v: V2, t: 19152 },
+      ],
+      hoy: [
+        { f: '8 ene 2025 · 7 semanas después', t: 'La gobernadora designa a Josué Colón <strong>Zar de Energía</strong> y director de la Autoridad para las Alianzas Público Privadas, la entidad que administra el contrato de LUMA. Quien evaluó el contrato ante el comité pasó a administrarlo.', u: 'https://www.metro.pr/noticias/2025/01/08/gobernadora-nombra-a-josue-colon-como-el-zar-de-energia/' },
+        { f: 'Abril 2025', t: 'Puerto Rico tiene un <strong>apagón total de casi 2 días</strong>.', u: 'https://www.gao.gov/products/gao-26-107772' },
+        { f: 'Junio 2025', t: 'En la vista, preguntado qué injerencia tendría la AEE sobre los trabajos de modernización, Colón contestó que <em>de manera oficial, ninguna</em>: bajo el contrato LUMA actúa como agente de la AEE y es quien radica los proyectos ante FEMA (minuto 6:45:06). En junio de 2025 el gobierno le devolvió ese control a la AEE, y el director de COR3 describió el arreglo anterior como <em>caótico</em>. <strong>Ese sí se atendió.</strong>', u: 'https://www.elnuevodia.com/noticias/locales/notas/no-lo-voy-a-echar-para-atras-firme-el-gobierno-en-determinacion-que-devolvio-a-la-aee-control-sobre-proyectos-federales-de-luma/' },
+        { f: '6 feb 2026', t: 'La AEE dejó inactivos <strong>289 de los 571 proyectos</strong> de transmisión y distribución de LUMA, con unos <strong>$402 millones</strong> en costos ya incurridos. El Negociado de Energía le ordenó reactivarlos y dirigirle los fondos a LUMA.', u: 'https://eldiariony.com/2026/02/07/aee-debera-restituir-a-luma-energy-cientos-de-millones-en-fondos-federales-de-fema-que-habian-sido-paralizados/' },
+        { f: '2 jul 2026 · el récord federal', t: 'La GAO publica su informe sobre la red (<strong>GAO-26-107772</strong>): de unos $14,000 millones obligados desde 2017, FEMA ha desembolsado <strong>$2,700 millones de $11,100 millones</strong>. En manejo de vegetación — lo que según LUMA resolvería la mitad de los apagones — <strong>400 millas despejadas de 16,000 planificadas</strong>. El informe describe <em>progreso limitado hacia la estabilidad de la red</em>, y sus 5 recomendaciones siguen abiertas.', u: 'https://www.gao.gov/products/gao-26-107772' },
+        { f: 'La lectura', t: 'Entre noviembre de 2024 y julio de 2026 sí cambió <strong>quién manda</strong> sobre los proyectos federales de la red. Lo que no cambió fue <strong>cuánto dinero llegó a la calle</strong>. 20 meses después, el informe federal no contradice el 3 de 10.' },
       ],
     },
     {
@@ -6850,7 +6857,19 @@ ${b.claims.map(cl => `
     <p class="text-sm text-slate-800 mt-2 leading-relaxed">${cl.d.replace('/acueductos', '<a href="/acueductos" class="text-teal-700 font-semibold">/acueductos</a>').replace('/sigue-el-dinero', '<a href="/sigue-el-dinero" class="text-teal-700 font-semibold">/sigue-el-dinero</a>')}</p>
     ${cl.v ? `<a href="${ytLink(cl.v, cl.t)}" target="_blank" rel="noopener" data-prsf="verify" data-rec="transicion" class="inline-flex items-center gap-1 mt-2 text-sm font-bold text-teal-700 hover:underline">Óyelo tú mismo, minuto ${fmtT(cl.t)} ↗</a>` : ''}
   </div>`).join('')}
-</div>`).join('')
+</div>
+${b.hoy && b.hoy.length ? `
+<div class="not-prose border-2 border-slate-900 bg-slate-50 rounded-2xl p-5 mt-4">
+  <p class="text-xs uppercase tracking-widest text-slate-900 font-bold">Dónde está hoy</p>
+  <p class="text-sm text-slate-600 mt-1">Lo de arriba es lo que se dijo en la vista. Esto es lo que pasó después, con la fuente al lado.</p>
+  <div class="border-l-4 border-teal-500 pl-4 mt-4 space-y-4">
+    ${b.hoy.map(h => `<div>
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-wide">${escapeHtml(h.f)}</p>
+      <p class="text-slate-800 leading-relaxed">${h.t}</p>
+      ${h.u ? `<p class="mt-1"><a href="${escapeHtml(h.u)}" target="_blank" rel="noopener" data-prsf="verify" data-rec="transicion-hoy" class="text-sm text-teal-700 font-semibold hover:underline">Verifícalo tú mismo: ${escapeHtml(h.u.replace(/^https?:\/\/(www\.)?/, '').split('/')[0])} ↗</a></p>` : ''}
+    </div>`).join('')}
+  </div>
+</div>` : ''}`).join('')
 
   // Las vistas completas — índice verificado contra el canal de El Nuevo Día (2026-07-10).
   const videos: [string, string, number, string][] = [
@@ -8671,161 +8690,6 @@ const FUNCIONARIOS: Record<string, any> = {
 // Etiquetas cortas de medidas trackeadas (presentación; el texto completo vive en la DB, verificado contra SUTRA)
 const MEDIDA_LABEL: Record<string, string> = { RC0211: 'La luz en la PR-2', RC0210: 'Los solares abandonados', RCC0076: 'La escuela vocacional' }
 
-// =============== El Expediente de la Luz — lo que se dijo en vista pública ===============
-// Hermano de /expediente, pero la unidad no es un funcionario electo con distrito: es una
-// VISTA PÚBLICA. SUTRA da el récord de lo que se RADICA; esto da el récord de lo que se DICE.
-// Por eso no reusa handleExpediente (ese está cableado a municipios, FEMA por pueblo y reloj
-// electoral, nada de lo cual aplica a un cargo estatal no electo).
-// Data: quien_responde_promesas.cargo_id = el Zar de Energía + grabaciones.grabacion_id='3R8jwIec'.
-const VISTA_LUZ = {
-  cargoId: '9f2c7a41-6d8e-4b13-9c05-1a7e3f2b8d44',
-  quien: 'Josué Colón',
-  cargoEntonces: 'Director ejecutivo de la Autoridad de Energía Eléctrica (AEE)',
-  cargoHoy: 'Zar de Energía y director de la Autoridad para las Alianzas Público Privadas',
-  fecha: '2024-11-21',
-  vista: 'Vista pública del Comité de Transición 2024-2025 · día 2 · componente de Energía',
-  publicado: '2026-07-29',
-}
-async function handleVistaLuz(req: any, res: any) {
-  let filas: any[] = []
-  let grab: any = {}
-  try {
-    const [pp, gg] = await Promise.all([
-      supabase.from('quien_responde_promesas')
-        .select('promesa,cita,minuto,grabacion_id,fecha_grabacion,estado,que_paso,fuente_que_paso')
-        .eq('cargo_id', VISTA_LUZ.cargoId).eq('publicable', true),
-      supabase.from('grabaciones').select('grabacion_id,titulo,video_url,clip_url,fecha').eq('grabacion_id', '3R8jwIec').maybeSingle(),
-    ])
-    filas = pp.data || []
-    grab = gg.data || {}
-  } catch (_) { /* la página se sostiene con el texto fijo aunque la DB falle */ }
-
-  // Orden cronológico por minuto del video, no por cuándo se insertó la fila.
-  filas.sort((a: any, b: any) => minutoASegundos(a.minuto) - minutoASegundos(b.minuto))
-
-  const DAY = 86400000
-  const diasDesde = (d: string) => Math.max(0, Math.floor((Date.now() - new Date(d + 'T12:00:00').getTime()) / DAY))
-  const fmtF = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString('es-PR', { day: 'numeric', month: 'long', year: 'numeric' })
-  const tsLink = (url: string, minuto: string) => {
-    if (!url) return ''
-    const secs = minutoASegundos(minuto)
-    const sep = url.includes('?') ? '&' : '?'
-    return /youtu\.?be|youtube/.test(url) ? `${url}${sep}t=${secs}s` : `${url}${sep}t=${secs}`
-  }
-
-  const EST: Record<string, { label: string; cls: string; borde: string }> = {
-    se_sostiene: { label: 'Lo dicho se sostiene hoy', cls: 'text-red-700 bg-red-50 border-red-200', borde: 'border-red-200' },
-    empeoro: { label: 'Hoy está peor', cls: 'text-red-800 bg-red-100 border-red-300', borde: 'border-red-300' },
-    mejoro: { label: 'Hoy está mejor', cls: 'text-emerald-800 bg-emerald-50 border-emerald-300', borde: 'border-emerald-200' },
-    sin_cruzar: { label: 'Cita verificada · cifra sin cruzar', cls: 'text-amber-800 bg-amber-50 border-amber-300', borde: 'border-amber-200' },
-  }
-  const n = (s: string) => filas.filter((f: any) => f.estado === s).length
-
-  const cards = filas.map((p: any) => {
-    const e = EST[p.estado] || EST.sin_cruzar
-    const vlink = tsLink(grab.video_url, p.minuto)
-    const fuenteOk = /^https?:\/\//i.test(String(p.fuente_que_paso || ''))
-    return `
-<div class="not-prose border-2 ${e.borde} bg-white rounded-2xl p-5 mt-4">
-  <div class="flex items-start justify-between gap-3 flex-wrap">
-    <h3 class="text-lg font-black text-slate-900 max-w-xl" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(p.promesa)}</h3>
-    <span class="text-xs font-bold border rounded-full px-3 py-1 ${e.cls}">${e.label}</span>
-  </div>
-  ${p.cita ? `<blockquote class="text-sm text-slate-700 italic border-l-4 border-slate-300 pl-4 mt-3">"${escapeHtml(p.cita)}"</blockquote>` : ''}
-  <p class="text-xs text-slate-500 mt-2">Dicho en vista pública el ${fmtF(p.fecha_grabacion)}${vlink ? ` · <a href="${escapeHtml(vlink)}" target="_blank" rel="noopener" data-prsf="verify" data-rec="vista-luz" class="text-teal-700 font-semibold underline">véalo decirlo (${escapeHtml(p.minuto || '')}) ↗</a>` : ''}</p>
-  ${p.que_paso ? `<p class="text-sm font-semibold text-slate-500 mt-3 mb-1">Dónde está hoy:</p><blockquote class="text-slate-700 leading-relaxed border-l-4 border-teal-500 pl-3 text-sm">${escapeHtml(p.que_paso)}</blockquote>` : ''}
-  ${fuenteOk ? `<p class="text-xs mt-2"><a href="${escapeHtml(p.fuente_que_paso)}" target="_blank" rel="noopener" data-prsf="verify" data-rec="vista-luz" class="text-teal-700 font-semibold">Verifícalo tú mismo: ${escapeHtml(String(p.fuente_que_paso).replace(/^https?:\/\/(www\.)?/, '').split('/')[0])} ↗</a></p>` : ''}
-</div>`
-  }).join('')
-
-  const body = `
-<p class="text-xs uppercase tracking-widest text-teal-700 font-bold">El récord de lo que se dijo</p>
-<h1>El Expediente de la Luz</h1>
-<p class="lead">El 21 de noviembre de 2024, en una vista pública de 7 horas y 53 minutos que casi nadie vio, quien dirigía la Autoridad de Energía Eléctrica le puso nota a la modernización del sistema eléctrico de Puerto Rico. Le dio <strong>3 de 10</strong>. Aquí está lo que dijo, con el minuto exacto, y dónde está cada cosa hoy.</p>
-
-<div class="not-prose bg-slate-900 text-white rounded-2xl p-5 sm:p-6 mt-3">
-  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El Marcador de la Vista · ${escapeHtml(VISTA_LUZ.vista)}</p>
-  <div class="flex flex-wrap items-baseline gap-x-8 gap-y-2 mt-3">
-    <div><span class="text-5xl font-black text-red-400" style="font-family:'Fraunces',Georgia,serif">3</span><span class="text-slate-300 text-sm ml-2">de 10, la nota que le puso</span></div>
-    <div><span class="text-4xl font-black" style="font-family:'Fraunces',Georgia,serif">${diasDesde(VISTA_LUZ.fecha).toLocaleString('en-US')}</span><span class="text-slate-300 text-sm ml-2">días desde que lo dijo</span></div>
-    <div><span class="text-4xl font-black" style="font-family:'Fraunces',Georgia,serif">${filas.length}</span><span class="text-slate-300 text-sm ml-2">afirmaciones con minuto</span></div>
-  </div>
-  <p class="text-slate-300 text-sm mt-4"><strong class="text-white">Este marcador no opina.</strong> Cada línea es algo que se dijo en cámara, en una vista pública, con la hora exacta del video para que cualquiera lo verifique. La columna de la derecha no es nuestra lectura: es lo que dice el récord federal más reciente. ${n('se_sostiene')} de las ${filas.length} afirmaciones siguen describiendo el sistema de hoy. ${n('sin_cruzar')} tienen la cita verificada pero la cifra todavía sin cruzar contra fuente independiente, y así se dice.</p>
-</div>
-
-<h2>Lo que pasó después</h2>
-<div class="not-prose border-l-4 border-teal-500 pl-4 mt-3 space-y-4">
-  <div><p class="text-xs font-bold text-slate-400 uppercase tracking-wide">21 de noviembre de 2024</p><p class="text-slate-800">${escapeHtml(VISTA_LUZ.quien)}, entonces ${escapeHtml(VISTA_LUZ.cargoEntonces).toLowerCase()}, testifica ante el Comité de Transición. Le da <strong>3 de 10</strong> a la modernización y dice que LUMA <strong>no ha cumplido</strong>.</p></div>
-  <div><p class="text-xs font-bold text-slate-400 uppercase tracking-wide">8 de enero de 2025 · 7 semanas después</p><p class="text-slate-800">La gobernadora designa a ${escapeHtml(VISTA_LUZ.quien)} <strong>Zar de Energía</strong> y director de la Autoridad para las Alianzas Público Privadas, la entidad que administra el contrato de LUMA. La persona que evaluó el contrato pasa a administrarlo.</p></div>
-  <div><p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Abril de 2025</p><p class="text-slate-800">Puerto Rico tiene un <strong>apagón total de casi 2 días</strong>.</p></div>
-  <div><p class="text-xs font-bold text-slate-400 uppercase tracking-wide">Junio de 2025</p><p class="text-slate-800">El gobierno devuelve a la AEE el control de las solicitudes de fondos federales que estaba en manos de LUMA. El director de COR3 y presidente de la junta de la AEE describe el arreglo anterior como <em>caótico</em>. <strong>El problema estructural que Colón señaló en la vista sí se atendió</strong>, con él ya de Zar de Energía.</p></div>
-  <div><p class="text-xs font-bold text-slate-400 uppercase tracking-wide">2025 → 6 de febrero de 2026</p><p class="text-slate-800">La AEE deja inactivos <strong>289 de los 571 proyectos</strong> de transmisión y distribución de LUMA, con unos <strong>$402 millones</strong> en costos ya incurridos. El Negociado de Energía le ordena a la AEE reactivarlos y dirigirle los fondos a LUMA.</p></div>
-  <div><p class="text-xs font-bold text-slate-400 uppercase tracking-wide">2 de julio de 2026 · el récord federal</p><p class="text-slate-800">La GAO publica su informe sobre la red: de unos <strong>$14,000 millones</strong> obligados desde 2017, FEMA solo ha desembolsado <strong>$2,700 millones</strong> de $11,100 millones. En limpieza de vegetación, <strong>400 millas despejadas de 16,000 planificadas</strong>. El informe describe <em>progreso limitado hacia la estabilidad de la red</em>. Las 5 recomendaciones siguen abiertas.</p></div>
-</div>
-<p class="text-sm text-slate-600 mt-3">20 meses después del 3 de 10, el informe federal no lo contradice. Y la lectura incómoda no es partidista: <strong>lo que se arregló fue quién manda sobre los proyectos, no cuánto dinero llegó a la calle.</strong></p>
-
-<h2>Las afirmaciones, una por una</h2>
-<p class="text-slate-600 -mt-1">Cada tarjeta: lo que se dijo, la cita textual, el minuto para verlo con tus ojos, y dónde está esa cosa hoy con la fuente al lado.</p>
-${cards || '<p class="text-slate-500">El récord se está actualizando.</p>'}
-
-<h2>Verifícalo tú mismo</h2>
-<div class="not-prose grid sm:grid-cols-2 gap-3 mt-3">
-  ${grab.video_url ? `<a href="${escapeHtml(grab.video_url)}" target="_blank" rel="noopener" data-prsf="verify" data-rec="vista-luz" class="block border-2 border-teal-300 bg-teal-50 rounded-2xl p-5 hover:bg-teal-100 no-underline">
-    <span class="text-xs uppercase tracking-widest text-teal-700 font-bold">La vista completa</span>
-    <p class="text-lg font-black mt-1 leading-snug text-slate-900" style="font-family:'Fraunces',Georgia,serif">7 horas 53 minutos, sin editar →</p>
-    <p class="text-slate-600 mt-1 text-sm">Transmisión de El Nuevo Día, 21 de noviembre de 2024. El componente de energía empieza cerca de la hora 5.</p>
-  </a>` : ''}
-  ${grab.clip_url ? `<a href="${escapeHtml(grab.clip_url)}" target="_blank" rel="noopener" data-prsf="verify" data-rec="vista-luz" class="block border-2 border-slate-200 bg-white rounded-2xl p-5 hover:border-teal-300 no-underline">
-    <span class="text-xs uppercase tracking-widest text-teal-700 font-bold">El pedazo que importa</span>
-    <p class="text-lg font-black mt-1 leading-snug text-slate-900" style="font-family:'Fraunces',Georgia,serif">El intercambio del 3 de 10 →</p>
-    <p class="text-slate-600 mt-1 text-sm">La pregunta y la respuesta completas, sin recortar la parte incómoda.</p>
-  </a>` : ''}
-  <a href="https://www.gao.gov/products/gao-26-107772" target="_blank" rel="noopener" data-prsf="verify" data-rec="vista-luz" class="block border-2 border-slate-200 bg-white rounded-2xl p-5 hover:border-teal-300 no-underline">
-    <span class="text-xs uppercase tracking-widest text-teal-700 font-bold">El récord federal</span>
-    <p class="text-lg font-black mt-1 leading-snug text-slate-900" style="font-family:'Fraunces',Georgia,serif">Informe GAO-26-107772 →</p>
-    <p class="text-slate-600 mt-1 text-sm"><em>Puerto Rico Grid Recovery: Limited Progress Toward Stability.</em> Junio 2026, divulgado el 2 de julio de 2026.</p>
-  </a>
-</div>
-
-<h2>Cómo se hizo, y qué NO estamos diciendo</h2>
-<div class="not-prose border border-slate-200 bg-slate-50 rounded-2xl p-5 mt-3 text-sm text-slate-700 space-y-2">
-  <p><strong>Las citas están verificadas contra el video</strong>, con hora, minuto y segundo. Si una cita no cuadra con lo que oyes, se corrige el mismo día.</p>
-  <p><strong>Que algo se haya dicho no lo hace cierto.</strong> Varias cifras de esta vista ($1,200 millones en reembolsos, 1,000 MW reparados, $300 millones para unidades) son declaraciones bajo testimonio que todavía no hemos cruzado contra COR3, FEMA ni el Negociado de Energía. Están marcadas en ámbar y así se quedan hasta que se crucen. No las repetimos como hechos.</p>
-  <p><strong>Esto no es una acusación ni un endoso.</strong> Es el récord de lo que se dijo, puesto donde se pueda encontrar. El verde se registra igual que el rojo: el día que el desembolso se mueva o la vegetación se limpie, esta página lo dice con fecha.</p>
-  <p><strong>La grabación es de El Nuevo Día</strong>, que transmitió la vista en vivo. El evento es una vista pública de gobierno; el video original se enlaza siempre, completo y sin intermediarios.</p>
-  <p class="text-xs text-slate-500 pt-1">¿Encontraste un error, o se movió algo? <a href="mailto:angel@angelanderson.com?subject=${encodeURIComponent('Expediente de la Luz: corrección')}" class="text-teal-700 font-semibold">Escríbenos</a> y se actualiza con fecha.</p>
-</div>
-
-${shareRow({ text: 'En noviembre de 2024, el que dirigía la AEE le puso 3 de 10 a la modernización eléctrica de PR, en una vista pública que vieron 7,000 personas. 20 meses después, la GAO dice que el 75% del dinero sigue sin desembolsar. El récord completo, con el minuto exacto:', url: 'https://puertoricosinfiltros.com/vista-luz', toWho: 'Al que paga la luz y nunca supo que esto se dijo en cámara.' })}
-
-<p class="text-xs text-slate-500 mt-4"><a href="/expedientes" class="text-teal-700 font-semibold">Los demás expedientes →</a> · <a href="/recuperacion" class="text-teal-700 font-semibold">Los fondos de recuperación, pueblo por pueblo →</a></p>
-`
-
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Article',
-    headline: 'El Expediente de la Luz — lo que se dijo en la vista pública del 21 de noviembre de 2024',
-    description: 'El récord verificable del testimonio sobre la modernización del sistema eléctrico de Puerto Rico: la nota de 3 de 10, las cifras dichas bajo testimonio, y dónde está cada cosa hoy según el informe GAO-26-107772.',
-    datePublished: VISTA_LUZ.publicado,
-    author: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros' },
-    isAccessibleForFree: true,
-    citation: [
-      { '@type': 'CreativeWork', name: VISTA_LUZ.vista, url: grab.video_url || 'https://www.youtube.com/watch?v=3R8jwIec-Yg', datePublished: VISTA_LUZ.fecha },
-      { '@type': 'Report', name: 'Puerto Rico Grid Recovery: Limited Progress Toward Stability and Opportunities Exist to Improve Federal Assistance (GAO-26-107772)', url: 'https://www.gao.gov/products/gao-26-107772' },
-    ],
-  }
-  res.setHeader('Content-Type', 'text/html; charset=utf-8')
-  res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=1800')
-  res.status(200).send(layout({
-    title: 'El Expediente de la Luz — el 3 de 10 que nadie oyó',
-    description: 'El 21 de noviembre de 2024, quien dirigía la AEE le puso 3 de 10 a la modernización eléctrica de PR en una vista pública. Aquí está lo que dijo, con el minuto exacto, y dónde está hoy.',
-    slug: 'vista-luz',
-    bodyHtml: body,
-    jsonLd,
-    host: req?.headers?.host,
-  }))
-}
-
 async function handleExpediente(req: any, res: any) {
   const f = String(req.query?.f || 'alcalde-cabo-rojo')
   const cfg = FUNCIONARIOS[f] || FUNCIONARIOS['alcalde-cabo-rojo']
@@ -9646,7 +9510,7 @@ export const BUSCAR_INDEX = [
   { u: '/dossier', t: 'La población genética más valiosa', d: 'PR: el ADN más valioso y menos estudiado de EE.UU.', k: 'dossier genetica adn poblacion valiosa estudiada nih' },
   { u: '/observatorio', t: 'Observatorio Cívico de Cabo Rojo', d: 'El pulso cívico del pueblo', k: 'observatorio civico cabo rojo pulso pueblo' },
   { u: '/barrios', t: 'Los 9 barrios de Cabo Rojo', d: 'Mapa interactivo con lugares verificados', k: 'barrios cabo rojo mapa boqueron combate joyuda pedernales' },
-  { u: '/vista-luz', t: 'El Expediente de la Luz', d: 'El 3 de 10 a la modernización eléctrica, con el minuto exacto', k: 'luz luma aee vista transicion 3 de 10 zar energia gao modernizacion colon' },
+  { u: '/transicion#energia', t: 'Energía: el 3 de 10 del propio director', d: 'Lo que la AEE admitió en vista pública, y dónde está hoy', k: 'luz luma aee vista transicion 3 de 10 zar energia gao modernizacion colon apagon vegetacion pensiones' },
   { u: '/sinfiltros/pulso', t: 'Pulso', d: 'Qué mira Puerto Rico Sin Filtros', k: 'pulso analytics que miran visitas' },
   { u: '/cambios', t: 'Historial y roadmap', d: 'Qué cambió y qué viene', k: 'cambios roadmap historial changelog viene' },
 ]
@@ -14554,7 +14418,6 @@ export default async function handler(req: any, res: any) {
     case 'telemedicina': return await handleTelemedicina(req, res)
     case 'no-se-mide': return handleNoSeMide(req, res)
     case 'diabetes': return await handleDiabetes(req, res)
-    case 'vista-luz': return await handleVistaLuz(req, res)
     case 'expediente': return await handleExpediente(req, res)
     case 'sigue-el-dinero': return await handleSigueElDinero(req, res)
     case 'esencia': return await handleEsencia(req, res)
