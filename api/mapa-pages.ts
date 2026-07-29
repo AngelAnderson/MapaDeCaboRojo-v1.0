@@ -4160,7 +4160,7 @@ ${regDisclaimer(en)}
       '@type': 'FAQPage',
       mainEntity: [
         { '@type': 'Question', name: '¿Cuántos especialistas médicos hay en Puerto Rico?',
-          acceptedAnswer: { '@type': 'Answer', text: `En Puerto Rico hay ${totalVerified} especialistas médicos verificados contra el registro federal NPPES/CMS, organizados por ${REGISTRY_SPECS.length} especialidades y por región.` } },
+          acceptedAnswer: { '@type': 'Answer', text: `Este registro lista ${totalVerified} proveedores de salud de Puerto Rico que aparecen en el registro federal NPPES/CMS, organizados por ${REGISTRY_SPECS.length} especialidades y por región. Incluye médicos especialistas y también proveedores licenciados que no son médicos MD (psicólogos, dentistas, optómetras, terapistas), separados en el sitio para que se sepa a quién se va.` } },
         { '@type': 'Question', name: '¿Cómo se verifica este registro de médicos?',
           acceptedAnswer: { '@type': 'Answer', text: 'Cada proveedor existe en el NPPES (National Plan and Provider Enumeration System), el registro oficial del gobierno federal de EE.UU. que usan Medicare y los planes médicos. Cada NPI es un número público que cualquiera puede verificar.' } },
         { '@type': 'Question', name: '¿Es gratis buscar un especialista aquí?',
