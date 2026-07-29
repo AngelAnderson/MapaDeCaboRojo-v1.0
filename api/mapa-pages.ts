@@ -10998,7 +10998,7 @@ async function handleMarcador(req: any, res: any) {
     { metric_key: 'sin_sitio_nhsc', orden: 3, label: 'Pueblos del cupón sin sitio NHSC aprobado', valor: 5, valor_txt: null, unidad: 'municipios', meta_valor: 0, meta_txt: '0', dueno: 'Oficina de Cuidado Primario, Departamento de Salud', accion: 'Radicar ante HRSA para que un centro 330 regional inscriba un sitio. Es papeleo, no ley, no presupuesto.', fuente: 'HRSA BHW, mapa de sitios NHSC', fuente_url: 'https://nhsc.hrsa.gov/', nota: 'Añasco, Guánica, Guayanilla, Hormigueros y Loíza.', medido_on: '2026-07-28' },
     { metric_key: 'nhsc_por_100k', orden: 4, label: 'Clínicos NHSC por cada 100,000 habitantes', valor: 2.5, valor_txt: null, unidad: 'clínicos/100k', meta_valor: 15.3, meta_txt: '15.3 (nivel West Virginia)', dueno: 'Departamento de Salud + los centros 330', accion: 'Operar el programa: reclutar, inscribir sitios y dirigir participantes hacia lo rural.', fuente: 'HRSA — NHSC Field Strength FY2025', fuente_url: 'https://nhsc.hrsa.gov/', nota: 'West Virginia tiene la mitad de nuestra población y 15.3. PR: 79 clínicos, solo 6 de cuidado primario.', medido_on: '2026-07-28' },
     { metric_key: 'comparten_telefono', orden: 5, label: 'Proveedores que comparten teléfono con otro proveedor', valor: 40.9, valor_txt: null, unidad: '%', meta_valor: 15, meta_txt: 'bajo 15%', dueno: 'Los planes médicos', accion: 'Dejar de medir la red contando nombres. Publicar cuántos de sus proveedores de verdad contestan.', fuente: 'Este registro, sobre NPPES', fuente_url: 'https://registromedicopr.com/registro/estado', nota: 'Un directorio con cientos de nombres detrás del mismo teléfono no es una red, es una lista.', medido_on: '2026-07-28' },
-    { metric_key: 'slrp_solicitado', orden: 6, label: '¿Puerto Rico solicitó el SLRP con pareo federal 1 a 1?', valor: 0, valor_txt: 'No', unidad: null, meta_valor: 1, meta_txt: 'Sí', dueno: 'Departamento de Salud de PR', accion: 'Solicitarlo. Más de 40 estados ya lo corren. Y al ser estatal, PR puede pagar en condiciones (energía, agua, internet, techo) y no solo en cheque.', fuente: 'HRSA BHW — State Loan Repayment Program', fuente_url: 'https://nhsc.hrsa.gov/loan-repayment/state-loan-repayment-program', nota: 'Pendiente de confirmación directa con HRSA. Lo marcamos sin confirmar hasta que respondan.', medido_on: '2026-07-28' },
+    { metric_key: 'slrp_solicitado', orden: 6, label: '¿Puerto Rico tiene un SLRP activo (pareo federal 1 a 1)?', valor: 0, valor_txt: 'No', unidad: null, meta_valor: 1, meta_txt: 'Sí', dueno: 'Departamento de Salud de PR', accion: 'Montarlo. Más de 40 estados ya lo corren. Y al ser estatal, PR puede pagar en condiciones (energía, agua, internet, techo) y no solo en cheque.', fuente: 'HRSA BHW — State Loan Repayment Program', fuente_url: 'https://nhsc.hrsa.gov/loan-repayment/state-loan-repayment-program', nota: 'Verificable hoy: PR no aparece en la lista de HRSA de jurisdicciones con SLRP activo. Lo que NO afirmamos es por qué: si nunca se solicitó, o si se solicitó y no se completó. Preguntado a HRSA por escrito.', medido_on: '2026-07-28' },
   ]
 
   // Última medición por métrica + desde cuándo NO se mueve (corrida contigua con el mismo valor)
@@ -11148,31 +11148,38 @@ async function handleMarcador(req: any, res: any) {
 <div class="not-prose mt-4 space-y-3">
   <div class="border border-slate-200 bg-white rounded-2xl p-4">
     <p class="text-xs font-black uppercase tracking-wider text-teal-700 m-0">1 · Gobierno de PR</p>
-    <p class="font-bold text-slate-900 mt-1 m-0">Solicitar el SLRP y pagar en condiciones, no en cheque</p>
-    <p class="text-sm text-slate-700 mt-1 m-0">Es la llave que abre todo lo demás. El programa federal te obliga a pagar en cheque. El estatal <strong>lo diseñas tú</strong>: energía que no se va, agua, internet y techo en la clínica. Eso sí compite contra una oferta en Orlando. El pareo lo pone el federal, 1 a 1, así que la excusa del presupuesto no aplica.</p>
+    <p class="font-bold text-slate-900 mt-1 m-0">Montar el SLRP y pagar en condiciones, no en cheque</p>
+    <p class="text-sm text-slate-700 mt-1 m-0">Es la llave que abre todo lo demás. <strong>Puerto Rico no aparece en la lista de HRSA de jurisdicciones con un SLRP activo</strong>, el programa estatal de repago con pareo federal 1 a 1 que corren más de 40 estados. Y ahí está lo importante: el programa federal obliga a pagar en cheque, pero <strong>el estatal lo diseña PR</strong>. Puede pagar en condiciones: energía que no se va, agua, internet y techo en la clínica. Eso sí compite contra una oferta en Orlando. El pareo lo pone el federal, así que la excusa del presupuesto no aplica.</p>
   </div>
   <div class="border border-slate-200 bg-white rounded-2xl p-4">
     <p class="text-xs font-black uppercase tracking-wider text-teal-700 m-0">2 · Los municipios</p>
     <p class="font-bold text-slate-900 mt-1 m-0">Primero el papel, después el paquete de aterrizaje</p>
     <p class="text-sm text-slate-700 mt-1 m-0">A 5 pueblos les falta hasta el papel: Añasco, Guánica, Guayanilla, Hormigueros y Loíza. Guánica es el municipio más pobre de Puerto Rico, con la puntuación federal de salud mental casi en el máximo, y ni el formulario tiene radicado. A los otros 28 no les falta papel: les falta armar el paquete. <strong>El primer pueblo que lo arme se lleva los médicos de toda su región.</strong></p>
   </div>
+  <div class="border-2 border-emerald-300 bg-emerald-50/50 rounded-2xl p-4">
+    <p class="text-xs font-black uppercase tracking-wider text-emerald-700 m-0">3 · Los centros de salud 330</p>
+    <p class="font-bold text-slate-900 mt-1 m-0">No hay que inventar nada. Hay que copiar al vecino que ya lo logró</p>
+    <p class="text-sm text-slate-700 mt-1 m-0">Esta es la prueba de que sí se puede, y está adentro de Puerto Rico. Donde el centro de salud lo trabaja, <strong>el programa funciona</strong>: Salud Integral en la Montaña (Aibonito 11 participantes, Naranjito 7, Morovis 5, Orocovis 2) y el corredor de Lares (Castañer y CISS, 9) concentran cerca de <strong>un tercio de todos los clínicos NHSC de la isla</strong>. Mientras tanto, <strong>21 de los 33 pueblos del cupón no tienen ni un participante</strong>. No es que el programa no sirva en Puerto Rico. Es que la mayoría no lo está operando, y ya hay quien enseñe cómo.</p>
+  </div>
   <div class="border border-slate-200 bg-white rounded-2xl p-4">
-    <p class="text-xs font-black uppercase tracking-wider text-teal-700 m-0">3 · Los planes médicos</p>
+    <p class="text-xs font-black uppercase tracking-wider text-teal-700 m-0">4 · Los planes médicos</p>
     <p class="font-bold text-slate-900 mt-1 m-0">Dejar de contar nombres y empezar a contar quién contesta</p>
     <p class="text-sm text-slate-700 mt-1 m-0">La ley les exige red adecuada, y la miden contando nombres. Nuestro conteo dice que eso es ficción: <strong>40.9%</strong> de los 23,398 proveedores comparte teléfono con otro. Hay <strong>254 centralitas</strong> con 6 o más proveedores detrás del mismo número, y una sola con <strong>543</strong>. Un directorio con cientos de nombres que llevan al mismo teléfono que nadie contesta no es una red. Es una lista.</p>
   </div>
   <div class="border border-slate-200 bg-white rounded-2xl p-4">
-    <p class="text-xs font-black uppercase tracking-wider text-teal-700 m-0">4 · Los médicos y psicólogos</p>
-    <p class="font-bold text-slate-900 mt-1 m-0">No vuelvas por patria. Vuelve con condiciones</p>
-    <p class="text-sm text-slate-700 mt-1 m-0">El mensaje no es "regresa". Es: el dinero <strong>ya está aprobado</strong> ($75,000 en primaria, $50,000 en salud mental) y en 26 pueblos no tendrías competencia local. No lo aceptes solo. Exige el paquete completo antes de firmar, porque el cheque se lo come la luz. Y si ya estás aquí: corrige tu ficha, que es gratis y arregla el directorio para el próximo vecino.</p>
+    <p class="text-xs font-black uppercase tracking-wider text-teal-700 m-0">5 · Los médicos y psicólogos</p>
+    <p class="font-bold text-slate-900 mt-1 m-0">El repago te paga el préstamo. Nadie te paga el sueldo</p>
+    <p class="text-sm text-slate-700 mt-1 m-0">Esa es la pata coja, y hay que decirla antes que nada. El repago lo pone el gobierno federal, pero <strong>el sueldo lo pone el centro de salud</strong>, y con los planes pagando cerca de <strong>41% menos</strong> que en los estados, ese sueldo no compite con Florida. El repago cubre la diferencia salarial <strong>menos de 2 años</strong>. Los otros 28 los pierde el médico.</p>
+    <p class="text-sm text-slate-700 mt-2 m-0">Aun así el dinero es real y hay más de lo que la gente cree. Son <strong>7 programas</strong>, no 1: repago de <strong>$75,000</strong> en cuidado primario y <strong>$50,000</strong> en salud mental · <strong>Students-to-Service, hasta $120,000</strong> por comprometerte desde la residencia · <strong>becas</strong> con matrícula y estipendio · <strong>bono de Medicare</strong> por ejercer en zona designada · el <strong>SLRP</strong> estatal · y <strong>Conrad 30</strong>, 30 visas J-1 al año para médicos ya formados. En Puerto Rico las becas y Students-to-Service están en <strong>cero</strong>.</p>
+    <p class="text-sm text-slate-700 mt-2 m-0">Así que no vuelvas por patria y no aceptes el cheque solo. En 26 pueblos no tendrías competencia local: pide el paquete completo antes de firmar. Y si ya estás aquí, corrige tu ficha. Es gratis y arregla el directorio para el próximo vecino.</p>
   </div>
   <div class="border-2 border-teal-300 bg-teal-50/60 rounded-2xl p-4">
-    <p class="text-xs font-black uppercase tracking-wider text-teal-700 m-0">5 · Cada uno de nosotros</p>
+    <p class="text-xs font-black uppercase tracking-wider text-teal-700 m-0">6 · Cada uno de nosotros</p>
     <p class="font-bold text-slate-900 mt-1 m-0">3 cosas, ninguna toma más de un minuto</p>
     <ol class="text-sm text-slate-700 mt-2 mb-0 pl-5 space-y-1">
       <li><strong>Mira tu pueblo.</strong> Si sale en cero, lo sabes antes de necesitarlo y no en la emergencia.</li>
       <li><strong>Corrige un dato.</strong> Si tu doctor se retiró, cambió de número o ya no coge pacientes, dilo. Eso arregla el directorio para el que venga detrás.</li>
-      <li><strong>Haz la pregunta.</strong> Al centro de salud de tu pueblo: "¿ustedes son sitio aprobado del NHSC?" Y al que te pida el voto: "¿Puerto Rico solicitó el SLRP?" Las dos tienen respuesta de sí o no, y casi nadie las ha hecho.</li>
+      <li><strong>Haz la pregunta.</strong> Al centro de salud de tu pueblo: "¿ustedes son sitio aprobado del NHSC?" Y al que te pida el voto: "¿por qué Puerto Rico no tiene SLRP, si más de 40 estados sí?" Las dos tienen respuesta corta, y casi nadie las ha hecho.</li>
     </ol>
   </div>
 </div>
@@ -11198,11 +11205,12 @@ async function handleMarcador(req: any, res: any) {
 <h2>Lo que todavía no podemos jurar</h2>
 <p>Dos cosas que preferimos decir antes de que alguien las use para tumbar el resto:</p>
 <ul>
-  <li><strong>El SLRP.</strong> Que Puerto Rico nunca lo haya solicitado sale del expediente de HRSA (FY2025). Es la acusación más fuerte de esta página, así que la pedimos por escrito a HRSA y publicamos la respuesta llegue como llegue. Hasta entonces va marcada como sin confirmar.</li>
+  <li><strong>El SLRP.</strong> Lo que sí decimos, y se verifica hoy en el expediente de HRSA (FY2025): <strong>Puerto Rico no aparece en la lista de jurisdicciones con un SLRP activo.</strong> Lo que <em>no</em> decimos es por qué, porque no lo sabemos: puede que nunca se solicitara, o que se solicitara y no se completara. Son cosas distintas y la diferencia importa. Se lo preguntamos a HRSA por escrito y publicamos la respuesta llegue como llegue.</li>
+  <li><strong>Conrad 30.</strong> Son 30 visas al año para médicos ya formados que ejerzan en zonas designadas. Cuántas usa Puerto Rico <strong>no es público</strong>. Está pedido al Departamento de Salud. Hasta que contesten no decimos que se pierden, solo que no se sabe, que ya de por sí es un problema.</li>
   <li><strong>El conteo de psiquiatras.</strong> Sale del registro federal NPPES, que dice quién declaró práctica en el pueblo. Un profesional que atienda sin declararlo ahí no aparece. Si conoces uno, <a href="/rompelo" class="text-teal-700 font-semibold">rómpelo</a> y lo corregimos con tu nombre en el récord.</li>
 </ul>
 
-<p class="text-sm text-slate-500 mt-6">Fuentes: HRSA (designaciones HPSA y sitios NHSC) × NPPES/CMS (proveedores) × Censo/ACS (pobreza, edad, internet) × EIA (electricidad) × OpenFEMA (recuperación), cruzados municipio por municipio. Medición del ${fecha(metrics[0]?.medido_on || '2026-07-28')}. Esta página no garantiza citas ni reemplaza a médicos, planes o gobierno. Hace algo más básico: que la próxima persona no empiece a ciegas.</p>
+<p class="text-sm text-slate-500 mt-6">Fuentes: HRSA (designaciones HPSA, sitios NHSC y NHSC Field Strength FY2025, corte 30 sept 2025) × NPPES/CMS (proveedores) × Censo/ACS (pobreza, edad, internet) × EIA (electricidad) × EPA SDWIS (agua) × OpenFEMA (recuperación), cruzados municipio por municipio. La brecha salarial como causa está etiquetada como <strong>análisis</strong>, no como hallazgo de encuesta: es consistente con el 41% documentado, y se lo preguntamos por escrito a los centros que sí reclutan. Medición del ${fecha(metrics[0]?.medido_on || '2026-07-28')}. Esta página no garantiza citas ni reemplaza a médicos, planes o gobierno. Hace algo más básico: que la próxima persona no empiece a ciegas.</p>
 <p class="text-sm text-slate-600"><a href="/registro/estado" class="text-teal-700 font-semibold">El expediente completo, pueblo por pueblo →</a> · <a href="/comparte" class="text-teal-700 font-semibold">Datos citables →</a></p>
 `
 
