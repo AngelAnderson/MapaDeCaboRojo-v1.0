@@ -176,6 +176,10 @@
       "destination": "/api/mapa-pages?page=registro-mapa"
     },
     {
+      "source": "/kit",
+      "destination": "/api/mapa-pages?page=kit"
+    },
+    {
       "source": "/marcador",
       "destination": "/api/mapa-pages?page=marcador"
     },

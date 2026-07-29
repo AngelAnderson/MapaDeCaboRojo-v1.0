@@ -11334,6 +11334,317 @@ ${[
   }))
 }
 
+// =============== /kit — Kit para compartir: posts listos, números y tarjetas ===============
+// Página pública para Angel y para quien le ayude a distribuir (Noel y demás). Todo copy-paste
+// o descargable, sin cuenta. Las tarjetas se rasterizan en el navegador (SVG -> canvas -> PNG),
+// sin dependencias externas ni llamadas de red.
+async function handleKit(req: any, res: any) {
+  // Los números salen del marcador vivo para que el kit no pueda quedar desfasado de la página.
+  let pctTel = '43.6', cupon = '33', ceroEsp = '3', sinSitio = '5'
+  try {
+    const { data } = await supabase.from('marcador_salud').select('metric_key,valor,medido_on').order('medido_on', { ascending: false }).range(0, 200)
+    const latest: Record<string, any> = {}
+    for (const r of (data || [])) if (!(r.metric_key in latest)) latest[r.metric_key] = r.valor
+    if (latest.comparten_telefono != null) pctTel = String(Number(latest.comparten_telefono))
+    if (latest.cupon_sin_cobrar != null) cupon = String(Number(latest.cupon_sin_cobrar))
+    if (latest.cero_especialistas != null) ceroEsp = String(Number(latest.cero_especialistas))
+    if (latest.sin_sitio_nhsc != null) sinSitio = String(Number(latest.sin_sitio_nhsc))
+  } catch (_) { /* fallback */ }
+
+  const U = 'registromedicopr.com/marcador'
+
+  type Post = { id: string; titulo: string; nota: string; donde: string; txt: string }
+  const posts: Post[] = [
+    { id: 'p1', titulo: 'Carlin', donde: 'Facebook · X (en hilo)', nota: 'El truco es la repetición: "te dicen / mentira", 3 veces, y a la cuarta cambia el patrón. El desprecio va contra la excusa, nunca contra la gente.',
+      txt: `Te dicen que no hay médicos porque no hay dinero.
+Mentira.
+Hay 7 programas federales para traer médicos a Puerto Rico. Siete.
+
+Entonces te dicen que los médicos son desagradecidos.
+Mentira otra vez.
+Le pagan la deuda de estudio. Nadie le paga el sueldo.
+El regalo dura 2 años. La carrera dura 30.
+Haz tú la resta.
+
+Después te dicen que ese programa federal está ahí para ayudarnos.
+Ese programa lo hicieron para el campo de Estados Unidos, donde el problema es la distancia.
+Aquí el problema no es la distancia. Es que la luz cuesta el doble y se va.
+
+Y cuando ya casi te convencen de que esto no tiene arreglo, resulta que 4 pueblos de aquí lo resolvieron.
+Aibonito. Naranjito. Morovis. Lares.
+No inventaron nada. Lo trabajaron.
+Los demás ni lo han intentado.
+
+Así que no es que no se pueda.
+Es que no se está haciendo.
+Y esas son dos cosas bien distintas.
+
+${U}` },
+    { id: 'p2', titulo: 'El récord seco', donde: 'LinkedIn', nota: 'Cero adjetivos, todo numerado. Es la que mejor aguanta una audiencia profesional.',
+      txt: `4 cosas que aprendí contando los médicos de Puerto Rico, pueblo por pueblo.
+
+1. No falta el dinero. Hay 7 programas federales para traer médicos aquí.
+
+2. El dinero no paga lo que duele. Paga la deuda de estudio. No paga el sueldo. Y los planes aquí pagan 41% menos que en los estados. El repago dura 2 años; la carrera, 30.
+
+3. El programa no fue hecho para nosotros. Se diseñó para el campo de Estados Unidos, donde lo que falta es distancia. Aquí falta con qué aguantarlo: luz casi al doble, agua con violaciones federales, sueldos que no compiten.
+
+4. Ya hay quien lo resolvió, y es de aquí. Aibonito, Naranjito, Morovis y Lares tienen casi un tercio de los clínicos de ese programa en toda la isla. 21 pueblos no lo han intentado ni una vez.
+
+Puerto Rico no tiene escasez de médicos. Tiene escasez de condiciones.
+
+${U}` },
+    { id: 'p3', titulo: 'Dicen / El récord', donde: 'X (4 tuits) · Facebook · LinkedIn', nota: 'Formato canon del sitio. Cero opinión, imposible de acusar de político.',
+      txt: `DICEN: no hay dinero para traer médicos.
+EL RÉCORD: hay 7 programas federales para eso.
+
+DICEN: es que los médicos quieren ganar más.
+EL RÉCORD: le pagan la deuda de estudio, no el sueldo. Los planes aquí pagan 41% menos. El repago dura 2 años. La carrera dura 30.
+
+DICEN: el programa federal está para ayudarnos.
+EL RÉCORD: se hizo para el campo de Estados Unidos, donde falta distancia. Aquí falta con qué aguantarlo.
+
+DICEN: esto no tiene arreglo.
+EL RÉCORD: Aibonito, Naranjito, Morovis y Lares ya lo arreglaron. 21 pueblos ni lo han intentado.
+
+No nos falta el médico. Nos falta con qué aguantarlo.
+
+${U}` },
+    { id: 'p4', titulo: 'El cartero', donde: 'Facebook · X', nota: 'Para el que no lee listas. Nadie tiene que saber qué es Medicare Advantage para entenderla.',
+      txt: `El gobierno federal manda dinero para tus médicos.
+Lo manda por correo.
+El cartero es una aseguradora.
+Y el cartero decide cuánto te llega.
+
+En Ohio llega completo. Aquí llega más flaco.
+
+Ahora le dicen al médico: te pago la deuda de tus estudios si te mudas a un pueblo que no tiene.
+Suena bien.
+Pero el que le paga la deuda no es el que le paga el sueldo.
+El regalo dura 2 años. La carrera dura 30.
+
+Eso no es escasez de médicos.
+Eso es escasez de condiciones.
+
+Y aun así, 4 pueblos de aquí lo resolvieron.
+
+${U}` },
+    { id: 'p5', titulo: 'Corto · Busca tu pueblo', donde: 'El que más clics da', nota: '35 palabras. La última línea es personal: la gente no da clic por Puerto Rico, da clic por su pueblo.',
+      txt: `Hay ${cupon} pueblos en Puerto Rico sin un solo psiquiatra.
+
+Ni uno.
+
+Y no es que falte el dinero. El dinero está aprobado hace años.
+
+Lo que falta es que alguien lo cobre.
+
+Busca tu pueblo.
+
+${U}` },
+    { id: 'p6', titulo: 'Corto · Los 4 pueblos', donde: 'El que más se comparte', nota: 'Abre con buenas noticias, que casi nadie hace con este tema. La gente de esos 4 pueblos la comparte sola.',
+      txt: `4 pueblos de Puerto Rico resolvieron lo que el resto no.
+
+Aibonito. Naranjito. Morovis. Lares.
+
+Hay un programa federal que trae médicos. Casi nadie aquí lo usa.
+
+Esos 4 solos tienen casi un tercio de esos clínicos.
+
+No inventaron nada. Lo trabajaron.
+
+Y 21 pueblos no lo han intentado ni una vez.
+
+Busca el tuyo.
+
+${U}` },
+    { id: 'p7', titulo: 'Corto · El mecanismo', donde: 'La más explicativa', nota: 'Da el porqué completo. Menos clics, más comprensión.',
+      txt: `En Puerto Rico dicen que los médicos se van porque no hay dinero.
+
+No es verdad.
+
+Hay 7 programas federales para traerlos.
+
+El problema es otro.
+
+Le pagan la deuda de estudio al médico.
+
+Nadie le paga el sueldo.
+
+El regalo se acaba en 2 años. La carrera dura 30.
+
+No nos falta el médico. Nos falta con qué aguantarlo.
+
+Lo conté pueblo por pueblo.
+
+${U}` },
+  ]
+
+  const datos: { k: string; v: string; f: string }[] = [
+    { k: 'El titular', v: `${cupon} municipios de Puerto Rico tienen el dinero federal de salud mental aprobado y cero psiquiatras: 792,221 personas. Verificado pueblo por pueblo contra el registro federal.`, f: 'HRSA × NPPES/CMS' },
+    { k: 'Los que están en cero de todo', v: `${ceroEsp} pueblos de Puerto Rico no tienen ni un especialista médico de ninguna clase: Maricao, Las Marías y Florida.`, f: 'NPPES/CMS' },
+    { k: 'El papel que falta', v: `A ${sinSitio} pueblos designados les falta hasta el papel: Añasco, Guánica, Guayanilla, Hormigueros y Loíza no tienen sitio NHSC aprobado donde un médico pueda cobrar el repago.`, f: 'HRSA BHW' },
+    { k: 'La comparación que duele', v: 'Puerto Rico usa el programa federal que trae médicos a razón de 2.5 clínicos por cada 100,000 habitantes. West Virginia, con la mitad de nuestra población, tiene 15.3. Seis veces más.', f: 'HRSA NHSC Field Strength FY2025' },
+    { k: 'La prueba de que sí se puede', v: 'Aibonito (11 participantes), Naranjito (7), Morovis (5), Orocovis (2) y el corredor de Lares (9) concentran cerca de un tercio de todos los clínicos NHSC de Puerto Rico. Y 21 de los pueblos con el cupón sin cobrar no tienen ni un participante.', f: 'HRSA BHW, julio 2026' },
+    { k: 'El dinero del SLRP', v: 'HRSA le adjudicó a Puerto Rico $2,414,970 en 3 años ($804,990 anuales) para su programa estatal de repago de préstamos, el tramo más alto de la tabla. Lo que no está público es a cuántos clínicos colocó ese dinero.', f: 'HRSA — SLRP Awards' },
+    { k: 'La red que no es red', v: `${pctTel}% de los proveedores del registro federal en Puerto Rico comparte teléfono con otro proveedor. Hay 254 números con 6 o más proveedores detrás, y uno solo con 543. Un directorio así no es una red, es una lista.`, f: 'Este registro, sobre NPPES' },
+    { k: 'La luz', v: 'La electricidad en Puerto Rico cuesta 45.6% más que el promedio de Estados Unidos: 24.36 contra 16.73 centavos por kilovatio hora.', f: 'EIA, Electric Power Monthly 2025' },
+    { k: 'El agua', v: 'El récord federal de la EPA muestra 13 violaciones de salud del agua activas en el oeste de Puerto Rico: Cabo Rojo con 3 y los acueductos comunitarios de San Germán con 8.', f: 'EPA SDWIS' },
+    { k: 'La telemedicina que no llega', v: 'En Maricao, 60.5% de los hogares no tiene internet. En Las Marías, 58.8%. Son 2 de los 3 pueblos de Puerto Rico con cero especialistas de toda clase.', f: 'Censo/ACS tabla B28002' },
+    { k: 'El cemento sin médico', v: `$3,469 millones de fondos federales de recuperación llegaron a los ${cupon} pueblos que no tienen ni un psiquiatra. Jayuya recibió $424 millones y tiene 2 especialistas y cero psiquiatras.`, f: 'OpenFEMA' },
+  ]
+
+  const tarjetas = [
+    { id: 't1', l1: `${cupon} pueblos`, l2: 'de Puerto Rico no tienen', l3: 'ni un solo psiquiatra', pie: 'Fuente: HRSA × registro federal NPPES' },
+    { id: 't2', l1: '2.5 contra 15.3', l2: 'PR usa el programa federal que trae médicos', l3: '6 veces menos que West Virginia', pie: 'Fuente: HRSA, NHSC Field Strength FY2025' },
+    { id: 't3', l1: '2 años contra 30', l2: 'El repago le paga la deuda al médico', l3: 'Nadie le paga el sueldo', pie: 'Fuente: HRSA · planes pagan 41% menos que en los estados' },
+    { id: 't4', l1: `${pctTel}%`, l2: 'de los proveedores comparte teléfono', l3: 'Eso no es una red. Es una lista', pie: 'Fuente: este registro, sobre NPPES' },
+  ]
+
+  const svgCard = (c: any) => {
+    const esc = (x: string) => escapeHtml(x)
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" width="1080" height="1080" id="svg-${c.id}">
+  <rect width="1080" height="1080" fill="#0f172a"/>
+  <rect x="0" y="0" width="1080" height="14" fill="#14b8a6"/>
+  <text x="80" y="300" font-family="Georgia, serif" font-size="104" font-weight="bold" fill="#5eead4">${esc(c.l1)}</text>
+  <text x="80" y="430" font-family="Helvetica, Arial, sans-serif" font-size="52" fill="#e2e8f0">${esc(c.l2)}</text>
+  <text x="80" y="510" font-family="Helvetica, Arial, sans-serif" font-size="52" font-weight="bold" fill="#ffffff">${esc(c.l3)}</text>
+  <rect x="80" y="600" width="120" height="6" fill="#14b8a6"/>
+  <text x="80" y="700" font-family="Helvetica, Arial, sans-serif" font-size="30" fill="#94a3b8">${esc(c.pie)}</text>
+  <text x="80" y="960" font-family="Helvetica, Arial, sans-serif" font-size="38" font-weight="bold" fill="#5eead4">registromedicopr.com/marcador</text>
+  <text x="80" y="1010" font-family="Helvetica, Arial, sans-serif" font-size="26" fill="#64748b">Verificado contra fuentes federales. Si ves un error, rómpelo.</text>
+</svg>`
+  }
+
+  const body = `
+<h1>Kit para compartir</h1>
+<p class="text-lg text-slate-600 mt-3">Todo lo de esta página es para usarse. Copia el texto, descarga la tarjeta, publícalo donde quieras. No hace falta pedir permiso ni poner mi nombre.</p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold m-0">Para quién es</p>
+  <p class="text-sm text-slate-300 mt-2 m-0">Para cualquiera que quiera ayudar a mover esto: amistades, prensa, un médico, alguien de otro pueblo. Los números salen en vivo de <a href="/marcador" class="text-teal-300 underline">El Marcador</a>, así que esta página no se puede quedar desfasada. Si el número cambia allá, cambia aquí.</p>
+</div>
+
+<h2>1 · Textos listos</h2>
+<p class="text-slate-600 -mt-2">Todos dicen lo mismo. Cambia el tono. Escoge por dónde vas a publicar.</p>
+<div class="not-prose mt-4 space-y-3">
+${posts.map(p => `<div class="border border-slate-200 bg-white rounded-2xl p-4">
+  <div class="flex items-start justify-between gap-3 flex-wrap">
+    <div class="min-w-0">
+      <p class="font-black text-slate-900 m-0">${escapeHtml(p.titulo)}</p>
+      <p class="text-xs text-teal-700 font-semibold mt-0.5 m-0">${escapeHtml(p.donde)}</p>
+    </div>
+    <button type="button" class="copy-btn shrink-0 text-xs font-bold text-white bg-teal-700 rounded-full px-4 py-2 hover:bg-teal-800" data-copy="${escapeHtml(p.txt)}">📋 Copiar</button>
+  </div>
+  <p class="text-xs text-slate-500 mt-2 m-0">${escapeHtml(p.nota)}</p>
+  <pre class="mt-3 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-xl p-3 whitespace-pre-wrap font-sans leading-relaxed m-0">${escapeHtml(p.txt)}</pre>
+</div>`).join('')}
+</div>
+
+<h2>2 · Los números, con su fuente</h2>
+<p class="text-slate-600 -mt-2">Para citar en una noticia, un comentario o un mensaje. Cada uno se copia con la fuente pegada.</p>
+<div class="not-prose mt-4 space-y-3">
+${datos.map((d, i) => `<div class="border border-slate-200 bg-white rounded-xl p-4">
+  <div class="flex items-start justify-between gap-2">
+    <p class="text-xs font-bold text-teal-700 uppercase tracking-wide m-0">${escapeHtml(d.k)}</p>
+    <button type="button" class="copy-btn shrink-0 text-xs font-semibold text-teal-700 border border-teal-300 rounded-full px-3 py-1 hover:bg-teal-50" data-copy="${escapeHtml(d.v + ' Fuente: ' + d.f + ', vía registromedicopr.com/marcador')}">📋 Copiar</button>
+  </div>
+  <blockquote class="mt-2 text-slate-900 leading-relaxed border-l-4 border-teal-500 pl-3 m-0">${escapeHtml(d.v)}</blockquote>
+  <p class="text-xs text-slate-500 mt-2 m-0">Fuente: ${escapeHtml(d.f)}</p>
+</div>`).join('')}
+</div>
+
+<h2>3 · Tarjetas para descargar</h2>
+<p class="text-slate-600 -mt-2">Cuadradas, 1080 por 1080, listas para Instagram, Facebook o WhatsApp. Toca descargar y te baja el PNG.</p>
+<div class="not-prose mt-4 grid sm:grid-cols-2 gap-4">
+${tarjetas.map(c => `<div class="border border-slate-200 bg-white rounded-2xl p-3">
+  <div class="rounded-xl overflow-hidden border border-slate-200">${svgCard(c).replace('width="1080" height="1080"', 'width="100%" height="auto" style="display:block"')}</div>
+  <button type="button" class="dl-btn mt-3 w-full text-sm font-bold text-white bg-slate-900 rounded-full px-4 py-2.5 hover:bg-slate-800" data-svg="svg-${c.id}" data-name="${c.id}-registromedicopr.png">⬇️ Descargar PNG</button>
+</div>`).join('')}
+</div>
+
+<h2>4 · Antes de publicar, 4 reglas</h2>
+<div class="not-prose mt-4 space-y-2">
+  <div class="border-l-4 border-red-400 bg-white border border-slate-200 rounded-r-xl p-4">
+    <p class="font-bold text-slate-900 m-0">No digas que Puerto Rico no pidió el dinero del SLRP.</p>
+    <p class="text-sm text-slate-700 mt-1 m-0">Nosotros lo dijimos y era falso. HRSA le adjudicó a PR <strong>$2,414,970</strong> en 3 años, el tramo más alto. Lo corregimos el 29 de julio de 2026. Lo que sí se puede decir es que <strong>no está público a cuántos clínicos colocó ese dinero</strong>.</p>
+  </div>
+  <div class="border-l-4 border-amber-400 bg-white border border-slate-200 rounded-r-xl p-4">
+    <p class="font-bold text-slate-900 m-0">El dinero de FEMA no es acusación.</p>
+    <p class="text-sm text-slate-700 mt-1 m-0">Los $3,469 millones eran de infraestructura, no de salud. Se citan para dar tamaño, no para decir que se lo robaron. Usarlo como acusación tumba el argumento entero, y con razón.</p>
+  </div>
+  <div class="border-l-4 border-amber-400 bg-white border border-slate-200 rounded-r-xl p-4">
+    <p class="font-bold text-slate-900 m-0">Lo del sueldo es análisis, no encuesta.</p>
+    <p class="text-sm text-slate-700 mt-1 m-0">Que los planes pagan cerca de 41% menos está documentado. Que por eso el médico no viene es la lectura más razonable, no un hallazgo de encuesta. Si te lo pelean, esa es la respuesta honesta.</p>
+  </div>
+  <div class="border-l-4 border-teal-500 bg-teal-50/60 border border-teal-200 rounded-r-xl p-4">
+    <p class="font-bold text-slate-900 m-0">No cierres con urgencia ni con culpa.</p>
+    <p class="text-sm text-slate-700 mt-1 m-0">Nada de "si no actúas ahora". Este tema ya pesa bastante. Los textos de arriba cierran dando permiso de no hacer nada hoy, y esa es justo la línea que hace que se compartan.</p>
+  </div>
+</div>
+
+<h2>Si encuentras un error</h2>
+<p>Este kit se corrige igual que el récord: en público y el mismo día. Ya nos pasó una vez con el SLRP. <a href="/rompelo" class="text-teal-700 font-semibold">Rómpelo aquí</a> o escribe a <a href="mailto:angel@angelanderson.com" class="text-teal-700 font-semibold">angel@angelanderson.com</a>.</p>
+
+<script>
+(function(){
+  document.querySelectorAll('.copy-btn').forEach(function(b){
+    b.addEventListener('click', function(){
+      var t = b.getAttribute('data-copy') || '';
+      var done = function(){ var o = b.textContent; b.textContent = '✓ Copiado'; b.disabled = true; setTimeout(function(){ b.textContent = o; b.disabled = false; }, 1600); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t).then(done).catch(function(){ fb(t, done); });
+      } else { fb(t, done); }
+    });
+  });
+  function fb(t, done){ var ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch(e){} document.body.removeChild(ta); }
+
+  document.querySelectorAll('.dl-btn').forEach(function(b){
+    b.addEventListener('click', function(){
+      var svg = document.getElementById(b.getAttribute('data-svg'));
+      if (!svg) return;
+      var clone = svg.cloneNode(true);
+      clone.setAttribute('width','1080'); clone.setAttribute('height','1080');
+      var s = new XMLSerializer().serializeToString(clone);
+      var img = new Image();
+      var url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(s)));
+      img.onload = function(){
+        var cv = document.createElement('canvas'); cv.width = 1080; cv.height = 1080;
+        cv.getContext('2d').drawImage(img, 0, 0, 1080, 1080);
+        cv.toBlob(function(blob){
+          var a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = b.getAttribute('data-name') || 'tarjeta.png';
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
+          var o = b.textContent; b.textContent = '✓ Descargada';
+          setTimeout(function(){ b.textContent = o; }, 1800);
+        }, 'image/png');
+      };
+      img.onerror = function(){ alert('No se pudo generar el PNG. Haz captura de pantalla de la tarjeta.'); };
+      img.src = url;
+    });
+  });
+})();
+</script>
+`
+
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'WebPage',
+    name: 'Kit para compartir — el estado de los médicos en Puerto Rico',
+    description: 'Textos listos para publicar, números con su fuente federal y tarjetas descargables sobre el acceso a médicos en Puerto Rico. Libre de usar, sin cuenta.',
+    url: 'https://registromedicopr.com/kit', inLanguage: 'es', isAccessibleForFree: true,
+    publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=600')
+  res.status(200).send(layout({
+    title: 'Kit para compartir — Registro Médico PR',
+    description: 'Textos listos para publicar, números con su fuente federal y tarjetas descargables sobre el acceso a médicos en Puerto Rico. Libre de usar, sin cuenta ni permiso.',
+    slug: 'kit', bodyHtml: body, jsonLd, ogImage: '/og/desiertos.png',
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
 // =============== /marcador — El Marcador de Salud PR: 6 números con dueño ===============
 // Tesis: PR no tiene escasez de médicos, tiene escasez de condiciones. Los 3 escapes propuestos
 // (que vengan / telemedicina / que llegue dinero) mueren en la misma piedra, y se prueba con data.
@@ -14492,6 +14803,7 @@ export default async function handler(req: any, res: any) {
     case 'registro-mapa': return await handleRegistroMapa(req, res)
     case 'registro-estado': return await handleRegistroEstado(req, res)
     case 'marcador': return await handleMarcador(req, res)
+    case 'kit': return await handleKit(req, res)
     case 'registro-censo': return await handleRegistroCenso(req, res)
     case 'raras': return await handleRaras(req, res)
     case 'atlas': return await handleAtlas(req, res)
