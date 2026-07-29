@@ -11054,6 +11054,15 @@ async function handleMarcador(req: any, res: any) {
     }
   } catch (_) { /* fallback */ }
 
+  // Conteo vivo de proveedores: la prosa del actor "planes médicos" NO puede quedar
+  // hardcoded o contradice al marcador cuando el registro crece (pasó el 28 jul: 23,398 → 25,762).
+  let nProv = 25762
+  try {
+    const { count } = await supabase.from('places').select('id', { count: 'exact', head: true }).not('npi', 'is', null)
+    if (count && count > 1000) nProv = count
+  } catch (_) { /* fallback */ }
+  const pctTel = metrics.find(m => m.metric_key === 'comparten_telefono')?.valor ?? 43.6
+
   const lectura: Record<string, string> = {
     'Cabo Rojo': 'Casi 49,000 personas, 99 especialistas y solo 3 psiquiatras. Tiene sitio aprobado y designación federal de salud mental activa. O sea: el cupón se puede cobrar aquí mañana y nadie lo ha cobrado.',
     'Mayagüez': 'Aguanta a toda la región. Sus 26 psiquiatras son los únicos de un radio enorme, y 6 pueblos del oeste dependen de ellos. Eso no es abundancia, es un punto único de fallo.',
@@ -11164,7 +11173,7 @@ async function handleMarcador(req: any, res: any) {
   <div class="border border-slate-200 bg-white rounded-2xl p-4">
     <p class="text-xs font-black uppercase tracking-wider text-teal-700 m-0">4 · Los planes médicos</p>
     <p class="font-bold text-slate-900 mt-1 m-0">Dejar de contar nombres y empezar a contar quién contesta</p>
-    <p class="text-sm text-slate-700 mt-1 m-0">La ley les exige red adecuada, y la miden contando nombres. Nuestro conteo dice que eso es ficción: <strong>40.9%</strong> de los 23,398 proveedores comparte teléfono con otro. Hay <strong>254 centralitas</strong> con 6 o más proveedores detrás del mismo número, y una sola con <strong>543</strong>. Un directorio con cientos de nombres que llevan al mismo teléfono que nadie contesta no es una red. Es una lista.</p>
+    <p class="text-sm text-slate-700 mt-1 m-0">La ley les exige red adecuada, y la miden contando nombres. Nuestro conteo dice que eso es ficción: <strong>${pctTel}%</strong> de los ${nProv.toLocaleString('en-US')} proveedores del registro comparte teléfono con otro. Hay <strong>254 centralitas</strong> con 6 o más proveedores detrás del mismo número, y una sola con <strong>543</strong>. Un directorio con cientos de nombres que llevan al mismo teléfono que nadie contesta no es una red. Es una lista.</p>
   </div>
   <div class="border border-slate-200 bg-white rounded-2xl p-4">
     <p class="text-xs font-black uppercase tracking-wider text-teal-700 m-0">5 · Los médicos y psicólogos</p>
