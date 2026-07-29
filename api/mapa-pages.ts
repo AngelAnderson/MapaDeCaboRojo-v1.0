@@ -9484,8 +9484,8 @@ ${AGENDA.map((a, i) => `
 
 // /buscar — búsqueda instantánea sobre el índice de récords PRSF (client-side, cero dependencias).
 // Cada búsqueda se loggea a prsf_events (event=search) — las búsquedas sin resultado son señal de qué récord falta.
-export { BUSCAR_INDEX } from './_lib/buscar-index'
-import { BUSCAR_INDEX } from './_lib/buscar-index'
+export { BUSCAR_INDEX } from './_lib/buscar-index.js'
+import { BUSCAR_INDEX } from './_lib/buscar-index.js'
 
 // Tier 2: además de las páginas, se buscan los datos citables (/comparte) y las contradicciones —
 // la búsqueda devuelve la respuesta con su fuente, no solo el link.

@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { BUSCAR_INDEX } from './_lib/buscar-index';
+import { BUSCAR_INDEX } from './_lib/buscar-index.js';
 import { GoogleGenAI } from "@google/genai";
 
 const supabase = createClient(
