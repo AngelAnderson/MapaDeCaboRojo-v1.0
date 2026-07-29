@@ -6324,6 +6324,35 @@ async function handleSinFiltrosPulso(req: any, res: any) {
   const list = (title: string, pairs: [string, number][]) => pairs.length
     ? `<h3>${title}</h3><div class="not-prose overflow-auto border border-slate-200 rounded-xl mt-2 mb-4"><table class="w-full text-sm"><tbody>${pairs.map(([k, v]) => `<tr class="border-t border-slate-100"><td class="py-1.5 px-3 font-semibold text-slate-800">${escapeHtml(k)}</td><td class="py-1.5 px-3 text-right text-slate-600">${v}</td></tr>`).join('')}</tbody></table></div>`
     : `<h3>${title}</h3><p class="text-sm text-slate-400 italic">Sin clicks todavía.</p>`
+  // Lo que PR le pregunta al récord. `search_no_result` es la lista de construir:
+  // lo buscaron y no estaba. Se agrupa por texto para que 5 personas buscando lo
+  // mismo pesen como 5, no como 5 filas sueltas.
+  const busq: Record<string, { n: number; sin: number }> = {}
+  rows.filter(r => r.event === 'search' || r.event === 'search_no_result').forEach(r => {
+    const k = String(r.target || '').trim().toLowerCase()
+    if (!k) return
+    busq[k] = busq[k] || { n: 0, sin: 0 }
+    busq[k].n++
+    if (r.event === 'search_no_result') busq[k].sin++
+  })
+  const busqOrden = Object.entries(busq).sort((a, b) => (b[1].sin - a[1].sin) || (b[1].n - a[1].n))
+  const sinResultado = busqOrden.filter(([, v]) => v.sin > 0).slice(0, 15)
+  const conResultado = busqOrden.filter(([, v]) => v.sin === 0).slice(0, 10)
+  const filaBusq = (k: string, v: { n: number; sin: number }) => `<tr class="border-t border-slate-100">
+    <td class="py-1.5 px-3 font-semibold text-slate-800">${escapeHtml(k)}</td>
+    <td class="py-1.5 px-3 text-right text-slate-600 whitespace-nowrap">${v.n}${v.n > 1 ? ' veces' : ' vez'}</td>
+  </tr>`
+  const busquedasHtml = `
+<h2>Lo que Puerto Rico le preguntó al récord</h2>
+<p class="text-slate-600 -mt-1">La señal más útil del sitio. Se empezó a registrar el 29 de julio de 2026 — antes se estaba botando por un bug, así que este bloque arranca de cero.</p>
+${sinResultado.length ? `
+<div class="not-prose border-2 border-amber-300 bg-amber-50 rounded-2xl p-5 mt-3">
+  <p class="text-xs uppercase tracking-widest text-amber-800 font-bold">Lo buscaron y no estaba · la lista de qué construir</p>
+  <div class="overflow-auto bg-white border border-amber-200 rounded-xl mt-3"><table class="w-full text-sm"><tbody>${sinResultado.map(([k, v]) => filaBusq(k, v)).join('')}</tbody></table></div>
+  <p class="text-xs text-amber-800 mt-3">Cada línea es un vecino que vino, preguntó, y se fue con las manos vacías. Si algo se repite, ese es el próximo récord.</p>
+</div>` : `<p class="text-sm text-slate-400 italic mt-3">Todavía nadie ha buscado algo que no esté. Buena señal, o poco tráfico al buscador.</p>`}
+${conResultado.length ? `<h3 class="mt-5">Lo buscaron y sí estaba</h3><div class="not-prose overflow-auto border border-slate-200 rounded-xl mt-2 mb-4"><table class="w-full text-sm"><tbody>${conResultado.map(([k, v]) => filaBusq(k, v)).join('')}</tbody></table></div>` : ''}`
+
   const empty = rows.length === 0
   const body = `
 <h1>Pulso</h1>
@@ -6335,6 +6364,7 @@ ${empty ? '<div class="not-prose bg-amber-50 border border-amber-200 rounded-xl 
   ${tile(totals.verify, 'clicks "verifícalo tú mismo"')}
   ${tile(totals.cite, 'clicks a la capa citable')}
 </div>
+${busquedasHtml}
 ${list('Récords más mirados', topRec)}
 ${list('Fuentes que la gente fue a verificar', topVerify)}
 ${list('Capa citable (API / IA / datos)', topCite)}
