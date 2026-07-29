@@ -6281,7 +6281,13 @@ ${recordCards}
 
 // Analytics de PuertoRicoSinFiltros.com — el log ES un récord (qué mira PR).
 // Mismo patrón fail-safe que acceso-log: allowlist + insert service-role, nunca rompe la página.
-const SINFILTROS_EVENTS = new Set(['page_view', 'record_click', 'verify_click', 'cite_click', 'audio_play', 'outbound_click'])
+// 2026-07-29: faltaban 'search' y 'search_no_result'. El cliente de /buscar los venia
+// posteando bien (debounce 900ms) desde el dia 1, pero este whitelist los botaba en
+// silencio: 21 visitas a /buscar en 30 dias y CERO busquedas en prsf_events. Peor: el
+// estado vacio le promete al vecino "que lo buscaste ya quedo anotado" — y no se anotaba.
+// search_no_result es la senal mas valiosa del sitio: lo que PR le pregunta al record
+// y el record no tiene. De ahi sale cual se construye proximo.
+const SINFILTROS_EVENTS = new Set(['page_view', 'record_click', 'verify_click', 'cite_click', 'audio_play', 'outbound_click', 'search', 'search_no_result', 'ask'])
 async function handleSinFiltrosLog(req: any, res: any) {
   try {
     let body: any = req.body
@@ -9617,6 +9623,32 @@ export const BUSCAR_INDEX = [
     { u: '/rompelo', t: 'Rómpelo', d: 'Objeciones contestadas + registro público de correcciones', k: 'rompelo objeciones quien eres correcciones errores confianza' },
     { u: '/comparte', t: 'Datos citables', d: 'Números listos pa\' copiar, con fuente', k: 'citas citables copiar prensa compartir' },
     { u: '/mision', t: 'La misión', d: 'Qué es este sitio y qué no es', k: 'mision quienes somos acerca proposito' },
+  // 2026-07-29 — 34 rutas vivas no estaban en el indice, o sea eran invisibles pa'l
+  // buscador. /salud-que-falta era la 6ta pagina mas visitada del sitio y no salia.
+  // Keywords sin acento a proposito: norm() los quita antes de comparar.
+  { u: '/salud-que-falta', t: 'La salud que falta', d: 'Las zonas de escasez médica de PR y el dinero que las arregla', k: 'salud falta escasez hpsa zonas medicos dinero arregla desierto' },
+  { u: '/pueblo', t: '¿Cómo está tu pueblo?', d: 'Semáforo de acceso médico de los 78 municipios', k: 'pueblo municipio semaforo acceso medico 78 municipios mi pueblo' },
+  { u: '/registro/desiertos', t: 'Los desiertos médicos', d: 'Regiones de PR sin especialistas', k: 'desierto desiertos medicos regiones sin especialistas vacio' },
+  { u: '/registro/mapa', t: 'El mapa de los médicos', d: 'Especialistas por municipio, en mapa', k: 'mapa medicos especialistas municipio ver mapa' },
+  { u: '/registro/censo', t: 'El Censo Médico Real', d: '¿Quién está cogiendo pacientes de verdad?', k: 'censo medico pacientes nuevos cogiendo aceptando cita' },
+  { u: '/registro', t: 'Registro de Especialistas', d: 'Los especialistas médicos de PR, verificado y en español', k: 'registro especialistas medicos directorio buscar doctor' },
+  { u: '/puedo-volver', t: '¿Puedo volver a Puerto Rico?', d: 'Los médicos que hay de verdad, si estás pensando regresar', k: 'volver regresar mudarme diaspora retorno medicos' },
+  { u: '/porque', t: '¿Por qué se van los médicos?', d: 'La matemática del éxodo médico, con fuente', k: 'porque se van medicos exodo fuga sueldo reembolso medicare' },
+  { u: '/necesito', t: '¿Cuál es tu situación?', d: 'Guías pa\' resolver lo médico en PR', k: 'necesito ayuda situacion guia resolver como hago' },
+  { u: '/marcador', t: 'El Marcador de la salud', d: '6 números de la salud de PR, cada uno con dueño', k: 'marcador numeros salud dueno responsable score' },
+  { u: '/espejo', t: 'El Espejo', d: 'Cómo pedimos cuentas, y cómo nos las piden a nosotros', k: 'espejo cuentas accountability metodo transparencia' },
+  { u: '/notas', t: 'Las Notas de Puerto Rico', d: 'Las metas mínimas federales, con nota y fuente', k: 'notas boletin metas federales calificacion nota' },
+  { u: '/numero-mas-nuevo', t: 'El número más nuevo que existe', d: 'El rezago de los datos en PR', k: 'numero nuevo rezago viejo desactualizado data stale' },
+  { u: '/ultima-cifra', t: 'La última buena cifra', d: 'El conteo de negocios de PR se congeló en el año pico', k: 'ultima cifra negocios conteo congelado qcew' },
+  { u: '/raras', t: 'Enfermedades raras en PR', d: 'Quién las diagnostica', k: 'raras enfermedades diagnostica genetica' },
+  { u: '/oer', t: 'El Expediente OER', d: 'El registro de enfermedades raras que prometió el gobierno', k: 'oer expediente raras registro ley 9 prometio' },
+  { u: '/atlas', t: 'Atlas de enfermedades fundadoras', d: 'Las enfermedades fundadoras boricuas', k: 'atlas fundadoras geneticas boricuas adn founder' },
+  { u: '/dossier', t: 'La población genética más valiosa', d: 'PR: el ADN más valioso y menos estudiado de EE.UU.', k: 'dossier genetica adn poblacion valiosa estudiada nih' },
+  { u: '/observatorio', t: 'Observatorio Cívico de Cabo Rojo', d: 'El pulso cívico del pueblo', k: 'observatorio civico cabo rojo pulso pueblo' },
+  { u: '/barrios', t: 'Los 9 barrios de Cabo Rojo', d: 'Mapa interactivo con lugares verificados', k: 'barrios cabo rojo mapa boqueron combate joyuda pedernales' },
+  { u: '/vista-luz', t: 'El Expediente de la Luz', d: 'El 3 de 10 a la modernización eléctrica, con el minuto exacto', k: 'luz luma aee vista transicion 3 de 10 zar energia gao modernizacion colon' },
+  { u: '/sinfiltros/pulso', t: 'Pulso', d: 'Qué mira Puerto Rico Sin Filtros', k: 'pulso analytics que miran visitas' },
+  { u: '/cambios', t: 'Historial y roadmap', d: 'Qué cambió y qué viene', k: 'cambios roadmap historial changelog viene' },
 ]
 
 // Tier 2: además de las páginas, se buscan los datos citables (/comparte) y las contradicciones —
