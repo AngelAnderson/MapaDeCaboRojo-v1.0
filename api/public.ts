@@ -856,6 +856,9 @@ Barrios: https://mapadecaborojo.com/barrio/{barrio}
 Para el listado completo con teléfonos, horarios, y direcciones: https://mapadecaborojo.com/llms-full.txt
 API JSON: https://mapadecaborojo.com/api/public?action=places
 
+## MCP (Model Context Protocol) para agentes AI
+El Veci (el mismo bot que sirve este directorio) tiene un servidor MCP público en https://api.vecinoai.com/mcp — cualquier agente compatible con MCP (Claude, ChatGPT, Cursor) se conecta directo sin API key y usa 6 herramientas sobre el mismo directorio verificado (buscar negocio, detalle, categorías, abierto ahora, eventos, recalls FDA). Descriptor: https://api.vecinoai.com/.well-known/mcp.json
+
 ## Contacto
 Angel Anderson — angel@angelanderson.com
 Bot El Veci: textea al 787-417-7711
