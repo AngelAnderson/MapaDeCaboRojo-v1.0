@@ -216,7 +216,7 @@ function layout(opts: {
 <p class="text-xs text-slate-500 mt-1 text-center">Verificado uno por uno contra registros federales y públicos. Sin spin, sin relleno. <a href="/rompelo" class="text-teal-700 font-semibold">¿Ves un error? Rómpelo →</a></p>
 <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6 text-xs">
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Salud</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/marcador" class="hover:text-teal-700">El Marcador</a><a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a><a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a><a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a><a href="/espejo" class="hover:text-teal-700">El Espejo</a><a href="/telemedicina" class="hover:text-teal-700">Telemedicina</a><a href="/diabetes" class="hover:text-teal-700">Diabetes</a><a href="/registro-raras" class="hover:text-teal-700">Enfermedades raras</a><a href="https://www.recallradarpr.com" class="hover:text-teal-700">Recalls FDA (RecallRadarPR)</a></div></div>
-<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/rendimiento" class="hover:text-teal-700">Rendimiento del dólar</a><a href="/cupon" class="hover:text-teal-700">Dinero sin cobrar</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/exposicion-ai" class="hover:text-teal-700">Exposición a la IA</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a><a href="/investigacion" class="hover:text-teal-700">Dinero de ciencia</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/rendimiento" class="hover:text-teal-700">Rendimiento del dólar</a><a href="/cupon" class="hover:text-teal-700">Dinero sin cobrar</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/exposicion-ai" class="hover:text-teal-700">Exposición a la IA</a><a href="/cuatro-economias" class="hover:text-teal-700">Las 4 economías</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a><a href="/investigacion" class="hover:text-teal-700">Dinero de ciencia</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Servicios</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/agua" class="hover:text-teal-700">Agua</a><a href="/acueductos" class="hover:text-teal-700">El recibo del agua</a><a href="/luz" class="hover:text-teal-700">Luz</a><a href="/basura" class="hover:text-teal-700">Basura</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">El pueblo</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/contradicciones" class="hover:text-teal-700">Contradicciones</a><a href="/transicion" class="hover:text-teal-700">Vistas de transición</a><a href="/funciona" class="hover:text-teal-700">Cuando funciona</a><a href="/semaforo-fema" class="hover:text-teal-700">Semáforo FEMA</a><a href="/demanda" class="hover:text-teal-700">Lo que busca PR</a><a href="/historial" class="hover:text-teal-700">Historial de promesas</a><a href="/promesas" class="hover:text-teal-700">Promesómetro</a><a href="/esencia" class="hover:text-teal-700">Proyecto Esencia</a><a href="/activos" class="hover:text-teal-700">Activos dormidos</a><a href="/retiro" class="hover:text-teal-700">El Huracán Lento</a><a href="/no-se-mide" class="hover:text-teal-700">Lo que ni se mide</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Expedientes</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/expediente/alcalde-cabo-rojo" class="hover:text-teal-700">Alcalde de Cabo Rojo</a><a href="/expediente/representante-distrito-20" class="hover:text-teal-700">Rep. Distrito 20</a></div></div>
@@ -5730,6 +5730,7 @@ export function citableFacts(g = COMPARTE_G_DEFAULT): CitableFact[] {
     { q: '¿Cuál es el municipio más pobre de Puerto Rico y cómo está de médicos?', a: 'Guánica es el municipio más pobre de PR (63.6% bajo el nivel de pobreza). Tiene una designación federal de salud mental con el puntaje máximo posible y cero psiquiatras.', srcText: 'ACS 5-año (censo) × NPPES/CMS × HRSA (ver el estado).', srcUrl: 'https://registromedicopr.com/registro/estado' },
     { q: '¿El sueldo rinde en Puerto Rico?', a: 'El ingreso mediano de un hogar en PR ronda los $25,000 al año, cerca de un tercio del de EE.UU. (~$81,600), pero la luz cuesta casi el doble (~24.5¢/kWh) y la comida importada corre 15-30% más cara por la Ley Jones. El salario mínimo es $10.50 la hora (~$1,820 al mes), menos que el ingreso mediano de un hogar.', srcText: 'Censo/ACS; EIA; DACO (Orden 2021-012); Depto. del Trabajo de PR (ver el récord).', srcUrl: 'https://puertoricosinfiltros.com/costo-de-vida' },
     { q: '¿Cuánta gente en Puerto Rico está trabajando?', a: 'Solo el 40.7% de la población en edad de trabajar de PR está en la fuerza laboral (2024): menos de la mitad, contra cerca de 63% en EE.UU.', srcText: 'Banco Mundial / BLS (2024) (ver el récord).', srcUrl: 'https://puertoricosinfiltros.com/trabajo' },
+    { q: '¿Cuáles pueblos de Puerto Rico aguantaron la caída y cuáles no?', a: 'Los 78 municipios caen en 4 grupos al cruzar población, negocios y vivienda. Puerto Rico perdió 14.5% de su gente entre 2010 y 2025 y ganó 5.2% de sus establecimientos entre 2010 y 2024. De los 4 municipios de mayor población, ninguno quedó en el grupo bueno; la región oeste puso 10 de sus 15 (67%) contra 29% del resto del archipiélago.', srcText: 'Censo/PEP + BLS QCEW + ACS 5 años (ver el récord).', srcUrl: 'https://puertoricosinfiltros.com/cuatro-economias' },
     { q: '¿A qué pueblos de PR les pega más la inteligencia artificial?', a: 'Los pueblos con más empleo de pantalla (Guaynabo, San Juan, Bayamón, Carolina) son los más expuestos a la inteligencia artificial; los del campo (Vieques, Maunabo, Salinas, Maricao) los más resilientes. Es el primer ranking de exposición a la inteligencia artificial de los 78 municipios de PR, cruzando la ocupación del Censo con índices de exposición por ocupación.', srcText: 'Censo/ACS (C24010) × Eloundou 2023 / AIOE (ver el ranking).', srcUrl: 'https://puertoricosinfiltros.com/exposicion-ai' },
     { q: '¿Cuánto del dinero de recuperación de PR se fue de la isla?', a: 'De cada dólar de contrato de recuperación de Puerto Rico rastreado, cerca de 87 centavos salieron hacia el mainland, a firmas de consultoría e ingeniería fuera de la isla. Solo el 13% quedó en manos de empresas boricuas.', srcText: 'OpenFEMA / USASpending (ver el récord).', srcUrl: 'https://puertoricosinfiltros.com/sigue-el-dinero' },
     { q: '¿Está limpia el agua en el oeste de Puerto Rico?', a: 'El récord federal de la EPA muestra 13 violaciones de salud del agua activas en el oeste de PR: Cabo Rojo con 3 (trihalometanos) y los acueductos comunitarios de San Germán (Periche, Río Piedras y Méndez) con 8.', srcText: 'EPA (SDWIS), récord federal del agua potable (ver el récord).', srcUrl: 'https://puertoricosinfiltros.com/agua', tag: 'local' },
@@ -9416,6 +9417,7 @@ export const BUSCAR_INDEX = [
     { u: '/costo-de-vida', t: '¿El sueldo rinde?', d: 'Ingreso contra costo real de vivir en PR', k: 'costo vida sueldo ingreso canasta ipc inflacion' },
     { u: '/trabajo', t: 'El trabajo', d: 'Participación laboral y cómo subir de valor', k: 'trabajo empleo participacion laboral salario ai' },
     { u: '/exposicion-ai', t: 'Exposición a la AI', d: 'Qué trabajos de PR toca la AI primero', k: 'ai inteligencia artificial empleos automatizacion' },
+    { u: '/cuatro-economias', t: 'Las 4 economías de PR', d: 'Los 78 municipios clasificados: quién aguantó y quién no', k: 'economia municipios poblacion negocios oeste censo qcew cuatro' },
     { u: '/historial', t: 'Historial en video', d: 'Declaraciones públicas al minuto', k: 'historial video declaraciones grabaciones minuto' },
     { u: '/no-se-mide', t: 'Lo que no se mide', d: 'Los datos que PR no recoge (y eso también es dato)', k: 'no se mide gaps datos faltan gobernanza' },
     { u: '/rompelo', t: 'Rómpelo', d: 'Objeciones contestadas + registro público de correcciones', k: 'rompelo objeciones quien eres correcciones errores confianza' },
@@ -10377,6 +10379,154 @@ function handleExposicionAi(req: any, res: any) {
     title: '¿Qué pueblos de Puerto Rico están más expuestos a la inteligencia artificial? Ranking de los 78 municipios',
     description: 'Data nunca publicada: el ranking de exposición a la inteligencia artificial de los 78 municipios de Puerto Rico. El metro corporativo es el más expuesto; el campo, el más resiliente. Con metodología y fuente.',
     slug: 'exposicion-ai', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
+// /cuatro-economias — Las 4 economías de PR. 3 ejes federales independientes (Census PEP + ACS + BLS QCEW),
+// 2 umbrales = la tasa nacional (-14.5% población, +5.2% establecimientos). Canon: Outbox/Estrategia/Las-4-Economias-de-Puerto-Rico-2026-07-28.md
+function handleCuatroEconomias(req: any, res: any) {
+  const M = [
+{n:"Rincón",c:1,p:2.51,g:82.78,e:61.65},{n:"Dorado",c:1,p:-5.96,g:66.05,e:57.69},{n:"Culebra",c:1,p:-4.57,g:45.24,e:41.57},{n:"Moca",c:1,p:-6.35,g:44.79,e:36.47},{n:"Gurabo",c:1,p:-12.32,g:35.42,e:32.67},{n:"Toa Alta",c:1,p:-11.22,g:34.23,e:25.33},{n:"Camuy",c:1,p:-7.02,g:29.97,e:32.95},{n:"Isabela",c:1,p:-5.90,g:29.24,e:12.43},{n:"Aguada",c:1,p:-11.06,g:26.52,e:5.83},{n:"San Sebastián",c:1,p:-8.04,g:22.85,e:29.44},{n:"Cabo Rojo",c:1,p:-8.52,g:22.48,e:11.70},{n:"Juana Díaz",c:1,p:-9.64,g:21.54,e:10.80},{n:"Hatillo",c:1,p:-9.88,g:19.52,e:25.77},{n:"Lajas",c:1,p:-11.53,g:17.67,e:17.96},{n:"Aguadilla",c:1,p:-12.68,g:15.54,e:15.01},{n:"Vega Alta",c:1,p:-14.02,g:13.92,e:-10.89},{n:"Guaynabo",c:1,p:-9.06,g:13.66,e:40.90},{n:"Barceloneta",c:1,p:-10.07,g:13.57,e:12.56},{n:"Cidra",c:1,p:-8.76,g:10.97,e:4.64},{n:"Hormigueros",c:1,p:-11.76,g:8.95,e:53.88},{n:"Vega Baja",c:1,p:-10.32,g:8.82,e:1.30},{n:"Las Piedras",c:1,p:-10.22,g:8.53,e:-1.93},{n:"Sabana Grande",c:1,p:-12.71,g:7.35,e:18.35},{n:"Barranquitas",c:1,p:-2.67,g:6.72,e:-6.66},{n:"Naranjito",c:1,p:-2.55,g:6.59,e:19.02},{n:"Luquillo",c:1,p:-14.34,g:6.58,e:-11.81},{n:"Trujillo Alto",c:1,p:-11.35,g:5.93,e:-3.17},{n:"Quebradillas",c:1,p:-10.53,g:5.51,e:17.75},{n:"Santa Isabel",c:2,p:-16.01,g:48.31,e:10.83},{n:"Río Grande",c:2,p:-17.50,g:35.22,e:0.61},{n:"Naguabo",c:2,p:-15.17,g:20.51,e:10.62},{n:"Añasco",c:2,p:-16.45,g:19.85,e:20.29},{n:"Villalba",c:2,p:-18.95,g:18.62,e:2.69},{n:"Toa Baja",c:2,p:-20.84,g:14.00,e:12.38},{n:"Salinas",c:2,p:-22.07,g:10.53,e:-4.80},{n:"Arroyo",c:2,p:-24.68,g:7.69,e:9.51},{n:"Coamo",c:2,p:-18.36,g:6.54,e:-3.78},{n:"Morovis",c:3,p:-13.62,g:5.12,e:-3.39},{n:"Orocovis",c:3,p:-8.94,g:3.00,e:-7.02},{n:"San Lorenzo",c:3,p:-9.21,g:2.72,e:-1.01},{n:"Canóvanas",c:3,p:-13.32,g:2.36,e:-6.11},{n:"Arecibo",c:3,p:-11.30,g:1.53,e:1.52},{n:"Adjuntas",c:3,p:-7.64,g:1.29,e:-11.70},{n:"Lares",c:3,p:-9.78,g:1.17,e:-5.60},{n:"Juncos",c:3,p:-9.06,g:0.00,e:29.00},{n:"Corozal",c:3,p:-7.03,g:-1.70,e:-4.94},{n:"Jayuya",c:3,p:-13.33,g:-2.65,e:2.52},{n:"Comerío",c:3,p:-11.23,g:-2.90,e:-8.48},{n:"Aibonito",c:3,p:-4.46,g:-3.40,e:10.99},{n:"Ciales",c:3,p:-11.34,g:-3.66,e:-7.81},{n:"Caguas",c:3,p:-13.11,g:-3.75,e:-5.86},{n:"Manatí",c:3,p:-12.92,g:-3.87,e:16.56},{n:"Bayamón",c:3,p:-13.24,g:-5.15,e:-3.89},{n:"San Germán",c:3,p:-13.28,g:-6.07,e:-19.75},{n:"Las Marías",c:3,p:-12.58,g:-21.09,e:-20.57},{n:"Florida",c:3,p:-10.32,g:-28.57,e:-5.93},{n:"Peñuelas",c:4,p:-20.41,g:4.52,e:-14.21},{n:"San Juan",c:4,p:-16.59,g:4.22,e:-2.58},{n:"Humacao",c:4,p:-15.76,g:2.99,e:-2.17},{n:"Vieques",c:4,p:-15.42,g:2.99,e:-13.96},{n:"Guayanilla",c:4,p:-23.59,g:1.48,e:-11.72},{n:"Loíza",c:4,p:-28.34,g:0.00,e:1.47},{n:"Yauco",c:4,p:-24.82,g:-0.21,e:6.92},{n:"Cataño",c:4,p:-22.88,g:-0.60,e:6.02},{n:"Aguas Buenas",c:4,p:-20.31,g:-1.71,e:-9.83},{n:"Ceiba",c:4,p:-22.54,g:-1.72,e:4.48},{n:"Ponce",c:4,p:-22.81,g:-2.09,e:-8.96},{n:"Utuado",c:4,p:-18.87,g:-3.19,e:-1.42},{n:"Mayagüez",c:4,p:-22.65,g:-3.32,e:-7.38},{n:"Cayey",c:4,p:-16.82,g:-4.76,e:-12.34},{n:"Guayama",c:4,p:-24.95,g:-7.65,e:-22.55},{n:"Carolina",c:4,p:-15.21,g:-7.76,e:-5.84},{n:"Fajardo",c:4,p:-16.80,g:-8.94,e:-12.70},{n:"Yabucoa",c:4,p:-26.05,g:-9.39,e:-15.28},{n:"Patillas",c:4,p:-21.79,g:-13.64,e:-9.13},{n:"Maunabo",c:4,p:-17.22,g:-16.05,e:-10.26},{n:"Guánica",c:4,p:-39.05,g:-17.29,e:54.42},{n:"Maricao",c:4,p:-30.91,g:-24.05,e:4.03}
+  ]
+  const CAT = {
+    1: { t: 'Aguantó y creció', c: '#059669', d: 'Retuvo gente mejor que PR y los negocios crecieron más que PR' },
+    2: { t: 'El apretón', c: '#d97706', d: 'Perdió gente más rápido que PR, pero los negocios crecieron más que PR' },
+    3: { t: 'Retuvo sin motor', c: '#2563eb', d: 'Retuvo gente mejor que PR, pero los negocios no crecieron' },
+    4: { t: 'Doble caída', c: '#dc2626', d: 'Perdió gente más rápido que PR y los negocios no crecieron' },
+  } as Record<number, { t: string; c: string; d: string }>
+  const n = (v: number) => (v > 0 ? '+' : '') + v.toFixed(1) + '%'
+  const counts = [1, 2, 3, 4].map(k => M.filter(m => m.c === k).length)
+
+  const rowsHtml = M.map(m => `<tr class="border-t border-slate-100 muni" data-cat="${m.c}" data-n="${escapeHtml(m.n.toLowerCase())}">
+      <td class="py-1.5 px-3 font-semibold text-slate-800">${escapeHtml(m.n)}</td>
+      <td class="py-1.5 px-3 text-xs font-bold" style="color:${CAT[m.c].c}">${CAT[m.c].t}</td>
+      <td class="py-1.5 px-2 text-right tabular-nums" style="color:${m.p > 0 ? '#059669' : '#64748b'}">${n(m.p)}</td>
+      <td class="py-1.5 px-2 text-right tabular-nums" style="color:${m.g > 5.2 ? '#059669' : '#dc2626'}">${n(m.g)}</td>
+      <td class="py-1.5 px-2 text-right tabular-nums text-slate-500">${n(m.e)}</td>
+    </tr>`).join('')
+
+  const catCards = [1, 2, 3, 4].map(k => `<div class="rounded-xl border border-slate-200 p-4">
+      <div class="flex items-baseline gap-2"><span class="text-2xl font-black" style="color:${CAT[k].c}">${counts[k - 1]}</span><span class="font-bold text-slate-800">${CAT[k].t}</span></div>
+      <p class="text-xs text-slate-500 mt-1">${CAT[k].d}</p>
+    </div>`).join('')
+
+  const body = `
+<h1>Las 4 economías de Puerto Rico</h1>
+<p class="text-lg text-slate-600 mt-2">Los 78 municipios no caen en "pueblo rico" y "pueblo pobre". Caen en <strong>4 grupos</strong>, y salen solos al cruzar 3 datos federales que nadie había puesto juntos: cuánta gente quedó, cuántos negocios hay, y qué tipo de casa está vacía.</p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Puerto Rico perdió 14.5% de su gente y ganó 5.2% de sus negocios. La caída fue urbana. El oeste aguantó.</p>
+</div>
+
+<h2>Los 2 umbrales (no son inventados)</h2>
+<p>Cada municipio se compara contra <strong>Puerto Rico completo</strong> en el mismo periodo. Eso es todo. No hay pesos, no hay modelo, no hay opinión.</p>
+<ul>
+  <li><strong>Gente:</strong> PR pasó de 3,725,789 a 3,184,835 entre 2010 y 2025. <strong>-14.5%.</strong></li>
+  <li><strong>Negocios:</strong> PR pasó de 48,990 a 51,548 establecimientos entre 2010 y 2024. <strong>+5.2%.</strong></li>
+</ul>
+<p>Un municipio que perdió menos de 14.5% de su gente, retuvo. Uno cuyos negocios crecieron más de 5.2%, creció. Dos preguntas de sí o no, 4 combinaciones.</p>
+
+<div class="not-prose grid sm:grid-cols-2 gap-3 my-6">${catCards}</div>
+
+<h2>Busca tu pueblo</h2>
+<p class="text-slate-600 -mt-1 text-sm">Escribe el nombre, o filtra por grupo.</p>
+<div class="not-prose mt-3 mb-2">
+  <input id="q" type="search" placeholder="Escribe tu pueblo..." class="w-full border border-slate-300 rounded-xl px-4 py-2.5 text-base" autocomplete="off">
+  <div class="flex flex-wrap gap-1.5 mt-2 text-xs">
+    <button class="fbtn px-3 py-1.5 rounded-full border border-slate-300 font-semibold" data-f="0">Todos</button>
+    <button class="fbtn px-3 py-1.5 rounded-full border border-slate-300 font-semibold" data-f="1" style="color:#059669">Aguantó y creció</button>
+    <button class="fbtn px-3 py-1.5 rounded-full border border-slate-300 font-semibold" data-f="2" style="color:#d97706">El apretón</button>
+    <button class="fbtn px-3 py-1.5 rounded-full border border-slate-300 font-semibold" data-f="3" style="color:#2563eb">Retuvo sin motor</button>
+    <button class="fbtn px-3 py-1.5 rounded-full border border-slate-300 font-semibold" data-f="4" style="color:#dc2626">Doble caída</button>
+  </div>
+</div>
+<div class="not-prose overflow-auto border border-slate-200 rounded-xl mb-2" style="max-height:520px">
+  <table class="w-full text-sm"><thead class="sticky top-0 bg-slate-50"><tr class="text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Municipio</th><th class="py-2 px-3">Grupo</th><th class="py-2 px-2 text-right">Gente 10-25</th><th class="py-2 px-2 text-right">Negocios 10-24</th><th class="py-2 px-2 text-right">Empleo 10-24</th></tr></thead><tbody id="tb">${rowsHtml}</tbody></table>
+</div>
+<p id="none" class="text-sm text-slate-500 mb-6" style="display:none">No aparece así. Prueba con menos letras, o revisa el acento.</p>
+
+<h2>Los 4 hallazgos</h2>
+<p><strong>1. Ningún municipio creció entre el Censo de 2010 y el de 2020.</strong> Ni uno de los 78. El mejor del país fue Rincón, con -0.07%. Desde 2020 hay 6 en positivo: Rincón, Barranquitas, Naranjito, Aibonito, Moca y Dorado.</p>
+<p><strong>2. El país perdió gente y ganó negocios.</strong> 14.5% menos población, 5.2% más establecimientos, 1.8% más empleo formal. Hay más negocios operando hoy que en 2010, sirviendo a medio millón de personas menos. La correlación entre cambio de población y cambio de negocios por municipio es apenas r = +0.48: la mitad de lo que pasó no lo explica la gente que se fue.</p>
+<p><strong>3. La caída fue urbana.</strong> De los 4 municipios de mayor población en 2010, ninguno quedó en el grupo 1. San Juan, Carolina y Ponce cayeron en gente y en negocios. Bayamón retuvo gente pero no economía. Mayagüez, la mayor del oeste, también quedó en doble caída.</p>
+<p><strong>4. El oeste es la excepción regional.</strong> 10 de los 15 municipios del oeste quedaron en el grupo 1, o sea <strong>67%, contra 29% del resto del archipiélago</strong>: Aguada, Aguadilla, Cabo Rojo, Hormigueros, Isabela, Lajas, Moca, Rincón, Sabana Grande y San Sebastián. Fuera quedaron Añasco, Las Marías, San Germán, Maricao y Mayagüez.</p>
+<p>Los 2 hallazgos juntos dicen algo incómodo y útil: <strong>no fue la geografía, fue el tamaño.</strong> Mayagüez está rodeada de municipios que aguantaron, y ella no.</p>
+
+<h2>La vacancia mide 2 cosas opuestas</h2>
+<p>El tercer eje no define el grupo, diagnostica dentro de él. Y desarma la trampa más común al hablar de vivienda en PR: "% de casas vacías" agrupa realidades contrarias.</p>
+<div class="not-prose overflow-auto border border-slate-200 rounded-xl my-3">
+  <table class="w-full text-sm"><thead class="bg-slate-50"><tr class="text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Municipio</th><th class="py-2 px-2 text-right">Casa de veraneo</th><th class="py-2 px-2 text-right">Vacante "otra"</th><th class="py-2 px-2 text-right">Gente 10-25</th></tr></thead><tbody>
+  <tr class="border-t border-slate-100"><td class="py-1.5 px-3 font-semibold">Culebra</td><td class="py-1.5 px-2 text-right">40.7%</td><td class="py-1.5 px-2 text-right">10.9%</td><td class="py-1.5 px-2 text-right">-4.6%</td></tr>
+  <tr class="border-t border-slate-100"><td class="py-1.5 px-3 font-semibold">Guánica</td><td class="py-1.5 px-2 text-right">6.8%</td><td class="py-1.5 px-2 text-right">27.0%</td><td class="py-1.5 px-2 text-right">-39.0%</td></tr>
+  </tbody></table>
+</div>
+<p>Las dos registran vacancia alta. No es el mismo fenómeno: una es economía de veraneo, la otra es casa dejada. Por eso en este récord <strong>ninguna cifra de vacancia aparece sin desglosar</strong> (ACS B25004, uso estacional contra vacante "otra").</p>
+
+<h2>Cabo Rojo, como ejemplo de lectura</h2>
+<p>Grupo 1. Población -8.5% contra -14.5% del país. Negocios +22.5% (de 556 a 681), rank 13 de 78. Empleo formal +11.7%. Ingreso mediano por hogar $26,408, prácticamente igual al de PR ($26,297). Y 18.2% de su vivienda es de uso estacional, el cuarto más alto del país.</p>
+<p>Lectura: <strong>pueblo de ingreso promedio con una economía por encima del promedio</strong>, y con una parte de su clientela que no vive ahí todo el año.</p>
+
+<h2>Lo que este récord NO dice</h2>
+<ul>
+  <li><strong>Crecer no es enriquecer.</strong> Rincón encabeza el crecimiento de negocios (+82.8%) con ingreso mediano de $24,447, <em>por debajo</em> del de Puerto Rico. El veraneo sube el precio de la vivienda, no necesariamente el bolsillo del que vive ahí.</li>
+  <li><strong>Solo mide economía formal.</strong> BLS QCEW cubre empleo asegurado; no cuenta trabajo por cuenta propia ni informal, que en PR es grande.</li>
+  <li><strong>2010 es base baja.</strong> La contracción de PR empezó en 2006. Crecer desde un piso no es crecer desde un techo.</li>
+  <li><strong>El Censo 2020 en PR</strong> se levantó tras María y durante la pandemia; hay señalamientos de subconteo. Las cifras de 2025 son estimados, no conteo.</li>
+  <li><strong>Grupo no es destino.</strong> Es una foto de 15 años, no un pronóstico.</li>
+</ul>
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
+  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Antes de decir que un pueblo está muerto, hay que contar.</p>
+  <p class="mt-2 text-sm text-slate-600 italic">Aquí están los 78, con la fuente al lado. Si te sirve, úsalo.</p>
+</div>
+
+<p class="text-sm text-slate-500 mt-6"><strong>Cómo se hizo:</strong> población del Censo Decenal 2010 y del Population Estimates Program V2025; establecimientos y empleo del promedio anual de BLS QCEW 2010 y 2024 (área 72xxx, todas las titularidades, nivel municipio); vivienda del ACS 5 años 2020-2024, tablas B19013, B25002 y B25004. Nota: County Business Patterns de Census no cubre a Puerto Rico en su archivo de condados, por eso los negocios salen de QCEW. Reproducible: cualquiera con esas 3 fuentes lo recalcula. Los umbrales se recalculan cada año con la tasa nacional nueva. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a> y se corrige. Julio 2026.</p>
+
+<script>
+(function(){
+  var q=document.getElementById('q'),tb=document.getElementById('tb'),none=document.getElementById('none');
+  if(!q||!tb)return;
+  var rows=[].slice.call(tb.querySelectorAll('tr.muni')),f='0';
+  function norm(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+  function apply(){
+    var t=norm(q.value),shown=0;
+    rows.forEach(function(r){
+      var ok=(f==='0'||r.getAttribute('data-cat')===f)&&(!t||norm(r.getAttribute('data-n')).indexOf(t)>=0);
+      r.style.display=ok?'':'none'; if(ok)shown++;
+    });
+    none.style.display=shown?'none':'';
+  }
+  q.addEventListener('input',apply);
+  [].slice.call(document.querySelectorAll('.fbtn')).forEach(function(b){
+    b.addEventListener('click',function(){
+      f=b.getAttribute('data-f');
+      [].slice.call(document.querySelectorAll('.fbtn')).forEach(function(x){x.style.background='';x.style.borderColor='#cbd5e1';});
+      b.style.background='#f1f5f9'; b.style.borderColor='#94a3b8';
+      apply();
+    });
+  });
+})();
+</script>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/cuatro-economias', encodingFormat: 'text/html' },
+    license: 'https://www.usa.gov/government-works',
+    name: 'Las 4 economías de Puerto Rico: clasificación de los 78 municipios, 2010-2025',
+    description: 'Clasificación de los 78 municipios de Puerto Rico en 4 grupos usando 3 indicadores federales independientes (población del Censo/PEP, establecimientos y empleo de BLS QCEW, vivienda del ACS) y 2 umbrales iguales a la tasa nacional: -14.5% de población y +5.2% de establecimientos.',
+    creator: { '@type': 'Person', name: 'Angel Anderson' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    temporalCoverage: '2010/2025', spatialCoverage: 'Puerto Rico',
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/cuatro-economias',
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'Las 4 economías de Puerto Rico: los 78 municipios clasificados con data federal',
+    description: 'PR perdió 14.5% de su gente y ganó 5.2% de sus negocios. La caída fue urbana: de los 4 municipios más grandes, ninguno quedó en el grupo bueno. El oeste puso 67% de los suyos. Los 78, con fuente.',
+    slug: 'cuatro-economias', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
@@ -14170,6 +14320,7 @@ export default async function handler(req: any, res: any) {
     case 'trabajo': return handleTrabajo(req, res)
     case 'decidir': return handleDecidir(req, res)
     case 'exposicion-ai': return handleExposicionAi(req, res)
+    case 'cuatro-economias': return handleCuatroEconomias(req, res)
     case 'rendimiento': return handleRendimiento(req, res)
     case 'cupon': return handleCupon(req, res)
     case 'demanda-real': return await handleDemandaReal(req, res)

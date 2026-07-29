@@ -212,6 +212,18 @@
       "destination": "/api/mapa-pages?page=recuperacion"
     },
     {
+      "source": "/cuatro-economias",
+      "destination": "/api/mapa-pages?page=cuatro-economias"
+    },
+    {
+      "source": "/exposicion-ai",
+      "destination": "/api/mapa-pages?page=exposicion-ai"
+    },
+    {
+      "source": "/sigue-el-dinero",
+      "destination": "/api/mapa-pages?page=sigue-el-dinero"
+    },
+    {
       "source": "/sinfiltros/pulso",
       "destination": "/api/mapa-pages?page=sinfiltros-pulso"
     },
@@ -468,11 +480,6 @@
       "permanent": true
     },
     {
-      "source": "/exposicion-ai",
-      "destination": "/",
-      "permanent": true
-    },
-    {
       "source": "/faq",
       "destination": "/",
       "permanent": true
@@ -589,11 +596,6 @@
     },
     {
       "source": "/señales-del-pueblo",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/sigue-el-dinero",
       "destination": "/",
       "permanent": true
     },
