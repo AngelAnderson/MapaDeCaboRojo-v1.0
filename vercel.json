@@ -216,6 +216,42 @@
       "destination": "/api/mapa-pages?page=cuatro-economias"
     },
     {
+      "source": "/agua",
+      "destination": "/api/mapa-pages?page=agua"
+    },
+    {
+      "source": "/basura",
+      "destination": "/api/mapa-pages?page=basura"
+    },
+    {
+      "source": "/costo-de-vida",
+      "destination": "/api/mapa-pages?page=costo-de-vida"
+    },
+    {
+      "source": "/historial",
+      "destination": "/api/mapa-pages?page=historial"
+    },
+    {
+      "source": "/investigacion",
+      "destination": "/api/mapa-pages?page=investigacion"
+    },
+    {
+      "source": "/luz",
+      "destination": "/api/mapa-pages?page=luz"
+    },
+    {
+      "source": "/no-se-mide",
+      "destination": "/api/mapa-pages?page=no-se-mide"
+    },
+    {
+      "source": "/promesas",
+      "destination": "/api/mapa-pages?page=promesas"
+    },
+    {
+      "source": "/retiro",
+      "destination": "/api/mapa-pages?page=retiro"
+    },
+    {
       "source": "/exposicion-ai",
       "destination": "/api/mapa-pages?page=exposicion-ai"
     },
@@ -435,22 +471,7 @@
       "permanent": true
     },
     {
-      "source": "/agua",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/basura",
-      "destination": "/",
-      "permanent": true
-    },
-    {
       "source": "/carro",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/costo-de-vida",
       "destination": "/",
       "permanent": true
     },
@@ -490,22 +511,7 @@
       "permanent": true
     },
     {
-      "source": "/historial",
-      "destination": "/",
-      "permanent": true
-    },
-    {
       "source": "/huracan-lento",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/investigacion",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/luz",
       "destination": "/",
       "permanent": true
     },
@@ -545,22 +551,12 @@
       "permanent": true
     },
     {
-      "source": "/no-se-mide",
-      "destination": "/",
-      "permanent": true
-    },
-    {
       "source": "/playas/defensa-y-limpieza",
       "destination": "/barrios",
       "permanent": true
     },
     {
       "source": "/preguntas",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/promesas",
       "destination": "/",
       "permanent": true
     },
@@ -581,11 +577,6 @@
     },
     {
       "source": "/rendimiento",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/retiro",
       "destination": "/",
       "permanent": true
     },
