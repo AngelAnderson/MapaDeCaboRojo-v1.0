@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenAI } from "@google/genai";
-import { BUSCAR_INDEX } from './mapa-pages';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -562,11 +561,22 @@ const RUTAS_CONOCIDAS: Record<string, string> = {
 // Marca del SPA: si una ruta de PRSF devuelve 200 pero sirve esto, es soft-404 con el sitio
 // equivocado. Ese fue el modo de fallo silencioso de /cuatro-economias antes del rewrite.
 const SPA_MARK = 'El Veci — El Copiloto del Pueblo';
+// Respaldo si BUSCAR_INDEX no carga. Se desincroniza con el tiempo: el email lo dice
+// cuando se usa, para que se note en vez de fingir cobertura completa.
+const RUTAS_RESPALDO = ['/agua','/basura','/costo-de-vida','/cuatro-economias','/cupon','/exposicion-ai','/historial','/investigacion','/luz','/no-se-mide','/prediccion','/promesas','/recuperacion','/retiro','/rompelo','/sigue-el-dinero','/trabajo'];
 
 async function runRutas(req: any, res: any) {
   const BASE = 'https://puertoricosinfiltros.com';
   const dryRun = req?.query?.dry_run === '1';
-  const rutas = BUSCAR_INDEX.map((x: any) => x.u).filter((u: string) => typeof u === 'string' && u.startsWith('/'));
+  // Import perezoso: mapa-pages es un modulo pesado y cargarlo arriba tumbaba TODA la
+  // funcion de crons (los otros 7 jobs incluidos). Aqui, si falla, solo degrada este job.
+  let rutas: string[] = [];
+  let fuente = 'BUSCAR_INDEX';
+  try {
+    const mod: any = await import('./mapa-pages');
+    rutas = (mod.BUSCAR_INDEX || []).map((x: any) => x.u).filter((u: string) => typeof u === 'string' && u.startsWith('/'));
+  } catch { /* cae al respaldo */ }
+  if (!rutas.length) { rutas = RUTAS_RESPALDO; fuente = 'respaldo (BUSCAR_INDEX no cargo)'; }
 
   type Chk = { u: string; status: number; soft: boolean; to: string };
   const checks: Chk[] = [];
@@ -610,7 +620,7 @@ async function runRutas(req: any, res: any) {
 <ul style="padding-left:18px">${rotas.map(fila).join('')}</ul>
 <p style="font-size:14px;color:#475569">Casi siempre es lo mismo: el handler existe y el <code>case</code> está en el switch, pero falta el rewrite en <code>vercel.json</code>, o hay un redirect a <code>/</code> que lo tapa. Un récord que no abre no se puede citar, y a Google se le está diciendo que la URL ya no existe.</p>
 ${conocidas.length ? `<p style="font-size:13px;color:#64748b">Conocidas y aceptadas (no cuentan): ${conocidas.map(c => `<code>${escH(c.u)}</code> — ${escH(RUTAS_CONOCIDAS[c.u])}`).join('; ')}</p>` : ''}
-<p style="font-size:13px;color:#64748b">cron rutas · lee BUSCAR_INDEX, no una lista aparte<br>- Angel | Menos revolú, más sistema, mejor vida.</p>
+<p style="font-size:13px;color:#64748b">cron rutas · fuente: ${escH(fuente)}<br>- Angel | Menos revolú, más sistema, mejor vida.</p>
 </div>`,
           }),
         });
@@ -619,7 +629,7 @@ ${conocidas.length ? `<p style="font-size:13px;color:#64748b">Conocidas y acepta
   }
 
   return res.status(200).json({
-    success: true, dry_run: dryRun, ...resumen,
+    success: true, dry_run: dryRun, fuente, ...resumen,
     rotas: rotas.map(c => ({ ruta: c.u, status: c.status, soft_404: c.soft, to: c.to })),
     conocidas: conocidas.map(c => ({ ruta: c.u, status: c.status, razon: RUTAS_CONOCIDAS[c.u] })),
     email: rotas.length && !dryRun ? 'enviado si hay RESEND_API_KEY' : 'no (silencio)',
