@@ -308,6 +308,10 @@
       "destination": "/api/mapa-pages?page=esencia"
     },
     {
+      "source": "/vista-luz",
+      "destination": "/api/mapa-pages?page=vista-luz"
+    },
+    {
       "source": "/expediente/:slug",
       "destination": "/api/mapa-pages?page=expediente&f=:slug"
     },
