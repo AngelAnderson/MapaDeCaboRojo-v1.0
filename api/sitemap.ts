@@ -192,7 +192,8 @@ export default async function handler(req: any, res: any) {
       { slug: 'necesito/cuido-a-mis-padres-desde-afuera', priority: 0.8, changefreq: 'monthly' },
       { slug: 'necesito/acabo-de-llegar', priority: 0.8, changefreq: 'monthly' },
       { slug: 'necesito/no-hay-en-mi-pueblo', priority: 0.8, changefreq: 'monthly' },
-      { slug: 'observatorio', priority: 0.9, changefreq: 'weekly' },
+      // /observatorio es de mapadecaborojo.com y /agua de puertoricosinfiltros.com:
+      // el guard de host las redirige, así que anunciarlas aquí sería anunciar un 301.
       { slug: 'registro/desiertos', priority: 0.8, changefreq: 'monthly' },
       { slug: 'marcador', priority: 0.9, changefreq: 'weekly' },
       { slug: 'kit', priority: 0.7, changefreq: 'weekly' },
@@ -201,7 +202,6 @@ export default async function handler(req: any, res: any) {
       { slug: 'cambios', priority: 0.8, changefreq: 'weekly' },
       { slug: 'comparte', priority: 0.85, changefreq: 'monthly' },
       { slug: 'porque', priority: 0.9, changefreq: 'monthly' },
-      { slug: 'agua', priority: 0.7, changefreq: 'monthly' },
     ].forEach(({ slug, priority, changefreq }) => {
       urls.push(`
         <url>
@@ -355,7 +355,7 @@ export default async function handler(req: any, res: any) {
     if (isPRSF) {
       // Host-aware: puertoricosinfiltros.com lista solo sus récords propios (limpio en GSC).
       const B = 'https://puertoricosinfiltros.com';
-      const paths = ['', '/ultima-cifra', '/numero-mas-nuevo', '/prediccion', '/costo-de-vida', '/rendimiento', '/cupon', '/trabajo', '/decidir', '/exposicion-ai', '/sigue-el-dinero', '/recuperacion', '/agua', '/activos', '/luz', '/basura', '/historial', '/no-se-mide', '/esencia', '/registro/estado', '/marcador', '/comparte', '/sinfiltros/pulso', '/expediente/alcalde-cabo-rojo', '/expediente/representante-distrito-20'];
+      const paths = ['', '/ultima-cifra', '/numero-mas-nuevo', '/prediccion', '/costo-de-vida', '/rendimiento', '/cupon', '/trabajo', '/decidir', '/exposicion-ai', '/sigue-el-dinero', '/recuperacion', '/agua', '/activos', '/luz', '/basura', '/historial', '/no-se-mide', '/esencia', '/sinfiltros/pulso', '/expediente/alcalde-cabo-rojo', '/expediente/representante-distrito-20'];
       outUrls = paths.map((p) => `<url><loc>${B}${p}</loc><changefreq>weekly</changefreq><priority>${p === '' ? '1.0' : '0.8'}</priority></url>`);
     } else if (isReg) {
       outUrls = urls.filter((u) => u.includes('registromedicopr.com'));

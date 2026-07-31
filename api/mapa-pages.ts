@@ -14785,8 +14785,108 @@ ${zeroState ? `<div class="bg-amber-50 border border-amber-200 rounded-xl p-5 mt
   }))
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Un récord, un dominio. Los 3 sitios salen del mismo monolito y hasta ahora los
+// 3 servían las 100+ rutas: registromedicopr.com/agua devolvía 200 con el récord
+// del agua del oeste, y puertoricosinfiltros.com/marcador devolvía 200 diciendo
+// "la canónica está en registromedicopr.com". Eso es lo que Search Console
+// reportó el 28 jul como "Alternate page with proper canonical tag" en PRSF y en
+// registro, y como "Duplicate, Google chose different canonical" en mapa: 60
+// páginas × 3 dominios = 180 URLs peleando por ser 60.
+//
+// La tabla sale de lo que cada página YA declara: se leyó el <link rel=canonical>
+// de las 66 rutas servidas desde los 3 hosts (30 jul 2026). 60 declaraban el mismo
+// dominio desde cualquier host — esas se hacen cumplir aquí. Las que no declaraban
+// dueño (/barrios /rentas /promesas /observatorio → mapa, /agua → PRSF) se
+// resolvieron con el sitemap que las anuncia. /civico.json y /api/subscribe se
+// quedan fuera a propósito: son endpoints de máquina, no páginas indexables.
+//
+// Si añades una página nueva: ponle canonicalHost en su layout() Y una línea aquí.
+const PAGE_CANONICAL: Record<string, string> = {
+  'activos': 'https://puertoricosinfiltros.com/activos',
+  'acueductos': 'https://puertoricosinfiltros.com/acueductos',
+  'agua': 'https://puertoricosinfiltros.com/agua',
+  'atlas': 'https://registromedicopr.com/atlas',
+  'barrios': 'https://www.mapadecaborojo.com/barrios',
+  'basura': 'https://puertoricosinfiltros.com/basura',
+  'boletin': 'https://puertoricosinfiltros.com/notas',
+  'buscar': 'https://puertoricosinfiltros.com/buscar',
+  'cambios': 'https://registromedicopr.com/cambios',
+  'comparte': 'https://registromedicopr.com/comparte',
+  'contradicciones': 'https://puertoricosinfiltros.com/contradicciones',
+  'costo-de-vida': 'https://puertoricosinfiltros.com/costo-de-vida',
+  'cuatro-economias': 'https://puertoricosinfiltros.com/cuatro-economias',
+  'cupon': 'https://puertoricosinfiltros.com/cupon',
+  'decidir': 'https://puertoricosinfiltros.com/decidir',
+  'equipo': 'https://www.mapadecaborojo.com/equipo',
+  'esencia': 'https://puertoricosinfiltros.com/esencia',
+  'espejo': 'https://registromedicopr.com/espejo',
+  'expediente': 'https://puertoricosinfiltros.com/expediente/alcalde-cabo-rojo',
+  'exposicion-ai': 'https://puertoricosinfiltros.com/exposicion-ai',
+  'funciona': 'https://puertoricosinfiltros.com/funciona',
+  'historia': 'https://www.mapadecaborojo.com/historia',
+  'historial': 'https://puertoricosinfiltros.com/historial',
+  'investigacion': 'https://puertoricosinfiltros.com/investigacion',
+  'kit': 'https://registromedicopr.com/kit',
+  'luz': 'https://puertoricosinfiltros.com/luz',
+  'marcador': 'https://registromedicopr.com/marcador',
+  'mision': 'https://www.mapadecaborojo.com/mision',
+  'necesito': 'https://registromedicopr.com/necesito',
+  'no-se-mide': 'https://puertoricosinfiltros.com/no-se-mide',
+  'numero-mas-nuevo': 'https://puertoricosinfiltros.com/numero-mas-nuevo',
+  'observatorio': 'https://www.mapadecaborojo.com/observatorio',
+  'oer': 'https://puertoricosinfiltros.com/registro-raras',
+  'pon-tu-negocio-en-el-mapa': 'https://www.mapadecaborojo.com/pon-tu-negocio-en-el-mapa',
+  'porque': 'https://registromedicopr.com/porque',
+  'prediccion': 'https://puertoricosinfiltros.com/prediccion',
+  'promesas': 'https://www.mapadecaborojo.com/promesas',
+  'prospecto': 'https://registromedicopr.com/prospecto',
+  'pueblo': 'https://registromedicopr.com/pueblo',
+  'raras': 'https://registromedicopr.com/raras',
+  'recuperacion': 'https://puertoricosinfiltros.com/recuperacion',
+  'registro': 'https://registromedicopr.com',
+  'registro-censo': 'https://registromedicopr.com/registro/censo',
+  'registro-desiertos': 'https://registromedicopr.com/registro/desiertos',
+  'registro-estado': 'https://registromedicopr.com/registro/estado',
+  'registro-mapa': 'https://registromedicopr.com/registro/mapa',
+  'registro-puedo-volver': 'https://registromedicopr.com/puedo-volver',
+  'rendimiento': 'https://puertoricosinfiltros.com/rendimiento',
+  'rentas': 'https://www.mapadecaborojo.com/rentas',
+  'retiro': 'https://puertoricosinfiltros.com/retiro',
+  'rompelo': 'https://puertoricosinfiltros.com/rompelo',
+  'salud-que-falta': 'https://puertoricosinfiltros.com/salud-que-falta',
+  'semaforo-fema': 'https://puertoricosinfiltros.com/semaforo-fema',
+  'sigue-el-dinero': 'https://puertoricosinfiltros.com/sigue-el-dinero',
+  'sinfiltros': 'https://puertoricosinfiltros.com/',
+  'sinfiltros-pulso': 'https://puertoricosinfiltros.com/sinfiltros/pulso',
+  'tienda': 'https://www.mapadecaborojo.com/tienda',
+  'trabajo': 'https://puertoricosinfiltros.com/trabajo',
+  'transicion': 'https://puertoricosinfiltros.com/transicion',
+  'ultima-cifra': 'https://puertoricosinfiltros.com/ultima-cifra',
+}
+
+// Devuelve la URL canónica si el host que sirve no es el dueño. null = sigue derecho.
+function wrongHost(req: any, page: string): string | null {
+  const target = PAGE_CANONICAL[page]
+  if (!target) return null
+  const host = String(req.headers?.host || '').toLowerCase()
+  if (!host) return null
+  const owner = target.split('/')[2].toLowerCase()
+  // El ápice de mapa ya lo manda Vercel a www; no hacemos doble salto aquí.
+  if (host === owner || (owner === 'www.mapadecaborojo.com' && host === 'mapadecaborojo.com')) return null
+  return target
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 export default async function handler(req: any, res: any) {
   const page = String(req.query.page || '')
+
+  const canonicalElsewhere = wrongHost(req, page)
+  if (canonicalElsewhere) {
+    res.writeHead(301, { Location: canonicalElsewhere })
+    return res.end()
+  }
 
   switch (page) {
     case 'agua': return handleAgua(req, res)
