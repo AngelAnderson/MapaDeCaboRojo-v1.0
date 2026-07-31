@@ -4418,6 +4418,18 @@ async function handleEspecialista(req: any, res: any) {
         <input name="contact_phone" placeholder="Teléfono de contacto" class="rounded-lg border border-amber-300 p-2.5 text-sm">
         <input name="contact_email" type="email" placeholder="Correo (opcional)" class="rounded-lg border border-amber-300 p-2.5 text-sm">
       </div>
+      <!-- 2026-07-31: 4 de 10 respuestas a doctores rebotaron porque el numero que dieron es
+           un telefono FIJO. Llenaron el formulario, esperaron hasta 30 dias, y les mandamos
+           un texto a un numero que no puede recibir textos. Estabamos coleccionando numeros
+           por los que nunca ibamos a poder escribirles.
+           Va con "Si" preseleccionado porque la mayoria son celulares: quien tiene fijo lo
+           sabe y lo cambia, y quien no lee la pregunta no queda peor que antes. -->
+      <div class="flex flex-wrap items-center gap-4 text-sm text-amber-900 bg-amber-50 rounded-lg p-2.5">
+        <span class="font-semibold">¿Ese teléfono recibe textos?</span>
+        <label class="flex items-center gap-1.5"><input type="radio" name="recibe_sms" value="si" checked> Sí</label>
+        <label class="flex items-center gap-1.5"><input type="radio" name="recibe_sms" value="no"> No, es fijo</label>
+        <span class="text-xs text-amber-700 w-full sm:w-auto">Si es fijo te escribimos por correo.</span>
+      </div>
       <input name="corrected_phone" placeholder="¿El teléfono de arriba está mal? Pon el correcto aquí" class="w-full rounded-lg border border-amber-300 p-2.5 text-sm">
       <input name="accepted_plans" placeholder="Planes que aceptas (ej: MMM, Triple-S, Plan Medicare, First Medical...)" class="w-full rounded-lg border border-amber-300 p-2.5 text-sm">
       <!-- 2026-07-29: los 2 datos que la gente busca y que no existen en ninguna base
@@ -4559,6 +4571,10 @@ async function handleEspecialistaClaim(req: any, res: any) {
       horario: String(b.horario || '').slice(0, 300) || null,
       acepta_pacientes: b.acepta_pacientes === 'si' ? true : b.acepta_pacientes === 'no' ? false : null,
       website: String(b.website || '').slice(0, 200) || null,
+      // 2026-07-31: si el numero no recibe textos, el SMS rebota y el proveedor nunca se
+      // entera de que le contestamos. Guardarlo aqui deja que el envio escoja el canal antes
+      // de gastar 3 intentos contra un fijo.
+      recibe_sms: b.recibe_sms === 'no' ? false : true,
       wants_vitrina: !!b.wants_vitrina,
       source: 'especialista_page',
     })
