@@ -184,13 +184,17 @@ export default async function handler(req: any, res: any) {
     relatedSearches: 'Related searches in Cabo Rojo',
     viewOnMap: (n: string) => `See ${n} on the interactive map`,
     isYourBusiness: 'Is this your business?',
-    standOut: (l: string) => `Feature your ${l.toLowerCase()} with La Vitrina — photos, services, verified hours, and rank first when people search ${l.toLowerCase()}s in Cabo Rojo. $799/year.`,
+    // La promesa de ranking es de Cabo Rojo. Fuera de CR se ofrece La Vitrina sin prometer
+    // un pueblo que no servimos: la página ya dice el pueblo real arriba.
+    standOut: (l: string, cr: boolean) => cr
+      ? `Feature your ${l.toLowerCase()} with La Vitrina. Photos, services, verified hours, and rank first when people search ${l.toLowerCase()}s in Cabo Rojo. $799/year.`
+      : `Feature your ${l.toLowerCase()} with La Vitrina. Photos, services, verified hours, and your own page like this one. $799/year.`,
     learnVitrina: 'Learn about La Vitrina',
     waPreText: (n: string) => `Hello, I found ${n} on MapaDeCaboRojo.com — I'd like to make an appointment / ask a question.`,
     ctaSubtitle: (n: string) => `Need something from ${n}?`,
     locale: 'en_US',
-    titleSuffix: (l: string) => `${l} in Cabo Rojo | MapaDeCaboRojo`,
-    descFallback: (n: string, l: string) => `${n} — ${l} in Cabo Rojo, Puerto Rico. Hours, address, phone and more.`,
+    titleSuffix: (l: string, m: string) => `${l} in ${m} | MapaDeCaboRojo`,
+    descFallback: (n: string, l: string, m: string) => `${n} — ${l} in ${m}, Puerto Rico. Hours, address, phone and more.`,
   } : {
     inCaboRojo: 'en Cabo Rojo', address: 'Dirección', phone: 'Teléfono', hours: 'Horario', website: 'Web',
     info: 'Información', faq: 'Preguntas frecuentes',
@@ -200,13 +204,17 @@ export default async function handler(req: any, res: any) {
     relatedSearches: 'Búsquedas relacionadas en Cabo Rojo',
     viewOnMap: (n: string) => `Ver ${n} en el mapa interactivo`,
     isYourBusiness: '¿Es tu negocio?',
-    standOut: (l: string) => `Destaca tu ${l.toLowerCase()} con La Vitrina — fotos, servicios, horarios verificados, y apareces primero cuando busquen ${l.toLowerCase()}s en Cabo Rojo. $799/año.`,
+    // La promesa de ranking es de Cabo Rojo. Fuera de CR se ofrece La Vitrina sin prometer
+    // un pueblo que no servimos: la página ya dice el pueblo real arriba.
+    standOut: (l: string, cr: boolean) => cr
+      ? `Destaca tu ${l.toLowerCase()} con La Vitrina. Fotos, servicios, horarios verificados, y apareces primero cuando busquen ${l.toLowerCase()}s en Cabo Rojo. $799/año.`
+      : `Destaca tu ${l.toLowerCase()} con La Vitrina. Fotos, servicios, horarios verificados, y tu propia página como esta. $799/año.`,
     learnVitrina: 'Conoce La Vitrina',
     waPreText: (n: string) => `Hola, encontré ${n} en MapaDeCaboRojo.com — quisiera agendar cita / hacer una pregunta.`,
     ctaSubtitle: (n: string) => `¿Necesitas algo de ${n}?`,
     locale: 'es_PR',
-    titleSuffix: (l: string) => `${l} en Cabo Rojo | MapaDeCaboRojo`,
-    descFallback: (n: string, l: string) => `${n} — ${l} en Cabo Rojo, Puerto Rico. Horarios, dirección, teléfono y más.`,
+    titleSuffix: (l: string, m: string) => `${l} en ${m} | MapaDeCaboRojo`,
+    descFallback: (n: string, l: string, m: string) => `${n} — ${l} en ${m}, Puerto Rico. Horarios, dirección, teléfono y más.`,
     labelEn: undefined as any, labelPluralEn: undefined as any,
   };
   const baseUrl     = 'https://www.mapadecaborojo.com';
@@ -214,18 +222,24 @@ export default async function handler(req: any, res: any) {
   const pageUrlEs   = pageUrl;
   const pageUrlEn   = `${pageUrl}?lang=en`;
   const placeName   = esc(place.name);
+  // El pueblo REAL del negocio. Estas páginas sirven 1,820 places de salud y solo 24 están
+  // en Cabo Rojo: el título, el schema.org, la dirección, el mapa y el FAQ le decían "Cabo
+  // Rojo" a una farmacia de Bayamón. Mismo bug que api/negocio.ts ya había arreglado.
+  const muniRaw     = place.municipality || 'Cabo Rojo';
+  const muni        = esc(muniRaw);
+  const isCaboRojo  = /cabo\s*rojo/i.test(muniRaw);
   const localizedLabel       = (lang === 'en' && T.labelEn?.[type]) ? T.labelEn[type] : config.label;
   const localizedLabelPlural = (lang === 'en' && T.labelPluralEn?.[type]) ? T.labelPluralEn[type] : config.labelPlural;
   const nameAlreadyHasLabel = place.name.toLowerCase().includes(localizedLabel.toLowerCase());
   // seo_title/seo_description: overrides written by the fabrica-seo nightly engine (ES only)
   const title       = (lang !== 'en' && place.seo_title)
     ? esc(place.seo_title)
-    : nameAlreadyHasLabel ? `${placeName} — Cabo Rojo | MapaDeCaboRojo` : `${placeName} — ${T.titleSuffix(localizedLabel)}`;
+    : nameAlreadyHasLabel ? `${placeName} — ${muni} | MapaDeCaboRojo` : `${placeName} — ${T.titleSuffix(localizedLabel, muni)}`;
   const description = (lang !== 'en' && place.seo_description)
     ? esc(place.seo_description).slice(0, 160)
     : place.description
       ? esc(place.description).slice(0, 160)
-      : T.descFallback(placeName, localizedLabel);
+      : T.descFallback(placeName, localizedLabel, muni);
   const image       = place.image_url || 'https://www.mapadecaborojo.com/og-default.png';
   const hoursText   = formatHours(place.opening_hours);
   const openNow     = isCurrentlyOpen(place.opening_hours);
@@ -334,7 +348,7 @@ export default async function handler(req: any, res: any) {
   // Google Maps embed — uses coordinates if available, falls back to address search
   const mapsEmbedSrc = (place.lat && place.lon)
     ? `https://maps.google.com/maps?q=${place.lat},${place.lon}&z=16&output=embed`
-    : `https://maps.google.com/maps?q=${encodeURIComponent((place.address || place.name) + ', Cabo Rojo, PR')}&z=15&output=embed`;
+    : `https://maps.google.com/maps?q=${encodeURIComponent((place.address || place.name) + ', ' + muniRaw + ', PR')}&z=15&output=embed`;
 
   // JSON-LD — Pharmacy type (more specific than LocalBusiness)
   const jsonLd: any = {
@@ -348,9 +362,10 @@ export default async function handler(req: any, res: any) {
     address: {
       '@type': 'PostalAddress',
       streetAddress: place.address || undefined,
-      addressLocality: 'Cabo Rojo',
+      addressLocality: muniRaw,
       addressRegion: 'Puerto Rico',
-      postalCode: (place.address || '').match(/\b006\d{2}\b/)?.[0] || '00623',
+      // Sin zip en la dirección no se inventa: 00623 es de Cabo Rojo y sería falso en Bayamón.
+      postalCode: (place.address || '').match(/\b00\d{3}\b/)?.[0] || (isCaboRojo ? '00623' : undefined),
       addressCountry: 'PR',
     },
     geo: (place.lat && place.lon) ? {
@@ -358,7 +373,7 @@ export default async function handler(req: any, res: any) {
       latitude: place.lat,
       longitude: place.lon,
     } : undefined,
-    areaServed: { '@type': 'City', name: 'Cabo Rojo' },
+    areaServed: { '@type': 'City', name: muniRaw },
     openingHours: ldHours.length > 0 ? ldHours : undefined,
     aggregateRating: (place.google_rating && place.google_review_count > 1) ? {
       '@type': 'AggregateRating',
@@ -489,7 +504,7 @@ export default async function handler(req: any, res: any) {
 
     <div class="info-card">
       <h2>${T.info}</h2>
-      ${place.address ? `<div class="info-row"><span class="info-label">&#128205; ${T.address}</span><span class="info-value">${esc(place.address)}, Cabo Rojo, PR</span></div>` : ''}
+      ${place.address ? `<div class="info-row"><span class="info-label">&#128205; ${T.address}</span><span class="info-value">${esc(place.address)}, ${muni}, PR</span></div>` : ''}
       ${displayPhone ? `<div class="info-row"><span class="info-label">&#128222; ${T.phone}</span><span class="info-value"><a href="tel:${esc(displayPhone)}">${esc(displayPhone)}</a>${phoneCorrected ? ` <small style="color:#92400e;">(corregido vs NPPES: ${esc(place.phone)})</small>` : ''}</span></div>` : ''}
       <div class="info-row"><span class="info-label">&#128336; ${T.hours}</span><span class="info-value">${hoursText}</span></div>
       ${place.website ? `<div class="info-row"><span class="info-label">&#127758; ${T.website}</span><span class="info-value"><a href="${esc(place.website)}" target="_blank" rel="noopener">${esc(place.website)}</a></span></div>` : ''}
@@ -636,8 +651,8 @@ export default async function handler(req: any, res: any) {
       <div class="faq-item">
         <h3>¿Dónde queda ${placeName}?</h3>
         <p>${place.address
-          ? `${placeName} está en ${esc(place.address)}, Cabo Rojo, Puerto Rico.`
-          : `${placeName} está ubicada en Cabo Rojo, Puerto Rico.`}
+          ? `${placeName} está en ${esc(place.address)}, ${muni}, Puerto Rico.`
+          : `${placeName} está ubicada en ${muni}, Puerto Rico.`}
         ${place.gmaps_url ? ` <a href="${esc(place.gmaps_url)}" target="_blank" rel="noopener">Ver en Google Maps</a>.` : ''}</p>
       </div>
       <div class="faq-item">
@@ -664,7 +679,7 @@ export default async function handler(req: any, res: any) {
     </div>`
       : `<div class="reclaim-card">
       <h2>${T.isYourBusiness}</h2>
-      <p>${T.standOut(localizedLabel)}</p>
+      <p>${T.standOut(localizedLabel, isCaboRojo)}</p>
       <a class="reclaim-btn" href="https://wa.me/17874177711?text=VITRINA%20${encodeURIComponent(place.name)}">${T.learnVitrina}</a>
       <a href="https://wa.me/17874177711?text=RECLAMAR%20${encodeURIComponent(place.name)}" style="display:inline-block;background:transparent;color:white;text-decoration:underline;padding:0.4rem 1rem;font-size:0.85rem;margin-top:0.5rem;">Solo verificar mi info (gratis)</a>
       <p style="color:rgba(255,255,255,0.75);font-size:0.8rem;margin-top:0.75rem;">Textea al 787-417-7711 y El Veci te guía paso a paso.</p>
