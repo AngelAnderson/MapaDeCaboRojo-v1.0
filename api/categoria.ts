@@ -86,6 +86,11 @@ function getOpenStatusLabel(opening_hours: any): string | null {
   return '🔴 Cerrado';
 }
 
+// Las 34 categorías que anuncia el sitemap (espejo de api/sitemap.ts § Category pages).
+// Cualquier otro slug de CATEGORY_MAP es un alias y redirige 301 a la suya. Si agregas una
+// categoría al sitemap, agrégala aquí en el mismo commit o el alias se comerá la canónica.
+const CANONICAL_CATEGORY_SLUGS = new Set(['restaurantes', 'playas', 'salud', 'farmacia', 'dentista', 'veterinario', 'medico', 'hospital', 'laboratorio', 'optica', 'salud-mental', 'quiropractico', 'gimnasio', 'fisiatra', 'hospedaje', 'servicios', 'compras', 'entretenimiento', 'turismo', 'deportes', 'belleza', 'automotriz', 'marina', 'educacion', 'gobierno', 'helados', 'panaderia', 'pizza', 'mariscos', 'lavanderia', 'cafe', 'barberia', 'peluqueria', 'imprenta']);
+
 // Maps URL slug / search term → canonical category values in DB + display name
 const CATEGORY_MAP: Record<string, { match: string[]; display: string; emoji: string; nameMatch?: boolean }> = {
   restaurante:    { match: ['restaurante', 'restaurant', 'food', 'comida', 'FOOD', 'RESTAURANTE'], display: 'Restaurantes', emoji: '🍽️' },
@@ -185,6 +190,27 @@ export default async function handler(req: any, res: any) {
   if (!cat) {
     res.status(400).send('<h1>400 – Categoría requerida</h1>');
     return;
+  }
+
+  // Una categoría, una URL. CATEGORY_MAP tiene ~40 pares alias (playa/playas,
+  // dentista/dentistas, restaurante/restaurantes…) que servían la MISMA lista, cada copia
+  // auto-canónica. Search Console lo reportó como "Duplicada: Google eligió una versión
+  // canónica diferente" — eligió /categoria/playa cuando el sitemap anuncia /categoria/playas.
+  // La canónica es la que anuncia el sitemap (CANONICAL_CATEGORY_SLUGS, espejo de
+  // api/sitemap.ts § Category pages); si el grupo no está en el sitemap, gana la primera
+  // clave del mapa. Los demás alias redirigen 301 en vez de competir.
+  const canonicalFor = (slug: string): string | null => {
+    const m = CATEGORY_MAP[slug];
+    if (!m || CANONICAL_CATEGORY_SLUGS.has(slug)) return null;
+    const sig = m.match.join('|');
+    const twins = Object.keys(CATEGORY_MAP).filter((k) => CATEGORY_MAP[k].match.join('|') === sig);
+    const winner = twins.find((k) => CANONICAL_CATEGORY_SLUGS.has(k)) || twins[0];
+    return winner && winner !== slug ? winner : null;
+  };
+  const canonicalSlug = canonicalFor(cat);
+  if (canonicalSlug) {
+    res.writeHead(301, { Location: `https://www.mapadecaborojo.com/categoria/${canonicalSlug}` });
+    return res.end();
   }
 
   const mapping = CATEGORY_MAP[cat];
@@ -287,6 +313,17 @@ export default async function handler(req: any, res: any) {
       return false;
     });
   });
+
+  // Sin resultados = 404, no una página vacía con 200. /categoria/[loquesea] respondía 200
+  // con título generado ("Xyzabc-no-existe en Cabo Rojo") y cero negocios: una fábrica de
+  // soft-404 que Google rastrea e indexa. Las 34 canónicas tienen resultados (verificado
+  // 30 jul 2026, de 2 a 239 cada una), así que esto no toca ninguna página viva.
+  if (filtered.length === 0) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.status(404).send(`<!DOCTYPE html>
+<html lang="es"><head><meta charset="UTF-8"><meta name="robots" content="noindex"><title>Categoría no encontrada | MapaDeCaboRojo.com</title></head>
+<body><h1>404 — No tenemos esa categoría</h1><p>Puede que la escribiéramos distinto. <a href="https://www.mapadecaborojo.com">Ver el directorio completo</a>.</p></body></html>`);
+  }
 
   // Map pins: physically-in-CR businesses only. Service-area businesses (tagged
   // sirve-cabo-rojo but located elsewhere, e.g. Manatí) are listed but NOT pinned,
@@ -1284,7 +1321,7 @@ export default async function handler(req: any, res: any) {
         Hecho con orgullo en Cabo Rojo, Puerto Rico
       </p>
       <p style="color: #94a3b8; font-size: 11px; margin: 4px 0 0 0;">
-        <a href="https://mapadecaborojo.com" style="color: #0d9488; text-decoration: none;">MapaDeCaboRojo.com</a>
+        <a href="https://www.mapadecaborojo.com" style="color: #0d9488; text-decoration: none;">MapaDeCaboRojo.com</a>
         · Un proyecto de <a href="https://angelanderson.com" style="color: #0d9488; text-decoration: none;">Angel Anderson</a>
       </p>
     </footer>

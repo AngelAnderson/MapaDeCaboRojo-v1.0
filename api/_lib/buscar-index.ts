@@ -27,7 +27,7 @@ export const BUSCAR_INDEX = [
     { u: '/registro-raras', t: 'Expediente enfermedades raras', d: 'La Ley 9-2025 y el registro OER, declarado vs entregado', k: 'raras enfermedades oer ley 9 2025 registro' },
     { u: '/diabetes', t: 'Diabetes', d: 'El dato que existe y el que falta', k: 'diabetes cdc salud cronica' },
     { u: '/telemedicina', t: 'Telemedicina', d: 'Quién puede y quién no (internet × médicos)', k: 'telemedicina internet broadband acceso' },
-    { u: 'https://mapadecaborojo.com/demanda', t: 'La demanda real', d: 'Lo que la gente busca y no encuentra (El Veci *7711) — vive en el Mapa', k: 'demanda veci busquedas negocio plomero electricista' },
+    { u: 'https://www.mapadecaborojo.com/demanda', t: 'La demanda real', d: 'Lo que la gente busca y no encuentra (El Veci *7711) — vive en el Mapa', k: 'demanda veci busquedas negocio plomero electricista' },
     { u: '/costo-de-vida', t: '¿El sueldo rinde?', d: 'Ingreso contra costo real de vivir en PR', k: 'costo vida sueldo ingreso canasta ipc inflacion' },
     { u: '/trabajo', t: 'El trabajo', d: 'Participación laboral y cómo subir de valor', k: 'trabajo empleo participacion laboral salario ai' },
     { u: '/exposicion-ai', t: 'Exposición a la AI', d: 'Qué trabajos de PR toca la AI primero', k: 'ai inteligencia artificial empleos automatizacion' },

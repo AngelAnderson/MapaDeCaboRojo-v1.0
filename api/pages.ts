@@ -1203,7 +1203,7 @@ async function handle_municipio(req: any, res: any) {
       <div style="font-size:11px;color:#64748b;">Datos en vivo · actualizado</div>
       <div style="font-size:13px;font-weight:600;color:#cbd5e1;">${esc(generatedAt)}</div>
       <div style="margin-top:10px;">
-        <a href="https://mapadecaborojo.com" style="background:#0d9488;color:#fff;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;display:inline-block;">Ver el directorio →</a>
+        <a href="https://www.mapadecaborojo.com" style="background:#0d9488;color:#fff;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;display:inline-block;">Ver el directorio →</a>
       </div>
     </div>
   </div>
@@ -1427,7 +1427,7 @@ async function handle_municipio(req: any, res: any) {
 
     <div style="text-align:center;">
       <a href="https://wa.me/17874177711?text=Soy%20alcalde%2Falcaldesa%20de%20%5BTU%20MUNICIPIO%5D%20-%20quiero%20demo%20de%20Cabo%20Rojo%20OS" style="background:#0d9488;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;display:inline-block;margin-right:8px;">Pedir demo de mi municipio</a>
-      <a href="https://mapadecaborojo.com" style="background:#334155;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;display:inline-block;">Ver directorio completo</a>
+      <a href="https://www.mapadecaborojo.com" style="background:#334155;color:#fff;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;display:inline-block;">Ver directorio completo</a>
     </div>
   </div>
 
@@ -1504,7 +1504,7 @@ async function handle_turismo(req: any, res: any) {
     .slice(0, 5)
     .map(([term]) => term);
 
-  const baseUrl = 'https://mapadecaborojo.com';
+  const baseUrl = 'https://www.mapadecaborojo.com';
   const pageTitle = 'Tourism Intelligence API — Cabo Rojo | MapaDeCaboRojo.com';
   const desc = 'Sabe qué buscan los turistas en Cabo Rojo en tiempo real. Datos de demanda local para hoteles, restaurantes, tours y negocios.';
 
@@ -1657,7 +1657,7 @@ async function handle_turismo(req: any, res: any) {
     <!-- API REFERENCE -->
     <h2 style="font-size:1.5rem;font-weight:700;margin-bottom:16px;">🔌 API Reference</h2>
     <div style="background:#0f172a;border-radius:12px;padding:24px;margin-bottom:48px;overflow:auto;">
-      <pre style="color:#e2e8f0;font-size:0.85rem;margin:0;white-space:pre-wrap;"><code>GET https://mapadecaborojo.com/api/intelligence
+      <pre style="color:#e2e8f0;font-size:0.85rem;margin:0;white-space:pre-wrap;"><code>GET https://www.mapadecaborojo.com/api/intelligence
 
 Parámetros:
   ?key=TU_API_KEY        (requerido)
@@ -2046,7 +2046,7 @@ async function handle_demanda(req: any, res: any) {
       </div>`;
     }).join('');
 
-  const baseUrl = 'https://mapadecaborojo.com';
+  const baseUrl = 'https://www.mapadecaborojo.com';
   const waLink = `https://wa.me/17874177711?text=${encodeURIComponent('Hola, vi el radar de demanda y quiero que mi negocio aparezca en Cabo Rojo')}`;
 
   // "El negocio que le falta" — demand ÷ supply opportunity engine (get_demand_opportunities RPC).
@@ -2379,7 +2379,7 @@ async function handle_intelligence(req: any, res: any) {
   if (!validKey) {
     return res.status(401).json({
       error: 'API key requerida. Obtén acceso gratuito en mapadecaborojo.com/turismo',
-      docs: 'https://mapadecaborojo.com/turismo'
+      docs: 'https://www.mapadecaborojo.com/turismo'
     });
   }
 
@@ -2590,7 +2590,7 @@ async function handle_evento(req: any, res: any) {
       organizer: {
         '@type': 'Organization',
         name: 'MapaDeCaboRojo.com',
-        url: 'https://mapadecaborojo.com',
+        url: 'https://www.mapadecaborojo.com',
       },
       ...(event.ticket_link ? {
         offers: {
@@ -2604,7 +2604,7 @@ async function handle_evento(req: any, res: any) {
     };
 
     const description = event.description || `${event.title} en Cabo Rojo, Puerto Rico — ${startDate}.`;
-    const ogImage = event.image_url || 'https://mapadecaborojo.com/og-default.png';
+    const ogImage = event.image_url || 'https://www.mapadecaborojo.com/og-default.png';
 
     const html = `<!DOCTYPE html>
 <html lang="es">
@@ -3948,7 +3948,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
         { lbl: 'Ingreso típico', val: '$' + fmt(CABO_ROJO_BASELINE.median_income), sub: 'Census ACS 2019-23 (mediana)', subUrl: 'https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico', icon: '💵', color: '#16a34a', wiifm: 'Es la mitad del promedio US ($75K). O sea: precio bajo gana, premium pierde.' },
         { lbl: 'Pull regional', val: '~' + fmt(CABO_ROJO_BASELINE.regional_pull), sub: '47K CR + 15K Hormigueros + 23K Lajas + 30K S.Germán', subUrl: 'https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico', icon: '🌐', color: '#0369a1', wiifm: 'Servicios (salud, mecánico, abogado) — tu cliente puede venir de pueblo vecino.' },
         { lbl: 'Visitantes/año', val: '~' + fmt(CABO_ROJO_BASELINE.visitors_annual), sub: '⚠️ PRTC estimate · pendiente verificar', subUrl: 'https://www.tourism.pr.gov/', icon: '🏖️', color: '#ea580c', wiifm: '3 meses pico (verano + diciembre). Restaurante + hospedaje viven de aquí.' },
-        { lbl: 'Negocios abiertos hoy', val: fmt(openCount), sub: `${fmt(total)} directorio · ${fmt(openCount)} abiertos · ${fmt(closedCount)} cerrados · ${fmt(unknownCount)} dudosos`, subUrl: 'https://mapadecaborojo.com', icon: '🏢', color: '#dc2626', wiifm: 'Más negocios de los que el pueblo solo puede sostener. El resto compite por turistas o se exporta.' },
+        { lbl: 'Negocios abiertos hoy', val: fmt(openCount), sub: `${fmt(total)} directorio · ${fmt(openCount)} abiertos · ${fmt(closedCount)} cerrados · ${fmt(unknownCount)} dudosos`, subUrl: 'https://www.mapadecaborojo.com', icon: '🏢', color: '#dc2626', wiifm: 'Más negocios de los que el pueblo solo puede sostener. El resto compite por turistas o se exporta.' },
       ].map(s => `
         <div style="padding:16px 14px;background:#f8fafc;border-radius:10px;border-left:3px solid ${s.color};">
           <div style="font-size:20px;margin-bottom:4px;">${s.icon}</div>
@@ -4442,7 +4442,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
     <p style="font-size:13px;color:#64748b;margin-bottom:16px;">Cada número arriba se puede comprobar. Sin secretos, sin opacidad. Cero "trust me bro."</p>
     <ul style="padding-left:20px;font-size:13px;color:#374151;line-height:1.85;list-style:none;">
       <li style="padding:8px 0;border-bottom:1px solid #f1f5f9;">📍 <strong>Población (47,158):</strong> abre <a href="https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico" target="_blank" rel="noopener" style="color:#0d9488;font-weight:600;">data.census.gov</a> → busca "Cabo Rojo Municipio". FIPS 72023. ACS 5-year 2019-2023.</li>
-      <li style="padding:8px 0;border-bottom:1px solid #f1f5f9;">🏢 <strong>Supply (negocios open):</strong> <a href="https://mapadecaborojo.com" target="_blank" rel="noopener" style="color:#0d9488;font-weight:600;">mapadecaborojo.com</a> → directorio live. Cada place tiene <code style="background:#f1f5f9;padding:1px 4px;border-radius:3px;">last_verified_at</code>.</li>
+      <li style="padding:8px 0;border-bottom:1px solid #f1f5f9;">🏢 <strong>Supply (negocios open):</strong> <a href="https://www.mapadecaborojo.com" target="_blank" rel="noopener" style="color:#0d9488;font-weight:600;">mapadecaborojo.com</a> → directorio live. Cada place tiene <code style="background:#f1f5f9;padding:1px 4px;border-radius:3px;">last_verified_at</code>.</li>
       <li style="padding:8px 0;border-bottom:1px solid #f1f5f9;">🔍 <strong>Demanda:</strong> logs reales del bot *7711 (visible en <a href="/admin/municipio" style="color:#0d9488;font-weight:600;">/admin/municipio</a> si tienes acceso admin).</li>
       <li style="padding:8px 0;border-bottom:1px solid #f1f5f9;">💵 <strong>Per-cápita spend:</strong> <a href="https://www.bls.gov/cex/tables.htm" target="_blank" rel="noopener" style="color:#0d9488;font-weight:600;">BLS CES Tables</a> + industry sources (NRA, NACS, NCPDP, IHRSA, ADA).</li>
       <li style="padding:8px 0;border-bottom:1px solid #f1f5f9;">📊 <strong>Lo mínimo pa' no quebrar:</strong> <a href="https://www.bls.gov/cew/" target="_blank" rel="noopener" style="color:#0d9488;font-weight:600;">data oficial del gobierno (BLS QCEW)</a> — negocios y pagos de salarios por industria.</li>
@@ -4511,7 +4511,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
       <strong>Población:</strong> <a href="https://data.census.gov/profile?q=Cabo+Rojo+Municipio,+Puerto+Rico" target="_blank" rel="noopener" style="color:#0d9488;">US Census 2020</a> + <a href="https://www.census.gov/programs-surveys/acs" target="_blank" rel="noopener" style="color:#0d9488;">ACS 5-year</a>. ·
       <strong>Visitantes:</strong> <a href="https://www.tourism.pr.gov/" target="_blank" rel="noopener" style="color:#0d9488;">PRTC turismo</a> estimate (próxima versión lo calibra). ·
       <strong>Per-cápita spend:</strong> <a href="https://www.bls.gov/cex/tables.htm" target="_blank" rel="noopener" style="color:#0d9488;">BLS CES</a>, <a href="https://restaurant.org/research-and-media/research/economic-impact/" target="_blank" rel="noopener" style="color:#0d9488;">NRA</a>, <a href="https://www.convenience.org/Research" target="_blank" rel="noopener" style="color:#0d9488;">NACS</a>, <a href="https://www.ncpdp.org/" target="_blank" rel="noopener" style="color:#0d9488;">NCPDP</a>, <a href="https://www.ihrsa.org/" target="_blank" rel="noopener" style="color:#0d9488;">IHRSA</a>, <a href="https://www.ada.org/resources/research" target="_blank" rel="noopener" style="color:#0d9488;">ADA</a>, <a href="https://www.cms.gov/" target="_blank" rel="noopener" style="color:#0d9488;">CMS</a>, <a href="https://www.probeauty.org/" target="_blank" rel="noopener" style="color:#0d9488;">PBA</a> — industry benchmarks. ·
-      <strong>Supply:</strong> <a href="https://mapadecaborojo.com" target="_blank" rel="noopener" style="color:#0d9488;">Live directorio MapaDeCaboRojo.com</a>. ·
+      <strong>Supply:</strong> <a href="https://www.mapadecaborojo.com" target="_blank" rel="noopener" style="color:#0d9488;">Live directorio MapaDeCaboRojo.com</a>. ·
       <strong>Demand:</strong> Live bot *7711 search logs (90 días). ·
       <strong>Densidad PR para comparar:</strong> <a href="https://www.bls.gov/cew/" target="_blank" rel="noopener" style="color:#0d9488;">BLS QCEW 2023</a> — PR ${fmt(VERIFIED_FEDERAL_DATA.qcew_estabs_pr_2023)} establecimientos, Cabo Rojo ${fmt(VERIFIED_FEDERAL_DATA.qcew_estabs_cr_2023)} (verificado 29 jun 2026). La calibración por categoría individual sigue pendiente Phase 2. ·
       <strong>Fondos federales:</strong> <a href="https://www.usaspending.gov/" target="_blank" rel="noopener" style="color:#0d9488;">USASpending.gov</a> (grants FY2020-26, lugar de ejecución Cabo Rojo).
@@ -5144,10 +5144,10 @@ function mc_pageShell(bodyHtml: string, title: string, description: string): str
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(description)}">
 <meta name="robots" content="index,follow">
-<link rel="canonical" href="https://mapadecaborojo.com/me-conviene">
+<link rel="canonical" href="https://www.mapadecaborojo.com/me-conviene">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"¿Me Conviene? — Decisión de Negocio Cabo Rojo","description":"${esc(description)}","url":"https://mapadecaborojo.com/me-conviene","applicationCategory":"BusinessApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"¿Me Conviene? — Decisión de Negocio Cabo Rojo","description":"${esc(description)}","url":"https://www.mapadecaborojo.com/me-conviene","applicationCategory":"BusinessApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#faf9f7;color:#1c1917;-webkit-font-smoothing:antialiased;line-height:1.5}
@@ -5667,7 +5667,7 @@ async function handle_sistema(req: any, res: any) {
 <title>El Sistema · La capa de verdad económica de Cabo Rojo</title>
 <meta name="description" content="Qué negocio necesita Cabo Rojo, en vivo. Demanda real del *7711 cruzada con oferta verificada a mano. La capa de inteligencia económica de un pueblo — replicable a cualquier municipio.">
 <meta name="robots" content="index,follow">
-<link rel="canonical" href="https://mapadecaborojo.com/sistema">
+<link rel="canonical" href="https://www.mapadecaborojo.com/sistema">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
 <meta property="og:title" content="El Sistema · La capa de verdad económica de Cabo Rojo">
@@ -5969,7 +5969,7 @@ async function handle_cultura(req: any, res: any) {
     }).length;
     const freshnessPct = total > 0 ? Math.round((verifiedRecently / total) * 100) : 0;
 
-    const baseUrl = 'https://mapadecaborojo.com';
+    const baseUrl = 'https://www.mapadecaborojo.com';
     const pageTitle = 'Directorio Cultural de Cabo Rojo | MapaDeCaboRojo.com';
     const desc = `${total} lugares culturales verificados manualmente: próceres, museos, naturaleza histórica, plazas, artesanos. Mapa interactivo + lista por sección.`;
 

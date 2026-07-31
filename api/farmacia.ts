@@ -165,7 +165,7 @@ export default async function handler(req: any, res: any) {
 <head><meta charset="UTF-8"><title>${config.label} no encontrado | MapaDeCaboRojo.com</title></head>
 <body>
   <h1>404 – ${config.label} no encontrado</h1>
-  <p><a href="https://mapadecaborojo.com/categoria/${type}">Ver todos</a></p>
+  <p><a href="https://www.mapadecaborojo.com/categoria/${type}">Ver todos</a></p>
 </body>
 </html>`);
     return;
@@ -209,7 +209,7 @@ export default async function handler(req: any, res: any) {
     descFallback: (n: string, l: string) => `${n} — ${l} en Cabo Rojo, Puerto Rico. Horarios, dirección, teléfono y más.`,
     labelEn: undefined as any, labelPluralEn: undefined as any,
   };
-  const baseUrl     = 'https://mapadecaborojo.com';
+  const baseUrl     = 'https://www.mapadecaborojo.com';
   const pageUrl     = `${baseUrl}/${type}/${esc(place.slug || place.id)}`;
   const pageUrlEs   = pageUrl;
   const pageUrlEn   = `${pageUrl}?lang=en`;
@@ -226,7 +226,7 @@ export default async function handler(req: any, res: any) {
     : place.description
       ? esc(place.description).slice(0, 160)
       : T.descFallback(placeName, localizedLabel);
-  const image       = place.image_url || 'https://mapadecaborojo.com/og-default.png';
+  const image       = place.image_url || 'https://www.mapadecaborojo.com/og-default.png';
   const hoursText   = formatHours(place.opening_hours);
   const openNow     = isCurrentlyOpen(place.opening_hours);
   // Three-state status. We only claim "open"/"closed" when we actually have

@@ -160,7 +160,7 @@ ${LEAFLET_TAGS}
   });
 })();
 </script>`
-    const jsonLd = { '@context': 'https://schema.org', '@type': 'CollectionPage', name: 'Los barrios de Cabo Rojo', url: 'https://mapadecaborojo.com/barrios', description: 'Los 9 barrios de Cabo Rojo con sus negocios y lugares verificados: Boquerón, Miradero, Guanajibo, Pedernales, Bajura, Monte Grande, Llanos Tuna, Llanos Costa y el Pueblo.' }
+    const jsonLd = { '@context': 'https://schema.org', '@type': 'CollectionPage', name: 'Los barrios de Cabo Rojo', url: 'https://www.mapadecaborojo.com/barrios', description: 'Los 9 barrios de Cabo Rojo con sus negocios y lugares verificados: Boquerón, Miradero, Guanajibo, Pedernales, Bajura, Monte Grande, Llanos Tuna, Llanos Costa y el Pueblo.' }
     res.status(200).send(layout({
       title: 'Los 9 barrios de Cabo Rojo — mapa interactivo con lugares verificados',
       description: 'Toca tu barrio y mira qué hay: negocios, playas y servicios verificados a mano. Boquerón, Joyuda, Puerto Real, El Combate y más.',
@@ -249,7 +249,7 @@ ${LEAFLET_TAGS}
 })();
 </script>`
 
-  const jsonLd = { '@context': 'https://schema.org', '@type': 'Place', name: `${barrio.name}, Cabo Rojo, Puerto Rico`, url: `https://mapadecaborojo.com/barrio/${slug}`, description: `${barrio.tagline} ${rows.length} negocios y lugares verificados.`, containedInPlace: { '@type': 'City', name: 'Cabo Rojo', address: { '@type': 'PostalAddress', addressRegion: 'PR', addressCountry: 'US' } } }
+  const jsonLd = { '@context': 'https://schema.org', '@type': 'Place', name: `${barrio.name}, Cabo Rojo, Puerto Rico`, url: `https://www.mapadecaborojo.com/barrio/${slug}`, description: `${barrio.tagline} ${rows.length} negocios y lugares verificados.`, containedInPlace: { '@type': 'City', name: 'Cabo Rojo', address: { '@type': 'PostalAddress', addressRegion: 'PR', addressCountry: 'US' } } }
   res.status(200).send(layout({
     title: `${barrio.name}, Cabo Rojo — ${rows.length} lugares verificados en el barrio`,
     description: `${barrio.tagline} Negocios, playas y servicios de ${barrio.name} verificados a mano, con mapa. Si falta algo, textea al 787-417-7711.`,

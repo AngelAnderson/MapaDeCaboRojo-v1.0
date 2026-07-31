@@ -14,7 +14,7 @@
  * CTA doble: textea CARRO al *7711 · directorio de mecánicos del mapa.
  */
 
-const SITE_URL = 'https://mapadecaborojo.com';
+const SITE_URL = 'https://www.mapadecaborojo.com';
 const PHONE_CTA = '787-417-7711';
 
 function esc(str: string | null | undefined): string {

@@ -41,7 +41,7 @@ const supabase = createClient(
   },
 )
 
-const SITE_URL = 'https://mapadecaborojo.com'
+const SITE_URL = 'https://www.mapadecaborojo.com'
 const PHONE_CTA = '787-417-7711'
 const RESEND_API_KEY = process.env.RESEND_API_KEY || ''
 const FROM_EMAIL = 'MapaDeCaboRojo <newsletter@mapadecaborojo.com>'
@@ -7438,7 +7438,7 @@ ${SHARE_COPY_SCRIPT}
 // El registro de correcciones se publica (incluyendo las propias): la falsificabilidad ES la credibilidad.
 async function handleRompelo(req: any, res: any) {
   const objeciones: [string, string][] = [
-    ['"¿Y quién eres tú?"', 'Soy <strong>Angel Anderson</strong>, vecino de Cabo Rojo. Serví 20 años en la Fuerza Aérea de los Estados Unidos, trabajé más de 20 en mercadeo, y volví a mi pueblo a poner ese entrenamiento a trabajar aquí: verifico datos uno por uno y los publico con la fuente al lado. Lo que construyo está a la vista: <a href="https://angelanderson.com" target="_blank" rel="noopener" class="text-teal-700 font-semibold">angelanderson.com</a> (quién soy y cómo trabajo), <a href="https://mapadecaborojo.com" target="_blank" rel="noopener" class="text-teal-700 font-semibold">mapadecaborojo.com</a> (el directorio verificado de mi pueblo) y El Veci, el número local que contesta 24/7 (787-417-7711). Pero esa es la parte buena: NO tienes que creerme. Cada número de este sitio lleva al lado el link del documento oficial o el minuto del video donde lo dijeron. No cites mi opinión: verifica la fuente tú mismo.'],
+    ['"¿Y quién eres tú?"', 'Soy <strong>Angel Anderson</strong>, vecino de Cabo Rojo. Serví 20 años en la Fuerza Aérea de los Estados Unidos, trabajé más de 20 en mercadeo, y volví a mi pueblo a poner ese entrenamiento a trabajar aquí: verifico datos uno por uno y los publico con la fuente al lado. Lo que construyo está a la vista: <a href="https://angelanderson.com" target="_blank" rel="noopener" class="text-teal-700 font-semibold">angelanderson.com</a> (quién soy y cómo trabajo), <a href="https://www.mapadecaborojo.com" target="_blank" rel="noopener" class="text-teal-700 font-semibold">mapadecaborojo.com</a> (el directorio verificado de mi pueblo) y El Veci, el número local que contesta 24/7 (787-417-7711). Pero esa es la parte buena: NO tienes que creerme. Cada número de este sitio lleva al lado el link del documento oficial o el minuto del video donde lo dijeron. No cites mi opinión: verifica la fuente tú mismo.'],
     ['"Esto es política. Tú eres del otro partido."', 'El récord cubre administraciones de todos los partidos, y anota el verde igual que el rojo: aquí hay promesas cumplidas y logros reconocidos al lado de los plazos vencidos. El récord no tiene papeleta. Si un dato te incomoda, el problema no es el mensajero: es el documento.'],
     ['"Eso está viejo / sacado de contexto"', 'Cada récord dice su fecha de corte, visible. Y cada link va al documento o al video COMPLETO, no a un recorte: el contexto entero está a un click. Cuando sale un corte más nuevo, el récord se actualiza y se anota.'],
     ['"Eso lo hizo una AI"', 'Se construye con computadoras y se verifica contra la fuente primaria, dato por dato, por un humano que responde con su nombre. La prueba de que no es relleno automático es simple: encuentra UN error. El reto está abajo, con premio.'],

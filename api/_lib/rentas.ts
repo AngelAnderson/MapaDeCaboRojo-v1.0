@@ -146,7 +146,7 @@ export async function handleRentas(req: any, res: any, deps: Deps) {
     '@type': 'CollectionPage',
     name: "Casas pa' rentar en Cabo Rojo",
     description: 'Lista verificada de casas y apartamentos de renta larga en Cabo Rojo, con fecha de verificación en cada listado.',
-    url: 'https://mapadecaborojo.com/rentas',
+    url: 'https://www.mapadecaborojo.com/rentas',
     numberOfItems: rows.length,
   }
 

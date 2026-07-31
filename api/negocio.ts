@@ -157,7 +157,7 @@ export default async function handler(req: any, res: any) {
     res.status(404).send(`<!DOCTYPE html>
 <html lang="es">
 <head><meta charset="UTF-8"><title>Negocio no encontrado | MapaDeCaboRojo.com</title></head>
-<body><h1>404 – Negocio no encontrado</h1><p><a href="https://mapadecaborojo.com">Ver todos los negocios</a></p></body>
+<body><h1>404 – Negocio no encontrado</h1><p><a href="https://www.mapadecaborojo.com">Ver todos los negocios</a></p></body>
 </html>`);
     return;
   }
@@ -173,11 +173,11 @@ export default async function handler(req: any, res: any) {
   const cat = (place.category || '').toUpperCase();
   if (cat === 'HEALTH' && HEALTH_ROUTES[sub]) {
     const healthSlug = place.slug || place.id;
-    res.writeHead(301, { Location: `https://mapadecaborojo.com/${HEALTH_ROUTES[sub]}/${healthSlug}` });
+    res.writeHead(301, { Location: `https://www.mapadecaborojo.com/${HEALTH_ROUTES[sub]}/${healthSlug}` });
     return res.end();
   }
 
-  const baseUrl = 'https://mapadecaborojo.com';
+  const baseUrl = 'https://www.mapadecaborojo.com';
   const pageUrl = `${baseUrl}/negocio/${esc(place.slug || place.id)}`;
   // Use the business's REAL municipality (was hardcoded "Cabo Rojo" — hurt CTR + local
   // relevance for every business outside CR, e.g. "penfed mayaguez" showing "| Cabo Rojo").
@@ -445,7 +445,7 @@ export default async function handler(req: any, res: any) {
         Hecho con orgullo en Cabo Rojo, Puerto Rico
       </p>
       <p style="color: #94a3b8; font-size: 11px; margin: 4px 0 0 0;">
-        <a href="https://mapadecaborojo.com" style="color: #0d9488; text-decoration: none;">MapaDeCaboRojo.com</a>
+        <a href="https://www.mapadecaborojo.com" style="color: #0d9488; text-decoration: none;">MapaDeCaboRojo.com</a>
         · Un proyecto de <a href="https://angelanderson.com" style="color: #0d9488; text-decoration: none;">Angel Anderson</a>
       </p>
     </footer>

@@ -11,6 +11,29 @@ const supabase = createClient(
 // sitemaps on all three domains, leaving puertoricosinfiltros.com undiscoverable).
 const AI_CRAWLERS = ['GPTBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-Web', 'anthropic-ai', 'Google-Extended', 'PerplexityBot', 'cohere-ai', 'Applebot-Extended'];
 
+// Las 56 categorías del registro (Fase 2, jul 2026): 32 especialistas + dentista + primaria
+// + aliados + facilidades NPI-2. Un proveedor con NPI y una de estas subcategorías es del
+// Registro Médico PR: su URL canónica vive en registromedicopr.com/especialista/[slug] y NO
+// se anuncia en el sitemap de mapadecaborojo.com (si no, el mismo médico sale dos veces, en
+// dos dominios, cada copia auto-canónica — eso es lo que Search Console reporta como
+// "Duplicada: Google eligió una versión canónica diferente").
+const SPECIALIST_SUBS = ['cardiólogo','psiquiatra','fisiatra','ginecólogo','pediatra','dermatólogo','gastroenterólogo','oftalmólogo','ortopeda','neurologo','urólogo','endocrinologo','nefrólogo','neumólogo','oncólogo','reumatólogo','geriatra','otorrinolaringólogo','infectólogo','alergista','medicina de emergencia','cirujano general','anestesiólogo','radiólogo','neurocirujano','cirujano plástico','cirujano torácico','coloproctólogo','manejo de dolor','psicólogo','optómetra','podiatra','dentista','internista','medicina de familia','terapeuta del habla','terapista físico','terapista ocupacional','quiropractico','consejero','trabajador social','terapeuta de familia','nutricionista','physician assistant','enfermera practicante','audiólogo','partera','farmacéutico','hospital','cuidado en el hogar','hospicio','hogar de envejecientes','centro de diálisis','urgent care','clínica comunitaria','laboratorio clínico','radiología','ambulancia','dentista pediátrico','ortodoncista','cirujano oral','naturópata','acupunturista','neonatólogo','cirujano vascular'];
+
+// Espejo EXACTO de api/negocio.ts: un place HEALTH con una de estas subcategorías no se
+// sirve en /negocio/[slug], se redirige 301 a /[ruta]/[slug]. El sitemap anuncia el destino,
+// nunca la redirección.
+const HEALTH_ROUTES: Record<string, string> = {
+  farmacia: 'farmacia', dentista: 'dentista', veterinario: 'veterinario',
+  medico: 'medico', hospital: 'hospital', laboratorio: 'laboratorio',
+  optica: 'optica', 'salud-mental': 'salud-mental', quiropractico: 'quiropractico',
+  gimnasio: 'gimnasio',
+};
+
+// Espejo EXACTO de api/farmacia.ts: en estas rutas, un proveedor con NPI canonicaliza a
+// registromedicopr.com. Anunciarlo en el sitemap de mapa sería pedirle a Google que indexe
+// una página que dice "la buena está en el otro dominio".
+const REG_ESPECIALISTA_TYPES = new Set(['medico', 'dentista', 'salud-mental', 'quiropractico', 'fisiatra', 'optica']);
+
 function robotsFor(host: string): string {
   const isPRSF = /puertoricosinfiltros\.com/i.test(host);
   const isReg = /registromedicopr\.com/i.test(host);
@@ -43,19 +66,32 @@ export default async function handler(req: any, res: any) {
       res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate');
       return res.status(200).send(robotsFor(String(req.headers?.host || '')));
     }
-    // 1. Fetch Data — paginate to bypass PostgREST 1000-row cap
-    const allPlaces: any[] = [];
-    for (let page = 0; page < 10; page++) {
-      const { data } = await supabase
-        .from('places')
-        .select('slug, id, verified_at, category')
-        .eq('status', 'open')
-        .range(page * 1000, (page + 1) * 1000 - 1);
-      if (!data || data.length === 0) break;
-      allPlaces.push(...data);
-      if (data.length < 1000) break;
-    }
-    const places = allPlaces;
+    // 1. Fetch Data — el directorio de mapadecaborojo.com, SIN los proveedores del registro.
+    // Antes esto era un `.eq('status','open')` pelado cortado en 10 páginas: de 29,513 places
+    // abiertos, las primeras 10,000 filas eran casi todas médicos del NPPES de todo PR. El
+    // sitemap de mapa anunciaba 10,000 URLs /negocio/[slug] que o redirigen a /dentista/[slug]
+    // o canonicalizan a registromedicopr.com — y los negocios reales de Cabo Rojo se quedaban
+    // fuera por el corte. Ahora se piden solo los que mapa sí es dueño de indexar.
+    const SUBS_IN = `(${SPECIALIST_SUBS.map((s) => `"${s}"`).join(',')})`;
+    const COLS = 'slug, id, verified_at, category, subcategory, npi';
+    const fetchAll = async (build: () => any): Promise<any[]> => {
+      const out: any[] = [];
+      for (let page = 0; page < 12; page++) {
+        const { data } = await build().range(page * 1000, (page + 1) * 1000 - 1);
+        if (!data || data.length === 0) break;
+        out.push(...data);
+        if (data.length < 1000) break;
+      }
+      return out;
+    };
+    const places = [
+      // (a) directorio puro — sin NPI, nunca fue del registro
+      ...(await fetchAll(() => supabase.from('places').select(COLS).eq('status', 'open').is('npi', null))),
+      // (b) con NPI pero fuera de las 56 categorías del registro (farmacias, equipo médico…)
+      ...(await fetchAll(() => supabase.from('places').select(COLS).eq('status', 'open').not('npi', 'is', null).not('subcategory', 'in', SUBS_IN))),
+      // (c) con NPI y sin subcategoría — `NOT IN` los deja fuera porque NULL no compara
+      ...(await fetchAll(() => supabase.from('places').select(COLS).eq('status', 'open').not('npi', 'is', null).is('subcategory', null))),
+    ];
 
     const { data: events } = await supabase
       .from('events')
@@ -177,9 +213,6 @@ export default async function handler(req: any, res: any) {
     });
 
     // Registro Médico PR — one page per verified specialist (NPPES). Paginate past the 1000-row cap.
-    // Las 56 categorías del registro (Fase 2, jul 2026): 32 especialistas + dentista + primaria
-    // + aliados + facilidades NPI-2. Excluye viejos negocios de salud de CR con NPI que no son del registro.
-    const SPECIALIST_SUBS = ['cardiólogo','psiquiatra','fisiatra','ginecólogo','pediatra','dermatólogo','gastroenterólogo','oftalmólogo','ortopeda','neurologo','urólogo','endocrinologo','nefrólogo','neumólogo','oncólogo','reumatólogo','geriatra','otorrinolaringólogo','infectólogo','alergista','medicina de emergencia','cirujano general','anestesiólogo','radiólogo','neurocirujano','cirujano plástico','cirujano torácico','coloproctólogo','manejo de dolor','psicólogo','optómetra','podiatra','dentista','internista','medicina de familia','terapeuta del habla','terapista físico','terapista ocupacional','quiropractico','consejero','trabajador social','terapeuta de familia','nutricionista','physician assistant','enfermera practicante','audiólogo','partera','farmacéutico','hospital','cuidado en el hogar','hospicio','hogar de envejecientes','centro de diálisis','urgent care','clínica comunitaria','laboratorio clínico','radiología','ambulancia','dentista pediátrico','ortodoncista','cirujano oral','naturópata','acupunturista','neonatólogo','cirujano vascular'];
     const specialists: any[] = [];
     // 25 pages × 1000 = 25,000 capacity (registry = ~20,600 providers; sitemap protocol cap is 50k/file).
     for (let page = 0; page < 25; page++) {
@@ -269,64 +302,32 @@ export default async function handler(req: any, res: any) {
       `);
     });
 
-    // Dynamic Places — SEO pages at /negocio/[slug]
-    // Pharmacy places also get dedicated /farmacia/[slug] pages (Salud layer)
+    // Dynamic Places — una URL por negocio, la que de verdad responde 200 y se auto-canoniza.
+    // La versión vieja anunciaba SIEMPRE /negocio/[slug] y además adivinaba una ruta de salud
+    // con el nombre del negocio. Dos bugs: (a) /negocio/[slug] de un place HEALTH devuelve 301,
+    // así que el sitemap anunciaba la redirección y no el destino; (b) la adivinanza usaba
+    // p.name y p.subcategory, columnas que el SELECT ni pedía, así que nunca emitió una sola
+    // URL de salud. Ahora la ruta se calcula igual que en api/negocio.ts y se anuncia el destino.
     if (places) {
       places.forEach((p: any) => {
         const lastMod = p.verified_at ? p.verified_at.split('T')[0] : new Date().toISOString().split('T')[0];
         const slug = p.slug || p.id;
+        const sub = (p.subcategory || '').toLowerCase();
+        const cat = (p.category || '').toUpperCase();
+        const healthRoute = cat === 'HEALTH' ? HEALTH_ROUTES[sub] || null : null;
 
-        // All businesses get the canonical /negocio/ page
+        // Con NPI en ruta de especialista, la página canoniza a registromedicopr.com:
+        // esa URL es del registro, no de mapa. Ya sale como /especialista/[slug] arriba.
+        if (healthRoute && p.npi && REG_ESPECIALISTA_TYPES.has(healthRoute)) return;
+
         urls.push(`
           <url>
-            <loc>${baseUrl}/negocio/${slug}</loc>
+            <loc>${baseUrl}/${healthRoute ? `${healthRoute}/${slug}` : `negocio/${slug}`}</loc>
             <lastmod>${lastMod}</lastmod>
             <changefreq>weekly</changefreq>
-            <priority>0.8</priority>
+            <priority>${healthRoute ? '0.9' : '0.8'}</priority>
           </url>
         `);
-
-        // Health detail pages — route based on category/subcategory
-        const catLower = (p.category || '').toLowerCase();
-        const subcatLower = (p.subcategory || '').toLowerCase();
-        const nameLower = (p.name || '').toLowerCase();
-
-        // Determine health detail route
-        let healthRoute: string | null = null;
-        if (catLower === 'farmacia' || subcatLower.includes('pharmacy') || subcatLower.includes('farmacia') || nameLower.includes('farmacia') || nameLower.includes('pharmacy')) {
-          healthRoute = 'farmacia';
-        } else if (subcatLower.includes('dentist') || subcatLower.includes('dentista') || nameLower.includes('dental') || nameLower.includes('dentist')) {
-          healthRoute = 'dentista';
-        } else if (subcatLower.includes('veterinar') || nameLower.includes('veterinar')) {
-          healthRoute = 'veterinario';
-        } else if (subcatLower.includes('hospital') || nameLower.includes('hospital') || nameLower.includes('clínica') || nameLower.includes('clinica') || nameLower.includes('cdt')) {
-          healthRoute = 'hospital';
-        } else if (subcatLower.includes('optom') || subcatLower.includes('óptica') || nameLower.includes('óptica') || nameLower.includes('optica') || nameLower.includes('vision')) {
-          healthRoute = 'optica';
-        } else if (subcatLower.includes('laboratorio') || nameLower.includes('laboratorio')) {
-          healthRoute = 'laboratorio';
-        } else if (subcatLower.includes('salud mental') || subcatLower.includes('psicólog') || nameLower.includes('psicólog') || nameLower.includes('psiquiatr')) {
-          healthRoute = 'salud-mental';
-        } else if (subcatLower.includes('chiropract') || nameLower.includes('quiropract')) {
-          healthRoute = 'quiropractico';
-        } else if (nameLower.includes('fitness') || nameLower.includes('gym') || nameLower.includes('crossfit')) {
-          healthRoute = 'gimnasio';
-        } else if (subcatLower === 'fisiatra' || subcatLower.includes('fisiatr') || nameLower.includes('fisiatr')) {
-          healthRoute = 'fisiatra';
-        } else if (subcatLower.includes('doctor') || nameLower.includes('dr.') || nameLower.includes('dra.')) {
-          healthRoute = 'medico';
-        }
-
-        if (healthRoute) {
-          urls.push(`
-            <url>
-              <loc>${baseUrl}/${healthRoute}/${slug}</loc>
-              <lastmod>${lastMod}</lastmod>
-              <changefreq>weekly</changefreq>
-              <priority>0.9</priority>
-            </url>
-          `);
-        }
       });
     }
 
