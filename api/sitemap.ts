@@ -110,35 +110,20 @@ export default async function handler(req: any, res: any) {
         <priority>0.5</priority>
       </url>
     `);
-    urls.push(`
-      <url>
-        <loc>${baseUrl}/playas/defensa-y-limpieza</loc>
-        <changefreq>daily</changefreq>
-        <priority>0.7</priority>
-      </url>
-    `);
-
     // Narrative public pages (SSR · positioning + sales + transparency)
     // Priority order matches conversion path: entry → sales → trust → data
+    // ⚠️ Solo rutas que devuelven 200. Un slug con redirect 301 en vercel.json NO va
+    // aquí: Google lo sigue rastreando como "enviada", lo mantiene indexado y sigue
+    // reportando sus errores (así seguía vivo el aviso de Dataset de /transparencia
+    // y /senales-del-pueblo tres días después de la poda del 27 jul 2026).
     const narrativePages: Array<{ slug: string; priority: number; changefreq: string }> = [
       { slug: 'tienda', priority: 0.9, changefreq: 'weekly' },                 // storefront · La Vitrina + libro + Conserje
-      { slug: 'menos-revolu', priority: 0.9, changefreq: 'weekly' },           // §20 consolidated landing
       { slug: 'pon-tu-negocio-en-el-mapa', priority: 0.9, changefreq: 'weekly' }, // §13 revenue CTA
-      { slug: 'mira-la-vuelta', priority: 0.9, changefreq: 'daily' },          // §14 with live demand data
-      { slug: 'senales-del-pueblo', priority: 0.8, changefreq: 'daily' },      // live demand signals
       { slug: 'observatorio', priority: 0.9, changefreq: 'weekly' },           // civic accountability · Esencia/vertedero · FAQPage schema
       { slug: 'promesas', priority: 0.8, changefreq: 'weekly' },               // promesas del alcalde en cámara · banco completo
-      { slug: 'pueblo-en-numeros', priority: 0.8, changefreq: 'daily' },       // math anchor (TAM/SAM/SOM)
-      { slug: 'transparencia', priority: 0.7, changefreq: 'daily' },           // live supply metrics
       { slug: 'mision', priority: 0.7, changefreq: 'weekly' },
-      { slug: 'vision', priority: 0.6, changefreq: 'weekly' },
       { slug: 'equipo', priority: 0.6, changefreq: 'weekly' },
-      { slug: 'moonshots', priority: 0.5, changefreq: 'weekly' },
-      { slug: 'preguntas', priority: 0.7, changefreq: 'monthly' },             // FAQPage schema · LLM citability
       { slug: 'historia', priority: 0.6, changefreq: 'monthly' },              // Origin story · build-in-public
-      { slug: 'me-conviene', priority: 0.7, changefreq: 'monthly' },
-      { slug: 'municipio', priority: 0.6, changefreq: 'weekly' },
-      { slug: 'cultura', priority: 0.8, changefreq: 'monthly' },               // curated cultural directory · 30 verified places
       { slug: 'barrios', priority: 0.9, changefreq: 'weekly' },                // mapa interactivo de los 9 barrios
       { slug: 'barrio/pueblo', priority: 0.8, changefreq: 'weekly' },
       { slug: 'barrio/boqueron', priority: 0.8, changefreq: 'weekly' },

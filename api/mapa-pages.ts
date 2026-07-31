@@ -742,6 +742,10 @@ ${failBanner}
       name: 'Mapa de Cabo Rojo · Transparencia Metrics',
       description: 'Live verification metrics for the Cabo Rojo directory.',
       url: `${SITE_URL}/transparencia`,
+      creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://www.angelanderson.com' },
+      publisher: { '@type': 'Organization', name: 'MapaDeCaboRojo.com', url: SITE_URL },
+      isAccessibleForFree: true, inLanguage: 'es',
+      spatialCoverage: { '@type': 'Place', name: 'Cabo Rojo, Puerto Rico' },
       keywords: ['cabo rojo', 'civic-tech', 'directorio', 'verification'],
     },
   }))
@@ -1563,8 +1567,11 @@ ${subscribeForm('senales-del-pueblo', { audience: 'general' })}
       name: 'Señales del pueblo · Demanda local Cabo Rojo',
       description: 'Live demand signals from bot searches + directory queries for Cabo Rojo, PR. Top searches, recent verifications, demand-supply gaps.',
       url: `${SITE_URL}/senales-del-pueblo`,
+      creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://www.angelanderson.com' },
+      publisher: { '@type': 'Organization', name: 'MapaDeCaboRojo.com', url: SITE_URL },
+      spatialCoverage: { '@type': 'Place', name: 'Cabo Rojo, Puerto Rico' },
       keywords: ['cabo rojo', 'demand signals', 'civic-tech', 'local market data'],
-      isAccessibleForFree: true,
+      isAccessibleForFree: true, inLanguage: 'es',
     },
   }))
 }

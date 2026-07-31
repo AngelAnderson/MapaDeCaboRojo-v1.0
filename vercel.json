@@ -272,6 +272,14 @@
       "destination": "/api/mapa-pages?page=exposicion-ai"
     },
     {
+      "source": "/rendimiento",
+      "destination": "/api/mapa-pages?page=rendimiento"
+    },
+    {
+      "source": "/activos",
+      "destination": "/api/mapa-pages?page=activos"
+    },
+    {
       "source": "/sigue-el-dinero",
       "destination": "/api/mapa-pages?page=sigue-el-dinero"
     },
@@ -487,11 +495,6 @@
       "permanent": true
     },
     {
-      "source": "/activos",
-      "destination": "/",
-      "permanent": true
-    },
-    {
       "source": "/carro",
       "destination": "/",
       "permanent": true
@@ -593,11 +596,6 @@
     },
     {
       "source": "/quién-responde",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/rendimiento",
       "destination": "/",
       "permanent": true
     },
