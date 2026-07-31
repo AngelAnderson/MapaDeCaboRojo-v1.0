@@ -228,6 +228,17 @@ export default async function handler(req: any, res: any) {
   const muniRaw     = place.municipality || 'Cabo Rojo';
   const muni        = esc(muniRaw);
   const isCaboRojo  = /cabo\s*rojo/i.test(muniRaw);
+  // La dirección de la base a veces ya trae el pueblo y/o el país ("62 E DE DIEGO, Mayagüez,
+  // 00680, Puerto Rico"). Pegarle el pueblo a ciegas daba "…, Mayagüez, Puerto Rico, Mayagüez,
+  // Puerto Rico". Se limpia la cola y el pueblo se añade solo si falta.
+  const fullAddress = (() => {
+    const raw = String(place.address || '').trim().replace(/[,\s]+$/, '');
+    if (!raw) return '';
+    const base = raw.replace(/,?\s*(Puerto Rico|P\.?R\.?)\s*$/i, '').replace(/[,\s]+$/, '');
+    const norm = (x: string) => x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const hasMuni = norm(base).includes(norm(muniRaw));
+    return `${base}${hasMuni ? '' : `, ${muniRaw}`}, Puerto Rico`;
+  })();
   const localizedLabel       = (lang === 'en' && T.labelEn?.[type]) ? T.labelEn[type] : config.label;
   const localizedLabelPlural = (lang === 'en' && T.labelPluralEn?.[type]) ? T.labelPluralEn[type] : config.labelPlural;
   const nameAlreadyHasLabel = place.name.toLowerCase().includes(localizedLabel.toLowerCase());
@@ -504,7 +515,7 @@ export default async function handler(req: any, res: any) {
 
     <div class="info-card">
       <h2>${T.info}</h2>
-      ${place.address ? `<div class="info-row"><span class="info-label">&#128205; ${T.address}</span><span class="info-value">${esc(place.address)}, ${muni}, PR</span></div>` : ''}
+      ${place.address ? `<div class="info-row"><span class="info-label">&#128205; ${T.address}</span><span class="info-value">${esc(fullAddress)}</span></div>` : ''}
       ${displayPhone ? `<div class="info-row"><span class="info-label">&#128222; ${T.phone}</span><span class="info-value"><a href="tel:${esc(displayPhone)}">${esc(displayPhone)}</a>${phoneCorrected ? ` <small style="color:#92400e;">(corregido vs NPPES: ${esc(place.phone)})</small>` : ''}</span></div>` : ''}
       <div class="info-row"><span class="info-label">&#128336; ${T.hours}</span><span class="info-value">${hoursText}</span></div>
       ${place.website ? `<div class="info-row"><span class="info-label">&#127758; ${T.website}</span><span class="info-value"><a href="${esc(place.website)}" target="_blank" rel="noopener">${esc(place.website)}</a></span></div>` : ''}
@@ -651,7 +662,7 @@ export default async function handler(req: any, res: any) {
       <div class="faq-item">
         <h3>¿Dónde queda ${placeName}?</h3>
         <p>${place.address
-          ? `${placeName} está en ${esc(place.address)}, ${muni}, Puerto Rico.`
+          ? `${placeName} está en ${esc(fullAddress)}.`
           : `${placeName} está ubicada en ${muni}, Puerto Rico.`}
         ${place.gmaps_url ? ` <a href="${esc(place.gmaps_url)}" target="_blank" rel="noopener">Ver en Google Maps</a>.` : ''}</p>
       </div>
