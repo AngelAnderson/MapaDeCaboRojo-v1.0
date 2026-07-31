@@ -184,7 +184,9 @@ export default async function handler(req: any, res: any) {
     // Registro Médico PR — index pages
     ;[
       { slug: '', priority: 1.0, changefreq: 'weekly' },
-      { slug: 'registro', priority: 0.9, changefreq: 'weekly' },
+      // /registro NO va: es copia byte por byte de la raíz y su canonical apunta a la raíz.
+      // Anunciar una URL que canoniza a otra es pedirle a Google que reporte
+      // "Alternate page with proper canonical tag" — que fue justo el aviso del 28 jul.
       { slug: 'pueblo', priority: 0.9, changefreq: 'weekly' },
       { slug: 'necesito', priority: 0.85, changefreq: 'monthly' },
       { slug: 'necesito/cita-rapido', priority: 0.8, changefreq: 'monthly' },
