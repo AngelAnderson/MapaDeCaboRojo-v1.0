@@ -8212,30 +8212,16 @@ async function handleEsencia(req: any, res: any) {
   <p class="text-xs text-teal-200/70 mt-3 mb-0">Haz una cosa, no cargues el país entero. Si hoy no es el día, el récord sigue aquí mañana.</p>
 </div>
 
-<div class="not-prose mt-5 bg-rose-50 border-2 border-rose-300 rounded-2xl p-5">
-  <p class="text-xs uppercase tracking-widest text-rose-700 font-bold">La pieza que cambió el tablero · Ley 82 de 2026</p>
-  <p class="font-bold text-slate-800 mt-1">Una ley de mayo abrió el suelo protegido y le puso precio a ir a corte.</p>
-  <p class="text-sm text-slate-600 mt-2">El 12 de mayo de 2026 se firmó la <strong>Ley 82</strong> (PC 310). Hace dos cosas que caen justo encima de este expediente. <strong>Una:</strong> permite otorgar permisos en terrenos clasificados como Suelo Rústico Especialmente Protegido cuando el proyecto recibe la designación de &#8220;proyecto estratégico&#8221; &#8212; la misma designación con la que llegó la solicitud de Esencia. Ese es el mecanismo por el que un terreno que hoy no es urbanizable puede terminar siéndolo, sin cambiar el Plan de Uso de Terrenos. <strong>Dos:</strong> exige una fianza mínima del 10% del valor del proyecto a quien le pida a un tribunal que lo paralice. Aquí eso son <strong>$200 millones</strong>.</p>
-  <p class="text-sm text-slate-600 mt-2">Qué significa en la práctica: el ~40% de Suelo Rústico Especialmente Protegido-Ecológico que aparece arriba dejó de ser una pared y pasó a ser una puerta con llave, y la llave la da la designación de &#8220;estratégico&#8221;. Por eso el reclamo de vistas públicas presenciales dejó de ser un trámite: es la única mesa que le queda al vecino que no tiene $200 millones.</p>
-  <p class="text-sm text-slate-600 mt-2">Dividida entre el ingreso mediano de un hogar caborrojeño ($26,408 al año, censo federal), esa fianza equivale al ingreso anual completo de <strong>7,573 familias</strong>, o $4,083 por cada habitante del municipio. <a href="https://caborojo.com/ley-82-puerto-rico/" target="_blank" rel="noopener" class="text-teal-700 underline font-semibold">La misma cuenta para los 78 municipios de Puerto Rico ↗</a></p>
-  <p class="text-xs text-slate-400 mt-2">Fuente: <a href="https://www.lexjuris.com/lexlex/Leyes2026/lexl2026082.htm" target="_blank" rel="noopener" class="text-teal-700 underline">Ley Núm. 82 de 2026, texto completo (LexJuris) ↗</a> · <a href="https://aldia.microjuris.com/2026/05/25/la-ley-82-2026-y-el-acceso-ciudadano-a-los-tribunales/" target="_blank" rel="noopener" class="text-teal-700 underline">Microjuris ↗</a> · Ingreso mediano: Censo federal, ACS 5 años</p>
-</div>
-
-<div class="not-prose mt-5 bg-white border border-slate-200 rounded-2xl p-4">
-  <p class="text-sm font-bold text-slate-700 mb-2">🎧 Escúchalo: "Lujo sin agua" — el expediente de Esencia en audio (dos voces, 15 min)</p>
-  <audio controls preload="none" class="w-full" src="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/esencia-lujo-sin-agua.m4a">Tu navegador no puede reproducir el audio. <a href="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/esencia-lujo-sin-agua.m4a" class="text-teal-700 font-semibold">Descárgalo</a>.</audio>
-  <p class="text-xs text-slate-400 mt-1">Generado con IA sobre las fuentes primarias de este récord (DIA, carta de la AAA, CPI, vistas públicas). Los números son los de esta página.</p>
-</div>
-
 <div class="not-prose mt-4 flex flex-wrap gap-2 text-xs">
   <a href="#hoy" class="bg-teal-900 border border-teal-900 rounded-full px-3 py-1.5 font-bold text-white hover:bg-teal-800">⚡ En 5 minutos</a>
   <a href="#citables" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">📋 Datos citables</a>
   <a href="#numeros" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Los números</a>
+  <a href="#ley82" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">La Ley 82</a>
   <a href="#proscons" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Lo mejor de cada lado</a>
   <a href="#termometro" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">El termómetro (196 voces)</a>
+  <a href="#dueno" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">El dueño</a>
   <a href="#cuenta" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">La cuenta + calculadora</a>
   <a href="#agua" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">El agua</a>
-  <a href="#dueno" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">El dueño</a>
   <a href="#escenarios" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Los escenarios</a>
   <a href="#timeline" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Línea de tiempo</a>
   <a href="#video" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">El panel en video</a>
@@ -8243,6 +8229,14 @@ async function handleEsencia(req: any, res: any) {
 </div>
 
 ${shareRow({ text: 'El expediente de Esencia (Cabo Rojo), con la fuente al lado de cada dato: ~$498M en créditos contributivos, la propia AAA dijo por carta que no puede suplir el agua, y no hay cláusula que obligue los 2,000 empleos. Los dos lados, verificables:', url: 'https://puertoricosinfiltros.com/esencia', toWho: 'Al del grupo que dice "eso son 2,000 empleos" y al que dice "eso es un desastre". Aquí está el récord completo, pa\' los dos.' })}
+
+<div class="not-prose mt-5 bg-white border border-slate-200 rounded-2xl p-4">
+  <p class="text-sm font-bold text-slate-700 mb-2">🎧 Escúchalo: "Lujo sin agua" — el expediente de Esencia en audio (dos voces, 15 min)</p>
+  <audio controls preload="none" class="w-full" src="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/esencia-lujo-sin-agua.m4a">Tu navegador no puede reproducir el audio. <a href="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/esencia-lujo-sin-agua.m4a" class="text-teal-700 font-semibold">Descárgalo</a>.</audio>
+  <p class="text-xs text-slate-400 mt-1">Generado con IA sobre las fuentes primarias de este récord (DIA, carta de la AAA, CPI, vistas públicas). Los números son los de esta página.</p>
+</div>
+
+
 
 ${contradiccionInline({
   dicenC: 'Desarrollo responsable y ecoamigable',
@@ -8274,6 +8268,15 @@ ${(() => {
   <div class="bg-white border border-amber-300 rounded-xl p-4 text-center"><div class="text-2xl font-black text-amber-600">$498M</div><div class="text-xs text-slate-500 mt-1">en créditos contributivos</div></div>
 </div>
 <p class="text-xs text-slate-400 mt-2">Fuentes: Centro de Periodismo Investigativo (CPI), The Real Deal, registros públicos. La cifra de cuerdas y unidades proviene de la documentación del proyecto reseñada por el CPI.</p>
+
+<div class="not-prose mt-5 bg-rose-50 border-2 border-rose-300 rounded-2xl p-5" id="ley82">
+  <p class="text-xs uppercase tracking-widest text-rose-700 font-bold">La pieza que cambió el tablero · Ley 82 de 2026</p>
+  <p class="font-bold text-slate-800 mt-1">Una ley de mayo abrió el suelo protegido y le puso precio a ir a corte.</p>
+  <p class="text-sm text-slate-600 mt-2">El 12 de mayo de 2026 se firmó la <strong>Ley 82</strong> (PC 310). Hace dos cosas que caen justo encima de este expediente. <strong>Una:</strong> permite otorgar permisos en terrenos clasificados como Suelo Rústico Especialmente Protegido cuando el proyecto recibe la designación de &#8220;proyecto estratégico&#8221; &#8212; la misma designación con la que llegó la solicitud de Esencia. Ese es el mecanismo por el que un terreno que hoy no es urbanizable puede terminar siéndolo, sin cambiar el Plan de Uso de Terrenos. <strong>Dos:</strong> exige una fianza mínima del 10% del valor del proyecto a quien le pida a un tribunal que lo paralice. Aquí eso son <strong>$200 millones</strong>.</p>
+  <p class="text-sm text-slate-600 mt-2">Qué significa en la práctica: el ~40% de Suelo Rústico Especialmente Protegido-Ecológico que aparece arriba dejó de ser una pared y pasó a ser una puerta con llave, y la llave la da la designación de &#8220;estratégico&#8221;. Por eso el reclamo de vistas públicas presenciales dejó de ser un trámite: es la única mesa que le queda al vecino que no tiene $200 millones.</p>
+  <p class="text-sm text-slate-600 mt-2">Dividida entre el ingreso mediano de un hogar caborrojeño ($26,408 al año, censo federal), esa fianza equivale al ingreso anual completo de <strong>7,573 familias</strong>, o $4,083 por cada habitante del municipio. <a href="https://caborojo.com/ley-82-puerto-rico/" target="_blank" rel="noopener" class="text-teal-700 underline font-semibold">La misma cuenta para los 78 municipios de Puerto Rico ↗</a></p>
+  <p class="text-xs text-slate-400 mt-2">Fuente: <a href="https://www.lexjuris.com/lexlex/Leyes2026/lexl2026082.htm" target="_blank" rel="noopener" class="text-teal-700 underline">Ley Núm. 82 de 2026, texto completo (LexJuris) ↗</a> · <a href="https://aldia.microjuris.com/2026/05/25/la-ley-82-2026-y-el-acceso-ciudadano-a-los-tribunales/" target="_blank" rel="noopener" class="text-teal-700 underline">Microjuris ↗</a> · Ingreso mediano: Censo federal, ACS 5 años</p>
+</div>
 
 <h2 id="proscons">Lo mejor que dice cada lado</h2>
 <p>Ningún bando es bobo. Estos son los argumentos más fuertes de cada lado, tratados con respeto, y con lo que el récord dice de cada uno:</p>
@@ -8341,36 +8344,6 @@ Reuben Brothers <span class="text-slate-400">(Londres, UK · David &amp; Simon R
 <p class="text-sm text-slate-600 mt-2">El socio operacional citado, <strong>Three Rules Capital</strong> (Will Bennett y Roberto Ruiz Vargas), no aparece incorporado en los registros públicos de Florida, Delaware ni Nueva York que se revisaron. Una compañía registrada en Puerto Rico, controlada por ejecutivos en Londres.</p>
 <p class="text-xs text-slate-400 mt-1">Fuentes: <a href="https://rcp.estado.pr.gov/en/entity-information?c=424893-1511" target="_blank" rel="noopener" class="text-teal-700 underline">Registro del Depto. de Estado de PR ↗</a> · UK Companies House #02373675 · <a href="https://therealdeal.com/magazine/april-2025/meet-the-little-known-developer-behind-a-2b-reuben-brother-development/" target="_blank" rel="noopener" class="text-teal-700 underline">The Real Deal ↗</a></p>
 
-<h2>El paquete fiscal: $498 millones</h2>
-<p>Los créditos no salen del aire: salen de impuestos que paga el contribuyente. Para tener una vara de medir, <strong>$498M son unos 26 años del presupuesto completo del municipio de Cabo Rojo</strong> ($19.2M/año). Costo aproximado por contribuyente: <strong>~$413</strong>.</p>
-<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
-  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Incentivo</th><th class="py-2 px-3">Beneficio</th><th class="py-2 px-3">Duración</th></tr></thead><tbody>
-    <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Créditos contributivos turísticos</td><td class="py-1.5 px-3 font-semibold">$498M (~40% de $1.244B elegible)</td><td class="py-1.5 px-3">—</td></tr>
-    <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Exención sobre ingresos</td><td class="py-1.5 px-3 font-semibold">90%</td><td class="py-1.5 px-3">10 años</td></tr>
-    <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Exención CRIM (propiedad)</td><td class="py-1.5 px-3 font-semibold">90%</td><td class="py-1.5 px-3">10 años</td></tr>
-    <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Exención patentes municipales</td><td class="py-1.5 px-3 font-semibold">90%</td><td class="py-1.5 px-3">10 años</td></tr>
-    <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Impuesto de construcción / IVU municipal</td><td class="py-1.5 px-3 font-semibold">Exento</td><td class="py-1.5 px-3">Construcción / operaciones</td></tr>
-  </tbody></table>
-</div>
-<div class="not-prose grid grid-cols-2 gap-3 mt-3">
-  <div class="bg-white border-2 border-amber-300 rounded-xl p-4 text-center"><div class="text-2xl font-black text-amber-600">~$69M</div><div class="text-xs text-slate-600 mt-1">que Cabo Rojo deja de cobrar en 10 años (~$6.9M/año)</div></div>
-  <div class="bg-white border-2 border-slate-200 rounded-xl p-4 text-center"><div class="text-2xl font-black text-slate-900">~$1M</div><div class="text-xs text-slate-600 mt-1">costo por habitación vs. ~$273K promedio histórico en PR</div></div>
-</div>
-<p class="text-sm text-slate-700 mt-2">El decreto original es de diciembre de 2020 (Gov. Wanda Vázquez), enmendado en 2024 (Gov. Pierluisi), bajo la Ley 74 de 2010. Según el análisis del decreto, <strong>no hay cláusula de devolución</strong> si no se cumplen las metas de empleo.</p>
-<p class="text-xs text-slate-400 mt-1">Fuente: <a href="https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/" target="_blank" rel="noopener" class="text-teal-700 underline">CPI, octubre 2025 ↗</a></p>
-
-<h2>Los empleos: la pregunta que falta</h2>
-<p>El argumento más fuerte a favor es el empleo, y Cabo Rojo necesita trabajo — hay que tratarlo con respeto y con números. El proyecto promete <strong>2,000+ empleos</strong>. Dos preguntas sin contestar:</p>
-<div class="not-prose grid sm:grid-cols-2 gap-3 mt-3">
-  <div class="border border-slate-200 bg-white rounded-xl p-4"><div class="text-xs font-bold text-slate-700 uppercase">¿Cuánto pagan?</div><p class="text-sm text-slate-700 mt-1">En un resort de lujo comparable (Dorado Beach, Ritz-Carlton) un mesero gana <strong>$15.37/hora</strong> — ~$2,000 netos al mes. El costo de vida en Cabo Rojo ronda <strong>$1,574/mes</strong>. Sobran ~$416 para carro, ahorro y emergencias.</p></div>
-  <div class="border border-slate-200 bg-white rounded-xl p-4"><div class="text-xs font-bold text-slate-700 uppercase">¿Y si no se crean?</div><p class="text-sm text-slate-700 mt-1">Según el análisis del decreto, <strong>no hay cláusula de cumplimiento de empleo</strong>. Si no se generan los 2,000 empleos, no se devuelven los créditos. La promesa y el incentivo no están amarrados.</p></div>
-</div>
-<p class="text-xs text-slate-400 mt-1">Fuentes: <a href="https://www.bls.gov/regions/northeast/news-release/occupationalemploymentandwages_sanjuan.htm" target="_blank" rel="noopener" class="text-teal-700 underline">BLS OEWS PR ↗</a> · Glassdoor Ritz-Carlton Dorado · CPI.</p>
-
-<h2 id="agua">El agua</h2>
-<p>El sistema PRASA del suroeste (Planta de Filtros Betances) sirve a <strong>~20,749 personas</strong> y arrastra <strong>3 violaciones activas</strong> en el récord federal de agua. Ese es el mismo sistema del que dependería Esencia, que necesitaría <strong>1.2 millones de galones diarios</strong> (según la página 89 de su propia Declaración de Impacto Ambiental). Según la denuncia llevada ante la ONU, ese consumo equivaldría a cerca del <strong>28% del suministro diario de agua de Cabo Rojo</strong>. Y la propia AAA le informó al expediente, el <strong>26 de septiembre de 2024</strong>, que la infraestructura actual de la Planta de Filtros Betances <strong>no puede suplir esa demanda</strong> y que harían falta mejoras significativas. Mientras tanto, vecinos del sector Las Palmas reportaron estar días sin agua.</p>
-<p class="text-xs text-slate-400 mt-1">Fuentes: EPA (récord federal de agua) · reportes de prensa y de vecinos · <a href="https://news.un.org/es/story/2026/06/1541586" target="_blank" rel="noopener" class="text-teal-700 underline">Noticias ONU ↗</a> · <a href="https://mareaecologista.com/2025/04/cabo-rojo-el-proyecto-esencia-y-la-crisis-del-agua-en-el-suroeste/" target="_blank" rel="noopener" class="text-teal-700 underline">Marea Ecologista ↗</a>. Ver también <a href="/agua" class="text-teal-700 underline">el récord del agua en PRSF</a>.</p>
-
 <h2>El historial de los desarrolladores</h2>
 <p>El CPI documentó el rastro global de las empresas y personas vinculadas al proyecto en siete países. Esto es contexto verificable, no una acusación sobre Esencia:</p>
 <div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
@@ -8392,50 +8365,23 @@ Reuben Brothers <span class="text-slate-400">(Londres, UK · David &amp; Simon R
 <p class="text-sm text-slate-600 mt-1">El alcalde actual, Jorge Morales Wiscovitch, le dijo al CPI que <strong>no fue incluido</strong> en las negociaciones del decreto.</p>
 <p class="text-xs text-slate-400 mt-1">Fuente: Oficina del Contralor Electoral (OCE), vía <a href="https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/" target="_blank" rel="noopener" class="text-teal-700 underline">CPI ↗</a></p>
 
-<h2 id="timeline">La línea de tiempo</h2>
-<div class="not-prose flex flex-wrap gap-2 mb-1 text-xs">
-  <span class="rounded-full px-2.5 py-0.5 border bg-amber-100 text-amber-800 border-amber-200 font-bold">Dinero</span>
-  <span class="rounded-full px-2.5 py-0.5 border bg-slate-100 text-slate-700 border-slate-200 font-bold">Legal</span>
-  <span class="rounded-full px-2.5 py-0.5 border bg-red-100 text-red-800 border-red-200 font-bold">Protesta</span>
-  <span class="rounded-full px-2.5 py-0.5 border bg-emerald-100 text-emerald-800 border-emerald-200 font-bold">Ambiente</span>
+<h2>El paquete fiscal: $498 millones</h2>
+<p>Los créditos no salen del aire: salen de impuestos que paga el contribuyente. Para tener una vara de medir, <strong>$498M son unos 26 años del presupuesto completo del municipio de Cabo Rojo</strong> ($19.2M/año). Costo aproximado por contribuyente: <strong>~$413</strong>.</p>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Incentivo</th><th class="py-2 px-3">Beneficio</th><th class="py-2 px-3">Duración</th></tr></thead><tbody>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Créditos contributivos turísticos</td><td class="py-1.5 px-3 font-semibold">$498M (~40% de $1.244B elegible)</td><td class="py-1.5 px-3">—</td></tr>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Exención sobre ingresos</td><td class="py-1.5 px-3 font-semibold">90%</td><td class="py-1.5 px-3">10 años</td></tr>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Exención CRIM (propiedad)</td><td class="py-1.5 px-3 font-semibold">90%</td><td class="py-1.5 px-3">10 años</td></tr>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Exención patentes municipales</td><td class="py-1.5 px-3 font-semibold">90%</td><td class="py-1.5 px-3">10 años</td></tr>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Impuesto de construcción / IVU municipal</td><td class="py-1.5 px-3 font-semibold">Exento</td><td class="py-1.5 px-3">Construcción / operaciones</td></tr>
+  </tbody></table>
 </div>
-${items || '<p class="text-sm text-slate-400 italic">Data no disponible ahora.</p>'}
-
-<h2 id="video">En video: el panel</h2>
-<p>Expertos y voces del país explicando el proyecto, cara a cara. Publicados en el canal de Cabo Rojo:</p>
-<div class="not-prose flex flex-col gap-2 mt-3">
-  <a href="https://youtu.be/Ahta7PZ4YNo" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Senador E. Molina: falla geológica y riesgos del proyecto</a>
-  <a href="https://youtu.be/NFeo3v07rHA" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Luis García Pelatti: por qué la AAA y la AEE no contestan sobre agua y luz</a>
-  <a href="https://youtu.be/6jlNJt87rDM" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Dra. Dimaris Acosta Mercado: análisis científico del peligro ambiental</a>
-  <a href="https://youtu.be/OoRZA-pWciU" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Javier O. Torres: por qué la agricultura del suroeste está en riesgo</a>
-  <a href="https://youtu.be/g0Aw5aD_rf4" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Reniel Rodríguez Ramos: la amenaza a sitios arqueológicos</a>
+<div class="not-prose grid grid-cols-2 gap-3 mt-3">
+  <div class="bg-white border-2 border-amber-300 rounded-xl p-4 text-center"><div class="text-2xl font-black text-amber-600">~$69M</div><div class="text-xs text-slate-600 mt-1">que Cabo Rojo deja de cobrar en 10 años (~$6.9M/año)</div></div>
+  <div class="bg-white border-2 border-slate-200 rounded-xl p-4 text-center"><div class="text-2xl font-black text-slate-900">~$1M</div><div class="text-xs text-slate-600 mt-1">costo por habitación vs. ~$273K promedio histórico en PR</div></div>
 </div>
-
-<h3 class="mt-6">La videoteca del expediente</h3>
-<p class="text-sm text-slate-600">Más voces en récord — expertos, funcionarios y los dos lados. Cada video es fuente primaria de esta página:</p>
-<div class="not-prose flex flex-col gap-2 mt-3">
-  <a href="https://youtu.be/yUXgf0wzTrs" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ El proyecto Esencia explicado por un geólogo — caliza, la urbanización más grande de PR, y ~100 sitios taínos en el terreno</a>
-  <a href="https://youtu.be/HvPKlXI6tBM" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Pozos, permisos y créditos — $497M sin un solo permiso, y el aviso cuya dirección era una tienda en Boquerón</a>
-  <a href="https://youtu.be/Ndw3ukIvhhQ" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Túbal Padilla Galiano (abogado ambiental) sobre Esencia</a>
-  <a href="https://youtu.be/_XmdnivWhu4" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Lo que pocos saben del proyecto Esencia — el embalse, los ecosistemas, el informe oficial</a>
-  <a href="https://youtu.be/N8sc3t9upnQ" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Esencia: lo que no te dijeron — la compilación</a>
-  <a href="https://youtu.be/Ub_W1BmgeE0" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Un desarrollo multimillonario en Cabo Rojo — el cuadro general</a>
-  <a href="https://youtu.be/3HVutYUMlMw" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ ¿Cementar nuestras costas? — el argumento crítico</a>
-  <a href="https://youtu.be/W9LznI4_KS8" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Pros y contras ambientales del proyecto en Boquerón — los dos lados</a>
-  <a href="https://youtu.be/85V_v2cBj1s" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Alcalde de Cabo Rojo: "Esencia es un reto y una oportunidad" — la voz a favor, en récord</a>
-  <a href="https://youtu.be/e7OzVGbIpO0" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Alcalde de San Germán apoya el proyecto — la visión regional a favor</a>
-</div>
-
-<h2>Lo que falta — y lo que se pide por escrito</h2>
-<p>Hay cosas que todavía no se saben. En vez de adivinar, se piden por escrito al amparo de la Ley 141-2019 de transparencia:</p>
-<ul class="text-sm text-slate-700">
-  <li><strong>DRNA:</strong> la Declaración de Impacto Ambiental completa y el estado del permiso de pozos privados.</li>
-  <li><strong>AAA:</strong> la determinación oficial de capacidad de agua.</li>
-  <li><strong>Compañía de Turismo:</strong> el decreto de exención, el análisis costo-beneficio y las cláusulas de cumplimiento.</li>
-  <li><strong>Contralor Electoral:</strong> el registro completo de donaciones relacionadas.</li>
-  <li><strong>Senado:</strong> las dos investigaciones aprobadas el 31 de marzo de 2026.</li>
-</ul>
-<p class="text-sm text-slate-600 mt-1">Cuando respondan, se publica lo que digan — diga lo que diga.</p>
+<p class="text-sm text-slate-700 mt-2">El decreto original es de diciembre de 2020 (Gov. Wanda Vázquez), enmendado en 2024 (Gov. Pierluisi), bajo la Ley 74 de 2010. Según el análisis del decreto, <strong>no hay cláusula de devolución</strong> si no se cumplen las metas de empleo.</p>
+<p class="text-xs text-slate-400 mt-1">Fuente: <a href="https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/" target="_blank" rel="noopener" class="text-teal-700 underline">CPI, octubre 2025 ↗</a></p>
 
 <h2 id="cuenta">La cuenta completa: lo que el pueblo pone y lo que recibe</h2>
 <p>Nadie ha puesto en una sola cuenta lo que Cabo Rojo entrega y lo que recibe si Esencia va como está. Y no solo en dinero. En las tres cosas que no se reponen: <strong>dinero, agua y basura</strong>. Aquí está, con la fuente al lado. No dice sí ni no. Dice cuánto está en juego.</p>
@@ -8587,6 +8533,28 @@ ${items || '<p class="text-sm text-slate-400 italic">Data no disponible ahora.</
 </script>
 <p class="text-xs text-slate-400 mt-2">Cálculo de PuertoRicoSinFiltros.com sobre datos verificados: créditos y presupuesto (CPI), agua (DIA p.89 y carta de la AAA del 26 sept 2024 en el expediente), basura (testimonio en vista pública y registros del préstamo del vertedero). La cifra de subsidio por unidad es una división simple del subsidio público conocido entre las unidades propuestas; el estimado de más de $1M por unidad es del deponente en vista pública. Los escenarios de empleo asumen que las promesas se cumplen.</p>
 
+<h2>Los empleos: la pregunta que falta</h2>
+<p>El argumento más fuerte a favor es el empleo, y Cabo Rojo necesita trabajo — hay que tratarlo con respeto y con números. El proyecto promete <strong>2,000+ empleos</strong>. Dos preguntas sin contestar:</p>
+<div class="not-prose grid sm:grid-cols-2 gap-3 mt-3">
+  <div class="border border-slate-200 bg-white rounded-xl p-4"><div class="text-xs font-bold text-slate-700 uppercase">¿Cuánto pagan?</div><p class="text-sm text-slate-700 mt-1">En un resort de lujo comparable (Dorado Beach, Ritz-Carlton) un mesero gana <strong>$15.37/hora</strong> — ~$2,000 netos al mes. El costo de vida en Cabo Rojo ronda <strong>$1,574/mes</strong>. Sobran ~$416 para carro, ahorro y emergencias.</p></div>
+  <div class="border border-slate-200 bg-white rounded-xl p-4"><div class="text-xs font-bold text-slate-700 uppercase">¿Y si no se crean?</div><p class="text-sm text-slate-700 mt-1">Según el análisis del decreto, <strong>no hay cláusula de cumplimiento de empleo</strong>. Si no se generan los 2,000 empleos, no se devuelven los créditos. La promesa y el incentivo no están amarrados.</p></div>
+</div>
+<p class="text-xs text-slate-400 mt-1">Fuentes: <a href="https://www.bls.gov/regions/northeast/news-release/occupationalemploymentandwages_sanjuan.htm" target="_blank" rel="noopener" class="text-teal-700 underline">BLS OEWS PR ↗</a> · Glassdoor Ritz-Carlton Dorado · CPI.</p>
+
+<h2 id="agua">El agua</h2>
+<p>El sistema PRASA del suroeste (Planta de Filtros Betances) sirve a <strong>~20,749 personas</strong> y arrastra <strong>3 violaciones activas</strong> en el récord federal de agua. Ese es el mismo sistema del que dependería Esencia, que necesitaría <strong>1.2 millones de galones diarios</strong> (según la página 89 de su propia Declaración de Impacto Ambiental). Según la denuncia llevada ante la ONU, ese consumo equivaldría a cerca del <strong>28% del suministro diario de agua de Cabo Rojo</strong>. Y la propia AAA le informó al expediente, el <strong>26 de septiembre de 2024</strong>, que la infraestructura actual de la Planta de Filtros Betances <strong>no puede suplir esa demanda</strong> y que harían falta mejoras significativas. Mientras tanto, vecinos del sector Las Palmas reportaron estar días sin agua.</p>
+<p class="text-xs text-slate-400 mt-1">Fuentes: EPA (récord federal de agua) · reportes de prensa y de vecinos · <a href="https://news.un.org/es/story/2026/06/1541586" target="_blank" rel="noopener" class="text-teal-700 underline">Noticias ONU ↗</a> · <a href="https://mareaecologista.com/2025/04/cabo-rojo-el-proyecto-esencia-y-la-crisis-del-agua-en-el-suroeste/" target="_blank" rel="noopener" class="text-teal-700 underline">Marea Ecologista ↗</a>. Ver también <a href="/agua" class="text-teal-700 underline">el récord del agua en PRSF</a>.</p>
+
+<h2>Lo que falta — y lo que se pide por escrito</h2>
+<p>Hay cosas que todavía no se saben. En vez de adivinar, se piden por escrito al amparo de la Ley 141-2019 de transparencia:</p>
+<ul class="text-sm text-slate-700">
+  <li><strong>DRNA:</strong> la Declaración de Impacto Ambiental completa y el estado del permiso de pozos privados.</li>
+  <li><strong>AAA:</strong> la determinación oficial de capacidad de agua.</li>
+  <li><strong>Compañía de Turismo:</strong> el decreto de exención, el análisis costo-beneficio y las cláusulas de cumplimiento.</li>
+  <li><strong>Contralor Electoral:</strong> el registro completo de donaciones relacionadas.</li>
+  <li><strong>Senado:</strong> las dos investigaciones aprobadas el 31 de marzo de 2026.</li>
+</ul>
+<p class="text-sm text-slate-600 mt-1">Cuando respondan, se publica lo que digan — diga lo que diga.</p>
 
 <h2>Qué protege cada quien</h2>
 <p>Nadie es el villano de su propia historia. Antes de decidir qué piensas, ayuda ver qué protege cada parte. Todos defienden algo legítimo. Aquí no decimos quién tiene la razón: mostramos qué está en juego para cada quien, para que te ubiques tú y entiendas al que piensa distinto.</p>
@@ -8636,6 +8604,40 @@ ${items || '<p class="text-sm text-slate-400 italic">Data no disponible ahora.</
   </div>
 </div>
 <p class="text-xs text-slate-400 mt-2">PuertoRicoSinFiltros.com no está afiliado a ninguno de los dos. Los ponemos lado a lado para que compares tú, no para empujarte a un lado.</p>
+
+<h2 id="timeline">La línea de tiempo</h2>
+<div class="not-prose flex flex-wrap gap-2 mb-1 text-xs">
+  <span class="rounded-full px-2.5 py-0.5 border bg-amber-100 text-amber-800 border-amber-200 font-bold">Dinero</span>
+  <span class="rounded-full px-2.5 py-0.5 border bg-slate-100 text-slate-700 border-slate-200 font-bold">Legal</span>
+  <span class="rounded-full px-2.5 py-0.5 border bg-red-100 text-red-800 border-red-200 font-bold">Protesta</span>
+  <span class="rounded-full px-2.5 py-0.5 border bg-emerald-100 text-emerald-800 border-emerald-200 font-bold">Ambiente</span>
+</div>
+${items || '<p class="text-sm text-slate-400 italic">Data no disponible ahora.</p>'}
+
+<h2 id="video">En video: el panel</h2>
+<p>Expertos y voces del país explicando el proyecto, cara a cara. Publicados en el canal de Cabo Rojo:</p>
+<div class="not-prose flex flex-col gap-2 mt-3">
+  <a href="https://youtu.be/Ahta7PZ4YNo" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Senador E. Molina: falla geológica y riesgos del proyecto</a>
+  <a href="https://youtu.be/NFeo3v07rHA" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Luis García Pelatti: por qué la AAA y la AEE no contestan sobre agua y luz</a>
+  <a href="https://youtu.be/6jlNJt87rDM" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Dra. Dimaris Acosta Mercado: análisis científico del peligro ambiental</a>
+  <a href="https://youtu.be/OoRZA-pWciU" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Javier O. Torres: por qué la agricultura del suroeste está en riesgo</a>
+  <a href="https://youtu.be/g0Aw5aD_rf4" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Reniel Rodríguez Ramos: la amenaza a sitios arqueológicos</a>
+</div>
+
+<h3 class="mt-6">La videoteca del expediente</h3>
+<p class="text-sm text-slate-600">Más voces en récord — expertos, funcionarios y los dos lados. Cada video es fuente primaria de esta página:</p>
+<div class="not-prose flex flex-col gap-2 mt-3">
+  <a href="https://youtu.be/yUXgf0wzTrs" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ El proyecto Esencia explicado por un geólogo — caliza, la urbanización más grande de PR, y ~100 sitios taínos en el terreno</a>
+  <a href="https://youtu.be/HvPKlXI6tBM" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Pozos, permisos y créditos — $497M sin un solo permiso, y el aviso cuya dirección era una tienda en Boquerón</a>
+  <a href="https://youtu.be/Ndw3ukIvhhQ" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Túbal Padilla Galiano (abogado ambiental) sobre Esencia</a>
+  <a href="https://youtu.be/_XmdnivWhu4" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Lo que pocos saben del proyecto Esencia — el embalse, los ecosistemas, el informe oficial</a>
+  <a href="https://youtu.be/N8sc3t9upnQ" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Esencia: lo que no te dijeron — la compilación</a>
+  <a href="https://youtu.be/Ub_W1BmgeE0" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Un desarrollo multimillonario en Cabo Rojo — el cuadro general</a>
+  <a href="https://youtu.be/3HVutYUMlMw" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ ¿Cementar nuestras costas? — el argumento crítico</a>
+  <a href="https://youtu.be/W9LznI4_KS8" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Pros y contras ambientales del proyecto en Boquerón — los dos lados</a>
+  <a href="https://youtu.be/85V_v2cBj1s" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Alcalde de Cabo Rojo: "Esencia es un reto y una oportunidad" — la voz a favor, en récord</a>
+  <a href="https://youtu.be/e7OzVGbIpO0" target="_blank" rel="noopener" class="block border border-slate-200 bg-white rounded-lg px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-teal-50 hover:border-teal-300 no-underline">▶ Alcalde de San Germán apoya el proyecto — la visión regional a favor</a>
+</div>
 
 <h2>El expediente es público</h2>
 <p>Casi todo el papeleo de Esencia está disponible para quien lo quiera leer. Si alguien te dice algo, puedes ir a la fuente y verificarlo tú mismo:</p>
