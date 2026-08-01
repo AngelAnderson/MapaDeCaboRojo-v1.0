@@ -8012,6 +8012,33 @@ export const CONTRA_PARES: Par[] = [
       fuentes: [['CPI — sin cláusula que obligue los empleos', 'https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/'], ['El expediente completo de Esencia', 'https://puertoricosinfiltros.com/esencia']],
       brecha: '2,000 prometidos sin cláusula · "17,000" el día del anuncio · 0 garantizados en papel', rec: '/esencia',
     },
+    {
+      tipo: 'agencia', corto: 'La recesión sin nombre', titulo: 'Cuatro meses de caída y "todavía no se puede catalogar como recesión" — porque el dato que la declararía no se publica',
+      dicenC: 'Economistas advierten que todavía no se puede catalogar como una recesión, dada la escasez de datos oficiales disponibles y actualizados',
+      dicenQ: 'El Vocero, sección Economía, 31 jul 2026 (edición impresa)',
+      dicenUrl: 'https://www.elvocero.com/economia/econom-a-de-puerto-rico-entra-en-fase-recesiva-seg-n-economista/article_394469c9-f336-473f-8bf6-f7501154207a.html',
+      recordD: 'El propio artículo trae los números: el Índice de Actividad Económica del DDEC cayó contra el año anterior 4 meses seguidos (febrero 0.6%, marzo 0.9%, abril 0.9%, mayo 0.7%), y el Índice de Indicadores Coincidentes acumula 6 caídas mensuales seguidas (mayo 2026: -1.2% interanual). La definición técnica de recesión pide 2 trimestres seguidos de caída del PNB — y la Junta de Planificación no publica el PNB por trimestre: lo estima 1 vez al año, con meses de atraso. Estados Unidos mide su economía cada trimestre desde 1947. Aquí el nombre oficial de lo que vives hoy llega cuando ya pasó.',
+      fuentes: [['NotiCel — sexto mes seguido de contracción (IIC, jul 2026)', 'https://noticel.com/en/economia/20260718/la-economia-de-la-isla-llega-a-su-sexto-mes-seguido-de-contraccion/'], ['DDEC — estadísticas económicas (IAE)', 'https://www.desarrollo.pr.gov/en/estadisticas-economicas'], ['Lo que ni se mide (el récord de los huecos de data)', 'https://puertoricosinfiltros.com/no-se-mide']],
+      brecha: 'No hay recesión oficial porque no existe el dato oficial: el termómetro sale 1 vez al año', rec: '/no-se-mide',
+    },
+    {
+      tipo: 'creencia', corto: 'La "resiliencia" laboral', titulo: 'El mercado laboral "resiliente" donde 55 de cada 100 no están ni buscando trabajo',
+      dicenC: 'Y lo único que sí se está viendo todavía, que aún muestra algún tipo de resiliencia es básicamente el mercado laboral',
+      dicenQ: 'Leslie Adames, economista (Estudios Técnicos) · El Vocero, 31 jul 2026',
+      dicenUrl: 'https://www.elvocero.com/economia/econom-a-de-puerto-rico-entra-en-fase-recesiva-seg-n-economista/article_394469c9-f336-473f-8bf6-f7501154207a.html',
+      recordD: 'La tasa de participación laboral de PR es 45.2% (junio 2026, DTRH): de cada 100 personas en edad de trabajar, 55 no trabajan ni buscan trabajo. Con ese denominador, el desempleo de 5.8% también "mejora" cuando la gente se va o se retira, no solo cuando hay trabajo. Por eso las 2 quejas del pueblo coexisten sin contradecirse: los negocios no consiguen empleados Y la economía se contrae. El fondo es el mismo: entre los censos de 2010 y 2020, 0 de los 78 municipios creció en población.',
+      fuentes: [['NotiCel — participación laboral 45.2% (jun 2026)', 'https://noticel.com/en/ultima-hora/20260721/tasa-de-participacion-laboral-alcanza-45-2-en-junio/'], ['Las 4 economías de PR (0 de 78 municipios creció)', 'https://puertoricosinfiltros.com/cuatro-economias'], ['El Huracán Lento (el país que envejece, municipio a municipio)', 'https://puertoricosinfiltros.com/retiro']],
+      brecha: 'Desempleo "bajo" con participación de 45.2%: el número mejora cuando la gente se va, no solo cuando hay trabajo', rec: '/retiro',
+    },
+    {
+      tipo: 'dinero', corto: 'El estímulo "agotado"', titulo: '"Se agotaron los estímulos federales" — con $8,985 millones identificados para agua y 8.6% recibido',
+      dicenC: 'Ante el agotamiento de los estímulos federales pospandemia... Puerto Rico debe abandonar la dependencia de fondos no recurrentes y apostar por una transformación estructural profunda',
+      dicenQ: 'Leslie Adames, economista · El Vocero, 31 jul 2026',
+      dicenUrl: 'https://www.elvocero.com/economia/econom-a-de-puerto-rico-entra-en-fase-recesiva-seg-n-economista/article_394469c9-f336-473f-8bf6-f7501154207a.html',
+      recordD: 'El estímulo pospandemia (el cheque que se gasta) sí se acaba. Pero el dinero federal grande de recuperación no está agotado: está sin cobrar. Solo para los sistemas de agua hay $8,985.7 millones identificados y al 31 de marzo de 2025 habían llegado $773 millones — el 8.6% — según el Plan Fiscal Certificado de la AAA. En las vistas de transición: Educación había desembolsado el 2.3% de sus fondos FEMA, la AAA el 13.4%, la AEE el 15%. Y en Cabo Rojo solo, 28 proyectos de FEMA llevan más de 5 años abiertos sin cerrar ($14.3 millones obligados).',
+      fuentes: [['El recibo del agua, contra el récord (Plan Fiscal AAA, Tabla 4-6)', 'https://puertoricosinfiltros.com/acueductos'], ['La vista: 2.3% / 13.4% / 15%, al minuto', 'https://www.youtube.com/watch?v=RguowcKS7wU&t=4420s'], ['Semáforo FEMA de Cabo Rojo (28 proyectos con 5+ años)', 'https://puertoricosinfiltros.com/semaforo-fema']],
+      brecha: 'El estímulo que se acaba es el del gasto; el de la reconstrucción está aprobado y sin cobrar', rec: '/acueductos',
+    },
 ]
 
 async function handleContradicciones(req: any, res: any) {
