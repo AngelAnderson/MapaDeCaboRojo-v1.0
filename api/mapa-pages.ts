@@ -8174,6 +8174,44 @@ async function handleEsencia(req: any, res: any) {
   <p class="text-xs text-slate-400 mt-2">Fuente: <a href="https://www.elvocero.com/actualidad/otros/aprueban-desarrollo-del-proyecto-esencia-en-cabo-rojo-con-inversi-n-de-m-s-de/article_53d25877-b53b-4962-81b7-379a568bcba0.html" target="_blank" rel="noopener" class="text-teal-700 underline">El Vocero, 31 jul 2026 ↗</a> · <a href="https://noticel.com/en/ultima-hora/20260716/exigen-llevar-a-vistas-publicas-consulta-de-ubicacion-de-esencia/" target="_blank" rel="noopener" class="text-teal-700 underline">NotiCel, 16 jul 2026 ↗</a> · <a href="https://www.elnuevodia.com/noticias/locales/notas/reclaman-vistas-publicas-para-evaluar-consulta-de-ubicacion-del-megaproyecto-esencia/" target="_blank" rel="noopener" class="text-teal-700 underline">El Nuevo Día, jul 2026 ↗</a> · Comunicado Comité PIP Cabo Rojo, 17 jul 2026</p>
 </div>
 
+<div class="not-prose mt-5 bg-teal-900 text-white rounded-2xl p-5" id="hoy">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">⚡ Muévete en 5 minutos</p>
+  <p class="text-lg font-black mt-1 leading-snug" style="font-family:'Fraunces',Georgia,serif">No hay que leerlo todo. Escoge UNA de estas 4 cosas. Con una basta.</p>
+  <div class="grid sm:grid-cols-2 gap-3 mt-4">
+    <div class="bg-white/10 border border-white/15 rounded-xl p-4">
+      <p class="font-bold text-white m-0">1 · Mira el expediente con tus propios ojos</p>
+      <p class="text-sm text-teal-100 mt-1.5 mb-0">El caso es el <span class="font-mono font-bold">2026-693109-CUB-013470</span>. Cópialo y búscalo en el expediente digital de la Junta de Planificación. Lo que diga ese expediente vale más que cualquier post, incluyendo este.</p>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <button type="button" class="share-copy inline-flex items-center gap-1.5 bg-white text-teal-900 font-bold px-3 py-2 rounded-lg text-xs" data-copy="2026-693109-CUB-013470"><i class="fa-regular fa-copy"></i> Copiar el número de caso</button>
+        <a href="https://jp.pr.gov/expediente-digital/" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white font-bold px-3 py-2 rounded-lg text-xs no-underline">Abrir el expediente digital ↗</a>
+      </div>
+    </div>
+    <div class="bg-white/10 border border-white/15 rounded-xl p-4">
+      <p class="font-bold text-white m-0">2 · Pide las vistas públicas, por escrito</p>
+      <p class="text-sm text-teal-100 mt-1.5 mb-0">Sirve igual si estás a favor o en contra: pedir participación no es un bando. Este comentario está listo pa' radicar ante OGPe. Le añades tu nombre y ya.</p>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <button type="button" class="share-copy inline-flex items-center gap-1.5 bg-white text-teal-900 font-bold px-3 py-2 rounded-lg text-xs" data-copy="Solicito respetuosamente que la consulta de ubicación 2026-693109-CUB-013470 (Proyecto Esencia, Cabo Rojo) se evalúe con vistas públicas presenciales en el municipio de Cabo Rojo, según contempla el Reglamento Conjunto 2023 (secciones 2.1.10.1 y 2.2.3.19), y solicito quedar notificado de las determinaciones en este caso. [Tu nombre y dirección]"><i class="fa-regular fa-copy"></i> Copiar el comentario</button>
+        <a href="https://www.sbp.pr.gov/" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white font-bold px-3 py-2 rounded-lg text-xs no-underline">Radicar en sbp.pr.gov ↗</a>
+      </div>
+    </div>
+    <div class="bg-white/10 border border-white/15 rounded-xl p-4">
+      <p class="font-bold text-white m-0">3 · Llévate la línea de tiempo en el teléfono</p>
+      <p class="text-sm text-teal-100 mt-1.5 mb-0">Textea <strong>ESENCIA</strong> al 787-417-7711 y el Veci te contesta con las fechas clave, pa' cuando el tema salga en la mesa y cada cual tenga un cuento distinto.</p>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <a href="https://wa.me/17874177711?text=ESENCIA" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 bg-white text-teal-900 font-bold px-3 py-2 rounded-lg text-xs no-underline"><i class="fa-brands fa-whatsapp"></i> Textear ESENCIA</a>
+      </div>
+    </div>
+    <div class="bg-white/10 border border-white/15 rounded-xl p-4">
+      <p class="font-bold text-white m-0">4 · ¿Viste algo? Mándalo</p>
+      <p class="text-sm text-teal-100 mt-1.5 mb-0">¿Foto de un rótulo, una carta, un documento del expediente? Mándala al mismo número. Este récord se construye con los ojos del pueblo, y si algo está mal, se corrige público (<a href="/rompelo" class="text-white underline">así funciona</a>).</p>
+      <div class="flex flex-wrap gap-2 mt-3">
+        <a href="https://wa.me/17874177711?text=Vi%20esto%20del%20proyecto%20Esencia:" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white font-bold px-3 py-2 rounded-lg text-xs no-underline"><i class="fa-brands fa-whatsapp"></i> Mandar lo que viste</a>
+      </div>
+    </div>
+  </div>
+  <p class="text-xs text-teal-200/70 mt-3 mb-0">Haz una cosa, no cargues el país entero. Si hoy no es el día, el récord sigue aquí mañana.</p>
+</div>
+
 <div class="not-prose mt-5 bg-rose-50 border-2 border-rose-300 rounded-2xl p-5">
   <p class="text-xs uppercase tracking-widest text-rose-700 font-bold">La pieza que cambió el tablero · Ley 82 de 2026</p>
   <p class="font-bold text-slate-800 mt-1">Una ley de mayo abrió el suelo protegido y le puso precio a ir a corte.</p>
@@ -8190,6 +8228,7 @@ async function handleEsencia(req: any, res: any) {
 </div>
 
 <div class="not-prose mt-4 flex flex-wrap gap-2 text-xs">
+  <a href="#hoy" class="bg-teal-900 border border-teal-900 rounded-full px-3 py-1.5 font-bold text-white hover:bg-teal-800">⚡ En 5 minutos</a>
   <a href="#citables" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">📋 Datos citables</a>
   <a href="#numeros" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Los números</a>
   <a href="#proscons" class="bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Lo mejor de cada lado</a>
