@@ -4,7 +4,7 @@
 // Uso: source /tmp/prsf-env (o env con OPENAI_API_KEY + SUPABASE_SERVICE_ROLE_KEY) && npx tsx scripts/prsf-ingest-facts.mts
 import { createHash } from 'node:crypto'
 import { createClient } from '@supabase/supabase-js'
-import { citableFacts, CONTRA_PARES, TRANSICION_BLOQUES, BUSCAR_INDEX } from '../api/mapa-pages.ts'
+import { citableFacts, CITABLES_ESENCIA, CONTRA_PARES, TRANSICION_BLOQUES, BUSCAR_INDEX } from '../api/mapa-pages.ts'
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || 'https://vprjteqgmanntvisjrvp.supabase.co',
@@ -19,6 +19,9 @@ const rows: Row[] = []
 
 for (const f of citableFacts()) {
   rows.push({ kind: 'dato', titulo: f.q, texto: f.a, fuente_texto: f.srcText, fuente_url: f.srcUrl, record_url: '/comparte', content_hash: hash('dato|' + f.q + '|' + f.a) })
+}
+for (const [dato, fuente, url] of CITABLES_ESENCIA) {
+  rows.push({ kind: 'dato', titulo: `Proyecto Esencia · ${fuente}`, texto: dato, fuente_texto: fuente, fuente_url: url, record_url: '/esencia', content_hash: hash('dato-esencia|' + dato) })
 }
 CONTRA_PARES.forEach((p, i) => {
   const texto = `DICEN: "${p.dicenC}" (${p.dicenQ}). EL RÉCORD: ${p.recordD} LA BRECHA: ${p.brecha}`

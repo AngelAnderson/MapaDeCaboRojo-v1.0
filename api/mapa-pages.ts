@@ -8003,6 +8003,15 @@ export const CONTRA_PARES: Par[] = [
       fuentes: [['El termómetro del pueblo (196 voces, método y límites)', 'https://puertoricosinfiltros.com/esencia']],
       brecha: 'La contradicción también puede ser tuya', rec: '/esencia',
     },
+    {
+      tipo: 'narrativa', corto: 'Esencia: los empleos que crecen', titulo: 'El día del anuncio, los 2,000 empleos amanecieron siendo "más de 17,000"',
+      dicenC: 'El proyecto generará más de 17,000 empleos directos, indirectos e inducidos',
+      dicenQ: 'Anuncio de los desarrolladores (Reuben Brothers / Three Rules Capital) · El Vocero, 31 jul 2026',
+      dicenUrl: 'https://www.elvocero.com/actualidad/otros/aprueban-desarrollo-del-proyecto-esencia-en-cabo-rojo-con-inversi-n-de-m-s-de/article_53d25877-b53b-4962-81b7-379a568bcba0.html',
+      recordD: 'El expediente y la cobertura previa hablaban de ~2,000 empleos, y el récord del CPI documenta que no hay UNA cláusula que obligue ninguno: si los empleos no llegan, los ~$498M en créditos contributivos no se devuelven. El salto a "17,000" se logra sumando "indirectos e inducidos", una proyección que nadie está obligado a cumplir. El mismo anuncio tampoco dice qué agencia aprobó qué permiso.',
+      fuentes: [['CPI — sin cláusula que obligue los empleos', 'https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/'], ['El expediente completo de Esencia', 'https://puertoricosinfiltros.com/esencia']],
+      brecha: '2,000 prometidos sin cláusula · "17,000" el día del anuncio · 0 garantizados en papel', rec: '/esencia',
+    },
 ]
 
 async function handleContradicciones(req: any, res: any) {
@@ -8108,6 +8117,18 @@ ${SHARE_COPY_SCRIPT}
   }))
 }
 
+export const CITABLES_ESENCIA: Array<[string, string, string]> = [
+  ['Lo llaman "desarrollo turístico". El récord: 1,132 casas vs 520 habitaciones de hotel — ~70% residencial — con ~$498 millones en créditos TURÍSTICOS aprobados. Ese dinero sale del mismo fondo que paga servicios públicos. Tú decides.', 'CPI, octubre 2025', 'https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/'],
+  ['Prometen agua pa\' 1,652 unidades de lujo. La propia AAA dijo por carta que Betances no puede — y en tu casa el agua se va sin aviso. El proyecto pide 1.25 a 2 millones de galones AL DÍA. Tú decides quién bebe primero.', 'Carta AAA vía CPI · NotiCel, 18 jun 2026', 'https://noticel.com/noticias/20260618/aaa-carece-de-la-capacidad-para-suplir-la-demanda-de-agua-requerida-por-esencia/'],
+  ['Tu casa paga CRIM completo. Las residencias de $2M a $20M de Esencia: ~90% exentas por 10 años. El municipio pierde ese recaudo la misma década que a ti te suben las tarifas.', 'CPI, octubre 2025', 'https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/'],
+  ['Si tú quieres construir un cuarto en suelo protegido, te lo niegan. Esencia quiere 1,549 cuerdas donde ~90% es suelo rústico o protegido-ecológico, no urbanizable — y la consulta pa\' cambiarlo ya empezó con rótulos en Boquerón (julio 2026).', 'NotiCel, 16 jul 2026', 'https://noticel.com/en/ultima-hora/20260716/exigen-llevar-a-vistas-publicas-consulta-de-ubicacion-de-esencia/'],
+  ['El DRNA lo rechazó (sep 2025). OGPe lo aprobó con 46 condiciones (dic 2025). Dos agencias del mismo gobierno, dos respuestas opuestas sobre el mismo terreno. A ti un permiso de uso te tarda meses.', 'El Nuevo Día, dic 2025', 'https://www.elnuevodia.com/noticias/locales/notas/avanza-esencia-ogpe-aprueba-declaracion-de-impacto-ambiental-del-megaproyecto-en-cabo-rojo/'],
+  ['A ti te embargan por una carta que "se te fue". Aquí el Tribunal de Apelaciones dijo que la notificación oficial del deslinde fue "defectuosa e inadecuada" (oct 2025) — y el proyecto siguió caminando.', 'Récord judicial, oct 2025', 'https://puertoricosinfiltros.com/esencia'],
+  ['Prometen 2,000 empleos. El récord: no hay UNA cláusula que los obligue. Si no llegan, los ~$498M en créditos no se devuelven. Tu nómina no funciona así.', 'CPI, octubre 2025', 'https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/'],
+  ['Hasta el Senado tuvo que abrir dos investigaciones sobre Esencia (31 mar 2026). Cuando el que reparte los beneficios investiga los beneficios, algo en el papeleo no cuadra.', 'Metro PR, 31 mar 2026', 'https://www.metro.pr/noticias/2026/03/31/senado-aprueba-dos-medidas-de-investigacion-sobre-proyecto-esencia-en-cabo-rojo/'],
+  ['El 16 de julio aparecieron los rótulos de la consulta. El 31 de julio anunciaron "la aprobación oficial" y ventas pa\' finales de 2026. El anuncio no dice qué agencia aprobó qué permiso. Ese silencio también es un dato del récord.', 'El Vocero, 31 jul 2026', 'https://www.elvocero.com/actualidad/otros/aprueban-desarrollo-del-proyecto-esencia-en-cabo-rojo-con-inversi-n-de-m-s-de/article_53d25877-b53b-4962-81b7-379a568bcba0.html'],
+]
+
 async function handleEsencia(req: any, res: any) {
   let rows: any[] = []
   try {
@@ -8193,17 +8214,6 @@ ${contradiccionInline({
 })}
 
 ${(() => {
-  const CITABLES_ESENCIA: Array<[string, string, string]> = [
-    ['Lo llaman "desarrollo turístico". El récord: 1,132 casas vs 520 habitaciones de hotel — ~70% residencial — con ~$498 millones en créditos TURÍSTICOS aprobados. Ese dinero sale del mismo fondo que paga servicios públicos. Tú decides.', 'CPI, octubre 2025', 'https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/'],
-    ['Prometen agua pa\' 1,652 unidades de lujo. La propia AAA dijo por carta que Betances no puede — y en tu casa el agua se va sin aviso. El proyecto pide 1.25 a 2 millones de galones AL DÍA. Tú decides quién bebe primero.', 'Carta AAA vía CPI · NotiCel, 18 jun 2026', 'https://noticel.com/noticias/20260618/aaa-carece-de-la-capacidad-para-suplir-la-demanda-de-agua-requerida-por-esencia/'],
-    ['Tu casa paga CRIM completo. Las residencias de $2M a $20M de Esencia: ~90% exentas por 10 años. El municipio pierde ese recaudo la misma década que a ti te suben las tarifas.', 'CPI, octubre 2025', 'https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/'],
-    ['Si tú quieres construir un cuarto en suelo protegido, te lo niegan. Esencia quiere 1,549 cuerdas donde ~90% es suelo rústico o protegido-ecológico, no urbanizable — y la consulta pa\' cambiarlo ya empezó con rótulos en Boquerón (julio 2026).', 'NotiCel, 16 jul 2026', 'https://noticel.com/en/ultima-hora/20260716/exigen-llevar-a-vistas-publicas-consulta-de-ubicacion-de-esencia/'],
-    ['El DRNA lo rechazó (sep 2025). OGPe lo aprobó con 46 condiciones (dic 2025). Dos agencias del mismo gobierno, dos respuestas opuestas sobre el mismo terreno. A ti un permiso de uso te tarda meses.', 'El Nuevo Día, dic 2025', 'https://www.elnuevodia.com/noticias/locales/notas/avanza-esencia-ogpe-aprueba-declaracion-de-impacto-ambiental-del-megaproyecto-en-cabo-rojo/'],
-    ['A ti te embargan por una carta que "se te fue". Aquí el Tribunal de Apelaciones dijo que la notificación oficial del deslinde fue "defectuosa e inadecuada" (oct 2025) — y el proyecto siguió caminando.', 'Récord judicial, oct 2025', 'https://puertoricosinfiltros.com/esencia'],
-    ['Prometen 2,000 empleos. El récord: no hay UNA cláusula que los obligue. Si no llegan, los ~$498M en créditos no se devuelven. Tu nómina no funciona así.', 'CPI, octubre 2025', 'https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/'],
-    ['Hasta el Senado tuvo que abrir dos investigaciones sobre Esencia (31 mar 2026). Cuando el que reparte los beneficios investiga los beneficios, algo en el papeleo no cuadra.', 'Metro PR, 31 mar 2026', 'https://www.metro.pr/noticias/2026/03/31/senado-aprueba-dos-medidas-de-investigacion-sobre-proyecto-esencia-en-cabo-rojo/'],
-    ['El 16 de julio aparecieron los rótulos de la consulta. El 31 de julio anunciaron "la aprobación oficial" y ventas pa\' finales de 2026. El anuncio no dice qué agencia aprobó qué permiso. Ese silencio también es un dato del récord.', 'El Vocero, 31 jul 2026', 'https://www.elvocero.com/actualidad/otros/aprueban-desarrollo-del-proyecto-esencia-en-cabo-rojo-con-inversi-n-de-m-s-de/article_53d25877-b53b-4962-81b7-379a568bcba0.html'],
-  ]
   const cards = CITABLES_ESENCIA.map(([dato, fuente, url]) => {
     const copyText = `${dato} (Fuente: ${fuente} — ${url}. Récord completo: puertoricosinfiltros.com/esencia)`
     return `<div class="bg-white border border-slate-200 rounded-xl p-4 flex items-start justify-between gap-3">
