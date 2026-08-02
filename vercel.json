@@ -292,6 +292,10 @@
       "destination": "/api/mapa-pages?page=sinfiltros-pulso"
     },
     {
+      "source": "/notas/kit",
+      "destination": "/api/mapa-pages?page=notas-kit"
+    },
+    {
       "source": "/notas",
       "destination": "/api/mapa-pages?page=boletin"
     },

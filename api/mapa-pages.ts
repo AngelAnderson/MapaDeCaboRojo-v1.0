@@ -7941,6 +7941,13 @@ async function handleBoletin(req: any, res: any) {
   </div>
 </div>
 ${cards}
+<div class="not-prose bg-slate-900 text-white rounded-2xl p-5 mt-8">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">Llévatelo</p>
+  <p class="text-lg font-black mt-1">¿Quieres publicar esto? Ya está listo.</p>
+  <p class="text-slate-300 mt-2 text-sm">Cada nota con su frase, lo que no cuadra, el enemigo y qué puedes hacer. Texto para copiar y tarjeta para bajar. Libre de usar, solo deja la fuente.</p>
+  <a href="/notas/kit" data-prsf="record" data-rec="notas-a-kit" class="inline-flex items-center gap-1 bg-white text-slate-900 font-bold px-4 py-2 rounded-full hover:bg-slate-200 mt-3 text-sm">Abrir el kit</a>
+</div>
+
 <h2 class="mt-8">Cómo se verifica</h2>
 <p>Cada meta sale de un estándar federal publicado (HRSA, EPA, EIA) y de data federal o pública. La nota es una fórmula fija sobre el porcentaje del mínimo cumplido; la misma pa' todas las categorías. Cada card tiene su metodología abierta. <strong>¿Ves un error? Escríbenos y se corrige, en público.</strong></p>
 <p class="text-sm text-slate-600">¿Cambió una nota? Cada cambio queda en el historial público. Sugiere una meta que falte: <a href="mailto:angel@angelanderson.com?subject=Meta%20pa'l%20Bolet%C3%ADn" class="text-teal-700 font-semibold">angel@angelanderson.com</a> o textea al <strong>787-417-7711</strong>.</p>
@@ -7972,6 +7979,192 @@ ${cards}
     title: 'Las Notas de Puerto Rico — las metas mínimas federales, con nota y fuente',
     description: `Las metas MÍNIMAS federales que PR cumple o no: salud mental, dental, agua y energía, con nota A-F calculada de la data. Promedio general: ${gpa} de 4.0. Cada nota con su fuente al lado.`,
     slug: 'notas', bodyHtml: body, jsonLd: [datasetLd, faqLd] as any,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
+// /notas/kit — el kit descargable de Las Notas.
+// Por que existe: el home tuvo 7,236 vistas en 30 dias y 11 clicks de copiar.
+// El record se leia y no se cargaba. Aqui cada nota sale en 3 tamanos (el grado
+// solo, las 6 juntas, una por una) en bloque copy-paste + tarjeta PNG, a nivel
+// de lectura de 2do grado. Lee metas_minimas: si cambia la nota, cambia el kit.
+// ?descarga=txt devuelve el kit entero como archivo de texto.
+async function handleNotasKit(req: any, res: any) {
+  const { data: metas } = await supabase
+    .from('metas_minimas')
+    .select('*')
+    .order('pct_minimo', { ascending: false })
+
+  if (!metas || !metas.length) {
+    res.setHeader('Content-Type', 'text/html; charset=utf-8')
+    res.status(200).send(layout({
+      title: 'Kit de Las Notas de Puerto Rico',
+      description: 'Los textos y las tarjetas de Las Notas de Puerto Rico, listos para copiar y publicar.',
+      slug: 'notas/kit', bodyHtml: '<p>El kit se esta armando. Vuelve pronto.</p>',
+      host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+    }))
+    return
+  }
+
+  const pts: { [k: string]: number } = { A: 4, B: 3, C: 2, D: 1, F: 0 }
+  const gpa = (metas.reduce((a: number, m: any) => a + (pts[(m.grade || 'F').trim()] ?? 0), 0) / metas.length).toFixed(1)
+  const G = (m: any) => (m.grade || 'F').trim()
+  const U = 'puertoricosinfiltros.com/notas'
+  const efe = metas.filter((m: any) => G(m) === 'F').map((m: any) => m.categoria.toLowerCase())
+
+  // ── Pieza 1: el grado solo ──
+  const txtGrado = `Puerto Rico saca ${gpa} de 4.0 en las metas MINIMAS del gobierno federal.
+
+No son metas ambiciosas. Son el piso: lo menos que se supone.
+
+${metas.map((m: any) => `${G(m)} en ${m.categoria.toLowerCase()}`).join('\n')}
+
+Cada nota se calcula del porciento del minimo federal que Puerto Rico cumple. Formula fija, la misma pa' todas, con la fuente al lado. Nadie opino aqui.
+
+${U}`
+
+  // ── Pieza 2: las 6 juntas ──
+  const txtConjunto = `LAS NOTAS DE PUERTO RICO
+Promedio general: ${gpa} de 4.0
+
+No son metas ambiciosas. Son las MINIMAS del gobierno federal: el piso.
+
+${metas.map((m: any) => `${G(m)} · ${m.categoria.toUpperCase()}\n${m.frase || m.meta_texto}`).join('\n\n')}
+
+Cada nota sale del porciento del minimo federal que PR cumple. Formula fija y fuente al lado.
+El record completo, con la fuente de cada una: ${U}`
+
+  // ── Pieza 3: una por una ──
+  const txtNota = (m: any) => `${m.frase || m.meta_texto}
+
+LO QUE NO CUADRA
+${m.contradiccion}
+
+EL ENEMIGO
+${m.enemigo || 'Sin declarar.'}
+
+EN DOS LINEAS
+${m.contexto || ''}
+
+EN TU CASA, HOY
+${m.espejo}
+
+QUE PUEDES HACER
+${m.accion_texto}
+
+Nota ${G(m)} · Puerto Rico cumple el ${m.pct_minimo}% del minimo federal.
+Fuente: ${m.fuente_nombre}
+Record completo: ${U}#${m.id}`
+
+  const cardUrl = (m: any) => `/api/og?theme=sinfiltros&k=${encodeURIComponent(`Nota ${G(m)} · ${m.categoria}`)}&t=${encodeURIComponent(String(m.frase || m.meta_texto))}&sub=${encodeURIComponent(`Puerto Rico cumple el ${m.pct_minimo}% del minimo federal.`)}&badge=${encodeURIComponent('Las Notas de PR · metas minimas federales')}`
+  const cardGpa = `/api/og?theme=sinfiltros&k=${encodeURIComponent('Las Notas de Puerto Rico')}&t=${encodeURIComponent(`Puerto Rico saca ${gpa} de 4.0||en las metas minimas federales`)}&sub=${encodeURIComponent(`${metas.map((m: any) => `${G(m)} ${m.categoria.toLowerCase()}`).join(' · ')}`)}&badge=${encodeURIComponent('El piso, no la meta ambiciosa')}`
+
+  // ── Descarga en texto: el kit entero en un archivo ──
+  if (String(req.query?.descarga || '') === 'txt') {
+    const todo = [
+      'LAS NOTAS DE PUERTO RICO — KIT PARA USAR',
+      `Promedio general: ${gpa} de 4.0`,
+      'Todo esto es para usarse. No hace falta pedir permiso ni poner mi nombre.',
+      `Record y fuentes: ${U}`,
+      '', '='.repeat(60), '', '1. EL GRADO SOLO', '', txtGrado,
+      '', '='.repeat(60), '', '2. LAS NOTAS JUNTAS', '', txtConjunto,
+      '', '='.repeat(60), '', '3. UNA POR UNA', '',
+      metas.map((m: any) => `--- ${m.categoria.toUpperCase()} (${G(m)}) ---\n\n${txtNota(m)}`).join('\n\n' + '-'.repeat(40) + '\n\n'),
+    ].join('\n')
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+    res.setHeader('Content-Disposition', 'attachment; filename="las-notas-de-puerto-rico.txt"')
+    res.setHeader('Cache-Control', 'public, s-maxage=3600')
+    res.status(200).send(todo)
+    return
+  }
+
+  const chip = (m: any) => {
+    const g = G(m)
+    const c = g === 'A' || g === 'B' ? 'bg-emerald-500' : g === 'C' ? 'bg-amber-500' : 'bg-red-500'
+    return `<span class="${c} text-white w-8 h-8 rounded-full inline-flex items-center justify-center text-sm font-black shrink-0">${escapeHtml(g)}</span>`
+  }
+  const bloque = (id: string, titulo: string, pie: string, txt: string, card: string, cardName: string) => `
+    <div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-4" id="${escapeHtml(id)}">
+      <h3 class="text-xl font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">${titulo}</h3>
+      <p class="text-sm text-slate-600 mt-1">${escapeHtml(pie)}</p>
+      <pre class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-800 whitespace-pre-wrap" style="font-family:inherit">${escapeHtml(txt)}</pre>
+      <div class="mt-3 flex flex-wrap gap-2 text-sm">
+        <button type="button" class="copy-btn inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700" data-copy="${escapeHtml(txt)}">📋 Copiar el texto</button>
+        <a href="${escapeHtml(card)}" download="${escapeHtml(cardName)}" data-prsf="cite" data-rec="kit-${escapeHtml(id)}" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">🖼️ Bajar la tarjeta</a>
+      </div>
+    </div>`
+
+  const cadaNota = metas.map((m: any) => `
+    <div class="not-prose border border-slate-200 bg-white rounded-2xl p-5 mt-4" id="kit-${escapeHtml(m.id)}">
+      <div class="flex items-center gap-3">
+        ${chip(m)}
+        <h3 class="text-xl font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(m.categoria)}</h3>
+      </div>
+      <pre class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-800 whitespace-pre-wrap" style="font-family:inherit">${escapeHtml(txtNota(m))}</pre>
+      <div class="mt-3 flex flex-wrap gap-2 text-sm">
+        <button type="button" class="copy-btn inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700" data-copy="${escapeHtml(txtNota(m))}">📋 Copiar el texto</button>
+        <button type="button" class="copy-btn inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400" data-copy="${escapeHtml(String(m.frase || m.meta_texto) + '\n\n' + U)}">📋 Solo la frase</button>
+        <a href="${escapeHtml(cardUrl(m))}" download="nota-${escapeHtml(m.id)}.png" data-prsf="cite" data-rec="kit-card-${escapeHtml(m.id)}" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">🖼️ Bajar la tarjeta</a>
+        <a href="/notas#${escapeHtml(m.id)}" data-prsf="record" data-rec="kit-ver-${escapeHtml(m.id)}" class="inline-flex items-center gap-1 text-teal-700 font-semibold px-2 py-2">Ver la nota con su fuente →</a>
+      </div>
+    </div>`).join('')
+
+  const body = `
+<div class="not-prose text-center mt-2">
+  <p class="text-xs font-bold text-teal-700 uppercase tracking-wide">Kit para usar</p>
+  <h1 class="text-4xl font-black text-slate-900 mt-1" style="font-family:'Fraunces',Georgia,serif">Las Notas de Puerto Rico, listas para publicar</h1>
+  <p class="mt-3 text-slate-700 max-w-2xl mx-auto">Todo lo de esta página es para usarse. Copia el texto, baja la tarjeta, publícalo donde quieras. <strong>No hace falta pedir permiso ni poner mi nombre.</strong> Solo deja la fuente, para que el que lo lea pueda verificarlo.</p>
+  <div class="mt-5 flex flex-wrap gap-2 justify-center text-sm">
+    <a href="/notas/kit?descarga=txt" download data-prsf="cite" data-rec="kit-descarga-txt" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-5 py-3 rounded-full hover:bg-slate-700">⬇️ Bajar el kit completo (texto)</a>
+    <a href="/notas" data-prsf="record" data-rec="kit-a-notas" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-5 py-3 rounded-full hover:border-teal-400">Ver el récord con las fuentes</a>
+  </div>
+</div>
+
+<h2 class="mt-8">1. El grado, solo</h2>
+<p>Un número. Es lo que se cita cuando no hay espacio para más.</p>
+${bloque('kit-grado', 'Puerto Rico saca ' + escapeHtml(gpa) + ' de 4.0', 'Para un tuit, un pie de foto, o el principio de una nota de prensa.', txtGrado, cardGpa, 'las-notas-de-pr.png')}
+
+<h2 class="mt-8">2. Las notas juntas</h2>
+<p>Las 6 en un solo bloque, cada una con su frase. Para un post largo, un correo, o una presentación.</p>
+${bloque('kit-conjunto', 'Las ' + metas.length + ' notas, en un bloque', 'Copia y pega completo. Ya viene ordenado de la mejor a la peor.', txtConjunto, cardGpa, 'las-notas-de-pr.png')}
+
+<h2 class="mt-8">3. Una por una</h2>
+<p>Cada nota trae lo mismo, en el mismo orden: la frase, lo que no cuadra, el enemigo, la explicación en dos líneas, cómo se ve en tu casa hoy, y qué puedes hacer. Escrito para que se entienda de corrido, sin tener que pensarlo dos veces.</p>
+${cadaNota}
+
+<h2 class="mt-8">Cómo usarlo sin meterte en un lío</h2>
+<ul>
+  <li><strong>Deja la fuente.</strong> No por darme crédito a mí. Es para que el que lo lea pueda ir a verificarlo él mismo. Un dato sin fuente se cae solo.</li>
+  <li><strong>No le cambies el número.</strong> Si quieres decirlo con otras palabras, hazlo. Pero el número y la fecha van como están.</li>
+  <li><strong>La A cuenta igual que la F.</strong> Si copias las malas y dejas fuera la de tsunamis, eso ya no es el récord: es un argumento. La A es la prueba de que la escala no está amañada.</li>
+  <li><strong>Si ves un error, dilo.</strong> Se corrige en público y queda anotado. <a href="/rompelo" class="text-teal-700 font-semibold">Así se corrige aquí</a>.</li>
+</ul>
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
+  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Saber la nota es el primer paso pa' subirla.</p>
+  <p class="mt-2 text-sm text-slate-600 italic">Si te sirve, úsalo. Si no, sigue tu camino.</p>
+</div>
+
+<script>
+(function(){
+  document.querySelectorAll('.copy-btn').forEach(function(b){
+    b.addEventListener('click',function(){
+      var t=b.getAttribute('data-copy')||'';
+      var done=function(){var o=b.textContent;b.textContent='✓ Copiado';b.disabled=true;setTimeout(function(){b.textContent=o;b.disabled=false},1600)};
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done).catch(function(){})}
+      else{var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}document.body.removeChild(ta)}
+    });
+  });
+})();
+</script>
+`
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
+  res.status(200).send(layout({
+    title: 'Kit de Las Notas de Puerto Rico — textos y tarjetas listos para publicar',
+    description: `Los textos y las tarjetas de Las Notas de Puerto Rico (promedio ${gpa} de 4.0), listos para copiar, bajar y publicar. Libre de usar, solo deja la fuente.`,
+    slug: 'notas/kit', bodyHtml: body, ogImage: 'https://puertoricosinfiltros.com' + cardGpa,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
@@ -15296,6 +15489,7 @@ export default async function handler(req: any, res: any) {
     case 'recuperacion': return await handleRecuperacion(req, res)
     case 'sinfiltros': return await handleSinFiltros(req, res)
     case 'boletin': return await handleBoletin(req, res)
+    case 'notas-kit': return await handleNotasKit(req, res)
     case 'sinfiltros-log': return await handleSinFiltrosLog(req, res)
     case 'sinfiltros-pulso': return await handleSinFiltrosPulso(req, res)
     case 'luz': return await handleDatoRecord(req, res)
