@@ -583,7 +583,7 @@
     },
     {
       "source": "/municipio",
-      "destination": "/pueblo",
+      "destination": "/",
       "permanent": true
     },
     {
@@ -598,7 +598,7 @@
     },
     {
       "source": "/pueblo-en-numeros",
-      "destination": "/pueblo",
+      "destination": "/",
       "permanent": true
     },
     {
