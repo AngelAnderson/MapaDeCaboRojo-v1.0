@@ -3684,97 +3684,128 @@ async function handleCambios(req: any, res: any) {
 
   const body = `
 <h1>Historial del registro</h1>
-<p class="text-lg text-slate-600 mt-2">Esto no es un estudio engavetado. Es una herramienta viva. Aquí queda el récord de cada actualización, con fecha, pa' que sepas qué tan fresco está lo que ves.</p>
+<p class="text-lg text-slate-600 mt-2">Cada vez que el registro crece o se corrige, queda anotado aquí con fecha. Así sabes qué tan fresco está lo que ves.</p>
+
+<div class="not-prose mt-5 bg-teal-50 border border-teal-200 rounded-xl p-5">
+  <p class="text-xs font-bold uppercase tracking-widest text-teal-800 mb-2">¿Primera vez aquí?</p>
+  <p class="text-[15px] text-slate-700 leading-relaxed m-0">Registro Médico PR es una lista <strong>gratis</strong> de los médicos y facilidades de salud de Puerto Rico: en español, por pueblo y con el teléfono al lado. La base sale del registro federal de EE.UU. (se llama NPPES; ahí cada médico tiene un número único, el NPI). Nosotros la ponemos en orden pa' que la uses sin cuenta y sin plan.</p>
+  <div class="flex flex-wrap items-center gap-3 mt-4">
+    <a href="/registro" class="inline-flex items-center gap-2 bg-teal-700 hover:bg-teal-800 text-white font-bold px-4 py-2 rounded-lg text-sm no-underline"><i class="fa-solid fa-magnifying-glass"></i> Buscar un médico</a>
+    <span class="text-sm text-slate-600">o textea DENTISTA al <strong>787-417-7711</strong> y el Veci te contesta</span>
+  </div>
+</div>
 
 <div class="not-prose mt-4 flex flex-wrap gap-2 text-xs">
-  <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-shield-halved"></i> ${total} verificados hoy</span>
+  <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-user-doctor"></i> ${total} en el registro hoy</span>
   <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-clock-rotate-left"></i> Última actualización: 1 agosto 2026</span>
 </div>
 
 <h2>Cómo empezó</h2>
-<p>Esto empezó como un favor. Un conocido me preguntó por un especialista y le pasé una lista que yo había armado pa' mí, verificada contra el registro federal NPPES. Si le servía a él, le servía a cualquiera. La publiqué gratis.</p>
+<p>Esto empezó como un favor. Un conocido me preguntó por un especialista y le pasé una lista que yo había armado pa' mí, sacada del registro federal NPPES. Si le servía a él, le servía a cualquiera. La publiqué gratis.</p>
 <p>Después pasó algo que no esperaba: médicos escribiéndome "yo no aparezco, añádeme" y vecinos reportando quién faltaba. Este historial existe porque el registro se mantiene así, entre todos.</p>
 
 <h2>El récord</h2>
+<p class="text-sm text-slate-500">Cada tarjeta es una actualización. La más reciente arriba. Toca "ver los detalles" si quieres el desglose completo.</p>
 <div class="not-prose space-y-4 mt-4">
   <div class="bg-white border-2 border-teal-300 rounded-xl p-5">
     <div class="text-xs font-bold uppercase tracking-widest text-teal-700 mb-1">1 agosto 2026 · Última actualización</div>
-    <p class="font-bold text-slate-900">Entraron 4,031 médicos generalistas. El hueco lo destapó una auditoría.</p>
-    <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
-      <li><strong>Cómo se encontró:</strong> auditamos 142 proveedores del oeste del directorio oficial del Plan Vital (feb 2026) contra este registro. 36 no aparecían aquí. Todos estaban activos en el registro federal bajo <strong>"General Practice"</strong> — la medicina general clásica, que no habíamos ingerido. El médico primario de muchos planes está justo en esa categoría.</li>
-      <li><strong>El arreglo:</strong> se ingirió la categoría completa, isla entera: <strong>4,031 médicos generalistas</strong> con NPI en PR, por pueblo y con teléfono. El registro sube de 25,762 a <strong>29,793</strong>.</li>
-      <li><strong>Honestidad:</strong> San Juan quedó parcial en esta pasada (el registro federal corta las búsquedas en 1,200 por ciudad). Se completa en la próxima.</li>
-      <li><strong>Y una categoría pa' los veteranos:</strong> las 10 facilidades médicas del <a href="/registro/va" class="text-teal-700 font-semibold">VA en Puerto Rico</a> — el hospital de San Juan y las clínicas de Mayagüez, Ponce, Arecibo, Ceiba, Guayama, Comerío, Utuado y Vieques, con dirección y teléfono. Somos decenas de miles de veteranos en la isla y esta lista no existía en español en un solo sitio.</li>
-    </ul>
+    <p class="font-bold text-slate-900 text-lg m-0">Entraron 4,031 médicos generalistas y la lista completa del VA.</p>
+    <p class="text-sm text-slate-600 mt-2">Faltaba la medicina general clásica, la categoría donde está el médico primario de muchos planes. Una auditoría lo destapó y ya está corregido: el registro subió de 25,762 a <strong>29,793</strong>. También entraron las 10 facilidades médicas del <a href="/registro/va" class="text-teal-700 font-semibold">VA en Puerto Rico</a>, pa' los veteranos.</p>
+    <details class="mt-2">
+      <summary class="text-sm font-semibold text-teal-700 cursor-pointer select-none">Ver los detalles</summary>
+      <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
+        <li><strong>Cómo se encontró:</strong> auditamos 142 proveedores del oeste del directorio oficial del Plan Vital (feb 2026) contra este registro. 36 no aparecían aquí. Todos estaban activos en el registro federal bajo <strong>"General Practice"</strong>, la medicina general clásica, que no habíamos incluido.</li>
+        <li><strong>El arreglo:</strong> entró la categoría completa, isla entera: <strong>4,031 médicos generalistas</strong> con NPI en PR, por pueblo y con teléfono.</li>
+        <li><strong>Honestidad:</strong> San Juan quedó parcial en esta pasada (el registro federal corta las búsquedas en 1,200 por ciudad). Se completa en la próxima.</li>
+        <li><strong>La categoría del VA:</strong> el hospital de San Juan y las clínicas de Mayagüez, Ponce, Arecibo, Ceiba, Guayama, Comerío, Utuado y Vieques, con dirección y teléfono. Somos decenas de miles de veteranos en la isla y esta lista no existía en español en un solo sitio.</li>
+      </ul>
+    </details>
   </div>
 
   <div class="bg-white border border-slate-200 rounded-xl p-5">
     <div class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">28 julio 2026</div>
-    <p class="font-bold text-slate-900">Entraron 2,364 proveedores más del registro federal, y cambiamos una palabra que nos quedaba grande.</p>
-    <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
-      <li><strong>Ingesta de NPPES:</strong> los proveedores con NPI federal en el registro subieron de 23,398 a <strong>25,762</strong>.</li>
-      <li><strong>Dejamos de decir "verificados".</strong> Antes cada categoría decía "339 verificados en PR". Eso daba a entender que habíamos llamado a cada uno, y no es verdad: la inmensa mayoría viene del registro federal tal cual. Ahora dice <strong>"con NPI en PR"</strong>, que es exactamente lo que es. Lo nuestro no es haberlos verificado uno por uno, es <strong>haberlos puesto en orden en español</strong>, por pueblo y con el teléfono al lado. Cuando un dato sí lo verificamos a mano, lo decimos aparte y con fecha.</li>
-      <li><strong>Efecto colateral honesto:</strong> como el registro creció, el porcentaje de proveedores que comparten teléfono subió de 40.9% a 43.6%. Ese número subió por mejor cobertura, no porque el directorio empeorara. Está anotado en <a href="/marcador" class="text-teal-700 font-semibold">El Marcador</a>.</li>
-    </ul>
+    <p class="font-bold text-slate-900 m-0">Entraron 2,364 proveedores y cambiamos una palabra que nos quedaba grande.</p>
+    <p class="text-sm text-slate-600 mt-2">El registro subió a 25,762. Y las categorías ya no dicen "verificados": dicen <strong>"con NPI en PR"</strong>, porque eso es exactamente lo que es.</p>
+    <details class="mt-2">
+      <summary class="text-sm font-semibold text-teal-700 cursor-pointer select-none">Ver los detalles</summary>
+      <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
+        <li><strong>Ingesta de NPPES:</strong> los proveedores con NPI federal en el registro subieron de 23,398 a <strong>25,762</strong>.</li>
+        <li><strong>Por qué el cambio de palabra:</strong> "339 verificados en PR" daba a entender que habíamos llamado a cada uno, y no es verdad: la inmensa mayoría viene del registro federal tal cual. Lo nuestro es <strong>haberlos puesto en orden en español</strong>, por pueblo y con el teléfono al lado. Cuando un dato sí lo verificamos a mano, lo decimos aparte y con fecha.</li>
+        <li><strong>Efecto colateral honesto:</strong> como el registro creció, el porcentaje de proveedores que comparten teléfono subió de 40.9% a 43.6%. Subió por mejor cobertura, no porque el directorio empeorara. Está anotado en <a href="/marcador" class="text-teal-700 font-semibold">El Marcador</a>.</li>
+      </ul>
+    </details>
   </div>
 
   <div class="bg-white border border-slate-200 rounded-xl p-5">
     <div class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">18 julio 2026</div>
-    <p class="font-bold text-slate-900">Las facilidades que faltaban + el registro ahora se navega por pueblo.</p>
-    <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
-      <li><strong>4 categorías nuevas, isla completa:</strong> laboratorios clínicos (1,173), ambulancias y transporte médico (877), radiología e imágenes (252), y los centros de diálisis subieron de 10 a 70.</li>
-      <li><strong>Por pueblo:</strong> cada categoría ahora muestra sus pueblos con el número real, y el buscador entiende tu municipio ("laboratorio cabo rojo" te lleva directo).</li>
-      <li><strong><a href="/espejo" class="text-teal-700">El Espejo</a>:</strong> publicamos el método y la serie histórica — cada medición queda grabada con fecha, la próxima se toma automática el día 1.</li>
-    </ul>
-    <p class="text-sm text-slate-500 mt-2">+2,677 facilidades nuevas. 65 categorías en total.</p>
+    <p class="font-bold text-slate-900 m-0">Laboratorios, ambulancias, radiología y diálisis. Y ahora navegas por pueblo.</p>
+    <p class="text-sm text-slate-600 mt-2">4 categorías nuevas con 2,677 facilidades, isla completa. Y cada categoría muestra sus pueblos con el número real: "laboratorio cabo rojo" te lleva directo.</p>
+    <details class="mt-2">
+      <summary class="text-sm font-semibold text-teal-700 cursor-pointer select-none">Ver los detalles</summary>
+      <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
+        <li><strong>Las 4 categorías:</strong> laboratorios clínicos (1,173), ambulancias y transporte médico (877), radiología e imágenes (252), y los centros de diálisis subieron de 10 a 70.</li>
+        <li><strong><a href="/espejo" class="text-teal-700">El Espejo</a>:</strong> publicamos el método y la serie histórica. Cada medición queda grabada con fecha; la próxima se toma automática el día 1.</li>
+        <li>65 categorías en total tras esta pasada.</li>
+      </ul>
+    </details>
   </div>
+
   <div class="bg-white border border-slate-200 rounded-xl p-5">
     <div class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">16 julio 2026</div>
-    <p class="font-bold text-slate-900">5 categorías nuevas — una la pidió un vecino por texto.</p>
-    <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
-      <li><strong>Naturópatas (142)</strong> y <strong>acupunturistas (10)</strong> — medicina natural y alternativa, pedido real de un usuario del Veci.</li>
-      <li><strong>El cajón "dentista" se abrió:</strong> dentistas pediátricos (93), ortodoncistas (88) y cirujanos orales y maxilofaciales (52) ahora tienen su propia página.</li>
-    </ul>
-    <p class="text-sm text-slate-500 mt-2">280 proveedores nuevos + 105 reclasificados por su especialidad federal. 61 categorías en total.</p>
+    <p class="font-bold text-slate-900 m-0">5 categorías nuevas. Una la pidió un vecino por texto.</p>
+    <p class="text-sm text-slate-600 mt-2">Naturópatas, acupunturistas, y el cajón "dentista" se abrió en 3 especialidades con página propia. 280 proveedores nuevos.</p>
+    <details class="mt-2">
+      <summary class="text-sm font-semibold text-teal-700 cursor-pointer select-none">Ver los detalles</summary>
+      <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
+        <li><strong>Naturópatas (142)</strong> y <strong>acupunturistas (10)</strong>: medicina natural y alternativa, pedido real de un usuario del Veci.</li>
+        <li><strong>Del cajón "dentista":</strong> dentistas pediátricos (93), ortodoncistas (88) y cirujanos orales y maxilofaciales (52).</li>
+        <li>280 proveedores nuevos + 105 reclasificados por su especialidad federal. 61 categorías en total tras esta pasada.</li>
+      </ul>
+    </details>
   </div>
+
   <div class="bg-white border border-slate-200 rounded-xl p-5">
     <div class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">13 julio 2026</div>
-    <p class="font-bold text-slate-900">La actualización más grande hasta la fecha: +14,368 proveedores y facilidades.</p>
-    <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
-      <li><strong>Dentistas (1,631)</strong> — por primera vez, todos los de PR, por pueblo.</li>
-      <li><strong>Médicos de cabecera</strong> — internistas (1,110) y medicina de familia (596). La pregunta #1.</li>
-      <li><strong>13 profesiones aliadas</strong> — terapeutas del habla (1,167), terapistas físicos y ocupacionales, trabajadores sociales clínicos (2,301), consejeros, nutricionistas (402), PAs, enfermeras practicantes, audiólogos, parteras, quiroprácticos y farmacéuticos (3,369).</li>
-      <li><strong>Facilidades (nuevo)</strong> — unos 60 hospitales (lista CMS), 203 agencias de cuidado en el hogar, 103 clínicas comunitarias que te atienden sin plan, 72 hospicios, 58 urgent care, 40 hogares de envejecientes y 10 centros de diálisis.</li>
-    </ul>
-    <p class="text-sm text-slate-500 mt-2">El registro pasó de 32 a 56 categorías y de ~6,300 a ~${total} verificados contra el gobierno federal.</p>
+    <p class="font-bold text-slate-900 m-0">La actualización más grande hasta la fecha: +14,368 proveedores y facilidades.</p>
+    <p class="text-sm text-slate-600 mt-2">Entraron los dentistas, los médicos de cabecera, 13 profesiones aliadas y por primera vez las facilidades: hospitales, urgent care, clínicas comunitarias, hospicios y más. El registro pasó de 32 a 56 categorías y de ~6,300 a más de 20,000.</p>
+    <details class="mt-2">
+      <summary class="text-sm font-semibold text-teal-700 cursor-pointer select-none">Ver los detalles</summary>
+      <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
+        <li><strong>Dentistas (1,631):</strong> por primera vez, todos los de PR, por pueblo.</li>
+        <li><strong>Médicos de cabecera:</strong> internistas (1,110) y medicina de familia (596). La pregunta #1.</li>
+        <li><strong>13 profesiones aliadas:</strong> terapeutas del habla (1,167), terapistas físicos y ocupacionales, trabajadores sociales clínicos (2,301), consejeros, nutricionistas (402), PAs, enfermeras practicantes, audiólogos, parteras, quiroprácticos y farmacéuticos (3,369).</li>
+        <li><strong>Facilidades (nuevo):</strong> unos 60 hospitales (lista CMS), 203 agencias de cuidado en el hogar, 103 clínicas comunitarias que te atienden sin plan, 72 hospicios, 58 urgent care, 40 hogares de envejecientes y 10 centros de diálisis.</li>
+      </ul>
+    </details>
   </div>
+
   <div class="bg-white border border-slate-200 rounded-xl p-5">
     <div class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">Julio 2026</div>
-    <p class="text-sm text-slate-600">Filtro "¿acepta mi plan?", guías por situación (/necesito), semáforo de los 78 pueblos (/pueblo), alertas por pueblo, búsqueda por síntoma, y el mapa de enfermedades fundadoras boricuas (/atlas y /raras).</p>
+    <p class="text-sm text-slate-600 m-0">Filtro "¿acepta mi plan?", guías por situación (<a href="/necesito" class="text-teal-700">/necesito</a>), semáforo de los 78 pueblos (<a href="/pueblo" class="text-teal-700">/pueblo</a>), alertas por pueblo, búsqueda por síntoma, y el mapa de enfermedades fundadoras boricuas (<a href="/atlas" class="text-teal-700">/atlas</a> y <a href="/raras" class="text-teal-700">/raras</a>).</p>
   </div>
   <div class="bg-white border border-slate-200 rounded-xl p-5">
     <div class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">Junio 2026</div>
-    <p class="text-sm text-slate-600">Nace el registro público: 32 especialidades, 6,247 especialistas verificados NPPES, una página por doctor, el observatorio de desiertos médicos y el mapa interactivo por municipio.</p>
+    <p class="text-sm text-slate-600 m-0">Nace el registro público: 32 especialidades, 6,247 especialistas del registro federal NPPES, una página por doctor, el observatorio de desiertos médicos y el mapa interactivo por municipio.</p>
   </div>
 </div>
 
 <h2>Lo que viene</h2>
-<p class="text-sm text-slate-500">Sin fechas prometidas. Se publica cuando está verificado, no antes.</p>
+<p class="text-sm text-slate-500">Sin fechas prometidas. Se publica cuando está listo, no antes.</p>
 <ul>
-  <li><strong>Calidad, no solo existencia</strong> — estrellas e inspecciones federales (CMS Care Compare) pa' hospitales, hogares de envejecientes y agencias de cuidado en el hogar.</li>
-  <li><strong>"¿Acepta mi plan?" completo</strong> — llenado por la comunidad, oficina por oficina.</li>
-  <li><strong>Alertas por pueblo</strong> — te aviso cuando llegue el especialista que le falta al tuyo.</li>
+  <li><strong>Calidad, no solo existencia:</strong> estrellas e inspecciones federales (CMS Care Compare) pa' hospitales, hogares de envejecientes y agencias de cuidado en el hogar.</li>
+  <li><strong>"¿Acepta mi plan?" completo:</strong> llenado por la comunidad, oficina por oficina.</li>
+  <li><strong>Alertas por pueblo:</strong> te aviso cuando llegue el especialista que le falta al tuyo.</li>
 </ul>
 
 <h2>Úsalo hoy</h2>
 <p>Busca por especialidad y pueblo en <a href="/registro">el registro</a>, o textea el nombre del especialista (DENTISTA, INTERNISTA, CLINICA…) al <strong>787-417-7711</strong> y el Veci te contesta. Gratis, sin cuenta.</p>
-<p>Si tu médico no aparece, <a href="/registro#claim">dímelo y lo verifico</a>. Así es que esto crece.</p>
+<p>Si tu médico no aparece, <a href="/registro#claim">dímelo y lo añado</a>. Así es que esto crece.</p>
 `
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600')
   res.status(200).send(layout({
     title: 'Historial y roadmap · Registro Médico PR',
-    description: `Récord de cada actualización del registro médico verificado de Puerto Rico. Última: 18 julio 2026 — 65 categorías, ${total} proveedores y facilidades verificados contra NPPES.`,
+    description: `Récord de cada actualización del registro médico de Puerto Rico. Última: 1 agosto 2026. ${total} proveedores y facilidades con NPI federal, en español y por pueblo.`,
     slug: 'cambios',
     ogImage: '/og/registro.png',
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
@@ -3784,14 +3815,14 @@ async function handleCambios(req: any, res: any) {
       '@context': 'https://schema.org', '@type': 'WebPage',
       url: 'https://registromedicopr.com/cambios',
       name: 'Historial y roadmap · Registro Médico PR',
-      dateModified: '2026-07-18', inLanguage: 'es',
+      dateModified: '2026-08-01', inLanguage: 'es',
       description: 'Historial de actualizaciones del registro médico verificado de Puerto Rico.',
     },
   }))
 }
 
 // Última actualización del registro — UN solo sitio que editar (se muestra en home + /cambios)
-const REG_LAST_UPDATE = { es: '28 jul 2026', en: 'Jul 28, 2026' }
+const REG_LAST_UPDATE = { es: '1 ago 2026', en: 'Aug 1, 2026' }
 
 async function handleRegistro(req: any, res: any) {
   const en = String(req.query.lang || '') === 'en'
