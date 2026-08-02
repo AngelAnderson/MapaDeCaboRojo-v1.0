@@ -328,6 +328,10 @@
       "destination": "/api/mapa-pages?page=decidir"
     },
     {
+      "source": "/suelo",
+      "destination": "/api/mapa-pages?page=suelo"
+    },
+    {
       "source": "/esencia",
       "destination": "/api/mapa-pages?page=esencia"
     },

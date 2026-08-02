@@ -19,6 +19,7 @@ import { createHash, createHmac, timingSafeEqual } from 'crypto'
 import { handleActivos } from './_lib/activos.js'
 import { handleBarrios } from './_lib/barrios.js'
 import { handleRentas } from './_lib/rentas.js'
+import { handleSuelo } from './_lib/suelo.js'
 
 // Hard ceiling on every PostgREST call. Without it a stalled connection hangs the
 // await forever and Vercel kills the whole function at maxDuration — that is how 34
@@ -2771,6 +2772,7 @@ const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:n
   // ── Fase 2 (jul 2026): primaria + allied + facilidades NPI-2 ──
   {s:'internista',l:'Internista (medicina interna)',e:'🩺',kw:'INTERNISTA',md:true,t:1110,r:{Oeste:188,Norte:59,Centro:18,Sur:163,Este:131,Metro:551}},
   {s:'medicina de familia',l:'Médico de Familia',e:'👨‍👩‍👧',kw:'FAMILIA',md:true,t:596,r:{Oeste:98,Norte:82,Centro:11,Sur:62,Este:74,Metro:269}},
+  {s:'generalista',l:'Médico Generalista',e:'🩺',kw:'GENERALISTA',md:true,t:4031,r:{Oeste:811,Norte:438,Centro:97,Sur:552,Este:617,Metro:1516}},
   {s:'terapeuta del habla',l:'Terapeuta del Habla',e:'🗣️',kw:'HABLA',md:false,t:1167,r:{Oeste:152,Norte:132,Centro:25,Sur:112,Este:205,Metro:540}},
   {s:'terapista físico',l:'Terapista Físico',e:'🏃',kw:'TERAPIA',md:false,t:604,r:{Oeste:100,Norte:65,Centro:14,Sur:48,Este:73,Metro:304}},
   {s:'terapista ocupacional',l:'Terapista Ocupacional',e:'🖐️',kw:'OCUPACIONAL',md:false,t:502,r:{Oeste:69,Norte:56,Centro:10,Sur:47,Este:75,Metro:245}},
@@ -3685,7 +3687,7 @@ async function handleCambios(req: any, res: any) {
 
 <div class="not-prose mt-4 flex flex-wrap gap-2 text-xs">
   <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-shield-halved"></i> ${total} verificados hoy</span>
-  <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-clock-rotate-left"></i> Última actualización: 18 julio 2026</span>
+  <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-clock-rotate-left"></i> Última actualización: 1 agosto 2026</span>
 </div>
 
 <h2>Cómo empezó</h2>
@@ -3695,7 +3697,17 @@ async function handleCambios(req: any, res: any) {
 <h2>El récord</h2>
 <div class="not-prose space-y-4 mt-4">
   <div class="bg-white border-2 border-teal-300 rounded-xl p-5">
-    <div class="text-xs font-bold uppercase tracking-widest text-teal-700 mb-1">28 julio 2026 · Última actualización</div>
+    <div class="text-xs font-bold uppercase tracking-widest text-teal-700 mb-1">1 agosto 2026 · Última actualización</div>
+    <p class="font-bold text-slate-900">Entraron 4,031 médicos generalistas. El hueco lo destapó una auditoría.</p>
+    <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
+      <li><strong>Cómo se encontró:</strong> auditamos 142 proveedores del oeste del directorio oficial del Plan Vital (feb 2026) contra este registro. 36 no aparecían aquí. Todos estaban activos en el registro federal bajo <strong>"General Practice"</strong> — la medicina general clásica, que no habíamos ingerido. El médico primario de muchos planes está justo en esa categoría.</li>
+      <li><strong>El arreglo:</strong> se ingirió la categoría completa, isla entera: <strong>4,031 médicos generalistas</strong> con NPI en PR, por pueblo y con teléfono. El registro sube de 25,762 a <strong>29,793</strong>.</li>
+      <li><strong>Honestidad:</strong> San Juan quedó parcial en esta pasada (el registro federal corta las búsquedas en 1,200 por ciudad). Se completa en la próxima.</li>
+    </ul>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-xl p-5">
+    <div class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">28 julio 2026</div>
     <p class="font-bold text-slate-900">Entraron 2,364 proveedores más del registro federal, y cambiamos una palabra que nos quedaba grande.</p>
     <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
       <li><strong>Ingesta de NPPES:</strong> los proveedores con NPI federal en el registro subieron de 23,398 a <strong>25,762</strong>.</li>
@@ -12291,6 +12303,7 @@ const SPEC_INFO: Record<string, { treats: string; whenToGo: string; note: string
   'acupunturista': { treats: 'El profesional de la acupuntura: agujas finas pa\' dolor, estrés y otras molestias.', whenToGo: 'Cuando quieres probar acupuntura pa\' dolor crónico, migraña o estrés.', note: 'Tiene registro federal NPI, pero no es médico (MD). No sustituye el cuidado médico pa\' condiciones serias.' },
   'internista': { treats: 'El médico de cabecera de los adultos: ve el cuadro completo de tu salud.', whenToGo: 'Para tu chequeo anual, condiciones crónicas como presión o azúcar, y cuando no sabes a qué especialista ir.', note: 'Es el punto de partida. Él te refiere al especialista si hace falta.' },
   'medicina de familia': { treats: 'El médico que atiende a toda la familia, de niños a abuelos.', whenToGo: 'Para chequeos, condiciones del día a día y seguimiento de toda la casa con un mismo médico.', note: '' },
+  'generalista': { treats: 'El médico de medicina general: el clásico doctor del pueblo que atiende de todo un poco.', whenToGo: 'Para consultas del día a día, recetas, certificados médicos y cuando necesitas que alguien te vea sin especialista de por medio.', note: 'Muchos de los médicos primarios de los planes (como el Plan Vital) están en esta categoría.' },
   'terapeuta del habla': { treats: 'El profesional que ayuda con el habla, el lenguaje y hasta con tragar.', whenToGo: 'Cuando el nene no habla como se espera pa\' su edad, o después de un derrame que afectó el habla.', note: 'Tiene licencia, pero no es médico (MD).' },
   'terapista físico': { treats: 'El profesional que te ayuda a recuperar fuerza y movimiento con ejercicios.', whenToGo: 'Después de una operación, una caída o una lesión, cuando el médico te receta terapia.', note: 'Tiene licencia, pero no es médico (MD).' },
   'terapista ocupacional': { treats: 'El profesional que te ayuda a volver a hacer las tareas de la vida diaria.', whenToGo: 'Después de un derrame o lesión, cuando cuesta vestirse, cocinar o trabajar como antes.', note: 'Tiene licencia, pero no es médico (MD).' },
@@ -12318,7 +12331,7 @@ function specToUrl(sub: string): string {
 // English specialty labels (for ?lang=en on hub pages) — keyed by subcategory slug.
 const SPEC_LABEL_EN: Record<string, string> = {
   'cardiólogo':'Cardiologist','psiquiatra':'Psychiatrist','fisiatra':'Physiatrist (Rehab)','ginecólogo':'OB-GYN','pediatra':'Pediatrician','dermatólogo':'Dermatologist','gastroenterólogo':'Gastroenterologist','oftalmólogo':'Ophthalmologist (Eye MD)','ortopeda':'Orthopedic Surgeon','neurologo':'Neurologist','urólogo':'Urologist','endocrinologo':'Endocrinologist (Diabetes)','nefrólogo':'Nephrologist (Kidney)','neumólogo':'Pulmonologist (Lungs)','oncólogo':'Oncologist / Hematologist','reumatólogo':'Rheumatologist (Arthritis)','geriatra':'Geriatrician','otorrinolaringólogo':'ENT (Ear, Nose & Throat)','infectólogo':'Infectious Disease','alergista':'Allergist / Immunologist','medicina de emergencia':'Emergency Medicine','cirujano general':'General Surgeon','anestesiólogo':'Anesthesiologist','radiólogo':'Radiologist','neurocirujano':'Neurosurgeon','cirujano plástico':'Plastic Surgeon','cirujano torácico':'Thoracic Surgeon','coloproctólogo':'Colorectal Surgeon','manejo de dolor':'Pain Management','psicólogo':'Psychologist','optómetra':'Optometrist','podiatra':'Podiatrist','dentista':'Dentist',
-  'internista':'Internal Medicine','medicina de familia':'Family Medicine','terapeuta del habla':'Speech-Language Pathologist','terapista físico':'Physical Therapist','terapista ocupacional':'Occupational Therapist','quiropractico':'Chiropractor','consejero':'Professional Counselor','trabajador social':'Clinical Social Worker','terapeuta de familia':'Marriage & Family Therapist','nutricionista':'Dietitian / Nutritionist','physician assistant':'Physician Assistant (PA)','enfermera practicante':'Nurse Practitioner (NP)','audiólogo':'Audiologist','partera':'Midwife','farmacéutico':'Pharmacist','hospital':'Hospital (CMS-certified)','cuidado en el hogar':'Home Health Agency','hospicio':'Hospice','hogar de envejecientes':'Nursing Home (SNF)','centro de diálisis':'Dialysis Center','urgent care':'Urgent Care','clínica comunitaria':'Community Health Center (FQHC)',
+  'internista':'Internal Medicine','medicina de familia':'Family Medicine','generalista':'General Practice','terapeuta del habla':'Speech-Language Pathologist','terapista físico':'Physical Therapist','terapista ocupacional':'Occupational Therapist','quiropractico':'Chiropractor','consejero':'Professional Counselor','trabajador social':'Clinical Social Worker','terapeuta de familia':'Marriage & Family Therapist','nutricionista':'Dietitian / Nutritionist','physician assistant':'Physician Assistant (PA)','enfermera practicante':'Nurse Practitioner (NP)','audiólogo':'Audiologist','partera':'Midwife','farmacéutico':'Pharmacist','hospital':'Hospital (CMS-certified)','cuidado en el hogar':'Home Health Agency','hospicio':'Hospice','hogar de envejecientes':'Nursing Home (SNF)','centro de diálisis':'Dialysis Center','urgent care':'Urgent Care','clínica comunitaria':'Community Health Center (FQHC)',
   'neonatólogo':'Neonatologist','cirujano vascular':'Vascular Surgeon','dentista pediátrico':'Pediatric Dentist','ortodoncista':'Orthodontist','cirujano oral':'Oral & Maxillofacial Surgeon','naturópata':'Naturopath','acupunturista':'Acupuncturist',
 }
 // English specialty explainers (for ?lang=en on hub pages).
@@ -12365,6 +12378,7 @@ const SPEC_INFO_EN: Record<string, { treats: string; whenToGo: string; note: str
   'acupunturista':{treats:'The acupuncture professional: fine needles for pain, stress, and other complaints.',whenToGo:'When you want to try acupuncture for chronic pain, migraines, or stress.',note:'They hold a federal NPI, but they are not an MD. Not a substitute for medical care in serious conditions.'},
   'internista':{treats:'The primary care doctor for adults: sees the full picture of your health.',whenToGo:'For your yearly checkup, chronic conditions like blood pressure or diabetes, and when you don\'t know which specialist to see.',note:'This is the starting point. They refer you to a specialist if needed.'},
   'medicina de familia':{treats:'The doctor who cares for the whole family, from kids to grandparents.',whenToGo:'For checkups, everyday conditions, and follow-up for the whole household with one doctor.',note:''},
+  'generalista':{treats:'The general practice doctor: the classic town physician who handles a bit of everything.',whenToGo:'For everyday visits, prescriptions, medical certificates, and when you need to be seen without a specialist in between.',note:'Many primary care physicians in local health plans (like Plan Vital) fall in this category.'},
   'terapeuta del habla':{treats:'The professional who helps with speech, language, and even swallowing.',whenToGo:'When a child isn\'t talking as expected for their age, or after a stroke that affected speech.',note:'Licensed, but not a medical doctor (MD).'},
   'terapista físico':{treats:'The professional who helps you regain strength and movement with exercises.',whenToGo:'After surgery, a fall, or an injury, when your doctor prescribes therapy.',note:'Licensed, but not a medical doctor (MD).'},
   'terapista ocupacional':{treats:'The professional who helps you get back to daily-life tasks.',whenToGo:'After a stroke or injury, when dressing, cooking, or working is hard again.',note:'Licensed, but not a medical doctor (MD).'},
@@ -15053,6 +15067,7 @@ export default async function handler(req: any, res: any) {
     case 'expediente': return await handleExpediente(req, res)
     case 'sigue-el-dinero': return await handleSigueElDinero(req, res)
     case 'esencia': return await handleEsencia(req, res)
+    case 'suelo': return handleSuelo(req, res, { layout, escapeHtml })
     case 'activos': return handleActivos(req, res, { layout, escapeHtml })
     case 'barrios': return await handleBarrios(req, res, { layout, escapeHtml, supabase })
     case 'barrio': return await handleBarrios(req, res, { layout, escapeHtml, supabase })
