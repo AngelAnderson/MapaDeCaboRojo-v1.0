@@ -2830,6 +2830,12 @@ function shareRow(opts: { text: string; url: string; toWho: string; dark?: boole
 }
 const SHARE_COPY_SCRIPT = `<script>document.addEventListener('click',function(e){var b=e.target.closest('.share-copy');if(!b)return;navigator.clipboard.writeText(b.getAttribute('data-copy')||'').then(function(){var o=b.innerHTML;b.innerHTML='✓ Copiado';setTimeout(function(){b.innerHTML=o},1600);});});</script>`
 
+// OG del registro — servido por el motor vivo /api/og (theme medico, azul) con el total
+// calculado de REGISTRY_SPECS redondeado al millar. Se actualiza solo con cada sync de
+// conteos. Reemplaza el PNG estático /og/registro.png, que decía "6,341 especialistas"
+// (teal viejo + "verificados", 2 marcas atrás) — nunca más un número quemado en imagen.
+const REGISTRO_OG = `/api/og?theme=medico&k=${encodeURIComponent("Gratis · en español · por pueblo")}&t=${encodeURIComponent(Math.floor(REGISTRY_SPECS.reduce((a, x) => a + x.t, 0) / 1000).toLocaleString('en-US') + ",000+ médicos y facilidades de salud de Puerto Rico")}&sub=${encodeURIComponent("Del registro federal NPPES, puesto en orden pa' que lo uses sin cuenta y sin plan.")}&badge=${encodeURIComponent("Fuente federal NPPES / CMS")}`
+
 // =============== Registro: helpers compartidos (plan, disclaimer, checklist, WA familia) ===============
 // Planes médicos comunes en PR. `v` = token de match: se compara normalizado (sin acentos,
 // lowercase) como substring en ambas direcciones contra places.accepted_plans (crowdsourced).
@@ -3159,7 +3165,7 @@ ${regDisclaimer(en)}`
       description: te('Guías por situación real: cita rápido, sin plan médico, cuidando a tus padres desde afuera, recién llegado, o sin especialista en tu pueblo. Pasos concretos, gratis.', 'Guides by real situation: fast appointment, no insurance, caring for your parents from the States, just moved back, or no specialist in your town. Concrete steps, free.'),
       slug: 'necesito', bodyHtml: body,
       jsonLd: { '@context': 'https://schema.org', '@type': 'CollectionPage', name: te('¿Cuál es tu situación? · Registro Médico PR', 'What is your situation? · Registro Médico PR'), url: 'https://registromedicopr.com/necesito', inLanguage: en ? 'en' : 'es' },
-      ogImage: '/og/registro.png', host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+      ogImage: REGISTRO_OG, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
       canonicalUrl: 'https://registromedicopr.com/necesito',
       lang: en ? 'en' : 'es',
     }))
@@ -3220,7 +3226,7 @@ ${regDisclaimer(en)}
     title: te(`${L.title} · guía práctica PR`, `${L.title} · practical guide, Puerto Rico`),
     description: L.metaDesc,
     slug: `necesito/${page.slug}`, bodyHtml: body, jsonLd,
-    ogImage: '/og/registro.png', host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+    ogImage: REGISTRO_OG, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
     canonicalUrl: `https://registromedicopr.com/necesito/${page.slug}`,
     lang: en ? 'en' : 'es',
   }))
@@ -3853,9 +3859,9 @@ async function handleCambios(req: any, res: any) {
   res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600')
   res.status(200).send(layout({
     title: 'Historial y roadmap · Registro Médico PR',
-    description: `Récord de cada actualización del registro médico de Puerto Rico. Última: 1 agosto 2026. ${total} proveedores y facilidades con NPI federal, en español y por pueblo.`,
+    description: `Récord de cada actualización del registro médico de Puerto Rico. Última: 2 agosto 2026. ${total} proveedores y facilidades con NPI federal, en español y por pueblo.`,
     slug: 'cambios',
-    ogImage: '/og/registro.png',
+    ogImage: REGISTRO_OG,
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
     canonicalUrl: 'https://registromedicopr.com/cambios',
     bodyHtml: body,
@@ -4279,7 +4285,7 @@ ${regDisclaimer(en)}
     slug: 'registro',
     bodyHtml: body,
     jsonLd,
-    ogImage: '/og/registro.png',
+    ogImage: REGISTRO_OG,
     host: req.headers?.host,
     canonicalHost: 'https://registromedicopr.com',
     canonicalUrl: 'https://registromedicopr.com',
@@ -12434,7 +12440,7 @@ async function handleRegistroMapa(req: any, res: any) {
   res.status(200).send(layout({
     title: 'El mapa de los médicos de Puerto Rico — especialistas por municipio',
     description: 'Escoge el especialista que buscas y mira dónde hay, cuántos, y dónde no hay ninguno. Verificado contra el registro federal NPPES, municipio por municipio.',
-    slug: 'registro/mapa', bodyHtml: body, jsonLd, ogImage: '/og/registro.png',
+    slug: 'registro/mapa', bodyHtml: body, jsonLd, ogImage: REGISTRO_OG,
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
   }))
 }
@@ -12711,7 +12717,7 @@ ${regDisclaimer(en)}`
     ]
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
     res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
-    res.status(200).send(layout({ title: titleT, description: descT, slug: canonicalPathT, bodyHtml: bodyT, jsonLd: jsonLdT, ogImage: '/og/registro.png', host: req.headers?.host, canonicalHost: 'https://registromedicopr.com', lang: en ? 'en' : 'es' }))
+    res.status(200).send(layout({ title: titleT, description: descT, slug: canonicalPathT, bodyHtml: bodyT, jsonLd: jsonLdT, ogImage: REGISTRO_OG, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com', lang: en ? 'en' : 'es' }))
     return
   }
 
@@ -12827,7 +12833,7 @@ ${regDisclaimer(en)}
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
   res.status(200).send(layout({
     title, description, slug: canonicalPath, bodyHtml: body, jsonLd,
-    ogImage: '/og/registro.png', host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+    ogImage: REGISTRO_OG, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
     lang: en ? 'en' : 'es',
   }))
 }
