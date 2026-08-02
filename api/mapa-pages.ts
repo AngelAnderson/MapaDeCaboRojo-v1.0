@@ -2508,8 +2508,8 @@ function handleAcceso(_req: any, res: any) {
     fisiatra:{label:'fisiatra',ref:'fisiatría',kw:'FISIATRA',slug:'fisiatra',total:252,towns:{'Cabo Rojo':3,'Mayagüez':11,'San Germán':5,'Añasco':2,'Hormigueros':1}},
     cardiologo:{label:'cardiólogo',ref:'cardiología',kw:'CARDIOLOGO',slug:'cardiologos',total:339,towns:{'Mayagüez':13,'Aguadilla':5,'San Germán':4,'Cabo Rojo':2,'Sabana Grande':1,'Añasco':1}},
     nefrologo:{label:'nefrólogo',ref:'nefrología',kw:'NEFROLOGO',slug:'nefrologo',total:154,towns:{'Mayagüez':19,'Aguadilla':4,'Cabo Rojo':3,'Añasco':1,'San Germán':1}},
-    endocrinologo:{label:'endocrinólogo',ref:'endocrinología',kw:'ENDOCRINOLOGO',slug:'endocrinologo',total:158,towns:{'Mayagüez':14,'San Germán':4,'Aguadilla':3,'Cabo Rojo':1}},
-    neurologo:{label:'neurólogo',ref:'neurología',kw:'NEUROLOGO',slug:'neurologo',total:166,towns:{'Mayagüez':7,'Aguadilla':4,'San Germán':2}},
+    endocrinologo:{label:'endocrinólogo',ref:'endocrinología',kw:'ENDOCRINOLOGO',slug:'endocrinólogo',total:158,towns:{'Mayagüez':14,'San Germán':4,'Aguadilla':3,'Cabo Rojo':1}},
+    neurologo:{label:'neurólogo',ref:'neurología',kw:'NEUROLOGO',slug:'neurólogo',total:166,towns:{'Mayagüez':7,'Aguadilla':4,'San Germán':2}},
     ortopeda:{label:'ortopeda',ref:'ortopedia',kw:'ORTOPEDA',slug:'ortopeda',total:152,towns:{'Mayagüez':8,'Aguadilla':3,'San Germán':3}}
   };
   var DIST={'Cabo Rojo':25,'San Germán':20,'Mayagüez':0,'Lajas':30,'Hormigueros':12,'Sabana Grande':25,'Añasco':18,'Aguadilla':40};
@@ -2738,9 +2738,9 @@ const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:n
   {s:'gastroenterólogo',l:'Gastroenterólogo',e:'🩺',kw:'GASTRO',md:true,t:203,r:{Oeste:19,Norte:23,Centro:3,Sur:15,Este:22,Metro:121}},
   {s:'oftalmólogo',l:'Oftalmólogo (ojos)',e:'👁️',kw:'OFTALMOLOGO',md:true,t:239,r:{Oeste:27,Norte:18,Centro:2,Sur:18,Este:24,Metro:150}},
   {s:'ortopeda',l:'Ortopeda',e:'🦴',kw:'ORTOPEDA',md:true,t:151,r:{Oeste:14,Norte:9,Centro:2,Sur:11,Este:20,Metro:95}},
-  {s:'neurologo',l:'Neurólogo',e:'🧠',kw:'NEUROLOGO',md:true,t:165,r:{Oeste:15,Norte:6,Centro:1,Sur:7,Este:28,Metro:108}},
+  {s:'neurólogo',l:'Neurólogo',e:'🧠',kw:'NEUROLOGO',md:true,t:166,r:{Oeste:16,Norte:6,Centro:1,Sur:7,Este:28,Metro:108}},
   {s:'urólogo',l:'Urólogo',e:'🩺',kw:'UROLOGO',md:true,t:120,r:{Oeste:10,Norte:7,Centro:3,Sur:17,Este:18,Metro:65}},
-  {s:'endocrinologo',l:'Endocrinólogo (diabetes)',e:'🩺',kw:'ENDOCRINOLOGO',md:true,t:158,r:{Oeste:16,Norte:11,Centro:1,Sur:14,Este:21,Metro:95}},
+  {s:'endocrinólogo',l:'Endocrinólogo (diabetes)',e:'🩺',kw:'ENDOCRINOLOGO',md:true,t:158,r:{Oeste:16,Norte:11,Centro:1,Sur:14,Este:21,Metro:95}},
   {s:'nefrólogo',l:'Nefrólogo (riñón)',e:'🫘',kw:'NEFROLOGO',md:true,t:155,r:{Oeste:24,Norte:14,Centro:2,Sur:24,Este:24,Metro:67}},
   {s:'neumólogo',l:'Neumólogo (pulmones)',e:'🫁',kw:'NEUMOLOGO',md:true,t:146,r:{Oeste:15,Norte:8,Centro:0,Sur:19,Este:20,Metro:84}},
   {s:'oncólogo',l:'Oncólogo / Hematólogo',e:'🎗️',kw:'ONCOLOGO',md:true,t:143,r:{Oeste:12,Norte:7,Centro:1,Sur:14,Este:23,Metro:85}},
@@ -2777,7 +2777,7 @@ const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:n
   {s:'terapeuta del habla',l:'Terapeuta del Habla',e:'🗣️',kw:'HABLA',md:false,t:1167,r:{Oeste:152,Norte:132,Centro:25,Sur:112,Este:205,Metro:540}},
   {s:'terapista físico',l:'Terapista Físico',e:'🏃',kw:'TERAPIA',md:false,t:604,r:{Oeste:100,Norte:65,Centro:14,Sur:48,Este:73,Metro:304}},
   {s:'terapista ocupacional',l:'Terapista Ocupacional',e:'🖐️',kw:'OCUPACIONAL',md:false,t:502,r:{Oeste:69,Norte:56,Centro:10,Sur:47,Este:75,Metro:245}},
-  {s:'quiropractico',l:'Quiropráctico',e:'🦴',kw:'QUIROPRACTICO',md:false,t:612,r:{Oeste:79,Norte:59,Centro:9,Sur:68,Este:95,Metro:302}},
+  {s:'quiropráctico',l:'Quiropráctico',e:'🦴',kw:'QUIROPRACTICO',md:false,t:614,r:{Oeste:82,Norte:59,Centro:9,Sur:67,Este:95,Metro:302}},
   {s:'consejero',l:'Consejero Profesional',e:'💬',kw:'CONSEJERO',md:false,t:608,r:{Oeste:53,Norte:45,Centro:18,Sur:90,Este:110,Metro:292}},
   {s:'trabajador social',l:'Trabajador Social Clínico',e:'🤝',kw:'TRABAJADOR',md:false,t:2301,r:{Oeste:291,Norte:191,Centro:99,Sur:410,Este:390,Metro:918}},
   {s:'terapeuta de familia',l:'Terapeuta de Pareja y Familia',e:'👥',kw:'PAREJA',md:false,t:16,r:{Oeste:3,Norte:1,Centro:0,Sur:0,Este:3,Metro:9}},
@@ -2845,7 +2845,7 @@ function planLabel(v: string): string { return (PR_PLANS.find(p => p.v === v) ||
 const SYMPTOM_MAP: Array<{ k: string[]; s: string[]; u?: number }> = [
   { k: ['pecho', 'corazon', 'palpitacion', 'presion alta', 'hipertension', 'arritmia', 'chest', 'heart'], s: ['cardiólogo'], u: 1 },
   { k: ['aire', 'respirar', 'respiracion', 'asma', 'tos', 'pulmon', 'ahogo', 'apnea', 'breath', 'lungs'], s: ['neumólogo'], u: 1 },
-  { k: ['azucar', 'diabetes', 'tiroides', 'hormona', 'insulina'], s: ['endocrinologo'] },
+  { k: ['azucar', 'diabetes', 'tiroides', 'hormona', 'insulina'], s: ['endocrinólogo'] },
   { k: ['piel', 'acne', 'mancha', 'lunar', 'salpullido', 'sarpullido', 'eczema', 'psoriasis', 'skin', 'rash'], s: ['dermatólogo'] },
   { k: ['estomago', 'reflujo', 'acidez', 'gastritis', 'colon', 'estrenimiento', 'diarrea', 'higado', 'colonoscopia', 'stomach'], s: ['gastroenterólogo'] },
   { k: ['rinon', 'rinones', 'dialisis', 'kidney'], s: ['nefrólogo'] },
@@ -2854,7 +2854,7 @@ const SYMPTOM_MAP: Array<{ k: string[]; s: string[]; u?: number }> = [
   { k: ['terapia', 'duelo', 'estres', 'therapy'], s: ['psicólogo'] },
   { k: ['hueso', 'rodilla', 'hombro', 'fractura', 'cadera', 'knee', 'bone'], s: ['ortopeda'] },
   { k: ['espalda', 'ciatica', 'dolor muscular', 'rehabilitacion', 'back pain'], s: ['fisiatra', 'ortopeda'] },
-  { k: ['cabeza', 'migrana', 'jaqueca', 'mareo', 'convulsion', 'temblor', 'memoria', 'alzheimer', 'parkinson', 'derrame', 'headache', 'seizure'], s: ['neurologo'], u: 1 },
+  { k: ['cabeza', 'migrana', 'jaqueca', 'mareo', 'convulsion', 'temblor', 'memoria', 'alzheimer', 'parkinson', 'derrame', 'headache', 'seizure'], s: ['neurólogo'], u: 1 },
   { k: ['ojo', 'ojos', 'vision', 'catarata', 'glaucoma', 'eye'], s: ['oftalmólogo'] },
   { k: ['espejuelos', 'vista', 'lentes', 'glasses'], s: ['optómetra'] },
   { k: ['oido', 'garganta', 'sinusitis', 'ronquera', 'vertigo', 'nariz', 'ronquido', 'ear', 'throat'], s: ['otorrinolaringólogo'] },
@@ -2955,7 +2955,7 @@ const INTENT_PAGES: IntentPage[] = [
       { h: 'Amplía la región', p: 'El mismo especialista con 4 meses de espera en tu región puede tener espacio en 2 semanas en la de al lado. En el registro ves cuántos hay en cada región, con teléfono.' },
       { h: 'Pregunta por telemedicina', p: 'Pa\' seguimiento y discutir resultados, muchos atienden por video. A veces la primera evaluación también. Preguntar no cuesta.' },
     ],
-    specs: ['cardiólogo', 'neurologo', 'gastroenterólogo', 'endocrinologo', 'dermatólogo'],
+    specs: ['cardiólogo', 'neurólogo', 'gastroenterólogo', 'endocrinólogo', 'dermatólogo'],
     faq: [
       { q: '¿Cómo consigo cita más rápido con un especialista en Puerto Rico?', a: 'Pide el referido a tu médico primario por teléfono el mismo día, pide que te incluyan en la lista de cancelaciones de la oficina, llama entre 8 y 9 de la mañana, y considera especialistas de regiones vecinas, donde la espera puede ser semanas en vez de meses.' },
       { q: '¿Qué es la lista de cancelaciones de una oficina médica?', a: 'Es una lista de pacientes dispuestos a tomar espacios que se liberan cuando alguien cancela su cita. Casi todas las oficinas la tienen, pero hay que pedirla. Es una de las formas más efectivas de adelantar una cita.' },
@@ -3009,7 +3009,7 @@ const INTENT_PAGES: IntentPage[] = [
       { h: 'Cuando escojas plan nuevo, pregunta por la red', p: 'Aquí la mayoría de los planes Medicare son Advantage con redes cerradas. El especialista que quieres puede no estar en la red del plan que te están vendiendo. Verifica antes de firmar.' },
       { h: 'Mira qué especialistas hay en tu región antes de escoger pueblo', p: 'Hay regiones enteras sin ciertos especialistas. Si tienes una condición, revisa el registro y el mapa de desiertos médicos antes de decidir dónde vivir.' },
     ],
-    specs: ['cardiólogo', 'endocrinologo', 'psiquiatra', 'reumatólogo'],
+    specs: ['cardiólogo', 'endocrinólogo', 'psiquiatra', 'reumatólogo'],
     faq: [
       { q: '¿Mi plan médico de Estados Unidos funciona en Puerto Rico?', a: 'Depende. Medicare Original funciona en Puerto Rico porque es parte de Estados Unidos. Los planes Medicare Advantage y la mayoría de los planes de empleador tienen redes locales y casi nunca cubren igual en la isla. Llama a tu plan antes de tu primera cita.' },
       { q: '¿Necesito referido para ver un especialista en Puerto Rico?', a: 'En la mayoría de los casos sí. El sistema en Puerto Rico funciona por referido del médico primario, y muchas oficinas de especialistas no dan cita sin uno. Lo primero al llegar es conseguir médico primario.' },
@@ -3225,7 +3225,7 @@ ${regDisclaimer(en)}
 // Data SIEMPRE de las vistas canónicas (v_registro_muni_ratio / v_registro_muni_spec) — nunca
 // places.region crudo (lección 2026-07-05: el mapeo municipio→región de places produce artefactos).
 const PUEBLO_REGION_CAP: Record<string, string> = { metro: 'Metro', oeste: 'Oeste', norte: 'Norte', sur: 'Sur', este: 'Este', centro: 'Centro' }
-const PUEBLO_HIGH_NEED = ['psiquiatra', 'cardiólogo', 'pediatra', 'ginecólogo', 'geriatra', 'neumólogo', 'endocrinologo', 'oncólogo', 'neurologo', 'gastroenterólogo']
+const PUEBLO_HIGH_NEED = ['psiquiatra', 'cardiólogo', 'pediatra', 'ginecólogo', 'geriatra', 'neumólogo', 'endocrinólogo', 'oncólogo', 'neurólogo', 'gastroenterólogo']
 const HPSA_DISC_ES: Record<string, string> = { 'Primary Care': 'cuidado primario', 'Dental Health': 'salud dental', 'Mental Health': 'salud mental', primary: 'cuidado primario', dental: 'salud dental', mental: 'salud mental' }
 const HPSA_DISC_EN: Record<string, string> = { primary: 'primary care', dental: 'dental health', mental: 'mental health' }
 // Dinero local ya entrando por la designación (bullets por municipio, con fecha + fuente — refresh manual semestral)
@@ -3451,10 +3451,10 @@ ${SHARE_COPY_SCRIPT}`
     hpsaMental.manual_note
       ? escapeHtml(hpsaMental.manual_note)
       : te('La designación mide citas ambulatorias disponibles pa\' bajos ingresos, no el total de oficinas. Por eso el número federal y la lista de arriba pueden decir cosas distintas y las dos ser ciertas.', 'The designation measures outpatient appointments available to low-income patients, not total offices. That is why the federal number and the list above can say different things and both be true.')))
-  const escasos = specN('cardiólogo') + specN('oncólogo') + specN('neurologo')
+  const escasos = specN('cardiólogo') + specN('oncólogo') + specN('neurólogo')
   if (specN('farmacéutico') >= 10 && escasos > 0 && escasos <= 5) contraCards.push(contraCard(
     te(`${specLink('farmacéutico', `<strong>${specN('farmacéutico')} farmacéuticos</strong>`)} pa' despacharte la receta.`, `${specLink('farmacéutico', `<strong>${specN('farmacéutico')} pharmacists</strong>`)} to fill your prescription.`),
-    te(`${specLink('cardiólogo', `<strong>${specN('cardiólogo')} cardiólogo${specN('cardiólogo') === 1 ? '' : 's'}</strong>`)}, ${specLink('oncólogo', `<strong>${specN('oncólogo')} oncólogo${specN('oncólogo') === 1 ? '' : 's'}</strong>`)} y ${specLink('neurologo', `<strong>${specN('neurologo')} neurólogo${specN('neurologo') === 1 ? '' : 's'}</strong>`)} pa' escribirla.`, `${specLink('cardiólogo', `<strong>${specN('cardiólogo')} cardiologist${specN('cardiólogo') === 1 ? '' : 's'}</strong>`)}, ${specLink('oncólogo', `<strong>${specN('oncólogo')} oncologist${specN('oncólogo') === 1 ? '' : 's'}</strong>`)}, and ${specLink('neurologo', `<strong>${specN('neurologo')} neurologist${specN('neurologo') === 1 ? '' : 's'}</strong>`)} to write it.`),
+    te(`${specLink('cardiólogo', `<strong>${specN('cardiólogo')} cardiólogo${specN('cardiólogo') === 1 ? '' : 's'}</strong>`)}, ${specLink('oncólogo', `<strong>${specN('oncólogo')} oncólogo${specN('oncólogo') === 1 ? '' : 's'}</strong>`)} y ${specLink('neurólogo', `<strong>${specN('neurólogo')} neurólogo${specN('neurólogo') === 1 ? '' : 's'}</strong>`)} pa' escribirla.`, `${specLink('cardiólogo', `<strong>${specN('cardiólogo')} cardiologist${specN('cardiólogo') === 1 ? '' : 's'}</strong>`)}, ${specLink('oncólogo', `<strong>${specN('oncólogo')} oncologist${specN('oncólogo') === 1 ? '' : 's'}</strong>`)}, and ${specLink('neurólogo', `<strong>${specN('neurólogo')} neurologist${specN('neurólogo') === 1 ? '' : 's'}</strong>`)} to write it.`),
     te('La cadena está completa al final y rota al principio: el medicamento llega fácil, la receta no.', 'The chain is complete at the end and broken at the start: the medicine arrives easily, the prescription does not.')))
   const contradiccionesBlock = contraCards.length ? `
 <h2 id="contradicciones">${te('Los números que no cuadran (hasta que ves el tercero)', 'The numbers that do not add up (until you see the third one)')}</h2>
@@ -3675,12 +3675,19 @@ function starRating(r: number): string {
 
 // =============== /cambios — historial y roadmap del registro (registromedicopr.com) ===============
 async function handleCambios(req: any, res: any) {
-  // Live count so "última actualización" siempre cuadra con la data real
-  const { count: npiCount } = await supabase
-    .from('places').select('id', { count: 'exact', head: true })
-    .not('npi', 'is', null).eq('status', 'open')
-    .in('subcategory', REGISTRY_SPECS.map(x => x.s))
+  // Live counts so la página siempre cuadra con la data real.
+  // total = lo que vive en las categorías del registro · totalBase = todo lo que tiene NPI en la base
+  // (incluye farmacias como negocio, equipo médico y otros que se sirven desde el mapa).
+  const [{ count: npiCount }, { count: baseCount }] = await Promise.all([
+    supabase.from('places').select('id', { count: 'exact', head: true })
+      .not('npi', 'is', null).eq('status', 'open')
+      .in('subcategory', REGISTRY_SPECS.map(x => x.s)),
+    supabase.from('places').select('id', { count: 'exact', head: true })
+      .not('npi', 'is', null).eq('status', 'open'),
+  ])
   const total = (npiCount ?? 20700).toLocaleString('en-US')
+  const totalBase = (baseCount ?? 29700).toLocaleString('en-US')
+  const nCats = REGISTRY_SPECS.length
 
   const body = `
 <h1>Historial del registro</h1>
@@ -3696,9 +3703,14 @@ async function handleCambios(req: any, res: any) {
 </div>
 
 <div class="not-prose mt-4 flex flex-wrap gap-2 text-xs">
-  <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-user-doctor"></i> ${total} en el registro hoy</span>
+  <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-user-doctor"></i> ${total} en las ${nCats} categorías del registro</span>
   <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-clock-rotate-left"></i> Última actualización: 1 agosto 2026</span>
 </div>
+
+<details class="not-prose mt-3">
+  <summary class="text-sm font-semibold text-teal-700 cursor-pointer select-none">¿Por qué a veces ves 2 números distintos?</summary>
+  <p class="text-sm text-slate-600 mt-2 leading-relaxed">Porque contamos 2 cosas. <strong>${total}</strong> es lo que vive en las ${nCats} categorías de este registro (médicos, terapeutas, hospitales, laboratorios…). En la base completa hay <strong>${totalBase}</strong> con NPI federal: la diferencia son farmacias como negocio, suplidores de equipo médico y otros que se sirven desde <a href="https://www.mapadecaborojo.com" class="text-teal-700">el mapa</a>, no desde el registro. Los totales del récord de abajo usan la base completa.</p>
+</details>
 
 <h2>Cómo empezó</h2>
 <p>Esto empezó como un favor. Un conocido me preguntó por un especialista y le pasé una lista que yo había armado pa' mí, sacada del registro federal NPPES. Si le servía a él, le servía a cualquiera. La publiqué gratis.</p>
@@ -4244,9 +4256,11 @@ const REGISTRY_SUBS = new Set(REGISTRY_SPECS.map(x => x.s))
 async function handleRegistroData(req: any, res: any) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8')
   try {
-    const spec = String(req.query.spec || '')
+    // Resolver por slug normalizado — tolera specs con o sin acento (páginas cacheadas viejas)
+    const specObj = SPEC_BY_URL[specToUrl(String(req.query.spec || ''))]
+    const spec = specObj?.s || ''
     const region = String(req.query.region || '')
-    if (!REGISTRY_SUBS.has(spec)) { res.status(200).send(JSON.stringify({ providers: [] })); return }
+    if (!spec || !REGISTRY_SUBS.has(spec)) { res.status(200).send(JSON.stringify({ providers: [] })); return }
     let q = supabase
       .from('places')
       .select('name,municipality,phone,npi,slug,accepted_plans')
@@ -5747,7 +5761,7 @@ async function handleRegistroPuedoVolver(req: any, res: any) {
   const PICKS: Array<[string, string]> = [
     ['cardiólogo', '❤️'],
     ['nefrólogo', '🫘'],
-    ['endocrinologo', '🩸'],
+    ['endocrinólogo', '🩸'],
     ['geriatra', '🧓'],
     ['pediatra', '🧒'],
     ['ginecólogo', '🩺'],
@@ -10070,7 +10084,7 @@ ${renderAlertas()}
 <div class="not-prose space-y-4 mt-4">
   <div class="bg-white border border-slate-200 rounded-xl p-5">
     <div class="flex items-center justify-between gap-2"><span class="text-xs font-bold uppercase tracking-widest text-slate-400">Palabra #1 · Suelo</span><span class="text-xs font-bold bg-amber-50 border border-amber-200 text-amber-800 px-2 py-0.5 rounded-full">⏳ Abierta</span></div>
-    <p class="font-bold text-slate-900 mt-2">El próximo desarrollo turístico grande de Cabo Rojo va a caer sobre parcelas que ya están calificadas desde 2010.</p>
+    <p class="font-bold text-slate-900 mt-2">El próximo desarrollo turístico grande de Cabo Rojo va a caer sobre parcelas que ya están calificadas desde 2010. Y cuando se anuncie "la nueva inversión", la calificación va a tener más de 15 años de vieja.</p>
     <p class="text-sm text-slate-600 mt-1">La data: quedan cientos de cuerdas de Distrito Turístico Selectivo calificadas y sin proyecto anunciado, concentradas en Boquerón y Pedernales, con número de catastro. La lista completa está publicada en <a href="https://www.mapadecaborojo.com/suelo" class="text-teal-700 font-semibold">/suelo</a>.</p>
     <p class="text-xs text-slate-500 mt-2">📅 Chequeo: cada 6 meses · próximo <strong>1 de febrero de 2027</strong></p>
   </div>
@@ -10103,6 +10117,30 @@ ${renderAlertas()}
     <p class="font-bold text-slate-900 mt-2">El precipicio de Medicaid no se resuelve temprano: no habrá ley firmada antes del 1 de julio de 2027. Se parchea en los últimos 90 días, o después de vencido.</p>
     <p class="text-sm text-slate-600 mt-1">La data: el financiamiento cae de 76% a 55% el 30 de septiembre de 2027 por estatuto, no hay legislación aprobada, y el patrón histórico del Congreso con los parchos de Medicaid pa' PR (2019, 2022) fue siempre de última hora.</p>
     <p class="text-xs text-slate-500 mt-2">📅 Chequeo: <strong>1 de julio de 2027</strong> y <strong>30 de septiembre de 2027</strong></p>
+  </div>
+  <div class="bg-white border-2 border-slate-900 rounded-xl p-5">
+    <div class="flex items-center justify-between gap-2"><span class="text-xs font-bold uppercase tracking-widest text-slate-900">Palabra #7 · El éxodo, medido</span><span class="text-xs font-bold bg-amber-50 border border-amber-200 text-amber-800 px-2 py-0.5 rounded-full">⏳ Abierta</span></div>
+    <p class="font-bold text-slate-900 mt-2">El 1 de agosto de 2026 quedó grabado un número que nadie más tiene: <strong>4,031 médicos generalistas</strong> con práctica activa en Puerto Rico, contados 1 por 1 en el registro federal. El 1 de agosto de 2027 corro el mismo conteo, con el mismo método, y van a ser <strong>menos</strong>.</p>
+    <p class="text-sm text-slate-600 mt-1">La data: la proyección de que el 55% de los médicos activos se retira pa'l 2030, el patrón migratorio, y un baseline que quedó congelado hoy con método reproducible. Nadie más puede correr este chequeo, porque nadie más guardó el punto de partida. Ojalá pierda esta.</p>
+    <p class="text-xs text-slate-500 mt-2">📅 Chequeo: <strong>1 de agosto de 2027</strong>, misma ingesta, mismo método</p>
+  </div>
+  <div class="bg-white border-2 border-slate-900 rounded-xl p-5">
+    <div class="flex items-center justify-between gap-2"><span class="text-xs font-bold uppercase tracking-widest text-slate-900">Palabra #8 · El cero que no se mueve</span><span class="text-xs font-bold bg-amber-50 border border-amber-200 text-amber-800 px-2 py-0.5 rounded-full">⏳ Abierta</span></div>
+    <p class="font-bold text-slate-900 mt-2">Cabo Rojo tiene 47,000 habitantes y hoy tiene 0 neumólogos, 0 urólogos y 0 fisiatras con práctica en el municipio. El 1 de agosto de 2027 va a seguir en 0, 0 y 0 — a menos que alguien active el incentivo federal que lleva años sin cobrarse.</p>
+    <p class="text-sm text-slate-600 mt-1">La data: el registro federal NPPES hoy (verificable en <a href="https://registromedicopr.com/pueblo/cabo-rojo" class="text-teal-700 font-semibold">el registro</a>), y el repago de préstamos de hasta $75,000 por médico que existe y no se usa porque falta el "sitio aprobado" (<a href="/registro/estado" class="text-teal-700 font-semibold">el récord del cupón →</a>). Esta palabra está diseñada pa' que alguien me la rompa. Por favor, rómpanla.</p>
+    <p class="text-xs text-slate-500 mt-2">📅 Chequeo: <strong>1 de agosto de 2027</strong></p>
+  </div>
+  <div class="bg-white border-2 border-slate-900 rounded-xl p-5">
+    <div class="flex items-center justify-between gap-2"><span class="text-xs font-bold uppercase tracking-widest text-slate-900">Palabra #9 · Los empleos fantasma</span><span class="text-xs font-bold bg-amber-50 border border-amber-200 text-amber-800 px-2 py-0.5 rounded-full">⏳ Abierta</span></div>
+    <p class="font-bold text-slate-900 mt-2">El desglose de los "más de 17,000 empleos" de Esencia no va a aparecer. Llega el 31 de diciembre de 2026 y todavía no habrá un documento público que diga cuántos son directos y cuántos son permanentes.</p>
+    <p class="text-sm text-slate-600 mt-1">La data: el día del anuncio los empleos crecieron por 8 (de 2,000 prometidos a "más de 17,000 directos, indirectos e inducidos") sin desglose. Contexto: Cabo Rojo entero tiene 16,811 personas empleadas. Un FOIA pidiendo el desglose está en camino; si el documento aparece, esta palabra se marca perdida con gusto.</p>
+    <p class="text-xs text-slate-500 mt-2">📅 Chequeo: <strong>31 de diciembre de 2026</strong></p>
+  </div>
+  <div class="bg-white border-2 border-slate-900 rounded-xl p-5">
+    <div class="flex items-center justify-between gap-2"><span class="text-xs font-bold uppercase tracking-widest text-slate-900">Palabra #10 · La estabilización que no es</span><span class="text-xs font-bold bg-amber-50 border border-amber-200 text-amber-800 px-2 py-0.5 rounded-full">⏳ Abierta</span></div>
+    <p class="font-bold text-slate-900 mt-2">Cuando salga el próximo estimado del Censo, el titular va a decir que la población de Puerto Rico "se estabilizó". Y la población en edad de trabajar va a haber bajado otra vez.</p>
+    <p class="text-sm text-slate-600 mt-1">La data: el total puede aplanarse (retorno de retirados + menos salida neta) mientras el que trabaja y cría sigue yéndose. La participación laboral ya está en 40.7%. El total es el titular; la composición es el país. El récord municipio por municipio vive en <a href="/retiro" class="text-teal-700 font-semibold">El Huracán Lento →</a></p>
+    <p class="text-xs text-slate-500 mt-2">📅 Chequeo: cuando salga el vintage 2026 del Censo (<strong>~mediados de 2027</strong>)</p>
   </div>
 </div>
 
@@ -12347,9 +12385,9 @@ const SPEC_INFO: Record<string, { treats: string; whenToGo: string; note: string
   'gastroenterólogo': { treats: 'El médico del estómago, los intestinos y la digestión.', whenToGo: 'Cuando tienes acidez constante, dolor de barriga, estreñimiento o problemas para ir al baño.', note: '' },
   'oftalmólogo': { treats: 'El médico de los ojos y la vista.', whenToGo: 'Cuando ves borroso, tienes cataratas, glaucoma o necesitas operación de los ojos.', note: 'Es médico de los ojos. El optómetra solo te examina y receta espejuelos.' },
   'ortopeda': { treats: 'El médico de los huesos, las coyunturas y los músculos.', whenToGo: 'Cuando te fracturas, te duele una rodilla o cadera, o necesitas reemplazo de coyuntura.', note: '' },
-  'neurologo': { treats: 'El médico del cerebro y los nervios.', whenToGo: 'Cuando tienes dolores de cabeza fuertes, convulsiones, temblor o pérdida de memoria.', note: '' },
+  'neurólogo': { treats: 'El médico del cerebro y los nervios.', whenToGo: 'Cuando tienes dolores de cabeza fuertes, convulsiones, temblor o pérdida de memoria.', note: '' },
   'urólogo': { treats: 'El médico de los riñones, la vejiga y las partes íntimas del hombre.', whenToGo: 'Cuando te arde o cuesta orinar, ves sangre en la orina o tienes problemas de próstata.', note: '' },
-  'endocrinologo': { treats: 'El médico de la diabetes, la tiroides y las hormonas.', whenToGo: 'Cuando tienes el azúcar alta, problemas de tiroides o cambios fuertes de peso.', note: '' },
+  'endocrinólogo': { treats: 'El médico de la diabetes, la tiroides y las hormonas.', whenToGo: 'Cuando tienes el azúcar alta, problemas de tiroides o cambios fuertes de peso.', note: '' },
   'nefrólogo': { treats: 'El médico de los riñones.', whenToGo: 'Cuando tus riñones no están trabajando bien o necesitas diálisis.', note: '' },
   'neumólogo': { treats: 'El médico de los pulmones y la respiración.', whenToGo: 'Cuando tienes asma, te falta el aire, toses mucho o usas oxígeno.', note: '' },
   'oncólogo': { treats: 'El médico que trata el cáncer.', whenToGo: 'Cuando te diagnostican cáncer y necesitas tratamiento como quimioterapia.', note: '' },
@@ -12385,7 +12423,7 @@ const SPEC_INFO: Record<string, { treats: string; whenToGo: string; note: string
   'terapeuta del habla': { treats: 'El profesional que ayuda con el habla, el lenguaje y hasta con tragar.', whenToGo: 'Cuando el nene no habla como se espera pa\' su edad, o después de un derrame que afectó el habla.', note: 'Tiene licencia, pero no es médico (MD).' },
   'terapista físico': { treats: 'El profesional que te ayuda a recuperar fuerza y movimiento con ejercicios.', whenToGo: 'Después de una operación, una caída o una lesión, cuando el médico te receta terapia.', note: 'Tiene licencia, pero no es médico (MD).' },
   'terapista ocupacional': { treats: 'El profesional que te ayuda a volver a hacer las tareas de la vida diaria.', whenToGo: 'Después de un derrame o lesión, cuando cuesta vestirse, cocinar o trabajar como antes.', note: 'Tiene licencia, pero no es médico (MD).' },
-  'quiropractico': { treats: 'El profesional que ajusta la espalda y las coyunturas.', whenToGo: 'Cuando tienes dolor de espalda o cuello y quieres tratamiento sin medicamento.', note: 'Es doctor en quiropráctica (DC), no médico (MD).' },
+  'quiropráctico': { treats: 'El profesional que ajusta la espalda y las coyunturas.', whenToGo: 'Cuando tienes dolor de espalda o cuello y quieres tratamiento sin medicamento.', note: 'Es doctor en quiropráctica (DC), no médico (MD).' },
   'consejero': { treats: 'El profesional que da consejería y apoyo emocional.', whenToGo: 'Cuando necesitas hablar con alguien: estrés, duelo, ansiedad o problemas de la vida.', note: 'Tiene licencia, pero no es médico (MD) y no receta medicamentos.' },
   'trabajador social': { treats: 'El profesional que ayuda con salud mental y a navegar servicios y ayudas.', whenToGo: 'Cuando necesitas terapia o ayuda coordinando servicios pa\' ti o un familiar.', note: 'Tiene licencia, pero no es médico (MD).' },
   'terapeuta de familia': { treats: 'El profesional de terapia de pareja y de familia.', whenToGo: 'Cuando la pareja o la familia necesita ayuda pa\' comunicarse y resolver.', note: 'Tiene licencia, pero no es médico (MD).' },
@@ -12408,8 +12446,8 @@ function specToUrl(sub: string): string {
 }
 // English specialty labels (for ?lang=en on hub pages) — keyed by subcategory slug.
 const SPEC_LABEL_EN: Record<string, string> = {
-  'cardiólogo':'Cardiologist','psiquiatra':'Psychiatrist','fisiatra':'Physiatrist (Rehab)','ginecólogo':'OB-GYN','pediatra':'Pediatrician','dermatólogo':'Dermatologist','gastroenterólogo':'Gastroenterologist','oftalmólogo':'Ophthalmologist (Eye MD)','ortopeda':'Orthopedic Surgeon','neurologo':'Neurologist','urólogo':'Urologist','endocrinologo':'Endocrinologist (Diabetes)','nefrólogo':'Nephrologist (Kidney)','neumólogo':'Pulmonologist (Lungs)','oncólogo':'Oncologist / Hematologist','reumatólogo':'Rheumatologist (Arthritis)','geriatra':'Geriatrician','otorrinolaringólogo':'ENT (Ear, Nose & Throat)','infectólogo':'Infectious Disease','alergista':'Allergist / Immunologist','medicina de emergencia':'Emergency Medicine','cirujano general':'General Surgeon','anestesiólogo':'Anesthesiologist','radiólogo':'Radiologist','neurocirujano':'Neurosurgeon','cirujano plástico':'Plastic Surgeon','cirujano torácico':'Thoracic Surgeon','coloproctólogo':'Colorectal Surgeon','manejo de dolor':'Pain Management','psicólogo':'Psychologist','optómetra':'Optometrist','podiatra':'Podiatrist','dentista':'Dentist',
-  'internista':'Internal Medicine','medicina de familia':'Family Medicine','generalista':'General Practice','va':'VA (Veterans Affairs)','terapeuta del habla':'Speech-Language Pathologist','terapista físico':'Physical Therapist','terapista ocupacional':'Occupational Therapist','quiropractico':'Chiropractor','consejero':'Professional Counselor','trabajador social':'Clinical Social Worker','terapeuta de familia':'Marriage & Family Therapist','nutricionista':'Dietitian / Nutritionist','physician assistant':'Physician Assistant (PA)','enfermera practicante':'Nurse Practitioner (NP)','audiólogo':'Audiologist','partera':'Midwife','farmacéutico':'Pharmacist','hospital':'Hospital (CMS-certified)','cuidado en el hogar':'Home Health Agency','hospicio':'Hospice','hogar de envejecientes':'Nursing Home (SNF)','centro de diálisis':'Dialysis Center','urgent care':'Urgent Care','clínica comunitaria':'Community Health Center (FQHC)',
+  'cardiólogo':'Cardiologist','psiquiatra':'Psychiatrist','fisiatra':'Physiatrist (Rehab)','ginecólogo':'OB-GYN','pediatra':'Pediatrician','dermatólogo':'Dermatologist','gastroenterólogo':'Gastroenterologist','oftalmólogo':'Ophthalmologist (Eye MD)','ortopeda':'Orthopedic Surgeon','neurólogo':'Neurologist','urólogo':'Urologist','endocrinólogo':'Endocrinologist (Diabetes)','nefrólogo':'Nephrologist (Kidney)','neumólogo':'Pulmonologist (Lungs)','oncólogo':'Oncologist / Hematologist','reumatólogo':'Rheumatologist (Arthritis)','geriatra':'Geriatrician','otorrinolaringólogo':'ENT (Ear, Nose & Throat)','infectólogo':'Infectious Disease','alergista':'Allergist / Immunologist','medicina de emergencia':'Emergency Medicine','cirujano general':'General Surgeon','anestesiólogo':'Anesthesiologist','radiólogo':'Radiologist','neurocirujano':'Neurosurgeon','cirujano plástico':'Plastic Surgeon','cirujano torácico':'Thoracic Surgeon','coloproctólogo':'Colorectal Surgeon','manejo de dolor':'Pain Management','psicólogo':'Psychologist','optómetra':'Optometrist','podiatra':'Podiatrist','dentista':'Dentist',
+  'internista':'Internal Medicine','medicina de familia':'Family Medicine','generalista':'General Practice','va':'VA (Veterans Affairs)','terapeuta del habla':'Speech-Language Pathologist','terapista físico':'Physical Therapist','terapista ocupacional':'Occupational Therapist','quiropráctico':'Chiropractor','consejero':'Professional Counselor','trabajador social':'Clinical Social Worker','terapeuta de familia':'Marriage & Family Therapist','nutricionista':'Dietitian / Nutritionist','physician assistant':'Physician Assistant (PA)','enfermera practicante':'Nurse Practitioner (NP)','audiólogo':'Audiologist','partera':'Midwife','farmacéutico':'Pharmacist','hospital':'Hospital (CMS-certified)','cuidado en el hogar':'Home Health Agency','hospicio':'Hospice','hogar de envejecientes':'Nursing Home (SNF)','centro de diálisis':'Dialysis Center','urgent care':'Urgent Care','clínica comunitaria':'Community Health Center (FQHC)',
   'neonatólogo':'Neonatologist','cirujano vascular':'Vascular Surgeon','dentista pediátrico':'Pediatric Dentist','ortodoncista':'Orthodontist','cirujano oral':'Oral & Maxillofacial Surgeon','naturópata':'Naturopath','acupunturista':'Acupuncturist',
 }
 // English specialty explainers (for ?lang=en on hub pages).
@@ -12423,9 +12461,9 @@ const SPEC_INFO_EN: Record<string, { treats: string; whenToGo: string; note: str
   'gastroenterólogo':{treats:'The doctor for your stomach, intestines, and digestion.',whenToGo:'When you have constant heartburn, stomach pain, constipation, or trouble using the bathroom.',note:''},
   'oftalmólogo':{treats:'The doctor for your eyes and vision.',whenToGo:'When your vision is blurry, or you have cataracts, glaucoma, or need eye surgery.',note:'This is a medical eye doctor. An optometrist only examines your eyes and prescribes glasses.'},
   'ortopeda':{treats:'The doctor for your bones, joints, and muscles.',whenToGo:'When you break a bone, your knee or hip hurts, or you need a joint replacement.',note:''},
-  'neurologo':{treats:'The doctor for your brain and nerves.',whenToGo:'When you have severe headaches, seizures, tremors, or memory loss.',note:''},
+  'neurólogo':{treats:'The doctor for your brain and nerves.',whenToGo:'When you have severe headaches, seizures, tremors, or memory loss.',note:''},
   'urólogo':{treats:'The doctor for your kidneys, bladder, and men\'s reproductive health.',whenToGo:'When it burns or is hard to urinate, you see blood in your urine, or you have prostate problems.',note:''},
-  'endocrinologo':{treats:'The doctor for diabetes, thyroid, and hormones.',whenToGo:'When your blood sugar is high, you have thyroid problems, or major weight changes.',note:''},
+  'endocrinólogo':{treats:'The doctor for diabetes, thyroid, and hormones.',whenToGo:'When your blood sugar is high, you have thyroid problems, or major weight changes.',note:''},
   'nefrólogo':{treats:'The doctor for your kidneys.',whenToGo:'When your kidneys aren\'t working well or you need dialysis.',note:''},
   'neumólogo':{treats:'The doctor for your lungs and breathing.',whenToGo:'When you have asthma, shortness of breath, a bad cough, or you use oxygen.',note:''},
   'oncólogo':{treats:'The doctor who treats cancer.',whenToGo:'When you are diagnosed with cancer and need treatment such as chemotherapy.',note:''},
@@ -12461,7 +12499,7 @@ const SPEC_INFO_EN: Record<string, { treats: string; whenToGo: string; note: str
   'terapeuta del habla':{treats:'The professional who helps with speech, language, and even swallowing.',whenToGo:'When a child isn\'t talking as expected for their age, or after a stroke that affected speech.',note:'Licensed, but not a medical doctor (MD).'},
   'terapista físico':{treats:'The professional who helps you regain strength and movement with exercises.',whenToGo:'After surgery, a fall, or an injury, when your doctor prescribes therapy.',note:'Licensed, but not a medical doctor (MD).'},
   'terapista ocupacional':{treats:'The professional who helps you get back to daily-life tasks.',whenToGo:'After a stroke or injury, when dressing, cooking, or working is hard again.',note:'Licensed, but not a medical doctor (MD).'},
-  'quiropractico':{treats:'The professional who adjusts your back and joints.',whenToGo:'When you have back or neck pain and want treatment without medication.',note:'A doctor of chiropractic (DC), not an MD.'},
+  'quiropráctico':{treats:'The professional who adjusts your back and joints.',whenToGo:'When you have back or neck pain and want treatment without medication.',note:'A doctor of chiropractic (DC), not an MD.'},
   'consejero':{treats:'The professional who provides counseling and emotional support.',whenToGo:'When you need someone to talk to: stress, grief, anxiety, or life problems.',note:'Licensed, but not a medical doctor (MD); does not prescribe medication.'},
   'trabajador social':{treats:'The professional who helps with mental health and navigating services.',whenToGo:'When you need therapy or help coordinating services for yourself or a family member.',note:'Licensed, but not a medical doctor (MD).'},
   'terapeuta de familia':{treats:'The couples and family therapy professional.',whenToGo:'When a couple or family needs help communicating and working things out.',note:'Licensed, but not a medical doctor (MD).'},
