@@ -10064,6 +10064,50 @@ ${renderAlertas()}
 </ul>
 <p><strong>La regla de la casa:</strong> con lo que ya sabemos, se actúa (sección 3). Con lo que no sabemos, se pregunta mejor — no se inventa. La brecha entre las dos también es dato, y se publica.</p>
 
+<h2 id="palabra">Cógeme la palabra: predicciones con fecha</h2>
+<p>Lo de arriba es la lectura. Esto es otra cosa: <strong>predicciones concretas, cada una con su data y su fecha de chequeo.</strong> Cuando llegue la fecha, el chequeo se publica aquí mismo — gane o pierda. Una predicción sin fecha de verificación es opinión disfrazada. Estas tienen fecha.</p>
+
+<div class="not-prose space-y-4 mt-4">
+  <div class="bg-white border border-slate-200 rounded-xl p-5">
+    <div class="flex items-center justify-between gap-2"><span class="text-xs font-bold uppercase tracking-widest text-slate-400">Palabra #1 · Suelo</span><span class="text-xs font-bold bg-amber-50 border border-amber-200 text-amber-800 px-2 py-0.5 rounded-full">⏳ Abierta</span></div>
+    <p class="font-bold text-slate-900 mt-2">El próximo desarrollo turístico grande de Cabo Rojo va a caer sobre parcelas que ya están calificadas desde 2010.</p>
+    <p class="text-sm text-slate-600 mt-1">La data: quedan cientos de cuerdas de Distrito Turístico Selectivo calificadas y sin proyecto anunciado, concentradas en Boquerón y Pedernales, con número de catastro. La lista completa está publicada en <a href="https://www.mapadecaborojo.com/suelo" class="text-teal-700 font-semibold">/suelo</a>.</p>
+    <p class="text-xs text-slate-500 mt-2">📅 Chequeo: cada 6 meses · próximo <strong>1 de febrero de 2027</strong></p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-xl p-5">
+    <div class="flex items-center justify-between gap-2"><span class="text-xs font-bold uppercase tracking-widest text-slate-400">Palabra #2 · Vivienda</span><span class="text-xs font-bold bg-amber-50 border border-amber-200 text-amber-800 px-2 py-0.5 rounded-full">⏳ Abierta</span></div>
+    <p class="font-bold text-slate-900 mt-2">El próximo Censo (ACS 2025) va a mostrar a Cabo Rojo todavía en el top 2 de casas de veraneo de Puerto Rico, con menos unidades disponibles pa' vivir.</p>
+    <p class="text-sm text-slate-600 mt-1">La data: 5,190 viviendas de uso estacional (18% del inventario, ACS 2024), #2 de la isla detrás de San Juan, tendencia regional al alza, y 1,200 unidades de lujo nuevas aprobadas.</p>
+    <p class="text-xs text-slate-500 mt-2">📅 Chequeo: cuando salga el ACS 2025 (<strong>diciembre 2026</strong>)</p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-xl p-5">
+    <div class="flex items-center justify-between gap-2"><span class="text-xs font-bold uppercase tracking-widest text-slate-400">Palabra #3 · Agua</span><span class="text-xs font-bold bg-amber-50 border border-amber-200 text-amber-800 px-2 py-0.5 rounded-full">⏳ Abierta</span></div>
+    <p class="font-bold text-slate-900 mt-2">La pelea real de Esencia no va a ser ambiental. Va a ser de abasto de agua.</p>
+    <p class="text-sm text-slate-600 mt-1">La data: la demanda proyectada del proyecto contra un sistema que sirve a 20,356 personas, en una zona donde se evapora más del doble de lo que llueve, y con emergencia por sequía decretada con Cabo Rojo en la lista el mismo día de la aprobación (31 de julio de 2026).</p>
+    <p class="text-xs text-slate-500 mt-2">📅 Chequeo: cuando se publique la evaluación hidrológica del proyecto</p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-xl p-5">
+    <div class="flex items-center justify-between gap-2"><span class="text-xs font-bold uppercase tracking-widest text-slate-400">Palabra #4 · Silencio</span><span class="text-xs font-bold bg-amber-50 border border-amber-200 text-amber-800 px-2 py-0.5 rounded-full">⏳ Abierta</span></div>
+    <p class="font-bold text-slate-900 mt-2">La alcaldía de Cabo Rojo no va a contestar los próximos emails tampoco.</p>
+    <p class="text-sm text-slate-600 mt-1">La data: 7 emails enviados con preguntas específicas y verificables. 0 respuestas. El patrón es el récord.</p>
+    <p class="text-xs text-slate-500 mt-2">📅 Chequeo: <strong>1 de septiembre de 2026</strong></p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-xl p-5">
+    <div class="flex items-center justify-between gap-2"><span class="text-xs font-bold uppercase tracking-widest text-slate-400">Palabra #5 · Directorios médicos</span><span class="text-xs font-bold bg-amber-50 border border-amber-200 text-amber-800 px-2 py-0.5 rounded-full">⏳ Abierta</span></div>
+    <p class="font-bold text-slate-900 mt-2">La próxima edición del directorio del Plan Vital va a seguir contradiciendo al registro federal en 4 de cada 10 proveedores del oeste, o más.</p>
+    <p class="text-sm text-slate-600 mt-1">La data: el 1 de agosto de 2026 cruzamos 105 proveedores del oeste del directorio oficial (feb 2026) contra el registro federal NPPES en vivo: en 59 (56%), las 2 fuentes no coinciden en dónde practica el médico. Nadie corrige ninguna de las dos. El método queda guardado pa' repetirlo idéntico.</p>
+    <p class="text-xs text-slate-500 mt-2">📅 Chequeo: próxima edición del directorio (<strong>~febrero 2027</strong>), misma auditoría, mismo método</p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-xl p-5">
+    <div class="flex items-center justify-between gap-2"><span class="text-xs font-bold uppercase tracking-widest text-slate-400">Palabra #6 · Medicaid</span><span class="text-xs font-bold bg-amber-50 border border-amber-200 text-amber-800 px-2 py-0.5 rounded-full">⏳ Abierta</span></div>
+    <p class="font-bold text-slate-900 mt-2">El precipicio de Medicaid no se resuelve temprano: no habrá ley firmada antes del 1 de julio de 2027. Se parchea en los últimos 90 días, o después de vencido.</p>
+    <p class="text-sm text-slate-600 mt-1">La data: el financiamiento cae de 76% a 55% el 30 de septiembre de 2027 por estatuto, no hay legislación aprobada, y el patrón histórico del Congreso con los parchos de Medicaid pa' PR (2019, 2022) fue siempre de última hora.</p>
+    <p class="text-xs text-slate-500 mt-2">📅 Chequeo: <strong>1 de julio de 2027</strong> y <strong>30 de septiembre de 2027</strong></p>
+  </div>
+</div>
+
+<p class="text-sm text-slate-600 mt-4"><strong>La regla de este carril:</strong> cada palabra queda escrita con su fecha. Si fallo, aquí mismo se dice que fallé y qué aprendí del fallo. Eso es lo que ninguna bola de cristal hace, y es lo único que construye autoridad que no se puede copiar.</p>
+
 <div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
   <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">La predicción no es destino. Es lo que pasa si no escogemos otra cosa.</p>
   <p class="mt-2 text-sm text-slate-600 italic">Para escoger, primero hay que ver. Si te sirve, úsalo.</p>
@@ -10086,7 +10130,7 @@ ${SHARE_COPY_SCRIPT}
     about: 'Síntesis de los récords verificados de PR (salud, recuperación federal, agua, demanda) proyectada a 2030.',
     author: { '@type': 'Person', name: 'Angel Anderson' },
     publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
-    inLanguage: 'es', datePublished: '2026-07-05', url: 'https://puertoricosinfiltros.com/prediccion',
+    inLanguage: 'es', datePublished: '2026-07-05', dateModified: '2026-08-01', url: 'https://puertoricosinfiltros.com/prediccion',
   }
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
