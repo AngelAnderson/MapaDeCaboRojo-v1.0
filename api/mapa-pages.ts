@@ -2759,6 +2759,12 @@ const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:n
   {s:'cirujano torácico',l:'Cirujano Torácico',e:'🫁',kw:'TORACICO',md:true,t:15,r:{Oeste:1,Norte:1,Centro:0,Sur:2,Este:1,Metro:10}},
   {s:'coloproctólogo',l:'Coloproctólogo (colon/recto)',e:'🩺',kw:'COLOPROCTOLOGO',md:true,t:4,r:{Oeste:0,Norte:0,Centro:0,Sur:0,Este:0,Metro:4}},
   {s:'manejo de dolor',l:'Manejo de Dolor',e:'💢',kw:'DOLOR',md:true,t:5,r:{Oeste:0,Norte:0,Centro:0,Sur:1,Este:0,Metro:4}},
+  // ── Fase 6 (ago 2 2026): familias destapadas por el audit NUCC completo ──
+  {s:'patólogo',l:'Patólogo (laboratorio / biopsias)',e:'🔬',kw:'PATOLOGO',md:true,t:112,r:{Oeste:8,Norte:5,Centro:2,Sur:8,Este:5,Metro:84}},
+  {s:'medicina ocupacional',l:'Medicina Ocupacional y Preventiva',e:'👷',kw:'OCUPACIONAL',md:true,t:92,r:{Oeste:18,Norte:3,Sur:11,Este:18,Metro:42}},
+  {s:'hospitalista',l:'Hospitalista (medicina de hospital)',e:'🏥',kw:'HOSPITALISTA',md:true,t:53,r:{Oeste:2,Norte:2,Sur:4,Este:5,Metro:40}},
+  {s:'medicina nuclear',l:'Medicina Nuclear (estudios)',e:'⚛️',kw:'NUCLEAR',md:true,t:40,r:{Oeste:3,Norte:2,Centro:1,Sur:5,Este:5,Metro:24}},
+  {s:'genetista',l:'Genetista Clínico (ADN / enfermedades raras)',e:'🧬',kw:'GENETISTA',md:true,t:4,r:{Norte:1,Metro:3}},
   {s:'psicólogo',l:'Psicólogo (terapia)',e:'🧠',kw:'PSICOLOGO',md:false,t:1170,r:{Oeste:162,Norte:99,Centro:21,Sur:140,Este:159,Metro:588}},
   {s:'optómetra',l:'Optómetra (examen de vista)',e:'👓',kw:'OPTOMETRA',md:false,t:530,r:{Oeste:76,Norte:41,Centro:10,Sur:59,Este:82,Metro:262}},
   {s:'podiatra',l:'Podiatra (pies)',e:'🦶',kw:'PODIATRA',md:false,t:57,r:{Oeste:6,Norte:2,Centro:1,Sur:6,Este:9,Metro:33}},
@@ -2766,7 +2772,7 @@ const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:n
   // ── Fase 3 (jul 16 2026): sub-especialidades dentales + medicina alternativa ──
   {s:'dentista pediátrico',l:'Dentista Pediátrico (niños)',e:'🦷',kw:'DENTISTA',md:false,t:93,r:{Oeste:5,Norte:7,Centro:1,Sur:7,Este:17,Metro:54}},
   {s:'ortodoncista',l:'Ortodoncista (frenillos)',e:'😁',kw:'DENTISTA',md:false,t:88,r:{Oeste:7,Norte:9,Centro:1,Sur:11,Este:13,Metro:46}},
-  {s:'cirujano oral',l:'Cirujano Oral y Maxilofacial',e:'🦷',kw:'DENTISTA',md:false,t:52,r:{Oeste:4,Norte:5,Centro:1,Sur:4,Este:8,Metro:28}},
+  {s:'cirujano oral',l:'Cirujano Oral y Maxilofacial',e:'🦷',kw:'DENTISTA',md:false,t:56,r:{Oeste:6,Norte:5,Centro:1,Sur:4,Este:8,Metro:32}},
   {s:'naturópata',l:'Naturópata (medicina natural)',e:'🌿',kw:'NATUROPATA',md:false,t:142,r:{Oeste:14,Norte:7,Centro:2,Sur:9,Este:30,Metro:78}},
   {s:'acupunturista',l:'Acupunturista',e:'🪡',kw:'ACUPUNTURA',md:false,t:10,r:{Oeste:4,Norte:0,Centro:0,Sur:0,Este:3,Metro:2}},
   // ── Fase 2 (jul 2026): primaria + allied + facilidades NPI-2 ──
@@ -3721,21 +3727,22 @@ async function handleCambios(req: any, res: any) {
 <div class="not-prose space-y-4 mt-4">
   <div class="bg-white border-2 border-teal-300 rounded-xl p-5">
     <div class="text-xs font-bold uppercase tracking-widest text-teal-700 mb-1">2 agosto 2026 · Última actualización</div>
-    <p class="font-bold text-slate-900 text-lg m-0">Auditamos las 97 especialidades contra el registro federal: entraron 350 médicos más.</p>
-    <p class="text-sm text-slate-600 mt-2">El hueco de los radiólogos de ayer no era de radiología: era de clase. El registro federal clasifica a muchos médicos por su subespecialidad, y nuestra búsqueda solo veía la especialidad general. Auditamos las 97 taxonomías de médicos completas y entraron los que faltaban con práctica en PR.</p>
+    <p class="font-bold text-slate-900 text-lg m-0">Auditamos las 97 especialidades contra el registro federal: entraron 655 médicos y 5 categorías nuevas.</p>
+    <p class="text-sm text-slate-600 mt-2">El hueco de los radiólogos de esta madrugada no era de radiología: era de clase. El registro federal clasifica a muchos médicos por su subespecialidad, y nuestra búsqueda solo veía la especialidad general. Auditamos las 97 taxonomías de médicos completas y entraron los que faltaban con práctica en PR.</p>
     <details class="mt-2">
       <summary class="text-sm font-semibold text-teal-700 cursor-pointer select-none">Ver los detalles</summary>
       <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
         <li><strong>Los grupos grandes:</strong> 114 subespecialistas pediátricos (intensivo, gastro, pulmonar, hemato-oncología, nefrología, reumatología) · 65 de psiquiatría, incluyendo <strong>41 psiquiatras de niños y adolescentes</strong> que no aparecían · 44 de medicina de familia · 33 de medicina interna (intensivistas, sueño, adicciones, paliativo) · 25 obstetras y ginecólogas · 29 más entre cardiología, ortopedia, oftalmología, cirugía y otras.</li>
         <li><strong>El arreglo de raíz:</strong> la ingesta ahora consulta cada subespecialidad por su término federal exacto y filtra por el código NUCC de la familia. No puede volver a pasar.</li>
         <li><strong>Efecto en los números:</strong> los conteos por categoría y por región subieron en 27 categorías. El per-cápita municipal también se movió (Loíza pasó de 0.8 a 1.2 por 10 mil): el mapa de desiertos médicos estaba <em>subcontando</em>, la escasez real es un poco menos extrema de lo que decíamos, y lo corregimos porque el número honesto manda.</li>
-        <li><strong>Honestidad:</strong> quedan 334 médicos en PR de familias que este registro aún no lista como categoría (patólogos, medicina ocupacional, hospitalistas, medicina nuclear). Trabajan detrás de laboratorios y hospitales; estamos decidiendo si merecen categoría propia.</li>
+        <li><strong>5 categorías nuevas:</strong> 🔬 <a href="/registro" class="text-teal-700 font-semibold">Patólogo</a> (112, el médico que firma tu biopsia) · 👷 Medicina Ocupacional y Preventiva (92, casos del Fondo y exámenes de empleo, 18 en el oeste) · 🏥 Hospitalista (53) · ⚛️ Medicina Nuclear (40) · 🧬 Genetista Clínico (4 en toda la isla). También entraron 4 cirujanos orales y maxilofaciales médicos.</li>
+        <li><strong>Honestidad:</strong> quedan unas 29 personas de familias chiquitas sin categoría (examinadores médicos independientes, medicina integrativa, neuromusculoesquelética). Si alguna hace falta, se añade.</li>
       </ul>
     </details>
   </div>
 
   <div class="bg-white border border-slate-200 rounded-xl p-5">
-    <div class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">1 agosto 2026</div>
+    <div class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">2 agosto 2026</div>
     <p class="font-bold text-slate-900 m-0">Entraron 47 radiólogos que el registro no estaba viendo.</p>
     <p class="text-sm text-slate-600 mt-2">Un vecino buscó a un radiólogo de Cabo Rojo y no salía. Lo investigamos: el registro solo traía radiología diagnóstica, y quien tiene una subespecialidad como principal (imágenes del cuerpo, neuroradiología, vascular, pediátrica) se quedaba fuera. Corregido: la categoría subió de 253 a <strong>300</strong>.</p>
     <details class="mt-2">
@@ -12429,6 +12436,11 @@ const SPEC_INFO: Record<string, { treats: string; whenToGo: string; note: string
   'cirujano general': { treats: 'El médico que opera problemas comunes de la barriga y el cuerpo.', whenToGo: 'Cuando necesitas operarte de apendicitis, vesícula o una hernia.', note: '' },
   'anestesiólogo': { treats: 'El médico que te duerme y cuida durante una operación.', whenToGo: 'Lo conoces cuando te van a operar; él controla la anestesia y el dolor.', note: '' },
   'radiólogo': { treats: 'El médico que lee las radiografías, los CT scan y los sonogramas.', whenToGo: 'Trabaja detrás de tus pruebas de imágenes; casi siempre no lo ves en persona.', note: '' },
+  'patólogo': { treats: 'El médico que examina biopsias, laboratorios y tejidos pa\' ponerle nombre a la enfermedad.', whenToGo: 'Casi nunca lo ves en persona: tu médico le manda la muestra y él firma el diagnóstico.', note: '' },
+  'medicina ocupacional': { treats: 'Salud en el trabajo: casos del Fondo (CFSE), exámenes de empleo, exposiciones y prevención.', whenToGo: 'Si tu caso es por accidente o condición del trabajo, o te piden un examen médico ocupacional.', note: '' },
+  'hospitalista': { treats: 'El médico que te atiende mientras estás ingresado en el hospital.', whenToGo: 'No da citas de oficina: te lo asignan cuando estás hospitalizado y coordina tu cuidado hasta el alta.', note: '' },
+  'medicina nuclear': { treats: 'Estudios con dosis pequeñas de material radiactivo: tiroides, corazón, huesos.', whenToGo: 'Cuando tu médico ordena un estudio de medicina nuclear. Se llega por referido, no por cita directa.', note: '' },
+  'genetista': { treats: 'El médico que lee el ADN pa\' ponerle nombre a condiciones heredadas y enfermedades raras.', whenToGo: 'Cuando una condición corre en la familia o nadie logra nombrar lo que tienes. Se llega por referido.', note: '' },
   'neurocirujano': { treats: 'El médico que opera el cerebro, la columna y los nervios.', whenToGo: 'Cuando tienes un problema serio del cerebro o la columna que necesita operación.', note: '' },
   'cirujano plástico': { treats: 'El médico que reconstruye o arregla partes del cuerpo y la piel.', whenToGo: 'Cuando necesitas reconstrucción después de un accidente, quemadura u operación.', note: '' },
   'cirujano torácico': { treats: 'El médico que opera el pecho: los pulmones y la zona alrededor del corazón.', whenToGo: 'Cuando tienes un problema de los pulmones o el pecho que necesita operación.', note: '' },
@@ -12475,7 +12487,7 @@ function specToUrl(sub: string): string {
 }
 // English specialty labels (for ?lang=en on hub pages) — keyed by subcategory slug.
 const SPEC_LABEL_EN: Record<string, string> = {
-  'cardiólogo':'Cardiologist','psiquiatra':'Psychiatrist','fisiatra':'Physiatrist (Rehab)','ginecólogo':'OB-GYN','pediatra':'Pediatrician','dermatólogo':'Dermatologist','gastroenterólogo':'Gastroenterologist','oftalmólogo':'Ophthalmologist (Eye MD)','ortopeda':'Orthopedic Surgeon','neurólogo':'Neurologist','urólogo':'Urologist','endocrinólogo':'Endocrinologist (Diabetes)','nefrólogo':'Nephrologist (Kidney)','neumólogo':'Pulmonologist (Lungs)','oncólogo':'Oncologist / Hematologist','reumatólogo':'Rheumatologist (Arthritis)','geriatra':'Geriatrician','otorrinolaringólogo':'ENT (Ear, Nose & Throat)','infectólogo':'Infectious Disease','alergista':'Allergist / Immunologist','medicina de emergencia':'Emergency Medicine','cirujano general':'General Surgeon','anestesiólogo':'Anesthesiologist','radiólogo':'Radiologist','neurocirujano':'Neurosurgeon','cirujano plástico':'Plastic Surgeon','cirujano torácico':'Thoracic Surgeon','coloproctólogo':'Colorectal Surgeon','manejo de dolor':'Pain Management','psicólogo':'Psychologist','optómetra':'Optometrist','podiatra':'Podiatrist','dentista':'Dentist',
+  'cardiólogo':'Cardiologist','psiquiatra':'Psychiatrist','fisiatra':'Physiatrist (Rehab)','ginecólogo':'OB-GYN','pediatra':'Pediatrician','dermatólogo':'Dermatologist','gastroenterólogo':'Gastroenterologist','oftalmólogo':'Ophthalmologist (Eye MD)','ortopeda':'Orthopedic Surgeon','neurólogo':'Neurologist','urólogo':'Urologist','endocrinólogo':'Endocrinologist (Diabetes)','nefrólogo':'Nephrologist (Kidney)','neumólogo':'Pulmonologist (Lungs)','oncólogo':'Oncologist / Hematologist','reumatólogo':'Rheumatologist (Arthritis)','geriatra':'Geriatrician','otorrinolaringólogo':'ENT (Ear, Nose & Throat)','infectólogo':'Infectious Disease','alergista':'Allergist / Immunologist','medicina de emergencia':'Emergency Medicine','cirujano general':'General Surgeon','anestesiólogo':'Anesthesiologist','radiólogo':'Radiologist','neurocirujano':'Neurosurgeon','cirujano plástico':'Plastic Surgeon','cirujano torácico':'Thoracic Surgeon','coloproctólogo':'Colorectal Surgeon','manejo de dolor':'Pain Management','psicólogo':'Psychologist','optómetra':'Optometrist','podiatra':'Podiatrist','dentista':'Dentist','patólogo':'Pathologist','medicina ocupacional':'Occupational & Preventive Medicine','hospitalista':'Hospitalist','medicina nuclear':'Nuclear Medicine','genetista':'Clinical Geneticist (M.D.)',
   'internista':'Internal Medicine','medicina de familia':'Family Medicine','generalista':'General Practice','va':'VA (Veterans Affairs)','terapeuta del habla':'Speech-Language Pathologist','terapista físico':'Physical Therapist','terapista ocupacional':'Occupational Therapist','quiropráctico':'Chiropractor','consejero':'Professional Counselor','trabajador social':'Clinical Social Worker','terapeuta de familia':'Marriage & Family Therapist','nutricionista':'Dietitian / Nutritionist','physician assistant':'Physician Assistant (PA)','enfermera practicante':'Nurse Practitioner (NP)','audiólogo':'Audiologist','partera':'Midwife','farmacéutico':'Pharmacist','hospital':'Hospital (CMS-certified)','cuidado en el hogar':'Home Health Agency','hospicio':'Hospice','hogar de envejecientes':'Nursing Home (SNF)','centro de diálisis':'Dialysis Center','urgent care':'Urgent Care','clínica comunitaria':'Community Health Center (FQHC)',
   'neonatólogo':'Neonatologist','cirujano vascular':'Vascular Surgeon','dentista pediátrico':'Pediatric Dentist','ortodoncista':'Orthodontist','cirujano oral':'Oral & Maxillofacial Surgeon','naturópata':'Naturopath','acupunturista':'Acupuncturist',
 }
@@ -12505,6 +12517,11 @@ const SPEC_INFO_EN: Record<string, { treats: string; whenToGo: string; note: str
   'cirujano general':{treats:'The doctor who operates on common problems of the abdomen and body.',whenToGo:'When you need surgery for appendicitis, your gallbladder, or a hernia.',note:''},
   'anestesiólogo':{treats:'The doctor who puts you to sleep and watches over you during surgery.',whenToGo:'You meet this doctor when you are going to have surgery; they handle the anesthesia and your pain.',note:''},
   'radiólogo':{treats:'The doctor who reads your X-rays, CT scans, and ultrasounds.',whenToGo:'They work behind the scenes on your imaging tests; you usually don\'t see them in person.',note:''},
+  'patólogo':{treats:'The doctor who examines biopsies, labs, and tissue to name the disease.',whenToGo:'You almost never see them in person: your doctor sends the sample and they sign the diagnosis.',note:''},
+  'medicina ocupacional':{treats:'Work health: workers\' comp (CFSE) cases, employment exams, exposures, and prevention.',whenToGo:'If your case comes from a work accident or condition, or you need an occupational exam.',note:''},
+  'hospitalista':{treats:'The doctor who cares for you while you are admitted to the hospital.',whenToGo:'No office appointments: they are assigned when you are hospitalized and coordinate care until discharge.',note:''},
+  'medicina nuclear':{treats:'Studies using small doses of radioactive material: thyroid, heart, bones.',whenToGo:'When your doctor orders a nuclear medicine study. You get there by referral, not direct appointment.',note:''},
+  'genetista':{treats:'The doctor who reads DNA to name inherited conditions and rare diseases.',whenToGo:'When a condition runs in the family or no one can name what you have. You get there by referral.',note:''},
   'neurocirujano':{treats:'The doctor who operates on the brain, spine, and nerves.',whenToGo:'When you have a serious brain or spine problem that needs surgery.',note:''},
   'cirujano plástico':{treats:'The doctor who reconstructs or repairs parts of the body and skin.',whenToGo:'When you need reconstruction after an accident, a burn, or surgery.',note:''},
   'cirujano torácico':{treats:'The doctor who operates on the chest: the lungs and the area around the heart.',whenToGo:'When you have a lung or chest problem that needs surgery.',note:''},
