@@ -2753,7 +2753,7 @@ const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:n
   {s:'cirujano general',l:'Cirujano General',e:'🔪',kw:'CIRUJANO',md:true,t:329,r:{Oeste:39,Norte:19,Centro:6,Sur:53,Este:31,Metro:180}},
   {s:'cirujano vascular',l:'Cirujano Vascular (venas/arterias)',e:'🩸',kw:'VASCULAR',md:true,t:3,r:{Oeste:1,Norte:0,Centro:0,Sur:1,Este:0,Metro:1}},
   {s:'anestesiólogo',l:'Anestesiólogo',e:'💉',kw:'ANESTESIOLOGO',md:true,t:226,r:{Oeste:28,Norte:10,Centro:2,Sur:23,Este:23,Metro:140}},
-  {s:'radiólogo',l:'Radiólogo (imágenes)',e:'🩻',kw:'RADIOLOGO',md:true,t:255,r:{Oeste:19,Norte:12,Centro:1,Sur:17,Este:30,Metro:176}},
+  {s:'radiólogo',l:'Radiólogo (imágenes)',e:'🩻',kw:'RADIOLOGO',md:true,t:300,r:{Oeste:25,Norte:14,Centro:1,Sur:21,Este:32,Metro:207}},
   {s:'neurocirujano',l:'Neurocirujano',e:'🧠',kw:'NEUROCIRUJANO',md:true,t:44,r:{Oeste:1,Norte:4,Centro:0,Sur:2,Este:6,Metro:31}},
   {s:'cirujano plástico',l:'Cirujano Plástico',e:'✨',kw:'PLASTICO',md:true,t:19,r:{Oeste:1,Norte:0,Centro:0,Sur:1,Este:4,Metro:13}},
   {s:'cirujano torácico',l:'Cirujano Torácico',e:'🫁',kw:'TORACICO',md:true,t:15,r:{Oeste:1,Norte:1,Centro:0,Sur:2,Este:1,Metro:10}},
@@ -3721,7 +3721,21 @@ async function handleCambios(req: any, res: any) {
 <div class="not-prose space-y-4 mt-4">
   <div class="bg-white border-2 border-teal-300 rounded-xl p-5">
     <div class="text-xs font-bold uppercase tracking-widest text-teal-700 mb-1">1 agosto 2026 · Última actualización</div>
-    <p class="font-bold text-slate-900 text-lg m-0">Entraron 4,031 médicos generalistas y la lista completa del VA.</p>
+    <p class="font-bold text-slate-900 text-lg m-0">Entraron 47 radiólogos que el registro no estaba viendo.</p>
+    <p class="text-sm text-slate-600 mt-2">Un vecino buscó a un radiólogo de Cabo Rojo y no salía. Lo investigamos: el registro solo traía radiología diagnóstica, y quien tiene una subespecialidad como principal (imágenes del cuerpo, neuroradiología, vascular, pediátrica) se quedaba fuera. Corregido: la categoría subió de 253 a <strong>300</strong>.</p>
+    <details class="mt-2">
+      <summary class="text-sm font-semibold text-teal-700 cursor-pointer select-none">Ver los detalles</summary>
+      <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
+        <li><strong>Cómo se encontró:</strong> el reporte de un vecino. La búsqueda por apellido no encontraba a un radiólogo de Cabo Rojo que sí existe en el registro federal con subespecialidad de imágenes del cuerpo.</li>
+        <li><strong>El arreglo:</strong> la ingesta ahora cubre todas las subespecialidades de radiología del registro federal (código NUCC 2085), no solo la diagnóstica. Entraron <strong>47</strong> con práctica en PR.</li>
+        <li><strong>Al oeste le tocó:</strong> 6 de los 47 practican en la región, incluyendo 3 radiólogos vasculares en Mayagüez y 1 en Cabo Rojo. La categoría en el Oeste subió de 19 a 25.</li>
+      </ul>
+    </details>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-xl p-5">
+    <div class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">1 agosto 2026</div>
+    <p class="font-bold text-slate-900 m-0">Entraron 4,031 médicos generalistas y la lista completa del VA.</p>
     <p class="text-sm text-slate-600 mt-2">Faltaba la medicina general clásica, la categoría donde está el médico primario de muchos planes. Una auditoría lo destapó y ya está corregido: el registro subió de 25,762 a <strong>29,793</strong>. También entraron las 10 facilidades médicas del <a href="/registro/va" class="text-teal-700 font-semibold">VA en Puerto Rico</a>, pa' los veteranos.</p>
     <details class="mt-2">
       <summary class="text-sm font-semibold text-teal-700 cursor-pointer select-none">Ver los detalles</summary>
