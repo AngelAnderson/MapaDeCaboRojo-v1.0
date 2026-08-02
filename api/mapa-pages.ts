@@ -4673,6 +4673,36 @@ async function handleEspecialistaClaim(req: any, res: any) {
       wants_vitrina: !!b.wants_vitrina,
       source: 'especialista_page',
     })
+    // 2026-08-02: cerrar el loop con quien ayuda — el que reclama recibe su página de
+    // vuelta al instante con la promesa de corrección fechada. Antes el form se tragaba
+    // el esfuerzo y la oficina nunca veía el resultado.
+    if (RESEND_API_KEY && b.contact_email && /@/.test(String(b.contact_email))) {
+      try {
+        let slug: string | null = null
+        if (b.place_id) {
+          const { data } = await supabase.from('places').select('slug').eq('id', b.place_id).limit(1)
+          slug = data?.[0]?.slug || null
+        }
+        if (!slug && b.npi) {
+          const { data } = await supabase.from('places').select('slug').eq('npi', String(b.npi)).limit(1)
+          slug = data?.[0]?.slug || null
+        }
+        const pageUrl = slug ? `https://registromedicopr.com/especialista/${slug}` : 'https://registromedicopr.com/registro'
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: FROM_EMAIL, to: String(b.contact_email), reply_to: REPLY_TO,
+            subject: 'Recibimos tu corrección · Registro Médico PR',
+            html: `<p>Gracias por ayudar a mantener el registro al día.</p>
+<p>Recibimos lo que nos enviaste sobre <strong>${escapeHtml(String(b.provider_name || 'su perfil'))}</strong>. Esta es la página pública: <a href="${pageUrl}">${pageUrl}</a></p>
+<p>Las correcciones se aplican a mano y quedan anotadas con fecha en <a href="https://registromedicopr.com/cambios">registromedicopr.com/cambios</a>. Si algo más está mal (teléfono, dirección, horario, planes), responde a este correo y se corrige.</p>
+<p>El registro federal a veces pasa años sin actualizarse. Esto se arregla entre todos, y es gratis: es pa' que los vecinos encuentren quién resuelve.</p>
+<p>- Angel | registromedicopr.com</p>`,
+          }),
+        })
+      } catch { /* email best-effort */ }
+    }
     // Notify Angel (non-blocking)
     if (RESEND_API_KEY) {
       try {
