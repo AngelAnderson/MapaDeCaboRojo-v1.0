@@ -8000,7 +8000,7 @@ async function handleNotasKit(req: any, res: any) {
     res.status(200).send(layout({
       title: 'Kit de Las Notas de Puerto Rico',
       description: 'Los textos y las tarjetas de Las Notas de Puerto Rico, listos para copiar y publicar.',
-      slug: 'notas/kit', bodyHtml: '<p>El kit se esta armando. Vuelve pronto.</p>',
+      slug: 'notas/kit', bodyHtml: '<p>El kit se está armando. Vuelve pronto.</p>',
       host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
     }))
     return
@@ -8013,13 +8013,13 @@ async function handleNotasKit(req: any, res: any) {
   const efe = metas.filter((m: any) => G(m) === 'F').map((m: any) => m.categoria.toLowerCase())
 
   // ── Pieza 1: el grado solo ──
-  const txtGrado = `Puerto Rico saca ${gpa} de 4.0 en las metas MINIMAS del gobierno federal.
+  const txtGrado = `Puerto Rico saca ${gpa} de 4.0 en las metas MÍNIMAS del gobierno federal.
 
 No son metas ambiciosas. Son el piso: lo menos que se supone.
 
 ${metas.map((m: any) => `${G(m)} en ${m.categoria.toLowerCase()}`).join('\n')}
 
-Cada nota se calcula del porciento del minimo federal que Puerto Rico cumple. Formula fija, la misma pa' todas, con la fuente al lado. Nadie opino aqui.
+Cada nota se calcula del porciento del mínimo federal que Puerto Rico cumple. Fórmula fija, la misma pa' todas, con la fuente al lado. Nadie opinó aquí.
 
 ${U}`
 
@@ -8027,12 +8027,12 @@ ${U}`
   const txtConjunto = `LAS NOTAS DE PUERTO RICO
 Promedio general: ${gpa} de 4.0
 
-No son metas ambiciosas. Son las MINIMAS del gobierno federal: el piso.
+No son metas ambiciosas. Son las MÍNIMAS del gobierno federal: el piso.
 
 ${metas.map((m: any) => `${G(m)} · ${m.categoria.toUpperCase()}\n${m.frase || m.meta_texto}`).join('\n\n')}
 
-Cada nota sale del porciento del minimo federal que PR cumple. Formula fija y fuente al lado.
-El record completo, con la fuente de cada una: ${U}`
+Cada nota sale del porciento del mínimo federal que PR cumple. Fórmula fija y fuente al lado.
+El récord completo, con la fuente de cada una: ${U}`
 
   // ── Pieza 3: una por una ──
   const txtNota = (m: any) => `${m.frase || m.meta_texto}
@@ -8043,21 +8043,21 @@ ${m.contradiccion}
 EL ENEMIGO
 ${m.enemigo || 'Sin declarar.'}
 
-EN DOS LINEAS
+EN DOS LÍNEAS
 ${m.contexto || ''}
 
 EN TU CASA, HOY
 ${m.espejo}
 
-QUE PUEDES HACER
+QUÉ PUEDES HACER
 ${m.accion_texto}
 
-Nota ${G(m)} · Puerto Rico cumple el ${m.pct_minimo}% del minimo federal.
+Nota ${G(m)} · Puerto Rico cumple el ${m.pct_minimo}% del mínimo federal.
 Fuente: ${m.fuente_nombre}
-Record completo: ${U}#${m.id}`
+Récord completo: ${U}#${m.id}`
 
-  const cardUrl = (m: any) => `/api/og?theme=sinfiltros&k=${encodeURIComponent(`Nota ${G(m)} · ${m.categoria}`)}&t=${encodeURIComponent(String(m.frase || m.meta_texto))}&sub=${encodeURIComponent(`Puerto Rico cumple el ${m.pct_minimo}% del minimo federal.`)}&badge=${encodeURIComponent('Las Notas de PR · metas minimas federales')}`
-  const cardGpa = `/api/og?theme=sinfiltros&k=${encodeURIComponent('Las Notas de Puerto Rico')}&t=${encodeURIComponent(`Puerto Rico saca ${gpa} de 4.0||en las metas minimas federales`)}&sub=${encodeURIComponent(`${metas.map((m: any) => `${G(m)} ${m.categoria.toLowerCase()}`).join(' · ')}`)}&badge=${encodeURIComponent('El piso, no la meta ambiciosa')}`
+  const cardUrl = (m: any) => `/api/og?theme=sinfiltros&k=${encodeURIComponent(`Nota ${G(m)} · ${m.categoria}`)}&t=${encodeURIComponent(String(m.frase || m.meta_texto))}&sub=${encodeURIComponent(`Puerto Rico cumple el ${m.pct_minimo}% del mínimo federal.`)}&badge=${encodeURIComponent('Las Notas de PR · metas mínimas federales')}`
+  const cardGpa = `/api/og?theme=sinfiltros&k=${encodeURIComponent('Las Notas de Puerto Rico')}&t=${encodeURIComponent(`Puerto Rico saca ${gpa} de 4.0||en las metas mínimas federales`)}&sub=${encodeURIComponent(`${metas.map((m: any) => `${G(m)} ${m.categoria.toLowerCase()}`).join(' · ')}`)}&badge=${encodeURIComponent('El piso, no la meta ambiciosa')}`
 
   // ── Descarga en texto: el kit entero en un archivo ──
   if (String(req.query?.descarga || '') === 'txt') {
@@ -8065,7 +8065,7 @@ Record completo: ${U}#${m.id}`
       'LAS NOTAS DE PUERTO RICO — KIT PARA USAR',
       `Promedio general: ${gpa} de 4.0`,
       'Todo esto es para usarse. No hace falta pedir permiso ni poner mi nombre.',
-      `Record y fuentes: ${U}`,
+      `Récord y fuentes: ${U}`,
       '', '='.repeat(60), '', '1. EL GRADO SOLO', '', txtGrado,
       '', '='.repeat(60), '', '2. LAS NOTAS JUNTAS', '', txtConjunto,
       '', '='.repeat(60), '', '3. UNA POR UNA', '',
