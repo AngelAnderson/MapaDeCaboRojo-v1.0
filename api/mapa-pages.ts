@@ -6137,6 +6137,54 @@ async function handleSinFiltros(req: any, res: any) {
     if (typeof tot.count === 'number' && tot.count > 0) dem = { total90: tot.count, unmet90: unm.count || 0 }
   } catch (_) { /* fallback stands */ }
 
+  // ── La Nota de Puerto Rico (hero) ──────────────────────────────────
+  // El unico indicador del sitio que no necesita explicacion: una nota escolar.
+  // Lee metas_minimas, la MISMA tabla que /notas (una fuente, dos caras). Si la
+  // tabla no responde el hero se omite entero: aqui no se quema un numero ni se
+  // inventa una nota. OJO: en esta funcion hay un `type Record` local mas abajo
+  // que tapa el Record<> de TS, por eso el mapa de puntos va con index signature.
+  let notas: any[] = []
+  let gpa = ''
+  try {
+    const { data } = await supabase
+      .from('metas_minimas')
+      .select('id,categoria,grade,pct_minimo')
+      .order('pct_minimo', { ascending: false })
+    if (data && data.length) {
+      const pts: { [k: string]: number } = { A: 4, B: 3, C: 2, D: 1, F: 0 }
+      notas = data
+      gpa = (data.reduce((acc: number, m: any) => acc + (pts[(m.grade || 'F').trim()] ?? 0), 0) / data.length).toFixed(1)
+    }
+  } catch (_) { /* sin notas no hay hero */ }
+
+  const chipColor = (gr: string) => {
+    const x = (gr || 'F').trim()
+    return x === 'A' || x === 'B' ? 'bg-emerald-500' : x === 'C' ? 'bg-amber-500' : 'bg-red-500'
+  }
+  const notasCita = notas.length
+    ? `Puerto Rico saca ${gpa} de 4.0 en las metas MINIMAS federales: ${notas.map((m: any) => `${m.categoria} ${(m.grade || 'F').trim()}`).join(' · ')}. Record y fuentes: puertoricosinfiltros.com/notas`
+    : ''
+  const notasChips = notas.map((m: any) => `<span class="inline-flex items-center gap-2 bg-white/10 rounded-full pl-1 pr-3 py-1"><span class="${chipColor(m.grade)} w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0">${escapeHtml((m.grade || 'F').trim())}</span><span class="text-sm text-slate-100">${escapeHtml(m.categoria)}</span></span>`).join('')
+  const heroNotas = notas.length ? `
+<div class="not-prose mt-6 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <div class="flex flex-wrap items-center gap-5">
+    <div class="text-center shrink-0">
+      <div class="text-6xl font-black leading-none" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(gpa)}</div>
+      <div class="text-xs text-slate-400 mt-1 uppercase tracking-widest">de 4.0</div>
+    </div>
+    <div class="flex-1" style="min-width:260px">
+      <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">La nota de Puerto Rico</p>
+      <p class="text-lg sm:text-xl font-black mt-1 leading-snug">Estas no son metas ambiciosas. Son las <strong>MÍNIMAS</strong> federales: el piso, lo menos que se supone.</p>
+      <div class="flex flex-wrap gap-2 mt-3">${notasChips}</div>
+    </div>
+  </div>
+  <div class="mt-4 flex flex-wrap gap-2 text-sm">
+    <a href="/notas" data-prsf="record" data-rec="hero-notas" class="inline-flex items-center gap-1 bg-white text-slate-900 font-bold px-4 py-2 rounded-full hover:bg-slate-200">Ver las notas, una por una</a>
+    <button type="button" class="copy-btn inline-flex items-center gap-1 bg-transparent border border-slate-500 text-slate-100 font-semibold px-4 py-2 rounded-full hover:border-teal-300" data-copy="${escapeHtml(notasCita)}">📋 Cita esto</button>
+  </div>
+  <p class="text-xs text-slate-400 mt-3">Cada nota sale del porciento del mínimo federal que PR cumple, con fórmula fija y la fuente al lado. Nadie opinó aquí.</p>
+</div>` : ''
+
   type Record = { titulo: string; brecha: string; fuente: string; verUrl: string; verificaUrl: string; verificaText: string; tag: string }
   const records: Record[] = [
     {
@@ -6203,6 +6251,7 @@ async function handleSinFiltros(req: any, res: any) {
   const body = `
 <h1>Puerto Rico, sin filtros.</h1>
 <p class="text-lg text-slate-600 mt-3">El récord público que Puerto Rico nunca tuvo. Datos verificados que nadie había publicado, cada uno con su fuente al lado y la brecha entre lo que el papel dice y lo que tocó el suelo. Sin spin. Sin relleno. Verificado uno por uno.</p>
+${heroNotas}
 
 <div class="not-prose mt-6 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">Qué es esto</p>
@@ -6431,6 +6480,19 @@ ${recordCards}
 
 <p class="text-sm text-slate-500 mt-6">Metodología: cruce de fuentes federales y públicas a nivel de municipio — NPPES/CMS (proveedores), archivos HRSA (designaciones de escasez), OpenFEMA (fondos de recuperación), Censo/ACS (población y pobreza). Verificado uno por uno. Última actualización: julio 2026.</p>
 
+<script>
+(function(){
+  document.querySelectorAll('.copy-btn').forEach(function(b){
+    b.addEventListener('click',function(){
+      var t=b.getAttribute('data-copy')||'';
+      var done=function(){var o=b.textContent;b.textContent='✓ Copiado';b.disabled=true;setTimeout(function(){b.textContent=o;b.disabled=false},1600)};
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done).catch(function(){})}
+      else{var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}document.body.removeChild(ta)}
+    });
+  });
+})();
+</script>
+
 <!-- logging PRSF movido al layout (isPRSF): page_view + record/verify/cite + audio_play + outbound_click -->
 `
   const datasetLd = {
@@ -6449,7 +6511,8 @@ ${recordCards}
     inLanguage: 'es', publisher: { '@type': 'Person', name: 'Angel Anderson' },
   }
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
-  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  // 1h, no 24h: el hero ahora carga la nota viva de metas_minimas.
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
   res.status(200).send(layout({
     title: 'Puerto Rico Sin Filtros — el récord público de PR, con la fuente al lado',
     description: 'Datos verificados de Puerto Rico que nadie había publicado, cada uno con su fuente primaria. 65 de 76 municipios con escasez de médicos declarada por el gobierno federal, 33 con el dinero sin cobrar. Sin spin.',
@@ -7857,11 +7920,11 @@ async function handleBoletin(req: any, res: any) {
       ${cr ? `<p class="text-sm text-slate-700 mt-2 pl-3"><strong>En Cabo Rojo:</strong> ${escapeHtml(String(cr.texto || ''))}</p>` : ''}
       <p class="text-sm text-slate-700 mt-3 border-l-4 border-emerald-500 pl-3"><strong class="uppercase text-xs tracking-wide text-emerald-700 block mb-1">Qué puedes hacer hoy, con lo que hay</strong>${escapeHtml(m.accion_texto)}${m.accion_url ? ' (el botón de abajo te lleva).' : ''}</p>
       ${m.que_falta ? `<p class="text-sm text-slate-600 mt-3 border-l-4 border-slate-300 pl-3"><strong class="uppercase text-xs tracking-wide text-slate-500 block mb-1">Qué falta saber antes de moverse</strong>${escapeHtml(m.que_falta)}</p>` : ''}
-      <p class="text-xs text-slate-500 mt-3"><strong>Fuente:</strong> <a href="${escapeHtml(m.fuente_url)}" target="_blank" rel="noopener" data-prsf="verify" data-rec="boletin-${escapeHtml(m.id)}" class="text-teal-700">${escapeHtml(m.fuente_nombre)} ↗</a> · data de ${escapeHtml(fmtFecha(m.fuente_fecha))}</p>
+      <p class="text-xs text-slate-500 mt-3"><strong>Fuente:</strong> <a href="${escapeHtml(m.fuente_url)}" target="_blank" rel="noopener" data-prsf="verify" data-rec="boletin-${escapeHtml(m.id)}" class="text-teal-700">${escapeHtml(m.fuente_nombre)} ↗</a> · fuente verificada en ${escapeHtml(fmtFecha(m.fuente_fecha))}</p>
       <details class="mt-2 text-xs text-slate-500"><summary class="cursor-pointer font-semibold">Cómo se calculó esta nota</summary><p class="mt-1">${escapeHtml(m.metodologia)} La escala es fija: 100% o más del mínimo = A · 80-99 = B · 60-79 = C · 40-59 = D · menos de 40 = F.</p></details>
       <div class="mt-3 flex flex-wrap gap-2 text-sm">
         ${m.accion_url ? `<a href="${escapeHtml(m.accion_url)}" data-prsf="record" data-rec="boletin-${escapeHtml(m.id)}" class="inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700">${escapeHtml(m.accion_texto)}</a>` : `<span class="inline-flex items-center gap-1 bg-slate-100 text-slate-800 font-semibold px-4 py-2 rounded-full">${escapeHtml(m.accion_texto)}</span>`}
-        <button class="copy-btn inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400" data-cite="Puerto Rico cumple el ${escapeHtml(String(m.pct_minimo))}% del mínimo federal de ${escapeHtml(m.categoria.toLowerCase())} (nota ${escapeHtml(g)}). Fuente: ${escapeHtml(m.fuente_nombre)}, vía puertoricosinfiltros.com/notas" onclick="navigator.clipboard.writeText(this.getAttribute('data-cite'));this.textContent='Copiado ✓'">Cita esto</button>
+        <button class="copy-btn inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400" data-copy="Puerto Rico cumple el ${escapeHtml(String(m.pct_minimo))}% del mínimo federal de ${escapeHtml(m.categoria.toLowerCase())} (nota ${escapeHtml(g)}). Fuente: ${escapeHtml(m.fuente_nombre)}, vía puertoricosinfiltros.com/notas" onclick="navigator.clipboard.writeText(this.getAttribute('data-copy'));this.textContent='Copiado ✓'">Cita esto</button>
       </div>
     </div>`
   }).join('')
