@@ -3913,15 +3913,7 @@ async function handleRegistro(req: any, res: any) {
   const body = `
 <h1>${t('Registro de Especialistas Médicos de Puerto Rico', 'Registry of Puerto Rico Medical Specialists')}</h1>
 
-<p class="text-lg text-slate-600 mt-2">${t(`Encuentra tu especialista por especialidad y región. <strong>${totalVerified} proveedores</strong> del registro federal NPPES, puestos en orden en español: por pueblo, por especialidad y con el teléfono al lado. Gratis, sin cuenta.`, `Find your specialist by specialty and region. <strong>${totalVerified} providers</strong> from the federal NPPES registry, organized in Spanish: by town, by specialty, with the phone number. Free, no account needed.`)}</p>
-
-<div class="not-prose mt-4 rounded-xl border-2 border-slate-800 bg-slate-900 text-white p-4 flex items-start gap-3">
-  <div class="text-2xl leading-none">📊</div>
-  <div class="flex-1 min-w-0">
-    <p class="font-black m-0">${t('¿Y por qué faltan tantos?', 'Why are so many missing?')}</p>
-    <p class="text-sm text-slate-300 mt-1 m-0">${t('Puerto Rico no tiene escasez de médicos. Tiene escasez de condiciones. Lo contamos en 6 números, cada uno con quién lo tiene que mover y desde cuándo nadie lo mueve.', 'Puerto Rico does not have a doctor shortage. It has a conditions shortage. We counted it in 6 numbers, each with who has to move it and how long nobody has.')} <a href="/marcador" class="text-teal-300 font-bold underline">${t('Ver El Marcador →', 'See The Scoreboard →')}</a></p>
-  </div>
-</div>
+<p class="text-lg text-slate-600 mt-2">${t(`<strong>¿A cuál médico llamo hoy?</strong> Escoge especialidad y región, y en 10 segundos tienes los nombres, el pueblo y el teléfono. Gratis, sin cuenta y sin plan. Son ${totalVerified} proveedores del registro federal NPPES, puestos en orden en español.`, `<strong>Which doctor do I call today?</strong> Pick specialty and region and in 10 seconds you have the names, the town, and the phone number. Free, no account, no plan required. That is ${totalVerified} providers from the federal NPPES registry, organized in Spanish.`)}</p>
 
 <div class="not-prose mt-3 flex flex-wrap gap-2 text-xs">
   <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-shield-halved"></i> ${t('Del registro federal NPI', 'From the federal NPI registry')}</span>
@@ -3973,6 +3965,14 @@ async function handleRegistro(req: any, res: any) {
 <p class="not-prose mt-3 text-sm text-slate-500 text-center"><a href="/registro/mapa" class="text-teal-700 font-semibold hover:underline">${t('🗺️ Mira el mapa: qué especialista hay en cada pueblo →', '🗺️ See the map: which specialists each town has →')}</a> · ${t('¿Vives lejos del área metro?', 'Live far from the metro area?')} <a href="/registro/desiertos${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold hover:underline">${t('Los desiertos médicos →', 'The medical deserts →')}</a></p>
 
 <p class="not-prose mt-4 text-sm text-slate-500 text-center">🎙️ ${t('¿Quieres entender por qué pasa esto?', 'Want to understand why this happens?')} <a href="/observatorio${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold hover:underline">${t('Escucha el podcast y baja el reporte completo →', 'Listen to the podcast and get the full report →')}</a></p>
+
+<div class="not-prose mt-6 rounded-xl border-2 border-slate-800 bg-slate-900 text-white p-4 flex items-start gap-3">
+  <div class="text-2xl leading-none">📊</div>
+  <div class="flex-1 min-w-0">
+    <p class="font-black m-0">${t('¿Y por qué faltan tantos?', 'Why are so many missing?')}</p>
+    <p class="text-sm text-slate-300 mt-1 m-0">${t('Puerto Rico no tiene escasez de médicos. Tiene escasez de condiciones. Lo contamos en 6 números, cada uno con quién lo tiene que mover y desde cuándo nadie lo mueve.', 'Puerto Rico does not have a doctor shortage. It has a conditions shortage. We counted it in 6 numbers, each with who has to move it and how long nobody has.')} <a href="/marcador" class="text-teal-300 font-bold underline">${t('Ver El Marcador →', 'See The Scoreboard →')}</a></p>
+  </div>
+</div>
 
 <h2>${t('¿Cuál es tu situación?', 'What is your situation?')}</h2>
 <p class="text-slate-600 -mt-2">${t('A veces uno no busca una especialidad, busca salir de un aprieto. Empieza por el tuyo:', 'Sometimes you are not looking for a specialty, you are trying to get unstuck. Start with yours:')}</p>
@@ -4098,19 +4098,59 @@ async function handleRegistro(req: any, res: any) {
       })
       .catch(function(){box.innerHTML='<div style="color:#dc2626;font-size:14px;">No se pudo cargar la lista. Intenta de nuevo.</div>';});
   }
+  // --- La respuesta vive en el URL: se comparte, se guarda y se vuelve a abrir sin repetir el camino ---
+  var T0=(window.performance&&performance.now)?performance.now():Date.now(),answered=false,VIA='formulario';
+  function slug(s){return norm(s).replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
+  var BYSLUG={};SPECS.forEach(function(x){BYSLUG[slug(x.s)]=x.s;});
+  function answerUrl(spec,region){
+    return location.origin+location.pathname+'?spec='+encodeURIComponent(slug(spec))+'&region='+encodeURIComponent(region);
+  }
+  function syncState(){
+    try{
+      var q='?spec='+encodeURIComponent(slug(sp.value))+'&region='+encodeURIComponent(rg.value)+((pl&&pl.value)?('&plan='+encodeURIComponent(pl.value)):'');
+      history.replaceState(null,'',location.pathname+q);
+      localStorage.setItem('rgv1',JSON.stringify({s:sp.value,r:rg.value,p:(pl&&pl.value)||''}));
+    }catch(e){}
+  }
+  function shareRow(x,region,n){
+    var url=answerUrl(x.s,region);
+    var txt=n>0
+      ?('Te mando la lista: '+x.l+' en '+regionLabel(region)+' ('+n+'), con el pueblo y el teléfono de cada uno. '+url)
+      :('En '+regionLabel(region)+' el registro federal no muestra ninguno. Aquí se ve dónde sí hay, con teléfono. '+url);
+    return '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(15,23,42,.10);">'
+      +'<a href="https://wa.me/?text='+encodeURIComponent(txt)+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#0f766e;color:#fff;font-weight:700;font-size:13px;padding:8px 14px;border-radius:999px;text-decoration:none;">💬 Mandarle esto a alguien</a>'
+      +'<button type="button" data-copy="'+esc(url)+'" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #cbd5e1;color:#334155;font-weight:700;font-size:13px;padding:8px 14px;border-radius:999px;cursor:pointer;">🔗 Copiar el enlace de esta respuesta</button>'
+      +'<span style="font-size:11px;color:#64748b;align-self:center;">Ese enlace abre directo en esta lista. No hay que volver a buscar.</span>'
+      +'</div>';
+  }
+  function bindCopy(){
+    Array.prototype.forEach.call(out.querySelectorAll('[data-copy]'),function(b){
+      b.addEventListener('click',function(){
+        var u=b.getAttribute('data-copy'),done=function(){b.textContent='✓ Copiado';setTimeout(function(){b.innerHTML='🔗 Copiar el enlace de esta respuesta';},1800);};
+        try{navigator.clipboard.writeText(u).then(done,function(){prompt('Copia este enlace:',u);});}catch(e){prompt('Copia este enlace:',u);}
+        try{gtag('event','share_answer',{method:'copy'})}catch(e){}
+      });
+    });
+  }
   function render(){
     if(!sp.value||!rg.value){out.innerHTML='';hint.style.display='block';return;}
     hint.style.display='none';
+    syncState();
     try{gtag('event','search_specialty',{spec:sp.value,region:rg.value})}catch(e){}
+    if(!answered){
+      answered=true;
+      var _now=(window.performance&&performance.now)?performance.now():Date.now();
+      try{gtag('event','time_to_answer',{seconds:Math.round((_now-T0)/100)/10,via:VIA,spec:sp.value,region:rg.value})}catch(e){}
+    }
     var x=BYID[sp.value],region=rg.value,n=x.r[region]||0,M=x.r.Metro||0,tone,msg;
     if(region==='Metro'){
-      msg='<b>En el área metro hay '+M+' '+esc(x.l)+'.</b> Es donde se concentran los especialistas de la isla — aquí no te toca viajar lejos.';tone='ok';
+      msg='<b>En el área metro hay '+M+' '+esc(x.l)+'.</b> Es donde se concentran los especialistas de la isla, aquí no te toca viajar lejos.';tone='ok';
     } else if(n>=5){
       msg='<b>En el '+region+' hay '+n+'.</b> Hay con quién bregar cerca. El concentrado mayor sigue en el área metro ('+M+').';tone='ok';
     } else if(n>0){
-      msg='<b>En el '+region+' solo hay '+n+'.</b> Son pocos — la cita puede tardar. El grupo grande está en el área metro ('+M+'). Pide el referido temprano.';tone='warn';
+      msg='<b>En el '+region+' solo hay '+n+'.</b> Son pocos, la cita puede tardar. El grupo grande está en el área metro ('+M+'). Pide el referido temprano.';tone='warn';
     } else {
-      msg='<b>En el '+region+' el registro federal no muestra ninguno.</b> Te va a tocar viajar — el grupo más grande está en el área metro ('+M+').';tone='bad';
+      msg='<b>En el '+region+' el registro federal no muestra ninguno.</b> Te va a tocar viajar, el grupo más grande está en el área metro ('+M+').';tone='bad';
     }
     var bg=tone==='ok'?'#ecfdf5':tone==='warn'?'#fffbeb':'#fef2f2',bd=tone==='ok'?'#6ee7b7':tone==='warn'?'#fcd34d':'#fca5a5';
     out.innerHTML='<div style="background:'+bg+';border:2px solid '+bd+';border-radius:14px;padding:18px 20px;">'
@@ -4118,7 +4158,10 @@ async function handleRegistro(req: any, res: any) {
       +'<div style="font-size:14px;color:#334155;line-height:1.6;margin-bottom:12px;">'
       +'<b>👉 Qué hacer:</b> pídele a tu médico primario un <b>referido</b> y pregunta si está en tu plan. ¿Buscas rápido? Escríbele <a href="https://wa.me/17874177711?text='+x.kw+'" style="color:#0f766e;font-weight:700;text-decoration:underline;">'+x.kw+' al 787-417-7711</a>.'
       +'</div>'
-      +'<div id="rg-list"></div></div>';
+      +'<div id="rg-list"></div>'
+      +shareRow(x,region,n)
+      +'</div>';
+    bindCopy();
     var lr=(n>0||region==='Metro')?region:'Metro';
     loadList(sp.value,lr);
   }
@@ -4221,6 +4264,31 @@ async function handleRegistro(req: any, res: any) {
         .catch(function(){srchOut.innerHTML=muniChips(qn)+symChips(qn)+specChips(qn)+'<div style="color:#dc2626;font-size:14px;">No se pudo buscar. Intenta de nuevo.</div>';bindJumps();});
     },280);
   });
+
+  // --- Arranque: si el enlace ya trae la respuesta, se abre en la respuesta. Si no, se recuerda la última. ---
+  (function init(){
+    var REGIONS={Oeste:1,Metro:1,Norte:1,Sur:1,Este:1,Centro:1};
+    function apply(spec,region,plan,via){
+      if(!spec||!BYID[spec]||!REGIONS[region])return false;
+      sp.value=spec;rg.value=region;
+      if(pl&&plan)pl.value=plan;
+      VIA=via;render();
+      return true;
+    }
+    var p=null;
+    try{p=new URLSearchParams(location.search);}catch(e){}
+    if(p&&(p.get('spec')||p.get('region'))){
+      var raw=p.get('spec')||'',spec=BYID[raw]?raw:BYSLUG[slug(raw)];
+      if(apply(spec,p.get('region')||'Oeste',p.get('plan')||'','enlace')){
+        try{document.getElementById('reg-tool').scrollIntoView({block:'start'});}catch(e){}
+        return;
+      }
+    }
+    try{
+      var last=JSON.parse(localStorage.getItem('rgv1')||'null');
+      if(last)apply(last.s,last.r,last.p,'memoria');
+    }catch(e){}
+  })();
 })();
 </script>
 
