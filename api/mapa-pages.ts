@@ -6160,7 +6160,7 @@ async function handleSinFiltros(req: any, res: any) {
     return x === 'A' || x === 'B' ? 'bg-emerald-500' : x === 'C' ? 'bg-amber-500' : 'bg-red-500'
   }
   const notasCita = notas.length
-    ? `Puerto Rico saca ${gpa} de 4.0 en las metas MINIMAS federales: ${notas.map((m: any) => `${m.categoria} ${(m.grade || 'F').trim()}`).join(' · ')}. Record y fuentes: puertoricosinfiltros.com/notas`
+    ? `Puerto Rico saca ${gpa} de 4.0 en las metas MÍNIMAS federales: ${notas.map((m: any) => `${m.categoria} ${(m.grade || 'F').trim()}`).join(' · ')}. Récord y fuentes: puertoricosinfiltros.com/notas`
     : ''
   const notasChips = notas.map((m: any) => `<span class="inline-flex items-center gap-2 bg-white/10 rounded-full pl-1 pr-3 py-1"><span class="${chipColor(m.grade)} w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0">${escapeHtml((m.grade || 'F').trim())}</span><span class="text-sm text-slate-100">${escapeHtml(m.categoria)}</span></span>`).join('')
   const heroNotas = notas.length ? `
