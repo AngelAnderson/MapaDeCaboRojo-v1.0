@@ -177,6 +177,9 @@ function layout(opts: {
   canonicalHost?: string // force canonical/og base to a specific origin (SEO consolidation across domains)
   canonicalUrl?: string  // full canonical URL override (e.g. the clean root) — wins over host+slug
   lang?: 'es' | 'en'     // registry pages can render English for the diaspora
+  bareTitle?: boolean    // no " · Marca" al final: en páginas que compiten en el SERP por nombre
+                         // de médico o por especialidad+pueblo, esos 20 caracteres son los que
+                         // Google corta, y el dominio ya sale debajo del título de todos modos.
 }): string {
   // Host-aware branding. registromedicopr.com is its OWN property — not Mapa de Cabo Rojo.
   const isReg = /registromedicopr\.com/i.test(opts.host || '')
@@ -391,7 +394,7 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>${escapeHtml(opts.title)} · ${brandName}</title>
+<title>${escapeHtml(opts.bareTitle ? opts.title : `${opts.title} · ${brandName}`)}</title>
 <meta name="description" content="${escapeHtml(opts.description)}">
 <link rel="canonical" href="${canonical}">
 ${isReg ? `<link rel="alternate" hreflang="es-PR" href="${canonical}">
@@ -4346,7 +4349,8 @@ ${regDisclaimer(en)}
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=300')
   res.status(200).send(layout({
-    title: t('Registro de Especialistas Médicos de Puerto Rico — verificado, en español', 'Puerto Rico Medical Specialist Registry — verified, federal NPPES data'),
+    bareTitle: true,
+    title: t('Registro de Especialistas Médicos de PR: por pueblo y con teléfono', 'Puerto Rico Medical Specialist Registry: by town, with phone numbers'),
     description: t(`${totalVerified} especialistas de PR verificados contra el registro federal NPPES/CMS. Busca por especialidad y región, en español, gratis.`, `${totalVerified} PR specialists verified against the federal NPPES/CMS registry. Search by specialty and region. Free.`),
     slug: 'registro',
     bodyHtml: body,
@@ -4468,9 +4472,11 @@ async function handleEspecialista(req: any, res: any) {
 
   const spec = REGISTRY_BYSUB[place.subcategory] || null
   const specLabel = spec ? spec.l : (place.subcategory || 'Proveedor de salud')
+  const specLabelClean = cleanSpecLabel(specLabel)
   const specEmoji = spec ? spec.e : '🩺'
   const isMD = spec ? spec.md : true
   const name = cleanProviderName(place.name)
+  const nameTitle = name.charAt(0).toUpperCase() + name.slice(1)
   const muni = place.municipality || 'Puerto Rico'
   const region = place.region || ''
   const regionLabel = region === 'Metro' ? 'área metro' : region
@@ -4483,14 +4489,17 @@ async function handleEspecialista(req: any, res: any) {
     : null
   const pageUrl = `https://registromedicopr.com/especialista/${encodeURIComponent(place.slug)}`
 
+  // La meta abre con el teléfono a propósito: quien busca a un médico por nombre quiere el
+  // número, y si lo resuelve desde el propio Google ya ganamos (la misión es bajar el costo
+  // de encontrar la información correcta, no cobrar el clic).
   const T = lang === 'en' ? {
-    sub: `${specLabel} in ${muni}, Puerto Rico.${place.phone ? ` Phone: ${place.phone}.` : ''}${place.address ? ' Address on file.' : ''} Verified against the U.S. federal NPPES registry${verifiedDate ? ` (${verifiedDate})` : ''}.`,
+    sub: `${place.phone ? `Phone: ${place.phone}. ` : ''}${specLabelClean} in ${muni}, PR. NPI ${npi} verified in the federal NPPES registry${verifiedDate ? `, as of ${verifiedDate}` : ''}. Free, no account.`,
     verified: 'Verified · federal NPI', call: 'Call', wa: 'WhatsApp', veci: 'Ask El Veci',
     addr: 'Address', regionH: 'Region', specialtyH: 'Specialty', npiH: 'Federal NPI',
     othersH: `Other ${specLabel.toLowerCase()}s in ${regionLabel || 'PR'}`,
     claimH: 'Is this your profile?', notFound: 'Not who you were looking for?',
   } : {
-    sub: `${specLabel} en ${muni}, Puerto Rico.${place.phone ? ` Teléfono: ${place.phone}.` : ''}${place.address ? ' Dirección disponible.' : ''} Verificado contra el registro federal NPPES de EE.UU.${verifiedDate ? ` (${verifiedDate})` : ''}`,
+    sub: `${place.phone ? `Teléfono: ${place.phone}. ` : ''}${specLabelClean} en ${muni}, PR. NPI ${npi} verificado en el registro federal NPPES${verifiedDate ? `, al ${verifiedDate}` : ''}. Gratis y sin cuenta.`,
     verified: 'Verificado · NPI federal', call: 'Llamar', wa: 'WhatsApp', veci: 'Pregúntale al Veci',
     addr: 'Dirección', regionH: 'Región', specialtyH: 'Especialidad', npiH: 'NPI federal',
     othersH: `Otros ${specLabel.toLowerCase()} en el ${regionLabel || 'PR'}`,
@@ -4704,7 +4713,8 @@ ${SHARE_COPY_SCRIPT}
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
   res.status(200).send(layout({
-    title: lang === 'en' ? `${name} — ${specLabel} in ${muni}, PR | Phone & Address` : `${name} — ${specLabel} en ${muni}, PR | Teléfono y Dirección`,
+    bareTitle: true,
+    title: lang === 'en' ? `${nameTitle}, ${specLabelClean} in ${muni} · phone and NPI` : `${nameTitle}, ${specLabelClean} en ${muni} · teléfono y NPI`,
     description: T.sub,
     slug: `especialista/${place.slug}`,
     bodyHtml: body,
@@ -12843,6 +12853,17 @@ const SPEC_INFO: Record<string, { treats: string; whenToGo: string; note: string
 function specToUrl(sub: string): string {
   return sub.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
+// Los <title> compiten a 60 caracteres. El paréntesis explicativo ("Endocrinólogo (diabetes)")
+// sirve dentro de la página pero en el SERP se come el espacio que necesita el pueblo y el
+// conteo. Se quita solo del título y la meta; el body sigue con la etiqueta completa.
+function cleanSpecLabel(label: string): string {
+  return String(label || '').replace(/\s*\([^)]*\)/g, '').trim()
+}
+// "en Oeste" no se dice. "en el Oeste" sí, y "en el área metro" también.
+function regionPhrase(region: string): string {
+  if (!region) return 'Puerto Rico'
+  return region === 'Metro' ? 'el área metro' : `el ${region}`
+}
 // English specialty labels (for ?lang=en on hub pages) — keyed by subcategory slug.
 const SPEC_LABEL_EN: Record<string, string> = {
   'cardiólogo':'Cardiologist','psiquiatra':'Psychiatrist','fisiatra':'Physiatrist (Rehab)','ginecólogo':'OB-GYN','pediatra':'Pediatrician','dermatólogo':'Dermatologist','gastroenterólogo':'Gastroenterologist','oftalmólogo':'Ophthalmologist (Eye MD)','ortopeda':'Orthopedic Surgeon','neurólogo':'Neurologist','urólogo':'Urologist','endocrinólogo':'Endocrinologist (Diabetes)','nefrólogo':'Nephrologist (Kidney)','neumólogo':'Pulmonologist (Lungs)','oncólogo':'Oncologist / Hematologist','reumatólogo':'Rheumatologist (Arthritis)','geriatra':'Geriatrician','otorrinolaringólogo':'ENT (Ear, Nose & Throat)','infectólogo':'Infectious Disease','alergista':'Allergist / Immunologist','medicina de emergencia':'Emergency Medicine','cirujano general':'General Surgeon','anestesiólogo':'Anesthesiologist','radiólogo':'Radiologist','neurocirujano':'Neurosurgeon','cirujano plástico':'Plastic Surgeon','cirujano torácico':'Thoracic Surgeon','coloproctólogo':'Colorectal Surgeon','manejo de dolor':'Pain Management','psicólogo':'Psychologist','optómetra':'Optometrist','podiatra':'Podiatrist','dentista':'Dentist','patólogo':'Pathologist','medicina ocupacional':'Occupational & Preventive Medicine','hospitalista':'Hospitalist','medicina nuclear':'Nuclear Medicine','genetista':'Clinical Geneticist (M.D.)',
@@ -13002,10 +13023,17 @@ async function handleRegistroHub(req: any, res: any) {
     const nearby = ((inRegionRes as any).data || []).filter((p: any) => p.municipality !== muni.name)
     const rowsOf = (list: any[]) => list.map((p: any) => `<tr class="border-t border-slate-100"><td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td><td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '—')}</td><td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-full whitespace-nowrap"><i class="fa-solid fa-phone"></i> ${t('Llamar', 'Call')}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td></tr>`).join('')
     const theadT = `<thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(label)}</th><th class="py-2 px-3">${t('Pueblo', 'Town')}</th><th class="py-2 px-3 text-right">${t('Teléfono', 'Phone')}</th></tr></thead>`
-    const titleT = t(`${x.l} en ${muni.name}, Puerto Rico — verificados`, `${label} in ${muni.name}, Puerto Rico — verified`)
+    // El título compite en posición 8-11 contra "Best/Top 10". Gana el que dice el resultado:
+    // cuántos hay y que traen teléfono. Y cuando no hay, decirlo es lo único que nadie más hace.
+    const cleanEs = cleanSpecLabel(x.l), cleanEn = cleanSpecLabel(label)
+    const titleT = inTown.length
+      ? t(`${cleanEs} en ${muni.name}: los ${inTown.length} que hay, con teléfono`, `${cleanEn} in ${muni.name}: all ${inTown.length}, with phone numbers`)
+      : t(`${cleanEs} en ${muni.name}: no hay. Los más cercanos, con teléfono`, `${cleanEn} in ${muni.name}: none. The closest ones, with phone numbers`)
+    // La meta evita "los 4 cardiólogo": el conteo no toca el sustantivo, así no hay que
+    // pluralizar etiquetas de 2 y 3 palabras ("dentista pediátrico", "trabajador social").
     const descT = inTown.length
-      ? t(`¿Hay ${x.l.toLowerCase()} en ${muni.name}? Sí: ${inTown.length} verificado${inTown.length === 1 ? '' : 's'} contra el registro federal NPPES, con teléfono.`, `${label} in ${muni.name}, PR — ${inTown.length} verified against the federal NPPES registry, with phone numbers.`)
-      : t(`¿Hay ${x.l.toLowerCase()} en ${muni.name}? El registro federal no muestra ninguno con oficina ahí; te decimos los más cercanos, con teléfono.`, `${label} in ${muni.name}, PR — none with a local office per the federal registry; see the nearest ones.`)
+      ? t(`${cleanEs} en ${muni.name}: ${inTown.length} con oficina ahí, cada uno con su teléfono al lado. Del registro federal NPPES, en español. Gratis, sin cuenta y sin plan.`, `${cleanEn} in ${muni.name}: ${inTown.length} with a local office, each with a phone number. From the federal NPPES registry. Free, no account.`)
+      : t(`El registro federal no muestra ninguno con oficina en ${muni.name}. Aquí están los más cercanos${townReg ? ` en ${regionPhrase(townReg)}` : ''}, con pueblo y teléfono. Gratis y sin cuenta.`, `The federal registry shows none with an office in ${muni.name}. Here are the closest ones${townReg ? ` in ${townReg}` : ''}, with town and phone. Free, no account.`)
     const answerT = inTown.length
       ? t(`En ${escapeHtml(muni.name)} hay <strong>${inTown.length} ${escapeHtml(x.l.toLowerCase())}${inTown.length === 1 ? '' : 's'}</strong> con oficina, verificado${inTown.length === 1 ? '' : 's'} contra el registro federal NPPES.`, `${escapeHtml(muni.name)} has <strong>${inTown.length} verified ${escapeHtml(labelLow)}${inTown.length === 1 ? '' : 's'}</strong> with a local office.`)
       : t(`El registro federal <strong>no muestra ningún ${escapeHtml(x.l.toLowerCase())}</strong> con oficina en ${escapeHtml(muni.name)}.${nearby.length ? ` Los más cercanos están ${townReg ? `en el ${escapeHtml(townReg)}` : 'en tu región'}:` : ''}`, `The federal registry shows <strong>no ${escapeHtml(labelLow)}</strong> with an office in ${escapeHtml(muni.name)}.`)
@@ -13039,7 +13067,7 @@ ${regDisclaimer(en)}`
     ]
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
     res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
-    res.status(200).send(layout({ title: titleT, description: descT, slug: canonicalPathT, bodyHtml: bodyT, jsonLd: jsonLdT, ogImage: REGISTRO_OG, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com', lang: en ? 'en' : 'es' }))
+    res.status(200).send(layout({ bareTitle: true, title: titleT, description: descT, slug: canonicalPathT, bodyHtml: bodyT, jsonLd: jsonLdT, ogImage: REGISTRO_OG, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com', lang: en ? 'en' : 'es' }))
     return
   }
 
@@ -13084,8 +13112,12 @@ ${regDisclaimer(en)}`
     answerFirst = regionCount > 0
       ? t(`En ${regionFull(region)} hay <strong>${regionCount} ${escapeHtml(x.l.toLowerCase())}</strong> verificados contra el registro federal NPPES.`, `${regionFull(region)} has <strong>${regionCount} verified ${escapeHtml(labelLow)}${regionCount === 1 ? '' : 's'}</strong> in the federal NPPES registry.`)
       : t(`Según el registro federal, en ${regionFull(region)} no hay ningún ${escapeHtml(x.l.toLowerCase())} verificado. El grupo más grande está en el área metro (${metroCount}).`, `According to the federal registry, ${regionFull(region)} has no verified ${escapeHtml(labelLow)}. The largest group is in the metro area (${metroCount}).`)
-    title = t(`${x.l} en ${region}, Puerto Rico — ${regionCount} verificados`, `${label} in ${region}, Puerto Rico — ${regionCount} verified`)
-    description = t(`${regionCount} ${x.l.toLowerCase()} en ${region}, PR, verificados contra el registro federal NPPES. Con teléfono, en español.`, `${regionCount} verified ${labelLow} in ${region}, Puerto Rico, from the federal NPPES registry. With phone numbers.`)
+    title = regionCount > 0
+      ? t(`${cleanSpecLabel(x.l)} en ${regionPhrase(region)}: los ${regionCount}, con teléfono`, `${cleanSpecLabel(label)} in ${region}, PR: all ${regionCount}, with phone numbers`)
+      : t(`${cleanSpecLabel(x.l)} en ${regionPhrase(region)}: no hay ninguno`, `${cleanSpecLabel(label)} in ${region}, PR: none in the federal registry`)
+    description = regionCount > 0
+      ? t(`${cleanSpecLabel(x.l)} en ${regionPhrase(region)}: ${regionCount} en total, por pueblo y con el teléfono al lado. Del registro federal NPPES, en español. Gratis y sin cuenta.`, `${cleanSpecLabel(label)} in ${region}, Puerto Rico: ${regionCount} in total, by town and with phone numbers. From the federal NPPES registry. Free, no account.`)
+      : t(`El registro federal no muestra ningún ${cleanSpecLabel(x.l).toLowerCase()} en ${regionPhrase(region)}. El grupo grande está en el área metro (${metroCount}), con teléfono. Gratis y sin cuenta.`, `The federal registry shows no ${cleanSpecLabel(label).toLowerCase()} in ${region}. The largest group is in the metro area (${metroCount}), with phone numbers.`)
     body = `${breadcrumb}
 <h1>${x.e} ${escapeHtml(label)} ${t('en', 'in')} ${escapeHtml(region)}, Puerto Rico</h1>
 <p class="text-lg text-slate-600 mt-2">${answerFirst}</p>
@@ -13096,8 +13128,8 @@ ${REGION_TOWNS[region] ? `<div class="not-prose mt-5"><div class="text-xs font-b
 <p class="not-prose mt-4 text-sm"><a href="/registro/${specUrl}${lp}" class="text-teal-700 font-semibold">${t(`Ver los ${total} ${escapeHtml(x.l.toLowerCase())} de toda la isla →`, `See all ${total} ${escapeHtml(labelLow)} across the island →`)}</a></p>`
   } else {
     answerFirst = t(`En Puerto Rico hay <strong>${total} ${escapeHtml(x.l.toLowerCase())}</strong> verificados contra el registro federal NPPES, distribuidos por región.`, `Puerto Rico has <strong>${total} verified ${escapeHtml(labelLow)}</strong> in the federal NPPES registry, spread across regions.`)
-    title = t(`${x.l} en Puerto Rico — ${total} verificados, por región`, `${label} in Puerto Rico — ${total} verified, by region`)
-    description = t(`${total} ${x.l.toLowerCase()} en Puerto Rico verificados contra el registro federal NPPES. ${info.treats} Por región, con teléfono, en español.`, `${total} verified ${labelLow} in Puerto Rico from the federal NPPES registry. ${info.treats} By region, with phone numbers.`)
+    title = t(`${cleanSpecLabel(x.l)} en Puerto Rico: los ${total}, por pueblo y con teléfono`, `${cleanSpecLabel(label)} in Puerto Rico: all ${total}, by town and with phone`)
+    description = t(`${cleanSpecLabel(x.l)} en Puerto Rico: ${total} en total, por región y por pueblo, con el teléfono al lado. Del registro federal NPPES. Gratis y sin cuenta.`, `${cleanSpecLabel(label)} in Puerto Rico: ${total} in total, by region and town, with phone numbers. From the federal NPPES registry. Free, no account.`)
     const regionCards = HUB_REGIONS.map(r => {
       const n = (x.r as any)[r] || 0
       return `<a href="/registro/${specUrl}/${specToUrl(r)}${lp}" class="flex items-center justify-between bg-white border ${n === 0 ? 'border-red-200' : 'border-slate-200'} rounded-lg px-4 py-3 hover:border-teal-400 hover:shadow-sm transition">
@@ -13154,7 +13186,7 @@ ${regDisclaimer(en)}
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
   res.status(200).send(layout({
-    title, description, slug: canonicalPath, bodyHtml: body, jsonLd,
+    bareTitle: true, title, description, slug: canonicalPath, bodyHtml: body, jsonLd,
     ogImage: REGISTRO_OG, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
     lang: en ? 'en' : 'es',
   }))
