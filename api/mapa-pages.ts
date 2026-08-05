@@ -13069,6 +13069,19 @@ async function handleRegistroHub(req: any, res: any) {
     ])
     const inTown = (inTownRes.data || [])
     const nearby = ((inRegionRes as any).data || []).filter((p: any) => p.municipality !== muni.name)
+    // Cuando en el pueblo no hay ninguno, lo útil no es repetir que no hay: es
+    // decir a dónde le toca ir y cuán lejos queda. Distancia entre centroides de
+    // municipio (Census Gazetteer), en línea recta; por carretera siempre es más.
+    let cerca: { nearest: string; km: number; isla: boolean } | null = null
+    if (!inTown.length) {
+      const { data: cd } = await supabase.from('registro_cercania')
+        .select('nearest,km,isla').eq('municipality', muni.name).eq('subcategory', x.s).maybeSingle()
+      if (cd && cd.nearest && cd.nearest !== muni.name) cerca = { nearest: cd.nearest, km: Number(cd.km), isla: !!cd.isla }
+    }
+    const cercaFrase = !cerca ? '' : (cerca.isla
+      ? t(`El más cercano está en <strong>${escapeHtml(cerca.nearest)}</strong>, cruzando el agua.`, `The closest one is in <strong>${escapeHtml(cerca.nearest)}</strong>, across the water.`)
+      : t(`El más cercano está en <strong>${escapeHtml(cerca.nearest)}</strong>, a unos <strong>${Math.round(cerca.km)} km</strong> en línea recta (por carretera es más).`,
+          `The closest one is in <strong>${escapeHtml(cerca.nearest)}</strong>, about <strong>${Math.round(cerca.km)} km</strong> away as the crow flies (farther by road).`))
     const rowsOf = (list: any[]) => list.map((p: any) => `<tr class="border-t border-slate-100"><td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td><td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '—')}</td><td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-full whitespace-nowrap"><i class="fa-solid fa-phone"></i> ${t('Llamar', 'Call')}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td></tr>`).join('')
     const theadT = `<thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(label)}</th><th class="py-2 px-3">${t('Pueblo', 'Town')}</th><th class="py-2 px-3 text-right">${t('Teléfono', 'Phone')}</th></tr></thead>`
     // El título compite en posición 8-11 contra "Best/Top 10". Gana el que dice el resultado:
@@ -13078,15 +13091,17 @@ async function handleRegistroHub(req: any, res: any) {
     const titleT = nT
       ? t(nT === 1 ? `${cleanEs} en ${muni.name}: hay 1, con teléfono` : `${cleanEs} en ${muni.name}: los ${nT} que hay, con teléfono`,
           nT === 1 ? `${cleanEn} in ${muni.name}: there is 1, with phone number` : `${cleanEn} in ${muni.name}: all ${nT}, with phone numbers`)
-      : t(`${cleanEs} en ${muni.name}: no hay. Los más cercanos, con teléfono`, `${cleanEn} in ${muni.name}: none. The closest ones, with phone numbers`)
+      : cerca
+        ? t(`${cleanEs} en ${muni.name}: no hay. El más cercano, en ${cerca.nearest}`, `${cleanEn} in ${muni.name}: none. The closest is in ${cerca.nearest}`)
+        : t(`${cleanEs} en ${muni.name}: no hay. Los más cercanos, con teléfono`, `${cleanEn} in ${muni.name}: none. The closest ones, with phone numbers`)
     // La meta evita "los 4 cardiólogo": el conteo no toca el sustantivo, así no hay que
     // pluralizar etiquetas de 2 y 3 palabras ("dentista pediátrico", "trabajador social").
     const descT = inTown.length
       ? t(`${cleanEs} en ${muni.name}: ${nT} con oficina ahí, ${nT === 1 ? 'con su teléfono' : 'cada uno con su teléfono al lado'}. Del registro federal NPPES, en español. Gratis, sin cuenta y sin plan.`, `${cleanEn} in ${muni.name}: ${nT} with a local office, ${nT === 1 ? 'with phone number' : 'each with a phone number'}. From the federal NPPES registry. Free, no account.`)
-      : t(`El registro federal no muestra ninguno con oficina en ${muni.name}. Aquí están los más cercanos${townReg ? ` en ${regionPhrase(townReg)}` : ''}, con pueblo y teléfono. Gratis y sin cuenta.`, `The federal registry shows none with an office in ${muni.name}. Here are the closest ones${townReg ? ` in ${townReg}` : ''}, with town and phone. Free, no account.`)
+      : t(`El registro federal no muestra ninguno con oficina en ${muni.name}.${cerca ? ` El más cercano está en ${cerca.nearest}, a unos ${Math.round(cerca.km)} km.` : ''} Aquí están los de al lado, con pueblo y teléfono. Gratis y sin cuenta.`, `The federal registry shows none with an office in ${muni.name}. Here are the closest ones${townReg ? ` in ${townReg}` : ''}, with town and phone. Free, no account.`)
     const answerT = inTown.length
       ? t(`En ${escapeHtml(muni.name)} hay <strong>${inTown.length} ${escapeHtml(x.l.toLowerCase())}${inTown.length === 1 ? '' : 's'}</strong> con oficina, verificado${inTown.length === 1 ? '' : 's'} contra el registro federal NPPES.`, `${escapeHtml(muni.name)} has <strong>${inTown.length} verified ${escapeHtml(labelLow)}${inTown.length === 1 ? '' : 's'}</strong> with a local office.`)
-      : t(`El registro federal <strong>no muestra ningún ${escapeHtml(x.l.toLowerCase())}</strong> con oficina en ${escapeHtml(muni.name)}.${nearby.length ? ` Los más cercanos están ${townReg ? `en el ${escapeHtml(townReg)}` : 'en tu región'}:` : ''}`, `The federal registry shows <strong>no ${escapeHtml(labelLow)}</strong> with an office in ${escapeHtml(muni.name)}.`)
+      : t(`El registro federal <strong>no muestra ningún ${escapeHtml(x.l.toLowerCase())}</strong> con oficina en ${escapeHtml(muni.name)}. ${cercaFrase}${nearby.length ? ` Los de al lado:` : ''}`, `The federal registry shows <strong>no ${escapeHtml(labelLow)}</strong> with an office in ${escapeHtml(muni.name)}.`)
     const breadcrumbT = `<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro${lp}" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <a href="/registro/${specUrl}${lp}" class="hover:text-teal-700">${escapeHtml(label)}</a> <span class="text-slate-300">/</span> <span class="text-slate-700">${escapeHtml(muni.name)}</span></nav>`
     let bodyT = `${breadcrumbT}
 <h1>${x.e} ${escapeHtml(label)} ${t('en', 'in')} ${escapeHtml(muni.name)}, Puerto Rico</h1>
