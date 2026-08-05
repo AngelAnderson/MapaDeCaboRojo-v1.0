@@ -4527,18 +4527,22 @@ async function handleEspecialista(req: any, res: any) {
   // Qué dice el directorio publicado del plan. No es "acepta tu plan" (eso solo lo
   // confirma la oficina); es qué imprimió el plan y en qué edición. El caso que
   // ahorra la llamada es el otro: estaba en una edición anterior y ya no está.
-  let planDir: { ultima: string; primera: string; fuente: string | null } | null = null
+  let planDir: { ultima: string; primera: string; fuente: string | null; otroTel: string | null } | null = null
   {
     // Vista pública: la tabla base está cerrada porque trae el bloque crudo del PDF.
     const { data } = await supabase.from('v_plan_directory_public')
-      .select('edition_date,source_url').eq('plan', 'MMM').eq('npi', npi)
+      .select('edition_date,source_url,phones').eq('plan', 'MMM').eq('npi', npi)
       .order('edition_date', { ascending: false })
     const eds = (data || [])
     if (eds.length) {
+      // El teléfono que publica el plan y que el registro federal no tiene. Un
+      // número más que probar antes de darse por vencido.
+      const delPlan: string[] = (eds[0].phones || []).filter((x: string) => x && x !== phoneDigits.slice(-10))
       planDir = {
         ultima: eds[0].edition_date,
         primera: eds[eds.length - 1].edition_date,
         fuente: eds[0].source_url || null,
+        otroTel: delPlan.length ? delPlan[0] : null,
       }
     }
   }
@@ -4552,6 +4556,7 @@ async function handleEspecialista(req: any, res: any) {
     ? `<div class="not-prose mt-5 bg-teal-50 border border-teal-200 rounded-xl p-4">
     <p class="m-0 text-[15px] text-teal-900"><strong>MMM</strong> ${t('lo lista en su directorio de proveedores de', 'lists this provider in its provider directory of')} <strong>${mes(planDir.ultima)}</strong>.</p>
     <p class="m-0 mt-1 text-sm text-teal-800">${t('Eso es lo que el plan publicó, no una confirmación de que te van a coger. Antes de ir, llama y pregunta si aceptan tu plan y si están cogiendo pacientes nuevos.', 'That is what the plan published, not a confirmation that they will take you. Before you go, call and ask whether they take your plan and whether they are accepting new patients.')}</p>
+    ${planDir.otroTel ? `<p class="m-0 mt-2 text-[15px] text-teal-900">${t('MMM publica otro número para esta oficina:', 'MMM publishes another number for this office:')} <a href="tel:${escapeHtml(planDir.otroTel)}" class="font-bold underline">${escapeHtml(planDir.otroTel.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3'))}</a>. ${t('Si el de arriba no contesta, prueba ese.', 'If the one above does not answer, try that one.')}</p>` : ''}
     ${planDir.fuente ? `<p class="m-0 mt-2 text-xs"><a href="${escapeHtml(planDir.fuente)}" target="_blank" rel="noopener" class="text-teal-700 font-semibold underline">${t('Ver el directorio de MMM (PDF) →', 'See the MMM directory (PDF) →')}</a></p>` : ''}
   </div>`
     : `<div class="not-prose mt-5 bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
