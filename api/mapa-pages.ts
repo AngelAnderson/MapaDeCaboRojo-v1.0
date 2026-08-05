@@ -13032,13 +13032,15 @@ async function handleRegistroHub(req: any, res: any) {
     // El título compite en posición 8-11 contra "Best/Top 10". Gana el que dice el resultado:
     // cuántos hay y que traen teléfono. Y cuando no hay, decirlo es lo único que nadie más hace.
     const cleanEs = cleanSpecLabel(x.l), cleanEn = cleanSpecLabel(label)
-    const titleT = inTown.length
-      ? t(`${cleanEs} en ${muni.name}: los ${inTown.length} que hay, con teléfono`, `${cleanEn} in ${muni.name}: all ${inTown.length}, with phone numbers`)
+    const nT = inTown.length
+    const titleT = nT
+      ? t(nT === 1 ? `${cleanEs} en ${muni.name}: hay 1, con teléfono` : `${cleanEs} en ${muni.name}: los ${nT} que hay, con teléfono`,
+          nT === 1 ? `${cleanEn} in ${muni.name}: there is 1, with phone number` : `${cleanEn} in ${muni.name}: all ${nT}, with phone numbers`)
       : t(`${cleanEs} en ${muni.name}: no hay. Los más cercanos, con teléfono`, `${cleanEn} in ${muni.name}: none. The closest ones, with phone numbers`)
     // La meta evita "los 4 cardiólogo": el conteo no toca el sustantivo, así no hay que
     // pluralizar etiquetas de 2 y 3 palabras ("dentista pediátrico", "trabajador social").
     const descT = inTown.length
-      ? t(`${cleanEs} en ${muni.name}: ${inTown.length} con oficina ahí, cada uno con su teléfono al lado. Del registro federal NPPES, en español. Gratis, sin cuenta y sin plan.`, `${cleanEn} in ${muni.name}: ${inTown.length} with a local office, each with a phone number. From the federal NPPES registry. Free, no account.`)
+      ? t(`${cleanEs} en ${muni.name}: ${nT} con oficina ahí, ${nT === 1 ? 'con su teléfono' : 'cada uno con su teléfono al lado'}. Del registro federal NPPES, en español. Gratis, sin cuenta y sin plan.`, `${cleanEn} in ${muni.name}: ${nT} with a local office, ${nT === 1 ? 'with phone number' : 'each with a phone number'}. From the federal NPPES registry. Free, no account.`)
       : t(`El registro federal no muestra ninguno con oficina en ${muni.name}. Aquí están los más cercanos${townReg ? ` en ${regionPhrase(townReg)}` : ''}, con pueblo y teléfono. Gratis y sin cuenta.`, `The federal registry shows none with an office in ${muni.name}. Here are the closest ones${townReg ? ` in ${townReg}` : ''}, with town and phone. Free, no account.`)
     const answerT = inTown.length
       ? t(`En ${escapeHtml(muni.name)} hay <strong>${inTown.length} ${escapeHtml(x.l.toLowerCase())}${inTown.length === 1 ? '' : 's'}</strong> con oficina, verificado${inTown.length === 1 ? '' : 's'} contra el registro federal NPPES.`, `${escapeHtml(muni.name)} has <strong>${inTown.length} verified ${escapeHtml(labelLow)}${inTown.length === 1 ? '' : 's'}</strong> with a local office.`)
@@ -13119,7 +13121,7 @@ ${regDisclaimer(en)}`
       ? t(`En ${regionFull(region)} hay <strong>${regionCount} ${escapeHtml(x.l.toLowerCase())}</strong> verificados contra el registro federal NPPES.`, `${regionFull(region)} has <strong>${regionCount} verified ${escapeHtml(labelLow)}${regionCount === 1 ? '' : 's'}</strong> in the federal NPPES registry.`)
       : t(`Según el registro federal, en ${regionFull(region)} no hay ningún ${escapeHtml(x.l.toLowerCase())} verificado. El grupo más grande está en el área metro (${metroCount}).`, `According to the federal registry, ${regionFull(region)} has no verified ${escapeHtml(labelLow)}. The largest group is in the metro area (${metroCount}).`)
     title = regionCount > 0
-      ? t(`${cleanSpecLabel(x.l)} en ${regionPhrase(region)}: los ${regionCount}, con teléfono`, `${cleanSpecLabel(label)} in ${region}, PR: all ${regionCount}, with phone numbers`)
+      ? t(regionCount === 1 ? `${cleanSpecLabel(x.l)} en ${regionPhrase(region)}: hay 1, con teléfono` : `${cleanSpecLabel(x.l)} en ${regionPhrase(region)}: los ${regionCount}, con teléfono`, `${cleanSpecLabel(label)} in ${region}, PR: ${regionCount === 1 ? 'there is 1' : 'all ' + regionCount}, with phone numbers`)
       : t(`${cleanSpecLabel(x.l)} en ${regionPhrase(region)}: no hay ninguno`, `${cleanSpecLabel(label)} in ${region}, PR: none in the federal registry`)
     description = regionCount > 0
       ? t(`${cleanSpecLabel(x.l)} en ${regionPhrase(region)}: ${regionCount} en total, por pueblo y con el teléfono al lado. Del registro federal NPPES, en español. Gratis y sin cuenta.`, `${cleanSpecLabel(label)} in ${region}, Puerto Rico: ${regionCount} in total, by town and with phone numbers. From the federal NPPES registry. Free, no account.`)
