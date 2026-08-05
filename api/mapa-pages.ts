@@ -4524,6 +4524,42 @@ async function handleEspecialista(req: any, res: any) {
     others = data || []
   }
 
+  // Qué dice el directorio publicado del plan. No es "acepta tu plan" (eso solo lo
+  // confirma la oficina); es qué imprimió el plan y en qué edición. El caso que
+  // ahorra la llamada es el otro: estaba en una edición anterior y ya no está.
+  let planDir: { ultima: string; primera: string; fuente: string | null } | null = null
+  {
+    // Vista pública: la tabla base está cerrada porque trae el bloque crudo del PDF.
+    const { data } = await supabase.from('v_plan_directory_public')
+      .select('edition_date,source_url').eq('plan', 'MMM').eq('npi', npi)
+      .order('edition_date', { ascending: false })
+    const eds = (data || [])
+    if (eds.length) {
+      planDir = {
+        ultima: eds[0].edition_date,
+        primera: eds[eds.length - 1].edition_date,
+        fuente: eds[0].source_url || null,
+      }
+    }
+  }
+  const t = (es: string, en: string) => (lang === 'en' ? en : es)
+  const MES_ES: Record<string, string> = { '2026-06-01': 'junio de 2026', '2025-12-01': 'diciembre de 2025', '2024-12-01': 'diciembre de 2024' }
+  const MES_EN: Record<string, string> = { '2026-06-01': 'June 2026', '2025-12-01': 'December 2025', '2024-12-01': 'December 2024' }
+  const EDICION_VIGENTE = '2026-06-01'
+  const mes = (d: string) => (lang === 'en' ? MES_EN[d] : MES_ES[d]) || d
+
+  const planDirHtml = !planDir ? '' : planDir.ultima === EDICION_VIGENTE
+    ? `<div class="not-prose mt-5 bg-teal-50 border border-teal-200 rounded-xl p-4">
+    <p class="m-0 text-[15px] text-teal-900"><strong>MMM</strong> ${t('lo lista en su directorio de proveedores de', 'lists this provider in its provider directory of')} <strong>${mes(planDir.ultima)}</strong>.</p>
+    <p class="m-0 mt-1 text-sm text-teal-800">${t('Eso es lo que el plan publicó, no una confirmación de que te van a coger. Antes de ir, llama y pregunta si aceptan tu plan y si están cogiendo pacientes nuevos.', 'That is what the plan published, not a confirmation that they will take you. Before you go, call and ask whether they take your plan and whether they are accepting new patients.')}</p>
+    ${planDir.fuente ? `<p class="m-0 mt-2 text-xs"><a href="${escapeHtml(planDir.fuente)}" target="_blank" rel="noopener" class="text-teal-700 font-semibold underline">${t('Ver el directorio de MMM (PDF) →', 'See the MMM directory (PDF) →')}</a></p>` : ''}
+  </div>`
+    : `<div class="not-prose mt-5 bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
+    <p class="m-0 text-[15px] text-amber-900"><strong>${t('Ojo si tienes MMM:', 'Heads up if you have MMM:')}</strong> ${t('aparecía en el directorio de', 'this provider appeared in the')} <strong>${mes(planDir.ultima)}</strong> ${t('y ya no aparece en el de', 'directory and no longer appears in the')} <strong>${mes(EDICION_VIGENTE)}</strong>.</p>
+    <p class="m-0 mt-1 text-sm text-amber-800">${t('Puede que haya salido de la red. Confirma con MMM antes de coger cita, o te toca pagar de tu bolsillo.', 'They may have left the network. Confirm with MMM before booking, or you could end up paying out of pocket.')}</p>
+    ${planDir.fuente ? `<p class="m-0 mt-2 text-xs"><a href="${escapeHtml(planDir.fuente)}" target="_blank" rel="noopener" class="text-amber-800 font-semibold underline">${t('Ver el directorio donde aparecía (PDF) →', 'See the directory where they appeared (PDF) →')}</a></p>` : ''}
+  </div>`
+
   // Planes reportados por vecinos (crowdsource, distinto de accepted_plans = oficina confirmó)
   const { data: planRep } = await supabase.from('v_plan_reports').select('plan,reportes').eq('place_id', place.id)
   const reportedPlans = (planRep || []).filter((r: any) => Number(r.reportes) > 0).sort((a: any, b: any) => b.reportes - a.reportes)
@@ -4554,6 +4590,7 @@ async function handleEspecialista(req: any, res: any) {
       : `<div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${lang === 'en' ? 'Does this office take your plan?' : '¿Aceptan tu plan?'}</div><div class="text-slate-700 text-sm mt-1">${lang === 'en' ? 'Nobody has confirmed this office’s plans yet. Ask when you call, then help the next person below.' : 'Nadie ha confirmado los planes de esta oficina todavía. Pregunta cuando llames, y ayuda al próximo abajo.'}</div></div>`}
     ${reportedPlans.length ? `<div class="bg-sky-50 border border-sky-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-sky-700 font-bold">${lang === 'en' ? 'Neighbors report this office takes' : 'Vecinos reportan que aquí aceptan'}</div><div class="text-sky-900 font-semibold mt-1">${reportedPlans.map((r: any) => `${escapeHtml(planLabel(r.plan))}${Number(r.reportes) > 1 ? ` <span class="text-xs text-sky-600">(${r.reportes})</span>` : ''}`).join(' · ')}</div><div class="text-xs text-sky-700 mt-1">${lang === 'en' ? 'Reported by people who called, not confirmed by the office. Always double-check when you call.' : 'Reportado por gente que llamó, no confirmado por la oficina. Siempre verifica cuando llames.'}</div></div>` : ''}
   </div>
+${planDirHtml}
 
   <div class="not-prose mt-4 bg-white border border-slate-200 rounded-2xl p-5">
     <p class="font-bold text-slate-800 text-sm">${lang === 'en' ? '📞 Did you call? Help the next person' : '📞 ¿Llamaste? Ayuda al próximo'}</p>
