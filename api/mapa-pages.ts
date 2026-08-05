@@ -4404,12 +4404,18 @@ async function handleRegistroSearch(req: any, res: any) {
     // pattern stays a literal substring — % , ( ) * _ all have meaning to ilike/PostgREST otherwise.
     const safe = q.replace(/[%_,()*]/g, ' ').trim()
     if (safe.length < 3) { res.status(200).send(JSON.stringify({ providers: [] })); return }
-    const { data } = await supabase
+    // Se busca por PALABRAS, no por texto contiguo. Un nombre boricua completo trae
+    // 3 o 4 partes ("Edgar Iván Pérez Soto") y el vecino escribe las 2 que se sabe.
+    // Con un ilike contiguo, "Edgar Pérez" no encuentra a "Edgar Iván Pérez": cada
+    // palabra que el vecino no adivina lo deja fuera. Se piden todas las palabras
+    // presentes, en cualquier orden.
+    const terms = safe.split(/\s+/).filter(w => w.length >= 2).slice(0, 5)
+    let query = supabase
       .from('places')
       .select('name,subcategory,municipality,phone,region,slug')
       .eq('category', 'HEALTH').not('npi', 'is', null)
-      .ilike('name', `%${safe}%`)
-      .order('name', { ascending: true }).limit(40)
+    for (const w of (terms.length ? terms : [safe])) query = query.ilike('name', `%${w}%`)
+    const { data } = await query.order('name', { ascending: true }).limit(40)
     const providers = (data || [])
       .filter((p: any) => REGISTRY_SUBS.has(p.subcategory))
       .map((p: any) => ({ name: p.name, subcategory: p.subcategory, municipality: p.municipality, phone: p.phone, region: p.region, slug: p.slug }))
