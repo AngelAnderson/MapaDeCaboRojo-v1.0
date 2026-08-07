@@ -18,6 +18,7 @@ import { createClient } from '@supabase/supabase-js'
 import { createHash, createHmac, timingSafeEqual } from 'crypto'
 import { handleActivos } from './_lib/activos.js'
 import { conFrescura } from './_lib/agentes.js'
+import { paginaMedicaLd } from './_lib/procedencia.js'
 import { handleBarrios } from './_lib/barrios.js'
 import { handleRentas } from './_lib/rentas.js'
 import { handleSuelo } from './_lib/suelo.js'
@@ -13213,7 +13214,14 @@ ${providers.length ? `<div class="not-prose mt-5 overflow-auto border border-sla
 ${REGION_TOWNS[region] ? `<div class="not-prose mt-5"><div class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">${t('Por pueblo', 'By town')}</div><div class="flex flex-wrap gap-2">${REGION_TOWNS[region].map(([ts, tn]) => `<a href="/registro/${specUrl}/${ts}${lp}" class="inline-flex items-center bg-white border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-sm hover:border-teal-400 hover:text-teal-700">${escapeHtml(x.l)} ${t('en', 'in')} ${escapeHtml(tn)}</a>`).join('')}</div></div>` : ''}
 <p class="not-prose mt-4 text-sm"><a href="/registro/${specUrl}${lp}" class="text-teal-700 font-semibold">${t(`Ver los ${total} ${escapeHtml(x.l.toLowerCase())} de toda la isla →`, `See all ${total} ${escapeHtml(labelLow)} across the island →`)}</a></p>`
   } else {
-    answerFirst = t(`En Puerto Rico hay <strong>${total} ${escapeHtml(x.l.toLowerCase())}</strong> verificados contra el registro federal NPPES, distribuidos por región.`, `Puerto Rico has <strong>${total} verified ${escapeHtml(labelLow)}</strong> in the federal NPPES registry, spread across regions.`)
+    // El hueco es el dato citable, no el conteo: "cuantos hay" lo tiene cualquiera, "cuantas
+    // regiones no tienen ninguno" solo lo tiene quien cruzo el registro federal por region.
+    // Se calcula del mismo x.r que ya pinta las tarjetas, sin consulta nueva.
+    const regionesVacias = HUB_REGIONS.filter(r => !((x.r as any)[r] || 0)).length
+    const huecoFrase = regionesVacias > 0
+      ? t(` <strong>${regionesVacias} de las ${HUB_REGIONS.length} regiones de la isla no tienen ninguno</strong>.`, ` <strong>${regionesVacias} of the island's ${HUB_REGIONS.length} regions have none at all</strong>.`)
+      : t(` Todas las ${HUB_REGIONS.length} regiones de la isla tienen al menos uno.`, ` All ${HUB_REGIONS.length} regions of the island have at least one.`)
+    answerFirst = t(`En Puerto Rico hay <strong>${total} ${escapeHtml(x.l.toLowerCase())}</strong> verificados contra el registro federal NPPES, distribuidos por región.`, `Puerto Rico has <strong>${total} verified ${escapeHtml(labelLow)}</strong> in the federal NPPES registry, spread across regions.`) + huecoFrase
     title = t(`${cleanSpecLabel(x.l)} en Puerto Rico: los ${total}, por pueblo y con teléfono`, `${cleanSpecLabel(label)} in Puerto Rico: all ${total}, by town and with phone`)
     description = t(`${cleanSpecLabel(x.l)} en Puerto Rico: ${total} en total, por región y por pueblo, con el teléfono al lado. Del registro federal NPPES. Gratis y sin cuenta.`, `${cleanSpecLabel(label)} in Puerto Rico: ${total} in total, by region and town, with phone numbers. From the federal NPPES registry. Free, no account.`)
     const regionCards = HUB_REGIONS.map(r => {
@@ -13267,6 +13275,12 @@ ${regDisclaimer(en)}
         acceptedAnswer: { '@type': 'Answer', text: region ? `En ${region} hay ${regionCount} ${x.l.toLowerCase()} verificados contra el registro federal NPPES.` : `En Puerto Rico hay ${total} ${x.l.toLowerCase()} verificados contra el registro federal NPPES.` } },
     ] },
     ...(itemList.length ? [{ '@context': 'https://schema.org', '@type': 'ItemList', name: title, numberOfItems: providers.length, itemListElement: itemList }] : []),
+    // La pagina se presenta como FUENTE, no como lista huerfana: quien la mantiene, de
+    // cuando es, y de que registro federal sale. Sin esto el modelo citaba la home.
+    paginaMedicaLd({
+      url: `https://registromedicopr.com/${canonicalPath}`,
+      nombre: title, descripcion: description, especialidad: x.l, items: providers.length,
+    }),
   ]
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8')

@@ -107,6 +107,52 @@ export function ldScript(obj: any): string {
   return `<script type="application/ld+json">${JSON.stringify(obj).replace(/</g, '\\u003c')}</script>`;
 }
 
+
+// El Registro Medico es su propia propiedad: su editor es el Registro, no el Mapa. Lo que se
+// comparte es el sameAs de la red y el verificador.
+export const EDITOR_REGISTRO = {
+  '@type': 'Organization',
+  '@id': 'https://registromedicopr.com#registro',
+  name: 'Registro Médico PR',
+  url: 'https://registromedicopr.com',
+  founder: { '@id': `${ANGEL_URL}#angel` },
+  sameAs: RED_URLS,
+};
+
+/**
+ * Nodo de entidad para las paginas de especialidad del Registro.
+ *
+ * Medido el 7 ago 2026 con ai-visibility-check: para "Neumologo PR" el modelo cita
+ * `registromedicopr.com/` pelado en vez de `/registro/neumologo`, que es la que tiene la
+ * respuesta. Comparando las dos: la home declara MedicalWebPage + Organization; la de
+ * especialidad solo traia BreadcrumbList + FAQPage + ItemList. O sea que la unica pagina que
+ * se presentaba como FUENTE era la home, y el modelo citaba la unica que podia.
+ */
+export function paginaMedicaLd(opts: { url: string; nombre: string; descripcion: string; especialidad: string; items?: number }): any {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'MedicalWebPage',
+    '@id': opts.url,
+    url: opts.url,
+    name: opts.nombre,
+    description: opts.descripcion,
+    inLanguage: 'es-PR',
+    dateModified: new Date().toISOString().slice(0, 10),
+    author: VERIFICADOR,
+    publisher: EDITOR_REGISTRO,
+    isPartOf: { '@type': 'WebSite', '@id': 'https://registromedicopr.com#website', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+    about: { '@type': 'MedicalSpecialty', name: opts.especialidad },
+    audience: { '@type': 'Patient' },
+    license: 'https://creativecommons.org/licenses/by/4.0/',
+    isBasedOn: {
+      '@type': 'Dataset',
+      name: 'NPPES — National Plan and Provider Enumeration System',
+      url: 'https://npiregistry.cms.hhs.gov/',
+      creator: { '@type': 'GovernmentOrganization', name: 'Centers for Medicare & Medicaid Services' },
+    },
+  };
+}
+
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
 export function fechaEs(iso: string | null | undefined): string | null {
