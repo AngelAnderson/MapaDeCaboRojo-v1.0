@@ -208,7 +208,7 @@ export function bloqueProcedencia(place: any, opts: { categoriaUrl?: string | nu
   const lateral = place?.npi
     ? `<a href="https://registromedicopr.com" style="color:#0d9488;text-decoration:none">Registro Medico PR</a> tiene su expediente federal (NPI ${esc(place.npi)}).`
     : (opts.categoriaUrl && opts.categoriaNombre
-      ? `Mas <a href="${esc(opts.categoriaUrl)}" style="color:#0d9488;text-decoration:none">${opts.categoriaNombre} en Cabo Rojo</a>.`
+      ? `Mas <a href="${esc(opts.categoriaUrl)}" style="color:#0d9488;text-decoration:none">${esc(opts.categoriaNombre)} en Cabo Rojo</a>.`
       : '');
 
   return `
