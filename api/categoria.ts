@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { correctButtonHtml } from './_lib/correct-button.js';
+import { coleccionLd, bloqueRespuesta } from './_lib/procedencia.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -250,7 +251,7 @@ export default async function handler(req: any, res: any) {
 
   let placesQuery = supabase
     .from('places')
-    .select('id,name,slug,category,subcategory,image_url,phone,address,municipality,google_rating,google_review_count,status,plan,sponsor_weight,tags,services,opening_hours,lat,lon,npi,one_liner,is_emergency_resource')
+    .select('id,name,slug,category,subcategory,image_url,phone,address,municipality,google_rating,google_review_count,status,plan,sponsor_weight,tags,services,opening_hours,lat,lon,npi,one_liner,is_emergency_resource,last_verified_at,verified_at')
     .eq('status', 'open')
     // Lista negra: quien busca POR NOMBRE los encuentra (ficha propia y pin en el mapa
     // siguen vivos), pero quien busca una CATEGORÍA no los recibe como recomendación.
@@ -666,6 +667,20 @@ export default async function handler(req: any, res: any) {
     itemListElement: itemListElements,
   };
 
+  // Frescura real de ESTA categoria — los mismos numeros que van al parrafo extraible.
+  const _hace90 = Date.now() - 90 * 86400000;
+  const _verif = filtered.filter((p: any) => p.last_verified_at || p.verified_at);
+  const _frescos = _verif.filter((p: any) => new Date(p.last_verified_at || p.verified_at).getTime() > _hace90);
+  const _mejor = filtered
+    .filter((p: any) => p.google_rating)
+    .sort((a: any, b: any) => Number(b.google_rating) - Number(a.google_rating))[0]?.name || null;
+  const coleccionJsonLd = coleccionLd({
+    url: `${baseUrl}/categoria/${cat}`,
+    nombre: `${displayName} en Cabo Rojo, Puerto Rico`,
+    descripcion: description,
+    items: filtered.length,
+  });
+
   // FAQ — health categories + high-LTV capture categories (electricista/plomero/ac/solar)
   const isHealthCat = !!detailRoute;
   const topRated = filtered.filter((p: any) => p.google_rating).sort((a: any, b: any) => Number(b.google_rating) - Number(a.google_rating))[0];
@@ -1024,6 +1039,7 @@ export default async function handler(req: any, res: any) {
   <meta name="twitter:description" content="${esc(description)}">
   ${ogImage ? `<meta name="twitter:image" content="${ogImage}">` : ''}
   <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
+  <script type="application/ld+json">${JSON.stringify(coleccionJsonLd)}</script>
   ${faqSchema ? `<script type="application/ld+json">${JSON.stringify(faqSchema)}</script>` : ''}
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1063,6 +1079,13 @@ export default async function handler(req: any, res: any) {
   <p class="map-section-label">📍 ${mapPlaces.length} ubicaciones en el mapa</p>
 
   <div class="container">
+    ${bloqueRespuesta({
+      nombrePlural: (alreadyHasCaboRojo ? displayName : `${displayName}`).toLowerCase(),
+      total: filtered.length,
+      verificados: _verif.length,
+      frescos90: _frescos.length,
+      mejor: _mejor,
+    })}
     ${urgentBanner}
     ${catSeo?.intro ? `<p style="font-size:1.05rem;line-height:1.6;color:#475569;margin-bottom:1.5rem;max-width:720px">${esc(catSeo.intro)}</p>` : ''}
 

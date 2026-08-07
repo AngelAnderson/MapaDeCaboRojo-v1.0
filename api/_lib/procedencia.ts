@@ -90,6 +90,51 @@ export function paginaLd(opts: { url: string; nombreNegocio: string; fechaIso?: 
 }
 
 /**
+ * Nodo CollectionPage para las paginas de categoria. Son las que contestan la pregunta que
+ * la gente hace de verdad ("donde arreglo el carro en Cabo Rojo") y hasta hoy salian sin
+ * autor, sin editor y sin fecha: una lista huerfana. Con el crawl que les empieza a llegar
+ * desde las 1,193 fichas, tienen que llegar vestidas.
+ */
+export function coleccionLd(opts: { url: string; nombre: string; descripcion: string; items: number }): any {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': opts.url,
+    url: opts.url,
+    name: opts.nombre,
+    description: opts.descripcion,
+    inLanguage: 'es-PR',
+    dateModified: new Date().toISOString().slice(0, 10),
+    author: VERIFICADOR,
+    publisher: EDITOR_RED,
+    isPartOf: { '@type': 'WebSite', '@id': 'https://www.mapadecaborojo.com#website', name: 'MapaDeCaboRojo.com', url: 'https://www.mapadecaborojo.com' },
+    license: 'https://creativecommons.org/licenses/by/4.0/',
+    mainEntity: { '@type': 'ItemList', numberOfItems: opts.items },
+  };
+}
+
+/**
+ * El parrafo que un modelo puede extraer entero (40-60 palabras) y que un vecino lee sin
+ * esfuerzo. La pagina abria con "25 negocios encontrados", que es un conteo, no una
+ * respuesta. Los numeros son reales y se calculan en la misma consulta que pinta la lista.
+ */
+export function bloqueRespuesta(opts: {
+  nombrePlural: string; total: number; verificados: number; frescos90: number; mejor?: string | null;
+}): string {
+  if (!opts.total) return '';
+  const { nombrePlural, total, verificados, frescos90, mejor } = opts;
+  const verif = verificados
+    ? ` De esos, ${verificados} los verificó a mano una persona, y ${frescos90} en los últimos 3 meses.`
+    : ' Ninguno lo ha verificado un humano todavía, así que confírmalo antes de ir.';
+  const top = mejor ? ` El mejor puntuado en Google es ${mejor}.` : '';
+  return `
+    <p style="font-size:1.05rem;line-height:1.65;color:#334155;max-width:720px;margin:0 0 1.25rem 0">
+      En Cabo Rojo, Puerto Rico hay <strong>${total} ${nombrePlural}</strong> en el directorio.${verif}${top}
+      Cada ficha trae teléfono, dirección y la fecha en que se verificó.
+    </p>`;
+}
+
+/**
  * La linea visible. Corta a proposito: un modelo la extrae entera y un vecino la lee sin
  * estorbo. Si NO hay verificacion humana, lo dice — el hueco declarado vale mas que un sello
  * inventado, y ademas es la lista de trabajo pendiente a la vista.
