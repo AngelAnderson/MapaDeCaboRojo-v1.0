@@ -440,6 +440,10 @@
       "destination": "/api/mapa-pages?page=subscribe"
     },
     {
+      "source": "/.well-known/mcp-registry-auth",
+      "destination": "/api/public?action=mcp-auth"
+    },
+    {
       "source": "/llms.txt",
       "destination": "/api/public?action=llms"
     },

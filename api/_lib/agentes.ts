@@ -12,6 +12,15 @@
 
 export const MCP_ENDPOINT = 'https://vprjteqgmanntvisjrvp.supabase.co/functions/v1/mcp-puerto-rico';
 
+// Prueba de control del dominio para el registro oficial de MCP
+// (registry.modelcontextprotocol.io). El registro pide GET
+// https://<dominio>/.well-known/mcp-registry-auth y compara esta llave PUBLICA contra la
+// firma que manda el CLI. Es publica por diseno: sin la privada (que vive fuera del repo)
+// no sirve de nada. Se sirve en los 3 dominios porque los 3 son del mismo duenno, y eso
+// deja reclamar com.registromedicopr/* y com.puertoricosinfiltros/* sin trabajo nuevo.
+// Para rotar: se regenera el par y se cambia esta linea.
+export const MCP_REGISTRY_AUTH = 'v=MCPv1; k=ed25519; p=lpshyZW3GtiAgmJX0bO+BKXsN5lqdGFls+EtcqOn2PI=';
+
 export const MCP_TOOLS: [string, string][] = [
   ['buscar_negocio', 'negocios verificados con su fecha de verificacion'],
   ['chequear_recall', 'recalls de la FDA en espanol'],

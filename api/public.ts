@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { bloqueAgentes } from './_lib/agentes.js';
+import { bloqueAgentes, MCP_REGISTRY_AUTH } from './_lib/agentes.js';
 
 // ── Shared anon client ────────────────────────────────────────────────────────
 const supabase = createClient(
@@ -531,6 +531,11 @@ export default async function handler(req: any, res: any) {
   const action = (req.query.action as string || 'places').toLowerCase();
 
   switch (action) {
+    case 'mcp-auth':
+      // Servido en /.well-known/mcp-registry-auth (rewrite en vercel.json).
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, s-maxage=300');
+      return res.status(200).send(MCP_REGISTRY_AUTH + '\n');
     case 'log-search':
       return handleLogSearch(req, res);
     case 'llms':
