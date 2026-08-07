@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { correctButtonHtml } from './_lib/correct-button.js';
+import { bloqueProcedencia, paginaLd, CATEGORIA_LABEL_ES } from './_lib/procedencia.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -337,6 +338,7 @@ export default async function handler(req: any, res: any) {
   <!-- JSON-LD -->
   <script type="application/ld+json">${JSON.stringify(cleanJsonLd)}</script>
   <script type="application/ld+json">${JSON.stringify(faqJsonLd)}</script>
+  <script type="application/ld+json">${JSON.stringify(paginaLd({ url: pageUrl, nombreNegocio: place.name, fechaIso: place.last_verified_at || place.verified_at }))}</script>
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -460,6 +462,11 @@ export default async function handler(req: any, res: any) {
       <a href="https://wa.me/17874177711?text=VITRINA%20${encodeURIComponent(place.name)}" style="color: rgba(255,255,255,0.9); font-size: 0.875rem; text-decoration: underline;">Destaca tu negocio con La Vitrina — $799/año →</a>
       <p style="color: rgba(255,255,255,0.75); font-size: 0.8rem; margin-top: 0.75rem; margin-bottom: 0;">Textea al 787-417-7711 y El Veci te guía paso a paso.</p>
     </div>`}
+
+    ${bloqueProcedencia(place, {
+      categoriaUrl: CATEGORIA_LABEL_ES[(place.category || '').toUpperCase()] ? `/categoria/${(place.category || '').toLowerCase()}` : null,
+      categoriaNombre: CATEGORIA_LABEL_ES[(place.category || '').toUpperCase()] || null,
+    })}
 
     <footer style="margin-top: 48px; padding: 24px 0; border-top: 1px solid #e2e8f0; text-align: center;">
       <p style="color: #94a3b8; font-size: 12px; margin: 0;">
