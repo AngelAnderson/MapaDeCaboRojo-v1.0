@@ -4451,6 +4451,33 @@ function cleanProviderName(n: string): string {
   return String(n || '').replace(/^Dr\(a\)\.\s*/, '').trim()
 }
 
+// Cuando un proveedor manda a corregir su pueblo, el slug cambia — y el viejo ya está
+// indexado en Google y pegado en correos. Dejarlo en 404 es botar la cita y al paciente.
+// Convención del slug: {nombre}-{apellido}[-...]-{municipio}-{últimos4delNPI}.
+//
+// ⚠️ El sufijo de 4 SOLO no identifica: hasta 11 NPI distintos comparten los mismos 4
+// dígitos (promedio 3.21). Mandar a alguien al médico equivocado es peor que un 404, así
+// que además se exige que coincidan los dos primeros tokens del nombre. Esa combinación
+// sí es única — y si queda más de un candidato, no se adivina: se devuelve null y cae al 404.
+async function resolverSlugRenombrado(slugViejo: string): Promise<string | null> {
+  const m = slugViejo.match(/^([a-z0-9]+-[a-z0-9]+)-.+-(\d{4})$/)
+  if (!m) return null
+  const [, prefijoNombre, sufijoNpi] = m
+
+  const { data } = await supabase
+    .from('places')
+    .select('slug,npi')
+    .not('npi', 'is', null).not('slug', 'is', null)
+    .eq('status', 'open')
+    .like('slug', `${prefijoNombre}-%`)
+    .limit(25)
+
+  const candidatos = (data || []).filter(
+    (r: any) => String(r.npi).endsWith(sufijoNpi) && r.slug !== slugViejo
+  )
+  return candidatos.length === 1 ? String(candidatos[0].slug) : null
+}
+
 async function handleEspecialista(req: any, res: any) {
   const slug = String(req.query.slug || '').trim()
   const lang: 'es' | 'en' = String(req.query.lang || '') === 'en' ? 'en' : 'es'
@@ -4462,6 +4489,13 @@ async function handleEspecialista(req: any, res: any) {
     .eq('slug', slug).not('npi', 'is', null).maybeSingle()
 
   if (!place) {
+    // ¿Es un slug viejo de alguien que sigue en el registro? 301, no 404.
+    const slugNuevo = await resolverSlugRenombrado(slug)
+    if (slugNuevo) {
+      res.writeHead(301, { Location: `https://registromedicopr.com/especialista/${slugNuevo}` })
+      res.end()
+      return
+    }
     res.status(404).send(layout({
       title: 'Especialista no encontrado',
       description: 'Ese perfil no está en el registro. Busca por nombre o especialidad.',
