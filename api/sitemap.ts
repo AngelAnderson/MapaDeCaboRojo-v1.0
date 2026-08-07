@@ -67,7 +67,11 @@ export default async function handler(req: any, res: any) {
   try {
     if (req.query?.robots) {
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-      res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate');
+      // robotsFor() es función pura del host: no toca la base, devuelve el mismo
+      // texto siempre. Con s-maxage=3600 se estaba regenerando 681 veces al día
+      // para producir una cadena idéntica. Cambia solo cuando se edita el código,
+      // y un deploy invalida el cache de todos modos.
+      res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=604800');
       return res.status(200).send(robotsFor(String(req.headers?.host || '')));
     }
     // 1. Fetch Data — el directorio de mapadecaborojo.com, SIN los proveedores del registro.
@@ -388,7 +392,12 @@ export default async function handler(req: any, res: any) {
 
     // 4. Return XML
     res.setHeader('Content-Type', 'text/xml');
-    res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate'); // Cache for 1 hour
+    // Reconstruir esto es pagimar la base entera (27,182 URLs, 5.7 MB de XML). A 1 hora
+    // se rehacía 24 veces al día como mínimo, más una vez por región fría del CDN.
+    // Ningún buscador necesita el sitemap fresco al minuto: un proveedor nuevo entra
+    // al índice igual dentro de 6 horas, y el stale-while-revalidate sirve la copia
+    // vieja al instante mientras se regenera una sola vez por detrás.
+    res.setHeader('Cache-Control', 's-maxage=21600, stale-while-revalidate=86400');
     return res.status(200).send(xml);
 
   } catch (e) {

@@ -86,18 +86,36 @@ const THEMES = {
 const CHARSET =
   'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzáéíóúüñÁÉÍÓÚÜÑ0123456789.,·-—|()¿?¡!&/°#%+ ';
 
-async function loadFont(family: string, weight: number): Promise<ArrayBuffer | null> {
+// CHARSET es constante, así que la URL de cada fuente es idéntica en toda
+// petición: eran 5 fuentes × 2 fetches = 10 viajes a Google Fonts por tarjeta,
+// ~12,000 al día para bajar siempre los mismos 5 archivos. Se memoiza en scope
+// de módulo, que el runtime edge conserva entre peticiones de la misma
+// instancia caliente. Se guarda la PROMESA, no el resultado, para que dos
+// peticiones concurrentes compartan el fetch en vuelo en vez de disparar dos.
+const FONT_CACHE = new Map<string, Promise<ArrayBuffer | null>>();
+
+function loadFont(family: string, weight: number): Promise<ArrayBuffer | null> {
+  const key = `${family}:${weight}`;
+  const hit = FONT_CACHE.get(key);
+  if (hit) return hit;
+
   const url = `https://fonts.googleapis.com/css2?family=${family}:wght@${weight}&text=${encodeURIComponent(
     CHARSET
   )}`;
-  try {
+  const p = (async () => {
     const css = await (await fetch(url)).text();
     const m = css.match(/src: url\((.+?)\) format\('(?:opentype|truetype)'\)/);
     if (!m) return null;
     return await (await fetch(m[1])).arrayBuffer();
-  } catch {
+  })().catch(() => {
+    // Un fallo de red no se cachea: si Google Fonts parpadea, la próxima
+    // petición reintenta en vez de servir tarjetas sin tipografía para siempre.
+    FONT_CACHE.delete(key);
     return null;
-  }
+  });
+
+  FONT_CACHE.set(key, p);
+  return p;
 }
 
 // Título: separa con || en líneas (cada segmento su propia línea); el 2do
