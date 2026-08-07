@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { correctButtonHtml } from './_lib/correct-button.js';
-import { coleccionLd, bloqueRespuesta } from './_lib/procedencia.js';
+import { coleccionLd, bloqueRespuesta, pluralEs } from './_lib/procedencia.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -1080,7 +1080,7 @@ export default async function handler(req: any, res: any) {
 
   <div class="container">
     ${bloqueRespuesta({
-      nombrePlural: (alreadyHasCaboRojo ? displayName : `${displayName}`).toLowerCase(),
+      nombrePlural: pluralEs(cat, displayName),
       total: filtered.length,
       verificados: _verif.length,
       frescos90: _frescos.length,

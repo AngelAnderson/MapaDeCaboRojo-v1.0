@@ -51,6 +51,23 @@ export const CATEGORIA_LABEL_ES: Record<string, string> = {
   NIGHTLIFE: 'vida nocturna', BEACH: 'playas', LOGISTICS: 'náutico',
 };
 
+
+/**
+ * El nombre en espanol y en plural. La clave de categoria es inglesa por dentro (FOOD, AUTO)
+ * y el parrafo salio diciendo "25 auto" y "180 food" en la primera corrida. Lo que se le
+ * ensena al vecino se dice en su idioma; la clave se queda en la base de datos.
+ */
+export function pluralEs(cat: string, displayName: string): string {
+  const dela = CATEGORIA_LABEL_ES[(cat || '').toUpperCase()];
+  if (dela) return dela;
+  const n = (displayName || '').toLowerCase().trim();
+  if (!n) return 'negocios';
+  if (/(s|es)$/.test(n)) return n;               // ya viene en plural
+  if (/[aeiou]$/.test(n)) return `${n}s`;        // farmacia -> farmacias
+  if (/z$/.test(n)) return `${n.slice(0, -1)}ces`; // luz -> luces
+  return `${n}es`;                                // electricista queda igual, hotel -> hoteles
+}
+
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
 export function fechaEs(iso: string | null | undefined): string | null {
