@@ -57,6 +57,18 @@ function formatPhone(raw: string): string {
   return `${ten.slice(0, 3)}-${ten.slice(3, 6)}-${ten.slice(6)}`;
 }
 
+// Meta descriptions were built with esc() first and slice(0,160) after, so a hard
+// cut could land inside an HTML entity (&amp; -> &am) or mid-word ("… · Datos").
+// Cut the RAW text at a word boundary, then escape. Never the other way around.
+function cutAtWord(s: string, max: number): string {
+  if (s.length <= max) return s;
+  const cut = s.slice(0, max);
+  const i = cut.lastIndexOf(' ');
+  return (i > 0 ? cut.slice(0, i) : cut)
+    .replace(/[\s·,;:-]+$/, '')
+    .replace(/\s+(y|e|o|u|de|del|en|el|la|los|las|con|para)$/i, '');
+}
+
 // `category` is an internal English enum. It was rendering verbatim on a
 // Spanish-language page ("ACTIVITY" on a fishing charter).
 const CATEGORY_LABELS: Record<string, string> = {
@@ -188,13 +200,18 @@ export default async function handler(req: any, res: any) {
   const title = place.seo_title
     ? esc(place.seo_title)
     : `${esc(place.name)} en ${muni} · Teléfono, Horario y Dirección`;
-  const descParts = [`${esc(place.name)} en ${muni}, Puerto Rico`];
-  if (place.phone) descParts.push(`Tel. ${esc(place.phone)}`);
-  if (place.address) descParts.push(esc(place.address));
+  // The phone goes in the SERP snippet, so it has to read like a boricua writes it.
+  // It was printing the raw E.164 ("Tel. +17874761253") on every listing without a
+  // seo_description override — 32k pages showing a database dump where the searcher
+  // was looking for a phone number. That is the 1% CTR at position 3.
+  const descParts = [`${place.name} en ${muniRaw}, Puerto Rico`];
+  if (place.phone) descParts.push(`Tel. ${formatPhone(place.phone)}`);
+  if (place.address) descParts.push(String(place.address));
   descParts.push('Horario, dirección y datos verificados.');
-  const description = place.seo_description
-    ? esc(place.seo_description).slice(0, 160)
-    : descParts.join(' · ').slice(0, 160);
+  const description = esc(cutAtWord(
+    place.seo_description ? String(place.seo_description) : descParts.join(' · '),
+    158,
+  ));
   // Sin foto propia -> tarjeta de marca generada (nombre + categoría), no un default genérico.
   const ogCard = `${baseUrl}/api/og?t=${encodeURIComponent(place.name)}&k=${encodeURIComponent(place.subcategory || place.category || 'Cabo Rojo')}`;
   const image = place.image_url || ogCard;
