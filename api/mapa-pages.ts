@@ -17,6 +17,7 @@
 import { createClient } from '@supabase/supabase-js'
 import { createHash, createHmac, timingSafeEqual } from 'crypto'
 import { handleActivos } from './_lib/activos.js'
+import { conFrescura } from './_lib/agentes.js'
 import { handleBarrios } from './_lib/barrios.js'
 import { handleRentas } from './_lib/rentas.js'
 import { handleSuelo } from './_lib/suelo.js'
@@ -6619,15 +6620,15 @@ ${recordCards}
 
 <!-- logging PRSF movido al layout (isPRSF): page_view + record/verify/cite + audio_play + outbound_click -->
 `
-  const datasetLd = {
-    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
+  const datasetLd = conFrescura({
+    '@context': 'https://schema.org', '@type': 'Dataset', license: 'https://www.usa.gov/government-works',
     name: 'Puerto Rico Sin Filtros — récord público de datos verificados de PR',
     description: `Datos verificados de Puerto Rico con fuente primaria: ${g.conHpsa} de 76 municipios con escasez de médicos declarada por el gobierno federal, ${g.cupon} con el cupón de salud mental sin cobrar (${n(g.cuponPob)} personas), ${g.cero} municipios sin ningún especialista. Fuentes: NPPES/CMS, HRSA, OpenFEMA, Censo.`,
     creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
     publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
     isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/',
     keywords: ['Puerto Rico', 'datos verificados', 'acceso médico', 'HPSA', 'NPPES', 'transparencia', 'récord público'],
-  }
+  }, 'https://puertoricosinfiltros.com')
   const siteLd = {
     '@context': 'https://schema.org', '@type': 'WebSite',
     name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com',

@@ -1,5 +1,6 @@
 
 import { createClient } from '@supabase/supabase-js';
+import { MCP_ENDPOINT } from './_lib/agentes.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -53,9 +54,12 @@ function robotsFor(host: string): string {
     ...AI_CRAWLERS.flatMap((ua) => [`User-agent: ${ua}`, 'Allow: /', '']),
     `Sitemap: ${base}/sitemap.xml`,
   ];
-  if (!isPRSF && !isReg) {
-    lines.push('', '# Para LLMs:', `# ${base}/llms.txt`, `# ${base}/llms-full.txt`);
-  }
+  // El puntero a llms.txt vivia solo en mapa. registro y PRSF tambien sirven llms.txt
+  // (handleLlmsRegistro / handleLlmsSinFiltros) y quedaban sin anunciarlo — un crawler que
+  // solo lee robots.txt no tenia como saber que existia.
+  lines.push('', '# Para LLMs:', `# ${base}/llms.txt`);
+  if (!isPRSF && !isReg) lines.push(`# ${base}/llms-full.txt`);
+  lines.push('', '# Para agentes (MCP, read-only, sin llave):', `# ${MCP_ENDPOINT}`);
   return lines.join('\n') + '\n';
 }
 

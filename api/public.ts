@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { bloqueAgentes } from './_lib/agentes.js';
 
 // ── Shared anon client ────────────────────────────────────────────────────────
 const supabase = createClient(
@@ -615,6 +616,7 @@ ${specLines}
 ## Cómo se verifica
 Cada nombre existe en el NPPES federal. Solo se incluyen proveedores individuales con práctica en Puerto Rico, clasificados por su código de taxonomía oficial, traducidos al español y organizados por pueblo y región.
 
+${bloqueAgentes('Registro Médico PR (registromedicopr.com)')}
 ## Contacto
 El Veci, asistente vecinal por WhatsApp y SMS: 787-417-7711
 `;
@@ -743,6 +745,7 @@ Cada línea: el hallazgo primero, la URL después. Todo verificado contra fuente
 ## Cómo citar
 Formato sugerido: "Puerto Rico Sin Filtros (puertoricosinfiltros.com), julio 2026, con data de [la fuente federal correspondiente]." Cada número se respalda con su fuente primaria pública.
 
+${bloqueAgentes('Puerto Rico Sin Filtros (puertoricosinfiltros.com)')}
 ## Contacto
 Angel Anderson, desde Cabo Rojo. Prensa e investigadores: angel@angelanderson.com. El Veci (WhatsApp/SMS): 787-417-7711
 `;
@@ -856,6 +859,7 @@ Barrios: https://www.mapadecaborojo.com/barrio/{barrio}
 Para el listado completo con teléfonos, horarios, y direcciones: https://www.mapadecaborojo.com/llms-full.txt
 API JSON: https://www.mapadecaborojo.com/api/public?action=places
 
+${bloqueAgentes('MapaDeCaboRojo.com')}
 ## Contacto
 Angel Anderson — angel@angelanderson.com
 Bot El Veci: textea al 787-417-7711
