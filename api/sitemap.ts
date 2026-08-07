@@ -288,7 +288,9 @@ export default async function handler(req: any, res: any) {
     // URLs, la mayoría sin un solo proveedor en ese pueblo (Google las lee como thin y las
     // deja en "rastreada, no indexada"), y dejaba fuera los otros 86 pueblos que sí tienen.
     // Ahora sale de la data: solo los combos que de verdad tienen a alguien.
-    const { data: combos } = await supabase.rpc('registro_spec_town_combos', { p_min: 1 });
+    // fetchAll y no .rpc() a secas: son 2,646 combos y PostgREST corta en 1,000 sin avisar.
+    // La primera versión de esto salió a producción con 982 y el sitemap se ENCOGIÓ.
+    const combos = await fetchAll(() => supabase.rpc('registro_spec_town_combos', { p_min: 1 }));
     const slugify = (v: string) => v.normalize('NFD').replace(/[̀-ͯ]/g, '')
       .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     (combos || []).forEach((c: { subcategory: string; municipality: string; n: number }) => {
