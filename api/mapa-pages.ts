@@ -13219,7 +13219,12 @@ ${REGION_TOWNS[region] ? `<div class="not-prose mt-5"><div class="text-xs font-b
     // Se calcula del mismo x.r que ya pinta las tarjetas, sin consulta nueva.
     const regionesVacias = HUB_REGIONS.filter(r => !((x.r as any)[r] || 0)).length
     const huecoFrase = regionesVacias > 0
-      ? t(` <strong>${regionesVacias} de las ${HUB_REGIONS.length} regiones de la isla no tienen ninguno</strong>.`, ` <strong>${regionesVacias} of the island's ${HUB_REGIONS.length} regions have none at all</strong>.`)
+      ? t(regionesVacias === 1
+            ? ` <strong>1 de las ${HUB_REGIONS.length} regiones de la isla no tiene ninguno</strong>.`
+            : ` <strong>${regionesVacias} de las ${HUB_REGIONS.length} regiones de la isla no tienen ninguno</strong>.`,
+          regionesVacias === 1
+            ? ` <strong>1 of the island's ${HUB_REGIONS.length} regions has none at all</strong>.`
+            : ` <strong>${regionesVacias} of the island's ${HUB_REGIONS.length} regions have none at all</strong>.`)
       : t(` Todas las ${HUB_REGIONS.length} regiones de la isla tienen al menos uno.`, ` All ${HUB_REGIONS.length} regions of the island have at least one.`)
     answerFirst = t(`En Puerto Rico hay <strong>${total} ${escapeHtml(x.l.toLowerCase())}</strong> verificados contra el registro federal NPPES, distribuidos por región.`, `Puerto Rico has <strong>${total} verified ${escapeHtml(labelLow)}</strong> in the federal NPPES registry, spread across regions.`) + huecoFrase
     title = t(`${cleanSpecLabel(x.l)} en Puerto Rico: los ${total}, por pueblo y con teléfono`, `${cleanSpecLabel(label)} in Puerto Rico: all ${total}, by town and with phone`)
