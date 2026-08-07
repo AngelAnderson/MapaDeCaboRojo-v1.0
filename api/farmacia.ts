@@ -21,6 +21,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { correctButtonHtml } from './_lib/correct-button.js';
+import { paginaLd, ldScript } from './_lib/procedencia.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -430,6 +431,10 @@ export default async function handler(req: any, res: any) {
 
   <!-- JSON-LD: Pharmacy schema -->
   <script type="application/ld+json">${JSON.stringify(cleanJsonLd)}</script>
+  <!-- La pagina es nuestra: autor, editor, fecha y pertenencia a la red. La ficha ya mostraba
+       la fecha de verificacion visible; lo que faltaba era el grafo de entidad, y estas son
+       justo las paginas que hoy si ganan citas del AI. -->
+  ${ldScript(paginaLd({ url: regCanonical || pageUrl, nombreNegocio: place.name, fechaIso: lastVerifiedAt }))}
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
