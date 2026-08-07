@@ -3858,7 +3858,11 @@ async function handleCambios(req: any, res: any) {
 <p>Si tu médico no aparece, <a href="/registro#claim">dímelo y lo añado</a>. Así es que esto crece.</p>
 `
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
-  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600')
+  // El historial se edita a mano cada par de semanas, pero era la ruta #1 en
+  // invocaciones (8,361/día). Un TTL de 1h contra una página que cambia por mes
+  // es pagar CPU por nada. El stale-while-revalidate largo sirve la copia vieja
+  // al instante y regenera una sola vez por detrás.
+  res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=86400, stale-while-revalidate=604800')
   res.status(200).send(layout({
     title: 'Historial y roadmap · Registro Médico PR',
     description: `Récord de cada actualización del registro médico de Puerto Rico. Última: 2 agosto 2026. ${total} proveedores y facilidades con NPI federal, en español y por pueblo.`,
@@ -13041,7 +13045,9 @@ async function handleRegistroHub(req: any, res: any) {
   const specUrl = specToUrl(String(req.query.spec || ''))
   const regionUrl = specToUrl(String(req.query.region || ''))
   const x = SPEC_BY_URL[specUrl]
-  if (!x) { res.statusCode = 301; res.setHeader('Location', '/registro'); res.end(); return }
+  // SPEC_BY_URL es una tabla estática: si el slug no existe hoy, no existe mañana.
+  // Se cachea el 301 para que los bots que prueban URLs muertas no despierten la función.
+  if (!x) { res.statusCode = 301; res.setHeader('Location', '/registro'); res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=604800'); res.end(); return }
   const region = regionUrl ? (REGION_BY_URL[regionUrl] || '') : ''
   // A non-region 2nd segment may be a municipality (e.g. /registro/neurologo/cabo-rojo) —
   // handled as "town mode" after the shared vars below. Only 302 if it's neither.
@@ -13062,7 +13068,9 @@ async function handleRegistroHub(req: any, res: any) {
   // ── Town mode: /registro/:spec/:municipio — targets "[especialidad] [pueblo]" searches ──
   if (regionUrl && !region) {
     const muni = await resolveMuni(regionUrl)
-    if (!muni) { res.statusCode = 301; res.setHeader('Location', `/registro/${specUrl}${lp}`); res.end(); return }
+    // TTL corto (1 día) a propósito: resolveMuni pega a la base, y si se añade un
+    // municipio el redirect tiene que soltar la ruta sin esperar una semana.
+    if (!muni) { res.statusCode = 301; res.setHeader('Location', `/registro/${specUrl}${lp}`); res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=86400'); res.end(); return }
     const muniSlug = specToUrl(muni.name)
     const townReg = muni.region || ''
     const [inTownRes, inRegionRes] = await Promise.all([
@@ -15614,7 +15622,11 @@ export default async function handler(req: any, res: any) {
 
   const canonicalElsewhere = wrongHost(req, page)
   if (canonicalElsewhere) {
-    res.writeHead(301, { Location: canonicalElsewhere })
+    // El 301 se cachea en el CDN. Sin esta línea cada redirect era una invocación
+    // fría de la función: 8,688 al día (30% del gasto del ciclo de agosto) solo
+    // para decir "la canónica está en otro dominio". La tabla PAGE_CANONICAL es
+    // estática, así que la respuesta es la misma siempre — que la sirva el edge.
+    res.writeHead(301, { Location: canonicalElsewhere, 'Cache-Control': 'public, max-age=3600, s-maxage=604800' })
     return res.end()
   }
 
