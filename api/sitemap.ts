@@ -282,18 +282,25 @@ export default async function handler(req: any, res: any) {
     });
 
     // Registro Médico PR — specialty × TOWN pages: capturan la demanda "[especialidad] [pueblo]"
-    // (ej. "neurologo cabo rojo"). Pueblos de mayor demanda/población × especialidades.
-    const REG_TOWN_SLUGS = ['san-juan','bayamon','carolina','caguas','ponce','mayaguez','arecibo','guaynabo','cabo-rojo','san-german','aguadilla','humacao','fajardo','manati','hormigueros','lajas','sabana-grande','yauco','cayey','vega-baja','san-sebastian','cataño'].map((t) => t.normalize('NFD').replace(/[̀-ͯ]/g, ''));
-    SPEC_URLS.forEach((s) => {
-      REG_TOWN_SLUGS.forEach((town) => {
-        urls.push(`
+    // (ej. "neurologo cabo rojo").
+    //
+    // Esto era un producto cruzado de 86 especialidades × 22 pueblos escritos a mano: 1,892
+    // URLs, la mayoría sin un solo proveedor en ese pueblo (Google las lee como thin y las
+    // deja en "rastreada, no indexada"), y dejaba fuera los otros 86 pueblos que sí tienen.
+    // Ahora sale de la data: solo los combos que de verdad tienen a alguien.
+    const { data: combos } = await supabase.rpc('registro_spec_town_combos', { p_min: 1 });
+    const slugify = (v: string) => v.normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+    (combos || []).forEach((c: { subcategory: string; municipality: string; n: number }) => {
+      // Más proveedores en el pueblo = página más completa = más prioridad de rastreo.
+      const priority = c.n >= 10 ? 0.65 : c.n >= 3 ? 0.55 : 0.45;
+      urls.push(`
         <url>
-          <loc>${REG_BASE}/registro/${s}/${town}</loc>
+          <loc>${REG_BASE}/registro/${slugify(c.subcategory)}/${slugify(c.municipality)}</loc>
           <changefreq>monthly</changefreq>
-          <priority>0.5</priority>
+          <priority>${priority}</priority>
         </url>
       `);
-      });
     });
 
     // Category pages

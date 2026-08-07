@@ -13176,9 +13176,20 @@ ${regDisclaimer(en)}`
       const townsAll: [string, number][] = (mrows || [])
         .map((r: any) => [r.municipality as string, Number(r.n)] as [string, number])
       const top = townsAll.slice(0, 30)
+      // Los pueblos 31+ salían como texto muerto ("+18 pueblos más"), así que 908 páginas
+      // de especialidad×pueblo con 4,637 proveedores no recibían UN SOLO enlace interno.
+      // Google llega por sitemap y se va, porque nada del sitio apunta ahí. Ahora el resto
+      // va como lista de enlaces reales: menos prominente, pero rastreable y clicable.
+      const rest = townsAll.slice(30)
+      const chip = ([m, n]: [string, number]) =>
+        `<a href="/registro/${specUrl}/${specToUrl(m)}${lp}" class="inline-flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-sm hover:border-teal-400 hover:text-teal-700">${escapeHtml(m)} <span class="text-teal-700 font-black">${n}</span></a>`
+      const restLinks = rest.length
+        ? `<details class="not-prose mt-3"><summary class="cursor-pointer text-sm font-semibold text-teal-700 hover:underline">${t(`Ver los otros ${rest.length} pueblos`, `See the other ${rest.length} towns`)}</summary>
+<div class="mt-2 flex flex-wrap gap-x-3 gap-y-1.5">${rest.map(([m, n]) => `<a href="/registro/${specUrl}/${specToUrl(m)}${lp}" class="text-sm text-slate-600 hover:text-teal-700 hover:underline">${escapeHtml(m)} <span class="text-slate-400">(${n})</span></a>`).join('')}</div></details>`
+        : ''
       if (top.length) townChips = `<h2>${t('Por pueblo', 'By town')}</h2>
 <p class="text-slate-600 -mt-2">${t('Toca tu pueblo pa\' ver quién hay ahí mismo, con teléfono.', 'Tap your town to see who is right there, with phone numbers.')}</p>
-<div class="not-prose mt-3 flex flex-wrap gap-2">${top.map(([m, n]) => `<a href="/registro/${specUrl}/${specToUrl(m)}${lp}" class="inline-flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-sm hover:border-teal-400 hover:text-teal-700">${escapeHtml(m)} <span class="text-teal-700 font-black">${n}</span></a>`).join('')}${townsAll.length > 30 ? `<span class="text-xs text-slate-400 self-center">+${townsAll.length - 30} ${t('pueblos más', 'more towns')}</span>` : ''}</div>`
+<div class="not-prose mt-3 flex flex-wrap gap-2">${top.map(chip).join('')}</div>${restLinks}`
     } catch { /* chips are optional */ }
   }
 
