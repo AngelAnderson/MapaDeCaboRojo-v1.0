@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { correctButtonHtml } from './_lib/correct-button.js';
-import { bloqueProcedencia, paginaLd, CATEGORIA_LABEL_ES } from './_lib/procedencia.js';
+import { bloqueProcedencia, paginaLd, ldScript, CATEGORIA_ENLACE_ES } from './_lib/procedencia.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -338,7 +338,7 @@ export default async function handler(req: any, res: any) {
   <!-- JSON-LD -->
   <script type="application/ld+json">${JSON.stringify(cleanJsonLd)}</script>
   <script type="application/ld+json">${JSON.stringify(faqJsonLd)}</script>
-  <script type="application/ld+json">${JSON.stringify(paginaLd({ url: pageUrl, nombreNegocio: place.name, fechaIso: place.last_verified_at || place.verified_at }))}</script>
+  ${ldScript(paginaLd({ url: pageUrl, nombreNegocio: place.name, fechaIso: place.last_verified_at || place.verified_at }))}
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -464,8 +464,8 @@ export default async function handler(req: any, res: any) {
     </div>`}
 
     ${bloqueProcedencia(place, {
-      categoriaUrl: CATEGORIA_LABEL_ES[(place.category || '').toUpperCase()] ? `/categoria/${(place.category || '').toLowerCase()}` : null,
-      categoriaNombre: CATEGORIA_LABEL_ES[(place.category || '').toUpperCase()] || null,
+      categoriaUrl: CATEGORIA_ENLACE_ES[(place.category || '').toUpperCase()] ? `/categoria/${(place.category || '').toLowerCase()}` : null,
+      categoriaNombre: CATEGORIA_ENLACE_ES[(place.category || '').toUpperCase()] || null,
     })}
 
     <footer style="margin-top: 48px; padding: 24px 0; border-top: 1px solid #e2e8f0; text-align: center;">

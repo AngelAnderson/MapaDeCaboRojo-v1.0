@@ -45,6 +45,16 @@ export const EDITOR_RED = {
 // (verificado 200 en food/health/service/auto el 7 ago 2026) — se enlaza solo cuando la
 // categoria esta en esta tabla, para no sembrar 404 en 1,193 fichas.
 export const CATEGORIA_LABEL_ES: Record<string, string> = {
+  FOOD: "sitios pa' comer", SERVICE: 'servicios', SHOPPING: 'tiendas',
+  HEALTH: 'negocios de salud', SIGHTS: 'sitios que ver', BEAUTY: 'salones y barberías',
+  CULTURE: 'sitios de cultura', AUTO: 'negocios de autos', ACTIVITY: 'actividades',
+  EDUCATION: 'sitios de educación', LODGING: 'hospedajes',
+  NIGHTLIFE: 'sitios de vida nocturna', BEACH: 'playas', LOGISTICS: 'negocios náuticos',
+};
+
+// El enlace lateral de la ficha usa una forma corta ("Más salud en Cabo Rojo"), el parrafo
+// de la categoria usa la contable ("177 negocios de salud"). No es la misma frase.
+export const CATEGORIA_ENLACE_ES: Record<string, string> = {
   FOOD: "sitios pa' comer", SERVICE: 'servicios', SHOPPING: 'tiendas', HEALTH: 'salud',
   SIGHTS: 'sitios que ver', BEAUTY: 'belleza', CULTURE: 'cultura', AUTO: 'autos',
   ACTIVITY: 'actividades', EDUCATION: 'educación', LODGING: 'hospedajes',
@@ -60,12 +70,41 @@ export const CATEGORIA_LABEL_ES: Record<string, string> = {
 export function pluralEs(cat: string, displayName: string): string {
   const dela = CATEGORIA_LABEL_ES[(cat || '').toUpperCase()];
   if (dela) return dela;
-  const n = (displayName || '').toLowerCase().trim();
+  // displayName a veces ya trae "en Cabo Rojo" pegado; pluralizar eso daba "farmacias en
+  // cabo rojos". Se corta antes de tocar la ultima letra.
+  const n = (displayName || '').toLowerCase().replace(/\s+en\s+cabo\s+rojo\s*$/, '').trim();
   if (!n) return 'negocios';
   if (/(s|es)$/.test(n)) return n;               // ya viene en plural
   if (/[aeiou]$/.test(n)) return `${n}s`;        // farmacia -> farmacias
   if (/z$/.test(n)) return `${n.slice(0, -1)}ces`; // luz -> luces
   return `${n}es`;                                // electricista queda igual, hotel -> hoteles
+}
+
+
+// Los nombres de negocio NO son texto confiable: entran por sugerencias de vecinos
+// (SuggestPlaceModal, el flujo REGISTRAR del Veci) y por ingestas externas. Cualquier cosa
+// que salga de la base de datos y entre a HTML pasa por aqui primero. Espejo del esc() que
+// ya vive en negocio.ts.
+function esc(v: unknown): string {
+  if (v === null || v === undefined) return '';
+  return String(v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// Un entero de verdad, no lo que venga. Evita que un conteo raro se cuele al HTML.
+function num(v: unknown): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? Math.trunc(n) : 0;
+}
+
+/**
+ * JSON-LD dentro de <script> tiene su propia salida: una cadena "</script>" en cualquier
+ * campo cierra la etiqueta antes de tiempo. Escapar "<" como \u003c es JSON valido y el
+ * parser lo lee igual.
+ */
+export function ldScript(obj: any): string {
+  return `<script type="application/ld+json">${JSON.stringify(obj).replace(/</g, '\\u003c')}</script>`;
 }
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
@@ -138,12 +177,14 @@ export function coleccionLd(opts: { url: string; nombre: string; descripcion: st
 export function bloqueRespuesta(opts: {
   nombrePlural: string; total: number; verificados: number; frescos90: number; mejor?: string | null;
 }): string {
-  if (!opts.total) return '';
-  const { nombrePlural, total, verificados, frescos90, mejor } = opts;
+  const total = num(opts.total);
+  if (!total) return '';
+  const verificados = num(opts.verificados), frescos90 = num(opts.frescos90);
+  const nombrePlural = esc(opts.nombrePlural);
   const verif = verificados
     ? ` De esos, ${verificados} los verificó a mano una persona, y ${frescos90} en los últimos 3 meses.`
     : ' Ninguno lo ha verificado un humano todavía, así que confírmalo antes de ir.';
-  const top = mejor ? ` El mejor puntuado en Google es ${mejor}.` : '';
+  const top = opts.mejor ? ` El mejor puntuado en Google es ${esc(opts.mejor)}.` : '';
   return `
     <p style="font-size:1.05rem;line-height:1.65;color:#334155;max-width:720px;margin:0 0 1.25rem 0">
       En Cabo Rojo, Puerto Rico hay <strong>${total} ${nombrePlural}</strong> en el directorio.${verif}${top}
@@ -165,9 +206,9 @@ export function bloqueProcedencia(place: any, opts: { categoriaUrl?: string | nu
   // Un solo enlace lateral, el mas relevante. Los proveedores con NPI viven en el Registro
   // Medico; los demas, en su categoria. Nunca los dos, nunca los cinco.
   const lateral = place?.npi
-    ? `<a href="https://registromedicopr.com" style="color:#0d9488;text-decoration:none">Registro Medico PR</a> tiene su expediente federal (NPI ${place.npi}).`
+    ? `<a href="https://registromedicopr.com" style="color:#0d9488;text-decoration:none">Registro Medico PR</a> tiene su expediente federal (NPI ${esc(place.npi)}).`
     : (opts.categoriaUrl && opts.categoriaNombre
-      ? `Mas <a href="${opts.categoriaUrl}" style="color:#0d9488;text-decoration:none">${opts.categoriaNombre} en Cabo Rojo</a>.`
+      ? `Mas <a href="${esc(opts.categoriaUrl)}" style="color:#0d9488;text-decoration:none">${opts.categoriaNombre} en Cabo Rojo</a>.`
       : '');
 
   return `

@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { correctButtonHtml } from './_lib/correct-button.js';
-import { coleccionLd, bloqueRespuesta, pluralEs } from './_lib/procedencia.js';
+import { coleccionLd, bloqueRespuesta, pluralEs, ldScript } from './_lib/procedencia.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -1039,7 +1039,7 @@ export default async function handler(req: any, res: any) {
   <meta name="twitter:description" content="${esc(description)}">
   ${ogImage ? `<meta name="twitter:image" content="${ogImage}">` : ''}
   <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
-  <script type="application/ld+json">${JSON.stringify(coleccionJsonLd)}</script>
+  ${ldScript(coleccionJsonLd)}
   ${faqSchema ? `<script type="application/ld+json">${JSON.stringify(faqSchema)}</script>` : ''}
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
