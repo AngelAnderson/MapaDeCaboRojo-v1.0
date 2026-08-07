@@ -207,11 +207,15 @@ export default async function handler(req: any, res: any) {
   const descParts = [`${place.name} en ${muniRaw}, Puerto Rico`];
   if (place.phone) descParts.push(`Tel. ${formatPhone(place.phone)}`);
   if (place.address) descParts.push(String(place.address));
-  descParts.push('Horario, dirección y datos verificados.');
-  const description = esc(cutAtWord(
-    place.seo_description ? String(place.seo_description) : descParts.join(' · '),
-    158,
-  ));
+  // The trust line is appended only when it fits whole. Pushing it into the array and
+  // cutting afterwards left a dangling "· Horario" on every listing with a long address.
+  const descCore = descParts.join(' · ');
+  const descTail = descCore.length + 41 <= 158
+    ? ' · Horario, dirección y datos verificados.'
+    : (descCore.length + 21 <= 158 ? ' · Verificado a mano.' : '');
+  const description = esc(place.seo_description
+    ? cutAtWord(String(place.seo_description), 158)
+    : descCore.length > 158 ? cutAtWord(descCore, 158) : descCore + descTail);
   // Sin foto propia -> tarjeta de marca generada (nombre + categoría), no un default genérico.
   const ogCard = `${baseUrl}/api/og?t=${encodeURIComponent(place.name)}&k=${encodeURIComponent(place.subcategory || place.category || 'Cabo Rojo')}`;
   const image = place.image_url || ogCard;
