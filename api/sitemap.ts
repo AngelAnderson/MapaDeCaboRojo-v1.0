@@ -224,8 +224,11 @@ export default async function handler(req: any, res: any) {
 
     // Registro Médico PR — one page per verified specialist (NPPES). Paginate past the 1000-row cap.
     const specialists: any[] = [];
-    // 25 pages × 1000 = 25,000 capacity (registry = ~20,600 providers; sitemap protocol cap is 50k/file).
-    for (let page = 0; page < 25; page++) {
+    // 50 pages × 1000 = 50,000, que es exactamente el tope del protocolo de sitemaps por archivo.
+    // Estaba en 25 y el registro creció a 28,098 elegibles: el sitemap salía con 25,000 clavados
+    // y 3,098 proveedores publicados no tenían por dónde ser descubiertos (9 ago 2026). El corte
+    // era invisible porque un sitemap lleno se ve igual que uno completo — de ahí el aviso de abajo.
+    for (let page = 0; page < 50; page++) {
       const { data } = await supabase
         .from('places')
         .select('slug')
@@ -235,6 +238,11 @@ export default async function handler(req: any, res: any) {
       if (!data || data.length === 0) break;
       specialists.push(...data);
       if (data.length < 1000) break;
+    }
+    // Un sitemap topado no se distingue de uno completo a simple vista. Si volvemos a llegar al
+    // techo, que quede dicho en los logs en vez de descubrirlo meses después contando URLs.
+    if (specialists.length >= 50000) {
+      console.warn(`[sitemap] TOPE ALCANZADO: ${specialists.length} especialistas. Hay que partir en sitemap index.`);
     }
     specialists.forEach((p: any) => {
       urls.push(`
