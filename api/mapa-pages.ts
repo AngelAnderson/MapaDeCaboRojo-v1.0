@@ -243,7 +243,7 @@ function layout(opts: {
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Servicios</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/agua" class="hover:text-teal-700">Agua</a><a href="/acueductos" class="hover:text-teal-700">El recibo del agua</a><a href="/luz" class="hover:text-teal-700">Luz</a><a href="/basura" class="hover:text-teal-700">Basura</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">El pueblo</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/contradicciones" class="hover:text-teal-700">Contradicciones</a><a href="/transicion" class="hover:text-teal-700">Vistas de transición</a><a href="/funciona" class="hover:text-teal-700">Cuando funciona</a><a href="/semaforo-fema" class="hover:text-teal-700">Semáforo FEMA</a><a href="/demanda" class="hover:text-teal-700">Lo que busca PR</a><a href="/historial" class="hover:text-teal-700">Historial de promesas</a><a href="/promesas" class="hover:text-teal-700">Promesómetro</a><a href="/esencia" class="hover:text-teal-700">Proyecto Esencia</a><a href="/activos" class="hover:text-teal-700">Activos dormidos</a><a href="/retiro" class="hover:text-teal-700">El Huracán Lento</a><a href="/no-se-mide" class="hover:text-teal-700">Lo que ni se mide</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Expedientes</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/expediente/alcalde-cabo-rojo" class="hover:text-teal-700">Alcalde de Cabo Rojo</a><a href="/expediente/representante-distrito-20" class="hover:text-teal-700">Rep. Distrito 20</a></div></div>
-<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Predicción</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/prediccion" class="hover:text-teal-700">Predicción 2030</a><a href="/sinfiltros/pulso" class="hover:text-teal-700">Pulso</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Predicción</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/prediccion" class="hover:text-teal-700">Predicción 2030</a><a href="/predicciones" class="hover:text-teal-700">Predicciones con fecha</a><a href="/sinfiltros/pulso" class="hover:text-teal-700">Pulso</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Prensa</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/buscar" class="hover:text-teal-700">Pregúntale al récord</a><a href="/comparte" class="hover:text-teal-700">Datos citables</a><a href="/rompelo" class="hover:text-teal-700">Rómpelo, si puedes</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">La casa</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/mision" class="hover:text-teal-700">La misión</a><a href="/decidir" class="hover:text-teal-700">¿Me quedo o me voy?</a><a href="/#sugiere" class="hover:text-teal-700">Sugiere un récord</a></div></div>
 </div>
@@ -9407,6 +9407,121 @@ ${SHARE_COPY_SCRIPT}
   }))
 }
 
+// /predicciones — el archivo público de predicciones con fecha, criterio y fuente.
+// Lee en vivo de la tabla `predicciones` (Supabase; RLS on, sin políticas — nadie con
+// anon/authenticated puede leerla vía PostgREST; solo el service role de este server
+// la toca, igual que esencia_timeline, quien_responde_promesas, etc. arriba en este
+// archivo). Solo status IN ('publicada','locked') sale a la calle: 'banco' ni se
+// selecciona, y la columna `notas` nunca se pide en el SELECT — ni por accidente.
+// Las selladas muestran título + fecha de cobro y nada más: el sello es el mecanismo
+// de credibilidad (no se puede "ajustar" una predicción después de verla venir).
+async function handlePredicciones(req: any, res: any) {
+  let rows: any[] = []
+  try {
+    const { data } = await supabase.from('predicciones')
+      .select('num, titulo, prediccion, criterio, decision, bolsillo, fuente_url, vence_on, ojala_falle, status')
+      .in('status', ['publicada', 'locked'])
+      .order('num', { ascending: true, nullsFirst: false })
+    rows = data || []
+  } catch (_) { /* empty */ }
+
+  const publicadas = rows.filter((r: any) => r.status === 'publicada')
+  const selladas = rows.filter((r: any) => r.status === 'locked')
+
+  const MESES_PRED = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+  const fechaLargaPred = (iso: string): string => {
+    if (!iso) return ''
+    const [y, m, d] = String(iso).split('-').map(Number)
+    if (!y || !m || !d) return String(iso)
+    return `${d} de ${MESES_PRED[m - 1]} de ${y}`
+  }
+
+  const publicadaCards = publicadas.map((p: any) => {
+    const copyTxt = `${p.titulo}. ${p.prediccion} Se cobra: ${fechaLargaPred(p.vence_on)}. puertoricosinfiltros.com/predicciones`
+    return `
+  <div class="not-prose bg-white border border-slate-200 rounded-2xl overflow-hidden mt-5" id="p-${escapeHtml(String(p.num ?? ''))}">
+    <div class="px-4 pt-4 flex items-start justify-between gap-3 flex-wrap">
+      <p class="font-black text-slate-900 text-lg leading-snug flex-1" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(p.titulo)}</p>
+      ${p.ojala_falle ? `<span class="text-[11px] font-bold rounded-full px-2.5 py-0.5 border bg-emerald-50 border-emerald-200 text-emerald-800">🤞 Ojalá falle</span>` : ''}
+    </div>
+    <p class="px-4 mt-2 text-slate-700 leading-relaxed">${escapeHtml(p.prediccion)}</p>
+    ${p.bolsillo ? `<div class="mx-4 mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3"><p class="text-[11px] uppercase tracking-widest font-bold text-amber-700">🎒 Lo que te toca a ti</p><p class="text-sm text-slate-800 mt-1">${escapeHtml(p.bolsillo)}</p></div>` : ''}
+    <div class="px-4 mt-3 pb-4 border-t border-slate-100 pt-3">
+      <p class="text-[11px] uppercase tracking-widest font-bold text-teal-600">Cómo se verifica</p>
+      <p class="text-sm text-slate-700 mt-1 leading-relaxed">${escapeHtml(p.criterio)}</p>
+      ${p.decision ? `<p class="text-[11px] uppercase tracking-widest font-bold text-teal-600 mt-3">Qué hacer con esto</p><p class="text-sm text-slate-700 mt-1 leading-relaxed">${escapeHtml(p.decision)}</p>` : ''}
+    </div>
+    <div class="bg-slate-900 text-white px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+      <p class="font-bold text-sm sm:text-base m-0"><span class="text-teal-300 text-[11px] uppercase tracking-widest font-bold mr-2">Se cobra</span>${escapeHtml(fechaLargaPred(p.vence_on))}</p>
+      <div class="flex items-center gap-2 shrink-0">
+        ${p.fuente_url ? `<a href="${escapeHtml(p.fuente_url)}" target="_blank" rel="noopener" class="text-teal-300 text-xs font-bold hover:underline">Fuente ↗</a>` : ''}
+        <button type="button" class="share-copy inline-flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white font-bold px-3 py-1.5 rounded-full text-xs" data-copy="${escapeHtml(copyTxt)}"><i class="fa-regular fa-copy"></i> Copiar</button>
+      </div>
+    </div>
+  </div>`
+  }).join('')
+
+  const selladaCards = selladas.map((p: any) => `
+  <div class="not-prose bg-slate-50 border border-slate-200 border-dashed rounded-2xl p-4 mt-3 flex items-center justify-between gap-3 flex-wrap">
+    <div>
+      <p class="font-bold text-slate-800">${escapeHtml(p.titulo)}</p>
+      <p class="text-xs text-slate-500 mt-1">🔒 Escrita y sellada. Se publica un viernes.</p>
+    </div>
+    <span class="text-xs font-bold bg-white border border-slate-200 text-slate-600 px-2.5 py-1 rounded-full shrink-0">Se cobra: ${escapeHtml(fechaLargaPred(p.vence_on))}</span>
+  </div>`).join('')
+
+  const body = `
+<h1>Predicciones</h1>
+<p class="text-lg text-slate-600 mt-2">Predicciones con fecha, criterio y fuente. Si fallamos, queda escrito.</p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">Cómo se lee</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Cada predicción tiene fecha de cobro. Cuando llega, el resultado se publica aquí mismo — gane o pierda.</p>
+  <p class="text-slate-300 mt-2 text-sm leading-relaxed">Las <strong class="text-white">publicadas</strong> van con su fuente, el criterio exacto de verificación y qué hacer con la información. Las <strong class="text-white">selladas</strong> ya están escritas — el contenido no se muestra hasta que se publican, casi siempre un viernes. Lo único público antes de eso es que existen y cuándo se cobran. Eso evita que una predicción se "ajuste" después de ver para dónde sopla el viento.</p>
+</div>
+
+${shareRow({ text: 'Predicciones sobre Puerto Rico con fecha, criterio y fuente. Si fallan, queda escrito en público:', url: 'https://puertoricosinfiltros.com/predicciones', toWho: 'Al que decide con números, no con corazonadas.' })}
+
+<h2>Publicadas${publicadas.length ? '' : ' — ninguna todavía'}</h2>
+${publicadas.length ? publicadaCards : '<p class="text-slate-500 text-sm">Las primeras salen cuando llega su fecha de cobro. Mientras tanto, abajo están las que ya quedaron selladas.</p>'}
+
+<h2>Selladas — escritas, esperando su fecha</h2>
+<p class="text-sm text-slate-600">${selladas.length} ${selladas.length === 1 ? 'predicción más ya está escrita y sellada' : 'predicciones más ya están escritas y selladas'}. Nadie las edita después del hecho — ni siquiera nosotros.</p>
+${selladaCards || '<p class="text-slate-500 text-sm">Ninguna sellada por ahora.</p>'}
+
+<h2>Método</h2>
+<ul class="text-slate-700">
+  <li>Cada predicción se escribe y se sella ANTES de que se pueda verificar — el criterio queda fijo, no se mueve después de ver hacia dónde va la cosa.</li>
+  <li>Cuando llega la fecha de cobro, se publica el resultado en esta misma página: cumplió o no cumplió, con la fuente que lo prueba.</li>
+  <li>Algunas llevan la etiqueta 🤞 <strong>Ojalá falle</strong> — son las que preferiríamos perder, porque significan que algo le fue mejor a Puerto Rico de lo que el récord proyecta.</li>
+  <li>¿Ves un error en una publicada? Se corrige en público: <a href="/rompelo" class="text-teal-700 font-semibold">/rompelo</a>.</li>
+</ul>
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
+  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Una predicción sin fecha de verificación es opinión disfrazada. Estas tienen fecha.</p>
+  <p class="mt-2 text-sm text-slate-600 italic">Si te sirve, úsalo. Si no, sigue tu camino.</p>
+</div>
+${SHARE_COPY_SCRIPT}
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'Predicciones de Puerto Rico Sin Filtros: fecha, criterio y fuente',
+    description: 'Predicciones concretas sobre Puerto Rico, cada una escrita y sellada antes de poder verificarse, con fecha de cobro, criterio de verificación y fuente. Publicadas cuando llega su fecha, gane o pierda la predicción.',
+    creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/predicciones',
+    keywords: ['predicciones', 'Puerto Rico', 'verificacion', 'datos'],
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=1800, stale-while-revalidate=600')
+  res.status(200).send(layout({
+    title: 'Predicciones de Puerto Rico: con fecha, criterio y fuente',
+    description: 'Predicciones concretas sobre Puerto Rico, escritas y selladas antes de verificarse. Cuando llega la fecha de cobro, el resultado se publica aquí — gane o pierda. Con fuente al lado.',
+    slug: 'predicciones', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
 export const CITABLES_ESENCIA: Array<[string, string, string]> = [
   ['Lo llaman "desarrollo turístico". El récord: 1,132 casas vs 520 habitaciones de hotel — ~70% residencial — con ~$498 millones en créditos TURÍSTICOS aprobados. Ese dinero sale del mismo fondo que paga servicios públicos. Tú decides.', 'CPI, octubre 2025', 'https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/'],
   ['Prometen agua pa\' 1,652 unidades de lujo. La propia AAA dijo por carta que Betances no puede — y en tu casa el agua se va sin aviso. El proyecto pide 1.25 a 2 millones de galones AL DÍA. Tú decides quién bebe primero.', 'Carta AAA vía CPI · NotiCel, 18 jun 2026', 'https://noticel.com/noticias/20260618/aaa-carece-de-la-capacidad-para-suplir-la-demanda-de-agua-requerida-por-esencia/'],
@@ -16354,6 +16469,7 @@ const PAGE_CANONICAL: Record<string, string> = {
   'pon-tu-negocio-en-el-mapa': 'https://www.mapadecaborojo.com/pon-tu-negocio-en-el-mapa',
   'porque': 'https://registromedicopr.com/porque',
   'prediccion': 'https://puertoricosinfiltros.com/prediccion',
+  'predicciones': 'https://puertoricosinfiltros.com/predicciones',
   'promesas': 'https://www.mapadecaborojo.com/promesas',
   'prospecto': 'https://registromedicopr.com/prospecto',
   'pueblo': 'https://registromedicopr.com/pueblo',
@@ -16459,6 +16575,7 @@ export default async function handler(req: any, res: any) {
     case 'buscar': return handleBuscar(req, res)
     case 'buscar-ia': return await handleBuscarIa(req, res)
     case 'prediccion': return handlePrediccion(req, res)
+    case 'predicciones': return await handlePredicciones(req, res)
     case 'ultima-cifra': return handleUltimaCifra(req, res)
     case 'numero-mas-nuevo': return handleNumeroMasNuevo(req, res)
     case 'costo-de-vida': return await handleCostoDeVida(req, res)

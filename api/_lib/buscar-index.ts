@@ -6,6 +6,7 @@
 export const BUSCAR_INDEX = [
     { u: '/decidir', t: '¿Me quedo o me voy?', d: 'La decisión grande con los números al lado', k: 'quedarme irme mudarme diaspora regresar volver decision' },
     { u: '/prediccion', t: 'Predicción 2030', d: 'Lo que dicen todos los récords juntos si nada cambia', k: 'futuro 2030 proyeccion sintesis lectura' },
+    { u: '/predicciones', t: 'Predicciones con fecha', d: 'Predicciones concretas, cada una con fecha de cobro, criterio y fuente', k: 'predicciones fecha criterio apuesta selladas cobro verificacion' },
     { u: '/retiro', t: 'El Huracán Lento', d: 'Envejecimiento + médicos + internet, municipio por municipio', k: 'huracan retiro viejos envejecer pension 65 pobreza municipios tabla evidencia' },
     { u: '/registro/estado', t: 'El estado de los médicos', d: 'Cuántos médicos hay y por qué no llega el que falta', k: 'medicos doctores especialistas psiquiatras dentistas escasez nhsc hpsa salud cupon' },
     { u: '/cupon', t: 'El cupón sin cobrar', d: 'Dinero federal de salud aprobado que nadie reclama', k: 'cupon dinero federal salud mental prestamos 75000 nhsc fondos' },

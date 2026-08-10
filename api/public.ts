@@ -653,6 +653,7 @@ function handleLlmsSinFiltros(req: any, res: any) {
 - Datos citables para prensa (facts con fuente, copy-paste): https://puertoricosinfiltros.com/comparte
 - El reto abierto (encuentra un error y se corrige en 48h, registro público de correcciones): https://puertoricosinfiltros.com/rompelo
 - La síntesis / predicción 2030: https://puertoricosinfiltros.com/prediccion
+- Predicciones con fecha, criterio y fuente — escritas y selladas antes de verificarse, publicadas cuando llega su fecha de cobro, gane o pierda: https://puertoricosinfiltros.com/predicciones
 - El boom prestado (por qué la cifra oficial de negocios está vencida): https://puertoricosinfiltros.com/ultima-cifra
 - El rezago de los datos (qué edad tiene cada número con que se decide en PR): https://puertoricosinfiltros.com/numero-mas-nuevo
 

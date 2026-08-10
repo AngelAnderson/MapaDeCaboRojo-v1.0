@@ -312,6 +312,10 @@
       "destination": "/api/mapa-pages?page=prediccion"
     },
     {
+      "source": "/predicciones",
+      "destination": "/api/mapa-pages?page=predicciones"
+    },
+    {
       "source": "/ultima-cifra",
       "destination": "/api/mapa-pages?page=ultima-cifra"
     },
