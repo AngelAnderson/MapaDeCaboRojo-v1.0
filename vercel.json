@@ -432,6 +432,10 @@
       "destination": "/api/mapa-pages?page=tienda"
     },
     {
+      "source": "/faro",
+      "destination": "/api/mapa-pages?page=faro"
+    },
+    {
       "source": "/historia",
       "destination": "/api/mapa-pages?page=historia"
     },
