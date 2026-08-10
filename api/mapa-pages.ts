@@ -2005,6 +2005,25 @@ const FARO_ASSETS = `<style>
 .faro-dash{stroke:#5A6B78;fill:none;stroke-width:.8;stroke-dasharray:5 4}
 .faro-ln{stroke:#C7D0D8;fill:none;stroke-width:1.2}
 .faro-lnt{stroke:#8B9AA3;fill:none;stroke-width:.9}
+
+.faro-gal{display:grid;grid-template-columns:1fr;gap:26px;margin:26px 0}
+@media(min-width:760px){.faro-gal{grid-template-columns:1fr 1fr}}
+.faro-gal-item{margin:0;border:1px solid #cbd5e1;border-radius:8px;overflow:hidden;background:#fff}
+.faro-gal-item img{display:block;width:100%;height:auto;background:#f1f5f9}
+.faro-gal-item figcaption{padding:14px 16px;font-size:15px;line-height:1.55;color:#334155}
+.faro-gal-btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.faro-dl,.faro-ver{display:inline-block;padding:13px 18px;border-radius:8px;font-size:16px;font-weight:700;text-decoration:none;min-height:48px;line-height:1.4}
+.faro-dl{background:#0d9488;color:#fff}
+.faro-dl:hover{background:#0f766e}
+.faro-ver{background:#fff;color:#0f172a;border:2px solid #94a3b8}
+.faro-ver:hover{border-color:#0f172a}
+.faro-card{border:2px solid #0f172a;border-radius:10px;background:#fff;padding:20px 22px;margin:16px 0}
+.faro-q{font-size:22px;line-height:1.4;font-weight:700;color:#0f172a;margin:0 0 8px}
+.faro-src{font-size:14px;color:#64748b;margin:0 0 14px}
+.faro-copy{background:#0d9488;color:#fff;border:0;border-radius:8px;padding:14px 26px;font-size:17px;font-weight:700;cursor:pointer;min-height:50px}
+.faro-copy:hover{background:#0f766e}
+.faro-copy:focus-visible,.faro-dl:focus-visible,.faro-ver:focus-visible{outline:3px solid #0f172a;outline-offset:2px}
+.faro-copy.ok{background:#16a34a}
 @media (prefers-reduced-motion:reduce){#faro-piece *,#faro-mech-wrap *{animation-duration:.001ms !important;animation-iteration-count:1 !important}}
 </style>
 
@@ -2259,6 +2278,34 @@ const FARO_ASSETS = `<style>
       a.onfinish=function(){ play(); };
     });
   })();
+
+  /* ---------- copiar tarjetas ---------- */
+  (function copiar(){
+    var btns=document.querySelectorAll(".faro-copy");
+    if(!btns.length) return;
+    function copy(txt,btn){
+      function done(){ btn.classList.add("ok"); btn.textContent="Copiado \u2713";
+        setTimeout(function(){ btn.classList.remove("ok"); btn.textContent="Copiar"; },2400); }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txt).then(done,function(){ fallback(); });
+      } else { fallback(); }
+      function fallback(){
+        var t=document.createElement("textarea"); t.value=txt;
+        t.style.position="fixed"; t.style.opacity="0";
+        document.body.appendChild(t); t.select();
+        try{ document.execCommand("copy"); done(); }catch(e){}
+        document.body.removeChild(t);
+      }
+    }
+    for(var i=0;i<btns.length;i++){
+      btns[i].addEventListener("click",function(){
+        var card=this.closest(".faro-card");
+        var q=card.querySelector(".faro-q").textContent.trim();
+        var s=card.querySelector(".faro-src").textContent.trim();
+        copy(q+"\n("+s+")\nmapadecaborojo.com/faro",this);
+      });
+    }
+  })();
 })();
 </script>`
 
@@ -2268,7 +2315,7 @@ const FARO_ASSETS = `<style>
 function faroEmbed(res: any) {
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600')
-  res.setHeader('X-Frame-Options', 'ALLOWALL')
+  res.setHeader('Content-Security-Policy', "frame-ancestors 'self' https://caborojo.com https://*.caborojo.com https://puertoricosinfiltros.com")
   res.status(200).send(`<!doctype html><html lang="es"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex">
@@ -2299,7 +2346,7 @@ function handleFaro(req: any, res: any) {
   const body = `
 <h1>El Faro de Los Morrillos, pieza por pieza</h1>
 
-<p class="text-lg text-slate-600 mt-4">Lo aprobaron en 1877 y lo encendieron el 1 de julio de 1882. 5 años y 4 días. Sin carretera, subiendo ladrillo por un acantilado, con una subasta que quedó desierta porque nadie quería el trabajo.</p>
+<p class="text-lg text-slate-600 mt-4">Lo aprobaron en 1877 y lo encendieron el 1 de julio de 1882. 5 años y 4 días. A mano, subiendo ladrillo por un acantilado a 20 kilómetros del pueblo, con una subasta que quedó desierta porque nadie quería el trabajo.</p>
 
 <p class="text-lg text-slate-600">Esta página está levantada a escala sobre los planos de obra originales y sobre el expediente publicado en la prensa oficial de su época. Cada número tiene su documento.</p>
 
@@ -2311,7 +2358,7 @@ function handleFaro(req: any, res: any) {
   </div>
   <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
     <div class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">¿Por qué importa?</div>
-    <p class="text-sm text-slate-700 leading-snug">Porque lo levantaron en 5 años con mulas y hoy lleva 9 cerrado. Las 2 cosas son verificables.</p>
+    <p class="text-sm text-slate-700 leading-snug">Porque lo levantaron en 5 años, a mano, y hoy lleva 9 cerrado. Las 2 cosas son verificables.</p>
   </div>
   <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
     <div class="text-xs font-bold text-blue-700 uppercase tracking-wide mb-2">¿Qué hago con esto?</div>
@@ -2381,6 +2428,96 @@ function handleFaro(req: any, res: any) {
   <p class="text-sm text-slate-500 mt-3 italic">Izquierda: el contrapeso de 200 libras bajando por el tubo. Centro: el tren de relojería. Derecha: el lente lenticular de Sautter, Lemonnier &amp; Cie., 1881, con sus 8 paneles de destello, 11 prismas arriba y 4 abajo de cada uno.</p>
 </div>
 
+
+<h2>Las láminas originales de 1881</h2>
+
+<p>Estos son los planos de obra del faro, dibujados alrededor de 1881. Los guarda la Library of Congress y <strong>nadie en Puerto Rico los había publicado.</strong> Son de dominio público: puedes bajarlos, imprimirlos y compartirlos. El botón verde baja la lámina con su crédito ya puesto, lista para las redes.</p>
+
+<div class="faro-gal not-prose">
+  <figure class="faro-gal-item">
+    <img src="/faro/lamina-02.jpg" alt="La planta del faro. Lámina original de 1881 del Faro de Los Morrillos" width="1600" height="1275" loading="lazy">
+    <figcaption>
+      <strong>La planta del faro.</strong> Los cuartos de las 2 familias, el almacén y el gabinete del ingeniero, con la torre arriba. Hoja 1.ª del presupuesto reformado.
+      <span class="faro-gal-btns">
+        <a class="faro-dl" href="/faro/lamina-02-para-compartir.jpg" download="faro-1881-planta.jpg">⬇ Bajar para compartir</a>
+        <a class="faro-ver" href="/faro/lamina-02.jpg" target="_blank" rel="noopener">Ver grande</a>
+      </span>
+    </figcaption>
+  </figure>
+  <figure class="faro-gal-item">
+    <img src="/faro/lamina-05.jpg" alt="La sección con la escalera. Lámina original de 1881 del Faro de Los Morrillos" width="1600" height="1275" loading="lazy">
+    <figcaption>
+      <strong>La sección con la escalera.</strong> El corte vertical del edificio: se ve la escalera de caracol por dentro de la torre.
+      <span class="faro-gal-btns">
+        <a class="faro-dl" href="/faro/lamina-05-para-compartir.jpg" download="faro-1881-seccion.jpg">⬇ Bajar para compartir</a>
+        <a class="faro-ver" href="/faro/lamina-05.jpg" target="_blank" rel="noopener">Ver grande</a>
+      </span>
+    </figcaption>
+  </figure>
+  <figure class="faro-gal-item">
+    <img src="/faro/lamina-06.jpg" alt="La escalera de hierro, la cisterna y la sala de aceite. Lámina original de 1881 del Faro de Los Morrillos" width="1600" height="1275" loading="lazy">
+    <figcaption>
+      <strong>La escalera de hierro, la cisterna y la sala de aceite.</strong> La escalera dibujada peldaño por peldaño a escala 1/20, y el aljibe con su capacidad anotada a mano.
+      <span class="faro-gal-btns">
+        <a class="faro-dl" href="/faro/lamina-06-para-compartir.jpg" download="faro-1881-escalera.jpg">⬇ Bajar para compartir</a>
+        <a class="faro-ver" href="/faro/lamina-06.jpg" target="_blank" rel="noopener">Ver grande</a>
+      </span>
+    </figcaption>
+  </figure>
+  <figure class="faro-gal-item">
+    <img src="/faro/lamina-07.jpg" alt="La torre y la linterna. Lámina original de 1881 del Faro de Los Morrillos" width="1600" height="1275" loading="lazy">
+    <figcaption>
+      <strong>La torre y la linterna.</strong> Los detalles de hierro fundido: la linterna, la balaustrada del balcón y la escalera.
+      <span class="faro-gal-btns">
+        <a class="faro-dl" href="/faro/lamina-07-para-compartir.jpg" download="faro-1881-torre.jpg">⬇ Bajar para compartir</a>
+        <a class="faro-ver" href="/faro/lamina-07.jpg" target="_blank" rel="noopener">Ver grande</a>
+      </span>
+    </figcaption>
+  </figure>
+  <figure class="faro-gal-item">
+    <img src="/faro/lamina-03.jpg" alt="La fachada de entrada. Lámina original de 1881 del Faro de Los Morrillos" width="1600" height="1275" loading="lazy">
+    <figcaption>
+      <strong>La fachada de entrada.</strong> La cara norte del edificio, por donde se entraba.
+      <span class="faro-gal-btns">
+        <a class="faro-dl" href="/faro/lamina-03-para-compartir.jpg" download="faro-1881-fachada-entrada.jpg">⬇ Bajar para compartir</a>
+        <a class="faro-ver" href="/faro/lamina-03.jpg" target="_blank" rel="noopener">Ver grande</a>
+      </span>
+    </figcaption>
+  </figure>
+  <figure class="faro-gal-item">
+    <img src="/faro/lamina-04.jpg" alt="La fachada posterior. Lámina original de 1881 del Faro de Los Morrillos" width="1600" height="1275" loading="lazy">
+    <figcaption>
+      <strong>La fachada posterior.</strong> La cara que da a la torre.
+      <span class="faro-gal-btns">
+        <a class="faro-dl" href="/faro/lamina-04-para-compartir.jpg" download="faro-1881-fachada-posterior.jpg">⬇ Bajar para compartir</a>
+        <a class="faro-ver" href="/faro/lamina-04.jpg" target="_blank" rel="noopener">Ver grande</a>
+      </span>
+    </figcaption>
+  </figure>
+  <figure class="faro-gal-item">
+    <img src="/faro/lamina-08.jpg" alt="El blueprint de la escalera. Lámina original de 1881 del Faro de Los Morrillos" width="1600" height="1275" loading="lazy">
+    <figcaption>
+      <strong>El blueprint de la escalera.</strong> La copia azul con la escalera de la torre y la balaustrada.
+      <span class="faro-gal-btns">
+        <a class="faro-dl" href="/faro/lamina-08-para-compartir.jpg" download="faro-1881-blueprint.jpg">⬇ Bajar para compartir</a>
+        <a class="faro-ver" href="/faro/lamina-08.jpg" target="_blank" rel="noopener">Ver grande</a>
+      </span>
+    </figcaption>
+  </figure>
+  <figure class="faro-gal-item">
+    <img src="/faro/lamina-01.jpg" alt="El faro en 1895. Lámina original de 1881 del Faro de Los Morrillos" width="1600" height="1275" loading="lazy">
+    <figcaption>
+      <strong>El faro en 1895.</strong> Ilustración del Álbum de Puerto Rico, a 13 años del encendido.
+      <span class="faro-gal-btns">
+        <a class="faro-dl" href="/faro/lamina-01-para-compartir.jpg" download="faro-1895-ilustracion.jpg">⬇ Bajar para compartir</a>
+        <a class="faro-ver" href="/faro/lamina-01.jpg" target="_blank" rel="noopener">Ver grande</a>
+      </span>
+    </figcaption>
+  </figure>
+</div>
+
+<p class="text-sm text-slate-500 italic">Crédito de todas: Historic American Engineering Record, HAER No. PR-11, Library of Congress. Los originales en alta resolución están en <a href="https://www.loc.gov/item/pr0033/" class="text-teal-600 hover:underline" rel="noopener">loc.gov/item/pr0033</a>.</p>
+
 <h2>El faro no nació blanco</h2>
 
 <p>El aviso a los navegantes del 20 de mayo de 1882 describe el edificio para que los capitanes lo reconocieran de día. En la última línea está la pintura.</p>
@@ -2434,11 +2571,52 @@ function handleFaro(req: any, res: any) {
 <!-- ============ EL CIERRE ============ -->
 <div class="not-prose mt-10 border-2 border-slate-800 rounded-lg p-6 bg-slate-50">
   <div class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Las 2 mitades del mismo faro</div>
-  <p class="text-xl md:text-2xl font-bold text-slate-900 leading-snug m-0">Lo levantaron en 5 años, sin carretera, subiendo ladrillo por un acantilado, y con una subasta que quedó desierta.</p>
+  <p class="text-xl md:text-2xl font-bold text-slate-900 leading-snug m-0">Lo levantaron en 5 años, a mano, subiendo ladrillo por un acantilado, con una subasta que quedó desierta.</p>
   <p class="text-xl md:text-2xl font-bold text-slate-900 leading-snug mt-3 m-0">Lleva 9 años cerrado, y el acuerdo de manejo venció en 2016.</p>
   <p class="text-slate-600 mt-4 mb-0">Las dos cosas son verificables y ninguna es opinión. La primera está en la Gazeta de Puerto-Rico. La segunda está en el expediente público del alcalde, con el video y el minuto.</p>
   <a href="/observatorio" class="inline-block mt-4 bg-slate-900 text-white px-5 py-3 rounded-lg font-semibold hover:bg-slate-700">Ver el estado de la promesa en /observatorio</a>
 </div>
+
+
+<h2>Para copiar y pegar</h2>
+
+<p>Cada tarjeta tiene su fuente. Toca el botón y se copia completa, con el enlace, lista para WhatsApp o para donde la quieras soltar.</p>
+
+<div class="not-prose">
+  <div class="faro-card">
+    <p class="faro-q">Lo levantaron en 5 años, a mano. Lleva 9 años cerrado.</p>
+    <p class="faro-src">Gazeta de Puerto-Rico 1877-1882 · acuerdo de manejo vencido desde 2016</p>
+    <button class="faro-copy" type="button">Copiar</button>
+  </div>
+  <div class="faro-card">
+    <p class="faro-q">La subasta para construir el faro quedó desierta. Nadie quería el trabajo.</p>
+    <p class="faro-src">Gazeta de Puerto-Rico, 6 de abril de 1878</p>
+    <button class="faro-copy" type="button">Copiar</button>
+  </div>
+  <div class="faro-card">
+    <p class="faro-q">El faro costó lo mismo que pagarle 41 años al señor que prendía la luz.</p>
+    <p class="faro-src">18,607 pesos de obra ÷ 450 pesos al año de sueldo · Gazeta de Puerto-Rico, 1878 y 1882</p>
+    <button class="faro-copy" type="button">Copiar</button>
+  </div>
+  <div class="faro-card">
+    <p class="faro-q">El faro no nació blanco. Nació gris oscuro y blanco, con las persianas verdes.</p>
+    <p class="faro-src">Aviso oficial a los navegantes, 20 de mayo de 1882</p>
+    <button class="faro-copy" type="button">Copiar</button>
+  </div>
+  <div class="faro-card">
+    <p class="faro-q">9 meses antes de encender la luz, un barco se partió en esas mismas rocas. Se salvaron todos.</p>
+    <p class="faro-src">Vapor Alicante, 28 de septiembre de 1881 · Boletín Mercantil</p>
+    <button class="faro-copy" type="button">Copiar</button>
+  </div>
+</div>
+
+<h2>Para seguir</h2>
+
+<ul class="text-base leading-relaxed">
+  <li><a href="https://caborojo.com/faro-los-morrillos-administracion-reapertura/" class="text-teal-600 hover:underline" rel="noopener">Quién administra el faro, por qué está cerrado y qué se ha prometido</a> — el expediente de la administración, en CaboRojo.com.</li>
+  <li><a href="/observatorio" class="text-teal-600 hover:underline">El estado de la promesa de reapertura, con el video y el minuto</a> — el observatorio de promesas públicas.</li>
+  <li><a href="https://www.loc.gov/item/pr0033/" class="text-teal-600 hover:underline" rel="noopener">Las láminas originales en alta resolución</a> — Library of Congress, HAER PR-11.</li>
+</ul>
 
 <h2>De dónde salió cada cosa</h2>
 
