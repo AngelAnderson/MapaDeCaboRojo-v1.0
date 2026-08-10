@@ -1986,156 +1986,7 @@ function handleHistoria(_req: any, res: any) {
 // Cada cifra de esta pagina salio de un documento que se puede abrir. La escena es
 // deliberadamente nocturna y de tema fijo: es un panel oscuro dentro de un sitio claro.
 // Cierra hacia /observatorio, que es donde el orgullo se vuelve pregunta.
-function handleFaro(_req: any, res: any) {
-  const body = `
-<h1>El Faro de Los Morrillos, pieza por pieza</h1>
-
-<p class="text-lg text-slate-600 mt-4">Lo aprobaron en 1877 y lo encendieron el 1 de julio de 1882. Cinco años, cuatro días. Sin carretera, subiendo ladrillo por un acantilado, con una subasta que quedó desierta porque nadie quería el trabajo.</p>
-
-<p class="text-lg text-slate-600">Esta página está levantada a escala sobre los planos de obra originales y sobre el expediente publicado en la prensa oficial de su época. Cada número tiene su documento.</p>
-
-<!-- WIIFM 3-chip -->
-<div class="grid sm:grid-cols-3 gap-3 mt-6 not-prose">
-  <div class="bg-teal-50 border border-teal-200 rounded-lg p-4">
-    <div class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-2">¿Qué es esto?</div>
-    <p class="text-sm text-slate-700 leading-snug">La construcción del faro, dibujada a escala real desde las láminas de 1881 que guarda la Library of Congress.</p>
-  </div>
-  <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
-    <div class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">¿Por qué importa?</div>
-    <p class="text-sm text-slate-700 leading-snug">Porque lo levantaron en 5 años con mulas y hoy lleva 9 cerrado. Las dos cosas son verificables.</p>
-  </div>
-  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-    <div class="text-xs font-bold text-blue-700 uppercase tracking-wide mb-2">¿Qué hago con esto?</div>
-    <p class="text-sm text-slate-700 leading-snug">Compártelo, cítalo, o mira el estado de la promesa de reapertura en <a href="/observatorio" class="text-blue-700 underline">/observatorio</a>.</p>
-  </div>
-</div>
-
-<!-- ============ ESCENA ============ -->
-<div id="faro-piece" class="not-prose mt-8">
-  <figure class="faro-stage">
-    <svg id="faro-svg-scene" viewBox="0 0 460 470" role="img" aria-label="El Faro de Los Morrillos de noche, con el haz girando"></svg>
-  </figure>
-  <p class="text-sm text-slate-500 mt-2 italic">Alzado levantado sobre las medidas del expediente. Torre de 18.30 metros, foco a 15 sobre el terreno y 33.80 sobre el mar. La luz gira a velocidad real: una vuelta por minuto, con su eclipse, igual que en 1882.</p>
-</div>
-
-<h2>Costaba 18,607 pesos y nadie lo quiso</h2>
-
-<p>La Gazeta de Puerto-Rico publicó el pliego completo el 5 de febrero de 1878. La subasta se fijó para el 4 de marzo a la una de la tarde. No se presentó nadie.</p>
-
-<p>El 23 de marzo el Gobernador General autorizó negociar directamente, por <em>concierto particular</em>, que es lo que se hace cuando una subasta queda desierta.</p>
-
-<blockquote class="border-l-4 border-teal-500 pl-4 italic text-slate-700 my-6">
-  "cuyo importe según presupuesto de contrata aprobado por Real órden de 27 de Junio último, asciende á diez y ocho mil seiscientos siete pesos sesenta y siete"
-  <span class="block not-italic text-xs uppercase tracking-widest text-slate-500 mt-2">Gazeta de Puerto-Rico · 5 de febrero de 1878</span>
-</blockquote>
-
-<div class="grid grid-cols-2 md:grid-cols-4 gap-3 not-prose my-6">
-  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4"><div class="text-xl font-bold text-slate-800 tabular-nums">18,607.67</div><div class="text-xs text-slate-600 mt-1">pesos, presupuesto de contrata</div></div>
-  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4"><div class="text-xl font-bold text-slate-800 tabular-nums">0</div><div class="text-xs text-slate-600 mt-1">postores en la subasta del 4 de marzo</div></div>
-  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4"><div class="text-xl font-bold text-slate-800 tabular-nums">41 años</div><div class="text-xs text-slate-600 mt-1">de la paga de un torrero, el costo del faro</div></div>
-  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4"><div class="text-xl font-bold text-slate-800 tabular-nums">60¢</div><div class="text-xs text-slate-600 mt-1">lo que pagó EEUU por cada peso en 1899</div></div>
-</div>
-
-<h3>¿Y cuánto es eso en dinero de hoy?</h3>
-
-<p>Aquí se paga en dólares, pero en 1878 esto era España y se pagaba en <strong>pesos fuertes</strong>. El propio documento trae la conversión de su época: 18,607.67 pesos son 93,035.35 pesetas. Cinco a uno, exacto. Y en 1880 un dólar valía 5.1 pesetas, así que el peso fuerte estaba casi a la par con el dólar.</p>
-
-<p>Traerlo a hoy con un índice de inflación de 148 años da alrededor de 600,000 dólares. Es la conversión más citada y la menos confiable: un índice no sabe lo que costaba subir ladrillo a un acantilado sin carretera.</p>
-
-<p><strong>La conversión honesta sale de la misma Gazeta.</strong> Un torrero de tercera ganaba 300 pesos de sueldo más 150 de sobresueldo: 450 pesos al año. El faro costó 41 años de la paga completa de un torrero. Ese número no necesita índice ni depende de a quién le creas. Los dos salieron del mismo periódico.</p>
-
-<p>Y hay un tercero que duele. El 20 de enero de 1899, por orden ejecutiva, Estados Unidos fijó el cambio en 60 centavos de dólar por cada peso puertorriqueño. Los banqueros pidieron 75, los deudores pidieron 50. Salió 60. Diecisiete años después de encender el faro, el dinero con que se pagó valía 40 por ciento menos de la noche a la mañana.</p>
-
-<h2>La luz era gravedad cayendo despacio</h2>
-
-<p>El lente no tenía motor. Iba montado sobre un carro que movía un sistema de relojería, y ese reloj lo halaba un contrapeso de 200 libras que bajaba por un tubo de hierro fundido dentro de la escalera de caracol.</p>
-
-<p>El torrero subía los 18 metros, le daba cuerda al peso, y esa pesa cayendo era lo que hacía girar la luz toda la noche. En 1960 le pusieron un motor eléctrico y el reloj se acabó.</p>
-
-<div id="faro-mech-wrap" class="not-prose mt-6">
-  <figure class="faro-stage faro-scroll">
-    <svg id="faro-svg-mech" viewBox="0 0 900 380" role="img" aria-label="El contrapeso, el tren de relojería y el lente de ocho paneles girando"></svg>
-  </figure>
-  <div class="flex gap-2 items-center flex-wrap mt-3">
-    <button id="faro-btn-speed" class="faro-btn" aria-pressed="false">Velocidad real</button>
-    <button id="faro-btn-wind" class="faro-btn">Dar cuerda</button>
-    <span id="faro-speed-note" class="text-sm text-slate-500 italic">Acelerado 6 veces para poder verlo</span>
-  </div>
-  <p class="text-sm text-slate-500 mt-3 italic">Izquierda: el contrapeso de 200 libras bajando por el tubo. Centro: el tren de relojería. Derecha: el lente lenticular de Sautter, Lemonnier &amp; Cie., 1881, con sus 8 paneles de destello, 11 prismas arriba y 4 abajo de cada uno.</p>
-</div>
-
-<h2>El faro no nació blanco</h2>
-
-<p>El aviso a los navegantes del 20 de mayo de 1882 describe el edificio para que los capitanes lo reconocieran de día. En la última línea está la pintura.</p>
-
-<blockquote class="border-l-4 border-teal-500 pl-4 italic text-slate-700 my-6">
-  "tanto esta como aquel están pintados de color gris oscuro y blanco en los muros y de verde en las persianas de las ventanas"
-  <span class="block not-italic text-xs uppercase tracking-widest text-slate-500 mt-2">Gazeta de Puerto-Rico · 20 de mayo de 1882</span>
-</blockquote>
-
-<div class="flex gap-4 flex-wrap not-prose my-5">
-  <div class="flex items-center gap-2 text-sm text-slate-600"><span class="inline-block w-8 h-8 rounded border border-slate-300" style="background:#4A4F52"></span> gris oscuro</div>
-  <div class="flex items-center gap-2 text-sm text-slate-600"><span class="inline-block w-8 h-8 rounded border border-slate-300" style="background:#EFEAE0"></span> blanco</div>
-  <div class="flex items-center gap-2 text-sm text-slate-600"><span class="inline-block w-8 h-8 rounded border border-slate-300" style="background:#3B5A3F"></span> verde en las persianas</div>
-</div>
-
-<h2>El vapor que se partió esperando la luz</h2>
-
-<p>El faro llevaba cuatro años tratando de nacer. La obra estaba casi lista. La luz todavía apagada.</p>
-
-<blockquote class="border-l-4 border-amber-500 pl-4 italic text-slate-700 my-6">
-  "Tenemos que consignar un sensible naufragio. Anteayer, á las 3 de la mañana, varó con tan mala suerte el vapor español <em>Alicante</em>, que iba á Cuba, en los Morrillos de Cabo-rojo, que ayer estaba ya destruido completamente por el oleaje. Afortunadamente la tripulación y el pasaje se salvaron sin que ocurriera desgracia alguna personal."
-  <span class="block not-italic text-xs uppercase tracking-widest text-slate-500 mt-2">Boletín Mercantil de Puerto Rico · 30 de septiembre de 1881</span>
-</blockquote>
-
-<p>El 28 de septiembre de 1881, a las tres de la mañana, un vapor español rumbo a Cuba encalló en las mismas rocas que el faro se estaba construyendo para alumbrar. El mar lo deshizo en un día. No murió nadie. La luz se encendió nueve meses y tres días después.</p>
-
-<h2>Vivir allí costaba 30 centavos al día</h2>
-
-<p>A los cuatro meses de encenderlo, el gobierno estaba discutiendo si pagarle extra a la gente que vivía en ese punto. La Real Orden del 2 de noviembre de 1882 dice que Los Morrillos quedaba <strong>a 20 kilómetros del pueblo más cercano</strong>, y le concedió a cada torrero una gratificación de 30 centavos diarios, 9 pesos al mes, con una condición: el transporte de los víveres corría por cuenta de ellos.</p>
-
-<h2>Cinco años, día por día</h2>
-
-<div class="not-prose border-t border-slate-200 mt-4">
-  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-amber-50"><time class="text-sm text-slate-700 tabular-nums whitespace-nowrap font-semibold">27 jun 1877</time><p class="text-sm text-slate-800 font-semibold m-0">Real Orden aprueba el presupuesto de contrata: 18,607.67 pesos</p></div>
-  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">11 ene 1878</time><p class="text-sm text-slate-700 m-0">Se firma el anuncio de la subasta pública</p></div>
-  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">5 feb 1878</time><p class="text-sm text-slate-700 m-0">La Gazeta publica el pliego de condiciones completo</p></div>
-  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-amber-50"><time class="text-sm text-slate-700 tabular-nums whitespace-nowrap font-semibold">4 mar 1878</time><p class="text-sm text-slate-800 font-semibold m-0">Subasta a la una de la tarde. Queda desierta</p></div>
-  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-amber-50"><time class="text-sm text-slate-700 tabular-nums whitespace-nowrap font-semibold">23 mar 1878</time><p class="text-sm text-slate-800 font-semibold m-0">El Gobernador autoriza contratar por concierto particular</p></div>
-  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">1881</time><p class="text-sm text-slate-700 m-0">Se fechan las hojas del presupuesto reformado. Se fabrica el lente en Francia</p></div>
-  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-amber-50"><time class="text-sm text-slate-700 tabular-nums whitespace-nowrap font-semibold">28 sep 1881</time><p class="text-sm text-slate-800 font-semibold m-0">El vapor Alicante encalla en Los Morrillos a las 3 de la mañana</p></div>
-  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">20 may 1882</time><p class="text-sm text-slate-700 m-0">Aviso a los navegantes con la ficha técnica y los colores</p></div>
-  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-amber-50"><time class="text-sm text-slate-700 tabular-nums whitespace-nowrap font-semibold">1 jul 1882</time><p class="text-sm text-slate-800 font-semibold m-0">Se enciende definitivamente</p></div>
-  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">2 nov 1882</time><p class="text-sm text-slate-700 m-0">Se concede a cada torrero 30 centavos diarios por lo aislado del sitio</p></div>
-  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">1960</time><p class="text-sm text-slate-700 m-0">Sacan el reloj de contrapeso y ponen un motor eléctrico</p></div>
-  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">1967</time><p class="text-sm text-slate-700 m-0">Se automatiza. Queda sin gente y clavado con tablas</p></div>
-  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">22 oct 1981</time><p class="text-sm text-slate-700 m-0">Entra al Registro Nacional de Lugares Históricos</p></div>
-  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-rose-50"><time class="text-sm text-rose-800 tabular-nums whitespace-nowrap font-semibold">2016</time><p class="text-sm text-rose-900 font-semibold m-0">El municipio deja vencer el acuerdo de manejo del faro</p></div>
-  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-rose-50"><time class="text-sm text-rose-800 tabular-nums whitespace-nowrap font-semibold">2026</time><p class="text-sm text-rose-900 font-semibold m-0">Sigue cerrado</p></div>
-</div>
-
-<!-- ============ EL CIERRE ============ -->
-<div class="not-prose mt-10 border-2 border-slate-800 rounded-lg p-6 bg-slate-50">
-  <div class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Las dos mitades del mismo faro</div>
-  <p class="text-xl md:text-2xl font-bold text-slate-900 leading-snug m-0">Lo levantaron en 5 años, sin carretera, subiendo ladrillo por un acantilado, y con una subasta que quedó desierta.</p>
-  <p class="text-xl md:text-2xl font-bold text-slate-900 leading-snug mt-3 m-0">Lleva 9 años cerrado, y el acuerdo de manejo venció en 2016.</p>
-  <p class="text-slate-600 mt-4 mb-0">Las dos cosas son verificables y ninguna es opinión. La primera está en la Gazeta de Puerto-Rico. La segunda está en el expediente público del alcalde, con el video y el minuto.</p>
-  <a href="/observatorio" class="inline-block mt-4 bg-slate-900 text-white px-5 py-3 rounded-lg font-semibold hover:bg-slate-700">Ver el estado de la promesa en /observatorio</a>
-</div>
-
-<h2>De dónde salió cada cosa</h2>
-
-<ul class="text-sm text-slate-600">
-  <li>Láminas de obra ca. 1881 y fotografía de 1980: <a href="https://www.loc.gov/item/pr0033/" class="text-teal-600 hover:underline" rel="noopener">Historic American Engineering Record, HAER No. PR-11</a>, Library of Congress. Dominio público.</li>
-  <li>Registro Nacional de Lugares Históricos, referencia 81000685, inscrito el 22 de octubre de 1981.</li>
-  <li>Gazeta de Puerto-Rico, ediciones del 5 de febrero y 6 de abril de 1878, 20 de mayo y 2 de noviembre de 1882. Digitalizada en Chronicling America, Library of Congress.</li>
-  <li>Boletín Mercantil de Puerto Rico, 30 de septiembre de 1881.</li>
-  <li>Estado actual y acuerdo de manejo: expediente público del alcalde de Cabo Rojo, en <a href="/observatorio" class="text-teal-600 hover:underline">/observatorio</a>.</li>
-</ul>
-
-<p class="text-sm text-slate-500 italic mt-4">Los pasajes de prensa se verificaron contra la imagen original de cada página el 9 de agosto de 2026, no contra el texto automático. El reconocimiento de caracteres tenía 4 errores y los cuatro están corregidos aquí.</p>
-
-<style>
+const FARO_ASSETS = `<style>
 #faro-piece .faro-stage, #faro-mech-wrap .faro-stage{
   background:#0E1216;border:1px solid #22303C;border-radius:.5rem;overflow:hidden;margin:0;
 }
@@ -2409,7 +2260,191 @@ function handleFaro(_req: any, res: any) {
     });
   })();
 })();
-</script>
+</script>`
+
+// El iframe de caborojo.com pide ?embed=1: devuelve solo los dos lienzos, sin
+// encabezado, sin pie y sin navegación. WordPress borra <script> inline, así que
+// la animación tiene que vivir aquí y entrar por iframe.
+function faroEmbed(res: any) {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600')
+  res.setHeader('X-Frame-Options', 'ALLOWALL')
+  res.status(200).send(`<!doctype html><html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>El Faro de Los Morrillos</title>
+<style>body{margin:0;padding:0;background:transparent;font-family:ui-serif,Georgia,serif}
+.faro-cap{font-size:13px;color:#64748b;font-style:italic;margin:8px 2px 18px;line-height:1.5}
+.faro-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}</style>
+</head><body>
+<div id="faro-piece">
+  <figure class="faro-stage"><svg id="faro-svg-scene" viewBox="0 0 460 470" role="img" aria-label="El Faro de Los Morrillos de noche, con el haz girando"></svg></figure>
+  <p class="faro-cap">Alzado levantado sobre las medidas del expediente. La luz gira a velocidad real: una vuelta por minuto, con su eclipse, igual que en 1882.</p>
+</div>
+<div id="faro-mech-wrap">
+  <figure class="faro-stage faro-scroll" style="overflow-x:auto"><svg id="faro-svg-mech" viewBox="0 0 900 380" role="img" aria-label="El contrapeso, el tren de relojería y el lente girando"></svg></figure>
+  <div class="faro-row">
+    <button id="faro-btn-speed" class="faro-btn" aria-pressed="false">Velocidad real</button>
+    <button id="faro-btn-wind" class="faro-btn">Dar cuerda</button>
+    <span id="faro-speed-note" class="faro-cap" style="margin:0">Acelerado 6 veces para poder verlo</span>
+  </div>
+  <p class="faro-cap">El contrapeso de 200 libras, el tren de relojería y el lente de Sautter, Lemonnier &amp; Cie. de 1881.</p>
+</div>
+${FARO_ASSETS}
+</body></html>`)
+}
+
+function handleFaro(req: any, res: any) {
+  if (req?.query?.embed === '1') return faroEmbed(res)
+  const body = `
+<h1>El Faro de Los Morrillos, pieza por pieza</h1>
+
+<p class="text-lg text-slate-600 mt-4">Lo aprobaron en 1877 y lo encendieron el 1 de julio de 1882. Cinco años, cuatro días. Sin carretera, subiendo ladrillo por un acantilado, con una subasta que quedó desierta porque nadie quería el trabajo.</p>
+
+<p class="text-lg text-slate-600">Esta página está levantada a escala sobre los planos de obra originales y sobre el expediente publicado en la prensa oficial de su época. Cada número tiene su documento.</p>
+
+<!-- WIIFM 3-chip -->
+<div class="grid sm:grid-cols-3 gap-3 mt-6 not-prose">
+  <div class="bg-teal-50 border border-teal-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-2">¿Qué es esto?</div>
+    <p class="text-sm text-slate-700 leading-snug">La construcción del faro, dibujada a escala real desde las láminas de 1881 que guarda la Library of Congress.</p>
+  </div>
+  <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">¿Por qué importa?</div>
+    <p class="text-sm text-slate-700 leading-snug">Porque lo levantaron en 5 años con mulas y hoy lleva 9 cerrado. Las dos cosas son verificables.</p>
+  </div>
+  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-blue-700 uppercase tracking-wide mb-2">¿Qué hago con esto?</div>
+    <p class="text-sm text-slate-700 leading-snug">Compártelo, cítalo, o mira el estado de la promesa de reapertura en <a href="/observatorio" class="text-blue-700 underline">/observatorio</a>.</p>
+  </div>
+</div>
+
+<!-- ============ ESCENA ============ -->
+<div id="faro-piece" class="not-prose mt-8">
+  <figure class="faro-stage">
+    <svg id="faro-svg-scene" viewBox="0 0 460 470" role="img" aria-label="El Faro de Los Morrillos de noche, con el haz girando"></svg>
+  </figure>
+  <p class="text-sm text-slate-500 mt-2 italic">Alzado levantado sobre las medidas del expediente. Torre de 18.30 metros, foco a 15 sobre el terreno y 33.80 sobre el mar. La luz gira a velocidad real: una vuelta por minuto, con su eclipse, igual que en 1882.</p>
+</div>
+
+<h2>Costaba 18,607 pesos y nadie lo quiso</h2>
+
+<p>La Gazeta de Puerto-Rico publicó el pliego completo el 5 de febrero de 1878. La subasta se fijó para el 4 de marzo a la una de la tarde. No se presentó nadie.</p>
+
+<p>El 23 de marzo el Gobernador General autorizó negociar directamente, por <em>concierto particular</em>, que es lo que se hace cuando una subasta queda desierta.</p>
+
+<blockquote class="border-l-4 border-teal-500 pl-4 italic text-slate-700 my-6">
+  "cuyo importe según presupuesto de contrata aprobado por Real órden de 27 de Junio último, asciende á diez y ocho mil seiscientos siete pesos sesenta y siete"
+  <span class="block not-italic text-xs uppercase tracking-widest text-slate-500 mt-2">Gazeta de Puerto-Rico · 5 de febrero de 1878</span>
+</blockquote>
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 not-prose my-6">
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4"><div class="text-xl font-bold text-slate-800 tabular-nums">18,607.67</div><div class="text-xs text-slate-600 mt-1">pesos, presupuesto de contrata</div></div>
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4"><div class="text-xl font-bold text-slate-800 tabular-nums">0</div><div class="text-xs text-slate-600 mt-1">postores en la subasta del 4 de marzo</div></div>
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4"><div class="text-xl font-bold text-slate-800 tabular-nums">41 años</div><div class="text-xs text-slate-600 mt-1">de la paga de un torrero, el costo del faro</div></div>
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4"><div class="text-xl font-bold text-slate-800 tabular-nums">60¢</div><div class="text-xs text-slate-600 mt-1">lo que pagó EEUU por cada peso en 1899</div></div>
+</div>
+
+<h3>¿Y cuánto es eso en dinero de hoy?</h3>
+
+<p>Aquí se paga en dólares, pero en 1878 esto era España y se pagaba en <strong>pesos fuertes</strong>. El propio documento trae la conversión de su época: 18,607.67 pesos son 93,035.35 pesetas. Cinco a uno, exacto. Y en 1880 un dólar valía 5.1 pesetas, así que el peso fuerte estaba casi a la par con el dólar.</p>
+
+<p>Traerlo a hoy con un índice de inflación de 148 años da alrededor de 600,000 dólares. Es la conversión más citada y la menos confiable: un índice no sabe lo que costaba subir ladrillo a un acantilado sin carretera.</p>
+
+<p><strong>La conversión honesta sale de la misma Gazeta.</strong> Un torrero de tercera ganaba 300 pesos de sueldo más 150 de sobresueldo: 450 pesos al año. El faro costó 41 años de la paga completa de un torrero. Ese número no necesita índice ni depende de a quién le creas. Los dos salieron del mismo periódico.</p>
+
+<p>Y hay un tercero que duele. El 20 de enero de 1899, por orden ejecutiva, Estados Unidos fijó el cambio en 60 centavos de dólar por cada peso puertorriqueño. Los banqueros pidieron 75, los deudores pidieron 50. Salió 60. Diecisiete años después de encender el faro, el dinero con que se pagó valía 40 por ciento menos de la noche a la mañana.</p>
+
+<h2>La luz era gravedad cayendo despacio</h2>
+
+<p>El lente no tenía motor. Iba montado sobre un carro que movía un sistema de relojería, y ese reloj lo halaba un contrapeso de 200 libras que bajaba por un tubo de hierro fundido dentro de la escalera de caracol.</p>
+
+<p>El torrero subía los 18 metros, le daba cuerda al peso, y esa pesa cayendo era lo que hacía girar la luz toda la noche. En 1960 le pusieron un motor eléctrico y el reloj se acabó.</p>
+
+<div id="faro-mech-wrap" class="not-prose mt-6">
+  <figure class="faro-stage faro-scroll">
+    <svg id="faro-svg-mech" viewBox="0 0 900 380" role="img" aria-label="El contrapeso, el tren de relojería y el lente de ocho paneles girando"></svg>
+  </figure>
+  <div class="flex gap-2 items-center flex-wrap mt-3">
+    <button id="faro-btn-speed" class="faro-btn" aria-pressed="false">Velocidad real</button>
+    <button id="faro-btn-wind" class="faro-btn">Dar cuerda</button>
+    <span id="faro-speed-note" class="text-sm text-slate-500 italic">Acelerado 6 veces para poder verlo</span>
+  </div>
+  <p class="text-sm text-slate-500 mt-3 italic">Izquierda: el contrapeso de 200 libras bajando por el tubo. Centro: el tren de relojería. Derecha: el lente lenticular de Sautter, Lemonnier &amp; Cie., 1881, con sus 8 paneles de destello, 11 prismas arriba y 4 abajo de cada uno.</p>
+</div>
+
+<h2>El faro no nació blanco</h2>
+
+<p>El aviso a los navegantes del 20 de mayo de 1882 describe el edificio para que los capitanes lo reconocieran de día. En la última línea está la pintura.</p>
+
+<blockquote class="border-l-4 border-teal-500 pl-4 italic text-slate-700 my-6">
+  "tanto esta como aquel están pintados de color gris oscuro y blanco en los muros y de verde en las persianas de las ventanas"
+  <span class="block not-italic text-xs uppercase tracking-widest text-slate-500 mt-2">Gazeta de Puerto-Rico · 20 de mayo de 1882</span>
+</blockquote>
+
+<div class="flex gap-4 flex-wrap not-prose my-5">
+  <div class="flex items-center gap-2 text-sm text-slate-600"><span class="inline-block w-8 h-8 rounded border border-slate-300" style="background:#4A4F52"></span> gris oscuro</div>
+  <div class="flex items-center gap-2 text-sm text-slate-600"><span class="inline-block w-8 h-8 rounded border border-slate-300" style="background:#EFEAE0"></span> blanco</div>
+  <div class="flex items-center gap-2 text-sm text-slate-600"><span class="inline-block w-8 h-8 rounded border border-slate-300" style="background:#3B5A3F"></span> verde en las persianas</div>
+</div>
+
+<h2>El vapor que se partió esperando la luz</h2>
+
+<p>El faro llevaba cuatro años tratando de nacer. La obra estaba casi lista. La luz todavía apagada.</p>
+
+<blockquote class="border-l-4 border-amber-500 pl-4 italic text-slate-700 my-6">
+  "Tenemos que consignar un sensible naufragio. Anteayer, á las 3 de la mañana, varó con tan mala suerte el vapor español <em>Alicante</em>, que iba á Cuba, en los Morrillos de Cabo-rojo, que ayer estaba ya destruido completamente por el oleaje. Afortunadamente la tripulación y el pasaje se salvaron sin que ocurriera desgracia alguna personal."
+  <span class="block not-italic text-xs uppercase tracking-widest text-slate-500 mt-2">Boletín Mercantil de Puerto Rico · 30 de septiembre de 1881</span>
+</blockquote>
+
+<p>El 28 de septiembre de 1881, a las tres de la mañana, un vapor español rumbo a Cuba encalló en las mismas rocas que el faro se estaba construyendo para alumbrar. El mar lo deshizo en un día. No murió nadie. La luz se encendió nueve meses y tres días después.</p>
+
+<h2>Vivir allí costaba 30 centavos al día</h2>
+
+<p>A los cuatro meses de encenderlo, el gobierno estaba discutiendo si pagarle extra a la gente que vivía en ese punto. La Real Orden del 2 de noviembre de 1882 dice que Los Morrillos quedaba <strong>a 20 kilómetros del pueblo más cercano</strong>, y le concedió a cada torrero una gratificación de 30 centavos diarios, 9 pesos al mes, con una condición: el transporte de los víveres corría por cuenta de ellos.</p>
+
+<h2>Cinco años, día por día</h2>
+
+<div class="not-prose border-t border-slate-200 mt-4">
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-amber-50"><time class="text-sm text-slate-700 tabular-nums whitespace-nowrap font-semibold">27 jun 1877</time><p class="text-sm text-slate-800 font-semibold m-0">Real Orden aprueba el presupuesto de contrata: 18,607.67 pesos</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">11 ene 1878</time><p class="text-sm text-slate-700 m-0">Se firma el anuncio de la subasta pública</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">5 feb 1878</time><p class="text-sm text-slate-700 m-0">La Gazeta publica el pliego de condiciones completo</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-amber-50"><time class="text-sm text-slate-700 tabular-nums whitespace-nowrap font-semibold">4 mar 1878</time><p class="text-sm text-slate-800 font-semibold m-0">Subasta a la una de la tarde. Queda desierta</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-amber-50"><time class="text-sm text-slate-700 tabular-nums whitespace-nowrap font-semibold">23 mar 1878</time><p class="text-sm text-slate-800 font-semibold m-0">El Gobernador autoriza contratar por concierto particular</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">1881</time><p class="text-sm text-slate-700 m-0">Se fechan las hojas del presupuesto reformado. Se fabrica el lente en Francia</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-amber-50"><time class="text-sm text-slate-700 tabular-nums whitespace-nowrap font-semibold">28 sep 1881</time><p class="text-sm text-slate-800 font-semibold m-0">El vapor Alicante encalla en Los Morrillos a las 3 de la mañana</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">20 may 1882</time><p class="text-sm text-slate-700 m-0">Aviso a los navegantes con la ficha técnica y los colores</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-amber-50"><time class="text-sm text-slate-700 tabular-nums whitespace-nowrap font-semibold">1 jul 1882</time><p class="text-sm text-slate-800 font-semibold m-0">Se enciende definitivamente</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">2 nov 1882</time><p class="text-sm text-slate-700 m-0">Se concede a cada torrero 30 centavos diarios por lo aislado del sitio</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">1960</time><p class="text-sm text-slate-700 m-0">Sacan el reloj de contrapeso y ponen un motor eléctrico</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">1967</time><p class="text-sm text-slate-700 m-0">Se automatiza. Queda sin gente y clavado con tablas</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">22 oct 1981</time><p class="text-sm text-slate-700 m-0">Entra al Registro Nacional de Lugares Históricos</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-rose-50"><time class="text-sm text-rose-800 tabular-nums whitespace-nowrap font-semibold">2016</time><p class="text-sm text-rose-900 font-semibold m-0">El municipio deja vencer el acuerdo de manejo del faro</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-rose-50"><time class="text-sm text-rose-800 tabular-nums whitespace-nowrap font-semibold">2026</time><p class="text-sm text-rose-900 font-semibold m-0">Sigue cerrado</p></div>
+</div>
+
+<!-- ============ EL CIERRE ============ -->
+<div class="not-prose mt-10 border-2 border-slate-800 rounded-lg p-6 bg-slate-50">
+  <div class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Las dos mitades del mismo faro</div>
+  <p class="text-xl md:text-2xl font-bold text-slate-900 leading-snug m-0">Lo levantaron en 5 años, sin carretera, subiendo ladrillo por un acantilado, y con una subasta que quedó desierta.</p>
+  <p class="text-xl md:text-2xl font-bold text-slate-900 leading-snug mt-3 m-0">Lleva 9 años cerrado, y el acuerdo de manejo venció en 2016.</p>
+  <p class="text-slate-600 mt-4 mb-0">Las dos cosas son verificables y ninguna es opinión. La primera está en la Gazeta de Puerto-Rico. La segunda está en el expediente público del alcalde, con el video y el minuto.</p>
+  <a href="/observatorio" class="inline-block mt-4 bg-slate-900 text-white px-5 py-3 rounded-lg font-semibold hover:bg-slate-700">Ver el estado de la promesa en /observatorio</a>
+</div>
+
+<h2>De dónde salió cada cosa</h2>
+
+<ul class="text-sm text-slate-600">
+  <li>Láminas de obra ca. 1881 y fotografía de 1980: <a href="https://www.loc.gov/item/pr0033/" class="text-teal-600 hover:underline" rel="noopener">Historic American Engineering Record, HAER No. PR-11</a>, Library of Congress. Dominio público.</li>
+  <li>Registro Nacional de Lugares Históricos, referencia 81000685, inscrito el 22 de octubre de 1981.</li>
+  <li>Gazeta de Puerto-Rico, ediciones del 5 de febrero y 6 de abril de 1878, 20 de mayo y 2 de noviembre de 1882. Digitalizada en Chronicling America, Library of Congress.</li>
+  <li>Boletín Mercantil de Puerto Rico, 30 de septiembre de 1881.</li>
+  <li>Estado actual y acuerdo de manejo: expediente público del alcalde de Cabo Rojo, en <a href="/observatorio" class="text-teal-600 hover:underline">/observatorio</a>.</li>
+</ul>
+
+<p class="text-sm text-slate-500 italic mt-4">Los pasajes de prensa se verificaron contra la imagen original de cada página el 9 de agosto de 2026, no contra el texto automático. El reconocimiento de caracteres tenía 4 errores y los cuatro están corregidos aquí.</p>
+
+${FARO_ASSETS}
 `
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
