@@ -2302,7 +2302,7 @@ const FARO_ASSETS = `<style>
         var card=this.closest(".faro-card");
         var q=card.querySelector(".faro-q").textContent.trim();
         var s=card.querySelector(".faro-src").textContent.trim();
-        copy(q+"\n("+s+")\nmapadecaborojo.com/faro",this);
+        copy(q+"\\n("+s+")\\nmapadecaborojo.com/faro",this);
       });
     }
   })();
@@ -2564,9 +2564,29 @@ function handleFaro(req: any, res: any) {
   <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">1960</time><p class="text-sm text-slate-700 m-0">Sacan el reloj de contrapeso y ponen un motor eléctrico</p></div>
   <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">1967</time><p class="text-sm text-slate-700 m-0">Se automatiza. Queda sin gente y clavado con tablas</p></div>
   <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">22 oct 1981</time><p class="text-sm text-slate-700 m-0">Entra al Registro Nacional de Lugares Históricos</p></div>
-  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-rose-50"><time class="text-sm text-rose-800 tabular-nums whitespace-nowrap font-semibold">2016</time><p class="text-sm text-rose-900 font-semibold m-0">El municipio deja vencer el acuerdo de manejo del faro</p></div>
+    <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">dic 2023</time><p class="text-sm text-slate-700 m-0">Visitantes reportan p&uacute;blicamente el camino "casi imposible de pasar", con cr&aacute;teres y basura</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-rose-50"><time class="text-sm text-rose-800 tabular-nums whitespace-nowrap font-semibold">9 abr 2024</time><p class="text-sm text-rose-900 font-semibold m-0">Letrero oficial de "Estacionamiento Impedidos" instalado frente a un matorral, sin facilidad accesible. Foto con fecha y GPS, abajo</p></div>
+<div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-rose-50"><time class="text-sm text-rose-800 tabular-nums whitespace-nowrap font-semibold">2016</time><p class="text-sm text-rose-900 font-semibold m-0">El municipio deja vencer el acuerdo de manejo del faro</p></div>
   <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-rose-50"><time class="text-sm text-rose-800 tabular-nums whitespace-nowrap font-semibold">2026</time><p class="text-sm text-rose-900 font-semibold m-0">Sigue cerrado</p></div>
 </div>
+
+
+<h2>El capítulo de ahora, con fecha y GPS</h2>
+
+<p>Esto no es historia. Estas 2 fotos son del <strong>9 de abril de 2024</strong>, tomadas con el GPS del tel&eacute;fono encendido, a 230 metros del faro. Fue la &uacute;ltima vez que se pudo llegar en carro hasta la entrada.</p>
+
+<div class="faro-gal not-prose">
+  <figure class="faro-gal-item">
+    <img src="/faro/evidencia-impedidos-2024.jpg" alt="Letrero oficial del DRNA de Estacionamiento Impedidos instalado frente a un matorral, sin espacio accesible, 9 de abril de 2024" width="1200" height="1500" loading="lazy">
+    <figcaption><strong>El letrero de "Estacionamiento Impedidos".</strong> Oficial, del DRNA, clavado frente a un matorral. Sin pavimento, sin espacio marcado, sin ruta accesible. 9 abr 2024, 10:38 AM, GPS 17.9357, -67.1917.</figcaption>
+  </figure>
+  <figure class="faro-gal-item">
+    <img src="/faro/evidencia-entrada-2024.jpg" alt="Entrada a Playuela bloqueada con postes y piedras, con los letreros oficiales de bienvenida en pie, 9 de abril de 2024" width="1200" height="2133" loading="lazy">
+    <figcaption><strong>La entrada a Playuela.</strong> Los letreros de bienvenida en pie y el paso bloqueado con postes y piedras. 9 abr 2024, 11:57 AM, GPS 17.9375, -67.1944.</figcaption>
+  </figure>
+</div>
+
+<p>En 1882 el gobierno le pagaba 30 centavos diarios extra al torrero porque vivir ah&iacute; era duro, y lo escribi&oacute; en su peri&oacute;dico oficial. En 2024 el gobierno rotul&oacute; un estacionamiento para impedidos donde no puede entrar una silla de ruedas. <strong>144 a&ntilde;os, el mismo acantilado. La diferencia es qui&eacute;n documenta.</strong></p>
 
 <!-- ============ EL CIERRE ============ -->
 <div class="not-prose mt-10 border-2 border-slate-800 rounded-lg p-6 bg-slate-50">
