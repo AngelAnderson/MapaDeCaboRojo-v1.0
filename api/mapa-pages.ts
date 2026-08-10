@@ -1976,6 +1976,477 @@ function handleHistoria(_req: any, res: any) {
   }))
 }
 
+// =============== /faro ===============
+// El Faro de Los Morrillos, pieza por pieza.
+// Levantado sobre fuentes primarias verificadas el 9 de agosto de 2026:
+//   · HAER No. PR-11 (Library of Congress) — 8 láminas del "Presupuesto reformado", ca. 1881
+//   · NRHP ref. 81000685 — inscrito el 22 de octubre de 1981
+//   · Gazeta de Puerto-Rico: 5 feb y 6 abr 1878 (subasta), 20 may 1882 (encendido), 2 nov 1882 (torreros)
+//   · Boletin Mercantil de Puerto Rico, 30 sep 1881 (naufragio del vapor Alicante)
+// Cada cifra de esta pagina salio de un documento que se puede abrir. La escena es
+// deliberadamente nocturna y de tema fijo: es un panel oscuro dentro de un sitio claro.
+// Cierra hacia /observatorio, que es donde el orgullo se vuelve pregunta.
+function handleFaro(_req: any, res: any) {
+  const body = `
+<h1>El Faro de Los Morrillos, pieza por pieza</h1>
+
+<p class="text-lg text-slate-600 mt-4">Lo aprobaron en 1877 y lo encendieron el 1 de julio de 1882. Cinco años, cuatro días. Sin carretera, subiendo ladrillo por un acantilado, con una subasta que quedó desierta porque nadie quería el trabajo.</p>
+
+<p class="text-lg text-slate-600">Esta página está levantada a escala sobre los planos de obra originales y sobre el expediente publicado en la prensa oficial de su época. Cada número tiene su documento.</p>
+
+<!-- WIIFM 3-chip -->
+<div class="grid sm:grid-cols-3 gap-3 mt-6 not-prose">
+  <div class="bg-teal-50 border border-teal-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-2">¿Qué es esto?</div>
+    <p class="text-sm text-slate-700 leading-snug">La construcción del faro, dibujada a escala real desde las láminas de 1881 que guarda la Library of Congress.</p>
+  </div>
+  <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">¿Por qué importa?</div>
+    <p class="text-sm text-slate-700 leading-snug">Porque lo levantaron en 5 años con mulas y hoy lleva 9 cerrado. Las dos cosas son verificables.</p>
+  </div>
+  <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <div class="text-xs font-bold text-blue-700 uppercase tracking-wide mb-2">¿Qué hago con esto?</div>
+    <p class="text-sm text-slate-700 leading-snug">Compártelo, cítalo, o mira el estado de la promesa de reapertura en <a href="/observatorio" class="text-blue-700 underline">/observatorio</a>.</p>
+  </div>
+</div>
+
+<!-- ============ ESCENA ============ -->
+<div id="faro-piece" class="not-prose mt-8">
+  <figure class="faro-stage">
+    <svg id="faro-svg-scene" viewBox="0 0 460 470" role="img" aria-label="El Faro de Los Morrillos de noche, con el haz girando"></svg>
+  </figure>
+  <p class="text-sm text-slate-500 mt-2 italic">Alzado levantado sobre las medidas del expediente. Torre de 18.30 metros, foco a 15 sobre el terreno y 33.80 sobre el mar. La luz gira a velocidad real: una vuelta por minuto, con su eclipse, igual que en 1882.</p>
+</div>
+
+<h2>Costaba 18,607 pesos y nadie lo quiso</h2>
+
+<p>La Gazeta de Puerto-Rico publicó el pliego completo el 5 de febrero de 1878. La subasta se fijó para el 4 de marzo a la una de la tarde. No se presentó nadie.</p>
+
+<p>El 23 de marzo el Gobernador General autorizó negociar directamente, por <em>concierto particular</em>, que es lo que se hace cuando una subasta queda desierta.</p>
+
+<blockquote class="border-l-4 border-teal-500 pl-4 italic text-slate-700 my-6">
+  "cuyo importe según presupuesto de contrata aprobado por Real órden de 27 de Junio último, asciende á diez y ocho mil seiscientos siete pesos sesenta y siete"
+  <span class="block not-italic text-xs uppercase tracking-widest text-slate-500 mt-2">Gazeta de Puerto-Rico · 5 de febrero de 1878</span>
+</blockquote>
+
+<div class="grid grid-cols-2 md:grid-cols-4 gap-3 not-prose my-6">
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4"><div class="text-xl font-bold text-slate-800 tabular-nums">18,607.67</div><div class="text-xs text-slate-600 mt-1">pesos, presupuesto de contrata</div></div>
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4"><div class="text-xl font-bold text-slate-800 tabular-nums">0</div><div class="text-xs text-slate-600 mt-1">postores en la subasta del 4 de marzo</div></div>
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4"><div class="text-xl font-bold text-slate-800 tabular-nums">41 años</div><div class="text-xs text-slate-600 mt-1">de la paga de un torrero, el costo del faro</div></div>
+  <div class="bg-slate-50 border border-slate-200 rounded-lg p-4"><div class="text-xl font-bold text-slate-800 tabular-nums">60¢</div><div class="text-xs text-slate-600 mt-1">lo que pagó EEUU por cada peso en 1899</div></div>
+</div>
+
+<h3>¿Y cuánto es eso en dinero de hoy?</h3>
+
+<p>Aquí se paga en dólares, pero en 1878 esto era España y se pagaba en <strong>pesos fuertes</strong>. El propio documento trae la conversión de su época: 18,607.67 pesos son 93,035.35 pesetas. Cinco a uno, exacto. Y en 1880 un dólar valía 5.1 pesetas, así que el peso fuerte estaba casi a la par con el dólar.</p>
+
+<p>Traerlo a hoy con un índice de inflación de 148 años da alrededor de 600,000 dólares. Es la conversión más citada y la menos confiable: un índice no sabe lo que costaba subir ladrillo a un acantilado sin carretera.</p>
+
+<p><strong>La conversión honesta sale de la misma Gazeta.</strong> Un torrero de tercera ganaba 300 pesos de sueldo más 150 de sobresueldo: 450 pesos al año. El faro costó 41 años de la paga completa de un torrero. Ese número no necesita índice ni depende de a quién le creas. Los dos salieron del mismo periódico.</p>
+
+<p>Y hay un tercero que duele. El 20 de enero de 1899, por orden ejecutiva, Estados Unidos fijó el cambio en 60 centavos de dólar por cada peso puertorriqueño. Los banqueros pidieron 75, los deudores pidieron 50. Salió 60. Diecisiete años después de encender el faro, el dinero con que se pagó valía 40 por ciento menos de la noche a la mañana.</p>
+
+<h2>La luz era gravedad cayendo despacio</h2>
+
+<p>El lente no tenía motor. Iba montado sobre un carro que movía un sistema de relojería, y ese reloj lo halaba un contrapeso de 200 libras que bajaba por un tubo de hierro fundido dentro de la escalera de caracol.</p>
+
+<p>El torrero subía los 18 metros, le daba cuerda al peso, y esa pesa cayendo era lo que hacía girar la luz toda la noche. En 1960 le pusieron un motor eléctrico y el reloj se acabó.</p>
+
+<div id="faro-mech-wrap" class="not-prose mt-6">
+  <figure class="faro-stage faro-scroll">
+    <svg id="faro-svg-mech" viewBox="0 0 900 380" role="img" aria-label="El contrapeso, el tren de relojería y el lente de ocho paneles girando"></svg>
+  </figure>
+  <div class="flex gap-2 items-center flex-wrap mt-3">
+    <button id="faro-btn-speed" class="faro-btn" aria-pressed="false">Velocidad real</button>
+    <button id="faro-btn-wind" class="faro-btn">Dar cuerda</button>
+    <span id="faro-speed-note" class="text-sm text-slate-500 italic">Acelerado 6 veces para poder verlo</span>
+  </div>
+  <p class="text-sm text-slate-500 mt-3 italic">Izquierda: el contrapeso de 200 libras bajando por el tubo. Centro: el tren de relojería. Derecha: el lente lenticular de Sautter, Lemonnier &amp; Cie., 1881, con sus 8 paneles de destello, 11 prismas arriba y 4 abajo de cada uno.</p>
+</div>
+
+<h2>El faro no nació blanco</h2>
+
+<p>El aviso a los navegantes del 20 de mayo de 1882 describe el edificio para que los capitanes lo reconocieran de día. En la última línea está la pintura.</p>
+
+<blockquote class="border-l-4 border-teal-500 pl-4 italic text-slate-700 my-6">
+  "tanto esta como aquel están pintados de color gris oscuro y blanco en los muros y de verde en las persianas de las ventanas"
+  <span class="block not-italic text-xs uppercase tracking-widest text-slate-500 mt-2">Gazeta de Puerto-Rico · 20 de mayo de 1882</span>
+</blockquote>
+
+<div class="flex gap-4 flex-wrap not-prose my-5">
+  <div class="flex items-center gap-2 text-sm text-slate-600"><span class="inline-block w-8 h-8 rounded border border-slate-300" style="background:#4A4F52"></span> gris oscuro</div>
+  <div class="flex items-center gap-2 text-sm text-slate-600"><span class="inline-block w-8 h-8 rounded border border-slate-300" style="background:#EFEAE0"></span> blanco</div>
+  <div class="flex items-center gap-2 text-sm text-slate-600"><span class="inline-block w-8 h-8 rounded border border-slate-300" style="background:#3B5A3F"></span> verde en las persianas</div>
+</div>
+
+<h2>El vapor que se partió esperando la luz</h2>
+
+<p>El faro llevaba cuatro años tratando de nacer. La obra estaba casi lista. La luz todavía apagada.</p>
+
+<blockquote class="border-l-4 border-amber-500 pl-4 italic text-slate-700 my-6">
+  "Tenemos que consignar un sensible naufragio. Anteayer, á las 3 de la mañana, varó con tan mala suerte el vapor español <em>Alicante</em>, que iba á Cuba, en los Morrillos de Cabo-rojo, que ayer estaba ya destruido completamente por el oleaje. Afortunadamente la tripulación y el pasaje se salvaron sin que ocurriera desgracia alguna personal."
+  <span class="block not-italic text-xs uppercase tracking-widest text-slate-500 mt-2">Boletín Mercantil de Puerto Rico · 30 de septiembre de 1881</span>
+</blockquote>
+
+<p>El 28 de septiembre de 1881, a las tres de la mañana, un vapor español rumbo a Cuba encalló en las mismas rocas que el faro se estaba construyendo para alumbrar. El mar lo deshizo en un día. No murió nadie. La luz se encendió nueve meses y tres días después.</p>
+
+<h2>Vivir allí costaba 30 centavos al día</h2>
+
+<p>A los cuatro meses de encenderlo, el gobierno estaba discutiendo si pagarle extra a la gente que vivía en ese punto. La Real Orden del 2 de noviembre de 1882 dice que Los Morrillos quedaba <strong>a 20 kilómetros del pueblo más cercano</strong>, y le concedió a cada torrero una gratificación de 30 centavos diarios, 9 pesos al mes, con una condición: el transporte de los víveres corría por cuenta de ellos.</p>
+
+<h2>Cinco años, día por día</h2>
+
+<div class="not-prose border-t border-slate-200 mt-4">
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-amber-50"><time class="text-sm text-slate-700 tabular-nums whitespace-nowrap font-semibold">27 jun 1877</time><p class="text-sm text-slate-800 font-semibold m-0">Real Orden aprueba el presupuesto de contrata: 18,607.67 pesos</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">11 ene 1878</time><p class="text-sm text-slate-700 m-0">Se firma el anuncio de la subasta pública</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">5 feb 1878</time><p class="text-sm text-slate-700 m-0">La Gazeta publica el pliego de condiciones completo</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-amber-50"><time class="text-sm text-slate-700 tabular-nums whitespace-nowrap font-semibold">4 mar 1878</time><p class="text-sm text-slate-800 font-semibold m-0">Subasta a la una de la tarde. Queda desierta</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-amber-50"><time class="text-sm text-slate-700 tabular-nums whitespace-nowrap font-semibold">23 mar 1878</time><p class="text-sm text-slate-800 font-semibold m-0">El Gobernador autoriza contratar por concierto particular</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">1881</time><p class="text-sm text-slate-700 m-0">Se fechan las hojas del presupuesto reformado. Se fabrica el lente en Francia</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-amber-50"><time class="text-sm text-slate-700 tabular-nums whitespace-nowrap font-semibold">28 sep 1881</time><p class="text-sm text-slate-800 font-semibold m-0">El vapor Alicante encalla en Los Morrillos a las 3 de la mañana</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">20 may 1882</time><p class="text-sm text-slate-700 m-0">Aviso a los navegantes con la ficha técnica y los colores</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-amber-50"><time class="text-sm text-slate-700 tabular-nums whitespace-nowrap font-semibold">1 jul 1882</time><p class="text-sm text-slate-800 font-semibold m-0">Se enciende definitivamente</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">2 nov 1882</time><p class="text-sm text-slate-700 m-0">Se concede a cada torrero 30 centavos diarios por lo aislado del sitio</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">1960</time><p class="text-sm text-slate-700 m-0">Sacan el reloj de contrapeso y ponen un motor eléctrico</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">1967</time><p class="text-sm text-slate-700 m-0">Se automatiza. Queda sin gente y clavado con tablas</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline"><time class="text-sm text-slate-500 tabular-nums whitespace-nowrap">22 oct 1981</time><p class="text-sm text-slate-700 m-0">Entra al Registro Nacional de Lugares Históricos</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-rose-50"><time class="text-sm text-rose-800 tabular-nums whitespace-nowrap font-semibold">2016</time><p class="text-sm text-rose-900 font-semibold m-0">El municipio deja vencer el acuerdo de manejo del faro</p></div>
+  <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-rose-50"><time class="text-sm text-rose-800 tabular-nums whitespace-nowrap font-semibold">2026</time><p class="text-sm text-rose-900 font-semibold m-0">Sigue cerrado</p></div>
+</div>
+
+<!-- ============ EL CIERRE ============ -->
+<div class="not-prose mt-10 border-2 border-slate-800 rounded-lg p-6 bg-slate-50">
+  <div class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Las dos mitades del mismo faro</div>
+  <p class="text-xl md:text-2xl font-bold text-slate-900 leading-snug m-0">Lo levantaron en 5 años, sin carretera, subiendo ladrillo por un acantilado, y con una subasta que quedó desierta.</p>
+  <p class="text-xl md:text-2xl font-bold text-slate-900 leading-snug mt-3 m-0">Lleva 9 años cerrado, y el acuerdo de manejo venció en 2016.</p>
+  <p class="text-slate-600 mt-4 mb-0">Las dos cosas son verificables y ninguna es opinión. La primera está en la Gazeta de Puerto-Rico. La segunda está en el expediente público del alcalde, con el video y el minuto.</p>
+  <a href="/observatorio" class="inline-block mt-4 bg-slate-900 text-white px-5 py-3 rounded-lg font-semibold hover:bg-slate-700">Ver el estado de la promesa en /observatorio</a>
+</div>
+
+<h2>De dónde salió cada cosa</h2>
+
+<ul class="text-sm text-slate-600">
+  <li>Láminas de obra ca. 1881 y fotografía de 1980: <a href="https://www.loc.gov/item/pr0033/" class="text-teal-600 hover:underline" rel="noopener">Historic American Engineering Record, HAER No. PR-11</a>, Library of Congress. Dominio público.</li>
+  <li>Registro Nacional de Lugares Históricos, referencia 81000685, inscrito el 22 de octubre de 1981.</li>
+  <li>Gazeta de Puerto-Rico, ediciones del 5 de febrero y 6 de abril de 1878, 20 de mayo y 2 de noviembre de 1882. Digitalizada en Chronicling America, Library of Congress.</li>
+  <li>Boletín Mercantil de Puerto Rico, 30 de septiembre de 1881.</li>
+  <li>Estado actual y acuerdo de manejo: expediente público del alcalde de Cabo Rojo, en <a href="/observatorio" class="text-teal-600 hover:underline">/observatorio</a>.</li>
+</ul>
+
+<p class="text-sm text-slate-500 italic mt-4">Los pasajes de prensa se verificaron contra la imagen original de cada página el 9 de agosto de 2026, no contra el texto automático. El reconocimiento de caracteres tenía 4 errores y los cuatro están corregidos aquí.</p>
+
+<style>
+#faro-piece .faro-stage, #faro-mech-wrap .faro-stage{
+  background:#0E1216;border:1px solid #22303C;border-radius:.5rem;overflow:hidden;margin:0;
+}
+#faro-mech-wrap .faro-scroll{overflow-x:auto}
+#faro-piece svg, #faro-mech-wrap svg{display:block;width:100%;height:auto}
+.faro-btn{
+  font-family:ui-monospace,Menlo,monospace;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;
+  background:#fff;color:#0f172a;border:1px solid #cbd5e1;padding:9px 15px;border-radius:.375rem;cursor:pointer;
+}
+.faro-btn:hover{background:#f1f5f9}
+.faro-btn[aria-pressed="true"]{background:#0f172a;color:#fff;border-color:#0f172a}
+.faro-btn:focus-visible{outline:2px solid #0d9488;outline-offset:2px}
+.faro-fe{fill:#C7D0D8;font-family:ui-serif,Georgia,serif;font-style:italic;font-size:11px}
+.faro-fs{fill:#8B9AA3;font-family:ui-monospace,Menlo,monospace;font-size:8.5px;letter-spacing:.09em}
+.faro-dim{stroke:#8B9AA3;fill:none;stroke-width:.7}
+.faro-dash{stroke:#5A6B78;fill:none;stroke-width:.8;stroke-dasharray:5 4}
+.faro-ln{stroke:#C7D0D8;fill:none;stroke-width:1.2}
+.faro-lnt{stroke:#8B9AA3;fill:none;stroke-width:.9}
+@media (prefers-reduced-motion:reduce){#faro-piece *,#faro-mech-wrap *{animation-duration:.001ms !important;animation-iteration-count:1 !important}}
+</style>
+
+<script>
+(function(){
+  "use strict";
+  var NS="http://www.w3.org/2000/svg";
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function el(p,t,a,txt){
+    var n=document.createElementNS(NS,t);
+    for(var k in a){ n.setAttribute(k,a[k]); }
+    if(txt!=null) n.textContent=txt;
+    p.appendChild(n); return n;
+  }
+  var C={sky1:"#070B10",sky2:"#101A26",sky3:"#1B2836",sea1:"#0F1C27",sea2:"#1E3346",
+    foam:"#5A7286",stoneL:"#333B45",stoneM:"#2A323B",stoneS:"#1F262E",roof:"#232B33",
+    rock1:"#26313C",rock2:"#151C24",haze:"#223446",luz:"#F5C65C",verde:"#3B5A3F"};
+
+  /* ---------- escena ---------- */
+  (function scene(){
+    var s=document.getElementById("faro-svg-scene"); if(!s) return;
+    var W=460,H=470,M=17.2,ground=398,cx=236,horiz=352;
+    var d=el(s,"defs");
+    function lin(id,stops,vert){
+      var g=el(d,"linearGradient",{id:id,x1:"0",y1:"0",x2:vert?"0":"1",y2:vert?"1":"0"});
+      stops.forEach(function(st){ el(g,"stop",{offset:st[0],"stop-color":st[1],"stop-opacity":(st[2]==null?1:st[2])}); });
+    }
+    lin("fsky",[["0%",C.sky1],["58%",C.sky2],["100%",C.sky3]],true);
+    lin("fsea",[["0%",C.sea2],["100%",C.sea1]],true);
+    lin("fstT",[["0%",C.stoneM],["26%",C.stoneL],["78%",C.stoneM],["100%",C.stoneS]]);
+    lin("fstB",[["0%",C.stoneM],["34%",C.stoneL],["100%",C.stoneM]]);
+    lin("frock",[["0%",C.rock1],["100%",C.rock2]],true);
+    lin("fhaze",[["0%",C.haze,0],["100%",C.haze,.85]],true);
+    lin("ffall",[["0%",C.rock2,0],["62%",C.rock2,.16],["100%",C.rock2,.44]],true);
+    var hg=el(d,"radialGradient",{id:"fhalo"});
+    el(hg,"stop",{offset:"0%","stop-color":C.luz,"stop-opacity":".85"});
+    el(hg,"stop",{offset:"32%","stop-color":C.luz,"stop-opacity":".28"});
+    el(hg,"stop",{offset:"100%","stop-color":C.luz,"stop-opacity":"0"});
+    var bg=el(d,"linearGradient",{id:"fbeam",x1:"0",y1:"0",x2:"1",y2:"0"});
+    el(bg,"stop",{offset:"0%","stop-color":C.luz,"stop-opacity":".46"});
+    el(bg,"stop",{offset:"38%","stop-color":C.luz,"stop-opacity":".17"});
+    el(bg,"stop",{offset:"100%","stop-color":C.luz,"stop-opacity":"0"});
+    var cp=el(d,"clipPath",{id:"fclip"}); el(cp,"rect",{x:0,y:0,width:W,height:H});
+    var g=el(s,"g",{"clip-path":"url(#fclip)"});
+
+    el(g,"rect",{x:0,y:0,width:W,height:horiz,fill:"url(#fsky)"});
+    for(var i=0;i<46;i++){
+      el(g,"circle",{cx:(i*97)%W,cy:((i*53)%210)+8,r:((i%3)+1)*.35,
+        fill:C.stoneL,"fill-opacity":.30+((i%4)*.09)});
+    }
+    [[60,286,120,9,.18],[220,272,160,7,.13],[330,296,130,8,.16]].forEach(function(c){
+      el(g,"ellipse",{cx:c[0],cy:c[1],rx:c[2],ry:c[3],fill:C.stoneL,"fill-opacity":c[4]});
+    });
+    el(g,"rect",{x:0,y:horiz,width:W,height:H-horiz,fill:"url(#fsea)"});
+    for(var w=0;w<22;w++){
+      var yy=horiz+3+w*5.4, amp=.6+w*.18, seg=16+w*2.6, p="M0,"+yy;
+      for(var x=0;x<=W;x+=seg){ p+=" q"+(seg/2)+","+((Math.floor(x/seg)%2)?-amp:amp)+" "+seg+",0"; }
+      el(g,"path",{d:p,fill:"none",stroke:C.foam,"stroke-width":.7,"stroke-opacity":.10+w*.016});
+    }
+    el(g,"rect",{x:0,y:horiz-34,width:W,height:44,fill:"url(#fhaze)","fill-opacity":".55"});
+
+    var cliff="M0,"+H+" L0,"+(ground+26)+" L48,"+(ground+14)+" L104,"+(ground+4)+
+      " L168,"+(ground-2)+" L246,"+(ground-5)+" L318,"+(ground+1)+" L372,"+(ground+10)+
+      " L420,"+(ground+20)+" L"+W+","+(ground+30)+" L"+W+","+H+" Z";
+    el(g,"path",{d:cliff,fill:"url(#frock)"});
+    el(g,"path",{d:cliff,fill:"none",stroke:C.rock2,"stroke-width":.8,"stroke-opacity":.7});
+    for(var r=1;r<7;r++){
+      var pr="M0,"+(ground+26+r*11);
+      for(var xr=0;xr<=W;xr+=52){ pr+=" q26,"+((r%2)?-3:3)+" 52,"+(r*1.1); }
+      el(g,"path",{d:pr,fill:"none",stroke:C.rock2,"stroke-width":.7,"stroke-opacity":.34});
+    }
+    el(g,"path",{d:"M0,"+(ground+27)+" q40,7 92,-6 q60,-12 130,-4 q70,8 132,7 q56,-1 106,6",
+      fill:"none",stroke:C.foam,"stroke-width":1.6,"stroke-opacity":.32});
+
+    var foco=ground-15*M;
+    var beamG=el(g,"g",{transform:"translate("+cx+","+foco+")"});
+    var beam=el(beamG,"g",{});
+    [-1,1].forEach(function(dir){
+      el(beam,"polygon",{points:"0,-6 "+(dir*470)+",-64 "+(dir*470)+",64 0,6",fill:"url(#fbeam)"});
+      el(beam,"polygon",{points:"0,-2 "+(dir*470)+",-22 "+(dir*470)+",22 0,2",fill:"url(#fbeam)","fill-opacity":".7"});
+    });
+
+    var bh=6*M, by=ground-bh;
+    el(g,"rect",{x:cx-152,y:by,width:120,height:bh,fill:"url(#fstB)"});
+    el(g,"rect",{x:cx+32,y:by,width:120,height:bh,fill:"url(#fstB)"});
+    el(g,"rect",{x:cx-152,y:ground-17,width:120,height:17,fill:C.roof,"fill-opacity":".78"});
+    el(g,"rect",{x:cx+32,y:ground-17,width:120,height:17,fill:C.roof,"fill-opacity":".78"});
+    el(g,"rect",{x:cx-157,y:by-6,width:130,height:6,fill:C.roof,"fill-opacity":".62"});
+    el(g,"rect",{x:cx+27,y:by-6,width:130,height:6,fill:C.roof,"fill-opacity":".62"});
+    [-138,-104,-70,70,104,138].forEach(function(dx){
+      el(g,"rect",{x:cx+dx-1,y:by+20,width:17,height:27,fill:C.stoneS,"fill-opacity":".5"});
+      el(g,"rect",{x:cx+dx,y:by+19,width:15,height:26,fill:C.verde,"fill-opacity":".92"});
+      for(var q=1;q<5;q++){ el(g,"line",{x1:cx+dx,y1:by+19+q*5.2,x2:cx+dx+15,y2:by+19+q*5.2,
+        stroke:C.rock2,"stroke-width":.5,"stroke-opacity":.55}); }
+    });
+
+    var th=18.30*M, tTop=ground-th, bw=2.5*M, tw2=bw*0.76;
+    el(g,"path",{d:"M"+(cx-bw)+","+ground+" L"+(cx-tw2)+","+(tTop+30)+" L"+(cx+bw*0.16)+","+(tTop+30)+" L"+(cx+bw*0.20)+","+ground+" Z",fill:"url(#fstT)"});
+    el(g,"path",{d:"M"+(cx+bw*0.20)+","+ground+" L"+(cx+bw*0.16)+","+(tTop+30)+" L"+(cx+tw2)+","+(tTop+30)+" L"+(cx+bw)+","+ground+" Z",fill:C.stoneS,"fill-opacity":".92"});
+    el(g,"line",{x1:cx+bw*0.20,y1:ground,x2:cx+bw*0.16,y2:tTop+30,stroke:C.rock2,"stroke-width":.7,"stroke-opacity":.45});
+    for(var yc=ground-6;yc>tTop+34;yc-=7.6){
+      var t=(ground-yc)/th, wl=bw-(bw-tw2)*t;
+      el(g,"line",{x1:cx-wl,y1:yc,x2:cx+wl,y2:yc,stroke:C.rock2,"stroke-width":.55,"stroke-opacity":.24});
+    }
+    el(g,"rect",{x:cx-7,y:ground-9*M,width:14,height:20,fill:C.verde,"fill-opacity":".9"});
+    el(g,"rect",{x:cx-bw*1.02,y:tTop+18,width:bw*2.04,height:12,fill:C.roof,"fill-opacity":".8"});
+    for(var b=0;b<15;b++){
+      el(g,"line",{x1:cx-bw*0.98+b*(bw*1.96/14),y1:tTop+18,x2:cx-bw*0.98+b*(bw*1.96/14),y2:tTop+30,
+        stroke:C.stoneL,"stroke-width":.7,"stroke-opacity":.5});
+    }
+    var lw=1.25*M;
+    el(g,"rect",{x:cx-lw,y:tTop-4,width:lw*2,height:24,fill:C.sky3,"fill-opacity":".55"});
+    for(var m2=0;m2<=5;m2++){
+      el(g,"line",{x1:cx-lw+m2*(lw*2/5),y1:tTop-4,x2:cx-lw+m2*(lw*2/5),y2:tTop+20,stroke:C.roof,"stroke-width":1.1});
+    }
+    el(g,"polygon",{points:(cx-lw-3)+","+(tTop-4)+" "+cx+","+(tTop-20)+" "+(cx+lw+3)+","+(tTop-4),fill:C.roof,"fill-opacity":".92"});
+    el(g,"circle",{cx:cx,cy:tTop-24,r:2,fill:C.roof});
+    el(g,"rect",{x:cx-160,y:tTop-24,width:320,height:(ground+6)-(tTop-24),fill:"url(#ffall)"});
+    el(g,"circle",{cx:cx,cy:foco,r:86,fill:"url(#fhalo)"});
+    el(g,"circle",{cx:cx,cy:foco,r:6.5,fill:C.luz});
+    el(g,"ellipse",{cx:cx+56,cy:ground+3,rx:96,ry:7,fill:C.rock2,"fill-opacity":".28"});
+
+    var sx=40;
+    el(s,"line",{x1:sx,y1:ground,x2:sx,y2:tTop,class:"faro-dim"});
+    [0,5,10,15].forEach(function(m){
+      el(s,"line",{x1:sx-5,y1:ground-m*M,x2:sx+5,y2:ground-m*M,class:"faro-dim"});
+      el(s,"text",{x:sx-9,y:ground-m*M+3,class:"faro-fs","text-anchor":"end"},m+" m");
+    });
+    el(s,"text",{x:sx+9,y:tTop+4,class:"faro-fe"},"18.30 m");
+    el(s,"line",{x1:sx+5,y1:foco,x2:cx-bw-6,y2:foco,class:"faro-dash"});
+    el(s,"text",{x:sx+9,y:foco-6,class:"faro-fe"},"foco, 15 m");
+
+    if(!reduce && beam.animate){
+      beam.animate([{transform:"rotate(0deg)"},{transform:"rotate(360deg)"}],
+        {duration:60000,iterations:Infinity,easing:"linear"});
+      beam.animate([{opacity:1},{opacity:1},{opacity:.10},{opacity:1}],
+        {duration:60000,iterations:Infinity,offset:[0,.74,.87,1]});
+    }
+  })();
+
+  /* ---------- mecanismo ---------- */
+  (function mech(){
+    var s=document.getElementById("faro-svg-mech"); if(!s) return;
+    var realtime=false;
+    var tubeX=110,tubeTop=40,tubeBot=330;
+    var d=el(s,"defs");
+    var lg=el(d,"linearGradient",{id:"fmbeam",x1:"0",y1:"0",x2:"1",y2:"0"});
+    el(lg,"stop",{offset:"0%","stop-color":C.luz,"stop-opacity":".42"});
+    el(lg,"stop",{offset:"100%","stop-color":C.luz,"stop-opacity":"0"});
+
+    el(s,"text",{x:tubeX,y:24,class:"faro-fs","text-anchor":"middle"},"CONTRAPESO");
+    el(s,"line",{x1:tubeX-26,y1:tubeTop,x2:tubeX-26,y2:tubeBot,class:"faro-lnt"});
+    el(s,"line",{x1:tubeX+26,y1:tubeTop,x2:tubeX+26,y2:tubeBot,class:"faro-lnt"});
+    el(s,"line",{x1:tubeX-26,y1:tubeBot,x2:tubeX+26,y2:tubeBot,class:"faro-ln"});
+    for(var y=tubeTop+8;y<tubeBot;y+=13){
+      el(s,"line",{x1:tubeX-26,y1:y,x2:tubeX-20,y2:y+6,class:"faro-dim","stroke-opacity":".45"});
+      el(s,"line",{x1:tubeX+20,y1:y,x2:tubeX+26,y2:y+6,class:"faro-dim","stroke-opacity":".45"});
+    }
+    el(s,"line",{x1:tubeX,y1:tubeTop,x2:tubeX,y2:tubeTop+40,class:"faro-ln"});
+    var wg=el(s,"g",{transform:"translate("+tubeX+","+(tubeTop+40)+")"});
+    el(wg,"rect",{x:-15,y:0,width:30,height:46,class:"faro-ln",fill:C.stoneL,"fill-opacity":".85"});
+    el(wg,"rect",{x:-19,y:-5,width:38,height:7,class:"faro-ln",fill:C.stoneM});
+    el(wg,"text",{x:0,y:28,class:"faro-fs","text-anchor":"middle"},"200 lb");
+    el(s,"text",{x:tubeX+34,y:tubeBot-4,class:"faro-fe"},"18 m de caída");
+
+    var gx=306,gy=176;
+    el(s,"text",{x:gx,y:24,class:"faro-fs","text-anchor":"middle"},"TREN DE RELOJERÍA");
+    // el translate va en un grupo de afuera: si se anima rotate() sobre el mismo
+    // nodo, el transform del atributo se pierde y el engranaje se va al origen
+    function gear(ccx,ccy,r,teeth){
+      var outer=el(s,"g",{transform:"translate("+ccx+","+ccy+")"});
+      var gg=el(outer,"g",{});
+      el(gg,"circle",{cx:0,cy:0,r:r,class:"faro-ln",fill:C.stoneM});
+      el(gg,"circle",{cx:0,cy:0,r:r*0.24,class:"faro-lnt"});
+      for(var i=0;i<teeth;i++){
+        var a=i*2*Math.PI/teeth;
+        el(gg,"line",{x1:r*Math.cos(a),y1:r*Math.sin(a),x2:(r+5.5)*Math.cos(a),y2:(r+5.5)*Math.sin(a),class:"faro-lnt"});
+      }
+      for(var j=0;j<5;j++){
+        var b=j*2*Math.PI/5;
+        el(gg,"line",{x1:r*0.24*Math.cos(b),y1:r*0.24*Math.sin(b),x2:r*0.9*Math.cos(b),y2:r*0.9*Math.sin(b),class:"faro-dim"});
+      }
+      return gg;
+    }
+    var g1=gear(gx-52,gy+34,40,18), g2=gear(gx+22,gy+6,28,13), g3=gear(gx+70,gy-40,18,9);
+    el(s,"line",{x1:tubeX,y1:tubeTop+6,x2:gx-52,y2:gy+34,class:"faro-dash"});
+    el(s,"text",{x:gx-96,y:gy+96,class:"faro-fe"},"cuerda y tambor");
+
+    var lx=700,ly=185,R=118;
+    el(s,"text",{x:lx,y:24,class:"faro-fs","text-anchor":"middle"},"LENTE SAUTTER, LEMONNIER & CIE. · 1881");
+    var beamG=el(s,"g",{transform:"translate("+lx+","+ly+")"});
+    var beams=el(beamG,"g",{});
+    [-1,1].forEach(function(dd){ el(beams,"polygon",{points:"0,0 "+(dd*175)+",-30 "+(dd*175)+",30",fill:"url(#fmbeam)"}); });
+
+    var drum=el(s,"g",{transform:"translate("+lx+","+ly+")"});
+    var rot=el(drum,"g",{});
+    for(var p=0;p<8;p++){
+      var pg=el(rot,"g",{transform:"rotate("+(p*45)+")"});
+      el(pg,"path",{d:"M"+(R*0.30)+",-24 L"+(R*0.92)+",-30 L"+(R*0.92)+",30 L"+(R*0.30)+",24 Z",
+        class:"faro-lnt",fill:C.luz,"fill-opacity":".07"});
+      el(pg,"circle",{cx:R*0.61,cy:0,r:7,class:"faro-lnt",fill:C.luz,"fill-opacity":".28"});
+      for(var rr=1;rr<=7;rr++){
+        el(pg,"line",{x1:R*0.33,y1:rr*3.2,x2:R*0.90,y2:rr*3.2+1.4,class:"faro-dim","stroke-opacity":".55"});
+        el(pg,"line",{x1:R*0.33,y1:-rr*3.2,x2:R*0.90,y2:-rr*3.2-1.4,class:"faro-dim","stroke-opacity":".55"});
+      }
+      for(var k1=0;k1<11;k1++){
+        el(pg,"line",{x1:R*0.36+k1*0.8,y1:-31-k1*3.0,x2:R*0.90,y2:-31-k1*3.0-1.2,class:"faro-dim","stroke-opacity":".45"});
+      }
+      for(var k2=0;k2<4;k2++){
+        el(pg,"line",{x1:R*0.36+k2*0.8,y1:31+k2*3.4,x2:R*0.90,y2:31+k2*3.4+1.2,class:"faro-dim","stroke-opacity":".45"});
+      }
+    }
+    el(drum,"circle",{cx:0,cy:0,r:R*0.26,class:"faro-ln",fill:C.stoneM});
+    el(drum,"circle",{cx:0,cy:0,r:7,fill:C.luz});
+    el(s,"text",{x:lx,y:ly+R+34,class:"faro-fe","text-anchor":"middle"},"tambor de 1 metro · 8 paneles de destello");
+    el(s,"line",{x1:lx-R*0.3,y1:ly+R*0.30,x2:lx+R*0.3,y2:ly+R*0.30,class:"faro-ln"});
+
+    var aA=null,aB=null,aC=[],aW=null;
+    function play(){
+      var dur = realtime ? 60000 : 10000;
+      [aA,aB,aW].forEach(function(a){ if(a) a.cancel(); });
+      aC.forEach(function(a){ a.cancel(); }); aC=[];
+      if(reduce || !rot.animate) return;
+      aA=rot.animate([{transform:"rotate(0deg)"},{transform:"rotate(360deg)"}],{duration:dur,iterations:Infinity,easing:"linear"});
+      aB=beams.animate([{transform:"rotate(0deg)"},{transform:"rotate(360deg)"}],{duration:dur,iterations:Infinity,easing:"linear"});
+      [[g1,1,3.4],[g2,-1,1.6],[g3,1,.75]].forEach(function(pair){
+        aC.push(pair[0].animate([{transform:"rotate(0deg)"},{transform:"rotate("+(pair[1]*360)+"deg)"}],
+          {duration:dur*pair[2]/3.4,iterations:Infinity,easing:"linear"}));
+      });
+      aW=wg.animate([{transform:"translate("+tubeX+"px,"+(tubeTop+40)+"px)"},
+                     {transform:"translate("+tubeX+"px,"+(tubeBot-52)+"px)"}],
+        {duration:dur*8,iterations:1,fill:"forwards",easing:"linear"});
+    }
+    play();
+
+    var bs=document.getElementById("faro-btn-speed");
+    var note=document.getElementById("faro-speed-note");
+    if(bs) bs.addEventListener("click",function(){
+      realtime=!realtime;
+      bs.setAttribute("aria-pressed",String(realtime));
+      bs.textContent = realtime ? "Acelerar" : "Velocidad real";
+      if(note) note.textContent = realtime ? "Velocidad de 1882: una vuelta por minuto" : "Acelerado 6 veces para poder verlo";
+      play();
+    });
+    var bw2=document.getElementById("faro-btn-wind");
+    if(bw2) bw2.addEventListener("click",function(){
+      if(aW) aW.cancel();
+      if(!wg.animate){ return; }
+      var a=wg.animate([{transform:"translate("+tubeX+"px,"+(tubeBot-52)+"px)"},
+                        {transform:"translate("+tubeX+"px,"+(tubeTop+40)+"px)"}],
+        {duration:1400,fill:"forwards",easing:"ease-in-out"});
+      a.onfinish=function(){ play(); };
+    });
+  })();
+})();
+</script>
+`
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600')
+  res.status(200).send(layout({
+    title: 'El Faro de Los Morrillos, pieza por pieza',
+    description: 'Lo aprobaron en 1877 y lo encendieron el 1 de julio de 1882. La construcción del Faro de Cabo Rojo levantada a escala desde los planos originales, con el expediente verificado en la Gazeta de Puerto-Rico: el costo real, la subasta que quedó desierta y el barco que se partió esperando la luz.',
+    slug: 'faro',
+    bodyHtml: body,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: 'El Faro de Los Morrillos, pieza por pieza',
+      author: { '@type': 'Person', name: 'Angel Anderson', url: 'https://www.angelanderson.com' },
+      publisher: { '@type': 'Organization', name: 'MapaDeCaboRojo.com', url: SITE_URL },
+      datePublished: '2026-08-09',
+      url: `${SITE_URL}/faro`,
+      description: 'La construcción del Faro Los Morrillos de Cabo Rojo (1877-1882) desde fuentes primarias: HAER PR-11, NRHP 81000685 y la Gazeta de Puerto-Rico.',
+      inLanguage: 'es-PR',
+      about: {
+        '@type': 'LandmarksOrHistoricalBuildings',
+        name: 'Faro Los Morrillos de Cabo Rojo',
+        alternateName: 'Cabo Rojo Light',
+        geo: { '@type': 'GeoCoordinates', latitude: 17.9350, longitude: -67.1917 },
+        address: { '@type': 'PostalAddress', addressLocality: 'Cabo Rojo', addressRegion: 'PR', addressCountry: 'US' },
+      },
+      citation: [
+        'Historic American Engineering Record, HAER No. PR-11, Library of Congress',
+        'National Register of Historic Places, ref. 81000685',
+        'Gazeta de Puerto-Rico, 5 de febrero de 1878',
+        'Gazeta de Puerto-Rico, 20 de mayo de 1882',
+        'Boletín Mercantil de Puerto Rico, 30 de septiembre de 1881',
+      ],
+    },
+  }))
+}
+
 // =============== subscribe (POST) ===============
 // Newsletter capture flow — Supabase newsletter_subscribers + Resend welcome email.
 // Routed via /api/subscribe (vercel.json rewrite).
@@ -15787,6 +16258,7 @@ export default async function handler(req: any, res: any) {
     case 'menos-revolu': return handleMenosRevolu(req, res)
     case 'preguntas': return handlePreguntas(req, res)
     case 'historia': return handleHistoria(req, res)
+    case 'faro': return handleFaro(req, res)
     case 'subscribe': return await handleSubscribe(req, res)
     case 'defensa-y-limpieza': return handleDefensaYLimpieza(req, res)
     default:
