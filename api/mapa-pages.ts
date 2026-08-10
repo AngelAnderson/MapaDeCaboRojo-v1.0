@@ -2299,7 +2299,7 @@ function handleFaro(req: any, res: any) {
   const body = `
 <h1>El Faro de Los Morrillos, pieza por pieza</h1>
 
-<p class="text-lg text-slate-600 mt-4">Lo aprobaron en 1877 y lo encendieron el 1 de julio de 1882. Cinco años, cuatro días. Sin carretera, subiendo ladrillo por un acantilado, con una subasta que quedó desierta porque nadie quería el trabajo.</p>
+<p class="text-lg text-slate-600 mt-4">Lo aprobaron en 1877 y lo encendieron el 1 de julio de 1882. 5 años y 4 días. Sin carretera, subiendo ladrillo por un acantilado, con una subasta que quedó desierta porque nadie quería el trabajo.</p>
 
 <p class="text-lg text-slate-600">Esta página está levantada a escala sobre los planos de obra originales y sobre el expediente publicado en la prensa oficial de su época. Cada número tiene su documento.</p>
 
@@ -2311,7 +2311,7 @@ function handleFaro(req: any, res: any) {
   </div>
   <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
     <div class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-2">¿Por qué importa?</div>
-    <p class="text-sm text-slate-700 leading-snug">Porque lo levantaron en 5 años con mulas y hoy lleva 9 cerrado. Las dos cosas son verificables.</p>
+    <p class="text-sm text-slate-700 leading-snug">Porque lo levantaron en 5 años con mulas y hoy lleva 9 cerrado. Las 2 cosas son verificables.</p>
   </div>
   <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
     <div class="text-xs font-bold text-blue-700 uppercase tracking-wide mb-2">¿Qué hago con esto?</div>
@@ -2347,13 +2347,21 @@ function handleFaro(req: any, res: any) {
 
 <h3>¿Y cuánto es eso en dinero de hoy?</h3>
 
-<p>Aquí se paga en dólares, pero en 1878 esto era España y se pagaba en <strong>pesos fuertes</strong>. El propio documento trae la conversión de su época: 18,607.67 pesos son 93,035.35 pesetas. Cinco a uno, exacto. Y en 1880 un dólar valía 5.1 pesetas, así que el peso fuerte estaba casi a la par con el dólar.</p>
+<p>Aquí se paga en dólares, pero en 1878 esto era España y se pagaba en <strong>pesos fuertes</strong>. El propio documento trae la conversión de su época: 18,607.67 pesos son 93,035.35 pesetas. 5 a 1, exacto. Y en 1880 un dólar valía 5.1 pesetas, así que el peso fuerte estaba casi a la par con el dólar.</p>
 
 <p>Traerlo a hoy con un índice de inflación de 148 años da alrededor de 600,000 dólares. Es la conversión más citada y la menos confiable: un índice no sabe lo que costaba subir ladrillo a un acantilado sin carretera.</p>
 
-<p><strong>La conversión honesta sale de la misma Gazeta.</strong> Un torrero de tercera ganaba 300 pesos de sueldo más 150 de sobresueldo: 450 pesos al año. El faro costó 41 años de la paga completa de un torrero. Ese número no necesita índice ni depende de a quién le creas. Los dos salieron del mismo periódico.</p>
+<p><strong>Hay una cuenta mejor, y sale del mismo periódico.</strong></p>
 
-<p>Y hay un tercero que duele. El 20 de enero de 1899, por orden ejecutiva, Estados Unidos fijó el cambio en 60 centavos de dólar por cada peso puertorriqueño. Los banqueros pidieron 75, los deudores pidieron 50. Salió 60. Diecisiete años después de encender el faro, el dinero con que se pagó valía 40 por ciento menos de la noche a la mañana.</p>
+<p><strong>El torrero era el señor que vivía en el faro y prendía la luz todas las noches.</strong> Vivía allá arriba con su familia. El de rango más bajo ganaba <strong>450 pesos al año</strong>: 300 de sueldo y 150 de extra. Eso lo publicó la Gazeta el 23 de mayo de 1882.</p>
+
+<p>Entonces la cuenta es fácil:</p>
+
+<p class="text-xl font-bold text-slate-900">El faro costó lo mismo que pagarle a ese señor durante 41 años.</p>
+
+<p>Ese número no depende de a quién le creas. Sale de 2 páginas del mismo periódico, publicadas con 3 meses de diferencia. Divide 18,607 entre 450 y te da 41.</p>
+
+<p>Y hay un tercero que duele. El 20 de enero de 1899, por orden ejecutiva, Estados Unidos fijó el cambio en 60 centavos de dólar por cada peso puertorriqueño. Los banqueros pidieron 75, los deudores pidieron 50. Salió 60. 17 años después de encender el faro, el dinero con que se pagó valía 40% menos de la noche a la mañana.</p>
 
 <h2>La luz era gravedad cayendo despacio</h2>
 
@@ -2363,7 +2371,7 @@ function handleFaro(req: any, res: any) {
 
 <div id="faro-mech-wrap" class="not-prose mt-6">
   <figure class="faro-stage faro-scroll">
-    <svg id="faro-svg-mech" viewBox="0 0 900 380" role="img" aria-label="El contrapeso, el tren de relojería y el lente de ocho paneles girando"></svg>
+    <svg id="faro-svg-mech" viewBox="0 0 900 380" role="img" aria-label="El contrapeso, el tren de relojería y el lente de 8 paneles girando"></svg>
   </figure>
   <div class="flex gap-2 items-center flex-wrap mt-3">
     <button id="faro-btn-speed" class="faro-btn" aria-pressed="false">Velocidad real</button>
@@ -2390,20 +2398,20 @@ function handleFaro(req: any, res: any) {
 
 <h2>El vapor que se partió esperando la luz</h2>
 
-<p>El faro llevaba cuatro años tratando de nacer. La obra estaba casi lista. La luz todavía apagada.</p>
+<p>El faro llevaba 4 años tratando de nacer. La obra estaba casi lista. La luz todavía apagada.</p>
 
 <blockquote class="border-l-4 border-amber-500 pl-4 italic text-slate-700 my-6">
   "Tenemos que consignar un sensible naufragio. Anteayer, á las 3 de la mañana, varó con tan mala suerte el vapor español <em>Alicante</em>, que iba á Cuba, en los Morrillos de Cabo-rojo, que ayer estaba ya destruido completamente por el oleaje. Afortunadamente la tripulación y el pasaje se salvaron sin que ocurriera desgracia alguna personal."
   <span class="block not-italic text-xs uppercase tracking-widest text-slate-500 mt-2">Boletín Mercantil de Puerto Rico · 30 de septiembre de 1881</span>
 </blockquote>
 
-<p>El 28 de septiembre de 1881, a las tres de la mañana, un vapor español rumbo a Cuba encalló en las mismas rocas que el faro se estaba construyendo para alumbrar. El mar lo deshizo en un día. No murió nadie. La luz se encendió nueve meses y tres días después.</p>
+<p>El 28 de septiembre de 1881, a las 3 de la mañana, un vapor español rumbo a Cuba encalló en las mismas rocas que el faro se estaba construyendo para alumbrar. El mar lo deshizo en un día. No murió nadie. La luz se encendió 9 meses y 3 días después.</p>
 
 <h2>Vivir allí costaba 30 centavos al día</h2>
 
-<p>A los cuatro meses de encenderlo, el gobierno estaba discutiendo si pagarle extra a la gente que vivía en ese punto. La Real Orden del 2 de noviembre de 1882 dice que Los Morrillos quedaba <strong>a 20 kilómetros del pueblo más cercano</strong>, y le concedió a cada torrero una gratificación de 30 centavos diarios, 9 pesos al mes, con una condición: el transporte de los víveres corría por cuenta de ellos.</p>
+<p>A los 4 meses de encenderlo, el gobierno estaba discutiendo si pagarle extra a la gente que vivía en ese punto. La Real Orden del 2 de noviembre de 1882 dice que Los Morrillos quedaba <strong>a 20 kilómetros del pueblo más cercano</strong>, y le concedió a cada torrero una gratificación de 30 centavos diarios, 9 pesos al mes, con una condición: el transporte de los víveres corría por cuenta de ellos.</p>
 
-<h2>Cinco años, día por día</h2>
+<h2>5 años, día por día</h2>
 
 <div class="not-prose border-t border-slate-200 mt-4">
   <div class="grid grid-cols-[auto_1fr] gap-x-6 py-3 border-b border-slate-200 items-baseline bg-amber-50"><time class="text-sm text-slate-700 tabular-nums whitespace-nowrap font-semibold">27 jun 1877</time><p class="text-sm text-slate-800 font-semibold m-0">Real Orden aprueba el presupuesto de contrata: 18,607.67 pesos</p></div>
@@ -2425,7 +2433,7 @@ function handleFaro(req: any, res: any) {
 
 <!-- ============ EL CIERRE ============ -->
 <div class="not-prose mt-10 border-2 border-slate-800 rounded-lg p-6 bg-slate-50">
-  <div class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Las dos mitades del mismo faro</div>
+  <div class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Las 2 mitades del mismo faro</div>
   <p class="text-xl md:text-2xl font-bold text-slate-900 leading-snug m-0">Lo levantaron en 5 años, sin carretera, subiendo ladrillo por un acantilado, y con una subasta que quedó desierta.</p>
   <p class="text-xl md:text-2xl font-bold text-slate-900 leading-snug mt-3 m-0">Lleva 9 años cerrado, y el acuerdo de manejo venció en 2016.</p>
   <p class="text-slate-600 mt-4 mb-0">Las dos cosas son verificables y ninguna es opinión. La primera está en la Gazeta de Puerto-Rico. La segunda está en el expediente público del alcalde, con el video y el minuto.</p>
@@ -2442,7 +2450,7 @@ function handleFaro(req: any, res: any) {
   <li>Estado actual y acuerdo de manejo: expediente público del alcalde de Cabo Rojo, en <a href="/observatorio" class="text-teal-600 hover:underline">/observatorio</a>.</li>
 </ul>
 
-<p class="text-sm text-slate-500 italic mt-4">Los pasajes de prensa se verificaron contra la imagen original de cada página el 9 de agosto de 2026, no contra el texto automático. El reconocimiento de caracteres tenía 4 errores y los cuatro están corregidos aquí.</p>
+<p class="text-sm text-slate-500 italic mt-4">Los pasajes de prensa se verificaron contra la imagen original de cada página el 9 de agosto de 2026, no contra el texto automático. El reconocimiento de caracteres tenía 4 errores y los 4 están corregidos aquí.</p>
 
 ${FARO_ASSETS}
 `
