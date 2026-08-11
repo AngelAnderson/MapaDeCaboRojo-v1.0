@@ -4540,15 +4540,26 @@ async function handleCambios(req: any, res: any) {
   // Live counts so la página siempre cuadra con la data real.
   // total = lo que vive en las categorías del registro · totalBase = todo lo que tiene NPI en la base
   // (incluye farmacias como negocio, equipo médico y otros que se sirven desde el mapa).
-  const [{ count: npiCount }, { count: baseCount }] = await Promise.all([
+  const hace30d = new Date(Date.now() - 30 * 86400000).toISOString()
+  const [{ count: npiCount }, { count: baseCount }, { count: nuevosCount }, { data: ultimaRow }, { data: muniList }] = await Promise.all([
     supabase.from('places').select('id', { count: 'exact', head: true })
       .not('npi', 'is', null).eq('status', 'open')
       .in('subcategory', REGISTRY_SPECS.map(x => x.s)),
     supabase.from('places').select('id', { count: 'exact', head: true })
       .not('npi', 'is', null).eq('status', 'open'),
+    supabase.from('places').select('id', { count: 'exact', head: true })
+      .not('npi', 'is', null).eq('status', 'open').gt('created_at', hace30d),
+    supabase.from('places').select('created_at')
+      .not('npi', 'is', null).eq('status', 'open')
+      .order('created_at', { ascending: false }).limit(1),
+    supabase.from('v_registro_muni_ratio').select('municipio').order('municipio'),
   ])
   const total = (npiCount ?? 20700).toLocaleString('en-US')
   const totalBase = (baseCount ?? 29700).toLocaleString('en-US')
+  const nuevos30 = (nuevosCount ?? 0).toLocaleString('en-US')
+  const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+  const ultimaD = ultimaRow?.[0]?.created_at ? new Date(ultimaRow[0].created_at) : null
+  const ultimaIngesta = ultimaD ? `${ultimaD.getUTCDate()} ${MESES[ultimaD.getUTCMonth()]} ${ultimaD.getUTCFullYear()}` : REG_LAST_UPDATE.es
   const nCats = REGISTRY_SPECS.length
 
   const body = `
@@ -4566,8 +4577,10 @@ async function handleCambios(req: any, res: any) {
 
 <div class="not-prose mt-4 flex flex-wrap gap-2 text-xs">
   <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-user-doctor"></i> ${total} en las ${nCats} categorías del registro</span>
-  <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-clock-rotate-left"></i> Última actualización: 2 agosto 2026</span>
+  <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-clock-rotate-left"></i> Última ingesta: ${ultimaIngesta}</span>
+  <span class="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-arrow-trend-up"></i> ${nuevos30} entraron en los últimos 30 días</span>
 </div>
+<p class="not-prose text-[11px] text-slate-400 mt-1.5 m-0">Estos 3 números se calculan en vivo contra la base de datos cada vez que abres la página. No se editan a mano.</p>
 
 <details class="not-prose mt-3">
   <summary class="text-sm font-semibold text-teal-700 cursor-pointer select-none">¿Por qué a veces ves 2 números distintos?</summary>
@@ -4582,7 +4595,7 @@ async function handleCambios(req: any, res: any) {
 <p class="text-sm text-slate-500">Cada tarjeta es una actualización. La más reciente arriba. Toca "ver los detalles" si quieres el desglose completo.</p>
 <div class="not-prose space-y-4 mt-4">
   <div class="bg-white border-2 border-teal-300 rounded-xl p-5">
-    <div class="text-xs font-bold uppercase tracking-widest text-teal-700 mb-1">2 agosto 2026 · Última actualización</div>
+    <div class="text-xs font-bold uppercase tracking-widest text-teal-700 mb-1">2 agosto 2026 · La entrada más reciente</div>
     <p class="font-bold text-slate-900 text-lg m-0">Auditamos las 97 especialidades contra el registro federal: entraron 655 médicos y 5 categorías nuevas.</p>
     <p class="text-sm text-slate-600 mt-2">El hueco de los radiólogos de esta madrugada no era de radiología: era de clase. El registro federal clasifica a muchos médicos por su subespecialidad, y nuestra búsqueda solo veía la especialidad general. Auditamos las 97 taxonomías de médicos completas y entraron los que faltaban con práctica en PR.</p>
     <details class="mt-2">
@@ -4693,17 +4706,73 @@ async function handleCambios(req: any, res: any) {
   </div>
 </div>
 
+<h2>Por qué este historial importa (y no es humildad)</h2>
+<p>El registro federal se mueve más de lo que la gente cree. Lo medimos: en una muestra aleatoria de 600 proveedores de PR, <strong>3.5% de los registros cambió en NPPES en unas 7 semanas</strong> (julio 2026). A ese ritmo, un directorio que se copia una vez y no se re-siembra pierde como una cuarta parte de su exactitud en un año. Eso nos incluye: nuestra copia se pudre igual que la de cualquiera. La diferencia es que aquí la re-siembra queda anotada arriba, con fecha.</p>
+
+<div class="not-prose mt-4 space-y-3">
+  <p class="text-xs font-bold uppercase tracking-widest text-slate-500 m-0">Pa' citar · prensa, investigadores y planes médicos</p>
+  <div class="flex gap-3 items-start bg-white border border-slate-200 rounded-xl p-4">
+    <div class="flex-1"><p class="text-sm text-slate-800 m-0">En una muestra aleatoria de 600 proveedores de Puerto Rico, 3.5% de los registros cambió en el registro federal NPPES en unas 7 semanas (medición propia, julio 2026). Un directorio médico que no se re-verifica pierde exactitud a ese ritmo.</p><p class="text-xs text-slate-400 mt-1 m-0">registromedicopr.com/cambios · método en registromedicopr.com/espejo</p></div>
+    <button type="button" class="copy-btn shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="En una muestra aleatoria de 600 proveedores de Puerto Rico, 3.5% de los registros cambió en el registro federal NPPES en unas 7 semanas (medición propia, julio 2026). Un directorio médico que no se re-verifica pierde exactitud a ese ritmo. Fuente: registromedicopr.com/cambios"><i class="fa-regular fa-copy"></i> Copiar</button>
+  </div>
+  <div class="flex gap-3 items-start bg-white border border-slate-200 rounded-xl p-4">
+    <div class="flex-1"><p class="text-sm text-slate-800 m-0">43.6% de los proveedores con NPI en Puerto Rico comparte teléfono con otro proveedor. Hay 254 números con 6 o más proveedores detrás, y uno solo con 543. Tener el nombre no es lo mismo que poder llegar.</p><p class="text-xs text-slate-400 mt-1 m-0">registromedicopr.com/marcador · sobre NPPES, julio 2026</p></div>
+    <button type="button" class="copy-btn shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 py-2 rounded-lg text-xs" data-copy="43.6% de los proveedores con NPI en Puerto Rico comparte teléfono con otro proveedor. Hay 254 números con 6 o más proveedores detrás, y uno solo con 543. Fuente: registromedicopr.com/marcador"><i class="fa-regular fa-copy"></i> Copiar</button>
+  </div>
+</div>
+
+<div class="not-prose mt-8 bg-amber-50 border-2 border-amber-200 rounded-2xl p-5">
+  <p class="font-bold text-amber-900 text-base m-0">🔔 Te aviso cuando llegue uno nuevo a tu pueblo</p>
+  <p class="text-sm text-amber-800 mt-1">Cada tarjeta de arriba es gente nueva entrando al registro. Si a tu pueblo le falta un especialista, déjame el email y te escribo cuando aparezca uno verificado en el registro federal. Nada más. Sin spam, sin lista de mercadeo.</p>
+  <form id="ca-form" class="mt-3 grid sm:grid-cols-4 gap-3">
+    <input id="ca-email" type="email" required placeholder="Tu email" class="rounded-lg border border-amber-300 p-2.5 text-sm">
+    <select id="ca-muni" required class="rounded-lg border border-amber-300 p-2.5 text-sm bg-white">
+      <option value="">Tu pueblo</option>
+      ${(muniList || []).map((m: any) => `<option value="${escapeHtml(m.municipio)}">${escapeHtml(m.municipio)}</option>`).join('')}
+    </select>
+    <select id="ca-spec" class="rounded-lg border border-amber-300 p-2.5 text-sm bg-white">
+      <option value="">Cualquier especialista</option>
+      ${PUEBLO_HIGH_NEED.map(s => { const x = REGISTRY_BYSUB[s]; return x ? `<option value="${escapeHtml(s)}">${x.e} ${escapeHtml(x.l)}</option>` : '' }).join('')}
+    </select>
+    <button type="submit" class="bg-amber-600 hover:bg-amber-700 text-white font-bold px-5 py-2.5 rounded-lg text-sm">Avísame</button>
+  </form>
+  <div id="ca-ok" hidden class="mt-2 text-sm text-emerald-700 font-semibold">✓ Anotado. Si llega uno nuevo a tu pueblo, te escribo. - Angel</div>
+</div>
+
 <h2>Lo que viene</h2>
 <p class="text-sm text-slate-500">Sin fechas prometidas. Se publica cuando está listo, no antes.</p>
 <ul>
   <li><strong>Calidad, no solo existencia:</strong> estrellas e inspecciones federales (CMS Care Compare) pa' hospitales, hogares de envejecientes y agencias de cuidado en el hogar.</li>
   <li><strong>"¿Acepta mi plan?" completo:</strong> llenado por la comunidad, oficina por oficina.</li>
-  <li><strong>Alertas por pueblo:</strong> te aviso cuando llegue el especialista que le falta al tuyo.</li>
+  <li><strong>El censo de quién está cogiendo pacientes:</strong> no cuántos médicos hay en papel, sino a cuál puedes llamar hoy. Ya arrancó en <a href="/registro/censo" class="text-teal-700">/registro/censo</a>.</li>
 </ul>
 
 <h2>Úsalo hoy</h2>
 <p>Busca por especialidad y pueblo en <a href="/registro">el registro</a>, o textea el nombre del especialista (DENTISTA, INTERNISTA, CLINICA…) al <strong>787-417-7711</strong> y el Veci te contesta. Gratis, sin cuenta.</p>
 <p>Si tu médico no aparece, <a href="/registro#claim">dímelo y lo añado</a>. Así es que esto crece.</p>
+
+<script>
+(function(){
+  document.querySelectorAll('.copy-btn').forEach(function(b){
+    b.addEventListener('click',function(){
+      var t=b.getAttribute('data-copy')||'';
+      var done=function(){var o=b.innerHTML;b.innerHTML='✓ Copiado';b.disabled=true;setTimeout(function(){b.innerHTML=o;b.disabled=false},1600)};
+      if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done).catch(function(){})}
+      else{var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done()}catch(e){}document.body.removeChild(ta)}
+    });
+  });
+  var f=document.getElementById('ca-form');if(!f)return;
+  f.addEventListener('submit',function(ev){ev.preventDefault();
+    var em=document.getElementById('ca-email').value.trim();
+    var mu=document.getElementById('ca-muni').value;
+    if(!em||!mu)return;
+    var btn=f.querySelector('button[type=submit]');btn.disabled=true;btn.textContent='Enviando…';
+    try{gtag('event','alerta_pueblo',{municipio:mu,origen:'cambios'})}catch(e){}
+    fetch('/api/mapa-pages?page=registro-alert',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:em,municipio:mu,specialty:document.getElementById('ca-spec').value||null})})
+    .then(function(r){return r.json();}).then(function(){f.style.display='none';document.getElementById('ca-ok').hidden=false;})
+    .catch(function(){btn.disabled=false;btn.textContent='Avísame';alert('No se pudo enviar. Intenta de nuevo.');});});
+})();
+</script>
 `
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   // El historial se edita a mano cada par de semanas, pero era la ruta #1 en
@@ -4713,7 +4782,7 @@ async function handleCambios(req: any, res: any) {
   res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=86400, stale-while-revalidate=604800')
   res.status(200).send(layout({
     title: 'Historial y roadmap · Registro Médico PR',
-    description: `Récord de cada actualización del registro médico de Puerto Rico. Última: 2 agosto 2026. ${total} proveedores y facilidades con NPI federal, en español y por pueblo.`,
+    description: `Récord de cada actualización del registro médico de Puerto Rico. Última ingesta: ${ultimaIngesta}. ${total} proveedores y facilidades con NPI federal, en español y por pueblo.`,
     slug: 'cambios',
     ogImage: REGISTRO_OG,
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
@@ -4723,14 +4792,14 @@ async function handleCambios(req: any, res: any) {
       '@context': 'https://schema.org', '@type': 'WebPage',
       url: 'https://registromedicopr.com/cambios',
       name: 'Historial y roadmap · Registro Médico PR',
-      dateModified: '2026-08-01', inLanguage: 'es',
+      dateModified: ultimaD ? ultimaD.toISOString().slice(0, 10) : '2026-08-07', inLanguage: 'es',
       description: 'Historial de actualizaciones del registro médico verificado de Puerto Rico.',
     },
   }))
 }
 
 // Última actualización del registro — UN solo sitio que editar (se muestra en home + /cambios)
-const REG_LAST_UPDATE = { es: '1 ago 2026', en: 'Aug 1, 2026' }
+const REG_LAST_UPDATE = { es: '7 ago 2026', en: 'Aug 7, 2026' }
 
 async function handleRegistro(req: any, res: any) {
   const en = String(req.query.lang || '') === 'en'
@@ -9046,26 +9115,19 @@ Cada nota sale del porciento del mínimo federal que PR cumple. Fórmula fija y 
 El récord completo, con la fuente de cada una: ${U}`
 
   // ── Pieza 3: una por una ──
-  const txtNota = (m: any) => `${m.frase || m.meta_texto}
-
-LO QUE NO CUADRA
-${m.contradiccion}
-
-EL ENEMIGO
-${m.enemigo || 'Sin declarar.'}
-
-EN DOS LÍNEAS
-${m.contexto || ''}
-
-EN TU CASA, HOY
-${m.espejo}
-
-QUÉ PUEDES HACER
-${m.accion_texto}
-
-Nota ${G(m)} · Puerto Rico cumple el ${m.pct_minimo}% del mínimo federal.
-Fuente: ${m.fuente_nombre}
-Récord completo: ${U}#${m.id}`
+  // Rótulos de lector, mismos que /notas (regla de Angel 2026-07-15: nunca
+  // "el enemigo"/"el espejo" como subtítulo). Secciones vacías no salen.
+  const txtNota = (m: any) => {
+    const secs: string[] = [String(m.frase || m.meta_texto)]
+    if (m.contexto) secs.push(`EN DOS LÍNEAS\n${m.contexto}`)
+    if (m.contradiccion) secs.push(`LO QUE NO CUADRA\n${m.contradiccion}`)
+    if (m.costo_inaccion) secs.push(`LO QUE CUESTA ESPERAR\n${m.costo_inaccion}`)
+    if (m.espejo) secs.push(`EN TU CASA, HOY\n${m.espejo}`)
+    if (m.accion_texto) secs.push(`QUÉ PUEDES HACER HOY\n${m.accion_texto}`)
+    secs.push(`Nota ${G(m)} · Puerto Rico cumple el ${m.pct_minimo}% del mínimo federal.\nFuente: ${m.fuente_nombre}\nRécord completo: ${U}#${m.id}`)
+    return secs.join('\n\n')
+  }
+  const waUrl = (txt: string) => 'https://wa.me/?text=' + encodeURIComponent(txt)
 
   const cardUrl = (m: any) => `/api/og?theme=sinfiltros&k=${encodeURIComponent(`Nota ${G(m)} · ${m.categoria}`)}&t=${encodeURIComponent(String(m.frase || m.meta_texto))}&sub=${encodeURIComponent(`Puerto Rico cumple el ${m.pct_minimo}% del mínimo federal.`)}&badge=${encodeURIComponent('Las Notas de PR · metas mínimas federales')}`
   const cardGpa = `/api/og?theme=sinfiltros&k=${encodeURIComponent('Las Notas de Puerto Rico')}&t=${encodeURIComponent(`Puerto Rico saca ${gpa} de 4.0||en las metas mínimas federales`)}&sub=${encodeURIComponent(`${metas.map((m: any) => `${G(m)} ${m.categoria.toLowerCase()}`).join(' · ')}`)}&badge=${encodeURIComponent('El piso, no la meta ambiciosa')}`
@@ -9101,6 +9163,7 @@ Récord completo: ${U}#${m.id}`
       <pre class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-4 text-sm text-slate-800 whitespace-pre-wrap" style="font-family:inherit">${escapeHtml(txt)}</pre>
       <div class="mt-3 flex flex-wrap gap-2 text-sm">
         <button type="button" class="copy-btn inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700" data-copy="${escapeHtml(txt)}">📋 Copiar el texto</button>
+        <a href="${escapeHtml(waUrl(txt))}" target="_blank" rel="noopener" data-prsf="cite" data-rec="kit-wa-${escapeHtml(id)}" class="inline-flex items-center gap-1 bg-emerald-600 text-white font-bold px-4 py-2 rounded-full hover:bg-emerald-700">📲 Mandarlo por WhatsApp</a>
         <a href="${escapeHtml(card)}" download="${escapeHtml(cardName)}" data-prsf="cite" data-rec="kit-${escapeHtml(id)}" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">🖼️ Bajar la tarjeta</a>
       </div>
     </div>`
@@ -9115,6 +9178,7 @@ Récord completo: ${U}#${m.id}`
       <div class="mt-3 flex flex-wrap gap-2 text-sm">
         <button type="button" class="copy-btn inline-flex items-center gap-1 bg-slate-900 text-white font-bold px-4 py-2 rounded-full hover:bg-slate-700" data-copy="${escapeHtml(txtNota(m))}">📋 Copiar el texto</button>
         <button type="button" class="copy-btn inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400" data-copy="${escapeHtml(String(m.frase || m.meta_texto) + '\n\n' + U)}">📋 Solo la frase</button>
+        <a href="${escapeHtml(waUrl(String(m.frase || m.meta_texto) + '\n\n' + 'https://' + U + '#' + m.id))}" target="_blank" rel="noopener" data-prsf="cite" data-rec="kit-wa-${escapeHtml(m.id)}" class="inline-flex items-center gap-1 bg-emerald-600 text-white font-bold px-4 py-2 rounded-full hover:bg-emerald-700">📲 WhatsApp</a>
         <a href="${escapeHtml(cardUrl(m))}" download="nota-${escapeHtml(m.id)}.png" data-prsf="cite" data-rec="kit-card-${escapeHtml(m.id)}" class="inline-flex items-center gap-1 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">🖼️ Bajar la tarjeta</a>
         <a href="/notas#${escapeHtml(m.id)}" data-prsf="record" data-rec="kit-ver-${escapeHtml(m.id)}" class="inline-flex items-center gap-1 text-teal-700 font-semibold px-2 py-2">Ver la nota con su fuente →</a>
       </div>
@@ -9136,12 +9200,32 @@ Récord completo: ${U}#${m.id}`
 ${bloque('kit-grado', 'Puerto Rico saca ' + escapeHtml(gpa) + ' de 4.0', 'Para un tuit, un pie de foto, o el principio de una nota de prensa.', txtGrado, cardGpa, 'las-notas-de-pr.png')}
 
 <h2 class="mt-8">2. Las notas juntas</h2>
-<p>Las 6 en un solo bloque, cada una con su frase. Para un post largo, un correo, o una presentación.</p>
+<p>Las ${metas.length} en un solo bloque, cada una con su frase. Para un post largo, un correo, o una presentación.</p>
 ${bloque('kit-conjunto', 'Las ' + metas.length + ' notas, en un bloque', 'Copia y pega completo. Ya viene ordenado de la mejor a la peor.', txtConjunto, cardGpa, 'las-notas-de-pr.png')}
 
 <h2 class="mt-8">3. Una por una</h2>
-<p>Cada nota trae lo mismo, en el mismo orden: la frase, lo que no cuadra, el enemigo, la explicación en dos líneas, cómo se ve en tu casa hoy, y qué puedes hacer. Escrito para que se entienda de corrido, sin tener que pensarlo dos veces.</p>
+<p>Cada nota trae lo mismo, en el mismo orden: la frase, la explicación en dos líneas, lo que no cuadra, lo que cuesta esperar, cómo se ve en tu casa hoy, y qué puedes hacer hoy. Escrito para que se entienda de corrido, sin tener que pensarlo dos veces.</p>
 ${cadaNota}
+
+<h2 class="mt-8">Según quién eres, empieza aquí</h2>
+<p>No tienes que leerlo todo. Cada cual necesita una pieza distinta, y ya está armada.</p>
+<div class="not-prose grid sm:grid-cols-3 gap-4 mt-4">
+  <div class="border border-slate-200 bg-white rounded-2xl p-5">
+    <p class="text-2xl m-0">🍎</p>
+    <p class="font-black text-slate-900 mt-1 m-0" style="font-family:'Fraunces',Georgia,serif">Maestro o maestra</p>
+    <p class="text-sm text-slate-600 mt-2">Usa una nota como ejercicio: los estudiantes leen la frase, abren la fuente y verifican el número ellos mismos. Eso es literacia de datos con material de su propia isla.${(() => { const mm = metas.find((m: any) => /matem/i.test(String(m.categoria))); return mm ? ` La de <a href="#kit-${escapeHtml(mm.id)}" class="text-teal-700 font-semibold">matemáticas</a> habla de ellos directamente.` : '' })()}</p>
+  </div>
+  <div class="border border-slate-200 bg-white rounded-2xl p-5">
+    <p class="text-2xl m-0">📰</p>
+    <p class="font-black text-slate-900 mt-1 m-0" style="font-family:'Fraunces',Georgia,serif">Periodista o creador</p>
+    <p class="text-sm text-slate-600 mt-2">El grado solo (pieza 1) abre una nota o un video. Cada número tiene su fuente primaria en <a href="/notas" class="text-teal-700 font-semibold">el récord</a>, y si encuentras un error, <a href="/rompelo" class="text-teal-700 font-semibold">se corrige en público</a>. Pa' verificar la metodología completa, escribe a <a href="mailto:angel@angelanderson.com" class="text-teal-700 font-semibold">angel@angelanderson.com</a>.</p>
+  </div>
+  <div class="border border-slate-200 bg-white rounded-2xl p-5">
+    <p class="text-2xl m-0">🤝</p>
+    <p class="font-black text-slate-900 mt-1 m-0" style="font-family:'Fraunces',Georgia,serif">Líder comunitario o de iglesia</p>
+    <p class="text-sm text-slate-600 mt-2">Escoge la nota de tu tema y comparte solo 2 bloques: "En tu casa, hoy" y "Qué puedes hacer hoy". O <a href="/notas/kit?descarga=txt" class="text-teal-700 font-semibold">baja el kit completo</a> y llévalo impreso a la próxima reunión. Sin pedir permiso.</p>
+  </div>
+</div>
 
 <h2 class="mt-8">Cómo usarlo sin meterte en un lío</h2>
 <ul>
