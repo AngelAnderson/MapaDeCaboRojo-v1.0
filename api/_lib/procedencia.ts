@@ -144,11 +144,15 @@ export function paginaMedicaLd(opts: { url: string; nombre: string; descripcion:
     about: { '@type': 'MedicalSpecialty', name: opts.especialidad },
     audience: { '@type': 'Patient' },
     license: 'https://creativecommons.org/licenses/by/4.0/',
+    // GSC (9 ago 2026) marco este Dataset anidado: "description" es campo requerido y el
+    // validador de Google solo acepta Person/Organization en creator (GovernmentOrganization no).
     isBasedOn: {
       '@type': 'Dataset',
       name: 'NPPES — National Plan and Provider Enumeration System',
+      description: 'Registro federal público de proveedores de salud de Estados Unidos y sus territorios. Cada proveedor tiene un NPI (National Provider Identifier) verificable, con especialidad, dirección de práctica y estado de licencia. Es el mismo registro que usan Medicare y los planes médicos.',
       url: 'https://npiregistry.cms.hhs.gov/',
-      creator: { '@type': 'GovernmentOrganization', name: 'Centers for Medicare & Medicaid Services' },
+      license: 'https://www.usa.gov/government-works',
+      creator: { '@type': 'Organization', name: 'Centers for Medicare & Medicaid Services', url: 'https://www.cms.gov' },
     },
   };
 }
