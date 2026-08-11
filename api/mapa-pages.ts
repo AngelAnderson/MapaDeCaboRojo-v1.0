@@ -323,6 +323,7 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <span class="font-black tracking-tight">Mapa de Cabo Rojo</span>
 </a>
 <nav class="hidden md:flex gap-4 text-sm text-slate-600 flex-wrap">
+<a href="/facil" class="hover:text-teal-600 font-semibold text-teal-700">Búscalo Fácil</a>
 <a href="/pon-tu-negocio-en-el-mapa" class="hover:text-teal-600 font-semibold text-teal-700">Pon tu negocio</a>
 <a href="/tienda" class="hover:text-teal-600 font-semibold text-teal-700">Tienda</a>
 <a href="/barrios" class="hover:text-teal-600">Barrios</a>
@@ -381,6 +382,7 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 </div>
 
 <div class="mt-6 flex justify-center gap-4 text-xs text-slate-500 flex-wrap">
+<a href="/facil" class="hover:text-teal-600 font-semibold text-teal-700">Búscalo Fácil</a>
 <a href="/pon-tu-negocio-en-el-mapa" class="hover:text-teal-600 font-semibold text-teal-700">Pon tu negocio</a>
 <a href="/tienda" class="hover:text-teal-600 font-semibold text-teal-700">Tienda</a>
 <a href="/barrios" class="hover:text-teal-600">Barrios</a>
@@ -1332,6 +1334,139 @@ function handlePonTuNegocio(_req: any, res: any) {
           priceCurrency: 'USD',
         },
       ],
+    },
+  }))
+}
+
+// =============== /facil — "Búscalo Fácil", nivel abuela ===============
+// Orden directa de Angel (2026-08-11): una página donde CUALQUIERA, sin importar
+// destreza con teléfonos, encuentra un negocio de Cabo Rojo apretando UN botón.
+// Botones grandes agrupados por NECESIDAD (lenguaje de abuela), no por categoría
+// técnica. Cada destino es una /categoria/:slug verificada 200 en vivo. El Veci
+// (787-417-7711) es la salida universal — arriba y abajo, siempre — pa'l que no
+// encuentra su botón.
+const FACIL_BOTONES: Array<{ e: string; label: string; href: string }> = [
+  { e: '🔧', label: 'Se dañó la nevera o el aire', href: '/categoria/ac' },
+  { e: '🚰', label: 'El agua, la pluma o el baño', href: '/categoria/plomero' },
+  { e: '💡', label: 'La luz de la casa', href: '/categoria/electrico' },
+  { e: '🦷', label: 'Me duele una muela', href: '/categoria/dentista' },
+  { e: '💊', label: 'Farmacia y medicinas', href: '/categoria/farmacia' },
+  { e: '🩺', label: 'Un doctor', href: '/categoria/medico' },
+  { e: '👁️', label: 'Los ojos y los espejuelos', href: '/categoria/optica' },
+  { e: '✂️', label: 'El pelo', href: '/categoria/peluqueria' },
+  { e: '🚗', label: 'El carro', href: '/categoria/mecanico' },
+  { e: '🧺', label: 'Lavar ropa', href: '/categoria/lavanderia' },
+  { e: '🍽️', label: 'Comer hoy', href: '/categoria/restaurantes' },
+  { e: '🏖️', label: 'Ir a la playa', href: '/categoria/playas' },
+  { e: '📄', label: 'Papeles y notario', href: '/categoria/notario' },
+  { e: '🐕', label: 'La mascota', href: '/categoria/veterinario' },
+  { e: '🏠', label: 'Arreglos de la casa', href: '/categoria/servicios' },
+]
+
+function handleFacil(_req: any, res: any) {
+  const vecinoBlock = (id: string) => `
+<div class="not-prose bg-teal-700 rounded-3xl p-6 sm:p-8 text-center text-white shadow-lg" id="${id}">
+  <p class="text-2xl sm:text-3xl font-black leading-tight">¿No lo encuentras?</p>
+  <p class="text-lg sm:text-xl mt-2 text-teal-50">Escríbele al Veci y él te contesta.</p>
+  <p class="text-3xl sm:text-4xl font-black mt-3 tracking-wide">📱 787-417-7711</p>
+  <div class="mt-5 flex flex-col sm:flex-row gap-3 justify-center">
+    <a href="https://wa.me/17874177711" class="inline-flex items-center justify-center gap-3 bg-white text-teal-800 font-black text-xl px-6 py-5 rounded-2xl min-h-[64px] hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-2xl"></i> WhatsApp</a>
+    <a href="sms:+17874177711" class="inline-flex items-center justify-center gap-3 bg-teal-900 text-white font-black text-xl px-6 py-5 rounded-2xl min-h-[64px] hover:bg-teal-800"><i class="fa-solid fa-comment-sms text-2xl"></i> Mensaje de Texto</a>
+  </div>
+</div>`
+
+  const botonesHtml = FACIL_BOTONES.map(b => `
+  <a href="${b.href}" class="flex items-center gap-4 bg-white border-2 border-slate-200 rounded-2xl px-5 py-6 min-h-[64px] shadow-sm hover:border-teal-500 hover:bg-teal-50 active:scale-[0.98] transition">
+    <span class="text-4xl leading-none shrink-0">${b.e}</span>
+    <span class="text-xl font-bold text-slate-900 leading-snug">${escapeHtml(b.label)}</span>
+  </a>`).join('')
+
+  const body = `
+<h1>Búscalo Fácil</h1>
+<p class="text-xl text-slate-600 mt-2">Aprieta lo que necesitas.</p>
+
+${vecinoBlock('facil-veci-top')}
+
+<div class="not-prose mt-8">
+  <label for="facil-q" class="block text-lg font-bold text-slate-800 mb-2">O escribe lo que buscas:</label>
+  <form id="facil-search-form" class="flex flex-col sm:flex-row gap-2">
+    <input id="facil-q" type="search" name="q" placeholder="Escribe lo que buscas, como: plomero" class="flex-1 text-lg px-4 py-4 min-h-[60px] rounded-2xl border-2 border-slate-300 focus:outline-none focus:ring-2 focus:ring-teal-500" autocomplete="off">
+    <button type="submit" class="bg-teal-600 hover:bg-teal-700 text-white font-black text-lg px-6 py-4 min-h-[60px] rounded-2xl">Buscar</button>
+  </form>
+  <div id="facil-status" class="mt-3 text-slate-500 text-base hidden"></div>
+  <div id="facil-results" class="mt-4 space-y-3"></div>
+</div>
+
+<div class="not-prose mt-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+${botonesHtml}
+</div>
+
+<div class="not-prose mt-10">
+${vecinoBlock('facil-veci-bottom')}
+</div>
+`
+
+  const script = `
+<script>
+(function(){
+  var form = document.getElementById('facil-search-form');
+  var input = document.getElementById('facil-q');
+  var results = document.getElementById('facil-results');
+  var status = document.getElementById('facil-status');
+  if (!form || !input || !results) return;
+  function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+  function digits10(p){ var d=String(p||'').replace(/\\D/g,''); return d.slice(-10); }
+  function card(r){
+    var d = digits10(r.phone);
+    var tel = d.length===10 ? '<a href="tel:+1'+d+'" style="flex:1;background:#0d9488;color:white;text-decoration:none;padding:0.9rem;border-radius:12px;font-size:1.05rem;text-align:center;font-weight:800;min-height:52px;display:flex;align-items:center;justify-content:center;">📞 Llamar</a>' : '';
+    var wa = d.length===10 ? '<a href="https://wa.me/1'+d+'" style="flex:1;background:#22c55e;color:white;text-decoration:none;padding:0.9rem;border-radius:12px;font-size:1.05rem;text-align:center;font-weight:800;min-height:52px;display:flex;align-items:center;justify-content:center;">💬 WhatsApp</a>' : '';
+    return '<div style="background:white;border:2px solid #e2e8f0;border-radius:16px;padding:1.1rem;">'
+      + '<div style="font-weight:800;font-size:1.15rem;color:#0f172a;">'+esc(r.name)+'</div>'
+      + (r.address ? '<div style="color:#64748b;font-size:0.95rem;margin-top:0.2rem;">'+esc(r.address)+'</div>' : '')
+      + (tel || wa ? '<div style="display:flex;gap:0.6rem;margin-top:0.7rem;">'+tel+wa+'</div>' : '')
+      + '</div>';
+  }
+  async function buscar(q){
+    q = (q||'').trim();
+    if (!q) return;
+    status.classList.remove('hidden'); status.textContent = 'Buscando…';
+    results.innerHTML = '';
+    try {
+      var r = await fetch('https://vprjteqgmanntvisjrvp.supabase.co/functions/v1/web-veci', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ q: q }),
+      });
+      var data = await r.json();
+      var list = Array.isArray(data.results) ? data.results.slice(0, 5) : [];
+      status.classList.add('hidden');
+      if (!list.length) {
+        results.innerHTML = '<div style="background:#fffbeb;border:2px solid #fcd34d;border-radius:16px;padding:1.1rem;font-size:1.05rem;color:#78350f;">No encontramos eso. Escríbele al Veci arriba, o textea <strong>'+esc(q)+'</strong> al <strong>787-417-7711</strong> y él te contesta.</div>';
+        return;
+      }
+      results.innerHTML = list.map(card).join('');
+      try { fetch('/api/public?action=log-search', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ q: q, hits: data.resultCount || list.length, source: 'facil' }) }); } catch(e){}
+    } catch(e) {
+      status.classList.remove('hidden');
+      status.textContent = 'No pudimos buscar ahora. Escríbele al Veci arriba.';
+    }
+  }
+  form.addEventListener('submit', function(e){ e.preventDefault(); buscar(input.value); });
+})();
+</script>`
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600')
+  res.status(200).send(layout({
+    title: 'Búscalo Fácil · Aprieta lo que necesitas',
+    description: 'Encuentra plomero, electricista, farmacia, doctor, dentista, comida y más en Cabo Rojo con un botón grande. Si no lo encuentras, escríbele al Veci al 787-417-7711.',
+    slug: 'facil',
+    ogImage: '/og/pon-tu-negocio-en-el-mapa.png',
+    bodyHtml: body + script,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: 'Búscalo Fácil · MapaDeCaboRojo.com',
+      description: 'Directorio de negocios de Cabo Rojo organizado por necesidad, con botones grandes, pa\' cualquiera.',
+      url: `${SITE_URL}/facil`,
     },
   }))
 }
@@ -16453,6 +16588,7 @@ const PAGE_CANONICAL: Record<string, string> = {
   'espejo': 'https://registromedicopr.com/espejo',
   'expediente': 'https://puertoricosinfiltros.com/expediente/alcalde-cabo-rojo',
   'exposicion-ai': 'https://puertoricosinfiltros.com/exposicion-ai',
+  'facil': 'https://www.mapadecaborojo.com/facil',
   'funciona': 'https://puertoricosinfiltros.com/funciona',
   'historia': 'https://www.mapadecaborojo.com/historia',
   'historial': 'https://puertoricosinfiltros.com/historial',
@@ -16612,6 +16748,7 @@ export default async function handler(req: any, res: any) {
     case 'moonshots': return handleMoonshots(req, res)
     case 'mira-la-vuelta': return await handleMiraLaVuelta(req, res)
     case 'pon-tu-negocio-en-el-mapa': return handlePonTuNegocio(req, res)
+    case 'facil': return handleFacil(req, res)
     case 'senales-del-pueblo': return await handleSenalesDelPueblo(req, res)
     case 'menos-revolu': return handleMenosRevolu(req, res)
     case 'preguntas': return handlePreguntas(req, res)

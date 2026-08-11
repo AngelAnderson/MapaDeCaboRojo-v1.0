@@ -29,6 +29,7 @@ export const BUSCAR_INDEX = [
     { u: '/diabetes', t: 'Diabetes', d: 'El dato que existe y el que falta', k: 'diabetes cdc salud cronica' },
     { u: '/telemedicina', t: 'Telemedicina', d: 'Quién puede y quién no (internet × médicos)', k: 'telemedicina internet broadband acceso' },
     { u: 'https://www.mapadecaborojo.com/demanda', t: 'La demanda real', d: 'Lo que la gente busca y no encuentra (El Veci *7711) — vive en el Mapa', k: 'demanda veci busquedas negocio plomero electricista' },
+    { u: 'https://www.mapadecaborojo.com/facil', t: 'Búscalo Fácil', d: 'Botones grandes pa\' encontrar cualquier negocio de Cabo Rojo, sin complicación', k: 'facil botones plomero electricista farmacia doctor dentista buscar negocio simple' },
     { u: '/costo-de-vida', t: '¿El sueldo rinde?', d: 'Ingreso contra costo real de vivir en PR', k: 'costo vida sueldo ingreso canasta ipc inflacion' },
     { u: '/trabajo', t: 'El trabajo', d: 'Participación laboral y cómo subir de valor', k: 'trabajo empleo participacion laboral salario ai' },
     { u: '/exposicion-ai', t: 'Exposición a la AI', d: 'Qué trabajos de PR toca la AI primero', k: 'ai inteligencia artificial empleos automatizacion' },

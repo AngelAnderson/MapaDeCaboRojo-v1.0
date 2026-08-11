@@ -432,6 +432,10 @@
       "destination": "/api/mapa-pages?page=pon-tu-negocio-en-el-mapa"
     },
     {
+      "source": "/facil",
+      "destination": "/api/mapa-pages?page=facil"
+    },
+    {
       "source": "/tienda",
       "destination": "/api/mapa-pages?page=tienda"
     },

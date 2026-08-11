@@ -163,6 +163,7 @@ export default async function handler(req: any, res: any) {
     const narrativePages: Array<{ slug: string; priority: number; changefreq: string }> = [
       { slug: 'tienda', priority: 0.9, changefreq: 'weekly' },                 // storefront · La Vitrina + libro + Conserje
       { slug: 'pon-tu-negocio-en-el-mapa', priority: 0.9, changefreq: 'weekly' }, // §13 revenue CTA
+      { slug: 'facil', priority: 0.9, changefreq: 'weekly' },                  // "Búscalo Fácil" — botones grandes nivel abuela, entrada principal al directorio
       { slug: 'observatorio', priority: 0.9, changefreq: 'weekly' },           // civic accountability · Esencia/vertedero · FAQPage schema
       { slug: 'promesas', priority: 0.8, changefreq: 'weekly' },               // promesas del alcalde en cámara · banco completo
       { slug: 'mision', priority: 0.7, changefreq: 'weekly' },

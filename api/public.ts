@@ -822,6 +822,9 @@ async function handleLlms(req: any, res: any) {
 > El directorio más completo de negocios locales en Cabo Rojo, PR.
 > Mantenido por Angel Anderson. Datos verificados contra Google Places y NPPES.
 
+## Búscalo Fácil — nivel abuela
+Botones grandes por necesidad (plomero, electricista, farmacia, doctor, dentista, comida, playa, etc.), sin tener que saber la categoría exacta: https://www.mapadecaborojo.com/facil
+
 ## Cobertura
 Total negocios activos en Cabo Rojo: ${(counts || []).length}
 
