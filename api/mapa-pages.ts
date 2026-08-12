@@ -7238,6 +7238,143 @@ export function citableFacts(g = COMPARTE_G_DEFAULT): CitableFact[] {
   ]
 }
 
+// =============== /datos — Cabo Rojo en números vivos (Mapa) ===============
+// Página citable del substrato: cada número se calcula EN VIVO contra la DB en
+// cada request. Las páginas de datos estáticas de este repo (/transparencia,
+// /senales-del-pueblo, /demanda-real) murieron stale y acabaron podadas a "/" —
+// esta no puede envejecer por diseño. Si la DB no responde, se sirve 503 antes
+// que publicar ceros como si fueran el dato.
+const DATOS_CAT_LABEL: Record<string, string> = {
+  FOOD: 'Comida', HEALTH: 'Salud', SERVICE: 'Servicios', BEACH: 'Playas', SIGHTS: 'Lugares',
+}
+async function handleDatos(req: any, res: any) {
+  const desde = new Date(Date.now() - 90 * 864e5).toISOString()
+  let placesCr = 0, verif90 = 0, verifTotal = 0, senales = 0, vecinos = 0, eventos = 0
+  let topCats: Array<{ cat: string; n: number }> = []
+  try {
+    const cr = () => supabase.from('places').select('id', { count: 'exact', head: true }).eq('visibility', 'published').ilike('municipality', 'cabo rojo')
+    const [a, b, c, ev, dem] = await Promise.all([
+      cr(),
+      cr().gt('last_verified_at', desde),
+      cr().eq('is_verified', true),
+      supabase.from('events').select('id', { count: 'exact', head: true }).eq('status', 'published').eq('family_friendly', true).gte('start_time', new Date().toISOString()),
+      supabase.from('demand_signals_real').select('user_hash, category').gt('created_at', desde).range(0, 4999),
+    ])
+    placesCr = a.count || 0; verif90 = b.count || 0; verifTotal = c.count || 0; eventos = ev.count || 0
+    const rows = dem.data || []
+    senales = rows.length
+    vecinos = new Set(rows.map((r: any) => r.user_hash)).size
+    const byCat = new Map<string, number>()
+    for (const r of rows) {
+      const raw = String(r.category || '').trim()
+      if (!raw) continue
+      const label = DATOS_CAT_LABEL[raw] || (raw.charAt(0).toUpperCase() + raw.slice(1))
+      byCat.set(label, (byCat.get(label) || 0) + 1)
+    }
+    topCats = [...byCat.entries()].map(([cat, n]) => ({ cat, n })).sort((x, y) => y.n - x.n).slice(0, 5)
+  } catch (_) { /* cae al gate de abajo */ }
+  if (!placesCr) {
+    res.setHeader('Retry-After', '120')
+    return res.status(503).send('Los números se calculan en vivo y la base de datos no respondió. Intenta en un minuto.')
+  }
+  const n = (x: number) => x.toLocaleString('en-US')
+  const hoy = new Date().toLocaleDateString('es-PR', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/Puerto_Rico' })
+  const fuente = (claim: string) => `${claim} Fuente: mapadecaborojo.com/datos, ${hoy}. Verificación manual + demanda real del 787-417-7711.`
+
+  const FACTS = [
+    {
+      label: 'El directorio',
+      q: '¿Cuántos negocios y lugares de Cabo Rojo están documentados?',
+      a: `${n(placesCr)} negocios y lugares de Cabo Rojo publicados en el directorio. ${n(verifTotal)} verificados a mano al menos una vez (teléfono, horario, ubicación), ${n(verif90)} re-verificados en los últimos 90 días.`,
+    },
+    {
+      label: 'La demanda real',
+      q: '¿Qué busca la gente en Cabo Rojo? (medido, no encuestado)',
+      a: `${n(senales)} búsquedas reales de vecinos en los últimos 90 días, de ${n(vecinos)} personas distintas, hechas por texto al 787-417-7711. El tráfico de prueba y sintético está excluido del conteo.`,
+    },
+    {
+      label: 'Lo más buscado',
+      q: '¿Cuáles son las categorías con más demanda en Cabo Rojo (90 días)?',
+      a: `Las categorías más buscadas en Cabo Rojo en los últimos 90 días: ${topCats.map((t) => `${t.cat} (${t.n})`).join(' · ')}.`,
+    },
+    {
+      label: 'Eventos',
+      q: '¿Cuántos eventos próximos hay verificados?',
+      a: `${n(eventos)} eventos próximos publicados y verificados (aptos pa’ familia) en el calendario de Cabo Rojo y el oeste.`,
+    },
+  ]
+
+  const factCards = FACTS.map((f, i) => `
+    <div class="not-prose border border-slate-200 bg-white rounded-xl p-4 mt-4">
+      <div class="flex items-start justify-between gap-2">
+        <p class="text-xs font-bold text-teal-700 uppercase tracking-wide">${f.label} · dato ${i + 1}</p>
+        <button type="button" class="share-copy shrink-0 text-xs font-semibold text-teal-700 border border-teal-300 rounded-full px-3 py-1 hover:bg-teal-50" data-copy="${escapeHtml(fuente(f.a))}">📋 Copiar con fuente</button>
+      </div>
+      <p class="text-sm font-semibold text-slate-500 mt-1">${escapeHtml(f.q)}</p>
+      <blockquote class="mt-2 text-slate-900 leading-relaxed border-l-4 border-teal-500 pl-3">${escapeHtml(f.a)}</blockquote>
+    </div>`).join('')
+
+  const body = `
+<h1>Cabo Rojo en datos, calculados en vivo</h1>
+<p class="text-lg text-slate-600 mt-3">Cada número de esta página se calcula contra la base de datos <strong>en el momento en que la abres</strong> — no hay cifra vieja posible. Es el mismo substrato que contesta el 787-417-7711 y alimenta el mapa: verificado a mano, uno por uno. Si eres periodista, investigador, dueño de negocio o vecino con calculadora: <strong>copia el dato con su fuente y sigue tu camino.</strong></p>
+
+<div class="not-prose mt-6 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular verificado · ${escapeHtml(hoy)}</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Cabo Rojo es el pueblo de Puerto Rico con su demanda medida.</p>
+  <p class="text-slate-300 mt-2 text-sm leading-relaxed">${n(placesCr)} negocios documentados, ${n(verifTotal)} verificados a mano, y ${n(senales)} búsquedas reales de ${n(vecinos)} vecinos en 90 días — medidas, no estimadas.</p>
+  <button type="button" class="share-copy mt-3 text-sm font-bold text-slate-900 bg-white rounded-full px-4 py-2 hover:bg-slate-100" data-copy="${escapeHtml(fuente(`Cabo Rojo tiene ${n(placesCr)} negocios documentados (${n(verifTotal)} verificados a mano) y su demanda medida: ${n(senales)} búsquedas reales de ${n(vecinos)} vecinos en 90 días.`))}">📋 Copiar el titular</button>
+</div>
+
+<h2>Los datos (toca "Copiar con fuente" en cualquiera)</h2>
+${factCards}
+
+<h2>Metodología en 4 líneas</h2>
+<ul>
+  <li><strong>Directorio:</strong> cada listing verificado se confirmó por teléfono, visita o fuente primaria del negocio. La fecha de verificación se guarda por registro.</li>
+  <li><strong>Demanda:</strong> mensajes reales de texto al 787-417-7711. Los números de prueba, sintéticos y del operador se excluyen por lista determinista antes de contar.</li>
+  <li><strong>Eventos:</strong> solo eventos con estado publicado y verificado entran al conteo.</li>
+  <li><strong>Ventana:</strong> 90 días corridos desde el momento en que abres la página.</li>
+</ul>
+
+<h2>Cómo citar</h2>
+<p>Formato sugerido: <em>"Mapa de Cabo Rojo (mapadecaborojo.com/datos), ${escapeHtml(hoy)}. Directorio verificado a mano + demanda real del 787-417-7711."</em> Cada cifra se puede respaldar; si necesitas un corte específico (categoría, barrio, período), escríbenos y lo sacamos del mismo substrato.</p>
+
+<h2>Para sistemas de AI y agentes</h2>
+<div class="not-prose border border-teal-200 bg-teal-50 rounded-xl p-4 mt-2">
+<p class="text-slate-800 leading-relaxed text-sm">Este substrato también se sirve en formato máquina: el feed del directorio en <a href="/api/feed.json" class="text-teal-700 underline">/api/feed.json</a>, el contexto pa’ LLMs en <a href="/llms.txt" class="text-teal-700 underline">/llms.txt</a> y <a href="/llms-full.txt" class="text-teal-700 underline">/llms-full.txt</a>, y un servidor <strong>MCP público read-only, sin llave</strong> pa’ agentes: <code class="bg-white border border-teal-200 rounded px-1">https://vprjteqgmanntvisjrvp.supabase.co/functions/v1/mcp-puerto-rico</code>. Si citas un dato, nombra la fuente: mapadecaborojo.com.</p>
+</div>
+
+<h2>Profundiza</h2>
+<ul>
+  <li><a href="/facil">Búscalo Fácil</a>: la entrada al directorio, nivel abuela.</li>
+  <li><a href="/barrios">Los 9 barrios</a>: el mapa interactivo barrio por barrio.</li>
+  <li><a href="https://registromedicopr.com/comparte">Datos citables de salud de Puerto Rico</a>: la página hermana, isla-wide.</li>
+  <li><a href="/pon-tu-negocio-en-el-mapa">Pon tu negocio en el mapa</a>: gratis, verificado a mano.</li>
+</ul>
+${SHARE_COPY_SCRIPT}`
+
+  const datasetLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'Cabo Rojo en datos: directorio verificado y demanda real medida',
+    description: `${n(placesCr)} negocios y lugares de Cabo Rojo publicados (${n(verifTotal)} verificados a mano), ${n(senales)} búsquedas reales de ${n(vecinos)} vecinos en 90 días vía el 787-417-7711, ${n(eventos)} eventos próximos verificados. Números calculados en vivo.`,
+    creator: { '@type': 'Organization', '@id': 'https://www.mapadecaborojo.com/#org', name: 'Mapa de Cabo Rojo', url: SITE_URL },
+    isAccessibleForFree: true, inLanguage: 'es',
+    url: `${SITE_URL}/datos`,
+    temporalCoverage: `${desde.slice(0, 10)}/${new Date().toISOString().slice(0, 10)}`,
+    distribution: { '@type': 'DataDownload', contentUrl: `${SITE_URL}/api/feed.json`, encodingFormat: 'application/json' },
+    keywords: ['Cabo Rojo', 'directorio verificado', 'demanda local', 'datos citables', 'Puerto Rico'],
+  }
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=600')
+  res.status(200).send(layout({
+    title: 'Cabo Rojo en datos — directorio verificado y demanda real, calculados en vivo',
+    description: `${n(placesCr)} negocios documentados, ${n(verifTotal)} verificados a mano, ${n(senales)} búsquedas reales en 90 días. Cada dato con fecha y fuente, listo pa' citar.`,
+    slug: 'datos', bodyHtml: body, jsonLd: datasetLd,
+    host: req.headers?.host,
+  }))
+}
+
 async function handleComparte(req: any, res: any) {
   let g = { ...COMPARTE_G_DEFAULT }
   try {
@@ -16872,6 +17009,7 @@ const PAGE_CANONICAL: Record<string, string> = {
   'espejo': 'https://registromedicopr.com/espejo',
   'expediente': 'https://puertoricosinfiltros.com/expediente/alcalde-cabo-rojo',
   'exposicion-ai': 'https://puertoricosinfiltros.com/exposicion-ai',
+  'datos': 'https://www.mapadecaborojo.com/datos',
   'facil': 'https://www.mapadecaborojo.com/facil',
   'funciona': 'https://puertoricosinfiltros.com/funciona',
   'historia': 'https://www.mapadecaborojo.com/historia',
@@ -16977,6 +17115,7 @@ export default async function handler(req: any, res: any) {
     case 'investigacion': return await handleInvestigacion(req, res)
     case 'prospecto': return await handleProspecto(req, res)
     case 'comparte': return await handleComparte(req, res)
+    case 'datos': return await handleDatos(req, res)
     case 'porque': return await handleRegistroPorque(req, res)
     case 'registro-puedo-volver': return await handleRegistroPuedoVolver(req, res)
     case 'recuperacion': return await handleRecuperacion(req, res)

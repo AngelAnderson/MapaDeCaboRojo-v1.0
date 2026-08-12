@@ -440,6 +440,10 @@
       "destination": "/api/mapa-pages?page=tienda"
     },
     {
+      "source": "/datos",
+      "destination": "/api/mapa-pages?page=datos"
+    },
+    {
       "source": "/faro",
       "destination": "/api/mapa-pages?page=faro"
     },

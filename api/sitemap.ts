@@ -166,6 +166,7 @@ export default async function handler(req: any, res: any) {
       { slug: 'facil', priority: 0.9, changefreq: 'weekly' },                  // "Búscalo Fácil" — botones grandes nivel abuela, entrada principal al directorio
       { slug: 'observatorio', priority: 0.9, changefreq: 'weekly' },           // civic accountability · Esencia/vertedero · FAQPage schema
       { slug: 'promesas', priority: 0.8, changefreq: 'weekly' },               // promesas del alcalde en cámara · banco completo
+      { slug: 'datos', priority: 0.8, changefreq: 'daily' },                   // Cabo Rojo en números vivos · página citable (AI-SEO paso 3)
       { slug: 'mision', priority: 0.7, changefreq: 'weekly' },
       { slug: 'equipo', priority: 0.6, changefreq: 'weekly' },
       { slug: 'historia', priority: 0.6, changefreq: 'monthly' },              // Origin story · build-in-public
