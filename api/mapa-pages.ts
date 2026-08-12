@@ -168,6 +168,59 @@ document.addEventListener('submit', async function(e) {
 </script>
 `
 
+// ── Grafo de entidad cross-dominio ──
+// Las 3 propiedades del substrato se declaran subOrganization de Caborojo.com
+// con founder Angel F. Anderson. Los @id son estables y los parsers deduplican
+// por @id, así que emitirlo en cada página no crea entidades duplicadas.
+const ANGEL_ID = 'https://www.angelanderson.com/#angel'
+const CABOROJO_ORG_ID = 'https://caborojo.com/#org'
+function entityGraphLd(canonicalBase: string, brandName: string): string {
+  const graph = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Person',
+        '@id': ANGEL_ID,
+        name: 'Angel F. Anderson',
+        url: 'https://www.angelanderson.com',
+        sameAs: [
+          'https://www.linkedin.com/in/angelfanderson',
+          'https://x.com/angelfanderson',
+          'https://www.instagram.com/angelfanderson',
+          'https://www.facebook.com/angelfanderson',
+          'https://www.youtube.com/@AngelAnderson',
+        ],
+      },
+      {
+        '@type': 'Organization',
+        '@id': CABOROJO_ORG_ID,
+        name: 'Caborojo.com',
+        url: 'https://caborojo.com',
+        founder: { '@id': ANGEL_ID },
+        sameAs: [
+          'https://www.facebook.com/caborojoweb',
+          'https://www.youtube.com/c/Caborojo',
+        ],
+        subOrganization: [
+          { '@type': 'Organization', '@id': 'https://www.mapadecaborojo.com/#org' },
+          { '@type': 'Organization', '@id': 'https://registromedicopr.com/#org' },
+          { '@type': 'Organization', '@id': 'https://puertoricosinfiltros.com/#org' },
+          { '@type': 'Organization', '@id': 'https://loquehayhoy.com/#org' },
+        ],
+      },
+      {
+        '@type': 'Organization',
+        '@id': `${canonicalBase}/#org`,
+        name: brandName,
+        url: canonicalBase,
+        parentOrganization: { '@id': CABOROJO_ORG_ID },
+        founder: { '@id': ANGEL_ID },
+      },
+    ],
+  }
+  return `<script type="application/ld+json">${JSON.stringify(graph)}</script>`
+}
+
 function layout(opts: {
   title: string
   description: string
@@ -193,9 +246,9 @@ function layout(opts: {
   // Each domain has its own GA4 property — keep data clean/separate from Mapa.
   const GA = isReg ? 'G-P1H28B6EET' : isPRSF ? 'G-S848YPDVZT' : 'G-6KBMV0LKQ4'
   const canonical = opts.canonicalUrl || `${canonicalBase}/${opts.slug}`
-  const jsonLd = opts.jsonLd
+  const jsonLd = (opts.jsonLd
     ? `<script type="application/ld+json">${JSON.stringify(opts.jsonLd)}</script>`
-    : ''
+    : '') + entityGraphLd(canonicalBase, brandName)
 
   // OG image — per-page if provided, else fall back to canonical /menos-revolu OG.
   const ogImagePath = opts.ogImage || '/og/menos-revolu.png'
@@ -618,6 +671,153 @@ function handleMision(_req: any, res: any) {
       name: 'Misión · Mapa de Cabo Rojo',
       description: 'El mapa vivo pa\' poner orden en el revolú de Cabo Rojo. Menos revolú. Mejores decisiones. Mejor vida.',
     },
+  }))
+}
+
+// =============== /mision (Puerto Rico Sin Filtros) ===============
+// La misión, la visión y las metas de la casa — con fecha, criterio y falla pública.
+// Doctrina: el sitio que le pone reloj a PR se pone reloj a sí mismo. Las metas se
+// presentan igual que las predicciones (criterio verificable + fecha de cobro), y si
+// una vence sin cumplirse, el resultado se publica aquí mismo. Misión/visión encadenan
+// al canon del ecosistema (LOCKED 2026-08-02): "reducir el costo de encontrar la
+// información correcta" / "que decidir bien tome segundos, no semanas".
+function handleMisionSinFiltros(req: any, res: any) {
+  const MESES_M = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+  const fechaLargaM = (iso: string): string => {
+    const [y, m, d] = String(iso).split('-').map(Number)
+    if (!y || !m || !d) return String(iso)
+    return `${d} de ${MESES_M[m - 1]} de ${y}`
+  }
+  const diasRestantes = (iso: string): number => Math.ceil((new Date(`${iso}T23:59:59-04:00`).getTime() - Date.now()) / 86400000)
+
+  const METAS = [
+    {
+      titulo: 'Cobrarse en público',
+      meta: 'El 100% de las predicciones que venzan publican su resultado en 14 días o menos, gane o pierda la predicción.',
+      hoy: 'Hay 12 predicciones públicas con fecha de cobro. La primera vence el 31 de diciembre de 2026 (Esencia).',
+      criterio: 'Cualquiera abre /predicciones después de una fecha de cobro y encuentra el resultado publicado, con la fuente al lado. Una vencida sin resultado por más de 14 días = meta fallada.',
+      vence: '2026-12-31',
+      verificaUrl: '/predicciones', verificaText: 'Las predicciones',
+    },
+    {
+      titulo: 'El récord viaja',
+      meta: '10 citas externas con nombre: prensa, funcionario o académico citando un récord de esta casa.',
+      hoy: 'El conteo y la lista, con link a cada cita, se publican en esta página el día del cobro. Si no llegan a 10, el número real queda escrito igual.',
+      criterio: 'Cada cita con su link verificable. Aquí no cuenta tráfico, cuenta quién cargó el dato con su nombre.',
+      vence: '2026-10-05',
+      verificaUrl: null, verificaText: null,
+    },
+    {
+      titulo: 'El récord mueve gobierno',
+      meta: '3 respuestas on-record de funcionarios, publicadas textuales en sus expedientes.',
+      hoy: 'Hoy: 0. El precedente existe: un paramédico habló en récord en 2023 y 360 días después el municipio contestó con contrato de 9-1-1. Está documentado minuto a minuto.',
+      criterio: 'Cada respuesta llega por canal verificable del funcionario y se publica textual en su expediente. El contador público de "días sin respuesta" corre pa\' ambos lados.',
+      vence: '2027-06-30',
+      verificaUrl: '/funciona', verificaText: 'El precedente 9-1-1',
+    },
+    {
+      titulo: 'Cobertura del oeste',
+      meta: 'Expedientes vivos de los distritos 19, 21, 22 y 23, con re-verificación mensual de sus medidas en SUTRA.',
+      hoy: 'Hoy: 2 expedientes (alcalde de Cabo Rojo + representante del distrito 20).',
+      criterio: 'Los 4 expedientes nuevos publicados y cada medida con su estado verificado contra el trámite legislativo, con menos de 31 días de antigüedad.',
+      vence: '2026-12-31',
+      verificaUrl: '/expediente/representante-distrito-20', verificaText: 'El patrón: expediente D20',
+    },
+    {
+      titulo: 'Sostenerse sin venderse',
+      meta: '1 conversación seria de licencia de data con una organización que la necesite.',
+      hoy: 'El récord es y seguirá siendo gratis pa\'l vecino. La casa se sostiene licenciando data verificada a quien la necesita, no vendiendo espacio, atención ni titulares.',
+      criterio: 'Conversación formal documentada (propuesta o reunión con minuta). El nombre se publica solo con permiso; el hecho de que existió, siempre.',
+      vence: '2026-10-05',
+      verificaUrl: null, verificaText: null,
+    },
+  ]
+
+  const metaCards = METAS.map((m, i) => {
+    const d = diasRestantes(m.vence)
+    const reloj = d >= 0
+      ? `<span class="text-[11px] font-bold rounded-full px-2.5 py-0.5 bg-white/15 text-teal-200">quedan ${d} días</span>`
+      : `<span class="text-[11px] font-bold rounded-full px-2.5 py-0.5 bg-red-500/30 text-red-200">vencida hace ${Math.abs(d)} días</span>`
+    return `
+  <div class="not-prose bg-white border border-slate-200 rounded-2xl overflow-hidden mt-5">
+    <div class="px-4 pt-4 flex items-start gap-3">
+      <span class="shrink-0 w-8 h-8 rounded-full bg-slate-900 text-white font-black flex items-center justify-center text-sm">${i + 1}</span>
+      <p class="font-black text-slate-900 text-lg leading-snug" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(m.titulo)}</p>
+    </div>
+    <p class="px-4 mt-2 text-slate-700 leading-relaxed"><strong>La meta:</strong> ${escapeHtml(m.meta)}</p>
+    <div class="mx-4 mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3"><p class="text-[11px] uppercase tracking-widest font-bold text-slate-500">Dónde está hoy</p><p class="text-sm text-slate-800 mt-1">${m.hoy}</p></div>
+    <div class="px-4 mt-3 pb-4">
+      <p class="text-[11px] uppercase tracking-widest font-bold text-teal-600">Cómo se verifica</p>
+      <p class="text-sm text-slate-700 mt-1 leading-relaxed">${m.criterio}</p>
+    </div>
+    <div class="bg-slate-900 text-white px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
+      <p class="font-bold text-sm sm:text-base m-0"><span class="text-teal-300 text-[11px] uppercase tracking-widest font-bold mr-2">Se cobra</span>${escapeHtml(fechaLargaM(m.vence))} ${reloj}</p>
+      ${m.verificaUrl ? `<a href="${escapeHtml(m.verificaUrl)}" class="text-teal-300 text-xs font-bold hover:underline shrink-0">${escapeHtml(m.verificaText || 'Ver')} →</a>` : ''}
+    </div>
+  </div>`
+  }).join('')
+
+  const body = `
+<h1>La misión, con relojes</h1>
+<p class="text-lg text-slate-600 mt-2">Qué hace esta casa, a dónde va, y las metas con las que se deja medir. Escritas igual que las predicciones: con fecha, criterio y falla pública.</p>
+
+<div class="not-prose mt-6 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">La misión · el trabajo diario</p>
+  <p class="text-2xl sm:text-3xl font-black mt-1 leading-snug" style="font-family:'Fraunces',Georgia,serif">Reducir a segundos el costo de verificar lo que te dicen sobre Puerto Rico.</p>
+  <p class="text-slate-300 mt-3 text-sm leading-relaxed">En Puerto Rico verificar es caro. La recesión se nombra con 1 año de atraso. Las promesas expiran con la elección. El dato existe, pero vive enterrado en un PDF que nadie abre. Cuando verificar cuesta tanto, la gente decide con el cuento. Esta casa junta el récord, le pone la fuente al lado y la brecha a la vista, pa\' que confirmar lo que te dijeron tome segundos, no semanas.</p>
+</div>
+
+<div class="not-prose mt-4 bg-teal-50 border border-teal-200 rounded-2xl p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-700 font-bold">La visión · el mundo si ganamos</p>
+  <p class="text-2xl sm:text-3xl font-black mt-1 leading-snug text-slate-900" style="font-family:'Fraunces',Georgia,serif">Que en Puerto Rico la palabra pública tenga precio: fallar cobra, cumplir paga.</p>
+  <p class="text-slate-700 mt-3 text-sm leading-relaxed">Un Puerto Rico donde ninguna promesa pública expira con la elección. Donde la pregunta "¿y eso se cumplió?" tiene una dirección donde vive la respuesta. Y donde la familia que decide quedarse o irse decide con el récord, no con el miedo ni con la nostalgia.</p>
+  <p class="text-slate-700 mt-2 text-sm leading-relaxed"><strong>La mitad que no se negocia:</strong> la misma vara premia. Cuando algo funciona, se publica con la misma disciplina que lo que falla. Sin el verde, esto sería un martillo. Con el verde, es una vara. <a href="/funciona" class="text-teal-700 font-semibold">El registro de lo que sí se movió →</a></p>
+</div>
+
+<h2>Las 2 decisiones que esta casa sirve</h2>
+<p>El resto del sistema resuelve las decisiones del día a día: <a href="https://www.mapadecaborojo.com" class="text-teal-700 font-semibold">el Mapa</a> te encuentra el negocio, <a href="https://registromedicopr.com" class="text-teal-700 font-semibold">el Registro</a> te dice a cuál médico llamas hoy, y el Veci te contesta por texto. Sin Filtros existe pa\' las 2 decisiones más caras que hay:</p>
+<ul>
+  <li><strong>"¿Esta promesa me la creo o no?"</strong> — se contesta con <a href="/contradicciones" class="text-teal-700 font-semibold">el marcador de contradicciones</a>, <a href="/quien-responde" class="text-teal-700 font-semibold">las promesas con recibo</a> y los expedientes.</li>
+  <li><strong>"¿Nos quedamos en Puerto Rico o nos vamos?"</strong> — se contesta con el récord completo: <a href="/decidir" class="text-teal-700 font-semibold">¿Me quedo o me voy?</a>, <a href="/predicciones" class="text-teal-700 font-semibold">las predicciones con fecha</a> y <a href="/retiro" class="text-teal-700 font-semibold">El Huracán Lento</a>.</li>
+</ul>
+<p>Esa segunda decisión es la más cara que toma una familia en este país. Merece algo mejor que un titular.</p>
+
+<h2>Las metas de la casa</h2>
+<p>El sitio que le pone nota a Puerto Rico se pone nota a sí mismo. Estas son las 5 metas, con la misma anatomía que las predicciones: criterio fijo, fecha de cobro, y resultado publicado gane o pierda. Ninguna se mide en tráfico, likes ni alcance.</p>
+${metaCards}
+
+<div class="not-prose bg-amber-50 border border-amber-200 rounded-2xl p-5 mt-6">
+  <p class="text-[11px] uppercase tracking-widest font-bold text-amber-700">La cláusula honesta</p>
+  <p class="text-sm text-slate-800 mt-1 leading-relaxed">Si pa\'l 5 de octubre de 2026 el récord no tiene citas externas ni conversaciones serias, la pregunta se hace en público: ¿esto le sirve a alguien o es vanidad con tablas? Esa respuesta también queda escrita en esta página. Un proyecto que no se deja matar por su propia vara no merece la vara.</p>
+</div>
+
+<h2>Quién está detrás y qué gana</h2>
+<p>Angel Anderson, vecino de Cabo Rojo, 20 años en la Fuerza Aérea. La identidad completa, las objeciones contestadas de frente y el registro público de correcciones están en <a href="/rompelo" class="text-teal-700 font-semibold">/rompelo</a>. Este sitio no vende nada ni cobra por ver el récord.</p>
+
+${shareRow({ text: 'La misión de Puerto Rico Sin Filtros, escrita como sus predicciones: con metas, fecha de cobro y falla pública. Si fallan, queda escrito:', url: 'https://puertoricosinfiltros.com/mision', toWho: 'Al que está harto de misiones de póster.' })}
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
+  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Una misión sin fecha de verificación es un póster. Esta tiene relojes.</p>
+  <p class="mt-2 text-sm text-slate-600 italic">Si te sirve, úsala. Si no, sigue tu camino.</p>
+</div>
+${SHARE_COPY_SCRIPT}
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'AboutPage',
+    name: 'La misión de Puerto Rico Sin Filtros: con metas, fecha y criterio',
+    description: 'La misión, la visión y las 5 metas de Puerto Rico Sin Filtros, cada una con fecha de cobro y criterio verificable. Si fallamos, queda escrito.',
+    url: 'https://puertoricosinfiltros.com/mision',
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
+    inLanguage: 'es',
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=600')
+  res.status(200).send(layout({
+    title: 'La misión, con relojes: metas con fecha, criterio y falla pública',
+    description: 'La misión, la visión y las 5 metas de Puerto Rico Sin Filtros, escritas como sus predicciones: con fecha de cobro y criterio verificable. Si fallamos, queda escrito.',
+    slug: 'mision', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
 
@@ -7340,7 +7540,7 @@ ${heroNotas}
 </div>
 
 <h2 id="mision">La misión</h2>
-<p class="text-lg text-slate-700">Un pueblo que no ve su realidad no la escoge: la aguanta. <strong>Puerto Rico Sin Filtros existe para que Puerto Rico se pueda ver claro</strong> — el récord, con la fuente al lado — porque solo lo que se ve se puede decidir. Ver claro es el primer paso para vivir el país que escogemos, no el que nos tocó.</p>
+<p class="text-lg text-slate-700">Un pueblo que no ve su realidad no la escoge: la aguanta. <strong>Puerto Rico Sin Filtros existe para que Puerto Rico se pueda ver claro</strong> — el récord, con la fuente al lado — porque solo lo que se ve se puede decidir. Ver claro es el primer paso para vivir el país que escogemos, no el que nos tocó. <a href="/mision" data-prsf="record" data-rec="mision" class="text-teal-700 font-semibold">La misión completa, con metas y relojes →</a></p>
 
 <div class="not-prose bg-white border border-slate-200 rounded-2xl p-5 mt-5">
   <p class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-3">Índice de récords</p>
@@ -16722,6 +16922,10 @@ function wrongHost(req: any, page: string): string | null {
   if (!target) return null
   const host = String(req.headers?.host || '').toLowerCase()
   if (!host) return null
+  // /mision vive en 2 hosts con contenido propio: la del Mapa (canónica histórica,
+  // handleMision) y la de Sin Filtros (misión + metas con relojes,
+  // handleMisionSinFiltros). A PRSF no se le redirige.
+  if (page === 'mision' && /puertoricosinfiltros\.com$/.test(host)) return null
   const owner = target.split('/')[2].toLowerCase()
   // El ápice de mapa ya lo manda Vercel a www; no hacemos doble salto aquí.
   if (host === owner || (owner === 'www.mapadecaborojo.com' && host === 'mapadecaborojo.com')) return null
@@ -16825,7 +17029,7 @@ export default async function handler(req: any, res: any) {
     case 'civico-json': return handleCivicoJson(req, res)
     case 'civico-submit': return await handleCivicoSubmit(req, res)
     case 'civico-moderate': return await handleCivicoModerate(req, res)
-    case 'mision': return handleMision(req, res)
+    case 'mision': return /puertoricosinfiltros\.com/i.test(String(req.headers?.host || '')) ? handleMisionSinFiltros(req, res) : handleMision(req, res)
     case 'transparencia': return await handleTransparencia(req, res)
     case 'equipo': return handleEquipo(req, res)
     case 'vision': return handleVision(req, res)
