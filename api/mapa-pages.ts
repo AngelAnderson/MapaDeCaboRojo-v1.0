@@ -4973,7 +4973,12 @@ async function handleCambios(req: any, res: any) {
 <p class="text-sm text-slate-500">Cada tarjeta es una actualización. La más reciente arriba. Toca "ver los detalles" si quieres el desglose completo.</p>
 <div class="not-prose space-y-4 mt-4">
   <div class="bg-white border-2 border-teal-300 rounded-xl p-5">
-    <div class="text-xs font-bold uppercase tracking-widest text-teal-700 mb-1">12 agosto 2026 · La entrada más reciente</div>
+    <div class="text-xs font-bold uppercase tracking-widest text-teal-700 mb-1">13 agosto 2026 · La entrada más reciente</div>
+    <p class="font-bold text-slate-900 text-lg m-0">La ficha de cada especialista ahora contesta la pregunta que importa: ¿está cogiendo pacientes?</p>
+    <p class="text-sm text-slate-600 mt-2">Cuando una oficina confirma que acepta (o no acepta) pacientes nuevos, ese dato sale con fecha en su ficha pública — verde si acepta, y si no acepta te ahorra la llamada. El dato caduca a los 90 días, igual que en el <a href="/registro/censo" class="text-teal-700 font-semibold">Censo</a>. El Censo también estrena una línea de frescura en vivo: cuántos proveedores hay, cuándo fue la última sincronización con el registro federal, y cuántas fichas han corregido las propias oficinas. Por debajo, la verificación ahora se dirige por demanda real: lo que los vecinos más piden por el 787-417-7711 es lo primero que se verifica.</p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-xl p-5">
+    <div class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">12 agosto 2026</div>
     <p class="font-bold text-slate-900 text-lg m-0">11 médicos corrigieron su propia ficha, arrancó el conteo de verificados, y entraron 179 proveedores nuevos.</p>
     <p class="text-sm text-slate-600 mt-2">Se procesaron los reclamos de perfil que las propias oficinas nos enviaron por el form de "¿Es tu perfil?": teléfonos corregidos, planes confirmados y horarios. Cada ficha corregida por su propia oficina queda sellada como verificada con fecha, y con eso el <a href="/registro/censo" class="text-teal-700 font-semibold">Censo Médico Real</a> deja de estar en cero.</p>
     <details class="mt-2">
@@ -5919,6 +5924,18 @@ async function handleEspecialista(req: any, res: any) {
   const { data: planRep } = await supabase.from('v_plan_reports').select('plan,reportes').eq('place_id', place.id)
   const reportedPlans = (planRep || []).filter((r: any) => Number(r.reportes) > 0).sort((a: any, b: any) => b.reportes - a.reportes)
 
+  // Disponibilidad verificada (registro_provider_status = la misma tabla del Censo).
+  // La regla de /registro/censo aplica aquí también: dato >90 días vuelve a "desconocido".
+  const { data: pstat } = await supabase.from('registro_provider_status')
+    .select('accepting_patients,wait_note,verified_at,verified_by')
+    .eq('place_slug', place.slug).order('verified_at', { ascending: false }).limit(1)
+  const st0 = pstat?.[0] || null
+  const stFresh = st0 && st0.verified_at && (Date.now() - new Date(String(st0.verified_at) + 'T12:00:00').getTime()) < 90 * 86400000 ? st0 : null
+  const stDate = stFresh ? new Date(String(stFresh.verified_at) + 'T12:00:00').toLocaleDateString(lang === 'en' ? 'en-US' : 'es-PR', { day: 'numeric', month: 'long', year: 'numeric' }) : null
+  const dispoHtml = !stFresh || stFresh.accepting_patients == null ? '' : stFresh.accepting_patients
+    ? `<div class="bg-emerald-50 border-2 border-emerald-300 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-emerald-700 font-bold">${lang === 'en' ? '✓ Accepting new patients' : '✓ Aceptando pacientes nuevos'}</div><div class="text-emerald-900 font-semibold mt-1">${lang === 'en' ? `Confirmed ${stDate}` : `Confirmado ${stDate}`}${stFresh.wait_note ? ` · ${escapeHtml(stFresh.wait_note)}` : ''}</div><div class="text-xs text-emerald-700 mt-1">${lang === 'en' ? 'Verified directly, with a date — part of the Real Medical Census. Things change: confirm when you call.' : 'Verificado directo, con fecha — parte del Censo Médico Real. Esto cambia: confirma cuando llames.'}</div></div>`
+    : `<div class="bg-rose-50 border border-rose-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-rose-700 font-bold">${lang === 'en' ? 'Not accepting new patients' : 'No está aceptando pacientes nuevos'}</div><div class="text-rose-900 font-semibold mt-1">${lang === 'en' ? `Confirmed ${stDate}` : `Confirmado ${stDate}`}${stFresh.wait_note ? ` · ${escapeHtml(stFresh.wait_note)}` : ''}</div><div class="text-xs text-rose-700 mt-1">${lang === 'en' ? 'Save the call: see other options in your region below.' : 'Ahórrate la llamada: mira otras opciones en tu región más abajo.'}</div></div>`
+
   const mapsEmbed = (place.lat && place.lon)
     ? `https://maps.google.com/maps?q=${place.lat},${place.lon}&z=15&output=embed`
     : `https://maps.google.com/maps?q=${encodeURIComponent((place.address || (muni + ', Puerto Rico')))}&z=13&output=embed`
@@ -5936,6 +5953,7 @@ async function handleEspecialista(req: any, res: any) {
   </div>`
 
   const dataRows = `<div class="not-prose grid sm:grid-cols-2 gap-3 mt-6">
+    ${dispoHtml}
     <div class="bg-white border border-slate-200 rounded-xl p-4"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${T.specialtyH}</div><div class="text-slate-900 font-semibold mt-1">${specEmoji} ${escapeHtml(specLabel)}</div></div>
     <div class="bg-white border border-slate-200 rounded-xl p-4"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${T.regionH}</div><div class="text-slate-900 font-semibold mt-1">${escapeHtml(muni)}${region ? ` · ${escapeHtml(region)}` : ''}</div>${region && REGION_BLURB[region] ? `<div class="text-xs text-slate-500 mt-0.5">${escapeHtml(REGION_BLURB[region])}</div>` : ''}</div>
     ${place.address ? `<div class="bg-white border border-slate-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${T.addr}</div><div class="text-slate-900 mt-1">${escapeHtml(place.address)}</div></div>` : ''}
@@ -17084,6 +17102,24 @@ async function handleRegistroCenso(req: any, res: any) {
   const totPapel = munis.reduce((s, x) => s + x.papel, 0)
   const zeroState = totVer === 0
 
+  // Freshness del registro, en vivo. La regla de la casa: el moat se mide o no existe.
+  let fresco = { total: 0, ultimaIngesta: '', oficinas: 0, dispo90: 0 }
+  try {
+    const d90 = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10)
+    const [tot, ult, ofi, disp] = await Promise.all([
+      supabase.from('places').select('id', { count: 'exact', head: true }).not('npi', 'is', null).eq('status', 'open').eq('visibility', 'published'),
+      supabase.from('places').select('created_at').not('npi', 'is', null).order('created_at', { ascending: false }).limit(1),
+      supabase.from('provider_claims').select('id', { count: 'exact', head: true }).eq('status', 'applied'),
+      supabase.from('registro_provider_status').select('id', { count: 'exact', head: true }).not('accepting_patients', 'is', null).gte('verified_at', d90),
+    ])
+    fresco = {
+      total: tot.count || 0,
+      ultimaIngesta: ult.data?.[0]?.created_at ? new Date(ult.data[0].created_at).toLocaleDateString('es-PR', { day: 'numeric', month: 'long', year: 'numeric' }) : '',
+      oficinas: ofi.count || 0,
+      dispo90: disp.count || 0,
+    }
+  } catch (_) { /* strip se omite si falla */ }
+
   const rows = munis.map(x => `<tr class="border-t border-slate-100">
     <td class="py-2.5 px-3 font-semibold text-slate-800">${escapeHtml(x.m)}</td>
     <td class="py-2.5 px-3 text-center font-bold text-slate-700">${x.papel.toLocaleString('es-PR')}</td>
@@ -17112,6 +17148,13 @@ async function handleRegistroCenso(req: any, res: any) {
     <div class="text-xs text-slate-500 mt-1">Confirmado que aceptan pacientes nuevos (dato &lt;90 días)</div>
   </div>
 </div>
+
+${fresco.total ? `<div class="mt-4 bg-white border border-slate-200 rounded-xl p-4 text-sm text-slate-600 flex flex-wrap gap-x-6 gap-y-1">
+  <span>📗 <strong class="text-slate-900">${fresco.total.toLocaleString('es-PR')}</strong> proveedores en el registro (isla completa)</span>
+  <span>🔄 última sincronización con NPPES: <strong class="text-slate-900">${escapeHtml(fresco.ultimaIngesta)}</strong></span>
+  <span>✍️ <strong class="text-slate-900">${fresco.oficinas}</strong> fichas corregidas por su propia oficina</span>
+  <span>📞 <strong class="text-slate-900">${fresco.dispo90}</strong> con disponibilidad confirmada &lt;90 días</span>
+</div>` : ''}
 
 ${zeroState ? `<div class="bg-amber-50 border border-amber-200 rounded-xl p-5 mt-8">
   <p class="font-bold text-amber-900">El dato de hoy es cero, y ese es el punto.</p>
