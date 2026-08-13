@@ -897,7 +897,7 @@ function handleCalculadora(req: any, res: any) {
 <ul class="text-sm">
   <li><strong>"Más de 17,000 empleos" (Esencia):</strong> la cifra del día del anuncio, que suma "directos, indirectos e inducidos". El expediente y la cobertura previa hablaban de ~2,000, sin cláusula que los obligue. El récord completo: <a href="/esencia" class="text-teal-700 font-semibold">/esencia</a> y <a href="/contradicciones" class="text-teal-700 font-semibold">/contradicciones</a>.</li>
   <li><strong>500,000 pies² comerciales:</strong> 2,500 pies de frente comercial × 100 pies de fondo × 2 lados de la calle, la cuenta que hizo Túbal en la entrevista.</li>
-  <li><strong>La casa de 23 personas:</strong> el ejemplo ilustrativo de Túbal en cámara: 23 personas pasan por la obra de 1 casa en 1 año y son ≈ 4 empleos de año completo.</li>
+  <li><strong>La casa de 23 personas:</strong> el ejemplo que Túbal montó en cámara (él mismo lo llama "un invento" pa' enseñar el método): 23 personas pasan por la obra de 1 casa, se suman los días de cada una ("esta trabajó 50 semanas, esta trabajó 30") y salen "como 4 empleos" de año completo. Los días del chip reconstruyen su conclusión; el punto es el método, no el decimal.</li>
 </ul>
 
 <div class="not-prose bg-white border border-slate-200 border-l-4 border-l-teal-600 rounded-lg p-4 mt-6">
