@@ -3956,32 +3956,32 @@ async function handleAccesoLog(req: any, res: any) {
 // provider lists are LIVE from the DB via ?page=registro-data.
 // Matrix order: [total, Oeste, Norte, Centro, Sur, Este, Metro]
 const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:number;r:Record<string,number>;org?:boolean}> = [
-  {s:'cardiólogo',l:'Cardiólogo',e:'❤️',kw:'CARDIOLOGO',md:true,t:329,r:{Oeste:28,Norte:31,Centro:3,Sur:40,Este:46,Metro:181}},
-  {s:'psiquiatra',l:'Psiquiatra',e:'🧠',kw:'PSIQUIATRA',md:true,t:539,r:{Oeste:50,Norte:22,Centro:8,Sur:43,Este:68,Metro:348}},
-  {s:'fisiatra',l:'Fisiatra',e:'🩺',kw:'FISIATRA',md:true,t:257,r:{Oeste:26,Norte:16,Centro:3,Sur:20,Este:42,Metro:150}},
-  {s:'ginecólogo',l:'Ginecólogo / Obstetra',e:'🤰',kw:'GINECOLOGO',md:true,t:134,r:{Oeste:15,Norte:12,Centro:3,Sur:13,Este:13,Metro:78}},
-  {s:'pediatra',l:'Pediatra',e:'🧒',kw:'PEDIATRA',md:true,t:200,r:{Oeste:23,Norte:8,Centro:3,Sur:20,Este:20,Metro:126}},
+  {s:'cardiólogo',l:'Cardiólogo',e:'❤️',kw:'CARDIOLOGO',md:true,t:329,r:{Oeste:27,Norte:31,Centro:3,Sur:40,Este:46,Metro:182}},
+  {s:'psiquiatra',l:'Psiquiatra',e:'🧠',kw:'PSIQUIATRA',md:true,t:538,r:{Oeste:49,Norte:22,Centro:8,Sur:43,Este:68,Metro:348}},
+  {s:'fisiatra',l:'Fisiatra',e:'🩺',kw:'FISIATRA',md:true,t:252,r:{Oeste:21,Norte:16,Centro:3,Sur:20,Este:42,Metro:150}},
+  {s:'ginecólogo',l:'Ginecólogo / Obstetra',e:'🤰',kw:'GINECOLOGO',md:true,t:133,r:{Oeste:14,Norte:12,Centro:3,Sur:13,Este:13,Metro:78}},
+  {s:'pediatra',l:'Pediatra',e:'🧒',kw:'PEDIATRA',md:true,t:192,r:{Oeste:13,Norte:8,Centro:3,Sur:20,Este:20,Metro:128}},
   {s:'neonatólogo',l:'Neonatólogo (recién nacidos)',e:'👶',kw:'NEONATOLOGO',md:true,t:48,r:{Oeste:5,Norte:2,Sur:8,Este:4,Metro:29}},
-  {s:'dermatólogo',l:'Dermatólogo',e:'🧴',kw:'DERMATOLOGO',md:true,t:132,r:{Oeste:16,Norte:6,Centro:1,Sur:11,Este:12,Metro:86}},
-  {s:'gastroenterólogo',l:'Gastroenterólogo',e:'🩺',kw:'GASTRO',md:true,t:212,r:{Oeste:23,Norte:23,Centro:3,Sur:16,Este:22,Metro:125}},
+  {s:'dermatólogo',l:'Dermatólogo',e:'🧴',kw:'DERMATOLOGO',md:true,t:125,r:{Oeste:9,Norte:6,Centro:1,Sur:11,Este:12,Metro:86}},
+  {s:'gastroenterólogo',l:'Gastroenterólogo',e:'🩺',kw:'GASTRO',md:true,t:210,r:{Oeste:20,Norte:23,Centro:3,Sur:16,Este:22,Metro:126}},
   {s:'oftalmólogo',l:'Oftalmólogo (ojos)',e:'👁️',kw:'OFTALMOLOGO',md:true,t:242,r:{Oeste:28,Norte:18,Centro:2,Sur:19,Este:24,Metro:151}},
-  {s:'ortopeda',l:'Ortopeda',e:'🦴',kw:'ORTOPEDA',md:true,t:157,r:{Oeste:15,Norte:9,Centro:2,Sur:12,Este:20,Metro:99}},
-  {s:'neurólogo',l:'Neurólogo',e:'🧠',kw:'NEUROLOGO',md:true,t:182,r:{Oeste:30,Norte:6,Centro:1,Sur:7,Este:28,Metro:110}},
-  {s:'urólogo',l:'Urólogo',e:'🩺',kw:'UROLOGO',md:true,t:126,r:{Oeste:14,Norte:7,Centro:3,Sur:17,Este:18,Metro:67}},
-  {s:'endocrinólogo',l:'Endocrinólogo (diabetes)',e:'🩺',kw:'ENDOCRINOLOGO',md:true,t:171,r:{Oeste:25,Norte:11,Centro:1,Sur:14,Este:21,Metro:99}},
-  {s:'nefrólogo',l:'Nefrólogo (riñón)',e:'🫘',kw:'NEFROLOGO',md:true,t:162,r:{Oeste:30,Norte:14,Centro:2,Sur:24,Este:25,Metro:67}},
+  {s:'ortopeda',l:'Ortopeda',e:'🦴',kw:'ORTOPEDA',md:true,t:158,r:{Oeste:14,Norte:10,Centro:2,Sur:12,Este:20,Metro:100}},
+  {s:'neurólogo',l:'Neurólogo',e:'🧠',kw:'NEUROLOGO',md:true,t:170,r:{Oeste:17,Norte:6,Centro:1,Sur:7,Este:28,Metro:111}},
+  {s:'urólogo',l:'Urólogo',e:'🩺',kw:'UROLOGO',md:true,t:120,r:{Oeste:10,Norte:7,Centro:3,Sur:17,Este:18,Metro:65}},
+  {s:'endocrinólogo',l:'Endocrinólogo (diabetes)',e:'🩺',kw:'ENDOCRINOLOGO',md:true,t:163,r:{Oeste:17,Norte:11,Centro:1,Sur:14,Este:21,Metro:99}},
+  {s:'nefrólogo',l:'Nefrólogo (riñón)',e:'🫘',kw:'NEFROLOGO',md:true,t:156,r:{Oeste:24,Norte:14,Centro:2,Sur:24,Este:25,Metro:67}},
   {s:'neumólogo',l:'Neumólogo (pulmones)',e:'🫁',kw:'NEUMOLOGO',md:true,t:148,r:{Oeste:15,Norte:8,Sur:20,Este:20,Metro:85}},
-  {s:'oncólogo',l:'Oncólogo / Hematólogo',e:'🎗️',kw:'ONCOLOGO',md:true,t:146,r:{Oeste:14,Norte:7,Centro:1,Sur:15,Este:23,Metro:85}},
+  {s:'oncólogo',l:'Oncólogo / Hematólogo',e:'🎗️',kw:'ONCOLOGO',md:true,t:145,r:{Oeste:12,Norte:8,Centro:1,Sur:15,Este:23,Metro:86}},
   {s:'reumatólogo',l:'Reumatólogo (artritis)',e:'🦴',kw:'REUMATOLOGO',md:true,t:88,r:{Oeste:9,Norte:3,Centro:1,Sur:6,Este:13,Metro:56}},
   {s:'geriatra',l:'Geriatra (adultos mayores)',e:'👵',kw:'GERIATRA',md:true,t:106,r:{Oeste:5,Norte:5,Sur:7,Este:16,Metro:73}},
   {s:'otorrinolaringólogo',l:'Otorrino (oído/nariz/garganta)',e:'👂',kw:'OTORRINO',md:true,t:77,r:{Oeste:8,Norte:6,Sur:7,Este:5,Metro:51}},
-  {s:'infectólogo',l:'Infectólogo',e:'🦠',kw:'INFECTOLOGO',md:true,t:126,r:{Oeste:11,Norte:9,Centro:2,Sur:11,Este:14,Metro:79}},
-  {s:'alergista',l:'Alergista / Inmunólogo',e:'🤧',kw:'ALERGISTA',md:true,t:28,r:{Oeste:2,Norte:3,Sur:2,Este:1,Metro:20}},
-  {s:'medicina de emergencia',l:'Medicina de Emergencia',e:'🚑',kw:'EMERGENCIA',md:true,t:348,r:{Oeste:24,Norte:9,Centro:5,Sur:63,Este:51,Metro:196}},
-  {s:'cirujano general',l:'Cirujano General',e:'🔪',kw:'CIRUJANO',md:true,t:335,r:{Oeste:40,Norte:19,Centro:6,Sur:56,Este:31,Metro:183}},
+  {s:'infectólogo',l:'Infectólogo',e:'🦠',kw:'INFECTOLOGO',md:true,t:125,r:{Oeste:10,Norte:9,Centro:2,Sur:11,Este:14,Metro:79}},
+  {s:'alergista',l:'Alergista / Inmunólogo',e:'🤧',kw:'ALERGISTA',md:true,t:29,r:{Oeste:2,Norte:3,Sur:3,Este:1,Metro:20}},
+  {s:'medicina de emergencia',l:'Medicina de Emergencia',e:'🚑',kw:'EMERGENCIA',md:true,t:349,r:{Oeste:25,Norte:9,Centro:5,Sur:63,Este:51,Metro:196}},
+  {s:'cirujano general',l:'Cirujano General',e:'🔪',kw:'CIRUJANO',md:true,t:337,r:{Oeste:40,Norte:19,Centro:6,Sur:56,Este:33,Metro:183}},
   {s:'cirujano vascular',l:'Cirujano Vascular (venas/arterias)',e:'🩸',kw:'VASCULAR',md:true,t:3,r:{Oeste:1,Sur:1,Metro:1}},
-  {s:'anestesiólogo',l:'Anestesiólogo',e:'💉',kw:'ANESTESIOLOGO',md:true,t:227,r:{Oeste:28,Norte:10,Centro:2,Sur:23,Este:23,Metro:141}},
-  {s:'radiólogo',l:'Radiólogo (imágenes)',e:'🩻',kw:'RADIOLOGO',md:true,t:307,r:{Oeste:26,Norte:16,Centro:1,Sur:23,Este:33,Metro:208}},
+  {s:'anestesiólogo',l:'Anestesiólogo',e:'💉',kw:'ANESTESIOLOGO',md:true,t:228,r:{Oeste:29,Norte:10,Centro:2,Sur:23,Este:23,Metro:141}},
+  {s:'radiólogo',l:'Radiólogo (imágenes)',e:'🩻',kw:'RADIOLOGO',md:true,t:306,r:{Oeste:25,Norte:16,Centro:1,Sur:23,Este:33,Metro:208}},
   {s:'neurocirujano',l:'Neurocirujano',e:'🧠',kw:'NEUROCIRUJANO',md:true,t:45,r:{Oeste:1,Norte:4,Sur:2,Este:6,Metro:32}},
   {s:'cirujano plástico',l:'Cirujano Plástico',e:'✨',kw:'PLASTICO',md:true,t:20,r:{Oeste:2,Sur:1,Este:4,Metro:13}},
   {s:'cirujano torácico',l:'Cirujano Torácico',e:'🫁',kw:'TORACICO',md:true,t:15,r:{Oeste:1,Norte:1,Sur:2,Este:1,Metro:10}},
@@ -3993,42 +3993,42 @@ const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:n
   {s:'hospitalista',l:'Hospitalista (medicina de hospital)',e:'🏥',kw:'HOSPITALISTA',md:true,t:53,r:{Oeste:2,Norte:2,Sur:4,Este:5,Metro:40}},
   {s:'medicina nuclear',l:'Medicina Nuclear (estudios)',e:'⚛️',kw:'NUCLEAR',md:true,t:40,r:{Oeste:3,Norte:2,Centro:1,Sur:5,Este:5,Metro:24}},
   {s:'genetista',l:'Genetista Clínico (ADN / enfermedades raras)',e:'🧬',kw:'GENETISTA',md:true,t:4,r:{Norte:1,Metro:3}},
-  {s:'psicólogo',l:'Psicólogo (terapia)',e:'🧠',kw:'PSICOLOGO',md:false,t:1172,r:{Oeste:166,Norte:101,Centro:21,Sur:139,Este:159,Metro:585}},
-  {s:'optómetra',l:'Optómetra (examen de vista)',e:'👓',kw:'OPTOMETRA',md:false,t:527,r:{Oeste:76,Norte:41,Centro:10,Sur:59,Este:81,Metro:260}},
-  {s:'podiatra',l:'Podiatra (pies)',e:'🦶',kw:'PODIATRA',md:false,t:56,r:{Oeste:6,Norte:2,Centro:1,Sur:6,Este:9,Metro:32}},
-  {s:'dentista',l:'Dentista (dientes)',e:'🦷',kw:'DENTISTA',md:false,t:1550,r:{Oeste:219,Norte:101,Centro:37,Sur:145,Este:232,Metro:816}},
+  {s:'psicólogo',l:'Psicólogo (terapia)',e:'🧠',kw:'PSICOLOGO',md:false,t:1209,r:{Oeste:172,Norte:105,Centro:23,Sur:144,Este:162,Metro:601}},
+  {s:'optómetra',l:'Optómetra (examen de vista)',e:'👓',kw:'OPTOMETRA',md:false,t:530,r:{Oeste:76,Norte:41,Centro:10,Sur:59,Este:82,Metro:262}},
+  {s:'podiatra',l:'Podiatra (pies)',e:'🦶',kw:'PODIATRA',md:false,t:59,r:{Oeste:6,Norte:2,Centro:1,Sur:6,Este:9,Metro:35}},
+  {s:'dentista',l:'Dentista (dientes)',e:'🦷',kw:'DENTISTA',md:false,t:1535,r:{Oeste:189,Norte:101,Centro:37,Sur:145,Este:239,Metro:824}},
   // ── Fase 3 (jul 16 2026): sub-especialidades dentales + medicina alternativa ──
-  {s:'dentista pediátrico',l:'Dentista Pediátrico (niños)',e:'🦷',kw:'DENTISTA',md:false,t:92,r:{Oeste:5,Norte:7,Centro:1,Sur:7,Este:17,Metro:54}},
-  {s:'ortodoncista',l:'Ortodoncista (frenillos)',e:'😁',kw:'DENTISTA',md:false,t:88,r:{Oeste:7,Norte:9,Centro:1,Sur:11,Este:13,Metro:46}},
+  {s:'dentista pediátrico',l:'Dentista Pediátrico (niños)',e:'🦷',kw:'DENTISTA',md:false,t:92,r:{Oeste:5,Norte:7,Centro:1,Sur:7,Este:17,Metro:55}},
+  {s:'ortodoncista',l:'Ortodoncista (frenillos)',e:'😁',kw:'DENTISTA',md:false,t:88,r:{Oeste:8,Norte:9,Centro:1,Sur:11,Este:13,Metro:46}},
   {s:'cirujano oral',l:'Cirujano Oral y Maxilofacial',e:'🦷',kw:'DENTISTA',md:false,t:56,r:{Oeste:6,Norte:5,Centro:1,Sur:4,Este:8,Metro:32}},
-  {s:'naturópata',l:'Naturópata (medicina natural)',e:'🌿',kw:'NATUROPATA',md:false,t:142,r:{Oeste:14,Norte:7,Centro:2,Sur:9,Este:30,Metro:78}},
-  {s:'acupunturista',l:'Acupunturista',e:'🪡',kw:'ACUPUNTURA',md:false,t:10,r:{Oeste:4,Este:3,Metro:2}},
+  {s:'naturópata',l:'Naturópata (medicina natural)',e:'🌿',kw:'NATUROPATA',md:false,t:145,r:{Oeste:17,Norte:7,Centro:2,Sur:9,Este:30,Metro:80}},
+  {s:'acupunturista',l:'Acupunturista',e:'🪡',kw:'ACUPUNTURA',md:false,t:10,r:{Oeste:5,Este:3,Metro:2}},
   // ── Fase 2 (jul 2026): primaria + allied + facilidades NPI-2 ──
-  {s:'internista',l:'Internista (medicina interna)',e:'🩺',kw:'INTERNISTA',md:true,t:1147,r:{Oeste:195,Norte:59,Centro:18,Sur:170,Este:138,Metro:567}},
+  {s:'internista',l:'Internista (medicina interna)',e:'🩺',kw:'INTERNISTA',md:true,t:1150,r:{Oeste:195,Norte:59,Centro:18,Sur:172,Este:138,Metro:568}},
   {s:'medicina de familia',l:'Médico de Familia',e:'👨‍👩‍👧',kw:'FAMILIA',md:true,t:642,r:{Oeste:107,Norte:86,Centro:12,Sur:65,Este:79,Metro:293}},
-  {s:'generalista',l:'Médico Generalista',e:'🩺',kw:'GENERALISTA',md:true,t:4041,r:{Oeste:821,Norte:438,Centro:97,Sur:552,Este:617,Metro:1516}},
+  {s:'generalista',l:'Médico Generalista',e:'🩺',kw:'GENERALISTA',md:true,t:4053,r:{Oeste:824,Norte:439,Centro:97,Sur:553,Este:618,Metro:1522}},
   {s:'va',l:'VA (veteranos)',e:'🎖️',kw:'VETERANO',md:false,t:10,r:{Oeste:1,Norte:1,Centro:2,Sur:2,Este:2,Metro:2},org:true},
-  {s:'terapeuta del habla',l:'Terapeuta del Habla',e:'🗣️',kw:'HABLA',md:false,t:1167,r:{Oeste:152,Norte:132,Centro:25,Sur:112,Este:205,Metro:540}},
-  {s:'terapista físico',l:'Terapista Físico',e:'🏃',kw:'TERAPIA',md:false,t:604,r:{Oeste:100,Norte:65,Centro:14,Sur:48,Este:73,Metro:304}},
-  {s:'terapista ocupacional',l:'Terapista Ocupacional',e:'🖐️',kw:'OCUPACIONAL',md:false,t:502,r:{Oeste:69,Norte:56,Centro:10,Sur:47,Este:75,Metro:245}},
-  {s:'quiropráctico',l:'Quiropráctico',e:'🦴',kw:'QUIROPRACTICO',md:false,t:623,r:{Oeste:91,Norte:59,Centro:9,Sur:67,Este:95,Metro:302}},
-  {s:'consejero',l:'Consejero Profesional',e:'💬',kw:'CONSEJERO',md:false,t:608,r:{Oeste:53,Norte:45,Centro:18,Sur:90,Este:110,Metro:292}},
-  {s:'trabajador social',l:'Trabajador Social Clínico',e:'🤝',kw:'TRABAJADOR',md:false,t:2300,r:{Oeste:292,Norte:191,Centro:99,Sur:409,Este:390,Metro:917}},
-  {s:'terapeuta de familia',l:'Terapeuta de Pareja y Familia',e:'👥',kw:'PAREJA',md:false,t:16,r:{Oeste:3,Norte:1,Este:3,Metro:9}},
-  {s:'nutricionista',l:'Nutricionista / Dietista',e:'🥗',kw:'NUTRICIONISTA',md:false,t:414,r:{Oeste:47,Norte:22,Centro:6,Sur:31,Este:71,Metro:236}},
-  {s:'physician assistant',l:'Physician Assistant (PA)',e:'🩺',kw:'PA',md:false,t:464,r:{Oeste:82,Norte:37,Centro:9,Sur:73,Este:68,Metro:195}},
-  {s:'enfermera practicante',l:'Enfermera(o) Practicante (NP)',e:'💉',kw:'NP',md:false,t:131,r:{Oeste:1,Norte:8,Centro:1,Sur:6,Este:23,Metro:92}},
-  {s:'audiólogo',l:'Audiólogo (audición)',e:'👂',kw:'AUDIOLOGO',md:false,t:127,r:{Oeste:13,Norte:13,Centro:2,Sur:8,Este:23,Metro:68}},
+  {s:'terapeuta del habla',l:'Terapeuta del Habla',e:'🗣️',kw:'HABLA',md:false,t:1184,r:{Oeste:157,Norte:133,Centro:26,Sur:116,Este:206,Metro:546}},
+  {s:'terapista físico',l:'Terapista Físico',e:'🏃',kw:'TERAPIA',md:false,t:606,r:{Oeste:102,Norte:65,Centro:14,Sur:48,Este:73,Metro:304}},
+  {s:'terapista ocupacional',l:'Terapista Ocupacional',e:'🖐️',kw:'OCUPACIONAL',md:false,t:510,r:{Oeste:69,Norte:56,Centro:10,Sur:48,Este:76,Metro:251}},
+  {s:'quiropráctico',l:'Quiropráctico',e:'🦴',kw:'QUIROPRACTICO',md:false,t:615,r:{Oeste:83,Norte:59,Centro:9,Sur:67,Este:95,Metro:302}},
+  {s:'consejero',l:'Consejero Profesional',e:'💬',kw:'CONSEJERO',md:false,t:616,r:{Oeste:54,Norte:45,Centro:18,Sur:91,Este:115,Metro:293}},
+  {s:'trabajador social',l:'Trabajador Social Clínico',e:'🤝',kw:'TRABAJADOR',md:false,t:2315,r:{Oeste:296,Norte:193,Centro:101,Sur:412,Este:392,Metro:921}},
+  {s:'terapeuta de familia',l:'Terapeuta de Pareja y Familia',e:'👥',kw:'PAREJA',md:false,t:17,r:{Oeste:3,Norte:1,Este:4,Metro:9}},
+  {s:'nutricionista',l:'Nutricionista / Dietista',e:'🥗',kw:'NUTRICIONISTA',md:false,t:402,r:{Oeste:34,Norte:22,Centro:6,Sur:32,Este:72,Metro:236}},
+  {s:'physician assistant',l:'Physician Assistant (PA)',e:'🩺',kw:'PA',md:false,t:473,r:{Oeste:83,Norte:39,Centro:9,Sur:75,Este:70,Metro:197}},
+  {s:'enfermera practicante',l:'Enfermera(o) Practicante (NP)',e:'💉',kw:'NP',md:false,t:134,r:{Oeste:1,Norte:8,Centro:1,Sur:6,Este:26,Metro:92}},
+  {s:'audiólogo',l:'Audiólogo (audición)',e:'👂',kw:'AUDIOLOGO',md:false,t:127,r:{Oeste:12,Norte:13,Centro:2,Sur:8,Este:23,Metro:69}},
   {s:'partera',l:'Partera (midwife)',e:'🤱',kw:'PARTERA',md:false,t:21,r:{Oeste:3,Norte:2,Centro:1,Sur:2,Este:4,Metro:9}},
-  {s:'farmacéutico',l:'Farmacéutico',e:'💊',kw:'FARMACEUTICO',md:false,t:3338,r:{Oeste:444,Norte:296,Centro:88,Sur:397,Este:511,Metro:1601}},
-  {s:'hospital',l:'Hospital (certificados CMS)',e:'🏥',kw:'HOSPITAL',md:false,org:true,t:171,r:{Oeste:35,Norte:10,Centro:4,Sur:23,Este:21,Metro:78}},
-  {s:'cuidado en el hogar',l:'Cuidado en el Hogar (home health)',e:'🏠',kw:'HOGAR',md:false,org:true,t:187,r:{Oeste:24,Norte:15,Centro:3,Sur:27,Este:31,Metro:87}},
-  {s:'hospicio',l:'Hospicio',e:'🕊️',kw:'HOSPICIO',md:false,org:true,t:71,r:{Oeste:13,Norte:12,Centro:2,Sur:5,Este:11,Metro:28}},
+  {s:'farmacéutico',l:'Farmacéutico',e:'💊',kw:'FARMACEUTICO',md:false,t:3357,r:{Oeste:448,Norte:300,Centro:89,Sur:400,Este:512,Metro:1607}},
+  {s:'hospital',l:'Hospital (certificados CMS)',e:'🏥',kw:'HOSPITAL',md:false,org:true,t:106,r:{Oeste:16,Norte:6,Centro:3,Sur:17,Este:13,Metro:51}},
+  {s:'cuidado en el hogar',l:'Cuidado en el Hogar (home health)',e:'🏠',kw:'HOGAR',md:false,org:true,t:190,r:{Oeste:25,Norte:15,Centro:3,Sur:27,Este:31,Metro:89}},
+  {s:'hospicio',l:'Hospicio',e:'🕊️',kw:'HOSPICIO',md:false,org:true,t:72,r:{Oeste:13,Norte:12,Centro:2,Sur:5,Este:11,Metro:29}},
   {s:'hogar de envejecientes',l:'Hogar de Envejecientes (SNF)',e:'👴',kw:'ENVEJECIENTES',md:false,org:true,t:38,r:{Oeste:5,Norte:1,Sur:4,Este:6,Metro:22}},
   {s:'centro de diálisis',l:'Centro de Diálisis',e:'🫘',kw:'DIALISIS',md:false,org:true,t:68,r:{Oeste:12,Norte:4,Centro:1,Sur:10,Este:15,Metro:26}},
   {s:'urgent care',l:'Urgent Care (urgencias)',e:'⏱️',kw:'URGENTE',md:false,org:true,t:50,r:{Oeste:12,Norte:7,Centro:2,Sur:5,Este:7,Metro:17}},
   {s:'clínica comunitaria',l:'Clínica Comunitaria (FQHC/330)',e:'🏘️',kw:'CLINICA',md:false,org:true,t:91,r:{Oeste:33,Norte:11,Centro:5,Sur:8,Este:11,Metro:23}},
-  {s:'laboratorio clínico',l:'Laboratorio Clínico (pruebas y análisis)',e:'🧪',kw:'LABORATORIO',md:false,org:true,t:1371,r:{Oeste:305,Norte:167,Centro:38,Sur:158,Este:194,Metro:509}},
+  {s:'laboratorio clínico',l:'Laboratorio Clínico (pruebas y análisis)',e:'🧪',kw:'LABORATORIO',md:false,org:true,t:1367,r:{Oeste:301,Norte:167,Centro:38,Sur:158,Este:194,Metro:509}},
   {s:'radiología',l:'Radiología e Imágenes (rayos X, MRI, CT)',e:'🩻',kw:'RADIOGRAFIA',md:false,org:true,t:252,r:{Oeste:34,Norte:18,Centro:2,Sur:22,Este:29,Metro:147}},
   {s:'ambulancia',l:'Ambulancia / Transporte Médico',e:'🚑',kw:'AMBULANCIA',md:false,org:true,t:869,r:{Oeste:224,Norte:129,Centro:45,Sur:102,Este:131,Metro:238}},
 ]
@@ -4973,8 +4973,24 @@ async function handleCambios(req: any, res: any) {
 <p class="text-sm text-slate-500">Cada tarjeta es una actualización. La más reciente arriba. Toca "ver los detalles" si quieres el desglose completo.</p>
 <div class="not-prose space-y-4 mt-4">
   <div class="bg-white border-2 border-teal-300 rounded-xl p-5">
-    <div class="text-xs font-bold uppercase tracking-widest text-teal-700 mb-1">2 agosto 2026 · La entrada más reciente</div>
-    <p class="font-bold text-slate-900 text-lg m-0">Auditamos las 97 especialidades contra el registro federal: entraron 655 médicos y 5 categorías nuevas.</p>
+    <div class="text-xs font-bold uppercase tracking-widest text-teal-700 mb-1">12 agosto 2026 · La entrada más reciente</div>
+    <p class="font-bold text-slate-900 text-lg m-0">11 médicos corrigieron su propia ficha, arrancó el conteo de verificados, y entraron 179 proveedores nuevos.</p>
+    <p class="text-sm text-slate-600 mt-2">Se procesaron los reclamos de perfil que las propias oficinas nos enviaron por el form de "¿Es tu perfil?": teléfonos corregidos, planes confirmados y horarios. Cada ficha corregida por su propia oficina queda sellada como verificada con fecha, y con eso el <a href="/registro/censo" class="text-teal-700 font-semibold">Censo Médico Real</a> deja de estar en cero.</p>
+    <details class="mt-2">
+      <summary class="text-sm font-semibold text-teal-700 cursor-pointer select-none">Ver los detalles</summary>
+      <ul class="text-sm text-slate-600 mt-2 space-y-1 list-disc pl-5">
+        <li><strong>6 teléfonos corregidos por el propio médico:</strong> psiquiatría (Manatí), neurología (Humacao), terapia del habla (Mayagüez), quiropráctica (Toa Alta), psicología (Río Grande) y neumología (San Juan). El número que publica el registro federal a veces lleva años viejo; el de la oficina manda.</li>
+        <li><strong>5 oficinas confirmaron sus datos</strong> (medicina de familia en Guayama, 2 internistas en San Germán con su extensión de citas, alergia en San Juan con horario y "aceptando pacientes nuevos", y 1 dentista en Canóvanas que estamos terminando de corregir).</li>
+        <li><strong>Arrancó el Censo Médico Real:</strong> 10 fichas verificadas por su propia oficina y 1 confirmada aceptando pacientes nuevos. El contador de <a href="/registro/censo" class="text-teal-700">/registro/censo</a> sube solo con cada verificación.</li>
+        <li><strong>Ingesta mensual NPPES:</strong> entraron 179 proveedores nuevos con práctica en PR. Los grupos grandes: 19 farmacéuticos, 14 trabajadores sociales, 12 generalistas, 9 physician assistants y 8 consejeros. Los conteos por categoría y región se refrescaron contra la base viva.</li>
+        <li><strong>Blindaje:</strong> el mecanismo que aplica las correcciones ahora valida que un teléfono corregido tenga forma de teléfono antes de publicarlo. Texto libre va a nota interna, nunca a la ficha pública.</li>
+      </ul>
+    </details>
+  </div>
+
+  <div class="bg-white border border-slate-200 rounded-xl p-5">
+    <div class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">2 agosto 2026</div>
+    <p class="font-bold text-slate-900 m-0">Auditamos las 97 especialidades contra el registro federal: entraron 655 médicos y 5 categorías nuevas.</p>
     <p class="text-sm text-slate-600 mt-2">El hueco de los radiólogos de esta madrugada no era de radiología: era de clase. El registro federal clasifica a muchos médicos por su subespecialidad, y nuestra búsqueda solo veía la especialidad general. Auditamos las 97 taxonomías de médicos completas y entraron los que faltaban con práctica en PR.</p>
     <details class="mt-2">
       <summary class="text-sm font-semibold text-teal-700 cursor-pointer select-none">Ver los detalles</summary>
