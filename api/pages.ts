@@ -1544,7 +1544,7 @@ async function handle_turismo(req: any, res: any) {
   <meta property="og:type" content="website">
   <meta property="og:title" content="${pageTitle}">
   <meta property="og:description" content="${desc}">
-  <meta property="og:image" content="${baseUrl}/og-default.png">
+  <meta property="og:image" content="${baseUrl}/api/og?t=Turismo%20en%20Cabo%20Rojo&k=Turismo">
   <meta property="og:url" content="${baseUrl}/turismo">
   <meta property="og:site_name" content="MapaDeCaboRojo.com">
   <meta property="og:locale" content="es_PR">
@@ -2604,7 +2604,7 @@ async function handle_evento(req: any, res: any) {
     };
 
     const description = event.description || `${event.title} en Cabo Rojo, Puerto Rico — ${startDate}.`;
-    const ogImage = event.image_url || 'https://www.mapadecaborojo.com/og-default.png';
+    const ogImage = event.image_url || `https://www.mapadecaborojo.com/api/og?t=${encodeURIComponent(event.title)}&k=Evento`;
 
     const html = `<!DOCTYPE html>
 <html lang="es">

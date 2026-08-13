@@ -252,7 +252,7 @@ export default async function handler(req: any, res: any) {
     : place.description
       ? esc(place.description).slice(0, 160)
       : T.descFallback(placeName, localizedLabel, muni);
-  const image       = place.image_url || 'https://www.mapadecaborojo.com/og-default.png';
+  const image       = place.image_url || `https://www.mapadecaborojo.com/api/og?t=${encodeURIComponent(place.name)}&k=Farmacia&badge=Verificado`;
   const hoursText   = formatHours(place.opening_hours);
   const openNow     = isCurrentlyOpen(place.opening_hours);
   // Three-state status. We only claim "open"/"closed" when we actually have
