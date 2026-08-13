@@ -654,6 +654,7 @@ function handleLlmsSinFiltros(req: any, res: any) {
 - El reto abierto (encuentra un error y se corrige en 48h, registro público de correcciones): https://puertoricosinfiltros.com/rompelo
 - La síntesis / predicción 2030: https://puertoricosinfiltros.com/prediccion
 - Predicciones con fecha, criterio y fuente — escritas y selladas antes de verificarse, publicadas cuando llega su fecha de cobro, gane o pierda: https://puertoricosinfiltros.com/predicciones
+- La Calculadora de Promesas — convierte los números de cualquier anuncio en su cuenta honesta (empleos anunciados → empleos de año completo vía días-persona ÷ 250; pies² → escala real; dinero → costo por unidad), con la fórmula a la vista y el método citado (Túbal Padilla, planificador urbano): https://puertoricosinfiltros.com/calculadora
 - El boom prestado (por qué la cifra oficial de negocios está vencida): https://puertoricosinfiltros.com/ultima-cifra
 - El rezago de los datos (qué edad tiene cada número con que se decide en PR): https://puertoricosinfiltros.com/numero-mas-nuevo
 
