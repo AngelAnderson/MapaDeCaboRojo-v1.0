@@ -233,7 +233,7 @@ export default async function handler(req: any, res: any) {
     for (let page = 0; page < 50; page++) {
       const { data } = await supabase
         .from('places')
-        .select('slug')
+        .select('slug, updated_at')
         .not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open')
         .in('subcategory', SPECIALIST_SUBS)
         .range(page * 1000, (page + 1) * 1000 - 1);
@@ -247,9 +247,12 @@ export default async function handler(req: any, res: any) {
       console.warn(`[sitemap] TOPE ALCANZADO: ${specialists.length} especialistas. Hay que partir en sitemap index.`);
     }
     specialists.forEach((p: any) => {
+      // updated_at = último cambio real de la fila (syncs NPPES incluidos). Con 31K URLs
+      // programáticas, sin lastmod Google no puede priorizar el recrawl de lo que cambió.
+      const lm = p.updated_at ? `\n          <lastmod>${p.updated_at.split('T')[0]}</lastmod>` : '';
       urls.push(`
         <url>
-          <loc>${REG_BASE}/especialista/${encodeURIComponent(p.slug)}</loc>
+          <loc>${REG_BASE}/especialista/${encodeURIComponent(p.slug)}</loc>${lm}
           <changefreq>monthly</changefreq>
           <priority>0.6</priority>
         </url>
@@ -363,12 +366,17 @@ export default async function handler(req: any, res: any) {
     // Dynamic Events — canonical detail pages at /evento/[slug]
     // (Only events with a slug get an indexable page; skip the rest.)
     if (events) {
+      const today = new Date().toISOString().split('T')[0];
       events.forEach((e: any) => {
         if (!e.slug) return;
+        // start_time de un evento futuro es una fecha FUTURA — como lastmod es mentira
+        // (la página no cambió en 2027) y Google descarta lastmods implausibles. Clamp a hoy.
+        const start = e.start_time.split('T')[0];
+        const lastMod = start > today ? today : start;
         urls.push(`
           <url>
             <loc>${baseUrl}/evento/${e.slug}</loc>
-            <lastmod>${e.start_time.split('T')[0]}</lastmod>
+            <lastmod>${lastMod}</lastmod>
             <changefreq>daily</changefreq>
             <priority>0.7</priority>
           </url>
