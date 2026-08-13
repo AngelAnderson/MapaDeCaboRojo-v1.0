@@ -17261,8 +17261,22 @@ function wrongHost(req: any, page: string): string | null {
   const host = String(req.headers?.host || '').toLowerCase()
   if (OWN_WWW[host]) {
     const u = String(req.url || '')
-    const path = u.startsWith('/') && !u.startsWith('/api/') ? u : ''
-    return 'https://' + OWN_WWW[host] + (path || (PAGE_CANONICAL[page] || 'https://x/').replace(/^https?:\/\/[^/]+/, ''))
+    if (u.startsWith('/') && !u.startsWith('/api/')) {
+      // El rewrite inyecta ?page= y los parámetros de ruta al query; se filtran
+      // pa' no ensuciar la URL canónica (los de ruta ya viven en el path).
+      const [p, qs] = u.split('?')
+      const segs = new Set(p.split('/').filter(Boolean).map(s => decodeURIComponent(s).toLowerCase()))
+      const keep = (qs || '').split('&').filter(kv => {
+        if (!kv) return false
+        const eq = kv.indexOf('=')
+        const k = eq < 0 ? kv : kv.slice(0, eq)
+        const v = eq < 0 ? '' : kv.slice(eq + 1)
+        if (k === 'page') return false
+        return !segs.has(decodeURIComponent(v).toLowerCase())
+      })
+      return 'https://' + OWN_WWW[host] + p + (keep.length ? '?' + keep.join('&') : '')
+    }
+    return 'https://' + OWN_WWW[host] + ((PAGE_CANONICAL[page] || 'https://x/').replace(/^https?:\/\/[^/]+/, '') || '/')
   }
   const target = PAGE_CANONICAL[page]
   if (!target) return null
