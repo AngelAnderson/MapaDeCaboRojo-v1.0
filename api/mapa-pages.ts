@@ -5730,16 +5730,29 @@ async function handleRegistroSearch(req: any, res: any) {
     // Con un ilike contiguo, "Edgar Pérez" no encuentra a "Edgar Iván Pérez": cada
     // palabra que el vecino no adivina lo deja fuera. Se piden todas las palabras
     // presentes, en cualquier orden.
+    // Sin acentos: los nombres NPPES vienen en ASCII ("Jose"), así que "José" tecleado
+    // con acento no matchearía ningún ilike. Se normalizan los términos, no los datos.
     const terms = safe.split(/\s+/).filter(w => w.length >= 2).slice(0, 5)
+      .map(w => w.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase())
     let query = supabase
       .from('places')
       .select('name,subcategory,municipality,phone,region,slug')
       .eq('category', 'HEALTH').not('npi', 'is', null)
     for (const w of (terms.length ? terms : [safe])) query = query.ilike('name', `%${w}%`)
     const { data } = await query.order('name', { ascending: true }).limit(40)
-    const providers = (data || [])
+    let providers = (data || [])
       .filter((p: any) => REGISTRY_SUBS.has(p.subcategory))
       .map((p: any) => ({ name: p.name, subcategory: p.subcategory, municipality: p.municipality, phone: p.phone, region: p.region, slug: p.slug }))
+    // Fallback fuzzy (RPC registro_search_fuzzy, levenshtein <=1/<=2 por palabra): el vecino
+    // escribe "idelfonso" y el doctor se llama Ildefonso, o "antogiorgi" por Antongiorgi.
+    // GSC 2026-08 probó esas búsquedas muriendo en blanco. Solo corre cuando el exacto dio 0,
+    // así que el camino caliente no paga el costo (~350ms).
+    if (!providers.length && terms.length) {
+      const { data: fz } = await supabase.rpc('registro_search_fuzzy', { terms, cap: 40 })
+      providers = (fz || [])
+        .filter((p: any) => REGISTRY_SUBS.has(p.subcategory))
+        .map((p: any) => ({ name: p.name, subcategory: p.subcategory, municipality: p.municipality, phone: p.phone, region: p.region, slug: p.slug }))
+    }
     res.setHeader('Cache-Control', 'public, s-maxage=600, stale-while-revalidate=300')
     res.status(200).send(JSON.stringify({ providers, capped: providers.length >= 40 }))
   } catch {
