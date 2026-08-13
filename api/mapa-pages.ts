@@ -294,7 +294,7 @@ function layout(opts: {
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Salud</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/marcador" class="hover:text-teal-700">El Marcador</a><a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a><a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a><a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a><a href="/espejo" class="hover:text-teal-700">El Espejo</a><a href="/telemedicina" class="hover:text-teal-700">Telemedicina</a><a href="/diabetes" class="hover:text-teal-700">Diabetes</a><a href="/registro-raras" class="hover:text-teal-700">Enfermedades raras</a><a href="https://www.recallradarpr.com" class="hover:text-teal-700">Recalls FDA (RecallRadarPR)</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/rendimiento" class="hover:text-teal-700">Rendimiento del dólar</a><a href="/cupon" class="hover:text-teal-700">Dinero sin cobrar</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/exposicion-ai" class="hover:text-teal-700">Exposición a la IA</a><a href="/cuatro-economias" class="hover:text-teal-700">Las 4 economías</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a><a href="/investigacion" class="hover:text-teal-700">Dinero de ciencia</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Servicios</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/agua" class="hover:text-teal-700">Agua</a><a href="/acueductos" class="hover:text-teal-700">El recibo del agua</a><a href="/luz" class="hover:text-teal-700">Luz</a><a href="/basura" class="hover:text-teal-700">Basura</a></div></div>
-<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">El pueblo</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/contradicciones" class="hover:text-teal-700">Contradicciones</a><a href="/transicion" class="hover:text-teal-700">Vistas de transición</a><a href="/funciona" class="hover:text-teal-700">Cuando funciona</a><a href="/semaforo-fema" class="hover:text-teal-700">Semáforo FEMA</a><a href="/demanda" class="hover:text-teal-700">Lo que busca PR</a><a href="/historial" class="hover:text-teal-700">Historial de promesas</a><a href="/promesas" class="hover:text-teal-700">Promesómetro</a><a href="/esencia" class="hover:text-teal-700">Proyecto Esencia</a><a href="/activos" class="hover:text-teal-700">Activos dormidos</a><a href="/retiro" class="hover:text-teal-700">El Huracán Lento</a><a href="/no-se-mide" class="hover:text-teal-700">Lo que ni se mide</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">El pueblo</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/contradicciones" class="hover:text-teal-700">Contradicciones</a><a href="/transicion" class="hover:text-teal-700">Vistas de transición</a><a href="/funciona" class="hover:text-teal-700">Cuando funciona</a><a href="/semaforo-fema" class="hover:text-teal-700">Semáforo FEMA</a><a href="/demanda" class="hover:text-teal-700">Lo que busca PR</a><a href="/historial" class="hover:text-teal-700">Historial de promesas</a><a href="/promesas" class="hover:text-teal-700">Promesómetro</a><a href="/calculadora" class="hover:text-teal-700">Calculadora de Promesas</a><a href="/esencia" class="hover:text-teal-700">Proyecto Esencia</a><a href="/activos" class="hover:text-teal-700">Activos dormidos</a><a href="/retiro" class="hover:text-teal-700">El Huracán Lento</a><a href="/no-se-mide" class="hover:text-teal-700">Lo que ni se mide</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Expedientes</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/expediente/alcalde-cabo-rojo" class="hover:text-teal-700">Alcalde de Cabo Rojo</a><a href="/expediente/representante-distrito-20" class="hover:text-teal-700">Rep. Distrito 20</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Predicción</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/prediccion" class="hover:text-teal-700">Predicción 2030</a><a href="/predicciones" class="hover:text-teal-700">Predicciones con fecha</a><a href="/sinfiltros/pulso" class="hover:text-teal-700">Pulso</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Prensa</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/buscar" class="hover:text-teal-700">Pregúntale al récord</a><a href="/comparte" class="hover:text-teal-700">Datos citables</a><a href="/rompelo" class="hover:text-teal-700">Rómpelo, si puedes</a></div></div>
@@ -817,6 +817,168 @@ ${SHARE_COPY_SCRIPT}
     title: 'La misión, con relojes: metas con fecha, criterio y falla pública',
     description: 'La misión, la visión y las 5 metas de Puerto Rico Sin Filtros, escritas como sus predicciones: con fecha de cobro y criterio verificable. Si fallamos, queda escrito.',
     slug: 'mision', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
+// =============== /calculadora — La Calculadora de Promesas (PRSF) ===============
+// La herramienta que le hace la cuenta honesta a los anuncios: empleos, tamaño y dinero.
+// Método empleo-año (días-persona ÷ 250) explicado en cámara por Túbal Padilla,
+// planificador urbano (entrevista CaboRojo.com, 11 ago 2026). La página no opina: divide.
+// Todo corre en el navegador; cero DB. Los casos precargados citan el récord de la casa
+// (/esencia, /contradicciones), no memoria.
+function handleCalculadora(req: any, res: any) {
+  const inputCls = 'w-full border border-slate-300 rounded-lg px-3 py-2 text-lg font-bold text-slate-900 bg-white focus:outline-none focus:border-teal-500'
+  const labelCls = 'block text-[11px] uppercase tracking-widest font-bold text-slate-500 mb-1'
+  const body = `
+<span class="not-prose inline-block bg-slate-900 text-teal-300 text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full">Herramienta pública · La cuenta a la vista</span>
+
+<h1 class="mt-4">La Calculadora de Promesas</h1>
+<p class="text-lg text-slate-600 mt-3">Cuando anuncian un megaproyecto te dan 3 números: los empleos, los pies cuadrados y los millones. Casi nunca te dan la cuenta. Esta página la hace en segundos, con la fórmula a la vista. Tú pones el número del anuncio; la aritmética es la misma pa' todo el mundo.</p>
+
+<div class="not-prose mt-6 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El método · contar días, no caras</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug" style="font-family:'Fraunces',Georgia,serif">Una persona que pasa 2 semanas por una obra no es "un empleo".</p>
+  <p class="text-slate-300 mt-3 text-sm leading-relaxed">Un empleo de verdad es 1 año de trabajo: <strong class="text-white">250 días laborables</strong> (5 días por semana, 50 semanas). La cuenta honesta suma los días de todo el que pasa por la obra y los divide entre 250. El planificador urbano <strong class="text-white">Túbal Padilla</strong> lo explicó en cámara con 1 casa de ejemplo: 23 personas pasaron por la obra y, al sumar los días, salieron ≈ 4 empleos de año completo. Su frase: el albañil y su ayudante, el año entero. "Eso sí es un empleo."</p>
+  <p class="text-slate-400 mt-2 text-xs">Fuente del método: entrevista de CaboRojo.com con Túbal Padilla, planificador urbano, 11 de agosto de 2026. Las cifras por oficio de su ejemplo son ilustrativas; el método es el punto.</p>
+</div>
+
+<div class="not-prose mt-4 flex flex-wrap gap-2 items-center">
+  <span class="text-[11px] uppercase tracking-widest font-bold text-slate-500">Casos ya corridos:</span>
+  <button type="button" class="calc-chip bg-teal-50 border border-teal-300 text-teal-800 text-xs font-bold rounded-full px-3 py-1.5 hover:bg-teal-100" data-chip="esencia-empleos">Esencia: "más de 17,000 empleos"</button>
+  <button type="button" class="calc-chip bg-teal-50 border border-teal-300 text-teal-800 text-xs font-bold rounded-full px-3 py-1.5 hover:bg-teal-100" data-chip="esencia-pies">Esencia: 500,000 pies² comerciales</button>
+  <button type="button" class="calc-chip bg-teal-50 border border-teal-300 text-teal-800 text-xs font-bold rounded-full px-3 py-1.5 hover:bg-teal-100" data-chip="casa-tubal">La casa de Túbal: 23 personas</button>
+</div>
+
+<h2 id="empleos">1 · Los empleos</h2>
+<p>2 formas de hacer la cuenta, según el número que tengas.</p>
+
+<div class="not-prose grid sm:grid-cols-2 gap-4 mt-4">
+  <div class="bg-white border border-slate-200 rounded-2xl p-4">
+    <p class="font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">A · Te dieron el número de empleos</p>
+    <p class="text-xs text-slate-500 mt-1">Qué tendría que pasar pa' que ese número sea verdad como empleos de año completo.</p>
+    <label class="${labelCls} mt-3" for="ca-empleos">Empleos anunciados</label>
+    <input id="ca-empleos" type="text" inputmode="numeric" placeholder="17,000" class="${inputCls}">
+    <div id="ca-out" hidden class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800"></div>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-2xl p-4">
+    <p class="font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">B · Sabes cuánta gente pasa por la obra</p>
+    <p class="text-xs text-slate-500 mt-1">El método de la casa de Túbal: suma los días, divide entre 250.</p>
+    <div class="grid grid-cols-2 gap-2 mt-3">
+      <div><label class="${labelCls}" for="cb-personas">Personas</label><input id="cb-personas" type="text" inputmode="numeric" placeholder="23" class="${inputCls}"></div>
+      <div><label class="${labelCls}" for="cb-dias">Días promedio c/u</label><input id="cb-dias" type="text" inputmode="numeric" placeholder="43" class="${inputCls}"></div>
+    </div>
+    <div id="cb-out" hidden class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800"></div>
+  </div>
+</div>
+<p class="not-prose text-sm text-slate-600 mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3">Pa' comparar cualquier número de empleos: <strong>Cabo Rojo entero tiene 16,811 personas empleadas.</strong> Ese contexto vive en <a href="/predicciones" class="text-teal-700 font-semibold">las predicciones de la casa</a>, junto al reloj que le corre al desglose de los "más de 17,000" de Esencia.</p>
+
+<h2 id="tamano">2 · El tamaño</h2>
+<div class="not-prose bg-white border border-slate-200 rounded-2xl p-4 mt-4">
+  <label class="${labelCls}" for="ct-pies">Pies cuadrados anunciados</label>
+  <input id="ct-pies" type="text" inputmode="numeric" placeholder="500,000" class="${inputCls}">
+  <p class="text-xs text-slate-500 mt-1">Si te dieron dimensiones: frente × fondo = pies². (2,500 pies de frente × 100 de fondo × 2 lados = 500,000.)</p>
+  <div id="ct-out" hidden class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800"></div>
+</div>
+
+<h2 id="dinero">3 · El dinero</h2>
+<div class="not-prose bg-white border border-slate-200 rounded-2xl p-4 mt-4">
+  <div class="grid grid-cols-2 gap-2">
+    <div><label class="${labelCls}" for="cd-total">Dinero total ($)</label><input id="cd-total" type="text" inputmode="numeric" placeholder="498,000,000" class="${inputCls}"></div>
+    <div><label class="${labelCls}" for="cd-unidades">Entre cuántas unidades</label><input id="cd-unidades" type="text" inputmode="numeric" placeholder="2,000" class="${inputCls}"></div>
+  </div>
+  <label class="${labelCls} mt-3" for="cd-casa">Precio de la casa de comparación ($)</label>
+  <input id="cd-casa" type="text" inputmode="numeric" value="300,000" class="${inputCls}">
+  <p class="text-xs text-slate-500 mt-1">$300,000 es el ejemplo que usó Túbal en cámara: la casa que una maestra y un policía pueden pagar. Cámbialo si tu comparación es otra.</p>
+  <div id="cd-out" hidden class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800"></div>
+</div>
+
+<h2>De dónde salen los casos precargados</h2>
+<ul class="text-sm">
+  <li><strong>"Más de 17,000 empleos" (Esencia):</strong> la cifra del día del anuncio, que suma "directos, indirectos e inducidos". El expediente y la cobertura previa hablaban de ~2,000, sin cláusula que los obligue. El récord completo: <a href="/esencia" class="text-teal-700 font-semibold">/esencia</a> y <a href="/contradicciones" class="text-teal-700 font-semibold">/contradicciones</a>.</li>
+  <li><strong>500,000 pies² comerciales:</strong> 2,500 pies de frente comercial × 100 pies de fondo × 2 lados de la calle, la cuenta que hizo Túbal en la entrevista.</li>
+  <li><strong>La casa de 23 personas:</strong> el ejemplo ilustrativo de Túbal en cámara: 23 personas pasan por la obra de 1 casa en 1 año y son ≈ 4 empleos de año completo.</li>
+</ul>
+
+<div class="not-prose bg-white border border-slate-200 border-l-4 border-l-teal-600 rounded-lg p-4 mt-6">
+  <p class="text-sm text-slate-700"><strong class="text-teal-700">Las reglas de esta página:</strong> no dice si un proyecto es bueno o malo: divide. El número que entra es del anuncio que tú tengas al frente; la fuente de ese número es tuya. Cada resultado enseña su fórmula. Y si la aritmética está mal, <a href="/rompelo" class="text-teal-700 font-semibold">rómpela en público</a>: se corrige con crédito, como todo en esta casa.</p>
+</div>
+
+<p class="text-sm text-slate-600 mt-4">Piezas hermanas: <a href="/promesas" class="text-teal-700 font-semibold">el Promesómetro</a> (lo que se dijo en cámara, una por una) · <a href="/historial" class="text-teal-700 font-semibold">el historial de promesas</a> · <a href="/predicciones" class="text-teal-700 font-semibold">las predicciones con fecha de cobro</a>.</p>
+
+${shareRow({ text: 'La Calculadora de Promesas: metes los números que anuncia un megaproyecto (empleos, pies cuadrados, millones) y te devuelve la cuenta honesta, con la fórmula a la vista:', url: 'https://puertoricosinfiltros.com/calculadora', toWho: 'Al que dice "eso son 17,000 empleos" y al que dice "eso es mentira". La cuenta es la misma pa\' los 2.' })}
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
+  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">El anuncio te da el número. Aquí vive la cuenta.</p>
+  <p class="mt-2 text-sm text-slate-600 italic">Si te sirve, úsala. Si no, sigue tu camino.</p>
+</div>
+${SHARE_COPY_SCRIPT}
+
+<script>
+(function(){
+  function num(id){var el=document.getElementById(id);if(!el)return null;var x=parseFloat(String(el.value).replace(/[^0-9.]/g,""));return (isFinite(x)&&x>0)?x:null;}
+  function fmt(x,d){return x.toLocaleString("es-PR",{maximumFractionDigits:(d==null?1:d)});}
+  function out(id,h){var el=document.getElementById(id);if(!el)return;el.innerHTML=h;el.hidden=!h;}
+  function copyBtn(txt){return '<button type="button" class="copy-btn mt-2 inline-flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold rounded-lg px-3 py-1.5 hover:bg-slate-700" data-copy="calculadora" data-text="'+txt.replace(/"/g,"&quot;")+'">Copiar la cuenta con fuente</button>';}
+  var FUENTE=" (metodo empleo-ano: dias de trabajo / 250 = 1 empleo de ano completo; Tubal Padilla, planificador urbano, entrevista CaboRojo.com, ago 2026). La cuenta: puertoricosinfiltros.com/calculadora";
+  function calcA(){var e=num("ca-empleos");if(e==null){out("ca-out","");return;}
+    var dias=e*250;
+    var h="<p>Pa' que <strong>"+fmt(e,0)+"</strong> sean empleos de año completo hacen falta <strong>"+fmt(dias,0)+" días-persona de trabajo al año</strong>. Eso es "+fmt(e,0)+" personas trabajando a tiempo completo, todos los días, a la vez.</p>";
+    h+='<p class="text-xs text-slate-500 mt-1 font-mono">'+fmt(e,0)+" empleos × 250 días = "+fmt(dias,0)+" días-persona/año</p>";
+    h+=copyBtn(fmt(e,0)+" empleos anunciados = "+fmt(dias,0)+" dias-persona de trabajo al ano"+FUENTE);
+    out("ca-out",h);}
+  function calcB(){var p=num("cb-personas"),d=num("cb-dias");if(p==null||d==null){out("cb-out","");return;}
+    var fte=p*d/250;
+    var h="<p><strong>"+fmt(p,0)+" personas</strong> a "+fmt(d,0)+" días cada una son <strong>≈ "+fmt(fte,1)+" empleos de año completo</strong>, no "+fmt(p,0)+".</p>";
+    h+='<p class="text-xs text-slate-500 mt-1 font-mono">'+fmt(p,0)+" × "+fmt(d,0)+" ÷ 250 = "+fmt(fte,1)+" empleos-año</p>";
+    h+=copyBtn(fmt(p,0)+" personas x "+fmt(d,0)+" dias = "+fmt(fte,1)+" empleos de ano completo, no "+fmt(p,0)+FUENTE);
+    out("cb-out",h);}
+  function calcT(){var a=num("ct-pies");if(a==null){out("ct-out","");return;}
+    var canchas=a/57600, cuerdas=a/42306, millas=a/100/5280;
+    var h="<p><strong>"+fmt(a,0)+" pies²</strong> son <strong>"+fmt(canchas,1)+" canchas de fútbol americano</strong> ("+fmt(cuerdas,1)+" cuerdas). Como franja de tiendas de 100 pies de fondo: <strong>"+fmt(millas,2)+" millas de largo</strong>.</p>";
+    h+='<p class="text-xs text-slate-500 mt-1 font-mono">cancha con zonas: 360 × 160 pies = 57,600 pies² · 1 cuerda ≈ 42,306 pies²</p>';
+    h+=copyBtn(fmt(a,0)+" pies cuadrados = "+fmt(canchas,1)+" canchas de futbol americano (57,600 pies2 c/u) = "+fmt(cuerdas,1)+" cuerdas. La cuenta: puertoricosinfiltros.com/calculadora");
+    out("ct-out",h);}
+  function calcD(){var t=num("cd-total"),u=num("cd-unidades"),c=num("cd-casa");
+    if(t==null){out("cd-out","");return;}
+    var h="";
+    if(u!=null){var pu=t/u;h+="<p>Son <strong>$"+fmt(pu,0)+" por unidad</strong>.</p>";h+='<p class="text-xs text-slate-500 mt-1 font-mono">$'+fmt(t,0)+" ÷ "+fmt(u,0)+" = $"+fmt(pu,0)+"</p>";}
+    if(c!=null){var casas=t/c;h+="<p class='mt-2'>Con $"+fmt(t,0)+" se compran <strong>"+fmt(casas,0)+" casas de $"+fmt(c,0)+"</strong>.</p>";h+='<p class="text-xs text-slate-500 mt-1 font-mono">$'+fmt(t,0)+" ÷ $"+fmt(c,0)+" = "+fmt(casas,0)+" casas</p>";}
+    if(h&&u!=null){h+=copyBtn("$"+fmt(t,0)+" entre "+fmt(u,0)+" unidades = $"+fmt(t/u,0)+" por unidad. La cuenta: puertoricosinfiltros.com/calculadora");}
+    out("cd-out",h);}
+  ["ca-empleos"].forEach(function(id){document.getElementById(id).addEventListener("input",calcA);});
+  ["cb-personas","cb-dias"].forEach(function(id){document.getElementById(id).addEventListener("input",calcB);});
+  ["ct-pies"].forEach(function(id){document.getElementById(id).addEventListener("input",calcT);});
+  ["cd-total","cd-unidades","cd-casa"].forEach(function(id){document.getElementById(id).addEventListener("input",calcD);});
+  function setVal(id,v){var el=document.getElementById(id);if(el){el.value=v;}}
+  var CHIPS={
+    "esencia-empleos":function(){setVal("ca-empleos","17000");calcA();location.hash="empleos";},
+    "esencia-pies":function(){setVal("ct-pies","500000");calcT();location.hash="tamano";},
+    "casa-tubal":function(){setVal("cb-personas","23");setVal("cb-dias","43");calcB();location.hash="empleos";}
+  };
+  document.querySelectorAll(".calc-chip").forEach(function(b){b.addEventListener("click",function(){var f=CHIPS[b.getAttribute("data-chip")];if(f)f();});});
+  document.addEventListener("click",function(e){var b=e.target.closest?e.target.closest(".copy-btn[data-text]"):null;if(!b)return;var t=b.getAttribute("data-text")||"";
+    function done(){var o=b.textContent;b.textContent="Copiado ✓";setTimeout(function(){b.textContent=o;},1600);}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done);}else{var ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");done();}catch(err){}document.body.removeChild(ta);}});
+})();
+</script>
+`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'WebApplication',
+    name: 'La Calculadora de Promesas',
+    description: 'Herramienta pública que convierte los números de los anuncios de megaproyectos en su cuenta honesta: empleos anunciados a empleos de año completo (días-persona ÷ 250), pies cuadrados a escala real, y dinero a costo por unidad. Con la fórmula a la vista y el método citado.',
+    url: 'https://puertoricosinfiltros.com/calculadora',
+    applicationCategory: 'UtilityApplication', operatingSystem: 'Web', isAccessibleForFree: true,
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
+    inLanguage: 'es',
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=600')
+  res.status(200).send(layout({
+    title: 'La Calculadora de Promesas: la cuenta honesta de los megaproyectos',
+    description: 'Metes los números que anuncia un megaproyecto (empleos, pies cuadrados, millones) y te devuelve la cuenta honesta con la fórmula a la vista. Método empleo-año: días de trabajo ÷ 250.',
+    slug: 'calculadora', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
@@ -16997,6 +17159,7 @@ const PAGE_CANONICAL: Record<string, string> = {
   'basura': 'https://puertoricosinfiltros.com/basura',
   'boletin': 'https://puertoricosinfiltros.com/notas',
   'buscar': 'https://puertoricosinfiltros.com/buscar',
+  'calculadora': 'https://puertoricosinfiltros.com/calculadora',
   'cambios': 'https://registromedicopr.com/cambios',
   'comparte': 'https://registromedicopr.com/comparte',
   'contradicciones': 'https://puertoricosinfiltros.com/contradicciones',
@@ -17165,6 +17328,7 @@ export default async function handler(req: any, res: any) {
     case 'cambios': return await handleCambios(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)
+    case 'calculadora': return handleCalculadora(req, res)
     case 'civico-json': return handleCivicoJson(req, res)
     case 'civico-submit': return await handleCivicoSubmit(req, res)
     case 'civico-moderate': return await handleCivicoModerate(req, res)

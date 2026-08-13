@@ -424,6 +424,10 @@
       "destination": "/api/mapa-pages?page=mision"
     },
     {
+      "source": "/calculadora",
+      "destination": "/api/mapa-pages?page=calculadora"
+    },
+    {
       "source": "/equipo",
       "destination": "/api/mapa-pages?page=equipo"
     },
