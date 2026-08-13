@@ -834,7 +834,7 @@ function handleCalculadora(req: any, res: any) {
 <span class="not-prose inline-block bg-slate-900 text-teal-300 text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full">Herramienta pública · La cuenta a la vista</span>
 
 <h1 class="mt-4">La Calculadora de Promesas</h1>
-<p class="text-lg text-slate-600 mt-3">Cuando anuncian un megaproyecto te dan 3 números: los empleos, los pies cuadrados y los millones. Casi nunca te dan la cuenta. Esta página la hace en segundos, con la fórmula a la vista. Tú pones el número del anuncio; la aritmética es la misma pa' todo el mundo.</p>
+<p class="text-lg text-slate-600 mt-3">Cuando anuncian un proyecto grande te dan números que suenan bonitos: los empleos, los pies cuadrados, los millones. Aquí les haces la cuenta. Escribe el número que te dieron y la página te contesta en cristiano, sin que tengas que sacar nada. La respuesta sale sola mientras escribes: no hay que apretar ningún botón.</p>
 
 <div class="not-prose mt-6 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El método · contar días, no caras</p>
@@ -850,47 +850,45 @@ function handleCalculadora(req: any, res: any) {
   <button type="button" class="calc-chip bg-teal-50 border border-teal-300 text-teal-800 text-xs font-bold rounded-full px-3 py-1.5 hover:bg-teal-100" data-chip="casa-tubal">La casa de Túbal: 23 personas</button>
 </div>
 
-<h2 id="empleos">1 · Los empleos</h2>
-<p>2 formas de hacer la cuenta, según el número que tengas.</p>
+<h2 id="empleos">1 · Los empleos: ¿cuántos son de verdad?</h2>
 
 <div class="not-prose grid sm:grid-cols-2 gap-4 mt-4">
   <div class="bg-white border border-slate-200 rounded-2xl p-4">
-    <p class="font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">A · Te dieron el número de empleos</p>
-    <p class="text-xs text-slate-500 mt-1">Qué tendría que pasar pa' que ese número sea verdad como empleos de año completo.</p>
-    <label class="${labelCls} mt-3" for="ca-empleos">Empleos anunciados</label>
+    <p class="font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Te dieron un número de empleos</p>
+    <p class="text-sm text-slate-500 mt-1">Escríbelo y mira qué tendría que pasar pa' que sea verdad.</p>
+    <label class="${labelCls} mt-3" for="ca-empleos">¿Cuántos empleos anunciaron?</label>
     <input id="ca-empleos" type="text" inputmode="numeric" placeholder="17,000" class="${inputCls}">
-    <div id="ca-out" hidden class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800"></div>
+    <div id="ca-out" hidden class="mt-3 bg-teal-50 border-l-4 border-teal-600 border border-teal-200 rounded-xl p-4"></div>
   </div>
   <div class="bg-white border border-slate-200 rounded-2xl p-4">
-    <p class="font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">B · Sabes cuánta gente pasa por la obra</p>
-    <p class="text-xs text-slate-500 mt-1">El método de la casa de Túbal: suma los días, divide entre 250.</p>
+    <p class="font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Sabes cuánta gente pasó por la obra</p>
+    <p class="text-sm text-slate-500 mt-1">Aquí sale cuántos empleos de verdad son.</p>
     <div class="grid grid-cols-2 gap-2 mt-3">
-      <div><label class="${labelCls}" for="cb-personas">Personas</label><input id="cb-personas" type="text" inputmode="numeric" placeholder="23" class="${inputCls}"></div>
-      <div><label class="${labelCls}" for="cb-dias">Días promedio c/u</label><input id="cb-dias" type="text" inputmode="numeric" placeholder="43" class="${inputCls}"></div>
+      <div><label class="${labelCls}" for="cb-personas">¿Cuánta gente pasó?</label><input id="cb-personas" type="text" inputmode="numeric" placeholder="23" class="${inputCls}"></div>
+      <div><label class="${labelCls}" for="cb-dias">¿Cuántos días cada una, más o menos?</label><input id="cb-dias" type="text" inputmode="numeric" placeholder="43" class="${inputCls}"></div>
     </div>
-    <div id="cb-out" hidden class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800"></div>
+    <div id="cb-out" hidden class="mt-3 bg-teal-50 border-l-4 border-teal-600 border border-teal-200 rounded-xl p-4"></div>
   </div>
 </div>
-<p class="not-prose text-sm text-slate-600 mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3">Pa' comparar cualquier número de empleos: <strong>Cabo Rojo entero tiene 16,811 personas empleadas.</strong> Ese contexto vive en <a href="/predicciones" class="text-teal-700 font-semibold">las predicciones de la casa</a>, junto al reloj que le corre al desglose de los "más de 17,000" de Esencia.</p>
 
-<h2 id="tamano">2 · El tamaño</h2>
+<h2 id="tamano">2 · El tamaño: ¿cuán grande es eso?</h2>
 <div class="not-prose bg-white border border-slate-200 rounded-2xl p-4 mt-4">
-  <label class="${labelCls}" for="ct-pies">Pies cuadrados anunciados</label>
+  <label class="${labelCls}" for="ct-pies">¿Cuántos pies cuadrados anunciaron?</label>
   <input id="ct-pies" type="text" inputmode="numeric" placeholder="500,000" class="${inputCls}">
-  <p class="text-xs text-slate-500 mt-1">Si te dieron dimensiones: frente × fondo = pies². (2,500 pies de frente × 100 de fondo × 2 lados = 500,000.)</p>
-  <div id="ct-out" hidden class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800"></div>
+  <p class="text-xs text-slate-500 mt-1">Si te dieron medidas sueltas: el frente por el fondo. (2,500 pies de frente × 100 de fondo × 2 lados de la calle = 500,000.)</p>
+  <div id="ct-out" hidden class="mt-3 bg-teal-50 border-l-4 border-teal-600 border border-teal-200 rounded-xl p-4"></div>
 </div>
 
-<h2 id="dinero">3 · El dinero</h2>
+<h2 id="dinero">3 · El dinero: ¿a cuánto sale cada uno?</h2>
 <div class="not-prose bg-white border border-slate-200 rounded-2xl p-4 mt-4">
   <div class="grid grid-cols-2 gap-2">
-    <div><label class="${labelCls}" for="cd-total">Dinero total ($)</label><input id="cd-total" type="text" inputmode="numeric" placeholder="498,000,000" class="${inputCls}"></div>
-    <div><label class="${labelCls}" for="cd-unidades">Entre cuántas unidades</label><input id="cd-unidades" type="text" inputmode="numeric" placeholder="2,000" class="${inputCls}"></div>
+    <div><label class="${labelCls}" for="cd-total">¿Cuánto dinero en total? ($)</label><input id="cd-total" type="text" inputmode="numeric" placeholder="498,000,000" class="${inputCls}"></div>
+    <div><label class="${labelCls}" for="cd-unidades">¿Entre cuántos se reparte?</label><input id="cd-unidades" type="text" inputmode="numeric" placeholder="2,000" class="${inputCls}"></div>
   </div>
-  <label class="${labelCls} mt-3" for="cd-casa">Precio de la casa de comparación ($)</label>
+  <label class="${labelCls} mt-3" for="cd-casa">¿Con qué casa comparamos? ($)</label>
   <input id="cd-casa" type="text" inputmode="numeric" value="300,000" class="${inputCls}">
-  <p class="text-xs text-slate-500 mt-1">$300,000 es el ejemplo que usó Túbal en cámara: la casa que una maestra y un policía pueden pagar. Cámbialo si tu comparación es otra.</p>
-  <div id="cd-out" hidden class="mt-3 bg-slate-50 border border-slate-200 rounded-xl p-3 text-sm text-slate-800"></div>
+  <p class="text-xs text-slate-500 mt-1">$300,000 es el ejemplo que usó Túbal en cámara: la casa que una maestra y un policía pueden pagar. Cámbialo si quieres comparar con otra.</p>
+  <div id="cd-out" hidden class="mt-3 bg-teal-50 border-l-4 border-teal-600 border border-teal-200 rounded-xl p-4"></div>
 </div>
 
 <h2>De dónde salen los casos precargados</h2>
@@ -920,32 +918,50 @@ ${SHARE_COPY_SCRIPT}
   function fmt(x,d){return x.toLocaleString("es-PR",{maximumFractionDigits:(d==null?1:d)});}
   function out(id,h){var el=document.getElementById(id);if(!el)return;el.innerHTML=h;el.hidden=!h;}
   function copyBtn(txt){return '<button type="button" class="copy-btn mt-2 inline-flex items-center gap-1.5 bg-slate-900 text-white text-xs font-bold rounded-lg px-3 py-1.5 hover:bg-slate-700" data-copy="calculadora" data-text="'+txt.replace(/"/g,"&quot;")+'">Copiar la cuenta con fuente</button>';}
-  var FUENTE=" (metodo empleo-ano: dias de trabajo / 250 = 1 empleo de ano completo; Tubal Padilla, planificador urbano, entrevista CaboRojo.com, ago 2026). La cuenta: puertoricosinfiltros.com/calculadora";
+  var EMPLEADOS_CR=16811;
+  function card(head,frases,cuenta,copia){
+    var h='<p class="text-[11px] uppercase tracking-widest font-bold text-teal-700">La cuenta honesta</p>';
+    h+='<p class="text-xl sm:text-2xl font-black text-slate-900 leading-snug mt-1" style="font-family:Georgia,serif">'+head+"</p>";
+    for(var i=0;i<frases.length;i++){h+='<p class="text-sm sm:text-base text-slate-700 mt-2">'+frases[i]+"</p>";}
+    h+='<p class="text-xs text-slate-400 mt-3">La cuenta: '+cuenta+"</p>";
+    h+=copyBtn(copia);
+    return h;}
   function calcA(){var e=num("ca-empleos");if(e==null){out("ca-out","");return;}
     var dias=e*250;
-    var h="<p>Pa' que <strong>"+fmt(e,0)+"</strong> sean empleos de año completo hacen falta <strong>"+fmt(dias,0)+" días-persona de trabajo al año</strong>. Eso es "+fmt(e,0)+" personas trabajando a tiempo completo, todos los días, a la vez.</p>";
-    h+='<p class="text-xs text-slate-500 mt-1 font-mono">'+fmt(e,0)+" empleos × 250 días = "+fmt(dias,0)+" días-persona/año</p>";
-    h+=copyBtn(fmt(e,0)+" empleos anunciados = "+fmt(dias,0)+" dias-persona de trabajo al ano"+FUENTE);
-    out("ca-out",h);}
+    var frases=[];
+    if(e>=EMPLEADOS_CR){frases.push("Eso es <strong>más gente que todas las personas con empleo que hay en Cabo Rojo entero</strong> (16,811).");}
+    else if(e>=1682){frases.push("Eso es como si <strong>"+fmt(e/EMPLEADOS_CR*100,0)+" de cada 100 personas con empleo de Cabo Rojo</strong> (16,811 en total) estuvieran metidas en la obra.");}
+    frases.push("La pregunta pa' quien anuncia: ¿cuántos de esos empleos son de año completo, y cuántos son gente que pasa unos días y se va?");
+    out("ca-out",card(
+      "Pa' que eso sea verdad: "+fmt(e,0)+" personas trabajando a tiempo completo, todos los días, por 1 año.",
+      frases,
+      fmt(e,0)+" empleos × 250 días laborables = "+fmt(dias,0)+" días de trabajo en 1 año.",
+      "Anunciaron "+fmt(e,0)+" empleos. Pa' que eso sea verdad: "+fmt(e,0)+" personas a tiempo completo, todos los dias, por 1 ano. La pregunta: cuantos son asi? Haz tu cuenta: puertoricosinfiltros.com/calculadora"));}
   function calcB(){var p=num("cb-personas"),d=num("cb-dias");if(p==null||d==null){out("cb-out","");return;}
-    var fte=p*d/250;
-    var h="<p><strong>"+fmt(p,0)+" personas</strong> a "+fmt(d,0)+" días cada una son <strong>≈ "+fmt(fte,1)+" empleos de año completo</strong>, no "+fmt(p,0)+".</p>";
-    h+='<p class="text-xs text-slate-500 mt-1 font-mono">'+fmt(p,0)+" × "+fmt(d,0)+" ÷ 250 = "+fmt(fte,1)+" empleos-año</p>";
-    h+=copyBtn(fmt(p,0)+" personas x "+fmt(d,0)+" dias = "+fmt(fte,1)+" empleos de ano completo, no "+fmt(p,0)+FUENTE);
-    out("cb-out",h);}
+    var fte=p*d/250, tot=p*d;
+    out("cb-out",card(
+      "Eso son como "+fmt(fte,1)+" empleos de verdad. No "+fmt(p,0)+".",
+      ["Pasaron "+fmt(p,0)+" personas, pero todo ese trabajo junto es lo que hacen "+fmt(fte,1)+" personas trabajando el año entero."],
+      fmt(p,0)+" personas × "+fmt(d,0)+" días = "+fmt(tot,0)+" días de trabajo. 1 año de trabajo son 250 días. "+fmt(tot,0)+" ÷ 250 ≈ "+fmt(fte,1)+".",
+      "Por la obra pasaron "+fmt(p,0)+" personas, pero eso son como "+fmt(fte,1)+" empleos de ano completo, no "+fmt(p,0)+". (Metodo del planificador Tubal Padilla: dias de trabajo entre 250.) Haz tu cuenta: puertoricosinfiltros.com/calculadora"));}
   function calcT(){var a=num("ct-pies");if(a==null){out("ct-out","");return;}
     var canchas=a/57600, cuerdas=a/42306, millas=a/100/5280;
-    var h="<p><strong>"+fmt(a,0)+" pies²</strong> son <strong>"+fmt(canchas,1)+" canchas de fútbol americano</strong> ("+fmt(cuerdas,1)+" cuerdas). Como franja de tiendas de 100 pies de fondo: <strong>"+fmt(millas,2)+" millas de largo</strong>.</p>";
-    h+='<p class="text-xs text-slate-500 mt-1 font-mono">cancha con zonas: 360 × 160 pies = 57,600 pies² · 1 cuerda ≈ 42,306 pies²</p>';
-    h+=copyBtn(fmt(a,0)+" pies cuadrados = "+fmt(canchas,1)+" canchas de futbol americano (57,600 pies2 c/u) = "+fmt(cuerdas,1)+" cuerdas. La cuenta: puertoricosinfiltros.com/calculadora");
-    out("ct-out",h);}
+    var frases=["En medidas de aquí: <strong>"+fmt(cuerdas,1)+" cuerdas de terreno</strong>."];
+    if(millas>=0.2){frases.push("Y si fuera una fila de tiendas de 100 pies de fondo, la fila mediría <strong>"+fmt(millas,1)+" millas de largo</strong>: pa' caminarla completa te tomaría como "+fmt(millas*20,0)+" minutos a pie.");}
+    out("ct-out",card(
+      "Eso es como "+fmt(canchas,1)+" canchas de fútbol, una al lado de la otra.",
+      frases,
+      "1 cancha de fútbol americano con sus zonas mide 360 × 160 pies = 57,600 pies². "+fmt(a,0)+" ÷ 57,600 = "+fmt(canchas,1)+". 1 cuerda ≈ 42,306 pies².",
+      fmt(a,0)+" pies cuadrados = como "+fmt(canchas,1)+" canchas de futbol, una al lado de la otra ("+fmt(cuerdas,1)+" cuerdas). Haz tu cuenta: puertoricosinfiltros.com/calculadora"));}
   function calcD(){var t=num("cd-total"),u=num("cd-unidades"),c=num("cd-casa");
-    if(t==null){out("cd-out","");return;}
-    var h="";
-    if(u!=null){var pu=t/u;h+="<p>Son <strong>$"+fmt(pu,0)+" por unidad</strong>.</p>";h+='<p class="text-xs text-slate-500 mt-1 font-mono">$'+fmt(t,0)+" ÷ "+fmt(u,0)+" = $"+fmt(pu,0)+"</p>";}
-    if(c!=null){var casas=t/c;h+="<p class='mt-2'>Con $"+fmt(t,0)+" se compran <strong>"+fmt(casas,0)+" casas de $"+fmt(c,0)+"</strong>.</p>";h+='<p class="text-xs text-slate-500 mt-1 font-mono">$'+fmt(t,0)+" ÷ $"+fmt(c,0)+" = "+fmt(casas,0)+" casas</p>";}
-    if(h&&u!=null){h+=copyBtn("$"+fmt(t,0)+" entre "+fmt(u,0)+" unidades = $"+fmt(t/u,0)+" por unidad. La cuenta: puertoricosinfiltros.com/calculadora");}
-    out("cd-out",h);}
+    if(t==null||u==null){out("cd-out","");return;}
+    var pu=t/u, frases=[];
+    if(c!=null){var casas=t/c;frases.push("Con ese mismo dinero se compran <strong>"+fmt(casas,0)+" casas de $"+fmt(c,0)+"</strong>"+(c===300000?" (la casa que una maestra y un policía pueden pagar)":"")+".");}
+    out("cd-out",card(
+      "Eso sale a $"+fmt(pu,0)+" por cada uno.",
+      frases,
+      "$"+fmt(t,0)+" ÷ "+fmt(u,0)+" = $"+fmt(pu,0)+" cada uno"+(c!=null?". $"+fmt(t,0)+" ÷ $"+fmt(c,0)+" = "+fmt(t/c,0)+" casas":"")+".",
+      "$"+fmt(t,0)+" entre "+fmt(u,0)+" sale a $"+fmt(pu,0)+" por cada uno. Haz tu cuenta: puertoricosinfiltros.com/calculadora"));}
   ["ca-empleos"].forEach(function(id){document.getElementById(id).addEventListener("input",calcA);});
   ["cb-personas","cb-dias"].forEach(function(id){document.getElementById(id).addEventListener("input",calcB);});
   ["ct-pies"].forEach(function(id){document.getElementById(id).addEventListener("input",calcT);});
