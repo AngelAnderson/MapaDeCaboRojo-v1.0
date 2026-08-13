@@ -17249,11 +17249,23 @@ const PAGE_CANONICAL: Record<string, string> = {
   'ultima-cifra': 'https://puertoricosinfiltros.com/ultima-cifra',
 }
 
+// www de los ápices propios: redirigir con el path COMPLETO. PAGE_CANONICAL mapea
+// page→URL fija y pierde los parámetros de ruta (www /pueblo/loiza caía en /pueblo).
+const OWN_WWW: Record<string, string> = {
+  'www.registromedicopr.com': 'registromedicopr.com',
+  'www.puertoricosinfiltros.com': 'puertoricosinfiltros.com',
+}
+
 // Devuelve la URL canónica si el host que sirve no es el dueño. null = sigue derecho.
 function wrongHost(req: any, page: string): string | null {
+  const host = String(req.headers?.host || '').toLowerCase()
+  if (OWN_WWW[host]) {
+    const u = String(req.url || '')
+    const path = u.startsWith('/') && !u.startsWith('/api/') ? u : ''
+    return 'https://' + OWN_WWW[host] + (path || (PAGE_CANONICAL[page] || 'https://x/').replace(/^https?:\/\/[^/]+/, ''))
+  }
   const target = PAGE_CANONICAL[page]
   if (!target) return null
-  const host = String(req.headers?.host || '').toLowerCase()
   if (!host) return null
   // /mision vive en 2 hosts con contenido propio: la del Mapa (canónica histórica,
   // handleMision) y la de Sin Filtros (misión + metas con relojes,
