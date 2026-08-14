@@ -17154,6 +17154,147 @@ ${SHARE_COPY_SCRIPT}`
 // registro, que es que cada fila de médico está verificada contra NPPES.
 // Fuente: https://sulme.familiapr.com/mapaPublico · bajado 2026-08-14.
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// /lo-que-cuesta — El precio del cuido de adultos mayores en Puerto Rico.
+//
+// Primera vez que este cruce se publica: tarifa mediana por pueblo (registro
+// SULME del Depto de la Familia, 977 de 1,300 establecimientos reportan tarifa)
+// contra ingreso mediano de hogar (ACS 2023 5-year, B19013). Snapshot 14 ago 2026.
+//
+// El hallazgo: la mediana del cuido es $1,900/mes = $22,800/año, contra un
+// ingreso mediano de hogar en PR de $25,096. Eso es 91% del ingreso de un hogar
+// COMPLETO. En 16 de 58 pueblos analizados pasa del 100%.
+//
+// Encuadre (orden de Angel, 14 ago 2026): NO se le tira al que opera un hogar.
+// $1,900 no es abuso, es lo que cuesta cuidar a alguien 24 horas. La historia es
+// la distancia entre lo que cuesta cuidar y lo que gana la gente, y las 15,498
+// camas vacías son la prueba de esa distancia.
+// ---------------------------------------------------------------------------
+const CARGA_CUIDO = [
+  {p:'Utuado',t:2000,i:17624,pc:136,n:5},
+  {p:'Las Marías',t:1750,i:16170,pc:130,n:6},
+  {p:'San Germán',t:1900,i:17921,pc:127,n:13},
+  {p:'Naguabo',t:2200,i:21416,pc:123,n:11},
+  {p:'San Sebastián',t:1800,i:17834,pc:121,n:13},
+  {p:'San Lorenzo',t:2100,i:21320,pc:118,n:9},
+  {p:'Ponce',t:1825,i:18827,pc:116,n:44},
+  {p:'Mayagüez',t:1700,i:17963,pc:114,n:31},
+  {p:'Lares',t:1800,i:19323,pc:112,n:19},
+  {p:'Barranquitas',t:2000,i:22167,pc:108,n:7},
+  {p:'Sabana Grande',t:1800,i:20564,pc:105,n:7},
+  {p:'Coamo',t:1800,i:20797,pc:104,n:13},
+  {p:'Naranjito',t:1850,i:21399,pc:104,n:4},
+  {p:'Aguas Buenas',t:1900,i:22361,pc:102,n:7},
+  {p:'Arroyo',t:1600,i:18931,pc:101,n:9},
+  {p:'Manatí',t:1700,i:20352,pc:100,n:11},
+  {p:'Yauco',t:1800,i:21918,pc:99,n:15},
+  {p:'Barceloneta',t:1775,i:21750,pc:98,n:6},
+  {p:'Aguadilla',t:1600,i:19826,pc:97,n:25},
+  {p:'Morovis',t:1850,i:23010,pc:96,n:8},
+  {p:'Villalba',t:2000,i:24882,pc:96,n:9},
+  {p:'Juana Díaz',t:1900,i:23823,pc:96,n:16},
+  {p:'Lajas',t:1500,i:18920,pc:95,n:5},
+  {p:'Guayama',t:1600,i:20273,pc:95,n:12},
+  {p:'San Juan',t:2100,i:26981,pc:93,n:125},
+  {p:'Yabucoa',t:1650,i:21279,pc:93,n:6},
+  {p:'Guayanilla',t:1650,i:21400,pc:93,n:6},
+  {p:'Vega Baja',t:1825,i:23877,pc:92,n:8},
+  {p:'Cidra',t:2075,i:27149,pc:92,n:8},
+  {p:'Moca',t:1625,i:21415,pc:91,n:20},
+  {p:'Rincón',t:1900,i:25223,pc:90,n:4},
+  {p:'Corozal',t:1800,i:23933,pc:90,n:7},
+  {p:'Río Grande',t:2000,i:26745,pc:90,n:12},
+  {p:'Las Piedras',t:1900,i:25697,pc:89,n:9},
+  {p:'Cayey',t:2100,i:28461,pc:89,n:12},
+  {p:'Isabela',t:1500,i:20484,pc:88,n:16},
+  {p:'Humacao',t:1900,i:26083,pc:87,n:15},
+  {p:'Añasco',t:1700,i:23591,pc:86,n:14},
+  {p:'Fajardo',t:1800,i:25170,pc:86,n:14},
+  {p:'Santa Isabel',t:1650,i:23197,pc:85,n:4},
+  {p:'Patillas',t:1637,i:23422,pc:84,n:4},
+  {p:'Aguada',t:1500,i:21694,pc:83,n:8},
+  {p:'Arecibo',t:1600,i:23175,pc:83,n:34},
+  {p:'Camuy',t:1800,i:26094,pc:83,n:9},
+  {p:'Juncos',t:1925,i:28196,pc:82,n:12},
+  {p:'Toa Baja',t:2000,i:29648,pc:81,n:21},
+  {p:'Hatillo',t:1875,i:28001,pc:80,n:14},
+  {p:'Caguas',t:2000,i:30113,pc:80,n:55},
+  {p:'Hormigueros',t:1650,i:24862,pc:80,n:8},
+  {p:'Trujillo Alto',t:2400,i:38773,pc:74,n:15},
+  {p:'Bayamón',t:1900,i:30729,pc:74,n:72},
+  {p:'Cabo Rojo',t:1550,i:25720,pc:72,n:12},
+  {p:'Carolina',t:2000,i:35126,pc:68,n:25},
+  {p:'Gurabo',t:2250,i:39532,pc:68,n:8},
+  {p:'Dorado',t:1900,i:33388,pc:68,n:9},
+  {p:'Quebradillas',t:1300,i:23624,pc:66,n:9},
+  {p:'Toa Alta',t:1800,i:33349,pc:65,n:20},
+  {p:'Guaynabo',t:2250,i:46048,pc:59,n:26},
+]
+async function handleLoQueCuesta(req: any, res: any) {
+  const host = String(req.headers?.host || '')
+  const sobre100 = CARGA_CUIDO.filter(x => x.pc >= 100)
+  const fmt = (n: number) => n.toLocaleString('en-US')
+
+  const fila = (x: typeof CARGA_CUIDO[number]) => {
+    const rojo = x.pc >= 100, amber = x.pc >= 85 && x.pc < 100
+    return `<tr>
+      <td style="padding:9px 8px;border-bottom:1px solid #1e293b;font-weight:600">${escapeHtml(x.p)}</td>
+      <td style="padding:9px 8px;border-bottom:1px solid #1e293b;text-align:right">$${fmt(x.t)}</td>
+      <td style="padding:9px 8px;border-bottom:1px solid #1e293b;text-align:right">$${fmt(x.t * 12)}</td>
+      <td style="padding:9px 8px;border-bottom:1px solid #1e293b;text-align:right;opacity:.75">$${fmt(x.i)}</td>
+      <td style="padding:9px 8px;border-bottom:1px solid #1e293b;text-align:right;font-weight:800;color:${rojo ? '#f87171' : amber ? '#fbbf24' : '#4ade80'}">${x.pc}%</td>
+    </tr>`
+  }
+
+  const body = `
+<h1>Lo que cuesta guardar a Mami</h1>
+<p style="font-size:20px;line-height:1.6"><strong>Un hogar de cuido en Puerto Rico cuesta $1,900 al mes.</strong> Eso son $22,800 al año. El ingreso mediano de un hogar en Puerto Rico es $25,096 al año.</p>
+<p style="font-size:20px;line-height:1.6">Cuidar a un viejo cuesta el <strong>91% de lo que gana una familia completa</strong>.</p>
+<p style="font-size:17px;line-height:1.7;opacity:.85">Nadie había publicado este cruce. Los precios estaban en un registro del Departamento de la Familia que abrió en diciembre de 2025 y que casi nadie sabe que existe. Los ingresos están en el Censo. Nadie los había puesto uno al lado del otro, pueblo por pueblo.</p>
+
+<h2>En 16 pueblos cuesta más que el ingreso completo</h2>
+<p style="font-size:17px;line-height:1.7">No el 91%. Más del 100%. En Utuado la mediana del cuido es $24,000 al año y el ingreso mediano del hogar es $17,624. Para pagar un hogar de cuido en Utuado, una familia mediana tiene que ganar 36% más de lo que gana.</p>
+<div style="overflow-x:auto;margin:20px 0">
+<table style="width:100%;border-collapse:collapse;font-size:15px">
+<thead><tr style="border-bottom:2px solid #334155">
+<th style="padding:9px 8px;text-align:left">Pueblo</th>
+<th style="padding:9px 8px;text-align:right">Cuido al mes</th>
+<th style="padding:9px 8px;text-align:right">Al año</th>
+<th style="padding:9px 8px;text-align:right">Ingreso del hogar</th>
+<th style="padding:9px 8px;text-align:right">% del ingreso</th>
+</tr></thead>
+<tbody>${CARGA_CUIDO.map(fila).join('')}</tbody></table>
+</div>
+<p style="font-size:14px;opacity:.7">58 pueblos con 4 o más establecimientos que reportan tarifa. La tarifa es la mediana del pueblo; el ingreso es la mediana de hogar del Censo.</p>
+
+<h2>Y por eso hay 15,498 camas vacías</h2>
+<p style="font-size:17px;line-height:1.7">Puerto Rico tiene <strong>20,572 camas de cuido licenciadas</strong>. Solo <strong>5,074 están ocupadas</strong>. Tres de cada cuatro camas están vacías, en el sitio que más rápido envejece del hemisferio, donde 740,397 personas ya pasaron de 65 años.</p>
+<p style="font-size:17px;line-height:1.7">Eso no es un misterio. Es la resta. Las camas están vacías porque cuestan casi un ingreso completo, y la gente no lo tiene.</p>
+
+<h2>Tres cosas que la data dice y que nadie te dice</h2>
+<p style="font-size:17px;line-height:1.7"><strong>1. El pueblo importa más que el tamaño.</strong> Entre el más barato y el más caro hay $900 al mes de diferencia: Quebradillas $1,300, Naguabo $2,200. Son $10,800 al año por cruzar un pueblo.</p>
+<p style="font-size:17px;line-height:1.7"><strong>2. Buscar uno chiquito no te ahorra.</strong> Los hogares de 8 camas o menos tienen mediana de $1,825. Los de 20 camas o más, $1,900. $75 de diferencia. Si alguien te dijo que los pequeños salen más baratos, la data dice que no.</p>
+<p style="font-size:17px;line-height:1.7"><strong>3. Con tres de cada cuatro camas vacías, tú tienes algo que decir en el precio.</strong> Ese es el dato que cambia una conversación. No estás pidiendo un favor: hay 15,498 camas esperando. Pregunta el precio, di lo que puedes pagar, y pregunta en más de un pueblo.</p>
+
+<h2>Lo que esto NO es</h2>
+<p style="font-size:17px;line-height:1.7">Esto no es contra los que operan hogares de cuido. <strong>$1,900 al mes no es abuso.</strong> Es lo que cuesta cuidar a una persona 24 horas al día, con comida, con gente despierta de noche, con licencia y con seguro. El que abre un cuido está resolviendo un problema que nadie más resolvió.</p>
+<p style="font-size:17px;line-height:1.7">La historia es la distancia entre lo que cuesta cuidar y lo que gana la gente. Y las 15,498 camas vacías son la medida exacta de esa distancia.</p>
+
+<h2>Antes de dejar a alguien tuyo en un sitio</h2>
+<p style="font-size:17px;line-height:1.7">Pide ver la licencia. La ley obliga a que esté colgada en un sitio visible, y eso es así desde 1977. Mira la fecha de vencimiento, no solo que exista el papel. Verifícalo antes de ir en el buscador del Departamento de la Familia. Pregunta cuántas personas cuidan por turno, sobre todo de noche. Y vuelve sin avisar.</p>
+<p style="font-size:17px;line-height:1.7">Los 1,300 hogares licenciados de Puerto Rico, con teléfono y camas disponibles, están en <a href="https://registromedicopr.com/cuido" style="color:#5eead4">registromedicopr.com/cuido</a>, buscables por pueblo.</p>
+
+<p style="font-size:14px;opacity:.65;margin-top:32px;border-top:1px solid #1e293b;padding-top:14px">
+Fuentes: registro SULME del Departamento de la Familia de Puerto Rico (sulme.familiapr.com/mapaPublico), consultado el 14 de agosto de 2026: 1,300 establecimientos licenciados, 977 con tarifa reportada, 20,572 camas y 5,074 ocupadas. Ingreso mediano de hogar y población de 65 años o más: American Community Survey 2023, estimados de 5 años, tablas B19013 y S0101, U.S. Census Bureau. Las tarifas y la ocupación las reporta cada establecimiento al Departamento de la Familia. Si ves un dato incorrecto, escríbenos y lo corregimos con fecha.
+</p>`
+
+  return res.status(200).send(layout({
+    title: 'Lo que cuesta guardar a Mami: el precio del cuido en Puerto Rico, pueblo por pueblo',
+    description: 'Un hogar de cuido en PR cuesta $1,900 al mes, 91% del ingreso mediano de un hogar. En 16 pueblos cuesta más que el ingreso completo. Y hay 15,498 camas vacías. Primera vez publicado.',
+    slug: 'lo-que-cuesta', host, bodyHtml: body,
+  }))
+}
+
 async function handleCuido(req: any, res: any) {
   const host = String(req.headers?.host || '')
   const muniRaw = String(req.query?.m || '').trim()
@@ -17592,6 +17733,7 @@ export default async function handler(req: any, res: any) {
     case 'marcador': return await handleMarcador(req, res)
     case 'kit': return await handleKit(req, res)
     case 'tu-ficha': return handleTuFicha(req, res)
+    case 'lo-que-cuesta': return await handleLoQueCuesta(req, res)
     case 'cuido': return await handleCuido(req, res)
     case 'registro-censo': return await handleRegistroCenso(req, res)
     case 'raras': return await handleRaras(req, res)

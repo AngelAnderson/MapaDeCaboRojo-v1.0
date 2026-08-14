@@ -172,6 +172,10 @@
       "destination": "/api/mapa-pages?page=necesito&intent=:intent"
     },
     {
+      "source": "/lo-que-cuesta",
+      "destination": "/api/mapa-pages?page=lo-que-cuesta"
+    },
+    {
       "source": "/cuido",
       "destination": "/api/mapa-pages?page=cuido"
     },
