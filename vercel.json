@@ -172,6 +172,14 @@
       "destination": "/api/mapa-pages?page=necesito&intent=:intent"
     },
     {
+      "source": "/cuido",
+      "destination": "/api/mapa-pages?page=cuido"
+    },
+    {
+      "source": "/cuido/:m",
+      "destination": "/api/mapa-pages?page=cuido&m=:m"
+    },
+    {
       "source": "/registro/desiertos",
       "destination": "/api/mapa-pages?page=registro-desiertos"
     },
@@ -186,6 +194,10 @@
     {
       "source": "/kit",
       "destination": "/api/mapa-pages?page=kit"
+    },
+    {
+      "source": "/tu-ficha",
+      "destination": "/api/mapa-pages?page=tu-ficha"
     },
     {
       "source": "/marcador",

@@ -13977,6 +13977,73 @@ ${tarjetas.map(c => `<div class="border border-slate-200 bg-white rounded-2xl p-
   }))
 }
 
+
+// =============== /tu-ficha — la página que se le manda a un profesional que pregunta ===============
+// Nace del caso de la Dra. Rivera Bobe (14 ago 2026): contestó "sí, estoy interesada" a nuestro
+// propio SMS y El Veci le respondió "¿interesada en qué?". La disculpa necesitaba un sitio a donde
+// mandarla. Esta es esa pagina, y sirve para cualquiera que pregunte "¿que es esto y quien esta detras?".
+// Regla: se explica, no se vende. El precio no aparece. Lo unico que se pide es que corrija su ficha.
+function handleTuFicha(req: any, res: any) {
+  const body = `
+<div class="max-w-3xl mx-auto px-5 py-10">
+  <p class="text-xs uppercase tracking-widest text-teal-700 font-bold">Para profesionales de la salud</p>
+  <h1 class="text-3xl md:text-4xl font-extrabold text-slate-900 mt-3 leading-tight">Su nombre aparece aquí. Esto es por qué, y qué control tiene usted.</h1>
+  <p class="text-lg text-slate-600 mt-4">Si le llegó un mensaje nuestro y quiere saber quién le escribió antes de contestar, esta página es la respuesta completa. Toma 2 minutos leerla.</p>
+
+  <div class="mt-8 border-l-4 border-teal-600 bg-teal-50 rounded-r-lg p-5">
+    <p class="font-bold text-slate-900">Lo más corto posible</p>
+    <p class="text-slate-700 mt-2">Esto es un registro público de proveedores de salud en Puerto Rico, hecho para que un paciente encuentre a quién necesita. Usted no se inscribió: su información salió del registro federal NPPES, que es público. Aparecer no cuesta nada y nunca va a costar nada. Si algo está mal, se corrige el mismo día. Si no quiere aparecer, se quita el mismo día y no hay que dar explicaciones.</p>
+  </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10">¿Por qué aparezco si yo no me registré?</h2>
+  <p class="text-slate-700 mt-3">Todo proveedor de salud en Estados Unidos y sus territorios tiene un NPI, un número federal público. Ese registro se llama NPPES y lo mantiene CMS, la misma agencia de Medicare. Cualquiera puede descargarlo. Nosotros lo bajamos, lo organizamos por especialidad y por pueblo, y lo verificamos a mano cuando podemos.</p>
+  <p class="text-slate-700 mt-3">La diferencia entre nuestro registro y la lista de un plan médico es simple: cuando un vecino nos dice que un teléfono no sirve o que un médico ya no está en ese pueblo, lo arreglamos esa semana. Y ponemos la fecha en que se verificó, para que usted sepa si lo que está leyendo es de hoy o de hace 3 años.</p>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10">¿Qué cuesta?</h2>
+  <p class="text-slate-700 mt-3">Nada. Aparecer en el registro es gratis y va a seguir siendo gratis. No hay una versión de paga que le quite el nombre si no paga. No hay letra chica.</p>
+  <p class="text-slate-700 mt-3">Sí existe la opción de que su ficha salga <strong>destacada</strong> cuando alguien busca su especialidad, y eso sí se paga. Pero antes de hablar de eso preferimos preguntarle algo: <strong>cuando un paciente la busca, ¿qué le gustaría que vea primero de su práctica?</strong> Esa pregunta va primero, y muchas veces la respuesta no cuesta dinero.</p>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10">Cómo corregir o quitar su ficha</h2>
+  <p class="text-slate-700 mt-3">Un solo canal, y contesta una persona:</p>
+  <div class="mt-4 bg-white border border-slate-200 rounded-xl p-5">
+    <p class="text-2xl font-extrabold text-slate-900">787-417-7711</p>
+    <p class="text-slate-600 text-sm mt-1">Textee. No hace falta llamar ni llenar formularios.</p>
+    <ul class="mt-4 space-y-2 text-slate-700 text-sm">
+      <li><strong>Para corregir</strong> (teléfono, dirección, horario, si acepta pacientes nuevos): escriba qué está mal y qué es lo correcto.</li>
+      <li><strong>Para quitar su ficha:</strong> escriba que la quiere fuera. Se hace ese día, sin preguntas y sin verificar nada. Si un día quiere volver, se pone de vuelta igual de rápido.</li>
+    </ul>
+  </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10">Una cosa honesta sobre el sistema</h2>
+  <p class="text-slate-700 mt-3">El número 787-417-7711 lo contesta El Veci, un asistente que responde a toda hora para que nadie se quede esperando. Está mejorando constantemente y todavía se equivoca: a veces contesta como si no entendiera algo que sí le habíamos escrito nosotros mismos, o responde con un mensaje que no venía al caso.</p>
+  <p class="text-slate-700 mt-3">Cuando eso pase, no es que la estemos ignorando. Escriba otra vez o escriba la palabra <strong>ANGEL</strong> y llega a una persona. Cada vez que el sistema se equivoca con alguien, ese caso se usa para arreglarlo. Así es que ha aprendido lo que sabe.</p>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10">¿Quién está detrás de esto?</h2>
+  <p class="text-slate-700 mt-3">Angel Anderson, vecino de Cabo Rojo. No es un plan médico, no es una agencia de gobierno y no es una compañía de mercadeo con inversionistas. Empezó porque conseguir un especialista en Puerto Rico se volvió un trabajo de días, y porque la información que existía estaba vieja.</p>
+  <p class="text-slate-700 mt-3">Si quiere ver el trabajo detrás del registro: <a href="/registro/estado" class="text-teal-700 font-semibold underline">el estado de salud de Puerto Rico</a>, <a href="/registro/desiertos" class="text-teal-700 font-semibold underline">los pueblos sin especialistas</a> y <a href="/porque" class="text-teal-700 font-semibold underline">por qué se van los médicos</a>, todo con su fuente federal.</p>
+
+  <div class="mt-10 border-t border-slate-200 pt-6">
+    <p class="text-slate-600 text-sm">¿Algo de esto no le cuadra o quiere que su ficha diga otra cosa? Textee al <strong>787-417-7711</strong> o escriba a <a href="mailto:angel@angelanderson.com" class="text-teal-700 font-semibold">angel@angelanderson.com</a>. Le contesta Angel.</p>
+  </div>
+</div>`
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'FAQPage',
+    mainEntity: [
+      { '@type': 'Question', name: '¿Por qué aparezco en el Registro Médico PR si yo no me registré?', acceptedAnswer: { '@type': 'Answer', text: 'Todo proveedor de salud en Estados Unidos y sus territorios tiene un NPI, un número federal público que vive en el registro NPPES de CMS. Ese registro es descargable por cualquiera. Registro Médico PR lo organiza por especialidad y pueblo y lo verifica a mano, con fecha de verificación visible.' } },
+      { '@type': 'Question', name: '¿Cuánto cuesta aparecer en el Registro Médico PR?', acceptedAnswer: { '@type': 'Answer', text: 'Nada. Aparecer es gratis y seguirá siendo gratis. Existe una opción pagada para que una ficha salga destacada en las búsquedas de su especialidad, pero el listado básico nunca se cobra ni se retira por no pagar.' } },
+      { '@type': 'Question', name: '¿Cómo corrijo o quito mi ficha del Registro Médico PR?', acceptedAnswer: { '@type': 'Answer', text: 'Textee al 787-417-7711 con lo que está mal y lo correcto. Para quitar la ficha, basta con pedirlo: se remueve el mismo día, sin verificación ni explicaciones, y se puede reponer cuando el proveedor lo pida.' } },
+    ],
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=600')
+  res.status(200).send(layout({
+    title: 'Su ficha en el Registro Médico PR — qué es, qué cuesta y cómo cambiarla',
+    description: 'Si su nombre aparece en el Registro Médico PR: por qué aparece, qué cuesta (nada), cómo corregir su información y cómo quitarla el mismo día. Textee al 787-417-7711.',
+    slug: 'tu-ficha', bodyHtml: body, jsonLd,
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
 // =============== /marcador — El Marcador de Salud PR: 6 números con dueño ===============
 // Tesis: PR no tiene escasez de médicos, tiene escasez de condiciones. Los 3 escapes propuestos
 // (que vengan / telemedicina / que llegue dinero) mueren en la misma piedra, y se prueba con data.
@@ -17077,6 +17144,145 @@ ${SHARE_COPY_SCRIPT}`
 }
 
 // =============== /registro/censo — El Censo Médico Real de PR (v0 · día cero) ===============
+// ---------------------------------------------------------------------------
+// /cuido — Registro de hogares de cuido para adultos mayores (SULME / Familia)
+//
+// OJO, y es la razón por la que esto vive en su propia ruta y no dentro de
+// /especialista/: un hogar de cuido NO es un proveedor médico. Lo licencia el
+// Departamento de la Familia (Ley 94-1977), no factura a seguros, y por eso
+// casi ninguno tiene NPI. Mezclarlos con los médicos rompería la promesa del
+// registro, que es que cada fila de médico está verificada contra NPPES.
+// Fuente: https://sulme.familiapr.com/mapaPublico · bajado 2026-08-14.
+// ---------------------------------------------------------------------------
+async function handleCuido(req: any, res: any) {
+  const host = String(req.headers?.host || '')
+  const muniRaw = String(req.query?.m || '').trim()
+
+  const { data: rows } = await supabase
+    .from('places')
+    .select('name, municipality, phone, address, description, automated_notes')
+    .eq('subcategory', 'hogar de ancianos')
+    .eq('verification_source', 'SULME_Familia_PR')
+    .eq('visibility', 'published')
+    .order('municipality')
+    .limit(2000)
+
+  type Nota = { licencia?: string; licencia_exp?: string; cumplimiento?: string; camas?: number; ocupadas?: number }
+  const parse = (s: any): Nota => { try { return JSON.parse(s || '{}') } catch { return {} } }
+
+  const all = (rows || []).map(r => ({ ...r, n: parse((r as any).automated_notes) }))
+  const byMuni = new Map<string, typeof all>()
+  all.forEach(r => {
+    const m = r.municipality || 'Sin pueblo'
+    if (!byMuni.has(m)) byMuni.set(m, [])
+    byMuni.get(m)!.push(r)
+  })
+
+  const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+  const muni = muniRaw ? [...byMuni.keys()].find(k => norm(k) === norm(muniRaw)) : ''
+
+  const totalCamas = all.reduce((a, r) => a + (r.n.camas || 0), 0)
+  const totalOcup = all.reduce((a, r) => a + (r.n.ocupadas || 0), 0)
+
+  const diasPara = (exp?: string) => {
+    if (!exp) return null
+    const d = Math.round((new Date(exp).getTime() - Date.now()) / 86400000)
+    return Number.isFinite(d) ? d : null
+  }
+
+  const aviso = `<div class="not-prose mt-5 rounded-2xl border-2 border-amber-300 bg-amber-50 p-4">
+  <p class="font-black text-slate-900">Esto no es un directorio de médicos.</p>
+  <p class="text-sm text-slate-700 mt-1">Un hogar de cuido lo licencia el <strong>Departamento de la Familia</strong> bajo la Ley 94-1977. No da servicios médicos y no factura a seguros, así que casi ninguno aparece en el registro federal de proveedores. Son dos registros distintos y aquí están separados a propósito.</p>
+</div>`
+
+  const comoVerificar = `<div class="not-prose mt-5 rounded-2xl border-2 border-teal-300 bg-teal-50 p-5">
+  <p class="font-black text-slate-900 text-lg">Antes de dejar a alguien tuyo en un sitio</p>
+  <ol class="mt-2 space-y-1.5 text-sm text-slate-800 list-decimal pl-5">
+    <li><strong>Pide ver la licencia.</strong> La ley obliga a que esté colgada en un sitio visible al público. Si no te la enseñan, ahí tienes tu respuesta.</li>
+    <li><strong>Mira la fecha de vencimiento</strong>, no solo que exista. Una licencia vencida no es licencia.</li>
+    <li><strong>Verifícalo aquí o en el buscador de Familia</strong> antes de ir, desde el teléfono.</li>
+    <li><strong>Pregunta cuántas personas cuidan por turno</strong>, sobre todo de noche.</li>
+    <li><strong>Ve sin avisar una segunda vez.</strong> Lo que veas sin cita es lo que hay.</li>
+  </ol>
+  <p class="text-xs text-slate-600 mt-3">Verificar es responsabilidad de la familia. Desde diciembre 2025 se puede hacer desde el celular, pero la licencia en la pared se puede pedir desde 1977.</p>
+</div>`
+
+  const fuente = `<p class="text-xs text-slate-500 mt-6">Fuente: registro SULME del Departamento de la Familia de Puerto Rico, consultado el 14 de agosto de 2026. Las camas ocupadas y la tarifa las reporta cada establecimiento a Familia. Buscador oficial: <a href="https://sulme.familiapr.com/mapaPublico" rel="nofollow" class="text-teal-700 underline">sulme.familiapr.com</a>. Si ves un dato incorrecto, escríbenos y lo corregimos con fecha.</p>`
+
+  if (muni) {
+    const list = byMuni.get(muni)!.slice().sort((a, b) => (b.n.camas || 0) - (a.n.camas || 0))
+    const camas = list.reduce((a, r) => a + (r.n.camas || 0), 0)
+    const ocup = list.reduce((a, r) => a + (r.n.ocupadas || 0), 0)
+    const cards = list.map(r => {
+      const d = diasPara(r.n.licencia_exp)
+      const libres = (r.n.camas || 0) - (r.n.ocupadas || 0)
+      const badge = d === null
+        ? `<span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">Sin fecha de vencimiento en el registro</span>`
+        : d < 0
+          ? `<span class="text-xs bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded">Licencia vencida hace ${Math.abs(d)} días</span>`
+          : d <= 90
+            ? `<span class="text-xs bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded">Licencia vence en ${d} días</span>`
+            : `<span class="text-xs bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded">Licencia vigente</span>`
+      const tel = (r.phone || '').replace(/[^\d]/g, '')
+      return `<div class="bg-white border border-slate-200 rounded-xl p-4">
+        <div class="flex flex-wrap items-start justify-between gap-2">
+          <h3 class="font-black text-slate-900 text-base m-0">${escapeHtml(r.name)}</h3>
+          ${badge}
+        </div>
+        ${r.address ? `<p class="text-sm text-slate-600 mt-1 mb-0">${escapeHtml(r.address)}</p>` : ''}
+        <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
+          ${r.n.camas ? `<span><strong>${r.n.camas}</strong> camas${libres > 0 ? ` · <strong>${libres}</strong> disponibles` : ''}</span>` : ''}
+          ${r.n.cumplimiento ? `<span>${escapeHtml(r.n.cumplimiento)}</span>` : ''}
+        </div>
+        ${tel ? `<a href="tel:${tel}" class="inline-block mt-3 bg-teal-700 text-white font-bold text-sm px-4 py-2 rounded-lg no-underline">Llamar ${escapeHtml(r.phone || '')}</a>` : ''}
+      </div>`
+    }).join('')
+
+    const body = `
+<h1>Hogares de cuido en ${escapeHtml(muni)}</h1>
+<p class="text-lg text-slate-600 mt-3">Hay <strong>${list.length}</strong> establecimiento${list.length === 1 ? '' : 's'} de cuido con licencia del Departamento de la Familia en ${escapeHtml(muni)}. Entre todos suman <strong>${camas}</strong> camas, con <strong>${ocup}</strong> ocupadas según el registro.</p>
+${aviso}
+<div class="not-prose mt-6 grid gap-3 sm:grid-cols-2">${cards}</div>
+${comoVerificar}
+<p class="mt-6"><a href="/cuido" class="text-teal-700 font-semibold">Ver todos los pueblos →</a></p>
+${fuente}`
+
+    return res.status(200).send(layout({
+      title: `Hogares de cuido en ${muni} — licenciados por Familia`,
+      description: `${list.length} hogares de cuido con licencia vigente en ${muni}, Puerto Rico. Camas, disponibilidad y cómo verificar la licencia antes de dejar a un familiar.`,
+      slug: `cuido/${encodeURIComponent(muni)}`, host, bodyHtml: body,
+    }))
+  }
+
+  const munis = [...byMuni.entries()]
+    .map(([m, rs]) => ({ m, n: rs.length, camas: rs.reduce((a, r) => a + (r.n.camas || 0), 0) }))
+    .sort((a, b) => a.m.localeCompare(b.m, 'es'))
+  const grid = munis.map(x => `<a href="/cuido/${encodeURIComponent(x.m)}" class="block bg-white border border-slate-200 rounded-xl p-3 no-underline hover:border-teal-400">
+    <div class="font-bold text-slate-900 text-sm">${escapeHtml(x.m)}</div>
+    <div class="text-xs text-slate-500">${x.n} hogar${x.n === 1 ? '' : 'es'} · ${x.camas} camas</div>
+  </a>`).join('')
+
+  const body = `
+<h1>Hogares de cuido de Puerto Rico</h1>
+<p class="text-lg text-slate-600 mt-3">Los <strong>${all.length}</strong> establecimientos de cuido para adultos mayores con licencia del Departamento de la Familia, en <strong>${munis.length}</strong> pueblos. Con camas, disponibilidad y hasta cuándo vence cada licencia.</p>
+<div class="not-prose mt-5 grid grid-cols-3 gap-3 text-center">
+  <div class="bg-white border-2 border-slate-200 rounded-xl p-4"><div class="text-3xl font-black text-slate-800">${all.length}</div><div class="text-xs text-slate-500 mt-1">establecimientos</div></div>
+  <div class="bg-white border-2 border-slate-200 rounded-xl p-4"><div class="text-3xl font-black text-slate-800">${totalCamas.toLocaleString('es')}</div><div class="text-xs text-slate-500 mt-1">camas licenciadas</div></div>
+  <div class="bg-white border-2 border-teal-300 rounded-xl p-4"><div class="text-3xl font-black text-teal-700">${(totalCamas - totalOcup).toLocaleString('es')}</div><div class="text-xs text-slate-500 mt-1">camas sin ocupar</div></div>
+</div>
+${aviso}
+<h2 class="mt-8">Busca tu pueblo</h2>
+<div class="not-prose mt-3 grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">${grid}</div>
+${comoVerificar}
+${fuente}`
+
+  return res.status(200).send(layout({
+    title: 'Hogares de cuido de Puerto Rico — licenciados por Familia',
+    description: `Los ${all.length} hogares de cuido para adultos mayores con licencia del Departamento de la Familia en Puerto Rico, por pueblo. Camas disponibles, vencimiento de licencia y cómo verificar antes de dejar a un familiar.`,
+    slug: 'cuido', host, bodyHtml: body,
+  }))
+}
+
 async function handleRegistroCenso(req: any, res: any) {
   const OESTE = ['Mayagüez', 'San Germán', 'Cabo Rojo', 'Añasco', 'Sabana Grande', 'Hormigueros', 'Lajas']
   // Col 1 "en papel": snapshot mensual más reciente (registro_snapshots)
@@ -17385,6 +17591,8 @@ export default async function handler(req: any, res: any) {
     case 'registro-estado': return await handleRegistroEstado(req, res)
     case 'marcador': return await handleMarcador(req, res)
     case 'kit': return await handleKit(req, res)
+    case 'tu-ficha': return handleTuFicha(req, res)
+    case 'cuido': return await handleCuido(req, res)
     case 'registro-censo': return await handleRegistroCenso(req, res)
     case 'raras': return await handleRaras(req, res)
     case 'atlas': return await handleAtlas(req, res)
