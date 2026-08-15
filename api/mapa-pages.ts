@@ -17230,6 +17230,91 @@ const CARGA_CUIDO = [
   {p:'Toa Alta',t:1800,i:33349,pc:65,n:20},
   {p:'Guaynabo',t:2250,i:46048,pc:59,n:26},
 ]
+// ---------------------------------------------------------------------------
+// /el-oeste-viejo — La region mas vieja de Puerto Rico y quien la atiende.
+//
+// Cruce propio, 14 ago 2026: poblacion 65+ (ACS 2023 5-year S0101) x camas de
+// cuido licenciadas (SULME/Familia) x geriatras con NPI (NPPES) x ingreso
+// mediano de hogar (ACS B19013), por municipio.
+//
+// El hallazgo: los 6 pueblos mas viejos de PR son todos del oeste. Hay 3,761
+// camas y el 76% estan vacias. Hay 6 geriatras para 102,920 personas mayores,
+// y 10 de los 14 pueblos no tienen ninguno.
+//
+// OJO DE METODO: el conteo de geriatras usa taxonomia ESTRICTA (subcategory
+// ILIKE 'geriatr%'). Un ILIKE suelto sobre nombre y descripcion daba 12 — el
+// doble — por duplicados y falsos positivos. Cualquier conteo de especialistas
+// que se publique tiene que apretarse igual.
+// ---------------------------------------------------------------------------
+const OESTE_VIEJO: [string,number,number,number,number,number|null,number,number|null][] = [["Hormigueros", 29.8, 4621, 251, 216, 1650, 0, 80], ["Rincón", 27.1, 4146, 110, 108, 1900, 0, 90], ["San Germán", 27.0, 8514, 436, 348, 1900, 0, 127], ["Lajas", 26.6, 6160, 109, 68, 1500, 0, 95], ["Guánica", 26.1, 3468, 48, 39, 2000, 0, 148], ["Maricao", 25.9, 1343, 0, 0, null, 0, null], ["Mayagüez", 25.9, 18634, 980, 683, 1650, 3, 110], ["San Sebastián", 25.5, 9970, 262, 184, 1700, 0, 114], ["Sabana Grande", 24.9, 5623, 188, 167, 1800, 0, 105], ["Yauco", 24.8, 8321, 265, 184, 1800, 1, 99], ["Cabo Rojo", 24.5, 11488, 269, 196, 1550, 1, 72], ["Aguadilla", 23.6, 12861, 474, 375, 1550, 1, 94], ["Las Marías", 22.9, 2016, 134, 105, 1750, 0, 130], ["Añasco", 22.7, 5755, 235, 170, 1700, 0, 86]]
+async function handleOesteViejo(req: any, res: any) {
+  const host = String(req.headers?.host || '')
+  const n = (x: number) => x.toLocaleString('en-US')
+  const totMayores = OESTE_VIEJO.reduce((a, r) => a + r[2], 0)
+  const totCamas = OESTE_VIEJO.reduce((a, r) => a + r[3], 0)
+  const totLibres = OESTE_VIEJO.reduce((a, r) => a + r[4], 0)
+  const totGeri = OESTE_VIEJO.reduce((a, r) => a + r[6], 0)
+  const sinGeri = OESTE_VIEJO.filter(r => r[6] === 0).length
+
+  const filas = OESTE_VIEJO.map(([m, pct, p65, camas, libres, tarifa, geri, carga]) => `<tr>
+    <td style="padding:9px 7px;border-bottom:1px solid #1e293b;font-weight:600">${escapeHtml(m)}</td>
+    <td style="padding:9px 7px;border-bottom:1px solid #1e293b;text-align:right">${pct}%</td>
+    <td style="padding:9px 7px;border-bottom:1px solid #1e293b;text-align:right">${n(p65)}</td>
+    <td style="padding:9px 7px;border-bottom:1px solid #1e293b;text-align:right">${camas || '—'}</td>
+    <td style="padding:9px 7px;border-bottom:1px solid #1e293b;text-align:right;opacity:.8">${libres || '—'}</td>
+    <td style="padding:9px 7px;border-bottom:1px solid #1e293b;text-align:right;font-weight:800;color:${geri === 0 ? '#f87171' : '#4ade80'}">${geri}</td>
+    <td style="padding:9px 7px;border-bottom:1px solid #1e293b;text-align:right;color:${carga && carga >= 100 ? '#f87171' : '#fbbf24'}">${carga ? carga + '%' : '—'}</td>
+  </tr>`).join('')
+
+  const body = `
+<h1>El oeste es la region mas vieja de Puerto Rico. Y no tiene quien atienda a sus viejos.</h1>
+<p style="font-size:20px;line-height:1.6">Los <strong>6 pueblos mas viejos de Puerto Rico</strong> son todos del oeste y el suroeste: Hormigueros, Rincon, San German, Lajas, Guanica y Maricao. En 14 pueblos del oeste viven <strong>${n(totMayores)} personas de 65 anos o mas</strong>.</p>
+<p style="font-size:20px;line-height:1.6">Entre esos 14 pueblos hay <strong>6 geriatras</strong>. Uno por cada ${n(Math.round(totMayores / totGeri))} personas mayores. <strong>Diez de los catorce no tienen ninguno.</strong></p>
+
+<h2>La tenaza de tres brazos</h2>
+<p style="font-size:17px;line-height:1.7"><strong>Hay camas.</strong> ${n(totCamas)} licenciadas por el Departamento de la Familia en esos 14 pueblos. El <strong>${Math.round(100 * totLibres / totCamas)}% estan vacias</strong>: ${n(totLibres)} camas sin usar.</p>
+<p style="font-size:17px;line-height:1.7"><strong>No hay quien los atienda.</strong> ${sinGeri} de 14 pueblos tienen cero geriatras, incluyendo Hormigueros, que es el pueblo mas viejo de Puerto Rico, y San German, que tiene 8,514 personas mayores.</p>
+<p style="font-size:17px;line-height:1.7"><strong>Y la familia no puede pagar.</strong> En Guanica el cuido cuesta el <strong>148% del ingreso mediano de un hogar</strong>. En Las Marias 130%. En San German 127%. En Mayaguez 110%.</p>
+<p style="font-size:17px;line-height:1.7">Las tres cosas son verdad a la vez. La cama existe, el medico no, y la familia no llega. Eso no es escasez. Es <strong>desencaje</strong>.</p>
+
+<h2>Los 14 pueblos, ordenados por edad</h2>
+<div style="overflow-x:auto;margin:20px 0">
+<table style="width:100%;border-collapse:collapse;font-size:15px">
+<thead><tr style="border-bottom:2px solid #334155">
+<th style="padding:9px 7px;text-align:left">Pueblo</th>
+<th style="padding:9px 7px;text-align:right">65+</th>
+<th style="padding:9px 7px;text-align:right">Mayores</th>
+<th style="padding:9px 7px;text-align:right">Camas</th>
+<th style="padding:9px 7px;text-align:right">Vacias</th>
+<th style="padding:9px 7px;text-align:right">Geriatras</th>
+<th style="padding:9px 7px;text-align:right">Cuido / ingreso</th>
+</tr></thead>
+<tbody>${filas}</tbody></table>
+</div>
+
+<h2>Tres pueblos que cuentan la historia solos</h2>
+<p style="font-size:17px;line-height:1.7"><strong>Hormigueros.</strong> El pueblo mas viejo de Puerto Rico, 29.8% de su gente pasa de 65. Tiene 251 camas de cuido y <strong>cero geriatras</strong>. El 86% de esas camas estan vacias.</p>
+<p style="font-size:17px;line-height:1.7"><strong>Maricao.</strong> 1,343 personas mayores, una de cada cuatro de su poblacion, y <strong>ni una sola cama licenciada</strong>. El unico pueblo del oeste sin nada.</p>
+<p style="font-size:17px;line-height:1.7"><strong>Guanica.</strong> 26.1% de viejos, 48 camas, cero geriatras, y el cuido cuesta <strong>una vez y media</strong> lo que gana una familia completa.</p>
+
+<h2>Lo que esto NO es</h2>
+<p style="font-size:17px;line-height:1.7">No es contra los que operan hogares de cuido. Una cama a $1,900 al mes no es abuso: es lo que cuesta cuidar a una persona 24 horas, con comida, con gente despierta de noche, con licencia y con seguro. El que abre un cuido en Maricao o en Guanica esta resolviendo algo que nadie mas resolvio.</p>
+<p style="font-size:17px;line-height:1.7">Tampoco es contra los 6 geriatras. Son 6 para 102,920 personas. El problema no es que trabajen poco.</p>
+
+<h2>Como se cuenta esto</h2>
+<p style="font-size:17px;line-height:1.7">Poblacion de 65 anos o mas y el ingreso mediano de hogar salen del American Community Survey del Censo federal, estimados de 5 anos, 2023. Las camas y las tarifas salen del registro SULME del Departamento de la Familia, bajado el 14 de agosto de 2026. Los geriatras salen del registro federal NPPES, contados con taxonomia estricta.</p>
+<p style="font-size:16px;line-height:1.7;opacity:.8">Ese ultimo detalle importa y lo decimos en voz alta: <strong>contando geriatras con una busqueda suelta salian 12; con la taxonomia correcta salen 6.</strong> La mitad eran duplicados y falsos positivos. Cualquier conteo de especialistas que veas publicado por ahi, incluyendo los nuestros viejos, merece esa misma pregunta.</p>
+<p style="font-size:16px;line-height:1.7;opacity:.8">Las camas ocupadas y las tarifas las reporta cada establecimiento al Departamento de la Familia. Son el numero oficial, pero son autorreportados. Si ves un dato incorrecto, escribenos y lo corregimos con fecha.</p>
+
+<p style="font-size:17px;line-height:1.7;margin-top:26px">Los 1,290 hogares de cuido licenciados de Puerto Rico, con telefono, precio y camas libres, se buscan por pueblo en <a href="https://registromedicopr.com/cuido" style="color:#5eead4">registromedicopr.com/cuido</a>. Lo que cuesta el cuido pueblo por pueblo, en <a href="/lo-que-cuesta" style="color:#5eead4">Lo que cuesta guardar a Mami</a>.</p>`
+
+  return res.status(200).send(layout({
+    title: 'El oeste es la region mas vieja de Puerto Rico, y no tiene quien atienda a sus viejos',
+    description: `Los 6 pueblos mas viejos de PR son del oeste. 102,920 personas mayores, 3,761 camas de cuido con 76% vacias, y solo 6 geriatras: 10 de 14 pueblos no tienen ninguno.`,
+    slug: 'el-oeste-viejo', host, bodyHtml: body,
+  }))
+}
+
 async function handleLoQueCuesta(req: any, res: any) {
   const host = String(req.headers?.host || '')
   const sobre100 = CARGA_CUIDO.filter(x => x.pc >= 100)
@@ -17737,6 +17822,7 @@ export default async function handler(req: any, res: any) {
     case 'marcador': return await handleMarcador(req, res)
     case 'kit': return await handleKit(req, res)
     case 'tu-ficha': return handleTuFicha(req, res)
+    case 'el-oeste-viejo': return await handleOesteViejo(req, res)
     case 'lo-que-cuesta': return await handleLoQueCuesta(req, res)
     case 'cuido': return await handleCuido(req, res)
     case 'registro-censo': return await handleRegistroCenso(req, res)

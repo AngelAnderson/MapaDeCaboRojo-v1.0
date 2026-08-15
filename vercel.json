@@ -172,6 +172,10 @@
       "destination": "/api/mapa-pages?page=necesito&intent=:intent"
     },
     {
+      "source": "/el-oeste-viejo",
+      "destination": "/api/mapa-pages?page=el-oeste-viejo"
+    },
+    {
       "source": "/lo-que-cuesta",
       "destination": "/api/mapa-pages?page=lo-que-cuesta"
     },
