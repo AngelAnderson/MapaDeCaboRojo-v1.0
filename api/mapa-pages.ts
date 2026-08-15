@@ -5713,6 +5713,12 @@ async function handleRegistroData(req: any, res: any) {
       .from('places')
       .select('name,municipality,phone,npi,slug,accepted_plans,last_verified_at,accepts_new_patients')
       .eq('category', 'HEALTH').eq('subcategory', spec).not('npi', 'is', null)
+      // El orden va en SQL, no solo en el navegador. La lista corta en 120 y 43
+      // especialidades pasan de ahi: 4,180 de las 4,388 fichas confirmadas viven
+      // en esas. Ordenando solo en el cliente se reordena lo que ya llego, y el
+      // confirmado que cae en un pueblo alfabeticamente tarde nunca entra al corte.
+      .order('accepts_new_patients', { ascending: false, nullsFirst: false })
+      .order('last_verified_at', { ascending: false, nullsFirst: false })
       .order('municipality', { ascending: true }).limit(120)
     if (region) q = q.eq('region', region)
     const { data } = await q
