@@ -5408,12 +5408,27 @@ async function handleRegistro(req: any, res: any) {
           try{gtag('event','filter_plan',{plan:plan,spec:spec,region:region})}catch(e){}
           list=list.slice().sort(function(a,b){return (planMatch(b.plans,plan)?1:0)-(planMatch(a.plans,plan)?1:0);});
         }
+        // Mejora Util 2026-08-15: el que SI sabemos que sirve va primero.
+        // Antes el orden era el que devolvia la base (por municipio), asi que las
+        // 7 fichas confirmadas de Cabo Rojo salian mezcladas con las 28 que nadie
+        // ha llamado nunca, y el vecino empezaba a marcar a ciegas.
+        // Criterio: coge pacientes > verificado reciente > el resto. Estable.
+        list=list.slice().sort(function(a,b){
+          if(plan){var pm=(planMatch(b.plans,plan)?1:0)-(planMatch(a.plans,plan)?1:0); if(pm) return pm;}
+          var aa=a.acc===1?1:0, ba=b.acc===1?1:0; if(aa!==ba) return ba-aa;
+          var av=a.ver?1:0, bv=b.ver?1:0; if(av!==bv) return bv-av;
+          if(a.ver&&b.ver&&a.ver!==b.ver) return a.ver<b.ver?1:-1;
+          return 0;
+        });
         var rows=list.map(function(p){
           var tel=p.phone?('<a href="tel:'+esc(p.phone.replace(/[^0-9]/g,''))+'" style="display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:40px;box-sizing:border-box;padding:8px 14px;background:#0d9488;color:#fff;font-weight:700;font-size:13px;border-radius:9999px;text-decoration:none;white-space:nowrap;">📞 Llamar</a>'):'<span style="color:#94a3b8;">sin teléfono</span>';
           var nm=p.slug?('<a href="/especialista/'+encodeURIComponent(p.slug)+'" style="color:#0f172a;font-weight:600;text-decoration:none;border-bottom:1px dotted #94a3b8;">'+esc(p.name)+'</a>'):esc(p.name);
           var badge='';
           if(plan&&planMatch(p.plans,plan)){nm+='<div style="font-size:11px;color:#059669;font-weight:700;margin-top:2px;">✓ la oficina confirmó que acepta '+esc(PLAN_LABELS[plan]||plan)+'</div>';}
           else if(p.plans&&p.plans.length){nm+='<div style="font-size:11px;color:#64748b;margin-top:2px;">planes confirmados: '+esc(p.plans.join(', '))+'</div>';}
+          if(p.acc===1){nm+='<div style="font-size:11px;color:#059669;font-weight:700;margin-top:2px;">✓ está cogiendo pacientes'+(p.ver?' · confirmado '+esc(p.ver):'')+'</div>';}
+          else if(p.ver){nm+='<div style="font-size:11px;color:#0f766e;margin-top:2px;">✓ teléfono confirmado '+esc(p.ver)+'</div>';}
+          else {nm+='<div style="font-size:11px;color:#94a3b8;margin-top:2px;">sin confirmar todavía</div>';}
           return '<tr style="border-top:1px solid #e2e8f0;"><td style="padding:7px 8px;font-weight:600;color:#0f172a;">'+nm+badge+'</td><td style="padding:7px 8px;color:#475569;">'+esc(p.municipality||'—')+'</td><td style="padding:7px 8px;text-align:right;">'+tel+'</td></tr>';
         }).join('');
         var planNote=plan?'<div style="font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:8px 10px;margin:4px 0 8px;">Las oficinas casi nunca publican qué planes aceptan. El ✓ sale solo cuando la oficina lo confirmó con nosotros. Que no tenga ✓ <b>no</b> significa que no acepte '+esc(PLAN_LABELS[plan]||plan)+': llama y pregunta primero.</div>':'';
@@ -5696,12 +5711,12 @@ async function handleRegistroData(req: any, res: any) {
     if (!spec || !REGISTRY_SUBS.has(spec)) { res.status(200).send(JSON.stringify({ providers: [] })); return }
     let q = supabase
       .from('places')
-      .select('name,municipality,phone,npi,slug,accepted_plans')
+      .select('name,municipality,phone,npi,slug,accepted_plans,last_verified_at,accepts_new_patients')
       .eq('category', 'HEALTH').eq('subcategory', spec).not('npi', 'is', null)
       .order('municipality', { ascending: true }).limit(120)
     if (region) q = q.eq('region', region)
     const { data } = await q
-    const providers = (data || []).map((p: any) => ({ name: p.name, municipality: p.municipality, phone: p.phone, slug: p.slug, plans: Array.isArray(p.accepted_plans) && p.accepted_plans.length ? p.accepted_plans : undefined }))
+    const providers = (data || []).map((p: any) => ({ name: p.name, municipality: p.municipality, phone: p.phone, slug: p.slug, plans: Array.isArray(p.accepted_plans) && p.accepted_plans.length ? p.accepted_plans : undefined, ver: p.last_verified_at ? String(p.last_verified_at).slice(0, 10) : undefined, acc: p.accepts_new_patients === true ? 1 : p.accepts_new_patients === false ? 0 : undefined }))
     res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=300')
     res.status(200).send(JSON.stringify({ providers, capped: providers.length >= 120 }))
   } catch {
