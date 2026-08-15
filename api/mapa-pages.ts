@@ -7350,7 +7350,7 @@ async function handleRegistroOpciones(req: any, res: any) {
       titulo: 'Si eres el médico', sub: 'Existe hoy. Está sin cobrar.',
       items: [
         { n: 'Decreto de 4% de contribución', quien: 'El médico', vel: '~6 meses', det: 'Ley 14-2017, hoy dentro del Código de Incentivos: 4% fijo sobre el ingreso de servicios médicos, 15 años renovables por 15 más, hasta $250,000 de dividendos exentos. Pide 180 horas anuales de servicio comunitario. Es la tasa contributiva más baja que un médico consigue bajo bandera americana.' },
-        { n: 'Repago de préstamos NHSC', quien: 'El médico + el centro', vel: '1 ciclo', det: 'Hasta $75,000 en cuidado primario y $50,000 en las demás disciplinas, salud mental incluida. Requiere que el sitio esté inscrito ante HRSA — ahí es donde se traba.' },
+        { n: 'Repago de préstamos NHSC', quien: 'El médico + el centro', vel: '1 ciclo', det: 'Hasta $75,000 en cuidado primario y $50,000 en las demás disciplinas, salud mental incluida. Requiere que el sitio esté inscrito ante HRSA, y ahí es donde se traba.' },
         { n: 'Bono de 10% de Medicare por zona designada', quien: 'El médico', vel: 'Inmediato', det: 'Si atiendes en un área con designación federal de escasez, Medicare paga un bono sobre el servicio. Se activa con la designación, que 77 de los 78 municipios ya tienen en alguna disciplina.' },
         { n: 'Membresía mensual, sin plan de por medio', quien: 'El médico', vel: '~3 meses', det: 'Cuota fija al mes por paciente, acceso directo, sin facturar al plan. Le pone piso al ingreso y le quita la parte más cara de la oficina, que es pelear con la aseguradora. Es el modelo que nadie les está enseñando.' },
         { n: 'Conrad 30', quien: 'Depto. de Salud', vel: '1 ciclo', det: '30 visas al año para médicos formados en EE.UU. que se comprometan a servir en zona designada. Trae médicos ya formados. Cuánto usa PR de esas 30 no está publicado.' },
@@ -7437,7 +7437,7 @@ async function handleRegistroOpciones(req: any, res: any) {
 </div>
 
 <h2>Y encima, la tenaza</h2>
-<p>Esto pasa mientras la población se pone vieja y sigue pobre: <b>23.2% de los residentes tiene 65 años o más</b> y la pobreza promedio por municipio es de <b>43.7%</b>. Un pueblo viejo y pobre es un pueblo donde casi todo el mundo lo paga Medicare o Medicaid — o sea, los dos programas que le pagan a Puerto Rico menos que a cualquier estado. La demanda sube por el mismo lado por donde baja el pago. Y el que se queda gasta más: <b>la luz aquí cuesta cerca de 68% más</b> que en el continente.</p>
+<p>Esto pasa mientras la población se pone vieja y sigue pobre: <b>23.2% de los residentes tiene 65 años o más</b> y la pobreza promedio por municipio es de <b>43.7%</b>. Un pueblo viejo y pobre es un pueblo donde casi todo el mundo lo paga Medicare o Medicaid, o sea, los dos programas que le pagan a Puerto Rico menos que a cualquier estado. La demanda sube por el mismo lado por donde baja el pago. Y el que se queda gasta más: <b>la luz aquí cuesta cerca de 68% más</b> que en el continente.</p>
 
 <h2>El menú completo</h2>
 <p class="text-slate-600">Abre la que te toque. Cada una dice quién la mueve y cuánto tarda.</p>
@@ -7509,7 +7509,7 @@ ${nivelHtml}
       plan2='Si prefieres oficina privada, pregunta directo: "¿están cogiendo pacientes nuevos?" antes de nada más.';
     }
     if(s.q2==='vital'){ extra='Con Plan Vital, el centro 330 de tu región es tu mejor puerta y no te pueden negar atención por no poder pagar.'; }
-    else if(s.q2==='ma'){ extra='Con Medicare Advantage, la red cambia todos los años. Antes de coger cita, confirma por teléfono que el médico todavía coge tu plan — el directorio se queda viejo. La temporada para cambiar plan es del 15 de octubre al 7 de diciembre.'; }
+    else if(s.q2==='ma'){ extra='Con Medicare Advantage, la red cambia todos los años. Antes de coger cita, confirma por teléfono que el médico todavía coge tu plan, porque el directorio se queda viejo. La temporada para cambiar plan es del 15 de octubre al 7 de diciembre.'; }
     else if(s.q2==='priv'){ extra='Con plan privado, pregunta si el médico está dentro de red. Fuera de red, casi siempre sale más caro que pagar en efectivo.'; }
     else { extra='Sin plan, pregunta siempre el precio en efectivo primero y pide el centro 330: cobran según lo que ganas, no una tarifa fija.'; }
     if(s.q1==='mayor'){ extra+=' Como es para un mayor: lleva tú la lista de sus medicinas a la cita. Es lo que más tiempo ahorra.'; }
