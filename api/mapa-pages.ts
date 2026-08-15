@@ -7999,7 +7999,7 @@ ${FUENTES.map(([d, f, u]) => `<tr class="border-t border-slate-100"><td class="p
 <li>El conteo de municipios con escasez de <b>cuidado primario</b>: dos fuentes federales dicen cosas distintas (una dice 20, otra 37). Hasta reconciliarlo no publicamos ese número. Los de dental (77) y salud mental (52) sí cuadran.</li>
 </ul>
 
-<p class="text-sm text-slate-500 mt-6">Datos de Cabo Rojo corridos contra la base el 15 de agosto de 2026. <a href="/registro/porque" class="text-teal-700 font-semibold">El informe completo de por qué pasa esto →</a> · <a href="/marcador" class="text-teal-700 font-semibold">El marcador de salud de PR →</a> · <a href="/rompelo" class="text-teal-700 font-semibold">¿Algo no cuadra? Rómpelo →</a></p>
+<p class="text-sm text-slate-500 mt-6">Datos de Cabo Rojo corridos contra la base el 15 de agosto de 2026. <a href="/porque" class="text-teal-700 font-semibold">El informe completo de por qué pasa esto →</a> · <a href="/marcador" class="text-teal-700 font-semibold">El marcador de salud de PR →</a> · <a href="/rompelo" class="text-teal-700 font-semibold">¿Algo no cuadra? Rómpelo →</a></p>
 ${SHARE_COPY_SCRIPT}
 ${regDisclaimer()}`
 
