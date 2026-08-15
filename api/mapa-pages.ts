@@ -2859,7 +2859,7 @@ function handleFaro(req: any, res: any) {
   const body = `
 <h1>El Faro de Los Morrillos, pieza por pieza</h1>
 
-<p class="text-lg text-slate-600 mt-4">Lo aprobaron en 1877 y lo encendieron el 1 de julio de 1882. 5 años y 4 días. A mano, subiendo ladrillo por un acantilado a 20 kilómetros del pueblo, con una subasta que quedó desierta porque nadie quería el trabajo.</p>
+<p class="text-lg text-slate-600 mt-4">Lo aprobaron en 1877 y lo encendieron el 1 de julio de 1882. 5 años y 4 días. A mano, subiendo ladrillo por un acantilado a unas 12 millas del pueblo, con una subasta que quedó desierta porque nadie quería el trabajo.</p>
 
 <p class="text-lg text-slate-600">Esta página está levantada a escala sobre los planos de obra originales y sobre el expediente publicado en la prensa oficial de su época. Cada número tiene su documento.</p>
 
@@ -3059,7 +3059,7 @@ function handleFaro(req: any, res: any) {
 
 <h2>Vivir allí costaba 30 centavos al día</h2>
 
-<p>A los 4 meses de encenderlo, el gobierno estaba discutiendo si pagarle extra a la gente que vivía en ese punto. La Real Orden del 2 de noviembre de 1882 dice que Los Morrillos quedaba <strong>a 20 kilómetros del pueblo más cercano</strong>, y le concedió a cada torrero una gratificación de 30 centavos diarios, 9 pesos al mes, con una condición: el transporte de los víveres corría por cuenta de ellos.</p>
+<p>A los 4 meses de encenderlo, el gobierno estaba discutiendo si pagarle extra a la gente que vivía en ese punto. La Real Orden del 2 de noviembre de 1882 dice que Los Morrillos quedaba <strong>a unas 12 millas del pueblo más cercano</strong>, y le concedió a cada torrero una gratificación de 30 centavos diarios, 9 pesos al mes, con una condición: el transporte de los víveres corría por cuenta de ellos.</p>
 
 <h2>5 años, día por día</h2>
 
@@ -3376,16 +3376,16 @@ function handleDefensaYLimpieza(_req: any, res: any) {
       gmaps: 'https://maps.google.com/?q=17.9766404,-67.2127867',
       color: 'teal',
       food: [
-        { name: 'I Love Combate', slug: 'i-love-combate', phone: null, address: 'PR-3301 Km 2.8, El Combate', rating: 4.7, dist: '0.2 km' },
-        { name: 'Santos Bar & Restaurant', slug: 'santos-bar-amp-restaurant', phone: '+17878518300', address: 'Calle 2, El Combate', rating: 4.6, dist: '0.3 km' },
+        { name: 'I Love Combate', slug: 'i-love-combate', phone: null, address: 'PR-3301 Km 2.8, El Combate', rating: 4.7, dist: '0.1 milla' },
+        { name: 'Santos Bar & Restaurant', slug: 'santos-bar-amp-restaurant', phone: '+17878518300', address: 'Calle 2, El Combate', rating: 4.6, dist: '0.2 milla' },
       ],
       gas: [
-        { name: 'Gulf Pole Ojea', slug: 'gulf-pole-ojea', phone: null, address: 'Pole Ojea, Cabo Rojo', rating: 4.5, dist: '2.9 km' },
+        { name: 'Gulf Pole Ojea', slug: 'gulf-pole-ojea', phone: null, address: 'Pole Ojea, Cabo Rojo', rating: 4.5, dist: '1.8 millas' },
       ],
       salud: [
-        { name: 'El Combate Drug Store', slug: 'el-combate-drug', phone: '+17878518123', address: 'XQHW+MG4, El Combate', rating: 4.4, dist: '0.4 km', tipo: 'Farmacia' },
+        { name: 'El Combate Drug Store', slug: 'el-combate-drug', phone: '+17878518123', address: 'XQHW+MG4, El Combate', rating: 4.4, dist: '0.25 milla', tipo: 'Farmacia' },
       ],
-      notas: 'El Combate Drug Store también funciona como punto de referencia si necesitas orientación. No hay CDT en el área — la clínica más cercana es en Boquerón (~7 km por Carr 301).',
+      notas: 'El Combate Drug Store también funciona como punto de referencia si necesitas orientación. No hay CDT en el área — la clínica más cercana es en Boquerón (~4 millas por Carr 301).',
     },
     {
       id: 'buye',
@@ -3395,14 +3395,14 @@ function handleDefensaYLimpieza(_req: any, res: any) {
       gmaps: 'https://maps.google.com/?q=18.0402393,-67.2060134',
       color: 'amber',
       food: [
-        { name: 'Criollisimo Coffee Market', slug: 'criollisimo-coffee-market', phone: null, address: 'Carr. 307 km 4.9, Guaniquilla', rating: 4.9, dist: '2.1 km' },
-        { name: 'Pizzería Cofresí', slug: 'pizzeria-cofresi', phone: null, address: 'PR-307 km 5.2, Cabo Rojo', rating: 4.4, dist: '2.1 km' },
+        { name: 'Criollisimo Coffee Market', slug: 'criollisimo-coffee-market', phone: null, address: 'Carr. 307 km 4.9, Guaniquilla', rating: 4.9, dist: '1.3 millas' },
+        { name: 'Pizzería Cofresí', slug: 'pizzeria-cofresi', phone: null, address: 'PR-307 km 5.2, Cabo Rojo', rating: 4.4, dist: '1.3 millas' },
       ],
       gas: [
-        { name: 'Gasolinera Texaco', slug: 'gasolinera-texaco', phone: '+17878515781', address: 'Calle Carbonell 86, Boquerón', rating: 4.4, dist: '6.7 km (camino a Boquerón)' },
+        { name: 'Gasolinera Texaco', slug: 'gasolinera-texaco', phone: '+17878515781', address: 'Calle Carbonell 86, Boquerón', rating: 4.4, dist: '4.2 millas (camino a Boquerón)' },
       ],
       salud: [
-        { name: "Ed's Pharmacy", slug: 'eds-pharmacy', phone: '+17872550485', address: 'PR-307, Cabo Rojo', rating: 4.8, dist: '1.2 km', tipo: 'Farmacia' },
+        { name: "Ed's Pharmacy", slug: 'eds-pharmacy', phone: '+17872550485', address: 'PR-307, Cabo Rojo', rating: 4.8, dist: '0.7 milla', tipo: 'Farmacia' },
       ],
       notas: "Buyé está entre dos tramos de playa; Criollisimo es una excelente parada para café y comida real. Ed's Pharmacy en la misma Carr. 307 es la opción más próxima pa' primeros auxilios y medicamentos básicos.",
     },
@@ -3419,7 +3419,7 @@ function handleDefensaYLimpieza(_req: any, res: any) {
         { name: "Dongo's", slug: 'dongo-s', phone: null, address: 'Joyuda, Cabo Rojo', rating: 4.5, dist: 'sobre la Carr. 102' },
       ],
       gas: [
-        { name: 'Total Energies', slug: 'total', phone: '+17873570052', address: 'Carr. 102 KM 14.1, Cabo Rojo', rating: 4.6, dist: '~2 km' },
+        { name: 'Total Energies', slug: 'total', phone: '+17873570052', address: 'Carr. 102 KM 14.1, Cabo Rojo', rating: 4.6, dist: '~1.2 millas' },
       ],
       salud: [
         { name: 'Walgreens', slug: 'walgreens-cabo-rojo', phone: '+17878513363', address: 'Carr 308 #80, Cabo Rojo', rating: 4.3, dist: 'la más cercana a Joyuda', tipo: 'Farmacia' },
@@ -3440,7 +3440,7 @@ function handleDefensaYLimpieza(_req: any, res: any) {
       salud: [
         { name: 'El Combate Drug Store', slug: 'el-combate-drug', phone: '+17878518123', address: 'XQHW+MG4, El Combate', rating: 4.4, dist: 'la más cercana (verificar)', tipo: 'Farmacia' },
       ],
-      notas: 'La Playuela está al lado del Faro Los Morrillos — la playa más remota de las cuatro. Camino no pavimentado los últimos 3 km y SIN servicios en el área (no hay comida, baños ni food trucks). Lleva todo contigo: agua, comida, sombra y protector. El punto de ayuda más cercano es El Combate (~5 km de regreso).',
+      notas: 'La Playuela está al lado del Faro Los Morrillos — la playa más remota de las cuatro. Camino no pavimentado la última milla y media y SIN servicios en el área (no hay comida, baños ni food trucks). Lleva todo contigo: agua, comida, sombra y protector. El punto de ayuda más cercano es El Combate (~3 millas de regreso).',
     },
   ]
 
@@ -7584,6 +7584,17 @@ async function handleRegistroOpciones(req: any, res: any) {
   <p class="text-lg sm:text-xl font-black mt-2 leading-snug m-0 text-teal-300">Pero hay ${gratis} cosas que arreglarían parte de esto y no cuestan un peso. Son justo las que llevan más tiempo sin hacerse.</p>
 </div>
 
+<div class="not-prose mt-4 bg-white border border-slate-200 rounded-2xl p-4">
+  <div class="flex items-start gap-3">
+    <div class="text-2xl leading-none">🎧</div>
+    <div class="flex-1 min-w-0">
+      <p class="text-sm font-bold text-slate-800 m-0">Escúchalo en vez de leerlo</p>
+      <p class="text-xs text-slate-500 mt-0.5 mb-2">22 minutos, en español. Ponlo mientras guías o cocinas. Cubre lo mismo que esta página.</p>
+      <audio controls preload="none" class="w-full" src="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/registro/por-que-no-hay-medicos.m4a">Tu navegador no puede reproducir el audio. <a href="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/registro/por-que-no-hay-medicos.m4a" class="text-teal-700 font-semibold">Descárgalo</a>.</audio>
+    </div>
+  </div>
+</div>
+
 <div class="not-prose mt-4 flex flex-wrap gap-2 text-sm">
   <a href="#mejora" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">¿Mejora o empeora?</a>
   <a href="#cabo-rojo" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">Cabo Rojo</a>
@@ -7893,7 +7904,7 @@ async function handleRegistroOpciones(req: any, res: any) {
 ${tiersHtml}
 
 <h2 id="ruido">Cómo se logra que contesten</h2>
-<p class="text-slate-600">No con coraje. Con papeles que quedan y con fechas que se pueden mirar.</p>
+<p class="text-slate-600">No peleando. Con papeles que quedan y con fechas que se pueden mirar.</p>
 <p>Puerto Rico no tiene senadores ni voto presidencial. Un congresista de Florida que le baje Medicare a sus viejos pierde el puesto; con los viejos de aquí no pierde nada. <b>Entonces la única palanca que nos queda es dejar constancia.</b></p>
 <p>Una queja se ignora porque no cuesta nada ignorarla. Un documento con número, fecha y fuente <b>no se puede ignorar sin quedar por escrito ignorándolo</b>. Y eso funciona: en 2017 se corrigió por vía administrativa una parte de la fórmula que pagaba menos aquí, y se corrigió con datos, no con marchas.</p>
 
@@ -11249,7 +11260,7 @@ Reuben Brothers <span class="text-slate-400">(Londres, UK · David &amp; Simon R
     <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Waikiki, Hawái</td><td class="py-1.5 px-3">Bennett / PACREP LLC</td><td class="py-1.5 px-3">Edificio excedió zonificación; $100K+ en donaciones políticas</td></tr>
     <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Los Cabos, México</td><td class="py-1.5 px-3">Bennett + Ruiz Vargas</td><td class="py-1.5 px-3">Daño a arrecifes de coral, alteración de playas</td></tr>
     <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Ibiza, España</td><td class="py-1.5 px-3">Reuben Brothers</td><td class="py-1.5 px-3">5,000 residentes firmaron petición en contra</td></tr>
-    <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Mallorca, España</td><td class="py-1.5 px-3">Reuben Brothers</td><td class="py-1.5 px-3">Adquisición de ~20 km de costa</td></tr>
+    <tr class="border-t border-slate-100"><td class="py-1.5 px-3">Mallorca, España</td><td class="py-1.5 px-3">Reuben Brothers</td><td class="py-1.5 px-3">Adquisición de ~12 millas de costa</td></tr>
   </tbody></table>
 </div>
 <p class="text-xs text-slate-400 mt-1">Fuente: <a href="https://periodismoinvestigativo.com/2025/06/esencia-project-puerto-rico-environmental-damage/" target="_blank" rel="noopener" class="text-teal-700 underline">CPI, junio 2025 ↗</a> · <a href="https://ejatlas.org/conflict/esencia-project" target="_blank" rel="noopener" class="text-teal-700 underline">EJ Atlas ↗</a></p>
