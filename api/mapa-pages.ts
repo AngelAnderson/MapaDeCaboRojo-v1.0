@@ -7593,7 +7593,7 @@ async function handleRegistroOpciones(req: any, res: any) {
     <div class="text-2xl leading-none">🎧</div>
     <div class="flex-1 min-w-0">
       <p class="text-sm font-bold text-slate-800 m-0">Escúchalo en vez de leerlo</p>
-      <p class="text-xs text-slate-500 mt-0.5 mb-2">22 minutos, en español. Ponlo mientras guías o cocinas. Cubre lo mismo que esta página.</p>
+      <p class="text-xs text-slate-500 mt-0.5 mb-2">6 minutos, en español. Ponlo mientras guías o cocinas. Cubre lo mismo que esta página.</p>
       <audio controls preload="none" class="w-full" src="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/registro/por-que-no-hay-medicos.m4a">Tu navegador no puede reproducir el audio. <a href="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/registro/por-que-no-hay-medicos.m4a" class="text-teal-700 font-semibold">Descárgalo</a>.</audio>
     </div>
   </div>
