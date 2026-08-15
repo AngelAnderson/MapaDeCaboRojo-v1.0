@@ -220,6 +220,10 @@
       "destination": "/api/mapa-pages?page=registro-censo"
     },
     {
+      "source": "/registro/opciones",
+      "destination": "/api/mapa-pages?page=registro-opciones"
+    },
+    {
       "source": "/cambios",
       "destination": "/api/mapa-pages?page=cambios"
     },
