@@ -7589,7 +7589,7 @@ async function handleRegistroOpciones(req: any, res: any) {
   <a href="#cabo-rojo" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">Cabo Rojo</a>
   <a href="#quien" class="rounded-full bg-teal-700 text-white px-3 py-1.5 font-bold hover:bg-teal-800">¿Qué hago yo?</a>
   <a href="#menu" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">El menú con precio</a>
-  <a href="#ruido" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">Hacer ruido sin gritar</a>
+  <a href="#ruido" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">Cómo se logra que contesten</a>
   <a href="#diccionario" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">Diccionario</a>
   <a href="#fuentes" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">Fuentes</a>
 </div>
@@ -7599,10 +7599,65 @@ async function handleRegistroOpciones(req: any, res: any) {
 <div class="not-prose my-4 bg-amber-50 border border-amber-200 rounded-2xl p-5">
   <p class="text-xs uppercase tracking-widest text-amber-700 font-bold m-0">Lo que se oye en toda conversación</p>
   <p class="text-lg font-black text-slate-900 mt-1 mb-0">&quot;Aquí no hay médicos por culpa de los planes médicos.&quot;</p>
-  <p class="text-sm text-slate-700 mt-3 mb-0 leading-relaxed">No es mentira. Es <b>incompleta</b>, y por incompleta no lleva a ningún lado.</p>
+  <p class="text-sm text-slate-700 mt-3 mb-0 leading-relaxed">Eso es verdad. Pero es <b>media verdad</b>, y la mitad que falta es justo la que tiene el arreglo.</p>
+  <p class="text-sm text-slate-700 mt-2 mb-0 leading-relaxed">Es como echarle la culpa a la cajera por el precio de la leche. Ella te lo cobra, sí. Pero ella no lo puso.</p>
 </div>
 
 <p><b>El plan es el cajero, no el que pone el precio.</b> Quien decide cuánto entra a Puerto Rico por atender a un enfermo es el gobierno federal, por fórmula y por ley: como 41% menos por cada persona mayor en un plan, y un Medicaid congelado en 55 centavos cuando por pobreza nos tocarían hasta 83. El plan recibe ese descuento y lo pasa hacia abajo.</p>
+
+<h3>La cuenta, sin adornos</h3>
+<p class="text-slate-600">Lo que entra hoy, lo que entraría si nos trataran igual que a un estado, y qué falta para que pase.</p>
+
+<div class="not-prose mt-3 overflow-x-auto rounded-xl border border-slate-200 bg-white">
+<table class="w-full text-sm border-collapse">
+<thead><tr class="bg-slate-50">
+<th class="text-left py-2 px-3 font-bold text-slate-700">Qué</th>
+<th class="text-left py-2 px-3 font-bold text-slate-700">Lo que hay hoy</th>
+<th class="text-left py-2 px-3 font-bold text-slate-700">Lo que habría</th>
+<th class="text-left py-2 px-3 font-bold text-slate-700">Qué falta</th>
+</tr></thead>
+<tbody>
+<tr class="border-t border-slate-100">
+<td class="py-2 px-3 font-semibold text-slate-800">Medicaid: de cada dólar, cuánto pone el federal</td>
+<td class="py-2 px-3 text-slate-700"><b>76 centavos</b>, y solo hasta el 30 de septiembre de 2027. Por ley son <b>55</b>.</td>
+<td class="py-2 px-3 text-slate-700">Hasta <b>83 centavos</b>, calculado por pobreza. Misisipi, el estado más pobre, recibe 77.</td>
+<td class="py-2 px-3 text-slate-600">Que el Congreso lo haga permanente</td>
+</tr>
+<tr class="border-t border-slate-100 bg-rose-50/40">
+<td class="py-2 px-3 font-semibold text-slate-800">Medicaid: dinero al año</td>
+<td class="py-2 px-3 text-slate-700">Cerca de <b>$4,700 millones</b></td>
+<td class="py-2 px-3 text-slate-700">Si nadie hace nada, en 2028 baja a cerca de <b>$1,700 millones</b></td>
+<td class="py-2 px-3 text-slate-600">La misma ley. <b>La fecha ya está puesta.</b></td>
+</tr>
+<tr class="border-t border-slate-100">
+<td class="py-2 px-3 font-semibold text-slate-800">Medicare: lo que el federal le paga al plan por cada persona mayor</td>
+<td class="py-2 px-3 text-slate-700">Cerca de <b>41% por debajo</b> del promedio nacional</td>
+<td class="py-2 px-3 text-slate-700">El promedio nacional</td>
+<td class="py-2 px-3 text-slate-600">Cambiar la fórmula. <b>Se puede sin Congreso:</b> ya se hizo así en 2017</td>
+</tr>
+<tr class="border-t border-slate-100 bg-teal-50/50">
+<td class="py-2 px-3 font-semibold text-slate-800">Repago de deudas de estudio a médicos</td>
+<td class="py-2 px-3 text-slate-700"><b>$2,414,970</b> adjudicados. Cuántos médicos se colocaron: <b>no se sabe</b></td>
+<td class="py-2 px-3 text-slate-700">El mismo dinero, pero cobrado y con recibo público</td>
+<td class="py-2 px-3 text-slate-600"><b>Una hoja de cálculo.</b> Nada más</td>
+</tr>
+<tr class="border-t border-slate-100 bg-teal-50/50">
+<td class="py-2 px-3 font-semibold text-slate-800">Bono de 10% de Medicare por zona de escasez</td>
+<td class="py-2 px-3 text-slate-700">Disponible en <b>77 de los 78</b> municipios</td>
+<td class="py-2 px-3 text-slate-700">Lo mismo. Ya está</td>
+<td class="py-2 px-3 text-slate-600"><b>Nada.</b> Se activa solo, y aun así casi nadie lo cobra</td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<div class="not-prose my-5 bg-rose-50 border border-rose-200 rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-rose-700 font-bold m-0">Lo que significa esa segunda fila, en gente</p>
+  <p class="text-lg font-black text-slate-900 mt-1 mb-0">Entre 700,000 y 1 millón de personas podrían quedarse sin plan.</p>
+  <p class="text-sm text-slate-700 mt-2 mb-0">La proporción de gente sin seguro en Puerto Rico pasaría de <b>5.7%</b> a cerca de <b>30%</b>. No es una amenaza: es lo que dice la ley que pasa el 1 de octubre de 2027 si nadie la cambia.</p>
+</div>
+
+<p><b>Mira las dos últimas filas otra vez.</b> Una necesita una hoja de cálculo. La otra no necesita nada, porque ya está activa. Esas dos no dependen de Washington ni de ningún plan médico, y son las que llevan más tiempo sin moverse.</p>
 
 <p>Ahora, el cajero tampoco es inocente: <b>es el único que decide cuánto del descuento pasa y cuánto se queda</b>, y es el que publica el directorio donde casi la mitad de los teléfonos repiten. Eso sí es suyo y sí se le puede cobrar.</p>
 
@@ -7837,9 +7892,10 @@ async function handleRegistroOpciones(req: any, res: any) {
 <p class="text-slate-600">Ordenado por lo que cuesta, no por quién tiene la culpa.</p>
 ${tiersHtml}
 
-<h2 id="ruido">Cómo se hace ruido sin gritar</h2>
-<p>Puerto Rico no tiene senadores ni voto presidencial. Un congresista de Florida que le baje Medicare a sus viejos pierde el puesto; con los viejos de aquí no pierde nada. <b>Entonces la única palanca que queda no es el grito: es el récord.</b></p>
-<p>El grito se ignora porque no cuesta nada ignorarlo. Un documento con número, fecha y fuente <b>no se puede ignorar sin quedar en récord ignorándolo</b>. Y eso funciona: en 2017 se corrigió por vía administrativa una parte de la fórmula que pagaba menos aquí, y se corrigió con data, no con marchas.</p>
+<h2 id="ruido">Cómo se logra que contesten</h2>
+<p class="text-slate-600">No con coraje. Con papeles que quedan y con fechas que se pueden mirar.</p>
+<p>Puerto Rico no tiene senadores ni voto presidencial. Un congresista de Florida que le baje Medicare a sus viejos pierde el puesto; con los viejos de aquí no pierde nada. <b>Entonces la única palanca que nos queda es dejar constancia.</b></p>
+<p>Una queja se ignora porque no cuesta nada ignorarla. Un documento con número, fecha y fuente <b>no se puede ignorar sin quedar por escrito ignorándolo</b>. Y eso funciona: en 2017 se corrigió por vía administrativa una parte de la fórmula que pagaba menos aquí, y se corrigió con datos, no con marchas.</p>
 
 <div class="not-prose mt-4 space-y-3">
   <div class="bg-white border border-slate-200 rounded-xl p-4">
@@ -7851,12 +7907,12 @@ ${tiersHtml}
   <div class="bg-white border border-slate-200 rounded-xl p-4">
     <p class="text-xs font-bold text-slate-500 m-0">PASO 2 · Publicar la respuesta, y también el silencio</p>
     <p class="font-black text-slate-900 mt-1 mb-1">Si contestan, es un dato. Si no contestan, también.</p>
-    <p class="text-sm text-slate-600 m-0">Aquí está el truco entero: <b>no hay forma de perder</b>. Si te contestan, tienes el número que nadie tenía. Si no te contestan en 20 días laborables, tienes algo mejor: la fecha en que preguntaste y el silencio, que es un hecho verificable y publicable. Y no es solo moral: pasado el término sin respuesta la solicitud se entiende denegada, queda abierto el Recurso Especial ante el Tribunal de Primera Instancia, y desde la enmienda de 2025 el incumplimiento de una orden judicial conlleva multas de hasta $100 diarios. Un marcador que dice &quot;preguntado el 15 de agosto, sin contestar&quot; y que sube el contador cada mes hace más ruido que cualquier grito.</p>
+    <p class="text-sm text-slate-600 m-0">Aquí está el truco entero: <b>no hay forma de perder</b>. Si te contestan, tienes el número que nadie tenía. Si no te contestan en 20 días laborables, tienes algo mejor: la fecha en que preguntaste y el silencio, que es un hecho verificable y publicable. Y no es solo moral: pasado el término sin respuesta la solicitud se entiende denegada, queda abierto el Recurso Especial ante el Tribunal de Primera Instancia, y desde la enmienda de 2025 el incumplimiento de una orden judicial conlleva multas de hasta $100 diarios. Un marcador que dice &quot;preguntado el 15 de agosto, sin contestar&quot; y que sube el contador cada mes pesa más que cualquier queja.</p>
   </div>
   <div class="bg-white border border-slate-200 rounded-xl p-4">
     <p class="text-xs font-bold text-slate-500 m-0">PASO 3 · Hacerlo citable</p>
     <p class="font-black text-slate-900 mt-1 mb-1">Que el periodista y la máquina lo puedan copiar sin llamarte</p>
-    <p class="text-sm text-slate-600 m-0">Un número con fuente y fecha, en una página pública que cualquiera puede leer, termina en un reportaje, en una ponencia y en la respuesta de un asistente de inteligencia artificial cuando alguien pregunta por qué no hay médicos en Puerto Rico. Eso es lo que mueve a Washington desde aquí: no que nos oigan gritar, sino que cuando busquen el dato, el dato sea el nuestro.</p>
+    <p class="text-sm text-slate-600 m-0">Un número con fuente y fecha, en una página pública que cualquiera puede leer, termina en un reportaje, en una ponencia y en la respuesta de un asistente de inteligencia artificial cuando alguien pregunta por qué no hay médicos en Puerto Rico. Eso es lo que mueve a Washington desde aquí: que cuando alguien busque el dato, el dato sea el nuestro.</p>
   </div>
   <div class="bg-white border border-slate-200 rounded-xl p-4">
     <p class="text-xs font-bold text-slate-500 m-0">PASO 4 · Cobrar la fecha</p>
