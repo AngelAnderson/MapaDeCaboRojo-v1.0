@@ -17437,6 +17437,17 @@ async function handleCuido(req: any, res: any) {
   <p class="text-xs text-slate-600 mt-3">Verificar es responsabilidad de la familia. Desde diciembre 2025 se puede hacer desde el celular, pero la licencia en la pared se puede pedir desde 1977.</p>
 </div>`
 
+  const cruces = `<div class="not-prose mt-6 grid gap-3 sm:grid-cols-2">
+  <a href="https://puertoricosinfiltros.com/lo-que-cuesta" class="block rounded-xl border border-slate-200 bg-white p-4 no-underline hover:border-teal-400">
+    <div class="font-bold text-slate-900 text-sm">Lo que cuesta guardar a Mami</div>
+    <div class="text-xs text-slate-600 mt-1">El precio del cuido pueblo por pueblo. Mediana de la isla: $1,900/mes, el 91% del ingreso de un hogar completo.</div>
+  </a>
+  <a href="https://puertoricosinfiltros.com/el-oeste-viejo" class="block rounded-xl border border-slate-200 bg-white p-4 no-underline hover:border-teal-400">
+    <div class="font-bold text-slate-900 text-sm">El oeste es la región más vieja de PR</div>
+    <div class="text-xs text-slate-600 mt-1">102,920 personas mayores, 76% de las camas vacías, y 6 geriatras para los 14 pueblos.</div>
+  </a>
+</div>`
+
   const fuente = `<p class="text-xs text-slate-500 mt-6">Fuente: registro SULME del Departamento de la Familia de Puerto Rico, consultado el 14 de agosto de 2026. Las camas ocupadas y la tarifa las reporta cada establecimiento a Familia. Buscador oficial: <a href="https://sulme.familiapr.com/mapaPublico" rel="nofollow" class="text-teal-700 underline">sulme.familiapr.com</a>. Si ves un dato incorrecto, escríbenos y lo corregimos con fecha.</p>`
 
   if (muni) {
@@ -17474,6 +17485,7 @@ async function handleCuido(req: any, res: any) {
 ${aviso}
 <div class="not-prose mt-6 grid gap-3 sm:grid-cols-2">${cards}</div>
 ${comoVerificar}
+${cruces}
 <p class="mt-6"><a href="/cuido" class="text-teal-700 font-semibold">Ver todos los pueblos →</a></p>
 ${fuente}`
 
@@ -17504,6 +17516,7 @@ ${aviso}
 <h2 class="mt-8">Busca tu pueblo</h2>
 <div class="not-prose mt-3 grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">${grid}</div>
 ${comoVerificar}
+${cruces}
 ${fuente}`
 
   return res.status(200).send(layout({
