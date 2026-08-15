@@ -7330,123 +7330,223 @@ ${articleHtml}
   }))
 }
 
-// =============== /registro/opciones — el menú de salidas, con dueño y velocidad ===============
+// =============== /registro/opciones — el menú de salidas, ordenado por lo que cuesta ===============
 // Par de /registro/porque: aquella explica POR QUÉ; esta contesta ¿Y AHORA QUÉ?
-// Existe porque la conversación de pueblo se traba en "es culpa de los planes" y ahí se acaba.
+// v2 (2026-08-15): reordenada por COSTO, no por "necesita Congreso". Angel: "todo eso cuesta
+// un montón de dinero y aquí la gente está acostumbrada a estirar la mano." Tenía razón:
+// "no necesita al Congreso" NO es lo mismo que "es gratis", y la v1 los dejaba sonar igual.
+// Espina de la página = las 3 cosas que Angel pidió, en orden:
+//   lo que está pasando · lo que puede pasar · lo que TÚ puedes hacer.
 async function handleRegistroOpciones(req: any, res: any) {
-  // Palancas. `congreso:true` = no se mueve sin Washington. Todo lo demás se mueve aquí.
-  type Palanca = { n: string; quien: string; vel: string; congreso?: boolean; det: string }
-  const NIVELES: { titulo: string; sub: string; items: Palanca[] }[] = [
+  type Palanca = { n: string; quien: string; cuesta: string; det: string }
+  type Tier = { titulo: string; sub: string; tono: 'verde' | 'ambar' | 'rojo' | 'gris'; items: Palanca[] }
+
+  const TIERS: Tier[] = [
     {
-      titulo: 'Si eres el paciente', sub: 'Esta semana. No depende de nadie más.',
+      titulo: 'No cuesta un peso', tono: 'verde',
+      sub: 'Solo hay que hacerlo. Estas son las que llevan más tiempo sin hacerse.',
       items: [
-        { n: 'Averiguar quién SÍ está cogiendo pacientes', quien: 'Tú', vel: 'Hoy', det: 'El directorio del plan lista nombres, no disponibilidad. El 43.6% de los proveedores del registro comparte teléfono con otro proveedor: llamas y contesta otra oficina. Aquí se marca quién confirmó que coge pacientes, con fecha.' },
-        { n: 'Preguntar el precio en efectivo antes de asumir', quien: 'Tú', vel: 'Hoy', det: 'La consulta pagada de bolsillo a veces cuesta menos que el copago más la gasolina más el día de trabajo perdido yendo a otro pueblo. Nadie te lo va a ofrecer: hay que preguntarlo.' },
-        { n: 'Telemedicina con médico licenciado en PR', quien: 'Tú', vel: 'Hoy', det: 'Para seguimiento, recetas y salud mental resuelve más de lo que la gente cree, y casi todos los planes la cubren. No sirve para lo que hay que tocar.' },
-        { n: 'Centro 330 con tarifa según ingreso', quien: 'Tú', vel: 'Esta semana', det: 'Los centros federalmente cualificados cobran por escala de ingreso y no te pueden negar atención por no poder pagar. Mucha gente que cualifica no sabe que existe.' },
+        { n: 'Publicar el recibo del repago estatal', quien: 'Depto. de Salud de PR', cuesta: '$0. Una hoja de cálculo.', det: 'HRSA le adjudicó a Puerto Rico $2,414,970 en tres años para repagar préstamos de clínicos. Cuántos se colocaron con ese dinero, en qué pueblos y en qué años, no está publicado. El dinero está. Falta el recibo.' },
+        { n: 'Inscribir el centro como sitio ante HRSA', quien: 'El centro 330', cuesta: '$0 de cuota. Semanas de papeleo.', det: 'Sin sitio inscrito, el repago de préstamos no se puede cobrar aunque el pueblo tenga la designación. Hay 5 pueblos con el cupón que no tienen sitio. Esto no es ley ni presupuesto: es un formulario.' },
+        { n: 'Cobrar el bono de 10% de Medicare', quien: 'El médico', cuesta: '$0. Se activa solo.', det: 'Si atiendes en un área con designación federal de escasez, Medicare paga un bono sobre el servicio. No se solicita aparte: se activa con la designación, y 77 de los 78 municipios ya tienen designación en alguna disciplina.' },
+        { n: 'Preguntar el precio en efectivo', quien: 'El paciente', cuesta: '$0. Una pregunta.', det: 'La consulta pagada de bolsillo a veces cuesta menos que el copago más la gasolina más el día de trabajo perdido yendo a otro pueblo. Nadie te lo va a ofrecer. Hay que preguntarlo.' },
+        { n: 'Averiguar quién sí está cogiendo pacientes', quien: 'El paciente', cuesta: '$0. Cinco minutos.', det: 'El directorio del plan lista nombres, no disponibilidad. El 43.6% de los proveedores del registro comparte teléfono con otro proveedor: por eso llamas y te contesta otra oficina.' },
       ],
     },
     {
-      titulo: 'Si eres el médico', sub: 'Existe hoy. Está sin cobrar.',
+      titulo: 'Cuesta tiempo y honorarios, y se paga solo', tono: 'ambar',
+      sub: 'Hay que poner de tu bolsillo al principio. Se recupera rápido.',
       items: [
-        { n: 'Decreto de 4% de contribución', quien: 'El médico', vel: '~6 meses', det: 'Ley 14-2017, hoy dentro del Código de Incentivos: 4% fijo sobre el ingreso de servicios médicos, 15 años renovables por 15 más, hasta $250,000 de dividendos exentos. Pide 180 horas anuales de servicio comunitario. Es la tasa contributiva más baja que un médico consigue bajo bandera americana.' },
-        { n: 'Repago de préstamos NHSC', quien: 'El médico + el centro', vel: '1 ciclo', det: 'Hasta $75,000 en cuidado primario y $50,000 en las demás disciplinas, salud mental incluida. Requiere que el sitio esté inscrito ante HRSA, y ahí es donde se traba.' },
-        { n: 'Bono de 10% de Medicare por zona designada', quien: 'El médico', vel: 'Inmediato', det: 'Si atiendes en un área con designación federal de escasez, Medicare paga un bono sobre el servicio. Se activa con la designación, que 77 de los 78 municipios ya tienen en alguna disciplina.' },
-        { n: 'Membresía mensual, sin plan de por medio', quien: 'El médico', vel: '~3 meses', det: 'Cuota fija al mes por paciente, acceso directo, sin facturar al plan. Le pone piso al ingreso y le quita la parte más cara de la oficina, que es pelear con la aseguradora. Es el modelo que nadie les está enseñando.' },
-        { n: 'Conrad 30', quien: 'Depto. de Salud', vel: '1 ciclo', det: '30 visas al año para médicos formados en EE.UU. que se comprometan a servir en zona designada. Trae médicos ya formados. Cuánto usa PR de esas 30 no está publicado.' },
+        { n: 'El decreto de 4% de contribución', quien: 'El médico', cuesta: 'Honorarios de CPA o abogado, más 180 horas de servicio comunitario al año.', det: 'Ley 14-2017, hoy dentro del Código de Incentivos: 4% fijo sobre el ingreso de servicios médicos, por 15 años renovables por 15 más, con hasta $250,000 de dividendos exentos. Es la tasa más baja que un médico consigue bajo bandera americana. El mismo médico en Florida paga la tasa federal completa. Para un ingreso de práctica normal, lo que cuesta sacarlo se recupera el primer año.' },
+        { n: 'Radicar el expediente de designación', quien: 'Oficina de Cuidado Primario', cuesta: 'Tiempo de personal, o un consultor.', det: 'Destraba el repago de préstamos, el bono de Medicare y la elegibilidad de fondos. El expediente de Maricao y Las Marías ya está escrito y sirve de molde para cualquier municipio que cualifique.' },
+        { n: 'Cobrar el repago de préstamos NHSC', quien: 'El médico', cuesta: 'Un compromiso de servicio, no dinero.', det: 'Hasta $75,000 en cuidado primario y $50,000 en las demás disciplinas, salud mental incluida. El costo real no es dinero: es amarrarte a un sitio por dos años. Y requiere que ese sitio esté inscrito, que es donde casi siempre se traba.' },
+        { n: 'Cambiar a membresía mensual', quien: 'El médico', cuesta: 'Montar el sistema. Baja el gasto de facturación.', det: 'Cuota fija al mes por paciente, acceso directo, sin facturarle al plan. Le pone piso al ingreso y le quita la parte más cara de la oficina, que es pelear con la aseguradora. Es el modelo que nadie les está enseñando.' },
+        { n: 'Conrad 30', quien: 'Depto. de Salud', cuesta: 'Administrativo.', det: '30 visas al año para médicos formados en Estados Unidos que se comprometan a servir en zona designada. Trae médicos ya formados, sin esperar diez años de formación. Cuánto de esas 30 usa Puerto Rico no está publicado.' },
       ],
     },
     {
-      titulo: 'Si eres el pueblo o el centro', sub: 'Papeleo. No es ley, no es presupuesto.',
+      titulo: 'Cuesta dinero de verdad, y hay quien lo pague', tono: 'rojo',
+      sub: 'Aquí es donde "no necesita al Congreso" deja de ser gratis. Pero el dinero existe y tiene formulario.',
       items: [
-        { n: 'Crear plazas de residencia', quien: 'Hospitales + escuelas de medicina', vel: '2-3 años', det: 'La palanca más grande de todas. 75.6% de los que hacen residencia aquí se quedan a ejercer aquí, la segunda tasa más alta del país. No se van porque quieran: se van porque no hay dónde terminar de formarse. Cada plaza que se crea es un médico que se queda.' },
-        { n: 'Inscribir el sitio ante HRSA', quien: 'El centro 330', vel: '~3 meses', det: 'Sin sitio inscrito, el repago de préstamos no se puede cobrar aunque el pueblo tenga la designación. 5 pueblos con el cupón no tienen sitio.' },
-        { n: 'Radicar el expediente de designación', quien: 'Oficina de Cuidado Primario', vel: '~1 año', det: 'Destraba repago, bono de Medicare y elegibilidad de fondos. El expediente de Maricao y Las Marías ya está escrito y sirve de molde.' },
-        { n: 'Publicar el recibo del SLRP', quien: 'Depto. de Salud de PR', vel: 'Una semana', det: 'HRSA le adjudicó a PR $2,414,970 en tres años para repago de préstamos. Cuántos clínicos se colocaron con ese dinero, en qué pueblos y en qué años, no está publicado. El dinero está; falta el recibo.' },
-        { n: 'Clínica itinerante o telemedicina municipal', quien: 'El municipio', vel: '~6 meses', det: 'Para los 3 pueblos sin un solo especialista de ninguna clase. El médico no tiene que mudarse: tiene que llegar un día fijo al mes.' },
+        { n: 'Crear plazas de residencia', quien: 'Centros 330 + hospitales + escuelas', cuesta: 'Por la vía del hospital: sobre $100,000 por residente al año, y con tope desde 1997. Por la vía del centro 330: lo paga HRSA.', det: 'Es la palanca más grande de todas, y la que Angel tenía razón en señalar como cara. Por la vía tradicional, Medicare congeló el número de plazas que paga en 1997 y ese tope sigue puesto. PERO existe una segunda puerta que casi nadie usa: el programa federal de residencias en centros comunitarios (Teaching Health Center GME), que le paga las plazas directamente al centro 330 y se salta el tope de 1997. En una ronda reciente repartió $80 millones entre 41 programas. No es un fondo que baja solo: es una solicitud con fecha límite.' },
+        { n: 'Clínica itinerante o telemedicina municipal', quien: 'El municipio', cuesta: 'Presupuesto municipal. Escala pequeña.', det: 'Para los 3 pueblos sin un solo especialista de ninguna clase. El médico no tiene que mudarse: tiene que llegar un día fijo al mes. Es lo más barato que un alcalde puede hacer que se note el mismo mes.' },
       ],
     },
     {
-      titulo: 'Solo el Congreso', sub: 'Las dos grandes. Las lentas.',
+      titulo: 'Cuesta un país', tono: 'gris',
+      sub: 'Las dos únicas que de verdad hay que esperar a Washington.',
       items: [
-        { n: 'Paridad en Medicaid', quien: 'Congreso', vel: 'Años', congreso: true, det: 'A un estado le pagan según su pobreza, sin techo de dólares, hasta 83%. A PR se lo congelaron en 55% por estatuto. El parcho de 76% que rige hoy vence el 30 de septiembre de 2027. Esa fecha ya está puesta.' },
-        { n: 'La fórmula del benchmark de Medicare Advantage', quien: 'Congreso / CMS', vel: 'Años', congreso: true, det: 'El federal le paga a los planes de PR benchmarks alrededor de 41% bajo el promedio nacional, calculados sobre el gasto histórico local que la fórmula vieja mantuvo deprimido. Nos pagan poco porque nos pagaron poco. Se puede mover sin Congreso: los índices GPCI se corrigieron por vía administrativa en 2017.' },
+        { n: 'Paridad en Medicaid', quien: 'Congreso', cuesta: 'Miles de millones al año.', det: 'A un estado le pagan según su pobreza, sin techo de dólares, hasta 83%. A Puerto Rico se lo congelaron en 55% por estatuto. El parcho de 76% que rige hoy vence el 30 de septiembre de 2027. Esa fecha ya está puesta en el calendario y no la puso nadie de aquí.' },
+        { n: 'La fórmula del benchmark de Medicare Advantage', quien: 'Congreso o CMS', cuesta: 'Miles de millones al año.', det: 'El federal le paga a los planes de Puerto Rico benchmarks alrededor de 41% bajo el promedio nacional, calculados sobre el gasto histórico local que la fórmula vieja mantuvo deprimido. Nos pagan poco porque nos pagaron poco. Ojo: se puede mover sin Congreso, porque los índices GPCI se corrigieron por vía administrativa en 2017.' },
       ],
     },
   ]
 
-  const total = NIVELES.reduce((a, n) => a + n.items.length, 0)
-  const sinCongreso = total - NIVELES.reduce((a, n) => a + n.items.filter(i => i.congreso).length, 0)
+  const TONOS: Record<string, { borde: string; chip: string; punto: string }> = {
+    verde: { borde: 'border-teal-300', chip: 'bg-teal-100 text-teal-800', punto: 'bg-teal-500' },
+    ambar: { borde: 'border-amber-300', chip: 'bg-amber-100 text-amber-800', punto: 'bg-amber-500' },
+    rojo: { borde: 'border-rose-300', chip: 'bg-rose-100 text-rose-800', punto: 'bg-rose-500' },
+    gris: { borde: 'border-slate-300', chip: 'bg-slate-200 text-slate-700', punto: 'bg-slate-400' },
+  }
 
-  const nivelHtml = NIVELES.map((niv, ni) => `
+  const total = TIERS.reduce((a, t) => a + t.items.length, 0)
+  const gratis = TIERS[0].items.length
+  const sinCongreso = total - TIERS[3].items.length
+
+  const tiersHtml = TIERS.map(t => {
+    const c = TONOS[t.tono]
+    return `
   <div class="not-prose mt-6">
-    <div class="flex items-baseline gap-2 flex-wrap">
-      <h3 class="text-xl font-black text-slate-900 m-0" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(niv.titulo)}</h3>
-      <span class="text-sm text-slate-500">${escapeHtml(niv.sub)}</span>
+    <div class="flex items-center gap-2 flex-wrap">
+      <span class="w-2.5 h-2.5 rounded-full ${c.punto}"></span>
+      <h3 class="text-xl font-black text-slate-900 m-0" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(t.titulo)}</h3>
+      <span class="text-xs font-bold rounded-full px-2.5 py-1 ${c.chip}">${t.items.length}</span>
     </div>
+    <p class="text-sm text-slate-500 mt-1 mb-0">${escapeHtml(t.sub)}</p>
     <div class="mt-3 space-y-2">
-      ${niv.items.map((it, ii) => `
-      <details class="group bg-white border ${it.congreso ? 'border-amber-300' : 'border-slate-200'} rounded-xl overflow-hidden">
+      ${t.items.map(it => `
+      <details class="group bg-white border ${c.borde} rounded-xl overflow-hidden">
         <summary class="cursor-pointer list-none p-4 flex items-start gap-3 hover:bg-slate-50">
-          <span class="shrink-0 w-7 h-7 rounded-full ${it.congreso ? 'bg-amber-100 text-amber-800' : 'bg-teal-100 text-teal-800'} grid place-items-center text-xs font-black">${ni === 3 ? '⚑' : (ii + 1)}</span>
           <span class="flex-1 min-w-0">
             <span class="block font-bold text-slate-900 leading-snug">${escapeHtml(it.n)}</span>
-            <span class="block text-xs text-slate-500 mt-1">La mueve: <b class="text-slate-700">${escapeHtml(it.quien)}</b> · ${escapeHtml(it.vel)}${it.congreso ? ' · <b class="text-amber-700">necesita al Congreso</b>' : ''}</span>
+            <span class="block text-xs text-slate-500 mt-1">La mueve: <b class="text-slate-700">${escapeHtml(it.quien)}</b></span>
+            <span class="block text-xs mt-1"><b class="text-slate-900">Cuesta:</b> <span class="text-slate-600">${escapeHtml(it.cuesta)}</span></span>
           </span>
           <span class="shrink-0 text-slate-400 text-sm group-open:rotate-180 transition">▾</span>
         </summary>
         <p class="px-4 pb-4 pt-0 text-sm text-slate-600 leading-relaxed m-0">${escapeHtml(it.det)}</p>
       </details>`).join('')}
     </div>
-  </div>`).join('')
+  </div>`
+  }).join('')
 
   const body = `
-<h1>¿Y ahora qué? Las ${total} salidas, con dueño y velocidad</h1>
-<p class="text-lg text-slate-600 mt-2">Todo el mundo sabe decir que faltan médicos. Casi nadie sabe decir qué se hace. Esta página es la lista completa de lo que existe hoy: quién mueve cada cosa, cuánto tarda, y cuáles son las únicas dos que de verdad hay que esperar a Washington.</p>
+<h1>¿Y ahora qué? Las ${total} salidas, y lo que cuesta cada una</h1>
+<p class="text-lg text-slate-600 mt-2">Todo el mundo sabe decir que faltan médicos. Casi nadie sabe decir qué se hace, ni cuánto cuesta hacerlo. Esta página es la lista completa: quién mueve cada cosa, <b>qué precio tiene de verdad</b>, y cuáles son las únicas dos que hay que esperar de Washington.</p>
 
 <div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold m-0">Si solo lees esto</p>
-  <p class="text-lg sm:text-xl font-black mt-2 leading-snug m-0">De las ${total} palancas que mueven este problema, <span class="text-teal-300">${sinCongreso} no necesitan al Congreso</span>. Están aquí, sin operar.</p>
-  <p class="text-sm text-slate-300 mt-3 mb-0">Por eso &quot;esto no tiene arreglo&quot; es media verdad. El túnel federal sí está tapado. Pero el túnel federal son 2 de ${total}.</p>
+  <p class="text-lg sm:text-xl font-black mt-2 leading-snug m-0">Hay ${gratis} cosas en esta lista que <span class="text-teal-300">no cuestan un peso</span>. Son, exactamente, las que llevan más tiempo sin hacerse.</p>
+  <p class="text-sm text-slate-300 mt-3 mb-0">No es que falte dinero. Es que el dinero que existe hay que <b class="text-white">pedirlo</b>, y pedir no es lo mismo que esperar.</p>
 </div>
 
-<h2>Primero, la parte que se dice mal</h2>
+<div class="not-prose mt-4 flex flex-wrap gap-2 text-sm">
+  <a href="#pasando" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">1. Lo que está pasando</a>
+  <a href="#puede" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">2. Lo que puede pasar</a>
+  <a href="#mano" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">3. La costumbre</a>
+  <a href="#menu" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">4. El menú con precio</a>
+  <a href="#medico" class="rounded-full bg-teal-700 text-white px-3 py-1.5 font-bold hover:bg-teal-800">Soy médico</a>
+  <a href="#paciente" class="rounded-full bg-slate-900 text-white px-3 py-1.5 font-bold hover:bg-slate-800">Soy paciente</a>
+</div>
 
-<div class="not-prose my-5 bg-amber-50 border border-amber-200 rounded-2xl p-5">
-  <p class="text-xs uppercase tracking-widest text-amber-700 font-bold m-0">Lo que se oye en la conversación</p>
+<h2 id="pasando">1. Lo que está pasando</h2>
+
+<div class="not-prose grid grid-cols-1 sm:grid-cols-3 gap-3 mt-3">
+  <div class="rounded-xl bg-white border border-slate-200 p-4">
+    <div class="text-3xl font-black text-slate-900">14,500 → 9,000</div>
+    <div class="text-sm font-semibold text-slate-700 mt-1">médicos, de 2009 a 2020</div>
+  </div>
+  <div class="rounded-xl bg-white border border-slate-200 p-4">
+    <div class="text-3xl font-black text-slate-900">77 de 78</div>
+    <div class="text-sm font-semibold text-slate-700 mt-1">municipios con designación federal de escasez</div>
+    <div class="text-xs text-slate-500 mt-1">dental 77 · salud mental 52</div>
+  </div>
+  <div class="rounded-xl bg-white border border-slate-200 p-4">
+    <div class="text-3xl font-black text-slate-900">43.6%</div>
+    <div class="text-sm font-semibold text-slate-700 mt-1">de los proveedores comparte teléfono con otro</div>
+    <div class="text-xs text-slate-500 mt-1">llamas y te contesta otra oficina</div>
+  </div>
+</div>
+
+<h3>Por qué se dice mal</h3>
+
+<div class="not-prose my-4 bg-amber-50 border border-amber-200 rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-amber-700 font-bold m-0">Lo que se oye en toda conversación</p>
   <p class="text-lg font-black text-slate-900 mt-1 mb-0">&quot;Aquí no hay médicos por culpa de los planes médicos.&quot;</p>
-  <p class="text-sm text-slate-700 mt-3 mb-0 leading-relaxed">Es lo primero que dice todo el mundo, y no es mentira. Es <b>incompleta</b>, y por incompleta no lleva a ningún lado.</p>
+  <p class="text-sm text-slate-700 mt-3 mb-0 leading-relaxed">No es mentira. Es <b>incompleta</b>, y por incompleta no lleva a ningún lado.</p>
 </div>
 
 <p><b>El plan es el cajero, no el que pone el precio.</b> Quien fija cuánto entra a Puerto Rico por atender a un enfermo es el gobierno federal, por fórmula y por estatuto: alrededor de 41% menos por cada persona en Medicare Advantage, y un Medicaid congelado en 55% cuando por pobreza nos tocaría hasta 83%. El plan recibe ese descuento y lo pasa hacia abajo.</p>
 
-<p>Ahora, el cajero tampoco es inocente: <b>es el único eslabón que decide cuánto del descuento pasa y cuánto se queda</b>, y es el que publica directorios donde el 43.6% de los proveedores comparte teléfono con otro. Esa parte sí es suya y sí se le puede cobrar.</p>
+<p>Ahora, el cajero tampoco es inocente: <b>es el único eslabón que decide cuánto del descuento pasa y cuánto se queda</b>, y es el que publica el directorio donde casi la mitad de los teléfonos repiten. Esa parte sí es suya y sí se le puede cobrar.</p>
 
-<p>Pero si el plan es el único culpable, entonces <b>nadie más tiene tarea</b>. Y ahí está el costo real de la frase: el Departamento de Salud no tiene que publicar el recibo de los $2,414,970, el centro no tiene que inscribir el sitio, el hospital no tiene que crear la plaza de residencia, y el municipio no tiene que radicar nada. Todos quedan libres porque el villano ya tiene nombre y teléfono.</p>
+<p>Pero si el plan es el único culpable, entonces <b>nadie más tiene tarea</b>. Ese es el costo real de la frase: el Departamento de Salud no publica el recibo, el centro no inscribe el sitio, el hospital no pide la plaza de residencia y el municipio no radica nada. Todos quedan libres porque el villano ya tiene nombre y teléfono.</p>
 
-<h2>La prueba de que no es solo el cheque</h2>
-
-<p>Puerto Rico le da al médico <b>una contribución fija de 4%</b> sobre el ingreso de sus servicios, por 15 años renovables por otros 15, con hasta $250,000 de dividendos exentos. Es la tasa más baja que un médico consigue bajo bandera americana: en Florida ese mismo médico paga la tasa federal completa.</p>
-
-<p>Le damos la mejor tasa contributiva de la nación, hay $75,000 de repago de préstamos aprobado, y hay un bono de Medicare esperando. <b>Y aun así no llega.</b> Eso no se explica solo con el cheque. Se explica con lo que nadie está operando: el sitio sin inscribir, el expediente sin radicar, la plaza de residencia que no existe.</p>
-
-<div class="not-prose my-5 bg-teal-50 border border-teal-200 rounded-2xl p-5">
-  <p class="text-xs uppercase tracking-widest text-teal-700 font-bold m-0">La que casi nadie cuenta</p>
-  <p class="text-lg font-black text-slate-900 mt-1 mb-0">Los médicos jóvenes de aquí <i>quieren</i> quedarse.</p>
-  <p class="text-sm text-slate-700 mt-2 mb-0 leading-relaxed">La emigración de graduados bajó de 56% en 2022 a 43% en 2024, y Puerto Rico tiene la <b>segunda tasa de retención más alta del país</b>: 75.6% de los que hacen su residencia aquí se quedan a ejercer aquí. El problema no es que se quieran ir. Es que no hay suficientes plazas de residencia para retenerlos. <b>Y eso se arregla aquí.</b></p>
+<div class="not-prose my-5 bg-white border-2 border-slate-900 rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-slate-500 font-bold m-0">La prueba de que no es solo el cheque</p>
+  <p class="text-lg font-black text-slate-900 mt-1 mb-0">Aquí el médico paga 4% de contribución. Cuatro.</p>
+  <p class="text-sm text-slate-700 mt-2 mb-0 leading-relaxed">El mismo médico en Florida paga la tasa federal completa. Le damos la tasa más baja de la nación, hay $75,000 de repago de préstamos aprobado y hay un bono de Medicare esperando. <b>Y aun así no llega.</b> Eso no se explica solo con el cheque. Se explica con lo que nadie está operando.</p>
 </div>
 
-<h2>Y encima, la tenaza</h2>
-<p>Esto pasa mientras la población se pone vieja y sigue pobre: <b>23.2% de los residentes tiene 65 años o más</b> y la pobreza promedio por municipio es de <b>43.7%</b>. Un pueblo viejo y pobre es un pueblo donde casi todo el mundo lo paga Medicare o Medicaid, o sea, los dos programas que le pagan a Puerto Rico menos que a cualquier estado. La demanda sube por el mismo lado por donde baja el pago. Y el que se queda gasta más: <b>la luz aquí cuesta cerca de 68% más</b> que en el continente.</p>
+<h2 id="puede">2. Lo que puede pasar</h2>
 
-<h2>El menú completo</h2>
-<p class="text-slate-600">Abre la que te toque. Cada una dice quién la mueve y cuánto tarda.</p>
-${nivelHtml}
+<p>Dos relojes están corriendo al mismo tiempo, y ninguno de los dos lo pusimos nosotros.</p>
 
-<h2 id="yo-que-hago">¿Y yo qué hago hoy?</h2>
-<p class="text-slate-600">Tres preguntas. No hay que leer nada de arriba.</p>
+<p><b>El primero es la tenaza.</b> La población se pone vieja y sigue pobre: <b>23.2% de los residentes tiene 65 años o más</b> y la pobreza promedio por municipio es <b>43.7%</b>. Un pueblo viejo y pobre es un pueblo donde casi todo lo paga Medicare o Medicaid, o sea, los dos programas que le pagan a Puerto Rico menos que a cualquier estado. La demanda sube por el mismo lado por donde baja el pago. Y el que se queda gasta más: <b>la luz aquí cuesta cerca de 68% más</b> que en el continente.</p>
 
-<div class="not-prose mt-4 bg-white border-2 border-teal-300 rounded-2xl p-5" id="dec">
+<p><b>El segundo tiene fecha.</b> El 30 de septiembre de 2027 vence el parcho que mantiene el Medicaid de Puerto Rico en 76%. Si nadie lo renueva, baja a 55% por estatuto. No es una amenaza ni una opinión: es una fecha ya escrita en la ley.</p>
+
+<div class="not-prose my-5 bg-teal-50 border border-teal-200 rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-teal-700 font-bold m-0">Y la que casi nadie cuenta</p>
+  <p class="text-lg font-black text-slate-900 mt-1 mb-0">Los médicos jóvenes de aquí <i>quieren</i> quedarse.</p>
+  <p class="text-sm text-slate-700 mt-2 mb-0 leading-relaxed">La emigración de graduados bajó de 56% en 2022 a 43% en 2024, y Puerto Rico tiene la <b>segunda tasa de retención más alta del país</b>: 75.6% de los que hacen su residencia aquí se quedan a ejercer aquí. El problema no es que se quieran ir. Es que no hay suficientes plazas de residencia para retenerlos. <b>Y eso se decide aquí.</b></p>
+</div>
+
+<h2 id="mano">3. La costumbre que nos sale cara</h2>
+
+<p>Aquí llevamos cien años oyendo la misma respuesta: espera, que va a bajar un fondo federal. Cuando esa es la respuesta a todo, uno aprende a esperar. <b>No es vagancia. Es entrenamiento.</b></p>
+
+<p>El problema es que la costumbre de esperar también tapa lo que ya está aquí. Cuando todo se explica con &quot;falta dinero&quot;, las cosas que <b>no</b> cuestan dinero se vuelven invisibles.</p>
+
+<div class="not-prose my-5 bg-slate-900 text-white rounded-2xl p-5">
+  <p class="text-lg sm:text-xl font-black leading-snug m-0">Estirar la mano y solicitar no son la misma cosa.</p>
+  <p class="text-sm text-slate-300 mt-2 mb-0">Estirar la mano es esperar que caiga. Solicitar es llenar un formulario que tiene fecha límite y a veces se pierde. <b class="text-white">Casi todo lo que no estamos cobrando tiene formulario.</b></p>
+</div>
+
+<p>La lista de abajo está ordenada por lo que cuesta, no por quién tiene la culpa. Míralo tú mismo: <b>las ${gratis} cosas que no cuestan un peso son, exactamente, las que llevan más tiempo sin hacerse.</b> Eso no lo decidió Washington.</p>
+
+<h2 id="menu">4. El menú, con el precio de frente</h2>
+<p class="text-slate-600">Abre la que te toque. Cada una dice quién la mueve y qué cuesta de verdad.</p>
+${tiersHtml}
+
+<h2 id="medico">Si eres médico: 3 preguntas</h2>
+<p class="text-slate-600">No hay que leer nada de arriba. Contesta y te digo tus movidas, con lo que cuestan.</p>
+
+<div class="not-prose mt-4 bg-white border-2 border-teal-300 rounded-2xl p-5" id="med">
+  <div class="space-y-4">
+    <div>
+      <p class="text-sm font-bold text-slate-800 m-0">1. ¿Dónde estás?</p>
+      <div class="flex flex-wrap gap-2 mt-2" data-q="m1">
+        <button data-v="aqui" class="opt">Ejerciendo aquí</button>
+        <button data-v="fuera" class="opt">Afuera, pensando volver</button>
+        <button data-v="form" class="opt">Residente o estudiante</button>
+      </div>
+    </div>
+    <div>
+      <p class="text-sm font-bold text-slate-800 m-0">2. ¿Dónde trabajas?</p>
+      <div class="flex flex-wrap gap-2 mt-2" data-q="m2">
+        <button data-v="propia" class="opt">Oficina propia</button>
+        <button data-v="c330" class="opt">Centro 330 o clínica comunitaria</button>
+        <button data-v="hosp" class="opt">Hospital o grupo</button>
+      </div>
+    </div>
+    <div>
+      <p class="text-sm font-bold text-slate-800 m-0">3. ¿Qué te aprieta más?</p>
+      <div class="flex flex-wrap gap-2 mt-2" data-q="m3">
+        <button data-v="cobro" class="opt">Lo que cobro</button>
+        <button data-v="papeleo" class="opt">El papeleo con los planes</button>
+        <button data-v="deuda" class="opt">La deuda de estudios</button>
+        <button data-v="irme" class="opt">Ya casi me voy</button>
+      </div>
+    </div>
+  </div>
+  <div id="med-out" class="mt-5 hidden"></div>
+</div>
+
+<h2 id="paciente">Si eres paciente: 3 preguntas</h2>
+<p class="text-slate-600">Lo mismo. Contesta y te digo por dónde entrar hoy.</p>
+
+<div class="not-prose mt-4 bg-white border-2 border-slate-900 rounded-2xl p-5" id="dec">
   <div class="space-y-4">
     <div>
       <p class="text-sm font-bold text-slate-800 m-0">1. ¿Para quién es?</p>
@@ -7460,7 +7560,7 @@ ${nivelHtml}
       <p class="text-sm font-bold text-slate-800 m-0">2. ¿Con qué se paga?</p>
       <div class="flex flex-wrap gap-2 mt-2" data-q="q2">
         <button data-v="vital" class="opt">Plan Vital</button>
-        <button data-v="ma" class="opt">Medicare / Advantage</button>
+        <button data-v="ma" class="opt">Medicare o Advantage</button>
         <button data-v="priv" class="opt">Plan privado</button>
         <button data-v="nada" class="opt">Sin plan</button>
       </div>
@@ -7477,73 +7577,163 @@ ${nivelHtml}
   </div>
   <div id="dec-out" class="mt-5 hidden"></div>
 </div>
-<style>#dec .opt{border:1px solid #cbd5e1;background:#fff;border-radius:9999px;padding:7px 14px;font-size:14px;font-weight:600;color:#334155;cursor:pointer}#dec .opt:hover{border-color:#14b8a6}#dec .opt[aria-pressed="true"]{background:#0f766e;border-color:#0f766e;color:#fff}</style>
+
+<style>.opt{border:1px solid #cbd5e1;background:#fff;border-radius:9999px;padding:7px 14px;font-size:14px;font-weight:600;color:#334155;cursor:pointer}.opt:hover{border-color:#14b8a6}.opt[aria-pressed="true"]{background:#0f766e;border-color:#0f766e;color:#fff}</style>
 <script>
 (function(){
-  var s={},box=document.getElementById('dec'),out=document.getElementById('dec-out');
-  if(!box) return;
-  box.addEventListener('click',function(e){
-    var b=e.target.closest('.opt'); if(!b) return;
-    var wrap=b.closest('[data-q]'); var k=wrap.getAttribute('data-q');
-    Array.prototype.forEach.call(wrap.querySelectorAll('.opt'),function(x){x.setAttribute('aria-pressed','false')});
-    b.setAttribute('aria-pressed','true'); s[k]=b.getAttribute('data-v');
-    if(s.q1&&s.q2&&s.q3) render();
-  });
-  function render(){
-    var puerta='', porque='', plan2='', extra='';
-    if(s.q3==='mental'){
-      puerta='Telemedicina de salud mental, y de una vez.';
-      porque='Es lo que más rápido se consigue y lo que menos depende de que haya alguien en tu pueblo. 52 municipios tienen designación federal de escasez de salud mental: la espera presencial es larga en casi toda la isla.';
-      plan2='Si te dicen que no hay cita: pide el centro 330 de tu región. Cobran por escala de ingreso.';
-    } else if(s.q3==='dental'){
-      puerta='Centro 330 con tarifa por ingreso.';
-      porque='Dental es la escasez más ancha de todas: 77 de los 78 municipios tienen designación federal en dental. Fuera del 330, casi todo es de bolsillo.';
-      plan2='Pregunta el precio en efectivo antes de asumir que no puedes. Suele ser menos de lo que la gente cree.';
-    } else if(s.q3==='esp'){
-      puerta='Busca el especialista por pueblo y llama al que tenga fecha de verificación reciente.';
-      porque='El directorio de tu plan lista nombres, no disponibilidad. El 43.6% de los proveedores comparte teléfono con otro: por eso llamas y te contesta otra oficina.';
-      plan2='Si no hay en tu pueblo, mira el pueblo de al lado antes de irte al área metro. Casi siempre hay algo más cerca de lo que crees.';
-    } else {
-      puerta='Médico de cabecera: empieza por el centro 330 de tu región.';
-      porque='Es la puerta que no te puede decir que no, y la que más rápido te coge de paciente nuevo.';
-      plan2='Si prefieres oficina privada, pregunta directo: "¿están cogiendo pacientes nuevos?" antes de nada más.';
-    }
-    if(s.q2==='vital'){ extra='Con Plan Vital, el centro 330 de tu región es tu mejor puerta y no te pueden negar atención por no poder pagar.'; }
-    else if(s.q2==='ma'){ extra='Con Medicare Advantage, la red cambia todos los años. Antes de coger cita, confirma por teléfono que el médico todavía coge tu plan, porque el directorio se queda viejo. La temporada para cambiar plan es del 15 de octubre al 7 de diciembre.'; }
-    else if(s.q2==='priv'){ extra='Con plan privado, pregunta si el médico está dentro de red. Fuera de red, casi siempre sale más caro que pagar en efectivo.'; }
-    else { extra='Sin plan, pregunta siempre el precio en efectivo primero y pide el centro 330: cobran según lo que ganas, no una tarifa fija.'; }
-    if(s.q1==='mayor'){ extra+=' Como es para un mayor: lleva tú la lista de sus medicinas a la cita. Es lo que más tiempo ahorra.'; }
-    if(s.q1==='nino'){ extra+=' Para un menor, el centro 330 y la sala de pediatría del hospital regional suelen coger más rápido que una oficina privada.'; }
-    out.innerHTML='<div class="rounded-xl bg-teal-50 border border-teal-200 p-4">'
-      +'<p class="text-xs uppercase tracking-widest text-teal-700 font-bold m-0">Tu puerta hoy</p>'
-      +'<p class="text-lg font-black text-slate-900 mt-1 mb-0">'+puerta+'</p>'
-      +'<p class="text-sm text-slate-700 mt-2 mb-0">'+porque+'</p>'
-      +'<p class="text-sm text-slate-700 mt-2 mb-0"><b>Ojo:</b> '+extra+'</p>'
-      +'<p class="text-sm text-slate-700 mt-2 mb-0"><b>Si te dicen que no:</b> '+plan2+'</p>'
-      +'<p class="mt-3 mb-0"><a href="/registro" class="text-teal-700 font-bold text-sm">Buscar por especialidad y pueblo →</a></p>'
-      +'</div>';
-    out.classList.remove('hidden');
+  function wire(boxId, outId, keys, build){
+    var s={}, box=document.getElementById(boxId), out=document.getElementById(outId);
+    if(!box||!out) return;
+    box.addEventListener('click', function(e){
+      var b=e.target.closest('.opt'); if(!b) return;
+      var wrap=b.closest('[data-q]'); var k=wrap.getAttribute('data-q');
+      Array.prototype.forEach.call(wrap.querySelectorAll('.opt'), function(x){ x.setAttribute('aria-pressed','false') });
+      b.setAttribute('aria-pressed','true'); s[k]=b.getAttribute('data-v');
+      for(var i=0;i<keys.length;i++){ if(!s[keys[i]]) return; }
+      var r=build(s);
+      out.innerHTML='<div class="rounded-xl '+r.bg+' p-4">'
+        +'<p class="text-xs uppercase tracking-widest font-bold m-0 '+r.lbl+'">'+r.kicker+'</p>'
+        +'<p class="text-lg font-black text-slate-900 mt-1 mb-0">'+r.titulo+'</p>'
+        +r.lineas.map(function(l){ return '<p class="text-sm text-slate-700 mt-2 mb-0">'+l+'</p>' }).join('')
+        +'<p class="mt-3 mb-0"><a href="'+r.href+'" class="text-teal-700 font-bold text-sm">'+r.cta+' →</a></p>'
+        +'</div>';
+      out.classList.remove('hidden');
+      out.scrollIntoView({behavior:'smooth', block:'nearest'});
+    });
   }
+
+  wire('med','med-out',['m1','m2','m3'], function(s){
+    var L=[], titulo='', cta='Ver el menú completo con precios', href='#menu';
+
+    if(s.m3==='deuda'){
+      titulo='Repago de préstamos. Hasta $75,000, y no sale de tu bolsillo.';
+      L.push('<b>Cuesta:</b> no dinero. Cuesta amarrarte a un sitio por dos años.');
+      if(s.m2==='c330'){ L.push('<b>Tu ventaja:</b> estás en el tipo de sitio que cualifica. La pregunta exacta que tienes que hacer mañana es una sola: <i>"¿este centro está inscrito como sitio NHSC ante HRSA?"</i> Si la respuesta es no, ahí está tu bloqueo, y quitarlo no cuesta dinero, cuesta papeleo.'); }
+      else { L.push('<b>Tu bloqueo:</b> el repago se cobra en sitios inscritos ante HRSA, y una oficina privada normalmente no lo es. La vía es acordar horas en un centro que sí lo esté.'); }
+      L.push('En toda la isla solo hay 6 clínicos de cuidado primario cobrando esto. No es que esté agotado. Es que no se está pidiendo.');
+    }
+    else if(s.m3==='cobro'){
+      titulo='El decreto de 4%. Es la tasa más baja bajo bandera americana.';
+      L.push('<b>Cuesta:</b> honorarios de CPA o abogado, más 180 horas de servicio comunitario al año. Para una práctica normal, se recupera el primer año.');
+      L.push('<b>Qué da:</b> 4% fijo sobre el ingreso de servicios médicos por 15 años, renovable por 15 más, con hasta $250,000 de dividendos exentos.');
+      if(s.m2==='propia'){ L.push('<b>Segunda movida:</b> si tu oficina está en zona designada, el bono de 10% de Medicare no se solicita aparte, se activa con la designación. 77 de los 78 municipios ya tienen designación en alguna disciplina.'); }
+      else { L.push('<b>Segunda movida:</b> pregunta si tu sitio está en zona designada. El bono de 10% de Medicare se activa con la designación, sin trámite aparte.'); }
+    }
+    else if(s.m3==='papeleo'){
+      titulo='Membresía mensual. Le quitas el intermediario a una parte de tu práctica.';
+      L.push('<b>Cuesta:</b> montar el sistema. A cambio baja el gasto más caro de la oficina, que es facturar y pelear con la aseguradora.');
+      L.push('<b>Cómo funciona:</b> cuota fija al mes por paciente, acceso directo, sin facturarle al plan. No hay que convertir la práctica entera: se puede empezar con una parte.');
+      L.push('<b>Y de paso:</b> saca el decreto de 4%. Las dos cosas atacan lo mismo por lados distintos, una el ingreso y la otra el gasto.');
+    }
+    else {
+      titulo='Antes de irte, corre los números otra vez. Con el 4% adentro.';
+      L.push('La mayoría compara el sueldo de aquí con el de allá <b>sin meter el decreto de 4%</b> en la cuenta. En Florida ese mismo ingreso paga la tasa federal completa. La diferencia no siempre es la que uno cree.');
+      L.push('<b>Y lo que no es dinero:</b> si tienes deuda de estudios, hay hasta $75,000 de repago aprobado que casi nadie está cobrando. Si estás en zona designada, hay un bono de 10% de Medicare que se activa solo.');
+      L.push('Si aun así te vas, está bien. Pero que sea con la cuenta completa, no con la mitad.');
+    }
+
+    if(s.m1==='form'){
+      L.push('<b>Porque estás en formación:</b> 75.6% de los que hacen residencia aquí se quedan a ejercer aquí, la segunda tasa más alta del país. El cuello de botella no eres tú, son las plazas. Si tu programa está en un centro comunitario, pregunta por el programa federal de residencias en centros 330: le paga las plazas al centro y se salta el tope de Medicare de 1997.');
+      cta='Ver quién paga las plazas de residencia'; href='#menu';
+    }
+    if(s.m1==='fuera'){
+      L.push('<b>Porque estás afuera:</b> el decreto de 4% aplica igual al que vuelve. Antes de decidir, mira los números del pueblo al que llegarías.');
+      cta='Ver los números antes de volver'; href='/registro/puedo-volver';
+    }
+    if(s.m1==='aqui' && s.m3!=='irme'){
+      L.push('<b>Y una que no cuesta nada:</b> reclama tu ficha en el registro para que diga si estás cogiendo pacientes. El 43.6% de los teléfonos del directorio repiten, y por eso la gente llama y no da contigo.');
+      cta='Reclamar mi ficha'; href='/tu-ficha';
+    }
+    return { kicker:'Tus movidas', titulo:titulo, lineas:L, cta:cta, href:href, bg:'bg-teal-50 border border-teal-200', lbl:'text-teal-700' };
+  });
+
+  wire('dec','dec-out',['q1','q2','q3'], function(s){
+    var titulo='', L=[];
+    if(s.q3==='mental'){
+      titulo='Telemedicina de salud mental, y de una vez.';
+      L.push('Es lo que más rápido se consigue y lo que menos depende de que haya alguien en tu pueblo. 52 municipios tienen designación federal de escasez de salud mental: la espera presencial es larga en casi toda la isla.');
+      L.push('<b>Si te dicen que no hay cita:</b> pide el centro 330 de tu región. Cobran por escala de ingreso.');
+    } else if(s.q3==='dental'){
+      titulo='Centro 330 con tarifa por ingreso.';
+      L.push('Dental es la escasez más ancha de todas: 77 de los 78 municipios tienen designación federal en dental. Fuera del 330, casi todo es de bolsillo.');
+      L.push('<b>Si te dicen que no:</b> pregunta el precio en efectivo antes de asumir que no puedes. Suele ser menos de lo que la gente cree.');
+    } else if(s.q3==='esp'){
+      titulo='Busca por pueblo y llama al que tenga verificación reciente.';
+      L.push('El directorio de tu plan lista nombres, no disponibilidad. El 43.6% de los proveedores comparte teléfono con otro: por eso llamas y te contesta otra oficina.');
+      L.push('<b>Si no hay en tu pueblo:</b> mira el pueblo de al lado antes de irte al área metro. Casi siempre hay algo más cerca de lo que crees.');
+    } else {
+      titulo='Empieza por el centro 330 de tu región.';
+      L.push('Es la puerta que no te puede decir que no, y la que más rápido coge pacientes nuevos.');
+      L.push('<b>Si prefieres oficina privada:</b> pregunta directo <i>"¿están cogiendo pacientes nuevos?"</i> antes de nada más.');
+    }
+    if(s.q2==='vital'){ L.push('<b>Ojo:</b> con Plan Vital, el centro 330 de tu región es tu mejor puerta y no te pueden negar atención por no poder pagar.'); }
+    else if(s.q2==='ma'){ L.push('<b>Ojo:</b> con Medicare Advantage la red cambia todos los años. Confirma por teléfono que el médico todavía coge tu plan, porque el directorio se queda viejo. La temporada para cambiar plan es del 15 de octubre al 7 de diciembre.'); }
+    else if(s.q2==='priv'){ L.push('<b>Ojo:</b> pregunta si el médico está dentro de red. Fuera de red casi siempre sale más caro que pagar en efectivo.'); }
+    else { L.push('<b>Ojo:</b> sin plan, pregunta siempre el precio en efectivo primero y pide el centro 330: cobran según lo que ganas, no una tarifa fija.'); }
+    if(s.q1==='mayor'){ L.push('<b>Como es para un mayor:</b> lleva tú la lista de sus medicinas a la cita. Es lo que más tiempo ahorra.'); }
+    if(s.q1==='nino'){ L.push('<b>Para un menor:</b> el centro 330 y la sala de pediatría del hospital regional suelen coger más rápido que una oficina privada.'); }
+    return { kicker:'Tu puerta hoy', titulo:titulo, lineas:L, cta:'Buscar por especialidad y pueblo', href:'/registro', bg:'bg-slate-100 border border-slate-300', lbl:'text-slate-600' };
+  });
 })();
 </script>
 
-${shareRow({ text: 'De las 16 palancas que mueven la falta de médicos en Puerto Rico, 14 no necesitan al Congreso. Están aquí, sin operar. La lista completa con dueño y velocidad:', url: 'https://registromedicopr.com/registro/opciones', toWho: 'Al que dice "es culpa de los planes médicos" y ahí se acaba la conversación.' })}
+<h2>Si te toca la conversación</h2>
+<p class="text-slate-600">Esto pasa en la fila de la panadería, no en una vista pública. Cuatro movidas, en orden, y cada una cabe en una respiración.</p>
+
+<div class="not-prose mt-4 space-y-3">
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <p class="text-xs font-bold text-slate-500 m-0">MOVIDA 1</p>
+    <p class="font-black text-slate-900 mt-1 mb-1">Dale la razón. De verdad.</p>
+    <p class="text-sm text-slate-600 m-0">&quot;Tienes razón, y no es poco. El plan es el que te dice que no.&quot; No es táctica, es cierto: es el único eslabón que tiene nombre, teléfono y una persona que te cuelga. Si arrancas con la fórmula federal, suenas a que estás defendiendo al plan y se acabó la conversación.</p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <p class="text-xs font-bold text-slate-500 m-0">MOVIDA 2</p>
+    <p class="font-black text-slate-900 mt-1 mb-1">Mueve la pregunta de quién es malo a quién pone el precio.</p>
+    <p class="text-sm text-slate-600 m-0">&quot;Pero fíjate: el plan es el cajero, no el que pone el precio.&quot; Y la línea que se queda pegada: <i>no es que el cajero sea malo, es que le entregan menos dinero en la gaveta.</i></p>
+    <p class="text-sm text-rose-700 mt-2 mb-0"><b>Cuidado:</b> no digas &quot;los planes pagan 41% menos&quot;. Se cae con una pregunta de cualquier médico: <i>&quot;yo no cobro de Medicare, yo cobro del plan.&quot;</i> El 41% es lo que el federal le paga <b>al plan</b>.</p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <p class="text-xs font-bold text-slate-500 m-0">MOVIDA 3</p>
+    <p class="font-black text-slate-900 mt-1 mb-1">El dato que rompe la conversación en dos.</p>
+    <p class="text-sm text-slate-600 m-0">&quot;Aquí el médico paga 4% de contribución. Cuatro. El mismo médico en Florida paga la tasa federal completa. Y hay $75,000 de repago esperando. Le damos la mejor tasa de la nación y aun así no llega, así que no es solo el cheque.&quot; Casi siempre viene un silencio. Déjalo.</p>
+  </div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4">
+    <p class="text-xs font-bold text-slate-500 m-0">MOVIDA 4</p>
+    <p class="font-black text-slate-900 mt-1 mb-1">La luz, con número.</p>
+    <p class="text-sm text-slate-600 m-0">&quot;Los médicos jóvenes de aquí quieren quedarse: 75.6% de los que hacen residencia aquí se quedan. No se van porque quieran, se van porque no hay plazas. Y eso lo decide un centro de aquí, no Washington.&quot;</p>
+  </div>
+</div>
+
+<h3>Si te tiran una de estas</h3>
+<table>
+<tr><th>Te dicen</th><th>Contestas</th></tr>
+<tr><td><i>&quot;Aquí no hay nada que hacer&quot;</i></td><td>Hay $2,414,970 adjudicados para repago de préstamos y nadie ha publicado a cuántos médicos colocaron con eso. Eso no es falta de dinero, es falta de recibo.</td></tr>
+<tr><td><i>&quot;Todo eso cuesta un montón de dinero&quot;</i></td><td>Parte sí. Pero 5 de las ${total} cosas de la lista no cuestan un peso, y son justo las que llevan más tiempo sin hacerse. Y lo caro, las plazas de residencia, tiene un programa federal que se las paga a los centros comunitarios. Hay que solicitarlo.</td></tr>
+<tr><td><i>&quot;Los planes son una mafia&quot;</i></td><td>En eso tienes razón: el 43.6% de los proveedores del directorio comparte teléfono con otro. Llamas y te contesta otra oficina. Eso sí es de ellos y sí se les puede cobrar.</td></tr>
+<tr><td><i>&quot;Se van por dinero, son unos mercenarios&quot;</i></td><td>La hora del médico aquí vale menos cada año mientras la luz cuesta 68% más. Cualquiera con una calculadora se va. Los que se quedan, se quedan por otra cosa.</td></tr>
+<tr><td><i>&quot;Eso lo arregla el gobierno&quot;</i></td><td>¿Cuál? El municipio puede radicar el expediente, el centro puede inscribir el sitio, y el hospital puede pedir la plaza. Ninguna de esas tres es Washington.</td></tr>
+</table>
+
+<p class="text-sm text-slate-500 mt-4"><b>Tres reglas de esta conversación:</b> el enlace va después, nunca antes, porque si sacas el teléfono a enseñar data dejaste de conversar y empezaste a dar clase. Si un médico te contesta que ya no es el sueldo, apúntalo, porque ese dato vale más que tener la razón. Y no hay que ganar: basta con que la persona se vaya con una cosa que no sabía.</p>
+
+${shareRow({ text: 'De las 14 cosas que arreglarían la falta de médicos en Puerto Rico, 5 no cuestan un peso. Son exactamente las que llevan más tiempo sin hacerse. La lista con el precio de cada una:', url: 'https://registromedicopr.com/registro/opciones', toWho: 'Al que dice "es culpa de los planes médicos" y ahí se acaba la conversación.' })}
 
 <h2>Lo que este registro no sabe</h2>
 <ul>
 <li>Cuántos clínicos se colocaron con los <b>$2,414,970</b> del repago estatal. Está adjudicado; las colocaciones no están publicadas.</li>
+<li>Si algún centro de Puerto Rico tiene hoy <b>residencias pagadas por el programa federal de centros comunitarios</b>. Buscamos la lista de beneficiarios y no la pudimos confirmar. <b>No decimos que sea cero</b>: decimos que hay que preguntarlo. Ya nos pasó una vez publicar un cero que no era.</li>
 <li>Cuántas de las <b>30 visas</b> anuales de Conrad 30 usa Puerto Rico. No es público.</li>
-<li>El conteo de municipios con designación de <b>cuidado primario</b>: nuestras dos fuentes federales no cuadran entre sí (una dice 20, otra 37). Hasta reconciliarlo, no publicamos ese número. Los de dental (77) y salud mental (52) sí cuadran.</li>
+<li>El conteo de municipios con designación de <b>cuidado primario</b>: nuestras dos fuentes federales no cuadran entre sí (una dice 20, otra 37). Hasta reconciliarlo no publicamos ese número. Los de dental (77) y salud mental (52) sí cuadran.</li>
 </ul>
 
-<p class="text-sm text-slate-500 mt-6">Designaciones federales de escasez: HRSA, tabla del registro, actualizada 2026. Demografía: Censo/ACS, extraído 5 julio 2026. Repago NHSC y Field Strength: HRSA FY2025. Contribución de 4%: Ley 14-2017, hoy dentro del Código de Incentivos. Costo de electricidad: Urban Institute, evaluación de la infraestructura de salud de PR. Retención de residentes: AAMC, NRMP y Centro de Periodismo Investigativo, 2024. Medicaid: MACPAC y Congressional Research Service IF11012. <a href="/registro/porque" class="text-teal-700 font-semibold">El informe completo de por qué pasa esto →</a> · <a href="/rompelo" class="text-teal-700 font-semibold">¿Algo no cuadra? Rómpelo →</a></p>
+<p class="text-sm text-slate-500 mt-6">Designaciones federales de escasez: HRSA, tabla del registro. Demografía: Censo y ACS, extraído 5 julio 2026. Repago NHSC y Field Strength: HRSA FY2025. Contribución de 4%: Ley 14-2017, hoy dentro del Código de Incentivos. Costo de electricidad: Urban Institute. Retención de residentes: AAMC, NRMP y Centro de Periodismo Investigativo, 2024. Tope de plazas de Medicare: Balanced Budget Act de 1997, GAO. Residencias en centros comunitarios: HRSA, Bureau of Health Workforce. Medicaid: MACPAC y Congressional Research Service IF11012. <a href="/registro/porque" class="text-teal-700 font-semibold">El informe completo de por qué pasa esto →</a> · <a href="/rompelo" class="text-teal-700 font-semibold">¿Algo no cuadra? Rómpelo →</a></p>
 ${SHARE_COPY_SCRIPT}
 ${regDisclaimer()}`
 
   const jsonLd = {
     '@context': 'https://schema.org', '@type': 'Article',
-    headline: `¿Y ahora qué? Las ${total} salidas a la falta de médicos en Puerto Rico`,
-    description: `De las ${total} palancas que mueven la falta de médicos en PR, ${sinCongreso} no necesitan al Congreso.`,
+    headline: `¿Y ahora qué? Las ${total} salidas a la falta de médicos en Puerto Rico, y lo que cuesta cada una`,
+    description: `Hay ${gratis} cosas que no cuestan un peso y son las que llevan más tiempo sin hacerse. No falta dinero: el dinero que existe hay que pedirlo.`,
     author: { '@type': 'Person', name: 'Angel Anderson' },
     publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
     inLanguage: 'es', url: 'https://registromedicopr.com/registro/opciones',
@@ -7551,8 +7741,8 @@ ${regDisclaimer()}`
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
   res.status(200).send(layout({
-    title: `¿Y ahora qué? Las ${total} salidas a la falta de médicos`,
-    description: `De las ${total} palancas que mueven la falta de médicos en Puerto Rico, ${sinCongreso} no necesitan al Congreso. Quién mueve cada una y cuánto tarda.`,
+    title: `¿Y ahora qué? Las ${total} salidas, y lo que cuesta cada una`,
+    description: `Hay ${gratis} cosas que arreglarían la falta de médicos en PR y no cuestan un peso. Son las que llevan más tiempo sin hacerse. El menú completo con precio y dueño.`,
     slug: 'registro/opciones', bodyHtml: body, jsonLd,
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
   }))
