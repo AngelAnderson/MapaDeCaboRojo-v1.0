@@ -7381,7 +7381,10 @@ async function handleRegistroOpciones(req: any, res: any) {
     sitio: 'Migrant Health Center Western Region, Inc.',
   }
 
-  type Palanca = { n: string; quien: string; cuesta: string; det: string }
+  // `absurdo`: la contradicción de la palanca en una línea, sin explicarla. Va visible en el
+  // resumen porque es el gancho que hace abrir el detalle; el detalle solo la sustenta.
+  // Regla: cada línea tiene que poder probarse con el `det` de al lado. Si no, no va.
+  type Palanca = { n: string; quien: string; cuesta: string; absurdo: string; det: string }
   type Tier = { titulo: string; sub: string; tono: 'verde' | 'ambar' | 'rojo' | 'gris'; items: Palanca[] }
 
   const TIERS: Tier[] = [
@@ -7389,38 +7392,38 @@ async function handleRegistroOpciones(req: any, res: any) {
       titulo: 'No cuesta un peso', tono: 'verde',
       sub: 'Solo hay que hacerlo. Estas son las que llevan más tiempo sin hacerse.',
       items: [
-        { n: 'Publicar el recibo del repago estatal', quien: 'Departamento de Salud de PR', cuesta: '$0. Una hoja de cálculo.', det: 'El gobierno federal le dio a Puerto Rico $2,414,970 en tres años para pagarle la deuda de estudios a médicos que se queden a trabajar aquí. Ese dinero está adjudicado. Lo que nadie ha publicado es a cuántos médicos se lo dieron, en qué pueblos y en qué años. No estamos pidiendo dinero nuevo: estamos pidiendo el recibo del que ya llegó.' },
-        { n: 'Inscribir el centro ante la agencia federal', quien: 'El centro comunitario', cuesta: '$0 de cuota. Semanas de papeleo.', det: 'Un médico solo puede cobrar el pago de su deuda de estudios si trabaja en un sitio que esté inscrito. Si el centro no está inscrito, el dinero existe pero no llega. Hay 5 pueblos con la designación federal que no tienen un solo sitio inscrito.' },
-        { n: 'Cobrar el bono de 10% de Medicare', quien: 'El médico', cuesta: '$0. Se activa solo.', det: 'Si el médico atiende en un pueblo que el gobierno federal declaró zona de escasez, Medicare le paga 10% extra por el servicio. No hay que solicitarlo aparte: se activa con la designación del pueblo. Y 77 de los 78 municipios ya tienen designación en algo.' },
-        { n: 'Preguntar el precio en efectivo', quien: 'Tú', cuesta: '$0. Una pregunta.', det: 'A veces pagar de tu bolsillo sale más barato que el copago más la gasolina más el día de trabajo que pierdes yendo a otro pueblo. Nadie te lo va a ofrecer. Hay que preguntarlo.' },
-        { n: 'Averiguar quién sí está cogiendo pacientes', quien: 'Tú', cuesta: '$0. Cinco minutos.', det: 'El directorio de tu plan te da una lista de nombres, no te dice quién tiene cita. En nuestro registro, 43 de cada 100 proveedores comparten teléfono con otro proveedor. Por eso llamas y te contesta otra oficina.' },
+        { n: 'Publicar el recibo del repago estatal', quien: 'Departamento de Salud de PR', cuesta: '$0. Una hoja de cálculo.', absurdo: 'Son $2,414,970 ya adjudicados. La lista de a quién se le dio no existe en ningún sitio público.', det: 'El gobierno federal le dio a Puerto Rico $2,414,970 en tres años para pagarle la deuda de estudios a médicos que se queden a trabajar aquí. Ese dinero está adjudicado. Lo que nadie ha publicado es a cuántos médicos se lo dieron, en qué pueblos y en qué años. No estamos pidiendo dinero nuevo: estamos pidiendo el recibo del que ya llegó.' },
+        { n: 'Inscribir el centro ante la agencia federal', quien: 'El centro comunitario', cuesta: '$0 de cuota. Semanas de papeleo.', absurdo: 'Hay 5 pueblos donde el dinero existe, el médico existe, y falta el papel que los junta.', det: 'Un médico solo puede cobrar el pago de su deuda de estudios si trabaja en un sitio que esté inscrito. Si el centro no está inscrito, el dinero existe pero no llega. Hay 5 pueblos con la designación federal que no tienen un solo sitio inscrito.' },
+        { n: 'Cobrar el bono de 10% de Medicare', quien: 'El médico', cuesta: '$0. Se activa solo.', absurdo: 'Está disponible en 77 de los 78 pueblos y se paga solo. Lo difícil es enterarse de que existe.', det: 'Si el médico atiende en un pueblo que el gobierno federal declaró zona de escasez, Medicare le paga 10% extra por el servicio. No hay que solicitarlo aparte: se activa con la designación del pueblo. Y 77 de los 78 municipios ya tienen designación en algo.' },
+        { n: 'Preguntar el precio en efectivo', quien: 'Tú', cuesta: '$0. Una pregunta.', absurdo: 'A veces sale más barato pagar de tu bolsillo que usar el plan que ya estás pagando.', det: 'A veces pagar de tu bolsillo sale más barato que el copago más la gasolina más el día de trabajo que pierdes yendo a otro pueblo. Nadie te lo va a ofrecer. Hay que preguntarlo.' },
+        { n: 'Averiguar quién sí está cogiendo pacientes', quien: 'Tú', cuesta: '$0. Cinco minutos.', absurdo: 'Te dan una lista de médicos donde 43 de cada 100 comparten el teléfono con otro.', det: 'El directorio de tu plan te da una lista de nombres, no te dice quién tiene cita. En nuestro registro, 43 de cada 100 proveedores comparten teléfono con otro proveedor. Por eso llamas y te contesta otra oficina.' },
       ],
     },
     {
       titulo: 'Cuesta tiempo y honorarios, y se paga solo', tono: 'ambar',
       sub: 'Hay que poner de tu bolsillo al principio. Se recupera rápido.',
       items: [
-        { n: 'El decreto de 4% de contribución', quien: 'El médico, el dentista, el podiatra', cuesta: 'Honorarios de CPA o abogado, más 180 horas de servicio comunitario al año.', det: 'La Ley 14 de 2017 le deja pagar 4% fijo de contribución sobre lo que gana atendiendo pacientes, por 15 años, y se puede renovar por 15 más. Ese mismo profesional en Florida paga la tasa federal completa. NO es solo para médicos: la ley cubre medicina, podiatría y las especialidades de odontología, y también aplica a residentes en programas acreditados. Lo que cuesta sacarlo se recupera el primer año.' },
-        { n: 'Radicar el expediente de designación', quien: 'Oficina de Cuidado Primario', cuesta: 'Tiempo de personal, o un consultor.', det: 'Es el papel con el que un pueblo le prueba al gobierno federal que le faltan médicos. Sin ese papel no hay pago de deuda de estudios, no hay bono de Medicare y no hay elegibilidad para fondos. El expediente de Maricao y Las Marías ya está escrito y sirve de molde.' },
-        { n: 'Cobrar el pago de la deuda de estudios', quien: 'El médico', cuesta: 'Un compromiso de servicio, no dinero.', det: 'Hasta $75,000 si es médico de cabecera y $50,000 en las demás, salud mental incluida. El costo no es dinero: es amarrarse a un sitio por dos años. Y requiere que ese sitio esté inscrito, que es donde casi siempre se traba.' },
-        { n: 'Cambiar a membresía mensual', quien: 'El médico', cuesta: 'Montar el sistema. Baja el gasto de facturación.', det: 'El paciente paga una cuota fija al mes y tiene acceso directo, sin plan de por medio. Le pone piso al ingreso del médico y le quita la parte más cara de la oficina, que es pelear con la aseguradora. No hay que convertir la práctica entera: se puede empezar con una parte.' },
-        { n: 'Las 30 visas de médicos formados aquí', quien: 'Departamento de Salud', cuesta: 'Administrativo.', det: 'Cada año hay 30 visas para médicos extranjeros que se formaron en Estados Unidos y se comprometen a servir en una zona de escasez. Trae médicos ya hechos, sin esperar diez años. Cuántas usa Puerto Rico no está publicado.' },
+        { n: 'El decreto de 4% de contribución', quien: 'El médico, el dentista, el podiatra', cuesta: 'Honorarios de CPA o abogado, más 180 horas de servicio comunitario al año.', absurdo: 'Es la contribución más baja bajo bandera americana. 4%. Y aun así no llegan médicos nuevos.', det: 'La Ley 14 de 2017 le deja pagar 4% fijo de contribución sobre lo que gana atendiendo pacientes, por 15 años, y se puede renovar por 15 más. Ese mismo profesional en Florida paga la tasa federal completa. NO es solo para médicos: la ley cubre medicina, podiatría y las especialidades de odontología, y también aplica a residentes en programas acreditados. Lo que cuesta sacarlo se recupera el primer año.' },
+        { n: 'Radicar el expediente de designación', quien: 'Oficina de Cuidado Primario', cuesta: 'Tiempo de personal, o un consultor.', absurdo: 'Es un papel que dice «a este pueblo le faltan médicos». Sin ese papel no mandan médicos.', det: 'Es el papel con el que un pueblo le prueba al gobierno federal que le faltan médicos. Sin ese papel no hay pago de deuda de estudios, no hay bono de Medicare y no hay elegibilidad para fondos. El expediente de Maricao y Las Marías ya está escrito y sirve de molde.' },
+        { n: 'Cobrar el pago de la deuda de estudios', quien: 'El médico', cuesta: 'Un compromiso de servicio, no dinero.', absurdo: 'Hay $75,000 aprobados, y donde más se traba no es en el médico. Es en si el centro llenó un formulario.', det: 'Hasta $75,000 si es médico de cabecera y $50,000 en las demás, salud mental incluida. El costo no es dinero: es amarrarse a un sitio por dos años. Y requiere que ese sitio esté inscrito, que es donde casi siempre se traba.' },
+        { n: 'Cambiar a membresía mensual', quien: 'El médico', cuesta: 'Montar el sistema. Baja el gasto de facturación.', absurdo: 'La parte más cara de una oficina médica no es atender pacientes. Es pelear con la aseguradora.', det: 'El paciente paga una cuota fija al mes y tiene acceso directo, sin plan de por medio. Le pone piso al ingreso del médico y le quita la parte más cara de la oficina, que es pelear con la aseguradora. No hay que convertir la práctica entera: se puede empezar con una parte.' },
+        { n: 'Las 30 visas de médicos formados aquí', quien: 'Departamento de Salud', cuesta: 'Administrativo.', absurdo: 'Son 30 médicos ya formados al año, esperando. Cuántos usa Puerto Rico no está publicado en ningún sitio.', det: 'Cada año hay 30 visas para médicos extranjeros que se formaron en Estados Unidos y se comprometen a servir en una zona de escasez. Trae médicos ya hechos, sin esperar diez años. Cuántas usa Puerto Rico no está publicado.' },
       ],
     },
     {
       titulo: 'Cuesta dinero de verdad, y hay quien lo pague', tono: 'rojo',
       sub: 'Aquí es donde deja de ser gratis. Pero el dinero existe y tiene formulario.',
       items: [
-        { n: 'Crear plazas de residencia', quien: 'Centros comunitarios, hospitales y escuelas', cuesta: 'Por la vía del hospital: sobre $100,000 por residente al año, y con tope desde 1997. Por la vía del centro comunitario: lo paga el gobierno federal.', det: 'La residencia es donde el médico recién graduado termina de formarse. Es la palanca más grande de todas, y es la cara. Por la vía tradicional, Medicare congeló en 1997 el número de plazas que paga y ese tope sigue puesto. PERO hay una segunda puerta que casi nadie usa: un programa federal que le paga las plazas directamente a los centros de salud comunitarios y se salta el tope de 1997. En una ronda reciente repartió $80 millones entre 41 programas. No es un fondo que baja solo: es una solicitud con fecha límite.' },
-        { n: 'Clínica que va al pueblo, o telemedicina', quien: 'El municipio', cuesta: 'Presupuesto municipal. Escala pequeña.', det: 'Para los 3 pueblos que no tienen un solo especialista de ninguna clase. El médico no tiene que mudarse: tiene que llegar un día fijo al mes. Es lo más barato que un alcalde puede hacer que se note el mismo mes.' },
+        { n: 'Crear plazas de residencia', quien: 'Centros comunitarios, hospitales y escuelas', cuesta: 'Por la vía del hospital: sobre $100,000 por residente al año, y con tope desde 1997. Por la vía del centro comunitario: lo paga el gobierno federal.', absurdo: 'El que se forma aquí se queda. El cupo de plazas que paga Medicare se congeló en 1997 y ahí sigue, 29 años después.', det: 'La residencia es donde el médico recién graduado termina de formarse. Es la palanca más grande de todas, y es la cara. Por la vía tradicional, Medicare congeló en 1997 el número de plazas que paga y ese tope sigue puesto. PERO hay una segunda puerta que casi nadie usa: un programa federal que le paga las plazas directamente a los centros de salud comunitarios y se salta el tope de 1997. En una ronda reciente repartió $80 millones entre 41 programas. No es un fondo que baja solo: es una solicitud con fecha límite.' },
+        { n: 'Clínica que va al pueblo, o telemedicina', quien: 'El municipio', cuesta: 'Presupuesto municipal. Escala pequeña.', absurdo: 'Hay 3 pueblos sin un solo especialista de ninguna clase. Se resuelve con que alguien guíe hasta allá 1 día al mes.', det: 'Para los 3 pueblos que no tienen un solo especialista de ninguna clase. El médico no tiene que mudarse: tiene que llegar un día fijo al mes. Es lo más barato que un alcalde puede hacer que se note el mismo mes.' },
       ],
     },
     {
       titulo: 'Cuesta un país', tono: 'gris',
       sub: 'Las dos únicas que de verdad hay que esperar de Washington.',
       items: [
-        { n: 'Que nos paguen el Medicaid como a un estado', quien: 'Congreso', cuesta: 'Miles de millones al año.', det: 'A un estado le pagan según lo pobre que sea, sin techo, hasta 83 centavos de cada dólar. A Puerto Rico se lo congelaron en 55 por ley, sin mirar la pobreza. Hoy rige un parcho de 76 que vence el 30 de septiembre de 2027. Esa fecha ya está escrita.' },
-        { n: 'Arreglar la fórmula de Medicare Advantage', quien: 'Congreso o la agencia federal', cuesta: 'Miles de millones al año.', det: 'El gobierno federal le paga a los planes de Puerto Rico como 41% menos por persona que a los planes de un estado. Y lo calcula sobre lo que se gastó aquí antes, que ya era poco. Nos pagan poco porque nos pagaron poco. Ojo: esto se puede mover sin Congreso. En 2017 se corrigió una parte por vía administrativa.' },
+        { n: 'Que nos paguen el Medicaid como a un estado', quien: 'Congreso', cuesta: 'Miles de millones al año.', absurdo: 'Por pobreza nos tocarían hasta 83 centavos. Por ley nos dan 55. La ley no mira la pobreza.', det: 'A un estado le pagan según lo pobre que sea, sin techo, hasta 83 centavos de cada dólar. A Puerto Rico se lo congelaron en 55 por ley, sin mirar la pobreza. Hoy rige un parcho de 76 que vence el 30 de septiembre de 2027. Esa fecha ya está escrita.' },
+        { n: 'Arreglar la fórmula de Medicare Advantage', quien: 'Congreso o la agencia federal', cuesta: 'Miles de millones al año.', absurdo: 'Nos pagan poco porque antes nos pagaron poco. Esa es la fórmula, literal.', det: 'El gobierno federal le paga a los planes de Puerto Rico como 41% menos por persona que a los planes de un estado. Y lo calcula sobre lo que se gastó aquí antes, que ya era poco. Nos pagan poco porque nos pagaron poco. Ojo: esto se puede mover sin Congreso. En 2017 se corrigió una parte por vía administrativa.' },
       ],
     },
   ]
@@ -7474,7 +7477,8 @@ async function handleRegistroOpciones(req: any, res: any) {
         <summary class="cursor-pointer list-none p-4 flex items-start gap-3 hover:bg-slate-50">
           <span class="flex-1 min-w-0">
             <span class="block font-bold text-slate-900 leading-snug">${escapeHtml(it.n)}</span>
-            <span class="block text-xs text-slate-500 mt-1">La mueve: <b class="text-slate-700">${escapeHtml(it.quien)}</b></span>
+            <span class="block text-sm text-slate-700 italic mt-1.5 leading-snug">${escapeHtml(it.absurdo)}</span>
+            <span class="block text-xs text-slate-500 mt-2">La mueve: <b class="text-slate-700">${escapeHtml(it.quien)}</b></span>
             <span class="block text-xs mt-1"><b class="text-slate-900">Cuesta:</b> <span class="text-slate-600">${escapeHtml(it.cuesta)}</span></span>
           </span>
           <span class="shrink-0 text-slate-400 text-sm group-open:rotate-180 transition">▾</span>
@@ -7900,7 +7904,7 @@ async function handleRegistroOpciones(req: any, res: any) {
 </script>
 
 <h2 id="menu">El menú completo, con el precio de frente</h2>
-<p class="text-slate-600">Ordenado por lo que cuesta, no por quién tiene la culpa.</p>
+<p class="text-slate-600">Ordenado por lo que cuesta, no por quién tiene la culpa. La línea en itálicas es lo que queda cuando le quitas la jerga.</p>
 ${tiersHtml}
 
 <h2 id="ruido">Cómo se logra que contesten</h2>
@@ -7968,15 +7972,17 @@ ${DICC.map(([t, d]) => `<div class="bg-white border border-slate-200 rounded-xl 
 </div>
 
 <h3>Si te tiran una de estas</h3>
-<table>
-<tr><th>Te dicen</th><th>Contestas</th></tr>
-<tr><td><i>&quot;Aquí no hay nada que hacer&quot;</i></td><td>Hay $2,414,970 adjudicados para pagar deudas de estudios de médicos y nadie ha publicado a cuántos se los dieron. Eso no es falta de dinero, es falta de recibo.</td></tr>
-<tr><td><i>&quot;Todo eso cuesta un montón de dinero&quot;</i></td><td>Parte sí. Pero ${gratis} de las ${total} cosas de la lista no cuestan un peso, y son justo las que llevan más tiempo sin hacerse. Y lo caro, las plazas de residencia, tiene un programa federal que se las paga a los centros comunitarios. Hay que solicitarlo.</td></tr>
-<tr><td><i>&quot;Aquí la gente lo que hace es estirar la mano&quot;</i></td><td>Estirar la mano es esperar que caiga. Solicitar es llenar un formulario con fecha límite. Casi todo lo que no estamos cobrando tiene formulario.</td></tr>
-<tr><td><i>&quot;Los planes son una mafia&quot;</i></td><td>En eso tienes razón: 43.6% de los proveedores del directorio comparte teléfono con otro. Llamas y te contesta otra oficina. Eso sí es de ellos.</td></tr>
-<tr><td><i>&quot;Se van por dinero, son unos mercenarios&quot;</i></td><td>La hora del médico aquí vale menos cada año mientras la luz cuesta como 68% más. Cualquiera con una calculadora se va. Los que se quedan, se quedan por otra cosa.</td></tr>
-<tr><td><i>&quot;Eso lo arregla el gobierno&quot;</i></td><td>¿Cuál? El municipio puede radicar el expediente, el centro puede inscribirse, y el centro comunitario puede pedir las plazas. Ninguna de esas tres es Washington.</td></tr>
+<div class="not-prose my-4 overflow-x-auto rounded-xl border border-slate-200 bg-white">
+<table class="w-full text-sm border-collapse">
+<tr><th class="text-left py-2 px-3 font-bold text-slate-700 bg-slate-50">Te dicen</th><th class="text-left py-2 px-3 font-bold text-slate-700 bg-slate-50">Contestas</th></tr>
+<tr class="border-t border-slate-100"><td class="py-2 px-3"><i>&quot;Aquí no hay nada que hacer&quot;</i></td><td class="py-2 px-3">Hay $2,414,970 adjudicados para pagar deudas de estudios de médicos y nadie ha publicado a cuántos se los dieron. Eso no es falta de dinero, es falta de recibo.</td></tr>
+<tr class="border-t border-slate-100"><td class="py-2 px-3"><i>&quot;Todo eso cuesta un montón de dinero&quot;</i></td><td class="py-2 px-3">Parte sí. Pero ${gratis} de las ${total} cosas de la lista no cuestan un peso, y son justo las que llevan más tiempo sin hacerse. Y lo caro, las plazas de residencia, tiene un programa federal que se las paga a los centros comunitarios. Hay que solicitarlo.</td></tr>
+<tr class="border-t border-slate-100"><td class="py-2 px-3"><i>&quot;Aquí la gente lo que hace es estirar la mano&quot;</i></td><td class="py-2 px-3">Estirar la mano es esperar que caiga. Solicitar es llenar un formulario con fecha límite. Casi todo lo que no estamos cobrando tiene formulario.</td></tr>
+<tr class="border-t border-slate-100"><td class="py-2 px-3"><i>&quot;Los planes son una mafia&quot;</i></td><td class="py-2 px-3">En eso tienes razón: 43.6% de los proveedores del directorio comparte teléfono con otro. Llamas y te contesta otra oficina. Eso sí es de ellos.</td></tr>
+<tr class="border-t border-slate-100"><td class="py-2 px-3"><i>&quot;Se van por dinero, son unos mercenarios&quot;</i></td><td class="py-2 px-3">La hora del médico aquí vale menos cada año mientras la luz cuesta como 68% más. Cualquiera con una calculadora se va. Los que se quedan, se quedan por otra cosa.</td></tr>
+<tr class="border-t border-slate-100"><td class="py-2 px-3"><i>&quot;Eso lo arregla el gobierno&quot;</i></td><td class="py-2 px-3">¿Cuál? El municipio puede radicar el expediente, el centro puede inscribirse, y el centro comunitario puede pedir las plazas. Ninguna de esas tres es Washington.</td></tr>
 </table>
+</div>
 
 <p class="text-sm text-slate-500 mt-4"><b>Tres reglas:</b> el enlace va después, nunca antes, porque si sacas el teléfono a enseñar data dejaste de conversar y empezaste a dar clase. Si un médico te contesta que ya no es el sueldo, apúntalo, porque ese dato vale más que tener la razón. Y no hay que ganar: basta con que la persona se vaya con una cosa que no sabía.</p>
 
