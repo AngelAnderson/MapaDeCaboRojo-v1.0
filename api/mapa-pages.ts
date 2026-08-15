@@ -7823,13 +7823,14 @@ ${tiersHtml}
 <div class="not-prose mt-4 space-y-3">
   <div class="bg-white border border-slate-200 rounded-xl p-4">
     <p class="text-xs font-bold text-slate-500 m-0">PASO 1 · Preguntar por escrito</p>
-    <p class="font-black text-slate-900 mt-1 mb-1">Una carta de una página, bajo la Ley 141 de 2019</p>
-    <p class="text-sm text-slate-600 m-0">Al Departamento de Salud de Puerto Rico no le aplica FOIA: le aplica la <b>Ley 141 de 2019</b>, que le da <b>10 días laborables</b> para contestar. Citar la ley equivocada es la excusa perfecta para no contestarte. Se piden cosas que ya deberían estar publicadas: a cuántos clínicos se les pagó la deuda con los $2,414,970, cuántas de las 30 visas se usaron, y cuándo se actualizó por última vez el expediente de tu pueblo.</p>
+    <p class="font-black text-slate-900 mt-1 mb-1">Un email de una página, bajo la Ley 141 de 2019</p>
+    <p class="text-sm text-slate-600 m-0">Al Departamento de Salud de Puerto Rico no le aplica FOIA: le aplica la <b>Ley 141 de 2019, según enmendada por la Ley 156 de 2025</b>, que le da <b>20 días laborables</b> para contestar, prorrogables una sola vez por 20 más y solo si te avisan dentro del término. Citar la ley o el término equivocado es la excusa perfecta para no contestarte. <b>Va por email, no por carta</b>, porque el reloj arranca el día que se somete y el email se fecha solo.</p>
+    <p class="text-sm text-slate-600 mt-2 mb-0"><b>Y la regla que lo hace a prueba de bruto:</b> no se pide que <i>creen</i> nada. Se piden documentos que ya existen por mandato de ley, y si alguno no existe, <b>que lo certifiquen por escrito</b>. Esa certificación de que no existe es, muchas veces, el hallazgo. Se piden cosas que ya deberían estar publicadas: a cuántos clínicos se les pagó la deuda con los $2,414,970, cuántas de las 30 visas se usaron, y cuándo se actualizó por última vez el expediente de tu pueblo.</p>
   </div>
   <div class="bg-white border border-slate-200 rounded-xl p-4">
     <p class="text-xs font-bold text-slate-500 m-0">PASO 2 · Publicar la respuesta, y también el silencio</p>
     <p class="font-black text-slate-900 mt-1 mb-1">Si contestan, es un dato. Si no contestan, también.</p>
-    <p class="text-sm text-slate-600 m-0">Aquí está el truco entero: <b>no hay forma de perder</b>. Si te contestan, tienes el número que nadie tenía. Si no te contestan en 10 días laborables, tienes algo mejor: la fecha en que preguntaste y el silencio, que es un hecho verificable y publicable. Un marcador que dice &quot;preguntado el 15 de agosto, sin contestar&quot; y que sube el contador cada mes hace más ruido que cualquier grito.</p>
+    <p class="text-sm text-slate-600 m-0">Aquí está el truco entero: <b>no hay forma de perder</b>. Si te contestan, tienes el número que nadie tenía. Si no te contestan en 20 días laborables, tienes algo mejor: la fecha en que preguntaste y el silencio, que es un hecho verificable y publicable. Y no es solo moral: pasado el término sin respuesta la solicitud se entiende denegada, queda abierto el Recurso Especial ante el Tribunal de Primera Instancia, y desde la enmienda de 2025 el incumplimiento de una orden judicial conlleva multas de hasta $100 diarios. Un marcador que dice &quot;preguntado el 15 de agosto, sin contestar&quot; y que sube el contador cada mes hace más ruido que cualquier grito.</p>
   </div>
   <div class="bg-white border border-slate-200 rounded-xl p-4">
     <p class="text-xs font-bold text-slate-500 m-0">PASO 3 · Hacerlo citable</p>
