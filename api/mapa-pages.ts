@@ -7607,6 +7607,7 @@ async function handleRegistroOpciones(req: any, res: any) {
   <a href="#ruido" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">Cómo se logra que contesten</a>
   <a href="#diccionario" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">Diccionario</a>
   <a href="#fuentes" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">Fuentes</a>
+  <a href="#corrigeme" class="rounded-full border border-rose-300 px-3 py-1.5 font-semibold text-rose-700 hover:border-rose-500">¿Soy médico y esto está mal?</a>
 </div>
 
 <h2>Lo primero, porque se dice mal</h2>
@@ -8007,6 +8008,32 @@ ${FUENTES.map(([d, f, u]) => `<tr class="border-t border-slate-100"><td class="p
 </table>
 </div>
 
+<h2 id="corrigeme">Si eres médico y algo de esto está mal</h2>
+
+<p>En esta página hay números y afirmaciones sobre tu profesión, escritas por alguien que <b>no es médico</b>. Es probable que algo esté mal, o incompleto, o que se explique mejor de otra manera.</p>
+
+<p><b>Si ves algo así, mándamelo.</b> No tiene que ser formal ni largo. Una línea basta: qué está mal y por qué. Lo corrijo, pongo la corrección con fecha, y te doy el crédito. Si prefieres que no aparezca tu nombre, tampoco aparece.</p>
+
+<p>Me interesan sobre todo tres cosas: <b>lo que esté equivocado</b>, <b>lo que falte</b>, y <b>lo que se pueda decir mejor</b> para que un vecino lo entienda sin ser del campo.</p>
+
+<div class="not-prose my-5 grid gap-2 sm:grid-cols-3">
+  <a href="mailto:angel@caborojo.com?subject=Correcci%C3%B3n%20a%20registromedicopr.com%2Fregistro%2Fopciones" class="block rounded-xl bg-white border border-slate-200 p-4 hover:border-teal-400">
+    <div class="text-xl">✉️</div><div class="font-bold text-slate-900 mt-1">Por correo</div>
+    <div class="text-xs text-slate-500 mt-0.5">angel@caborojo.com</div></a>
+  <a href="https://wa.me/17874177711?text=Vi%20algo%20que%20corregir%20en%20la%20p%C3%A1gina%20de%20m%C3%A9dicos" class="block rounded-xl bg-white border border-slate-200 p-4 hover:border-teal-400">
+    <div class="text-xl">💬</div><div class="font-bold text-slate-900 mt-1">Por texto</div>
+    <div class="text-xs text-slate-500 mt-0.5">787-417-7711</div></a>
+  <a href="https://puertoricosinfiltros.com/rompelo" class="block rounded-xl bg-white border border-slate-200 p-4 hover:border-teal-400">
+    <div class="text-xl">🔨</div><div class="font-bold text-slate-900 mt-1">Rómpelo</div>
+    <div class="text-xs text-slate-500 mt-0.5">El formulario de corrección</div></a>
+</div>
+
+<p>Esto es lo que tengo. No es lo que debería existir: es lo que se pudo armar con datos públicos y verificación a mano, por una persona. Va a mejorar en la medida en que la gente que vive esto por dentro lo corrija.</p>
+
+<div class="not-prose my-5 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-xl sm:text-2xl font-black leading-snug m-0" style="font-family:'Fraunces',Georgia,serif">Y si vamos a envejecer aquí, esto tiene que arreglarse.</p>
+</div>
+
 <h2>Lo que este registro no sabe</h2>
 <ul>
 <li><b>Quién hace telemedicina en Cabo Rojo.</b> Nadie lo preguntaba. Ya se está preguntando.</li>
@@ -8015,6 +8042,14 @@ ${FUENTES.map(([d, f, u]) => `<tr class="border-t border-slate-100"><td class="p
 <li>Cuántas de las <b>30 visas</b> anuales de médicos formados aquí usa Puerto Rico. No es público.</li>
 <li>El conteo de municipios con escasez de <b>cuidado primario</b>: dos fuentes federales dicen cosas distintas (una dice 20, otra 37). Hasta reconciliarlo no publicamos ese número. Los de dental (77) y salud mental (52) sí cuadran.</li>
 </ul>
+
+<h2 id="citar">Cómo citar esta página</h2>
+<p class="text-slate-600">Se puede citar, copiar y republicar sin pedir permiso. Solo pon de dónde salió, para que quien lea pueda verificarlo.</p>
+<div class="not-prose my-3 rounded-xl border border-slate-300 bg-slate-50 p-4">
+  <p class="text-sm text-slate-800 m-0" id="cita-texto">Anderson, Angel. &quot;No hay médicos: por qué, y qué se puede hacer.&quot; Registro Médico PR, 15 de agosto de 2026. https://registromedicopr.com/registro/opciones</p>
+  <button class="share-copy mt-3 text-xs font-bold rounded-full px-3 py-1.5 bg-slate-900 text-white" data-copy="Anderson, Angel. &quot;No hay médicos: por qué, y qué se puede hacer.&quot; Registro Médico PR, 15 de agosto de 2026. https://registromedicopr.com/registro/opciones">Copiar la cita</button>
+</div>
+<p class="text-sm text-slate-600">Cada número de esta página tiene su fuente en la tabla de arriba. Si vas a citar un número suelto, cita la fuente original además de esta página: nosotros somos el que los juntó, no el que los produjo. Y si algo cambió desde que se publicó, <a href="https://puertoricosinfiltros.com/rompelo" class="text-teal-700 font-semibold">dínoslo</a> y se actualiza con nota de qué cambió.</p>
 
 <p class="text-sm text-slate-500 mt-6">Datos de Cabo Rojo corridos contra la base el 15 de agosto de 2026. <a href="/porque" class="text-teal-700 font-semibold">El informe completo de por qué pasa esto →</a> · <a href="/marcador" class="text-teal-700 font-semibold">El marcador de salud de PR →</a> · <a href="https://puertoricosinfiltros.com/rompelo" class="text-teal-700 font-semibold">¿Algo no cuadra? Rómpelo →</a></p>
 ${SHARE_COPY_SCRIPT}
