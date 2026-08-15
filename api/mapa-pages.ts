@@ -17319,7 +17319,11 @@ async function handleCuido(req: any, res: any) {
     byMuni.get(m)!.push(r)
   })
 
-  const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+  // Acepta las 2 formas: "Cabo%20Rojo" (link de web) y "cabo-rojo" (link de SMS,
+  // que va en slug porque %20 en un mensaje de texto algunos carriers lo filtran
+  // y muchos clientes no lo convierten en enlace).
+  const norm = (s: string) => s.toLowerCase().normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '')
   const muni = muniRaw ? [...byMuni.keys()].find(k => norm(k) === norm(muniRaw)) : ''
 
   const totalCamas = all.reduce((a, r) => a + (r.n.camas || 0), 0)
@@ -17398,7 +17402,7 @@ ${fuente}`
   const munis = [...byMuni.entries()]
     .map(([m, rs]) => ({ m, n: rs.length, camas: rs.reduce((a, r) => a + (r.n.camas || 0), 0) }))
     .sort((a, b) => a.m.localeCompare(b.m, 'es'))
-  const grid = munis.map(x => `<a href="/cuido/${encodeURIComponent(x.m)}" class="block bg-white border border-slate-200 rounded-xl p-3 no-underline hover:border-teal-400">
+  const grid = munis.map(x => `<a href="/cuido/${x.m.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-')}" class="block bg-white border border-slate-200 rounded-xl p-3 no-underline hover:border-teal-400">
     <div class="font-bold text-slate-900 text-sm">${escapeHtml(x.m)}</div>
     <div class="text-xs text-slate-500">${x.n} hogar${x.n === 1 ? '' : 'es'} · ${x.camas} camas</div>
   </a>`).join('')
