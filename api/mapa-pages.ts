@@ -7718,7 +7718,7 @@ async function handleRegistroOpciones(req: any, res: any) {
 <h3>¿Quién hace telemedicina en Cabo Rojo?</h3>
 <p><b>No lo sabemos, y esa es la falla.</b> Nuestro registro tiene ${CR.smNombres} nombres de salud mental y cientos de proveedores de salud en el pueblo, pero <b>ninguno tiene marcado si atiende por video</b>, porque hasta hoy nadie lo preguntaba en el formulario.</p>
 <p>No vamos a inventarlo. Lo que sí hacemos es <b>empezar a preguntarlo</b>: se añade a la verificación y al formulario de &quot;¿es tu perfil?&quot;, y en cuanto haya respuestas se publica aquí con fecha. Si eres proveedor en Cabo Rojo y atiendes por video, <b>dínoslo y sales en la lista</b>.</p>
-<p class="text-sm text-slate-600">Mientras tanto, lo que sí sabemos: <b>${CR.broadband} de los hogares de Cabo Rojo tiene internet de banda ancha</b> y <b>${CR.sinInternet} no tiene internet ninguno</b>. O sea, la telemedicina es viable para la mayoría del pueblo, pero deja fuera a casi 1 de cada 5 hogares, que suelen ser los mismos que menos pueden guiar hasta Mayagüez. <a href="/telemedicina" class="text-teal-700 font-semibold">Ver el cruce de internet contra desierto médico, pueblo por pueblo →</a></p>
+<p class="text-sm text-slate-600">Mientras tanto, lo que sí sabemos: <b>${CR.broadband} de los hogares de Cabo Rojo tiene internet de banda ancha</b> y <b>${CR.sinInternet} no tiene internet ninguno</b>. O sea, la telemedicina es viable para la mayoría del pueblo, pero deja fuera a casi 1 de cada 5 hogares, que suelen ser los mismos que menos pueden guiar hasta Mayagüez. <i>Fuente: Censo y Encuesta sobre la Comunidad, banda ancha por municipio.</i></p>
 
 <h2 id="quien">¿Y qué hago yo?</h2>
 <p class="text-slate-600">Busca el que eres tú. Cada uno abre con cosas concretas, no con teoría.</p>
@@ -7849,7 +7849,7 @@ async function handleRegistroOpciones(req: any, res: any) {
     }
     if(s.m1==='fuera'){
       L.push('<b>Porque estás afuera:</b> el decreto de 4% aplica igual al que vuelve. Antes de decidir, mira los números del pueblo al que llegarías.');
-      cta='Ver los números antes de volver'; href='/registro/puedo-volver';
+      cta='Ver los números antes de volver'; href='/puedo-volver';
     }
     if(s.m1==='aqui' && s.m3!=='irme'){
       L.push('<b>Y una que no cuesta nada:</b> reclama tu ficha en el registro para que diga si estás cogiendo pacientes. 43 de cada 100 teléfonos del directorio repiten, y por eso la gente llama y no da contigo.');
@@ -7999,7 +7999,7 @@ ${FUENTES.map(([d, f, u]) => `<tr class="border-t border-slate-100"><td class="p
 <li>El conteo de municipios con escasez de <b>cuidado primario</b>: dos fuentes federales dicen cosas distintas (una dice 20, otra 37). Hasta reconciliarlo no publicamos ese número. Los de dental (77) y salud mental (52) sí cuadran.</li>
 </ul>
 
-<p class="text-sm text-slate-500 mt-6">Datos de Cabo Rojo corridos contra la base el 15 de agosto de 2026. <a href="/porque" class="text-teal-700 font-semibold">El informe completo de por qué pasa esto →</a> · <a href="/marcador" class="text-teal-700 font-semibold">El marcador de salud de PR →</a> · <a href="/rompelo" class="text-teal-700 font-semibold">¿Algo no cuadra? Rómpelo →</a></p>
+<p class="text-sm text-slate-500 mt-6">Datos de Cabo Rojo corridos contra la base el 15 de agosto de 2026. <a href="/porque" class="text-teal-700 font-semibold">El informe completo de por qué pasa esto →</a> · <a href="/marcador" class="text-teal-700 font-semibold">El marcador de salud de PR →</a> · <a href="https://puertoricosinfiltros.com/rompelo" class="text-teal-700 font-semibold">¿Algo no cuadra? Rómpelo →</a></p>
 ${SHARE_COPY_SCRIPT}
 ${regDisclaimer()}`
 
