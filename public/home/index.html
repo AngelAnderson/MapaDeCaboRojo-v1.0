@@ -58,8 +58,10 @@
 
   .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;justify-content:center}
   .chip{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);color:#fff;
-        border-radius:999px;padding:6px 13px;font-size:.85rem;font-weight:600;cursor:pointer;
-        font-family:inherit;transition:background .15s}
+        border-radius:999px;padding:10px 16px;font-size:.9rem;font-weight:600;cursor:pointer;
+        font-family:inherit;transition:background .15s;min-height:44px}
+  /* 44px es el minimo comodo para un dedo. Estaban en 33 y habia que apuntar. */
+  .ev a{min-height:52px}
   .chip:hover,.chip:focus-visible{background:rgba(255,255,255,.3)}
 
   /* ── resultados ── */
@@ -138,7 +140,7 @@
   .prueba div:last-child{border-right:0}
   .prueba b{display:block;font-family:'Fraunces',Georgia,serif;font-size:1.32rem;font-weight:700;
     color:#fff;font-variant-numeric:tabular-nums;line-height:1.15}
-  .prueba span{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;
+  .prueba span{display:block;font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;
     color:rgba(255,255,255,.82);margin-top:2px}
   .prueba.vacia{display:none}
 
@@ -149,10 +151,10 @@
   .ev a{display:flex;gap:11px;align-items:baseline;text-decoration:none;padding:9px 11px;
     border:1px solid var(--line);border-radius:11px;background:#fafaf9}
   .ev a:hover{border-color:var(--teal)}
-  .ev .cuando{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  .ev .cuando{font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
     color:var(--teal-dark);white-space:nowrap;flex:0 0 auto}
-  .ev .qué{font-size:.92rem;font-weight:700;line-height:1.25}
-  .ev .dónde{font-size:.8rem;color:var(--ink-soft);font-weight:400;display:block;margin-top:1px}
+  .ev .qué{font-size:.98rem;font-weight:700;line-height:1.25}
+  .ev .dónde{font-size:.86rem;color:var(--ink-soft);font-weight:400;display:block;margin-top:1px}
 
   .cierre{text-align:center;margin-top:26px;padding:20px 18px;border-top:1px solid var(--line)}
   .cierre p{font-size:.9rem;color:var(--ink-soft);max-width:46ch;margin:0 auto}
@@ -427,8 +429,17 @@
         var cuando=new Date(t).toLocaleDateString('es-PR',
           {weekday:'short',day:'numeric',timeZone:'America/Puerto_Rico'});
         var a=document.createElement('a');
-        a.href=e.url||'/pueblo-en-numeros';
-        if(e.url){ a.target='_blank'; a.rel='noopener'; }
+        // A dónde lleva tocar un evento, en orden de utilidad para el vecino:
+        // 1. la página del lugar (tiene mapa, teléfono y cómo llegar)
+        // 2. el mapa 3D parado encima del sitio
+        // 3. nada: si no sabemos dónde es, no se hace link a ningún lado.
+        // Antes caía en /pueblo-en-numeros, que no tiene NADA que ver con el
+        // evento. El sitio sabía dónde era y no lo decía.
+        if(e.s){ a.href='/negocio/'+encodeURIComponent(e.s); }
+        else if(e.lat&&e.lon){ a.href='/3d#'+e.lat.toFixed(5)+','+e.lon.toFixed(5); }
+        else if(e.url){ a.href=e.url; a.target='_blank'; a.rel='noopener'; }
+        else { a.href='#'; a.setAttribute('aria-disabled','true');
+               a.style.cursor='default'; a.onclick=function(ev){ ev.preventDefault(); }; }
         a.innerHTML='<span class="cuando">'+esc(cuando)+'</span>'+
           '<span class="qué">'+esc(e.n)+
           (e.l?'<span class="dónde">'+esc(e.l)+'</span>':'')+'</span>';
