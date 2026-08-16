@@ -7459,6 +7459,7 @@ function bloqueFormulario141(): string {
       <label class="block"><span class="text-xs font-bold text-slate-500">Tu dirección postal</span>
         <input id="c141-d" required maxlength="140" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" placeholder="HC 01 Box 1234, Cabo Rojo, PR 00623">
         <span class="text-[11px] text-slate-500">La ley la exige (Artículo 6). Sin dirección postal la solicitud se considera <b>defectuosa y el reloj no arranca</b>. No la publicamos ni la guardamos.</span></label>
+      <input id="c141-company" type="text" name="company" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" aria-hidden="true">
       <label class="flex items-start gap-2 text-sm text-slate-700"><input id="c141-cc" type="checkbox" checked class="mt-1"><span>Mandarme copia a mí también, para poder contarla como confirmada en el marcador.</span></label>
       <label class="flex items-start gap-2 text-sm text-slate-700"><input id="c141-pub" type="checkbox" class="mt-1"><span>Pueden publicar mi nombre en el marcador. (Si lo dejas en blanco sale solo el pueblo.)</span></label>
 
@@ -7514,7 +7515,7 @@ function bloqueFormulario141(): string {
     ev.preventDefault();
     if(!N.value.trim()||!P.value.trim()||!E.value.trim()||!D.value.trim()){OK.className='text-sm font-bold text-rose-800 bg-rose-50 border border-rose-200 rounded-lg p-3 m-0';OK.textContent='Llena los cuatro campos. La dirección postal la exige la ley, no nosotros.';return;}
     fetch('/api/mapa-pages?page=carta-141',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({nombre:N.value,pueblo:P.value,email:E.value,publicar_nombre:!!PUB.checked,pedido:'SLRP $2,414,970 · visas Conrad 30 · fecha del expediente HPSA'})})
+      body:JSON.stringify({nombre:N.value,pueblo:P.value,email:E.value,publicar_nombre:!!PUB.checked,company:(document.getElementById('c141-company')||{}).value||'',pedido:'SLRP $2,414,970 · visas Conrad 30 · fecha del expediente HPSA'})})
       .then(function(r){return r.json()}).then(function(){
         OK.className='text-sm font-bold text-teal-800 bg-teal-50 border border-teal-200 rounded-lg p-3 m-0';
         OK.textContent='Quedó anotada con la fecha de hoy. Guarda tu copia en enviados. Si a los 20 días laborables no te contestan, escríbenos: eso ya es una denegación y se puede llevar al Tribunal sin abogado.';
