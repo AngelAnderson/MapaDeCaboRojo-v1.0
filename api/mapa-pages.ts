@@ -7524,7 +7524,23 @@ function bloqueCarta141(m: Marcador141): string {
 async function handleCarta141(req: any, res: any) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8')
   try {
+    if (req.method !== 'POST') { res.status(405).send(JSON.stringify({ ok: false })); return }
+    // Este endpoint era el unico sink publico de escritura del archivo SIN freno:
+    // registro-search, conserje-intent y registro-lead ya pasan por isRateLimited.
+    // Y aqui pesa mas que en los otros, porque lo que se inserta alimenta un
+    // contador que la propia pagina cita como argumento ("N vecinos radicaron").
+    // Un numero inflable hace mas dano que el spam: lo que se vende es que el
+    // numero aguanta. La segunda valla vive en la base (indice unico
+    // cartas_141_una_por_email_pedido), que es la que no se puede saltar
+    // cambiando el codigo.
+    const ip = getClientIp(req)
+    if (await isRateLimited('carta141', ip, 3, 60_000) ||
+        await isRateLimited('carta141_dia', ip, 20, 24 * 60 * 60_000)) {
+      res.status(429).send(JSON.stringify({ ok: false, error: 'rate_limited' })); return
+    }
     const b = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}')
+    // Trampa: campo escondido que un humano nunca llena y un bot de formularios si.
+    if (String(b.company || '').trim()) { res.status(200).send(JSON.stringify({ ok: true })); return }
     const strip = (v: any, n: number) => String(v || '').replace(/[\u0000-\u001f\u007f]/g, '').slice(0, n).trim()
     const nombre = strip(b.nombre, 80)
     const pueblo = strip(b.pueblo, 40)
