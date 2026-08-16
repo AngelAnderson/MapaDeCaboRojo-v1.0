@@ -4,10 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#374C8A">
-<meta name="description" content="El mapa 3D de Cabo Rojo: 931 negocios del pueblo y 2,515 del resto del oeste. 260 confirmados a mano en los últimos 90 días; los demás salen igual, marcados como sin confirmar. Busca, mira qué está abierto ahora, y pregúntale al Veci.">
+<meta name="description" content="El mapa 3D de Cabo Rojo: 920 negocios del pueblo y 2,515 del resto del oeste. 258 confirmados a mano en los últimos 90 días; los demás salen igual, marcados como sin confirmar. Busca, mira qué está abierto ahora, y pregúntale al Veci.">
 <link rel="canonical" href="https://www.mapadecaborojo.com/3d">
 <meta property="og:title" content="Mapa de Cabo Rojo · 3D">
-<meta property="og:description" content="El directorio del pueblo en 3D. 260 de 3,446 confirmados a mano en 90 días; los demás salen marcados como sin confirmar.">
+<meta property="og:description" content="El directorio del pueblo en 3D. 258 de 3,435 confirmados a mano en 90 días; los demás salen marcados como sin confirmar.">
 <meta property="og:url" content="https://www.mapadecaborojo.com/3d">
 <meta property="og:image" content="https://www.mapadecaborojo.com/og/mapa-3d.png">
 <meta property="og:image:width" content="1200">
@@ -103,14 +103,18 @@
   #chips{display:none}
   #chips.abierto{display:flex}
   /* el cockpit de mapa se esconde detras de "Mas" */
-  #b-mas{bottom:14px;left:14px;z-index:7;cursor:pointer;background:#ffffff0d;
-     border:1px solid #ffffff1f;color:var(--txt);border-radius:10px;padding:7px 12px;
-     font-size:12px;font-family:inherit;font-weight:600}
+  /* Iban en 5% de blanco: sobre el mapa de noche se adivinaban y sobre el de dia
+     desaparecian. Ahora son fichas opacas, que se leen sobre cualquier fondo. */
+  #b-mas{bottom:14px;left:14px;z-index:7;cursor:pointer;background:var(--card2);
+     border:1px solid #ffffff40;color:var(--txt);border-radius:10px;padding:9px 13px;
+     font-size:12.5px;font-family:inherit;font-weight:700;min-height:40px;
+     box-shadow:0 4px 16px #00000066}
   #b-mas:hover{background:var(--teal);border-color:var(--teal);color:#06281f}
   /* Hermano de "Mas", no hijo. Mismo lenguaje, un toque. */
-  #b-casco{bottom:14px;left:88px;z-index:7;cursor:pointer;background:#ffffff0d;
-     border:1px solid #ffffff1f;color:var(--txt);border-radius:10px;padding:9px 14px;
-     font-size:13px;font-family:inherit;font-weight:600;white-space:nowrap;min-height:40px}
+  #b-casco{bottom:14px;left:96px;z-index:7;cursor:pointer;background:var(--card2);
+     border:1px solid #ffffff40;color:var(--txt);border-radius:10px;padding:9px 14px;
+     font-size:13px;font-family:inherit;font-weight:700;white-space:nowrap;min-height:40px;
+     box-shadow:0 4px 16px #00000066}
   #b-casco:hover{background:var(--teal);border-color:var(--teal);color:#06281f}
   #b-casco.on{background:var(--orange);border-color:var(--orange);color:#3b1604}
   #ctrls{display:none}
@@ -285,7 +289,7 @@
 
 <script>
 </script>
-<script id="datos-3d" src="/3d/datos-b92389c861.js" data-lugares="3446"></script>
+<script id="datos-3d" src="/3d/datos-e93a977b3f.js" data-lugares="3435"></script>
 <script>
 
 let EVENTS={"type":"FeatureCollection","features":[]}; // se llena en vivo desde live3d
@@ -1236,7 +1240,14 @@ async function toggleCasco(btn){
   btn.textContent='🏛 El casco';
   cascoOn=true; btn.classList.add('on');
   pintarCasco();
-  map.flyTo({...CASCO_VISTA, duration:2400, curve:1.3, essential:true});
+  // El padding es lo que faltaba. `center` centra el viewport completo, pero el
+  // panel de marca (300px) y el del pulso tapan como 640px de ese viewport, asi
+  // que la plaza aterrizaba corrida y por eso "no llegaba al centro de la plaza".
+  // Esto la centra en lo que de verdad se ve.
+  const anchoPad = innerWidth > 900
+    ? {top:190, bottom:120, left:340, right:330}
+    : {top:210, bottom:180, left:16, right:16};
+  map.flyTo({...CASCO_VISTA, padding:anchoPad, duration:2400, curve:1.3, essential:true});
 
   if(!document.getElementById('casco-nota')){
     const n=document.createElement('div');
