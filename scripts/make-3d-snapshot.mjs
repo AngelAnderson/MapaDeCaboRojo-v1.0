@@ -69,6 +69,11 @@ async function traer() {
       .eq('visibility', 'published').eq('status', 'open')
       .in('municipality', OESTE)
       .not('lat', 'is', null).not('lon', 'is', null)
+      // Sin ORDER BY, Postgres no promete el mismo orden entre una página y la
+      // siguiente: las fronteras se corren y salen filas dobles mientras otras no
+      // salen nunca. Hoy son 3,528 filas, o sea 4 páginas — pasó de latente a real
+      // en cuanto el oeste cruzó las 1,000. slug es único aquí.
+      .order('slug', { ascending: true })
       .range(desde, desde + 999);
     if (error) throw new Error(`Supabase: ${error.message}`);
     if (!data?.length) break;
