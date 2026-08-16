@@ -648,14 +648,22 @@ export const getPlaces = async (): Promise<Place[]> => {
   if (cached) return cached;
 
   try {
-    // Select only columns needed for map + cards (excludes embedding, one_liner, description heavy fields).
-    // .range(0, 1999) bypasses the default Supabase REST 1000-row limit. The places table has ~1170 rows
-    // today; at 2000 rows this query still fits well under the row-level cost ceiling. When the table
-    // grows past ~1500 rows we should migrate to a bounding-box RPC (see plan Phase 3.1).
-    // PostgREST enforces a server-side db-max-rows cap (1000 on this project). A client-side
-    // .range(0, 1999) gets silently clipped, so we paginate in 1000-row pages until the server
-    // returns a short page. Places table has ~1170 rows today → 2 HTTP calls, ~1.5 MB total.
-    // Migrate to a bounding-box RPC (plan Phase 3.1) once the table exceeds ~2000 rows.
+    // Respaldo de getMapPlaces() cuando el RPC get_map_places_minimal falla. Solo por eso
+    // importa: si el RPC cae, esto es lo que ve el vecino.
+    //
+    // ⚠️ Los números de este comentario estaban podridos y por eso nadie vio el problema.
+    // Decía "~1170 filas, 2 llamadas, ~1.5 MB". Al 16 ago 2026 la tabla tiene 35,757
+    // publicados (la ingesta del NPPES) y esto pedía TODO sin filtro con tope de 10,000:
+    // una rebanada arbitraria de médicos de todo Puerto Rico en el mapa de Cabo Rojo.
+    // Si actualizas el filtro, actualiza el número, o el próximo se guía por lo de ayer.
+    //
+    // Mismo filtro que el RPC: cae solo lo que es a la vez indibujable (sin lat/lon, y
+    // useMapEngine.ts:296 ya las descarta) Y ajena al directorio del Mapa (con NPI, su
+    // casa es registromedicopr.com). Da 5,530 filas con 5,070 pines — los 5,070, sin
+    // perder los 47 de Cabo Rojo que un filtro de propiedad pelado sí se llevaría.
+    //
+    // El .order('slug') no es cosmético: sin ORDER BY las fronteras entre páginas se
+    // corren y salen filas dobles mientras otras no salen nunca.
     const SELECT_COLS = 'id,name,description,category,subcategory,lat,lon,image_url,tags,address,gmaps_url,video_url,website,phone,price_level,best_time_to_visit,vibe,is_pet_friendly,is_handicap_accessible,is_verified,verified_at,created_at,opening_hours,contact_info,custom_icon,amenities,slug,status,plan,sponsor_weight,default_zoom';
     const PAGE_SIZE = 1000;
     const MAX_PAGES = 10;
@@ -666,6 +674,9 @@ export const getPlaces = async (): Promise<Place[]> => {
       const { data: pageData, error } = await supabase
         .from('places')
         .select(SELECT_COLS)
+        .neq('status', 'closed')
+        .or('and(lat.not.is.null,lon.not.is.null),npi.is.null')
+        .order('slug', { ascending: true })
         .range(from, to);
       if (error) {
         console.error(`Supabase Fetch Error (page ${page}):`, error.message);
@@ -736,7 +747,7 @@ export const getPlaces = async (): Promise<Place[]> => {
 
 // ============================================================================
 // Phase 3 RPCs: minimal list + detail-on-click.
-// getMapPlaces()  → ~230 KB payload (was 1.5 MB from getPlaces pagination)
+// getMapPlaces()  → 2.98 MB / 5,530 filas (medido 16 ago 2026; era 19.83 MB sin filtro)
 // getPlaceDetail() → ~2 KB per click, fetched lazily
 // ============================================================================
 

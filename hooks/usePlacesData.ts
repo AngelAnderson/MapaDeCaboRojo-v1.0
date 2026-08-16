@@ -20,8 +20,16 @@ export const usePlacesData = () => {
             // 1. Heartbeat Check (fire-and-forget — don't block data fetch)
             checkDataVersion();
 
-            // 2. Load Data — use the Phase 3 minimal RPC (~230KB) instead of the full
-            // paginated getPlaces (~1.5MB). Detail is fetched lazily when user taps a pin.
+            // 2. Load Data — RPC mínimo get_map_places_minimal. El detalle se pide
+            // cuando el usuario toca un pin, no aquí.
+            //
+            // Este comentario decía "~230KB" y el 16 ago 2026 medimos 19.83 MB. No era
+            // mentira cuando se escribió: la ingesta del NPPES llevó la tabla a 35,757
+            // publicados y el RPC no tenía filtro, así que 30,677 filas sin coordenadas
+            // viajaban por el cable para que useMapEngine.ts:296 las botara al llegar.
+            // Hoy va en 2.98 MB / 5,530 filas, con los 5,070 pines intactos.
+            // Si vuelve a crecer, el número se mide, no se hereda de este comentario:
+            //   select round(length(get_map_places_minimal()::text)/1048576.0, 2);
             console.log("Fetching real data (minimal)...");
 
             // Load places FIRST (critical path) — set loading=false as soon as pins are ready
