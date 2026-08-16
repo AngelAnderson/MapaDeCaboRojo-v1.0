@@ -82,10 +82,14 @@ export default async function handler(req: any, res: any) {
     // fuera por el corte. Ahora se piden solo los que mapa sí es dueño de indexar.
     const SUBS_IN = `(${SPECIALIST_SUBS.map((s) => `"${s}"`).join(',')})`;
     const COLS = 'slug, id, verified_at, category, subcategory, npi';
+    // El .order('slug') no es cosmético: sin ORDER BY, Postgres no garantiza el mismo
+    // orden entre las 12 consultas, así que las fronteras de página se corren y el
+    // resultado es filas repetidas y filas que nunca salen. Ver la nota del sitemap
+    // del registro (16 ago 2026), donde eso costó 58 proveedores y 9 duplicados.
     const fetchAll = async (build: () => any): Promise<any[]> => {
       const out: any[] = [];
       for (let page = 0; page < 12; page++) {
-        const { data } = await build().range(page * 1000, (page + 1) * 1000 - 1);
+        const { data } = await build().order('slug', { ascending: true }).range(page * 1000, (page + 1) * 1000 - 1);
         if (!data || data.length === 0) break;
         out.push(...data);
         if (data.length < 1000) break;
@@ -250,6 +254,12 @@ export default async function handler(req: any, res: any) {
         .select('slug, updated_at')
         .not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open')
         .in('subcategory', SPECIALIST_SUBS)
+        // Sin ORDER BY, cada una de las 29 páginas se pide con un orden que Postgres
+        // no promete repetir: las fronteras se mueven y salen filas dobles mientras
+        // otras no salen nunca. Medido el 16 ago 2026: la base tenía 28,276 elegibles
+        // y el sitemap anunciaba 28,218 únicos con 9 repetidos. slug es único aquí,
+        // así que ordenar por él da una paginación estable y reproducible.
+        .order('slug', { ascending: true })
         .range(page * 1000, (page + 1) * 1000 - 1);
       if (!data || data.length === 0) break;
       specialists.push(...data);
