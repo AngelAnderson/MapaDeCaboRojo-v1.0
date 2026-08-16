@@ -373,13 +373,21 @@ export default async function handler(req: any, res: any) {
     // encodeURIComponent (/cuido/Cabo%20Rojo) y el sitio enlazaba /cuido/cabo-rojo:
     // anunciar aquí una de las dos habría sido pedirle a Google que indexe una página
     // que dice que la buena es otra.
-    const { data: cuidoMunis } = await supabase
+    // Va por fetchAll y NO por .limit(2000): PostgREST corta en 1,000 filas del lado
+    // del servidor y el limit del cliente no lo sube. La primera versión de esto pidió
+    // 2000, recibió 1,000 de 1,290 en silencio, y se perdieron Cataño y Maricao —
+    // justo los 2 pueblos con un solo hogar, que cayeron en las 290 que no llegaron.
+    // El mismo corte invisible que este archivo ya arregló 2 veces hoy, escrito de
+    // nuevo aquí mismo. Por eso el helper existe: para no volver a escribirlo.
+    // Ordena por `id`, NO por `slug`: estas filas tienen slug NULO (los hogares SULME
+    // entraron sin él) y ordenar por una columna nula no da paginación estable — sería
+    // el mismo bug de fronteras corridas, un piso más abajo.
+    const cuidoMunis = await fetchAll(() => supabase
       .from('places')
-      .select('municipality')
+      .select('id, municipality')
       .eq('subcategory', 'hogar de ancianos')
       .eq('verification_source', 'SULME_Familia_PR')
-      .eq('visibility', 'published')
-      .limit(2000);
+      .eq('visibility', 'published'), ['id']);
     for (const m of [...new Set((cuidoMunis || []).map((r: any) => r.municipality).filter(Boolean))]) {
       urls.push(`
         <url>
