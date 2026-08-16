@@ -7362,6 +7362,267 @@ ${articleHtml}
   }))
 }
 
+// =============== El contador de la última milla ===============
+// Hermano del marcador del silencio, apuntado al revés. Aquel cuenta lo que el gobierno
+// no contesta; este cuenta lo que nosotros todavía no hemos averiguado. Contarnos con la
+// misma regla es lo que da derecho a contarlos a ellos.
+//
+// Y es el motor, no el adorno: este número sube ÚNICAMENTE cuando alguien pregunta a un
+// proveedor si está cogiendo pacientes. No sube publicando, ni con una idea, ni con un
+// video. El día que no se preguntó, se queda igual y se ve. Esa es toda la gracia.
+//
+// Regla de frescura: 90 días. Un sí viejo no es un sí, es una corazonada vencida, y se
+// devuelve a "no sé". El mismo umbral que usa el Veci al contestar (search.ts, FRESCO_DIAS).
+type ContadorMilla = { totalPR: number; confirmados: number; cogiendo: number; totalCR: number; confirmadosCR: number }
+
+async function leerContadorUltimaMilla(): Promise<ContadorMilla> {
+  const vacio: ContadorMilla = { totalPR: 0, confirmados: 0, cogiendo: 0, totalCR: 0, confirmadosCR: 0 }
+  try {
+    const desde = new Date(Date.now() - 90 * 86400000).toISOString()
+    const base = () => supabase.from('places').select('id', { count: 'exact', head: true })
+      .eq('category', 'HEALTH').eq('visibility', 'published').eq('status', 'open')
+    const [tPR, conf, coge, tCR, confCR] = await Promise.all([
+      base(),
+      base().not('accepts_new_patients', 'is', null).gt('last_verified_at', desde),
+      base().eq('accepts_new_patients', true).gt('last_verified_at', desde),
+      base().eq('municipality', 'Cabo Rojo'),
+      base().eq('municipality', 'Cabo Rojo').not('accepts_new_patients', 'is', null).gt('last_verified_at', desde),
+    ])
+    return {
+      totalPR: tPR.count || 0, confirmados: conf.count || 0, cogiendo: coge.count || 0,
+      totalCR: tCR.count || 0, confirmadosCR: confCR.count || 0,
+    }
+  } catch { return vacio }
+}
+
+function bloqueContadorMilla(c: ContadorMilla): string {
+  if (!c.totalPR) return ''
+  const n = (x: number) => x.toLocaleString('en-US')
+  const cifra = (v: string, t: string, tono: string) =>
+    `<div><p class="text-3xl sm:text-4xl font-black m-0 ${tono}">${v}</p><p class="text-xs text-slate-500 m-0 leading-tight mt-1">${t}</p></div>`
+  return `
+<div class="not-prose mt-4 rounded-2xl bg-white border border-slate-200 p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-slate-500 font-bold m-0">La lista que estamos haciendo</p>
+  <p class="text-lg sm:text-xl font-black text-slate-900 mt-2 leading-snug m-0">Vamos a ser la única lista de Puerto Rico que dice <span class="text-teal-700">quién contesta y quién está cogiendo pacientes</span>, con la fecha en que lo confirmamos.</p>
+  <div class="mt-4 grid grid-cols-3 gap-3">
+    ${cifra(n(c.confirmados), 'confirmados en los últimos 90 días', 'text-teal-700')}
+    ${cifra(n(c.totalPR), 'proveedores de salud en todo PR', 'text-slate-900')}
+    ${cifra(`${n(c.confirmadosCR)} de ${n(c.totalCR)}`, 'en Cabo Rojo, que es donde vivimos', c.confirmadosCR ? 'text-teal-700' : 'text-rose-700')}
+  </div>
+  <p class="text-sm text-slate-700 mt-4 mb-0">Hoy vamos <b>${n(c.confirmados)} de ${n(c.totalPR)}</b>. Es ridículo, y por eso lo publicamos: <b>este número solo sube cuando alguien llama y pregunta.</b> No sube publicando, no sube con una idea, no sube con un video. El día que no se preguntó se queda igual, y se ve.</p>
+  <p class="text-[11px] text-slate-500 mt-2 mb-0">Un sí de más de 90 días deja de contar como sí y vuelve a «no sé», aquí y en el ${'*'}7711. Nadie sabe cuáles de esos ${n(c.totalPR)} contestan el teléfono: ni el plan médico, cuyo propio directorio repite 43.6% de los números, ni el Departamento de Salud, ni Google. Por eso hay que preguntarlo uno por uno.</p>
+</div>`
+}
+
+// =============== El marcador del silencio (Ley 141-2019) ===============
+// Por qué existe: la página describía el método ("un marcador que dice preguntado el 15 de
+// agosto, sin contestar") y no lo montaba. Un expediente que solo se lee deja al vecino igual
+// que antes; lo único que mueve la aguja es que su acción quede grabada con fecha. Aquí queda.
+//
+// El derecho, contra el texto oficial consolidado (OGP, Rev. 13 marzo 2026):
+//   Art. 6  · la solicitud se notifica al JEFE de la agencia CON COPIA al Oficial de Información,
+//             y debe traer dirección postal Y correo electrónico. Si no, es DEFECTUOSA y no
+//             extingue el término. O sea: una carta mal dirigida no arranca ningún reloj.
+//   Art. 7  · 20 días laborables (≤300 folios y <3 años); 30 si excede folios/antigüedad o si se
+//             radicó en oficina regional. Prórroga única de 20, y solo si la notifican dentro del
+//             término inicial con la razón. Vencido el término sin contestar: se entiende DENEGADA.
+//   Art. 9  · Recurso Especial ante el TPI de San Juan. Sin sellos, sin aranceles, sin abogado.
+//             Término de cumplimiento ESTRICTO de 30 días desde la denegación o el vencimiento.
+//   Art. 10 · (Ley 156-2025) hasta $100 diarios por incumplir la Resolución, tope $18,000.
+const CARTA141 = {
+  para: 'contactus@salud.pr.gov',
+  copia: 'leydetransparencia@salud.pr.gov',
+  copiaMarcador: 'angel@caborojo.com',
+  secretario: 'Dr. Víctor M. Ramos Otero',
+  agencia: 'Departamento de Salud de Puerto Rico',
+  asunto: 'Solicitud de información pública — Ley 141-2019, según enmendada',
+}
+
+type Marcador141 = {
+  total: number; confirmadas: number; abiertas: number; vencidas: number
+  masVieja: number | null; contestadas: number
+}
+
+async function leerMarcador141(): Promise<Marcador141> {
+  const vacio: Marcador141 = { total: 0, confirmadas: 0, abiertas: 0, vencidas: 0, masVieja: null, contestadas: 0 }
+  try {
+    const { data, error } = await supabase
+      .from('v_marcador_141')
+      .select('confirmada, contestada, vencida, dias_laborables')
+    if (error || !data) return vacio
+    const abiertas = data.filter((r: any) => !r.contestada)
+    return {
+      total: data.length,
+      confirmadas: data.filter((r: any) => r.confirmada).length,
+      contestadas: data.length - abiertas.length,
+      abiertas: abiertas.length,
+      vencidas: data.filter((r: any) => r.vencida).length,
+      masVieja: abiertas.length ? Math.max(...abiertas.map((r: any) => Number(r.dias_laborables) || 0)) : null,
+    }
+  } catch { return vacio }
+}
+
+function bloqueCarta141(m: Marcador141): string {
+  // El titular cambia con el estado real. Un "0 vecinos han preguntado" en grande es un
+  // cartel de que aquí no pasa nada; el cero se dice, pero como invitación, no como marcador.
+  const titular = m.total === 0
+    ? 'Todavía nadie ha preguntado por escrito. El primero pesa más que el número diez.'
+    : (m.masVieja !== null
+        ? `${m.total} ${m.total === 1 ? 'vecino ha preguntado' : 'vecinos han preguntado'} por escrito. La más vieja sin contestar lleva <span class="text-teal-300">${m.masVieja} ${m.masVieja === 1 ? 'día laborable' : 'días laborables'}</span>.`
+        : `${m.total} ${m.total === 1 ? 'vecino ha preguntado' : 'vecinos han preguntado'} por escrito. Todas contestadas, por ahora.`)
+
+  const chip = (n: number | string, t: string, tono: string) =>
+    `<div class="rounded-xl bg-white/10 px-3 py-2"><p class="text-xl font-black m-0 ${tono}">${n}</p><p class="text-[11px] text-slate-300 m-0 leading-tight">${t}</p></div>`
+
+  // Vive DENTRO del PASO 2, que es el paso que lo describe ("publicar la respuesta, y también
+  // el silencio"). No va arriba: el que acaba de llegar no sabe todavía qué es la Ley 141, y un
+  // contador sin su explicación al lado es un número huérfano. Cada paso con su instrumento.
+  return `
+<div class="not-prose mt-3 rounded-xl bg-slate-900 text-white p-4 sm:p-5">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold m-0">El marcador del silencio</p>
+  <p class="text-lg sm:text-xl font-black mt-2 leading-snug m-0">${titular}</p>
+  <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+    ${chip(m.total, 'radicadas', 'text-white')}
+    ${chip(m.confirmadas, 'con copia recibida', 'text-teal-300')}
+    ${chip(m.abiertas, 'sin contestar', 'text-amber-300')}
+    ${chip(m.vencidas, 'fuera de término', 'text-rose-300')}
+  </div>
+  <p class="text-sm text-slate-300 mt-3 mb-0">Cada fila es un vecino que preguntó por escrito y todavía espera. <a href="#carta" class="font-bold text-teal-300 underline">Añadir la mía ↑</a></p>
+  <p class="text-[11px] text-slate-400 mt-2 mb-0 leading-snug">Cómo se cuenta: <b>radicadas</b> es lo que reporta quien la mandó. <b>Con copia recibida</b> es la que además llegó a nuestro buzón, o sea la que podemos probar. Los días son laborables y no descuentan feriados, así que el contador va por lo bajo a propósito. Si el número se puede tumbar, no sirve.</p>
+</div>`
+}
+
+function bloqueFormulario141(): string {
+  return `
+<div id="carta" class="not-prose mt-3 rounded-2xl overflow-hidden border border-slate-300">
+  <div class="bg-white p-5 sm:p-6">
+    <p class="font-black text-slate-900 text-lg m-0">Manda la tuya. Toma 2 minutos y arranca un reloj legal.</p>
+    <p class="text-sm text-slate-600 mt-1 mb-4">No estás pidiendo un favor ni que inventen nada: son documentos que ya existen. Si alguno no existe, tienen que certificarlo por escrito, y esa certificación suele ser el hallazgo. Si no contestan en el término, la ley da por denegada la solicitud y se te abre el Tribunal, sin sellos, sin aranceles y sin abogado.</p>
+
+    <form id="c141" class="grid gap-3">
+      <div class="grid sm:grid-cols-2 gap-3">
+        <label class="block"><span class="text-xs font-bold text-slate-500">Tu nombre</span>
+          <input id="c141-n" required maxlength="80" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" placeholder="María Rivera"></label>
+        <label class="block"><span class="text-xs font-bold text-slate-500">Tu pueblo</span>
+          <input id="c141-p" required maxlength="40" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" placeholder="Cabo Rojo"></label>
+      </div>
+      <label class="block"><span class="text-xs font-bold text-slate-500">Tu correo electrónico</span>
+        <input id="c141-e" type="email" required maxlength="120" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" placeholder="maria@ejemplo.com"></label>
+      <label class="block"><span class="text-xs font-bold text-slate-500">Tu dirección postal</span>
+        <input id="c141-d" required maxlength="140" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" placeholder="HC 01 Box 1234, Cabo Rojo, PR 00623">
+        <span class="text-[11px] text-slate-500">La ley la exige (Artículo 6). Sin dirección postal la solicitud se considera <b>defectuosa y el reloj no arranca</b>. No la publicamos ni la guardamos.</span></label>
+      <input id="c141-company" type="text" name="company" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" aria-hidden="true">
+      <label class="flex items-start gap-2 text-sm text-slate-700"><input id="c141-cc" type="checkbox" checked class="mt-1"><span>Mandarme copia a mí también, para poder contarla como confirmada en el marcador.</span></label>
+      <label class="flex items-start gap-2 text-sm text-slate-700"><input id="c141-pub" type="checkbox" class="mt-1"><span>Pueden publicar mi nombre en el marcador. (Si lo dejas en blanco sale solo el pueblo.)</span></label>
+
+      <div class="rounded-xl bg-slate-50 border border-slate-200 p-3">
+        <p class="text-xs font-bold text-slate-500 m-0 mb-1">Esta es la carta que se manda. Léela.</p>
+        <pre id="c141-prev" class="text-[12px] leading-relaxed text-slate-700 whitespace-pre-wrap m-0 max-h-56 overflow-auto font-sans"></pre>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <button type="button" id="c141-copy" class="rounded-full bg-slate-900 text-white font-bold px-4 py-2.5 text-sm">Copiar la carta</button>
+        <a id="c141-mail" href="#" class="rounded-full bg-teal-700 text-white font-bold px-4 py-2.5 text-sm">Abrirla en mi correo</a>
+        <button type="submit" class="rounded-full border-2 border-slate-900 text-slate-900 font-bold px-4 py-2.5 text-sm">Ya la mandé →</button>
+      </div>
+      <p class="text-[11px] text-slate-500 m-0">Si el botón de correo no te abre nada, copia la carta y pégala en tu correo. Va a <b>${escapeHtml(CARTA141.para)}</b> con copia a <b>${escapeHtml(CARTA141.copia)}</b>. Guarda el mensaje en tu carpeta de enviados: esa es tu prueba de la fecha.</p>
+      <p id="c141-ok" class="hidden text-sm font-bold text-teal-800 bg-teal-50 border border-teal-200 rounded-lg p-3 m-0"></p>
+    </form>
+  </div>
+</div>
+<script>(function(){
+  var F=document.getElementById('c141'); if(!F) return;
+  var N=document.getElementById('c141-n'),P=document.getElementById('c141-p'),E=document.getElementById('c141-e'),
+      D=document.getElementById('c141-d'),CC=document.getElementById('c141-cc'),PUB=document.getElementById('c141-pub'),
+      PREV=document.getElementById('c141-prev'),MAIL=document.getElementById('c141-mail'),OK=document.getElementById('c141-ok');
+  var PARA=${JSON.stringify(CARTA141.para)},COPIA=${JSON.stringify(CARTA141.copia)},MARC=${JSON.stringify(CARTA141.copiaMarcador)},
+      ASUNTO=${JSON.stringify(CARTA141.asunto)},SEC=${JSON.stringify(CARTA141.secretario)},AG=${JSON.stringify(CARTA141.agencia)};
+  var MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  function hoy(){var d=new Date();return d.getDate()+' de '+MESES[d.getMonth()]+' de '+d.getFullYear();}
+  function carta(){
+    var n=(N.value||'[tu nombre]').trim(), p=(P.value||'[tu pueblo]').trim(),
+        e=(E.value||'[tu correo]').trim(), d=(D.value||'[tu dirección postal]').trim();
+    return 'Sr. Secretario de Salud, '+SEC+'\\n'+AG+'\\nCon copia al Oficial de Información\\n\\n'
+      +'Estimado señor Secretario:\\n\\n'
+      +'Al amparo de la Ley 141-2019, "Ley de Transparencia y Procedimiento Expedito para el Acceso a la Información Pública", según enmendada por la Ley 156-2025, solicito copia de los siguientes documentos, que ya obran en poder del Departamento:\\n\\n'
+      +'1. El desglose de las adjudicaciones del State Loan Repayment Program (SLRP) recibidas por Puerto Rico, por un total de $2,414,970: cuántos profesionales de la salud recibieron repago de préstamos estudiantiles, en qué municipios prestaron el servicio y en qué años fiscales.\\n\\n'
+      +'2. Cuántas de las 30 exenciones anuales de visa J-1 (Conrad 30) disponibles para Puerto Rico se solicitaron y se adjudicaron en cada uno de los últimos cinco años fiscales, y en qué municipios fueron ubicados los médicos.\\n\\n'
+      +'3. La fecha de la última actualización del expediente de designación de área de escasez de profesionales de la salud (HPSA) del municipio de '+p+', y copia de la solicitud más reciente sometida a HRSA.\\n\\n'
+      +'No solicito que se cree, se resuma ni se analice documento alguno. Si alguno de los documentos solicitados no existe, solicito que así se certifique por escrito.\\n\\n'
+      +'Conforme al Artículo 7 de la Ley, el término para entregar la información no excederá de veinte (20) días laborables contados desde el envío de esta solicitud, prorrogable una sola vez por veinte (20) días laborables adicionales si se me notifica dentro del término inicial y se expone la razón. De no recibir respuesta dentro del término, se entenderá denegada la solicitud.\\n\\n'
+      +'Conforme al Artículo 6, mis datos para notificaciones son:\\nNombre: '+n+'\\nDirección postal: '+d+'\\nCorreo electrónico: '+e+'\\n\\n'
+      +'Agradezco el acuse de recibo y el número de identificación de esta solicitud.\\n\\nCordialmente,\\n'+n+'\\n'+p+', Puerto Rico\\n'+hoy();
+  }
+  function pinta(){
+    var t=carta(); PREV.textContent=t;
+    var cc=COPIA+(CC.checked?','+MARC:'');
+    MAIL.setAttribute('href','mailto:'+PARA+'?cc='+encodeURIComponent(cc)+'&subject='+encodeURIComponent(ASUNTO)+'&body='+encodeURIComponent(t));
+  }
+  [N,P,E,D,CC].forEach(function(el){el.addEventListener('input',pinta);el.addEventListener('change',pinta);});
+  pinta();
+  document.getElementById('c141-copy').addEventListener('click',function(){
+    var b=this; navigator.clipboard.writeText(carta()).then(function(){var o=b.textContent;b.textContent='✓ Copiada';setTimeout(function(){b.textContent=o},1800);});
+  });
+  F.addEventListener('submit',function(ev){
+    ev.preventDefault();
+    if(!N.value.trim()||!P.value.trim()||!E.value.trim()||!D.value.trim()){OK.className='text-sm font-bold text-rose-800 bg-rose-50 border border-rose-200 rounded-lg p-3 m-0';OK.textContent='Llena los cuatro campos. La dirección postal la exige la ley, no nosotros.';return;}
+    fetch('/api/mapa-pages?page=carta-141',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({nombre:N.value,pueblo:P.value,email:E.value,publicar_nombre:!!PUB.checked,company:(document.getElementById('c141-company')||{}).value||'',pedido:'SLRP $2,414,970 · visas Conrad 30 · fecha del expediente HPSA'})})
+      .then(function(r){return r.json()}).then(function(){
+        OK.className='text-sm font-bold text-teal-800 bg-teal-50 border border-teal-200 rounded-lg p-3 m-0';
+        OK.textContent='Quedó anotada con la fecha de hoy. Guarda tu copia en enviados. Si a los 20 días laborables no te contestan, escríbenos: eso ya es una denegación y se puede llevar al Tribunal sin abogado.';
+      }).catch(function(){
+        OK.className='text-sm font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3 m-0';
+        OK.textContent='No pudimos anotarla, pero tu carta vale igual: lo que cuenta es el correo que mandaste.';
+      });
+  });
+})();</script>`
+}
+
+// Registra una carta radicada. Autoreporte: se marca confirmada solo cuando llega la copia
+// real al buzón, y el marcador publica las dos cifras por separado en vez de inflar una sola.
+async function handleCarta141(req: any, res: any) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8')
+  try {
+    if (req.method !== 'POST') { res.status(405).send(JSON.stringify({ ok: false })); return }
+    // Este endpoint era el unico sink publico de escritura del archivo SIN freno:
+    // registro-search, conserje-intent y registro-lead ya pasan por isRateLimited.
+    // Y aqui pesa mas que en los otros, porque lo que se inserta alimenta un
+    // contador que la propia pagina cita como argumento ("N vecinos radicaron").
+    // Un numero inflable hace mas dano que el spam: lo que se vende es que el
+    // numero aguanta. La segunda valla vive en la base (indice unico
+    // cartas_141_una_por_email_pedido), que es la que no se puede saltar
+    // cambiando el codigo.
+    const ip = getClientIp(req)
+    if (await isRateLimited('carta141', ip, 3, 60_000) ||
+        await isRateLimited('carta141_dia', ip, 20, 24 * 60 * 60_000)) {
+      res.status(429).send(JSON.stringify({ ok: false, error: 'rate_limited' })); return
+    }
+    const b = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}')
+    // Trampa: campo escondido que un humano nunca llena y un bot de formularios si.
+    if (String(b.company || '').trim()) { res.status(200).send(JSON.stringify({ ok: true })); return }
+    const strip = (v: any, n: number) => String(v || '').replace(/[\u0000-\u001f\u007f]/g, '').slice(0, n).trim()
+    const nombre = strip(b.nombre, 80)
+    const pueblo = strip(b.pueblo, 40)
+    const email = strip(b.email, 120).toLowerCase()
+    const pedido = strip(b.pedido, 120) || 'Solicitud Ley 141-2019'
+    if (!nombre || !pueblo || !email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      res.status(400).send(JSON.stringify({ ok: false })); return
+    }
+    // La dirección postal NO se guarda: es dato de contacto del solicitante con la agencia,
+    // no nuestro. Viaja en su correo y ahí se queda.
+    const { error } = await supabase.from('cartas_141').insert({
+      nombre, pueblo, email, pedido,
+      publicar_nombre: b.publicar_nombre === true,
+      agencia: CARTA141.agencia,
+    })
+    if (error) { res.status(200).send(JSON.stringify({ ok: false })); return }
+    res.status(200).send(JSON.stringify({ ok: true }))
+  } catch {
+    res.status(200).send(JSON.stringify({ ok: false }))
+  }
+}
+
 // =============== /registro/opciones — el menú de salidas, ordenado por lo que cuesta ===============
 // Par de /registro/porque: aquella explica POR QUÉ; esta contesta ¿Y AHORA QUÉ?
 // v3 (2026-08-15): flujo abuelita-first. Angel pidió: que se entienda sin pensar, que las
@@ -7369,6 +7630,11 @@ ${articleHtml}
 // (hijo, mayor, médico, alcalde, gobierno), la sección de Cabo Rojo, y cómo hacer ruido sin gritar.
 // Orden mental: pregunta de abuela primero, jerga al final en diccionario.
 async function handleRegistroOpciones(req: any, res: any) {
+  // ── El marcador del silencio (en vivo) ────────────────────────────────────
+  // Esto SÍ se lee en vivo, al revés que los datos de Cabo Rojo de abajo: un
+  // contador de días que se congela en el código miente todos los días.
+  const [marcador141, contadorMilla] = await Promise.all([leerMarcador141(), leerContadorUltimaMilla()])
+
   // ── Datos de Cabo Rojo (verificados en vivo 2026-08-15) ───────────────────
   // Se dejan literales y fechados a propósito: si se leen en vivo y la vista cambia
   // de forma, la página miente en silencio. El día que se muevan, se mueven aquí.
@@ -7593,12 +7859,25 @@ async function handleRegistroOpciones(req: any, res: any) {
   <p class="text-lg sm:text-xl font-black mt-2 leading-snug m-0 text-teal-300">Pero hay ${gratis} cosas que arreglarían parte de esto y no cuestan un peso. Son justo las que llevan más tiempo sin hacerse.</p>
 </div>
 
+<!-- El techo, dicho de frente y arriba. Va aquí porque es lo que hace creíble todo lo demás:
+     una página que promete arreglarlo todo no se le cree, y una que dice qué NO puede hacer
+     compra el derecho a que le crean lo que sí. También es la vacuna contra "así son las cosas":
+     el que lee sabe desde la línea 3 que aquí no se le va a vender humo. -->
+<div class="not-prose mt-4 rounded-2xl border-2 border-slate-900 bg-white p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-slate-500 font-bold m-0">Lo que esta página no puede hacer</p>
+  <p class="text-xl sm:text-2xl font-black text-slate-900 mt-2 leading-snug m-0">No podemos arreglar el Medicaid. No podemos cambiar la fórmula de Medicare. No podemos hacer aparecer médicos.</p>
+  <p class="text-sm text-slate-600 mt-2 mb-0">Eso lo decide el Congreso, y ya tiene fecha: <b>30 de septiembre de 2027</b>. Quien te diga que lo va a resolver desde aquí te está mintiendo.</p>
+  <p class="text-base text-slate-900 mt-4 mb-0 leading-snug"><b>Lo que sí se puede es todo lo que pasa entre «existe un médico» y «tienes cita».</b> Ahí es donde se pierde la gente de verdad: el teléfono que nadie contesta, el directorio viejo, el referido que se perdió, el plan que dice que no la primera vez. Nada de eso lo decide Washington, y nada de eso se arregla esperando.</p>
+</div>
+
+${bloqueContadorMilla(contadorMilla)}
+
 <div class="not-prose mt-4 bg-white border border-slate-200 rounded-2xl p-4">
   <div class="flex items-start gap-3">
     <div class="text-2xl leading-none">🎧</div>
     <div class="flex-1 min-w-0">
       <p class="text-sm font-bold text-slate-800 m-0">Escúchalo en vez de leerlo</p>
-      <p class="text-xs text-slate-500 mt-0.5 mb-2">6 minutos, en español. Ponlo mientras guías o cocinas. Cubre lo mismo que esta página.</p>
+      <p class="text-xs text-slate-500 mt-0.5 mb-2">6 minutos, en español. Ponlo mientras guías o cocinas. Cubre lo mismo que esta página, menos el recuadro de arriba: <b>no podemos arreglar el Medicaid ni hacer aparecer médicos, y lo que sí se puede es lo que pasa entre «existe un médico» y «tienes cita».</b></p>
       <audio controls preload="none" class="w-full" src="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/registro/por-que-no-hay-medicos.m4a">Tu navegador no puede reproducir el audio. <a href="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/registro/por-que-no-hay-medicos.m4a" class="text-teal-700 font-semibold">Descárgalo</a>.</audio>
     </div>
   </div>
@@ -7923,12 +8202,17 @@ ${tiersHtml}
     <p class="text-xs font-bold text-slate-500 m-0">PASO 1 · Preguntar por escrito</p>
     <p class="font-black text-slate-900 mt-1 mb-1">Un email de una página, bajo la Ley 141 de 2019</p>
     <p class="text-sm text-slate-600 m-0">Al Departamento de Salud de Puerto Rico no le aplica FOIA: le aplica la <b>Ley 141 de 2019, según enmendada por la Ley 156 de 2025</b>, que le da <b>20 días laborables</b> para contestar, prorrogables una sola vez por 20 más y solo si te avisan dentro del término. Citar la ley o el término equivocado es la excusa perfecta para no contestarte. <b>Va por email, no por carta</b>, porque el reloj arranca el día que se somete y el email se fecha solo.</p>
+    <p class="text-sm text-slate-600 mt-2 mb-2"><b>Hay un detalle que tumba cartas y casi nadie lo sabe:</b> el Artículo 6 exige que la solicitud se le notifique <b>al jefe de la agencia, con copia al Oficial de Información</b>, y que traiga <b>dirección postal y correo electrónico</b>. Si falta algo de eso, la solicitud es <b>defectuosa y el reloj nunca arranca</b>. Es la salida más limpia que tiene una agencia para no contestarte, y no le cuesta nada usarla.</p>
     <p class="text-sm text-slate-600 mt-2 mb-0"><b>Y la regla que lo hace a prueba de bruto:</b> no se pide que <i>creen</i> nada. Se piden documentos que ya existen por mandato de ley, y si alguno no existe, <b>que lo certifiquen por escrito</b>. Esa certificación de que no existe es, muchas veces, el hallazgo. Se piden cosas que ya deberían estar publicadas: a cuántos clínicos se les pagó la deuda con los $2,414,970, cuántas de las 30 visas se usaron, y cuándo se actualizó por última vez el expediente de tu pueblo.</p>
   </div>
+
+${bloqueFormulario141()}
+
   <div class="bg-white border border-slate-200 rounded-xl p-4">
     <p class="text-xs font-bold text-slate-500 m-0">PASO 2 · Publicar la respuesta, y también el silencio</p>
     <p class="font-black text-slate-900 mt-1 mb-1">Si contestan, es un dato. Si no contestan, también.</p>
     <p class="text-sm text-slate-600 m-0">Aquí está el truco entero: <b>no hay forma de perder</b>. Si te contestan, tienes el número que nadie tenía. Si no te contestan en 20 días laborables, tienes algo mejor: la fecha en que preguntaste y el silencio, que es un hecho verificable y publicable. Y no es solo moral: pasado el término sin respuesta la solicitud se entiende denegada, queda abierto el Recurso Especial ante el Tribunal de Primera Instancia, y desde la enmienda de 2025 el incumplimiento de una orden judicial conlleva multas de hasta $100 diarios. Un marcador que dice &quot;preguntado el 15 de agosto, sin contestar&quot; y que sube el contador cada mes pesa más que cualquier queja.</p>
+${bloqueCarta141(marcador141)}
   </div>
   <div class="bg-white border border-slate-200 rounded-xl p-4">
     <p class="text-xs font-bold text-slate-500 m-0">PASO 3 · Hacerlo citable</p>
@@ -8368,7 +8652,53 @@ ${SHARE_COPY_SCRIPT}`
   }))
 }
 
+// La sección de la última milla dentro de /comparte. Va aquí y no en una página nueva
+// porque la quinta página para lo mismo es el problema, no la solución.
+//
+// Y corrige un sesgo de esta página: todo lo demás en ella prueba que el sistema está
+// roto, que es munición para el "así son las cosas". Un promotor armado solo con eso
+// reparte fatalismo con fuente. Esto le da lo único que se puede empujar hacia adelante:
+// algo que se está construyendo, con lo poco que llevamos dicho de frente.
+function bloqueMillaCitable(c: ContadorMilla): string {
+  if (!c.totalPR) return ''
+  const n = (x: number) => x.toLocaleString('en-US')
+  const M = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']
+  const d = new Date(); const hoy = `${d.getDate()} de ${M[d.getMonth()]} de ${d.getFullYear()}`
+  const FUENTE = `Fuente: Registro Médico PR (registromedicopr.com), sobre el registro federal NPPES. Datos al ${hoy}.`
+  const citas: [string, string][] = [
+    ['El número que nadie tiene',
+     `Puerto Rico tiene ${n(c.totalPR)} proveedores de salud listados. Nadie sabe cuáles están aceptando pacientes nuevos: al ${hoy}, solo ${n(c.confirmados)} lo tienen confirmado por contacto directo. ${FUENTE}`],
+    ['El pueblo, como ejemplo',
+     `En Cabo Rojo hay ${n(c.totalCR)} proveedores de salud listados y ${n(c.confirmadosCR)} con confirmación vigente de si están aceptando pacientes nuevos. ${FUENTE}`],
+    ['Por qué el directorio no basta',
+     `En el registro, 43.6% de los proveedores comparte el mismo número de teléfono con otro proveedor. Por eso una lista de nombres no es una lista de citas. ${FUENTE}`],
+  ]
+  return `
+<div class="not-prose mt-6 rounded-2xl border-2 border-teal-700 bg-white p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-700 font-bold m-0">Lo que estamos construyendo, y cuánto llevamos</p>
+  <p class="text-xl sm:text-2xl font-black text-slate-900 mt-2 leading-snug m-0">La única lista de Puerto Rico que diga quién contesta y quién está aceptando pacientes, con la fecha en que se confirmó.</p>
+  <div class="mt-4 grid grid-cols-3 gap-3">
+    <div><p class="text-3xl font-black m-0 text-teal-700">${n(c.confirmados)}</p><p class="text-xs text-slate-500 m-0 mt-1 leading-tight">confirmados (90 días)</p></div>
+    <div><p class="text-3xl font-black m-0 text-slate-900">${n(c.totalPR)}</p><p class="text-xs text-slate-500 m-0 mt-1 leading-tight">proveedores en PR</p></div>
+    <div><p class="text-3xl font-black m-0 ${c.confirmadosCR ? 'text-teal-700' : 'text-rose-700'}">${n(c.confirmadosCR)} de ${n(c.totalCR)}</p><p class="text-xs text-slate-500 m-0 mt-1 leading-tight">en Cabo Rojo</p></div>
+  </div>
+  <p class="text-sm text-slate-700 mt-4 mb-0">Publicamos el número aunque sea vergonzoso, porque es el único honesto y porque <b>solo sube cuando alguien pregunta uno por uno.</b> Si citas esta página dentro de un mes, el número va a ser otro. Búscalo, no lo copies de aquí de memoria.</p>
+
+  <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mt-5 mb-2">3 líneas listas para citar</p>
+  <div class="space-y-2">
+    ${citas.map(([t, x]) => `<div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+      <p class="text-xs font-bold text-slate-500 m-0">${escapeHtml(t)}</p>
+      <p class="text-sm text-slate-800 mt-1 mb-2">${escapeHtml(x)}</p>
+      <button type="button" class="copy-btn text-xs font-semibold text-teal-700 border border-teal-300 rounded-full px-3 py-1 hover:bg-teal-50" data-copy="${escapeHtml(x)}">📋 Copiar</button>
+    </div>`).join('')}
+  </div>
+
+  <p class="text-sm text-slate-700 mt-5 mb-0"><b>¿Quieres empujarlo y no eres prensa?</b> Lo que más sirve no es compartir: es <b>preguntarle a tu propio médico si está aceptando pacientes nuevos y decírnoslo</b>. Eso mueve el número de arriba. Escríbele al ${'*'}7711 o a angel@caborojo.com. Textos y tarjetas listas: <a href="/kit" class="font-bold text-teal-700 underline">el kit para compartir</a>.</p>
+</div>`
+}
+
 async function handleComparte(req: any, res: any) {
+  const milla = await leerContadorUltimaMilla()
   let g = { ...COMPARTE_G_DEFAULT }
   try {
     const { data } = await supabase.from('v_registro_municipio_intel').select('poblacion,especialistas,psiquiatras,hpsa_primaria,hpsa_salud_mental,cupon_mh_sin_cobrar,por_10k_hab').range(0, 100)
@@ -8422,6 +8752,8 @@ async function handleComparte(req: any, res: any) {
   <p class="text-slate-300 mt-2 text-sm leading-relaxed">${g.conHpsa} de 76 municipios de PR con designación federal de escasez activa. ${g.cupon} con el dinero de salud mental aprobado y cero psiquiatras: ${n(g.cuponPob)} personas. Verificado contra el registro federal, pueblo por pueblo.</p>
   <button type="button" class="copy-btn mt-3 text-sm font-bold text-slate-900 bg-white rounded-full px-4 py-2 hover:bg-slate-100" data-copy="${escapeHtml(heroClaim)}">📋 Copiar el titular</button>
 </div>
+
+${bloqueMillaCitable(milla)}
 
 <h2>Los datos (toca "Copiar" en cualquiera)</h2>
 ${factCards}
@@ -18636,6 +18968,7 @@ export default async function handler(req: any, res: any) {
     case 'datos': return await handleDatos(req, res)
     case 'porque': return await handleRegistroPorque(req, res)
     case 'registro-opciones': return await handleRegistroOpciones(req, res)
+    case 'carta-141': return await handleCarta141(req, res)
     case 'registro-puedo-volver': return await handleRegistroPuedoVolver(req, res)
     case 'recuperacion': return await handleRecuperacion(req, res)
     case 'sinfiltros': return await handleSinFiltros(req, res)
