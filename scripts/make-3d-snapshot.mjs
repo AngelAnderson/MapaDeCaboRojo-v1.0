@@ -71,6 +71,13 @@ async function traer() {
       .eq('visibility', 'published').eq('status', 'open')
       .in('municipality', OESTE)
       .not('lat', 'is', null).not('lon', 'is', null)
+      // Un negocio que va a TU casa no tiene un sitio al que ir, y ponerle pin es
+      // decir "esta aqui" donde no esta. Oso Electric, 3 gruas y varios de
+      // jardineria caian todos encima de la plaza: su direccion es solo "Cabo
+      // Rojo, PR" y el geocodificador tira al centro del pueblo cuando no sabe.
+      // Siguen en la busqueda y en el Veci, que es donde se les llama. Ya habia
+      // precedente sin nombre: Pipeline Plumbing y Quickfix PR nunca tuvieron pin.
+      .eq('sin_local', false)
       // Sin ORDER BY, Postgres no promete el mismo orden entre una página y la
       // siguiente: las fronteras se corren y salen filas dobles mientras otras no
       // salen nunca. Hoy son 3,528 filas, o sea 4 páginas — pasó de latente a real
