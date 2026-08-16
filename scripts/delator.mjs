@@ -119,9 +119,27 @@ async function sitemapDelRegistro() {
 async function snapshot3d() {
   const { ok, texto } = await traer('https://www.mapadecaborojo.com/3d');
   if (!ok) return delatar('ROTO', 'mapa 3D', 'no responde', '—');
-  const m = texto.match(/const PLACES=(\{.*?\});\s*$/ms);
-  if (!m) return delatar('ROTO', 'mapa 3D', 'no encuentro const PLACES', '—');
-  const vivos = JSON.parse(m[1]).features.length;
+
+  // La data salió del HTML a /3d/datos-<hash>.js el 16 ago. Este chequeo buscaba
+  // `const PLACES=` dentro del documento y empezó a gritar "no lo encuentro" — o
+  // sea que hizo su trabajo: noto que la forma cambio en vez de pasar callado.
+  // Ahora sigue el <script id="datos-3d"> hasta el archivo real y cuenta ahi.
+  // Se cuenta el archivo, NO el atributo data-lugares: ese numero es la promesa
+  // del generador, y un guardia que verifica contra la promesa no verifica nada.
+  const ref = texto.match(/id="datos-3d"[^>]*src="([^"]+)"/);
+  let vivos;
+  if (ref) {
+    const datos = await traer('https://www.mapadecaborojo.com' + ref[1]);
+    if (!datos.ok) return delatar('ROTO', 'mapa 3D', `el HTML apunta a ${ref[1]} y ese archivo no responde`, 'data partida del shell, 16 ago');
+    const md = datos.texto.match(/const PLACES=(\{.*\});\s*$/s);
+    if (!md) return delatar('ROTO', 'mapa 3D', `${ref[1]} no define PLACES`, 'data partida del shell, 16 ago');
+    vivos = JSON.parse(md[1]).features.length;
+  } else {
+    // Forma vieja: data pegada en el HTML. Se acepta para no gritar si alguien revierte.
+    const m = texto.match(/const PLACES=(\{.*?\});\s*$/ms);
+    if (!m) return delatar('ROTO', 'mapa 3D', 'no encuentro ni el <script id="datos-3d"> ni const PLACES', 'data partida del shell, 16 ago');
+    vivos = JSON.parse(m[1]).features.length;
+  }
 
   const oeste = ['Cabo Rojo', 'Mayagüez', 'San Germán', 'Lajas', 'Hormigueros', 'Sabana Grande'];
   const debe = await contar('places',
