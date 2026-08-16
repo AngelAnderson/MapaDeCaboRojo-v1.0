@@ -10,7 +10,14 @@
 //
 // El archivo sale con hash en el nombre, igual que datos-*.js, para que el
 // navegador lo cachee para siempre y un cambio invalide el cache solo.
-import { writeFileSync, readdirSync, unlinkSync } from 'node:fs'
+//
+// Lo que hace propio a este mapa: cada edificio se cruza contra el directorio.
+// El que tiene adentro un negocio que existe se pinta con el color de su
+// categoria; el que tiene uno CONFIRMADO en los ultimos 90 dias se levanta y se
+// pinta fuerte. El resto del pueblo queda en hueso, de escenario. Eso ningun
+// otro mapa lo puede hacer: OSM tiene las paredes, nosotros tenemos quien esta
+// adentro.
+import { writeFileSync, readdirSync, unlinkSync, readFileSync } from 'node:fs'
 import { createHash } from 'node:crypto'
 import { join } from 'node:path'
 
@@ -60,9 +67,38 @@ function areaM2(pts) {
   return Math.abs(a / 2)
 }
 
+// ── el directorio, del mismo archivo que ya carga el mapa ───────────────────
+// Se lee de public/3d/datos-*.js en vez de ir a Supabase: es la misma verdad
+// que el mapa esta enseñando en ese momento, y no hace falta ninguna llave.
+function leerLugares() {
+  const dir = readdirSync(SALIDA).find(f => /^datos-[a-f0-9]+\.js$/.test(f))
+  if (!dir) { console.warn('[casco] no encontre datos-*.js, los edificios van sin cruzar'); return [] }
+  const src = readFileSync(join(SALIDA, dir), 'utf8')
+  const geo = JSON.parse(src.slice(src.indexOf('{'), src.lastIndexOf('}') + 1))
+  const dentro = geo.features.filter(f => {
+    const [lon, lat] = f.geometry.coordinates
+    return lat >= BBOX[0] && lat <= BBOX[2] && lon >= BBOX[1] && lon <= BBOX[3]
+  })
+  console.log(`[casco] ${dir}: ${dentro.length} negocios dentro del casco`)
+  return dentro
+}
+
+// Punto en poligono, rayo horizontal. Los anillos son chiquitos (huellas de
+// edificio), asi que la fuerza bruta con caja envolvente alcanza y sobra.
+function dentroDe(lon, lat, anillo, caja) {
+  if (lon < caja[0] || lon > caja[2] || lat < caja[1] || lat > caja[3]) return false
+  let d = false
+  for (let i = 0, j = anillo.length - 1; i < anillo.length; j = i++) {
+    const [xi, yi] = anillo[i], [xj, yj] = anillo[j]
+    if ((yi > lat) !== (yj > lat) && lon < ((xj - xi) * (lat - yi)) / (yj - yi) + xi) d = !d
+  }
+  return d
+}
+
 const elementos = await bajar()
+const lugares = leerLugares()
 const rasgos = []
-let sinAltura = 0
+let sinAltura = 0, conNegocio = 0, confirmados = 0
 
 for (const e of elementos) {
   const pts = e.geometry
@@ -90,9 +126,36 @@ for (const e of elementos) {
   const pri = anillo[0], ult = anillo[anillo.length - 1]
   if (pri[0] !== ult[0] || pri[1] !== ult[1]) anillo.push(pri)
 
+  // ¿quien vive aqui adentro?
+  let minx = 180, miny = 90, maxx = -180, maxy = -90
+  for (const [x, y] of anillo) {
+    if (x < minx) minx = x; if (x > maxx) maxx = x
+    if (y < miny) miny = y; if (y > maxy) maxy = y
+  }
+  const caja = [minx, miny, maxx, maxy]
+  const adentro = []
+  for (const l of lugares) {
+    const [lon, lat] = l.geometry.coordinates
+    if (dentroDe(lon, lat, anillo, caja)) adentro.push(l.properties)
+  }
+
+  const props = { h: 0, r: real ? 1 : 0 }
+  if (adentro.length) {
+    conNegocio++
+    // El confirmado manda sobre el que solo esta listado: es el que costo ir.
+    const jefe = adentro.find(p => p.v) || adentro[0]
+    props.k = jefe.c || 'otros'
+    props.n = adentro.length
+    if (adentro.some(p => p.v)) { props.v = 1; confirmados++ }
+    // Un edificio con negocio adentro es comercio: en el casco eso es 2 plantas
+    // con el local abajo. Se levanta para que la calle comercial se lea sola.
+    h = Math.max(h, props.v ? 8.5 : 7)
+  }
+  props.h = +h.toFixed(1)
+
   rasgos.push({
     type: 'Feature',
-    properties: { h: +h.toFixed(1), r: real ? 1 : 0 },
+    properties: props,
     geometry: { type: 'Polygon', coordinates: [anillo] },
   })
 }
@@ -114,4 +177,6 @@ const kb = (json.length / 1024).toFixed(0)
 console.log(`[casco] ✓ ${SALIDA}/${nombre} · ${rasgos.length} edificios · ${kb} KB`)
 console.log(`[casco]   ${sinAltura} con altura representativa (OSM no la trae), ` +
             `${rasgos.length - sinAltura} con altura real de OSM`)
+console.log(`[casco]   ${conNegocio} con un negocio del directorio adentro, ` +
+            `de esos ${confirmados} confirmados en 90 dias`)
 console.log(`[casco]   pega esto en public/3d/index.html:  const CASCO_URL='/3d/${nombre}'`)

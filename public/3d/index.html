@@ -1141,31 +1141,65 @@ document.getElementById('b-3d').onclick=function(){
 // El archivo (706 KB) NO se baja al entrar. Solo cuando el vecino toca el boton.
 // La portada acaba de adelgazar sacando la data del HTML; no la volvemos a
 // engordar por una vista que la mayoria no va a abrir.
-const CASCO_URL='/3d/casco-e6f8b88345.json';
-const CASCO_VISTA={center:[-67.1457,18.0866], zoom:16.4, pitch:66, bearing:-18};
+const CASCO_URL='/3d/casco-18c1c9ea24.json';
+// El centro NO se escoge a ojo. Sale de donde esta la mayor densidad de
+// negocios de Cabo Rojo en el directorio (189 negocios en 11 celdas de ~100 m),
+// que es la definicion operativa de "casco". La primera version se puso a ojo y
+// cayo 150 m al sureste, con la plaza descuadrada.
+const CASCO_VISTA={center:[-67.14692,18.08707], zoom:16.3, pitch:64, bearing:-20};
 let cascoDatos=null, cascoOn=false, cascoBajando=false;
 
 function pintarCasco(){
   if(!cascoDatos || map.getLayer('casco')) return;
   try{
     if(!map.getSource('casco')) map.addSource('casco',{type:'geojson',data:cascoDatos});
-    // Debajo de los pines: los edificios son el escenario, no el contenido.
+    const noche = curStyle==='noche';
+    const hueso = noche ? '#2b3a45' : '#ddd5c8';   // el pueblo que es escenario
+
+    // El color del edificio sale de QUIEN ESTA ADENTRO, con la misma paleta de
+    // los pines. Un edificio en color es un negocio del directorio; en hueso es
+    // una casa. Asi el mapa deja de ser una maqueta y pasa a decir algo.
+    const porCategoria = ['match', ['coalesce',['get','k'],'_'],
+      'comida','#f97316', 'salud','#0d9488', 'servicios','#3b82f6',
+      'compras','#a855f7', 'belleza','#ec4899', 'cultura','#d4a017',
+      'auto','#64748b', 'educacion','#16a34a', 'hospedaje','#d97706',
+      'naturaleza','#059669', 'nightlife','#c026d3', 'gobierno','#475569',
+      'otros','#6b7280',
+      hueso];
+
     const debajo = map.getLayer('heat') ? 'heat' : undefined;
     map.addLayer({
       id:'casco', type:'fill-extrusion', source:'casco', minzoom:14.2,
       paint:{
-        'fill-extrusion-color': curStyle==='noche' ? '#2c3f4d' : '#d8cfc2',
+        'fill-extrusion-color': porCategoria,
         'fill-extrusion-height':['get','h'],
         'fill-extrusion-base':0,
-        'fill-extrusion-opacity':0.92,
-        // Aparece con el zoom en vez de brincar de golpe.
+        // El confirmado se ve solido. El listado, translucido. La casa, discreta.
+        // Es la misma regla que el pin solido vs el borroso, pero en volumen.
+        'fill-extrusion-opacity': 0.9,
         'fill-extrusion-vertical-gradient':true
       }
     }, debajo);
+
+    // Los confirmados en 90 dias llevan techo propio: una tapa fina y solida
+    // encima del volumen. Es lo unico que se ve distinto de verdad desde lejos.
+    if(!map.getLayer('casco-techo')){
+      map.addLayer({
+        id:'casco-techo', type:'fill-extrusion', source:'casco', minzoom:14.2,
+        filter:['==',['get','v'],1],
+        paint:{
+          'fill-extrusion-color': noche ? '#f8fafc' : '#1f2937',
+          'fill-extrusion-height':['+',['get','h'],0.7],
+          'fill-extrusion-base':['get','h'],
+          'fill-extrusion-opacity':0.95
+        }
+      }, debajo);
+    }
   }catch(e){ console.warn('[casco] no se pudo montar:', e && e.message); }
 }
 
 function quitarCasco(){
+  try{ if(map.getLayer('casco-techo')) map.removeLayer('casco-techo'); }catch(e){}
   try{ if(map.getLayer('casco')) map.removeLayer('casco'); }catch(e){}
 }
 
@@ -1198,9 +1232,13 @@ async function toggleCasco(btn){
     n.id='casco-nota'; n.className='panel';
     n.style.cssText='position:absolute;left:12px;bottom:124px;z-index:6;max-width:250px;'+
       'padding:9px 11px;font-size:11.5px;line-height:1.45;opacity:.93';
-    n.innerHTML='Las huellas de los <b>'+cascoDatos.features.length.toLocaleString('es-PR')+
-      ' edificios</b> son reales, de OpenStreetMap.<br>La altura es representativa: '+
-      'OSM no tiene la altura de Cabo Rojo.';
+    const conNeg=cascoDatos.features.filter(f=>f.properties.k).length;
+    const conf=cascoDatos.features.filter(f=>f.properties.v).length;
+    n.innerHTML='<b>'+conNeg+'</b> de estos edificios tienen adentro un negocio del '+
+      'directorio, y <b>'+conf+'</b> los fuimos a confirmar en los ultimos 90 dias '+
+      '(esos llevan techo).<br><span style="opacity:.75">Las '+
+      cascoDatos.features.length.toLocaleString('es-PR')+' huellas son de OpenStreetMap. '+
+      'La altura es representativa: OSM no tiene la altura de Cabo Rojo.</span>';
     document.getElementById('map').appendChild(n);
   }
 }
