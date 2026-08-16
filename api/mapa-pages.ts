@@ -8592,14 +8592,48 @@ async function handleDatos(req: any, res: any) {
     </div>`).join('')
 
   const body = `
-<h1>Cabo Rojo en datos, calculados en vivo</h1>
-<p class="text-lg text-slate-600 mt-3">Cada número de esta página se calcula contra la base de datos <strong>en el momento en que la abres</strong> — no hay cifra vieja posible. Es el mismo substrato que contesta el 787-417-7711 y alimenta el mapa: verificado a mano, uno por uno. Si eres periodista, investigador, dueño de negocio o vecino con calculadora: <strong>copia el dato con su fuente y sigue tu camino.</strong></p>
+<h1>Sabemos qué está buscando Cabo Rojo</h1>
+<p class="text-lg text-slate-600 mt-3">${n(senales)} búsquedas reales de ${n(vecinos)} vecinos en los últimos 90 días, por texto al 787-417-7711. No es una encuesta ni una estimación: es lo que la gente escribió cuando necesitaba algo.</p>
 
-<div class="not-prose mt-6 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
-  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular verificado · ${escapeHtml(hoy)}</p>
-  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Cabo Rojo es el pueblo de Puerto Rico con su demanda medida.</p>
-  <p class="text-slate-300 mt-2 text-sm leading-relaxed">${n(placesCr)} negocios documentados, ${n(verifTotal)} verificados a mano, y ${n(senales)} búsquedas reales de ${n(vecinos)} vecinos en 90 días — medidas, no estimadas.</p>
-  <button type="button" class="share-copy mt-3 text-sm font-bold text-slate-900 bg-white rounded-full px-4 py-2 hover:bg-slate-100" data-copy="${escapeHtml(fuente(`Cabo Rojo tiene ${n(placesCr)} negocios documentados (${n(verifTotal)} verificados a mano) y su demanda medida: ${n(senales)} búsquedas reales de ${n(vecinos)} vecinos en 90 días.`))}">📋 Copiar el titular</button>
+<!-- Reescrito 2026-08-17 (notas de Angel). El titular viejo, "Cabo Rojo es el pueblo de
+     PR con su demanda medida", era conceptualmente bueno pero obligaba a pensar. Ahora la
+     primera linea dice el hallazgo y las cifras lo sostienen. Y la pagina deja de ser
+     "tenemos un directorio" para ser las dos cosas que juntas si son un moat: sabemos
+     que existe Y sabemos que busca la gente. -->
+<div class="not-prose mt-5 rounded-2xl bg-slate-900 text-white p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold m-0">Lo más buscado · últimos 90 días</p>
+  <div class="mt-3 space-y-2">
+    ${topCats.slice(0, 6).map((t) => `<div class="flex items-center gap-3">
+        <div class="w-28 sm:w-36 shrink-0 text-sm font-bold">${escapeHtml(t.cat)}</div>
+        <div class="flex-1 h-6 bg-white/10 rounded-md overflow-hidden"><div class="h-full bg-teal-400/80" style="width:${Math.max(4, Math.round((t.n / (topCats[0]?.n || 1)) * 100))}%"></div></div>
+        <div class="w-10 text-right text-sm font-black tabular-nums">${n(t.n)}</div>
+      </div>`).join('')}
+  </div>
+  <p class="text-[11px] text-slate-400 mt-3 mb-0">Se excluyen números de prueba, sintéticos y del operador antes de contar. Ventana de 90 días corridos desde que abres la página.</p>
+</div>
+
+<div class="not-prose mt-4 grid sm:grid-cols-2 gap-3">
+  <a href="https://wa.me/17874177711" class="block rounded-2xl border-2 border-teal-700 bg-white p-5 hover:bg-teal-50">
+    <p class="text-xs uppercase tracking-widest text-teal-700 font-bold m-0">Soy vecino</p>
+    <p class="text-lg font-black text-slate-900 mt-1 mb-1">Busca lo que necesitas</p>
+    <p class="text-sm text-slate-600 m-0">Escríbele al 787-417-7711 y te digo quién lo resuelve, con teléfono. Gratis y sin cuenta.</p>
+  </a>
+  <a href="/negocios" class="block rounded-2xl border-2 border-slate-900 bg-white p-5 hover:bg-slate-50">
+    <p class="text-xs uppercase tracking-widest text-slate-500 font-bold m-0">Tengo negocio</p>
+    <p class="text-lg font-black text-slate-900 mt-1 mb-1">Mira qué está buscando la gente</p>
+    <p class="text-sm text-slate-600 m-0">Esta es la demanda real del pueblo. Si lo que vendes está en esa lista y no te encuentran, eso es lo que hay que arreglar.</p>
+  </a>
+</div>
+
+<div class="not-prose mt-4 bg-white border border-slate-200 rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-slate-500 font-bold m-0">Y esto es lo que existe · ${escapeHtml(hoy)}</p>
+  <div class="mt-3 grid grid-cols-3 gap-3">
+    <div><p class="text-2xl sm:text-3xl font-black m-0 text-slate-900">${n(placesCr)}</p><p class="text-xs text-slate-500 m-0 mt-1 leading-tight">negocios documentados</p></div>
+    <div><p class="text-2xl sm:text-3xl font-black m-0 text-teal-700">${n(verifTotal)}</p><p class="text-xs text-slate-500 m-0 mt-1 leading-tight">verificados a mano</p></div>
+    <div><p class="text-2xl sm:text-3xl font-black m-0 text-slate-900">${n(vecinos)}</p><p class="text-xs text-slate-500 m-0 mt-1 leading-tight">vecinos preguntando</p></div>
+  </div>
+  <p class="text-sm text-slate-700 mt-3 mb-0"><b>Una lista te dice qué existe. Nosotros queremos saber qué funciona hoy.</b> Por eso las dos mitades van juntas: el directorio dice qué hay, la demanda dice qué hace falta.</p>
+  <button type="button" class="share-copy mt-3 text-sm font-bold text-white bg-slate-900 rounded-full px-4 py-2" data-copy="${escapeHtml(fuente(`En los últimos 90 días, ${n(vecinos)} vecinos de Cabo Rojo hicieron ${n(senales)} búsquedas reales por texto. Lo más buscado: ${topCats.slice(0, 5).map((t) => `${t.cat} (${t.n})`).join(', ')}. El directorio tiene ${n(placesCr)} negocios documentados, ${n(verifTotal)} verificados a mano.`))}">📋 Copiar con fuente</button>
 </div>
 
 <h2>Los datos (toca "Copiar con fuente" en cualquiera)</h2>
@@ -8645,7 +8679,7 @@ ${SHARE_COPY_SCRIPT}`
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=600')
   res.status(200).send(layout({
-    title: 'Cabo Rojo en datos — directorio verificado y demanda real, calculados en vivo',
+    title: 'Sabemos qué está buscando Cabo Rojo',
     description: `${n(placesCr)} negocios documentados, ${n(verifTotal)} verificados a mano, ${n(senales)} búsquedas reales en 90 días. Cada dato con fecha y fuente, listo pa' citar.`,
     slug: 'datos', bodyHtml: body, jsonLd: datasetLd,
     host: req.headers?.host,
@@ -8832,6 +8866,7 @@ ${U}` },
 
 async function handleComparte(req: any, res: any) {
   const milla = await leerContadorUltimaMilla()
+  const n2 = (x: number) => x.toLocaleString('en-US')
   let g = { ...COMPARTE_G_DEFAULT }
   try {
     const { data } = await supabase.from('v_registro_municipio_intel').select('poblacion,especialistas,psiquiatras,hpsa_primaria,hpsa_salud_mental,cupon_mh_sin_cobrar,por_10k_hab').range(0, 100)
@@ -8872,21 +8907,56 @@ async function handleComparte(req: any, res: any) {
 
   const body = `
 <h1>Datos citables de Puerto Rico, verificados uno por uno</h1>
-<p class="text-lg text-slate-600 mt-3"><strong>El trabajo pesado ya está hecho.</strong> Cada número de esta página está verificado contra su fuente federal o pública, con fecha. No tienes que buscarlo, ni cruzar bases de datos, ni dudar si está bien: <strong>cópialo y úsalo.</strong> Si eres periodista, legislador, investigador o vecino, esto es para que lo tomes, lo cites, y sigas tu camino. Salud, costo de vida, trabajo, agua, dinero de recuperación — todo con la fuente al lado.</p>
+<p class="text-lg text-slate-600 mt-3"><strong>El trabajo pesado ya está hecho.</strong> Cada número está verificado contra su fuente federal o pública, con fecha. Cópialo y úsalo: periodista, legislador, investigador o vecino. Sin pedir permiso.</p>
+
+<!-- Hero reescrito 2026-08-17 (notas de Angel). El titular viejo, "el dinero federal ya
+     esta aprobado y no se cobra", es cierto pero cuenta POR QUE llegamos aqui. La
+     historia de HOY es el acceso, y esa es la que abre. Las dos conviven abajo,
+     separadas y rotuladas, en vez de mezcladas como estaban. -->
+<div class="not-prose mt-5 rounded-2xl bg-slate-900 text-white p-5 sm:p-7">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold m-0">El acceso, hoy</p>
+  <p class="text-2xl sm:text-3xl font-black mt-2 leading-tight m-0">Una lista de médicos no te dice quién te puede atender.</p>
+  <p class="text-slate-300 mt-3 mb-0 text-base">${n2(milla.totalPR)} proveedores aparecen en el registro. ${n2(milla.confirmados)} tienen confirmado si aceptan pacientes nuevos.</p>
+  <p class="text-teal-300 font-bold mt-2 mb-0">Los estamos verificando uno por uno.</p>
+  <div class="mt-5 grid grid-cols-3 gap-3">
+    <div class="rounded-xl bg-white/10 p-3">
+      <p class="text-[11px] uppercase tracking-wide text-slate-300 m-0">Puerto Rico</p>
+      <p class="text-2xl font-black m-0 mt-1">${n2(milla.totalPR)}</p><p class="text-[11px] text-slate-400 m-0">listados</p>
+      <p class="text-2xl font-black m-0 mt-2 text-teal-300">${n2(milla.confirmados)}</p><p class="text-[11px] text-slate-400 m-0">confirmados</p>
+    </div>
+    <div class="rounded-xl bg-white/10 p-3">
+      <p class="text-[11px] uppercase tracking-wide text-slate-300 m-0">Cabo Rojo</p>
+      <p class="text-2xl font-black m-0 mt-1">${n2(milla.totalCR)}</p><p class="text-[11px] text-slate-400 m-0">listados</p>
+      <p class="text-2xl font-black m-0 mt-2 ${milla.confirmadosCR ? 'text-teal-300' : 'text-rose-300'}">${n2(milla.confirmadosCR)}</p><p class="text-[11px] text-slate-400 m-0">confirmados</p>
+    </div>
+    <div class="rounded-xl bg-white/10 p-3">
+      <p class="text-[11px] uppercase tracking-wide text-slate-300 m-0">Los teléfonos</p>
+      <p class="text-2xl font-black m-0 mt-1">43.6%</p><p class="text-[11px] text-slate-400 m-0 leading-tight">comparte número con otro proveedor</p>
+      <p class="text-[11px] text-slate-400 m-0 mt-2 leading-tight">Llamas y te contesta otra oficina.</p>
+    </div>
+  </div>
+  <div class="mt-4 flex flex-wrap gap-2">
+    <a href="/kit" class="rounded-full bg-teal-600 text-white font-bold px-4 py-2 text-sm hover:bg-teal-500">Ayuda a confirmar uno →</a>
+    <a href="#porque" class="rounded-full border border-white/30 text-white font-semibold px-4 py-2 text-sm hover:bg-white/10">Por qué PR llegó aquí ↓</a>
+  </div>
+</div>
 
 <div class="not-prose mt-4 flex flex-wrap gap-3 text-sm">
-  <a href="/registro/estado" class="inline-flex items-center gap-2 bg-teal-700 text-white font-bold px-4 py-2 rounded-full hover:bg-teal-800">Ver el estado de salud, pueblo por pueblo</a>
+  <a href="/registro/estado" class="inline-flex items-center gap-2 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Estado de salud, pueblo por pueblo</a>
   <a href="/registro/mapa" class="inline-flex items-center gap-2 bg-white border border-slate-300 text-slate-700 font-semibold px-4 py-2 rounded-full hover:border-teal-400">Abrir el mapa interactivo</a>
 </div>
 
+${bloqueMillaCitable(milla)}
+
+
+<h2 id="porque">Por qué Puerto Rico llegó aquí</h2>
+<p class="text-slate-600 -mt-2">Arriba está el acceso de hoy. Esto es cómo se llegó: el dinero federal que ya está aprobado y nadie cobra, los pueblos sin especialistas, y la fórmula que lo fija todo desde Washington.</p>
 <div class="not-prose mt-6 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular verificado</p>
   <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">El dinero federal para traer médicos ya está aprobado. Y no se cobra.</p>
   <p class="text-slate-300 mt-2 text-sm leading-relaxed">${g.conHpsa} de 76 municipios de PR con designación federal de escasez activa. ${g.cupon} con el dinero de salud mental aprobado y cero psiquiatras: ${n(g.cuponPob)} personas. Verificado contra el registro federal, pueblo por pueblo.</p>
   <button type="button" class="copy-btn mt-3 text-sm font-bold text-slate-900 bg-white rounded-full px-4 py-2 hover:bg-slate-100" data-copy="${escapeHtml(heroClaim)}">📋 Copiar el titular</button>
 </div>
-
-${bloqueMillaCitable(milla)}
 
 <h2>Los datos (toca "Copiar" en cualquiera)</h2>
 ${factCards}
