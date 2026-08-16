@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "snapshot:3d": "node scripts/make-3d-snapshot.mjs",
     "smoke": "node scripts/smoke.mjs",
-    "deploy": "npm run build && vercel deploy --prod && node -e \"setTimeout(()=>{},22000)\" && npm run smoke"
+    "deploy": "npm run build && vercel deploy --prod && node -e \"setTimeout(()=>{},22000)\" && npm run smoke",
+    "delator": "node scripts/delator.mjs"
   },
   "dependencies": {
     "@google/genai": "^1.46.0",
