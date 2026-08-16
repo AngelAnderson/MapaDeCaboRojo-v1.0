@@ -22,7 +22,7 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-6KBMV0LKQ4"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-6KBMV0LKQ4');</script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"Mapa de Cabo Rojo","url":"https://www.mapadecaborojo.com/","inLanguage":"es-PR","publisher":{"@id":"https://www.mapadecaborojo.com/#org"},"potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://www.mapadecaborojo.com/?q={search_term_string}"},"query-input":"required name=search_term_string"}},{"@type":"Organization","@id":"https://www.mapadecaborojo.com/#org","name":"Mapa de Cabo Rojo","url":"https://www.mapadecaborojo.com","parentOrganization":{"@id":"https://caborojo.com/#org"},"founder":{"@id":"https://www.angelanderson.com/#angel"}},{"@type":"Organization","@id":"https://caborojo.com/#org","name":"Caborojo.com","url":"https://caborojo.com","founder":{"@id":"https://www.angelanderson.com/#angel"},"sameAs":["https://www.facebook.com/caborojoweb","https://www.youtube.com/c/Caborojo"],"subOrganization":[{"@type":"Organization","@id":"https://www.mapadecaborojo.com/#org"},{"@type":"Organization","@id":"https://registromedicopr.com/#org"},{"@type":"Organization","@id":"https://puertoricosinfiltros.com/#org"},{"@type":"Organization","@id":"https://loquehayhoy.com/#org"}]},{"@type":"Person","@id":"https://www.angelanderson.com/#angel","name":"Angel F. Anderson","url":"https://www.angelanderson.com","sameAs":["https://www.linkedin.com/in/angelfanderson","https://x.com/angelfanderson","https://www.instagram.com/angelfanderson","https://www.facebook.com/angelfanderson","https://www.youtube.com/@AngelAnderson"]},{"@type":"Dataset","name":"Directorio verificado de negocios y lugares de Cabo Rojo, Puerto Rico","description":"Negocios, farmacias, médicos y lugares de Cabo Rojo verificados a mano, con teléfono, horario y coordenadas. Actualizado continuamente.","url":"https://www.mapadecaborojo.com","inLanguage":"es-PR","creator":{"@id":"https://www.mapadecaborojo.com/#org"},"distribution":{"@type":"DataDownload","contentUrl":"https://www.mapadecaborojo.com/api/feed.json","encodingFormat":"application/json"}}]}
+{"@context":"https://schema.org","@graph":[{"@type":"WebSite","name":"Mapa de Cabo Rojo","url":"https://www.mapadecaborojo.com/","inLanguage":"es-PR","publisher":{"@id":"https://www.mapadecaborojo.com/#org"},"potentialAction":{"@type":"SearchAction","target":{"@type":"EntryPoint","urlTemplate":"https://www.mapadecaborojo.com/?q={search_term_string}"},"query-input":"required name=search_term_string"}},{"@type":"Organization","@id":"https://www.mapadecaborojo.com/#org","name":"Mapa de Cabo Rojo","url":"https://www.mapadecaborojo.com","parentOrganization":{"@id":"https://caborojo.com/#org"},"founder":{"@id":"https://www.angelanderson.com/#angel"}},{"@type":"Organization","@id":"https://caborojo.com/#org","name":"Caborojo.com","url":"https://caborojo.com","founder":{"@id":"https://www.angelanderson.com/#angel"},"sameAs":["https://www.facebook.com/caborojoweb","https://www.youtube.com/c/Caborojo"],"subOrganization":[{"@type":"Organization","@id":"https://www.mapadecaborojo.com/#org"},{"@type":"Organization","@id":"https://registromedicopr.com/#org"},{"@type":"Organization","@id":"https://puertoricosinfiltros.com/#org"},{"@type":"Organization","@id":"https://loquehayhoy.com/#org"}]},{"@type":"Person","@id":"https://www.angelanderson.com/#angel","name":"Angel F. Anderson","url":"https://www.angelanderson.com","sameAs":["https://www.linkedin.com/in/angelfanderson","https://x.com/angelfanderson","https://www.instagram.com/angelfanderson","https://www.facebook.com/angelfanderson","https://www.youtube.com/@AngelAnderson"]},{"@type":"Dataset","license":"https://creativecommons.org/licenses/by/4.0/","isAccessibleForFree":true,"name":"Directorio verificado de negocios y lugares de Cabo Rojo, Puerto Rico","description":"Negocios, farmacias, médicos y lugares de Cabo Rojo verificados a mano, con teléfono, horario y coordenadas. Actualizado continuamente.","url":"https://www.mapadecaborojo.com","inLanguage":"es-PR","creator":{"@id":"https://www.mapadecaborojo.com/#org"},"distribution":{"@type":"DataDownload","contentUrl":"https://www.mapadecaborojo.com/api/feed.json","encodingFormat":"application/json"}}]}
 </script>
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -87,6 +87,9 @@
      border-radius:10px;padding:11px 16px;font-family:inherit;font-size:.95rem;font-weight:700;
      color:var(--ink);cursor:pointer;box-shadow:var(--shadow)}
   .volver:hover{border-color:var(--coral);color:var(--coral)}
+  /* display:block le ganaba al atributo hidden del navegador, asi que el boton
+     "Volver al inicio" se veia estando en el inicio. El atributo tiene que ganar. */
+  .volver[hidden]{display:none}
   .vacio{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:22px 18px;
          box-shadow:var(--shadow);text-align:center}
   .vacio h2{font-size:1.1rem;margin-bottom:6px}
@@ -126,6 +129,47 @@
   footer a{color:var(--teal-dark);font-weight:600}
   .conteo{font-variant-numeric:tabular-nums}
 
+  /* ── la prueba, arriba ──────────────────────────────────────────────
+     Los tres conteos vivian en gris de 13px al fondo del footer: son el
+     unico numero que ningun otro directorio de PR puede enseñar, y eran
+     el texto mas chiquito de la pagina. */
+  .prueba{display:flex;justify-content:center;gap:0;margin-top:18px;flex-wrap:wrap}
+  .prueba div{padding:0 18px;border-right:1px solid rgba(255,255,255,.26);text-align:center}
+  .prueba div:last-child{border-right:0}
+  .prueba b{display:block;font-family:'Fraunces',Georgia,serif;font-size:1.32rem;font-weight:700;
+    color:#fff;font-variant-numeric:tabular-nums;line-height:1.15}
+  .prueba span{display:block;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;
+    color:rgba(255,255,255,.82);margin-top:2px}
+  .prueba.vacia{display:none}
+
+  /* ── eventos ──────────────────────────────────────────────────────
+     El API ya los mandaba en la misma respuesta del pulso y la portada
+     los botaba. Cero peticiones nuevas. */
+  .ev{display:grid;gap:8px}
+  .ev a{display:flex;gap:11px;align-items:baseline;text-decoration:none;padding:9px 11px;
+    border:1px solid var(--line);border-radius:11px;background:#fafaf9}
+  .ev a:hover{border-color:var(--teal)}
+  .ev .cuando{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+    color:var(--teal-dark);white-space:nowrap;flex:0 0 auto}
+  .ev .qué{font-size:.92rem;font-weight:700;line-height:1.25}
+  .ev .dónde{font-size:.8rem;color:var(--ink-soft);font-weight:400;display:block;margin-top:1px}
+
+  .cierre{text-align:center;margin-top:26px;padding:20px 18px;border-top:1px solid var(--line)}
+  .cierre p{font-size:.9rem;color:var(--ink-soft);max-width:46ch;margin:0 auto}
+  .cierre a{color:var(--teal-dark);font-weight:700}
+
+  /* ── escritorio: el contenido usaba 570px de 1280 ── */
+  @media(min-width:900px){
+    main.wrap{max-width:1060px}
+    #res,.note,.volver{max-width:660px;margin-left:auto;margin-right:auto}
+    #inicio{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;align-items:start}
+    #inicio .panel{margin-top:0}
+    .lado{display:grid;gap:12px;align-content:start}
+    .lado .dos{grid-template-columns:1fr;margin-top:0}
+    .lado .dueno{margin-top:0}
+    .cierre{grid-column:1/-1}
+  }
+
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -143,6 +187,7 @@
       <span class="spin" aria-hidden="true"></span>
     </div>
     <div class="chips" id="chips"></div>
+    <div class="prueba vacia" id="prueba"></div>
   </div>
 </header>
 
@@ -158,24 +203,39 @@
       <div class="pulso" id="pulso"><span class="sub">Cargando…</span></div>
     </div>
 
-    <div class="dos">
-      <a class="tile" href="/3d">
-        <div class="t">⛰ Ver el mapa 3D</div>
-        <div class="d">El pueblo entero en relieve</div>
-      </a>
-      <a class="tile" href="https://wa.me/17874177711?text=Hola%20Veci" target="_blank" rel="noopener">
-        <div class="t">💬 Escríbele al Veci</div>
-        <div class="d">787-417-7711 · gratis, 24/7</div>
+    <div class="lado">
+      <!-- Los eventos ya venían en la misma respuesta del pulso y se botaban. -->
+      <div class="panel" id="panel-ev" hidden>
+        <h2>Esta semana en Cabo Rojo</h2>
+        <p class="sub">Lo que ya está confirmado.</p>
+        <div class="ev" id="ev"></div>
+      </div>
+
+      <div class="dos">
+        <a class="tile" href="/3d">
+          <div class="t">⛰ Ver el mapa 3D</div>
+          <div class="d">El pueblo entero en relieve</div>
+        </a>
+        <a class="tile" href="https://wa.me/17874177711?text=Hola%20Veci" target="_blank" rel="noopener">
+          <div class="t">💬 Escríbele al Veci</div>
+          <div class="d">787-417-7711 · gratis, 24/7</div>
+        </a>
+      </div>
+
+      <!-- La puerta del dueño. Estaba en /pon-tu-negocio-en-el-mapa con CERO visitas
+           en 56 días en los tres dominios: existía pero no se llegaba desde ningún
+           lado. Va aquí porque la portada es el 53% del tráfico del sitio. -->
+      <a class="dueno" href="/pon-tu-negocio-en-el-mapa">
+        <div class="t">¿Tienes negocio en Cabo Rojo?</div>
+        <div class="d">Ponlo en el mapa donde la gente ya está buscando. Verificarte es gratis.</div>
       </a>
     </div>
 
-    <!-- La puerta del dueño. Estaba en /pon-tu-negocio-en-el-mapa con CERO visitas
-         en 56 días en los tres dominios: existía pero no se llegaba desde ningún
-         lado. Va aquí porque la portada es el 53% del tráfico del sitio. -->
-    <a class="dueno" href="/pon-tu-negocio-en-el-mapa">
-      <div class="t">¿Tienes negocio en Cabo Rojo?</div>
-      <div class="d">Ponlo en el mapa donde la gente ya está buscando. Verificarte es gratis.</div>
-    </a>
+    <div class="cierre">
+      <p>Cada ficha de aquí la verificó una persona, no un robot que copia de otro
+        directorio. Si algo está mal, <a href="https://wa.me/17874177711?text=Encontr%C3%A9%20algo%20mal%20en%20el%20mapa"
+        target="_blank" rel="noopener">dímelo por el Veci</a> y lo arreglo.</p>
+    </div>
   </div>
 </main>
 
@@ -346,12 +406,42 @@
       });
     } else { cont.innerHTML='<span class="sub">El pulso vuelve en un rato.</span>'; }
 
-    var c=d.conteos;
+    // Los conteos suben al hero: son la prueba, no una nota al pie.
+    var c=d.conteos, pr=document.getElementById('prueba');
     if(c&&c.cabo_rojo){
-      document.getElementById('conteo').textContent=
-        c.cabo_rojo.toLocaleString('es-PR')+' negocios de Cabo Rojo · '+
-        c.oeste.toLocaleString('es-PR')+' en el oeste · '+
-        c.pr.toLocaleString('es-PR')+' en todo Puerto Rico';
+      pr.innerHTML=
+        '<div><b>'+c.cabo_rojo.toLocaleString('es-PR')+'</b><span>en Cabo Rojo</span></div>'+
+        '<div><b>'+c.oeste.toLocaleString('es-PR')+'</b><span>en el oeste</span></div>'+
+        '<div><b>'+c.pr.toLocaleString('es-PR')+'</b><span>en todo PR</span></div>';
+      pr.classList.remove('vacia');
+    }
+
+    // Eventos: se muestran los de los proximos 7 dias, maximo 3.
+    var ev=(d.eventos||[]).filter(function(e){ return e && e.d; });
+    if(ev.length){
+      var hoy=Date.now(), tope=hoy+7*864e5, box=document.getElementById('ev'), n=0;
+      ev.forEach(function(e){
+        var t=Date.parse(e.d);
+        if(!(t>=hoy-864e5&&t<=tope) || n>=3) return;
+        n++;
+        var cuando=new Date(t).toLocaleDateString('es-PR',
+          {weekday:'short',day:'numeric',timeZone:'America/Puerto_Rico'});
+        var a=document.createElement('a');
+        a.href=e.url||'/pueblo-en-numeros';
+        if(e.url){ a.target='_blank'; a.rel='noopener'; }
+        a.innerHTML='<span class="cuando">'+esc(cuando)+'</span>'+
+          '<span class="qué">'+esc(e.n)+
+          (e.l?'<span class="dónde">'+esc(e.l)+'</span>':'')+'</span>';
+        box.appendChild(a);
+      });
+      if(n) document.getElementById('panel-ev').hidden=false;
+    }
+
+    if(d.generated){
+      document.getElementById('conteo').textContent='Datos al '+
+        new Date(d.generated).toLocaleString('es-PR',
+          {day:'numeric',month:'long',hour:'numeric',minute:'2-digit',
+           timeZone:'America/Puerto_Rico'});
     }
   }).catch(function(){});
 })();
