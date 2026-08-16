@@ -7362,6 +7362,191 @@ ${articleHtml}
   }))
 }
 
+// =============== El marcador del silencio (Ley 141-2019) ===============
+// Por qué existe: la página describía el método ("un marcador que dice preguntado el 15 de
+// agosto, sin contestar") y no lo montaba. Un expediente que solo se lee deja al vecino igual
+// que antes; lo único que mueve la aguja es que su acción quede grabada con fecha. Aquí queda.
+//
+// El derecho, contra el texto oficial consolidado (OGP, Rev. 13 marzo 2026):
+//   Art. 6  · la solicitud se notifica al JEFE de la agencia CON COPIA al Oficial de Información,
+//             y debe traer dirección postal Y correo electrónico. Si no, es DEFECTUOSA y no
+//             extingue el término. O sea: una carta mal dirigida no arranca ningún reloj.
+//   Art. 7  · 20 días laborables (≤300 folios y <3 años); 30 si excede folios/antigüedad o si se
+//             radicó en oficina regional. Prórroga única de 20, y solo si la notifican dentro del
+//             término inicial con la razón. Vencido el término sin contestar: se entiende DENEGADA.
+//   Art. 9  · Recurso Especial ante el TPI de San Juan. Sin sellos, sin aranceles, sin abogado.
+//             Término de cumplimiento ESTRICTO de 30 días desde la denegación o el vencimiento.
+//   Art. 10 · (Ley 156-2025) hasta $100 diarios por incumplir la Resolución, tope $18,000.
+const CARTA141 = {
+  para: 'contactus@salud.pr.gov',
+  copia: 'leydetransparencia@salud.pr.gov',
+  copiaMarcador: 'angel@caborojo.com',
+  secretario: 'Dr. Víctor M. Ramos Otero',
+  agencia: 'Departamento de Salud de Puerto Rico',
+  asunto: 'Solicitud de información pública — Ley 141-2019, según enmendada',
+}
+
+type Marcador141 = {
+  total: number; confirmadas: number; abiertas: number; vencidas: number
+  masVieja: number | null; contestadas: number
+}
+
+async function leerMarcador141(): Promise<Marcador141> {
+  const vacio: Marcador141 = { total: 0, confirmadas: 0, abiertas: 0, vencidas: 0, masVieja: null, contestadas: 0 }
+  try {
+    const { data, error } = await supabase
+      .from('v_marcador_141')
+      .select('confirmada, contestada, vencida, dias_laborables')
+    if (error || !data) return vacio
+    const abiertas = data.filter((r: any) => !r.contestada)
+    return {
+      total: data.length,
+      confirmadas: data.filter((r: any) => r.confirmada).length,
+      contestadas: data.length - abiertas.length,
+      abiertas: abiertas.length,
+      vencidas: data.filter((r: any) => r.vencida).length,
+      masVieja: abiertas.length ? Math.max(...abiertas.map((r: any) => Number(r.dias_laborables) || 0)) : null,
+    }
+  } catch { return vacio }
+}
+
+function bloqueCarta141(m: Marcador141): string {
+  // El titular cambia con el estado real. Un "0 vecinos han preguntado" en grande es un
+  // cartel de que aquí no pasa nada; el cero se dice, pero como invitación, no como marcador.
+  const titular = m.total === 0
+    ? 'Todavía nadie ha preguntado por escrito. El primero pesa más que el número diez.'
+    : (m.masVieja !== null
+        ? `${m.total} ${m.total === 1 ? 'vecino ha preguntado' : 'vecinos han preguntado'} por escrito. La más vieja sin contestar lleva <span class="text-teal-300">${m.masVieja} ${m.masVieja === 1 ? 'día laborable' : 'días laborables'}</span>.`
+        : `${m.total} ${m.total === 1 ? 'vecino ha preguntado' : 'vecinos han preguntado'} por escrito. Todas contestadas, por ahora.`)
+
+  const chip = (n: number | string, t: string, tono: string) =>
+    `<div class="rounded-xl bg-white/10 px-3 py-2"><p class="text-xl font-black m-0 ${tono}">${n}</p><p class="text-[11px] text-slate-300 m-0 leading-tight">${t}</p></div>`
+
+  return `
+<div id="carta" class="not-prose mt-4 rounded-2xl overflow-hidden border border-slate-800">
+  <div class="bg-slate-900 text-white p-5 sm:p-6">
+    <p class="text-xs uppercase tracking-widest text-teal-300 font-bold m-0">El marcador del silencio</p>
+    <p class="text-lg sm:text-xl font-black mt-2 leading-snug m-0">${titular}</p>
+    <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+      ${chip(m.total, 'radicadas', 'text-white')}
+      ${chip(m.confirmadas, 'con copia recibida', 'text-teal-300')}
+      ${chip(m.abiertas, 'sin contestar', 'text-amber-300')}
+      ${chip(m.vencidas, 'fuera de término', 'text-rose-300')}
+    </div>
+    <p class="text-[11px] text-slate-400 mt-3 mb-0 leading-snug">Cómo se cuenta: <b>radicadas</b> es lo que reporta quien la mandó. <b>Con copia recibida</b> es la que además llegó a nuestro buzón, o sea la que podemos probar. Los días son laborables y no descuentan feriados, así que el contador va por lo bajo a propósito. Si el número se puede tumbar, no sirve.</p>
+  </div>
+
+  <div class="bg-white p-5 sm:p-6">
+    <p class="font-black text-slate-900 text-lg m-0">Manda la tuya. Toma 2 minutos y arranca un reloj legal.</p>
+    <p class="text-sm text-slate-600 mt-1 mb-4">No estás pidiendo un favor ni que inventen nada: son documentos que ya existen. Si alguno no existe, tienen que certificarlo por escrito, y esa certificación suele ser el hallazgo. Si no contestan en el término, la ley da por denegada la solicitud y se te abre el Tribunal, sin sellos, sin aranceles y sin abogado.</p>
+
+    <form id="c141" class="grid gap-3">
+      <div class="grid sm:grid-cols-2 gap-3">
+        <label class="block"><span class="text-xs font-bold text-slate-500">Tu nombre</span>
+          <input id="c141-n" required maxlength="80" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" placeholder="María Rivera"></label>
+        <label class="block"><span class="text-xs font-bold text-slate-500">Tu pueblo</span>
+          <input id="c141-p" required maxlength="40" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" placeholder="Cabo Rojo"></label>
+      </div>
+      <label class="block"><span class="text-xs font-bold text-slate-500">Tu correo electrónico</span>
+        <input id="c141-e" type="email" required maxlength="120" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" placeholder="maria@ejemplo.com"></label>
+      <label class="block"><span class="text-xs font-bold text-slate-500">Tu dirección postal</span>
+        <input id="c141-d" required maxlength="140" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2" placeholder="HC 01 Box 1234, Cabo Rojo, PR 00623">
+        <span class="text-[11px] text-slate-500">La ley la exige (Artículo 6). Sin dirección postal la solicitud se considera <b>defectuosa y el reloj no arranca</b>. No la publicamos ni la guardamos.</span></label>
+      <label class="flex items-start gap-2 text-sm text-slate-700"><input id="c141-cc" type="checkbox" checked class="mt-1"><span>Mandarme copia a mí también, para poder contarla como confirmada en el marcador.</span></label>
+      <label class="flex items-start gap-2 text-sm text-slate-700"><input id="c141-pub" type="checkbox" class="mt-1"><span>Pueden publicar mi nombre en el marcador. (Si lo dejas en blanco sale solo el pueblo.)</span></label>
+
+      <div class="rounded-xl bg-slate-50 border border-slate-200 p-3">
+        <p class="text-xs font-bold text-slate-500 m-0 mb-1">Esta es la carta que se manda. Léela.</p>
+        <pre id="c141-prev" class="text-[12px] leading-relaxed text-slate-700 whitespace-pre-wrap m-0 max-h-56 overflow-auto font-sans"></pre>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <button type="button" id="c141-copy" class="rounded-full bg-slate-900 text-white font-bold px-4 py-2.5 text-sm">Copiar la carta</button>
+        <a id="c141-mail" href="#" class="rounded-full bg-teal-700 text-white font-bold px-4 py-2.5 text-sm">Abrirla en mi correo</a>
+        <button type="submit" class="rounded-full border-2 border-slate-900 text-slate-900 font-bold px-4 py-2.5 text-sm">Ya la mandé →</button>
+      </div>
+      <p class="text-[11px] text-slate-500 m-0">Si el botón de correo no te abre nada, copia la carta y pégala en tu correo. Va a <b>${escapeHtml(CARTA141.para)}</b> con copia a <b>${escapeHtml(CARTA141.copia)}</b>. Guarda el mensaje en tu carpeta de enviados: esa es tu prueba de la fecha.</p>
+      <p id="c141-ok" class="hidden text-sm font-bold text-teal-800 bg-teal-50 border border-teal-200 rounded-lg p-3 m-0"></p>
+    </form>
+  </div>
+</div>
+<script>(function(){
+  var F=document.getElementById('c141'); if(!F) return;
+  var N=document.getElementById('c141-n'),P=document.getElementById('c141-p'),E=document.getElementById('c141-e'),
+      D=document.getElementById('c141-d'),CC=document.getElementById('c141-cc'),PUB=document.getElementById('c141-pub'),
+      PREV=document.getElementById('c141-prev'),MAIL=document.getElementById('c141-mail'),OK=document.getElementById('c141-ok');
+  var PARA=${JSON.stringify(CARTA141.para)},COPIA=${JSON.stringify(CARTA141.copia)},MARC=${JSON.stringify(CARTA141.copiaMarcador)},
+      ASUNTO=${JSON.stringify(CARTA141.asunto)},SEC=${JSON.stringify(CARTA141.secretario)},AG=${JSON.stringify(CARTA141.agencia)};
+  var MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  function hoy(){var d=new Date();return d.getDate()+' de '+MESES[d.getMonth()]+' de '+d.getFullYear();}
+  function carta(){
+    var n=(N.value||'[tu nombre]').trim(), p=(P.value||'[tu pueblo]').trim(),
+        e=(E.value||'[tu correo]').trim(), d=(D.value||'[tu dirección postal]').trim();
+    return 'Sr. Secretario de Salud, '+SEC+'\\n'+AG+'\\nCon copia al Oficial de Información\\n\\n'
+      +'Estimado señor Secretario:\\n\\n'
+      +'Al amparo de la Ley 141-2019, "Ley de Transparencia y Procedimiento Expedito para el Acceso a la Información Pública", según enmendada por la Ley 156-2025, solicito copia de los siguientes documentos, que ya obran en poder del Departamento:\\n\\n'
+      +'1. El desglose de las adjudicaciones del State Loan Repayment Program (SLRP) recibidas por Puerto Rico, por un total de $2,414,970: cuántos profesionales de la salud recibieron repago de préstamos estudiantiles, en qué municipios prestaron el servicio y en qué años fiscales.\\n\\n'
+      +'2. Cuántas de las 30 exenciones anuales de visa J-1 (Conrad 30) disponibles para Puerto Rico se solicitaron y se adjudicaron en cada uno de los últimos cinco años fiscales, y en qué municipios fueron ubicados los médicos.\\n\\n'
+      +'3. La fecha de la última actualización del expediente de designación de área de escasez de profesionales de la salud (HPSA) del municipio de '+p+', y copia de la solicitud más reciente sometida a HRSA.\\n\\n'
+      +'No solicito que se cree, se resuma ni se analice documento alguno. Si alguno de los documentos solicitados no existe, solicito que así se certifique por escrito.\\n\\n'
+      +'Conforme al Artículo 7 de la Ley, el término para entregar la información no excederá de veinte (20) días laborables contados desde el envío de esta solicitud, prorrogable una sola vez por veinte (20) días laborables adicionales si se me notifica dentro del término inicial y se expone la razón. De no recibir respuesta dentro del término, se entenderá denegada la solicitud.\\n\\n'
+      +'Conforme al Artículo 6, mis datos para notificaciones son:\\nNombre: '+n+'\\nDirección postal: '+d+'\\nCorreo electrónico: '+e+'\\n\\n'
+      +'Agradezco el acuse de recibo y el número de identificación de esta solicitud.\\n\\nCordialmente,\\n'+n+'\\n'+p+', Puerto Rico\\n'+hoy();
+  }
+  function pinta(){
+    var t=carta(); PREV.textContent=t;
+    var cc=COPIA+(CC.checked?','+MARC:'');
+    MAIL.setAttribute('href','mailto:'+PARA+'?cc='+encodeURIComponent(cc)+'&subject='+encodeURIComponent(ASUNTO)+'&body='+encodeURIComponent(t));
+  }
+  [N,P,E,D,CC].forEach(function(el){el.addEventListener('input',pinta);el.addEventListener('change',pinta);});
+  pinta();
+  document.getElementById('c141-copy').addEventListener('click',function(){
+    var b=this; navigator.clipboard.writeText(carta()).then(function(){var o=b.textContent;b.textContent='✓ Copiada';setTimeout(function(){b.textContent=o},1800);});
+  });
+  F.addEventListener('submit',function(ev){
+    ev.preventDefault();
+    if(!N.value.trim()||!P.value.trim()||!E.value.trim()||!D.value.trim()){OK.className='text-sm font-bold text-rose-800 bg-rose-50 border border-rose-200 rounded-lg p-3 m-0';OK.textContent='Llena los cuatro campos. La dirección postal la exige la ley, no nosotros.';return;}
+    fetch('/api/mapa-pages?page=carta-141',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({nombre:N.value,pueblo:P.value,email:E.value,publicar_nombre:!!PUB.checked,pedido:'SLRP $2,414,970 · visas Conrad 30 · fecha del expediente HPSA'})})
+      .then(function(r){return r.json()}).then(function(){
+        OK.className='text-sm font-bold text-teal-800 bg-teal-50 border border-teal-200 rounded-lg p-3 m-0';
+        OK.textContent='Quedó anotada con la fecha de hoy. Guarda tu copia en enviados. Si a los 20 días laborables no te contestan, escríbenos: eso ya es una denegación y se puede llevar al Tribunal sin abogado.';
+      }).catch(function(){
+        OK.className='text-sm font-bold text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3 m-0';
+        OK.textContent='No pudimos anotarla, pero tu carta vale igual: lo que cuenta es el correo que mandaste.';
+      });
+  });
+})();</script>`
+}
+
+// Registra una carta radicada. Autoreporte: se marca confirmada solo cuando llega la copia
+// real al buzón, y el marcador publica las dos cifras por separado en vez de inflar una sola.
+async function handleCarta141(req: any, res: any) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8')
+  try {
+    const b = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}')
+    const strip = (v: any, n: number) => String(v || '').replace(/[\u0000-\u001f\u007f]/g, '').slice(0, n).trim()
+    const nombre = strip(b.nombre, 80)
+    const pueblo = strip(b.pueblo, 40)
+    const email = strip(b.email, 120).toLowerCase()
+    const pedido = strip(b.pedido, 120) || 'Solicitud Ley 141-2019'
+    if (!nombre || !pueblo || !email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      res.status(400).send(JSON.stringify({ ok: false })); return
+    }
+    // La dirección postal NO se guarda: es dato de contacto del solicitante con la agencia,
+    // no nuestro. Viaja en su correo y ahí se queda.
+    const { error } = await supabase.from('cartas_141').insert({
+      nombre, pueblo, email, pedido,
+      publicar_nombre: b.publicar_nombre === true,
+      agencia: CARTA141.agencia,
+    })
+    if (error) { res.status(200).send(JSON.stringify({ ok: false })); return }
+    res.status(200).send(JSON.stringify({ ok: true }))
+  } catch {
+    res.status(200).send(JSON.stringify({ ok: false }))
+  }
+}
+
 // =============== /registro/opciones — el menú de salidas, ordenado por lo que cuesta ===============
 // Par de /registro/porque: aquella explica POR QUÉ; esta contesta ¿Y AHORA QUÉ?
 // v3 (2026-08-15): flujo abuelita-first. Angel pidió: que se entienda sin pensar, que las
@@ -7369,6 +7554,11 @@ ${articleHtml}
 // (hijo, mayor, médico, alcalde, gobierno), la sección de Cabo Rojo, y cómo hacer ruido sin gritar.
 // Orden mental: pregunta de abuela primero, jerga al final en diccionario.
 async function handleRegistroOpciones(req: any, res: any) {
+  // ── El marcador del silencio (en vivo) ────────────────────────────────────
+  // Esto SÍ se lee en vivo, al revés que los datos de Cabo Rojo de abajo: un
+  // contador de días que se congela en el código miente todos los días.
+  const marcador141 = await leerMarcador141()
+
   // ── Datos de Cabo Rojo (verificados en vivo 2026-08-15) ───────────────────
   // Se dejan literales y fechados a propósito: si se leen en vivo y la vista cambia
   // de forma, la página miente en silencio. El día que se muevan, se mueven aquí.
@@ -7593,6 +7783,8 @@ async function handleRegistroOpciones(req: any, res: any) {
   <p class="text-lg sm:text-xl font-black mt-2 leading-snug m-0 text-teal-300">Pero hay ${gratis} cosas que arreglarían parte de esto y no cuestan un peso. Son justo las que llevan más tiempo sin hacerse.</p>
 </div>
 
+${bloqueCarta141(marcador141)}
+
 <div class="not-prose mt-4 bg-white border border-slate-200 rounded-2xl p-4">
   <div class="flex items-start gap-3">
     <div class="text-2xl leading-none">🎧</div>
@@ -7607,7 +7799,8 @@ async function handleRegistroOpciones(req: any, res: any) {
 <div class="not-prose mt-4 flex flex-wrap gap-2 text-sm">
   <a href="#mejora" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">¿Mejora o empeora?</a>
   <a href="#cabo-rojo" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">Cabo Rojo</a>
-  <a href="#quien" class="rounded-full bg-teal-700 text-white px-3 py-1.5 font-bold hover:bg-teal-800">¿Qué hago yo?</a>
+  <a href="#carta" class="rounded-full bg-teal-700 text-white px-3 py-1.5 font-bold hover:bg-teal-800">Mandar la carta</a>
+  <a href="#quien" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">¿Qué hago yo?</a>
   <a href="#menu" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">El menú con precio</a>
   <a href="#ruido" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">Cómo se logra que contesten</a>
   <a href="#diccionario" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">Diccionario</a>
@@ -7923,6 +8116,8 @@ ${tiersHtml}
     <p class="text-xs font-bold text-slate-500 m-0">PASO 1 · Preguntar por escrito</p>
     <p class="font-black text-slate-900 mt-1 mb-1">Un email de una página, bajo la Ley 141 de 2019</p>
     <p class="text-sm text-slate-600 m-0">Al Departamento de Salud de Puerto Rico no le aplica FOIA: le aplica la <b>Ley 141 de 2019, según enmendada por la Ley 156 de 2025</b>, que le da <b>20 días laborables</b> para contestar, prorrogables una sola vez por 20 más y solo si te avisan dentro del término. Citar la ley o el término equivocado es la excusa perfecta para no contestarte. <b>Va por email, no por carta</b>, porque el reloj arranca el día que se somete y el email se fecha solo.</p>
+    <p class="text-sm text-slate-600 mt-2 mb-2"><b>Hay un detalle que tumba cartas y casi nadie lo sabe:</b> el Artículo 6 exige que la solicitud se le notifique <b>al jefe de la agencia, con copia al Oficial de Información</b>, y que traiga <b>dirección postal y correo electrónico</b>. Si falta algo de eso, la solicitud es <b>defectuosa y el reloj nunca arranca</b>. Es la salida más limpia que tiene una agencia para no contestarte, y no le cuesta nada usarla.</p>
+    <p class="text-sm m-0"><a href="#carta" class="font-bold text-teal-700 underline">La carta ya está escrita arriba, con eso resuelto ↑</a></p>
     <p class="text-sm text-slate-600 mt-2 mb-0"><b>Y la regla que lo hace a prueba de bruto:</b> no se pide que <i>creen</i> nada. Se piden documentos que ya existen por mandato de ley, y si alguno no existe, <b>que lo certifiquen por escrito</b>. Esa certificación de que no existe es, muchas veces, el hallazgo. Se piden cosas que ya deberían estar publicadas: a cuántos clínicos se les pagó la deuda con los $2,414,970, cuántas de las 30 visas se usaron, y cuándo se actualizó por última vez el expediente de tu pueblo.</p>
   </div>
   <div class="bg-white border border-slate-200 rounded-xl p-4">
@@ -18636,6 +18831,7 @@ export default async function handler(req: any, res: any) {
     case 'datos': return await handleDatos(req, res)
     case 'porque': return await handleRegistroPorque(req, res)
     case 'registro-opciones': return await handleRegistroOpciones(req, res)
+    case 'carta-141': return await handleCarta141(req, res)
     case 'registro-puedo-volver': return await handleRegistroPuedoVolver(req, res)
     case 'recuperacion': return await handleRecuperacion(req, res)
     case 'sinfiltros': return await handleSinFiltros(req, res)
