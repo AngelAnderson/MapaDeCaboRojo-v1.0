@@ -456,7 +456,7 @@ async function handleLive3d(req: any, res: any) {
   // chip de Eventos se esconde solo en vez de enseñar un calendario muerto.
   const { data: evData } = await supabase
     .from('events')
-    .select('title,start_time,location_name,municipality,category,map_link,lat,lon')
+    .select('title,start_time,location_name,municipality,category,map_link,lat,lon,places:place_id(slug)')
     .eq('status', 'published')
     .eq('family_friendly', true)
     .gte('start_time', new Date().toISOString())
@@ -466,9 +466,15 @@ async function handleLive3d(req: any, res: any) {
   // Ahora sí traen lat/lon (migración events_coordenadas), así que el mapa puede
   // dibujarlos como pines en vez de esconderlos detrás de un chip. Un evento es
   // un lugar y una fecha: el mapa ya sabe dibujar lugares.
+  //
+  // Y traen el SLUG DEL LUGAR (`s`). Sin eso, tocar un evento en la portada no
+  // llevaba a ningún lado útil: el sitio sabía dónde era y no lo decía. Un evento
+  // sin puerta es un cartel. Con `s`, el toque cae en la página del lugar, que es
+  // donde está el mapa, el teléfono y cómo llegar.
   const eventos = (evData || []).map((e: any) => ({
     n: e.title, d: e.start_time, l: e.location_name, m: e.municipality, url: e.map_link,
     lat: e.lat, lon: e.lon,
+    s: Array.isArray(e.places) ? e.places[0]?.slug : (e.places as any)?.slug,
   }));
 
   // Conteos vivos para la portada. Se cuentan, no se hornean, porque el número
