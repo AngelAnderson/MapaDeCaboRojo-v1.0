@@ -7422,11 +7422,11 @@ function bloqueCarta141(m: Marcador141): string {
   const chip = (n: number | string, t: string, tono: string) =>
     `<div class="rounded-xl bg-white/10 px-3 py-2"><p class="text-xl font-black m-0 ${tono}">${n}</p><p class="text-[11px] text-slate-300 m-0 leading-tight">${t}</p></div>`
 
-  // Arriba va SOLO el marcador. Es un dato, y un dato engancha; el formulario es una tarea,
-  // y una tarea arriba, antes de que la página explique por qué, espanta al que acaba de llegar.
-  // El formulario vive abajo, en el PASO 1, que es donde el argumento ya está hecho.
+  // Vive DENTRO del PASO 2, que es el paso que lo describe ("publicar la respuesta, y también
+  // el silencio"). No va arriba: el que acaba de llegar no sabe todavía qué es la Ley 141, y un
+  // contador sin su explicación al lado es un número huérfano. Cada paso con su instrumento.
   return `
-<div class="not-prose mt-4 rounded-2xl bg-slate-900 text-white p-5 sm:p-6 border border-slate-800">
+<div class="not-prose mt-3 rounded-xl bg-slate-900 text-white p-4 sm:p-5">
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold m-0">El marcador del silencio</p>
   <p class="text-lg sm:text-xl font-black mt-2 leading-snug m-0">${titular}</p>
   <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -7435,7 +7435,7 @@ function bloqueCarta141(m: Marcador141): string {
     ${chip(m.abiertas, 'sin contestar', 'text-amber-300')}
     ${chip(m.vencidas, 'fuera de término', 'text-rose-300')}
   </div>
-  <p class="text-sm text-slate-300 mt-3 mb-0">Son solicitudes de vecinos al Departamento de Salud, bajo la Ley 141. <a href="#carta" class="font-bold text-teal-300 underline">Cómo se manda una, y por qué no se puede perder ↓</a></p>
+  <p class="text-sm text-slate-300 mt-3 mb-0">Cada fila es un vecino que preguntó por escrito y todavía espera. <a href="#carta" class="font-bold text-teal-300 underline">Añadir la mía ↑</a></p>
   <p class="text-[11px] text-slate-400 mt-2 mb-0 leading-snug">Cómo se cuenta: <b>radicadas</b> es lo que reporta quien la mandó. <b>Con copia recibida</b> es la que además llegó a nuestro buzón, o sea la que podemos probar. Los días son laborables y no descuentan feriados, así que el contador va por lo bajo a propósito. Si el número se puede tumbar, no sirve.</p>
 </div>`
 }
@@ -7806,8 +7806,6 @@ async function handleRegistroOpciones(req: any, res: any) {
   <p class="text-lg sm:text-xl font-black mt-2 leading-snug m-0 text-teal-300">Pero hay ${gratis} cosas que arreglarían parte de esto y no cuestan un peso. Son justo las que llevan más tiempo sin hacerse.</p>
 </div>
 
-${bloqueCarta141(marcador141)}
-
 <div class="not-prose mt-4 bg-white border border-slate-200 rounded-2xl p-4">
   <div class="flex items-start gap-3">
     <div class="text-2xl leading-none">🎧</div>
@@ -7822,8 +7820,7 @@ ${bloqueCarta141(marcador141)}
 <div class="not-prose mt-4 flex flex-wrap gap-2 text-sm">
   <a href="#mejora" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">¿Mejora o empeora?</a>
   <a href="#cabo-rojo" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">Cabo Rojo</a>
-  <a href="#carta" class="rounded-full bg-teal-700 text-white px-3 py-1.5 font-bold hover:bg-teal-800">Mandar la carta</a>
-  <a href="#quien" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">¿Qué hago yo?</a>
+  <a href="#quien" class="rounded-full bg-teal-700 text-white px-3 py-1.5 font-bold hover:bg-teal-800">¿Qué hago yo?</a>
   <a href="#menu" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">El menú con precio</a>
   <a href="#ruido" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">Cómo se logra que contesten</a>
   <a href="#diccionario" class="rounded-full border border-slate-300 px-3 py-1.5 font-semibold text-slate-700 hover:border-teal-400">Diccionario</a>
@@ -8149,6 +8146,7 @@ ${bloqueFormulario141()}
     <p class="text-xs font-bold text-slate-500 m-0">PASO 2 · Publicar la respuesta, y también el silencio</p>
     <p class="font-black text-slate-900 mt-1 mb-1">Si contestan, es un dato. Si no contestan, también.</p>
     <p class="text-sm text-slate-600 m-0">Aquí está el truco entero: <b>no hay forma de perder</b>. Si te contestan, tienes el número que nadie tenía. Si no te contestan en 20 días laborables, tienes algo mejor: la fecha en que preguntaste y el silencio, que es un hecho verificable y publicable. Y no es solo moral: pasado el término sin respuesta la solicitud se entiende denegada, queda abierto el Recurso Especial ante el Tribunal de Primera Instancia, y desde la enmienda de 2025 el incumplimiento de una orden judicial conlleva multas de hasta $100 diarios. Un marcador que dice &quot;preguntado el 15 de agosto, sin contestar&quot; y que sube el contador cada mes pesa más que cualquier queja.</p>
+${bloqueCarta141(marcador141)}
   </div>
   <div class="bg-white border border-slate-200 rounded-xl p-4">
     <p class="text-xs font-bold text-slate-500 m-0">PASO 3 · Hacerlo citable</p>
