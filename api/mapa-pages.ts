@@ -7807,12 +7807,23 @@ async function handleRegistroOpciones(req: any, res: any) {
   <p class="text-lg sm:text-xl font-black mt-2 leading-snug m-0 text-teal-300">Pero hay ${gratis} cosas que arreglarían parte de esto y no cuestan un peso. Son justo las que llevan más tiempo sin hacerse.</p>
 </div>
 
+<!-- El techo, dicho de frente y arriba. Va aquí porque es lo que hace creíble todo lo demás:
+     una página que promete arreglarlo todo no se le cree, y una que dice qué NO puede hacer
+     compra el derecho a que le crean lo que sí. También es la vacuna contra "así son las cosas":
+     el que lee sabe desde la línea 3 que aquí no se le va a vender humo. -->
+<div class="not-prose mt-4 rounded-2xl border-2 border-slate-900 bg-white p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-slate-500 font-bold m-0">Lo que esta página no puede hacer</p>
+  <p class="text-xl sm:text-2xl font-black text-slate-900 mt-2 leading-snug m-0">No podemos arreglar el Medicaid. No podemos cambiar la fórmula de Medicare. No podemos hacer aparecer médicos.</p>
+  <p class="text-sm text-slate-600 mt-2 mb-0">Eso lo decide el Congreso, y ya tiene fecha: <b>30 de septiembre de 2027</b>. Quien te diga que lo va a resolver desde aquí te está mintiendo.</p>
+  <p class="text-base text-slate-900 mt-4 mb-0 leading-snug"><b>Lo que sí se puede es todo lo que pasa entre «existe un médico» y «tienes cita».</b> Ahí es donde se pierde la gente de verdad: el teléfono que nadie contesta, el directorio viejo, el referido que se perdió, el plan que dice que no la primera vez. Nada de eso lo decide Washington, y nada de eso se arregla esperando.</p>
+</div>
+
 <div class="not-prose mt-4 bg-white border border-slate-200 rounded-2xl p-4">
   <div class="flex items-start gap-3">
     <div class="text-2xl leading-none">🎧</div>
     <div class="flex-1 min-w-0">
       <p class="text-sm font-bold text-slate-800 m-0">Escúchalo en vez de leerlo</p>
-      <p class="text-xs text-slate-500 mt-0.5 mb-2">6 minutos, en español. Ponlo mientras guías o cocinas. Cubre lo mismo que esta página.</p>
+      <p class="text-xs text-slate-500 mt-0.5 mb-2">6 minutos, en español. Ponlo mientras guías o cocinas. Cubre lo mismo que esta página, menos el recuadro de arriba: <b>no podemos arreglar el Medicaid ni hacer aparecer médicos, y lo que sí se puede es lo que pasa entre «existe un médico» y «tienes cita».</b></p>
       <audio controls preload="none" class="w-full" src="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/registro/por-que-no-hay-medicos.m4a">Tu navegador no puede reproducir el audio. <a href="https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/registro-media/podcast/registro/por-que-no-hay-medicos.m4a" class="text-teal-700 font-semibold">Descárgalo</a>.</audio>
     </div>
   </div>
