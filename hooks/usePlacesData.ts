@@ -33,7 +33,12 @@ export const usePlacesData = () => {
             console.log("Fetching real data (minimal)...");
 
             // Load places FIRST (critical path) — set loading=false as soon as pins are ready
-            const realPlaces = await getMapPlaces();
+            // Llega Cabo Rojo (1,028 lugares, 0.57 MB) y se pinta enseguida. El resto
+            // del oeste entra por el callback unos segundos después y se suma sin que
+            // el vecino haga nada: no se pierde ni un negocio, solo cambia el orden.
+            const realPlaces = await getMapPlaces((todos) => {
+                if (todos.length > 0) setPlaces(todos);
+            });
             if (realPlaces.length > 0) setPlaces(realPlaces);
             setLoading(false);
 

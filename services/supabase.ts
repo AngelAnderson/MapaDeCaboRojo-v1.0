@@ -798,25 +798,53 @@ const mapRpcToPlaces = (data: any[]): Place[] => data.map((row: any) => ({
       _detailLoaded: false, // sentinel: detail not yet fetched
 } as Place & { _detailLoaded?: boolean }));
 
-// Fetch fresh places from Supabase, cache result
-const fetchFreshPlaces = async (): Promise<Place[]> => {
+// El sitio se llama "Mapa de Cabo Rojo" y abría esperando por los 5,562 lugares del
+// oeste antes de pintar el primer pin. De esos, 1,028 son Cabo Rojo: el vecino
+// aguantaba por 4,534 negocios de otros pueblos para ver el suyo.
+//
+// NO se borra ni se esconde nada. La misma consulta llega en 2 tramos:
+//   'pueblo' → Cabo Rojo, 0.57 MB, se pinta enseguida
+//   'resto'  → el resto del oeste, entra solo detrás y se suma al mapa
+// Los bytes totales son los mismos (1,028 + 4,534 = 5,562, verificado en SQL); lo
+// que cambia es el orden. La primera pintada pasa de 2.99 MB a 0.57 MB.
+//
+// `onResto` es cómo el mapa se entera de que llegó el segundo tramo. Sin eso el
+// vecino se quedaría viendo solo Cabo Rojo hasta recargar, que sí sería esconder data.
+const fetchFreshPlaces = async (onResto?: (todos: Place[]) => void): Promise<Place[]> => {
   try {
-    const { data, error } = await supabase.rpc('get_map_places_minimal');
+    const { data, error } = await supabase.rpc('get_map_places_minimal', { p_scope: 'pueblo' });
     if (error) {
       console.error('getMapPlaces RPC Error:', error.message);
       return getPlaces();
     }
     if (!data || data.length === 0) return [];
-    const mapped = mapRpcToPlaces(data);
-    await setCache('PLACES', mapped);
-    return mapped;
+    const pueblo = mapRpcToPlaces(data);
+
+    // Segundo tramo, sin bloquear la pintada. Si falla, el vecino se queda con Cabo
+    // Rojo completo y funcional: peor que todo el oeste, pero nunca una pantalla vacía.
+    (async () => {
+      try {
+        const { data: resto, error: e2 } = await supabase.rpc('get_map_places_minimal', { p_scope: 'resto' });
+        if (e2 || !resto?.length) return;
+        const todos = pueblo.concat(mapRpcToPlaces(resto));
+        await setCache('PLACES', todos);
+        onResto?.(todos);
+      } catch (e) {
+        console.warn('El resto del oeste no cargó:', e);
+      }
+    })();
+
+    // A propósito NO se cachea el tramo 1 solo: si el usuario se va antes de que
+    // llegue el resto, la próxima visita debe volver a pedir, no quedarse con un
+    // mapa recortado creyendo que está completo.
+    return pueblo;
   } catch (err) {
     console.error('getMapPlaces Error:', err);
     return getPlaces();
   }
 };
 
-export const getMapPlaces = async (): Promise<Place[]> => {
+export const getMapPlaces = async (onResto?: (todos: Place[]) => void): Promise<Place[]> => {
   // 1. Fresh cache — return immediately
   const fresh = await getFromCache('PLACES');
   if (fresh) return fresh;
@@ -824,14 +852,12 @@ export const getMapPlaces = async (): Promise<Place[]> => {
   // 2. Stale cache — return instantly, revalidate in background
   const stale = await getFromCache('PLACES', true);
   if (stale) {
-    fetchFreshPlaces().then(updated => {
-      if (updated.length > 0) setCache('PLACES', updated);
-    });
+    fetchFreshPlaces(onResto);
     return stale;
   }
 
   // 3. No cache at all — must wait for network
-  return fetchFreshPlaces();
+  return fetchFreshPlaces(onResto);
 };
 
 /** Full detail for a single place — lazy-loaded when user taps a pin. */
