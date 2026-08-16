@@ -175,6 +175,29 @@ const antes = /^const PLACES=/.test(lineas[idx])
 // Se cierra el bloque, se carga el archivo, y se reabre: así no hay que saber dónde
 // cierra el bloque original y el orden de ejecución queda idéntico al de hoy.
 lineas[idx] = `</script>\n<script id="datos-3d" src="/3d/${nombreDatos}" data-lugares="${features.length}"></script>\n<script>`;
+
+// El meta description estaba escrito a mano y decía "944 negocios de Cabo Rojo y
+// 2,522 del oeste, verificados uno a uno". Dos mentiras a la vez: los números eran
+// viejos (son 931 y 2,515) y "verificados uno a uno" no es cierto — al 16 ago solo
+// 260 de 3,446 estaban confirmados en 90 días y 2,616 no se han visto nunca.
+//
+// Ahora lo escribe el script con los números de la corrida, así que no puede
+// envejecer, y dice lo que el mapa de verdad hace. Prometer verificación total en
+// un sitio cuyo moat ES la verificación es la peor forma de gastarse el moat.
+{
+  const crAqui = features.filter(f => f.properties.m === 'Cabo Rojo').length;
+  const frescos = features.filter(f => f.properties.v).length;
+  // Coma de millar, igual que el panel del mapa ("3,446"). toLocaleString('es') no la
+  // pone en números de 4 cifras y el meta salía "2515" al lado de un panel que dice
+  // "3,446" — dos formatos del mismo número en la misma pantalla.
+  const mil = (n) => n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  const desc = `El mapa 3D de Cabo Rojo: ${mil(crAqui)} negocios del pueblo y ` +
+    `${mil(features.length - crAqui)} del resto del oeste. ` +
+    `${mil(frescos)} confirmados a mano en los últimos 90 días; los demás salen igual, ` +
+    `marcados como sin confirmar. Busca, mira qué está abierto ahora, y pregúntale al Veci.`;
+  const iMeta = lineas.findIndex(l => l.includes('name="description"'));
+  if (iMeta !== -1) lineas[iMeta] = `<meta name="description" content="${desc.replace(/"/g, '&quot;')}">`;
+}
 fs.writeFileSync(TARGET, lineas.join('\n'));
 
 const porMuni = features.reduce((a, f) => (a[f.properties.m] = (a[f.properties.m] || 0) + 1, a), {});
