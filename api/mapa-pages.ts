@@ -8376,7 +8376,7 @@ ${regDisclaimer()}`
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
   res.status(200).send(layout({
     title: 'Por qué no hay médicos en Puerto Rico, y qué se puede hacer',
-    description: `No es solo culpa de los planes médicos. ${gratis} de las ${total} cosas que arreglarían la falta de médicos en PR no cuestan un peso. Con el precio de cada una, la fuente al lado, y qué hace cada quien. Incluye Cabo Rojo.`,
+    description: `No es solo culpa de los planes médicos: ${gratis} de las ${total} cosas que arreglarían la falta de médicos en PR no cuestan un peso. Con precio, fuente y quién la mueve.`,
     slug: 'registro/opciones', bodyHtml: body, jsonLd: jsonLd as any,
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
   }))
@@ -8811,8 +8811,8 @@ ${factCards}
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
   res.status(200).send(layout({
-    title: 'Datos citables sobre el acceso médico en Puerto Rico — para prensa y quien quiera compartir',
-    description: 'Cada dato con su fuente: 65 de 76 municipios de PR con escasez de médicos declarada por el gobierno federal, 33 con dinero de salud mental sin cobrar. Copia, cita, comparte.',
+    title: 'Datos citables del acceso médico en PR, para prensa',
+    description: `Cada dato con su fuente: ${g.conHpsa} de 76 municipios de PR con escasez de médicos declarada por el federal, ${g.cupon} con dinero de salud mental sin cobrar.`,
     slug: 'comparte', bodyHtml: body, jsonLd: [faqLd, datasetLd] as any, ogImage: '/og/desiertos.png',
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
   }))
@@ -14951,9 +14951,21 @@ ${U}` },
 <h1>Kit para compartir</h1>
 <p class="text-lg text-slate-600 mt-3">Todo lo de esta página es para usarse. Copia el texto, descarga la tarjeta, publícalo donde quieras. No hace falta pedir permiso ni poner mi nombre.</p>
 
-<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5">
+<!-- El porqué, arriba de todo. Sin esto el kit reparte datos sueltos: números de lo roto
+     que está el sistema, que es munición para el "así son las cosas". Con esto, el que
+     comparte sabe qué está empujando y para qué sirve. -->
+<div class="not-prose mt-5 rounded-2xl border-2 border-slate-900 bg-white p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-slate-500 font-bold m-0">Por qué existe esto</p>
+  <p class="text-xl sm:text-2xl font-black text-slate-900 mt-2 leading-snug m-0">Ya sabemos lo que cuesta conseguir una cita. Hacer una lista no es suficiente.</p>
+  <p class="text-sm text-slate-700 mt-3 mb-0">Las listas ya existen. El plan te da una, el gobierno federal te da otra, Google te da otra. Están llenas de nombres, y el vecino igual se pasa el día llamando: <b>en el registro, 43.6% de los proveedores comparte teléfono con otro</b>. Llamas y te contesta otra oficina. Ese es el problema de verdad, y no lo arregla una lista más larga.</p>
+  <p class="text-sm text-slate-700 mt-3 mb-0">Por eso <b>El Veci (${'*'}7711) está confirmando quién acepta pacientes nuevos y qué planes coge cada quien</b>, uno por uno, por contacto directo y con la fecha al lado. No es una lista más: es <b>la primera lista de Puerto Rico donde los nombres están confirmados</b>. Un sí de más de 90 días deja de contar como sí y vuelve a «no sé», aquí y en el ${'*'}7711.</p>
+  <p class="text-sm text-slate-700 mt-3 mb-0">Todavía vamos por el principio, y publicamos cuánto llevamos aunque dé vergüenza, porque <b>ese número solo sube cuando alguien pregunta</b>. Míralo en <a href="/comparte" class="font-bold text-teal-700 underline">datos citables</a>.</p>
+</div>
+
+<div class="not-prose mt-4 bg-slate-900 text-white rounded-2xl p-5">
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold m-0">Para quién es</p>
   <p class="text-sm text-slate-300 mt-2 m-0">Para cualquiera que quiera ayudar a mover esto: amistades, prensa, un médico, alguien de otro pueblo. Los números salen en vivo de <a href="/marcador" class="text-teal-300 underline">El Marcador</a>, así que esta página no se puede quedar desfasada. Si el número cambia allá, cambia aquí.</p>
+  <p class="text-sm text-slate-300 mt-3 m-0"><b class="text-white">Y si quieres hacer más que compartir:</b> pregúntale a tu propio médico si está aceptando pacientes nuevos y qué planes coge, y dínoslo al ${'*'}7711. Eso sube el número. Compartir da alcance; preguntar construye la lista.</p>
 </div>
 
 <h2>1 · Textos listos</h2>
@@ -15070,7 +15082,7 @@ ${tarjetas.map(c => `<div class="border border-slate-200 bg-white rounded-2xl p-
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=600')
   res.status(200).send(layout({
-    title: 'Kit para compartir — Registro Médico PR',
+    title: 'Kit para compartir: textos, números y tarjetas listas',
     description: 'Textos listos para publicar, números con su fuente federal y tarjetas descargables sobre el acceso a médicos en Puerto Rico. Libre de usar, sin cuenta ni permiso.',
     slug: 'kit', bodyHtml: body, jsonLd, ogImage: '/og/desiertos.png',
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
