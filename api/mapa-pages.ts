@@ -7422,20 +7422,27 @@ function bloqueCarta141(m: Marcador141): string {
   const chip = (n: number | string, t: string, tono: string) =>
     `<div class="rounded-xl bg-white/10 px-3 py-2"><p class="text-xl font-black m-0 ${tono}">${n}</p><p class="text-[11px] text-slate-300 m-0 leading-tight">${t}</p></div>`
 
+  // Arriba va SOLO el marcador. Es un dato, y un dato engancha; el formulario es una tarea,
+  // y una tarea arriba, antes de que la página explique por qué, espanta al que acaba de llegar.
+  // El formulario vive abajo, en el PASO 1, que es donde el argumento ya está hecho.
   return `
-<div id="carta" class="not-prose mt-4 rounded-2xl overflow-hidden border border-slate-800">
-  <div class="bg-slate-900 text-white p-5 sm:p-6">
-    <p class="text-xs uppercase tracking-widest text-teal-300 font-bold m-0">El marcador del silencio</p>
-    <p class="text-lg sm:text-xl font-black mt-2 leading-snug m-0">${titular}</p>
-    <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
-      ${chip(m.total, 'radicadas', 'text-white')}
-      ${chip(m.confirmadas, 'con copia recibida', 'text-teal-300')}
-      ${chip(m.abiertas, 'sin contestar', 'text-amber-300')}
-      ${chip(m.vencidas, 'fuera de término', 'text-rose-300')}
-    </div>
-    <p class="text-[11px] text-slate-400 mt-3 mb-0 leading-snug">Cómo se cuenta: <b>radicadas</b> es lo que reporta quien la mandó. <b>Con copia recibida</b> es la que además llegó a nuestro buzón, o sea la que podemos probar. Los días son laborables y no descuentan feriados, así que el contador va por lo bajo a propósito. Si el número se puede tumbar, no sirve.</p>
+<div class="not-prose mt-4 rounded-2xl bg-slate-900 text-white p-5 sm:p-6 border border-slate-800">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold m-0">El marcador del silencio</p>
+  <p class="text-lg sm:text-xl font-black mt-2 leading-snug m-0">${titular}</p>
+  <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
+    ${chip(m.total, 'radicadas', 'text-white')}
+    ${chip(m.confirmadas, 'con copia recibida', 'text-teal-300')}
+    ${chip(m.abiertas, 'sin contestar', 'text-amber-300')}
+    ${chip(m.vencidas, 'fuera de término', 'text-rose-300')}
   </div>
+  <p class="text-sm text-slate-300 mt-3 mb-0">Son solicitudes de vecinos al Departamento de Salud, bajo la Ley 141. <a href="#carta" class="font-bold text-teal-300 underline">Cómo se manda una, y por qué no se puede perder ↓</a></p>
+  <p class="text-[11px] text-slate-400 mt-2 mb-0 leading-snug">Cómo se cuenta: <b>radicadas</b> es lo que reporta quien la mandó. <b>Con copia recibida</b> es la que además llegó a nuestro buzón, o sea la que podemos probar. Los días son laborables y no descuentan feriados, así que el contador va por lo bajo a propósito. Si el número se puede tumbar, no sirve.</p>
+</div>`
+}
 
+function bloqueFormulario141(): string {
+  return `
+<div id="carta" class="not-prose mt-3 rounded-2xl overflow-hidden border border-slate-300">
   <div class="bg-white p-5 sm:p-6">
     <p class="font-black text-slate-900 text-lg m-0">Manda la tuya. Toma 2 minutos y arranca un reloj legal.</p>
     <p class="text-sm text-slate-600 mt-1 mb-4">No estás pidiendo un favor ni que inventen nada: son documentos que ya existen. Si alguno no existe, tienen que certificarlo por escrito, y esa certificación suele ser el hallazgo. Si no contestan en el término, la ley da por denegada la solicitud y se te abre el Tribunal, sin sellos, sin aranceles y sin abogado.</p>
@@ -8117,9 +8124,11 @@ ${tiersHtml}
     <p class="font-black text-slate-900 mt-1 mb-1">Un email de una página, bajo la Ley 141 de 2019</p>
     <p class="text-sm text-slate-600 m-0">Al Departamento de Salud de Puerto Rico no le aplica FOIA: le aplica la <b>Ley 141 de 2019, según enmendada por la Ley 156 de 2025</b>, que le da <b>20 días laborables</b> para contestar, prorrogables una sola vez por 20 más y solo si te avisan dentro del término. Citar la ley o el término equivocado es la excusa perfecta para no contestarte. <b>Va por email, no por carta</b>, porque el reloj arranca el día que se somete y el email se fecha solo.</p>
     <p class="text-sm text-slate-600 mt-2 mb-2"><b>Hay un detalle que tumba cartas y casi nadie lo sabe:</b> el Artículo 6 exige que la solicitud se le notifique <b>al jefe de la agencia, con copia al Oficial de Información</b>, y que traiga <b>dirección postal y correo electrónico</b>. Si falta algo de eso, la solicitud es <b>defectuosa y el reloj nunca arranca</b>. Es la salida más limpia que tiene una agencia para no contestarte, y no le cuesta nada usarla.</p>
-    <p class="text-sm m-0"><a href="#carta" class="font-bold text-teal-700 underline">La carta ya está escrita arriba, con eso resuelto ↑</a></p>
     <p class="text-sm text-slate-600 mt-2 mb-0"><b>Y la regla que lo hace a prueba de bruto:</b> no se pide que <i>creen</i> nada. Se piden documentos que ya existen por mandato de ley, y si alguno no existe, <b>que lo certifiquen por escrito</b>. Esa certificación de que no existe es, muchas veces, el hallazgo. Se piden cosas que ya deberían estar publicadas: a cuántos clínicos se les pagó la deuda con los $2,414,970, cuántas de las 30 visas se usaron, y cuándo se actualizó por última vez el expediente de tu pueblo.</p>
   </div>
+
+${bloqueFormulario141()}
+
   <div class="bg-white border border-slate-200 rounded-xl p-4">
     <p class="text-xs font-bold text-slate-500 m-0">PASO 2 · Publicar la respuesta, y también el silencio</p>
     <p class="font-black text-slate-900 mt-1 mb-1">Si contestan, es un dato. Si no contestan, también.</p>
