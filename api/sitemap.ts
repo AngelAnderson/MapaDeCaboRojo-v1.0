@@ -214,6 +214,10 @@ export default async function handler(req: any, res: any) {
       { slug: 'cambios', priority: 0.8, changefreq: 'weekly' },
       { slug: 'comparte', priority: 0.85, changefreq: 'monthly' },
       { slug: 'porque', priority: 0.9, changefreq: 'monthly' },
+      // Par de /porque: aquella explica POR QUÉ, esta contesta ¿Y AHORA QUÉ?
+      // Nació el 15 ago 2026 y se quedó fuera de esta lista, así que el crawler
+      // no tenía por dónde llegarle. Misma prioridad que su par.
+      { slug: 'registro/opciones', priority: 0.9, changefreq: 'monthly' },
     ].forEach(({ slug, priority, changefreq }) => {
       urls.push(`
         <url>
