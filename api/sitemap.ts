@@ -82,14 +82,24 @@ export default async function handler(req: any, res: any) {
     // fuera por el corte. Ahora se piden solo los que mapa sí es dueño de indexar.
     const SUBS_IN = `(${SPECIALIST_SUBS.map((s) => `"${s}"`).join(',')})`;
     const COLS = 'slug, id, verified_at, category, subcategory, npi';
-    // El .order('slug') no es cosmético: sin ORDER BY, Postgres no garantiza el mismo
-    // orden entre las 12 consultas, así que las fronteras de página se corren y el
-    // resultado es filas repetidas y filas que nunca salen. Ver la nota del sitemap
-    // del registro (16 ago 2026), donde eso costó 58 proveedores y 9 duplicados.
-    const fetchAll = async (build: () => any): Promise<any[]> => {
+    // Ordenar NO es cosmético: sin ORDER BY, Postgres no promete el mismo orden entre
+    // las 12 consultas, así que las fronteras de página se corren y salen filas dobles
+    // mientras otras no salen nunca (16 ago 2026: 58 proveedores perdidos y 9 duplicados
+    // en el sitemap del registro).
+    //
+    // Las columnas van POR LLAMADA, nunca fijas aquí dentro: este mismo fetchAll pagina
+    // el RPC registro_spec_town_combos, que devuelve subcategory/municipality/n y no
+    // tiene slug. Un .order('slug') forzado lo tumbaba entero y se llevaba 2,640 URLs
+    // de especialidad×pueblo sin ruido ninguno, porque el error volvía como data vacía
+    // y el loop lo leía como "ya no hay más páginas".
+    const fetchAll = async (build: () => any, orderBy: string[]): Promise<any[]> => {
       const out: any[] = [];
       for (let page = 0; page < 12; page++) {
-        const { data } = await build().order('slug', { ascending: true }).range(page * 1000, (page + 1) * 1000 - 1);
+        let q = build();
+        for (const col of orderBy) q = q.order(col, { ascending: true });
+        const { data, error } = await q.range(page * 1000, (page + 1) * 1000 - 1);
+        // Un error aquí encogía el sitemap en silencio. Que reviente y se vea.
+        if (error) throw new Error(`[sitemap] fetchAll falló ordenando por ${orderBy.join(',')}: ${error.message}`);
         if (!data || data.length === 0) break;
         out.push(...data);
         if (data.length < 1000) break;
@@ -98,11 +108,11 @@ export default async function handler(req: any, res: any) {
     };
     const places = [
       // (a) directorio puro — sin NPI, nunca fue del registro
-      ...(await fetchAll(() => supabase.from('places').select(COLS).eq('status', 'open').is('npi', null))),
+      ...(await fetchAll(() => supabase.from('places').select(COLS).eq('status', 'open').is('npi', null), ['slug'])),
       // (b) con NPI pero fuera de las 56 categorías del registro (farmacias, equipo médico…)
-      ...(await fetchAll(() => supabase.from('places').select(COLS).eq('status', 'open').not('npi', 'is', null).not('subcategory', 'in', SUBS_IN))),
+      ...(await fetchAll(() => supabase.from('places').select(COLS).eq('status', 'open').not('npi', 'is', null).not('subcategory', 'in', SUBS_IN), ['slug'])),
       // (c) con NPI y sin subcategoría — `NOT IN` los deja fuera porque NULL no compara
-      ...(await fetchAll(() => supabase.from('places').select(COLS).eq('status', 'open').not('npi', 'is', null).is('subcategory', null))),
+      ...(await fetchAll(() => supabase.from('places').select(COLS).eq('status', 'open').not('npi', 'is', null).is('subcategory', null), ['slug'])),
     ];
 
     const { data: events } = await supabase
@@ -331,7 +341,10 @@ export default async function handler(req: any, res: any) {
     // Ahora sale de la data: solo los combos que de verdad tienen a alguien.
     // fetchAll y no .rpc() a secas: son 2,646 combos y PostgREST corta en 1,000 sin avisar.
     // La primera versión de esto salió a producción con 982 y el sitemap se ENCOGIÓ.
-    const combos = await fetchAll(() => supabase.rpc('registro_spec_town_combos', { p_min: 1 }));
+    // subcategory+municipality es la llave del combo, así que ordenar por las dos da
+    // una paginación determinista. Ordenar por una sola no basta: hay hasta 78 pueblos
+    // por especialidad y el desempate quedaría al aire otra vez.
+    const combos = await fetchAll(() => supabase.rpc('registro_spec_town_combos', { p_min: 1 }), ['subcategory', 'municipality']);
     const slugify = (v: string) => v.normalize('NFD').replace(/[̀-ͯ]/g, '')
       .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
     (combos || []).forEach((c: { subcategory: string; municipality: string; n: number }) => {
