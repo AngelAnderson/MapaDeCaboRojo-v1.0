@@ -361,6 +361,35 @@ export default async function handler(req: any, res: any) {
       `);
     });
 
+    // Hogares de cuido, una página por pueblo (/cuido/[pueblo]).
+    //
+    // La ingesta SULME del 14 ago metió 1,363 hogares licenciados por el Departamento
+    // de la Familia y las páginas por municipio se construyeron con ellos — pero nadie
+    // las anunció: el sitemap solo traía el índice /cuido. 77 páginas con nombre, camas
+    // y fecha de licencia, sin una sola ruta por donde el crawler llegara.
+    //
+    // Se emiten en la MISMA forma que la grilla enlaza y que la página declara como
+    // canónica (minúsculas, sin acentos, guiones). Antes la canónica salía con
+    // encodeURIComponent (/cuido/Cabo%20Rojo) y el sitio enlazaba /cuido/cabo-rojo:
+    // anunciar aquí una de las dos habría sido pedirle a Google que indexe una página
+    // que dice que la buena es otra.
+    const { data: cuidoMunis } = await supabase
+      .from('places')
+      .select('municipality')
+      .eq('subcategory', 'hogar de ancianos')
+      .eq('verification_source', 'SULME_Familia_PR')
+      .eq('visibility', 'published')
+      .limit(2000);
+    for (const m of [...new Set((cuidoMunis || []).map((r: any) => r.municipality).filter(Boolean))]) {
+      urls.push(`
+        <url>
+          <loc>${REG_BASE}/cuido/${slugify(m as string)}</loc>
+          <changefreq>monthly</changefreq>
+          <priority>0.7</priority>
+        </url>
+      `);
+    }
+
     // Category pages
     const categories = ['restaurantes', 'playas', 'salud', 'farmacia', 'dentista', 'veterinario', 'medico', 'hospital', 'laboratorio', 'optica', 'salud-mental', 'quiropractico', 'gimnasio', 'fisiatra', 'hospedaje', 'servicios', 'compras', 'entretenimiento', 'turismo', 'deportes', 'belleza', 'automotriz', 'marina', 'educacion', 'gobierno', 'helados', 'panaderia', 'pizza', 'mariscos', 'lavanderia', 'cafe', 'barberia', 'peluqueria', 'imprenta'];
     categories.forEach((cat) => {

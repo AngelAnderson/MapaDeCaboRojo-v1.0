@@ -18261,7 +18261,15 @@ ${fuente}`
     return res.status(200).send(layout({
       title: `Hogares de cuido en ${muni} — licenciados por Familia`,
       description: `${list.length} hogares de cuido con licencia vigente en ${muni}, Puerto Rico. Camas, disponibilidad y cómo verificar la licencia antes de dejar a un familiar.`,
-      slug: `cuido/${encodeURIComponent(muni)}`, host, bodyHtml: body,
+      // La canónica tiene que ser la MISMA forma que la grilla enlaza (línea de abajo:
+      // minúsculas, sin acentos, con guiones). Con encodeURIComponent salía
+      // /cuido/Cabo%20Rojo mientras el sitio enlazaba /cuido/cabo-rojo: las 2 servían
+      // 200 con el mismo contenido y las 2 declaraban canónica la del %20, o sea que
+      // el URL que la gente sí visita se declaraba a sí mismo no-canónico. Son 77
+      // páginas × 2 formas = 154 URLs peleando por ser 77 — el mismo aviso de Search
+      // Console del 28 jul. Además %20 en un enlace por SMS lo filtran algunos
+      // carriers, que es justo por lo que existe la forma con guiones.
+      slug: `cuido/${muni.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-')}`, host, bodyHtml: body,
     }))
   }
 
