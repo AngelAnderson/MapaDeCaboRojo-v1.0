@@ -1,6 +1,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { MCP_ENDPOINT } from './_lib/agentes.js';
+import { SPECIALIST_SUBS } from './_lib/registro-subs.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -18,7 +19,8 @@ const AI_CRAWLERS = ['GPTBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-Web', 'anthr
 // se anuncia en el sitemap de mapadecaborojo.com (si no, el mismo médico sale dos veces, en
 // dos dominios, cada copia auto-canónica — eso es lo que Search Console reporta como
 // "Duplicada: Google eligió una versión canónica diferente").
-const SPECIALIST_SUBS = ['cardiólogo','psiquiatra','fisiatra','ginecólogo','pediatra','dermatólogo','gastroenterólogo','oftalmólogo','ortopeda','neurólogo','urólogo','endocrinólogo','nefrólogo','neumólogo','oncólogo','reumatólogo','geriatra','otorrinolaringólogo','infectólogo','alergista','medicina de emergencia','cirujano general','anestesiólogo','radiólogo','neurocirujano','cirujano plástico','cirujano torácico','coloproctólogo','manejo de dolor','psicólogo','optómetra','podiatra','dentista','internista','medicina de familia','generalista','va','terapeuta del habla','terapista físico','terapista ocupacional','quiropráctico','consejero','trabajador social','terapeuta de familia','nutricionista','physician assistant','enfermera practicante','audiólogo','partera','farmacéutico','hospital','cuidado en el hogar','hospicio','hogar de envejecientes','centro de diálisis','urgent care','clínica comunitaria','laboratorio clínico','radiología','ambulancia','dentista pediátrico','ortodoncista','cirujano oral','naturópata','acupunturista','neonatólogo','cirujano vascular','patólogo','medicina ocupacional','hospitalista','medicina nuclear','genetista'];
+// La lista vive en _lib: la comparte llms-full.txt, que se quedó sin ella y
+// terminó anunciando 10,000 de 35,757. Una sola copia, un solo drift posible.
 
 // Espejo EXACTO de api/negocio.ts: un place HEALTH con una de estas subcategorías no se
 // sirve en /negocio/[slug], se redirige 301 a /[ruta]/[slug]. El sitemap anuncia el destino,

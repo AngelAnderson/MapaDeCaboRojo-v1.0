@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { bloqueAgentes, MCP_REGISTRY_AUTH } from './_lib/agentes.js';
+import { SUBS_IN_LIST } from './_lib/registro-subs.js';
 
 // ── Shared anon client ────────────────────────────────────────────────────────
 const supabase = createClient(
@@ -132,19 +133,39 @@ function getAmenity(amenities: any, key: string): string {
   return 'No especificado';
 }
 
+// El directorio del Mapa, SIN los proveedores del Registro. Es el mismo filtro que
+// api/sitemap.ts ya aplicaba y que este endpoint nunca recibió: pedía places sin
+// filtrar y cortaba en 10,000. Medido el 16 ago 2026, el archivo salía diciendo
+// "Total de negocios: 10000" sobre 35,757 publicados — 28%, y el resto casi todo
+// médicos del NPPES de todo PR bajo un título que dice "Directorio de Cabo Rojo".
+// Además cada uno enlazaba a /negocio/[slug], que para un NPI redirige a otro dominio.
+// Con el filtro son ~7,515: cabe entero y ya no hay corte.
 async function handleLlmsFull(req: any, res: any) {
-  const allPlaces: any[] = [];
-  for (let page = 0; page < 10; page++) {
-    const { data, error } = await supabase
-      .from('places')
-      .select('id,name,slug,category,subcategory,description,address,phone,website,opening_hours,amenities,status,google_rating')
-      .order('category', { ascending: true })
-      .range(page * 1000, (page + 1) * 1000 - 1);
-    if (error) { res.status(500).send('# Error loading directory'); return; }
-    if (!data || data.length === 0) break;
-    allPlaces.push(...data);
-    if (data.length < 1000) break;
-  }
+  const COLS = 'id,name,slug,category,subcategory,description,address,phone,website,opening_hours,amenities,status,google_rating';
+  // Ordenar por slug (único), no por category: con category los empates quedan sin
+  // orden entre una página y otra, y ahí es donde se repiten y se pierden filas.
+  const fetchAll = async (build: () => any): Promise<any[] | null> => {
+    const out: any[] = [];
+    for (let page = 0; page < 12; page++) {
+      const { data, error } = await build().order('slug', { ascending: true })
+        .range(page * 1000, (page + 1) * 1000 - 1);
+      if (error) return null;
+      if (!data || data.length === 0) break;
+      out.push(...data);
+      if (data.length < 1000) break;
+    }
+    return out;
+  };
+  const ramas = await Promise.all([
+    // (a) directorio puro — sin NPI, nunca fue del registro
+    fetchAll(() => supabase.from('places').select(COLS).is('npi', null)),
+    // (b) con NPI pero fuera de las categorías del registro (farmacias, equipo médico…)
+    fetchAll(() => supabase.from('places').select(COLS).not('npi', 'is', null).not('subcategory', 'in', SUBS_IN_LIST)),
+    // (c) con NPI y sin subcategoría — `NOT IN` los deja fuera porque NULL no compara
+    fetchAll(() => supabase.from('places').select(COLS).not('npi', 'is', null).is('subcategory', null)),
+  ]);
+  if (ramas.some((r) => r === null)) { res.status(500).send('# Error loading directory'); return; }
+  const allPlaces: any[] = ramas.flat() as any[];
 
   const lines: string[] = [
     '# MapaDeCaboRojo.com — Directorio Completo de Cabo Rojo, Puerto Rico',
