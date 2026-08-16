@@ -7362,6 +7362,58 @@ ${articleHtml}
   }))
 }
 
+// =============== El contador de la última milla ===============
+// Hermano del marcador del silencio, apuntado al revés. Aquel cuenta lo que el gobierno
+// no contesta; este cuenta lo que nosotros todavía no hemos averiguado. Contarnos con la
+// misma regla es lo que da derecho a contarlos a ellos.
+//
+// Y es el motor, no el adorno: este número sube ÚNICAMENTE cuando alguien pregunta a un
+// proveedor si está cogiendo pacientes. No sube publicando, ni con una idea, ni con un
+// video. El día que no se preguntó, se queda igual y se ve. Esa es toda la gracia.
+//
+// Regla de frescura: 90 días. Un sí viejo no es un sí, es una corazonada vencida, y se
+// devuelve a "no sé". El mismo umbral que usa el Veci al contestar (search.ts, FRESCO_DIAS).
+type ContadorMilla = { totalPR: number; confirmados: number; cogiendo: number; totalCR: number; confirmadosCR: number }
+
+async function leerContadorUltimaMilla(): Promise<ContadorMilla> {
+  const vacio: ContadorMilla = { totalPR: 0, confirmados: 0, cogiendo: 0, totalCR: 0, confirmadosCR: 0 }
+  try {
+    const desde = new Date(Date.now() - 90 * 86400000).toISOString()
+    const base = () => supabase.from('places').select('id', { count: 'exact', head: true })
+      .eq('category', 'HEALTH').eq('visibility', 'published').eq('status', 'open')
+    const [tPR, conf, coge, tCR, confCR] = await Promise.all([
+      base(),
+      base().not('accepts_new_patients', 'is', null).gt('last_verified_at', desde),
+      base().eq('accepts_new_patients', true).gt('last_verified_at', desde),
+      base().eq('municipality', 'Cabo Rojo'),
+      base().eq('municipality', 'Cabo Rojo').not('accepts_new_patients', 'is', null).gt('last_verified_at', desde),
+    ])
+    return {
+      totalPR: tPR.count || 0, confirmados: conf.count || 0, cogiendo: coge.count || 0,
+      totalCR: tCR.count || 0, confirmadosCR: confCR.count || 0,
+    }
+  } catch { return vacio }
+}
+
+function bloqueContadorMilla(c: ContadorMilla): string {
+  if (!c.totalPR) return ''
+  const n = (x: number) => x.toLocaleString('en-US')
+  const cifra = (v: string, t: string, tono: string) =>
+    `<div><p class="text-3xl sm:text-4xl font-black m-0 ${tono}">${v}</p><p class="text-xs text-slate-500 m-0 leading-tight mt-1">${t}</p></div>`
+  return `
+<div class="not-prose mt-4 rounded-2xl bg-white border border-slate-200 p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-slate-500 font-bold m-0">La lista que estamos haciendo</p>
+  <p class="text-lg sm:text-xl font-black text-slate-900 mt-2 leading-snug m-0">Vamos a ser la única lista de Puerto Rico que dice <span class="text-teal-700">quién contesta y quién está cogiendo pacientes</span>, con la fecha en que lo confirmamos.</p>
+  <div class="mt-4 grid grid-cols-3 gap-3">
+    ${cifra(n(c.confirmados), 'confirmados en los últimos 90 días', 'text-teal-700')}
+    ${cifra(n(c.totalPR), 'proveedores de salud en todo PR', 'text-slate-900')}
+    ${cifra(`${n(c.confirmadosCR)} de ${n(c.totalCR)}`, 'en Cabo Rojo, que es donde vivimos', c.confirmadosCR ? 'text-teal-700' : 'text-rose-700')}
+  </div>
+  <p class="text-sm text-slate-700 mt-4 mb-0">Hoy vamos <b>${n(c.confirmados)} de ${n(c.totalPR)}</b>. Es ridículo, y por eso lo publicamos: <b>este número solo sube cuando alguien llama y pregunta.</b> No sube publicando, no sube con una idea, no sube con un video. El día que no se preguntó se queda igual, y se ve.</p>
+  <p class="text-[11px] text-slate-500 mt-2 mb-0">Un sí de más de 90 días deja de contar como sí y vuelve a «no sé», aquí y en el ${'*'}7711. Nadie sabe cuáles de esos ${n(c.totalPR)} contestan el teléfono: ni el plan médico, cuyo propio directorio repite 43.6% de los números, ni el Departamento de Salud, ni Google. Por eso hay que preguntarlo uno por uno.</p>
+</div>`
+}
+
 // =============== El marcador del silencio (Ley 141-2019) ===============
 // Por qué existe: la página describía el método ("un marcador que dice preguntado el 15 de
 // agosto, sin contestar") y no lo montaba. Un expediente que solo se lee deja al vecino igual
@@ -7581,7 +7633,7 @@ async function handleRegistroOpciones(req: any, res: any) {
   // ── El marcador del silencio (en vivo) ────────────────────────────────────
   // Esto SÍ se lee en vivo, al revés que los datos de Cabo Rojo de abajo: un
   // contador de días que se congela en el código miente todos los días.
-  const marcador141 = await leerMarcador141()
+  const [marcador141, contadorMilla] = await Promise.all([leerMarcador141(), leerContadorUltimaMilla()])
 
   // ── Datos de Cabo Rojo (verificados en vivo 2026-08-15) ───────────────────
   // Se dejan literales y fechados a propósito: si se leen en vivo y la vista cambia
@@ -7817,6 +7869,8 @@ async function handleRegistroOpciones(req: any, res: any) {
   <p class="text-sm text-slate-600 mt-2 mb-0">Eso lo decide el Congreso, y ya tiene fecha: <b>30 de septiembre de 2027</b>. Quien te diga que lo va a resolver desde aquí te está mintiendo.</p>
   <p class="text-base text-slate-900 mt-4 mb-0 leading-snug"><b>Lo que sí se puede es todo lo que pasa entre «existe un médico» y «tienes cita».</b> Ahí es donde se pierde la gente de verdad: el teléfono que nadie contesta, el directorio viejo, el referido que se perdió, el plan que dice que no la primera vez. Nada de eso lo decide Washington, y nada de eso se arregla esperando.</p>
 </div>
+
+${bloqueContadorMilla(contadorMilla)}
 
 <div class="not-prose mt-4 bg-white border border-slate-200 rounded-2xl p-4">
   <div class="flex items-start gap-3">
