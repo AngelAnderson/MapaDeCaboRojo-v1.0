@@ -174,7 +174,20 @@ const antes = /^const PLACES=/.test(lineas[idx])
 // (EVENTS, EVENTOS…). Meter una etiqueta ahí dejaría un script anidado y HTML roto.
 // Se cierra el bloque, se carga el archivo, y se reabre: así no hay que saber dónde
 // cierra el bloque original y el orden de ejecución queda idéntico al de hoy.
-lineas[idx] = `</script>\n<script id="datos-3d" src="/3d/${nombreDatos}" data-lugares="${features.length}"></script>\n<script>`;
+// Idempotencia. La primera versión reemplazaba SOLO la línea marcador, pero dejaba
+// el </script> que había insertado antes y el <script> de después: cada corrida
+// agregaba un par. A la tercera corrida había 3 </script> seguidos y 2 <script>.
+// El conteo seguía balanceado, así que no se veía roto — otro fallo callado.
+// Ahora se traga las etiquetas vecinas que este mismo script pudo haber puesto y
+// escribe siempre las mismas 3 líneas, corra 1 vez o 50.
+let ini = idx;
+while (ini - 1 >= 0 && lineas[ini - 1].trim() === '</script>') ini--;
+let fin = idx + 1;
+while (fin < lineas.length && lineas[fin].trim() === '<script>') fin++;
+lineas.splice(ini, fin - ini,
+  '</script>',
+  `<script id="datos-3d" src="/3d/${nombreDatos}" data-lugares="${features.length}"></script>`,
+  '<script>');
 
 // El meta description estaba escrito a mano y decía "944 negocios de Cabo Rojo y
 // 2,522 del oeste, verificados uno a uno". Dos mentiras a la vez: los números eran
@@ -197,6 +210,11 @@ lineas[idx] = `</script>\n<script id="datos-3d" src="/3d/${nombreDatos}" data-lu
     `marcados como sin confirmar. Busca, mira qué está abierto ahora, y pregúntale al Veci.`;
   const iMeta = lineas.findIndex(l => l.includes('name="description"'));
   if (iMeta !== -1) lineas[iMeta] = `<meta name="description" content="${desc.replace(/"/g, '&quot;')}">`;
+  // og:description también decía "verificado uno a uno". Se arregló el meta normal y
+  // este se quedó mintiendo — es el que se ve cuando alguien comparte el enlace por
+  // WhatsApp, o sea el que más gente lee.
+  const iOg = lineas.findIndex(l => l.includes('property="og:description"'));
+  if (iOg !== -1) lineas[iOg] = `<meta property="og:description" content="El directorio del pueblo en 3D. ${mil(frescos)} de ${mil(features.length)} confirmados a mano en 90 días; los demás salen marcados como sin confirmar.">`;
 }
 fs.writeFileSync(TARGET, lineas.join('\n'));
 

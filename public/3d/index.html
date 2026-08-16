@@ -7,7 +7,7 @@
 <meta name="description" content="El mapa 3D de Cabo Rojo: 931 negocios del pueblo y 2,515 del resto del oeste. 260 confirmados a mano en los últimos 90 días; los demás salen igual, marcados como sin confirmar. Busca, mira qué está abierto ahora, y pregúntale al Veci.">
 <link rel="canonical" href="https://www.mapadecaborojo.com/3d">
 <meta property="og:title" content="Mapa de Cabo Rojo · 3D">
-<meta property="og:description" content="El directorio del pueblo en 3D, verificado uno a uno.">
+<meta property="og:description" content="El directorio del pueblo en 3D. 260 de 3,446 confirmados a mano en 90 días; los demás salen marcados como sin confirmar.">
 <meta property="og:url" content="https://www.mapadecaborojo.com/3d">
 <meta property="og:image" content="https://www.mapadecaborojo.com/og/mapa-3d.png">
 <meta property="og:image:width" content="1200">
@@ -272,11 +272,7 @@
 
 <script>
 </script>
-</script>
-</script>
 <script id="datos-3d" src="/3d/datos-b92389c861.js" data-lugares="3446"></script>
-<script>
-<script>
 <script>
 
 let EVENTS={"type":"FeatureCollection","features":[]}; // se llena en vivo desde live3d
@@ -452,7 +448,10 @@ function mapFilter(){
 }
 function applyFilters(){
   const f=mapFilter();
-  ['heat','glow','dots'].forEach(id=>map.getLayer(id)&&map.setFilter(id,f));
+  // 'dots-nombre' va en la lista o al filtrar "farmacia" seguirían saliendo escritos
+  // los nombres de todo lo demás, con los pines ya escondidos. Cualquier capa nueva
+  // que lea de 'places' tiene que entrar aquí.
+  ['heat','glow','dots','dots-nombre'].forEach(id=>map.getLayer(id)&&map.setFilter(id,f));
   map.getLayer('sponsor-pulse')&&map.setFilter('sponsor-pulse',['all',['has','f'],f]);
 }
 
@@ -487,12 +486,33 @@ function setupLayers(){
     ['<=',['get','d'],90],  0.95,       // confirmado hace poco
     ['<=',['get','d'],365], 0.62,       // envejeciendo
     0.42];                              // más de un año
+  // Los pines eran de 2.4 a 8 px de radio: 3,446 puntitos del mismo tamaño, y en el
+  // casco del pueblo se amontonaban en una mancha donde no se le puede dar a ninguno.
+  // La guía de toque de Apple y Google pide 44 px de blanco; 16 px de diámetro es un
+  // tercio de eso. Aquí se dobla el tamaño y se le pone aro blanco grueso, que es lo
+  // que separa un pin de otro cuando están pegados.
   map.addLayer({id:'dots',type:'circle',source:'places',minzoom:11.6,layout:{'circle-sort-key':['case',['has','f'],2,1]},paint:{
     'circle-color':colorExpr,
-    'circle-radius':['interpolate',['linear'],['zoom'],12,2.4,15,5.5,17,8],
-    'circle-stroke-width':['case',['has','f'],1.8,['<=',['coalesce',['get','d'],9999],90],1.1,0.5],
-    'circle-stroke-color':['case',['has','f'],'#FFD700',['<=',['coalesce',['get','d'],9999],90],'#ffffff','#ffffff88'],
+    'circle-radius':['interpolate',['linear'],['zoom'],12,4,15,10,17,15],
+    'circle-stroke-width':['case',['has','f'],3,['<=',['coalesce',['get','d'],9999],90],2.2,1.4],
+    'circle-stroke-color':['case',['has','f'],'#FFD700',['<=',['coalesce',['get','d'],9999],90],'#ffffff','#ffffffaa'],
     'circle-opacity':frescura}});
+
+  // El nombre, escrito, cuando te acercas a tu barrio. Es lo más abuelita-friendly que
+  // existe: un punto de color no dice nada, "Farmacia Encarnación" lo dice todo sin
+  // leyenda, sin aprender códigos y sin tener que tocar nada para averiguarlo.
+  // Aparece en zoom 14.5 (nivel barrio) para no tapar el mapa cuando ves el oeste
+  // entero. La fuente es la misma que ya usan match-label y ev-label, o sea que se
+  // sabe que carga: probar con emoji habría sido apostar a que el set de glifos los
+  // trae, y si no los trae salen cuadritos.
+  map.addLayer({id:'dots-nombre',type:'symbol',source:'places',minzoom:14.5,layout:{
+    'text-field':['get','n'],'text-font':['Noto Sans Regular'],
+    'text-size':['interpolate',['linear'],['zoom'],14.5,11,17,14],
+    'text-offset':[0,1.1],'text-anchor':'top','text-max-width':11,
+    'text-allow-overlap':false,'text-optional':true,
+    'symbol-sort-key':['case',['has','f'],0,['<=',['coalesce',['get','d'],9999],90],1,2]},
+    paint:{'text-color':curStyle==='noche'?'#e2e8f0':'#1e293b',
+      'text-halo-color':curStyle==='noche'?'#0f172a':'#ffffff','text-halo-width':2}});
   map.addLayer({id:'sponsor-pulse',type:'circle',source:'places',filter:['has','f'],minzoom:11,paint:{
     'circle-color':'#FFD700','circle-opacity':.25,'circle-blur':.8,'circle-radius':10}});
   map.addLayer({id:'match-glow',type:'circle',source:'match',paint:{
@@ -519,7 +539,33 @@ function setupLayers(){
       paint:{'text-color':'#92400e','text-halo-color':'#fff','text-halo-width':1.8}});
   }catch(e){ console.warn('[3d] capas de eventos/etiquetas no montaron:', e && e.message); }
   applyFilters();
-  map.on('click','dots',e=>openPlace(e.features[0].properties, e.features[0].geometry.coordinates));
+  // Toque perdonador. Antes había que darle DENTRO del círculo, y con un dedo sobre un
+  // punto de 8 px de diámetro eso es puntería de cirujano. Ahora se busca en una caja
+  // de 22 px alrededor del dedo y se abre el más cercano al centro del toque, así que
+  // "cerquita" cuenta como "ahí". Se deja el listener de la capa como respaldo por si
+  // el toque cae justo encima.
+  const TOQUE = 22;
+  map.on('click', e => {
+    const p = e.point;
+    const caja = [[p.x - TOQUE, p.y - TOQUE], [p.x + TOQUE, p.y + TOQUE]];
+    let cerca;
+    try { cerca = map.queryRenderedFeatures(caja, { layers: ['dots'] }); } catch (_) { return; }
+    if (!cerca || !cerca.length) return;
+    // Si el dedo cayó sobre un evento, manda el evento: tiene su propio manejador y
+    // su propia tarjeta. Sin esto se abrirían los dos a la vez.
+    try { if (map.getLayer('ev-dot') && map.queryRenderedFeatures(p, { layers: ['ev-dot'] }).length) return; } catch (_) {}
+    // El más cercano al dedo, no el primero que devuelva el motor: con pines pegados
+    // el primero es arbitrario y el vecino abre un negocio que no era el que señaló.
+    let mejor = cerca[0], mejorD = Infinity;
+    for (const f of cerca) {
+      const q = map.project(f.geometry.coordinates);
+      const d = (q.x - p.x) ** 2 + (q.y - p.y) ** 2;
+      if (d < mejorD) { mejorD = d; mejor = f; }
+    }
+    openPlace(mejor.properties, mejor.geometry.coordinates);
+  });
+  // NO se deja además el listener de capa `map.on('click','dots',...)`: con el manejador
+  // de arriba los dos dispararían en un toque directo y openPlace correría 2 veces.
   map.on('click','ev-dot',e=>{
     const p=e.features[0].properties;
     closePopup();
