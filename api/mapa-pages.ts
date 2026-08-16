@@ -8652,7 +8652,53 @@ ${SHARE_COPY_SCRIPT}`
   }))
 }
 
+// La sección de la última milla dentro de /comparte. Va aquí y no en una página nueva
+// porque la quinta página para lo mismo es el problema, no la solución.
+//
+// Y corrige un sesgo de esta página: todo lo demás en ella prueba que el sistema está
+// roto, que es munición para el "así son las cosas". Un promotor armado solo con eso
+// reparte fatalismo con fuente. Esto le da lo único que se puede empujar hacia adelante:
+// algo que se está construyendo, con lo poco que llevamos dicho de frente.
+function bloqueMillaCitable(c: ContadorMilla): string {
+  if (!c.totalPR) return ''
+  const n = (x: number) => x.toLocaleString('en-US')
+  const M = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre']
+  const d = new Date(); const hoy = `${d.getDate()} de ${M[d.getMonth()]} de ${d.getFullYear()}`
+  const FUENTE = `Fuente: Registro Médico PR (registromedicopr.com), sobre el registro federal NPPES. Datos al ${hoy}.`
+  const citas: [string, string][] = [
+    ['El número que nadie tiene',
+     `Puerto Rico tiene ${n(c.totalPR)} proveedores de salud listados. Nadie sabe cuáles están aceptando pacientes nuevos: al ${hoy}, solo ${n(c.confirmados)} lo tienen confirmado por contacto directo. ${FUENTE}`],
+    ['El pueblo, como ejemplo',
+     `En Cabo Rojo hay ${n(c.totalCR)} proveedores de salud listados y ${n(c.confirmadosCR)} con confirmación vigente de si están aceptando pacientes nuevos. ${FUENTE}`],
+    ['Por qué el directorio no basta',
+     `En el registro, 43.6% de los proveedores comparte el mismo número de teléfono con otro proveedor. Por eso una lista de nombres no es una lista de citas. ${FUENTE}`],
+  ]
+  return `
+<div class="not-prose mt-6 rounded-2xl border-2 border-teal-700 bg-white p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-700 font-bold m-0">Lo que estamos construyendo, y cuánto llevamos</p>
+  <p class="text-xl sm:text-2xl font-black text-slate-900 mt-2 leading-snug m-0">La única lista de Puerto Rico que diga quién contesta y quién está aceptando pacientes, con la fecha en que se confirmó.</p>
+  <div class="mt-4 grid grid-cols-3 gap-3">
+    <div><p class="text-3xl font-black m-0 text-teal-700">${n(c.confirmados)}</p><p class="text-xs text-slate-500 m-0 mt-1 leading-tight">confirmados (90 días)</p></div>
+    <div><p class="text-3xl font-black m-0 text-slate-900">${n(c.totalPR)}</p><p class="text-xs text-slate-500 m-0 mt-1 leading-tight">proveedores en PR</p></div>
+    <div><p class="text-3xl font-black m-0 ${c.confirmadosCR ? 'text-teal-700' : 'text-rose-700'}">${n(c.confirmadosCR)} de ${n(c.totalCR)}</p><p class="text-xs text-slate-500 m-0 mt-1 leading-tight">en Cabo Rojo</p></div>
+  </div>
+  <p class="text-sm text-slate-700 mt-4 mb-0">Publicamos el número aunque sea vergonzoso, porque es el único honesto y porque <b>solo sube cuando alguien pregunta uno por uno.</b> Si citas esta página dentro de un mes, el número va a ser otro. Búscalo, no lo copies de aquí de memoria.</p>
+
+  <p class="text-xs font-bold text-slate-500 uppercase tracking-widest mt-5 mb-2">3 líneas listas para citar</p>
+  <div class="space-y-2">
+    ${citas.map(([t, x]) => `<div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+      <p class="text-xs font-bold text-slate-500 m-0">${escapeHtml(t)}</p>
+      <p class="text-sm text-slate-800 mt-1 mb-2">${escapeHtml(x)}</p>
+      <button type="button" class="copy-btn text-xs font-semibold text-teal-700 border border-teal-300 rounded-full px-3 py-1 hover:bg-teal-50" data-copy="${escapeHtml(x)}">📋 Copiar</button>
+    </div>`).join('')}
+  </div>
+
+  <p class="text-sm text-slate-700 mt-5 mb-0"><b>¿Quieres empujarlo y no eres prensa?</b> Lo que más sirve no es compartir: es <b>preguntarle a tu propio médico si está aceptando pacientes nuevos y decírnoslo</b>. Eso mueve el número de arriba. Escríbele al ${'*'}7711 o a angel@caborojo.com. Textos y tarjetas listas: <a href="/kit" class="font-bold text-teal-700 underline">el kit para compartir</a>.</p>
+</div>`
+}
+
 async function handleComparte(req: any, res: any) {
+  const milla = await leerContadorUltimaMilla()
   let g = { ...COMPARTE_G_DEFAULT }
   try {
     const { data } = await supabase.from('v_registro_municipio_intel').select('poblacion,especialistas,psiquiatras,hpsa_primaria,hpsa_salud_mental,cupon_mh_sin_cobrar,por_10k_hab').range(0, 100)
@@ -8706,6 +8752,8 @@ async function handleComparte(req: any, res: any) {
   <p class="text-slate-300 mt-2 text-sm leading-relaxed">${g.conHpsa} de 76 municipios de PR con designación federal de escasez activa. ${g.cupon} con el dinero de salud mental aprobado y cero psiquiatras: ${n(g.cuponPob)} personas. Verificado contra el registro federal, pueblo por pueblo.</p>
   <button type="button" class="copy-btn mt-3 text-sm font-bold text-slate-900 bg-white rounded-full px-4 py-2 hover:bg-slate-100" data-copy="${escapeHtml(heroClaim)}">📋 Copiar el titular</button>
 </div>
+
+${bloqueMillaCitable(milla)}
 
 <h2>Los datos (toca "Copiar" en cualquiera)</h2>
 ${factCards}
