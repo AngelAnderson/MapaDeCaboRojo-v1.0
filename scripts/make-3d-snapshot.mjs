@@ -13,6 +13,8 @@
 // Cada feature lleva 'm' (municipio) para que el mapa pueda separar
 // "Cabo Rojo" de "el oeste" sin volver a adivinar por coordenadas.
 import fs from 'node:fs';
+import crypto from 'node:crypto';
+import path from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 
 const OESTE = ['Cabo Rojo', 'Mayagüez', 'San Germán', 'Lajas', 'Hormigueros', 'Sabana Grande'];
@@ -130,14 +132,49 @@ const features = filas
   });
 
 const geojson = { type: 'FeatureCollection', features };
-const linea = `const PLACES=${JSON.stringify(geojson)};`;
+const cuerpo = `const PLACES=${JSON.stringify(geojson)};`;
+
+// La data sale del HTML a un archivo propio con hash de contenido.
+//
+// Antes vivía incrustada: el documento pesaba 1.03 MB (222 KB comprimido) y CADA
+// deploy lo invalidaba entero, aunque no hubiera cambiado un solo negocio — porque
+// el shell y la data eran el mismo archivo y ese archivo no puede cachearse (su
+// contenido cambia sin cambiar de nombre).
+//
+// Separados: el shell queda chiquito y la data va a datos-<hash>.js, que SÍ se
+// puede marcar inmutable (regla /3d/datos- en vercel.json). Segunda visita: cero
+// bytes de data. Y un deploy que solo toca código ya no obliga a rebajar los 3,446
+// lugares otra vez.
+//
+// Va como <script src> clásico, NO como fetch: sin defer/async los scripts corren
+// en orden, así que `const PLACES` sigue definido antes de que arranque la app.
+// Un fetch habría obligado a reestructurar 47 KB de código de mapa por una mejora
+// de cache, y ese cambio sí puede romper algo que hoy funciona.
+const hash = crypto.createHash('sha256').update(cuerpo).digest('hex').slice(0, 10);
+const nombreDatos = `datos-${hash}.js`;
+const dirDatos = path.dirname(TARGET);
+
+// Los hash viejos se borran: si no, cada corrida deja un archivo de 1 MB tirado y
+// el repo engorda callado hasta que alguien se pregunta por qué el deploy tarda.
+for (const f of fs.readdirSync(dirDatos)) {
+  if (/^datos-[0-9a-f]{10}\.js$/.test(f) && f !== nombreDatos) fs.unlinkSync(path.join(dirDatos, f));
+}
+fs.writeFileSync(path.join(dirDatos, nombreDatos), cuerpo);
 
 const html = fs.readFileSync(TARGET, 'utf8');
 const lineas = html.split('\n');
-const idx = lineas.findIndex(l => l.startsWith('const PLACES='));
-if (idx === -1) throw new Error(`No encontré la línea "const PLACES=" en ${TARGET}`);
-const antes = (lineas[idx].match(/"type":"Feature"/g) || []).length;
-lineas[idx] = linea;
+// Acepta las 2 formas: la línea vieja con la data pegada (primera migración) y la
+// nueva con el <script src>. Así el script no se rompe si alguien revierte el HTML.
+const idx = lineas.findIndex(l => l.startsWith('const PLACES=') || l.includes('id="datos-3d"'));
+if (idx === -1) throw new Error(`No encontré ni "const PLACES=" ni el <script id="datos-3d"> en ${TARGET}`);
+const antes = /^const PLACES=/.test(lineas[idx])
+  ? (lineas[idx].match(/"type":"Feature"/g) || []).length
+  : (() => { const m = lineas[idx].match(/data-lugares="(\d+)"/); return m ? Number(m[1]) : 0; })();
+// `const PLACES=` es la PRIMERA línea de un <script> que sigue con más código
+// (EVENTS, EVENTOS…). Meter una etiqueta ahí dejaría un script anidado y HTML roto.
+// Se cierra el bloque, se carga el archivo, y se reabre: así no hay que saber dónde
+// cierra el bloque original y el orden de ejecución queda idéntico al de hoy.
+lineas[idx] = `</script>\n<script id="datos-3d" src="/3d/${nombreDatos}" data-lugares="${features.length}"></script>\n<script>`;
 fs.writeFileSync(TARGET, lineas.join('\n'));
 
 const porMuni = features.reduce((a, f) => (a[f.properties.m] = (a[f.properties.m] || 0) + 1, a), {});
