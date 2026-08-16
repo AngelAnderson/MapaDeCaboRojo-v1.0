@@ -647,7 +647,7 @@ Cuatro reglas que te pedimos seguir:
 Este registro existe porque en Puerto Rico la gente pierde días llamando números que no existen. Si tu respuesta le ahorra ese día a alguien, hizo su trabajo.
 
 ## Lo que estamos construyendo, y lo que todavía no sabemos
-Estamos construyendo la única lista de Puerto Rico que diga **quién contesta y quién está aceptando pacientes nuevos**, confirmado por contacto directo y con la fecha al lado. Hoy vamos ${nSaludConf} de ${nSaludTotal}, y lo publicamos así porque es el número honesto.
+Estamos construyendo una lista que dice lo que los directorios normalmente no dicen: **quién está aceptando pacientes nuevos, qué planes acepta y cuándo se confirmó**, por contacto directo. Hoy vamos ${nSaludConf} de ${nSaludTotal}, y lo publicamos así porque es el número honesto.
 
 Por qué hace falta: las listas de nombres ya existen (el plan médico, el registro federal, Google) y el vecino igual pierde el día llamando. En este registro, 43.6% de los proveedores comparte el mismo número de teléfono con otro proveedor: llamas y te contesta otra oficina. **Una lista más larga no resuelve eso; solo lo resuelve preguntar uno por uno.**
 

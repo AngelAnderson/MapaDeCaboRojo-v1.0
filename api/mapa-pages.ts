@@ -7403,7 +7403,7 @@ function bloqueContadorMilla(c: ContadorMilla): string {
   return `
 <div class="not-prose mt-4 rounded-2xl bg-white border border-slate-200 p-5 sm:p-6">
   <p class="text-xs uppercase tracking-widest text-slate-500 font-bold m-0">La lista que estamos haciendo</p>
-  <p class="text-lg sm:text-xl font-black text-slate-900 mt-2 leading-snug m-0">Vamos a ser la única lista de Puerto Rico que dice <span class="text-teal-700">quién contesta y quién está cogiendo pacientes</span>, con la fecha en que lo confirmamos.</p>
+  <p class="text-lg sm:text-xl font-black text-slate-900 mt-2 leading-snug m-0">Una lista que dice lo que los directorios normalmente no dicen: <span class="text-teal-700">quién está aceptando pacientes, qué planes acepta y cuándo se confirmó</span>.</p>
   <div class="mt-4 grid grid-cols-3 gap-3">
     ${cifra(n(c.confirmados), 'confirmados en los últimos 90 días', 'text-teal-700')}
     ${cifra(n(c.totalPR), 'proveedores de salud en todo PR', 'text-slate-900')}
@@ -8676,7 +8676,7 @@ function bloqueMillaCitable(c: ContadorMilla): string {
   return `
 <div class="not-prose mt-6 rounded-2xl border-2 border-teal-700 bg-white p-5 sm:p-6">
   <p class="text-xs uppercase tracking-widest text-teal-700 font-bold m-0">Lo que estamos construyendo, y cuánto llevamos</p>
-  <p class="text-xl sm:text-2xl font-black text-slate-900 mt-2 leading-snug m-0">La única lista de Puerto Rico que diga quién contesta y quién está aceptando pacientes, con la fecha en que se confirmó.</p>
+  <p class="text-xl sm:text-2xl font-black text-slate-900 mt-2 leading-snug m-0">Una lista que dice lo que los directorios normalmente no dicen: quién está aceptando pacientes, qué planes acepta y cuándo se confirmó.</p>
   <div class="mt-4 grid grid-cols-3 gap-3">
     <div><p class="text-3xl font-black m-0 text-teal-700">${n(c.confirmados)}</p><p class="text-xs text-slate-500 m-0 mt-1 leading-tight">confirmados (90 días)</p></div>
     <div><p class="text-3xl font-black m-0 text-slate-900">${n(c.totalPR)}</p><p class="text-xs text-slate-500 m-0 mt-1 leading-tight">proveedores en PR</p></div>
@@ -8695,6 +8695,139 @@ function bloqueMillaCitable(c: ContadorMilla): string {
 
   <p class="text-sm text-slate-700 mt-5 mb-0"><b>¿Quieres empujarlo y no eres prensa?</b> Lo que más sirve no es compartir: es <b>preguntarle a tu propio médico si está aceptando pacientes nuevos y decírnoslo</b>. Eso mueve el número de arriba. Escríbele al ${'*'}7711 o a angel@caborojo.com. Textos y tarjetas listas: <a href="/kit" class="font-bold text-teal-700 underline">el kit para compartir</a>.</p>
 </div>`
+}
+
+// Los 7 textos sobre POR QUE Puerto Rico llego aqui (dinero federal aprobado que nadie
+// cobra, pueblos sin psiquiatra, el record). Vivian en /kit y competian con la unica
+// accion que esa pagina pide. Su casa es /comparte, la pagina de evidencia.
+// Son funcion y no constante porque las cifras que citan se leen en vivo.
+type Post = { id: string; titulo: string; nota: string; donde: string; txt: string }
+function postsEscasez(v: { U: string; pctTel: string; cupon: string; ceroEsp: string; sinSitio: string }): Post[] {
+  const { U, pctTel, cupon, ceroEsp, sinSitio } = v
+  return [
+    { id: 'p1', titulo: 'Carlin', donde: 'Facebook · X (en hilo)', nota: 'El truco es la repetición: "te dicen / mentira", 3 veces, y a la cuarta cambia el patrón. El desprecio va contra la excusa, nunca contra la gente.',
+      txt: `Te dicen que no hay médicos porque no hay dinero.
+Mentira.
+Hay 7 programas federales para traer médicos a Puerto Rico. Siete.
+
+Entonces te dicen que los médicos son desagradecidos.
+Mentira otra vez.
+Le pagan la deuda de estudio. Nadie le paga el sueldo.
+El regalo dura 2 años. La carrera dura 30.
+Haz tú la resta.
+
+Después te dicen que ese programa federal está ahí para ayudarnos.
+Ese programa lo hicieron para el campo de Estados Unidos, donde el problema es la distancia.
+Aquí el problema no es la distancia. Es que la luz cuesta el doble y se va.
+
+Y cuando ya casi te convencen de que esto no tiene arreglo, resulta que 4 pueblos de aquí lo resolvieron.
+Aibonito. Naranjito. Morovis. Lares.
+No inventaron nada. Lo trabajaron.
+Los demás ni lo han intentado.
+
+Así que no es que no se pueda.
+Es que no se está haciendo.
+Y esas son dos cosas bien distintas.
+
+${U}` },
+    { id: 'p2', titulo: 'El récord seco', donde: 'LinkedIn', nota: 'Cero adjetivos, todo numerado. Es la que mejor aguanta una audiencia profesional.',
+      txt: `4 cosas que aprendí contando los médicos de Puerto Rico, pueblo por pueblo.
+
+1. No falta el dinero. Hay 7 programas federales para traer médicos aquí.
+
+2. El dinero no paga lo que duele. Paga la deuda de estudio. No paga el sueldo. Y los planes aquí pagan 41% menos que en los estados. El repago dura 2 años; la carrera, 30.
+
+3. El programa no fue hecho para nosotros. Se diseñó para el campo de Estados Unidos, donde lo que falta es distancia. Aquí falta con qué aguantarlo: luz casi al doble, agua con violaciones federales, sueldos que no compiten.
+
+4. Ya hay quien lo resolvió, y es de aquí. Aibonito, Naranjito, Morovis y Lares tienen casi un tercio de los clínicos de ese programa en toda la isla. 21 pueblos no lo han intentado ni una vez.
+
+Puerto Rico no tiene escasez de médicos. Tiene escasez de condiciones.
+
+${U}` },
+    { id: 'p3', titulo: 'Dicen / El récord', donde: 'X (4 tuits) · Facebook · LinkedIn', nota: 'Formato canon del sitio. Cero opinión, imposible de acusar de político.',
+      txt: `DICEN: no hay dinero para traer médicos.
+EL RÉCORD: hay 7 programas federales para eso.
+
+DICEN: es que los médicos quieren ganar más.
+EL RÉCORD: le pagan la deuda de estudio, no el sueldo. Los planes aquí pagan 41% menos. El repago dura 2 años. La carrera dura 30.
+
+DICEN: el programa federal está para ayudarnos.
+EL RÉCORD: se hizo para el campo de Estados Unidos, donde falta distancia. Aquí falta con qué aguantarlo.
+
+DICEN: esto no tiene arreglo.
+EL RÉCORD: Aibonito, Naranjito, Morovis y Lares ya lo arreglaron. 21 pueblos ni lo han intentado.
+
+No nos falta el médico. Nos falta con qué aguantarlo.
+
+${U}` },
+    { id: 'p4', titulo: 'El cartero', donde: 'Facebook · X', nota: 'Para el que no lee listas. Nadie tiene que saber qué es Medicare Advantage para entenderla.',
+      txt: `El gobierno federal manda dinero para tus médicos.
+Lo manda por correo.
+El cartero es una aseguradora.
+Y el cartero decide cuánto te llega.
+
+En Ohio llega completo. Aquí llega más flaco.
+
+Ahora le dicen al médico: te pago la deuda de tus estudios si te mudas a un pueblo que no tiene.
+Suena bien.
+Pero el que le paga la deuda no es el que le paga el sueldo.
+El regalo dura 2 años. La carrera dura 30.
+
+Eso no es escasez de médicos.
+Eso es escasez de condiciones.
+
+Y aun así, 4 pueblos de aquí lo resolvieron.
+
+${U}` },
+    { id: 'p5', titulo: 'Corto · Busca tu pueblo', donde: 'El que más clics da', nota: '35 palabras. La última línea es personal: la gente no da clic por Puerto Rico, da clic por su pueblo.',
+      txt: `Hay ${cupon} pueblos en Puerto Rico sin un solo psiquiatra.
+
+Ni uno.
+
+Y no es que falte el dinero. El dinero está aprobado hace años.
+
+Lo que falta es que alguien lo cobre.
+
+Busca tu pueblo.
+
+${U}` },
+    { id: 'p6', titulo: 'Corto · Los 4 pueblos', donde: 'El que más se comparte', nota: 'Abre con buenas noticias, que casi nadie hace con este tema. La gente de esos 4 pueblos la comparte sola.',
+      txt: `4 pueblos de Puerto Rico resolvieron lo que el resto no.
+
+Aibonito. Naranjito. Morovis. Lares.
+
+Hay un programa federal que trae médicos. Casi nadie aquí lo usa.
+
+Esos 4 solos tienen casi un tercio de esos clínicos.
+
+No inventaron nada. Lo trabajaron.
+
+Y 21 pueblos no lo han intentado ni una vez.
+
+Busca el tuyo.
+
+${U}` },
+    { id: 'p7', titulo: 'Corto · El mecanismo', donde: 'La más explicativa', nota: 'Da el porqué completo. Menos clics, más comprensión.',
+      txt: `En Puerto Rico dicen que los médicos se van porque no hay dinero.
+
+No es verdad.
+
+Hay 7 programas federales para traerlos.
+
+El problema es otro.
+
+Le pagan la deuda de estudio al médico.
+
+Nadie le paga el sueldo.
+
+El regalo se acaba en 2 años. La carrera dura 30.
+
+No nos falta el médico. Nos falta con qué aguantarlo.
+
+Lo conté pueblo por pueblo.
+
+${U}` },
+  ]
 }
 
 async function handleComparte(req: any, res: any) {
@@ -8773,6 +8906,20 @@ ${factCards}
   <li><a href="/registro/desiertos">Los desiertos médicos</a>: las especialidades sin proveedor por región.</li>
   <li><a href="/observatorio">El Observatorio</a>: por qué se van los médicos, quién tiene la autoridad de actuar, podcast y reporte PDF.</li>
 </ul>
+
+<h2>Textos listos para publicar</h2>
+<p class="text-slate-600 -mt-2">Todos dicen lo mismo, cambia el tono. Escoge por dónde vas a publicar. Si lo que buscas es cómo <b>ayudar a verificar</b> un proveedor, eso está en <a href="/kit" class="font-bold text-teal-700 underline">el kit</a>.</p>
+<div class="not-prose mt-4 space-y-3">
+${postsEscasez({ U: 'registromedicopr.com/marcador', pctTel: '43.6', cupon: String(g.cupon), ceroEsp: String(g.cero), sinSitio: '5' }).map(pp => `<div class="border border-slate-200 bg-white rounded-2xl p-4">
+  <div class="flex items-start justify-between gap-3 flex-wrap">
+    <div class="min-w-0"><p class="font-black text-slate-900 m-0">${escapeHtml(pp.titulo)}</p>
+    <p class="text-xs text-teal-700 font-semibold mt-0.5 m-0">${escapeHtml(pp.donde)}</p></div>
+    <button type="button" class="copy-btn shrink-0 text-xs font-bold text-white bg-teal-700 rounded-full px-4 py-2" data-copy="${escapeHtml(pp.txt)}">📋 Copiar</button>
+  </div>
+  <p class="text-xs text-slate-500 mt-2 m-0">${escapeHtml(pp.nota)}</p>
+  <pre class="mt-3 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-xl p-3 whitespace-pre-wrap font-sans leading-relaxed m-0">${escapeHtml(pp.txt)}</pre>
+</div>`).join('')}
+</div>
 
 <h2>Para prensa</h2>
 <p>Angel Anderson, registromedicopr.com, desde Cabo Rojo. Contacto: <a href="mailto:angel@angelanderson.com">angel@angelanderson.com</a>. Puedo respaldar cualquier cifra con su fuente, entregar el corte de un municipio, o explicar la metodología. Prefiero texto o correo.</p>
@@ -14785,130 +14932,21 @@ async function handleKit(req: any, res: any) {
 
   const U = 'registromedicopr.com/marcador'
 
-  type Post = { id: string; titulo: string; nota: string; donde: string; txt: string }
-  const posts: Post[] = [
-    { id: 'p1', titulo: 'Carlin', donde: 'Facebook · X (en hilo)', nota: 'El truco es la repetición: "te dicen / mentira", 3 veces, y a la cuarta cambia el patrón. El desprecio va contra la excusa, nunca contra la gente.',
-      txt: `Te dicen que no hay médicos porque no hay dinero.
-Mentira.
-Hay 7 programas federales para traer médicos a Puerto Rico. Siete.
-
-Entonces te dicen que los médicos son desagradecidos.
-Mentira otra vez.
-Le pagan la deuda de estudio. Nadie le paga el sueldo.
-El regalo dura 2 años. La carrera dura 30.
-Haz tú la resta.
-
-Después te dicen que ese programa federal está ahí para ayudarnos.
-Ese programa lo hicieron para el campo de Estados Unidos, donde el problema es la distancia.
-Aquí el problema no es la distancia. Es que la luz cuesta el doble y se va.
-
-Y cuando ya casi te convencen de que esto no tiene arreglo, resulta que 4 pueblos de aquí lo resolvieron.
-Aibonito. Naranjito. Morovis. Lares.
-No inventaron nada. Lo trabajaron.
-Los demás ni lo han intentado.
-
-Así que no es que no se pueda.
-Es que no se está haciendo.
-Y esas son dos cosas bien distintas.
-
-${U}` },
-    { id: 'p2', titulo: 'El récord seco', donde: 'LinkedIn', nota: 'Cero adjetivos, todo numerado. Es la que mejor aguanta una audiencia profesional.',
-      txt: `4 cosas que aprendí contando los médicos de Puerto Rico, pueblo por pueblo.
-
-1. No falta el dinero. Hay 7 programas federales para traer médicos aquí.
-
-2. El dinero no paga lo que duele. Paga la deuda de estudio. No paga el sueldo. Y los planes aquí pagan 41% menos que en los estados. El repago dura 2 años; la carrera, 30.
-
-3. El programa no fue hecho para nosotros. Se diseñó para el campo de Estados Unidos, donde lo que falta es distancia. Aquí falta con qué aguantarlo: luz casi al doble, agua con violaciones federales, sueldos que no compiten.
-
-4. Ya hay quien lo resolvió, y es de aquí. Aibonito, Naranjito, Morovis y Lares tienen casi un tercio de los clínicos de ese programa en toda la isla. 21 pueblos no lo han intentado ni una vez.
-
-Puerto Rico no tiene escasez de médicos. Tiene escasez de condiciones.
-
-${U}` },
-    { id: 'p3', titulo: 'Dicen / El récord', donde: 'X (4 tuits) · Facebook · LinkedIn', nota: 'Formato canon del sitio. Cero opinión, imposible de acusar de político.',
-      txt: `DICEN: no hay dinero para traer médicos.
-EL RÉCORD: hay 7 programas federales para eso.
-
-DICEN: es que los médicos quieren ganar más.
-EL RÉCORD: le pagan la deuda de estudio, no el sueldo. Los planes aquí pagan 41% menos. El repago dura 2 años. La carrera dura 30.
-
-DICEN: el programa federal está para ayudarnos.
-EL RÉCORD: se hizo para el campo de Estados Unidos, donde falta distancia. Aquí falta con qué aguantarlo.
-
-DICEN: esto no tiene arreglo.
-EL RÉCORD: Aibonito, Naranjito, Morovis y Lares ya lo arreglaron. 21 pueblos ni lo han intentado.
-
-No nos falta el médico. Nos falta con qué aguantarlo.
-
-${U}` },
-    { id: 'p4', titulo: 'El cartero', donde: 'Facebook · X', nota: 'Para el que no lee listas. Nadie tiene que saber qué es Medicare Advantage para entenderla.',
-      txt: `El gobierno federal manda dinero para tus médicos.
-Lo manda por correo.
-El cartero es una aseguradora.
-Y el cartero decide cuánto te llega.
-
-En Ohio llega completo. Aquí llega más flaco.
-
-Ahora le dicen al médico: te pago la deuda de tus estudios si te mudas a un pueblo que no tiene.
-Suena bien.
-Pero el que le paga la deuda no es el que le paga el sueldo.
-El regalo dura 2 años. La carrera dura 30.
-
-Eso no es escasez de médicos.
-Eso es escasez de condiciones.
-
-Y aun así, 4 pueblos de aquí lo resolvieron.
-
-${U}` },
-    { id: 'p5', titulo: 'Corto · Busca tu pueblo', donde: 'El que más clics da', nota: '35 palabras. La última línea es personal: la gente no da clic por Puerto Rico, da clic por su pueblo.',
-      txt: `Hay ${cupon} pueblos en Puerto Rico sin un solo psiquiatra.
-
-Ni uno.
-
-Y no es que falte el dinero. El dinero está aprobado hace años.
-
-Lo que falta es que alguien lo cobre.
-
-Busca tu pueblo.
-
-${U}` },
-    { id: 'p6', titulo: 'Corto · Los 4 pueblos', donde: 'El que más se comparte', nota: 'Abre con buenas noticias, que casi nadie hace con este tema. La gente de esos 4 pueblos la comparte sola.',
-      txt: `4 pueblos de Puerto Rico resolvieron lo que el resto no.
-
-Aibonito. Naranjito. Morovis. Lares.
-
-Hay un programa federal que trae médicos. Casi nadie aquí lo usa.
-
-Esos 4 solos tienen casi un tercio de esos clínicos.
-
-No inventaron nada. Lo trabajaron.
-
-Y 21 pueblos no lo han intentado ni una vez.
-
-Busca el tuyo.
-
-${U}` },
-    { id: 'p7', titulo: 'Corto · El mecanismo', donde: 'La más explicativa', nota: 'Da el porqué completo. Menos clics, más comprensión.',
-      txt: `En Puerto Rico dicen que los médicos se van porque no hay dinero.
-
-No es verdad.
-
-Hay 7 programas federales para traerlos.
-
-El problema es otro.
-
-Le pagan la deuda de estudio al médico.
-
-Nadie le paga el sueldo.
-
-El regalo se acaba en 2 años. La carrera dura 30.
-
-No nos falta el médico. Nos falta con qué aguantarlo.
-
-Lo conté pueblo por pueblo.
-
-${U}` },
+  // Reescrito 2026-08-17 (orden de Angel): esta pagina contesta UNA pregunta, "como ayudo
+  // a que la lista verificada crezca". Antes tenia 7 textos sobre el dinero federal
+  // compitiendo con la accion, y el visitante tenia que estudiarla. Esos se mudaron a
+  // /comparte. Las cifras se leen en vivo: pedir ayuda con un numero viejo es quedar mal
+  // ante la primera persona que lo verifique.
+  const milla = await leerContadorUltimaMilla()
+  const nTotal = milla.totalPR.toLocaleString('en-US')
+  const nConf = milla.confirmados.toLocaleString('en-US')
+  const postsMision: { titulo: string; donde: string; txt: string }[] = [
+    { titulo: 'El corto', donde: 'WhatsApp · el que más se reenvía',
+      txt: `Puerto Rico tiene ${nTotal} proveedores de salud listados.\nSolo ${nConf} tienen confirmado si están aceptando pacientes nuevos.\n\nLa próxima vez que vayas al médico, pregúntale: «¿está aceptando pacientes nuevos y qué planes acepta?»\n\nManda la respuesta al 787-417-7711. Toma 20 segundos y le ahorra el día al próximo.` },
+    { titulo: 'El que explica por qué', donde: 'Facebook',
+      txt: `Una lista de médicos no te dice quién te puede atender.\n\nTe la da el plan, te la da el gobierno, te la da Google. Y tú igual pasas el día llamando, porque 43 de cada 100 proveedores comparten el teléfono con otro. Llamas, y te contesta otra oficina.\n\nUna lista más larga no arregla eso. Solo lo arregla preguntar, uno por uno.\n\nVamos ${nConf} de ${nTotal}. Es ridículo, y por eso lo publico.\n\nSi vas al médico esta semana, pregúntale si está aceptando pacientes nuevos y qué planes acepta, y mándamelo al 787-417-7711.\n\n- Angel | Menos revolú, más sistema, mejor vida.` },
+    { titulo: 'Para el que tiene consultorio', donde: 'grupos de médicos · LinkedIn',
+      txt: `Si tienes consultorio en Puerto Rico y estás aceptando pacientes nuevos, hay gente buscándote que no sabe que estás disponible.\n\nTextea al 787-417-7711 desde el teléfono de tu oficina y dilo. Queda publicado al momento, con la fecha. Gratis, sin cuenta, y lo corriges cuando quieras.\n\nSirve por nota de voz, que sé que nadie tiene tiempo.` },
   ]
 
   const datos: { k: string; v: string; f: string }[] = [
@@ -14948,8 +14986,50 @@ ${U}` },
   }
 
   const body = `
-<h1>Kit para compartir</h1>
-<p class="text-lg text-slate-600 mt-3">Todo lo de esta página es para usarse. Copia el texto, descarga la tarjeta, publícalo donde quieras. No hace falta pedir permiso ni poner mi nombre.</p>
+<h1>Ayuda a que la lista crezca</h1>
+<p class="text-lg text-slate-600 mt-3">Una lista te dice qué existe. Nosotros queremos saber <b>qué funciona hoy</b>. Esta página es para una sola cosa.</p>
+
+<div class="not-prose mt-5 rounded-2xl bg-slate-900 text-white p-6 sm:p-8 text-center">
+  <p class="text-4xl sm:text-6xl font-black m-0 leading-none">${nTotal}</p>
+  <p class="text-sm text-slate-300 mt-2 mb-0">proveedores de salud listados en Puerto Rico</p>
+  <p class="text-4xl sm:text-6xl font-black mt-6 mb-0 leading-none text-teal-300">${nConf}</p>
+  <p class="text-sm text-slate-300 mt-2 mb-0">tienen confirmado si aceptan pacientes nuevos</p>
+</div>
+
+<div class="not-prose mt-4 rounded-2xl border-2 border-teal-700 bg-white p-6 sm:p-8">
+  <p class="text-2xl sm:text-3xl font-black text-slate-900 m-0 leading-tight">Ayuda con uno.</p>
+  <p class="text-base text-slate-700 mt-3 mb-2">La próxima vez que vayas al médico, o si ya fuiste este mes, pregúntale esto:</p>
+  <blockquote class="border-l-4 border-teal-600 bg-teal-50 rounded-r-xl p-4 my-3 not-italic">
+    <p class="text-lg sm:text-xl font-bold text-slate-900 m-0">«¿Está aceptando pacientes nuevos, y qué planes acepta?»</p>
+  </blockquote>
+  <p class="text-base text-slate-700 mt-3 mb-4">Mándanos la respuesta. Toma 20 segundos y le ahorra el día al próximo vecino.</p>
+  <div class="flex flex-wrap gap-3 items-center">
+    <a href="https://wa.me/17874177711?text=Le%20pregunt%C3%A9%20a%20mi%20m%C3%A9dico.%20Consultorio%3A%20" class="rounded-full bg-teal-700 text-white font-bold px-5 py-3 text-base hover:bg-teal-800">Mandarlo por WhatsApp →</a>
+    <span class="text-sm text-slate-600">o textea al <b>787-417-7711</b></span>
+  </div>
+  <p class="text-xs text-slate-500 mt-3 mb-0">Sirve por nota de voz. Y si eres tú el proveedor, escríbenos desde el teléfono de tu oficina: queda publicado al momento, sin esperar a nadie.</p>
+</div>
+
+<div class="not-prose mt-4 rounded-xl bg-slate-50 border border-slate-200 p-4">
+  <p class="text-sm text-slate-700 m-0"><b>¿Por qué hace falta preguntar?</b> Las listas ya existen: te da una el plan, otra el gobierno federal, otra Google. Y el vecino igual pierde el día llamando, porque <b>43.6% de los proveedores comparte teléfono con otro</b>. Llamas y te contesta otra oficina. Eso no lo arregla una lista más larga. <a href="/comparte" class="font-bold text-teal-700 underline">Ver la evidencia completa</a>.</p>
+</div>
+
+<h2>Y si quieres compartirlo</h2>
+<p class="text-slate-600 -mt-2">Esto es lo segundo, no lo primero. Compartir da alcance; preguntar construye la lista.</p>
+<div class="not-prose mt-4 space-y-3">
+${postsMision.map(pm => `<div class="border border-slate-200 bg-white rounded-2xl p-4">
+  <div class="flex items-start justify-between gap-3 flex-wrap">
+    <div class="min-w-0"><p class="font-black text-slate-900 m-0">${escapeHtml(pm.titulo)}</p>
+    <p class="text-xs text-teal-700 font-semibold mt-0.5 m-0">${escapeHtml(pm.donde)}</p></div>
+    <button type="button" class="copy-btn shrink-0 text-xs font-bold text-white bg-teal-700 rounded-full px-4 py-2 hover:bg-teal-800" data-copy="${escapeHtml(pm.txt)}">📋 Copiar</button>
+  </div>
+  <pre class="mt-3 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-xl p-3 whitespace-pre-wrap font-sans leading-relaxed m-0">${escapeHtml(pm.txt)}</pre>
+</div>`).join('')}
+</div>
+
+<div class="not-prose mt-4 rounded-xl bg-white border border-slate-200 p-4">
+  <p class="text-sm text-slate-700 m-0">Los textos sobre <b>por qué Puerto Rico llegó aquí</b> (el dinero federal aprobado que no se cobra, los pueblos sin psiquiatra, el récord) se mudaron a <a href="/comparte" class="font-bold text-teal-700 underline">datos citables</a>. Esa es otra conversación y merece su propia página.</p>
+</div>
 
 <!-- El porqué, arriba de todo. Sin esto el kit reparte datos sueltos: números de lo roto
      que está el sistema, que es munición para el "así son las cosas". Con esto, el que
@@ -14958,7 +15038,7 @@ ${U}` },
   <p class="text-xs uppercase tracking-widest text-slate-500 font-bold m-0">Por qué existe esto</p>
   <p class="text-xl sm:text-2xl font-black text-slate-900 mt-2 leading-snug m-0">Ya sabemos lo que cuesta conseguir una cita. Hacer una lista no es suficiente.</p>
   <p class="text-sm text-slate-700 mt-3 mb-0">Las listas ya existen. El plan te da una, el gobierno federal te da otra, Google te da otra. Están llenas de nombres, y el vecino igual se pasa el día llamando: <b>en el registro, 43.6% de los proveedores comparte teléfono con otro</b>. Llamas y te contesta otra oficina. Ese es el problema de verdad, y no lo arregla una lista más larga.</p>
-  <p class="text-sm text-slate-700 mt-3 mb-0">Por eso <b>El Veci (${'*'}7711) está confirmando quién acepta pacientes nuevos y qué planes coge cada quien</b>, uno por uno, por contacto directo y con la fecha al lado. No es una lista más: es <b>la primera lista de Puerto Rico donde los nombres están confirmados</b>. Un sí de más de 90 días deja de contar como sí y vuelve a «no sé», aquí y en el ${'*'}7711.</p>
+  <p class="text-sm text-slate-700 mt-3 mb-0">Por eso <b>El Veci (${'*'}7711) está confirmando quién acepta pacientes nuevos y qué planes coge cada quien</b>, uno por uno, por contacto directo y con la fecha al lado. No es una lista más: es una lista donde el nombre viene con la fecha en que alguien confirmó que sigue siendo cierto. Un sí de más de 90 días deja de contar como sí y vuelve a «no sé», aquí y en el ${'*'}7711.</p>
   <p class="text-sm text-slate-700 mt-3 mb-0">Todavía vamos por el principio, y publicamos cuánto llevamos aunque dé vergüenza, porque <b>ese número solo sube cuando alguien pregunta</b>. Míralo en <a href="/comparte" class="font-bold text-teal-700 underline">datos citables</a>.</p>
 </div>
 
@@ -14968,23 +15048,7 @@ ${U}` },
   <p class="text-sm text-slate-300 mt-3 m-0"><b class="text-white">Y si quieres hacer más que compartir:</b> pregúntale a tu propio médico si está aceptando pacientes nuevos y qué planes coge, y dínoslo al ${'*'}7711. Eso sube el número. Compartir da alcance; preguntar construye la lista.</p>
 </div>
 
-<h2>1 · Textos listos</h2>
-<p class="text-slate-600 -mt-2">Todos dicen lo mismo. Cambia el tono. Escoge por dónde vas a publicar.</p>
-<div class="not-prose mt-4 space-y-3">
-${posts.map(p => `<div class="border border-slate-200 bg-white rounded-2xl p-4">
-  <div class="flex items-start justify-between gap-3 flex-wrap">
-    <div class="min-w-0">
-      <p class="font-black text-slate-900 m-0">${escapeHtml(p.titulo)}</p>
-      <p class="text-xs text-teal-700 font-semibold mt-0.5 m-0">${escapeHtml(p.donde)}</p>
-    </div>
-    <button type="button" class="copy-btn shrink-0 text-xs font-bold text-white bg-teal-700 rounded-full px-4 py-2 hover:bg-teal-800" data-copy="${escapeHtml(p.txt)}">📋 Copiar</button>
-  </div>
-  <p class="text-xs text-slate-500 mt-2 m-0">${escapeHtml(p.nota)}</p>
-  <pre class="mt-3 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-xl p-3 whitespace-pre-wrap font-sans leading-relaxed m-0">${escapeHtml(p.txt)}</pre>
-</div>`).join('')}
-</div>
-
-<h2>2 · Los números, con su fuente</h2>
+<h2>1 · Los números, con su fuente</h2>
 <p class="text-slate-600 -mt-2">Para citar en una noticia, un comentario o un mensaje. Cada uno se copia con la fuente pegada.</p>
 <div class="not-prose mt-4 space-y-3">
 ${datos.map((d, i) => `<div class="border border-slate-200 bg-white rounded-xl p-4">
@@ -14997,7 +15061,7 @@ ${datos.map((d, i) => `<div class="border border-slate-200 bg-white rounded-xl p
 </div>`).join('')}
 </div>
 
-<h2>3 · Tarjetas para descargar</h2>
+<h2>2 · Tarjetas para descargar</h2>
 <p class="text-slate-600 -mt-2">Cuadradas, 1080 por 1080, listas para Instagram, Facebook o WhatsApp. Toca descargar y te baja el PNG.</p>
 <div class="not-prose mt-4 grid sm:grid-cols-2 gap-4">
 ${tarjetas.map(c => `<div class="border border-slate-200 bg-white rounded-2xl p-3">
@@ -15006,7 +15070,7 @@ ${tarjetas.map(c => `<div class="border border-slate-200 bg-white rounded-2xl p-
 </div>`).join('')}
 </div>
 
-<h2>4 · Antes de publicar, 4 reglas</h2>
+<h2>3 · Antes de publicar, 4 reglas</h2>
 <div class="not-prose mt-4 space-y-2">
   <div class="border-l-4 border-red-400 bg-white border border-slate-200 rounded-r-xl p-4">
     <p class="font-bold text-slate-900 m-0">No digas que Puerto Rico no pidió el dinero del SLRP.</p>
