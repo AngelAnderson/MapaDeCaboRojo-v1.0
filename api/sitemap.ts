@@ -166,6 +166,11 @@ export default async function handler(req: any, res: any) {
       { slug: 'facil', priority: 0.9, changefreq: 'weekly' },                  // "Búscalo Fácil" — botones grandes nivel abuela, entrada principal al directorio
       { slug: 'observatorio', priority: 0.9, changefreq: 'weekly' },           // civic accountability · Esencia/vertedero · FAQPage schema
       { slug: 'promesas', priority: 0.8, changefreq: 'weekly' },               // promesas del alcalde en cámara · banco completo
+      // Las 2 con más tráfico de las que no estaban anunciadas (GA4 30d al 14 ago:
+      // faro 214 sesiones, suelo 248) y ningún sitemap las traía. Entran ahora que
+      // PAGE_CANONICAL las declara del Mapa, así que aquí sí devuelven 200.
+      { slug: 'faro', priority: 0.9, changefreq: 'weekly' },                   // expediente del faro · Playuela/DRNA
+      { slug: 'suelo', priority: 0.8, changefreq: 'monthly' },                 // suelo turístico del oeste · quién lo calificó y cuándo
       { slug: 'datos', priority: 0.8, changefreq: 'daily' },                   // Cabo Rojo en números vivos · página citable (AI-SEO paso 3)
       { slug: 'mision', priority: 0.7, changefreq: 'weekly' },
       { slug: 'equipo', priority: 0.6, changefreq: 'weekly' },
@@ -218,6 +223,11 @@ export default async function handler(req: any, res: any) {
       // Nació el 15 ago 2026 y se quedó fuera de esta lista, así que el crawler
       // no tenía por dónde llegarle. Misma prioridad que su par.
       { slug: 'registro/opciones', priority: 0.9, changefreq: 'monthly' },
+      // El clúster de cuido de mayores: existían, servían 200 desde los 3 dominios
+      // y ningún sitemap las anunciaba. Ya tienen dueño en PAGE_CANONICAL.
+      { slug: 'cuido', priority: 0.8, changefreq: 'monthly' },                 // hogares de cuido licenciados por Familia
+      { slug: 'el-oeste-viejo', priority: 0.8, changefreq: 'monthly' },        // el oeste, la región más vieja de PR
+      { slug: 'lo-que-cuesta', priority: 0.8, changefreq: 'monthly' },         // el precio del cuido, pueblo por pueblo
     ].forEach(({ slug, priority, changefreq }) => {
       urls.push(`
         <url>

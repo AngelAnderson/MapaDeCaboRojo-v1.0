@@ -7375,7 +7375,12 @@ async function handleRegistroOpciones(req: any, res: any) {
   const CR = {
     poblacion: '48,988', pobreza: '38.4%', mayores: '24.8%',
     smNombres: 35, smVerificados: 8, smNunca: 27,
-    psiquiatras: 4, psicologos: 13, tsociales: 12, consejeros: 5,
+    // El desglose decía 12 trabajadores sociales y son 13: la suma daba 34 contra
+    // un total declarado de 35. Verificado contra places el 16 ago 2026 (Cabo Rojo,
+    // visibility=published): psiquiatra 4 · psicólogo 13 · trabajador social 13 ·
+    // consejero 5 = 35, con last_verified_at no nulo en 1+6+0+1 = 8. El total, los
+    // 8 verificados y los 27 sin verificar estaban bien; solo fallaba este renglón.
+    psiquiatras: 4, psicologos: 13, tsociales: 13, consejeros: 5,
     broadband: '75.7%', sinInternet: '18.8%',
     hpsaDental: 24, hpsaMental: 22,
     sitio: 'Migrant Health Center Western Region, Inc.',
@@ -18466,8 +18471,10 @@ const PAGE_CANONICAL: Record<string, string> = {
   'contradicciones': 'https://puertoricosinfiltros.com/contradicciones',
   'costo-de-vida': 'https://puertoricosinfiltros.com/costo-de-vida',
   'cuatro-economias': 'https://puertoricosinfiltros.com/cuatro-economias',
+  'cuido': 'https://registromedicopr.com/cuido',
   'cupon': 'https://puertoricosinfiltros.com/cupon',
   'decidir': 'https://puertoricosinfiltros.com/decidir',
+  'el-oeste-viejo': 'https://registromedicopr.com/el-oeste-viejo',
   'equipo': 'https://www.mapadecaborojo.com/equipo',
   'esencia': 'https://puertoricosinfiltros.com/esencia',
   'espejo': 'https://registromedicopr.com/espejo',
@@ -18481,6 +18488,7 @@ const PAGE_CANONICAL: Record<string, string> = {
   'historial': 'https://puertoricosinfiltros.com/historial',
   'investigacion': 'https://puertoricosinfiltros.com/investigacion',
   'kit': 'https://registromedicopr.com/kit',
+  'lo-que-cuesta': 'https://registromedicopr.com/lo-que-cuesta',
   'luz': 'https://puertoricosinfiltros.com/luz',
   'marcador': 'https://registromedicopr.com/marcador',
   'mision': 'https://www.mapadecaborojo.com/mision',
@@ -18515,6 +18523,10 @@ const PAGE_CANONICAL: Record<string, string> = {
   'sigue-el-dinero': 'https://puertoricosinfiltros.com/sigue-el-dinero',
   'sinfiltros': 'https://puertoricosinfiltros.com/',
   'sinfiltros-pulso': 'https://puertoricosinfiltros.com/sinfiltros/pulso',
+  // Territorial, no médico ("el suelo turístico del oeste, quién lo calificó"), y
+  // GA4 dice que su público ya está en el Mapa: 248 sesiones del 1 al 9 ago, 0 en
+  // los otros 2 dominios. Es la única de las 4 huérfanas que NO es del Registro.
+  'suelo': 'https://www.mapadecaborojo.com/suelo',
   'tienda': 'https://www.mapadecaborojo.com/tienda',
   'trabajo': 'https://puertoricosinfiltros.com/trabajo',
   'tu-ficha': 'https://registromedicopr.com/tu-ficha',
