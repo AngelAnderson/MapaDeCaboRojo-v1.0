@@ -106,8 +106,16 @@ const features = filas
     const h = horasCompactas(p.opening_hours);
     if (h) props.h = h;
     if (p.is_featured || (p.sponsor_weight || 0) > 80) props.f = 1;
+    // La antigüedad de la verificación se calculaba y se tiraba: quedaba un sí/no.
+    // Con eso, un negocio confirmado ayer y uno sin tocar desde 2024 se pintaban
+    // idénticos. Ahora viaja `d` = días desde la última verificación, y el mapa
+    // desvanece el pin según envejece. Sin `d` = nunca se verificó, y eso también
+    // se dice. `v` se queda por compatibilidad: lo usan la insignia y el contador.
     const ver = p.last_verified_at ? Date.parse(p.last_verified_at) : NaN;
-    if (Number.isFinite(ver) && ver >= HACE_90D) props.v = 1;
+    if (Number.isFinite(ver)) {
+      props.d = Math.max(0, Math.round((Date.now() - ver) / 86400000));
+      if (ver >= HACE_90D) props.v = 1;
+    }
     // El chip 🚨 Emergencia filtra por 'e' y afina por 'et'. El snapshot viejo
     // marcaba 703 lugares como recurso de emergencia (incluyendo dentistas) con
     // solo 4 tipos: se calculaba por categoría al hornear, no se leía de la base.
