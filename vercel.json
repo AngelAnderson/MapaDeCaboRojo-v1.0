@@ -224,6 +224,10 @@
       "destination": "/api/mapa-pages?page=registro-opciones"
     },
     {
+      "source": "/internado-psicologia",
+      "destination": "/api/mapa-pages?page=internado-psicologia"
+    },
+    {
       "source": "/cambios",
       "destination": "/api/mapa-pages?page=cambios"
     },

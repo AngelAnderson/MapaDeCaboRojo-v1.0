@@ -8421,6 +8421,279 @@ ${regDisclaimer()}`
   }))
 }
 
+// =============== /internado-psicologia — la pregunta que decide si te vas de la isla ===============
+// Verificado contra fuente primaria el 17 de agosto de 2026:
+//  · Reglamento Núm. 9509 de 11 de octubre de 2023 (enmienda al Artículo 17 del Reglamento
+//    Núm. 9314 de 7 de octubre de 2021), Junta Examinadora de Psicólogos de PR — salud.pr.gov.
+//  · Reglamento Núm. 9314 de 7 de octubre de 2021 — Departamento de Estado.
+//  · APPIC Match, programas participantes Phase I 2026 (natmatch.com/psychint) y fechas del
+//    ciclo 2027 (appic.org).
+// OJO PA' LA PRÓXIMA SESIÓN: hay una copia del reglamento colgada en sociales.uprrp.edu que
+// sale primero en Google y está DEROGADA. Esa copia exige que el supervisor del internado tenga
+// "licencia vigente en Puerto Rico", cosa que el reglamento vigente NO exige. Publicar eso
+// hubiera mandado gente a tomar decisiones de mudanza por una regla que no existe.
+async function handleInternadoPsicologia(req: any, res: any) {
+  // Registro en vivo: cuántos psicólogos hay por región. Es el dato que contesta
+  // "¿y hay quien me supervise aquí?" sin tener que creerle a nadie.
+  const psi = await leerPsicologosPorRegion()
+
+  type Area = { area: string; grado: 'Maestría' | 'Doctorado'; horas: string; directo: string; sup: string; ruta: 'clinica' | 'maestria' }
+  const AREAS: Area[] = [
+    { area: 'Psicología Clínica', grado: 'Doctorado', horas: 'Internado predoctoral de 2,000 horas', directo: '25% o mínimo 500 horas de contacto directo', sup: '4 horas semanales, 2 de ellas individuales', ruta: 'clinica' },
+    { area: 'Consejería / Consejería psicológica', grado: 'Maestría', horas: '500 horas de práctica supervisada', directo: '25% o mínimo 125 horas de contacto directo', sup: '1 hora semanal individual', ruta: 'maestria' },
+    { area: 'Psicología Escolar', grado: 'Maestría', horas: '500 horas de práctica supervisada', directo: '25% en servicios directos con la comunidad escolar', sup: '1 hora o más semanal individual', ruta: 'maestria' },
+    { area: 'Psicología Social-Comunitaria', grado: 'Maestría', horas: '300 horas de práctica comunitaria supervisada o investigación', directo: 'No se especifica por separado', sup: 'No se especifica por separado', ruta: 'maestria' },
+    { area: 'Psicología Industrial / Organizacional', grado: 'Maestría', horas: '300 horas de práctica supervisada o investigación', directo: 'No se especifica por separado', sup: 'No se especifica por separado', ruta: 'maestria' },
+    { area: 'Psicología Académica / Investigativa', grado: 'Maestría', horas: '300 horas supervisadas en docencia o investigación', directo: 'No se especifica por separado', sup: 'No se especifica por separado', ruta: 'maestria' },
+  ]
+
+  type Prog = { n: string; pueblo: string; acred: boolean; code: string; dir: string; rot: string[] }
+  const PROGRAMAS: Prog[] = [
+    {
+      n: 'Ponce Internship Consortium', pueblo: 'Ponce, y sedes en varios pueblos', acred: true, code: '1791',
+      dir: 'Nydia M. Cappas, PsyD, MBA',
+      rot: [
+        'Health Psychology Program / Damas HEALTH', 'DBT program at Wellness/CSP',
+        'Health Psychology Program / La Concepción', 'CDT Asociación de Maestros',
+        'Health Psychology Program / Damas NEURO', 'Centro Ponceño de Autismo CEPA',
+        'San Lucas Hospital / Pediatric', 'Primary Care Psychology Prog / Mayagüez Med Center',
+        'Primary Care Psychology Prog / Concilio Salud Loíza', 'Primary Care Psychology Prog / Costa Salud center',
+        'Psychiatry Residency at Wellness/CSP - Ponce', 'Primary Care Psychology Prog / Manatí Medical Center',
+        'Intensive Outpatient (IOP) at Wellness/CSP', 'Primary Care Psychology Prog / Ryan White Caguas',
+        'Primary Care Psychology Prog / Ryan White CLETS', 'Primary Care Psychology Prog / Ryan White Bayamón',
+        'Psychiatry Residency at Wellness/CSP - Coamo', 'Wellness/CSP - Gogo (HAPI) rotation',
+        'Wellness/CSP - Clinical-Forensic rotation',
+      ],
+    },
+    {
+      n: 'Universidad Ana G. Méndez, Gurabo', pueblo: 'Gurabo', acred: true, code: '2283',
+      dir: 'Vidamaris Zayas, PsyD',
+      rot: ['UAGM Psychology Service Clinic', 'UAGM Counseling Psychology applied to Sports', 'UAGM Quality of Life and Wellness'],
+    },
+    {
+      n: 'Clínica de la Albizu / Carlos Albizu University', pueblo: 'San Juan', acred: true, code: '2020',
+      dir: 'Joycette Aponte, PsyD',
+      rot: ['General Clinic Program', 'Sexual Abuse Program', 'Domestic Violence Program'],
+    },
+    {
+      n: 'VA Caribbean Healthcare System', pueblo: 'San Juan', acred: true, code: '1773',
+      dir: 'Rafael E. Cancio-González',
+      rot: ['Psychology Internship'],
+    },
+    {
+      n: 'University of Puerto Rico Internship Consortium', pueblo: 'San Juan', acred: false, code: '2639',
+      dir: 'Carmen C. Salas-Serrano',
+      rot: ['CUSEP', 'UTM-Dock Workers Union Wellness Plan'],
+    },
+  ]
+
+  const totalRot = PROGRAMAS.reduce((a, p) => a + p.rot.length, 0)
+  const acreditados = PROGRAMAS.filter(p => p.acred).length
+  const totalPsi = psi.reduce((a, r) => a + r.n, 0)
+
+  const filaArea = (a: Area) => `
+    <tr class="${a.ruta === 'clinica' ? 'bg-amber-50' : ''}">
+      <td class="p-3 align-top border-b border-slate-200"><b>${a.area}</b></td>
+      <td class="p-3 align-top border-b border-slate-200 whitespace-nowrap">${a.grado}</td>
+      <td class="p-3 align-top border-b border-slate-200">${a.horas}</td>
+      <td class="p-3 align-top border-b border-slate-200 text-slate-600">${a.directo}</td>
+      <td class="p-3 align-top border-b border-slate-200 text-slate-600">${a.sup}</td>
+    </tr>`
+
+  const tarjetaProg = (p: Prog) => `
+    <div class="border border-slate-200 rounded-xl p-4 mb-3 bg-white">
+      <div class="flex flex-wrap items-baseline gap-2">
+        <span class="font-bold text-slate-800">${p.n}</span>
+        <span class="text-xs px-2 py-0.5 rounded-full ${p.acred ? 'bg-teal-50 text-teal-800' : 'bg-slate-100 text-slate-600'}">${p.acred ? 'Acreditado por APA' : 'No acreditado por APA'}</span>
+      </div>
+      <div class="text-sm text-slate-600 mt-1">${p.pueblo} · ${p.rot.length} ${p.rot.length === 1 ? 'rotación' : 'rotaciones'} · Match Code <span class="font-mono font-semibold">${p.code}</span> · Director de adiestramiento: ${p.dir}</div>
+      <details class="mt-2">
+        <summary class="text-sm text-teal-700 font-semibold cursor-pointer">Ver las ${p.rot.length} ${p.rot.length === 1 ? 'rotación' : 'rotaciones'}</summary>
+        <ul class="mt-2 text-sm text-slate-700 list-disc pl-5 space-y-0.5">${p.rot.map(r => `<li>${r}</li>`).join('')}</ul>
+      </details>
+    </div>`
+
+  const filaPsi = (r: { region: string; n: number }) => `
+    <tr><td class="p-2 border-b border-slate-200">${r.region}</td><td class="p-2 border-b border-slate-200 text-right font-semibold">${r.n.toLocaleString('en-US')}</td></tr>`
+
+  const FAQ: [string, string][] = [
+    ['¿Tengo que irme de Puerto Rico para hacer el internado de psicología?',
+     `No necesariamente. De las 6 áreas de práctica que reconoce la Junta Examinadora de Psicólogos, solo Psicología Clínica exige el internado predoctoral de 2,000 horas. Las otras 5 se licencian con maestría y entre 300 y 500 horas de práctica supervisada. Y si te toca el internado de 2,000 horas, en Puerto Rico hay ${PROGRAMAS.length} programas en el APPIC Match con ${totalRot} rotaciones, ${acreditados} de ellos acreditados por APA.`],
+    ['¿Cuántas horas de práctica supervisada exige Puerto Rico?',
+     'Depende del área de práctica. Psicología Clínica: internado predoctoral de 2,000 horas. Consejería psicológica y Psicología Escolar: 500 horas. Social-Comunitaria, Industrial/Organizacional y Académica/Investigativa: 300 horas. Está en el Artículo 17 del Reglamento de la Junta, según enmendado por el Reglamento Núm. 9509 de 11 de octubre de 2023.'],
+    ['¿Desde cuándo aplican esos requisitos de horas?',
+     'La Sección 17.4 del Reglamento Núm. 9509 dice textualmente que "los requisitos de horas de práctica supervisada serán de aplicación a los egresados durante el año académico 2026-2027 y en adelante". Si te gradúas en ese año académico o después, aplican. Si te graduaste antes, verifica con la Junta cuál versión te toca.'],
+    ['¿El supervisor del internado tiene que tener licencia de Puerto Rico?',
+     'El reglamento vigente no lo exige. Ojo: hay una copia vieja del reglamento circulando en internet que sí lo dice, y esa copia está derogada. Antes de tomar una decisión de mudanza por esa regla, confírmalo por escrito con la Junta Examinadora de Psicólogos.'],
+    ['¿El internado se puede hacer fuera de Puerto Rico?',
+     'El Artículo 17 vigente no le pone restricción geográfica al internado. Lo que sí regula es tu programa académico: no puede ser completamente a distancia, ni ofrecer más de 30% de los cursos a distancia, y esos cursos tienen que ser de naturaleza mayormente teórica.'],
+    ['¿Se puede ejercer psicología en Puerto Rico con maestría?',
+     'Sí, en 5 de las 6 áreas de práctica. La excepción es Psicología Clínica, que requiere grado doctoral. Eso está en la Sección 17.1 del reglamento vigente.'],
+    ['¿Cuándo son las fechas del APPIC Match para empezar en 2027?',
+     'El registro abrió en julio de 2026. La fecha límite para someter la Rank Order List de Phase I es el viernes 5 de febrero de 2027 a las 11:59 p.m. ET, y el Match Day de Phase I es el viernes 19 de febrero de 2027 a las 9:00 a.m. ET. Phase II cierra aplicaciones el 25 de febrero de 2027 y su Match Day es el 24 de marzo de 2027.'],
+  ]
+
+  const body = `
+<article class="max-w-3xl mx-auto px-4 py-8">
+
+  <nav class="text-xs text-slate-500 mb-3"><a href="/registro" class="hover:text-teal-700">Registro Médico PR</a> › Internado de psicología</nav>
+
+  <h1 class="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">¿Te tienes que ir de Puerto Rico a hacer tu internado de psicología?</h1>
+
+  <p class="text-lg text-slate-700 mt-4">Puede que no. De las <b>6 áreas de práctica</b> que licencia la Junta Examinadora de Psicólogos, <b>solo 1 exige el internado de 2,000 horas</b>. Las otras 5 se licencian con maestría y entre 300 y 500 horas de práctica supervisada.</p>
+
+  <p class="text-lg text-slate-700 mt-3">Y si te toca justo esa, en la isla hay <b>${PROGRAMAS.length} programas</b> en el APPIC Match con <b>${totalRot} rotaciones</b>, <b>${acreditados} de ellos acreditados por APA</b>.</p>
+
+  <div class="bg-teal-50 border border-teal-200 rounded-xl p-4 mt-6">
+    <p class="text-sm text-teal-900 m-0"><b>La pregunta que decide todo, y casi nadie la hace primero:</b> ¿en cuál área de práctica vas a solicitar la licencia? No es lo que dice tu diploma. Es el área bajo la cual la Junta te va a evaluar. De esa respuesta salen las horas, el grado y si te tienes que ir.</p>
+  </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Las 6 áreas, con las horas que exige cada una</h2>
+  <p class="text-sm text-slate-600 mb-4">Artículo 17 del Reglamento de la Junta Examinadora de Psicólogos, según enmendado por el <b>Reglamento Núm. 9509 de 11 de octubre de 2023</b>. La fila ámbar es la única que exige doctorado e internado.</p>
+
+  <div class="overflow-x-auto border border-slate-200 rounded-xl">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-left">
+        <tr>
+          <th class="p-3 font-semibold text-slate-700 border-b border-slate-200">Área de práctica</th>
+          <th class="p-3 font-semibold text-slate-700 border-b border-slate-200">Grado mínimo</th>
+          <th class="p-3 font-semibold text-slate-700 border-b border-slate-200">Práctica supervisada mínima</th>
+          <th class="p-3 font-semibold text-slate-700 border-b border-slate-200">Contacto directo</th>
+          <th class="p-3 font-semibold text-slate-700 border-b border-slate-200">Supervisión</th>
+        </tr>
+      </thead>
+      <tbody>${AREAS.map(filaArea).join('')}</tbody>
+    </table>
+  </div>
+
+  <p class="text-sm text-slate-600 mt-3">Aparte, la Sección 17.1 añade que quien sale de un <b>programa doctoral</b> en un área de servicios de salud tiene que cumplir un internado predoctoral de <b>al menos 2,000 horas</b> si viene de psicología clínica o consejería psicológica, y de <b>al menos 1,500 horas</b> si viene de psicología escolar.</p>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Dos detalles con fecha que cambian la respuesta</h2>
+
+  <div class="border border-slate-200 rounded-xl p-4 bg-white mb-3">
+    <p class="text-sm text-slate-800 m-0"><b>1. Estas horas aplican a partir del año académico 2026-2027.</b> La Sección 17.4 lo dice completo: <i>"Los requisitos de horas de práctica supervisada serán de aplicación a los egresados durante el año académico 2026-2027 y en adelante. Esto permitirá a los candidatos y a los programas académicos realizar los cambios necesarios en los requisitos y en la documentación de las horas de práctica."</i> Ese año académico es el que acaba de empezar. Si te gradúas ahí o después, es tu regla. Si te graduaste antes, pregúntale a la Junta por escrito cuál te toca, porque no es lo mismo.</p>
+  </div>
+
+  <div class="border border-slate-200 rounded-xl p-4 bg-white">
+    <p class="text-sm text-slate-800 m-0"><b>2. Psicología escolar a nivel doctoral bajó de 1,800 a 1,500 horas.</b> El Reglamento Núm. 9314 de 2021 pedía 1,800. La enmienda de 2023 lo dejó en 1,500. Son 300 horas menos, y una copia vieja del reglamento no te lo va a decir.</p>
+  </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Tres cosas que el reglamento vigente NO exige</h2>
+  <p class="text-sm text-slate-600 mb-4">Se asumen mucho, y cada una manda gente a mudarse de más.</p>
+  <ul class="text-sm text-slate-700 space-y-3 list-none pl-0">
+    <li class="border-l-4 border-slate-300 pl-3"><b>No exige que el internado sea en Puerto Rico.</b> El Artículo 17 vigente no le pone restricción geográfica.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>No exige que quien te supervise tenga licencia de Puerto Rico.</b> Hay una copia del reglamento colgada en internet que sí lo pide, y sale de las primeras en Google. Está derogada. Esa sola línea es capaz de hacerte descartar una plaza que sí te servía.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>No exige doctorado para 5 de las 6 áreas.</b> Solo Psicología Clínica.</li>
+  </ul>
+  <p class="text-sm text-slate-600 mt-4">Lo que sí regula, y con nombre: tu <b>programa académico</b> no puede ser completamente a distancia ni pasar de 30% de los cursos a distancia, y esos cursos tienen que ser de naturaleza mayormente teórica.</p>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Si te toca el internado de 2,000 horas: los ${PROGRAMAS.length} programas que hay en la isla</h2>
+  <p class="text-sm text-slate-600 mb-4">Programas de Puerto Rico participantes en el APPIC Match, lista final de Phase I. Consultado el 17 de agosto de 2026 en natmatch.com. El Match Code es el que se usa para rankearlos.</p>
+
+  ${PROGRAMAS.map(tarjetaProg).join('')}
+
+  <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-4">
+    <p class="text-sm text-slate-800 m-0"><b>Las fechas del ciclo que empieza en 2027</b> (appic.org, consultado el 17 de agosto de 2026): el registro abrió en <b>julio de 2026</b>. La Rank Order List de Phase I cierra el <b>viernes 5 de febrero de 2027</b> a las 11:59 p.m. ET y el Match Day es el <b>viernes 19 de febrero de 2027</b> a las 9:00 a.m. ET. Phase II cierra aplicaciones el <b>25 de febrero de 2027</b> y su Match Day es el <b>24 de marzo de 2027</b>. Cada programa pone su propia fecha límite de la AAPI, así que esa hay que preguntarla programa por programa.</p>
+  </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">¿Y hay quién supervise aquí?</h2>
+  <p class="text-sm text-slate-600 mb-4">Psicólogos con NPI activo ejerciendo en Puerto Rico, por región, según el registro federal. Son ${totalPsi.toLocaleString('en-US')} en total.</p>
+  <div class="overflow-x-auto border border-slate-200 rounded-xl max-w-sm">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-left"><tr><th class="p-2 font-semibold text-slate-700 border-b border-slate-200">Región</th><th class="p-2 font-semibold text-slate-700 border-b border-slate-200 text-right">Psicólogos</th></tr></thead>
+      <tbody>${psi.map(filaPsi).join('')}</tbody>
+    </table>
+  </div>
+  <p class="text-sm text-slate-600 mt-3">Tener NPI no es lo mismo que tener licencia al día ni que estar disponible para supervisar. Es el punto de partida para llamar, no el final.</p>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">A quién se le pregunta, y qué se pregunta</h2>
+  <p class="text-sm text-slate-700">Lo que decide tu caso no lo decide esta página: lo decide la <b>Junta Examinadora de Psicólogos de Puerto Rico</b>, adscrita al Departamento de Salud. Pregúntalo <b>por escrito</b> y guarda la contestación, porque es la que vale el día que radiques.</p>
+  <p class="text-sm text-slate-700 mt-3">Las 3 preguntas que resuelven el caso:</p>
+  <ol class="text-sm text-slate-700 mt-2 space-y-2 pl-5 list-decimal">
+    <li>Con mi grado y mi programa, ¿bajo cuál área de práctica del Artículo 17 me van a evaluar?</li>
+    <li>Me gradúo en el año académico [tu año]. ¿Me aplican los requisitos de horas del Reglamento Núm. 9509 o los anteriores?</li>
+    <li>¿La Junta acepta horas de práctica supervisada o de internado completadas fuera de Puerto Rico, y bajo qué condiciones?</li>
+  </ol>
+  <p class="text-sm text-slate-600 mt-3"><a href="https://www.salud.pr.gov/CMS/130" class="text-teal-700 font-semibold underline">Junta Examinadora de Psicólogos · Departamento de Salud de PR</a></p>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-8">
+    <p class="text-sm text-slate-700 m-0"><b>Si llegaste aquí buscando ayuda y no un internado:</b> si es una emergencia, llama al <b>9-1-1</b> o ve a la sala de emergencias más cercana. Para crisis emocional o pensamientos suicidas, marca <b>9-8-8</b>, que contesta 24 horas.</p>
+  </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">De dónde salió cada número</h2>
+  <ul class="text-sm text-slate-600 space-y-2 list-disc pl-5">
+    <li>Áreas de práctica, grados y horas: <b>Reglamento Núm. 9509 de 11 de octubre de 2023</b>, enmienda al Artículo 17 del Reglamento Núm. 9314 de 7 de octubre de 2021, Junta Examinadora de Psicólogos de Puerto Rico. Radicado en el Departamento de Estado. Leído en <a href="https://www.salud.pr.gov/CMS/DOWNLOAD/10075" class="text-teal-700 underline">salud.pr.gov</a> el 17 de agosto de 2026.</li>
+    <li>Las 1,800 horas anteriores de psicología escolar doctoral: <b>Reglamento Núm. 9314 de 7 de octubre de 2021</b>, Artículo 17.</li>
+    <li>Programas, rotaciones, acreditación y Match Codes: <b>APPIC Match, lista final de programas participantes de Phase I</b>, natmatch.com/psychint. Consultado el 17 de agosto de 2026.</li>
+    <li>Fechas del Match 2027: appic.org. Consultado el 17 de agosto de 2026.</li>
+    <li>Psicólogos por región: registro federal NPPES, según el substrato de Registro Médico PR. Consultado el 17 de agosto de 2026.</li>
+  </ul>
+
+  <p class="text-sm text-slate-500 mt-8 border-t border-slate-200 pt-4">Esto no es asesoría legal ni sustituye lo que te conteste la Junta. Es el reglamento vigente puesto en una tabla, con la fecha en que se leyó, para que la conversación empiece en otro sitio.</p>
+
+</article>`
+
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org', '@type': 'Article',
+      headline: '¿Te tienes que ir de Puerto Rico a hacer tu internado de psicología?',
+      description: `De las 6 áreas de práctica que licencia la Junta Examinadora de Psicólogos de PR, solo 1 exige el internado de 2,000 horas. Y hay ${PROGRAMAS.length} programas en la isla con ${totalRot} rotaciones.`,
+      author: { '@type': 'Person', name: 'Angel Anderson' },
+      publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+      inLanguage: 'es', url: 'https://registromedicopr.com/internado-psicologia',
+      dateModified: '2026-08-17',
+      about: [
+        { '@type': 'Thing', name: 'Internado de psicología en Puerto Rico' },
+        { '@type': 'Thing', name: 'Junta Examinadora de Psicólogos de Puerto Rico' },
+        { '@type': 'Thing', name: 'APPIC Match' },
+      ],
+      spatialCoverage: [{ '@type': 'Place', name: 'Puerto Rico' }],
+    },
+    {
+      '@context': 'https://schema.org', '@type': 'FAQPage',
+      mainEntity: FAQ.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
+    },
+  ]
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'Internado de psicología en Puerto Rico: quién se tiene que ir y quién no',
+    description: `De las 6 áreas que licencia la Junta Examinadora de Psicólogos de PR, solo 1 exige el internado de 2,000 horas. Hay ${PROGRAMAS.length} programas en la isla con ${totalRot} rotaciones. Con reglamento, artículo y fecha.`,
+    slug: 'internado-psicologia', bodyHtml: body, jsonLd: jsonLd as any,
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
+// Psicólogos con NPI por región. Se lee en vivo: un conteo congelado en el código
+// envejece sin avisar, y esta página se usa para decidir si alguien se muda.
+async function leerPsicologosPorRegion(): Promise<{ region: string; n: number }[]> {
+  // Se pagina a mano a propósito. PostgREST corta en 1,000 filas por defecto y aquí hay más:
+  // un .limit() grande no arregla eso, solo hace que el truncado pase callado y la tabla mienta
+  // hacia abajo sin que nadie se entere.
+  const acc = new Map<string, number>()
+  const patrones = ['Psychologist%', '%Neuropsychologist%']
+  try {
+    for (const pat of patrones) {
+      for (let desde = 0; ; desde += 1000) {
+        const { data, error } = await supabase
+          .from('places')
+          .select('region')
+          .not('npi', 'is', null)
+          .ilike('taxonomy_desc', pat)
+          .range(desde, desde + 999)
+        if (error || !data || !data.length) break
+        for (const r of data as any[]) {
+          const k = (r.region || 'Sin región asignada') as string
+          acc.set(k, (acc.get(k) || 0) + 1)
+        }
+        if (data.length < 1000) break
+      }
+    }
+    return [...acc.entries()].map(([region, n]) => ({ region, n })).sort((a, b) => b.n - a.n)
+  } catch { return [] }
+}
+
 // =============== /puedo-volver — diáspora landing: números reales antes de decidir ===============
 async function handleRegistroPuedoVolver(req: any, res: any) {
   // Top specialties for the diáspora "should I move back / bring my parents" question, linked
@@ -19096,6 +19369,7 @@ const PAGE_CANONICAL: Record<string, string> = {
   'registro-estado': 'https://registromedicopr.com/registro/estado',
   'registro-mapa': 'https://registromedicopr.com/registro/mapa',
   'registro-opciones': 'https://registromedicopr.com/registro/opciones',
+  'internado-psicologia': 'https://registromedicopr.com/internado-psicologia',
   'registro-puedo-volver': 'https://registromedicopr.com/puedo-volver',
   'rendimiento': 'https://puertoricosinfiltros.com/rendimiento',
   'rentas': 'https://www.mapadecaborojo.com/rentas',
@@ -19211,6 +19485,7 @@ export default async function handler(req: any, res: any) {
     case 'datos': return await handleDatos(req, res)
     case 'porque': return await handleRegistroPorque(req, res)
     case 'registro-opciones': return await handleRegistroOpciones(req, res)
+    case 'internado-psicologia': return await handleInternadoPsicologia(req, res)
     case 'carta-141': return await handleCarta141(req, res)
     case 'registro-puedo-volver': return await handleRegistroPuedoVolver(req, res)
     case 'recuperacion': return await handleRecuperacion(req, res)
