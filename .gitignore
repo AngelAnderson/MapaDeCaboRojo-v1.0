@@ -138,3 +138,8 @@ Outbox/
 # es la plantilla sin valores y tiene que viajar con el repo.
 .env*
 !.env.example
+
+# Estado de trabajo del CLI de Supabase. No es secreto hoy (solo versiones y el
+# project ref, que es público), pero este repo es PÚBLICO y el CLI escribe aquí
+# sin avisar. Añadido 2026-08-14.
+supabase/.temp/

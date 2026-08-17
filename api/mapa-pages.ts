@@ -5712,7 +5712,7 @@ async function handleRegistroData(req: any, res: any) {
     let q = supabase
       .from('places')
       .select('name,municipality,phone,npi,slug,accepted_plans,last_verified_at,accepts_new_patients')
-      .eq('category', 'HEALTH').eq('subcategory', spec).not('npi', 'is', null)
+      .eq('category', 'HEALTH').eq('subcategory', spec).not('npi', 'is', null).or('fuera_de_pr.is.null,fuera_de_pr.eq.false')
       // El orden va en SQL, no solo en el navegador. La lista corta en 120 y 43
       // especialidades pasan de ahi: 4,180 de las 4,388 fichas confirmadas viven
       // en esas. Ordenando solo en el cliente se reordena lo que ya llego, y el
@@ -5758,7 +5758,7 @@ async function handleRegistroSearch(req: any, res: any) {
     let query = supabase
       .from('places')
       .select('name,subcategory,municipality,phone,region,slug')
-      .eq('category', 'HEALTH').not('npi', 'is', null)
+      .eq('category', 'HEALTH').not('npi', 'is', null).or('fuera_de_pr.is.null,fuera_de_pr.eq.false')
     for (const w of (terms.length ? terms : [safe])) query = query.ilike('name', `%${w}%`)
     const { data } = await query.order('name', { ascending: true }).limit(40)
     let providers = (data || [])
@@ -6835,6 +6835,21 @@ ${crRow ? `<p class="not-prose mt-2 text-center text-sm text-slate-500">Cabo Roj
 <p class="not-prose mt-2 text-center text-xs text-slate-400">Fuente: NPPES/CMS (proveedores individuales con práctica en PR, por municipio declarado) × Censo 2020 (población). Verificado julio 2026.</p>
 `
 
+  // Desiertos por PUEBLO (no solo por region). La region esconde lo que vive el vecino:
+  // el Oeste "tiene" ginecologos, y Maricao no tiene ninguno.
+  // 78 municipios x 14 especialidades = 1,092 filas. El limite por defecto de PostgREST
+  // es 1,000: sin este range se cortaban ~92 filas en silencio y los desiertos salian
+  // subcontados (ortopeda daba 53 en vez de 59). Nunca leer esta vista sin paginar.
+  // Se lee el RESUMEN (14 filas), no el detalle (1,092). Leyendo el detalle, PostgREST
+  // cortaba en 1,000 filas sin avisar y la tabla publicaba 53 donde la verdad era 59.
+  // Un numero subcontado se ve igual de creible que el correcto: por eso se agrega en SQL.
+  const { data: dres } = await supabase.from('desiertos_resumen')
+    .select('especialidad,pueblos_sin_ninguno,municipios_sin_ninguno')
+  const filasPueblo = (dres || [])
+    .filter((r: any) => (r.pueblos_sin_ninguno ?? 0) > 0)
+    .map((r: any) => ({ esp: r.especialidad, n: r.pueblos_sin_ninguno, muns: (r.municipios_sin_ninguno || []) as string[] }))
+    .sort((a: any, b: any) => b.n - a.n)
+
   const body = `
 <h1>Los desiertos médicos de Puerto Rico</h1>
 <p class="text-lg text-slate-600 mt-3">Hay especialidades médicas que, según el registro federal, <strong>no tienen ni un solo proveedor</strong> en regiones enteras del país. No es opinión. Es el dato oficial (el mismo que usan Medicare y los planes médicos) puesto claro, por primera vez, región por región.</p>
@@ -6880,6 +6895,29 @@ ${ratioSection}
   </div>
   <p class="text-xs text-teal-200 mt-4">— Menos revolú, más sistema, mejor vida.</p>
 </div>
+
+<section class="max-w-4xl mx-auto px-4 mt-12">
+  <h2 class="text-2xl font-black text-slate-900">Ahora por pueblo, no por región</h2>
+  <p class="text-slate-600 mt-2">La región promedia y esconde. El Oeste "tiene" ginecólogos, pero eso no le sirve a quien vive en Maricao. Esto es municipio por municipio, sobre los 78.</p>
+  <div class="mt-3 border-l-4 border-amber-400 bg-amber-50 p-4 text-sm text-slate-700">
+    <strong>Léelo bien:</strong> que un pueblo salga en cero significa que <em>ningún proveedor de esa especialidad reporta dirección de práctica ahí</em>. No significa que no haya acceso: se puede ir al pueblo de al lado. Lo que mide esta tabla es dónde están, no cuán lejos queda el más cercano.
+  </div>
+  <div class="mt-4 overflow-x-auto">
+    <table class="w-full text-sm border border-slate-200 bg-white">
+      <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
+        <tr><th class="text-left p-3">Especialidad</th><th class="text-right p-3">Pueblos en cero</th><th class="text-left p-3">Cuáles</th></tr>
+      </thead>
+      <tbody>
+        ${filasPueblo.map(f => `<tr class="border-t border-slate-100 align-top">
+          <td class="p-3 font-semibold text-slate-900 whitespace-nowrap">${f.esp}</td>
+          <td class="p-3 text-right font-mono font-bold ${f.n >= 45 ? 'text-red-700' : f.n >= 25 ? 'text-amber-700' : 'text-slate-700'}">${f.n} de 78</td>
+          <td class="p-3 text-slate-600 text-xs leading-relaxed">${f.muns.join(' · ')}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  </div>
+  <p class="text-xs text-slate-500 mt-3">Fuente: registro federal NPPES/CMS, cruzado con los 78 municipios de Puerto Rico. Medido el 16 de agosto de 2026. Se excluyen proveedores con dirección fuera de la isla.</p>
+</section>
 `
 
   const jsonLd = {
@@ -9030,7 +9068,11 @@ ${postsEscasez({ U: 'registromedicopr.com/marcador', pctTel: '43.6', cupon: Stri
   res.status(200).send(layout({
     title: 'Datos citables del acceso médico en PR, para prensa',
     description: `Cada dato con su fuente: ${g.conHpsa} de 76 municipios de PR con escasez de médicos declarada por el federal, ${g.cupon} con dinero de salud mental sin cobrar.`,
-    slug: 'comparte', bodyHtml: body, jsonLd: [faqLd, datasetLd] as any, ogImage: '/og/desiertos.png',
+    // OG propia (antes compartía /og/desiertos.png con /kit y con media docena de páginas
+    // más, así que en Facebook las 3 se veían igual). Esta sí es la página del diagnóstico,
+    // así que la tarjeta lleva el número duro y dice para quién es: prensa.
+    slug: 'comparte', bodyHtml: body, jsonLd: [faqLd, datasetLd] as any,
+    ogImage: `https://registromedicopr.com/api/og?theme=medico&k=${encodeURIComponent('Para prensa · libre de citar')}&t=${encodeURIComponent(`${g.conHpsa} de 76 municipios de Puerto Rico||con escasez de médicos declarada por el federal`)}&sub=${encodeURIComponent(`${g.cupon} tienen dinero de salud mental aprobado y sin cobrar. Cada dato con su fuente y su fecha.`)}&badge=${encodeURIComponent('Fuentes: NPPES / HRSA / Censo')}&site=registromedicopr.com`,
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
   }))
 }
@@ -15033,25 +15075,73 @@ async function handleKit(req: any, res: any) {
     { k: 'El cemento sin médico', v: `$3,469 millones de fondos federales de recuperación llegaron a los ${cupon} pueblos que no tienen ni un psiquiatra. Jayuya recibió $424 millones y tiene 2 especialistas y cero psiquiatras.`, f: 'OpenFEMA' },
   ]
 
+  // Las tarjetas cargan el mensaje de ESTA página, que es la acción. Hasta el 17 de agosto
+  // seguían siendo las 4 de la escasez (pueblos sin psiquiatra, 2.5 contra 15.3, el repago),
+  // que se mudaron a /comparte cuando el kit se reescribió. Una tarjeta que dibuja el
+  // problema debajo de un titular que pide una pregunta de 20 segundos manda al que comparte
+  // a repetir el diagnóstico, que es justo lo que confirma "así son las cosas".
+  // La única de las viejas que se queda es la del teléfono compartido: no es diagnóstico
+  // suelto, es la razón por la que hace falta preguntar, y el cuerpo de la página la cita.
   const tarjetas = [
-    { id: 't1', l1: `${cupon} pueblos`, l2: 'de Puerto Rico no tienen', l3: 'ni un solo psiquiatra', pie: 'Fuente: HRSA × registro federal NPPES' },
-    { id: 't2', l1: '2.5 contra 15.3', l2: 'PR usa el programa federal que trae médicos', l3: '6 veces menos que West Virginia', pie: 'Fuente: HRSA, NHSC Field Strength FY2025' },
-    { id: 't3', l1: '2 años contra 30', l2: 'El repago le paga la deuda al médico', l3: 'Nadie le paga el sueldo', pie: 'Fuente: HRSA · planes pagan 41% menos que en los estados' },
-    { id: 't4', l1: `${pctTel}%`, l2: 'de los proveedores comparte teléfono', l3: 'Eso no es una red. Es una lista', pie: 'Fuente: este registro, sobre NPPES' },
+    { id: 't1', l1: '20 segundos', l2: 'La próxima vez que vayas al médico:', l3: '«¿Está aceptando pacientes nuevos?»', pie: 'Mándanos la respuesta. Le ahorra el día al próximo vecino.' },
+    { id: 't2', l1: `${nConf} de ${nTotal}`, l2: 'proveedores tienen confirmado', l3: 'si aceptan pacientes nuevos', pie: 'Ese número solo sube cuando alguien pregunta.' },
+    { id: 't3', l1: `${pctTel}%`, l2: 'de los proveedores comparte teléfono', l3: 'Una lista más larga no arregla eso', pie: 'Fuente: este registro, sobre el federal NPPES.' },
+    { id: 't4', l1: '90 días', l2: 'Un sí de hace más de 90 días', l3: 'vuelve a «no sé»', pie: 'Cada nombre lleva la fecha en que se confirmó.' },
   ]
+
+  // El <text> de SVG no hace wrap: lo que no cabe se sale del cuadro y sale cortado en el
+  // PNG, sin avisar. Las tarjetas viejas cabían de casualidad porque las frases eran cortas
+  // ("33 pueblos"), y la primera línea larga las rompía. Se parte a mano y se apila, con el
+  // ancho útil en píxeles, no en caracteres a ojo.
+  const ANCHO = 920 // 1080 menos 80 de margen a cada lado
+  // Si el texto no cabe en `max` líneas se corta, pero se corta CON puntos suspensivos.
+  // Un corte callado se ve igual de terminado que el texto completo: la primera versión de
+  // esto publicó "alguien confirmó que seguía" y se comió "siendo cierto", y en el PNG no
+  // había forma de notarlo. Que se vea feo es el punto: obliga a acortar la frase.
+  const partir = (txt: string, size: number, max = 3): string[] => {
+    const porChar = size * 0.52 // Helvetica, promedio medido; conservador a propósito
+    const cabe = Math.max(8, Math.floor(ANCHO / porChar))
+    const palabras = String(txt).split(/\s+/).filter(Boolean)
+    const out: string[] = []
+    let linea = ''
+    let i = 0
+    for (; i < palabras.length; i++) {
+      const trial = linea ? linea + ' ' + palabras[i] : palabras[i]
+      if (trial.length <= cabe) { linea = trial; continue }
+      if (out.length === max - 1) break // no cabe una línea más
+      if (linea) out.push(linea)
+      linea = palabras[i]
+    }
+    if (linea) out.push(linea)
+    if (i < palabras.length && out.length) out[out.length - 1] = out[out.length - 1].replace(/[.,;:]?$/, '…')
+    return out
+  }
 
   const svgCard = (c: any) => {
     const esc = (x: string) => escapeHtml(x)
+    // El titular grande cabe en una sola línea o encoge; nunca se parte.
+    const t1 = String(c.l1)
+    const size1 = t1.length <= 14 ? 104 : t1.length <= 19 ? 82 : 66
+    const l2s = partir(c.l2, 52, 2)
+    const l3s = partir(c.l3, 52, 2)
+    const pies = partir(c.pie, 30, 2)
+    let y = 430
+    const cuerpo: string[] = []
+    for (const s of l2s) { cuerpo.push(`  <text x="80" y="${y}" font-family="Helvetica, Arial, sans-serif" font-size="52" fill="#e2e8f0">${esc(s)}</text>`); y += 66 }
+    y += 14
+    for (const s of l3s) { cuerpo.push(`  <text x="80" y="${y}" font-family="Helvetica, Arial, sans-serif" font-size="52" font-weight="bold" fill="#ffffff">${esc(s)}</text>`); y += 66 }
+    const yRegla = y + 34
+    let yPie = yRegla + 78
+    const pieTxt = pies.map(s => { const el = `  <text x="80" y="${yPie}" font-family="Helvetica, Arial, sans-serif" font-size="30" fill="#94a3b8">${esc(s)}</text>`; yPie += 40; return el }).join('\n')
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 1080" width="1080" height="1080" id="svg-${c.id}">
   <rect width="1080" height="1080" fill="#0f172a"/>
   <rect x="0" y="0" width="1080" height="14" fill="#14b8a6"/>
-  <text x="80" y="300" font-family="Georgia, serif" font-size="104" font-weight="bold" fill="#5eead4">${esc(c.l1)}</text>
-  <text x="80" y="430" font-family="Helvetica, Arial, sans-serif" font-size="52" fill="#e2e8f0">${esc(c.l2)}</text>
-  <text x="80" y="510" font-family="Helvetica, Arial, sans-serif" font-size="52" font-weight="bold" fill="#ffffff">${esc(c.l3)}</text>
-  <rect x="80" y="600" width="120" height="6" fill="#14b8a6"/>
-  <text x="80" y="700" font-family="Helvetica, Arial, sans-serif" font-size="30" fill="#94a3b8">${esc(c.pie)}</text>
-  <text x="80" y="960" font-family="Helvetica, Arial, sans-serif" font-size="38" font-weight="bold" fill="#5eead4">registromedicopr.com/marcador</text>
-  <text x="80" y="1010" font-family="Helvetica, Arial, sans-serif" font-size="26" fill="#64748b">Verificado contra fuentes federales. Si ves un error, rómpelo.</text>
+  <text x="80" y="300" font-family="Georgia, serif" font-size="${size1}" font-weight="bold" fill="#5eead4">${esc(t1)}</text>
+${cuerpo.join('\n')}
+  <rect x="80" y="${yRegla}" width="120" height="6" fill="#14b8a6"/>
+${pieTxt}
+  <text x="80" y="960" font-family="Helvetica, Arial, sans-serif" font-size="38" font-weight="bold" fill="#5eead4">Textea al 787-417-7711</text>
+  <text x="80" y="1010" font-family="Helvetica, Arial, sans-serif" font-size="26" fill="#64748b">registromedicopr.com/kit · lo que se confirma lleva su fecha</text>
 </svg>`
   }
 
@@ -15218,7 +15308,13 @@ ${tarjetas.map(c => `<div class="border border-slate-200 bg-white rounded-2xl p-
   res.status(200).send(layout({
     title: 'Kit para compartir: textos, números y tarjetas listas',
     description: 'Textos listos para publicar, números con su fuente federal y tarjetas descargables sobre el acceso a médicos en Puerto Rico. Libre de usar, sin cuenta ni permiso.',
-    slug: 'kit', bodyHtml: body, jsonLd, ogImage: '/og/desiertos.png',
+    // OG propia. Antes las dos páginas de distribución compartían /og/desiertos.png,
+    // que dibuja el problema (los pueblos sin especialista). Compartir el kit con esa
+    // tarjeta contradice la página: el kit pide una acción de 20 segundos, no repite el
+    // diagnóstico. Se usa la fábrica /api/og en vez de un PNG nuevo para que el número
+    // del contador viaje en la tarjeta y no se quede viejo.
+    slug: 'kit', bodyHtml: body, jsonLd,
+    ogImage: `https://registromedicopr.com/api/og?theme=medico&k=${encodeURIComponent('Toma 20 segundos')}&t=${encodeURIComponent('«¿Está aceptando pacientes nuevos,||y qué planes acepta?»')}&sub=${encodeURIComponent(`Pregúntaselo a tu médico y mándanos la respuesta al 787-417-7711. Vamos por ${nConf} de ${nTotal}.`)}&badge=${encodeURIComponent('Ayuda a que la lista crezca')}&site=registromedicopr.com`,
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
   }))
 }
@@ -16030,8 +16126,8 @@ async function handleRegistroHub(req: any, res: any) {
     const muniSlug = specToUrl(muni.name)
     const townReg = muni.region || ''
     const [inTownRes, inRegionRes] = await Promise.all([
-      supabase.from('places').select('name,municipality,slug,phone').eq('subcategory', x.s).eq('category', 'HEALTH').not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').eq('municipality', muni.name).order('name', { ascending: true }).limit(80),
-      townReg ? supabase.from('places').select('name,municipality,slug,phone').eq('subcategory', x.s).eq('category', 'HEALTH').not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').eq('region', townReg).order('municipality', { ascending: true }).limit(120) : Promise.resolve({ data: [] as any[] }),
+      supabase.from('places').select('name,municipality,slug,phone').eq('subcategory', x.s).eq('category', 'HEALTH').not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').or('fuera_de_pr.is.null,fuera_de_pr.eq.false').eq('municipality', muni.name).order('name', { ascending: true }).limit(80),
+      townReg ? supabase.from('places').select('name,municipality,slug,phone').eq('subcategory', x.s).eq('category', 'HEALTH').not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').or('fuera_de_pr.is.null,fuera_de_pr.eq.false').eq('region', townReg).order('municipality', { ascending: true }).limit(120) : Promise.resolve({ data: [] as any[] }),
     ])
     const inTown = (inTownRes.data || [])
     const nearby = ((inRegionRes as any).data || []).filter((p: any) => p.municipality !== muni.name)

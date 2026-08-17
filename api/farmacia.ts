@@ -123,6 +123,18 @@ export default async function handler(req: any, res: any) {
   const config = HEALTH_CONFIG[type] || HEALTH_CONFIG['farmacia'];
   const isFarmaciaType = type === 'farmacia';
 
+  // Branding por host. Este mismo renderer sirve mapadecaborojo.com Y registromedicopr.com.
+  // Sin esto, un psiquiatra de Mayaguez que se busca en Google caia en el Registro con el
+  // tab diciendo "MapaDeCaboRojo", el og:site_name del Mapa y el og:url apuntando a otro
+  // dominio. Decirle "el mapa de Cabo Rojo" a un medico de Mayaguez lo saca del carril, y
+  // si despues le escribimos para verificar sus datos, el texto y la pagina tienen que
+  // decir el mismo nombre o se lee como estafa. api/mapa-pages.ts ya miraba el host desde
+  // hace tiempo; este archivo se habia quedado atras.
+  const isReg = /registromedicopr\.com/i.test(String(req.headers?.host || ''));
+  const brandName   = isReg ? 'Registro Médico PR' : 'MapaDeCaboRojo';
+  const brandDomain = isReg ? 'registromedicopr.com' : 'MapaDeCaboRojo.com';
+  const siteOrigin  = isReg ? 'https://registromedicopr.com' : 'https://www.mapadecaborojo.com';
+
   if (!slug) {
     res.status(400).send('<h1>400 – Slug requerido</h1>');
     return;
@@ -163,10 +175,10 @@ export default async function handler(req: any, res: any) {
   if (!place) {
     res.status(404).send(`<!DOCTYPE html>
 <html lang="es">
-<head><meta charset="UTF-8"><title>${config.label} no encontrado | MapaDeCaboRojo.com</title></head>
+<head><meta charset="UTF-8"><title>${config.label} no encontrado | ${brandDomain}</title></head>
 <body>
   <h1>404 – ${config.label} no encontrado</h1>
-  <p><a href="https://www.mapadecaborojo.com/categoria/${type}">Ver todos</a></p>
+  <p><a href="${siteOrigin}/categoria/${type}">Ver todos</a></p>
 </body>
 </html>`);
     return;
@@ -191,10 +203,10 @@ export default async function handler(req: any, res: any) {
       ? `Feature your ${l.toLowerCase()} with La Vitrina. Photos, services, verified hours, and rank first when people search ${l.toLowerCase()}s in Cabo Rojo. $799/year.`
       : `Feature your ${l.toLowerCase()} with La Vitrina. Photos, services, verified hours, and your own page like this one. $799/year.`,
     learnVitrina: 'Learn about La Vitrina',
-    waPreText: (n: string) => `Hello, I found ${n} on MapaDeCaboRojo.com — I'd like to make an appointment / ask a question.`,
+    waPreText: (n: string) => `Hello, I found ${n} on ${brandDomain} — I'd like to make an appointment / ask a question.`,
     ctaSubtitle: (n: string) => `Need something from ${n}?`,
     locale: 'en_US',
-    titleSuffix: (l: string, m: string) => `${l} in ${m} | MapaDeCaboRojo`,
+    titleSuffix: (l: string, m: string) => `${l} in ${m} | ${brandName}`,
     descFallback: (n: string, l: string, m: string) => `${n} — ${l} in ${m}, Puerto Rico. Hours, address, phone and more.`,
   } : {
     inCaboRojo: 'en Cabo Rojo', address: 'Dirección', phone: 'Teléfono', hours: 'Horario', website: 'Web',
@@ -211,14 +223,14 @@ export default async function handler(req: any, res: any) {
       ? `Destaca tu ${l.toLowerCase()} con La Vitrina. Fotos, servicios, horarios verificados, y apareces primero cuando busquen ${l.toLowerCase()}s en Cabo Rojo. $799/año.`
       : `Destaca tu ${l.toLowerCase()} con La Vitrina. Fotos, servicios, horarios verificados, y tu propia página como esta. $799/año.`,
     learnVitrina: 'Conoce La Vitrina',
-    waPreText: (n: string) => `Hola, encontré ${n} en MapaDeCaboRojo.com — quisiera agendar cita / hacer una pregunta.`,
+    waPreText: (n: string) => `Hola, encontré ${n} en ${brandDomain} — quisiera agendar cita / hacer una pregunta.`,
     ctaSubtitle: (n: string) => `¿Necesitas algo de ${n}?`,
     locale: 'es_PR',
-    titleSuffix: (l: string, m: string) => `${l} en ${m} | MapaDeCaboRojo`,
+    titleSuffix: (l: string, m: string) => `${l} en ${m} | ${brandName}`,
     descFallback: (n: string, l: string, m: string) => `${n} — ${l} en ${m}, Puerto Rico. Horarios, dirección, teléfono y más.`,
     labelEn: undefined as any, labelPluralEn: undefined as any,
   };
-  const baseUrl     = 'https://www.mapadecaborojo.com';
+  const baseUrl     = siteOrigin;
   const pageUrl     = `${baseUrl}/${type}/${esc(place.slug || place.id)}`;
   const pageUrlEs   = pageUrl;
   const pageUrlEn   = `${pageUrl}?lang=en`;
@@ -246,13 +258,13 @@ export default async function handler(req: any, res: any) {
   // seo_title/seo_description: overrides written by the fabrica-seo nightly engine (ES only)
   const title       = (lang !== 'en' && place.seo_title)
     ? esc(place.seo_title)
-    : nameAlreadyHasLabel ? `${placeName} — ${muni} | MapaDeCaboRojo` : `${placeName} — ${T.titleSuffix(localizedLabel, muni)}`;
+    : nameAlreadyHasLabel ? `${placeName} — ${muni} | ${brandName}` : `${placeName} — ${T.titleSuffix(localizedLabel, muni)}`;
   const description = (lang !== 'en' && place.seo_description)
     ? esc(place.seo_description).slice(0, 160)
     : place.description
       ? esc(place.description).slice(0, 160)
       : T.descFallback(placeName, localizedLabel, muni);
-  const image       = place.image_url || `https://www.mapadecaborojo.com/api/og?t=${encodeURIComponent(place.name)}&k=Farmacia&badge=Verificado`;
+  const image       = place.image_url || `${siteOrigin}/api/og?t=${encodeURIComponent(place.name)}&k=Farmacia&badge=Verificado`;
   const hoursText   = formatHours(place.opening_hours);
   const openNow     = isCurrentlyOpen(place.opening_hours);
   // Three-state status. We only claim "open"/"closed" when we actually have
@@ -420,7 +432,7 @@ export default async function handler(req: any, res: any) {
   <meta property="og:description" content="${description}">
   <meta property="og:image" content="${esc(image)}">
   <meta property="og:url" content="${pageUrl}">
-  <meta property="og:site_name" content="MapaDeCaboRojo.com">
+  <meta property="og:site_name" content="${brandDomain}">
   <meta property="og:locale" content="${T.locale}">
 
   <!-- Twitter Card -->
@@ -740,7 +752,7 @@ export default async function handler(req: any, res: any) {
 
     <footer>
       <p>Hecho con orgullo en Cabo Rojo, Puerto Rico</p>
-      <p style="margin-top:4px;"><a href="${baseUrl}">MapaDeCaboRojo.com</a> &middot; Un proyecto de <a href="https://angelanderson.com">Angel Anderson</a></p>
+      <p style="margin-top:4px;"><a href="${baseUrl}">${brandDomain}</a> &middot; Un proyecto de <a href="https://angelanderson.com">Angel Anderson</a></p>
     </footer>
   </div>
   ${correctButtonHtml({ pageType: 'farmacia', placeId: place.id })}

@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Solicitud de Información Pública — Municipio de Cabo Rojo · llénala en 3 minutos</title>
+<meta name="description" content="Herramienta gratuita para llenar la Solicitud de Información Pública del Municipio Autónomo de Cabo Rojo (Ley 141-2019). Llenas 5 campos, se genera el formulario completo y se abre tu correo con todo escrito. No guardamos nada.">
+<meta name="robots" content="index,follow">
+<style>
+:root{--paper:#faf9f6;--card:#fff;--ink:#16181a;--ink2:#474c50;--mut:#7d848a;--line:#e3dfd7;--acc:#0d7a72;--acci:#08574f;--warn:#b8452c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#131513;--card:#1c1f1c;--ink:#eeece6;--ink2:#c0c5c0;--mut:#8b918c;--line:#2c302c;--acc:#4fb3a9;--acci:#6ecec4}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;padding:0 18px 80px;-webkit-font-smoothing:antialiased}
+.w{max-width:760px;margin:0 auto}
+header{padding:38px 0 20px;border-bottom:3px solid var(--ink)}
+.kick{font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--acc);font-weight:700}
+h1{font-size:clamp(25px,4.4vw,34px);line-height:1.16;margin-top:9px;letter-spacing:-.02em}
+.lede{color:var(--ink2);margin-top:11px;font-size:16.5px}
+.priv{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:6px;padding:13px 15px;margin-top:18px;font-size:14.5px;color:var(--ink2)}
+h2{font-size:20px;margin:32px 0 6px;letter-spacing:-.01em}
+.sub{color:var(--mut);font-size:14px;margin-bottom:14px}
+label{display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:700;margin:16px 0 6px}
+input,textarea{width:100%;background:var(--card);border:1px solid var(--line);border-radius:6px;padding:11px 13px;font:16px/1.5 inherit;color:var(--ink)}
+input:focus,textarea:focus{outline:2px solid var(--acc);outline-offset:1px;border-color:var(--acc)}
+textarea{min-height:130px;resize:vertical}
+.hint{font-size:13px;color:var(--mut);margin-top:5px}
+.acts{display:flex;gap:10px;flex-wrap:wrap;margin-top:26px}
+button{background:var(--acc);color:#fff;border:none;border-radius:6px;padding:14px 22px;font:600 15px/1 inherit;cursor:pointer}
+button:hover{background:var(--acci)}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+button.alt{background:transparent;color:var(--ink);border:1px solid var(--line)}
+#aviso{margin-top:12px;font-size:14px;color:var(--warn);font-weight:600}
+.prev{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:22px;margin-top:14px;font-size:14.5px;line-height:1.65}
+.prev h3{font-size:15px;margin:16px 0 5px}
+.prev .lbl{color:var(--mut);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.prev .v{font-weight:700}
+.steps{counter-reset:s;list-style:none;margin-top:12px}
+.steps li{counter-increment:s;position:relative;padding:9px 0 9px 36px;border-bottom:1px solid var(--line);font-size:15px}
+.steps li::before{content:counter(s);position:absolute;left:0;top:9px;width:24px;height:24px;border-radius:50%;background:var(--ink);color:var(--paper);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);color:var(--mut);font-size:13px}
+a{color:var(--acci)}
+@media print{
+  body{padding:0;background:#fff;color:#000}
+  header,h2,.sub,.acts,.priv,form,footer,.steps,.noprint{display:none!important}
+  #salida{display:block!important;border:none;padding:0;font-size:11.5pt;color:#000;background:#fff}
+  #salida .lbl{color:#333}
+}
+#salida{display:none}
+</style>
+</head>
+<body>
+<div class="w">
+<header>
+  <p class="kick">Herramienta gratuita · Ley 141-2019</p>
+  <h1>Pídele un documento al Municipio de Cabo Rojo sin perder el viaje</h1>
+  <p class="lede">Llenas 5 campos, esta página arma la Solicitud de Información Pública completa y te abre tu correo con todo escrito. Toma 3 minutos.</p>
+  <div class="priv"><strong>Tu información no sale de tu teléfono.</strong> Esta página no guarda, no envía y no registra nada. El correo lo mandas tú desde tu propia cuenta, y eso es a propósito: ese correo tuyo es la prueba legal de la fecha en que pediste.</div>
+</header>
+
+<form id="f" onsubmit="return false">
+  <h2>1 · Quién eres</h2>
+  <p class="sub">Lo mismo que pondrías en cualquier trámite.</p>
+  <label for="nombre">Nombre completo</label>
+  <input id="nombre" autocomplete="name" placeholder="María del Carmen Rivera">
+  <label for="dirf">Dirección física</label>
+  <input id="dirf" autocomplete="street-address" placeholder="Calle Betances 14, Barrio Pueblo, Cabo Rojo, PR 00623">
+  <label for="tel">Teléfono</label>
+  <input id="tel" type="tel" autocomplete="tel" placeholder="787-000-0000">
+  <label for="email">Tu correo electrónico</label>
+  <input id="email" type="email" autocomplete="email" placeholder="tucorreo@ejemplo.com">
+  <p class="hint">Aquí es donde el Municipio te va a mandar el documento.</p>
+
+  <h2>2 · Qué estás pidiendo</h2>
+  <p class="sub">Mientras más específico, más difícil es que te digan que no se entiende. Si son varias cosas, ponlas numeradas.</p>
+  <label for="pide">Documento o información que solicitas</label>
+  <textarea id="pide" placeholder="Ejemplo:&#10;1. El presupuesto aprobado del Municipio para el año fiscal 2026-2027, con la ordenanza que lo aprobó y su fecha.&#10;2. La lista de contratos otorgados entre enero y junio de 2026 con su cuantía."></textarea>
+  <label for="oficina">Oficina que lo tiene (opcional)</label>
+  <input id="oficina" placeholder="Si no sabes, déjalo en blanco">
+
+  <div class="acts">
+    <button type="button" id="btnMail">Abrir mi correo con todo escrito</button>
+    <button type="button" class="alt" id="btnPrint">Ver e imprimir el formulario</button>
+  </div>
+  <p id="aviso"></p>
+</form>
+
+<div id="salida"></div>
+
+<h2 class="noprint">Después de mandarlo</h2>
+<ol class="steps noprint">
+  <li><strong>Guarda el correo enviado.</strong> Esa es tu prueba de la fecha. El propio formulario del Municipio dice que el término se cuenta desde el día que tú lo enviaste.</li>
+  <li><strong>Cuenta 20 días laborables.</strong> Ese es el plazo que tiene el Municipio para contestar. Solo se puede extender una vez, y te lo tienen que avisar dentro del plazo original.</li>
+  <li><strong>Si pasan los 20 días sin respuesta</strong>, la solicitud se entiende denegada y queda disponible el Recurso Especial ante el Tribunal de Primera Instancia.</li>
+  <li><strong>Si te contestaron o si no</strong>, cuéntanos. Lo anotamos en el récord público de Cabo Rojo. No tienes que dar tu nombre. Textea al 787-417-7711.</li>
+</ol>
+
+<footer class="noprint">
+  <p>Hecho por un vecino, gratis, para cualquiera que lo necesite. Basado en el formulario oficial vigente del Municipio Autónomo de Cabo Rojo y en la Ley 141-2019, según enmendada por la Ley 156-2025. No es asesoría legal.</p>
+  <p style="margin-top:9px"><strong>Municipio de Cabo Rojo:</strong> si quieren esta herramienta en su portal, es de ustedes. Sin costo y sin condiciones. Escriban a angel@caborojo.com y se la entrego con el código.</p>
+  <p style="margin-top:9px"><a href="https://caborojo.com/pedir-documento-municipio/">La guía completa paso a paso</a> · <a href="https://caborojo.com/planes-de-mitigacion/">El récord de los 78 municipios</a></p>
+</footer>
+</div>
+
+<script>
+var DEST = ['mcr@caborojopr.net','ifalto@caborojopr.net','vpagan@caborojopr.net'];
+var CC = 'legislatura@caborojopr.net';
+function g(id){ return (document.getElementById(id).value || '').trim(); }
+function hoy(){
+  var M=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  var d=new Date(); return d.getDate()+' de '+M[d.getMonth()]+' de '+d.getFullYear();
+}
+function falta(){
+  var m=[];
+  if(!g('nombre')) m.push('tu nombre');
+  if(!g('dirf')) m.push('tu dirección');
+  if(!g('email')) m.push('tu correo');
+  if(!g('pide')) m.push('qué documento pides');
+  return m;
+}
+function cuerpo(){
+  var of = g('oficina') || 'Se desconoce';
+  return ''
+  + 'SOLICITUD DE INFORMACION PUBLICA\n'
+  + 'Ley 141-2019, segun enmendada, y Ordenanza Num. 26, Serie 2025-2026\n'
+  + 'Municipio Autonomo de Cabo Rojo\n\n'
+  + 'Fecha: ' + hoy() + '\n\n'
+  + 'I. INFORMACION DEL PETICIONARIO\n'
+  + 'Tipo: Persona natural\n'
+  + 'Nombre completo: ' + g('nombre') + '\n'
+  + 'Direccion fisica: ' + g('dirf') + '\n'
+  + 'Direccion postal: ' + g('dirf') + '\n'
+  + 'Correo electronico: ' + g('email') + '\n'
+  + 'Telefono: ' + (g('tel') || 'No provisto') + '\n\n'
+  + 'II. DEPENDENCIA U OFICINA QUE CUSTODIA LA INFORMACION\n' + of + '\n\n'
+  + 'III. DESCRIPCION DE LA INFORMACION SOLICITADA\n' + g('pide') + '\n\n'
+  + 'Aclaraciones: No solicito la creacion de ningun documento, solo copia de lo que exista '
+  + 'al dia de hoy con sus fechas. Cada partida es independiente y puede entregarse por '
+  + 'separado segun este disponible, sin esperar por las demas.\n\n'
+  + 'Marco: Solicito copia de la informacion.\n\n'
+  + 'IV. INFORMACION RELACIONADA CON TERCEROS\n'
+  + 'La informacion solicitada no involucra a terceros.\n\n'
+  + 'V. FORMATO EN QUE SOLICITO LA INFORMACION\n'
+  + 'Copia digital (PDF u otro formato electronico), enviada por correo electronico a '
+  + g('email') + '. No solicito copias impresas ni envio postal, por lo que no se genera '
+  + 'costo de reproduccion ni franqueo.\n\n'
+  + 'VI. MEDIO DE PRESENTACION\n'
+  + 'Via electronica al correo electronico, conforme a la Seccion VI del formulario oficial.\n\n'
+  + 'Declaro que la informacion provista en esta solicitud es correcta y que la misma se '
+  + 'presenta conforme a la reglamentacion vigente del Municipio Autonomo de Cabo Rojo y a '
+  + 'las disposiciones de la Ley 141-2019.\n\n'
+  + 'Nombre en letra de molde: ' + g('nombre').toUpperCase() + '\n'
+  + 'Firma del Peticionario: ' + g('nombre') + ' (firma electronica)\n\n'
+  + 'Nota: Conforme al Articulo 6 de la Ley 141-2019 y al texto del propio formulario, el '
+  + 'termino para la entrega comienza a computarse desde la fecha de envio de este correo.\n';
+}
+document.getElementById('btnMail').onclick = function(){
+  var m = falta();
+  var av = document.getElementById('aviso');
+  if(m.length){ av.textContent = 'Te falta: ' + m.join(', ') + '.'; return; }
+  av.textContent = '';
+  var asunto = 'Solicitud de Informacion Publica (Ley 141-2019) - ' + g('nombre');
+  var url = 'mailto:' + DEST.join(',') + '?cc=' + encodeURIComponent(CC)
+          + '&subject=' + encodeURIComponent(asunto)
+          + '&body=' + encodeURIComponent(cuerpo());
+  if(url.length > 1900){
+    av.textContent = 'Tu descripcion es muy larga para abrir el correo automaticamente. Usa el boton de imprimir y copia el texto a mano.';
+    render(); window.scrollTo(0, document.body.scrollHeight);
+    return;
+  }
+  window.location.href = url;
+};
+function render(){
+  var of = g('oficina') || 'Se desconoce';
+  document.getElementById('salida').innerHTML =
+    '<div style="text-align:center;border-bottom:2px solid #000;padding-bottom:10px;margin-bottom:14px">'
+    + '<div style="font-weight:700">GOBIERNO DE PUERTO RICO<br>MUNICIPIO AUTONOMO DE CABO ROJO<br>OFICIALES DE INFORMACION</div>'
+    + '<div style="font-weight:700;margin-top:8px">SOLICITUD DE INFORMACION PUBLICA</div>'
+    + '<div style="font-size:12px;margin-top:4px">[Ley 141-2019, segun enmendada y la Ordenanza Num. 26, Serie 2025-2026]</div></div>'
+    + '<p><span class="lbl">Fecha:</span> <span class="v">' + hoy() + '</span></p>'
+    + '<h3>I. Informacion del Peticionario</h3>'
+    + '<p><span class="lbl">Tipo:</span> Persona natural<br>'
+    + '<span class="lbl">Nombre:</span> <span class="v">' + esc(g('nombre')) + '</span><br>'
+    + '<span class="lbl">Direccion fisica:</span> ' + esc(g('dirf')) + '<br>'
+    + '<span class="lbl">Direccion postal:</span> ' + esc(g('dirf')) + '<br>'
+    + '<span class="lbl">Correo:</span> ' + esc(g('email')) + '<br>'
+    + '<span class="lbl">Telefono:</span> ' + esc(g('tel') || 'No provisto') + '</p>'
+    + '<h3>II. Dependencia u oficina que custodia la informacion</h3><p>' + esc(of) + '</p>'
+    + '<h3>III. Descripcion de la informacion solicitada</h3><p style="white-space:pre-wrap">' + esc(g('pide')) + '</p>'
+    + '<p style="margin-top:8px;font-size:13px">No solicito la creacion de ningun documento, solo copia de lo que exista al dia de hoy con sus fechas. Cada partida es independiente y puede entregarse por separado.</p>'
+    + '<p style="margin-top:8px">[X] Solicito copia de la informacion</p>'
+    + '<h3>IV. Informacion relacionada con terceros</h3><p>[X] No involucra a terceros</p>'
+    + '<h3>V. Formato solicitado</h3><p>[X] Copia digital (PDF) &nbsp; [X] Correo electronico a ' + esc(g('email')) + '</p>'
+    + '<h3>VI. Medio de presentacion</h3><p>[X] Via electronica al correo electronico</p>'
+    + '<p style="margin-top:14px;font-size:13px">Declaro que la informacion provista es correcta y que la solicitud se presenta conforme a la reglamentacion vigente del Municipio Autonomo de Cabo Rojo y a la Ley 141-2019.</p>'
+    + '<p style="margin-top:22px">Nombre en letra de molde: <span class="v">' + esc(g('nombre').toUpperCase()) + '</span></p>'
+    + '<p style="margin-top:26px">Firma del Peticionario: ______________________________</p>';
+}
+function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+document.getElementById('btnPrint').onclick = function(){
+  var m = falta();
+  var av = document.getElementById('aviso');
+  if(m.length){ av.textContent = 'Te falta: ' + m.join(', ') + '.'; return; }
+  av.textContent = '';
+  render();
+  window.print();
+};
+</script>
+</body>
+</html>
