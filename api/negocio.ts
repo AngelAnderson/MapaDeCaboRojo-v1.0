@@ -31,21 +31,52 @@ function esc(str: string | null | undefined): string {
     .replace(/'/g, '&#39;');
 }
 
+// `opening_hours.structured` ships as an ARRAY of {day:0-6, open, close, isClosed}
+// (day 0 = domingo) on 938 of 938 rows that carry hours — it is what the Google
+// Places import writes. Every consumer here read it as an object keyed by Spanish
+// day name, which no row has ever used. Consequences, all confirmed live on
+// 2026-08-17 at /negocio/banco-popular-…: the schedule rendered as "0: 08:00 –
+// 16:00" (the array index printed as the day), the JSON-LD emitted the invalid
+// `openingHours: ["0 08:00-16:00", …]` so Google could not build an hours rich
+// result, and isOpenNow's day-name lookup could never hit, so all 923 published
+// businesses with real hours displayed "Cerrado ahora" around the clock.
+// Normalize once, here, and accept both shapes.
+const DAY_ES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const DAY_ABBR = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+const DAY_INDEX: Record<string, number> = {
+  domingo: 0, lunes: 1, martes: 2, miercoles: 3, 'miércoles': 3, jueves: 4, viernes: 5, sabado: 6, 'sábado': 6,
+  sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6,
+};
+
+// → { 0..6: {open, close} }, only days that actually open.
+function normalizeHours(opening_hours: any): Record<number, { open: string; close: string }> | null {
+  const s = opening_hours?.structured;
+  if (!s || typeof s !== 'object') return null;
+  const out: Record<number, { open: string; close: string }> = {};
+  const entries: Array<[string, any]> = Array.isArray(s)
+    ? s.map((v: any) => [String(v?.day ?? ''), v])
+    : Object.entries(s);
+  for (const [key, val] of entries) {
+    if (!val || typeof val !== 'object' || val.isClosed === true || !val.open) continue;
+    const idx = /^[0-6]$/.test(key) ? Number(key) : DAY_INDEX[key.toLowerCase()];
+    if (idx === undefined) continue;
+    out[idx] = { open: String(val.open), close: String(val.close || val.open) };
+  }
+  return Object.keys(out).length ? out : null;
+}
+
 function formatHours(opening_hours: any): string {
   if (!opening_hours) return 'No disponible';
   if (opening_hours.note) return esc(opening_hours.note);
   if (opening_hours.type === 'always_open') return 'Abierto 24 horas';
-  if (opening_hours.structured) {
-    const days: string[] = [];
-    const structured = opening_hours.structured;
-    for (const [day, hours] of Object.entries(structured)) {
-      if (hours && typeof hours === 'object' && (hours as any).open) {
-        days.push(`${day}: ${(hours as any).open} – ${(hours as any).close}`);
-      }
-    }
-    return days.length > 0 ? days.join(', ') : 'No disponible';
-  }
-  return 'No disponible';
+  const norm = normalizeHours(opening_hours);
+  if (!norm) return 'No disponible';
+  // Monday first: a Puerto Rican reads the week starting Monday, not Sunday.
+  const order = [1, 2, 3, 4, 5, 6, 0];
+  const days = order
+    .filter((i) => norm[i])
+    .map((i) => `${DAY_ES[i]}: ${esc(norm[i].open)} – ${esc(norm[i].close)}`);
+  return days.length > 0 ? days.join(', ') : 'No disponible';
 }
 
 // The DB stores phones in E.164 (+17875551234). Showing that raw reads like a
@@ -100,12 +131,11 @@ function formatAmenity(amenities: any, key: string): string {
 function isOpenNow(opening_hours: any): boolean | null {
   if (!opening_hours) return null;
   if (opening_hours.type === 'always_open') return true;
-  const structured = opening_hours.structured;
-  if (!structured) return null;
+  const norm = normalizeHours(opening_hours);
+  if (!norm) return null;
   const now = new Date(Date.now() - 4 * 3600 * 1000); // UTC-4
-  const dayNames = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
-  const today = structured[dayNames[now.getUTCDay()]];
-  if (!today || typeof today !== 'object' || !(today as any).open) return false;
+  const today = norm[now.getUTCDay()];
+  if (!today) return false;
   const toMin = (t: string) => {
     const m = /^(\d{1,2}):(\d{2})\s*(AM|PM)?/i.exec(t.trim());
     if (!m) return null;
@@ -119,22 +149,79 @@ function isOpenNow(opening_hours: any): boolean | null {
   return close > open ? cur >= open && cur < close : cur >= open || cur < close; // handles overnight
 }
 
-function jsonLdOpeningHours(opening_hours: any): string[] {
-  if (!opening_hours || !opening_hours.structured) return [];
-  const dayMap: Record<string, string> = {
-    lunes: 'Mo', martes: 'Tu', miercoles: 'We', jueves: 'Th',
-    viernes: 'Fr', sabado: 'Sa', domingo: 'Su',
-    monday: 'Mo', tuesday: 'Tu', wednesday: 'We', thursday: 'Th',
-    friday: 'Fr', saturday: 'Sa', sunday: 'Su',
-  };
-  const specs: string[] = [];
-  for (const [day, hours] of Object.entries(opening_hours.structured)) {
-    if (hours && typeof hours === 'object' && (hours as any).open) {
-      const abbr = dayMap[day.toLowerCase()] || day;
-      specs.push(`${abbr} ${(hours as any).open}-${(hours as any).close}`);
-    }
+// ── Promise only what the row can answer ─────────────────────────────────────
+// The <title> used to read "· Teléfono, Horario y Dirección" on every listing,
+// unconditionally. On 2026-08-17 that promise was false on 34,758 of 35,756
+// published pages (opening_hours = '{}') and 2,208 had no phone either. The
+// searcher clicks looking for the hours, finds none, and bounces: that is the
+// 0.2%-CTR-at-position-5 we keep paying for. Worse, the snippet also claimed
+// "datos verificados" on 29,236 rows with last_verified_at NULL — and the
+// dated verification stamp IS the product, so a fake one costs more than a
+// missing one. Both strings are now built from the columns that exist.
+function hasRealHours(place: any): boolean {
+  const oh = place.opening_hours;
+  if (oh && typeof oh === 'object') {
+    if (oh.type === 'always_open') return true;
+    const s = oh.structured;
+    if (s && typeof s === 'object' && Object.values(s).some((h: any) => h && typeof h === 'object' && h.open)) return true;
   }
-  return specs;
+  return typeof place.hours === 'string' && place.hours.trim() !== '';
+}
+
+// "a, b y c" — Spanish list, no Oxford comma, no dangling "y".
+function joinEs(items: string[]): string {
+  if (items.length <= 1) return items[0] || '';
+  return `${items.slice(0, -1).join(', ')} y ${items[items.length - 1]}`;
+}
+
+// Builds the strongest title the data can back, shrinking the promise (never
+// the business name) until it fits the ~60 chars Google renders.
+function honestTitle(place: any, name: string, muni: string): string {
+  const facts: string[] = [];
+  if (place.phone) facts.push('Teléfono');
+  if (hasRealHours(place)) facts.push('Horario');
+  if (place.address) facts.push('Dirección');
+  const base = `${name} en ${muni}`;
+  if (!facts.length) return cutAtWord(`${base} · ${categoryLabel(place)}`, 60);
+  for (let n = facts.length; n >= 1; n--) {
+    const candidate = `${base} · ${joinEs(facts.slice(0, n))}`;
+    if (candidate.length <= 60) return candidate;
+  }
+  return cutAtWord(`${base} · ${facts[0]}`, 60);
+}
+
+// "Verificado a mano el 06/08/2026" is a claim with a receipt. Absent a date,
+// the snippet says nothing about verification rather than inventing it.
+function verifiedTail(place: any): string {
+  const raw = place.last_verified_at || place.verified_at;
+  if (!raw) return '';
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return '';
+  const dd = String(d.getUTCDate()).padStart(2, '0');
+  const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+  return ` · Verificado a mano el ${dd}/${mm}/${d.getUTCFullYear()}.`;
+}
+
+// schema.org openingHours wants "Mo 08:00-16:00". It was emitting "0 08:00-16:00"
+// (the array index, unmapped), which is not a valid day token, so Google dropped
+// the hours instead of showing them in the result.
+function jsonLdOpeningHours(opening_hours: any): string[] {
+  if (opening_hours?.type === 'always_open') return ['Mo-Su 00:00-23:59'];
+  const norm = normalizeHours(opening_hours);
+  if (!norm) return [];
+  const order = [1, 2, 3, 4, 5, 6, 0];
+  return order
+    .filter((i) => norm[i])
+    .map((i) => `${DAY_ABBR[i]} ${to24h(norm[i].open)}-${to24h(norm[i].close)}`);
+}
+
+// "8:00 AM" → "08:00". Values already in 24h pass through untouched.
+function to24h(t: string): string {
+  const m = /^(\d{1,2}):(\d{2})\s*(AM|PM)?/i.exec(String(t).trim());
+  if (!m) return String(t);
+  let h = parseInt(m[1], 10);
+  if (m[3]) { const pm = m[3].toUpperCase() === 'PM'; if (pm && h < 12) h += 12; if (!pm && h === 12) h = 0; }
+  return `${String(h).padStart(2, '0')}:${m[2]}`;
 }
 
 export default async function handler(req: any, res: any) {
@@ -200,7 +287,7 @@ export default async function handler(req: any, res: any) {
   // seo_title/seo_description are overrides written by the fabrica-seo nightly engine.
   const title = place.seo_title
     ? esc(place.seo_title)
-    : `${esc(place.name)} en ${muni} · Teléfono, Horario y Dirección`;
+    : esc(honestTitle(place, String(place.name || ''), muniRaw));
   // The phone goes in the SERP snippet, so it has to read like a boricua writes it.
   // It was printing the raw E.164 ("Tel. +17874761253") on every listing without a
   // seo_description override — 32k pages showing a database dump where the searcher
@@ -211,9 +298,10 @@ export default async function handler(req: any, res: any) {
   // The trust line is appended only when it fits whole. Pushing it into the array and
   // cutting afterwards left a dangling "· Horario" on every listing with a long address.
   const descCore = descParts.join(' · ');
-  const descTail = descCore.length + 41 <= 158
-    ? ' · Horario, dirección y datos verificados.'
-    : (descCore.length + 21 <= 158 ? ' · Verificado a mano.' : '');
+  // The tail is a dated claim or nothing at all. It used to say "datos
+  // verificados" on any row, verified or not (29,236 of them).
+  const tailFull = verifiedTail(place);
+  const descTail = tailFull && descCore.length + tailFull.length <= 158 ? tailFull : '';
   const description = esc(place.seo_description
     ? cutAtWord(String(place.seo_description), 158)
     : descCore.length > 158 ? cutAtWord(descCore, 158) : descCore + descTail);
