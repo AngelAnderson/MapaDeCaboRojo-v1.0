@@ -179,14 +179,20 @@ export function fechaVerificacion(place: any): string | null {
  * quien le da el credito.
  */
 export function paginaLd(opts: { url: string; nombreNegocio: string; fechaIso?: string | null }): any {
+  // El comentario de fechaVerificacion (arriba) advierte de esto y esta funcion lo
+  // cometia: llamaba "ficha verificada" a toda ficha y, sin fecha real, ponia
+  // dateModified = hoy. O sea, le declaraba a Google que un humano miro el negocio
+  // hoy en 29,236 fichas que nadie ha mirado nunca. El sello con fecha es el
+  // producto; sin fecha no se dice nada, ni en el nombre ni en dateModified.
+  const verificada = !!opts.fechaIso;
   return {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
     '@id': opts.url,
     url: opts.url,
-    name: `${opts.nombreNegocio} — ficha verificada`,
+    name: verificada ? `${opts.nombreNegocio} — ficha verificada` : `${opts.nombreNegocio} — ficha del directorio`,
     inLanguage: 'es-PR',
-    dateModified: (opts.fechaIso ? new Date(opts.fechaIso) : new Date()).toISOString().slice(0, 10),
+    ...(verificada ? { dateModified: new Date(opts.fechaIso as string).toISOString().slice(0, 10) } : {}),
     author: VERIFICADOR,
     publisher: EDITOR_RED,
     isPartOf: { '@type': 'WebSite', '@id': 'https://www.mapadecaborojo.com#website', name: 'MapaDeCaboRojo.com', url: 'https://www.mapadecaborojo.com' },
