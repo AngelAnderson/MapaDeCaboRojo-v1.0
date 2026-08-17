@@ -239,6 +239,10 @@ export default async function handler(req: any, res: any) {
       // Nació el 15 ago 2026 y se quedó fuera de esta lista, así que el crawler
       // no tenía por dónde llegarle. Misma prioridad que su par.
       { slug: 'registro/opciones', priority: 0.9, changefreq: 'monthly' },
+      // El internado de psicología: la página se escribe una vez y se consulta
+      // cada año, en el ciclo del APPIC Match. Se anuncia desde el día 1 porque
+      // la busca gente que está decidiendo si se muda, no gente navegando.
+      { slug: 'internado-psicologia', priority: 0.9, changefreq: 'monthly' },
       // El clúster de cuido de mayores: existían, servían 200 desde los 3 dominios
       // y ningún sitemap las anunciaba. Ya tienen dueño en PAGE_CANONICAL.
       { slug: 'cuido', priority: 0.8, changefreq: 'monthly' },                 // hogares de cuido licenciados por Familia
