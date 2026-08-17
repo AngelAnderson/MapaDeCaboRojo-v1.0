@@ -8529,6 +8529,8 @@ async function handleInternadoPsicologia(req: any, res: any) {
      'El Artículo 17 vigente no le pone restricción geográfica al internado. Lo que sí regula es tu programa académico: no puede ser completamente a distancia, ni ofrecer más de 30% de los cursos a distancia, y esos cursos tienen que ser de naturaleza mayormente teórica.'],
     ['¿Se puede ejercer psicología en Puerto Rico con maestría?',
      'Sí, en 5 de las 6 áreas de práctica. La excepción es Psicología Clínica, que requiere grado doctoral. Eso está en la Sección 17.1 del reglamento vigente.'],
+    ['Si me voy y me licencio en otro estado, ¿puedo volver a ejercer en Puerto Rico?',
+     'Sí, pero por la vía de endoso hay reloj. El Reglamento Núm. 9746 de 25 de febrero de 2026, para el reconocimiento universal de licencias, pide en su Artículo 10 tener la licencia del otro estado por lo menos 1 año, haber ejercido de manera continua un mínimo de 3 años consecutivos antes de solicitar en Puerto Rico, y no haber estado inactivo más de 1 año. El endoso es una de 3 vías; las otras son examen y reciprocidad, y esas no cargan ese reloj.'],
     ['¿Cuándo son las fechas del APPIC Match para empezar en 2027?',
      'El registro abrió en julio de 2026. La fecha límite para someter la Rank Order List de Phase I es el viernes 5 de febrero de 2027 a las 11:59 p.m. ET, y el Match Day de Phase I es el viernes 19 de febrero de 2027 a las 9:00 a.m. ET. Phase II cierra aplicaciones el 25 de febrero de 2027 y su Match Day es el 24 de marzo de 2027.'],
   ]
@@ -8596,6 +8598,23 @@ async function handleInternadoPsicologia(req: any, res: any) {
     <p class="text-sm text-slate-800 m-0"><b>Las fechas del ciclo que empieza en 2027</b> (appic.org, consultado el 17 de agosto de 2026): el registro abrió en <b>julio de 2026</b>. La Rank Order List de Phase I cierra el <b>viernes 5 de febrero de 2027</b> a las 11:59 p.m. ET y el Match Day es el <b>viernes 19 de febrero de 2027</b> a las 9:00 a.m. ET. Phase II cierra aplicaciones el <b>25 de febrero de 2027</b> y su Match Day es el <b>24 de marzo de 2027</b>. Cada programa pone su propia fecha límite de la AAPI, así que esa hay que preguntarla programa por programa.</p>
   </div>
 
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Si te vas: la puerta de regreso tiene reloj, y es de 3 años</h2>
+  <p class="text-sm text-slate-600 mb-4">Esto es de febrero de 2026 y casi nadie lo ha leído todavía. Cambia el cálculo de irse, así que va antes de comprar boleto.</p>
+
+  <div class="border-l-4 border-amber-400 bg-amber-50 rounded-r-xl p-4">
+    <p class="text-sm text-slate-800 mt-0"><b>Reglamento Núm. 9746 de 25 de febrero de 2026</b>, para el reconocimiento universal de licencias ocupacionales y profesionales en Puerto Rico. Es el que rige cuando alguien con licencia de otro estado quiere ejercer aquí. Su Artículo 10 pide, entre otras cosas:</p>
+    <ul class="text-sm text-slate-800 list-disc pl-5 space-y-1 mt-2">
+      <li>Tener la licencia del otro estado <b>por lo menos 1 año</b>.</li>
+      <li>Haber <b>ejercido de manera continua un mínimo de 3 años consecutivos</b> antes de solicitar en Puerto Rico.</li>
+      <li>No haber estado inactivo en la profesión <b>más de 1 año</b> antes de solicitar.</li>
+      <li>Estar en <i>good standing</i>, sin licencias revocadas ni querellas pendientes en ninguna jurisdicción donde hayas tenido licencia.</li>
+      <li>La Junta local puede pedirte además <b>un examen de leyes y reglamentos de Puerto Rico</b>, sin repetir exámenes generales que ya aprobaste.</li>
+    </ul>
+    <p class="text-sm text-slate-800 mb-0 mt-3">Léelo bien: <b>irse no es un rodeo de 1 año.</b> Por esta vía, la de endoso, el regreso pide 3 años de ejercicio continuo afuera. Eso no es un año fuera y vuelves.</p>
+  </div>
+
+  <p class="text-sm text-slate-600 mt-3"><b>Lo que esto NO quiere decir:</b> que no puedas volver antes. El endoso es <b>una</b> de las 3 vías por las que la Junta expide licencia. Las otras 2 son <b>examen</b> y <b>reciprocidad</b>, y esas no cargan el reloj de 3 años. Lo que cambia es que la vía fácil, la de traer la licencia hecha, dejó de ser la vía rápida. Cuál te conviene depende de tu caso, y eso se pregunta por escrito.</p>
+
   <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">¿Y hay quién supervise aquí?</h2>
   <p class="text-sm text-slate-600 mb-4">Psicólogos con NPI activo ejerciendo en Puerto Rico, por región, según el registro federal. Son ${totalPsi.toLocaleString('en-US')} en total.</p>
   <div class="overflow-x-auto border border-slate-200 rounded-xl max-w-sm">
@@ -8625,6 +8644,7 @@ async function handleInternadoPsicologia(req: any, res: any) {
     <li>Áreas de práctica, grados y horas: <b>Reglamento Núm. 9509 de 11 de octubre de 2023</b>, enmienda al Artículo 17 del Reglamento Núm. 9314 de 7 de octubre de 2021, Junta Examinadora de Psicólogos de Puerto Rico. Radicado en el Departamento de Estado. Leído en <a href="https://www.salud.pr.gov/CMS/DOWNLOAD/10075" class="text-teal-700 underline">salud.pr.gov</a> el 17 de agosto de 2026.</li>
     <li>Las 1,800 horas anteriores de psicología escolar doctoral: <b>Reglamento Núm. 9314 de 7 de octubre de 2021</b>, Artículo 17.</li>
     <li>Programas, rotaciones, acreditación y Match Codes: <b>APPIC Match, lista final de programas participantes de Phase I</b>, natmatch.com/psychint. Consultado el 17 de agosto de 2026.</li>
+    <li>El reloj de 3 años para volver por endoso: <b>Reglamento Núm. 9746 de 25 de febrero de 2026</b>, Reglamento para el Reconocimiento Universal de Licencias Ocupacionales y Licencias Profesionales en Puerto Rico, Artículo 10. Departamento de Estado. Leído el 17 de agosto de 2026.</li>
     <li>Fechas del Match 2027: appic.org. Consultado el 17 de agosto de 2026.</li>
     <li>Psicólogos por región: registro federal NPPES, según el substrato de Registro Médico PR. Consultado el 17 de agosto de 2026.</li>
   </ul>
