@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { correctButtonHtml } from './_lib/correct-button.js';
 import { bloqueProcedencia, paginaLd, ldScript, CATEGORIA_ENLACE_ES } from './_lib/procedencia.js';
+import { slugVivoPara } from './_lib/redirect-archivada.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -262,6 +263,14 @@ export default async function handler(req: any, res: any) {
   }
 
   if (!place) {
+    // Antes de dar 404: la ficha puede estar archivada con un gemelo vivo. RLS no
+    // deja al anon key ver las archivadas, así que la única forma de saberlo es
+    // `place_redirects`, que solo tiene los casos inequívocos.
+    const vivo = await slugVivoPara(supabase, slug);
+    if (vivo) {
+      res.writeHead(301, { Location: `https://www.mapadecaborojo.com/negocio/${vivo}` });
+      return res.end();
+    }
     res.status(404).send(`<!DOCTYPE html>
 <html lang="es">
 <head><meta charset="UTF-8"><title>Negocio no encontrado | MapaDeCaboRojo.com</title></head>

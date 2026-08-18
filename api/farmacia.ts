@@ -22,6 +22,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { correctButtonHtml } from './_lib/correct-button.js';
 import { paginaLd, ldScript } from './_lib/procedencia.js';
+import { slugVivoPara } from './_lib/redirect-archivada.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -176,6 +177,14 @@ export default async function handler(req: any, res: any) {
   }
 
   if (!place) {
+    // Ficha archivada con gemelo vivo: se redirige en vez de dar 404. Era el caso
+    // de /gimnasio/dr-luis-pagan-marrero-cardiologia-cabo-rojo (102 impresiones/mes
+    // contra un 404, con el mismo cardiólogo publicado a un slug de distancia).
+    const vivo = await slugVivoPara(supabase, slug);
+    if (vivo) {
+      res.writeHead(301, { Location: `${siteOrigin}/negocio/${vivo}` });
+      return res.end();
+    }
     res.status(404).send(`<!DOCTYPE html>
 <html lang="es">
 <head><meta charset="UTF-8"><title>${config.label} no encontrado | ${brandDomain}</title></head>
