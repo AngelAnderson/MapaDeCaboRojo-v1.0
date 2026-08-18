@@ -346,12 +346,22 @@ async function mcpGetCategories() {
 async function mcpGetOpenNow(params: { category?: string }) {
   const { category } = params;
 
+  // El limit(50) corria ANTES del filtro, asi que "abierto ahora" devolvia 50
+  // filas cualesquiera del directorio menos las que se sabian cerradas: medido el
+  // 17 ago a las 11:16pm daba 49 resultados y 8 de los primeros eran medicos del
+  // NPPES sin horario. Una lista de "abiertos" donde el 97% no tiene horario no
+  // es una lista de abiertos, es el directorio con otro nombre.
+  //
+  // Ahora solo entran las fichas que DE VERDAD declaran horario (924 al 17 ago) o
+  // que son 24 horas. Devuelve menos y dice la verdad, que es el punto de un
+  // endpoint que un modelo va a citar.
   let dbQuery = supabase
     .from('places')
     .select('name, slug, category, address, phone, website, opening_hours')
     .eq('status', 'open')
     .eq('visibility', 'published')
-    .limit(50);
+    .not('opening_hours->structured', 'is', null)
+    .limit(1000);
 
   if (category) {
     dbQuery = dbQuery.ilike('category', `%${category}%`);
@@ -397,7 +407,8 @@ async function mcpGetOpenNow(params: { category?: string }) {
     if (abierto) results.push(b);
   }
 
-  return results.map((b: any) => ({
+  // El corte va DESPUES de filtrar, no antes.
+  return results.slice(0, 50).map((b: any) => ({
     name: escapeHtml(b.name),
     slug: b.slug,
     category: escapeHtml(b.category),
