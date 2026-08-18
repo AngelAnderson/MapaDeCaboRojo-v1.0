@@ -395,8 +395,14 @@ async function mcpGetOpenNow(params: { category?: string }) {
     // "abierto ahora" seria peor que incluir a alguno cerrado.
     if (!hours) { results.push(b); continue; }
     if (esSiempreAbierto(hours)) { results.push(b); continue; }
+    // structured presente pero sin un solo dia abierto = CERRADO, no "no se".
+    // El Cabo Rojo National Wildlife Refuge trae los 7 dias con isClosed:true y
+    // salia listado como abierto a las 11pm de un lunes.
     const norm = normalizarHorario(hours);
-    if (!norm) { results.push(b); continue; }
+    if (!norm) {
+      if (hours.structured) continue; // declara horario y no abre ningun dia
+      results.push(b); continue;      // de verdad no sabemos
+    }
     const hoy = norm[diaPR];
     if (!hoy) continue; // hoy no abre
     const abre = aMinutos(hoy.open), cierra = aMinutos(hoy.close);
