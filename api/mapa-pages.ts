@@ -19188,7 +19188,10 @@ async function handleRegistroCenso(req: any, res: any) {
   if (!Object.keys(papel).length) papel = { 'Mayagüez': 1152, 'San Germán': 322, 'Cabo Rojo': 245, 'Añasco': 114, 'Sabana Grande': 88, 'Hormigueros': 85, 'Lajas': 82 }
   // Cols 2-3 "verificados" / "cogiendo pacientes": registro_provider_status → places (live; sube sola)
   const ver: Record<string, { v: number; acc: number }> = {}
-  const detalle: Array<{ nombre: string; pueblo: string; tipo: string; tel: string; coge: boolean; fecha: string }> = []
+  // `coge` es boolean | null a proposito. Aplastar null a false hacia que 8 proveedores
+  // que NUNCA contestaron salieran publicados como que rechazaron pacientes (17 ago 2026).
+  // Nadie ha dicho que no; simplemente no han contestado, y eso es otra cosa.
+  const detalle: Array<{ nombre: string; pueblo: string; tipo: string; tel: string; coge: boolean | null; fecha: string }> = []
   let totVer = 0, totAcc = 0, lastVer = ''
   try {
     const { data: st } = await supabase.from('registro_provider_status').select('place_slug,accepting_patients,verified_at')
@@ -19206,7 +19209,7 @@ async function handleRegistroCenso(req: any, res: any) {
         detalle.push({
           nombre: p.name, pueblo: p.municipality || '',
           tipo: p.subcategory || p.category || '', tel: p.phone || '',
-          coge: x.accepting_patients === true, fecha: String(x.verified_at || ''),
+          coge: x.accepting_patients, fecha: String(x.verified_at || ''),
         })
       })
       st.forEach((x: any) => {
@@ -19311,17 +19314,19 @@ ${detalle.filter(d => d.coge).sort((a, b) => (b.fecha > a.fecha ? 1 : -1)).map(d
     <div class="text-xs text-slate-400 mt-1">confirmado el ${escapeHtml(d.fecha)}</div>
   </div>`).join('')}
 </div>
-${detalle.some(d => !d.coge) ? `
+${detalle.some(d => d.coge === false) ? `
 <h3 class="text-lg font-black text-slate-900 mt-8">Y los que dijeron que no, que también hay que publicarlos</h3>
 <p class="text-sm text-slate-500 mt-1">Un registro que solo publica las buenas noticias no sirve para decidir. Estos contestaron que por ahora no están cogiendo pacientes nuevos. No es una queja contra ellos: es el dato que te ahorra la llamada.</p>
 <div class="mt-3 bg-white border border-slate-200 rounded-xl divide-y divide-slate-100">
-${detalle.filter(d => !d.coge).sort((a, b) => (b.fecha > a.fecha ? 1 : -1)).map(d => `
+${detalle.filter(d => d.coge === false).sort((a, b) => (b.fecha > a.fecha ? 1 : -1)).map(d => `
   <div class="flex flex-wrap items-baseline justify-between gap-2 px-4 py-2.5 text-sm">
     <span class="font-semibold text-slate-800">${escapeHtml(d.nombre)}</span>
     <span class="text-slate-500">${escapeHtml([d.tipo, d.pueblo].filter(Boolean).join(' · '))}</span>
     <span class="text-xs text-slate-400">no cogía el ${escapeHtml(d.fecha)}</span>
   </div>`).join('')}
 </div>` : ''}
+${detalle.some(d => d.coge === null) ? `
+<p class="text-sm text-slate-500 mt-6">Hay ${detalle.filter(d => d.coge === null).length} fichas más que su propia oficina corrigió, pero a las que todavía no les hemos preguntado si están cogiendo pacientes. No aparecen arriba porque no han contestado, y no contestar no es decir que no.</p>` : ''}
 ` : ''}
 
 <h2 class="text-2xl font-black text-slate-900 mt-10">Cómo se llena esto</h2>
