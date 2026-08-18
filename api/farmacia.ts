@@ -62,7 +62,10 @@ const DAY_NAMES_ES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Vie
 function formatHours(opening_hours: any): string {
   if (!opening_hours) return 'No disponible';
   if (opening_hours.note) return esc(opening_hours.note);
-  if (opening_hours.type === 'always_open') return 'Abierto 24 horas';
+  // 'always_open' (1 fila) y '24_7' (12) conviven en la data: entraron por
+  // importadores distintos. Cada archivo chequeaba solo una, asi que los 12
+  // negocios de 24 horas salian sin horario en las paginas del servidor.
+  if (opening_hours.type === 'always_open' || opening_hours.type === '24_7') return 'Abierto 24 horas';
   if (opening_hours.formatted && typeof opening_hours.formatted === 'string') return esc(opening_hours.formatted);
   if (Array.isArray(opening_hours.structured)) {
     const lines: string[] = [];

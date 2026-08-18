@@ -57,7 +57,10 @@ function formatTime12h(hhmm: string): string {
 // deno-lint-ignore no-explicit-any
 function getOpenStatusLabel(opening_hours: any): string | null {
   if (!opening_hours || typeof opening_hours !== 'object') return null;
-  if (opening_hours.type === 'always_open') return '🟢 Abierto 24h';
+  // 'always_open' (1 fila) y '24_7' (12) conviven en la data: entraron por
+  // importadores distintos. Cada archivo chequeaba solo una, asi que los 12
+  // negocios de 24 horas salian sin horario en las paginas del servidor.
+  if (opening_hours.type === 'always_open' || opening_hours.type === '24_7') return '🟢 Abierto 24h';
   if (!Array.isArray(opening_hours.structured) || opening_hours.structured.length === 0) return null;
 
   // Puerto Rico = UTC-4 (no DST)
@@ -834,7 +837,10 @@ export default async function handler(req: any, res: any) {
                 // client script below rewrites it against the real current time.
                 const oh: any = p.opening_hours || {};
                 const payload = esc(JSON.stringify({
-                  type: oh.type === 'always_open' ? 'always_open' : 'fixed',
+                  // Esto aplastaba '24_7' a 'fixed' antes de mandarlo al cliente,
+                  // y el componente React solo reconoce '24_7': las 12 filas de 24
+                  // horas llegaban al navegador como horario fijo sin horas.
+                  type: (oh.type === 'always_open' || oh.type === '24_7') ? '24_7' : oh.type === 'sunrise_sunset' ? 'sunrise_sunset' : 'fixed',
                   structured: Array.isArray(oh.structured)
                     ? oh.structured.map((e: any) => ({ day: e.day, open: e.open, close: e.close, isClosed: !!e.isClosed }))
                     : [],
@@ -1450,7 +1456,7 @@ export default async function handler(req: any, res: any) {
     }
     function label(oh) {
       if (!oh) return null;
-      if (oh.type === 'always_open') return '🟢 Abierto 24h';
+      if (oh.type === 'always_open' || oh.type === '24_7') return '🟢 Abierto 24h';
       if (!oh.structured || !oh.structured.length) return null;
       var n = prParts(), byDay = {};
       oh.structured.forEach(function (e) { byDay[e.day] = e; });

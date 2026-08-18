@@ -65,10 +65,18 @@ function normalizeHours(opening_hours: any): Record<number, { open: string; clos
   return Object.keys(out).length ? out : null;
 }
 
+// 'always_open' y '24_7' conviven en la data (1 fila y 12 al 17 ago 2026) porque
+// entraron por importadores distintos. Este archivo solo miraba la primera, asi
+// que los 12 negocios de 24 horas se renderizaban como si no tuvieran horario.
+function esSiempreAbierto(opening_hours: any): boolean {
+  const t = opening_hours?.type;
+  return t === 'always_open' || t === '24_7' || opening_hours?.always_open === true;
+}
+
 function formatHours(opening_hours: any): string {
   if (!opening_hours) return 'No disponible';
   if (opening_hours.note) return esc(opening_hours.note);
-  if (opening_hours.type === 'always_open') return 'Abierto 24 horas';
+  if (esSiempreAbierto(opening_hours)) return 'Abierto 24 horas';
   const norm = normalizeHours(opening_hours);
   if (!norm) return 'No disponible';
   // Monday first: a Puerto Rican reads the week starting Monday, not Sunday.
@@ -130,7 +138,7 @@ function formatAmenity(amenities: any, key: string): string {
 // Returns null when hours are unknown (fall back to the status flag).
 function isOpenNow(opening_hours: any): boolean | null {
   if (!opening_hours) return null;
-  if (opening_hours.type === 'always_open') return true;
+  if (esSiempreAbierto(opening_hours)) return true;
   const norm = normalizeHours(opening_hours);
   if (!norm) return null;
   const now = new Date(Date.now() - 4 * 3600 * 1000); // UTC-4
@@ -161,7 +169,7 @@ function isOpenNow(opening_hours: any): boolean | null {
 function hasRealHours(place: any): boolean {
   const oh = place.opening_hours;
   if (oh && typeof oh === 'object') {
-    if (oh.type === 'always_open') return true;
+    if (esSiempreAbierto(oh)) return true;
     const s = oh.structured;
     if (s && typeof s === 'object' && Object.values(s).some((h: any) => h && typeof h === 'object' && h.open)) return true;
   }
@@ -206,7 +214,7 @@ function verifiedTail(place: any): string {
 // (the array index, unmapped), which is not a valid day token, so Google dropped
 // the hours instead of showing them in the result.
 function jsonLdOpeningHours(opening_hours: any): string[] {
-  if (opening_hours?.type === 'always_open') return ['Mo-Su 00:00-23:59'];
+  if (esSiempreAbierto(opening_hours)) return ['Mo-Su 00:00-23:59'];
   const norm = normalizeHours(opening_hours);
   if (!norm) return [];
   const order = [1, 2, 3, 4, 5, 6, 0];

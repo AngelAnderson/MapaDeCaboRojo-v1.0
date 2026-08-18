@@ -108,20 +108,53 @@ async function handlePlaces(req: any, res: any) {
 // ACTION: llms-full  (formerly api/llms-full.ts)
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// `opening_hours.structured` es un ARREGLO de {day:0-6, open, close, isClosed}
+// (day 0 = domingo) en las 924 filas publicadas que traen horario. Esto lo leia
+// con Object.entries, o sea imprimia el INDICE del arreglo como nombre del dia.
+// Medido el 17 ago 2026 en el archivo vivo: 859 negocios le decian a los
+// crawlers de IA "Horario: 0: 07:00-13:00, 1: 06:00-18:00...". Este archivo es
+// exactamente lo que GPTBot y ClaudeBot barrieron completo el 14 y 15 de agosto,
+// asi que el dato malo no se queda aqui: se va a la respuesta que le dan al
+// vecino. Ademas 'always_open' y '24_7' conviven en la data (1 y 12 filas) y
+// cada archivo chequeaba solo uno.
+const DIAS_ES = ['domingo', 'lunes', 'martes', 'mi\u00e9rcoles', 'jueves', 'viernes', 's\u00e1bado'];
+const DIA_A_INDICE: Record<string, number> = {
+  domingo: 0, lunes: 1, martes: 2, miercoles: 3, 'mi\u00e9rcoles': 3, jueves: 4, viernes: 5,
+  sabado: 6, 's\u00e1bado': 6, sunday: 0, monday: 1, tuesday: 2, wednesday: 3,
+  thursday: 4, friday: 5, saturday: 6,
+};
+
+function esSiempreAbierto(opening_hours: any): boolean {
+  const t = opening_hours?.type;
+  return t === 'always_open' || t === '24_7' || opening_hours?.always_open === true;
+}
+
+// -> { 0..6: {open, close} }, solo los dias que de verdad abren.
+function normalizarHorario(opening_hours: any): Record<number, { open: string; close: string }> | null {
+  const s = opening_hours?.structured;
+  if (!s || typeof s !== 'object') return null;
+  const out: Record<number, { open: string; close: string }> = {};
+  const entradas: Array<[string, any]> = Array.isArray(s)
+    ? s.map((v: any) => [String(v?.day ?? ''), v])
+    : Object.entries(s);
+  for (const [k, v] of entradas) {
+    if (!v || typeof v !== 'object' || v.isClosed === true || !v.open) continue;
+    const i = /^[0-6]$/.test(k) ? Number(k) : DIA_A_INDICE[k.toLowerCase()];
+    if (i === undefined) continue;
+    out[i] = { open: String(v.open), close: String(v.close || v.open) };
+  }
+  return Object.keys(out).length ? out : null;
+}
+
 function formatHours(opening_hours: any): string {
   if (!opening_hours) return 'No disponible';
   if (opening_hours.note) return opening_hours.note;
-  if (opening_hours.type === 'always_open') return 'Abierto 24 horas';
-  if (opening_hours.structured) {
-    const parts: string[] = [];
-    for (const [day, hours] of Object.entries(opening_hours.structured)) {
-      if (hours && typeof hours === 'object' && (hours as any).open) {
-        parts.push(`${day}: ${(hours as any).open}–${(hours as any).close}`);
-      }
-    }
-    return parts.length > 0 ? parts.join(', ') : 'No disponible';
-  }
-  return 'No disponible';
+  if (esSiempreAbierto(opening_hours)) return 'Abierto 24 horas';
+  const norm = normalizarHorario(opening_hours);
+  if (!norm) return 'No disponible';
+  const orden = [1, 2, 3, 4, 5, 6, 0]; // el boricua lee la semana desde el lunes
+  const partes = orden.filter((i) => norm[i]).map((i) => `${DIAS_ES[i]}: ${norm[i].open}\u2013${norm[i].close}`);
+  return partes.length > 0 ? partes.join(', ') : 'No disponible';
 }
 
 function getAmenity(amenities: any, key: string): string {
@@ -327,32 +360,41 @@ async function mcpGetOpenNow(params: { category?: string }) {
   const { data, error } = await dbQuery;
   if (error) throw new Error(error.message);
 
-  const now = new Date();
-  const dayOfWeek = now.getDay();
-  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  // Este filtro no filtraba nada. Buscaba `hours.schedule`, una forma que 0 de
+  // las 35,756 filas publicadas usa (la real es `structured`), asi que ninguna
+  // rama acertaba y todo caia al push del final: pedir "abierto ahora" devolvia
+  // hasta lo cerrado. Y `new Date()` en Vercel es UTC, o sea 4 horas adelantado
+  // de Puerto Rico: a las 9pm de aqui el servidor cree que es la 1am del dia
+  // siguiente. Se resuelve con la misma normalizacion que el resto del sitio.
+  const ahoraPR = new Date(Date.now() - 4 * 3600 * 1000); // AST, sin horario de verano
+  const diaPR = ahoraPR.getUTCDay();
+  const minutosPR = ahoraPR.getUTCHours() * 60 + ahoraPR.getUTCMinutes();
+  const aMinutos = (t: string): number | null => {
+    const m = /^(\d{1,2}):(\d{2})\s*(AM|PM)?/i.exec(String(t).trim());
+    if (!m) return null;
+    let h = parseInt(m[1], 10);
+    if (m[3]) { const pm = m[3].toUpperCase() === 'PM'; if (pm && h < 12) h += 12; if (!pm && h === 12) h = 0; }
+    return h * 60 + parseInt(m[2], 10);
+  };
   const results: any[] = [];
 
   for (const b of data || []) {
     const hours = b.opening_hours;
+    // Sin horario no se puede afirmar que este abierto, pero tampoco que este
+    // cerrado. Se deja pasar a proposito: excluir al 97% del directorio de
+    // "abierto ahora" seria peor que incluir a alguno cerrado.
     if (!hours) { results.push(b); continue; }
-    if (hours.type === '24_7' || hours.always_open === true) { results.push(b); continue; }
-    if (hours.schedule) {
-      const dayKeys = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-      const todayKey = dayKeys[dayOfWeek];
-      const todaySlots = hours.schedule[todayKey];
-      if (Array.isArray(todaySlots)) {
-        for (const slot of todaySlots) {
-          const [oh, om] = (slot.open || '00:00').split(':').map(Number);
-          const [ch, cm] = (slot.close || '23:59').split(':').map(Number);
-          if (currentMinutes >= oh * 60 + om && currentMinutes <= ch * 60 + cm) {
-            results.push(b);
-            break;
-          }
-        }
-      }
-      continue;
-    }
-    results.push(b);
+    if (esSiempreAbierto(hours)) { results.push(b); continue; }
+    const norm = normalizarHorario(hours);
+    if (!norm) { results.push(b); continue; }
+    const hoy = norm[diaPR];
+    if (!hoy) continue; // hoy no abre
+    const abre = aMinutos(hoy.open), cierra = aMinutos(hoy.close);
+    if (abre === null || cierra === null) { results.push(b); continue; }
+    const abierto = cierra > abre
+      ? minutosPR >= abre && minutosPR < cierra
+      : minutosPR >= abre || minutosPR < cierra; // cruza medianoche
+    if (abierto) results.push(b);
   }
 
   return results.map((b: any) => ({
