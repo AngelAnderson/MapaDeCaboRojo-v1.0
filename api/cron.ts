@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { BUSCAR_INDEX } from './_lib/buscar-index.js';
+import { cargarSenal, type SenalCategoria } from './_lib/la-senal.js';
 import { GoogleGenAI } from "@google/genai";
 
 const supabase = createClient(
@@ -37,8 +38,10 @@ export default async function handler(req: any, res: any) {
         return await runRutas(req, res);
       case 'busquedas':
         return await runBusquedas(res);
+      case 'demanda':
+        return await runLaSenal(res);
       default:
-        return res.status(400).json({ error: `Unknown job: ${job}. Use ?job=briefing|maintenance|vibe|alertas|dato|hpsa-refresh|registro-qc|salud-atencion|rutas|busquedas` });
+        return res.status(400).json({ error: `Unknown job: ${job}. Use ?job=briefing|maintenance|vibe|alertas|dato|hpsa-refresh|registro-qc|salud-atencion|rutas|busquedas|demanda` });
     }
   } catch (error: any) {
     console.error(`Cron ${job} failed:`, error.message);
@@ -429,6 +432,65 @@ async function runHpsaRefresh(res: any) {
     });
   }
   return res.status(200).json({ success: true, refreshed: fresh.length, changes: changes.length, detail: changes.slice(0, 20) });
+}
+
+// --- LA SEÑAL (job=demanda): latido diario de la máquina de demanda pública (EL SALTO v2 · 2026-08-19) ---
+// Cada día: agrega demand_signals_real (la MISMA función que renderiza /demanda), cuenta las
+// lecturas de ayer de la página (api_logs), y escribe SU PROPIO recibo a nightly_receipts.
+// Una máquina que no reporta es un fantasma futuro. Idempotente por run_date.
+// Día malo (fuente vacía o rota): recibo de skip honesto, nunca números inventados.
+// Kill switch: app_config 'la_senal'='off' → recibo de "apagada" y nada más.
+async function runLaSenal(res: any) {
+  const svc = createClient(
+    process.env.VITE_SUPABASE_URL || 'https://vprjteqgmanntvisjrvp.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  );
+  const runDate = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Puerto_Rico' });
+
+  // Idempotente: si ya hay recibo de hoy, no duplica.
+  const { data: existing } = await svc.from('nightly_receipts')
+    .select('id').eq('routine', 'la-senal').eq('run_date', runDate).limit(1);
+  if (existing && existing.length) return res.status(200).json({ success: true, skipped: 'ya corrió hoy' });
+
+  const senal = await cargarSenal(svc);
+
+  // Métrica propia: lecturas de /demanda en las últimas 24h (humanos + bots de IA).
+  let lecturas24h = 0;
+  try {
+    const { count } = await svc.from('api_logs')
+      .select('id', { count: 'exact', head: true })
+      .eq('endpoint', 'mapa-pages/demanda')
+      .gte('created_at', new Date(Date.now() - 86400000).toISOString());
+    lecturas24h = count || 0;
+  } catch { /* la métrica no tumba el recibo */ }
+
+  const verifySql = "SELECT category, count(*) AS n, count(*) FILTER (WHERE NOT matched) AS sin_respuesta FROM demand_signals_real WHERE created_at > now() - interval '28 days' GROUP BY 1 ORDER BY 2 DESC LIMIT 15;";
+
+  let summary: string;
+  let ok = true;
+  if (senal?.off) {
+    summary = `🔕 **La Señal** (${runDate}) — apagada por app_config ('la_senal'='off'). La página /demanda se retira sola. Para prenderla: UPDATE app_config SET value='on' WHERE key='la_senal';`;
+  } else if (!senal) {
+    ok = false;
+    summary = `⚠️ **La Señal** (${runDate}) — la fuente (demand_signals_real) vino vacía o rota. No se publicó ningún número nuevo: /demanda está enseñando su estado honesto de descanso. Si esto sale 2 días seguidos, el pipeline de señales del bot está roto (revisar antes que la página).`;
+  } else {
+    const top = senal.categorias.slice(0, 5).map((c: SenalCategoria) => `${c.nombre} (${c.n28})`).join(' · ');
+    const huecos = senal.huecos.length
+      ? senal.huecos.map((h: SenalCategoria) => `**${h.nombre}**: ${h.n28} búsquedas, ${h.sinRespuesta28} sin respuesta`).join(' · ')
+      : 'ninguno esta semana';
+    summary = `📡 **La Señal** (${runDate}) — /demanda respira sola.\n\n` +
+      `- **${senal.total28}** búsquedas reales en 28 días (${senal.total7} en 7d) · **${senal.categorias.length}** categorías con señal · **${senal.total28 ? Math.round(100 * senal.conRespuesta28 / senal.total28) : 0}%** recibió respuesta del directorio (matched, no "resuelto")\n` +
+      `- Top: ${top}\n` +
+      `- 🕳️ Huecos (≥50% sin respuesta): ${huecos}\n` +
+      `- 👀 Lecturas de /demanda en 24h: **${lecturas24h}**\n\n` +
+      `Los huecos son munición de Vitrina: demanda real, pública y con fecha. Nada que aprobar: el molde ya está aprobado.`;
+  }
+
+  await svc.from('nightly_receipts').insert({
+    routine: 'la-senal', run_date: runDate, summary_md: summary,
+    verify_sql: verifySql, reviewed_by_angel: false,
+  });
+  return res.status(200).json({ success: ok, off: !!senal?.off, total28: senal?.total28 ?? null, categorias: senal?.categorias.length ?? null, huecos: senal?.huecos.length ?? null, lecturas24h });
 }
 
 // --- Registro QC mensual: monitor de frescura (read-only) → recibo en nightly_receipts ---

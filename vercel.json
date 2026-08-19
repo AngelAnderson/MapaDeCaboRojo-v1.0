@@ -36,6 +36,10 @@
     {
       "path": "/api/cron?job=busquedas",
       "schedule": "0 11 * * 1"
+    },
+    {
+      "path": "/api/cron?job=demanda",
+      "schedule": "30 11 * * *"
     }
   ],
   "rewrites": [
@@ -206,6 +210,10 @@
     {
       "source": "/tu-ficha",
       "destination": "/api/mapa-pages?page=tu-ficha"
+    },
+    {
+      "source": "/demanda",
+      "destination": "/api/mapa-pages?page=demanda"
     },
     {
       "source": "/marcador",
@@ -596,13 +604,8 @@
       "permanent": true
     },
     {
-      "source": "/demanda",
-      "destination": "/",
-      "permanent": true
-    },
-    {
       "source": "/demanda-real",
-      "destination": "/",
+      "destination": "/demanda",
       "permanent": true
     },
     {
@@ -687,12 +690,12 @@
     },
     {
       "source": "/senales-del-pueblo",
-      "destination": "/",
+      "destination": "/demanda",
       "permanent": true
     },
     {
       "source": "/señales-del-pueblo",
-      "destination": "/",
+      "destination": "/demanda",
       "permanent": true
     },
     {
