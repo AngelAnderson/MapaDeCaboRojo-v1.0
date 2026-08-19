@@ -345,6 +345,30 @@ export default async function handler(req: any, res: any) {
   const smsBody = encodeURIComponent(place.name);
   const ldHours = jsonLdOpeningHours(place.opening_hours);
 
+  // LA SEÑAL en la ficha (EL SALTO v2 · 2026-08-19): cuántas búsquedas reales tuvo
+  // esta categoría por El Veci en 28 días. La ficha es la superficie que los bots de
+  // IA más leen (10K lecturas/mes) y este dato no lo tiene nadie más. Reglas: solo
+  // con 3+ búsquedas, solo agregado, y en cualquier error la ficha sale sin el bloque.
+  // demand_signals_real exige service role; sin esa env el bloque simplemente no sale.
+  let senalFicha = '';
+  try {
+    const subRaw = String(place.subcategory || '').trim();
+    const svcKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    if (subRaw && svcKey && !/[,()]/.test(subRaw)) {
+      const svc = createClient(process.env.VITE_SUPABASE_URL || 'https://vprjteqgmanntvisjrvp.supabase.co', svcKey);
+      const subPlain = subRaw.normalize('NFD').replace(/[̀-ͯ]/g, '');
+      const { count } = await svc.from('demand_signals_real')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', new Date(Date.now() - 28 * 86400000).toISOString())
+        .or(`category.ilike.${subRaw},category.ilike.${subPlain}`);
+      if ((count || 0) >= 3) {
+        senalFicha = `<div style="background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem;">
+      <p style="margin: 0; color: #134e4a; font-size: 0.95rem;"><strong>📡 ${count} búsquedas</strong> de ${esc(subRaw)} le llegaron a El Veci en los últimos 28 días. <a href="https://www.mapadecaborojo.com/demanda" style="color: #0d9488; font-weight: 600;">Lo que Cabo Rojo está buscando →</a></p>
+    </div>`;
+      }
+    }
+  } catch { /* sin señal no se rompe la ficha */ }
+
   const jsonLd: any = {
     '@context': 'https://schema.org',
     '@type': 'LocalBusiness',
@@ -567,6 +591,8 @@ export default async function handler(req: any, res: any) {
       <a href="https://wa.me/17874177711?text=VITRINA%20${encodeURIComponent(place.name)}" style="color: rgba(255,255,255,0.9); font-size: 0.875rem; text-decoration: underline;">Destaca tu negocio con La Vitrina — $799/año →</a>
       <p style="color: rgba(255,255,255,0.75); font-size: 0.8rem; margin-top: 0.75rem; margin-bottom: 0;">Textea al 787-417-7711 y El Veci te guía paso a paso.</p>
     </div>`}
+
+    ${senalFicha}
 
     ${bloqueProcedencia(place, {
       categoriaUrl: CATEGORIA_ENLACE_ES[(place.category || '').toUpperCase()] ? `/categoria/${(place.category || '').toLowerCase()}` : null,

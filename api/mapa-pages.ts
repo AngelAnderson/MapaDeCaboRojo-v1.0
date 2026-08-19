@@ -20,6 +20,7 @@ import { handleActivos } from './_lib/activos.js'
 import { conFrescura } from './_lib/agentes.js'
 import { paginaMedicaLd } from './_lib/procedencia.js'
 import { handleBarrios } from './_lib/barrios.js'
+import { cargarSenal, type SenalCategoria } from './_lib/la-senal.js'
 import { handleRentas } from './_lib/rentas.js'
 import { handleSuelo } from './_lib/suelo.js'
 
@@ -2088,6 +2089,134 @@ ${subscribeForm('senales-del-pueblo', { audience: 'general' })}
       publisher: { '@type': 'Organization', name: 'MapaDeCaboRojo.com', url: SITE_URL },
       spatialCoverage: { '@type': 'Place', name: 'Cabo Rojo, Puerto Rico' },
       keywords: ['cabo rojo', 'demand signals', 'civic-tech', 'local market data'],
+      isAccessibleForFree: true, inLanguage: 'es',
+    },
+  }))
+}
+
+// =============== /demanda — LA SEÑAL (EL SALTO v2 · 2026-08-19) ===============
+// La máquina de demanda pública. Sucesora honesta de /senales-del-pueblo (que se
+// archivó porque mv_top_searches_30d estaba contaminada con data de test).
+// Fuente ÚNICA: demand_signals_real vía _lib/la-senal.ts (exclusiones aplicadas).
+// Latido: cron diario job=demanda escribe recibo a nightly_receipts con métrica.
+// Kill switch: app_config key 'la_senal' = 'off' → la página se retira sola.
+async function handleDemanda(req: any, res: any) {
+  const senal = await cargarSenal(supabase)
+
+  // Métrica propia: cada lectura queda en api_logs (el cron la cuenta a diario).
+  try {
+    supabase.from('api_logs').insert({
+      endpoint: 'mapa-pages/demanda', method: 'GET', query: null,
+      user_agent: String(req.headers['user-agent'] || '').substring(0, 500),
+      ip: String(req.headers['x-forwarded-for'] || '').split(',')[0].substring(0, 45),
+      response_count: senal ? senal.categorias.length : 0,
+    }).then(() => {}, () => {})
+  } catch { /* fire-and-forget */ }
+
+  if (senal?.off) {
+    res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=300')
+    return res.redirect(302, '/')
+  }
+
+  const spark = (semanas: Array<{ semana: string; n: number }>) => {
+    if (!semanas || semanas.length < 2) return ''
+    const W = 120, H = 28, PAD = 2
+    const vals = semanas.map(p => p.n)
+    const maxV = Math.max(...vals, 1)
+    const stepX = (W - PAD * 2) / (semanas.length - 1)
+    const pts = semanas.map((p, i) => `${(PAD + i * stepX).toFixed(1)},${(H - PAD - (p.n / maxV) * (H - PAD * 2)).toFixed(1)}`).join(' ')
+    return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="#0d9488" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
+  }
+
+  const contenido = senal
+    ? `
+<div class="grid sm:grid-cols-3 gap-3 mt-6 not-prose">
+  <div class="bg-white border border-slate-200 rounded-xl p-4 text-center"><p class="text-3xl font-black text-slate-900">${senal.total28}</p><p class="text-xs text-slate-500 font-semibold uppercase tracking-wide mt-1">búsquedas reales · 28 días</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4 text-center"><p class="text-3xl font-black text-slate-900">${senal.categorias.length}</p><p class="text-xs text-slate-500 font-semibold uppercase tracking-wide mt-1">categorías con señal</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4 text-center"><p class="text-3xl font-black text-teal-700">${senal.total28 ? Math.round(100 * senal.conRespuesta28 / senal.total28) : 0}%</p><p class="text-xs text-slate-500 font-semibold uppercase tracking-wide mt-1">encontró respuesta</p></div>
+</div>
+
+<h2>Lo que se buscó, categoría por categoría</h2>
+<p class="text-sm text-slate-600">Últimos 28 días. La línea al lado es la tendencia de las últimas 12 semanas. Una categoría entra a la tabla con 3 búsquedas o más.</p>
+<div class="not-prose overflow-x-auto">
+<table class="text-sm w-full">
+<thead><tr class="text-left text-xs text-slate-500 uppercase tracking-wide"><th class="py-2 pr-2">Categoría</th><th class="text-right pr-3">28 días</th><th class="text-right pr-3">7 días</th><th class="pr-2">Tendencia</th><th>¿Encontraron?</th></tr></thead>
+<tbody>
+${senal.categorias.map((c: SenalCategoria) => `<tr class="border-t border-slate-100">
+  <td class="py-2 pr-2 font-semibold">${escapeHtml(c.nombre)}</td>
+  <td class="text-right pr-3 font-bold text-slate-900">${c.n28}</td>
+  <td class="text-right pr-3 text-slate-500">${c.n7 || ''}</td>
+  <td class="pr-2">${spark(c.semanas)}</td>
+  <td>${c.sinRespuesta28 === 0 ? '<span class="text-teal-700 text-xs font-bold">✓ sí</span>' : `<span class="text-amber-700 text-xs font-bold">⚠️ ${c.sinRespuesta28} sin respuesta</span>`}</td>
+</tr>`).join('')}
+</tbody>
+</table>
+</div>
+
+${senal.huecos.length ? `
+<h2>Los huecos: se buscó y no apareció quién</h2>
+<p class="text-sm text-slate-600">Estas categorías tuvieron demanda real y la mitad o más de las búsquedas se quedó sin respuesta del directorio. Si tu negocio resuelve una de estas, el pueblo ya te está pidiendo.</p>
+<div class="not-prose grid sm:grid-cols-2 gap-3 mt-3">
+${senal.huecos.map((h: SenalCategoria) => `<div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+  <p class="font-bold text-slate-900">${escapeHtml(h.nombre)}</p>
+  <p class="text-sm text-slate-600 mt-1">${h.n28} búsquedas en 28 días · ${h.sinRespuesta28} sin respuesta</p>
+</div>`).join('')}
+</div>` : ''}
+
+<h2>De dónde sale esto</h2>
+<p class="text-sm text-slate-600">Son los mensajes reales que los vecinos le textean a El Veci (${PHONE_CTA}), agregados por categoría. Los mensajes crudos nunca se publican: aquí no hay nombres, ni teléfonos, ni textos de nadie. El tráfico de prueba del sistema está excluido. Se actualiza solo, todos los días. Última actualización: ${senal.generadoEl}.</p>
+`
+    : `
+<div class="bg-amber-50 border-l-4 border-amber-400 p-4 my-6 rounded-r-lg not-prose">
+  <p class="font-semibold text-amber-900">La Señal está descansando ahora mismo.</p>
+  <p class="text-sm text-amber-800 mt-1">Los números no están cargando y aquí no se enseñan números inventados. Vuelve más tarde, o textea al <strong>${PHONE_CTA}</strong> y pregunta directo.</p>
+</div>`
+
+  const body = `
+<span class="not-prose inline-block bg-teal-100 text-teal-800 text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-full">La Señal · demanda real · se actualiza sola</span>
+
+<h1 class="mt-4">Lo que Cabo Rojo está buscando</h1>
+
+<p class="text-lg text-slate-600 mt-3">Cada mensaje a El Veci deja una pista: qué necesita la gente, qué encuentra, y qué se queda sin respuesta. Aquí está esa señal, en números y sin adornos. <strong>No es lo que creemos que el pueblo pide. Es lo que pidió.</strong></p>
+
+${contenido}
+
+<div class="not-prose mt-8 grid sm:grid-cols-2 gap-3">
+  <div class="bg-white border border-slate-200 rounded-xl p-5">
+    <p class="font-bold text-slate-900">¿Buscas algo tú?</p>
+    <p class="text-sm text-slate-600 mt-1">No des vueltas. Textea lo que necesitas al <strong>${PHONE_CTA}</strong> y El Veci te contesta con quién resuelve.</p>
+  </div>
+  <div class="bg-teal-900 text-white rounded-xl p-5">
+    <p class="font-bold">¿Tienes negocio en una de estas categorías?</p>
+    <p class="text-sm text-teal-100 mt-1">Primero asegúrate de salir en el directorio, gratis: <a href="/tu-ficha" class="underline font-semibold text-white">reclama tu ficha</a>. Si quieres que el pueblo te vea más, <a href="/tienda" class="underline font-semibold text-white">mira La Vitrina</a>.</p>
+  </div>
+</div>
+
+<blockquote>La demanda no se inventa ni se promete. Se mide. Si este espejo te sirve, llégate cuando quieras: se actualiza solo. Si no, sigue tu camino.</blockquote>
+
+<p class="text-xs text-slate-500 mt-4">Pa' ver la matemática completa de oferta y demanda por categoría: <a href="/pueblo-en-numeros" class="text-teal-700 font-semibold">/pueblo-en-numeros →</a></p>
+`
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=3600')
+  res.status(200).send(layout({
+    title: 'La Señal · Lo que Cabo Rojo está buscando',
+    description: 'Las búsquedas reales del pueblo por El Veci (787-417-7711), agregadas por categoría: qué se pidió, qué encontró respuesta y qué se quedó sin quién. Se actualiza sola todos los días.',
+    slug: 'demanda',
+    bodyHtml: body,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Dataset',
+      distribution: { '@type': 'DataDownload', contentUrl: `${SITE_URL}/demanda`, encodingFormat: 'text/html' },
+      license: 'https://creativecommons.org/licenses/by/4.0/',
+      name: 'La Señal · demanda local real de Cabo Rojo',
+      description: 'Búsquedas reales de vecinos por el canal El Veci (*7711) agregadas por categoría, con tasa de respuesta y huecos de mercado. Sin mensajes crudos, sin data sintética.',
+      url: `${SITE_URL}/demanda`,
+      dateModified: senal?.generadoEl || undefined,
+      creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://www.angelanderson.com' },
+      publisher: { '@type': 'Organization', name: 'MapaDeCaboRojo.com', url: SITE_URL },
+      spatialCoverage: { '@type': 'Place', name: 'Cabo Rojo, Puerto Rico' },
+      keywords: ['cabo rojo', 'demanda local', 'señales de demanda', 'civic-tech'],
       isAccessibleForFree: true, inLanguage: 'es',
     },
   }))
@@ -19885,6 +20014,7 @@ export default async function handler(req: any, res: any) {
     case 'pon-tu-negocio-en-el-mapa': return handlePonTuNegocio(req, res)
     case 'facil': return handleFacil(req, res)
     case 'senales-del-pueblo': return await handleSenalesDelPueblo(req, res)
+    case 'demanda': return await handleDemanda(req, res)
     case 'menos-revolu': return handleMenosRevolu(req, res)
     case 'preguntas': return handlePreguntas(req, res)
     case 'historia': return handleHistoria(req, res)
