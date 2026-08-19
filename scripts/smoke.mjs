@@ -78,9 +78,21 @@ async function capaHttp() {
 
   console.log('\nRutas');
   for (const ruta of ['/3d', '/clasico', '/pon-tu-negocio-en-el-mapa', '/tienda',
-                      '/barrios', '/registro', '/negocio/tano-plumbing', '/llms.txt']) {
+                      '/barrios', '/negocio/tano-plumbing', '/llms.txt']) {
     const rr = await fetch(BASE + ruta, { redirect: 'manual' });
     check(`${ruta} responde 200`, rr.status === 200, `dio ${rr.status}`);
+  }
+  // /registro dejó de renderizar en el dominio del Mapa el 30 jul ("un récord, un
+  // dominio"): su canónica es registromedicopr.com y desde aquí DEBE dar 301 allá.
+  // Este check esperaba 200 desde el 27 jul y llevaba 3 semanas contradiciendo el diseño.
+  {
+    const rr = await fetch(BASE + '/registro', { redirect: 'manual' });
+    const loc = rr.headers.get('location') || '';
+    check('/registro redirige a su canónica registromedicopr.com',
+          rr.status === 301 && loc.startsWith('https://registromedicopr.com'),
+          `dio ${rr.status} -> ${loc}`);
+    const rr2 = await fetch('https://registromedicopr.com/', { redirect: 'manual' });
+    check('registromedicopr.com responde 200', rr2.status === 200, `dio ${rr2.status}`);
   }
   // Las podadas tienen que redirigir, no caer al catch-all del SPA.
   for (const ruta of ['/moonshots', '/pueblo-en-numeros']) {
