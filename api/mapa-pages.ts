@@ -17970,16 +17970,23 @@ ${CIVIC_FORM_SCRIPT}
 // =============== /tienda — La Tienda del Mapa ===============
 // The storefront for the ecosystem's real products. Vecino is the hero, the mapa
 // is the guide. Only verified products/prices/links (no guessed Stripe links).
-//   · La Vitrina (escalera $40 / $150 / $799 / $1,800) → textea (Angel qualifies)
+// PRICING DOCTRINE 2026-07-09/27 (orden directa de Angel): pago ANUAL únicamente.
+// Prueba $40, Mensual $150 y Boost $29 ELIMINADOS. Único low-ticket: Un Post $40
+// (el negocio trae SU foto/video). El ranking activo del Veci NO se promociona en
+// público: $1,800 se vende como "Vitrina + Contenido" (1 día de grabación, 1x7).
+//   · La Vitrina Anual $799 → textea (Angel qualifies)
+//   · Vitrina + Contenido $1,800 → textea CONTENIDO
+//   · Un Post $40 → textea POST (cliente trae el contenido)
 //   · Verificado gratis → textea
-//   · Boost 7 días $29 → textea (Stripe link pendiente)
 //   · Libro AJORÁO PDF $9.99 → Stripe checkout directo (link verificado en canon)
 //   · El Conserje 24/7 (hoteles) → textea (B2B, requiere conversación)
 // CTAs log intent to store_clicks via POST /api/mapa-pages?page=tienda-log.
+// (Los keys viejos siguen en el set: tienda-log no debe romper con clicks cacheados.)
 const BOOK_STRIPE_URL = 'https://buy.stripe.com/aFa3cu5VOa0n0EpbAL0co0l'
 const WA_BASE = 'https://wa.me/17874177711?text='
 const STORE_PRODUCTS = new Set([
   'vitrina_prueba', 'vitrina_mensual', 'vitrina_anual', 'vitrina_veci',
+  'vitrina_contenido', 'un_post',
   'boost', 'libro', 'conserje', 'verificado',
 ])
 
@@ -17997,41 +18004,24 @@ function handleTienda(_req: any, res: any) {
 
 <!-- ============ LA VITRINA ============ -->
 <h2 id="vitrina">La Vitrina · tu negocio en el mapa</h2>
-<p>Cuando alguien busca lo que tú vendes, apareces. No es "estar en un mapa". Es aparecer en el momento correcto, frente a gente con intención de comprar. La escalera empieza con $40 y sin compromiso.</p>
+<p>Cuando alguien busca lo que tú vendes, apareces. No es "estar en un mapa". Es aparecer en el momento correcto, frente a gente con intención de comprar. <strong>Se vende por año, pagado completo.</strong> Si funciona, se renueva. Si no, no.</p>
 
 <div class="grid sm:grid-cols-2 gap-4 mt-4 not-prose">
 
-  <div class="bg-white border border-slate-200 rounded-xl p-5 flex flex-col">
-    <div class="text-xs font-bold text-slate-500 uppercase tracking-wide">Entrada · sin compromiso</div>
-    <h3 class="text-xl font-bold mt-1">Prueba</h3>
-    <p class="text-2xl font-black text-slate-900 mt-1">$40</p>
-    <p class="text-sm text-slate-600 mt-2 flex-1">1 publicación esta semana + tu negocio listado en El Veci. Pa' probar sin amarrarte.</p>
-    <a href="${wa('VITRINA PRUEBA')}" data-store="vitrina_prueba" data-action="whatsapp" target="_blank" rel="noopener" class="mt-4 block text-center px-4 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-700 text-white text-sm font-bold">Textea VITRINA PRUEBA</a>
-  </div>
-
   <div class="bg-teal-50 border-2 border-teal-400 rounded-xl p-5 flex flex-col relative">
-    <div class="absolute -top-3 left-5 bg-teal-500 text-white text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded">El que más cuadra</div>
-    <div class="text-xs font-bold text-teal-700 uppercase tracking-wide">Mensual</div>
-    <h3 class="text-xl font-bold mt-1">Destacado</h3>
-    <p class="text-2xl font-black text-slate-900 mt-1">$150<span class="text-sm font-semibold text-slate-500">/mes</span></p>
-    <p class="text-sm text-slate-600 mt-2 flex-1">4 publicaciones al mes (una por semana) + prioridad en El Veci + mención en el newsletter + reporte de cómo te fue.</p>
-    <a href="${wa('VITRINA MENSUAL')}" data-store="vitrina_mensual" data-action="whatsapp" target="_blank" rel="noopener" class="mt-4 block text-center px-4 py-2.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold">Textea VITRINA MENSUAL</a>
-  </div>
-
-  <div class="bg-white border border-slate-200 rounded-xl p-5 flex flex-col">
-    <div class="text-xs font-bold text-slate-500 uppercase tracking-wide">Anual · pago completo</div>
-    <h3 class="text-xl font-bold mt-1">Anual</h3>
+    <div class="absolute -top-3 left-5 bg-teal-500 text-white text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded">Anual · pago completo</div>
+    <h3 class="text-xl font-bold mt-1">La Vitrina Anual</h3>
     <p class="text-2xl font-black text-slate-900 mt-1">$799<span class="text-sm font-semibold text-slate-500">/año</span></p>
-    <p class="text-sm text-slate-600 mt-2 flex-1">52 publicaciones (una por semana todo el año) + exclusividad de tu categoría + reporte mensual + trato directo conmigo.</p>
-    <a href="${wa('VITRINA ANUAL')}" data-store="vitrina_anual" data-action="whatsapp" target="_blank" rel="noopener" class="mt-4 block text-center px-4 py-2.5 rounded-lg bg-slate-900 hover:bg-slate-700 text-white text-sm font-bold">Textea VITRINA ANUAL</a>
+    <p class="text-sm text-slate-600 mt-2 flex-1">52 publicaciones (una por semana todo el año) + exclusividad de tu categoría + 1 reporte anual con números reales antes de renovar + trato directo conmigo.</p>
+    <a href="${wa('VITRINA ANUAL')}" data-store="vitrina_anual" data-action="whatsapp" target="_blank" rel="noopener" class="mt-4 block text-center px-4 py-2.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold">Textea VITRINA ANUAL</a>
   </div>
 
   <div class="bg-slate-900 text-white rounded-xl p-5 flex flex-col">
     <div class="text-xs font-bold text-teal-300 uppercase tracking-wide">Premium · upfront</div>
-    <h3 class="text-xl font-bold mt-1">Vitrina + Veci</h3>
+    <h3 class="text-xl font-bold mt-1">Vitrina + Contenido</h3>
     <p class="text-2xl font-black mt-1">$1,800<span class="text-sm font-semibold text-slate-400">/año</span></p>
-    <p class="text-sm text-slate-300 mt-2 flex-1">El Veci recomienda tu negocio activamente cuando alguien busca lo que vendes + reporte mensual + exclusiva por categoría y zona + garantía de 60 días.</p>
-    <a href="${wa('VITRINA VECI')}" data-store="vitrina_veci" data-action="whatsapp" target="_blank" rel="noopener" class="mt-4 block text-center px-4 py-2.5 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-900 text-sm font-bold">Textea VITRINA VECI</a>
+    <p class="text-sm text-slate-300 mt-2 flex-1">Todo lo de La Vitrina + 1 día de grabación en tu negocio (yo te ayudo a crear el contenido) + ese material te promueve los 12 meses + garantía de 60 días.</p>
+    <a href="${wa('CONTENIDO')}" data-store="vitrina_contenido" data-action="whatsapp" target="_blank" rel="noopener" class="mt-4 block text-center px-4 py-2.5 rounded-lg bg-teal-500 hover:bg-teal-400 text-slate-900 text-sm font-bold">Textea CONTENIDO</a>
   </div>
 
 </div>
@@ -18045,15 +18035,15 @@ function handleTienda(_req: any, res: any) {
   <a href="${wa('NEGOCIO')}" data-store="verificado" data-action="whatsapp" target="_blank" rel="noopener" class="mt-4 inline-block px-4 py-2.5 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold">Textea NEGOCIO + tu nombre</a>
 </div>
 
-<!-- ============ BOOST ============ -->
-<h2 id="boost">Boost 7 días</h2>
+<!-- ============ UN POST ============ -->
+<h2 id="post">Un Post</h2>
 <div class="bg-amber-50 border border-amber-200 rounded-xl p-5 mt-3 not-prose">
   <div class="flex items-baseline gap-3">
-    <p class="text-2xl font-black text-slate-900">$29</p>
-    <p class="text-sm font-semibold text-amber-700">7 días arriba en tu categoría</p>
+    <p class="text-2xl font-black text-slate-900">$40</p>
+    <p class="text-sm font-semibold text-amber-700">tú mandas tu foto o video, nosotros publicamos</p>
   </div>
-  <p class="text-sm text-slate-600 mt-2">Tu negocio aparece primero en su categoría por una semana. Bueno pa' un fin de semana fuerte, una promoción, o una temporada. Lo cuadramos por texto.</p>
-  <a href="${wa('BOOST')}" data-store="boost" data-action="whatsapp" target="_blank" rel="noopener" class="mt-4 inline-block px-4 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold">Textea BOOST</a>
+  <p class="text-sm text-slate-600 mt-2">1 publicación en el Facebook de CaboRojo.com con el material que TÚ mandas. Sin contrato, sin renovación, sin producción. Bueno pa' un evento, una promoción o un anuncio puntual.</p>
+  <a href="${wa('POST')}" data-store="un_post" data-action="whatsapp" target="_blank" rel="noopener" class="mt-4 inline-block px-4 py-2.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold">Textea POST</a>
 </div>
 
 <!-- ============ EL LIBRO ============ -->
@@ -18113,11 +18103,9 @@ function handleTienda(_req: any, res: any) {
     description: 'Productos del ecosistema de Cabo Rojo: La Vitrina pa\' negocios, el libro AJORÁO, El Conserje 24/7 pa\' hoteles.',
     url: `${SITE_URL}/tienda`,
     makesOffer: [
-      { '@type': 'Offer', name: 'La Vitrina Prueba', price: '40', priceCurrency: 'USD' },
-      { '@type': 'Offer', name: 'La Vitrina Mensual', price: '150', priceCurrency: 'USD' },
       { '@type': 'Offer', name: 'La Vitrina Anual', price: '799', priceCurrency: 'USD' },
-      { '@type': 'Offer', name: 'La Vitrina + Veci', price: '1800', priceCurrency: 'USD' },
-      { '@type': 'Offer', name: 'Boost 7 días', price: '29', priceCurrency: 'USD' },
+      { '@type': 'Offer', name: 'Vitrina + Contenido', price: '1800', priceCurrency: 'USD' },
+      { '@type': 'Offer', name: 'Un Post', price: '40', priceCurrency: 'USD' },
       { '@type': 'Offer', name: 'Libro AJORÁO NO ES UN PLAN (PDF)', price: '9.99', priceCurrency: 'USD', url: BOOK_STRIPE_URL },
     ],
   }
@@ -18126,7 +18114,7 @@ function handleTienda(_req: any, res: any) {
   res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=1800')
   res.status(200).send(layout({
     title: 'La Tienda del Mapa · La Vitrina, el libro AJORÁO, El Conserje',
-    description: 'Los productos de Cabo Rojo en un solo sitio. La Vitrina pa\' que tu negocio aparezca ($40 a $1,800). El libro AJORÁO ($9.99 PDF). El Conserje 24/7 pa\' hoteles. Menos revolú, más sistema.',
+    description: 'Los productos de Cabo Rojo en un solo sitio. La Vitrina Anual pa\' que tu negocio aparezca todo el año. El libro AJORÁO ($9.99 PDF). El Conserje 24/7 pa\' hoteles. Menos revolú, más sistema.',
     slug: 'tienda',
     bodyHtml: body,
     jsonLd,
