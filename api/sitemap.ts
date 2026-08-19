@@ -243,6 +243,10 @@ export default async function handler(req: any, res: any) {
       // cada año, en el ciclo del APPIC Match. Se anuncia desde el día 1 porque
       // la busca gente que está decidiendo si se muda, no gente navegando.
       { slug: 'internado-psicologia', priority: 0.9, changefreq: 'monthly' },
+      // El expediente Plan Vital: 19,060 filas del directorio del plan cruzadas
+      // contra NPPES, pueblo por pueblo. Data congelada (edición feb 2026), así
+      // que cambia solo si el plan contesta o sale edición nueva.
+      { slug: 'expediente-planvital', priority: 0.9, changefreq: 'monthly' },
       // El clúster de cuido de mayores: existían, servían 200 desde los 3 dominios
       // y ningún sitemap las anunciaba. Ya tienen dueño en PAGE_CANONICAL.
       { slug: 'cuido', priority: 0.8, changefreq: 'monthly' },                 // hogares de cuido licenciados por Familia

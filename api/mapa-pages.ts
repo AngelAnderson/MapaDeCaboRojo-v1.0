@@ -8720,6 +8720,244 @@ async function leerPsicologosPorRegion(): Promise<{ region: string; n: number }[
   } catch { return [] }
 }
 
+// =============== /expediente-planvital — el expediente consultable, pueblo por pueblo ===============
+// Fuente: PDF oficial del Directorio de Proveedores Plan Vital / First Medical, aprobado el
+// 20 de febrero de 2026 (1,355 páginas, SHA-256 cd584eb70bf9f998134e1e442b4252a1d40ac1d2fec1de6bbd2cd181eee9f16b),
+// parseado a 19,060 filas y cruzado contra el registro federal NPPES.
+// Expediente canon: Dropbox/Claude/Outbox/Estrategia/Auditoria-PlanVital-COMPLETA-2026-08-13.md.
+// FMV_PUEBLOS lo genera scripts/deriva-fmvital-publico.py, que reproduce los titulares del
+// expediente con assert (9/9) antes de escribir un byte — si un número no cuadra, no compila data.
+// La data fila por fila vive en Supabase (tabla fmvital_directorio, RLS de lectura pública).
+// La contradicción mide DESACUERDO entre 2 fuentes oficiales; no dice cuál de las 2 tiene razón.
+const FMV_TITULARES = {
+  filas: 19060, conNpi: 6325, comparables: 6245, contradicciones: 2843,
+  pctBruta: 45.5, pctAjustada: 42.5, telChecked: 6320, telDisc: 1864,
+  telPorResolver: 792, aceptaNo: 6, muestraViva: 60, npisMuertos: 0, paginas: 1355,
+  sha256: 'cd584eb70bf9f998134e1e442b4252a1d40ac1d2fec1de6bbd2cd181eee9f16b',
+}
+
+type FmvPueblo = { nombre: string; filas: number; comp: number; contra: number; pct: number | null; tel: number; ej: { n: string; plan: string; fed: string; pg: number }[] }
+const FMV_PUEBLOS: Record<string, FmvPueblo> = {"ADJUNTAS":{"nombre":"Adjuntas","filas":68,"comp":22,"contra":15,"pct":68.2,"tel":0,"ej":[{"n":"ÁNGEL RIVERA SANTOS","plan":"Adjuntas","fed":"Ponce","pg":24},{"n":"YASMIN SOTO TORRES Porrata Pila","plan":"Adjuntas","fed":"Ponce","pg":89},{"n":"JANNICE ARROYO SOTO","plan":"Adjuntas","fed":"Ponce","pg":607}]},"AGUADA":{"nombre":"Aguada","filas":216,"comp":75,"contra":39,"pct":52.0,"tel":8,"ej":[{"n":"CARLOS TORRES SALICHS","plan":"Aguada","fed":"Aguadilla","pg":32},{"n":"ANITZA GONZÁLEZ COLÓN","plan":"Aguada","fed":"Moca","pg":57},{"n":"NOEL NIEVES LÓPEZ","plan":"Aguada","fed":"Moca","pg":57}]},"AGUADILLA":{"nombre":"Aguadilla","filas":300,"comp":134,"contra":45,"pct":33.6,"tel":23,"ej":[{"n":"ILEANA ALBINO CRUZ","plan":"Aguadilla","fed":"San Antonio","pg":27},{"n":"ERIC QUIÑONES MEDINA","plan":"Aguadilla","fed":"Moca","pg":28},{"n":"ED ORTEGA CORTÉS","plan":"Aguadilla","fed":"Moca","pg":28}]},"AGUAS BUENAS":{"nombre":"Aguas Buenas","filas":269,"comp":81,"contra":67,"pct":82.7,"tel":3,"ej":[{"n":"SAMUEL CRUZ ESTRADA","plan":"Aguas Buenas","fed":"Peñuelas","pg":334},{"n":"CAMACHO RODRÍGUEZ, YARIBELL","plan":"Aguas Buenas","fed":"Aibonito","pg":348},{"n":"MOLINA FIGUEROA, PEDRO","plan":"Aguas Buenas","fed":"Aibonito","pg":349}]},"AIBONITO":{"nombre":"Aibonito","filas":226,"comp":56,"contra":21,"pct":37.5,"tel":6,"ej":[{"n":"JOSÉ PIMENTEL FERNÁNDEZ","plan":"Aibonito","fed":"Guayama","pg":140},{"n":"ROBEXI ANGELI VELÁZQUEZ","plan":"Aibonito","fed":"Guayama","pg":140},{"n":"DOMÍNGUEZ LLERANDI, VIVIANNA","plan":"Aibonito","fed":"Arecibo","pg":354}]},"ANASCO":{"nombre":"Añasco","filas":182,"comp":72,"contra":46,"pct":63.9,"tel":12,"ej":[{"n":"CHARLENE RIVERA SHARPE","plan":"Añasco","fed":"Isabela","pg":41},{"n":"PEDRO MARTÍNEZ RIVERA","plan":"Añasco","fed":"Arecibo","pg":267},{"n":"MANUEL RIVERA GUTIERREZ","plan":"Añasco","fed":"Arecibo","pg":639}]},"ARECIBO":{"nombre":"Arecibo","filas":276,"comp":127,"contra":33,"pct":26.0,"tel":17,"ej":[{"n":"JUAN MARÍN ESPIET Clínicas De Medicina Familiar","plan":"Arecibo","fed":"Camuy","pg":233},{"n":"MAGALI MADERA ZAYAS","plan":"Arecibo","fed":"Camuy","pg":237},{"n":"YARALIN PLANELL PABÓN Pedro Albizu Campos 44","plan":"Arecibo","fed":"Lares","pg":238}]},"ARROYO":{"nombre":"Arroyo","filas":339,"comp":93,"contra":78,"pct":83.9,"tel":7,"ej":[{"n":"JOSÉ ALVARADO ROLÓN","plan":"Arroyo","fed":"Barranquitas","pg":562},{"n":"RAFAEL RODRÍGUEZ WERNER","plan":"Arroyo","fed":"Bayamón","pg":563},{"n":"MARY FIOL LAY","plan":"Arroyo","fed":"Bayamón","pg":563}]},"BARCELONETA":{"nombre":"Barceloneta","filas":375,"comp":135,"contra":100,"pct":74.1,"tel":14,"ej":[{"n":"EDDY MIESES ARIZA","plan":"Barceloneta","fed":"San Juan","pg":95},{"n":"RICARDO MACHADO TORRES","plan":"Barceloneta","fed":"Añasco","pg":267},{"n":"EDDY MIESES ARIZA","plan":"Barceloneta","fed":"San Juan","pg":665}]},"BARRANQUITAS":{"nombre":"Barranquitas","filas":253,"comp":37,"contra":24,"pct":64.9,"tel":4,"ej":[{"n":"FIGUEROA RODRÍGUEZ, MARIAM","plan":"Barranquitas","fed":"Comerío","pg":360},{"n":"AGUILÚ MORALES, CARLA","plan":"Barranquitas","fed":"Bayamón","pg":362},{"n":"OYOLA NIEVES, PEDRO","plan":"Barranquitas","fed":"Bayamón","pg":368}]},"BAYAMON":{"nombre":"Bayamón","filas":801,"comp":331,"contra":105,"pct":31.7,"tel":61,"ej":[{"n":"DIEGO COLÓN RODRÍGUEZ","plan":"Bayamón","fed":"Canóvanas","pg":153},{"n":"ANTONIO DEL TORO SÁNCHEZ","plan":"Bayamón","fed":"Culebra","pg":153},{"n":"EVELYN RODRÍGUEZ RÍOS","plan":"Bayamón","fed":"Las Piedras","pg":154}]},"CABO ROJO":{"nombre":"Cabo Rojo","filas":272,"comp":101,"contra":61,"pct":60.4,"tel":4,"ej":[{"n":"NELSON RODRÍGUEZ MARTÍNEZ Centro Profesional Borinquen","plan":"Cabo Rojo","fed":"San Germán","pg":34},{"n":"XIOMARA DÍAZ BARRETO","plan":"Cabo Rojo","fed":"Aguadilla","pg":64},{"n":"TERESA MONTESINOS ROIG Dra Teresa Montesinos","plan":"Cabo Rojo","fed":"Mayagüez","pg":67}]},"CAGUAS":{"nombre":"Caguas","filas":705,"comp":230,"contra":67,"pct":29.1,"tel":27,"ej":[{"n":"MIOSOTIS MUÑOZ PEÑA","plan":"Caguas","fed":"Cidra","pg":106},{"n":"JOSELY LÓPEZ NIEVES","plan":"Caguas","fed":"San Lorenzo","pg":106},{"n":"WILLYSON VELÁZQUEZ VELÁZQUEZ Desvío Anibal García Ramal 9922","plan":"Caguas","fed":"Las Piedras","pg":163}]},"CAMUY":{"nombre":"Camuy","filas":198,"comp":64,"contra":29,"pct":45.3,"tel":9,"ej":[{"n":"DE LA PAZ RODRÍGUEZ, ABDIEL","plan":"Camuy","fed":"Carolina","pg":397},{"n":"FELICIANO ASTACIO, NEREIDA I.","plan":"Camuy","fed":"San Juan","pg":400},{"n":"EDGARDO ESTREMERA RIOS","plan":"Camuy","fed":"Arecibo","pg":568}]},"CANOVANAS":{"nombre":"Canóvanas","filas":340,"comp":90,"contra":53,"pct":58.9,"tel":10,"ej":[{"n":"BENJAMÍN VELÁZQUEZ LÓPEZ","plan":"Canóvanas","fed":"Fajardo","pg":92},{"n":"EFRÉN RIVERA SANTIAGO Costa Este Medical Services F4","plan":"Canóvanas","fed":"Fajardo","pg":92},{"n":"RAMÓN PASTRANA MALDONADO","plan":"Canóvanas","fed":"Fajardo","pg":93}]},"CAROLINA":{"nombre":"Carolina","filas":463,"comp":137,"contra":40,"pct":29.2,"tel":29,"ej":[{"n":"ORLANDO LLAVONA GONZÁLEZ","plan":"Carolina","fed":"Lajas","pg":26},{"n":"LIZA RAMOS FIGUEROA","plan":"Carolina","fed":"Lajas","pg":26},{"n":"EFRÉN RIVERA SANTIAGO Costa Este Medical Services Gl 25","plan":"Carolina","fed":"Fajardo","pg":92}]},"CATANO":{"nombre":"Cataño","filas":95,"comp":9,"contra":7,"pct":null,"tel":1,"ej":[{"n":"FLORES SANTA, DAVID","plan":"Cataño","fed":"Cayey","pg":402},{"n":"SANTIAGO VÉLEZ, GARIMAR La Fuente Town Center 109","plan":"Cataño","fed":"Guayama","pg":406},{"n":"COTTO RIVERA, ELIZABETH","plan":"Cataño","fed":"Cidra","pg":410}]},"CAYEY":{"nombre":"Cayey","filas":112,"comp":38,"contra":2,"pct":5.3,"tel":12,"ej":[{"n":"RAFAEL RIVERA COLÓN","plan":"Cayey","fed":"Caguas","pg":114},{"n":"YANELIS RIVERA PABÓN","plan":"Cayey","fed":"Caguas","pg":114}]},"CEIBA":{"nombre":"Ceiba","filas":7,"comp":5,"contra":0,"pct":null,"tel":2,"ej":[]},"CIALES":{"nombre":"Ciales","filas":230,"comp":74,"contra":47,"pct":63.5,"tel":1,"ej":[{"n":"LABORATORIO CLÍNICO VILLA LOS SANTOS Laboratorio Del Sueño H","plan":"Ciales","fed":"Arecibo","pg":245},{"n":"LABORATORIO CLÍNICO AVANZADO EMMANUEL INC","plan":"Ciales","fed":"Toa Alta","pg":245},{"n":"LUIS ARROYO AGUIRRECHEA","plan":"Ciales","fed":"Manatí","pg":246}]},"CIDRA":{"nombre":"Cidra","filas":238,"comp":54,"contra":20,"pct":37.0,"tel":15,"ej":[{"n":"MOISÉS ORTIZ VILLALOBOS","plan":"Cidra","fed":"Caguas","pg":118},{"n":"ROBERTO GANDARA MÉNDEZ","plan":"Cidra","fed":"Caguas","pg":145},{"n":"LUIS ROMÁN MARRERO","plan":"Cidra","fed":"San Juan","pg":149}]},"COAMO":{"nombre":"Coamo","filas":381,"comp":123,"contra":87,"pct":70.7,"tel":18,"ej":[{"n":"ROBEXI ANGELI VELÁZQUEZ","plan":"Coamo","fed":"Guayama","pg":202},{"n":"VIDAL PÉREZ LOZADA","plan":"Coamo","fed":"Guayama","pg":575},{"n":"ROBERTO UBIÑAS ANGUEIRA","plan":"Coamo","fed":"Guayama","pg":575}]},"COMERIO":{"nombre":"Comerío","filas":60,"comp":9,"contra":5,"pct":null,"tel":3,"ej":[{"n":"LUIS BÁEZ CABRERA Premier Pain & Spine Llc","plan":"Comerío","fed":"Bayamón","pg":827},{"n":"MANUEL CRUZ SOTO","plan":"Comerío","fed":"Manatí","pg":828},{"n":"MIREYA BOLO DÍAZ","plan":"Comerío","fed":"Corozal","pg":828}]},"COROZAL":{"nombre":"Corozal","filas":87,"comp":23,"contra":7,"pct":30.4,"tel":5,"ej":[{"n":"LAURA PADILLA","plan":"Corozal","fed":"Manatí","pg":826},{"n":"MARÍA PEGUERO IGUINA","plan":"Corozal","fed":"Manatí","pg":826},{"n":"ANTONIO DEL TORO SÁNCHEZ","plan":"Corozal","fed":"Culebra","pg":830}]},"CULEBRA":{"nombre":"Culebra","filas":32,"comp":2,"contra":0,"pct":null,"tel":1,"ej":[]},"DORADO":{"nombre":"Dorado","filas":87,"comp":24,"contra":12,"pct":50.0,"tel":5,"ej":[{"n":"JUAN ORTIZ MATOS","plan":"Dorado","fed":"Corozal","pg":229},{"n":"MARÍA RIVERA CONCEPCIÓN","plan":"Dorado","fed":"Vega Alta","pg":837},{"n":"JOSÉ SOBRINO CATONI East Coast Medical","plan":"Dorado","fed":"Bayamón","pg":839}]},"FAJARDO":{"nombre":"Fajardo","filas":89,"comp":26,"contra":5,"pct":19.2,"tel":8,"ej":[{"n":"JOSÉ SOBRINO CATONI East Coast Medical","plan":"Fajardo","fed":"Bayamón","pg":96},{"n":"ADIANES COTTO GONZÁLEZ La Sierra Town Center","plan":"Fajardo","fed":"Caguas","pg":105},{"n":"RAUL HERNÁNDEZ RODRÍGUEZ","plan":"Fajardo","fed":"Juncos","pg":105}]},"FLORIDA":{"nombre":"Florida","filas":75,"comp":19,"contra":16,"pct":84.2,"tel":1,"ej":[{"n":"ROBEXI ANGELI VELÁZQUEZ","plan":"Florida","fed":"Guayama","pg":848},{"n":"JOSÉ PIMENTEL FERNÁNDEZ","plan":"Florida","fed":"Guayama","pg":848},{"n":"ROBEXI ANGELI VELÁZQUEZ","plan":"Florida","fed":"Guayama","pg":848}]},"GUANICA":{"nombre":"Guánica","filas":80,"comp":14,"contra":7,"pct":50.0,"tel":1,"ej":[{"n":"ENRÍQUEZ BERRÍOS, YANIA","plan":"Guánica","fed":"Guayama","pg":422},{"n":"GONZÁLEZ LORENZO, MARILIS","plan":"Guánica","fed":"Caguas","pg":422},{"n":"FIGUEROA APONTE, CARLOS Clínica Ambulatorio De Guayama Cima","plan":"Guánica","fed":"Guayama","pg":426}]},"GUAYAMA":{"nombre":"Guayama","filas":270,"comp":88,"contra":34,"pct":38.6,"tel":8,"ej":[{"n":"EDGARDO RONDA LEBRÓN","plan":"Guayama","fed":"Cidra","pg":141},{"n":"JULIO CORDERO SEPÚLVEDA","plan":"Guayama","fed":"Gurabo","pg":141},{"n":"PEDRO ORTIZ LARA","plan":"Guayama","fed":"Salinas","pg":170}]},"GUAYANILLA":{"nombre":"Guayanilla","filas":102,"comp":35,"contra":24,"pct":68.6,"tel":5,"ej":[{"n":"RAFAEL MÉNDEZ RODRÍGUEZ Mattei Lluberas 24","plan":"Guayanilla","fed":"Yauco","pg":78},{"n":"ALEXANDRA CAPELLÁN BATISTA","plan":"Guayanilla","fed":"Ponce","pg":80},{"n":"MARÍA VÉLEZ MALDONADO","plan":"Guayanilla","fed":"Ponce","pg":81}]},"GUAYNABO":{"nombre":"Guaynabo","filas":153,"comp":52,"contra":13,"pct":25.0,"tel":10,"ej":[{"n":"ANDREA TESTANI Centro De Medicina Primaría De Va","plan":"Guaynabo","fed":"Vega Alta","pg":213},{"n":"HÉCTOR FLORIAN RAMÍREZ Centro De Medicina Primaría De Va","plan":"Guaynabo","fed":"Vega Alta","pg":213},{"n":"KAREEN TIRADO VÁZQUEZ","plan":"Guaynabo","fed":"Vega Alta","pg":213}]},"GURABO":{"nombre":"Gurabo","filas":243,"comp":67,"contra":51,"pct":76.1,"tel":5,"ej":[{"n":"NANNETTE SANTIAGO BETANCOURT","plan":"Gurabo","fed":"Caguas","pg":145},{"n":"REYNALDO VALENTÍN ORTIZ Corporacion De Servicios Medicos","plan":"Gurabo","fed":"Hatillo","pg":578},{"n":"LORRAINE FRANQUI TALAVERA Clínica Dental Bayaney","plan":"Gurabo","fed":"Hatillo","pg":578}]},"HATILLO":{"nombre":"Hatillo","filas":178,"comp":52,"contra":18,"pct":34.6,"tel":10,"ej":[{"n":"AMNERYS ALBARRÁN RIVERA","plan":"Hatillo","fed":"Arecibo","pg":240},{"n":"MARÍA CUAUTLI RODRÍGUEZ","plan":"Hatillo","fed":"Utuado","pg":240},{"n":"JAIME LÓPEZ MEDINA","plan":"Hatillo","fed":"Vega Baja","pg":241}]},"HORMIGUEROS":{"nombre":"Hormigueros","filas":263,"comp":73,"contra":61,"pct":83.6,"tel":3,"ej":[{"n":"NILVER PÉREZ PÉREZ","plan":"Hormigueros","fed":"San Germán","pg":62},{"n":"RAYMOND TOSSAS ESTRADA","plan":"Hormigueros","fed":"San Germán","pg":62},{"n":"CABRERA RAMOS, TYFANNIE","plan":"Hormigueros","fed":"Humacao","pg":441}]},"HUMACAO":{"nombre":"Humacao","filas":457,"comp":185,"contra":57,"pct":30.8,"tel":35,"ej":[{"n":"JUAN LÓPEZ FONTANET","plan":"Humacao","fed":"Caguas","pg":111},{"n":"MYRIAM SÁEZ CARTAGENA","plan":"Humacao","fed":"Aibonito","pg":111},{"n":"OLGA LAGRANDIER GÓMEZ","plan":"Humacao","fed":"Caguas","pg":116}]},"ISABELA":{"nombre":"Isabela","filas":119,"comp":47,"contra":5,"pct":10.6,"tel":9,"ej":[{"n":"OLGA GUZMÁN GUZMÁN","plan":"Isabela","fed":"San Sebastián","pg":31},{"n":"RADAMÉS ROMÁN GRAU Policínica De Añasco","plan":"Isabela","fed":"Añasco","pg":43},{"n":"LUIS PAZ REYES","plan":"Isabela","fed":"Vega Baja","pg":242}]},"JAYUYA":{"nombre":"Jayuya","filas":84,"comp":19,"contra":10,"pct":52.6,"tel":4,"ej":[{"n":"LABORATORIO MÉDICO E INDUSTRIAL DEL SUR, CORP Laboratorio Mé","plan":"Jayuya","fed":"Juana Díaz","pg":920},{"n":"LABORATORIO ALHAMBRA LLC Laboratorio Alhambra","plan":"Jayuya","fed":"Juana Díaz","pg":920},{"n":"LABORATORIO CLÍNICO IRIZÁRRY GUASCH INC (JUANA DÍAZ)","plan":"Jayuya","fed":"Juana Díaz","pg":920}]},"JUANA DIAZ":{"nombre":"Juana Díaz","filas":368,"comp":138,"contra":93,"pct":67.4,"tel":12,"ej":[{"n":"BETHZAIDA TORRES NADAL","plan":"Juana Díaz","fed":"Ponce","pg":85},{"n":"MANUEL DÍAZ SANTIAGO","plan":"Juana Díaz","fed":"Juncos","pg":580},{"n":"RICARDO BRAVO MUÑOZ","plan":"Juana Díaz","fed":"Juncos","pg":580}]},"JUNCOS":{"nombre":"Juncos","filas":121,"comp":50,"contra":16,"pct":32.0,"tel":11,"ej":[{"n":"RAFAEL RAMOS HERNÁNDEZ","plan":"Juncos","fed":"Las Piedras","pg":127},{"n":"JULIO MARRERO GUADALUPE","plan":"Juncos","fed":"Cidra","pg":138},{"n":"SONIA CORREA MARRA","plan":"Juncos","fed":"Cayey","pg":139}]},"LAJAS":{"nombre":"Lajas","filas":152,"comp":45,"contra":34,"pct":75.6,"tel":2,"ej":[{"n":"JORGE IRIZARRY VEGA","plan":"Lajas","fed":"Cabo Rojo","pg":26},{"n":"NICANOR PÉREZ LAGUILLO","plan":"Lajas","fed":"Cabo Rojo","pg":27},{"n":"CARLOS ORTIZ SOTO","plan":"Lajas","fed":"Cabo Rojo","pg":27}]},"LARES":{"nombre":"Lares","filas":229,"comp":82,"contra":61,"pct":74.4,"tel":6,"ej":[{"n":"LUIS TORRES AGUILAR","plan":"Lares","fed":"San Sebastián","pg":269},{"n":"DÍAZ RODRÍGUEZ, ANAIRY","plan":"Lares","fed":"Las Piedras","pg":459},{"n":"RAÚL GUTIERREZ MÉNDEZ","plan":"Lares","fed":"Loíza","pg":582}]},"LAS MARIAS":{"nombre":"Las Marías","filas":32,"comp":11,"contra":6,"pct":54.5,"tel":0,"ej":[{"n":"LUZ JIMÉNEZ MORALES","plan":"Las Marías","fed":"Hormigueros","pg":62},{"n":"GRETCHEN ORTIZ SÁNCHEZ","plan":"Las Marías","fed":"Yauco","pg":75},{"n":"RAÚL ACOSTA FIGUEROA","plan":"Las Marías","fed":"Yauco","pg":75}]},"LAS PIEDRAS":{"nombre":"Las Piedras","filas":405,"comp":121,"contra":75,"pct":62.0,"tel":12,"ej":[{"n":"SHERRY SANTIAGO CASTRO Parque Industrial Tejas","plan":"Las Piedras","fed":"San Juan","pg":109},{"n":"JESSE DÍAZ CORREA Legacy Senior Living","plan":"Las Piedras","fed":"Humacao","pg":118},{"n":"RAFAEL BAQUERO ÁLVAREZ","plan":"Las Piedras","fed":"Caguas","pg":118}]},"LOIZA":{"nombre":"Loíza","filas":49,"comp":19,"contra":14,"pct":73.7,"tel":1,"ej":[{"n":"PORFIRIO RODRÍGUEZ GONZÁLEZ","plan":"Loíza","fed":"San Juan","pg":96},{"n":"JESSICA RÍOS DEL POZO San Jorge Medical Building 254 Ofic 30","plan":"Loíza","fed":"San Juan","pg":96},{"n":"ELISEO HERNÁNDEZ PÉREZ","plan":"Loíza","fed":"Manatí","pg":583}]},"LUQUILLO":{"nombre":"Luquillo","filas":31,"comp":8,"contra":3,"pct":null,"tel":1,"ej":[{"n":"MIGUEL GOYECHEA PABÓN","plan":"Luquillo","fed":"Luiquillo","pg":92},{"n":"ARROBA CARPIO, ARTURO L. Torre Médica Ii","plan":"Luquillo","fed":"Manatí","pg":461},{"n":"MIGUEL GOYECHEA PABÓN","plan":"Luquillo","fed":"Luiquillo","pg":943}]},"MANATI":{"nombre":"Manatí","filas":384,"comp":159,"contra":39,"pct":24.5,"tel":20,"ej":[{"n":"CARLOS ALOMAR LÓPEZ Clínicas Externas Hospital San Lucas","plan":"Manatí","fed":"Bayamón","pg":221},{"n":"CARLOS PLACER ROMÁN","plan":"Manatí","fed":"San Juan","pg":221},{"n":"VANESSA RAICES LÓPEZ","plan":"Manatí","fed":"Arecibo","pg":233}]},"MARICAO":{"nombre":"Maricao","filas":60,"comp":22,"contra":19,"pct":86.4,"tel":3,"ej":[{"n":"JOSÉ HERNÁNDEZ VERA Ruiz Belvis 6","plan":"Maricao","fed":"Mayagüez","pg":64},{"n":"PEDRO TORRES MORALES","plan":"Maricao","fed":"Maunabo","pg":978},{"n":"ELSA FIGUEROA TORRES Smart Speech Center, Inc","plan":"Maricao","fed":"Guayama","pg":978}]},"MAUNABO":{"nombre":"Maunabo","filas":55,"comp":12,"contra":8,"pct":66.7,"tel":2,"ej":[{"n":"MARTÍNEZ TORO, ETTSON A.","plan":"Maunabo","fed":"Mayagüez","pg":466},{"n":"MEDINA PI ERIK","plan":"Maunabo","fed":"Mayagüez","pg":466},{"n":"SAN MIGUEL LAFONTAINE, LUCÍA","plan":"Maunabo","fed":"Mayagüez","pg":466}]},"MAYAGUEZ":{"nombre":"Mayagüez","filas":256,"comp":98,"contra":46,"pct":46.9,"tel":16,"ej":[{"n":"RODOLFO TROCHE NEGRÓN Torre Médica Auxilio Mutuo","plan":"Mayagüez","fed":"San Juan","pg":22},{"n":"IVELISSE RIVERA BORGES","plan":"Mayagüez","fed":"San Juan","pg":22},{"n":"ILEANA OCASIO MELÉNDEZ Clínica De La Escuela De Medicina","plan":"Mayagüez","fed":"San Juan","pg":22}]},"MOCA":{"nombre":"Moca","filas":194,"comp":92,"contra":53,"pct":57.6,"tel":6,"ej":[{"n":"ROBERTO AYALA RÍOS","plan":"Moca","fed":"Añasco","pg":29},{"n":"PEDRO ROSADO VALENTÍN","plan":"Moca","fed":"Añasco","pg":29},{"n":"MARIO VÉLEZ GONZÁLEZ","plan":"Moca","fed":"Añasco","pg":29}]},"MOROVIS":{"nombre":"Morovis","filas":56,"comp":15,"contra":1,"pct":6.7,"tel":1,"ej":[{"n":"LABORATORIO CLÍNICO AVANZADO EMMANUEL INC","plan":"Morovis","fed":"Toa Alta","pg":1349}]},"NAGUABO":{"nombre":"Naguabo","filas":110,"comp":23,"contra":7,"pct":30.4,"tel":4,"ej":[{"n":"IBEL TORRES GARCÍA","plan":"Naguabo","fed":"Humacao","pg":156},{"n":"LUIS JIMÉNEZ OCASIO","plan":"Naguabo","fed":"Yabucoa","pg":166},{"n":"AWILDA SOLIS DÍAZ Cristóbal Colón No 10","plan":"Naguabo","fed":"Yabucoa","pg":166}]},"NARANJITO":{"nombre":"Naranjito","filas":88,"comp":17,"contra":9,"pct":52.9,"tel":2,"ej":[{"n":"LUIS BERNIER RIVERA","plan":"Naranjito","fed":"Patillas","pg":586},{"n":"ROSA RIVERA MORALES","plan":"Naranjito","fed":"Patillas","pg":586},{"n":"JANET RIVERA RIVERA","plan":"Naranjito","fed":"Patillas","pg":586}]},"OROCOVIS":{"nombre":"Orocovis","filas":196,"comp":33,"contra":20,"pct":60.6,"tel":3,"ej":[{"n":"IGNACIO ACEVEDO SIERRA","plan":"Orocovis","fed":"Manatí","pg":270},{"n":"LUIS ROSA TOLEDO","plan":"Orocovis","fed":"Manatí","pg":270},{"n":"BÁEZ RODRÍGUEZ, MARY","plan":"Orocovis","fed":"Peñuelas","pg":487}]},"PATILLAS":{"nombre":"Patillas","filas":328,"comp":89,"contra":82,"pct":92.1,"tel":1,"ej":[{"n":"ARTURO CAYERE MORALES Salinas Family Medical Services, Psc","plan":"Patillas","fed":"Salinas","pg":181},{"n":"RAMÍREZ DE JESÚS, BARBARA","plan":"Patillas","fed":"Ponce","pg":488},{"n":"ROSADO ROCHE, LILLIAN","plan":"Patillas","fed":"Ponce","pg":488}]},"PENUELAS":{"nombre":"Peñuelas","filas":269,"comp":91,"contra":75,"pct":82.4,"tel":4,"ej":[{"n":"JOSÉ BATISTA TORRES","plan":"Peñuelas","fed":"Ponce","pg":84},{"n":"AWILDA FRANCO MATTA","plan":"Peñuelas","fed":"Fajardo","pg":92},{"n":"JOSUÉ MUÑIZ HERNÁNDEZ","plan":"Peñuelas","fed":"Aibonito","pg":197}]},"PONCE":{"nombre":"Ponce","filas":393,"comp":192,"contra":17,"pct":8.9,"tel":46,"ej":[{"n":"MARÍA FERNÁNDEZ MARTI Torre Médica Auxilio Mutuo","plan":"Ponce","fed":"San Juan","pg":22},{"n":"ADAIR LABOY ZENGOTITA Torre Médica Auxilio Mutuo 735","plan":"Ponce","fed":"San Juan","pg":23},{"n":"GISELA VÉLEZ RAMÍREZ","plan":"Ponce","fed":"Yauco","pg":76}]},"QUEBRADILLAS":{"nombre":"Quebradillas","filas":88,"comp":34,"contra":14,"pct":41.2,"tel":6,"ej":[{"n":"ROSILY RIVERA MATOS","plan":"Quebradillas","fed":"Ciales","pg":241},{"n":"JUAN LICEAGA SÁNCHEZ","plan":"Quebradillas","fed":"Isabela","pg":241},{"n":"OSVALDO CASTRO MONTALVO","plan":"Quebradillas","fed":"Arecibo","pg":242}]},"RINCON":{"nombre":"Rincón","filas":83,"comp":25,"contra":16,"pct":64.0,"tel":0,"ej":[{"n":"GAIL GONZÁLEZ CORCHADO","plan":"Rincón","fed":"Isabela","pg":46},{"n":"ANIBAL RODRÍGUEZ SANTANA","plan":"Rincón","fed":"Isabela","pg":46},{"n":"NOEL NIEVES LÓPEZ","plan":"Rincón","fed":"Moca","pg":51}]},"RIO GRANDE":{"nombre":"Río Grande","filas":1016,"comp":268,"contra":238,"pct":88.8,"tel":12,"ej":[{"n":"EDDY MIESES ARIZA Villa Andalucia D3","plan":"Río Grande","fed":"San Juan","pg":95},{"n":"ROBERTO PÉREZ GUTIÉRREZ","plan":"Río Grande","fed":"San Juan","pg":95},{"n":"CARLOS FONTANEZ REYES","plan":"Río Grande","fed":"Fajardo","pg":104}]},"SABANA GRANDE":{"nombre":"Sabana Grande","filas":271,"comp":56,"contra":39,"pct":69.6,"tel":5,"ej":[{"n":"EDUARDO RODRÍGUEZ VÁZQUEZ Centro De Diagnóstico Y Tratamient","plan":"Sabana Grande","fed":"San Sebastián","pg":59},{"n":"RAMÓN PÉREZ PÉREZ","plan":"Sabana Grande","fed":"Lajas","pg":71},{"n":"JOSÉ NAZARIO LUGO Playa De Ponce","plan":"Sabana Grande","fed":"Ponce","pg":75}]},"SALINAS":{"nombre":"Salinas","filas":156,"comp":59,"contra":44,"pct":74.6,"tel":4,"ej":[{"n":"JOSÉ PIMENTEL FERNÁNDEZ","plan":"Salinas","fed":"Guayama","pg":170},{"n":"ROBEXI ANGELI VELÁZQUEZ","plan":"Salinas","fed":"Guayama","pg":170},{"n":"JOSÉ PIMENTEL FERNÁNDEZ","plan":"Salinas","fed":"Guayama","pg":184}]},"SAN GERMAN":{"nombre":"San Germán","filas":1016,"comp":290,"contra":214,"pct":73.8,"tel":23,"ej":[{"n":"EILEEN SOTO RUIZ","plan":"San Germán","fed":"Aguada","pg":63},{"n":"MELVIN TORRES","plan":"San Germán","fed":"Aguada","pg":63},{"n":"MARTÍNEZ GONZÁLEZ, KAREN Clínica Ambulatoria Ansiedad (rcm)","plan":"San Germán","fed":"San Juan","pg":510}]},"SAN JUAN":{"nombre":"San Juan","filas":1564,"comp":787,"contra":38,"pct":4.8,"tel":128,"ej":[{"n":"MOISÉS ORTIZ VILLALOBOS","plan":"San Juan","fed":"Caguas","pg":130},{"n":"MICHELLE LOZADA MARTÍNEZ","plan":"San Juan","fed":"Toa Baja","pg":220},{"n":"YANIRA MEDINA CLAUDIO","plan":"San Juan","fed":"Toa Baja","pg":220}]},"SAN LORENZO":{"nombre":"San Lorenzo","filas":90,"comp":29,"contra":8,"pct":27.6,"tel":2,"ej":[{"n":"MARIELLY MELÉNDEZ TIRADO","plan":"San Lorenzo","fed":"Humacao","pg":151},{"n":"MANUEL GUZMÁN SOLIS","plan":"San Lorenzo","fed":"Humacao","pg":151},{"n":"FÉLIX VILLAR HERNÁNDEZ","plan":"San Lorenzo","fed":"Trujillo Alto","pg":152}]},"SAN SEBASTIAN":{"nombre":"San Sebastián","filas":225,"comp":94,"contra":29,"pct":30.9,"tel":12,"ej":[{"n":"DELVIS RAMÍREZ LUGO","plan":"San Sebastián","fed":"Cabo Rojo","pg":26},{"n":"WILMA CARO CARO","plan":"San Sebastián","fed":"Cabo Rojo","pg":26},{"n":"WILMER DÁVILA GONZÁLEZ","plan":"San Sebastián","fed":"Cabo Rojo","pg":26}]},"SANTA ISABEL":{"nombre":"Santa Isabel","filas":91,"comp":21,"contra":8,"pct":38.1,"tel":4,"ej":[{"n":"JOSÉ PIMENTEL FERNÁNDEZ","plan":"Santa Isabel","fed":"Guayama","pg":199},{"n":"ROBEXI ANGELI VELÁZQUEZ","plan":"Santa Isabel","fed":"Guayama","pg":199},{"n":"SALUD INTEGRAL EN LA MONTAÑA, INC. - CENTRO DE SALULD INTEGR","plan":"Santa Isabel","fed":"Toa Alta","pg":540}]},"TOA ALTA":{"nombre":"Toa Alta","filas":162,"comp":50,"contra":26,"pct":52.0,"tel":3,"ej":[{"n":"RODOLFO OROZCO GALINDO","plan":"Toa Alta","fed":"Toa Baja","pg":222},{"n":"BARRIOS FALCÓN, MELISSA Integral Healthcare Services","plan":"Toa Alta","fed":"Toa Baja","pg":541},{"n":"FUENTES FONSECA, LOURDES","plan":"Toa Alta","fed":"San Juan","pg":542}]},"TOA BAJA":{"nombre":"Toa Baja","filas":267,"comp":85,"contra":55,"pct":64.7,"tel":6,"ej":[{"n":"EMILIO DÁVILA AGOSTO","plan":"Toa Baja","fed":"Manatí","pg":221},{"n":"JAIME RODRÍGUEZ QUINQUILLA","plan":"Toa Baja","fed":"San Juan","pg":221},{"n":"SALVADOR LÓPEZ ROJAS","plan":"Toa Baja","fed":"Arecibo","pg":233}]},"TRUJILLO ALTO":{"nombre":"Trujillo Alto","filas":71,"comp":25,"contra":9,"pct":36.0,"tel":3,"ej":[{"n":"WILSON VARGAS MALDONADO","plan":"Trujillo Alto","fed":"Vega Alta","pg":602},{"n":"TIARA OTERO NATER","plan":"Trujillo Alto","fed":"Vega Baja","pg":603},{"n":"YAIRA ROJAS TORRES Centro Profesional Médico Dental","plan":"Trujillo Alto","fed":"Vega Baja","pg":603}]},"UTUADO":{"nombre":"Utuado","filas":77,"comp":32,"contra":15,"pct":46.9,"tel":2,"ej":[{"n":"COLÓN DE LEÓN, ENRIQUE L. Morovis Community Health Center In","plan":"Utuado","fed":"Vega Alta","pg":547},{"n":"AMNERYS ALBARRÁN RIVERA","plan":"Utuado","fed":"Arecibo","pg":1242},{"n":"KEYLA DÁVILA MARCANO","plan":"Utuado","fed":"Manatí","pg":1243}]},"VEGA ALTA":{"nombre":"Vega Alta","filas":188,"comp":73,"contra":36,"pct":49.3,"tel":12,"ej":[{"n":"SANDRA SOTO APONTE","plan":"Vega Alta","fed":"Toa Baja","pg":207},{"n":"PEDRO RAMOS RIVERA Consultorio Médico Dr Pedro L Ramos River","plan":"Vega Alta","fed":"Toa Baja","pg":207},{"n":"WASILAH SULEIMAN SULEIMAN","plan":"Vega Alta","fed":"Bayamón","pg":207}]},"VEGA BAJA":{"nombre":"Vega Baja","filas":165,"comp":58,"contra":14,"pct":24.1,"tel":7,"ej":[{"n":"ISMAEL GONZÁLEZ DELGADO","plan":"Vega Baja","fed":"Arecibo","pg":243},{"n":"ADALBERTO TOSADO AROCHO Cdt Villa Los Santos","plan":"Vega Baja","fed":"Arecibo","pg":243},{"n":"CENTRO DE MEDICINA PRIMARÍA DE VEGA ALTA X-RAY","plan":"Vega Baja","fed":"Vega Alta","pg":262}]},"VIEQUES":{"nombre":"Vieques","filas":116,"comp":29,"contra":19,"pct":65.5,"tel":2,"ej":[{"n":"SERRANO RIVERA, DAYANARA I. San Vicente Mall","plan":"Vieques","fed":"San Juan","pg":554},{"n":"MARÍA ARROYO MEDINA","plan":"Vieques","fed":"Yabucoa","pg":605},{"n":"MAYRA GÓMEZ ABREU","plan":"Vieques","fed":"Yabucoa","pg":605}]},"VILLALBA":{"nombre":"Villalba","filas":73,"comp":21,"contra":6,"pct":28.6,"tel":2,"ej":[{"n":"ARMANDO MUÑOZ ALVARADO","plan":"Villalba","fed":"Juana Díaz","pg":87},{"n":"JOSÉ RIVERA GUILBE","plan":"Villalba","fed":"Coamo","pg":201},{"n":"ANDÚJAR ROSARIO, CARMEN","plan":"Villalba","fed":"Ponce","pg":551}]},"YABUCOA":{"nombre":"Yabucoa","filas":119,"comp":29,"contra":15,"pct":51.7,"tel":2,"ej":[{"n":"MOISÉS ORTIZ VILLALOBOS","plan":"Yabucoa","fed":"Caguas","pg":125},{"n":"LUIS TORRELLAS RUIZ","plan":"Yabucoa","fed":"Humacao","pg":126},{"n":"ANA GALVA RODRÍGUEZ","plan":"Yabucoa","fed":"Juncos","pg":126}]},"YAUCO":{"nombre":"Yauco","filas":103,"comp":40,"contra":11,"pct":27.5,"tel":8,"ej":[{"n":"FRANCISCO MONTALVO RODRÍGUEZ Cpr Professional Building","plan":"Yauco","fed":"Mayagüez","pg":34},{"n":"ANTONIO PADUA RAMOS Cpr Professional Building","plan":"Yauco","fed":"Mayagüez","pg":34},{"n":"HÉCTOR IRIZARRY MONTALVO","plan":"Yauco","fed":"Guayanilla","pg":76}]}}
+
+async function handleExpedientePlanVital(req: any, res: any) {
+  const T = FMV_TITULARES
+  const nf = (n: number) => n.toLocaleString('en-US')
+
+  const pueblosOrdenados = Object.entries(FMV_PUEBLOS).sort((a, b) => a[1].nombre.localeCompare(b[1].nombre, 'es'))
+
+  const filaPueblo = ([key, p]: [string, FmvPueblo]) => `
+    <tr id="fila-${key.toLowerCase().replace(/ /g, '-')}">
+      <td class="p-2 border-b border-slate-200 font-semibold">${p.nombre}</td>
+      <td class="p-2 border-b border-slate-200 text-right">${nf(p.filas)}</td>
+      <td class="p-2 border-b border-slate-200 text-right">${nf(p.comp)}</td>
+      <td class="p-2 border-b border-slate-200 text-right">${nf(p.contra)}</td>
+      <td class="p-2 border-b border-slate-200 text-right font-semibold ${p.pct !== null && p.pct >= 50 ? 'text-rose-700' : p.pct !== null && p.pct >= 25 ? 'text-amber-700' : 'text-slate-700'}">${p.pct !== null ? p.pct + '%' : 'muestra chica'}</td>
+    </tr>`
+
+  const cr = FMV_PUEBLOS['CABO ROJO']
+  const ejemploCR = cr ? cr.ej.map(e => `
+    <div class="border border-slate-200 rounded-lg p-3 bg-white text-sm">
+      <b class="text-slate-900">${escapeHtml(e.n)}</b>
+      <div class="text-slate-600 mt-1">El directorio del plan lo lista en <b>${escapeHtml(e.plan)}</b> (página ${e.pg} del PDF). El registro federal lo tiene en <b>${escapeHtml(e.fed)}</b>. El médico existe; las 2 listas no se ponen de acuerdo en dónde.</div>
+    </div>`).join('') : ''
+
+  const FAQ: [string, string][] = [
+    ['¿Esto significa que mi médico no existe o que el directorio es falso?',
+     `No. De hecho el hallazgo a favor del plan es ese: verifiqué ${T.muestraViva} proveedores al azar contra el registro federal en vivo y ${T.npisMuertos} estaban dados de baja. No hay médicos fantasma. Lo que hay son direcciones y teléfonos que no cuadran entre las 2 listas oficiales, y esa diferencia la paga el paciente que está llamando.`],
+    ['¿De dónde salen estos números?',
+     `Del PDF oficial del Directorio de Proveedores del Plan Vital que maneja First Medical, edición aprobada el 20 de febrero de 2026: ${nf(T.paginas)} páginas parseadas completas a ${nf(T.filas)} filas, cruzadas contra el registro federal NPPES por número NPI. El método completo, los scripts y la huella digital del PDF están en esta misma página.`],
+    ['¿Cuál de las 2 listas tiene la razón cuando se contradicen?',
+     'Esta auditoría no lo decide: mide el desacuerdo. El registro federal a veces guarda la dirección de facturación del sistema hospitalario y no el consultorio real, y también envejece por su cuenta. Por eso se publican las 2 versiones y se adjudica caso por caso, con evidencia.'],
+    ['¿Le avisaron a First Medical antes de publicar esto?',
+     'Sí. El cruce se les compartió por escrito el 13 de agosto de 2026, antes de publicarse, por cortesía y por si tenían correcciones o contexto. Si contestan, su respuesta se incluye íntegra aquí.'],
+    ['¿Por qué San Juan sale con 4.8% de contradicción y pueblos como San Germán con 73.8%?',
+     'En parte porque el registro federal tiende a guardar la dirección de la sede administrativa, que casi siempre está en el área metro. Cuando un médico atiende en un pueblo pero su sistema factura desde San Juan, la contradicción aparece en la fila del pueblo. Es una contradicción real para el que busca al médico, pero su causa es estructural, no un error de digitación.'],
+    ['¿Puedo ver la data completa, fila por fila?',
+     `Sí. Las ${nf(T.filas)} filas están cargadas en una base de datos consultable y la copia completa se comparte a quien la pida: angel@angelanderson.com. Los 3 scripts para reproducir la auditoría desde el PDF oficial también.`],
+  ]
+
+  const body = `
+<article class="max-w-3xl mx-auto px-4 py-8">
+
+  <nav class="text-xs text-slate-500 mb-3"><a href="/" class="hover:text-teal-700">Registro Médico PR</a> › Expediente Plan Vital</nav>
+
+  <h1 class="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">¿El directorio de tu plan sabe dónde está tu médico?</h1>
+
+  <p class="text-lg text-slate-700 mt-4">No me levanté un día a auditar a nadie. Estaba haciendo una herramienta pa' que conseguir una cita médica no tomara semanas, y pa' que sirviera me tocó cuadrar las listas que ya existen: la del gobierno federal y las de los planes. Al cuadrarlas apareció esto.</p>
+
+  <p class="text-lg text-slate-700 mt-3">Crucé el Directorio de Proveedores del <b>Plan Vital</b> que maneja First Medical (edición oficial de febrero 2026, <b>${nf(T.paginas)} páginas</b>) completo contra el registro federal NPPES. <b>${nf(T.filas)} filas.</b> Este es el expediente, pueblo por pueblo.</p>
+
+  <div class="bg-rose-50 border border-rose-200 rounded-xl p-4 mt-6">
+    <p class="text-sm text-rose-900 m-0"><b>El recibo en 1 línea:</b> de las ${nf(T.comparables)} filas que se pueden cruzar por número federal (NPI), <b>${nf(T.contradicciones)} (${T.pctBruta}%)</b> listan al proveedor en un pueblo que el registro federal contradice. Verifiqué ${T.muestraViva} al azar contra el registro en vivo y el número defendible queda en <b>~${T.pctAjustada}%</b>. Casi 1 de cada 2.</p>
+  </div>
+
+  <div class="bg-teal-50 border border-teal-200 rounded-xl p-4 mt-3">
+    <p class="text-sm text-teal-900 m-0"><b>Y el dato que ordena todo:</b> de ${T.muestraViva} proveedores verificados en vivo, <b>${T.npisMuertos} estaban dados de baja</b>. No hay médicos fantasma. <b>Hay direcciones y teléfonos fantasma.</b> El médico existe; la lista te manda al sitio equivocado. Eso es una buena noticia con un problema arreglable adentro.</p>
+  </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Tu pueblo</h2>
+  <p class="text-sm text-slate-600 mb-3">Escoge tu pueblo y mira cuántas filas del directorio lo mencionan, cuántas se pueden cruzar contra el registro federal, y en cuántas las 2 listas no se ponen de acuerdo.</p>
+
+  <select id="fmv-select" class="border border-slate-300 rounded-lg p-2 text-sm w-full max-w-xs bg-white" aria-label="Escoge tu pueblo">
+    ${pueblosOrdenados.map(([k, p]) => `<option value="${k}"${k === 'CABO ROJO' ? ' selected' : ''}>${p.nombre}</option>`).join('')}
+  </select>
+  <div id="fmv-detalle" class="mt-3"></div>
+
+  <noscript>
+    <div class="border border-slate-200 rounded-xl p-4 mt-3 bg-white text-sm text-slate-700">
+      <b>Cabo Rojo</b>: ${cr ? `${nf(cr.filas)} filas en el directorio, ${nf(cr.comp)} cruzables, ${nf(cr.contra)} contradicen el registro federal (${cr.pct}%).` : ''} La tabla completa de los 78 pueblos está más abajo.
+    </div>
+    ${ejemploCR}
+  </noscript>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Los 78 pueblos, completos</h2>
+  <p class="text-sm text-slate-600 mb-3">"Cruzables" = filas con NPI donde las 2 fuentes declaran pueblo. Donde la base cruzable es menor de 10, el porciento no se publica: un rango con muestra chica miente con cara de rigor.</p>
+
+  <div class="overflow-x-auto border border-slate-200 rounded-xl" style="max-height:480px;overflow-y:auto">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-left sticky top-0">
+        <tr>
+          <th class="p-2 font-semibold text-slate-700 border-b border-slate-200">Pueblo (según el plan)</th>
+          <th class="p-2 font-semibold text-slate-700 border-b border-slate-200 text-right">Filas</th>
+          <th class="p-2 font-semibold text-slate-700 border-b border-slate-200 text-right">Cruzables</th>
+          <th class="p-2 font-semibold text-slate-700 border-b border-slate-200 text-right">Contradicen</th>
+          <th class="p-2 font-semibold text-slate-700 border-b border-slate-200 text-right">%</th>
+        </tr>
+      </thead>
+      <tbody>${pueblosOrdenados.map(filaPueblo).join('')}</tbody>
+    </table>
+  </div>
+
+  <div class="border-l-4 border-amber-400 bg-amber-50 rounded-r-xl p-4 mt-4">
+    <p class="text-sm text-slate-800 m-0"><b>El patrón que salta de la tabla:</b> San Juan sale con 4.8% de contradicción y pueblos como San Germán con 73.8%. Parte de eso es estructural: el registro federal tiende a guardar la dirección administrativa del sistema de salud (casi siempre en el metro), no el consultorio del pueblo donde el médico de verdad atiende. La contradicción es real para el que busca al médico. La causa, en muchos casos, es que <b>cuadrar las 2 listas no es el trabajo de nadie</b>.</p>
+  </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Los 6 hallazgos, en corto</h2>
+  <div class="overflow-x-auto border border-slate-200 rounded-xl">
+    <table class="w-full text-sm">
+      <tbody>
+        <tr><td class="p-3 border-b border-slate-200 font-semibold w-56">Contradicción de municipio</td><td class="p-3 border-b border-slate-200">${nf(T.contradicciones)} de ${nf(T.comparables)} filas cruzables (${T.pctBruta}% bruto, ~${T.pctAjustada}% defendible tras verificar ${T.muestraViva} en vivo)</td></tr>
+        <tr><td class="p-3 border-b border-slate-200 font-semibold">Teléfonos</td><td class="p-3 border-b border-slate-200">${nf(T.telDisc)} de ${nf(T.telChecked)} no cuadran entre las 2 fuentes (29.5%). Descontando centrales telefónicas y oficinas compartidas, quedan <b>${nf(T.telPorResolver)} sin explicación</b></td></tr>
+        <tr><td class="p-3 border-b border-slate-200 font-semibold">"No acepta pacientes nuevos"</td><td class="p-3 border-b border-slate-200">${T.aceptaNo} filas de ${nf(T.filas)}. El que haya tratado de sacar una cita sabe que la agenda real no se ve así</td></tr>
+        <tr><td class="p-3 border-b border-slate-200 font-semibold">Proveedores dados de baja</td><td class="p-3 border-b border-slate-200">${T.npisMuertos} de ${T.muestraViva} verificados en vivo. El problema no es de médicos inexistentes: es de datos viejos sobre médicos reales</td></tr>
+        <tr><td class="p-3 border-b border-slate-200 font-semibold">Área codes</td><td class="p-3 border-b border-slate-200">37 teléfonos de 20,439 fuera de 787/939 (0.18%), casi todos líneas corporativas legítimas. No es un patrón de error</td></tr>
+        <tr><td class="p-3 font-semibold">Tamaño de la red</td><td class="p-3">${nf(T.filas)} filas listadas, 17,088 combinaciones únicas de nombre, pueblo y teléfonos</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">El método, pa' que cualquiera lo reproduzca</h2>
+  <ol class="text-sm text-slate-700 space-y-2 pl-5 list-decimal">
+    <li><b>Descarga:</b> el PDF oficial del plan, ${nf(T.paginas)} páginas, aprobado el 20 de febrero de 2026. Huella digital SHA-256 pa' que sepas que hablamos del mismo archivo: <span class="font-mono text-xs break-all">${T.sha256}</span></li>
+    <li><b>Parseo:</b> <code>pdftotext -bbox-layout</code> + un script de Python que entrega las ${nf(T.filas)} filas. Anatomía confirmada a mano en 8 páginas distribuidas por el documento.</li>
+    <li><b>Identidad:</b> cruce contra ${nf(31247)} proveedores de salud del registro federal por contención de tokens, con desempate por teléfono o pueblo. ${nf(T.conNpi)} filas quedan con NPI asignado (33.2%); 1,190 ambiguas se dejan SIN cruzar a propósito, porque un NPI equivocado es peor que ninguno.</li>
+    <li><b>Verificación en vivo:</b> 2 muestras de ${T.muestraViva} contra la API pública de NPPES el 13 de agosto de 2026 (multi-oficina y status del NPI).</li>
+    <li><b>Reproducir:</b> los 3 scripts de Python y la data cruda (JSONL) se comparten completos a quien los pida: <a href="mailto:angel@angelanderson.com" class="text-teal-700 underline">angel@angelanderson.com</a>. Las ${nf(T.filas)} filas también están cargadas en una base de datos consultable con los campos derivados (contradicción y clasificación del teléfono) fila por fila.</li>
+  </ol>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Lo que esto NO prueba</h2>
+  <ul class="text-sm text-slate-700 space-y-2 list-none pl-0">
+    <li class="border-l-4 border-slate-300 pl-3"><b>No prueba que el proveedor no exista ni que no atienda donde dice el plan.</b> El registro federal expone 1 sola dirección de práctica por NPI en su API pública; un médico con privilegios en 3 hospitales puede aparecer con la dirección de 1 solo.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>El registro federal también envejece.</b> Es auto-atestación: un médico que se mudó hace 2 años y no actualizó su récord aparece "mal" en NPPES aunque el plan esté correcto. La contradicción mide desacuerdo entre 2 fuentes, no cuál tiene la razón.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>Atestación no es realidad operativa.</b> Que el directorio diga "acepta pacientes nuevos" no confirma que al llamar hoy la agenda esté abierta. Esta auditoría no hizo llamadas.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>El cruce cubre el 33.2% de las filas.</b> El resto (mayormente farmacias e instalaciones) queda fuera de los cruces de identidad. Los hallazgos aplican al subconjunto cruzable, no al directorio completo.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>El conteo por pueblo refleja cómo el plan agrupa sus filas</b>, no la densidad real de consultorios. San Germán, sede de un hospital regional, infla su conteo por administración.</li>
+  </ul>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">La cortesía, con fecha</h2>
+  <p class="text-sm text-slate-700">Este cruce se le compartió por escrito a First Medical el <b>13 de agosto de 2026</b>, antes de publicarse, por si tenían correcciones o contexto que lo explicara. Si contestan, su respuesta se publica íntegra aquí. No busco señalar a nadie: las listas oficiales se contradicen entre sí y eso le pasa a todo el que las herede. Mi interés es que el paciente que llama encuentre a su médico.</p>
+  <p class="text-sm text-slate-600 mt-2">Contexto, sin especular causalidad: el Centro de Periodismo Investigativo y Metro reportaron en abril 2026 impagos de First Medical a proveedores de su red. Se cita como contexto; esta auditoría no establece relación causal entre eso y las contradicciones de aquí.</p>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-8">
+    <p class="text-sm text-slate-800 m-0"><b>Lo que puedes hacer tú, hoy:</b> tu médico está en <a href="/" class="text-teal-700 font-semibold underline">registromedicopr.com</a>, gratis, por pueblo y por especialidad, y cuando las 2 fuentes se contradicen aquí se publican las 2. Si tu médico sale mal, dímelo y <b>se corrige el mismo día</b>: <a href="mailto:angel@angelanderson.com" class="text-teal-700 underline">angel@angelanderson.com</a> o texto al <a href="sms:+17874177711" class="text-teal-700 underline">787-417-7711</a>.</p>
+  </div>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-3">
+    <p class="text-sm text-slate-700 m-0"><b>Si llegaste aquí buscando un médico ahora mismo y es una emergencia:</b> no busques en listas. Llama al <b>9-1-1</b> o ve a la sala de emergencias más cercana.</p>
+  </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">De dónde salió cada número</h2>
+  <ul class="text-sm text-slate-600 space-y-2 list-disc pl-5">
+    <li>Directorio de Proveedores Plan Vital / First Medical, edición aprobada el <b>20 de febrero de 2026</b>, ${nf(T.paginas)} páginas. PDF oficial publicado por el plan; SHA-256 arriba.</li>
+    <li>Registro federal NPPES / CMS, cruce por NPI contra ${nf(31247)} proveedores de salud del substrato de Registro Médico PR, y API pública de NPPES en vivo (13 de agosto de 2026) para las 2 muestras de ${T.muestraViva}.</li>
+    <li>Expediente completo con los 6 cruces, la triage de teléfonos y los ejemplos verificables: auditoría del 13 de agosto de 2026. Todos los derivados de esta página se regeneran con un script que verifica los titulares contra el expediente antes de escribir.</li>
+  </ul>
+
+  <p class="text-sm text-slate-500 mt-8 border-t border-slate-200 pt-4">Esto no es una acusación ni asesoría médica. Es el desacuerdo entre 2 listas oficiales, medido, publicado con método y con fecha, pa' que la conversación empiece en otro sitio. Publicado el 19 de agosto de 2026.</p>
+
+</article>
+
+<script>
+(function () {
+  var D = ${JSON.stringify(FMV_PUEBLOS).replace(/</g, '\\u003c')};
+  var sel = document.getElementById('fmv-select');
+  var det = document.getElementById('fmv-detalle');
+  if (!sel || !det) return;
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function render(k) {
+    var p = D[k];
+    if (!p) { det.innerHTML = ''; return; }
+    var html = '<div class="border border-slate-200 rounded-xl p-4 bg-white">'
+      + '<div class="text-sm text-slate-800"><b class="text-lg">' + esc(p.nombre) + '</b><br>'
+      + p.filas.toLocaleString('en-US') + ' filas del directorio lo mencionan · ' + p.comp.toLocaleString('en-US') + ' cruzables contra el registro federal · <b>' + p.contra.toLocaleString('en-US') + ' contradicen el pueblo</b>'
+      + (p.pct !== null ? ' (' + p.pct + '%)' : ' (base menor de 10: el porciento no se publica)')
+      + (p.tel ? ' · ' + p.tel + ' teléfonos sin explicación tras descartar centrales' : '')
+      + '</div>';
+    if (p.ej && p.ej.length) {
+      html += '<div class="mt-3 space-y-2">';
+      for (var i = 0; i < p.ej.length; i++) {
+        var e = p.ej[i];
+        html += '<div class="border border-slate-100 rounded-lg p-3 bg-slate-50 text-sm"><b>' + esc(e.n) + '</b><div class="text-slate-600 mt-1">El plan lo lista en <b>' + esc(e.plan) + '</b> (página ' + e.pg + ' del PDF). El registro federal lo tiene en <b>' + esc(e.fed) + '</b>. El teléfono coincide en las 2 fuentes: el médico existe, las listas no cuadran en dónde.</div></div>';
+      }
+      html += '</div>';
+    }
+    html += '<div class="text-xs text-slate-500 mt-3">Los ejemplos son filas verificables: nombre, página del PDF oficial y registro federal público. Miden desacuerdo entre 2 fuentes, no culpa de nadie.</div></div>';
+    det.innerHTML = html;
+  }
+  sel.addEventListener('change', function () { render(sel.value); });
+  var m = (location.search.match(/[?&]pueblo=([^&]+)/) || [])[1];
+  if (m) { var k = decodeURIComponent(m).toUpperCase().replace(/-/g, ' '); if (D[k]) sel.value = k; }
+  render(sel.value);
+})();
+</script>`
+
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org', '@type': 'Article',
+      headline: '¿El directorio de tu plan sabe dónde está tu médico? El expediente Plan Vital, completo',
+      description: `Las ${nf(T.paginas)} páginas del Directorio de Proveedores Plan Vital (First Medical, feb 2026) cruzadas contra el registro federal NPPES: ${nf(T.filas)} filas, ~${T.pctAjustada}% de contradicción de municipio en las filas cruzables, 0 proveedores dados de baja. No hay médicos fantasma: hay direcciones fantasma.`,
+      author: { '@type': 'Person', name: 'Angel Anderson' },
+      publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+      inLanguage: 'es', url: 'https://registromedicopr.com/expediente-planvital',
+      dateModified: '2026-08-19',
+      spatialCoverage: [{ '@type': 'Place', name: 'Puerto Rico' }],
+    },
+    {
+      '@context': 'https://schema.org', '@type': 'Dataset',
+      name: 'Directorio de Proveedores Plan Vital (First Medical, feb 2026) cruzado contra NPPES',
+      description: `${nf(T.filas)} filas parseadas del PDF oficial del Directorio de Proveedores del Plan Vital (aprobado 20 feb 2026), con NPI asignado por cruce reproducible, contradicción de municipio y clasificación de discrepancia telefónica fila por fila. SHA-256 del PDF fuente: ${T.sha256}.`,
+      creator: { '@type': 'Person', name: 'Angel Anderson' },
+      publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+      inLanguage: 'es', url: 'https://registromedicopr.com/expediente-planvital',
+      temporalCoverage: '2026-02', spatialCoverage: { '@type': 'Place', name: 'Puerto Rico' },
+      variableMeasured: ['contradiccion_municipio', 'telefono_flag', 'acepta_nuevos', 'npi'],
+    },
+    {
+      '@context': 'https://schema.org', '@type': 'FAQPage',
+      mainEntity: FAQ.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
+    },
+  ]
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'Expediente Plan Vital: el directorio del plan, cruzado contra el registro federal',
+    description: `${nf(T.filas)} filas del Directorio de Proveedores Plan Vital (feb 2026) cruzadas contra NPPES: ~${T.pctAjustada}% de contradicción de municipio, 792 teléfonos sin explicación, 0 médicos dados de baja. Pueblo por pueblo, con método y fecha.`,
+    slug: 'expediente-planvital', bodyHtml: body, jsonLd: jsonLd as any,
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
 // =============== /puedo-volver — diáspora landing: números reales antes de decidir ===============
 async function handleRegistroPuedoVolver(req: any, res: any) {
   // Top specialties for the diáspora "should I move back / bring my parents" question, linked
@@ -19445,6 +19683,7 @@ const PAGE_CANONICAL: Record<string, string> = {
   'registro-mapa': 'https://registromedicopr.com/registro/mapa',
   'registro-opciones': 'https://registromedicopr.com/registro/opciones',
   'internado-psicologia': 'https://registromedicopr.com/internado-psicologia',
+  'expediente-planvital': 'https://registromedicopr.com/expediente-planvital',
   'registro-puedo-volver': 'https://registromedicopr.com/puedo-volver',
   'rendimiento': 'https://puertoricosinfiltros.com/rendimiento',
   'rentas': 'https://www.mapadecaborojo.com/rentas',
@@ -19561,6 +19800,7 @@ export default async function handler(req: any, res: any) {
     case 'porque': return await handleRegistroPorque(req, res)
     case 'registro-opciones': return await handleRegistroOpciones(req, res)
     case 'internado-psicologia': return await handleInternadoPsicologia(req, res)
+    case 'expediente-planvital': return await handleExpedientePlanVital(req, res)
     case 'carta-141': return await handleCarta141(req, res)
     case 'registro-puedo-volver': return await handleRegistroPuedoVolver(req, res)
     case 'recuperacion': return await handleRecuperacion(req, res)
