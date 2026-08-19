@@ -5198,7 +5198,7 @@ async function handleCambios(req: any, res: any) {
 }
 
 // Última actualización del registro — UN solo sitio que editar (se muestra en home + /cambios)
-const REG_LAST_UPDATE = { es: '7 ago 2026', en: 'Aug 7, 2026' }
+const REG_LAST_UPDATE = { es: '18 ago 2026', en: 'Aug 18, 2026' }
 
 async function handleRegistro(req: any, res: any) {
   const en = String(req.query.lang || '') === 'en'
@@ -5244,6 +5244,8 @@ async function handleRegistro(req: any, res: any) {
   <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-list-check"></i> ${REGISTRY_SPECS.length} ${t('especialidades', 'specialties')}</span>
   <a href="/cambios" class="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1 rounded-full hover:border-teal-400"><i class="fa-solid fa-calendar-check"></i> ${t(`Última actualización: ${REG_LAST_UPDATE.es} →`, `Last updated: ${REG_LAST_UPDATE.en} →`)}</a>
 </div>
+
+<p class="not-prose mt-3 text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">${t(`<strong>¿Prefieres preguntar por texto?</strong> Escribe lo que buscas (ej: <em>neurólogo Mayagüez</em>) al <a href="sms:+17874177711" class="font-bold text-teal-700 whitespace-nowrap">787-417-7711</a> y te contesta El Veci, con nombre y teléfono. Gratis.`, `<strong>Prefer to ask by text?</strong> Text what you need (e.g. <em>neurologist Mayagüez</em>) to <a href="sms:+17874177711" class="font-bold text-teal-700 whitespace-nowrap">787-417-7711</a> and El Veci answers with a name and phone number. Free.`)}</p>
 
 <div id="reg-tool" class="not-prose mt-5 bg-white border-2 border-teal-300 rounded-2xl p-6 shadow-sm scroll-mt-24">
   <label class="block">
