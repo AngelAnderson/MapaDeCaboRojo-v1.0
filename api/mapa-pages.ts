@@ -19629,7 +19629,7 @@ async function handleRegistroCenso(req: any, res: any) {
     <td class="py-2.5 px-3 text-center">${x.v === 0 ? '<span class="inline-block bg-slate-100 text-slate-500 text-xs font-semibold px-2 py-0.5 rounded">desconocido</span>' : `<span class="inline-block bg-emerald-100 text-emerald-700 font-black px-2 py-0.5 rounded">${x.acc}</span>`}</td>
   </tr>`).join('')
 
-  const body = `<p class="text-xs text-slate-400 mb-4">El Censo · registromedicopr.com · v0, punto de partida · julio 2026</p>
+  const body = `<p class="text-xs text-slate-400 mb-4">El Censo · registromedicopr.com · el conteo empezó en julio 2026 y sube en vivo</p>
 <h1 class="text-3xl md:text-4xl font-black text-slate-900 leading-tight">El Censo Médico Real de Puerto Rico</h1>
 <p class="text-lg text-slate-600 mt-3">La pregunta que nadie contesta con data: <strong>¿a cuál médico puedes llamar hoy, cerca de ti, que esté cogiendo pacientes?</strong> El registro federal dice cuántos médicos hay en papel. Nadie mide cuántos están aceptando pacientes de verdad. Aquí empezamos a contarlo, uno por uno, y publicamos el número aunque hoy sea incómodo.</p>
 
@@ -19661,7 +19661,10 @@ ${fresco.total ? `<div class="mt-4 bg-white border border-slate-200 rounded-xl p
 ${zeroState ? `<div class="bg-amber-50 border border-amber-200 rounded-xl p-5 mt-8">
   <p class="font-bold text-amber-900">El dato de hoy es cero, y ese es el punto.</p>
   <p class="text-sm text-amber-800 mt-1">Nadie en Puerto Rico — ni Salud, ni los planes, ni el gobierno federal — publica cuántos médicos están realmente aceptando pacientes nuevos. El número no existe. Esta página documenta el día cero: empezamos por el oeste, consultorio por consultorio, por texto, con fecha. Cada verificado que entre sube el contador aquí mismo. Sin humo: lo que no sabemos, dice "desconocido".</p>
-</div>` : ''}
+</div>` : `<div class="bg-emerald-50 border border-emerald-200 rounded-xl p-5 mt-8">
+  <p class="font-bold text-emerald-900">El conteo ya no es cero, y cada número tiene nombre.</p>
+  <p class="text-sm text-emerald-800 mt-1">Nadie en Puerto Rico publica cuántos médicos están realmente aceptando pacientes nuevos, así que lo estamos contando nosotros: oficina por oficina, con fecha, y con los que dijeron que no publicados igual que los que dijeron que sí. Empezó en julio en cero. Lo que ves arriba es lo que el pueblo y las propias oficinas han confirmado desde entonces. La historia completa de por qué esto existe: <a href="https://caborojo.com/censo-medico-real/" class="font-semibold underline">el estreno del Censo</a>.</p>
+</div>`}
 
 <h2 class="text-2xl font-black text-slate-900 mt-10">Los 3 números, pueblo por pueblo (oeste)</h2>
 <p class="text-sm text-slate-500 mt-2">La brecha entre la primera columna y la última es la que importa: cuántos médicos existen en papel vs. cuántos te contestan y te dan cita.</p>
@@ -19710,7 +19713,8 @@ ${detalle.some(d => d.coge === null) ? `
 <h2 class="text-2xl font-black text-slate-900 mt-10">Cómo se llena esto</h2>
 <ul class="list-disc pl-6 text-slate-700 mt-3 space-y-2 text-sm">
   <li><strong>Verificación directa:</strong> contactamos los consultorios por texto y anotamos SÍ/NO con fecha. Empezamos por primaria y salud mental en Cabo Rojo y Hormigueros.</li>
-  <li><strong>Tú:</strong> ¿llamaste a un médico y no están cogiendo pacientes, o el número ya no sirve? Ese dato vale oro pa'l próximo vecino. <a href="/registro" class="text-teal-700 font-semibold">Cuéntamelo aquí →</a></li>
+  <li><strong>Tú, por texto:</strong> ¿llamaste a un médico y no están cogiendo pacientes, o el número ya no sirve? Textea el nombre y lo que pasó al <a href="sms:+17874177711" class="text-teal-700 font-semibold">787-417-7711</a> y entra directo a la lista de verificación. También puedes <a href="/registro" class="text-teal-700 font-semibold">contarlo aquí →</a></li>
+  <li><strong>La propia oficina:</strong> el botón "¿Es tu perfil?" en cada ficha. Esta semana lo usaron una alergista, un psiquiatra y una dentista: sus fichas quedaron al día el mismo día.</li>
   <li><strong>Cada mes:</strong> guardamos la foto completa (serie histórica desde julio 2026), así se ve si esto mejora o empeora.</li>
 </ul>
 
