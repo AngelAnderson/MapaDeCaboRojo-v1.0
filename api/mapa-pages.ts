@@ -19737,6 +19737,11 @@ function wrongHost(req: any, page: string): string | null {
   const target = PAGE_CANONICAL[page]
   if (!target) return null
   if (!host) return null
+  // Previews de Vercel: renderizar, no redirigir. El redirect canónico mandaba
+  // todo preview a producción, así que una página en branch era imposible de
+  // revisar antes del merge. Los previews van protegidos por SSO y con
+  // x-robots noindex, así que no compiten con la canónica.
+  if (/\.vercel\.app$/.test(host)) return null
   // /mision vive en 2 hosts con contenido propio: la del Mapa (canónica histórica,
   // handleMision) y la de Sin Filtros (misión + metas con relojes,
   // handleMisionSinFiltros). A PRSF no se le redirige.
