@@ -479,7 +479,7 @@ async function runLaSenal(res: any) {
       ? senal.huecos.map((h: SenalCategoria) => `**${h.nombre}**: ${h.n28} búsquedas, ${h.sinRespuesta28} sin respuesta`).join(' · ')
       : 'ninguno esta semana';
     summary = `📡 **La Señal** (${runDate}) — /demanda respira sola.\n\n` +
-      `- **${senal.total28}** búsquedas reales en 28 días (${senal.total7} en 7d) · **${senal.categorias.length}** categorías con señal · **${senal.total28 ? Math.round(100 * senal.conRespuesta28 / senal.total28) : 0}%** encontró respuesta\n` +
+      `- **${senal.total28}** búsquedas reales en 28 días (${senal.total7} en 7d) · **${senal.categorias.length}** categorías con señal · **${senal.total28 ? Math.round(100 * senal.conRespuesta28 / senal.total28) : 0}%** recibió respuesta del directorio (matched, no "resuelto")\n` +
       `- Top: ${top}\n` +
       `- 🕳️ Huecos (≥50% sin respuesta): ${huecos}\n` +
       `- 👀 Lecturas de /demanda en 24h: **${lecturas24h}**\n\n` +

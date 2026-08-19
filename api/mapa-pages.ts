@@ -2133,14 +2133,14 @@ async function handleDemanda(req: any, res: any) {
 <div class="grid sm:grid-cols-3 gap-3 mt-6 not-prose">
   <div class="bg-white border border-slate-200 rounded-xl p-4 text-center"><p class="text-3xl font-black text-slate-900">${senal.total28}</p><p class="text-xs text-slate-500 font-semibold uppercase tracking-wide mt-1">búsquedas reales · 28 días</p></div>
   <div class="bg-white border border-slate-200 rounded-xl p-4 text-center"><p class="text-3xl font-black text-slate-900">${senal.categorias.length}</p><p class="text-xs text-slate-500 font-semibold uppercase tracking-wide mt-1">categorías con señal</p></div>
-  <div class="bg-white border border-slate-200 rounded-xl p-4 text-center"><p class="text-3xl font-black text-teal-700">${senal.total28 ? Math.round(100 * senal.conRespuesta28 / senal.total28) : 0}%</p><p class="text-xs text-slate-500 font-semibold uppercase tracking-wide mt-1">encontró respuesta</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4 text-center"><p class="text-3xl font-black text-teal-700">${senal.total28 ? Math.round(100 * senal.conRespuesta28 / senal.total28) : 0}%</p><p class="text-xs text-slate-500 font-semibold uppercase tracking-wide mt-1">recibió respuesta del directorio</p></div>
 </div>
 
 <h2>Lo que se buscó, categoría por categoría</h2>
 <p class="text-sm text-slate-600">Últimos 28 días. La línea al lado es la tendencia de las últimas 12 semanas. Una categoría entra a la tabla con 3 búsquedas o más.</p>
 <div class="not-prose overflow-x-auto">
 <table class="text-sm w-full">
-<thead><tr class="text-left text-xs text-slate-500 uppercase tracking-wide"><th class="py-2 pr-2">Categoría</th><th class="text-right pr-3">28 días</th><th class="text-right pr-3">7 días</th><th class="pr-2">Tendencia</th><th>¿Encontraron?</th></tr></thead>
+<thead><tr class="text-left text-xs text-slate-500 uppercase tracking-wide"><th class="py-2 pr-2">Categoría</th><th class="text-right pr-3">28 días</th><th class="text-right pr-3">7 días</th><th class="pr-2">Tendencia</th><th>¿Hubo respuesta?</th></tr></thead>
 <tbody>
 ${senal.categorias.map((c: SenalCategoria) => `<tr class="border-t border-slate-100">
   <td class="py-2 pr-2 font-semibold">${escapeHtml(c.nombre)}</td>
@@ -2164,7 +2164,7 @@ ${senal.huecos.map((h: SenalCategoria) => `<div class="bg-amber-50 border border
 </div>` : ''}
 
 <h2>De dónde sale esto</h2>
-<p class="text-sm text-slate-600">Son los mensajes reales que los vecinos le textean a El Veci (${PHONE_CTA}), agregados por categoría. Los mensajes crudos nunca se publican: aquí no hay nombres, ni teléfonos, ni textos de nadie. El tráfico de prueba del sistema está excluido. Se actualiza solo, todos los días. Última actualización: ${senal.generadoEl}.</p>
+<p class="text-sm text-slate-600">Son los mensajes reales que los vecinos le textean a El Veci (${PHONE_CTA}), agregados por categoría. Solo se cuentan los mensajes que piden algo concreto: los saludos y la conversación suelta no entran. Los mensajes crudos nunca se publican: aquí no hay nombres, ni teléfonos, ni textos de nadie. El tráfico de prueba del sistema está excluido. Se actualiza solo, todos los días. Última actualización: ${senal.generadoEl}.</p>
 `
     : `
 <div class="bg-amber-50 border-l-4 border-amber-400 p-4 my-6 rounded-r-lg not-prose">
