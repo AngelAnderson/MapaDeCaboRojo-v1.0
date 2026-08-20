@@ -10984,6 +10984,24 @@ async function handleSaludQueFalta(req: any, res: any) {
   const cr = { d: dental.find(r => /cabo rojo/i.test(r.municipio)), m: mental.find(r => /cabo rojo/i.test(r.municipio)) }
   const n = (x: any) => Number(x || 0).toLocaleString('en-US')
 
+  // Lo que se perdió: designaciones de cuidado primario RETIRADAS (el barrido activo no las ve).
+  // pr_hpsa_withdrawn es récord histórico (fechas de retiro no cambian); la lista "sigue afuera" se
+  // computa contra las activas de pr_hpsa_designations, así que si el PCO recupera una, el municipio
+  // sale de la lista solo en el próximo refresh — sin tocar esta página.
+  let wrows: any[] = []
+  try {
+    const { data } = await supabase.from('pr_hpsa_withdrawn')
+      .select('hpsa_name,municipios,pop,pct_poverty,score,designated_on,withdrawn_on')
+      .eq('discipline', 'primary').order('pop', { ascending: false })
+    wrows = data || []
+  } catch (_) {}
+  const acc = (s: any) => String(s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim()
+  const activePC = new Set(primary.map(r => acc(r.municipio)))
+  const lostMunis = [...new Set(wrows.flatMap(r => (r.municipios || []) as string[]))]
+  const stillOut = lostMunis.filter(m => !activePC.has(acc(m))).sort((a, b) => a.localeCompare(b, 'es'))
+  const recovered = lostMunis.filter(m => activePC.has(acc(m))).sort((a, b) => a.localeCompare(b, 'es'))
+  const wPop = wrows.reduce((t, r) => t + (Number(r.pop) || 0), 0)
+
   // Traduce el FTE federal a lenguaje de vecino. 0 = "Ninguno". <1 = "Menos de 1". >=1 = número redondeado.
   const fmtProv = (fte: number) => {
     const f = Number(fte)
@@ -11010,6 +11028,7 @@ async function handleSaludQueFalta(req: any, res: any) {
     `El gobierno federal certificó escasez de salud mental en 52 municipios de Puerto Rico. En ${zeroM || 44} de ellos, el conteo de proveedores a tiempo completo da CERO. Fuente: HRSA HPSA Find, compilado en puertoricosinfiltros.com/salud-que-falta`,
     `Puerto Rico necesita ${sumShort(mental).toFixed(0) || 70} proveedores de salud mental y ${sumShort(dental).toFixed(0) || 297} dentistas más para llegar a la meta federal mínima. El dinero para reclutarlos ya está aprobado. Fuente: HRSA, puertoricosinfiltros.com/salud-que-falta`,
     `Cabo Rojo: el gobierno federal certifica menos de 1 proveedor de salud mental a tiempo completo (${cr.m ? Number(cr.m.fte).toFixed(3) : '0.175'} exacto) para ${cr.m ? n(cr.m.pop) : '38,629'} personas de bajos ingresos, un nivel de escasez de ${cr.m?.score || 22} sobre 26. Fuente: HRSA HPSA Find 2023, puertoricosinfiltros.com/salud-que-falta`,
+    `El 2 de enero de 2024 se retiraron de una vez ${wrows.length || 9} designaciones federales de escasez de cuidado primario en PR: ${lostMunis.length || 41} municipios con ${n(wPop) || '1,356,152'} personas de bajos ingresos designadas perdieron la llave del dinero federal para reclutar médicos. ${stillOut.length || 30} municipios siguen sin ella hoy, incluyendo Ponce, Mayagüez, Bayamón, Caguas y Cabo Rojo. Fuente: archivos HRSA, puertoricosinfiltros.com/salud-que-falta`,
   ]
   const citableCards = citables.map(c => `
     <div class="flex items-start gap-2 bg-white border border-slate-200 rounded-xl p-3 mt-2">
@@ -11070,6 +11089,39 @@ ${shareRow({ text: `El gobierno federal certificó escasez de salud mental en 52
   </tbody></table>
 </div>
 <p class="mt-3 text-sm text-slate-600"><strong>El dato que duele:</strong> Puerto Rico usa el NHSC a razón de 2.5 médicos por cada 100,000 habitantes. West Virginia, con el mismo programa federal, a 15.3 — seis veces más. El detalle municipio por municipio, en <a href="/registro/estado" class="text-teal-700 font-semibold">el estado de los médicos →</a></p>
+
+<h2 id="perdido">Lo que se perdió, y nadie anunció</h2>
+<p>Las tablas de arriba son las designaciones que existen. Esta sección es la que faltaba: las que <strong>existían y se retiraron</strong>. El barrido federal solo enseña lo vivo; lo que se pierde desaparece sin dejar rastro en la página oficial.</p>
+<div class="not-prose mt-4 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-amber-300 font-bold">El 2 de enero de 2024</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Se retiraron de una vez ${wrows.length || 9} designaciones regionales de cuidado primario: ${lostMunis.length || 41} municipios, con ${n(wPop) || '1,356,152'} personas de bajos ingresos designadas, perdieron la llave del dinero federal para reclutar médicos primarios. Sin comunicado. Sin que la mayoría de los alcaldes se enterara.</p>
+</div>
+<p class="mt-4"><strong>${recovered.length || 11} municipios fueron rescatados después</strong> con designaciones nuevas municipio por municipio (${recovered.map(m => escapeHtml(m)).join(', ') || 'Aguas Buenas, Cataño, Jayuya, Las Marías, Loíza, Luquillo, Maricao, Moca, Naguabo, Río Grande, Toa Alta'}). Eso prueba que el trámite se sabe hacer y quién lo sabe hacer. <strong>${stillOut.length || 30} municipios siguen afuera hoy:</strong></p>
+<div class="not-prose flex flex-wrap gap-1.5 mt-2">
+  ${(stillOut.length ? stillOut : ['Adjuntas','Aguada','Aguadilla','Añasco','Arecibo','Barceloneta','Bayamón','Cabo Rojo','Caguas','Camuy','Ceiba','Fajardo','Florida','Guayanilla','Gurabo','Hatillo','Hormigueros','Isabela','Lajas','Lares','Mayagüez','Naranjito','Peñuelas','Ponce','Rincón','San Germán','San Lorenzo','San Sebastián','Utuado','Yauco']).map(m => `<span class="inline-block px-2.5 py-1 rounded-lg text-xs font-bold ${/cabo rojo/i.test(m) ? 'bg-teal-600 text-white' : 'bg-red-50 text-red-700 border border-red-200'}">${escapeHtml(m)}</span>`).join('')}
+</div>
+<p class="text-xs text-slate-500 mt-2">"Afuera" = sin designación de área o población de cuidado primario. Las clínicas comunitarias (FQHC) conservan su designación de facilidad, pero esa cubre solo a sus pacientes, no al municipio.</p>
+
+<h3>El caso de Cabo Rojo (y de todo el suroeste)</h3>
+<p>Cabo Rojo, Lajas, San Germán y Hormigueros tenían la designación juntos desde 2013 (la "Rational Service Area 3": 100,669 personas, 50.2% bajo pobreza, nivel de escasez 16). Se retiró ese 2 de enero. Y aquí está el detalle que convierte esto en un trámite y no en una batalla: <strong>la misma oficina que tiene que someterla — la Primary Care Office del Departamento de Salud — ya designó a Cabo Rojo en salud mental (abril 2023, activa, score 22) y en dental (noviembre 2023, activa, score 24)</strong>, con el formato municipio por municipio. Lo único que falta es repetir ese mismo trámite para cuidado primario. El papel se venció; la necesidad no.</p>
+
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm">
+    <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Designación retirada</th><th class="py-2 px-3">Municipios</th><th class="py-2 px-3 text-right">Personas</th><th class="py-2 px-3 text-right">Pobreza</th><th class="py-2 px-3 text-right">Desde</th></tr></thead>
+    <tbody>${wrows.map(r => `<tr class="border-t border-slate-100 ${/cabo rojo/i.test((r.municipios || []).join(',')) ? 'bg-teal-50/60' : ''}">
+      <td class="py-2 px-3 font-semibold text-slate-800">${escapeHtml(r.hpsa_name)}</td>
+      <td class="py-2 px-3 text-slate-600">${(r.municipios || []).map((m: string) => escapeHtml(m)).join(', ')}</td>
+      <td class="py-2 px-3 text-right text-slate-700">${n(r.pop)}</td>
+      <td class="py-2 px-3 text-right text-slate-700">${r.pct_poverty ? Number(r.pct_poverty).toFixed(1) + '%' : ''}</td>
+      <td class="py-2 px-3 text-right text-slate-400 text-xs">${escapeHtml(String(r.designated_on || '').slice(0, 4))}</td>
+    </tr>`).join('') || `<tr><td colspan="5" class="py-3 px-3 text-slate-500 text-sm">Data en vivo no disponible ahora. Verificado ago 2026: 9 designaciones retiradas el 01/02/2024, 41 municipios, 1,356,152 personas.</td></tr>`}</tbody>
+  </table>
+</div>
+<p class="text-sm text-slate-500 mt-2">Las 9 designaciones de cuidado primario retiradas el 2 de enero de 2024. Fuente: archivo oficial de HRSA (BCD_HPSA_FCT_DET_PC), verificado el 19 de agosto de 2026. Récord en la tabla pública <code>pr_hpsa_withdrawn</code>.</p>
+
+<p class="mt-4"><strong>Qué tiene que pasar (1 acción, sin crear nada nuevo):</strong> que la Primary Care Office someta a HRSA la designación municipal de cuidado primario de los municipios que quedaron afuera — el mismo trámite que ya completó para 11 municipios y para las designaciones de salud mental y dental de 2023. Esta sección se corrige sola: el barrido trimestral detecta cuando una designación vuelve, y el municipio sale de la lista roja con fecha.</p>
+
+${shareRow({ text: `El 2 de enero de 2024, ${lostMunis.length || 41} municipios de PR perdieron su designación federal de escasez de cuidado primario — la llave del dinero para reclutar médicos. ${stillOut.length || 30} siguen sin ella, incluyendo Ponce, Mayagüez y Cabo Rojo. Nadie lo anunció. El récord:`, url: 'https://puertoricosinfiltros.com/salud-que-falta#perdido', toWho: 'Al alcalde de un pueblo en la lista roja. Al médico joven decidiendo dónde ejercer. Al periodista que cubre salud.' })}
 
 <h2 id="quien-mantiene">¿Quién hizo esta lista, y de cuándo es?</h2>
 <p>Esta no es una lista nuestra. La mantiene el gobierno federal, y así funciona la cadena:</p>
@@ -11147,7 +11199,7 @@ ${mientrasTanto(
   <p class="mt-2 text-sm text-slate-600 italic">No busco culpables. Busco que el próximo médico que decida dónde ejercer vea esto.</p>
 </div>
 
-<p class="text-sm text-slate-500 mt-6">Cómo se hizo: barrido completo de las designaciones HPSA de Puerto Rico desde el servidor de mapas de HRSA (gisportal.hrsa.gov), guardado en la tabla pública <code>pr_hpsa_designations</code> y refrescado periódicamente. Los números son verificables en HPSA Find. Designaciones federales 2022-2023. ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a>. Julio 2026.</p>
+<p class="text-sm text-slate-500 mt-6">Cómo se hizo: barrido completo de las designaciones HPSA de Puerto Rico desde el servidor de mapas de HRSA (gisportal.hrsa.gov), guardado en la tabla pública <code>pr_hpsa_designations</code> y refrescado periódicamente. Los números son verificables en HPSA Find. Designaciones activas 2022-2023; retiradas verificadas contra el archivo oficial de HRSA el 19 de agosto de 2026 (tabla <code>pr_hpsa_withdrawn</code>). ¿Ves un error? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a>. Actualizado agosto 2026.</p>
 ${SHARE_COPY_SCRIPT}
 `
   const nZeroM = zeroM || 44
@@ -11166,7 +11218,7 @@ ${SHARE_COPY_SCRIPT}
         name: 'La salud que falta: las designaciones federales de escasez médica de Puerto Rico',
         about: 'Barrido completo de las áreas de escasez de profesionales de salud (HPSA) de Puerto Rico, con el dinero federal aprobado para resolverlas.',
         author, publisher, citation, inLanguage: 'es',
-        datePublished: '2026-07-13', dateModified: '2026-07-14',
+        datePublished: '2026-07-13', dateModified: '2026-08-19',
         url: 'https://puertoricosinfiltros.com/salud-que-falta',
       },
       {
