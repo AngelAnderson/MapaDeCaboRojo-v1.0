@@ -442,6 +442,7 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <a href="/pon-tu-negocio-en-el-mapa" class="hover:text-teal-600 font-semibold text-teal-700">Pon tu negocio</a>
 <a href="/tienda" class="hover:text-teal-600 font-semibold text-teal-700">Tienda</a>
 <a href="/barrios" class="hover:text-teal-600">Barrios</a>
+<a href="/demanda" class="hover:text-teal-600">Lo que busca la gente</a>
 <a href="/mision" class="hover:text-teal-600">Misión</a>
 <a href="/equipo" class="hover:text-teal-600">Equipo</a>
 </div>
