@@ -423,7 +423,8 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 </div></div>
 </div>
 <p class="mt-8 text-xs text-slate-400 text-center">${isEn ? 'Questions about who to see? Text El Veci:' : '¿Dudas de a quién ir? Escríbele al Veci:'} <strong>${PHONE_CTA}</strong>. ${isEn ? '' : 'Si te sirve, llégate.'}</p>
-<p class="mt-3 text-xs text-slate-500 text-center">🧠 ${isEn ? 'If it is an emotional crisis, do not wait for an appointment:' : 'Si es una crisis emocional, no esperes cita:'} <strong>${isEn ? '988 Lifeline' : 'Línea PAS 988'}</strong> (${isEn ? 'or' : 'o'} 1-800-981-0023), 24/7, ${isEn ? 'free' : 'gratis'}.</p>
+<p class="mt-3 text-xs text-slate-500 text-center">🚑 ${isEn ? 'Is it an emergency? Do not search here: call 911 or go to the nearest ER.' : '¿Es una emergencia? No busques aquí: llama al 911 o ve a la sala más cercana.'}</p>
+<p class="mt-2 text-xs text-slate-500 text-center">🧠 ${isEn ? 'If it is an emotional crisis, do not wait for an appointment:' : 'Si es una crisis emocional, no esperes cita:'} <strong>${isEn ? '988 Lifeline' : 'Línea PAS 988'}</strong> (${isEn ? 'or' : 'o'} 1-800-981-0023), 24/7, ${isEn ? 'free' : 'gratis'}.</p>
 <p class="mt-2 text-xs text-slate-400 text-center">${isEn ? 'You do not have to memorize anything. The registry stays here for whenever you or yours need it.' : 'No tienes que memorizar nada. El registro se queda aquí, para cuando te haga falta a ti o a los tuyos.'}</p>
 </div>
 </footer>` : `
@@ -5017,6 +5018,17 @@ async function handleRegistroAlert(req: any, res: any) {
     const { error: insErr } = await supabase.from('registro_alerts')
       .insert({ email, municipio, specialty, source: 'pueblo_page' })
     if (insErr) { res.status(200).send(JSON.stringify({ ok: true, dup: true })); return }
+    // La alerta también dirige al Verificador Diario: alguien esperando en ese pueblo es
+    // demanda real → los proveedores de ese municipio/especialidad suben en la cola (2026-08-20).
+    try {
+      const { data: dupDem } = await supabase.from('registro_demanda_verificacion')
+        .select('id').eq('municipio', municipio).eq('atendida', false)
+        .filter('especialidad', specialty ? 'eq' : 'is', specialty ?? null).limit(1)
+      if (!dupDem?.length) {
+        await supabase.from('registro_demanda_verificacion')
+          .insert({ municipio, especialidad: specialty, source: 'alerta_pueblo' })
+      }
+    } catch { /* señal best-effort, la alerta ya quedó */ }
     if (RESEND_API_KEY) {
       try {
         await fetch('https://api.resend.com/emails', {
@@ -6141,6 +6153,12 @@ ${planDirHtml}
       ${PR_PLANS.map(p => `<button type="button" class="pr-chip inline-flex items-center gap-1.5 bg-slate-100 hover:bg-sky-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-sm" data-plan="${escapeHtml(p.v)}">${escapeHtml(p.l)}</button>`).join('')}
     </div>
     <div id="pr-ok" hidden class="mt-2 text-sm text-emerald-700 font-semibold">✓ ${lang === 'en' ? 'Thank you. You just helped the next person who searches.' : 'Gracias. Acabas de ayudar al próximo que busque.'}</div>
+    <p class="font-bold text-slate-800 text-sm mt-4">${lang === 'en' ? 'Did they tell you if they are taking new patients?' : '¿Te dijeron si están cogiendo pacientes nuevos?'}</p>
+    <div id="ac-chips" class="flex flex-wrap gap-2 mt-2" data-place="${escapeHtml(place.id)}">
+      <button type="button" class="ac-chip inline-flex items-center gap-1.5 bg-slate-100 hover:bg-emerald-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-sm" data-acepta="si">✓ ${lang === 'en' ? 'Yes, taking patients' : 'Sí, están cogiendo'}</button>
+      <button type="button" class="ac-chip inline-flex items-center gap-1.5 bg-slate-100 hover:bg-rose-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-sm" data-acepta="no">✕ ${lang === 'en' ? 'No, not taking patients' : 'No están cogiendo'}</button>
+    </div>
+    <div id="ac-ok" hidden class="mt-2 text-sm text-emerald-700 font-semibold">✓ ${lang === 'en' ? 'Noted. El Veci will re-check with the office to confirm it with a date.' : 'Anotado. El Veci le va a preguntar a la oficina pa\' confirmarlo con fecha.'}</div>
   </div>
   <script>
   (function(){var box=document.getElementById('pr-chips');if(!box)return;var pid=box.getAttribute('data-place');
@@ -6149,6 +6167,14 @@ ${planDirHtml}
     try{gtag('event','plan_report',{plan:b.getAttribute('data-plan')})}catch(_){}
     fetch('/api/mapa-pages?page=plan-report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({place_id:pid,plan:b.getAttribute('data-plan')})}).catch(function(){});
     document.getElementById('pr-ok').hidden=false;});})();
+  (function(){var box=document.getElementById('ac-chips');if(!box)return;var pid=box.getAttribute('data-place');
+  box.addEventListener('click',function(e){var b=e.target.closest('.ac-chip');if(!b||b.disabled)return;
+    var v=b.getAttribute('data-acepta');
+    box.querySelectorAll('.ac-chip').forEach(function(x){x.disabled=true});
+    b.className='ac-chip inline-flex items-center gap-1.5 '+(v==='si'?'bg-emerald-600 border-emerald-600':'bg-rose-600 border-rose-600')+' border text-white font-semibold px-3 py-1.5 rounded-full text-sm';
+    try{gtag('event','acepta_report',{acepta:v})}catch(_){}
+    fetch('/api/mapa-pages?page=acepta-report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({place_id:pid,acepta:v})}).catch(function(){});
+    document.getElementById('ac-ok').hidden=false;});})();
   </script>`
 
   const othersHtml = others.length ? `<h2>${escapeHtml(T.othersH)}</h2>
@@ -6305,7 +6331,8 @@ ${SHARE_COPY_SCRIPT}
     geo: (place.lat && place.lon) ? { '@type': 'GeoCoordinates', latitude: place.lat, longitude: place.lon } : undefined,
     areaServed: { '@type': 'AdministrativeArea', name: region ? `${region}, Puerto Rico` : 'Puerto Rico' },
     identifier: { '@type': 'PropertyValue', name: 'NPI', value: npi },
-    isAcceptingNewPatients: undefined,
+    // El dato con fecha del Censo Médico Real (registro_provider_status, regla 90 días)
+    isAcceptingNewPatients: stFresh && stFresh.accepting_patients != null ? !!stFresh.accepting_patients : undefined,
   }
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
@@ -6328,6 +6355,12 @@ ${SHARE_COPY_SCRIPT}
 async function handleEspecialistaClaim(req: any, res: any) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8')
   try {
+    // Mismo rate limit que sus vecinos conserje-intent y registro-lead (añadido 2026-08-20;
+    // era el único endpoint POST del registro sin límite y dispara 2 emails por submit).
+    const ipClaim = getClientIp(req)
+    if (await isRateLimited('especialista-claim', ipClaim, 5, 10 * 60_000)) {
+      res.status(429).send(JSON.stringify({ ok: false, error: 'rate_limited' })); return
+    }
     const b = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}')
     if (!b.npi && !b.place_id) { res.status(400).send(JSON.stringify({ ok: false })); return }
     const plans = String(b.accepted_plans || '').split(/[,;]+/).map((s: string) => s.trim()).filter(Boolean)
@@ -6426,6 +6459,48 @@ async function handlePlanReport(req: any, res: any) {
     const fwd = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || 'anon'
     const ipHash = createHash('sha256').update(fwd + '|' + placeId).digest('hex').slice(0, 32)
     await supabase.from('plan_reports').upsert({ place_id: placeId, plan, ip_hash: ipHash }, { onConflict: 'place_id,plan,ip_hash', ignoreDuplicates: true })
+    res.status(200).send(JSON.stringify({ ok: true }))
+  } catch { res.status(200).send(JSON.stringify({ ok: false })) }
+}
+
+// =============== Acepta-pacientes report (el vecino que llamó reporta, 1-tap) ===============
+// El reporte del vecino NO es el sello (el sello lo pone la oficina o el Verificador Diario).
+// Es señal: queda en registro_provider_corrections y encola re-verificación por demanda en
+// registro_demanda_verificacion, que el Verificador Diario prioriza. 2026-08-20.
+async function handleAceptaReport(req: any, res: any) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8')
+  try {
+    const ip = getClientIp(req)
+    if (await isRateLimited('acepta-report', ip, 5, 10 * 60_000)) {
+      res.status(429).send(JSON.stringify({ ok: false, error: 'rate_limited' })); return
+    }
+    const b = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}')
+    const placeId = String(b.place_id || '').trim()
+    const acepta = String(b.acepta || '').trim().toLowerCase()
+    if (!/^[0-9a-f-]{36}$/.test(placeId) || (acepta !== 'si' && acepta !== 'no')) {
+      res.status(200).send(JSON.stringify({ ok: false })); return
+    }
+    const { data: pl } = await supabase.from('places').select('npi,name,subcategory,municipality').eq('id', placeId).limit(1)
+    const p0 = pl?.[0]
+    if (!p0) { res.status(200).send(JSON.stringify({ ok: false })); return }
+    await supabase.from('registro_provider_corrections').insert({
+      npi: p0.npi || null,
+      provider_name: p0.name || null,
+      subcategory: p0.subcategory || null,
+      municipality: p0.municipality || null,
+      reported_status: acepta === 'no' ? 'no_acepta_pacientes' : 'si_acepta_pacientes',
+      reported_by: 'vecino_web',
+      notes: 'Chip 1-tap en la ficha /especialista (acepta-report)',
+    })
+    // Señal → cola de verificación dirigida por demanda (dedup: 1 fila pendiente por place)
+    const { data: dup } = await supabase.from('registro_demanda_verificacion')
+      .select('id').eq('place_id', placeId).eq('atendida', false).limit(1)
+    if (!dup?.length) {
+      await supabase.from('registro_demanda_verificacion').insert({
+        place_id: placeId, municipio: p0.municipality || null,
+        especialidad: p0.subcategory || null, source: 'web_report',
+      })
+    }
     res.status(200).send(JSON.stringify({ ok: true }))
   } catch { res.status(200).send(JSON.stringify({ ok: false })) }
 }
@@ -17189,6 +17264,8 @@ ${regDisclaimer(en)}`
   // Por pueblo (data-driven) — pa'l hub isla. Los pueblos son la unidad real de búsqueda
   // (feedback Angel 2026-07-18: "los pueblos deben ser una mejor manera de identificar").
   let townChips = ''
+  // Cuántos de los 78 municipios tienen al menos 1 — el dato citable de desierto (2026-08-20).
+  let pueblosCon = -1
   if (!region) {
     try {
       // Was 4 sequential round-trips pulling up to 4,000 rows just to count them in JS.
@@ -17196,6 +17273,7 @@ ${regDisclaimer(en)}`
       const { data: mrows } = await supabase.rpc('registro_town_counts', { p_sub: x.s })
       const townsAll: [string, number][] = (mrows || [])
         .map((r: any) => [r.municipality as string, Number(r.n)] as [string, number])
+      pueblosCon = townsAll.filter(([, n]) => n > 0).length
       const top = townsAll.slice(0, 30)
       // Los pueblos 31+ salían como texto muerto ("+18 pueblos más"), así que 908 páginas
       // de especialidad×pueblo con 4,637 proveedores no recibían UN SOLO enlace interno.
@@ -17246,7 +17324,12 @@ ${REGION_TOWNS[region] ? `<div class="not-prose mt-5"><div class="text-xs font-b
             ? ` <strong>1 of the island's ${HUB_REGIONS.length} regions has none at all</strong>.`
             : ` <strong>${regionesVacias} of the island's ${HUB_REGIONS.length} regions have none at all</strong>.`)
       : t(` Todas las ${HUB_REGIONS.length} regiones de la isla tienen al menos uno.`, ` All ${HUB_REGIONS.length} regions of the island have at least one.`)
-    answerFirst = t(`En Puerto Rico hay <strong>${total} ${escapeHtml(x.l.toLowerCase())}</strong> verificados contra el registro federal NPPES, distribuidos por región.`, `Puerto Rico has <strong>${total} verified ${escapeHtml(labelLow)}</strong> in the federal NPPES registry, spread across regions.`) + huecoFrase
+    // "Solo N de 78" — más granular que regiones, y es lo que la prensa y los AI citan.
+    const puebloFrase = (pueblosCon > 0 && pueblosCon < 78)
+      ? t(` <strong>Solo ${pueblosCon} de los 78 municipios</strong> tienen al menos uno; en los otros ${78 - pueblosCon} no hay ninguno registrado.`,
+          ` <strong>Only ${pueblosCon} of the 78 municipalities</strong> have at least one; the other ${78 - pueblosCon} have none registered.`)
+      : ''
+    answerFirst = t(`En Puerto Rico hay <strong>${total} ${escapeHtml(x.l.toLowerCase())}</strong> verificados contra el registro federal NPPES, distribuidos por región.`, `Puerto Rico has <strong>${total} verified ${escapeHtml(labelLow)}</strong> in the federal NPPES registry, spread across regions.`) + huecoFrase + puebloFrase
     title = t(`${cleanSpecLabel(x.l)} en Puerto Rico: los ${total}, por pueblo y con teléfono`, `${cleanSpecLabel(label)} in Puerto Rico: all ${total}, by town and with phone`)
     description = t(`${cleanSpecLabel(x.l)} en Puerto Rico: ${total} en total, por región y por pueblo, con el teléfono al lado. Del registro federal NPPES. Gratis y sin cuenta.`, `${cleanSpecLabel(label)} in Puerto Rico: ${total} in total, by region and town, with phone numbers. From the federal NPPES registry. Free, no account.`)
     const regionCards = HUB_REGIONS.map(r => {
@@ -17298,6 +17381,8 @@ ${regDisclaimer(en)}
       { '@type': 'Question', name: `¿Qué hace un ${x.l.toLowerCase()}?`, acceptedAnswer: { '@type': 'Answer', text: `${info.treats} ${info.whenToGo}` } },
       { '@type': 'Question', name: region ? `¿Cuántos ${x.l.toLowerCase()} hay en ${region}, Puerto Rico?` : `¿Cuántos ${x.l.toLowerCase()} hay en Puerto Rico?`,
         acceptedAnswer: { '@type': 'Answer', text: region ? `En ${region} hay ${regionCount} ${x.l.toLowerCase()} verificados contra el registro federal NPPES.` : `En Puerto Rico hay ${total} ${x.l.toLowerCase()} verificados contra el registro federal NPPES.` } },
+      ...(!region && pueblosCon > 0 && pueblosCon < 78 ? [{ '@type': 'Question', name: `¿Cuántos municipios de Puerto Rico tienen ${x.l.toLowerCase()}?`,
+        acceptedAnswer: { '@type': 'Answer', text: `Solo ${pueblosCon} de los 78 municipios de Puerto Rico tienen al menos 1 ${x.l.toLowerCase()} registrado en NPPES; los otros ${78 - pueblosCon} no tienen ninguno. Fuente: registromedicopr.com, cruce del registro federal NPPES por municipio.` } }] : []),
     ] },
     ...(itemList.length ? [{ '@context': 'https://schema.org', '@type': 'ItemList', name: title, numberOfItems: providers.length, itemListElement: itemList }] : []),
     // La pagina se presenta como FUENTE, no como lista huerfana: quien la mantiene, de
@@ -20206,6 +20291,7 @@ export default async function handler(req: any, res: any) {
     case 'especialista': return await handleEspecialista(req, res)
     case 'especialista-claim': return await handleEspecialistaClaim(req, res)
     case 'plan-report': return await handlePlanReport(req, res)
+    case 'acepta-report': return await handleAceptaReport(req, res)
     case 'conserje-intent': return await handleConserjeIntent(req, res)
     case 'registro-lead': return await handleRegistroLead(req, res)
     case 'registro-desiertos': return await handleRegistroDesiertos(req, res)
