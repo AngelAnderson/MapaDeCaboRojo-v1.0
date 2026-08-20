@@ -406,6 +406,7 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <a href="/prospecto" class="hover:text-teal-700">${isEn ? 'Prospectus (research)' : 'Prospecto (investigación)'}</a>
 <a href="/atlas" class="hover:text-teal-700">${isEn ? 'Founder diseases atlas' : 'Atlas de fundadoras'}</a>
 <a href="/porque" class="hover:text-teal-700">${isEn ? 'Why doctors leave' : '¿Por qué se van los médicos?'}</a>
+<a href="/expediente-planvital" class="hover:text-teal-700">${isEn ? 'Plan Vital: the case file' : 'Plan Vital: el expediente'}</a>
 <a href="${isReg || isPRSF ? 'https://www.mapadecaborojo.com/observatorio' : '/observatorio'}" class="hover:text-teal-700">${isEn ? 'Observatory + podcast' : 'Observatorio + podcast'}</a>
 <a href="https://www.recallradarpr.com" class="hover:text-teal-700">${isEn ? 'FDA recalls (RecallRadarPR)' : '¿Tu medicamento tiene recall? (RecallRadarPR)'}</a>
 <a href="https://puertoricosinfiltros.com" class="hover:text-teal-700">${isEn ? 'The public record of PR (Sin Filtros)' : 'El récord público de PR (Sin Filtros)'}</a>
