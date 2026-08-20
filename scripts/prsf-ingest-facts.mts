@@ -38,6 +38,20 @@ for (const p of BUSCAR_INDEX) {
   rows.push({ kind: 'pagina', titulo: p.t, texto: `${p.d}. Temas: ${p.k}`, fuente_texto: null, fuente_url: null, record_url: p.u, content_hash: hash('pagina|' + p.u + '|' + p.t + '|' + p.d) })
 }
 
+// record_url absoluto para los facts que un MCP/crawler de IA cita fuera del sitio:
+// un path relativo ("/esencia") no resuelve para un modelo de terceros. Los kinds
+// dato/contradiccion/cita_video son 100% PRSF por procedencia (citableFacts + Esencia +
+// CONTRA_PARES + TRANSICION_BLOQUES), así que se prefijan con el host canónico. Las
+// 'pagina' (BUSCAR_INDEX) cruzan dominios (salud/mapa/PRSF) y se dejan como vienen.
+// content_hash NO incluye record_url, así que esto no duplica al re-ingestar. La data
+// viva se normalizó por UPDATE el 2026-08-20 (sesión EL SALTO v3); esto evita el revert.
+const PRSF_HOST = 'https://puertoricosinfiltros.com'
+for (const r of rows) {
+  if (r.kind !== 'pagina' && r.record_url.startsWith('/')) {
+    r.record_url = PRSF_HOST + r.record_url
+  }
+}
+
 async function embed(texts: string[]): Promise<number[][]> {
   const ctrl = new AbortController(); const to = setTimeout(() => ctrl.abort(), 30000)
   const r = await fetch('https://api.openai.com/v1/embeddings', {
