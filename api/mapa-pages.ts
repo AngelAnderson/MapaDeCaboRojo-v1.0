@@ -407,6 +407,7 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <a href="/atlas" class="hover:text-teal-700">${isEn ? 'Founder diseases atlas' : 'Atlas de fundadoras'}</a>
 <a href="/porque" class="hover:text-teal-700">${isEn ? 'Why doctors leave' : '¿Por qué se van los médicos?'}</a>
 <a href="/expediente-planvital" class="hover:text-teal-700">${isEn ? 'Plan Vital: the case file' : 'Plan Vital: el expediente'}</a>
+<a href="/expediente-mmm" class="hover:text-teal-700">${isEn ? 'MMM (Medicare): the case file' : 'MMM (Medicare): el expediente'}</a>
 <a href="${isReg || isPRSF ? 'https://www.mapadecaborojo.com/observatorio' : '/observatorio'}" class="hover:text-teal-700">${isEn ? 'Observatory + podcast' : 'Observatorio + podcast'}</a>
 <a href="https://www.recallradarpr.com" class="hover:text-teal-700">${isEn ? 'FDA recalls (RecallRadarPR)' : '¿Tu medicamento tiene recall? (RecallRadarPR)'}</a>
 <a href="https://puertoricosinfiltros.com" class="hover:text-teal-700">${isEn ? 'The public record of PR (Sin Filtros)' : 'El récord público de PR (Sin Filtros)'}</a>
@@ -445,6 +446,7 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <a href="/equipo" class="hover:text-teal-600">Equipo</a>
 </div>
 <p class="mt-4 text-xs text-slate-400">Textea al <strong>${PHONE_CTA}</strong> · El Veci te contesta. Si te sirve, llégate. Si no, sigue tu camino.</p>
+<p class="mt-3 text-xs text-slate-500"><strong>CABO ROJO 2036</strong> · ¿Qué Cabo Rojo quieres en 10 años? Dilo en 1 oración: textea <strong>2036</strong> y tu oración al <strong>${PHONE_CTA}</strong>. A las 100 oraciones se publica la vara del pueblo.</p>
 </div>
 </footer>`
 
@@ -6078,12 +6080,12 @@ async function handleEspecialista(req: any, res: any) {
     <p class="m-0 text-[15px] text-teal-900"><strong>MMM</strong> ${t('lo lista en su directorio de proveedores de', 'lists this provider in its provider directory of')} <strong>${mes(planDir.ultima)}</strong>.</p>
     <p class="m-0 mt-1 text-sm text-teal-800">${t('Eso es lo que el plan publicó, no una confirmación de que te van a coger. Antes de ir, llama y pregunta si aceptan tu plan y si están cogiendo pacientes nuevos.', 'That is what the plan published, not a confirmation that they will take you. Before you go, call and ask whether they take your plan and whether they are accepting new patients.')}</p>
     ${planDir.otroTel ? `<p class="m-0 mt-2 text-[15px] text-teal-900">${t('MMM publica otro número para esta oficina:', 'MMM publishes another number for this office:')} <a href="tel:${escapeHtml(planDir.otroTel)}" class="font-bold underline">${escapeHtml(planDir.otroTel.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3'))}</a>. ${t('Si el de arriba no contesta, prueba ese.', 'If the one above does not answer, try that one.')}</p>` : ''}
-    ${planDir.fuente ? `<p class="m-0 mt-2 text-xs"><a href="${escapeHtml(planDir.fuente)}" target="_blank" rel="noopener" class="text-teal-700 font-semibold underline">${t('Ver el directorio de MMM (PDF) →', 'See the MMM directory (PDF) →')}</a></p>` : ''}
+    ${planDir.fuente ? `<p class="m-0 mt-2 text-xs"><a href="${escapeHtml(planDir.fuente)}" target="_blank" rel="noopener" class="text-teal-700 font-semibold underline">${t('Ver el directorio de MMM (PDF) →', 'See the MMM directory (PDF) →')}</a> · <a href="/expediente-mmm" class="text-teal-700 underline">${t('De dónde sale este cruce: el expediente MMM', 'Where this cross-check comes from: the MMM audit')}</a></p>` : `<p class="m-0 mt-2 text-xs"><a href="/expediente-mmm" class="text-teal-700 underline">${t('De dónde sale este cruce: el expediente MMM', 'Where this cross-check comes from: the MMM audit')}</a></p>`}
   </div>`
     : `<div class="not-prose mt-5 bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
     <p class="m-0 text-[15px] text-amber-900"><strong>${t('Ojo si tienes MMM:', 'Heads up if you have MMM:')}</strong> ${t('aparecía en el directorio de', 'this provider appeared in the')} <strong>${mes(planDir.ultima)}</strong> ${t('y ya no aparece en el de', 'directory and no longer appears in the')} <strong>${mes(EDICION_VIGENTE)}</strong>.</p>
     <p class="m-0 mt-1 text-sm text-amber-800">${t('Puede que haya salido de la red. Confirma con MMM antes de coger cita, o te toca pagar de tu bolsillo.', 'They may have left the network. Confirm with MMM before booking, or you could end up paying out of pocket.')}</p>
-    ${planDir.fuente ? `<p class="m-0 mt-2 text-xs"><a href="${escapeHtml(planDir.fuente)}" target="_blank" rel="noopener" class="text-amber-800 font-semibold underline">${t('Ver el directorio donde aparecía (PDF) →', 'See the directory where they appeared (PDF) →')}</a></p>` : ''}
+    ${planDir.fuente ? `<p class="m-0 mt-2 text-xs"><a href="${escapeHtml(planDir.fuente)}" target="_blank" rel="noopener" class="text-amber-800 font-semibold underline">${t('Ver el directorio donde aparecía (PDF) →', 'See the directory where they appeared (PDF) →')}</a> · <a href="/expediente-mmm" class="text-amber-800 underline">${t('El expediente MMM', 'The MMM audit')}</a></p>` : `<p class="m-0 mt-2 text-xs"><a href="/expediente-mmm" class="text-amber-800 underline">${t('De dónde sale este cruce: el expediente MMM', 'Where this cross-check comes from: the MMM audit')}</a></p>`}
   </div>`
 
   // Planes reportados por vecinos (crowdsource, distinto de accepted_plans = oficina confirmó)
@@ -9011,6 +9013,9 @@ async function handleExpedientePlanVital(req: any, res: any) {
     <li class="border-l-4 border-slate-300 pl-3"><b>El conteo por pueblo refleja cómo el plan agrupa sus filas</b>, no la densidad real de consultorios. San Germán, sede de un hospital regional, infla su conteo por administración.</li>
   </ul>
 
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">La serie de expedientes</h2>
+  <p class="text-sm text-slate-700">El mismo método, plan por plan, pa' que se pueda comparar manzana con manzana. Ya publicados: este y el <a href="/expediente-mmm" class="text-teal-700 font-semibold underline">expediente MMM</a> (el plan Medicare, 3 ediciones, publicado antes de la ventana del 15 de octubre). El dato que solo existe midiendo con el mismo palo: MMM da <b>5.0%</b> de contradicción de pueblo donde este directorio da <b>${T.pctBruta}%</b>. No todos los directorios están igual de mal.</p>
+
   <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">La cortesía, con fecha</h2>
   <p class="text-sm text-slate-700">El cruce de la edición de febrero se le compartió por escrito a First Medical el <b>13 de agosto de 2026</b>, antes de publicarse, por si tenían correcciones o contexto que lo explicara. Antes de publicar, el análisis completo se volvió a correr contra la edición vigente de julio, con el resultado que ves arriba. Si contestan, su respuesta se publica íntegra aquí. No busco señalar a nadie: las listas oficiales se contradicen entre sí y eso le pasa a todo el que las herede. Mi interés es que el paciente que llama encuentre a su médico.</p>
   <p class="text-sm text-slate-600 mt-2">Contexto, sin especular causalidad: el Centro de Periodismo Investigativo y Metro reportaron en abril 2026 impagos de First Medical a proveedores de su red. Se cita como contexto; esta auditoría no establece relación causal entre eso y las contradicciones de aquí.</p>
@@ -9101,6 +9106,227 @@ async function handleExpedientePlanVital(req: any, res: any) {
     title: 'Expediente Plan Vital: el directorio del plan, cruzado contra el registro federal',
     description: `Las 2 ediciones más recientes del Directorio Plan Vital (feb y jul 2026) cruzadas contra NPPES: ~${T.pctAjustada}% de contradicción de municipio en la vigente, ${nf(T.telPorResolver)} teléfonos sin explicación, 0 médicos dados de baja. Pueblo por pueblo, con método y fecha.`,
     slug: 'expediente-planvital', bodyHtml: body, jsonLd: jsonLd as any,
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
+// =============== /expediente-mmm — el expediente Medicare: MMM cruzado contra NPPES ===============
+// Fuente: los PDF OFICIALES del Directorio de Proveedores MMM (línea Individuales), bajados sin
+// login del sitio público de MMM (plan_directory_source_file guarda URL + SHA-256 + copia en
+// Storage y Dropbox):
+//  · jun 2026 (VIGENTE): 1,993 págs → 13,782 filas · SHA-256 40340b8a79a2d584a29d7a6ae12938802db29d2bbfe572e3378f0dd5db0fa2e5
+//  · dic 2025: 1,945 págs → 13,477 filas · SHA-256 caf4f1eede9fd4e4605816721d3ea6b506695e8445b15504b5c103f54612eae8
+//  · dic 2024: 1,851 págs → 12,697 filas · SHA-256 3e39f04d45f57889839e50c250b9eb0ee7cb1b187595a17aebbb4cad279bbb2d
+// Las 3 con el MISMO pipeline del expediente Plan Vital (parse → match NPI → audita). Fila por
+// fila en Supabase: plan_directory_snapshot (v_plan_directory_public es la vista pública) +
+// triage de teléfonos en mmm_phone_discrepancy (2026-08-05). Números baked el 2026-08-19 con
+// SQL reproducible (misma normalización unaccent/upper que audita-fmvital.py; equivalencia de
+// método verificada: places.municipality == pueblo NPPES en 4,923 de 4,925 NPIs compartidos, y
+// el mismo SQL reproduce exacto los titulares publicados de Plan Vital: 43.4% jul / 45.5% feb).
+// La contradicción mide DESACUERDO entre 2 fuentes oficiales; no dice cuál tiene razón.
+const MMM_TITULARES = {
+  vig: { // jun 2026, línea Individuales
+    filas: 13782, conNpi: 7176, puebloComparables: 7176, puebloContra: 360, pueblopct: 5.0,
+    telFilas: 7119, telFilasDisc: 2553, telFilasPct: 35.9,
+    telNpis: 5524, telNpisDisc: 1661, telNpisPct: 30.1,
+    triage: { total: 1655, compartida: 717, estable18m: 490, dosReales: 280, llamar: 168 },
+    paginas: 1993, sha256: '40340b8a79a2d584a29d7a6ae12938802db29d2bbfe572e3378f0dd5db0fa2e5',
+    fuente: 'https://www.mmm-pr.com/frontend/web/uploads/documentos/MSOPNOQRG086070325SXLMMMAllPlans_6a208608971b0.pdf',
+  },
+  d25: { filas: 13477, conNpi: 7063, puebloContra: 347, pueblopct: 4.9, telFilas: 7005, telFilasDisc: 2460, telFilasPct: 35.1, paginas: 1945, sha256: 'caf4f1eede9fd4e4605816721d3ea6b506695e8445b15504b5c103f54612eae8' },
+  d24: { filas: 12697, conNpi: 6794, puebloContra: 293, pueblopct: 4.3, telFilas: 6740, telFilasDisc: 2303, telFilasPct: 34.2, paginas: 1851, sha256: '3e39f04d45f57889839e50c250b9eb0ee7cb1b187595a17aebbb4cad279bbb2d' },
+  planVitalPueblo: 43.4, // mismo método, edición vigente jul 2026 del expediente Plan Vital
+}
+
+// Por pueblo (edición jun 2026, por proveedor con teléfono chequeable en las 2 fuentes; un
+// proveedor que el plan lista en 2 pueblos cuenta en los 2): cheq / no cuadran / sin explicación.
+type MmmPueblo = { c: number; d: number; l: number }
+const MMM_PUEBLOS: Record<string, MmmPueblo> = {"Adjuntas":{"c":7,"d":0,"l":0},"Aguada":{"c":71,"d":19,"l":0},"Aguadilla":{"c":116,"d":33,"l":5},"Aguas Buenas":{"c":10,"d":2,"l":0},"Aibonito":{"c":65,"d":17,"l":1},"Añasco":{"c":33,"d":6,"l":1},"Arecibo":{"c":186,"d":47,"l":1},"Arroyo":{"c":11,"d":3,"l":0},"Barceloneta":{"c":29,"d":9,"l":0},"Barranquitas":{"c":24,"d":3,"l":1},"Bayamón":{"c":494,"d":116,"l":11},"Cabo Rojo":{"c":66,"d":11,"l":0},"Caguas":{"c":304,"d":94,"l":8},"Camuy":{"c":38,"d":10,"l":1},"Canóvanas":{"c":56,"d":15,"l":0},"Carolina":{"c":222,"d":69,"l":6},"Cataño":{"c":7,"d":2,"l":0},"Cayey":{"c":104,"d":32,"l":6},"Ceiba":{"c":7,"d":2,"l":0},"Ciales":{"c":14,"d":3,"l":0},"Cidra":{"c":38,"d":9,"l":2},"Coamo":{"c":34,"d":9,"l":3},"Comerío":{"c":12,"d":4,"l":0},"Corozal":{"c":42,"d":14,"l":0},"Culebra":{"c":1,"d":0,"l":0},"Dorado":{"c":50,"d":21,"l":6},"Fajardo":{"c":63,"d":16,"l":1},"Florida":{"c":8,"d":0,"l":0},"Guánica":{"c":8,"d":3,"l":0},"Guayama":{"c":97,"d":35,"l":11},"Guayanilla":{"c":10,"d":2,"l":0},"Guaynabo":{"c":144,"d":41,"l":8},"Gurabo":{"c":27,"d":8,"l":0},"Hatillo":{"c":58,"d":15,"l":0},"Hormigueros":{"c":22,"d":3,"l":0},"Humacao":{"c":122,"d":36,"l":3},"Isabela":{"c":74,"d":23,"l":2},"Jayuya":{"c":10,"d":5,"l":1},"Juana Díaz":{"c":52,"d":20,"l":4},"Juncos":{"c":28,"d":6,"l":0},"Lajas":{"c":23,"d":11,"l":0},"Lares":{"c":22,"d":6,"l":2},"Las Marías":{"c":11,"d":2,"l":0},"Las Piedras":{"c":33,"d":10,"l":1},"Loíza":{"c":4,"d":1,"l":0},"Luquillo":{"c":12,"d":2,"l":0},"Manatí":{"c":159,"d":44,"l":2},"Maricao":{"c":1,"d":0,"l":0},"Maunabo":{"c":5,"d":2,"l":0},"Mayagüez":{"c":258,"d":67,"l":4},"Moca":{"c":53,"d":15,"l":2},"Morovis":{"c":20,"d":3,"l":1},"Naguabo":{"c":14,"d":1,"l":0},"Naranjito":{"c":31,"d":8,"l":1},"Orocovis":{"c":22,"d":6,"l":0},"Patillas":{"c":9,"d":2,"l":0},"Peñuelas":{"c":15,"d":2,"l":1},"Ponce":{"c":416,"d":140,"l":16},"Quebradillas":{"c":32,"d":11,"l":2},"Rincón":{"c":6,"d":2,"l":1},"Rio Grande":{"c":34,"d":13,"l":3},"Sabana Grande":{"c":32,"d":3,"l":0},"Salinas":{"c":31,"d":11,"l":0},"San Germán":{"c":95,"d":26,"l":2},"San Juan":{"c":1080,"d":404,"l":30},"San Lorenzo":{"c":30,"d":5,"l":0},"San Sebastián":{"c":71,"d":18,"l":3},"Santa Isabel":{"c":23,"d":8,"l":1},"Toa Alta":{"c":31,"d":7,"l":0},"Toa Baja":{"c":47,"d":12,"l":0},"Trujillo Alto":{"c":38,"d":9,"l":2},"Utuado":{"c":28,"d":11,"l":1},"Vega Alta":{"c":56,"d":12,"l":0},"Vega Baja":{"c":73,"d":21,"l":5},"Vieques":{"c":4,"d":2,"l":1},"Villalba":{"c":21,"d":4,"l":1},"Yabucoa":{"c":22,"d":4,"l":0},"Yauco":{"c":69,"d":17,"l":4}}
+
+async function handleExpedienteMMM(req: any, res: any) {
+  const T = MMM_TITULARES.vig
+  const D25 = MMM_TITULARES.d25
+  const D24 = MMM_TITULARES.d24
+  const nf = (n: number) => n.toLocaleString('en-US')
+
+  const pueblosOrdenados = Object.entries(MMM_PUEBLOS).sort((a, b) => a[0].localeCompare(b[0], 'es'))
+
+  const filaPueblo = ([k, p]: [string, MmmPueblo]) => {
+    const pct = p.c >= 10 ? Math.round(1000 * p.d / p.c) / 10 : null
+    return `
+    <tr>
+      <td class="p-2 border-b border-slate-200 font-semibold">${escapeHtml(k)}</td>
+      <td class="p-2 border-b border-slate-200 text-right">${nf(p.c)}</td>
+      <td class="p-2 border-b border-slate-200 text-right">${nf(p.d)}</td>
+      <td class="p-2 border-b border-slate-200 text-right font-semibold ${pct !== null && pct >= 33 ? 'text-rose-700' : pct !== null && pct >= 20 ? 'text-amber-700' : 'text-slate-700'}">${pct !== null ? pct + '%' : 'muestra chica'}</td>
+      <td class="p-2 border-b border-slate-200 text-right">${p.l || '—'}</td>
+    </tr>`
+  }
+
+  const FAQ: [string, string][] = [
+    ['¿Esto dice que el directorio de MMM está malo?',
+     `Dice algo más útil: dónde está bien y dónde no. En ubicación, MMM sale notablemente mejor que el otro directorio auditado con este mismo método: 5.0% de contradicción de pueblo contra 43.4% del directorio del Plan Vital. En teléfonos, 3 de cada 10 proveedores cruzables tienen un número distinto al del registro federal — y tras clasificar cada caso, solo 168 quedan sin explicación. No todos los directorios están igual de mal, y eso solo se sabe midiendo.`],
+    ['¿De dónde salen estos números?',
+     `De los 3 PDF oficiales más recientes del Directorio de Proveedores de MMM (línea Individuales), publicados por el propio plan en su sitio web: junio 2026 (${nf(T.paginas)} páginas, ${nf(T.filas)} filas), diciembre 2025 (${nf(D25.paginas)} páginas) y diciembre 2024 (${nf(D24.paginas)} páginas), los 3 cruzados contra el registro federal NPPES por número NPI con el mismo método del expediente Plan Vital. Las huellas SHA-256 de los 3 PDF están en esta página.`],
+    ['Cuando los teléfonos no cuadran, ¿quién tiene la razón?',
+     `A veces MMM. Se verificaron 15 casos a mano contra fuentes independientes (la cuenta del propio negocio, el sitio del hospital): MMM tenía el número bueno en 2 confirmados y el registro federal en otros 2; el resto quedó en evidencia parcial o sin resolver. El patrón más claro no fue "cuál directorio es mejor" sino cuál récord federal está viejo: NPPES es auto-reportado y hay récords sin tocar desde 2009. Por eso hay ${nf(T.triage.estable18m)} casos donde MMM sostiene el mismo número desde diciembre 2024 — ahí el desactualizado probablemente es el federal.`],
+    ['Estoy escogiendo plan Medicare (15 de octubre al 7 de diciembre). ¿Qué hago con esto?',
+     'El directorio impreso es una promesa, no una garantía. Si te estás cambiando de plan por un médico específico, llama a la oficina del médico ANTES de firmar y pregunta 2 cosas: si aceptan ese plan hoy, y si están cogiendo pacientes nuevos. Esta página existe pa\' que sepas cuánta fe darle al PDF — y pa\' darte el segundo número cuando el primero no conteste.'],
+    ['¿Le avisaron a MMM?',
+     'El expediente se le comparte por escrito a MMM, igual que se hizo con First Medical antes de publicar el expediente Plan Vital. La fecha exacta del envío se publica aquí en cuanto salga, y si contestan, su respuesta se incluye íntegra en esta página. El interés no es señalar a nadie: es que el que llama encuentre a su médico.'],
+    ['¿Puedo ver la data completa, fila por fila?',
+     `Sí. Las ${nf(T.filas + D25.filas + D24.filas)} filas (3 ediciones) están cargadas en una base de datos consultable, y la copia completa — con los scripts pa' reproducir el cruce desde los PDF oficiales — se comparte a quien la pida: angel@angelanderson.com.`],
+  ]
+
+  const body = `
+<article class="max-w-3xl mx-auto px-4 py-8">
+
+  <nav class="text-xs text-slate-500 mb-3"><a href="/" class="hover:text-teal-700">Registro Médico PR</a> › Expediente MMM</nav>
+
+  <h1 class="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">¿El teléfono que publica tu plan Medicare es el de tu médico?</h1>
+
+  <p class="text-lg text-slate-700 mt-4">Este es el segundo expediente de la serie. El primero cruzó el directorio del Plan Vital contra el registro federal y encontró direcciones fantasma. Este cruza el directorio de <b>MMM</b> (Medicare y Mucho Más) — las <b>3 ediciones más recientes</b>, ${nf(T.paginas)} páginas la vigente — con el mismo método, pa' que se puedan comparar manzana con manzana.</p>
+
+  <p class="text-lg text-slate-700 mt-3">Y la ventana importa: <b>del 15 de octubre al 7 de diciembre</b> es cuando se escoge o se cambia el plan Medicare. Esa decisión se toma mirando el directorio. Aquí está el directorio, auditado.</p>
+
+  <div class="bg-teal-50 border border-teal-200 rounded-xl p-4 mt-6">
+    <p class="text-sm text-teal-900 m-0"><b>La buena (y es buena de verdad):</b> el directorio de MMM sabe dónde están sus médicos. De las ${nf(T.puebloComparables)} filas cruzables por número federal (NPI) en la edición vigente, solo <b>${nf(T.puebloContra)} (${T.pueblopct}%)</b> listan al proveedor en un pueblo que el registro federal contradice. El directorio del Plan Vital, auditado con este mismo método, dio <b>${MMM_TITULARES.planVitalPueblo}%</b>. No todos los directorios están igual de mal — y eso solo se sabe midiendo.</p>
+  </div>
+
+  <div class="bg-rose-50 border border-rose-200 rounded-xl p-4 mt-3">
+    <p class="text-sm text-rose-900 m-0"><b>La otra:</b> los teléfonos. De ${nf(T.telNpis)} proveedores con número en las 2 fuentes, <b>${nf(T.telNpisDisc)} (${T.telNpisPct}%)</b> tienen en el directorio de MMM un teléfono distinto al del registro federal — 3 de cada 10. Y en 18 meses de ediciones el número no mejoró: ${D24.telFilasPct}% (dic 2024) → ${D25.telFilasPct}% (dic 2025) → ${T.telFilasPct}% (jun 2026), medido por fila. Cuadrar las 2 listas no es el trabajo de nadie, y se nota.</p>
+  </div>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-3">
+    <p class="text-sm text-slate-800 m-0"><b>Pero un teléfono distinto no es automáticamente un error.</b> Cada uno de los ${nf(T.triage.total)} casos discrepantes de la edición vigente se clasificó (5 de agosto de 2026): <b>${nf(T.triage.compartida)}</b> son la central de una clínica u oficina compartida · <b>${nf(T.triage.estable18m)}</b> los sostiene MMM igualitos desde diciembre 2024 (ahí el viejo probablemente es el récord federal) · <b>${nf(T.triage.dosReales)}</b> son proveedores con 2 oficinas y los 2 números buenos · y quedan <b>${nf(T.triage.llamar)} sin explicación</b>. La lista de llamadas reales bajó 90% sin llamar a nadie. Ese es el trabajo que un directorio le debería ahorrar al paciente.</p>
+  </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Tu pueblo</h2>
+  <p class="text-sm text-slate-600 mb-3">Edición vigente (junio 2026), por proveedor con teléfono en las 2 fuentes. Un proveedor que el plan lista en 2 pueblos cuenta en los 2. "Sin explicación" = discrepancias que no se explican por central compartida, segunda oficina, ni número sostenido 18 meses.</p>
+
+  <div class="overflow-x-auto border border-slate-200 rounded-xl" style="max-height:480px;overflow-y:auto">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-left sticky top-0">
+        <tr>
+          <th class="p-2 font-semibold text-slate-700 border-b border-slate-200">Pueblo (según el plan)</th>
+          <th class="p-2 font-semibold text-slate-700 border-b border-slate-200 text-right">Chequeables</th>
+          <th class="p-2 font-semibold text-slate-700 border-b border-slate-200 text-right">Tel. no cuadra</th>
+          <th class="p-2 font-semibold text-slate-700 border-b border-slate-200 text-right">%</th>
+          <th class="p-2 font-semibold text-slate-700 border-b border-slate-200 text-right">Sin explicación</th>
+        </tr>
+      </thead>
+      <tbody>${pueblosOrdenados.map(filaPueblo).join('')}</tbody>
+    </table>
+  </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">3 casos de Cabo Rojo, con nombre y las 2 fuentes</h2>
+  <div class="space-y-3">
+    <div class="border border-slate-200 rounded-lg p-3 bg-white text-sm">
+      <b class="text-slate-900">Dra. María Teresa Quiñones · Medicina General</b>
+      <div class="text-slate-600 mt-1">El registro federal publica <b>787-255-2775</b>. MMM publica <b>787-255-2755</b>. Un dígito bailao entre 2 listas oficiales — y la vecina marcando. (Los 2 números aparecen en fuentes oficiales; el cruce los clasificó como oficina con 2 números reales.) <a href="/especialista/maria-quinones-cabo-rojo-3388" class="text-teal-700 underline">Su ficha</a>.</div>
+    </div>
+    <div class="border border-slate-200 rounded-lg p-3 bg-white text-sm">
+      <b class="text-slate-900">Dr. Ismael Velázquez Rosado · Medicina Interna</b>
+      <div class="text-slate-600 mt-1">MMM publica <b>939-935-9113</b> y lo sostiene igualito desde diciembre 2024, 3 ediciones seguidas. El registro federal tiene <b>787-851-3810</b>. Cuando un plan repite el mismo número 18 meses, la inferencia razonable es que el viejo es el federal — el registro nacional también envejece. <a href="/especialista/ismael-velazquez-rosado-cabo-rojo-7559" class="text-teal-700 underline">Su ficha</a>.</div>
+    </div>
+    <div class="border border-slate-200 rounded-lg p-3 bg-white text-sm">
+      <b class="text-slate-900">Municipio de Cabo Rojo · Psicología</b>
+      <div class="text-slate-600 mt-1">El número que publica MMM pertenece a otra oficina del propio registro: es una central compartida, no un error. La mayoría de las discrepancias de Cabo Rojo (11 de 66 chequeables) son de esta clase — por eso aquí la columna "sin explicación" está en 0.</div>
+    </div>
+  </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">La serie de 3 ediciones: ¿mejora o empeora?</h2>
+  <div class="overflow-x-auto border border-slate-200 rounded-xl">
+    <table class="w-full text-sm">
+      <thead class="bg-slate-50 text-left">
+        <tr><th class="p-2 font-semibold text-slate-700 border-b border-slate-200">Edición</th><th class="p-2 font-semibold text-slate-700 border-b border-slate-200 text-right">Filas</th><th class="p-2 font-semibold text-slate-700 border-b border-slate-200 text-right">Con NPI</th><th class="p-2 font-semibold text-slate-700 border-b border-slate-200 text-right">Pueblo contradice</th><th class="p-2 font-semibold text-slate-700 border-b border-slate-200 text-right">Tel. no cuadra (por fila)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="p-2 border-b border-slate-200 font-semibold">dic 2024</td><td class="p-2 border-b border-slate-200 text-right">${nf(D24.filas)}</td><td class="p-2 border-b border-slate-200 text-right">${nf(D24.conNpi)}</td><td class="p-2 border-b border-slate-200 text-right">${nf(D24.puebloContra)} (${D24.pueblopct}%)</td><td class="p-2 border-b border-slate-200 text-right">${nf(D24.telFilasDisc)} (${D24.telFilasPct}%)</td></tr>
+        <tr><td class="p-2 border-b border-slate-200 font-semibold">dic 2025</td><td class="p-2 border-b border-slate-200 text-right">${nf(D25.filas)}</td><td class="p-2 border-b border-slate-200 text-right">${nf(D25.conNpi)}</td><td class="p-2 border-b border-slate-200 text-right">${nf(D25.puebloContra)} (${D25.pueblopct}%)</td><td class="p-2 border-b border-slate-200 text-right">${nf(D25.telFilasDisc)} (${D25.telFilasPct}%)</td></tr>
+        <tr><td class="p-2 font-semibold">jun 2026 (vigente)</td><td class="p-2 text-right">${nf(T.filas)}</td><td class="p-2 text-right">${nf(T.conNpi)}</td><td class="p-2 text-right">${nf(T.puebloContra)} (${T.pueblopct}%)</td><td class="p-2 text-right">${nf(T.telFilasDisc)} (${T.telFilasPct}%)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="text-sm text-slate-600 mt-2">La red crece en papel (${nf(D24.filas)} → ${nf(T.filas)} filas) y los 2 indicadores de desacuerdo suben despacito. Ninguna edición corrigió a la anterior. Cuando salga la próxima, el método corre igual en 1 día.</p>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">El método, pa' que cualquiera lo reproduzca</h2>
+  <ol class="text-sm text-slate-700 space-y-2 pl-5 list-decimal">
+    <li><b>Descarga:</b> los PDF oficiales del sitio público de MMM, sin login. Vigente (jun 2026): ${nf(T.paginas)} páginas, SHA-256 <span class="font-mono text-xs break-all">${T.sha256}</span>. Dic 2025: ${nf(D25.paginas)} páginas, SHA-256 <span class="font-mono text-xs break-all">${D25.sha256}</span>. Dic 2024: ${nf(D24.paginas)} páginas, SHA-256 <span class="font-mono text-xs break-all">${D24.sha256}</span>. Las líneas Grupales y AEE también están bajadas y con huella; esta auditoría corre sobre la línea Individuales.</li>
+    <li><b>Parseo:</b> <code>pdftotext -bbox-layout</code> + el mismo script de Python del expediente Plan Vital, adaptado a la anatomía del PDF de MMM.</li>
+    <li><b>Identidad:</b> cruce contra los proveedores de salud del registro federal por contención de tokens con desempate por teléfono o pueblo. En la vigente, ${nf(T.conNpi)} filas quedan con NPI (52%); las ambiguas se dejan SIN cruzar a propósito, porque un NPI equivocado es peor que ninguno.</li>
+    <li><b>Verificación a mano:</b> 15 discrepancias de teléfono verificadas una a una contra fuentes independientes (13 de agosto de 2026) — cuenta del propio negocio, sitio del hospital — descartando los agregadores que solo repiten NPPES. Resultado: ni MMM ni el federal "ganan" limpio; el patrón real es qué récord está viejo.</li>
+    <li><b>Reproducir:</b> el SQL de cada titular y los scripts se comparten completos a quien los pida: <a href="mailto:angel@angelanderson.com" class="text-teal-700 underline">angel@angelanderson.com</a>. Las ${nf(T.filas + D25.filas + D24.filas)} filas (3 ediciones) están en una base de datos consultable, con el triage de teléfonos fila por fila.</li>
+  </ol>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Lo que esto NO prueba</h2>
+  <ul class="text-sm text-slate-700 space-y-2 list-none pl-0">
+    <li class="border-l-4 border-slate-300 pl-3"><b>No prueba que un teléfono específico esté malo.</b> Mide desacuerdo entre 2 fuentes oficiales. En los 15 casos verificados a mano, MMM tenía el número bueno tantas veces como el federal en los confirmados.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>El registro federal también envejece.</b> Es auto-atestación: hay récords sin tocar desde 2009. La clase "MMM estable 18 meses" es una inferencia razonable de que el viejo es el federal — no un hecho probado; probarlo requiere la llamada.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>El cruce cubre el 52% de las filas.</b> El resto (mayormente instalaciones y filas sin NPI asignable con confianza) queda fuera. Los hallazgos aplican al subconjunto cruzable.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>Solo la línea Individuales.</b> Las líneas Grupales y AEE de MMM están bajadas y con huella digital, pero esta auditoría no las cubre todavía.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>Aparecer en el directorio no garantiza que te cojan.</b> Ni que acepten tu plan específico hoy, ni que la agenda esté abierta. Esta auditoría no hizo llamadas.</li>
+  </ul>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">La serie de expedientes</h2>
+  <p class="text-sm text-slate-700">El mismo método, plan por plan, pa' que se pueda comparar. Publicados: <a href="/expediente-planvital" class="text-teal-700 font-semibold underline">Plan Vital / First Medical</a> (19 de agosto) y este. Próximo: Triple-S, cuando publique su directorio de octubre. La pregunta de fondo es la misma en todos: <b>¿quién cuadra las listas de las que depende el paciente?</b></p>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">La cortesía, con fecha</h2>
+  <p class="text-sm text-slate-700">Igual que con First Medical, este expediente se le comparte por escrito a MMM con sus números y su método, por si tienen correcciones o contexto. La fecha del envío se publica aquí en cuanto salga, y si contestan, su respuesta se publica íntegra. Esto no es una acusación: las listas oficiales se contradicen entre sí y eso le pasa a todo el que las herede. El interés es que el paciente que llama encuentre a su médico — especialmente entre el 15 de octubre y el 7 de diciembre, cuando el directorio decide bolsillos.</p>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-8">
+    <p class="text-sm text-slate-800 m-0"><b>Lo que puedes hacer tú, hoy:</b> tu médico está en <a href="/" class="text-teal-700 font-semibold underline">registromedicopr.com</a>, gratis, por pueblo y por especialidad — y cuando MMM publica un número distinto al federal, la ficha del médico te da los 2, pa' que el segundo intento no dependa de suerte. Si tu médico sale mal, dímelo y <b>se corrige el mismo día</b>: <a href="mailto:angel@angelanderson.com" class="text-teal-700 underline">angel@angelanderson.com</a> o texto al <a href="sms:+17874177711" class="text-teal-700 underline">787-417-7711</a>.</p>
+  </div>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-3">
+    <p class="text-sm text-slate-700 m-0"><b>Si llegaste aquí buscando un médico ahora mismo y es una emergencia:</b> no busques en listas. Llama al <b>9-1-1</b> o ve a la sala de emergencias más cercana.</p>
+  </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">De dónde salió cada número</h2>
+  <ul class="text-sm text-slate-600 space-y-2 list-disc pl-5">
+    <li>Directorio de Proveedores MMM, línea Individuales: ediciones de <b>junio 2026</b> (vigente), <b>diciembre 2025</b> y <b>diciembre 2024</b>, PDF oficiales publicados por el plan en mmm-pr.com; huellas SHA-256 arriba y copia archivada de cada uno.</li>
+    <li>Registro federal NPPES / CMS, cruce por NPI contra el substrato de Registro Médico PR (el mismo censo que sirve las fichas de este sitio, que se re-sincroniza contra NPPES). Cruce de teléfonos re-corrido el 19 de agosto de 2026; triage de discrepancias del 5 de agosto de 2026.</li>
+    <li>Verificación a mano de 15 casos contra fuentes independientes: 13 de agosto de 2026.</li>
+    <li>Nota de honestidad: el censo federal se actualiza a diario, así que el conteo exacto se mueve unos pocos casos según el día del cruce (el 5 de agosto: ${nf(T.triage.total)}; el 19 de agosto: ${nf(T.telNpisDisc)}). El orden de magnitud no cambia: 3 de cada 10.</li>
+  </ul>
+
+  <p class="text-sm text-slate-500 mt-8 border-t border-slate-200 pt-4">Esto no es una acusación ni asesoría médica, y un NPI activo no equivale a licencia vigente. Es el desacuerdo entre 2 listas oficiales, medido en las 3 ediciones más recientes, publicado con método y con fecha, antes de la ventana en que más falta hace. Publicado el 19 de agosto de 2026.</p>
+
+</article>`
+
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org', '@type': 'Article',
+      headline: '¿El teléfono que publica tu plan Medicare es el de tu médico? El expediente MMM, completo',
+      description: `Las 3 ediciones más recientes del Directorio de Proveedores MMM (Individuales) cruzadas contra el registro federal NPPES: 5.0% de contradicción de pueblo (vs 43.4% del Plan Vital, mismo método) pero ${T.telNpisPct}% de teléfonos que no cuadran — clasificados caso por caso hasta dejar solo ${T.triage.llamar} sin explicación. Publicado antes de la ventana Medicare (15 oct – 7 dic).`,
+      author: { '@type': 'Person', name: 'Angel Anderson' },
+      publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+      inLanguage: 'es', url: 'https://registromedicopr.com/expediente-mmm',
+      dateModified: '2026-08-19',
+      spatialCoverage: [{ '@type': 'Place', name: 'Puerto Rico' }],
+    },
+    {
+      '@context': 'https://schema.org', '@type': 'Dataset',
+      name: 'Directorio de Proveedores MMM (Individuales) cruzado contra NPPES, ediciones dic 2024, dic 2025 y jun 2026',
+      description: `${nf(T.filas + D25.filas + D24.filas)} filas parseadas de los 3 PDF oficiales del Directorio de Proveedores de MMM, con NPI asignado por cruce reproducible, contradicción de municipio y triage de discrepancia telefónica (central compartida / estable 18 meses / 2 oficinas / sin explicación). SHA-256 de los PDF fuente: ${D24.sha256} (dic 2024), ${D25.sha256} (dic 2025), ${T.sha256} (jun 2026).`,
+      creator: { '@type': 'Person', name: 'Angel Anderson' },
+      publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+      inLanguage: 'es', url: 'https://registromedicopr.com/expediente-mmm',
+      temporalCoverage: '2024-12/2026-06', spatialCoverage: { '@type': 'Place', name: 'Puerto Rico' },
+      variableMeasured: ['contradiccion_municipio', 'discrepancia_telefono', 'clase_triage', 'npi', 'edition_date'],
+    },
+    {
+      '@context': 'https://schema.org', '@type': 'FAQPage',
+      mainEntity: FAQ.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
+    },
+  ]
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'Expediente MMM: el directorio del plan Medicare, cruzado contra el registro federal',
+    description: `Las 3 ediciones más recientes del Directorio MMM (dic 2024 – jun 2026) cruzadas contra NPPES: 5.0% de contradicción de pueblo (el Plan Vital dio 43.4% con el mismo método), 3 de cada 10 teléfonos que no cuadran, y el triage que baja la lista de llamadas 90%. Pueblo por pueblo, con método y fecha, antes de la ventana Medicare.`,
+    slug: 'expediente-mmm', bodyHtml: body, jsonLd: jsonLd as any,
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
   }))
 }
@@ -12946,6 +13172,11 @@ ${items || '<p class="text-sm text-slate-400 italic">Data no disponible ahora.</
 <p class="text-sm font-semibold text-slate-800 mt-4">- Angel, desde Cabo Rojo</p>
 </div>
 
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-5 mt-6">
+<div class="text-xs uppercase tracking-widest text-teal-700 font-bold">CABO ROJO 2036 · la vara del pueblo</div>
+<p class="text-slate-800 mt-2">Ese era mi Cabo Rojo. ¿Cuál es el tuyo? Dilo en 1 oración: textea <strong>2036</strong> y tu oración al <strong>787-417-7711</strong>. A las 100 oraciones se publica la vara, y cada proyecto (este incluido) se mide contra ella en público.</p>
+<p class="text-sm text-slate-500 mt-2">Sin nombre si no quieres. Sin formulario. 1 texto y ya.</p>
+</div>
 
 <p class="text-sm text-slate-500 mt-5">Fuentes primarias: <a href="https://periodismoinvestigativo.com/2025/10/esencia-proyecto-residencial-privilegios-contributivos-turisticos/" target="_blank" rel="noopener" class="text-teal-700">CPI — créditos contributivos</a> · <a href="https://periodismoinvestigativo.com/2025/06/esencia-project-puerto-rico-environmental-damage/" target="_blank" rel="noopener" class="text-teal-700">CPI — historial global</a> · <a href="https://periodismoinvestigativo.com/2025/03/esencia-project-cabo-rojo-hearings/" target="_blank" rel="noopener" class="text-teal-700">CPI — inversionistas</a> · <a href="https://www.metro.pr/noticias/2026/03/28/miles-protestan-en-el-viejo-san-juan-contra-proyecto-esencia-en-cabo-rojo/" target="_blank" rel="noopener" class="text-teal-700">Metro PR</a> · <a href="https://therealdeal.com/magazine/april-2025/meet-the-little-known-developer-behind-a-2b-reuben-brother-development/" target="_blank" rel="noopener" class="text-teal-700">The Real Deal</a>. ¿Ves un error o falta un hito? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbenos</a>. Actualizado julio 2026.</p>
 ${SHARE_COPY_SCRIPT}
@@ -19875,6 +20106,7 @@ const PAGE_CANONICAL: Record<string, string> = {
   'registro-opciones': 'https://registromedicopr.com/registro/opciones',
   'internado-psicologia': 'https://registromedicopr.com/internado-psicologia',
   'expediente-planvital': 'https://registromedicopr.com/expediente-planvital',
+  'expediente-mmm': 'https://registromedicopr.com/expediente-mmm',
   'registro-puedo-volver': 'https://registromedicopr.com/puedo-volver',
   'rendimiento': 'https://puertoricosinfiltros.com/rendimiento',
   'rentas': 'https://www.mapadecaborojo.com/rentas',
@@ -19997,6 +20229,7 @@ export default async function handler(req: any, res: any) {
     case 'registro-opciones': return await handleRegistroOpciones(req, res)
     case 'internado-psicologia': return await handleInternadoPsicologia(req, res)
     case 'expediente-planvital': return await handleExpedientePlanVital(req, res)
+    case 'expediente-mmm': return await handleExpedienteMMM(req, res)
     case 'carta-141': return await handleCarta141(req, res)
     case 'registro-puedo-volver': return await handleRegistroPuedoVolver(req, res)
     case 'recuperacion': return await handleRecuperacion(req, res)

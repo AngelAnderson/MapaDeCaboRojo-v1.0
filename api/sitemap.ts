@@ -247,6 +247,9 @@ export default async function handler(req: any, res: any) {
       // contra NPPES, pueblo por pueblo. Data congelada (edición feb 2026), así
       // que cambia solo si el plan contesta o sale edición nueva.
       { slug: 'expediente-planvital', priority: 0.9, changefreq: 'monthly' },
+      // El expediente MMM: 3 ediciones del directorio Medicare (dic 2024 – jun 2026)
+      // cruzadas contra NPPES. Publicado 19 ago 2026, antes de la ventana Medicare.
+      { slug: 'expediente-mmm', priority: 0.9, changefreq: 'monthly' },
       // El clúster de cuido de mayores: existían, servían 200 desde los 3 dominios
       // y ningún sitemap las anunciaba. Ya tienen dueño en PAGE_CANONICAL.
       { slug: 'cuido', priority: 0.8, changefreq: 'monthly' },                 // hogares de cuido licenciados por Familia

@@ -236,6 +236,10 @@
       "destination": "/api/mapa-pages?page=expediente-planvital"
     },
     {
+      "source": "/expediente-mmm",
+      "destination": "/api/mapa-pages?page=expediente-mmm"
+    },
+    {
       "source": "/internado-psicologia",
       "destination": "/api/mapa-pages?page=internado-psicologia"
     },
