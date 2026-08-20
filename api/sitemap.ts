@@ -188,6 +188,7 @@ export default async function handler(req: any, res: any) {
       { slug: 'faro', priority: 0.9, changefreq: 'weekly' },                   // expediente del faro · Playuela/DRNA
       { slug: 'suelo', priority: 0.8, changefreq: 'monthly' },                 // suelo turístico del oeste · quién lo calificó y cuándo
       { slug: 'datos', priority: 0.8, changefreq: 'daily' },                   // Cabo Rojo en números vivos · página citable (AI-SEO paso 3)
+      { slug: 'demanda', priority: 0.8, changefreq: 'daily' },                 // LA SEÑAL · demanda real del *7711, se actualiza sola (nació 19 ago 2026)
       { slug: 'mision', priority: 0.7, changefreq: 'weekly' },
       { slug: 'equipo', priority: 0.6, changefreq: 'weekly' },
       { slug: 'historia', priority: 0.6, changefreq: 'monthly' },              // Origin story · build-in-public
