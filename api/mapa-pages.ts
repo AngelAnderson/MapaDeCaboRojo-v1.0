@@ -6099,6 +6099,13 @@ async function handleEspecialista(req: any, res: any) {
   // Tampoco se muestra `acepta_nuevos`: 17,188 de 19,453 filas dicen "Sí" y solo 8 dicen
   // "No". El propio expediente probó que ese campo no distingue nada; publicarlo aquí
   // sería repetir una promesa que la agenda real no sostiene.
+  // El directorio guarda el pueblo en mayúsculas ("CABO ROJO", "SAN GERMÁN"). Capitalizar
+  // solo la primera letra daba "Cabo rojo", y un nombre de pueblo mal escrito le quita
+  // seriedad a toda la página. Palabra por palabra, respetando las de enlace.
+  const tituloPueblo = (s: string) => s.toLocaleLowerCase('es').split(/\s+/)
+    .map((w, i) => (i > 0 && ['de', 'del', 'la', 'las', 'los'].includes(w)) ? w : w.charAt(0).toLocaleUpperCase('es') + w.slice(1))
+    .join(' ')
+
   let fmv: { pueblo: string | null; seccion: string | null; pagina: number | null; otroTel: string | null } | null = null
   {
     const { data } = await supabase.from('fmvital_directorio')
@@ -6131,7 +6138,7 @@ async function handleEspecialista(req: any, res: any) {
   </div>`
 
   const fmvHtml = !fmv ? '' : `<div class="not-prose mt-3 bg-teal-50 border border-teal-200 rounded-xl p-4">
-    <p class="m-0 text-[15px] text-teal-900"><strong>Plan Vital</strong> ${t('(First Medical) lo lista en su directorio de', '(First Medical) lists this provider in its')} <strong>${t('julio de 2026', 'July 2026')}</strong>${fmv.seccion ? ` · ${escapeHtml(fmv.seccion)}` : ''}${fmv.pueblo ? ` · ${t('bajo', 'under')} ${escapeHtml(fmv.pueblo.charAt(0) + fmv.pueblo.slice(1).toLowerCase())}` : ''}${fmv.pagina ? ` · ${t('página', 'page')} ${fmv.pagina} ${t('del PDF', 'of the PDF')}` : ''}.</p>
+    <p class="m-0 text-[15px] text-teal-900"><strong>Plan Vital</strong> ${t('(First Medical) lo lista en su directorio de', '(First Medical) lists this provider in its')} <strong>${t('julio de 2026', 'July 2026')}</strong>${fmv.seccion ? ` · ${escapeHtml(fmv.seccion)}` : ''}${fmv.pueblo ? ` · ${t('bajo', 'under')} ${escapeHtml(tituloPueblo(fmv.pueblo))}` : ''}${fmv.pagina ? ` · ${t('página', 'page')} ${fmv.pagina} ${t('del PDF', 'of the PDF')}` : ''}.</p>
     <p class="m-0 mt-1 text-sm text-teal-800">${t('Eso es lo que el plan publicó, no una confirmación de que te van a coger.', 'That is what the plan published, not a confirmation that they will take you.')}</p>
     ${fmv.otroTel ? `<p class="m-0 mt-2 text-[15px] text-teal-900">${t('Plan Vital publica otro número para esta oficina:', 'Plan Vital publishes another number for this office:')} <a href="tel:${escapeHtml(fmv.otroTel)}" class="font-bold underline">${escapeHtml(fmv.otroTel.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3'))}</a>. ${t('Si el de arriba no contesta, prueba ese.', 'If the one above does not answer, try that one.')}</p>` : ''}
     <p class="m-0 mt-2 text-xs"><a href="/expediente-planvital" class="text-teal-700 underline">${t('De dónde sale este cruce: el expediente Plan Vital', 'Where this cross-check comes from: the Plan Vital audit')}</a></p>
