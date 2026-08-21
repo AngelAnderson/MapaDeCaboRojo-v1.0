@@ -512,6 +512,10 @@
       "destination": "/api/public?action=indexnow-key"
     },
     {
+      "source": "/e3f88118e354cec0f9706b950174ee36.txt",
+      "destination": "/api/public?action=indexnow-key"
+    },
+    {
       "source": "/llms.txt",
       "destination": "/api/public?action=llms"
     },
