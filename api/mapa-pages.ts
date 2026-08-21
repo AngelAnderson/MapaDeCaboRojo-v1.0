@@ -6084,6 +6084,33 @@ async function handleEspecialista(req: any, res: any) {
       }
     }
   }
+  // Plan Vital / First Medical (edición vigente jul 2026). La otra mitad de la pregunta
+  // que la gente hace entre el 15 de octubre y el 7 de diciembre: "si me cambio de plan,
+  // ¿pierdo a mi médico?". Hasta hoy la ficha solo miraba MMM aunque este directorio
+  // llevaba en Supabase desde el 13 de agosto. Tabla con RLS de lectura pública y sin
+  // el bloque crudo del PDF.
+  //
+  // ⚠️ SOLO SE PUBLICA EL HALLAZGO POSITIVO ("aparece en"). La ausencia NO se publica
+  // como "no está en la red": el cruce por NPI identifica el 32.7% de las filas de este
+  // directorio y el 52.1% de las de MMM, así que "no lo encontré" es casi siempre una
+  // fila que no se pudo cruzar, no un médico fuera de la red. Decir lo contrario sería
+  // mandar a alguien a cambiar de plan por un dato que no tengo.
+  //
+  // Tampoco se muestra `acepta_nuevos`: 17,188 de 19,453 filas dicen "Sí" y solo 8 dicen
+  // "No". El propio expediente probó que ese campo no distingue nada; publicarlo aquí
+  // sería repetir una promesa que la agenda real no sostiene.
+  let fmv: { pueblo: string | null; seccion: string | null; pagina: number | null; otroTel: string | null } | null = null
+  {
+    const { data } = await supabase.from('fmvital_directorio')
+      .select('pueblo_plan,seccion,pagina_pdf,telefonos')
+      .eq('npi', npi).eq('edicion', 'jul-2026').limit(1)
+    const r = (data || [])[0]
+    if (r) {
+      const del: string[] = (r.telefonos || []).filter((x: string) => x && x !== phoneDigits.slice(-10))
+      fmv = { pueblo: r.pueblo_plan || null, seccion: r.seccion || null, pagina: r.pagina_pdf || null, otroTel: del.length ? del[0] : null }
+    }
+  }
+
   const t = (es: string, en: string) => (lang === 'en' ? en : es)
   const MES_ES: Record<string, string> = { '2026-06-01': 'junio de 2026', '2025-12-01': 'diciembre de 2025', '2024-12-01': 'diciembre de 2024' }
   const MES_EN: Record<string, string> = { '2026-06-01': 'June 2026', '2025-12-01': 'December 2025', '2024-12-01': 'December 2024' }
@@ -6102,6 +6129,19 @@ async function handleEspecialista(req: any, res: any) {
     <p class="m-0 mt-1 text-sm text-amber-800">${t('Puede que haya salido de la red. Confirma con MMM antes de coger cita, o te toca pagar de tu bolsillo.', 'They may have left the network. Confirm with MMM before booking, or you could end up paying out of pocket.')}</p>
     ${planDir.fuente ? `<p class="m-0 mt-2 text-xs"><a href="${escapeHtml(planDir.fuente)}" target="_blank" rel="noopener" class="text-amber-800 font-semibold underline">${t('Ver el directorio donde aparecía (PDF) →', 'See the directory where they appeared (PDF) →')}</a> · <a href="/expediente-mmm" class="text-amber-800 underline">${t('El expediente MMM', 'The MMM audit')}</a></p>` : `<p class="m-0 mt-2 text-xs"><a href="/expediente-mmm" class="text-amber-800 underline">${t('De dónde sale este cruce: el expediente MMM', 'Where this cross-check comes from: the MMM audit')}</a></p>`}
   </div>`
+
+  const fmvHtml = !fmv ? '' : `<div class="not-prose mt-3 bg-teal-50 border border-teal-200 rounded-xl p-4">
+    <p class="m-0 text-[15px] text-teal-900"><strong>Plan Vital</strong> ${t('(First Medical) lo lista en su directorio de', '(First Medical) lists this provider in its')} <strong>${t('julio de 2026', 'July 2026')}</strong>${fmv.seccion ? ` · ${escapeHtml(fmv.seccion)}` : ''}${fmv.pueblo ? ` · ${t('bajo', 'under')} ${escapeHtml(fmv.pueblo.charAt(0) + fmv.pueblo.slice(1).toLowerCase())}` : ''}${fmv.pagina ? ` · ${t('página', 'page')} ${fmv.pagina} ${t('del PDF', 'of the PDF')}` : ''}.</p>
+    <p class="m-0 mt-1 text-sm text-teal-800">${t('Eso es lo que el plan publicó, no una confirmación de que te van a coger.', 'That is what the plan published, not a confirmation that they will take you.')}</p>
+    ${fmv.otroTel ? `<p class="m-0 mt-2 text-[15px] text-teal-900">${t('Plan Vital publica otro número para esta oficina:', 'Plan Vital publishes another number for this office:')} <a href="tel:${escapeHtml(fmv.otroTel)}" class="font-bold underline">${escapeHtml(fmv.otroTel.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3'))}</a>. ${t('Si el de arriba no contesta, prueba ese.', 'If the one above does not answer, try that one.')}</p>` : ''}
+    <p class="m-0 mt-2 text-xs"><a href="/expediente-planvital" class="text-teal-700 underline">${t('De dónde sale este cruce: el expediente Plan Vital', 'Where this cross-check comes from: the Plan Vital audit')}</a></p>
+  </div>`
+
+  // La nota que evita el peor uso de esta página: que alguien se cambie de plan porque
+  // "aquí no salía". Solo se publica lo que SÍ se encontró; el silencio no es evidencia.
+  const planesNota = (planDirHtml || fmvHtml)
+    ? `<p class="not-prose mt-3 text-xs text-slate-500">${t('Estos 2 bloques dicen lo que el plan imprimió en su directorio, no si te van a coger. Y si un plan no aparece aquí, eso NO quiere decir que el médico esté fuera de esa red: el cruce por número federal identifica el 33% de las filas del directorio del Plan Vital y el 52% de las de MMM, así que casi siempre significa que esa fila no se pudo cruzar. Antes de cambiarte de plan, confirma con la oficina.', 'These 2 blocks say what the plan printed in its directory, not whether they will take you. And a plan missing here does NOT mean the provider is out of that network: the federal-number cross-check identifies 33% of the Plan Vital directory rows and 52% of MMM\'s, so it almost always means that row could not be matched. Before switching plans, confirm with the office.')}</p>`
+    : ''
 
   // Planes reportados por vecinos (crowdsource, distinto de accepted_plans = oficina confirmó)
   const { data: planRep } = await supabase.from('v_plan_reports').select('plan,reportes').eq('place_id', place.id)
@@ -6146,7 +6186,7 @@ async function handleEspecialista(req: any, res: any) {
       : `<div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${lang === 'en' ? 'Does this office take your plan?' : '¿Aceptan tu plan?'}</div><div class="text-slate-700 text-sm mt-1">${lang === 'en' ? 'Nobody has confirmed this office’s plans yet. Ask when you call, then help the next person below.' : 'Nadie ha confirmado los planes de esta oficina todavía. Pregunta cuando llames, y ayuda al próximo abajo.'}</div></div>`}
     ${reportedPlans.length ? `<div class="bg-sky-50 border border-sky-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-sky-700 font-bold">${lang === 'en' ? 'Neighbors report this office takes' : 'Vecinos reportan que aquí aceptan'}</div><div class="text-sky-900 font-semibold mt-1">${reportedPlans.map((r: any) => `${escapeHtml(planLabel(r.plan))}${Number(r.reportes) > 1 ? ` <span class="text-xs text-sky-600">(${r.reportes})</span>` : ''}`).join(' · ')}</div><div class="text-xs text-sky-700 mt-1">${lang === 'en' ? 'Reported by people who called, not confirmed by the office. Always double-check when you call.' : 'Reportado por gente que llamó, no confirmado por la oficina. Siempre verifica cuando llames.'}</div></div>` : ''}
   </div>
-${planDirHtml}
+${planDirHtml}${fmvHtml}${planesNota}
 
   <div class="not-prose mt-4 bg-white border border-slate-200 rounded-2xl p-5">
     <p class="font-bold text-slate-800 text-sm">${lang === 'en' ? '📞 Did you call? Help the next person' : '📞 ¿Llamaste? Ayuda al próximo'}</p>
@@ -6342,7 +6382,16 @@ ${SHARE_COPY_SCRIPT}
   res.status(200).send(layout({
     bareTitle: true,
     title: lang === 'en' ? `${nameTitle}, ${specLabelClean} in ${muni} · phone and NPI` : `${nameTitle}, ${specLabelClean} en ${muni} · teléfono y NPI`,
-    description: T.sub,
+    // En la ventana Medicare (15 oct – 7 dic) la búsqueda deja de ser "dr fulano" y
+    // pasa a ser "dr fulano mmm". Nombrar en la descripción los planes que SÍ lo
+    // listan es la diferencia entre salir o no en esa búsqueda. Solo positivos: la
+    // ausencia de un plan aquí no dice nada (ver planesNota).
+    description: T.sub + ((planDir && planDir.ultima === EDICION_VIGENTE) || fmv
+      ? ` ${t('Lo listan en su directorio:', 'Listed in the directory of:')} ${[
+          planDir && planDir.ultima === EDICION_VIGENTE ? 'MMM' : null,
+          fmv ? 'Plan Vital' : null,
+        ].filter(Boolean).join(' · ')}.`
+      : ''),
     slug: `especialista/${place.slug}`,
     bodyHtml: body,
     jsonLd,
