@@ -622,6 +622,15 @@ export default async function handler(req: any, res: any) {
       res.setHeader('Content-Type', 'text/plain; charset=utf-8');
       res.setHeader('Cache-Control', 'public, s-maxage=300');
       return res.status(200).send(MCP_REGISTRY_AUTH + '\n');
+    case 'indexnow-key':
+      // Archivo de llave del protocolo IndexNow (público POR DISEÑO — así se verifica
+      // el dominio). Servido en /api/<key> vía rewrite en vercel.json para los 3 hosts
+      // del monolito. El mismo valor vive en el secret INDEXNOW_KEY de Supabase, que
+      // usa syndication-indexnow como keyLocation. Antes de esto: 2,562 pings con 422
+      // desde que existe la función, porque la llave nunca se sirvió en ningún host.
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, s-maxage=86400');
+      return res.status(200).send('e3f88118e354cec0f9706b950174ee36');
     case 'log-search':
       return handleLogSearch(req, res);
     case 'llms':
