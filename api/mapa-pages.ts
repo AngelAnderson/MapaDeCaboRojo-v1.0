@@ -6160,11 +6160,16 @@ async function handleEspecialista(req: any, res: any) {
       .not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open')
       .or('fuera_de_pr.is.null,fuera_de_pr.eq.false').eq('municipality', muni)
     const n = Number(nMuni || 0)
+    // Misma trampa que en el hub: specLabel trae el parentesis explicativo ("Dentista
+    // (dientes)") y dentro de una frase contada sale "12 dentista (dientes)". Y el plural
+    // solo se gana si la etiqueta es de una palabra terminada en vocal.
+    const lc = cleanSpecLabel(specLabel).toLocaleLowerCase('es')
+    const labelHub = (n !== 1 && /^[a-záéíóúñ]+$/.test(lc) && /[aeiou]$/.test(lc)) ? lc + 's' : lc
     if (n > 1) {
       const lpF = lang === 'en' ? '?lang=en' : ''
       puertaHub = `<p class="not-prose mt-4 text-sm"><a href="/registro/${specUrlF}/${muniSlugF}${lpF}" class="text-teal-700 font-semibold hover:underline">${lang === 'en'
-        ? `Comparing plans? See all ${n} ${escapeHtml(specLabel.toLowerCase())} in ${escapeHtml(muni)} and which plan lists each one →`
-        : `¿Estás comparando planes? Mira los ${n} ${escapeHtml(specLabel.toLowerCase())} de ${escapeHtml(muni)} y cuál plan lista a cada uno →`}</a></p>`
+        ? `Comparing plans? See all ${n} ${escapeHtml(labelHub)} in ${escapeHtml(muni)} and which plan lists each one →`
+        : `¿Estás comparando planes? Mira los ${n} ${escapeHtml(labelHub)} de ${escapeHtml(muni)} y cuál plan lista a cada uno →`}</a></p>`
     }
   }
 
