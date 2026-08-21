@@ -106,7 +106,10 @@ function formatHours(opening_hours: any): string {
 //  - Lleva derecho a replica en la misma linea: publicamos un senalamiento
 //    sobre un negocio con nombre, asi que el dueno tiene como responder ahi
 //    mismo, sin buscar a nadie.
-//  - Reversible: se limpia con
+//  - Caduca sola: se cae si alguien verifica la ficha despues del reporte
+//    (last_verified_at > dato_reportado.at) o a los 90 dias. Nadie limpia la
+//    columna hoy, asi que la nota tiene que saber morirse.
+//  - Reversible a mano tambien:
 //    UPDATE places SET dato_reportado = NULL WHERE id = '<uuid>';
 //  - No toca el JSON-LD telephone. Un reporte sin confirmar no borra el dato
 //    de un negocio: le pone fecha y contexto.
@@ -117,11 +120,26 @@ const REPORTE_FRASE: Record<string, string> = {
   cerro: 'que el negocio ya no está operando',
 };
 
-function avisoDatoReportado(dr: any): { texto: string; esTel: boolean } | null {
+function avisoDatoReportado(dr: any, lastVerifiedAt?: string | null): { texto: string; esTel: boolean } | null {
   if (!dr || typeof dr !== 'object') return null;
   const tipo = String(dr.tipo || '');
   const frase = REPORTE_FRASE[tipo];
   if (!frase) return null;
+  const reportadoEn = new Date(dr.at).getTime();
+  // Nada limpia places.dato_reportado hoy: la columna es de solo escritura
+  // (verificado 2026-08-21, cero UPDATE a NULL en todo el repo del bot). Sin
+  // estas 2 puertas de salida, un negocio cargaria una advertencia publica para
+  // siempre aunque el telefono ya estuviera bueno. La nota tiene que poder
+  // caducar sola, porque el que la puso no la va a quitar.
+  if (!isNaN(reportadoEn)) {
+    // (1) Alguien verifico la ficha DESPUES del reporte. Ese es el unico
+    //     evento que significa "ya lo chequeamos": la nota se cae.
+    const verificadoEn = lastVerifiedAt ? new Date(lastVerifiedAt).getTime() : NaN;
+    if (!isNaN(verificadoEn) && verificadoEn > reportadoEn) return null;
+    // (2) Caducidad de 90 dias. Un reporte sin confirmar no se queda de por
+    //     vida encima del nombre de un negocio.
+    if (Date.now() - reportadoEn > 90 * 24 * 60 * 60 * 1000) return null;
+  }
   let fecha = '';
   try {
     const d = new Date(dr.at);
@@ -381,7 +399,7 @@ export default async function handler(req: any, res: any) {
   // openNow (computed from hours) wins over the coarse status flag when available
   const isOpen = openNow !== null ? openNow : place.status === 'open';
   // Cuarentena consultable: la reporta el vecino por el *7711, la lee la ficha.
-  const avisoTel = avisoDatoReportado((place as any).dato_reportado);
+  const avisoTel = avisoDatoReportado((place as any).dato_reportado, (place as any).last_verified_at);
   const openLabel = openNow === null
     ? (isOpen ? 'Abierto' : 'Cerrado')
     : (openNow ? 'Abierto ahora' : 'Cerrado ahora');
