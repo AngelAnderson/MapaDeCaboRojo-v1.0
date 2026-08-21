@@ -6036,13 +6036,15 @@ async function handleEspecialista(req: any, res: any) {
   // de encontrar la información correcta, no cobrar el clic).
   const T = lang === 'en' ? {
     sub: `${place.phone ? `Phone: ${place.phone}. ` : ''}${specLabelClean} in ${muni}, PR. NPI ${npi} verified in the federal NPPES registry${verifiedDate ? `, as of ${verifiedDate}` : ''}. Free, no account.`,
-    verified: 'Verified · federal NPI', call: 'Call', wa: 'WhatsApp', veci: 'Ask El Veci',
+    // 2026-08-20: el botón decía "Ask El Veci", que en una página que YA muestra el
+    // teléfono no promete nada nuevo. Desde hoy El Veci le pregunta a las oficinas por ti.
+    verified: 'Verified · federal NPI', call: 'Call', wa: 'WhatsApp', veci: 'Have El Veci ask for you',
     addr: 'Address', regionH: 'Region', specialtyH: 'Specialty', npiH: 'Federal NPI',
     othersH: `Other ${specLabel.toLowerCase()}s in ${regionLabel || 'PR'}`,
     claimH: 'Is this your profile?', notFound: 'Not who you were looking for?',
   } : {
     sub: `${place.phone ? `Teléfono: ${place.phone}. ` : ''}${specLabelClean} en ${muni}, PR. NPI ${npi} verificado en el registro federal NPPES${verifiedDate ? `, al ${verifiedDate}` : ''}. Gratis y sin cuenta.`,
-    verified: 'Verificado · NPI federal', call: 'Llamar', wa: 'WhatsApp', veci: 'Pregúntale al Veci',
+    verified: 'Verificado · NPI federal', call: 'Llamar', wa: 'WhatsApp', veci: 'Que el Veci pregunte por ti',
     addr: 'Dirección', regionH: 'Región', specialtyH: 'Especialidad', npiH: 'NPI federal',
     othersH: `Otros ${specLabel.toLowerCase()} en el ${regionLabel || 'PR'}`,
     claimH: '¿Es tu perfil?', notFound: '¿No es a quien buscabas?',
@@ -6115,7 +6117,7 @@ async function handleEspecialista(req: any, res: any) {
   const stDate = stFresh ? new Date(String(stFresh.verified_at) + 'T12:00:00').toLocaleDateString(lang === 'en' ? 'en-US' : 'es-PR', { day: 'numeric', month: 'long', year: 'numeric' }) : null
   const dispoHtml = !stFresh || stFresh.accepting_patients == null ? '' : stFresh.accepting_patients
     ? `<div class="bg-emerald-50 border-2 border-emerald-300 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-emerald-700 font-bold">${lang === 'en' ? '✓ Accepting new patients' : '✓ Aceptando pacientes nuevos'}</div><div class="text-emerald-900 font-semibold mt-1">${lang === 'en' ? `Confirmed ${stDate}` : `Confirmado ${stDate}`}${stFresh.wait_note ? ` · ${escapeHtml(stFresh.wait_note)}` : ''}</div><div class="text-xs text-emerald-700 mt-1">${lang === 'en' ? 'Verified directly, with a date — part of the Real Medical Census. Things change: confirm when you call.' : 'Verificado directo, con fecha — parte del Censo Médico Real. Esto cambia: confirma cuando llames.'}</div></div>`
-    : `<div class="bg-rose-50 border border-rose-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-rose-700 font-bold">${lang === 'en' ? 'Not accepting new patients' : 'No está aceptando pacientes nuevos'}</div><div class="text-rose-900 font-semibold mt-1">${lang === 'en' ? `Confirmed ${stDate}` : `Confirmado ${stDate}`}${stFresh.wait_note ? ` · ${escapeHtml(stFresh.wait_note)}` : ''}</div><div class="text-xs text-rose-700 mt-1">${lang === 'en' ? 'Save the call: see other options in your region below.' : 'Ahórrate la llamada: mira otras opciones en tu región más abajo.'}</div></div>`
+    : `<div class="bg-rose-50 border border-rose-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-rose-700 font-bold">${lang === 'en' ? 'Not accepting new patients' : 'No está aceptando pacientes nuevos'}</div><div class="text-rose-900 font-semibold mt-1">${lang === 'en' ? `Confirmed ${stDate}` : `Confirmado ${stDate}`}${stFresh.wait_note ? ` · ${escapeHtml(stFresh.wait_note)}` : ''}</div><div class="text-xs text-rose-700 mt-1">${lang === 'en' ? 'Save the call. See other options below, or have El Veci ask the offices for you:' : 'Ahórrate la llamada. Mira otras opciones más abajo, o deja que el Veci les pregunte por ti:'} <a href="https://wa.me/17874177711?text=${spec ? spec.kw : 'ESPECIALISTA'}" class="font-bold underline">${PHONE_CTA}</a></div></div>`
 
   const mapsEmbed = (place.lat && place.lon)
     ? `https://maps.google.com/maps?q=${place.lat},${place.lon}&z=15&output=embed`
@@ -17359,8 +17361,8 @@ ${providers.length >= 200 ? `<p class="text-xs text-slate-500 mt-2">${t('Mostran
   body += `
 ${antesDeLlamar({ specLabel: x.l, en })}
 <div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
-  <p class="text-lg font-bold mb-1">${t('¿No sabes a cuál ir?', 'Not sure which one to see?')}</p>
-  <p class="text-sm text-teal-100 mb-4">${t('Escríbele al Veci. Te dice quién hay cerca y sus teléfonos. Al', 'Text El Veci. He tells you who is nearby and their phone numbers. At')} <strong>${PHONE_CTA}</strong>:</p>
+  <p class="text-lg font-bold mb-1">${t('¿No quieres llamar a todos?', 'Do not want to call them all?')}</p>
+  <p class="text-sm text-teal-100 mb-4">${t('El Veci les pregunta por ti cuáles están cogiendo pacientes y te dice quién contesta. Escríbele al', 'El Veci asks the offices for you which ones are taking new patients and tells you who replies. Text him at')} <strong>${PHONE_CTA}</strong>:</p>
   <a href="https://wa.me/17874177711?text=${x.kw}" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${x.kw}</a>
 </div>
 ${regDisclaimer(en)}
