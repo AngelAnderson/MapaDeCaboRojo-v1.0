@@ -8967,6 +8967,10 @@ async function handleExpedientePlanVital(req: any, res: any) {
   const T = FMV_TITULARES.jul
   const F = FMV_TITULARES.feb
   const nf = (n: number) => n.toLocaleString('en-US')
+  // Marcador del silencio: aviso por escrito a First Medical el 13 ago 2026. El contador
+  // corre pa' los 2 lados (igual que en los expedientes cívicos). Con s-maxage=86400 el
+  // número se refresca a diario; ±1 día de caché es aceptable pa' un contador de días.
+  const diasFM = Math.max(0, Math.floor((Date.now() - Date.parse('2026-08-13T12:00:00-04:00')) / 86400000))
 
   const pueblosOrdenados = Object.entries(FMV_PUEBLOS).sort((a, b) => a[1].nombre.localeCompare(b[1].nombre, 'es'))
 
@@ -9096,6 +9100,7 @@ async function handleExpedientePlanVital(req: any, res: any) {
 
   <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">La cortesía, con fecha</h2>
   <p class="text-sm text-slate-700">El cruce de la edición de febrero se le compartió por escrito a First Medical el <b>13 de agosto de 2026</b>, antes de publicarse, por si tenían correcciones o contexto que lo explicara. Antes de publicar, el análisis completo se volvió a correr contra la edición vigente de julio, con el resultado que ves arriba. Si contestan, su respuesta se publica íntegra aquí. No busco señalar a nadie: las listas oficiales se contradicen entre sí y eso le pasa a todo el que las herede. Mi interés es que el paciente que llama encuentre a su médico.</p>
+  <p class="text-sm text-slate-800 mt-2"><b>El marcador, que corre pa' los 2 lados:</b> desde el aviso por escrito del 13 de agosto, First Medical lleva <b>${nf(diasFM)} ${diasFM === 1 ? 'día' : 'días'}</b> sin contestar. El día que contesten, este contador se sustituye por su respuesta, íntegra. El silencio con fecha también es dato.</p>
   <p class="text-sm text-slate-600 mt-2">Contexto, sin especular causalidad: el Centro de Periodismo Investigativo y Metro reportaron en abril 2026 impagos de First Medical a proveedores de su red. Se cita como contexto; esta auditoría no establece relación causal entre eso y las contradicciones de aquí.</p>
 
   <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-8">
@@ -10177,6 +10182,12 @@ async function handleSinFiltros(req: any, res: any) {
 
   type Record = { titulo: string; brecha: string; fuente: string; verUrl: string; verificaUrl: string; verificaText: string; tag: string }
   const records: Record[] = [
+    {
+      titulo: 'El contrato de $5,886 millones',
+      brecha: 'La AEE firmó el contrato de generación temporera el 10 de junio de 2026 y lo canceló 66 días después. Lo que el expediente muestra: la propia oficina evaluadora escribió en agosto de 2025 que la empresa "ha sido ampliamente comparada con Whitefish", que ninguno de los 3 proponentes cumplía, y que la empresa no tenía capacidad financiera propia. La fianza para entrar a competir fue de $300,000.',
+      fuente: '13 documentos primarios: Junta de Supervisión Fiscal, AAPP y Negociado de Energía. Con 5 predicciones fechadas y derecho a réplica abierto.',
+      verUrl: '/expediente-power-expectations', verificaUrl: 'https://oversightboard.pr.gov/oversight-board-revokes-approval-of-prepa-contract-with-power-expectations/', verificaText: 'El comunicado de la Junta', tag: 'Energía',
+    },
     {
       titulo: 'El Marcador de Contradicciones',
       brecha: 'Lo que dicen, al lado de lo que dice el récord, con la brecha en el medio: LUMA prometió luz "affordable" en 2020 (pagamos casi el doble que EE.UU.) · la ley mandó reciclar 35% pa\'l 2006 (vamos por ~12%) · la AAA dice "agua segura al 98%" (13 violaciones activas). El formato nuevo del sitio: la contradicción, marcada.',
@@ -13419,6 +13430,204 @@ const FUNCIONARIOS: Record<string, any> = {
 }
 // Etiquetas cortas de medidas trackeadas (presentación; el texto completo vive en la DB, verificado contra SUTRA)
 const MEDIDA_LABEL: Record<string, string> = { RC0211: 'La luz en la PR-2', RC0210: 'Los solares abandonados', RCC0076: 'La escuela vocacional' }
+
+// ── Expediente: el contrato de generación temporera (Power Expectations) ──────
+// Publicado 2026-08-20. Fuente: 13 documentos primarios (Junta de Supervisión
+// Fiscal, AAPP, Negociado de Energía), SEC EDGAR, docket federal, Contralor.
+// Pasó el abogado contrario el 2026-08-20 (notebook con las 19 fuentes).
+type PxMomento = { fecha: string; quien: string; que: string; doc: string }
+
+const PX_MOMENTOS: PxMomento[] = [
+  { fecha: '19 may 2025', quien: 'New Fortress Energy', que: 'Descalificada de la subasta, le escribe a la gobernadora advirtiendo los costos del proceso y pidiendo reconsideración.', doc: 'Reportado por El Vocero y Bloomberg' },
+  { fecha: '22 may 2025', quien: 'Senado de Puerto Rico', que: 'El senador Luis Javier Hernández radica la Resolución 205 para investigar la licitación. Recibe informe negativo y muere sin una sola vista.', doc: 'Reportado por Metro' },
+  { fecha: '14 ago 2025', quien: 'La oficina que evaluaba (3PPO)', que: 'Su propio Background Analysis escribe que Power Expectations "has been widely compared to the post-hurricane Whitefish contracting scandal". El proceso continúa.', doc: 'Citado en la carta de la Junta del 17 de agosto de 2026' },
+  { fecha: '28 ago 2025', quien: 'La oficina que evaluaba (3PPO)', que: 'Su Evaluation and Recommendation Report concluye que ninguno de los 3 proponentes cumplía a cabalidad con el RFP, y que Power Expectations no tenía capacidad financiera independiente: dependía de inversionistas externos que nunca aparecieron con una carta de compromiso en el expediente.', doc: 'Citado en el RFI de la Junta del 26 de marzo de 2026' },
+  { fecha: '26 sep 2025', quien: 'Estado de Florida', que: 'Disuelve administrativamente a Power Expectations, Inc. por no radicar su informe anual. La corporación llevará 8 meses disuelta el día que se firme el contrato.', doc: 'Registro corporativo de Florida, doc. P11000043878' },
+  { fecha: '30 sep 2025', quien: 'La oficina que evaluaba (3PPO)', que: 'El Final Evaluation Report puntúa a Gothams primera, Javelin segunda y Power Expectations tercera. Power Expectations recibe la adjudicación de 400 MW en Aguirre; Gothams, 200 MW en San Juan.', doc: 'Citado en el RFI de la Junta del 11 de marzo de 2026' },
+  { fecha: '10 mar 2026', quien: 'IEEFA (instituto de análisis energético)', que: 'Publica "Alerta roja por el contrato de generación eléctrica de emergencia en Puerto Rico", 2 meses antes de que se apruebe.', doc: 'ieefa.org' },
+  { fecha: '13 feb – 16 jul 2026', quien: 'Junta de Supervisión Fiscal', que: '4 rondas de preguntas por escrito. La del 26 de marzo pide el modelo financiero detrás del valor de $5,886,720,000 y señala que lo único entregado fue una hoja de cálculo titulada "Contract Ceiling Calculations - Power X".', doc: '4 cartas publicadas por la Junta' },
+  { fecha: '17 jun 2026', quien: 'AAPP y 3PPO', que: 'Reciben la denuncia formal de ERock: firma no autorizada, una persona que dicen que no existe en su nómina, y una carta de cobro con el membrete de un bufete de Miami que el bufete negó haber escrito. La denuncia se investiga, pero no se le notifica ni a la Junta ni a la Autoridad de Energía Eléctrica.', doc: 'Carta de la AAPP del 9 de agosto de 2026' },
+  { fecha: '25 jun 2026', quien: 'El consorcio', que: 'Vence el plazo para entregar la fianza de ejecución de $1,180 millones. Nunca se entrega. El contrato sigue vivo 54 días más.', doc: 'Carta de terminación de la AEE' },
+  { fecha: '30-31 jul 2026', quien: '3PPO y AEE', que: 'El 3PPO recomienda sustituir a la empresa denunciante por otra. La AEE consiente al día siguiente, sin que se le hubieran informado las alegaciones que el 3PPO investigaba desde junio.', doc: 'Carta de la AAPP del 9 de agosto; reportado por Metro' },
+  { fecha: '7 ago 2026', quien: 'La prensa', que: 'La periodista Bárbara Figueroa Rosa publica el caso. La Junta de Supervisión Fiscal se entera ese día y manda su primera carta esa misma fecha.', doc: 'Carta de la Junta del 7 de agosto de 2026' },
+]
+
+const PX_PREDICCIONES: { p: string; cobro: string; comoSeCobra: string }[] = [
+  { p: 'Los 400 MW de Aguirre no van a estar generando electricidad en la fecha en que el contrato decía que estarían.', cobro: '7 de noviembre de 2026', comoSeCobra: 'Esa es la fecha de operación comercial que fijaba el contrato. Se verifica con el informe de generación de LUMA o del Negociado de Energía de esa semana.' },
+  { p: 'Al cerrar el año no habrá cargos criminales radicados en el foro local contra ningún funcionario del gobierno de Puerto Rico por este contrato.', cobro: '31 de diciembre de 2026', comoSeCobra: 'Se verifica en el sistema de consulta de casos del Poder Judicial y en los comunicados del Departamento de Justicia.' },
+  { p: 'El contrato de la oficina privada que corrió esta licitación (el 3PPO) va a seguir vigente.', cobro: '31 de diciembre de 2026', comoSeCobra: 'Se verifica en el registro de contratos del Contralor buscando Regulatory Compliance Services Corp.' },
+  { p: 'El texto completo del contrato 2026-P00107 no lo va a publicar el gobierno por iniciativa propia. Si sale, sale por la legislatura o porque alguien lo pidió.', cobro: '30 de septiembre de 2026', comoSeCobra: 'Se verifica revisando los portales de la AEE y la AAPP, y comparando con lo que entreguen el Senado y la Cámara.' },
+  { p: 'La persona que aparece firmando por Enchanted Rock sigue sin sentencia en su caso federal.', cobro: '31 de diciembre de 2026', comoSeCobra: 'Se verifica en el expediente público del caso 2:19-cr-00877 en el tribunal federal de Nueva Jersey.' },
+]
+
+async function handleExpedientePowerExpectations(req: any, res: any) {
+  const filaMomento = (m: PxMomento) => `
+    <tr>
+      <td class="p-3 border-b border-slate-200 align-top whitespace-nowrap font-semibold text-slate-900 text-xs">${escapeHtml(m.fecha)}</td>
+      <td class="p-3 border-b border-slate-200 align-top text-slate-700">
+        <div class="font-semibold text-slate-900 text-xs uppercase tracking-wide">${escapeHtml(m.quien)}</div>
+        <div class="mt-1">${escapeHtml(m.que)}</div>
+        <div class="mt-1 text-xs text-slate-500">${escapeHtml(m.doc)}</div>
+      </td>
+    </tr>`
+
+  const filaPrediccion = (x: { p: string; cobro: string; comoSeCobra: string }, i: number) => `
+    <div class="border border-slate-200 rounded-xl p-4 bg-white">
+      <div class="flex items-start gap-3">
+        <span class="shrink-0 w-7 h-7 rounded-full bg-slate-900 text-white text-xs font-bold grid place-items-center">${i + 1}</span>
+        <div>
+          <p class="text-slate-900 font-semibold m-0">${escapeHtml(x.p)}</p>
+          <p class="text-xs text-teal-800 mt-2 mb-0"><b>Se cobra el ${escapeHtml(x.cobro)}.</b> ${escapeHtml(x.comoSeCobra)}</p>
+        </div>
+      </div>
+    </div>`
+
+  const body = `
+<article class="max-w-3xl mx-auto px-4 py-8">
+
+  <nav class="text-xs text-slate-500 mb-3"><a href="/" class="hover:text-teal-700">Puerto Rico Sin Filtros</a> › Expediente</nav>
+
+  <h1 class="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">El contrato de $5,886 millones: todo lo que hacía falta para pararlo estuvo escrito a tiempo</h1>
+
+  <p class="text-lg text-slate-700 mt-4">El 10 de junio de 2026 la Autoridad de Energía Eléctrica firmó el contrato 2026-P00107 para 400 megavatios de generación temporera en la Central Aguirre. 66 días después estaba cancelado, referido al FBI, y Puerto Rico seguía con relevos de carga.</p>
+
+  <p class="text-lg text-slate-700 mt-3">Este expediente no cuenta el escándalo. Cuenta otra cosa, que es peor: <b>las advertencias existieron, por escrito, dentro del propio gobierno, con meses de anticipación.</b> Están en los documentos que la Junta de Supervisión Fiscal publicó, en las cartas del propio zar de energía, y en el registro de corporaciones de Florida. Aquí están, con fecha y con fuente.</p>
+
+  <div class="bg-slate-900 text-white rounded-2xl p-5 mt-6">
+    <div class="text-xs uppercase tracking-widest text-teal-300 font-bold">El titular</div>
+    <p class="mt-2 mb-0 text-slate-100">Antes de que se firmara, la oficina encargada de evaluar ya había escrito que la empresa "ha sido ampliamente comparada con el escándalo de Whitefish", que <b>ninguno de los 3 proponentes cumplía con los requisitos</b>, y que esa empresa <b>no tenía capacidad financiera propia</b>. La empresa además llevaba 8 meses disuelta en Florida. Nada de eso detuvo el proceso. Lo que lo detuvo, 2 meses después de firmado, fue una periodista.</p>
+  </div>
+
+  <div class="bg-teal-50 border border-teal-200 rounded-xl p-4 mt-3">
+    <p class="text-sm text-teal-900 m-0"><b>El dato que ordena todo:</b> no se desembolsó un centavo público bajo este contrato. El daño no es dinero perdido: es <b>tiempo perdido</b>. La orden de buscar esos megavatios salió en marzo de 2025 porque falló una unidad de Aguirre. 17 meses después no hay ni un megavatio nuevo, y LUMA proyectó cerca de 37 días de relevos de carga para este año fiscal.</p>
+  </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Los 12 momentos en que esto se pudo parar</h2>
+  <p class="text-sm text-slate-600 mb-3">Cada fila es un documento o un acto verificable, no una opinión. La columna de la derecha dice de dónde sale.</p>
+
+  <div class="overflow-x-auto border border-slate-200 rounded-xl">
+    <table class="w-full text-sm">
+      <tbody>${PX_MOMENTOS.map(filaMomento).join('')}</tbody>
+    </table>
+  </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Los 7 hallazgos que salen de los documentos</h2>
+
+  <div class="space-y-3">
+    <div class="border-l-4 border-slate-300 pl-3">
+      <p class="text-sm text-slate-800 m-0"><b>1. El valor de $5,886,720,000 salió de una hoja de cálculo.</b> La Junta pidió el modelo financiero que sustentara esa cifra. Lo que recibió fue un Excel titulado "Contract Ceiling Calculations - Power X" que multiplica la tarifa por 400 megavatios a capacidad completa por 6,570 horas al año por 10 años. El operador del sistema nunca certificó esas horas. <b>La cifra es un techo teórico, no un cheque</b>, y así hay que citarla.</p>
+    </div>
+    <div class="border-l-4 border-slate-300 pl-3">
+      <p class="text-sm text-slate-800 m-0"><b>2. La fianza de licitación fue de $300,000.</b> Para un contrato cuyo techo es de casi $6,000 millones. La propia Junta lo cuestionó por escrito y preguntó cómo se calculó. <b>Nadie ha dicho públicamente quién fijó esa cantidad ni con qué fórmula.</b> Una fianza baja no es un detalle técnico: es la puerta que decide quién puede entrar a competir.</p>
+    </div>
+    <div class="border-l-4 border-slate-300 pl-3">
+      <p class="text-sm text-slate-800 m-0"><b>3. El financiamiento del proyecto descansaba sobre las facturas futuras de la propia AEE.</b> No sobre capital de los socios. Y una institución financiera que nunca aparece en el expediente de la licitación ya había radicado un gravamen (un UCC-1) sobre ese contrato. En cristiano: <b>el contrato mismo era el activo</b>.</p>
+    </div>
+    <div class="border-l-4 border-slate-300 pl-3">
+      <p class="text-sm text-slate-800 m-0"><b>4. El firmante cambió en la versión final y no se avisó.</b> En todas las versiones anteriores del contrato, la persona designada a firmar por Enchanted Rock era otra. En la versión que se ejecutó aparece un nombre distinto. La Junta lo señala en su carta del 17 de agosto: <b>el cambio nunca se le informó.</b></p>
+    </div>
+    <div class="border-l-4 border-slate-300 pl-3">
+      <p class="text-sm text-slate-800 m-0"><b>5. La empresa se registró en el Contralor bajo la categoría "energía solar".</b> El proyecto era de generación con gas natural y diésel. Es un detalle administrativo, pero es el detalle que decide si alguien buscando contratos de generación fósil lo encuentra o no.</p>
+    </div>
+    <div class="border-l-4 border-slate-300 pl-3">
+      <p class="text-sm text-slate-800 m-0"><b>6. La fianza de ejecución de $1,180 millones venció el 25 de junio y nunca se entregó.</b> El contrato siguió vigente 54 días más. Durante esos días se aprobó el cambio de uno de los socios. El informe de cumplimiento número 3 registra <b>0% de avance</b> en las metas de generación.</p>
+    </div>
+    <div class="border-l-4 border-slate-300 pl-3">
+      <p class="text-sm text-slate-800 m-0"><b>7. El día que se firmó el contrato, la empresa cuya firma se disputa salía a la bolsa.</b> Levantó cerca de $600 millones. Su prospecto ante la Comisión de Valores federal, que audité con la herramienta de búsqueda de texto completo de la SEC, <b>no menciona a Puerto Rico ni una sola vez</b>. Ese silencio respalda su versión de que nunca fue parte. También plantea la pregunta contraria, que sigue abierta.</p>
+    </div>
+  </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Las 5 preguntas que nadie ha contestado</h2>
+  <ol class="text-sm text-slate-700 space-y-2 pl-5 list-decimal">
+    <li><b>¿Quién fijó la fianza de licitación en $300,000, y con qué fórmula?</b> La respuesta debe estar en el RFP, que no es público.</li>
+    <li><b>¿Quiénes son los cabilderos que trabajaron este contrato?</b> El propio director de la oficina evaluadora ha dicho públicamente que existen. Puerto Rico no tiene un registro obligatorio que permita saber quiénes son ni cuánto cobraban. La Junta pidió legislación para eso.</li>
+    <li><b>¿Subió la denuncia del 17 de junio hasta La Fortaleza?</b> Se sabe que llegó a la AAPP y al 3PPO. Quién más la vio, y cuándo, decide de quién es la responsabilidad.</li>
+    <li><b>¿Por qué el bufete que asesora a la Junta de Supervisión Fiscal en la quiebra de la AEE, y que fue contratado el 7 de junio por la empresa denunciante, no puso a la Junta sobre aviso?</b> La Junta dice que se enteró por la prensa el 7 de agosto. Esta pregunta la levanta la defensa del propio contratista, y es legítima.</li>
+    <li><b>¿Qué pasó con la otra mitad?</b> Los 200 megavatios de San Juan iban en un contrato aparte, con la empresa que había quedado primera en puntuación. Casi nadie está mirando ese.</li>
+  </ol>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">5 predicciones, con fecha de cobro</h2>
+  <p class="text-sm text-slate-600 mb-3">Una predicción sin fecha no es una predicción, es una opinión. Estas 5 se pueden cobrar en un día específico, y quien las cobre no tiene que creerme a mí: la columna dice dónde se verifica. Si me equivoco, esta página lo va a decir.</p>
+  <div class="space-y-2">${PX_PREDICCIONES.map(filaPrediccion).join('')}</div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Lo que este récord NO dice</h2>
+  <p class="text-sm text-slate-600 mb-3">Antes de publicar, este expediente se sometió a un ejercicio contrario: cargué los 13 documentos y le pedí a un sistema de análisis que actuara como abogado del gobierno y lo destruyera. Encontró 3 cosas. Las 3 se corrigieron y aquí están, porque un expediente que esconde sus límites no vale nada.</p>
+  <ul class="text-sm text-slate-700 space-y-2 list-none pl-0">
+    <li class="border-l-4 border-amber-400 pl-3"><b>No es cierto que "el peor evaluado ganó" así de simple.</b> La licitación no era de ganador único: se contemplaban adjudicaciones por sitio. Los otros 2 proponentes pusieron condiciones que el gobierno rechazaba (uno exigía pago por capacidad, el otro una cláusula de terminación) y Power Expectations fue la única que aceptó las cláusulas no negociables. <b>Lo que sí queda en pie</b> es que la propia Junta pidió explicar la adjudicación "a la luz de la puntuación", y preguntó si aceptar esas cláusulas se convirtió en criterio <i>después</i> de que ya se habían evaluado y puntuado las propuestas. Esa pregunta sigue sin contestar.</li>
+    <li class="border-l-4 border-amber-400 pl-3"><b>No es cierto que la denuncia se "engavetó".</b> La AAPP la refirió el mismo día que la recibió, y hubo reuniones con las partes el 22 y el 23 de junio. <b>Lo que sí queda en pie</b> es que ni la Junta ni la Autoridad de Energía Eléctrica fueron notificadas mientras se aprobaba el cambio de socio, y que quien investigó fue la misma oficina que había corrido la licitación.</li>
+    <li class="border-l-4 border-amber-400 pl-3"><b>No hay evidencia documental de que el contrato fuera "para revender".</b> Eso se ha dicho en televisión; el contrato no lo sostiene. La estructura era de financiamiento privado y pago solo por energía entregada, sin garantía de compra mínima. Para revenderlo habría que financiar más de $1,000 millones primero. <b>Lo que sí está en los documentos</b> es que el financiamiento se apoyaba en las cuentas por cobrar de la AEE y que ya había un gravamen radicado sobre el contrato.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>Ninguna de las alegaciones de fraude está adjudicada.</b> Hay un referido al Departamento de Justicia y al FBI. Un referido no es una acusación, y una acusación no es una convicción. Aquí se reportan actos documentados y quién los alega, no culpas.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>La disputa central puede terminar siendo civil y no criminal.</b> Existía un acuerdo de representación firmado entre las 2 empresas. Si el desacuerdo es sobre hasta dónde llegaba esa autorización, eso es un pleito de contrato, no necesariamente un delito. Los tribunales lo decidirán, no esta página.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>Este expediente no cubre a la tercera empresa del consorcio</b>, la única con operaciones físicas en Puerto Rico. No he encontrado documentos que digan qué sabían sus directivos ni qué diligencia se le hizo. Es un hueco y lo declaro.</li>
+  </ul>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Derecho a réplica</h2>
+  <div class="border border-slate-200 rounded-xl p-4 bg-white">
+    <p class="text-sm text-slate-700 m-0">Toda persona o entidad mencionada en este expediente tiene derecho a responder, y su respuesta se publica <b>íntegra y sin editar</b> en esta misma página, con la misma prominencia. Eso incluye a la Autoridad de Energía Eléctrica, la Autoridad para las Alianzas Público-Privadas, la Oficina Independiente de Adquisiciones, la Junta de Supervisión Fiscal y las empresas del consorcio. Escribe a <a href="mailto:angel@angelanderson.com" class="text-teal-700 underline">angel@angelanderson.com</a>. Si encuentras un error de hecho, dilo y se corrige con nota de corrección fechada.</p>
+  </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Cómo se hizo</h2>
+  <ol class="text-sm text-slate-700 space-y-2 pl-5 list-decimal">
+    <li><b>Documentos primarios (13).</b> Las 6 cartas y requerimientos de la Junta de Supervisión Fiscal entre el 13 de febrero y el 16 de julio de 2026; sus 2 cartas de agosto; su comunicado de revocación; la respuesta de 10 páginas de la Autoridad para las Alianzas Público-Privadas del 9 de agosto; 2 órdenes del Negociado de Energía de agosto; y la petición original que arrancó el proceso en febrero de 2025. Todos están publicados por las propias agencias.</li>
+    <li><b>Registros públicos.</b> El registro de contratos del Contralor de Puerto Rico (contrato 2026-P00107). El registro corporativo del estado de Florida. El registro de la Comisión de Valores federal (búsqueda de texto completo sobre los documentos de la empresa). El expediente público del caso federal 2:19-cr-00877 en Nueva Jersey.</li>
+    <li><b>Verificaciones propias.</b> Consulta del registro del dominio enchantedrockpr.com y búsqueda en el archivo histórico de internet. Búsqueda de texto completo en los documentos de la Comisión de Valores.</li>
+    <li><b>Prensa.</b> Cobertura de El Nuevo Día, NotiCel, El Vocero, Primera Hora, Metro, San Juan Daily Star, Bloomberg, el Centro de Periodismo Investigativo y el trabajo de Bárbara Figueroa Rosa, que fue quien destapó el caso el 7 de agosto. Cuando un dato viene solo de prensa, esta página lo dice.</li>
+    <li><b>Control de calidad.</b> Los 13 documentos se cargaron juntos y se sometieron a un ejercicio adversarial antes de publicar: el resultado está en la sección "Lo que este récord NO dice". Se repite antes de cualquier actualización mayor.</li>
+    <li><b>¿Ves un error?</b> <a href="mailto:angel@angelanderson.com" class="text-teal-700 underline">angel@angelanderson.com</a>. Publicado el 20 de agosto de 2026.</li>
+  </ol>
+
+  <div class="mt-8">
+    ${shareRow({
+      text: 'El contrato de $5,886 millones de la AEE: las advertencias existieron por escrito, con meses de anticipación, dentro del propio gobierno. Aquí están con fecha y fuente.',
+      url: 'https://puertoricosinfiltros.com/expediente-power-expectations',
+      toWho: 'a quien te diga que esto no se veía venir',
+    })}
+  </div>
+
+  <div class="bg-teal-50 border border-teal-200 rounded-2xl p-6 text-center mt-8">
+    <p class="font-display text-xl text-slate-900 m-0">Puerto Rico no tiene un problema para detectar estas cosas. Las detecta a tiempo y por escrito.</p>
+    <p class="text-sm text-slate-700 mt-3 mb-0">Lo que no tiene es una consecuencia para quien sigue adelante sabiendo. Esa parte no la arregla un expediente. La arregla la gente que pregunta.</p>
+  </div>
+
+  <div class="border border-slate-200 rounded-xl p-4 mt-6 bg-white">
+    <p class="text-sm text-slate-700 m-0"><b>Si esto te dejó con ganas de hacer algo y no sabes qué:</b> el 28 de agosto vencen los plazos que el Senado y la Cámara le dieron al gobierno para entregar el expediente completo de este contrato. Ese día se sabrá si lo entregaron. Puedes escribirle a tu legislador y preguntarle una sola cosa: <b>si el contrato completo ya llegó, y si lo van a publicar.</b> No hace falta más. Una pregunta con fecha es lo que convierte un escándalo en un récord.</p>
+  </div>
+
+</article>
+${SHARE_COPY_SCRIPT}`
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Dataset',
+    distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/expediente-power-expectations', encodingFormat: 'text/html' },
+    license: 'https://www.usa.gov/government-works',
+    name: 'Expediente del contrato 2026-P00107: generación temporera de la AEE con Power Expectations',
+    description: 'Cronología documentada del contrato de generación temporera de 400 MW en la Central Aguirre, cancelado en agosto de 2026, construida con 13 documentos primarios de la Junta de Supervisión Fiscal, la AAPP y el Negociado de Energía.',
+    creator: { '@type': 'Person', name: 'Angel Anderson' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    temporalCoverage: '2025-02/2026-08',
+    spatialCoverage: 'Puerto Rico',
+    isAccessibleForFree: true,
+    inLanguage: 'es',
+    url: 'https://puertoricosinfiltros.com/expediente-power-expectations',
+  }
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'El contrato de $5,886 millones: las advertencias estaban escritas',
+    description: 'La AEE firmó el contrato 2026-P00107 el 10 de junio de 2026 y lo canceló 66 días después. Los documentos del propio gobierno advertían el riesgo desde agosto de 2025. Cronología con 13 fuentes primarias.',
+    slug: 'expediente-power-expectations',
+    bodyHtml: body,
+    jsonLd,
+    ogImage: 'https://puertoricosinfiltros.com/api/og?theme=sinfiltros'
+      + '&t=' + encodeURIComponent('El contrato de,||$5,886 millones')
+      + '&k=' + encodeURIComponent('Expediente · 13 documentos primarios')
+      + '&sub=' + encodeURIComponent('Las advertencias existieron por escrito, dentro del gobierno, con meses de anticipación.'),
+    host: req.headers?.host,
+    canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
 
 async function handleExpediente(req: any, res: any) {
   const f = String(req.query?.f || 'alcalde-cabo-rojo')
@@ -20195,6 +20404,7 @@ const PAGE_CANONICAL: Record<string, string> = {
   'internado-psicologia': 'https://registromedicopr.com/internado-psicologia',
   'expediente-planvital': 'https://registromedicopr.com/expediente-planvital',
   'expediente-mmm': 'https://registromedicopr.com/expediente-mmm',
+  'expediente-power-expectations': 'https://puertoricosinfiltros.com/expediente-power-expectations',
   'registro-puedo-volver': 'https://registromedicopr.com/puedo-volver',
   'rendimiento': 'https://puertoricosinfiltros.com/rendimiento',
   'rentas': 'https://www.mapadecaborojo.com/rentas',
@@ -20278,6 +20488,7 @@ export default async function handler(req: any, res: any) {
   }
 
   switch (page) {
+    case 'expediente-power-expectations': return await handleExpedientePowerExpectations(req, res)
     case 'agua': return handleAgua(req, res)
     case 'tienda': return handleTienda(req, res)
     case 'tienda-log': return await handleTiendaLog(req, res)
