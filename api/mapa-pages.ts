@@ -6150,6 +6150,24 @@ async function handleEspecialista(req: any, res: any) {
     ? `<p class="not-prose mt-3 text-xs text-slate-500">${t('Estos 2 bloques dicen lo que el plan imprimió en su directorio, no si te van a coger. Y si un plan no aparece aquí, eso NO quiere decir que el médico esté fuera de esa red: el cruce por número federal identifica el 33% de las filas del directorio del Plan Vital y el 52% de las de MMM, así que casi siempre significa que esa fila no se pudo cruzar. Antes de cambiarte de plan, confirma con la oficina.', 'These 2 blocks say what the plan printed in its directory, not whether they will take you. And a plan missing here does NOT mean the provider is out of that network: the federal-number cross-check identifies 33% of the Plan Vital directory rows and 52% of MMM\'s, so it almost always means that row could not be matched. Before switching plans, confirm with the office.')}</p>`
     : ''
 
+  // El hub del pueblo: cuántos hay de lo mismo ahí, y el enlace que lo abre.
+  let puertaHub = ''
+  if (spec && muni) {
+    const specUrlF = specToUrl(place.subcategory), muniSlugF = specToUrl(muni)
+    const { count: nMuni } = await supabase.from('places')
+      .select('id', { count: 'exact', head: true })
+      .eq('subcategory', place.subcategory).eq('category', 'HEALTH')
+      .not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open')
+      .or('fuera_de_pr.is.null,fuera_de_pr.eq.false').eq('municipality', muni)
+    const n = Number(nMuni || 0)
+    if (n > 1) {
+      const lpF = lang === 'en' ? '?lang=en' : ''
+      puertaHub = `<p class="not-prose mt-4 text-sm"><a href="/registro/${specUrlF}/${muniSlugF}${lpF}" class="text-teal-700 font-semibold hover:underline">${lang === 'en'
+        ? `Comparing plans? See all ${n} ${escapeHtml(specLabel.toLowerCase())} in ${escapeHtml(muni)} and which plan lists each one →`
+        : `¿Estás comparando planes? Mira los ${n} ${escapeHtml(specLabel.toLowerCase())} de ${escapeHtml(muni)} y cuál plan lista a cada uno →`}</a></p>`
+    }
+  }
+
   // Planes reportados por vecinos (crowdsource, distinto de accepted_plans = oficina confirmó)
   const { data: planRep } = await supabase.from('v_plan_reports').select('plan,reportes').eq('place_id', place.id)
   const reportedPlans = (planRep || []).filter((r: any) => Number(r.reportes) > 0).sort((a: any, b: any) => b.reportes - a.reportes)
@@ -6194,6 +6212,7 @@ async function handleEspecialista(req: any, res: any) {
     ${reportedPlans.length ? `<div class="bg-sky-50 border border-sky-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-sky-700 font-bold">${lang === 'en' ? 'Neighbors report this office takes' : 'Vecinos reportan que aquí aceptan'}</div><div class="text-sky-900 font-semibold mt-1">${reportedPlans.map((r: any) => `${escapeHtml(planLabel(r.plan))}${Number(r.reportes) > 1 ? ` <span class="text-xs text-sky-600">(${r.reportes})</span>` : ''}`).join(' · ')}</div><div class="text-xs text-sky-700 mt-1">${lang === 'en' ? 'Reported by people who called, not confirmed by the office. Always double-check when you call.' : 'Reportado por gente que llamó, no confirmado por la oficina. Siempre verifica cuando llames.'}</div></div>` : ''}
   </div>
 ${planDirHtml}${fmvHtml}${planesNota}
+${puertaHub}
 
   <div class="not-prose mt-4 bg-white border border-slate-200 rounded-2xl p-5">
     <p class="font-bold text-slate-800 text-sm">${lang === 'en' ? '📞 Did you call? Help the next person' : '📞 ¿Llamaste? Ayuda al próximo'}</p>
@@ -17400,6 +17419,58 @@ async function resolveMuni(slug: string): Promise<{ name: string; region: string
   return MUNI_CACHE.get(slug) || null
 }
 
+// ── El bloque de planes en los hubs: la pregunta de la ventana Medicare, a nivel de pueblo ──
+// La ficha ya contestaba "¿qué planes listan a MI médico?" (19-20 ago). Pero entre el 15 de
+// octubre y el 7 de diciembre la gente no llega por el nombre del médico: llega por
+// "podiatra arecibo", que es exactamente donde estos hubs ya salen en posición 9-10 con miles
+// de impresiones. Un hub que además dice quién está listado por cuál plan es hoy el único
+// sitio de Puerto Rico que contesta esa pregunta por pueblo, sin cuenta y sin PDF de 335
+// páginas. 1,581 de los 2,641 hubs de especialidad×pueblo tienen al menos un proveedor
+// listado por un plan (verificado en Supabase el 2026-08-21).
+//
+// ⚠️ SOLO SE PUBLICA EL HALLAZGO POSITIVO. La ausencia NO se publica como "fuera de la red":
+// el cruce por número federal identifica el 33% de las filas del directorio del Plan Vital y
+// el 52% de las de MMM. Una raya aquí es una fila que no se pudo cruzar, no un médico que te
+// va a cobrar. Misma regla que la ficha, y por la misma razón: el peor uso de esta página
+// sería que alguien se cambie de plan por un silencio mío.
+//
+// Tampoco se muestra `acepta_nuevos`: 17,188 de 19,453 filas del Plan Vital dicen "Sí" y 8
+// dicen "No". El expediente ya probó que ese campo no distingue nada.
+const PLAN_ED_MMM = '2026-06-01'
+const PLAN_ED_VITAL = 'jul-2026'
+const PLAN_ED_MMM_ES = 'junio de 2026', PLAN_ED_MMM_EN = 'June 2026'
+const PLAN_ED_VITAL_ES = 'julio de 2026', PLAN_ED_VITAL_EN = 'July 2026'
+type PlanHit = { mmm: boolean; vital: boolean }
+
+async function planHitsByNpi(npis: any[]): Promise<Map<string, PlanHit>> {
+  const out = new Map<string, PlanHit>()
+  const list = Array.from(new Set(npis.filter(Boolean).map(String)))
+  if (!list.length) return out
+  try {
+    const [mRes, vRes] = await Promise.all([
+      // Vista pública: la tabla base está cerrada porque trae el bloque crudo del PDF.
+      supabase.from('v_plan_directory_public').select('npi').eq('plan', 'MMM').eq('edition_date', PLAN_ED_MMM).in('npi', list),
+      supabase.from('fmvital_directorio').select('npi').eq('edicion', PLAN_ED_VITAL).in('npi', list),
+    ])
+    for (const r of (((mRes as any).data) || [])) { const k = String(r.npi); out.set(k, { mmm: true, vital: out.get(k)?.vital || false }) }
+    for (const r of (((vRes as any).data) || [])) { const k = String(r.npi); const p = out.get(k); out.set(k, { mmm: p?.mmm || false, vital: true }) }
+  } catch { /* aditivo: si el cruce falla, el hub sigue sirviendo nombres y teléfonos */ }
+  return out
+}
+
+const planBadges = (h: PlanHit | undefined, en: boolean) => {
+  if (!h || (!h.mmm && !h.vital)) return `<span class="text-slate-300" title="${en ? 'This row could not be cross-matched — it does NOT mean out of network' : 'Esta fila no se pudo cruzar — NO quiere decir que esté fuera de la red'}">—</span>`
+  const b: string[] = []
+  if (h.mmm) b.push(`<span class="inline-block bg-teal-50 border border-teal-200 text-teal-800 font-bold text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap">MMM</span>`)
+  if (h.vital) b.push(`<span class="inline-block bg-indigo-50 border border-indigo-200 text-indigo-800 font-bold text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap">Plan Vital</span>`)
+  return `<span class="inline-flex flex-wrap gap-1">${b.join('')}</span>`
+}
+
+// La nota que evita el peor uso de la columna. Va debajo de toda tabla que la pinte.
+const planNotaHub = (en: boolean) => `<p class="not-prose mt-3 text-xs text-slate-500">${en
+  ? `The <strong>Plan</strong> column says what the plan printed in its own provider directory (MMM, ${PLAN_ED_MMM_EN} · Plan Vital / First Medical, ${PLAN_ED_VITAL_EN}), not whether they will take you. A dash does <strong>not</strong> mean the provider is out of that network: the federal-number cross-check identifies 33% of the Plan Vital directory rows and 52% of MMM's, so a dash almost always means that row could not be matched. Before switching plans, confirm with the office. <a href="/expediente-mmm?lang=en" class="text-teal-700 underline">The MMM audit</a> · <a href="/expediente-planvital?lang=en" class="text-teal-700 underline">the Plan Vital audit</a>.`
+  : `La columna <strong>Plan</strong> dice lo que el plan imprimió en su propio directorio (MMM, ${PLAN_ED_MMM_ES} · Plan Vital / First Medical, ${PLAN_ED_VITAL_ES}), no si te van a coger. Una raya <strong>no</strong> quiere decir que el médico esté fuera de esa red: el cruce por número federal identifica el 33% de las filas del directorio del Plan Vital y el 52% de las de MMM, así que casi siempre significa que esa fila no se pudo cruzar. Antes de cambiarte de plan, confirma con la oficina. <a href="/expediente-mmm" class="text-teal-700 underline">El expediente MMM</a> · <a href="/expediente-planvital" class="text-teal-700 underline">el expediente Plan Vital</a>.`}</p>`
+
 async function handleRegistroHub(req: any, res: any) {
   // Normalize incoming slug the same way specToUrl() built SPEC_BY_URL's keys — strip accents
   // (á/é/í/ó/ú/ñ) so /registro/cardiólogo matches the 'cardiologo' key instead of 302ing to /registro.
@@ -17437,8 +17508,8 @@ async function handleRegistroHub(req: any, res: any) {
     const muniSlug = specToUrl(muni.name)
     const townReg = muni.region || ''
     const [inTownRes, inRegionRes] = await Promise.all([
-      supabase.from('places').select('name,municipality,slug,phone').eq('subcategory', x.s).eq('category', 'HEALTH').not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').or('fuera_de_pr.is.null,fuera_de_pr.eq.false').eq('municipality', muni.name).order('name', { ascending: true }).limit(80),
-      townReg ? supabase.from('places').select('name,municipality,slug,phone').eq('subcategory', x.s).eq('category', 'HEALTH').not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').or('fuera_de_pr.is.null,fuera_de_pr.eq.false').eq('region', townReg).order('municipality', { ascending: true }).limit(120) : Promise.resolve({ data: [] as any[] }),
+      supabase.from('places').select('name,municipality,slug,phone,npi').eq('subcategory', x.s).eq('category', 'HEALTH').not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').or('fuera_de_pr.is.null,fuera_de_pr.eq.false').eq('municipality', muni.name).order('name', { ascending: true }).limit(80),
+      townReg ? supabase.from('places').select('name,municipality,slug,phone,npi').eq('subcategory', x.s).eq('category', 'HEALTH').not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').or('fuera_de_pr.is.null,fuera_de_pr.eq.false').eq('region', townReg).order('municipality', { ascending: true }).limit(120) : Promise.resolve({ data: [] as any[] }),
     ])
     const inTown = (inTownRes.data || [])
     const nearby = ((inRegionRes as any).data || []).filter((p: any) => p.municipality !== muni.name)
@@ -17455,25 +17526,44 @@ async function handleRegistroHub(req: any, res: any) {
       ? t(`El más cercano está en <strong>${escapeHtml(cerca.nearest)}</strong>, cruzando el agua.`, `The closest one is in <strong>${escapeHtml(cerca.nearest)}</strong>, across the water.`)
       : t(`El más cercano está en <strong>${escapeHtml(cerca.nearest)}</strong>, a unos <strong>${Math.round(cerca.km)} km</strong> en línea recta (por carretera es más).`,
           `The closest one is in <strong>${escapeHtml(cerca.nearest)}</strong>, about <strong>${Math.round(cerca.km)} km</strong> away as the crow flies (farther by road).`))
-    const rowsOf = (list: any[]) => list.map((p: any) => `<tr class="border-t border-slate-100"><td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td><td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '—')}</td><td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-full whitespace-nowrap"><i class="fa-solid fa-phone"></i> ${t('Llamar', 'Call')}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td></tr>`).join('')
-    const theadT = `<thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(label)}</th><th class="py-2 px-3">${t('Pueblo', 'Town')}</th><th class="py-2 px-3 text-right">${t('Teléfono', 'Phone')}</th></tr></thead>`
+    // El cruce contra los 2 directorios de plan, en una sola llamada por tabla.
+    const planMap = await planHitsByNpi([...inTown, ...nearby].map((p: any) => p.npi))
+    const conMMM = inTown.filter((p: any) => planMap.get(String(p.npi))?.mmm).length
+    const conVital = inTown.filter((p: any) => planMap.get(String(p.npi))?.vital).length
+    const rowsOf = (list: any[], showTown: boolean) => list.map((p: any) => `<tr class="border-t border-slate-100"><td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td>${showTown ? `<td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '—')}</td>` : ''}<td class="py-2 px-3">${planBadges(planMap.get(String(p.npi)), en)}</td><td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-full whitespace-nowrap"><i class="fa-solid fa-phone"></i> ${t('Llamar', 'Call')}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td></tr>`).join('')
+    const theadOf = (showTown: boolean) => `<thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(label)}</th>${showTown ? `<th class="py-2 px-3">${t('Pueblo', 'Town')}</th>` : ''}<th class="py-2 px-3">${t('Plan', 'Plan')}</th><th class="py-2 px-3 text-right">${t('Teléfono', 'Phone')}</th></tr></thead>`
     // El título compite en posición 8-11 contra "Best/Top 10". Gana el que dice el resultado:
     // cuántos hay y que traen teléfono. Y cuando no hay, decirlo es lo único que nadie más hace.
     const cleanEs = cleanSpecLabel(x.l), cleanEn = cleanSpecLabel(label)
     const nT = inTown.length
+    // Entre el 15 de octubre y el 7 de diciembre la busqueda deja de ser "podiatra arecibo"
+    // y pasa a ser "podiatra arecibo mmm". Si el titulo no dice "plan", esa busqueda no ve
+    // esta pagina — y es la unica que la contesta por pueblo.
+    const hayPlan = (conMMM + conVital) > 0
+    const planSuf = hayPlan ? t(' y plan', ' and plan') : ''
+    const frasePlanEs = !hayPlan ? '' : (conMMM && conVital)
+      ? `${conMMM} aparece${conMMM === 1 ? '' : 'n'} en el directorio de MMM (${PLAN_ED_MMM_ES}) y ${conVital} en el del Plan Vital (${PLAN_ED_VITAL_ES})`
+      : conMMM
+        ? `${conMMM} aparece${conMMM === 1 ? '' : 'n'} en el directorio de MMM (${PLAN_ED_MMM_ES})`
+        : `${conVital} aparece${conVital === 1 ? '' : 'n'} en el directorio del Plan Vital (${PLAN_ED_VITAL_ES})`
+    const frasePlanEn = !hayPlan ? '' : (conMMM && conVital)
+      ? `${conMMM} appear${conMMM === 1 ? 's' : ''} in MMM's provider directory (${PLAN_ED_MMM_EN}) and ${conVital} in Plan Vital's (${PLAN_ED_VITAL_EN})`
+      : conMMM
+        ? `${conMMM} appear${conMMM === 1 ? 's' : ''} in MMM's provider directory (${PLAN_ED_MMM_EN})`
+        : `${conVital} appear${conVital === 1 ? 's' : ''} in Plan Vital's provider directory (${PLAN_ED_VITAL_EN})`
     const titleT = nT
-      ? t(nT === 1 ? `${cleanEs} en ${muni.name}: hay 1, con teléfono` : `${cleanEs} en ${muni.name}: los ${nT} que hay, con teléfono`,
-          nT === 1 ? `${cleanEn} in ${muni.name}: there is 1, with phone number` : `${cleanEn} in ${muni.name}: all ${nT}, with phone numbers`)
+      ? t(nT === 1 ? `${cleanEs} en ${muni.name}: hay 1, con teléfono${planSuf}` : `${cleanEs} en ${muni.name}: los ${nT} que hay, con teléfono${planSuf}`,
+          nT === 1 ? `${cleanEn} in ${muni.name}: there is 1, with phone${planSuf}` : `${cleanEn} in ${muni.name}: all ${nT}, with phone${planSuf}`)
       : cerca
         ? t(`${cleanEs} en ${muni.name}: no hay. El más cercano, en ${cerca.nearest}`, `${cleanEn} in ${muni.name}: none. The closest is in ${cerca.nearest}`)
         : t(`${cleanEs} en ${muni.name}: no hay. Los más cercanos, con teléfono`, `${cleanEn} in ${muni.name}: none. The closest ones, with phone numbers`)
     // La meta evita "los 4 cardiólogo": el conteo no toca el sustantivo, así no hay que
     // pluralizar etiquetas de 2 y 3 palabras ("dentista pediátrico", "trabajador social").
     const descT = inTown.length
-      ? t(`${cleanEs} en ${muni.name}: ${nT} con oficina ahí, ${nT === 1 ? 'con su teléfono' : 'cada uno con su teléfono al lado'}. Del registro federal NPPES, en español. Gratis, sin cuenta y sin plan.`, `${cleanEn} in ${muni.name}: ${nT} with a local office, ${nT === 1 ? 'with phone number' : 'each with a phone number'}. From the federal NPPES registry. Free, no account.`)
+      ? t(`${cleanEs} en ${muni.name}: ${nT} con oficina ahí, ${nT === 1 ? 'con su teléfono' : 'cada uno con su teléfono al lado'}.${hayPlan ? ` De esos, ${frasePlanEs}.` : ''} Del registro federal NPPES, en español. Gratis y sin cuenta.`, `${cleanEn} in ${muni.name}: ${nT} with a local office, ${nT === 1 ? 'with phone number' : 'each with a phone number'}.${hayPlan ? ` Of those, ${frasePlanEn}.` : ''} From the federal NPPES registry. Free, no account.`)
       : t(`El registro federal no muestra ninguno con oficina en ${muni.name}.${cerca ? ` El más cercano está en ${cerca.nearest}, a unos ${Math.round(cerca.km)} km.` : ''} Aquí están los de al lado, con pueblo y teléfono. Gratis y sin cuenta.`, `The federal registry shows none with an office in ${muni.name}. Here are the closest ones${townReg ? ` in ${townReg}` : ''}, with town and phone. Free, no account.`)
     const answerT = inTown.length
-      ? t(`En ${escapeHtml(muni.name)} hay <strong>${inTown.length} ${escapeHtml(x.l.toLowerCase())}${inTown.length === 1 ? '' : 's'}</strong> con oficina, verificado${inTown.length === 1 ? '' : 's'} contra el registro federal NPPES.`, `${escapeHtml(muni.name)} has <strong>${inTown.length} verified ${escapeHtml(labelLow)}${inTown.length === 1 ? '' : 's'}</strong> with a local office.`)
+      ? t(`En ${escapeHtml(muni.name)} hay <strong>${inTown.length} ${escapeHtml(x.l.toLowerCase())}${inTown.length === 1 ? '' : 's'}</strong> con oficina, verificado${inTown.length === 1 ? '' : 's'} contra el registro federal NPPES.${hayPlan ? ` De esos, <strong>${frasePlanEs}</strong>.` : ''}`, `${escapeHtml(muni.name)} has <strong>${inTown.length} verified ${escapeHtml(labelLow)}${inTown.length === 1 ? '' : 's'}</strong> with a local office.${hayPlan ? ` Of those, <strong>${frasePlanEn}</strong>.` : ''}`)
       : t(`El registro federal <strong>no muestra ningún ${escapeHtml(x.l.toLowerCase())}</strong> con oficina en ${escapeHtml(muni.name)}. ${cercaFrase}${nearby.length ? ` Los de al lado:` : ''}`, `The federal registry shows <strong>no ${escapeHtml(labelLow)}</strong> with an office in ${escapeHtml(muni.name)}.`)
     const breadcrumbT = `<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro${lp}" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <a href="/registro/${specUrl}${lp}" class="hover:text-teal-700">${escapeHtml(label)}</a> <span class="text-slate-300">/</span> <span class="text-slate-700">${escapeHtml(muni.name)}</span></nav>`
     let bodyT = `${breadcrumbT}
@@ -17481,8 +17571,9 @@ async function handleRegistroHub(req: any, res: any) {
 <p class="text-lg text-slate-600 mt-2">${answerT}</p>
 ${info.treats ? `<p class="text-slate-600 mt-1">${escapeHtml(info.treats)} ${escapeHtml(info.whenToGo)}</p>` : ''}
 ${info.note ? `<p class="text-sm text-slate-500 mt-1"><i class="fa-solid fa-circle-info text-teal-600"></i> ${escapeHtml(info.note)}</p>` : ''}`
-    if (inTown.length) bodyT += `<div class="not-prose mt-5 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${theadT}<tbody>${rowsOf(inTown)}</tbody></table></div>`
-    if (nearby.length) bodyT += `<h2 class="mt-6">${t('También cerca', 'Also nearby')}${townReg ? ` — ${t('en el', 'in')} ${escapeHtml(townReg)}` : ''}</h2><div class="not-prose mt-2 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${theadT}<tbody>${rowsOf(nearby.slice(0, 60))}</tbody></table></div>`
+    if (inTown.length) bodyT += `<div class="not-prose mt-5 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${theadOf(false)}<tbody>${rowsOf(inTown, false)}</tbody></table></div>`
+    if (nearby.length) bodyT += `<h2 class="mt-6">${t('También cerca', 'Also nearby')}${townReg ? ` — ${t('en el', 'in')} ${escapeHtml(townReg)}` : ''}</h2><div class="not-prose mt-2 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${theadOf(true)}<tbody>${rowsOf(nearby.slice(0, 60), true)}</tbody></table></div>`
+    if (inTown.length || nearby.length) bodyT += planNotaHub(en)
     if (!inTown.length && !nearby.length) bodyT += `<div class="not-prose mt-5 bg-amber-50 border border-amber-200 rounded-xl p-5"><p class="text-amber-900 font-semibold">${t(`No hay ${escapeHtml(x.l.toLowerCase())} verificados cerca de ${escapeHtml(muni.name)}.`, `No verified ${escapeHtml(labelLow)} near ${escapeHtml(muni.name)}.`)}</p><p class="text-sm text-amber-800 mt-1"><a href="/registro/${specUrl}/metro${lp}" class="font-semibold underline">${t('Mira el área metro', 'See the metro area')} (${metroCount}) →</a></p></div>`
     bodyT += `<p class="not-prose mt-4 text-sm"><a href="/registro/${specUrl}${lp}" class="text-teal-700 font-semibold">${t(`Ver los ${x.t} ${escapeHtml(x.l.toLowerCase())} de toda la isla →`, `See all ${x.t} ${escapeHtml(labelLow)} across the island →`)}</a></p>
 ${antesDeLlamar({ specLabel: x.l, en })}
@@ -17500,6 +17591,11 @@ ${regDisclaimer(en)}`
       { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [
         { '@type': 'Question', name: `¿Hay ${x.l.toLowerCase()} en ${muni.name}?`, acceptedAnswer: { '@type': 'Answer', text: inTown.length ? `Sí. En ${muni.name} hay ${inTown.length} ${x.l.toLowerCase()} verificado${inTown.length === 1 ? '' : 's'} contra el registro federal NPPES.` : `El registro federal NPPES no muestra ningún ${x.l.toLowerCase()} con oficina en ${muni.name}.${nearby.length && townReg ? ` Los más cercanos están en el ${townReg}.` : ''}` } },
         { '@type': 'Question', name: `¿Qué hace un ${x.l.toLowerCase()}?`, acceptedAnswer: { '@type': 'Answer', text: `${info.treats} ${info.whenToGo}` } },
+        ...(hayPlan ? [{ '@type': 'Question', name: `¿Cuáles ${x.l.toLowerCase()} de ${muni.name} aparecen en el directorio de MMM o del Plan Vital?`, acceptedAnswer: { '@type': 'Answer', text: [
+          conMMM ? `En el directorio de proveedores de MMM (edición de ${PLAN_ED_MMM_ES}) aparecen ${conMMM}: ${inTown.filter((p: any) => planMap.get(String(p.npi))?.mmm).map((p: any) => cleanProviderName(p.name)).join(', ')}.` : '',
+          conVital ? `En el del Plan Vital / First Medical (edición de ${PLAN_ED_VITAL_ES}) aparecen ${conVital}: ${inTown.filter((p: any) => planMap.get(String(p.npi))?.vital).map((p: any) => cleanProviderName(p.name)).join(', ')}.` : '',
+          `Esto es lo que el plan imprimió en su directorio, no una confirmación de que te van a coger, y que un médico no salga aquí no quiere decir que esté fuera de esa red: el cruce por número federal identifica el 33% de las filas del Plan Vital y el 52% de las de MMM. Confirma con la oficina antes de cambiarte de plan.`,
+        ].filter(Boolean).join(' ') } }] : []),
       ] },
       ...(itemListT.length ? [{ '@context': 'https://schema.org', '@type': 'ItemList', name: titleT, numberOfItems: allT.length, itemListElement: itemListT }] : []),
     ]
@@ -17511,19 +17607,21 @@ ${regDisclaimer(en)}`
 
   // provider list (this specialty, optionally this region)
   let q = supabase.from('places')
-    .select('name,municipality,region,slug,phone')
+    .select('name,municipality,region,slug,phone,npi')
     .eq('subcategory', x.s).not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open')
     .order('municipality', { ascending: true }).limit(200)
   if (region) q = q.eq('region', region)
   const { data: provData } = await q
   const providers = provData || []
 
+  const planMapH = await planHitsByNpi(providers.map((p: any) => p.npi))
   const provRows = providers.map(p => `<tr class="border-t border-slate-100">
     <td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td>
     <td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '—')}</td>
+    <td class="py-2 px-3">${planBadges(planMapH.get(String((p as any).npi)), en)}</td>
     <td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-full whitespace-nowrap"><i class="fa-solid fa-phone"></i> ${t('Llamar', 'Call')}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td>
   </tr>`).join('')
-  const thead = `<thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(label)}</th><th class="py-2 px-3">${t('Pueblo', 'Town')}</th><th class="py-2 px-3 text-right">${t('Teléfono', 'Phone')}</th></tr></thead>`
+  const thead = `<thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(label)}</th><th class="py-2 px-3">${t('Pueblo', 'Town')}</th><th class="py-2 px-3">${t('Plan', 'Plan')}</th><th class="py-2 px-3 text-right">${t('Teléfono', 'Phone')}</th></tr></thead>`
 
   const noteHtml = info.note ? `<p class="text-sm text-slate-500 mt-1"><i class="fa-solid fa-circle-info text-teal-600"></i> ${escapeHtml(info.note)}</p>` : ''
   const breadcrumb = `<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro${lp}" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <a href="/registro/${specUrl}${lp}" class="hover:text-teal-700">${escapeHtml(label)}</a>${region ? ` <span class="text-slate-300">/</span> <span class="text-slate-700">${escapeHtml(region)}</span>` : ''}</nav>`
@@ -17576,6 +17674,7 @@ ${regDisclaimer(en)}`
 ${info.treats ? `<p class="text-slate-600 mt-1">${escapeHtml(info.treats)} ${escapeHtml(info.whenToGo)}</p>` : ''}
 ${noteHtml}
 ${providers.length ? `<div class="not-prose mt-5 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${thead}<tbody>${provRows}</tbody></table></div>` : `<div class="not-prose mt-5 bg-amber-50 border border-amber-200 rounded-xl p-5"><p class="text-amber-900 font-semibold">${t(`No hay ${escapeHtml(x.l.toLowerCase())} verificados en ${escapeHtml(region)}.`, `No verified ${escapeHtml(labelLow)} in ${escapeHtml(region)}.`)}</p><p class="text-sm text-amber-800 mt-1">${t('Te va a tocar viajar. Mira los de', 'You will have to travel. See those in')} <a href="/registro/${specUrl}/metro${lp}" class="font-semibold underline">${t('el área metro', 'the metro area')} (${metroCount}) →</a></p></div>`}
+${providers.length ? planNotaHub(en) : ''}
 ${REGION_TOWNS[region] ? `<div class="not-prose mt-5"><div class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">${t('Por pueblo', 'By town')}</div><div class="flex flex-wrap gap-2">${REGION_TOWNS[region].map(([ts, tn]) => `<a href="/registro/${specUrl}/${ts}${lp}" class="inline-flex items-center bg-white border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-sm hover:border-teal-400 hover:text-teal-700">${escapeHtml(x.l)} ${t('en', 'in')} ${escapeHtml(tn)}</a>`).join('')}</div></div>` : ''}
 <p class="not-prose mt-4 text-sm"><a href="/registro/${specUrl}${lp}" class="text-teal-700 font-semibold">${t(`Ver los ${total} ${escapeHtml(x.l.toLowerCase())} de toda la isla →`, `See all ${total} ${escapeHtml(labelLow)} across the island →`)}</a></p>`
   } else {
@@ -17620,6 +17719,7 @@ ${noteHtml}
 ${townChips}
 <h2>${t(`Los ${total} ${escapeHtml(x.l.toLowerCase())} de Puerto Rico`, `All ${total} ${escapeHtml(labelLow)} in Puerto Rico`)}</h2>
 <div class="not-prose mt-2 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${thead}<tbody>${provRows}</tbody></table></div>
+${providers.length ? planNotaHub(en) : ''}
 ${providers.length >= 200 ? `<p class="text-xs text-slate-500 mt-2">${t('Mostrando los primeros 200. Usa las regiones de arriba para ver la lista completa de tu zona.', 'Showing the first 200. Use the regions above to see the full list for your area.')}</p>` : ''}`
   }
 
