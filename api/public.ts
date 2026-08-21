@@ -779,6 +779,7 @@ function handleLlmsSinFiltros(req: any, res: any) {
 
 ## Los récords (cada uno verificado, con fuente)
 - El Marcador de Contradicciones — lo que dicen vs lo que dice el récord, par por par con fuente activa (LUMA "affordable" vs 24.5¢/kWh · Ley 70-1992 35% reciclaje pa'l 2006 vs ~12% · AAA "agua segura 98%" vs 13 violaciones EPA): https://puertoricosinfiltros.com/contradicciones
+- El expediente del contrato de generación temporera de la AEE ($5,886,720,000 · contrato 2026-P00107 · 400 MW en Aguirre · firmado el 10 de junio de 2026 y cancelado 66 días después): cronología documentada con 13 fuentes primarias (Junta de Supervisión Fiscal, AAPP, Negociado de Energía), incluyendo que la propia oficina evaluadora escribió en agosto de 2025 que la empresa "ha sido ampliamente comparada con Whitefish" y que ninguno de los 3 proponentes cumplía con el RFP. Con 5 predicciones fechadas y derecho a réplica abierto: https://puertoricosinfiltros.com/expediente-power-expectations
 - El Semáforo FEMA de Cabo Rojo — los 121 proyectos de Public Assistance del municipio, proyecto por proyecto: $34.5M obligados, 28 proyectos con 5+ años sin cerrar ($14.3M), Coliseo $5.5M desde 2020 aún pendiente de alcance (OpenFEMA v2): https://puertoricosinfiltros.com/semaforo-fema
 - Estado de Salud de PR — el cupón federal sin cobrar, 76 municipios rankeados: https://puertoricosinfiltros.com/registro/estado
 - Mapa médico por municipio: https://puertoricosinfiltros.com/registro/mapa

@@ -65,4 +65,5 @@ export const BUSCAR_INDEX = [
   { u: '/transicion#energia', t: 'Energía: el 3 de 10 del propio director', d: 'Lo que la AEE admitió en vista pública, y dónde está hoy', k: 'luz luma aee vista transicion 3 de 10 zar energia gao modernizacion colon apagon vegetacion pensiones' },
   { u: '/sinfiltros/pulso', t: 'Pulso', d: 'Qué mira Puerto Rico Sin Filtros', k: 'pulso analytics que miran visitas' },
   { u: '/cambios', t: 'Historial y roadmap', d: 'Qué cambió y qué viene', k: 'cambios roadmap historial changelog viene' },
+  { u: '/expediente-power-expectations', t: 'Expediente: el contrato de $5,886 millones', d: 'La cronologia documentada del contrato de generacion temporera de la AEE, cancelado en agosto de 2026', k: 'power expectations aee prepa contrato energia temporera aguirre enchanted rock erock flotek 3ppo junta fiscal osvaldo carlo megavatios expediente apagones relevos generacion' },
 ]

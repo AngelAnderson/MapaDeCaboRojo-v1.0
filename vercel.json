@@ -240,6 +240,10 @@
       "destination": "/api/mapa-pages?page=expediente-mmm"
     },
     {
+      "source": "/expediente-power-expectations",
+      "destination": "/api/mapa-pages?page=expediente-power-expectations"
+    },
+    {
       "source": "/internado-psicologia",
       "destination": "/api/mapa-pages?page=internado-psicologia"
     },
