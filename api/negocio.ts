@@ -88,6 +88,50 @@ function formatHours(opening_hours: any): string {
   return days.length > 0 ? days.join(', ') : 'No disponible';
 }
 
+// Cuarentena visible (2026-08-21). El bot ya avisaba al proximo que TEXTEA
+// (search.ts usa caveatTelReportado), pero mapadecaborojo.com no leia
+// places.dato_reportado: cero referencias en todo el repo. O sea que el vecino
+// corregia el directorio, el Veci le daba las gracias, y la ficha le seguia
+// dando el numero malo al proximo que llegaba por Google, que es justo donde
+// estan los clics. Esto cierra esa milla.
+//
+// Reglas de la nota (no negociables):
+//  - Se atribuye y se fecha. Es "un vecino reporto el DD/MM/AAAA", nunca
+//    "este telefono no sirve". Un reporte no es una verificacion nuestra.
+//  - El derecho a replica NO usa keyword. "CORREGIR" existe en el router
+//    (handler.ts ~L2503) pero escribe a loquehayhoy_corrections, que es el
+//    tablero de loquehayhoy.com, no el directorio: mandaria al dueno al carril
+//    equivocado. Un numero pelado siempre llega. Regla: una keyword en un CTA
+//    se verifica contra intent.ts antes de publicarla, o no se publica.
+//  - Lleva derecho a replica en la misma linea: publicamos un senalamiento
+//    sobre un negocio con nombre, asi que el dueno tiene como responder ahi
+//    mismo, sin buscar a nadie.
+//  - Reversible: se limpia con
+//    UPDATE places SET dato_reportado = NULL WHERE id = '<uuid>';
+//  - No toca el JSON-LD telephone. Un reporte sin confirmar no borra el dato
+//    de un negocio: le pone fecha y contexto.
+const REPORTE_FRASE: Record<string, string> = {
+  tel_no_sirve: 'que este número no está en servicio',
+  nadie_contesta: 'que nadie contesta en este número',
+  tel_equivocado: 'que este número está equivocado',
+  cerro: 'que el negocio ya no está operando',
+};
+
+function avisoDatoReportado(dr: any): { texto: string; esTel: boolean } | null {
+  if (!dr || typeof dr !== 'object') return null;
+  const tipo = String(dr.tipo || '');
+  const frase = REPORTE_FRASE[tipo];
+  if (!frase) return null;
+  let fecha = '';
+  try {
+    const d = new Date(dr.at);
+    if (!isNaN(d.getTime())) {
+      fecha = ` el ${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`;
+    }
+  } catch { /* sin fecha, la nota igual vale */ }
+  return { texto: `Un vecino nos reportó${fecha} ${frase}. Todavía no lo hemos confirmado.`, esTel: tipo !== 'cerro' };
+}
+
 // The DB stores phones in E.164 (+17875551234). Showing that raw reads like a
 // database dump to the business owner looking at their own listing. Display it
 // the way a boricua writes it; the tel: href keeps the raw value.
@@ -336,6 +380,8 @@ export default async function handler(req: any, res: any) {
   const openNow = isOpenNow(place.opening_hours);
   // openNow (computed from hours) wins over the coarse status flag when available
   const isOpen = openNow !== null ? openNow : place.status === 'open';
+  // Cuarentena consultable: la reporta el vecino por el *7711, la lee la ficha.
+  const avisoTel = avisoDatoReportado((place as any).dato_reportado);
   const openLabel = openNow === null
     ? (isOpen ? 'Abierto' : 'Cerrado')
     : (openNow ? 'Abierto ahora' : 'Cerrado ahora');
@@ -426,7 +472,7 @@ export default async function handler(req: any, res: any) {
         '@type': 'Question',
         name: `¿Cuál es el teléfono de ${place.name}?`,
         acceptedAnswer: { '@type': 'Answer', text: place.phone
-          ? `El teléfono de ${place.name} es ${formatPhone(place.phone)}.`
+          ? `El teléfono de ${place.name} es ${formatPhone(place.phone)}.${avisoTel ? ` ${avisoTel.texto}` : ''}`
           : `Textea ${place.name} al 787-417-7711 y El Veci te consigue el contacto.` },
       },
     ],
@@ -531,7 +577,7 @@ export default async function handler(req: any, res: any) {
     <div class="info-card">
       <h2>Información</h2>
       ${place.address ? `<div class="info-row"><span class="info-label">📍 Dirección</span><span class="info-value">${esc(place.address)}</span></div>` : ''}
-      ${place.phone ? `<div class="info-row"><span class="info-label">📞 Teléfono</span><span class="info-value"><a href="tel:${esc(place.phone)}">${esc(formatPhone(place.phone))}</a></span></div>` : ''}
+      ${place.phone ? `<div class="info-row"><span class="info-label">📞 Teléfono</span><span class="info-value"><a href="tel:${esc(place.phone)}">${esc(formatPhone(place.phone))}</a>${avisoTel ? `<div style="margin-top:6px;font-size:0.85rem;line-height:1.45;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px"><strong>⚠️ Dato reportado.</strong> ${esc(avisoTel.texto)} Si es tu negocio y el número está bien, escríbenos al <strong>787-417-7711</strong> y lo corregimos.</div>` : ''}</span></div>` : ''}
       ${hoursKnown ? `<div class="info-row"><span class="info-label">🕐 Horario</span><span class="info-value">${hoursText}</span></div>` : ''}
       ${place.website ? `<div class="info-row"><span class="info-label">🌐 Web</span><span class="info-value"><a href="${esc(place.website)}" target="_blank" rel="noopener">${esc(place.website)}</a></span></div>` : ''}
       ${place.gmaps_url ? `<div class="info-row"><span class="info-label">🗺️ Google Maps</span><span class="info-value"><a href="${esc(place.gmaps_url)}" target="_blank" rel="noopener">Ver en Maps</a></span></div>` : ''}
@@ -564,7 +610,7 @@ export default async function handler(req: any, res: any) {
       <div class="faq-item">
         <h3>¿Cuál es el teléfono de ${esc(place.name)}?</h3>
         <p>${place.phone
-          ? `El teléfono de ${esc(place.name)} es <a href="tel:${esc(place.phone)}">${esc(formatPhone(place.phone))}</a>.`
+          ? `El teléfono de ${esc(place.name)} es <a href="tel:${esc(place.phone)}">${esc(formatPhone(place.phone))}</a>.${avisoTel ? ` ${esc(avisoTel.texto)}` : ''}`
           : `Todavía no tenemos el teléfono. Textea <strong>${esc(place.name)}</strong> al 787-417-7711 y El Veci te consigue el contacto.`}</p>
       </div>
       ${parking !== 'No especificado' ? `<div class="faq-item">
