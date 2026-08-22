@@ -408,6 +408,7 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <a href="/porque" class="hover:text-teal-700">${isEn ? 'Why doctors leave' : '¿Por qué se van los médicos?'}</a>
 <a href="/expediente-planvital" class="hover:text-teal-700">${isEn ? 'Plan Vital: the case file' : 'Plan Vital: el expediente'}</a>
 <a href="/expediente-mmm" class="hover:text-teal-700">${isEn ? 'MMM (Medicare): the case file' : 'MMM (Medicare): el expediente'}</a>
+<a href="/telefonos-muertos" class="hover:text-teal-700">${isEn ? 'Dead phones: the live board' : 'Teléfonos muertos: el marcador'}</a>
 <a href="${isReg || isPRSF ? 'https://www.mapadecaborojo.com/observatorio' : '/observatorio'}" class="hover:text-teal-700">${isEn ? 'Observatory + podcast' : 'Observatorio + podcast'}</a>
 <a href="https://www.recallradarpr.com" class="hover:text-teal-700">${isEn ? 'FDA recalls (RecallRadarPR)' : '¿Tu medicamento tiene recall? (RecallRadarPR)'}</a>
 <a href="https://puertoricosinfiltros.com" class="hover:text-teal-700">${isEn ? 'The public record of PR (Sin Filtros)' : 'El récord público de PR (Sin Filtros)'}</a>
@@ -5981,7 +5982,7 @@ async function handleEspecialista(req: any, res: any) {
 
   const { data: place } = await supabase
     .from('places')
-    .select('id,name,subcategory,municipality,region,phone,address,npi,lat,lon,slug,last_verified_at,accepted_plans,cms_rating,cms_rating_type')
+    .select('id,name,subcategory,municipality,region,phone,address,npi,lat,lon,slug,last_verified_at,accepted_plans,cms_rating,cms_rating_type,dato_reportado')
     .eq('slug', slug).not('npi', 'is', null).maybeSingle()
 
   if (!place) {
@@ -6203,7 +6204,21 @@ async function handleEspecialista(req: any, res: any) {
     ${telLink ? `<a href="${telLink}" onclick="try{gtag('event','click_to_call',{${evtAttr}})}catch(e){}" class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-bold px-5 py-3 rounded-xl text-base"><i class="fa-solid fa-phone"></i> ${T.call} ${escapeHtml(place.phone)}</a>` : ''}
     ${waLink ? `<a href="${waLink}" onclick="try{gtag('event','click_whatsapp',{${evtAttr}})}catch(e){}" class="inline-flex items-center gap-2 bg-white border-2 border-teal-600 text-teal-700 font-bold px-5 py-3 rounded-xl text-base hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${T.wa}</a>` : ''}
     <a href="https://wa.me/17874177711?text=${spec ? spec.kw : 'ESPECIALISTA'}" class="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-5 py-3 rounded-xl text-base"><i class="fa-brands fa-whatsapp"></i> ${T.veci}</a>
+  </div>${(() => {
+    // Cuarentena visible en la ficha del Registro (2026-08-22). El bot y la ficha del
+    // Mapa ya avisaban; esta ficha — que es donde caen los clics de Google del Registro —
+    // seguía sirviendo el número con cara de bueno. Mismas reglas que negocio.ts:
+    // se atribuye, se fecha, caduca sola (verificación posterior o 90 días), derecho a
+    // réplica en la misma línea, y NO toca el JSON-LD.
+    const dr = (place as any).dato_reportado
+    if (!tmReporteVivo(dr, place.last_verified_at)) return ''
+    const d = new Date(dr.at)
+    const f = isNaN(d.getTime()) ? '' : ` el ${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`
+    return `<div class="not-prose mt-3 bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
+    <p class="m-0 text-[15px] text-amber-900"><b>⚠️ ${t('Un vecino nos reportó', 'A neighbor reported')}${f}</b> ${t(`que ${TM_FRASE[dr.tipo] || 'este dato está malo'}. Todavía no lo hemos confirmado.`, 'that this phone did not work when dialed. We have not confirmed it yet.')}</p>
+    <p class="m-0 mt-1 text-sm text-amber-800">${t('¿Es tu número y está bueno? Dímelo y se corrige el mismo día: texto al 787-417-7711 o angel@angelanderson.com.', 'Is this your number and it works? Tell us and it gets fixed the same day: text 787-417-7711 or angel@angelanderson.com.')} <a href="/telefonos-muertos" class="underline font-semibold">${t('El marcador de teléfonos reportados →', 'The reported-phones board →')}</a></p>
   </div>`
+  })()}`
 
   const dataRows = `<div class="not-prose grid sm:grid-cols-2 gap-3 mt-6">
     ${dispoHtml}
@@ -9438,7 +9453,7 @@ async function handleExpedienteMMM(req: any, res: any) {
   <p class="text-sm text-slate-700">Igual que con First Medical, este expediente se le comparte por escrito a MMM con sus números y su método, por si tienen correcciones o contexto. La fecha del envío se publica aquí en cuanto salga, y si contestan, su respuesta se publica íntegra. Esto no es una acusación: las listas oficiales se contradicen entre sí y eso le pasa a todo el que las herede. El interés es que el paciente que llama encuentre a su médico — especialmente entre el 15 de octubre y el 7 de diciembre, cuando el directorio decide bolsillos.</p>
 
   <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-8">
-    <p class="text-sm text-slate-800 m-0"><b>Lo que puedes hacer tú, hoy:</b> tu médico está en <a href="/" class="text-teal-700 font-semibold underline">registromedicopr.com</a>, gratis, por pueblo y por especialidad — y cuando MMM publica un número distinto al federal, la ficha del médico te da los 2, pa' que el segundo intento no dependa de suerte. Si tu médico sale mal, dímelo y <b>se corrige el mismo día</b>: <a href="mailto:angel@angelanderson.com" class="text-teal-700 underline">angel@angelanderson.com</a> o texto al <a href="sms:+17874177711" class="text-teal-700 underline">787-417-7711</a>.</p>
+    <p class="text-sm text-slate-800 m-0"><b>Lo que puedes hacer tú, hoy:</b> tu médico está en <a href="/" class="text-teal-700 font-semibold underline">registromedicopr.com</a>, gratis, por pueblo y por especialidad — y cuando MMM publica un número distinto al federal, la ficha del médico te da los 2, pa' que el segundo intento no dependa de suerte. Si tu médico sale mal, dímelo y <b>se corrige el mismo día</b>: <a href="mailto:angel@angelanderson.com" class="text-teal-700 underline">angel@angelanderson.com</a> o texto al <a href="sms:+17874177711" class="text-teal-700 underline">787-417-7711</a>. Y si un número te salió muerto al marcarlo, ese reporte alimenta <a href="/telefonos-muertos" class="text-teal-700 font-semibold underline">el marcador de teléfonos muertos</a> — la parte que ningún cruce de listas puede atrapar.</p>
   </div>
 
   <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-3">
@@ -9490,6 +9505,201 @@ async function handleExpedienteMMM(req: any, res: any) {
     title: 'Expediente MMM: el directorio del plan Medicare, cruzado contra el registro federal',
     description: `Las 3 ediciones más recientes del Directorio MMM (dic 2024 – jun 2026) cruzadas contra NPPES: 5.0% de contradicción de pueblo (el Plan Vital dio 43.4% con el mismo método), 3 de cada 10 teléfonos que no cuadran, y el triage que baja la lista de llamadas 90%. Pueblo por pueblo, con método y fecha, antes de la ventana Medicare.`,
     slug: 'expediente-mmm', bodyHtml: body, jsonLd: jsonLd as any,
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
+// =============== /telefonos-muertos — el marcador vivo de teléfonos reportados ===============
+// La página que ningún directorio de PR tiene: los números que un vecino MARCÓ y no
+// contestaron, con fecha, con quién los publica, y con derecho a réplica. Nace del caso
+// del 21 de agosto de 2026: una paciente marcó el número que el directorio de MMM publica
+// pa' su reumatóloga desde diciembre de 2024 (3 ediciones) — "no está en servicio" — y el
+// detector del Veci la oyó a menos de 14 horas de estar en vivo.
+//
+// La tesis de la página: dos listas oficiales que COINCIDEN pueden coincidir en un número
+// muerto. Coincidir no es contestar. El único auditor que de verdad marca es el vecino.
+//
+// Reglas (no negociables, las mismas de la nota de la ficha):
+//  - Cada fila se atribuye y se fecha: "un vecino reportó el DD/MM", nunca "este teléfono
+//    no sirve" como hecho nuestro. Un reporte no es una verificación.
+//  - Caduca sola: la fila sale de aquí si alguien verifica la ficha después del reporte o
+//    a los 90 días (mismas 2 puertas de salida que la nota de la ficha).
+//  - Derecho a réplica en la misma página, con el número pelado (no keyword).
+//  - El absurdo es del sistema (directorios que nadie cuadra), nunca de la persona: el
+//    médico con un número viejo no es el villano — es otra víctima de la misma lista.
+//  - Kill switch: UPDATE places SET dato_reportado = NULL WHERE id = '<uuid>';
+const TM_FRASE: Record<string, string> = {
+  tel_no_sirve: 'el número no está en servicio',
+  nadie_contesta: 'nadie contesta',
+  tel_equivocado: 'el número está equivocado',
+  no_es_aqui: 'ese no es el número correcto',
+}
+
+/** Vigencia de un dato_reportado de teléfono: mismas 2 puertas de salida que la ficha. */
+function tmReporteVivo(dr: any, lastVerifiedAt?: string | null): boolean {
+  if (!dr || typeof dr !== 'object' || !TM_FRASE[String(dr.tipo || '')]) return false
+  const at = new Date(dr.at).getTime()
+  if (isNaN(at)) return true
+  const ver = lastVerifiedAt ? new Date(lastVerifiedAt).getTime() : NaN
+  if (!isNaN(ver) && ver > at) return false
+  return Date.now() - at <= 90 * 86400000
+}
+
+async function handleTelefonosMuertos(req: any, res: any) {
+  const nf = (n: number) => n.toLocaleString('en-US')
+  const T = MMM_TITULARES.vig
+
+  // 1. El marcador vivo: la cuarentena pública (places.dato_reportado, clase teléfono).
+  const { data: raw } = await supabase.from('places')
+    .select('id,name,municipality,subcategory,phone,npi,slug,last_verified_at,dato_reportado')
+    .not('dato_reportado', 'is', null)
+    .limit(200)
+  const vivos = (raw || [])
+    .filter((p: any) => tmReporteVivo(p.dato_reportado, p.last_verified_at))
+    .sort((a: any, b: any) => new Date(b.dato_reportado?.at || 0).getTime() - new Date(a.dato_reportado?.at || 0).getTime())
+    .slice(0, 25)
+
+  // 2. Quién publica cada número reportado (cruce por NPI contra los directorios ingeridos).
+  //    Pocas filas: el costo es 2 queries por fila con NPI, cap 15.
+  const publicadores: Record<string, string[]> = {}
+  for (const p of vivos.slice(0, 15)) {
+    if (!p.npi) continue
+    const tel10 = (p.phone || '').replace(/\D/g, '').slice(-10)
+    if (tel10.length !== 10) continue
+    const pubs: string[] = []
+    try {
+      const { data: mmm } = await supabase.from('v_plan_directory_public')
+        .select('edition_date,phones').eq('plan', 'MMM').eq('npi', p.npi)
+        .order('edition_date', { ascending: true })
+      const conNum = (mmm || []).filter((e: any) => (e.phones || []).includes(tel10))
+      if (conNum.length) {
+        const desde = String(conNum[0].edition_date)
+        const MES: Record<string, string> = { '2024-12-01': 'dic 2024', '2025-12-01': 'dic 2025', '2026-06-01': 'jun 2026' }
+        pubs.push(`MMM (${conNum.length} ${conNum.length === 1 ? 'edición' : 'ediciones'}, desde ${MES[desde] || desde})`)
+      }
+    } catch { /* el cruce es aditivo: si falla, la fila sale sin publicadores */ }
+    try {
+      const { data: fmv } = await supabase.from('fmvital_directorio')
+        .select('telefonos').eq('npi', p.npi).eq('edicion', 'jul-2026').limit(1)
+      if ((fmv?.[0]?.telefonos || []).includes(tel10)) pubs.push('Plan Vital / First Medical (jul 2026)')
+    } catch { /* aditivo */ }
+    pubs.push('registro federal NPPES')
+    publicadores[p.id] = pubs
+  }
+
+  // 3. El total histórico (service key). Si el env no la tiene, el bloque no se rinde.
+  let totalReportes: number | null = null
+  try {
+    const { count } = await supabase.from('place_edit_proposals')
+      .select('id', { count: 'exact', head: true }).like('proposed', 'REPORTE VECINO%')
+    totalReportes = typeof count === 'number' ? count : null
+  } catch { totalReportes = null }
+
+  const fechaCorta = (iso: string) => {
+    const d = new Date(iso)
+    if (isNaN(d.getTime())) return ''
+    return `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`
+  }
+
+  const fila = (p: any) => {
+    const dr = p.dato_reportado || {}
+    const pubs = publicadores[p.id]
+    const esRegistro = !!(p.npi && p.slug)
+    const nombre = esRegistro
+      ? `<a href="/especialista/${escapeHtml(p.slug)}" class="text-teal-700 font-semibold underline">${escapeHtml(cleanProviderName(p.name))}</a>`
+      : `<span class="font-semibold">${escapeHtml(p.name)}</span>`
+    return `
+    <div class="border border-slate-200 rounded-lg p-3 bg-white text-sm">
+      <div class="flex flex-wrap items-baseline gap-x-2">${nombre}<span class="text-slate-500">· ${escapeHtml(p.municipality || 'PR')}</span></div>
+      <div class="text-slate-700 mt-1">Un vecino que marcó reportó el <b>${fechaCorta(dr.at)}</b> que ${TM_FRASE[dr.tipo] || 'el dato está malo'}. <span class="text-amber-700 font-semibold">Sin confirmar todavía.</span></div>
+      ${pubs?.length ? `<div class="text-xs text-slate-500 mt-1">Ese mismo número lo publica: ${pubs.map(escapeHtml).join(' · ')}.</div>` : ''}
+    </div>`
+  }
+
+  const FAQ: [string, string][] = [
+    ['¿Un número en esta lista está malo seguro?',
+     'No. Cada fila es el reporte de un vecino que marcó, con fecha — no una verificación nuestra. Puede haber vuelto a servicio, puede haber sido un fallo del día. Por eso cada fila dice "sin confirmar" y se cae sola cuando la ficha se verifica o a los 90 días.'],
+    ['¿Por qué esto no lo hace el plan médico?',
+     `Porque cuadrar las listas no es el trabajo de nadie. El cruce del expediente MMM encontró que 3 de cada 10 proveedores cruzables tienen en el directorio del plan un teléfono distinto al del registro federal — y en 18 meses de ediciones el número no mejoró. Pero este marcador atrapa lo que ningún cruce de listas puede: 2 listas que coinciden en un número muerto. Coincidir no es contestar. El único que marca es el vecino.`],
+    ['¿Cómo reporto un teléfono que me salió muerto?',
+     'Escríbele al Veci al 787-417-7711 (texto o WhatsApp) y dile lo que pasó, con tus palabras: "llamé a X y el número no sirve". El sistema lo apunta, la ficha lo avisa al próximo que llegue, y aparece aquí. Si después consigues el número bueno, mándalo por el mismo canal.'],
+    ['Soy el dueño del número, ¿cómo respondo?',
+     'Ahí mismo: texto al 787-417-7711 o correo a angel@angelanderson.com con el número correcto. Se corrige el mismo día y la fila se cae de esta página. Publicar un señalamiento con nombre obliga a dar la vía de réplica en la misma página — esta es.'],
+  ]
+
+  const body = `
+<article class="max-w-3xl mx-auto px-4 py-8">
+  <nav class="text-xs text-slate-500 mb-3"><a href="/" class="hover:text-teal-700">Registro Médico PR</a> › Teléfonos muertos</nav>
+
+  <h1 class="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">El teléfono que publica el directorio, ¿contesta?</h1>
+
+  <p class="text-lg text-slate-700 mt-4">El 21 de agosto de 2026, una paciente marcó el número que el directorio de proveedores de MMM publica pa' su reumatóloga — el mismo número, en 3 ediciones seguidas, desde diciembre de 2024. La contestación: <b>"no está en servicio."</b> Su cita era pa' enero de 2027.</p>
+
+  <p class="text-lg text-slate-700 mt-3">Lo reportó por WhatsApp con sus propias palabras y el sistema la oyó. Esta página es el marcador público de esos reportes: <b>números que un vecino marcó y no conectaron</b>, con fecha, con quién los publica, y con la salida honesta de que un reporte no es una verificación.</p>
+
+  <div class="bg-slate-900 text-white rounded-xl p-4 mt-6">
+    <p class="m-0 text-[15px]"><b>La lección que ningún cruce de listas atrapa:</b> el registro federal y el directorio del plan pueden <i>coincidir</i> en un número — y el número estar muerto. Los directorios se heredan unos a otros. <b>Coincidir no es contestar. El único auditor que marca es el vecino.</b></p>
+  </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">El marcador${vivos.length ? ` · ${vivos.length} reporte${vivos.length === 1 ? '' : 's'} vivo${vivos.length === 1 ? '' : 's'}` : ''}</h2>
+  <p class="text-sm text-slate-600 mb-3">Reportes de vecinos sin confirmar todavía. Cada fila se cae sola cuando la ficha se verifica después del reporte, o a los 90 días.${totalReportes ? ` Reportes de vecinos recibidos en total: <b>${nf(totalReportes)}</b>.` : ''}</p>
+  ${vivos.length
+    ? `<div class="space-y-3">${vivos.map(fila).join('')}</div>`
+    : `<div class="border border-emerald-200 bg-emerald-50 rounded-lg p-4 text-sm text-emerald-900">Ahora mismo no hay reportes de teléfono sin confirmar. Eso también es el marcador funcionando: las filas se caen cuando se verifican.</div>`}
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">El contexto, medido</h2>
+  <p class="text-sm text-slate-700">Esto no es anécdota. El cruce de los directorios completos contra el registro federal ya está publicado: de ${nf(T.telNpis)} proveedores con número en las 2 fuentes, <b>${nf(T.telNpisDisc)} (${T.telNpisPct}%)</b> tienen en el directorio de MMM un teléfono distinto al federal — y tras clasificar cada caso, ${nf(T.triage.llamar)} quedan sin explicación. El método completo, edición por edición: <a href="/expediente-mmm" class="text-teal-700 font-semibold underline">el expediente MMM</a> · <a href="/expediente-planvital" class="text-teal-700 font-semibold underline">el expediente Plan Vital</a>.</p>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Cómo se alimenta esto</h2>
+  <ol class="text-sm text-slate-700 space-y-2 pl-5 list-decimal">
+    <li>Un vecino busca un médico o negocio por el Veci (787-417-7711) o llega a la ficha por Google.</li>
+    <li>Marca el número y no conecta. Lo dice con sus palabras — "ese teléfono no sirve", "sale ocupado siempre" — sin keyword, sin formulario.</li>
+    <li>El sistema lo apunta con fecha, la ficha se lo avisa al próximo que llegue, y la fila aparece aquí.</li>
+    <li>Angel lo verifica. Si el número estaba malo, se corrige; si estaba bueno, la fila se cae. En los 2 casos el marcador se limpia solo.</li>
+  </ol>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Lo que esto NO prueba</h2>
+  <ul class="text-sm text-slate-700 space-y-2 list-none pl-0">
+    <li class="border-l-4 border-slate-300 pl-3"><b>No prueba que el número esté malo.</b> Es un reporte fechado de alguien que marcó, pendiente de confirmar. Los teléfonos se caen y vuelven.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>No es culpa del médico.</b> El proveedor con un número viejo en 3 listas que nadie cuadra es otra víctima de las mismas listas. El señalamiento es al sistema de directorios, no a la persona.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>Un NPI activo no equivale a licencia vigente</b>, y aparecer en un directorio no garantiza que acepten tu plan ni que estén cogiendo pacientes.</li>
+  </ul>
+
+  <div class="bg-teal-50 border border-teal-200 rounded-xl p-4 mt-8">
+    <p class="text-sm text-teal-900 m-0"><b>¿Te salió un número muerto?</b> Dímelo con tus palabras: texto o WhatsApp al <b>787-417-7711</b>. Se apunta con fecha, se avisa al próximo, y se persigue el bueno. <b>¿El número es tuyo y está bueno?</b> Mismo canal, o <a href="mailto:angel@angelanderson.com" class="text-teal-700 underline">angel@angelanderson.com</a> — se corrige el mismo día.</p>
+  </div>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-3">
+    <p class="text-sm text-slate-700 m-0"><b>Si es una emergencia:</b> no busques en listas ni marques números de directorio. Llama al <b>9-1-1</b> o ve a la sala de emergencias más cercana.</p>
+  </div>
+
+  <p class="text-sm text-slate-500 mt-8 border-t border-slate-200 pt-4">Cada fila de esta página es un reporte de un vecino real, fechado y sin confirmar, sobre un dato publicado en directorios públicos. No es asesoría médica ni una acusación: es el registro de lo que pasa cuando alguien marca. Derecho a réplica en la misma página. Página viva — se actualiza sola con cada reporte y cada verificación.</p>
+</article>`
+
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org', '@type': 'Article',
+      headline: 'Teléfonos muertos: el marcador de números de directorio que los vecinos reportan',
+      description: 'El marcador público de teléfonos de directorios médicos y de negocios que vecinos de Puerto Rico marcaron y no conectaron — con fecha, con quién publica cada número, y con verificación posterior. Coincidir no es contestar.',
+      author: { '@type': 'Person', name: 'Angel Anderson' },
+      publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+      inLanguage: 'es', url: 'https://registromedicopr.com/telefonos-muertos',
+      dateModified: new Date().toISOString().slice(0, 10),
+      spatialCoverage: [{ '@type': 'Place', name: 'Puerto Rico' }],
+    },
+    {
+      '@context': 'https://schema.org', '@type': 'FAQPage',
+      mainEntity: FAQ.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
+    },
+  ]
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  // 15 min de CDN: el marcador tiene que sentirse vivo sin pagar una invocación por visita.
+  res.setHeader('Cache-Control', 'public, s-maxage=900, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'Teléfonos muertos: los números de directorio que los vecinos reportan',
+    description: 'El marcador vivo de teléfonos de directorios médicos que vecinos marcaron y no conectaron, con fecha y con quién publica cada número. Un reporte no es una verificación — por eso cada fila caduca sola. Repórtalo al 787-417-7711.',
+    slug: 'telefonos-muertos', bodyHtml: body, jsonLd: jsonLd as any,
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
   }))
 }
@@ -20567,6 +20777,7 @@ const PAGE_CANONICAL: Record<string, string> = {
   'internado-psicologia': 'https://registromedicopr.com/internado-psicologia',
   'expediente-planvital': 'https://registromedicopr.com/expediente-planvital',
   'expediente-mmm': 'https://registromedicopr.com/expediente-mmm',
+  'telefonos-muertos': 'https://registromedicopr.com/telefonos-muertos',
   'expediente-power-expectations': 'https://puertoricosinfiltros.com/expediente-power-expectations',
   'registro-puedo-volver': 'https://registromedicopr.com/puedo-volver',
   'rendimiento': 'https://puertoricosinfiltros.com/rendimiento',
@@ -20693,6 +20904,7 @@ export default async function handler(req: any, res: any) {
     case 'internado-psicologia': return await handleInternadoPsicologia(req, res)
     case 'expediente-planvital': return await handleExpedientePlanVital(req, res)
     case 'expediente-mmm': return await handleExpedienteMMM(req, res)
+    case 'telefonos-muertos': return await handleTelefonosMuertos(req, res)
     case 'carta-141': return await handleCarta141(req, res)
     case 'registro-puedo-volver': return await handleRegistroPuedoVolver(req, res)
     case 'recuperacion': return await handleRecuperacion(req, res)

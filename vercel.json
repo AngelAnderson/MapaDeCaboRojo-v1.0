@@ -240,6 +240,10 @@
       "destination": "/api/mapa-pages?page=expediente-mmm"
     },
     {
+      "source": "/telefonos-muertos",
+      "destination": "/api/mapa-pages?page=telefonos-muertos"
+    },
+    {
       "source": "/expediente-power-expectations",
       "destination": "/api/mapa-pages?page=expediente-power-expectations"
     },
