@@ -9311,7 +9311,7 @@ const MMM_TITULARES = {
     telNpis: 5524, telNpisDisc: 1661, telNpisPct: 30.1,
     triage: { total: 1655, compartida: 717, estable18m: 490, dosReales: 280, llamar: 168 },
     paginas: 1993, sha256: '40340b8a79a2d584a29d7a6ae12938802db29d2bbfe572e3378f0dd5db0fa2e5',
-    fuente: 'https://www.mmm-pr.com/frontend/web/uploads/documentos/MSOPNOQRG086070325SXLMMMAllPlans_6a208608971b0.pdf',
+    fuente: 'https://www.mmm-pr.com/frontend/web/uploads/documentos/MSOPNOQRG086070325SXLMMMAllPlans_6a8638fb15130.pdf',
   },
   d25: { filas: 13477, conNpi: 7063, puebloContra: 347, pueblopct: 4.9, telFilas: 7005, telFilasDisc: 2460, telFilasPct: 35.1, paginas: 1945, sha256: 'caf4f1eede9fd4e4605816721d3ea6b506695e8445b15504b5c103f54612eae8' },
   d24: { filas: 12697, conNpi: 6794, puebloContra: 293, pueblopct: 4.3, telFilas: 6740, telFilasDisc: 2303, telFilasPct: 34.2, paginas: 1851, sha256: '3e39f04d45f57889839e50c250b9eb0ee7cb1b187595a17aebbb4cad279bbb2d' },
@@ -9378,6 +9378,10 @@ async function handleExpedienteMMM(req: any, res: any) {
 
   <div class="bg-slate-900 text-white rounded-xl p-4 mt-4">
     <p class="m-0 text-[15px]"><b>Y la tercera, que es la que te toca en octubre:</b> el directorio no solo tiene datos que no cuadran. <b>Se mueve.</b> 464 proveedores que MMM listaba en diciembre de 2024 no están en la edición de junio de 2026, y 254 salieron en los últimos 6 meses medidos. Los 511 que salieron siguen activos en el registro federal: ninguno cerró, lo que cambió fue la lista. <a href="/se-fue-tu-medico" class="text-teal-300 font-semibold underline">Busca tu médico en el reloj de la red →</a></p>
+  </div>
+
+  <div class="bg-rose-50 border-2 border-rose-300 rounded-xl p-4 mt-4">
+    <p class="m-0 text-[15px] text-rose-900"><b>Y una cuarta, encontrada el 22 de agosto de 2026 verificando este mismo expediente:</b> el PDF vigente que bajamos el 4 de agosto <b>ya no existe en el sitio de MMM</b>. Fue reemplazado por otro con el mismo código de edición y la misma fecha de junio, pero con 34 páginas y 334 líneas de teléfono más. Las 3 líneas vigentes (Individuales, Grupales, AEE) cambiaron de archivo el mismo día y las 3 URLs viejas devuelven 404. Las ediciones históricas de 2024 y 2025 siguen vivas: el único que desaparece es el que la gente está usando. Los números de este expediente salen del archivo del 4 de agosto, que está guardado con su sha256. <a href="/se-fue-tu-medico" class="text-rose-900 font-semibold underline">La tabla del antes y el después →</a></p>
   </div>
   </div>
 
@@ -9831,6 +9835,29 @@ async function handleSeFueTuMedico(req: any, res: any) {
   <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mt-6">
     <p class="m-0 text-[15px] text-amber-900"><b>Los ${nf(RED_TITULARES.salieronTotal)} que salieron siguen activos en el registro federal. Ninguno cerró.</b> Este no es un dato sobre médicos que se fueron del pueblo: es un dato sobre una lista que se mueve más rápido de lo que se publica. El proveedor que desaparece de un directorio sin que nadie le avise a su paciente es otra víctima del mismo papel.</p>
   </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Y mientras escribíamos esto, el directorio cambió</h2>
+
+  <p class="text-slate-700">El 4 de agosto de 2026 bajamos el directorio vigente del sitio público de MMM y lo guardamos con su huella digital. El 22 de agosto fuimos a verificar el enlace. <b>Ese archivo ya no existe.</b> En su lugar hay otro, con el mismo código de edición y la misma fecha de junio, pero distinto por dentro.</p>
+
+  <div class="overflow-x-auto mt-4">
+  <table class="w-full text-sm border border-slate-200 rounded-lg"><thead class="bg-slate-100 text-slate-700"><tr>
+    <th class="text-left p-2">Directorio MMM Individuales, edición jun 2026</th><th class="text-left p-2">Bajado el 4 de ago</th><th class="text-left p-2">Vivo el 22 de ago</th></tr></thead>
+  <tbody class="divide-y divide-slate-100">
+    <tr><td class="p-2 font-semibold">Páginas</td><td class="p-2">1,993</td><td class="p-2">2,027 <span class="text-rose-700 font-semibold">(+34)</span></td></tr>
+    <tr><td class="p-2 font-semibold">Líneas con teléfono</td><td class="p-2">16,445</td><td class="p-2">16,779 <span class="text-rose-700 font-semibold">(+334)</span></td></tr>
+    <tr><td class="p-2 font-semibold">Huella digital (sha256)</td><td class="p-2 font-mono text-xs">40340b8a…</td><td class="p-2 font-mono text-xs">36c48c6b…</td></tr>
+    <tr><td class="p-2 font-semibold">Código de edición</td><td class="p-2 font-mono text-xs">MSOPNOQRG086070325</td><td class="p-2 font-mono text-xs">MSOPNOQRG086070325 <span class="text-slate-500">(el mismo)</span></td></tr>
+    <tr><td class="p-2 font-semibold">El enlace de agosto 4</td><td class="p-2">servía el PDF</td><td class="p-2 text-rose-700 font-semibold">404</td></tr>
+  </tbody></table></div>
+
+  <p class="text-slate-700 mt-3">Pasó con las 3 líneas de la edición vigente a la vez (Individuales, Grupales y AEE): las 3 tienen archivo nuevo y las 3 URLs viejas dan 404. Las ediciones históricas de diciembre de 2024 y diciembre de 2025 siguen vivas. <b>El único que desaparece es el que la gente está usando ahora mismo.</b></p>
+
+  <div class="bg-slate-900 text-white rounded-xl p-4 mt-4">
+    <p class="m-0 text-[15px]">Revisar un directorio no tiene nada de malo. <b>Lo que no se puede hacer es revisarlo sin dejar rastro:</b> misma fecha de edición, mismo código, el archivo anterior borrado del internet, y ni una nota que diga qué cambió. Cualquiera que haya citado ese PDF (un paciente, una oficina, un periodista, nosotros) tiene hoy un enlace muerto y ninguna forma de probar qué decía. Por eso guardamos la copia con su huella digital antes de mirarla. <b>Hoy la única versión verificable del directorio de junio de 2026 es la que archivamos el 4 de agosto.</b></p>
+  </div>
+
+  <p class="text-sm text-slate-500 mt-3">Aviso honesto sobre esta misma página: los conteos de arriba salen del archivo del <b>4 de agosto</b>, que es el que está parseado. La revisión del 22 de agosto está bajada, guardada con su sha256 y registrada, pero todavía no procesada. Cuando se procese, los números se corrigen aquí y se dice qué se movió.</p>
 
   <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">El rezago, que es lo que de verdad te toca</h2>
   <p class="text-slate-700">La edición vigente cerró el 1 de junio. La ventana abre el 15 de octubre. Son <b>${RED_TITULARES.rezagoDias} días</b> de rezago el primer día. Al ritmo medido (${nf(RED_TITULARES.salieron6m)} salidas en 6 meses de ediciones, o sea unas 42 al mes), <b>cerca de ${nf(RED_TITULARES.proyeccionSalidas)} proveedores listados en ese PDF ya no van a estar en la red cuando lo abras en octubre.</b></p>
