@@ -409,6 +409,7 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <a href="/expediente-planvital" class="hover:text-teal-700">${isEn ? 'Plan Vital: the case file' : 'Plan Vital: el expediente'}</a>
 <a href="/expediente-mmm" class="hover:text-teal-700">${isEn ? 'MMM (Medicare): the case file' : 'MMM (Medicare): el expediente'}</a>
 <a href="/telefonos-muertos" class="hover:text-teal-700">${isEn ? 'Dead phones: the live board' : 'Teléfonos muertos: el marcador'}</a>
+<a href="/se-fue-tu-medico" class="hover:text-teal-700">${isEn ? 'Did your doctor leave the network?' : '¿Se fue tu médico de la red?'}</a>
 <a href="${isReg || isPRSF ? 'https://www.mapadecaborojo.com/observatorio' : '/observatorio'}" class="hover:text-teal-700">${isEn ? 'Observatory + podcast' : 'Observatorio + podcast'}</a>
 <a href="https://www.recallradarpr.com" class="hover:text-teal-700">${isEn ? 'FDA recalls (RecallRadarPR)' : '¿Tu medicamento tiene recall? (RecallRadarPR)'}</a>
 <a href="https://puertoricosinfiltros.com" class="hover:text-teal-700">${isEn ? 'The public record of PR (Sin Filtros)' : 'El récord público de PR (Sin Filtros)'}</a>
@@ -6135,6 +6136,7 @@ async function handleEspecialista(req: any, res: any) {
     : `<div class="not-prose mt-5 bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
     <p class="m-0 text-[15px] text-amber-900"><strong>${t('Ojo si tienes MMM:', 'Heads up if you have MMM:')}</strong> ${t('aparecía en el directorio de', 'this provider appeared in the')} <strong>${mes(planDir.ultima)}</strong> ${t('y ya no aparece en el de', 'directory and no longer appears in the')} <strong>${mes(EDICION_VIGENTE)}</strong>.</p>
     <p class="m-0 mt-1 text-sm text-amber-800">${t('Puede que haya salido de la red. Confirma con MMM antes de coger cita, o te toca pagar de tu bolsillo.', 'They may have left the network. Confirm with MMM before booking, or you could end up paying out of pocket.')}</p>
+    <p class="m-0 mt-1 text-sm text-amber-800">${t('No es el único: 254 proveedores salieron del directorio de MMM en los últimos 6 meses medidos, y los 511 que salieron siguen activos en el registro federal.', 'Not the only one: 254 providers left the MMM directory in the last 6 measured months, and all 511 who left are still active in the federal registry.')} <a href="/se-fue-tu-medico" class="font-semibold underline">${t('El reloj de la red →', 'The network clock →')}</a></p>
     ${planDir.fuente ? `<p class="m-0 mt-2 text-xs"><a href="${escapeHtml(planDir.fuente)}" target="_blank" rel="noopener" class="text-amber-800 font-semibold underline">${t('Ver el directorio donde aparecía (PDF) →', 'See the directory where they appeared (PDF) →')}</a> · <a href="/expediente-mmm" class="text-amber-800 underline">${t('El expediente MMM', 'The MMM audit')}</a></p>` : `<p class="m-0 mt-2 text-xs"><a href="/expediente-mmm" class="text-amber-800 underline">${t('De dónde sale este cruce: el expediente MMM', 'Where this cross-check comes from: the MMM audit')}</a></p>`}
   </div>`
 
@@ -9373,6 +9375,10 @@ async function handleExpedienteMMM(req: any, res: any) {
 
   <div class="bg-rose-50 border border-rose-200 rounded-xl p-4 mt-3">
     <p class="text-sm text-rose-900 m-0"><b>La otra:</b> los teléfonos. De ${nf(T.telNpis)} proveedores con número en las 2 fuentes, <b>${nf(T.telNpisDisc)} (${T.telNpisPct}%)</b> tienen en el directorio de MMM un teléfono distinto al del registro federal — 3 de cada 10. Y en 18 meses de ediciones el número no mejoró: ${D24.telFilasPct}% (dic 2024) → ${D25.telFilasPct}% (dic 2025) → ${T.telFilasPct}% (jun 2026), medido por fila. Cuadrar las 2 listas no es el trabajo de nadie, y se nota.</p>
+
+  <div class="bg-slate-900 text-white rounded-xl p-4 mt-4">
+    <p class="m-0 text-[15px]"><b>Y la tercera, que es la que te toca en octubre:</b> el directorio no solo tiene datos que no cuadran. <b>Se mueve.</b> 464 proveedores que MMM listaba en diciembre de 2024 no están en la edición de junio de 2026, y 254 salieron en los últimos 6 meses medidos. Los 511 que salieron siguen activos en el registro federal: ninguno cerró, lo que cambió fue la lista. <a href="/se-fue-tu-medico" class="text-teal-300 font-semibold underline">Busca tu médico en el reloj de la red →</a></p>
+  </div>
   </div>
 
   <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-3">
@@ -9660,6 +9666,7 @@ async function handleTelefonosMuertos(req: any, res: any) {
     : `<div class="border border-emerald-200 bg-emerald-50 rounded-lg p-4 text-sm text-emerald-900">Ahora mismo no hay reportes de teléfono sin confirmar. Eso también es el marcador funcionando: las filas se caen cuando se verifican.</div>`}
 
   <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">El contexto, medido</h2>
+  <p class="text-sm text-slate-700 mb-4">Y lo que se mueve entre ediciones: <b>464 proveedores</b> que MMM listaba en dic 2024 no están en la de jun 2026, <b>254</b> salieron en los últimos 6 meses medidos, y los <b>511</b> que salieron siguen activos en el registro federal. <a href="/se-fue-tu-medico" class="text-teal-700 font-semibold underline">Busca tu médico en el reloj de la red →</a></p>
   <p class="text-sm text-slate-700">Esto no es anécdota. El cruce de los directorios completos contra el registro federal ya está publicado: de ${nf(T.telNpis)} proveedores con número en las 2 fuentes, <b>${nf(T.telNpisDisc)} (${T.telNpisPct}%)</b> tienen en el directorio de MMM un teléfono distinto al federal — y tras clasificar cada caso, ${nf(T.triage.llamar)} quedan sin explicación. El método completo, edición por edición: <a href="/expediente-mmm" class="text-teal-700 font-semibold underline">el expediente MMM</a> · <a href="/expediente-planvital" class="text-teal-700 font-semibold underline">el expediente Plan Vital</a>.</p>
 
   <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Cómo se alimenta esto</h2>
@@ -9712,6 +9719,180 @@ async function handleTelefonosMuertos(req: any, res: any) {
     title: 'Teléfonos muertos: los números de directorio que los vecinos reportan',
     description: 'El marcador vivo de teléfonos de directorios médicos que vecinos marcaron y no conectaron, con fecha y con quién publica cada número. Un reporte no es una verificación — por eso cada fila caduca sola. Repórtalo al 787-417-7711.',
     slug: 'telefonos-muertos', bodyHtml: body, jsonLd: jsonLd as any,
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
+// =============== /se-fue-tu-medico — EL RELOJ DE LA RED ===============
+// La pregunta que nadie contesta en Puerto Rico antes de escoger plan: "¿el médico que
+// escogí sigue en la red?" El directorio de proveedores de MMM es un PDF de casi 2,000
+// páginas que se publica y se olvida. Nadie compara una edición contra la anterior.
+// Aquí sí: 3 ediciones parseadas (dic 2024, dic 2025, jun 2026, línea Individuales) y
+// la diferencia publicada, con el número de página donde el proveedor aparecía.
+//
+// LA REGLA DE TONO (no negociable): el señalamiento es a LA LISTA, nunca a la persona.
+// Los 511 que salieron siguen activos en el registro federal. Ninguno cerró. Lo que
+// cambió fue el papel. Por eso cada fila dice "no aparece en la edición de junio", que
+// es un hecho verificable sobre un documento público, y nunca "este médico se fue".
+//
+// CRITERIO DOBLE: NPI ausente en la edición nueva Y nombre normalizado ausente. Sin la
+// 2da condición el número sale inflado (62 de 492 candidatos seguían bajo otro NPI).
+// Reversa: DROP VIEW public.v_red_mmm_movimiento; + borrar este handler.
+const RED_TITULARES = {
+  redHoy: 5565, cohorte24: 5361, salieron24: 464, pct18m: 8.7,
+  cohorte25: 5491, salieron6m: 254, pct6m: 4.6, entraron: 682, salieronTotal: 511,
+  edicionVigente: '1 de junio de 2026', paginas: 1993,
+  // Proyección declarada, NO medición: 254 salidas en 6 meses de ediciones = ~42/mes.
+  // Del cierre de la edición vigente (1 jun) a la apertura de la ventana (15 oct) van
+  // 4.5 meses. 42 x 4.5 = ~190. Se publica como estimado y se dice que es estimado.
+  rezagoDias: 136, proyeccionSalidas: 190,
+}
+
+async function handleSeFueTuMedico(req: any, res: any) {
+  const nf = (n: number) => n.toLocaleString('en-US')
+
+  try {
+    supabase.from('api_logs').insert({
+      endpoint: 'mapa-pages/se-fue-tu-medico', method: 'GET', query: null,
+      user_agent: String(req.headers['user-agent'] || '').substring(0, 500),
+      ip: String(req.headers['x-forwarded-for'] || '').split(',')[0].substring(0, 45),
+      response_count: 0,
+    }).then(() => {}, () => {})
+  } catch { /* fire-and-forget */ }
+
+  // Los que salieron en la ventana más reciente medida (dic 2025 -> jun 2026). Es la que
+  // le sirve a alguien que va a escoger en octubre: lo que pasó hace 18 meses ya se sabe.
+  const { data: raw } = await supabase.from('v_red_mmm_movimiento')
+    .select('npi,name,town,specialty,page,ultima_edicion,ventana_salida')
+    .eq('estado', 'salio').limit(600)
+  const salieron = (raw || []).filter((r: any) => r.name)
+  const recientes = salieron.filter((r: any) => r.ventana_salida === 'ultimos_6_meses')
+    .sort((a: any, b: any) => (a.town || '').localeCompare(b.town || '', 'es') || (a.name || '').localeCompare(b.name || '', 'es'))
+
+  // La ficha propia, pa' que el nombre no quede colgando: si el proveedor está en el
+  // Registro (y están los 511), la fila enlaza a su página con su teléfono y sus planes.
+  const slugs: Record<string, string> = {}
+  const npis = recientes.map((r: any) => r.npi).filter(Boolean)
+  for (let i = 0; i < npis.length; i += 200) {
+    try {
+      const { data } = await supabase.from('places').select('npi,slug').in('npi', npis.slice(i, i + 200))
+      for (const p of (data || [])) if (p.slug) slugs[p.npi] = p.slug
+    } catch { /* aditivo: sin slug la fila sale sin enlace */ }
+  }
+
+  const porPueblo: Record<string, any[]> = {}
+  for (const r of recientes) (porPueblo[r.town || 'Sin pueblo'] ||= []).push(r)
+  const pueblos = Object.keys(porPueblo).sort((a, b) => a.localeCompare(b, 'es'))
+
+  const fila = (r: any) => {
+    const nombre = escapeHtml(cleanProviderName(r.name))
+    const enlace = slugs[r.npi]
+      ? `<a href="/especialista/${escapeHtml(slugs[r.npi])}" class="text-teal-700 font-semibold underline">${nombre}</a>`
+      : `<span class="font-semibold">${nombre}</span>`
+    return `<li class="py-1 text-sm" data-b="${escapeHtml((r.name + ' ' + (r.specialty || '') + ' ' + (r.town || '')).toLowerCase())}">${enlace}<span class="text-slate-500"> · ${escapeHtml(r.specialty || 'sin especialidad listada')} · aparecía en la pág. ${r.page || '?'} de la edición de dic 2025</span></li>`
+  }
+
+  const listado = pueblos.map(p => `
+    <section class="pueblo mb-5" data-p="${escapeHtml(p.toLowerCase())}">
+      <h3 class="text-base font-bold text-slate-900 border-b border-slate-200 pb-1 mb-1">${escapeHtml(p)} <span class="text-slate-500 font-normal text-sm">· ${porPueblo[p].length}</span></h3>
+      <ul class="list-none pl-0 m-0 divide-y divide-slate-100">${porPueblo[p].map(fila).join('')}</ul>
+    </section>`).join('')
+
+  const FAQ: [string, string][] = [
+    ['¿Que mi médico no aparezca quiere decir que cerró?',
+     'No, y esto es lo más importante de la página. Los 511 proveedores que salieron del directorio siguen activos en el registro federal NPPES. Ninguno aparece cerrado. Lo que cambió fue la lista del plan, no el médico. Salir de un directorio puede querer decir que renegoció, que se movió a otro plan, que se mudó, o simplemente que la lista se editó. Aviso honesto: el registro federal casi nunca desactiva un NPI, así que "activo en el federal" prueba que no hay evidencia de cierre, no prueba que siga ejerciendo.'],
+    ['¿De dónde sale este número?',
+     'De los propios PDF de MMM, bajados de su página pública sin login y guardados con su huella digital (sha256). Se compararon 3 ediciones de la línea Individuales: diciembre 2024, diciembre 2025 y junio 2026. Un proveedor cuenta como salido solo si su número federal (NPI) y su nombre desaparecen de la edición nueva. El método completo está en el expediente MMM.'],
+    ['¿Cubre todos los planes?',
+     'No. Hoy cubre la línea Individuales de MMM, que es la que tiene 3 ediciones parseadas. Las líneas Grupales y AEE están bajadas pero sin procesar, y los demás planes (Plan Vital / First Medical tiene su propio expediente) van entrando. Además solo cuenta las filas donde se pudo parear un número federal. El total real de salidas es mayor que este, nunca menor.'],
+    ['Soy el proveedor y esto está mal, ¿cómo lo corrijo?',
+     'Escríbeme y se corrige el mismo día: angel@angelanderson.com o texto al 787-417-7711. Dime tu nombre y tu NPI. Si apareces en la edición de junio de 2026 y el pareo falló, la fila sale de esta página y se documenta el error. Publicar un señalamiento con nombre obliga a dar la vía de réplica en la misma página, y esta es.'],
+    ['¿Qué hago yo con esto antes del 15 de octubre?',
+     'Busca tu médico aquí. Si aparece, llama a tu plan y pregunta por él por nombre y NPI antes de escoger, porque el directorio con el que vas a decidir se cerró el 1 de junio. Si no aparece, no asumas nada tampoco: confírmalo con el plan. La lista es un punto de partida para preguntar, nunca la respuesta final.'],
+  ]
+
+  const body = `
+<article class="max-w-3xl mx-auto px-4 py-8">
+  <nav class="text-xs text-slate-500 mb-3"><a href="/" class="hover:text-teal-700">Registro Médico PR</a> › ¿Se fue tu médico?</nav>
+
+  <h1 class="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">El directorio de tu plan no miente. Envejece.</h1>
+
+  <p class="text-lg text-slate-700 mt-4">El 15 de octubre abre la ventana para escoger plan Medicare. Vas a escoger mirando un directorio de proveedores que MMM cerró el <b>${RED_TITULARES.edicionVigente}</b>, en un PDF de ${nf(RED_TITULARES.paginas)} páginas. Nadie compara una edición contra la anterior, así que nadie sabe cuánto se movió la red mientras tanto.</p>
+
+  <p class="text-lg text-slate-700 mt-3">Comparamos 3 ediciones. Esto es lo que se movió.</p>
+
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+    <div class="bg-slate-900 text-white rounded-xl p-3"><div class="text-3xl font-black">${nf(RED_TITULARES.salieron24)}</div><div class="text-xs mt-1 opacity-90">proveedores que estaban en dic 2024 y no están en jun 2026</div></div>
+    <div class="bg-slate-100 rounded-xl p-3"><div class="text-3xl font-black text-slate-900">${RED_TITULARES.pct18m}%</div><div class="text-xs mt-1 text-slate-600">de la red, en 18 meses</div></div>
+    <div class="bg-slate-100 rounded-xl p-3"><div class="text-3xl font-black text-slate-900">${nf(RED_TITULARES.salieron6m)}</div><div class="text-xs mt-1 text-slate-600">salieron en los últimos 6 meses medidos (1 de cada 22)</div></div>
+    <div class="bg-slate-100 rounded-xl p-3"><div class="text-3xl font-black text-slate-900">${nf(RED_TITULARES.entraron)}</div><div class="text-xs mt-1 text-slate-600">entraron en el mismo periodo</div></div>
+  </div>
+
+  <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mt-6">
+    <p class="m-0 text-[15px] text-amber-900"><b>Los ${nf(RED_TITULARES.salieronTotal)} que salieron siguen activos en el registro federal. Ninguno cerró.</b> Este no es un dato sobre médicos que se fueron del pueblo: es un dato sobre una lista que se mueve más rápido de lo que se publica. El proveedor que desaparece de un directorio sin que nadie le avise a su paciente es otra víctima del mismo papel.</p>
+  </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">El rezago, que es lo que de verdad te toca</h2>
+  <p class="text-slate-700">La edición vigente cerró el 1 de junio. La ventana abre el 15 de octubre. Son <b>${RED_TITULARES.rezagoDias} días</b> de rezago el primer día. Al ritmo medido (${nf(RED_TITULARES.salieron6m)} salidas en 6 meses de ediciones, o sea unas 42 al mes), <b>cerca de ${nf(RED_TITULARES.proyeccionSalidas)} proveedores listados en ese PDF ya no van a estar en la red cuando lo abras en octubre.</b></p>
+  <p class="text-sm text-slate-500 mt-2">Ese último número es un <b>estimado</b>, no una medición: proyecta hacia adelante el ritmo de las 3 ediciones. El número medido son los ${nf(RED_TITULARES.salieron6m)} de arriba. Cuando MMM publique la edición de diciembre, se mide otra vez y se corrige aquí.</p>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Busca tu médico</h2>
+  <p class="text-sm text-slate-600 mb-3">Los ${nf(recientes.length)} proveedores que aparecían en el directorio de diciembre de 2025 y <b>no aparecen</b> en el de junio de 2026, por pueblo. Escribe un nombre, una especialidad o un pueblo.</p>
+  <input id="q" type="search" placeholder="Escribe un nombre, especialidad o pueblo…" class="w-full border border-slate-300 rounded-lg px-3 py-2 mb-4 text-base" autocomplete="off">
+  <div id="lista">${listado}</div>
+  <p id="vacio" class="hidden text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg p-3">No aparece en esta lista. Eso <b>no</b> quiere decir que esté en la red: quiere decir que no salió del directorio entre diciembre de 2025 y junio de 2026. Confírmalo con tu plan por nombre y NPI antes de escoger.</p>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Lo que esto NO prueba</h2>
+  <ul class="text-sm text-slate-700 space-y-2 list-none pl-0">
+    <li class="border-l-4 border-slate-300 pl-3"><b>No prueba que el médico cerró ni que dejó de coger pacientes.</b> Prueba que un documento público lo listaba y otro documento público del mismo emisor ya no.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>No prueba que MMM hizo algo mal.</b> Las redes se mueven por contrato, y un directorio impreso siempre va a ir atrás. El problema es que el rezago no se publica, así que la persona que escoge no sabe cuánto margen de error carga la lista.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>Un NPI activo no equivale a licencia vigente</b>, y aparecer en un directorio no garantiza que acepten tu plan ni que estén cogiendo pacientes nuevos.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>Está incompleto a propósito.</b> Solo línea Individuales de MMM, y solo las filas donde se pudo parear el número federal. El universo real de salidas es mayor.</li>
+  </ul>
+
+  <div class="bg-teal-50 border border-teal-200 rounded-xl p-4 mt-8">
+    <p class="text-sm text-teal-900 m-0"><b>¿Quieres saber si tu médico sigue listado?</b> Escríbele al Veci al <b>787-417-7711</b> (texto o WhatsApp) con el nombre y te dice en cuáles ediciones aparece y en cuál desapareció, con el número de página. <b>¿Eres el proveedor y esto está mal?</b> Mismo número, o <a href="mailto:angel@angelanderson.com" class="text-teal-700 underline">angel@angelanderson.com</a>: se corrige el mismo día.</p>
+  </div>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-3">
+    <p class="text-sm text-slate-700 m-0"><b>Si es una emergencia:</b> no busques en listas ni marques números de directorio. Llama al <b>9-1-1</b> o ve a la sala de emergencias más cercana.</p>
+  </div>
+
+  <p class="text-sm text-slate-600 mt-8">El método, edición por edición, con las huellas digitales de cada PDF: <a href="/expediente-mmm" class="text-teal-700 font-semibold underline">el expediente MMM</a> · <a href="/expediente-planvital" class="text-teal-700 font-semibold underline">el expediente Plan Vital</a> · <a href="/telefonos-muertos" class="text-teal-700 font-semibold underline">el marcador de teléfonos muertos</a>.</p>
+
+  <p class="text-sm text-slate-500 mt-6 border-t border-slate-200 pt-4">Datos de los directorios públicos de proveedores de MMM (línea Individuales), ediciones de diciembre 2024, diciembre 2025 y junio 2026, bajados sin login y guardados con su sha256. Cruce contra el registro federal NPPES. Comparación corrida el 22 de agosto de 2026. Esto no es asesoría médica ni una acusación contra ningún proveedor: es la diferencia entre 2 documentos públicos. Derecho a réplica en la misma página.</p>
+</article>
+<script>(function(){var q=document.getElementById('q'),L=document.getElementById('lista'),V=document.getElementById('vacio');if(!q||!L)return;
+function n(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');}
+q.addEventListener('input',function(){var t=n(q.value.trim());var vis=0;
+L.querySelectorAll('.pueblo').forEach(function(sec){var c=0;
+ sec.querySelectorAll('li').forEach(function(li){var ok=!t||n(li.getAttribute('data-b')).indexOf(t)>-1;li.style.display=ok?'':'none';if(ok)c++;});
+ sec.style.display=c?'':'none';vis+=c;});
+if(V)V.classList.toggle('hidden',!(t&&vis===0));});})();</script>`
+
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org', '@type': 'Article',
+      headline: '¿Se fue tu médico de la red? 464 proveedores salieron del directorio de MMM en 18 meses',
+      description: 'Comparación de 3 ediciones del directorio público de proveedores de MMM (dic 2024, dic 2025, jun 2026): 464 proveedores salieron, 682 entraron, y los 511 que salieron siguen activos en el registro federal. Lo que cambió fue la lista, no el médico.',
+      author: { '@type': 'Person', name: 'Angel Anderson' },
+      publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+      inLanguage: 'es', url: 'https://registromedicopr.com/se-fue-tu-medico',
+      dateModified: new Date().toISOString().slice(0, 10),
+      spatialCoverage: [{ '@type': 'Place', name: 'Puerto Rico' }],
+    },
+    {
+      '@context': 'https://schema.org', '@type': 'FAQPage',
+      mainEntity: FAQ.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })),
+    },
+  ]
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=21600, stale-while-revalidate=86400')
+  res.status(200).send(layout({
+    title: '¿Sigue tu médico en la red de MMM? Los que salieron del directorio',
+    description: '464 proveedores que MMM listaba en diciembre de 2024 ya no están en la edición de junio de 2026, y 254 salieron en los últimos 6 meses. Busca tu médico por nombre, especialidad o pueblo antes de escoger plan el 15 de octubre.',
+    slug: 'se-fue-tu-medico', bodyHtml: body, jsonLd: jsonLd as any,
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
   }))
 }
@@ -20790,6 +20971,7 @@ const PAGE_CANONICAL: Record<string, string> = {
   'expediente-planvital': 'https://registromedicopr.com/expediente-planvital',
   'expediente-mmm': 'https://registromedicopr.com/expediente-mmm',
   'telefonos-muertos': 'https://registromedicopr.com/telefonos-muertos',
+  'se-fue-tu-medico': 'https://registromedicopr.com/se-fue-tu-medico',
   'expediente-power-expectations': 'https://puertoricosinfiltros.com/expediente-power-expectations',
   'registro-puedo-volver': 'https://registromedicopr.com/puedo-volver',
   'rendimiento': 'https://puertoricosinfiltros.com/rendimiento',
@@ -20917,6 +21099,7 @@ export default async function handler(req: any, res: any) {
     case 'expediente-planvital': return await handleExpedientePlanVital(req, res)
     case 'expediente-mmm': return await handleExpedienteMMM(req, res)
     case 'telefonos-muertos': return await handleTelefonosMuertos(req, res)
+    case 'se-fue-tu-medico': return await handleSeFueTuMedico(req, res)
     case 'carta-141': return await handleCarta141(req, res)
     case 'registro-puedo-volver': return await handleRegistroPuedoVolver(req, res)
     case 'recuperacion': return await handleRecuperacion(req, res)

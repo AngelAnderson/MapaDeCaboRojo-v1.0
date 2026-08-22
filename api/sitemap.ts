@@ -254,6 +254,9 @@ export default async function handler(req: any, res: any) {
       // El marcador vivo de teléfonos muertos: reportes de vecinos que marcaron,
       // con fecha y con quién publica cada número. Se actualiza solo (daily).
       { slug: 'telefonos-muertos', priority: 0.9, changefreq: 'daily' },
+      // El reloj de la red: quién salió del directorio de MMM entre ediciones. Publicado
+      // 22 ago 2026, 54 días antes de que abra la ventana Medicare. Cambia con cada edición.
+      { slug: 'se-fue-tu-medico', priority: 0.9, changefreq: 'weekly' },
       // El clúster de cuido de mayores: existían, servían 200 desde los 3 dominios
       // y ningún sitemap las anunciaba. Ya tienen dueño en PAGE_CANONICAL.
       { slug: 'cuido', priority: 0.8, changefreq: 'monthly' },                 // hogares de cuido licenciados por Familia
