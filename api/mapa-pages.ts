@@ -9864,7 +9864,8 @@ async function handleSeFueTuMedico(req: any, res: any) {
   <p class="text-sm text-slate-500 mt-2">Ese último número es un <b>estimado</b>, no una medición: proyecta hacia adelante el ritmo de las 3 ediciones. El número medido son los ${nf(RED_TITULARES.salieron6m)} de arriba. Cuando MMM publique la edición de diciembre, se mide otra vez y se corrige aquí.</p>
 
   <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Busca tu médico</h2>
-  <p class="text-sm text-slate-600 mb-3">Los ${nf(recientes.length)} proveedores que aparecían en el directorio de diciembre de 2025 y <b>no aparecen</b> en el de junio de 2026, por pueblo. Escribe un nombre, una especialidad o un pueblo.</p>
+  <p class="text-sm text-slate-600 mb-3">De los ${nf(RED_TITULARES.salieron6m)} que salieron entre diciembre de 2025 y junio de 2026, aquí van los <b>${nf(recientes.length)}</b> a los que nuestro lector de PDF le pudo leer el nombre, por pueblo. Escribe un nombre, una especialidad o un pueblo.</p>
+  <p class="text-xs text-slate-500 mb-3">Los otros ${nf(RED_TITULARES.salieron6m - recientes.length)} salen de la sección de médicos clínicos (páginas 1,600 a 1,850 del PDF), donde la tabla tiene otro formato y nuestro lector se queda con el pueblo, la especialidad y el teléfono, pero no con el nombre. Eso es un hueco nuestro, no del directorio, y va escrito aquí en vez de escondido en la diferencia entre 2 números.</p>
   <input id="q" type="search" placeholder="Escribe un nombre, especialidad o pueblo…" class="w-full border border-slate-300 rounded-lg px-3 py-2 mb-4 text-base" autocomplete="off">
   <div id="lista">${listado}</div>
   <p id="vacio" class="hidden text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg p-3">No aparece en esta lista. Eso <b>no</b> quiere decir que esté en la red: quiere decir que no salió del directorio entre diciembre de 2025 y junio de 2026. Confírmalo con tu plan por nombre y NPI antes de escoger.</p>
