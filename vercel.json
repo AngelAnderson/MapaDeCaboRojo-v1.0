@@ -244,6 +244,10 @@
       "destination": "/api/mapa-pages?page=telefonos-muertos"
     },
     {
+      "source": "/se-fue-tu-medico",
+      "destination": "/api/mapa-pages?page=se-fue-tu-medico"
+    },
+    {
       "source": "/expediente-power-expectations",
       "destination": "/api/mapa-pages?page=expediente-power-expectations"
     },
