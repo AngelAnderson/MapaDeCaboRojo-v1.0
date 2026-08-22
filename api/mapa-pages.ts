@@ -9853,6 +9853,19 @@ async function handleSeFueTuMedico(req: any, res: any) {
 
   <p class="text-slate-700 mt-3">Pasó con las 3 líneas de la edición vigente a la vez (Individuales, Grupales y AEE): las 3 tienen archivo nuevo y las 3 URLs viejas dan 404. Las ediciones históricas de diciembre de 2024 y diciembre de 2025 siguen vivas. <b>El único que desaparece es el que la gente está usando ahora mismo.</b></p>
 
+  <h3 class="text-lg font-bold text-slate-900 mt-6 mb-2">Y qué cambió por dentro</h3>
+  <p class="text-slate-700">Guardamos las 2 versiones, así que se puede contestar. Comparando los teléfonos, que es lo único que sobrevive intacto cuando un PDF se vuelve a paginar:</p>
+  <ul class="text-slate-700 mt-2 space-y-1 list-none pl-0">
+    <li class="border-l-4 border-teal-400 pl-3"><b>154 números de teléfono</b> aparecen en la versión de agosto y no estaban en la del 4 de agosto.</li>
+    <li class="border-l-4 border-rose-400 pl-3"><b>115 números</b> que estaban, ya no están.</li>
+    <li class="border-l-4 border-slate-300 pl-3">9,268 siguen igual. Las líneas de listado subieron de 17,490 a 17,822.</li>
+  </ul>
+  <p class="text-slate-700 mt-3">Verificado abriendo casos uno por uno: entre los números nuevos hay una nutricionista en Ponce, una ambulancia en Lajas y un psicólogo en Yabucoa que el 4 de agosto no aparecían con ese teléfono. <b>No es una reimpresión cosmética. Entró y salió gente de la lista, con la misma fecha de edición en la portada.</b></p>
+
+  <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mt-4">
+    <p class="m-0 text-sm text-slate-700"><b>El número que NO vamos a publicar, y por qué:</b> el primer conteo que sacamos comparaba proveedores por nombre y daba 1,921 añadidos y 1,702 quitados. Antes de publicarlo lo probamos: <b>el 94% de los teléfonos de esos "quitados" siguen en el PDF nuevo.</b> O sea que casi todo ese número era nuestro lector pegando los nombres distinto porque el documento se volvió a paginar, no gente saliendo de la red. Se botó. Los 154 y los 115 de arriba son la versión que aguanta.</p>
+  </div>
+
   <div class="bg-slate-900 text-white rounded-xl p-4 mt-4">
     <p class="m-0 text-[15px]">Revisar un directorio no tiene nada de malo. <b>Lo que no se puede hacer es revisarlo sin dejar rastro:</b> misma fecha de edición, mismo código, el archivo anterior borrado del internet, y ni una nota que diga qué cambió. Cualquiera que haya citado ese PDF (un paciente, una oficina, un periodista, nosotros) tiene hoy un enlace muerto y ninguna forma de probar qué decía. Por eso guardamos la copia con su huella digital antes de mirarla. <b>Hoy la única versión verificable del directorio de junio de 2026 es la que archivamos el 4 de agosto.</b></p>
   </div>
