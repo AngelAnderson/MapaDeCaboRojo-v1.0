@@ -9549,6 +9549,18 @@ async function handleTelefonosMuertos(req: any, res: any) {
   const nf = (n: number) => n.toLocaleString('en-US')
   const T = MMM_TITULARES.vig
 
+  // Métrica propia (mismo patrón que /demanda): cada lectura fría queda en
+  // api_logs. PUNTO CIEGO DECLARADO: el CDN cachea 15 min, así que esto cuenta
+  // solo los hits que llegan a la función — el piso, no el total. GSC es el techo.
+  try {
+    supabase.from('api_logs').insert({
+      endpoint: 'mapa-pages/telefonos-muertos', method: 'GET', query: null,
+      user_agent: String(req.headers['user-agent'] || '').substring(0, 500),
+      ip: String(req.headers['x-forwarded-for'] || '').split(',')[0].substring(0, 45),
+      response_count: 0,
+    }).then(() => {}, () => {})
+  } catch { /* fire-and-forget */ }
+
   // 1. El marcador vivo: la cuarentena pública (places.dato_reportado, clase teléfono).
   const { data: raw } = await supabase.from('places')
     .select('id,name,municipality,subcategory,phone,npi,slug,last_verified_at,dato_reportado')
