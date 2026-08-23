@@ -5976,15 +5976,51 @@ async function resolverSlugRenombrado(slugViejo: string): Promise<string | null>
   return candidatos.length === 1 ? String(candidatos[0].slug) : null
 }
 
+// Una persona pidió salir del directorio. Archivar la fila NO bajaba la página: esta ruta
+// era la única del registro que no miraba `visibility` ni `status`, así que la ficha seguía
+// sirviéndose en vivo — con nombre, NPI y el sello "verificado en NPPES" — después de anular
+// el teléfono y la dirección. Lo encontró una trabajadora social que lo pidió 5 veces.
+//
+// La lista de supresión (`remocion_solicitudes`) es la autoridad, no el estado de la fila:
+// sobrevive a una re-ingesta de NPPES que vuelva a poner la fila en `published`.
+// 410 y no 404 a propósito: le dice a Google que la borre en vez de reintentar, y NUNCA
+// cae al resolvedor de slugs renombrados — mandar a la persona removida a la ficha de otro
+// médico con nombre parecido sería peor que el problema original.
+async function fueRemovidoAPeticion(slug: string): Promise<boolean> {
+  const { data } = await supabase
+    .from('remocion_solicitudes')
+    .select('id').eq('slug', slug).eq('no_reingestar', true).limit(1)
+  return !!(data && data.length)
+}
+
+function responderRemovido(res: any, req: any) {
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow, noarchive')
+  res.status(410).send(layout({
+    title: 'Esta ficha fue removida',
+    description: 'La ficha ya no está disponible.',
+    slug: 'registro',
+    bodyHtml: `<h1>Esta ficha fue removida</h1><p class="text-slate-600">La persona pidió que la sacáramos del registro y la sacamos. No vamos a volver a publicarla.</p><p class="text-slate-600 mt-3">¿Buscas un especialista? <a href="/registro" class="text-teal-700 font-semibold">Busca por especialidad y pueblo →</a></p>`,
+    host: req.headers?.host,
+    canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
 async function handleEspecialista(req: any, res: any) {
   const slug = String(req.query.slug || '').trim()
   const lang: 'es' | 'en' = String(req.query.lang || '') === 'en' ? 'en' : 'es'
   if (!slug) { res.status(400).send('Slug requerido'); return }
 
+  if (await fueRemovidoAPeticion(slug)) { responderRemovido(res, req); return }
+
   const { data: place } = await supabase
     .from('places')
-    .select('id,name,subcategory,municipality,region,phone,address,npi,lat,lon,slug,last_verified_at,accepted_plans,cms_rating,cms_rating_type,dato_reportado')
+    .select('id,name,subcategory,municipality,region,phone,address,npi,lat,lon,slug,last_verified_at,accepted_plans,cms_rating,cms_rating_type,dato_reportado,visibility,status')
     .eq('slug', slug).not('npi', 'is', null).maybeSingle()
+
+  // Un proveedor cerrado no lleva página pública con botón de llamar.
+  if (place && (place.status === 'closed' || place.status === 'permanently_closed')) {
+    responderRemovido(res, req); return
+  }
 
   if (!place) {
     // ¿Es un slug viejo de alguien que sigue en el registro? 301, no 404.
