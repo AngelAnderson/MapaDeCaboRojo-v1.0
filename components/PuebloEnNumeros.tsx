@@ -23,10 +23,18 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose }) => {
     const sponsorCount = cr.filter((p) => p.plan && p.plan !== 'free').length;
     const featuredFree = cr.filter((p) => p.is_featured && (!p.plan || p.plan === 'free')).length;
 
+    // Verificado en 90 días — mismo cálculo que verification_freshness (Supabase),
+    // hecho aquí client-side pa' que sea siempre en vivo, nunca un número horneado.
+    const cutoff90 = Date.now() - 90 * 86400_000;
+    const frescos90 = cr.filter((p) => p.verified_at && new Date(p.verified_at).getTime() >= cutoff90).length;
+    const pctFrescos90 = total > 0 ? Math.round((frescos90 / total) * 100) : 0;
+
     return {
       total,
       sponsorCount,
       featuredFree,
+      frescos90,
+      pctFrescos90,
       food: byCategory['FOOD'] || 0,
       lodging: byCategory['LODGING'] || 0,
       beach: byCategory['BEACH'] || 0,
@@ -106,6 +114,17 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose }) => {
     },
   ];
 
+  // "Lo que busca el pueblo" — no es conteo de negocios, es demanda real del
+  // Veci (*7711). Vive aparte de los tiles porque el número no es "cuántos hay",
+  // es "cuántos vecinos pidieron algo y no hubo quién contestara".
+  const demandaTile = {
+    label: 'Lo que busca el pueblo',
+    sub: 'búsquedas reales al *7711, con huecos y sin respuesta',
+    icon: 'magnifying-glass-chart',
+    color: 'from-red-500 to-orange-500',
+    href: '/demanda',
+  };
+
   // Sub-chips: especialidades dentro de Salud y Servicios. Cada uno es un
   // slug que ya existe en api/categoria.ts CATEGORY_MAP (los 6 nuevos de Servicios
   // se agregaron en este mismo PR).
@@ -184,6 +203,25 @@ const PuebloEnNumeros: React.FC<Props> = ({ places, onClose }) => {
             <div className="text-2xs text-ink-muted leading-snug mt-0.5">{tile.sub}</div>
           </a>
         ))}
+        <a
+          href={demandaTile.href}
+          className="tap group relative overflow-hidden rounded-xl p-3.5 text-left surface-2 hover:shadow-e2 hover:border-line-strong transition-all cursor-pointer block no-underline"
+        >
+          <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${demandaTile.color} flex items-center justify-center mb-2 shadow-e1`}>
+            <i className={`fa-solid fa-${demandaTile.icon} text-sm text-white`} aria-hidden="true"></i>
+          </div>
+          <div className="font-display text-base font-black text-ink leading-tight">Ver la demanda →</div>
+          <div className="text-xs font-bold text-ink mt-1.5">{demandaTile.label}</div>
+          <div className="text-2xs text-ink-muted leading-snug mt-0.5">{demandaTile.sub}</div>
+        </a>
+      </div>
+
+      {/* Verificación — número en vivo, mismo cálculo que verification_freshness */}
+      <div className="mt-3 flex items-center gap-2 text-xs text-ink-soft bg-paper-2/60 rounded-xl px-3 py-2">
+        <i className="fa-solid fa-check-double text-brand-600 dark:text-brand-400" aria-hidden="true"></i>
+        <span>
+          <strong className="text-ink">{stats.pctFrescos90}%</strong> de los {stats.total.toLocaleString()} negocios de Cabo Rojo se verificaron a mano en los últimos 90 días ({stats.frescos90.toLocaleString()} fichas). El resto está en cola.
+        </span>
       </div>
 
       {/* Sub-chips Salud */}

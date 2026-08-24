@@ -1,11 +1,15 @@
 /**
- * LA SEÑAL — agregador único de demanda pública. (EL SALTO v2 · 2026-08-19)
+ * LA SEÑAL — agregador único de demanda pública. (EL SALTO v2 · 2026-08-19,
+ * fuente actualizada a demand_signals_humano · 2026-08-23)
  *
- * Una sola fuente: demand_signals_real (la vista canónica, exclusiones
- * sintéticas ya aplicadas). Aquí NO se lee mv_top_searches_30d ni
- * demand_weekly: mv_top_searches_30d demostró estar contaminada con data
- * de test ("afinador de clavicordios" x14) y fue lo que mató la página
- * vieja /senales-del-pueblo. Un solo pozo, y el pozo limpio.
+ * Una sola fuente: demand_signals_humano (se para encima de demand_signals_real
+ * y además quita el arnés del canal web — scripts/veci-smoke.mjs pegaba sin
+ * bandera de prueba y contaminaba el 50%+ de la demanda "real" del canal web,
+ * ver CLAUDE.md § Regla 2026-08-23). demand_signals_real quedó DEPRECATED pa'
+ * reportes públicos. Aquí NO se lee mv_top_searches_30d ni demand_weekly:
+ * mv_top_searches_30d demostró estar contaminada con data de test
+ * ("afinador de clavicordios" x14) y fue lo que mató la página vieja
+ * /senales-del-pueblo. Un solo pozo, y el pozo limpio.
  *
  * CONTRATO DEL MOLDE (lo que este módulo NUNCA devuelve):
  *   - texto crudo de mensajes de vecinos (solo la columna category)
@@ -30,6 +34,7 @@ export interface SenalCategoria {
   n28: number
   n7: number
   sinRespuesta28: number
+  personas28: number     // vecinos DISTINTOS (user_hash) en 28 días — no "veces"
   semanas: Array<{ semana: string; n: number }>  // hasta 12 puntos, ascendente
 }
 
@@ -38,8 +43,10 @@ export interface Senal {
   total28: number
   total7: number
   conRespuesta28: number
+  personasTotal28: number        // vecinos distintos, todas las categorías, 28 días
   categorias: SenalCategoria[]   // solo n28 >= SENAL_MIN_N, orden n28 desc
-  huecos: SenalCategoria[]       // n28 >= MIN_N y >=50% sin respuesta
+  huecos: SenalCategoria[]       // n28 >= MIN_N y >=50% sin respuesta, orden n28 desc
+  huecosSemana: SenalCategoria[] // huecos ordenados por n7 (esta semana), top 5
   generadoEl: string             // YYYY-MM-DD (AT)
 }
 
@@ -69,18 +76,18 @@ export async function senalApagada(sb: any): Promise<boolean> {
  */
 export async function cargarSenal(sb: any): Promise<Senal | null> {
   if (await senalApagada(sb)) {
-    return { off: true, total28: 0, total7: 0, conRespuesta28: 0, categorias: [], huecos: [], generadoEl: fechaAT() }
+    return { off: true, total28: 0, total7: 0, conRespuesta28: 0, personasTotal28: 0, categorias: [], huecos: [], huecosSemana: [], generadoEl: fechaAT() }
   }
 
   const desde = new Date(Date.now() - DIAS_VENTANA * 86400000).toISOString()
-  const filas: Array<{ category: string | null; matched: boolean; created_at: string }> = []
+  const filas: Array<{ category: string | null; matched: boolean; created_at: string; user_hash: string | null }> = []
   try {
     // Pagina por si la ventana crece más allá del cap de PostgREST.
     const PAGE = 1000
     for (let page = 0; page < 10; page++) {
       const { data, error } = await sb
-        .from('demand_signals_real')
-        .select('category,matched,created_at')
+        .from('demand_signals_humano')
+        .select('category,matched,created_at,user_hash')
         .gte('created_at', desde)
         .order('created_at', { ascending: false })
         .range(page * PAGE, page * PAGE + PAGE - 1)
@@ -94,16 +101,17 @@ export async function cargarSenal(sb: any): Promise<Senal | null> {
   const corte7 = Date.now() - 7 * 86400000
   const corte28 = Date.now() - 28 * 86400000
 
-  type Acc = { display: Record<string, number>; n28: number; n7: number; sin28: number; semanas: Record<string, number> }
+  type Acc = { display: Record<string, number>; n28: number; n7: number; sin28: number; semanas: Record<string, number>; personas28: Set<string> }
   const acc: Record<string, Acc> = {}
   let total28 = 0, total7 = 0, conRespuesta28 = 0
+  const personasTotalSet = new Set<string>()
 
   for (const f of filas) {
     const raw = String(f.category || '').trim()
     const key = normCat(raw)
     if (!key || CATS_OCULTAS.has(key)) continue
     const t = Date.parse(f.created_at)
-    if (!acc[key]) acc[key] = { display: {}, n28: 0, n7: 0, sin28: 0, semanas: {} }
+    if (!acc[key]) acc[key] = { display: {}, n28: 0, n7: 0, sin28: 0, semanas: {}, personas28: new Set() }
     const a = acc[key]
     a.display[raw] = (a.display[raw] || 0) + 1
     // semana ISO-ish: lunes de esa semana (AT aproximado con UTC es suficiente pa' tendencia)
@@ -114,6 +122,7 @@ export async function cargarSenal(sb: any): Promise<Senal | null> {
     a.semanas[wk] = (a.semanas[wk] || 0) + 1
     if (t >= corte28) {
       a.n28++; total28++
+      if (f.user_hash) { a.personas28.add(f.user_hash); personasTotalSet.add(f.user_hash) }
       if (f.matched) conRespuesta28++
       else a.sin28++
       if (t >= corte7) { a.n7++; total7++ }
@@ -127,11 +136,13 @@ export async function cargarSenal(sb: any): Promise<Senal | null> {
       n28: a.n28,
       n7: a.n7,
       sinRespuesta28: a.sin28,
+      personas28: a.personas28.size || a.n28, // fallback: si no hay hash, usamos n28 (nunca infla)
       semanas: Object.entries(a.semanas).sort((x, y) => x[0] < y[0] ? -1 : 1).map(([semana, n]) => ({ semana, n })),
     }))
     .sort((x, y) => y.n28 - x.n28)
 
   const huecos = categorias.filter(c => c.sinRespuesta28 / c.n28 >= 0.5)
+  const huecosSemana = huecos.filter(c => c.n7 > 0).sort((x, y) => y.n7 - x.n7).slice(0, 5)
 
-  return { off: false, total28, total7, conRespuesta28, categorias, huecos, generadoEl: fechaAT() }
+  return { off: false, total28, total7, conRespuesta28, personasTotal28: personasTotalSet.size || total28, categorias, huecos, huecosSemana, generadoEl: fechaAT() }
 }

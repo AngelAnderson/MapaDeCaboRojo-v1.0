@@ -2135,26 +2135,45 @@ async function handleDemanda(req: any, res: any) {
     return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="#0d9488" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
   }
 
+  const dato = (cat: string) => `https://wa.me/17874177711?text=${encodeURIComponent(`DATO ${cat}`)}`
+  const pregunta = (cat: string) => `https://wa.me/17874177711?text=${encodeURIComponent(cat)}`
+
   const contenido = senal
     ? `
-<div class="grid sm:grid-cols-3 gap-3 mt-6 not-prose">
-  <div class="bg-white border border-slate-200 rounded-xl p-4 text-center"><p class="text-3xl font-black text-slate-900">${senal.total28}</p><p class="text-xs text-slate-500 font-semibold uppercase tracking-wide mt-1">búsquedas reales · 28 días</p></div>
+<p class="text-xs text-slate-500 not-prose">Verificado contra la base el ${senal.generadoEl}. Fuente: mensajes reales al ${PHONE_CTA} (demand_signals_humano — sin tráfico de prueba).</p>
+
+<div class="grid sm:grid-cols-3 gap-3 mt-4 not-prose">
+  <div class="bg-white border border-slate-200 rounded-xl p-4 text-center"><p class="text-3xl font-black text-slate-900">${senal.personasTotal28}</p><p class="text-xs text-slate-500 font-semibold uppercase tracking-wide mt-1">vecinos distintos · 28 días</p></div>
   <div class="bg-white border border-slate-200 rounded-xl p-4 text-center"><p class="text-3xl font-black text-slate-900">${senal.categorias.length}</p><p class="text-xs text-slate-500 font-semibold uppercase tracking-wide mt-1">categorías con señal</p></div>
   <div class="bg-white border border-slate-200 rounded-xl p-4 text-center"><p class="text-3xl font-black text-teal-700">${senal.total28 ? Math.round(100 * senal.conRespuesta28 / senal.total28) : 0}%</p><p class="text-xs text-slate-500 font-semibold uppercase tracking-wide mt-1">recibió respuesta del directorio</p></div>
 </div>
 
+${senal.huecosSemana.length ? `
+<h2>Lo que el pueblo pidió esta semana y nadie contesta</h2>
+<p class="text-sm text-slate-600">Las 5 categorías más pedidas en los últimos 7 días donde la mitad o más se quedó sin respuesta. Si resuelves una de estas, el pueblo te está pidiendo ahora mismo.</p>
+<div class="not-prose grid sm:grid-cols-2 gap-3 mt-3">
+${senal.huecosSemana.map((h: SenalCategoria) => `<div class="bg-red-50 border border-red-200 rounded-xl p-4">
+  <p class="font-bold text-slate-900">${escapeHtml(h.nombre)}</p>
+  <p class="text-sm text-slate-600 mt-1">${h.n7} vecino${h.n7 === 1 ? '' : 's'} lo pidió esta semana · ${h.sinRespuesta28} sin respuesta en 28 días</p>
+  <a href="${dato(h.nombre)}" target="_blank" rel="noopener" class="inline-block mt-2 text-xs font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg px-3 py-1.5 no-underline">¿Tienes este negocio? Manda DATO →</a>
+</div>`).join('')}
+</div>` : ''}
+
 <h2>Lo que se buscó, categoría por categoría</h2>
-<p class="text-sm text-slate-600">Últimos 28 días. La línea al lado es la tendencia de las últimas 12 semanas. Una categoría entra a la tabla con 3 búsquedas o más.</p>
+<p class="text-sm text-slate-600">Últimos 28 días, contado por vecino distinto (no por mensaje). La línea al lado es la tendencia de las últimas 12 semanas. Una categoría entra a la tabla con 3 búsquedas o más.</p>
 <div class="not-prose overflow-x-auto">
 <table class="text-sm w-full">
-<thead><tr class="text-left text-xs text-slate-500 uppercase tracking-wide"><th class="py-2 pr-2">Categoría</th><th class="text-right pr-3">28 días</th><th class="text-right pr-3">7 días</th><th class="pr-2">Tendencia</th><th>¿Hubo respuesta?</th></tr></thead>
+<thead><tr class="text-left text-xs text-slate-500 uppercase tracking-wide"><th class="py-2 pr-2">Categoría</th><th class="text-right pr-3">Vecinos · 28d</th><th class="text-right pr-3">7 días</th><th class="pr-2">Tendencia</th><th>¿Hubo respuesta?</th><th>Acción</th></tr></thead>
 <tbody>
 ${senal.categorias.map((c: SenalCategoria) => `<tr class="border-t border-slate-100">
   <td class="py-2 pr-2 font-semibold">${escapeHtml(c.nombre)}</td>
-  <td class="text-right pr-3 font-bold text-slate-900">${c.n28}</td>
+  <td class="text-right pr-3 font-bold text-slate-900">${c.personas28}</td>
   <td class="text-right pr-3 text-slate-500">${c.n7 || ''}</td>
   <td class="pr-2">${spark(c.semanas)}</td>
   <td>${c.sinRespuesta28 === 0 ? '<span class="text-teal-700 text-xs font-bold">✓ sí</span>' : `<span class="text-amber-700 text-xs font-bold">⚠️ ${c.sinRespuesta28} sin respuesta</span>`}</td>
+  <td>${c.sinRespuesta28 / c.n28 >= 0.5
+      ? `<a href="${dato(c.nombre)}" target="_blank" rel="noopener" class="text-xs font-bold text-red-700 hover:underline no-underline">¿Lo resuelves? Manda DATO →</a>`
+      : `<a href="${pregunta(c.nombre)}" target="_blank" rel="noopener" class="text-xs font-bold text-teal-700 hover:underline no-underline">Pregúntale a El Veci →</a>`}</td>
 </tr>`).join('')}
 </tbody>
 </table>
@@ -2166,12 +2185,13 @@ ${senal.huecos.length ? `
 <div class="not-prose grid sm:grid-cols-2 gap-3 mt-3">
 ${senal.huecos.map((h: SenalCategoria) => `<div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
   <p class="font-bold text-slate-900">${escapeHtml(h.nombre)}</p>
-  <p class="text-sm text-slate-600 mt-1">${h.n28} búsquedas en 28 días · ${h.sinRespuesta28} sin respuesta</p>
+  <p class="text-sm text-slate-600 mt-1">${h.personas28} vecino${h.personas28 === 1 ? '' : 's'} en 28 días · ${h.sinRespuesta28} sin respuesta</p>
+  <a href="${dato(h.nombre)}" target="_blank" rel="noopener" class="inline-block mt-2 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-lg px-3 py-1.5 no-underline">¿Tienes este negocio? Manda DATO →</a>
 </div>`).join('')}
 </div>` : ''}
 
 <h2>De dónde sale esto</h2>
-<p class="text-sm text-slate-600">Son los mensajes reales que los vecinos le textean a El Veci (${PHONE_CTA}), agregados por categoría. Solo se cuentan los mensajes que piden algo concreto: los saludos y la conversación suelta no entran. Los mensajes crudos nunca se publican: aquí no hay nombres, ni teléfonos, ni textos de nadie. El tráfico de prueba del sistema está excluido. Se actualiza solo, todos los días. Última actualización: ${senal.generadoEl}.</p>
+<p class="text-sm text-slate-600">Son los mensajes reales que los vecinos le textean a El Veci (${PHONE_CTA}), agregados por categoría y contados por vecino distinto (no por mensaje repetido). Solo se cuentan los mensajes que piden algo concreto: los saludos y la conversación suelta no entran. Los mensajes crudos nunca se publican: aquí no hay nombres, ni teléfonos, ni textos de nadie. El tráfico de prueba del sistema está excluido (incluido el del canal web, filtrado 2026-08-23). Se actualiza solo, todos los días. Última actualización: ${senal.generadoEl}.</p>
 `
     : `
 <div class="bg-amber-50 border-l-4 border-amber-400 p-4 my-6 rounded-r-lg not-prose">

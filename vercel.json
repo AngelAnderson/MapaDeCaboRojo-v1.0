@@ -92,6 +92,10 @@
       "destination": "/api/pages?page=intelligence"
     },
     {
+      "source": "/pueblo-en-numeros",
+      "destination": "/api/pages?page=pueblo-en-numeros"
+    },
+    {
       "source": "/negocio/:slug",
       "destination": "/api/negocio?slug=:slug"
     },
@@ -694,11 +698,6 @@
     },
     {
       "source": "/preguntas",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/pueblo-en-numeros",
       "destination": "/",
       "permanent": true
     },
