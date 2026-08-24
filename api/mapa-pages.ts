@@ -6014,7 +6014,7 @@ async function handleEspecialista(req: any, res: any) {
 
   const { data: place } = await supabase
     .from('places')
-    .select('id,name,subcategory,municipality,region,phone,address,npi,lat,lon,slug,last_verified_at,accepted_plans,cms_rating,cms_rating_type,dato_reportado,visibility,status')
+    .select('id,name,subcategory,municipality,region,phone,address,npi,lat,lon,slug,last_verified_at,accepted_plans,cms_rating,cms_rating_type,dato_reportado,visibility,status,npi_status')
     .eq('slug', slug).not('npi', 'is', null).maybeSingle()
 
   // Un proveedor cerrado no lleva página pública con botón de llamar.
@@ -6097,17 +6097,23 @@ async function handleEspecialista(req: any, res: any) {
   // La meta abre con el teléfono a propósito: quien busca a un médico por nombre quiere el
   // número, y si lo resuelve desde el propio Google ya ganamos (la misión es bajar el costo
   // de encontrar la información correcta, no cobrar el clic).
+  // El sello es el producto, así que no puede sobrevivir a su propia fuente. El sync del
+  // 16 ago marcó 28 fichas publicadas con npi_status='NO_ENCONTRADO' — el NPI ya no está en
+  // NPPES — y la página seguía diciendo "verificado en el registro federal NPPES" para todas.
+  // Es exactamente la acusación que le hacemos a un plan médico que publica un teléfono
+  // muerto: el sello dice que alguien comprobó algo que ya no es cierto.
+  const npiVivo = place.npi_status !== 'NO_ENCONTRADO'
   const T = lang === 'en' ? {
-    sub: `${place.phone ? `Phone: ${place.phone}. ` : ''}${specLabelClean} in ${muni}, PR. NPI ${npi} verified in the federal NPPES registry${verifiedDate ? `, as of ${verifiedDate}` : ''}. Free, no account.`,
+    sub: `${place.phone ? `Phone: ${place.phone}. ` : ''}${specLabelClean} in ${muni}, PR. ${npiVivo ? `NPI ${npi} verified in the federal NPPES registry${verifiedDate ? `, as of ${verifiedDate}` : ''}` : `NPI ${npi} no longer appears in the federal NPPES registry`}. Free, no account.`,
     // 2026-08-20: el botón decía "Ask El Veci", que en una página que YA muestra el
     // teléfono no promete nada nuevo. Desde hoy El Veci le pregunta a las oficinas por ti.
-    verified: 'Verified · federal NPI', call: 'Call', wa: 'WhatsApp', veci: 'Have El Veci ask for you',
+    verified: npiVivo ? 'Verified · federal NPI' : 'Not in the federal registry', call: 'Call', wa: 'WhatsApp', veci: 'Have El Veci ask for you',
     addr: 'Address', regionH: 'Region', specialtyH: 'Specialty', npiH: 'Federal NPI',
     othersH: `Other ${specLabel.toLowerCase()}s in ${regionLabel || 'PR'}`,
     claimH: 'Is this your profile?', notFound: 'Not who you were looking for?',
   } : {
-    sub: `${place.phone ? `Teléfono: ${place.phone}. ` : ''}${specLabelClean} en ${muni}, PR. NPI ${npi} verificado en el registro federal NPPES${verifiedDate ? `, al ${verifiedDate}` : ''}. Gratis y sin cuenta.`,
-    verified: 'Verificado · NPI federal', call: 'Llamar', wa: 'WhatsApp', veci: 'Que el Veci pregunte por ti',
+    sub: `${place.phone ? `Teléfono: ${place.phone}. ` : ''}${specLabelClean} en ${muni}, PR. ${npiVivo ? `NPI ${npi} verificado en el registro federal NPPES${verifiedDate ? `, al ${verifiedDate}` : ''}` : `El NPI ${npi} ya no aparece en el registro federal NPPES`}. Gratis y sin cuenta.`,
+    verified: npiVivo ? 'Verificado · NPI federal' : 'Ya no está en el registro federal', call: 'Llamar', wa: 'WhatsApp', veci: 'Que el Veci pregunte por ti',
     addr: 'Dirección', regionH: 'Región', specialtyH: 'Especialidad', npiH: 'NPI federal',
     othersH: `Otros ${specLabel.toLowerCase()} en el ${regionLabel || 'PR'}`,
     claimH: '¿Es tu perfil?', notFound: '¿No es a quien buscabas?',
@@ -6422,7 +6428,7 @@ ${puertaHub}
     <h1 class="text-3xl font-black text-slate-900 leading-tight">${escapeHtml(name)}</h1>
     <p class="text-lg text-slate-600 mt-1">${escapeHtml(specLabel)} · ${escapeHtml(muni)}${region ? ` · ${escapeHtml(region)}` : ''}</p>
     <div class="mt-3 flex flex-wrap gap-2">
-      <span class="inline-flex items-center gap-2 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full text-sm"><i class="fa-solid fa-shield-halved"></i> ${T.verified}</span>
+      <span class="inline-flex items-center gap-2 ${npiVivo ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-amber-50 border-amber-300 text-amber-900'} border font-semibold px-3 py-1 rounded-full text-sm"><i class="fa-solid ${npiVivo ? 'fa-shield-halved' : 'fa-triangle-exclamation'}"></i> ${T.verified}</span>
       ${place.cms_rating != null ? `<span class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 font-semibold px-3 py-1 rounded-full text-sm"><span class="text-amber-500">${starRating(Number(place.cms_rating))}</span> ${Number(place.cms_rating)}/5 ${lang === 'en' ? 'CMS rating' : 'estrellas CMS'}</span>` : ''}
       ${isMD ? '' : '<span class="inline-flex items-center gap-2 bg-slate-100 border border-slate-200 text-slate-600 font-semibold px-3 py-1 rounded-full text-sm">Proveedor licenciado (no es médico MD)</span>'}
       ${verifiedDate ? `<span class="inline-flex items-center gap-2 bg-slate-50 border border-slate-200 text-slate-500 px-3 py-1 rounded-full text-xs">Verificado ${escapeHtml(verifiedDate)}</span>` : ''}
