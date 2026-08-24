@@ -6022,6 +6022,31 @@ async function handleEspecialista(req: any, res: any) {
     responderRemovido(res, req); return
   }
 
+  // `visibility` significa algo o no significa nada. Al 23 ago 2026 había 63 fichas que
+  // alguien puso fuera de publicación a propósito y que esta ruta seguía sirviendo enteras:
+  // 16 marcadas `fuera-de-pr` (cardiólogos en Cleveland y Miami dentro de un registro de PR),
+  // ~30 farmacéuticos individuales de Cabo Rojo (la persona no es un sitio donde ir; su
+  // dirección de NPPES suele ser su casa), y un grupo de optómetras y dentistas archivados
+  // tras el reporte por correo de Enid el 24 jul. En los 3 casos la página viva contradecía
+  // una decisión ya tomada — y en el último, contradecía la corrección de una persona real.
+  //
+  // ⚠️ `duplicate_removed` se deja EXACTAMENTE como estaba: son 83 fichas de la fusión del
+  // 22 ago y 80 no tienen sobreviviente con el mismo NPI, así que no hay a dónde redirigir.
+  // 34 de esos slugs reciben impresiones reales; mandarlos a 410 sin el mapa de la fusión
+  // convierte tráfico en nada. Ese 301 le toca a quien tenga el mapa.
+  if (place && place.visibility !== 'published' && place.status !== 'duplicate_removed') {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow')
+    res.status(410).send(layout({
+      title: 'Ficha no publicada',
+      description: 'Esta ficha no forma parte del registro público.',
+      slug: 'registro',
+      bodyHtml: `<h1>Esta ficha no está publicada</h1><p class="text-slate-600">No forma parte del registro público de Puerto Rico. Puede que el proveedor no ejerza en la isla, o que sacáramos la ficha tras una corrección.</p><p class="text-slate-600 mt-3"><a href="/registro" class="text-teal-700 font-semibold">Busca por especialidad y pueblo →</a></p>`,
+      host: req.headers?.host,
+      canonicalHost: 'https://registromedicopr.com',
+    }))
+    return
+  }
+
   if (!place) {
     // ¿Es un slug viejo de alguien que sigue en el registro? 301, no 404.
     const slugNuevo = await resolverSlugRenombrado(slug)
