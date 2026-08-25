@@ -2116,6 +2116,7 @@ async function handleDemanda(req: any, res: any) {
       endpoint: 'mapa-pages/demanda', method: 'GET', query: null,
       user_agent: String(req.headers['user-agent'] || '').substring(0, 500),
       ip: String(req.headers['x-forwarded-for'] || '').split(',')[0].substring(0, 45),
+      referrer: String(req.headers['referer'] || '').substring(0, 500) || null,
       response_count: senal ? senal.categorias.length : 0,
     }).then(() => {}, () => {})
   } catch { /* fire-and-forget */ }
@@ -9654,6 +9655,7 @@ async function handleTelefonosMuertos(req: any, res: any) {
       endpoint: 'mapa-pages/telefonos-muertos', method: 'GET', query: null,
       user_agent: String(req.headers['user-agent'] || '').substring(0, 500),
       ip: String(req.headers['x-forwarded-for'] || '').split(',')[0].substring(0, 45),
+      referrer: String(req.headers['referer'] || '').substring(0, 500) || null,
       response_count: 0,
     }).then(() => {}, () => {})
   } catch { /* fire-and-forget */ }
@@ -9847,6 +9849,7 @@ async function handleSeFueTuMedico(req: any, res: any) {
       endpoint: 'mapa-pages/se-fue-tu-medico', method: 'GET', query: null,
       user_agent: String(req.headers['user-agent'] || '').substring(0, 500),
       ip: String(req.headers['x-forwarded-for'] || '').split(',')[0].substring(0, 45),
+      referrer: String(req.headers['referer'] || '').substring(0, 500) || null,
       response_count: 0,
     }).then(() => {}, () => {})
   } catch { /* fire-and-forget */ }
