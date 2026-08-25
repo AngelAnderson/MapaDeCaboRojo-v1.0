@@ -13343,6 +13343,15 @@ async function handleEsencia(req: any, res: any) {
     const { data } = await supabase.from('esencia_timeline').select('event_date,title,description,category,source_name,source_url').order('event_date', { ascending: false })
     rows = data || []
   } catch (_) { /* empty */ }
+  // Tablero de solicitudes Ley 141-2019. Incluye a proposito las filas "todavia sin radicar":
+  // un tablero que solo muestra lo comodo no sirve de tablero.
+  let solis: any[] = []
+  try {
+    const { data } = await supabase.from('esencia_solicitudes')
+      .select('que_se_pidio,a_quien,enviada,vencio,semaforo,estado_titulo,estado_detalle')
+      .eq('activa', true).order('orden', { ascending: true })
+    solis = data || []
+  } catch (_) { /* empty */ }
   const catCls: Record<string, string> = {
     financial: 'bg-amber-100 text-amber-800 border-amber-200',
     legal: 'bg-slate-100 text-slate-700 border-slate-200',
@@ -13363,6 +13372,44 @@ async function handleEsencia(req: any, res: any) {
       <p class="text-xs text-slate-400 mt-1">Fuente: ${okSrc ? `<a href="${escapeHtml(r.source_url)}" target="_blank" rel="noopener" class="text-teal-700 underline">${escapeHtml(r.source_name || 'ver')} ↗</a>` : escapeHtml(r.source_name || '—')}</p>
     </div>`
   }).join('')
+  const LUZ: Record<string, string> = { rojo: '\u{1F534}', amarillo: '\u{1F7E1}', verde: '\u{1F7E2}', blanco: '\u26AA' }
+  const LUZ_CLS: Record<string, string> = { rojo: 'bg-red-50/60', amarillo: 'bg-amber-50/50', verde: 'bg-emerald-50/50', blanco: 'bg-white' }
+  const dias = (d: string | null) => d ? Math.floor((Date.now() - new Date(d + 'T12:00:00Z').getTime()) / 86400000) : 0
+  const fmt = (d: string | null) => {
+    if (!d) return '<span class="text-amber-700 font-bold">Sin radicar</span>'
+    const M = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']
+    const p = d.split('-')
+    return `${Number(p[2])} ${M[Number(p[1]) - 1]} ${p[0]}`
+  }
+  const soliRows = solis.map((r: any) => {
+    const venc = r.vencio && dias(r.vencio) > 0 ? ` <span class="block text-[11px] text-red-700 font-bold">${dias(r.vencio)} días vencida</span>` : ''
+    return `<tr class="border-t border-slate-100 align-top ${LUZ_CLS[r.semaforo] || ''}">
+      <td class="py-2.5 px-3 text-slate-800">${escapeHtml(r.que_se_pidio)}</td>
+      <td class="py-2.5 px-3 text-slate-600 text-sm">${escapeHtml(r.a_quien)}</td>
+      <td class="py-2.5 px-3 text-sm whitespace-nowrap">${fmt(r.enviada)}</td>
+      <td class="py-2.5 px-3 text-sm whitespace-nowrap">${r.vencio ? fmt(r.vencio) + venc : '<span class="text-slate-400">—</span>'}</td>
+      <td class="py-2.5 px-3 text-sm"><span class="font-bold text-slate-800">${LUZ[r.semaforo] || ''} ${escapeHtml(r.estado_titulo)}</span>${r.estado_detalle ? `<span class="block text-slate-600 mt-0.5">${escapeHtml(r.estado_detalle)}</span>` : ''}</td>
+    </tr>`
+  }).join('')
+  const tablero = solis.length ? `
+<div class="not-prose mt-6" id="solicitudes">
+  <h2 class="text-2xl font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Lo que falta por contestar: las preguntas con reloj</h2>
+  <p class="text-slate-600 mt-1.5 text-sm">Cada fila dice a quién se le preguntó, cuándo, cuándo venció el término de ley y qué ha pasado. La Ley 141-2019 da <strong>10 días laborables</strong> para contestar. <strong>Incluye las que todavía no hemos radicado</strong>, porque un tablero que solo muestra lo cómodo no sirve de tablero.</p>
+  <p class="text-xs text-slate-500 mt-2">\u{1F534} vencida o sin llegar &nbsp;·&nbsp; \u{1F7E1} contestada a medias, o la bola es nuestra &nbsp;·&nbsp; \u26AA todavía no la hemos hecho</p>
+  <div class="overflow-x-auto mt-3 border border-slate-200 rounded-2xl bg-white">
+    <table class="w-full text-sm" style="min-width:720px">
+      <thead class="bg-slate-900 text-white"><tr>
+        <th class="py-2.5 px-3 text-left text-[11px] uppercase tracking-wider font-bold">Qué se pidió</th>
+        <th class="py-2.5 px-3 text-left text-[11px] uppercase tracking-wider font-bold">A quién</th>
+        <th class="py-2.5 px-3 text-left text-[11px] uppercase tracking-wider font-bold">Enviada</th>
+        <th class="py-2.5 px-3 text-left text-[11px] uppercase tracking-wider font-bold">Venció</th>
+        <th class="py-2.5 px-3 text-left text-[11px] uppercase tracking-wider font-bold">Estado hoy</th>
+      </tr></thead>
+      <tbody>${soliRows}</tbody>
+    </table>
+  </div>
+  <p class="text-sm text-slate-600 mt-3">Este tablero se actualiza según contesten o no contesten. <strong>El silencio de una agencia, con fecha, también es un dato</strong>, y es el único de esta página que crece solo mientras nadie hace nada. El expediente completo, con las 3 listas: <a href="https://caborojo.com/esencia-las-3-listas/" class="text-teal-700 font-semibold">caborojo.com/esencia-las-3-listas</a>.</p>
+</div>` : ''
   const body = `
 <h1>El proyecto Esencia, sin filtros</h1>
 <p class="text-lg text-slate-600 mt-2">Esencia es el mega-desarrollo turístico-residencial propuesto para Cabo Rojo que ha generado investigaciones periodísticas, medidas del Senado y protestas de San Juan a Nueva York. Esta página <strong>organiza el récord público con la fuente al lado de cada dato</strong>. Sin opinión: tú decides qué pensar.</p>
@@ -13382,6 +13429,8 @@ async function handleEsencia(req: any, res: any) {
   <p class="text-sm text-slate-600 mt-2"><strong>El número de caso, para que lo uses:</strong> la solicitud ante OGPe es la <strong class="font-mono">2026-693109-CUB-013470</strong>, y llegó clasificada como <strong>&#8220;proyecto estratégico&#8221;</strong>. Los rótulos se colocaron de madrugada. En una consulta de ubicación cualquier persona puede someter comentarios por escrito ante OGPe citando ese número, y participar en las vistas cuando se anuncien.</p>
   <p class="text-xs text-slate-400 mt-2">Fuente: Conferencia del Rep. Emilio Carlo, Cabo Rojo, 5 ago 2026 (video completo de CaboRojo.com) · <a href="https://www.elvocero.com/actualidad/otros/aprueban-desarrollo-del-proyecto-esencia-en-cabo-rojo-con-inversi-n-de-m-s-de/article_53d25877-b53b-4962-81b7-379a568bcba0.html" target="_blank" rel="noopener" class="text-teal-700 underline">El Vocero, 31 jul 2026 ↗</a> · <a href="https://noticel.com/en/ultima-hora/20260716/exigen-llevar-a-vistas-publicas-consulta-de-ubicacion-de-esencia/" target="_blank" rel="noopener" class="text-teal-700 underline">NotiCel, 16 jul 2026 ↗</a> · <a href="https://www.elnuevodia.com/noticias/locales/notas/reclaman-vistas-publicas-para-evaluar-consulta-de-ubicacion-del-megaproyecto-esencia/" target="_blank" rel="noopener" class="text-teal-700 underline">El Nuevo Día, jul 2026 ↗</a> · Comunicado Comité PIP Cabo Rojo, 17 jul 2026</p>
 </div>
+
+${tablero}
 
 <div class="not-prose mt-5 bg-teal-900 text-white rounded-2xl p-5" id="hoy">
   <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">⚡ Muévete en 5 minutos</p>
