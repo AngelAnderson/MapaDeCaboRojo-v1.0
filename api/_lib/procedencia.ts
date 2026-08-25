@@ -306,20 +306,20 @@ export function bloqueProcedencia(place: any, opts: { categoriaUrl?: string | nu
   const linea = nivel === 'persona'
     ? `Verificado a mano por <a href="${ANGEL_URL}" style="color:#0d9488;text-decoration:none">Angel Anderson</a> el ${fecha}.`
     : nivel === 'fuente'
-      ? `Confirmado el ${fecha} contra la fuente publica del negocio. <strong>Todavia no lo ha confirmado la oficina.</strong> Si eres del negocio, escribe <strong>CONFIRMAR MIS DATOS</strong> al 787-417-7711 y lo sellamos con tu nombre.`
-      : `Esta ficha viene del registro publico y <strong>todavia no la ha verificado un humano</strong>. Si conoces el negocio, corrigenos.`;
+      ? `Confirmado el ${fecha} contra la fuente pública del negocio. <strong>Todavía no lo ha confirmado la oficina.</strong> Si eres del negocio, escribe <strong>CONFIRMAR MIS DATOS</strong> al 787-417-7711 y lo sellamos con tu nombre.`
+      : `Esta ficha viene del registro público y <strong>todavía no la ha verificado un humano</strong>. Si conoces el negocio, corrígenos.`;
 
   // Un solo enlace lateral, el mas relevante. Los proveedores con NPI viven en el Registro
   // Medico; los demas, en su categoria. Nunca los dos, nunca los cinco.
   const lateral = place?.npi
-    ? `<a href="https://registromedicopr.com" style="color:#0d9488;text-decoration:none">Registro Medico PR</a> tiene su expediente federal (NPI ${esc(place.npi)}).`
+    ? `<a href="https://registromedicopr.com" style="color:#0d9488;text-decoration:none">Registro Médico PR</a> tiene su expediente federal (NPI ${esc(place.npi)}).`
     : (opts.categoriaUrl && opts.categoriaNombre
-      ? `Mas <a href="${esc(opts.categoriaUrl)}" style="color:#0d9488;text-decoration:none">${esc(opts.categoriaNombre)} en Cabo Rojo</a>.`
+      ? `Más <a href="${esc(opts.categoriaUrl)}" style="color:#0d9488;text-decoration:none">${esc(opts.categoriaNombre)} en Cabo Rojo</a>.`
       : '');
 
   return `
     <section style="margin-top:28px;padding:14px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;line-height:1.6;color:#475569">
       <p style="margin:0">${linea} ${lateral}</p>
-      <p style="margin:6px 0 0 0;color:#94a3b8;font-size:12px">Parte del substrato civico verificado de Puerto Rico. Si citas este dato, cita mapadecaborojo.com y la fecha.</p>
+      <p style="margin:6px 0 0 0;color:#94a3b8;font-size:12px">Parte del substrato cívico verificado de Puerto Rico. Si citas este dato, cita mapadecaborojo.com y la fecha.</p>
     </section>`;
 }
