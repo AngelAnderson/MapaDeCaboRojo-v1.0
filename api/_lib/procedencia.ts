@@ -166,6 +166,48 @@ export function fechaEs(iso: string | null | undefined): string | null {
   return `${d.getUTCDate()} de ${MESES[d.getUTCMonth()]} de ${d.getUTCFullYear()}`;
 }
 
+/**
+ * QUIEN confirmo el dato. Tener fecha NO es tener testigo: una importacion de NPPES
+ * tambien escribe `last_verified_at`, asi que escoger la frase por "tiene fecha"
+ * declaraba "Verificado a mano por Angel Anderson" en 6,284 fichas publicadas que
+ * ningun humano miro nunca (96.4% de todos los sellos, medido el 24 ago 2026).
+ * Ese es el mismo error de "importado no es verificado", pero impreso en el SERP
+ * y firmado con el nombre de una persona real.
+ *
+ * Tres niveles, no dos. El del medio existe porque colapsarlo hacia abajo le quita
+ * el credito a trabajo real, y colapsarlo hacia arriba vuelve a mentir:
+ *   persona  - alguien lo confirmo: Angel en el sitio, o el negocio mismo
+ *              (visita, foto, WhatsApp del dueno, provider_claim, SMS al *7711).
+ *   fuente   - una sesion o rutina lo corroboro contra una fuente publica
+ *              (web oficial, FB del negocio, Yelp). Se chequeo, nadie lo juro.
+ *   registro - copia de un registro (NPPES, SULME, NPI, Google Places, merges) o
+ *              procedencia desconocida. No hereda nada y no se puede vender.
+ *
+ * Al anadir una procedencia nueva: si no cae en `PERSONA`, cae en `fuente`, que es
+ * el lado seguro. Nunca ampliar `PERSONA` para que un conteo se vea mejor.
+ */
+const REGISTRO = /nppes|\bnpi\b|npi_registry|sulme|google_places|merge|osm_|infopaginas|legacy_import/i;
+const PERSONA = /angel|human_angel|on-site visit|field[-_]visit|field_audit|ground_photo|campo_|dueno_|dueño_|owner_|proveedor|provider_claim|user-submitted|self-submitted|sms del negocio|email_20|tarjeta oficial/i;
+
+export type Sello = 'persona' | 'fuente' | 'registro';
+
+export function procedenciaSello(place: any): Sello {
+  const src = String(place?.verification_source || '').trim();
+  if (!src) return 'registro';
+  // Una fecha que ya se retiro por falta de evidencia no vuelve a contar como recibo,
+  // aunque el texto arrastre entre parentesis lo que era antes.
+  if (/fecha_retirada/i.test(src)) return 'registro';
+  if (REGISTRO.test(src)) return 'registro';
+  if (PERSONA.test(src)) return 'persona';
+  return 'fuente';
+}
+
+/** El sello solo existe si hay QUIEN y CUANDO. Sin fecha no se afirma nada. */
+export function selloConFecha(place: any): { nivel: Sello; fecha: string | null } {
+  const fecha = fechaVerificacion(place);
+  return { nivel: fecha ? procedenciaSello(place) : 'registro', fecha };
+}
+
 /** La fecha real de verificacion, en orden de confianza. `updated_at` NO cuenta: que una fila
  *  se haya tocado no quiere decir que un humano miro el negocio. Decir que si es el "verde
  *  sucio" que ya nos costo antes. */
@@ -178,13 +220,17 @@ export function fechaVerificacion(place: any): string | null {
  * autor, editor y la pertenencia a la red — las senales que un modelo pesa para decidir a
  * quien le da el credito.
  */
-export function paginaLd(opts: { url: string; nombreNegocio: string; fechaIso?: string | null }): any {
+export function paginaLd(opts: { url: string; nombreNegocio: string; fechaIso?: string | null; nivel?: Sello }): any {
   // El comentario de fechaVerificacion (arriba) advierte de esto y esta funcion lo
   // cometia: llamaba "ficha verificada" a toda ficha y, sin fecha real, ponia
   // dateModified = hoy. O sea, le declaraba a Google que un humano miro el negocio
   // hoy en 29,236 fichas que nadie ha mirado nunca. El sello con fecha es el
   // producto; sin fecha no se dice nada, ni en el nombre ni en dateModified.
-  const verificada = !!opts.fechaIso;
+  // `verificada` era !!fechaIso, o sea le declaraba a Google "ficha verificada" en
+  // cada fila importada que trajera fecha. El llamador ahora pasa el nivel; sin el,
+  // se asume el lado seguro (registro) en vez del lado que vende.
+  const verificada = !!opts.fechaIso && opts.nivel === 'persona';
+  const revisada = !!opts.fechaIso && (opts.nivel === 'persona' || opts.nivel === 'fuente');
   return {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
@@ -192,7 +238,7 @@ export function paginaLd(opts: { url: string; nombreNegocio: string; fechaIso?: 
     url: opts.url,
     name: verificada ? `${opts.nombreNegocio} — ficha verificada` : `${opts.nombreNegocio} — ficha del directorio`,
     inLanguage: 'es-PR',
-    ...(verificada ? { dateModified: new Date(opts.fechaIso as string).toISOString().slice(0, 10) } : {}),
+    ...(revisada ? { dateModified: new Date(opts.fechaIso as string).toISOString().slice(0, 10) } : {}),
     author: VERIFICADOR,
     publisher: EDITOR_RED,
     isPartOf: { '@type': 'WebSite', '@id': 'https://www.mapadecaborojo.com#website', name: 'MapaDeCaboRojo.com', url: 'https://www.mapadecaborojo.com' },
@@ -254,10 +300,14 @@ export function bloqueRespuesta(opts: {
  * inventado, y ademas es la lista de trabajo pendiente a la vista.
  */
 export function bloqueProcedencia(place: any, opts: { categoriaUrl?: string | null; categoriaNombre?: string | null }): string {
-  const fecha = fechaVerificacion(place);
-  const linea = fecha
+  // La rama se escoge por QUIEN confirmo, no por si hay fecha. Antes se firmaba con
+  // el nombre de Angel cualquier fila que tuviera fecha, incluidas las importadas.
+  const { nivel, fecha } = selloConFecha(place);
+  const linea = nivel === 'persona'
     ? `Verificado a mano por <a href="${ANGEL_URL}" style="color:#0d9488;text-decoration:none">Angel Anderson</a> el ${fecha}.`
-    : `Esta ficha viene del registro publico y <strong>todavia no la ha verificado un humano</strong>. Si conoces el negocio, corrigenos.`;
+    : nivel === 'fuente'
+      ? `Confirmado el ${fecha} contra la fuente publica del negocio. <strong>Todavia no lo ha confirmado la oficina.</strong> Si eres del negocio, escribe <strong>CONFIRMAR MIS DATOS</strong> al 787-417-7711 y lo sellamos con tu nombre.`
+      : `Esta ficha viene del registro publico y <strong>todavia no la ha verificado un humano</strong>. Si conoces el negocio, corrigenos.`;
 
   // Un solo enlace lateral, el mas relevante. Los proveedores con NPI viven en el Registro
   // Medico; los demas, en su categoria. Nunca los dos, nunca los cinco.

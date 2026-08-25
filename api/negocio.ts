@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { correctButtonHtml } from './_lib/correct-button.js';
-import { bloqueProcedencia, paginaLd, ldScript, CATEGORIA_ENLACE_ES } from './_lib/procedencia.js';
+import { bloqueProcedencia, paginaLd, ldScript, CATEGORIA_ENLACE_ES, procedenciaSello } from './_lib/procedencia.js';
 import { slugVivoPara } from './_lib/redirect-archivada.js';
 
 const supabase = createClient(
@@ -270,7 +270,16 @@ function verifiedTail(place: any): string {
   if (isNaN(d.getTime())) return '';
   const dd = String(d.getUTCDate()).padStart(2, '0');
   const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
-  return ` · Verificado a mano el ${dd}/${mm}/${d.getUTCFullYear()}.`;
+  const fecha = `${dd}/${mm}/${d.getUTCFullYear()}`;
+  // Tener fecha no es tener testigo: NPPES tambien escribe last_verified_at. Este
+  // rabito sale en el snippet de Google, asi que "a mano" solo se dice cuando lo
+  // miro una persona. Lo importado no reclama nada en el SERP: un sello falso en
+  // 6,284 fichas cuesta mas que el CTR que gana.
+  switch (procedenciaSello(place)) {
+    case 'persona': return ` · Verificado a mano el ${fecha}.`;
+    case 'fuente':  return ` · Confirmado el ${fecha}.`;
+    default:        return '';
+  }
 }
 
 // schema.org openingHours wants "Mo 08:00-16:00". It was emitting "0 08:00-16:00"
@@ -531,7 +540,7 @@ export default async function handler(req: any, res: any) {
   <!-- JSON-LD -->
   <script type="application/ld+json">${JSON.stringify(cleanJsonLd)}</script>
   <script type="application/ld+json">${JSON.stringify(faqJsonLd)}</script>
-  ${ldScript(paginaLd({ url: pageUrl, nombreNegocio: place.name, fechaIso: place.last_verified_at || place.verified_at }))}
+  ${ldScript(paginaLd({ url: pageUrl, nombreNegocio: place.name, fechaIso: place.last_verified_at || place.verified_at, nivel: procedenciaSello(place) }))}
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
