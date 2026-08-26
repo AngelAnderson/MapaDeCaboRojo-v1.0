@@ -84,6 +84,18 @@
       "destination": "/api/pages?page=veci"
     },
     {
+      "source": "/privacidad",
+      "destination": "/api/pages?page=privacidad"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/api/pages?page=privacidad"
+    },
+    {
+      "source": "/politica-de-privacidad",
+      "destination": "/api/pages?page=privacidad"
+    },
+    {
       "source": "/veci.vcf",
       "destination": "/api/pages?page=veci&vcf=1"
     },

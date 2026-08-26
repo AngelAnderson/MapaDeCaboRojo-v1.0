@@ -6330,6 +6330,123 @@ async function handle_cultura(req: any, res: any) {
 }
 
 
+// /privacidad — política de privacidad unificada del ecosistema. Domain-aware:
+// la misma ruta sirve mapadecaborojo.com, registromedicopr.com y puertoricosinfiltros.com
+// (el monolito responde por los 3 hosts). El texto es UNO solo pa' todo el ecosistema —
+// caborojo.com lleva su copia espejo en WP (page 3, horneada por privacy-page-refresh).
+// Si cambias la política, cambia AMBOS lados y la fecha.
+function handle_privacidad(req: any, res: any) {
+  const host = String(req.headers?.['x-forwarded-host'] || req.headers?.host || '');
+  const isReg = /registromedicopr\.com/i.test(host);
+  const isPRSF = /puertoricosinfiltros\.com/i.test(host);
+  const brand = isPRSF ? 'Puerto Rico Sin Filtros' : isReg ? 'Registro Médico PR' : 'Mapa de Cabo Rojo';
+  const canonicalBase = isPRSF ? 'https://puertoricosinfiltros.com' : isReg ? 'https://registromedicopr.com' : 'https://www.mapadecaborojo.com';
+  const FECHA = '26 de agosto de 2026';
+
+  const h2 = (t: string) => `<h2 style="font-size:20px;font-weight:800;color:#0f172a;margin:34px 0 10px;letter-spacing:-0.3px;">${t}</h2>`;
+  const p = (t: string) => `<p style="font-size:15px;color:#334155;line-height:1.65;margin:0 0 12px;">${t}</p>`;
+  const li = (t: string) => `<li style="font-size:15px;color:#334155;line-height:1.6;margin:0 0 8px;">${t}</li>`;
+  const ul = (items: string[]) => `<ul style="margin:0 0 12px;padding-left:22px;">${items.join('')}</ul>`;
+
+  const html = `<!DOCTYPE html>
+<html lang="es-PR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Política de Privacidad · ${brand}</title>
+<meta name="description" content="Cómo el ecosistema de Caborojo.com (${brand}, El Veci 787-417-7711 y los sitios hermanos) recopila, usa y protege tu información. No vendemos datos. Nunca.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="${canonicalBase}/privacidad">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Source+Sans+3:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;color:#0f172a;-webkit-font-smoothing:antialiased}
+h1,h2{font-family:'Fraunces',Georgia,serif}
+a{color:#0d9488}
+.wrap{max-width:760px;margin:0 auto;padding:0 20px}
+</style>
+</head>
+<body>
+<div style="background:#0f172a;padding:14px 0;">
+  <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;">
+    <a href="/" style="color:#5eead4;font-size:13px;font-weight:600;text-decoration:none;">← ${brand}</a>
+    <span style="font-size:11px;color:#64748b;">Ecosistema Caborojo.com</span>
+  </div>
+</div>
+<div class="wrap" style="padding:44px 20px 70px;">
+  <h1 style="font-size:clamp(26px,5vw,36px);font-weight:800;letter-spacing:-0.8px;line-height:1.15;">Política de Privacidad</h1>
+  <p style="font-size:13px;color:#64748b;margin:10px 0 6px;">Última actualización: <strong>${FECHA}</strong></p>
+  ${p(`Esta política cubre todo el ecosistema: <strong>caborojo.com</strong>, <strong>mapadecaborojo.com</strong>, <strong>registromedicopr.com</strong>, <strong>puertoricosinfiltros.com</strong> y <strong>El Veci</strong> (SMS y WhatsApp al 787-417-7711). Todo lo opera Angel Anderson desde Cabo Rojo, Puerto Rico. Una sola política, en español claro, sin letra chiquita escondida.`)}
+
+  ${h2('1. Lo que recopilamos')}
+  ${ul([
+    li('<strong>En los sitios web:</strong> estadísticas de uso (qué páginas se visitan, desde qué pueblo, con qué dispositivo) vía Google Analytics, y lo que buscas en el directorio o el mapa.'),
+    li('<strong>En El Veci:</strong> tu número de teléfono y los mensajes que envías. Sin eso no te podemos contestar.'),
+    li('<strong>Si te suscribes al correo:</strong> tu dirección de email.'),
+    li('<strong>Si registras un negocio o evento:</strong> la información que tú mismo nos das (nombre, teléfono comercial, dirección, horario).'),
+  ])}
+  ${p('No pedimos contraseñas, números de tarjeta (los pagos los procesa Stripe directamente) ni seguro social.')}
+
+  ${h2('2. Para qué la usamos')}
+  ${ul([
+    li('Contestarte y mejorar las respuestas del Veci.'),
+    li('Medir demanda de forma <strong>agregada</strong>: contamos qué se busca y cuántas veces (ej. "12 vecinos buscaron plomero este mes"). Esos números se publican sin nombre y sin número de teléfono.'),
+    li('Enviarte el newsletter solo si te suscribiste. Darte de baja es 1 click.'),
+  ])}
+
+  ${h2('3. Lo que NO hacemos')}
+  ${ul([
+    li('<strong>No vendemos tus datos.</strong> A nadie. Nunca.'),
+    li('No compartimos tu número de teléfono con negocios ni con terceros.'),
+    li('No usamos tus búsquedas para identificarte públicamente.'),
+    li('No hacemos publicidad dirigida con tu información.'),
+  ])}
+
+  ${h2('4. Búsquedas de salud')}
+  ${p('Buscar un médico, farmacia o especialista aquí <strong>no crea un expediente médico</strong> ni una relación médico-paciente. Somos un directorio informativo, no proveedores de salud. Las búsquedas de salud se tratan igual que todo lo demás: agregadas, sin identificarte. Si es una emergencia, no busques aquí: llama al 9-1-1 o ve a la sala de emergencias más cercana.')}
+
+  ${h2('5. Con quién compartimos (proveedores de servicio)')}
+  ${p('Para operar usamos: <strong>Twilio</strong> (mensajería SMS/WhatsApp), <strong>Supabase</strong> (base de datos), <strong>Vercel</strong> y hosting web, <strong>Google Analytics</strong> (estadísticas), <strong>Resend</strong> (correo) y <strong>Stripe</strong> (pagos). Cada uno recibe solo lo mínimo para funcionar, bajo sus propias políticas de privacidad. También podríamos divulgar información si una ley u orden judicial lo exige.')}
+
+  ${h2('6. Mensajería · El Veci (787-417-7711)')}
+  ${ul([
+    li('Solo te escribimos si tú escribiste primero o pediste un aviso.'),
+    li('Responde <strong>STOP</strong> y no recibes más mensajes.'),
+    li('Escríbenos <strong>BORRAR</strong> al 787-417-7711 (o un correo) y borramos tu historial de conversación.'),
+    li('Tu compañía celular puede cobrar tarifas de mensajes y data.'),
+  ])}
+
+  ${h2('7. Cookies')}
+  ${p('Usamos cookies de estadísticas (Google Analytics). No usamos cookies de publicidad. Puedes bloquearlas en tu navegador y el sitio sigue funcionando igual.')}
+
+  ${h2('8. Cuánto tiempo guardamos la información')}
+  ${p('Las conversaciones y señales se guardan mientras el servicio opere o hasta que pidas borrarlas. Las estadísticas agregadas (que no te identifican) se conservan como parte del archivo público del pueblo.')}
+
+  ${h2('9. Tus derechos')}
+  ${p('Puedes pedir ver lo que tenemos tuyo, corregirlo o borrarlo. Escríbenos <strong>BORRAR</strong> al 787-417-7711 o un correo a <a href="mailto:angel@angelanderson.com">angel@angelanderson.com</a>. Contestamos en menos de 30 días. Nota: el nombre, teléfono comercial y dirección de un negocio son información pública del negocio, no data personal; igual puedes pedir corrección en cualquier momento.')}
+
+  ${h2('10. Menores')}
+  ${p('Estos servicios son para adultos. No recopilamos información de menores de 13 años a sabiendas. Si un menor nos escribió, avísanos y lo borramos.')}
+
+  ${h2('11. Seguridad')}
+  ${p('La información vive en servidores con acceso restringido y cifrado en tránsito. Ningún sistema es 100% infalible; si algo pasara que afecte tu información, lo decimos.')}
+
+  ${h2('12. Cambios a esta política')}
+  ${p('Si esta política cambia, actualizamos la fecha de arriba. Los cambios grandes se anuncian en el sitio.')}
+
+  ${h2('13. Contacto')}
+  ${p('Angel Anderson · Cabo Rojo, Puerto Rico · <a href="mailto:angel@angelanderson.com">angel@angelanderson.com</a> · 787-417-7711.')}
+</div>
+</body>
+</html>`;
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400');
+  return res.status(200).send(html);
+}
+
+
 // /veci — "guarda a El Veci": tarjeta de contacto .vcf + botones WhatsApp/SMS + add to home screen.
 function handle_veci(req: any, res: any) {
   if (req.query?.vcf !== undefined) {
@@ -6429,6 +6546,7 @@ export default async function handler(req: any, res: any) {
     case 'me-conviene': return handle_me_conviene(req, res);
     case 'sistema': return handle_sistema(req, res);
     case 'cultura': return handle_cultura(req, res);
+    case 'privacidad': return handle_privacidad(req, res);
     default: return res.status(404).json({ error: 'Page not found' });
   }
 }

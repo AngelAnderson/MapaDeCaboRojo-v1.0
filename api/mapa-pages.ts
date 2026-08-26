@@ -2466,7 +2466,7 @@ const FAQ_ENTRIES: Array<{ q: string; a: string }> = [
   },
   {
     q: '¿Tienen política de privacidad? ¿Qué hacen con los datos del bot?',
-    a: 'Las búsquedas del bot se guardan agregadas (qué se busca, cuántas veces) — eso alimenta /senales-del-pueblo. NO compartimos números de teléfono individuales con terceros · NO vendemos datos personales · NO usamos las búsquedas pa\' identificar usuarios. Si quieres que borremos tu historial, textea "BORRAR" al 787-417-7711. Privacy policy formal en construcción.',
+    a: 'Las búsquedas del bot se guardan agregadas (qué se busca, cuántas veces) — eso alimenta /senales-del-pueblo. NO compartimos números de teléfono individuales con terceros · NO vendemos datos personales · NO usamos las búsquedas pa\' identificar usuarios. Si quieres que borremos tu historial, textea "BORRAR" al 787-417-7711. Política completa en /privacidad.',
   },
   {
     q: '¿Por qué algunas categorías están "saturadas" o "te necesitan"?',
