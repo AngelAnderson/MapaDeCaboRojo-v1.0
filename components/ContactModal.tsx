@@ -45,7 +45,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose, onSuggest,
           </div>
 
           {/* Business Card */}
-          <button onClick={() => window.open('https://wa.me/17874178228?text=Hola, tengo un negocio y quiero verificarlo.', '_blank')} className="w-full bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-700/50 p-3 rounded-2xl flex items-center justify-between group active:scale-95 transition-transform">
+          <button onClick={() => window.open('https://wa.me/17874177711?text=Hola, tengo un negocio y quiero verificarlo.', '_blank')} className="w-full bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-700/50 p-3 rounded-2xl flex items-center justify-between group active:scale-95 transition-transform">
               <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-amber-100 dark:bg-amber-800/30 rounded-full flex items-center justify-center text-amber-600 dark:text-amber-400">
                       <i className="fa-solid fa-briefcase"></i>
@@ -62,7 +62,7 @@ const ContactModal: React.FC<ContactModalProps> = ({ isOpen, onClose, onSuggest,
             <p className="text-[10px] font-bold text-ink-muted uppercase tracking-wider mb-2 text-center">{t('contact_socials')}</p>
             <div className="flex justify-center gap-4">
                 <button onClick={() => window.open('https://instagram.com/caborojomap', '_blank')} className="w-10 h-10 bg-pink-50 dark:bg-pink-900/20 hover:bg-pink-100 dark:hover:bg-pink-900/40 text-pink-600 dark:text-pink-400 rounded-full flex items-center justify-center transition-colors active:scale-90"><i className="fa-brands fa-instagram text-lg"></i></button>
-                <button onClick={() => window.open('https://wa.me/17874178228', '_blank')} className="w-10 h-10 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center transition-colors active:scale-90"><i className="fa-brands fa-whatsapp text-lg"></i></button>
+                <button onClick={() => window.open('https://wa.me/17874177711', '_blank')} className="w-10 h-10 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/40 text-green-600 dark:text-green-400 rounded-full flex items-center justify-center transition-colors active:scale-90"><i className="fa-brands fa-whatsapp text-lg"></i></button>
                 <button onClick={() => window.open('https://x.com/angelfanderson', '_blank')} className="w-10 h-10 bg-paper-2 hover:bg-line text-ink rounded-full flex items-center justify-center transition-colors active:scale-90"><i className="fa-brands fa-x-twitter text-lg"></i></button>
                 <button onClick={() => window.open('mailto:angel@caborojo.com', '_self')} className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-blue-600 dark:text-blue-400 rounded-full flex items-center justify-center transition-colors active:scale-90"><i className="fa-solid fa-envelope text-lg"></i></button>
             </div>
