@@ -12382,6 +12382,138 @@ ${SHARE_COPY_SCRIPT}
 // Fuente: OpenFEMA PublicAssistanceFundedProjectsDetails v2 (tabla pr_fema_projects_cr, corrida 12 jul 2026).
 // Honestidad del dato: "obligado" = dinero aprobado y comprometido. OpenFEMA NO publica desembolso por
 // proyecto — este récord nunca dice "gastado". Ese hueco se anota, no se disimula.
+// =============== /los-78 — La Nota de cada pueblo, sobre umbrales federales ===============
+// El marcador municipal. NO confundir con /marcador (metricas de salud de la isla).
+// La nota mide lo que el gobierno ENTREGO en cada pueblo, nunca lo que el pueblo vale.
+async function handleLos78(req: any, res: any) {
+  let rows: any[] = []
+  try {
+    const { data } = await supabase.from('marcador_municipio')
+      .select('municipio,region,nota,pt_mitigacion,pt_primaria,pt_salud_mental,pt_cupon,pt_especialistas,hpsa_primaria,hpsa_salud_mental,hpsa_primaria_centro,hpsa_salud_mental_centro,psiquiatras,especialistas,por_10k_hab,poblacion,estado_mitigacion,nuevo_en_camino,dias_vencido,pct_broadband,federal_obligado,proyectos,componentes_sin_dato')
+      .order('nota', { ascending: true })
+    rows = data || []
+  } catch (_) { /* empty */ }
+
+  const n = rows.length
+  const conNota = rows.filter(r => r.nota !== null)
+  const prom = conNota.length ? conNota.reduce((s, r) => s + Number(r.nota), 0) / conNota.length : 0
+  const fondo = conNota.filter(r => Number(r.nota) <= 1)
+  const tope = conNota.filter(r => Number(r.nota) >= 4.5)
+  const venc = rows.filter(r => r.estado_mitigacion === 'VENCIDO')
+  const vencSinNuevo = rows.filter(r => r.estado_mitigacion === 'VENCIDO' && !r.nuevo_en_camino)
+  const cupon = rows.filter(r => Number(r.pt_cupon) === 0)
+  const bajoUS = rows.filter(r => r.pct_broadband !== null && Number(r.pct_broadband) < 91.0)
+
+  const REG_CAP: Record<string, string> = { oeste: 'Oeste', este: 'Este', sur: 'Sur', norte: 'Norte', centro: 'Centro', metro: 'Metro', islas: 'Islas' }
+  const regAgg: Record<string, { n: number; tot: number }> = {}
+  for (const r of conNota) {
+    const k = r.region || '?'
+    regAgg[k] = regAgg[k] || { n: 0, tot: 0 }
+    regAgg[k].n++; regAgg[k].tot += Number(r.nota)
+  }
+  const regRows = Object.entries(regAgg).sort((a, b) => (a[1].tot / a[1].n) - (b[1].tot / b[1].n))
+    .map(([k, v]) => `<tr class="border-t border-slate-100"><td class="py-2 px-3 font-semibold text-slate-800">${escapeHtml(REG_CAP[k] || k)}</td><td class="py-2 px-3 text-right">${v.n}</td><td class="py-2 px-3 text-right font-bold">${(v.tot / v.n).toFixed(2)}</td></tr>`).join('')
+
+  const luz = (nota: number) => nota >= 4 ? ['🟢', 'text-emerald-700', ''] : nota >= 2.5 ? ['🟡', 'text-amber-700', ''] : ['🔴', 'text-red-700', 'bg-red-50/40']
+  const tick = (p: any) => p === null ? '<span class="text-slate-300" title="sin dato">·</span>'
+    : Number(p) === 1 ? '<span class="text-emerald-600 font-bold">✓</span>'
+    : Number(p) === 0.5 ? '<span class="text-amber-600 font-bold">½</span>'
+    : '<span class="text-red-500 font-bold">✗</span>'
+
+  const tabla = rows.map((r, i) => {
+    const nota = Number(r.nota)
+    const [em, cls, bg] = luz(nota)
+    return `<tr class="border-t border-slate-100 ${bg}">
+      <td class="py-2 px-3 text-xs text-slate-400 text-right">${i + 1}</td>
+      <td class="py-2 px-3"><a href="/pueblo/${specToUrl(r.municipio)}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${em} ${escapeHtml(r.municipio)}</a></td>
+      <td class="py-2 px-3 text-xs text-slate-500">${escapeHtml(REG_CAP[r.region] || r.region || '—')}</td>
+      <td class="py-2 px-3 text-right font-black ${cls} whitespace-nowrap">${r.nota === null ? '—' : nota.toFixed(1)}</td>
+      <td class="py-2 px-3 text-center">${tick(r.pt_mitigacion)}</td>
+      <td class="py-2 px-3 text-center">${tick(r.pt_primaria)}</td>
+      <td class="py-2 px-3 text-center">${tick(r.pt_salud_mental)}</td>
+      <td class="py-2 px-3 text-center">${tick(r.pt_cupon)}</td>
+      <td class="py-2 px-3 text-center">${tick(r.pt_especialistas)}</td>
+    </tr>`
+  }).join('')
+
+  const body = `
+<h1>La Nota de los 78</h1>
+<p class="text-lg text-slate-600 mt-2">Cada pueblo de Puerto Rico, con una nota de 0 a 5 armada sobre <strong>5 umbrales federales que son sí o no</strong>. No hay opinión adentro: no se pondera, se cuenta. <strong>La nota mide lo que el gobierno entregó en ese pueblo, no lo que el pueblo vale ni lo que su gente hace.</strong></p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">El dato</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">La nota promedio de Puerto Rico es ${prom.toFixed(2)} de 5.0. ${fondo.length} pueblos están en 1.0 o menos. ${tope.length} llegan a 4.5 o más.</p>
+  <p class="text-slate-300 mt-2 text-sm leading-relaxed">${venc.length} de los 78 tienen el plan de mitigación vencido ante FEMA, y ${vencSinNuevo.length} lo tienen vencido <strong>sin uno nuevo en trámite</strong>. ${cupon.length} tienen designación federal de escasez de salud mental y cero psiquiatras: el cupón está aprobado y nadie lo cobra.</p>
+</div>
+
+${shareRow({ text: `La nota de cada pueblo de Puerto Rico, sobre 5 umbrales federales de sí o no. Promedio de la isla: ${prom.toFixed(2)} de 5.0. ${fondo.length} pueblos en 1.0 o menos. Busca el tuyo:`, url: 'https://puertoricosinfiltros.com/los-78', toWho: 'Al que dice que su pueblo está igual que los demás.' })}
+
+<h2>Los 5 puntos, y de dónde sale cada uno</h2>
+<ol class="text-slate-700">
+  <li><strong>Plan de mitigación vigente ante FEMA.</strong> Vigente vale 1 punto. Vencido pero con uno nuevo en trámite vale medio punto. Vencido y sin nada en camino vale 0. Fuente: el récord de planes de mitigación de FEMA.</li>
+  <li><strong>Sin designación federal de escasez de cuidado primario</strong> del municipio completo. Fuente: HRSA.</li>
+  <li><strong>Sin designación federal de escasez de salud mental</strong> del municipio completo. Fuente: HRSA.</li>
+  <li><strong>Sin cupón federal sin cobrar:</strong> que el pueblo no esté al mismo tiempo designado en salud mental y con cero psiquiatras. Fuente: HRSA cruzado con el registro federal NPPES.</li>
+  <li><strong>Al menos 5 especialistas por cada 10,000 habitantes.</strong> Fuente: NPPES cruzado con el Censo.</li>
+</ol>
+
+<h2>Por región</h2>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm">
+    <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Región</th><th class="py-2 px-3 text-right">Pueblos</th><th class="py-2 px-3 text-right">Nota promedio</th></tr></thead>
+    <tbody>${regRows}</tbody>
+  </table>
+</div>
+
+<h2>Los 78, de la nota más baja a la más alta</h2>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-sm">
+    <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+      <th class="py-2 px-3 text-right">#</th><th class="py-2 px-3">Pueblo</th><th class="py-2 px-3">Región</th><th class="py-2 px-3 text-right">Nota</th>
+      <th class="py-2 px-3 text-center" title="Plan de mitigación vigente ante FEMA">Mitig.</th>
+      <th class="py-2 px-3 text-center" title="Sin escasez federal de cuidado primario">Primaria</th>
+      <th class="py-2 px-3 text-center" title="Sin escasez federal de salud mental">S. mental</th>
+      <th class="py-2 px-3 text-center" title="Sin cupón federal sin cobrar">Cupón</th>
+      <th class="py-2 px-3 text-center" title="Al menos 5 especialistas por 10,000 habitantes">Espec.</th>
+    </tr></thead>
+    <tbody>${tabla}</tbody>
+  </table>
+</div>
+<p class="text-sm text-slate-500 mt-2">✓ el pueblo tiene lo que debería tener · ½ medio punto · ✗ no lo tiene · · sin dato. 🟢 4.0 o más · 🟡 entre 2.5 y 3.9 · 🔴 bajo 2.5. Toca el nombre del pueblo pa' ver su expediente completo.</p>
+
+<h2>Método y límites (léelo antes de citar)</h2>
+<ul class="text-slate-700">
+  <li><strong>Luz, basura y agua NO están en la nota.</strong> Existen como récord de la isla completa, pero las fuentes federales no las publican por municipio. Cortarlas por pueblo sería inventar, y un solo componente inventado tumba el índice entero. Cuando salga la fuente municipal, entran y se dice el día que entraron.</li>
+  <li><strong>Solo cuentan las designaciones del municipio completo.</strong> HRSA también designa centros de salud federalmente calificados, y todo centro de esos carga una designación automática. Contarla haría ver a Ponce, Bayamón, Mayagüez, Caguas, San Juan y Guaynabo como pueblos con escasez por el simple hecho de tener una clínica. Esas designaciones se guardan aparte y no puntúan. ${rows.filter(r => Number(r.hpsa_primaria_centro) > 0 || Number(r.hpsa_salud_mental_centro) > 0).length} pueblos tienen una.</li>
+  <li><strong>Un pueblo sin designación gana el punto aunque tenga cero psiquiatras.</strong> Que no exista designación no prueba que no haga falta: puede ser que nadie la haya sometido. Eso no es un error de la nota, es el hueco que vive en <a href="/no-se-mide" class="text-teal-700 font-semibold">/no-se-mide</a>.</li>
+  <li><strong>Ninguna nota sale de una muestra incompleta.</strong> Si a un pueblo le falta un componente, se marca con punto y la nota lo dice. Hoy los 78 tienen los 5 componentes.</li>
+  <li>Dato de contexto que no puntúa: ${bajoUS.length} de los 78 pueblos están bajo el nivel de Estados Unidos en hogares con banda ancha (91.0%, ACS 2024 5-year, tabla B28002). Está bajo el nivel casi toda la isla, así que como punto no distingue a nadie; como dato, dice bastante.</li>
+  <li>¿Un número está mal? Se corrige en público: <a href="/rompelo" class="text-teal-700 font-semibold">/rompelo</a>. Si eres del municipio y el récord federal está desactualizado, eso también se anota, con tu nombre y la fecha.</li>
+</ul>
+${SHARE_COPY_SCRIPT}
+`
+
+  const jsonLd = {
+    '@context': 'https://schema.org', '@type': 'Dataset',
+    name: 'La Nota de los 78: cada municipio de Puerto Rico sobre 5 umbrales federales',
+    description: `Los 78 municipios de Puerto Rico con una nota de 0 a 5 armada sobre 5 umbrales federales binarios: plan de mitigación vigente ante FEMA, designación HPSA de cuidado primario, designación HPSA de salud mental, cupón federal sin cobrar, y especialistas por cada 10,000 habitantes. Promedio de la isla: ${prom.toFixed(2)}. ${fondo.length} municipios en 1.0 o menos. Fuentes: FEMA, HRSA, NPPES/CMS, Censo.`,
+    distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/los-78', encodingFormat: 'text/html' },
+    license: 'https://creativecommons.org/licenses/by/4.0/',
+    creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/los-78',
+    spatialCoverage: { '@type': 'Place', name: 'Puerto Rico' },
+    keywords: ['municipios', 'Puerto Rico', 'FEMA', 'HPSA', 'HRSA', 'NPPES', 'mitigación', 'salud', 'marcador'],
+  }
+
+  res.status(200).send(layout({
+    title: 'La Nota de los 78: cómo va tu pueblo contra el récord federal',
+    description: `Cada municipio de PR con una nota de 0 a 5 sobre 5 umbrales federales de sí o no. Promedio de la isla: ${prom.toFixed(2)}. ${fondo.length} pueblos en 1.0 o menos. Busca el tuyo.`,
+    slug: 'los-78', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
 async function handleSemaforoFema(req: any, res: any) {
   let rows: any[] = []
   try {
@@ -21296,6 +21428,7 @@ export default async function handler(req: any, res: any) {
     case 'metodologia': return handleMetodologia(req, res)
     case 'contradicciones': return await handleContradicciones(req, res)
     case 'semaforo-fema': return await handleSemaforoFema(req, res)
+    case 'los-78': return await handleLos78(req, res)
     case 'funciona': return await handleFunciona(req, res)
     case 'salud-que-falta': return await handleSaludQueFalta(req, res)
     case 'retiro': return await handleRetiro(req, res)

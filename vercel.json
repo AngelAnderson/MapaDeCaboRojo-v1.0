@@ -476,6 +476,10 @@
       "destination": "/api/mapa-pages?page=semaforo-fema"
     },
     {
+      "source": "/los-78",
+      "destination": "/api/mapa-pages?page=los-78"
+    },
+    {
       "source": "/rompelo",
       "destination": "/api/mapa-pages?page=rompelo"
     },
