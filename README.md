@@ -4,8 +4,8 @@
 
 | Sitio | Qué es |
 |---|---|
-| [mapadecaborojo.com](https://www.mapadecaborojo.com) | Mapa + directorio verificado de Cabo Rojo (1,000+ negocios en CR, 12,000+ listados en PR) con El Veci detrás |
-| [registromedicopr.com](https://registromedicopr.com) | Registro de especialistas médicos de PR (NPPES): 6,300+ verificados, 32 especialidades × 5 regiones × 78 pueblos, desiertos médicos, guías por situación, bilingüe ES/EN |
+| [mapadecaborojo.com](https://www.mapadecaborojo.com) | Mapa + directorio de Cabo Rojo (1,173 negocios en CR, 35,621 fichas publicadas en PR) con El Veci detrás |
+| [registromedicopr.com](https://registromedicopr.com) | Registro de especialistas médicos de PR pareado contra NPPES: 30,622 fichas con NPI federal, 32 especialidades × 5 regiones × 78 pueblos, desiertos médicos, guías por situación, bilingüe ES/EN |
 | [puertoricosinfiltros.com](https://puertoricosinfiltros.com) | Récords cívicos con data verificable: el número, la fuente, y qué hacer con él |
 
 **El Veci** — textea al **787-417-7711** (SMS o [WhatsApp](https://wa.me/17874177711)) y te contesta 24/7. Guárdalo: [/veci](https://www.mapadecaborojo.com/veci).
@@ -60,5 +60,51 @@ React + TypeScript + Vite (frontend del mapa) · Vercel serverless (14 fns, pág
 **Deploy:** push a `main` → Vercel auto-deploy. El bot vive en el repo Vecinoai (edge functions de Supabase, 1,140 tests).
 
 ---
+
+## El marcador honesto
+
+Corrido contra la base el **2026-08-27**. Se re-corre, no se cita de memoria.
+
+```sql
+select count(*) filter (where visibility='published') as publicadas,
+       count(*) filter (where visibility='published' and npi is not null) as con_npi_federal,
+       count(*) filter (where visibility='published' and verification_source is not null
+         and verification_source !~* '(nppes|sulme|google_places|merge)') as confirmadas_por_persona
+from places;
+```
+
+| | |
+|---|---|
+| Fichas publicadas | **35,621** |
+| Municipios cubiertos | **78** |
+| Pareadas al registro federal NPPES | **30,622** |
+| **Confirmadas por una persona** | **292** (0.8%) |
+| Señales de demanda humana, 90 días | 676, de 374 personas |
+
+**Importado no es verificado.** Una ficha copiada de NPPES es la misma que ya tiene el plan médico: no hereda nada y no se vende como chequeo. Por eso el sello tiene 3 niveles y no 1, y por eso el nivel más alto solo lo escribe una persona. Ese 0.8% es la deuda, y es el trabajo.
+
+Si un directorio no te enseña esta proporción, también la tiene.
+
+## Las 5 reglas de la data
+
+Cada una costó un incidente real:
+
+1. **Importado no es verificado.** El reclamo se parte por `verification_source` o no se hace.
+2. **La exclusión de sintéticos se define por la FUENTE del tráfico, nunca por el canal.** Todo canal nuevo llega sin filtro por defecto.
+3. **Un cero no es evidencia.** Una sección sin instrumentar reporta "no medido", no "cero".
+4. **El sello dice quién confirmó** (`procedenciaSello()`, `api/_lib/procedencia.ts`): persona, fuente corroborada, o copia de registro que no reclama nada.
+5. **Un dato interno también se vence.** Todo número lleva la fecha en que se verificó, incluidos los de este archivo.
+
+## Dónde termina el sistema
+
+Nombrado a propósito, porque son las costuras:
+
+- **La llamada.** De 157 teléfonos medidos con Twilio Lookup, solo 39.5% son móviles. Al resto no le llega un texto, y confirmar "¿todavía toman ese plan?" termina en una persona marcando una recepción en horario de oficina.
+- **El claim form que nadie llena.** Es el camino más barato a una ficha confirmada y el más lento en la práctica.
+- **La ausencia.** Probar que un pueblo NO tiene cardiólogo cuesta más que listar los que hay, y es el dato que de verdad cambia lo que una familia hace después.
+
+---
+
+¿Redacción, plan médico o municipio que necesita esta data con chequeo verificable? Escribe a **angel@angelanderson.com** y dime qué estás tratando de probar.
 
 Hecho en Cabo Rojo por [Angel Anderson](https://angelanderson.com) — una persona, con AI. *Menos revolú, más sistema, mejor vida.*
