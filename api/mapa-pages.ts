@@ -9533,6 +9533,14 @@ async function handleExpedientePlanVital(req: any, res: any) {
 // método verificada: places.municipality == pueblo NPPES en 4,923 de 4,925 NPIs compartidos, y
 // el mismo SQL reproduce exacto los titulares publicados de Plan Vital: 43.4% jul / 45.5% feb).
 // La contradicción mide DESACUERDO entre 2 fuentes oficiales; no dice cuál tiene razón.
+// ⚠️ DERIVA CONOCIDA (27 ago 2026): la edición vigente ganó 34 filas con NPI al re-cruzar
+// contra el registro de hoy (solo aditivo, ninguna fila perdió ni cambió de NPI). O sea
+// `conNpi` real = 7,210 y NPIs distintos = 5,580, contra los 7,176 / 5,565 horneados aquí.
+// NO se actualizó el bloque a medias a propósito: `puebloContra` y los porcentajes salen de
+// un conteo POR FILA-PUEBLO (un proveedor listado en 2 pueblos cuenta 2 veces), y al intentar
+// reproducirlo por NPI dio 158/164/169 contra los 293/347/360 publicados. Mientras el SQL
+// original no se vuelva a correr entero, mover una cifra sola dejaría la página contradiciendo
+// su propio método, que es peor que 34 filas de deriva. Re-hornear las 3 ediciones de una.
 const MMM_TITULARES = {
   vig: { // jun 2026, línea Individuales
     filas: 13782, conNpi: 7176, puebloComparables: 7176, puebloContra: 360, pueblopct: 5.0,
