@@ -6397,13 +6397,26 @@ async function handleEspecialista(req: any, res: any) {
   //
   // Lo que sí faltaba es que se conozcan. Mismo teléfono + sin NPI + otro slug = la ficha
   // de negocio de esta misma oficina.
+  //
+  // ⚠️ El teléfono NO basta como identidad, y esto casi se va así a producción: por teléfono
+  // solo, la ficha de Fasima Corp (ambulancia) enlazaba a "Funeraria Valle", y la de un
+  // laboratorio clínico a un hospital psiquiátrico. Son centrales compartidas, la misma
+  // trampa de los 787-892-1860 del Hospital de La Concepción. Se exige además que los 2
+  // nombres compartan una palabra de verdad.
+  const PALABRA_VACIA = new Set(['DR', 'DRA', 'INC', 'CORP', 'LLC', 'PSC', 'CSP', 'CABO', 'ROJO',
+    'CLINICA', 'CENTRO', 'HEALTH', 'MEDICAL', 'SERVICES', 'GROUP', 'PUERTO', 'RICO', 'SAN', 'DE', 'LA'])
+  const palabras = (t: string) => new Set(
+    (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase()
+      .split(/[^A-Z]+/).filter(w => w.length >= 4 && !PALABRA_VACIA.has(w)))
   let negocioEnMapa: { slug: string; name: string } | null = null
   if (place.phone) {
     const { data } = await supabase.from('places')
       .select('slug,name').eq('phone', place.phone).is('npi', null)
       .eq('visibility', 'published').eq('status', 'open')
-      .not('slug', 'is', null).neq('id', place.id).limit(1)
-    const n = (data || [])[0]
+      .eq('municipality', place.municipality)
+      .not('slug', 'is', null).neq('id', place.id).limit(5)
+    const mias = palabras(place.name)
+    const n = (data || []).find((c: any) => [...palabras(c.name)].some(w => mias.has(w)))
     if (n) negocioEnMapa = { slug: n.slug, name: n.name }
   }
   const negocioHtml = !negocioEnMapa ? '' : `<p class="not-prose mt-4 text-sm text-slate-600">${t('Esta misma oficina tiene su ficha de negocio en el directorio de Cabo Rojo, con horario y reseñas:', 'This same office has its business listing in the Cabo Rojo directory, with hours and reviews:')} <a href="https://www.mapadecaborojo.com/negocio/${encodeURIComponent(negocioEnMapa.slug)}" class="text-teal-700 font-semibold underline">${escapeHtml(negocioEnMapa.name)} →</a></p>`
