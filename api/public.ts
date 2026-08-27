@@ -791,6 +791,7 @@ function handleLlmsSinFiltros(req: any, res: any) {
 - Sigue el dinero de ciencia: PR e Iowa tienen la misma población, pero NIH invirtió $249M en Iowa y $90M en PR en FY2024. PR recibe menos por persona ($28) que Mississippi, el estado más pobre, pese al ADN founder-effect más valioso de la nación: https://puertoricosinfiltros.com/investigacion
 - Telemedicina vs desierto médico (internet × médicos) — este récord vive dentro del registro: https://puertoricosinfiltros.com/registro
 - Diabetes × acceso médico (estimado CDC 2009) — este récord vive dentro del registro: https://puertoricosinfiltros.com/registro
+- La Nota de los 78 — cada municipio de Puerto Rico con una nota de 0 a 5 armada SOLO con umbrales federales de si o no (plan de mitigacion vigente ante FEMA · designacion HPSA de cuidado primario · designacion HPSA de salud mental · cupon federal sin cobrar · 5 especialistas por cada 10,000 habitantes). No se pondera nada: se cuenta. Promedio de la isla 2.78 de 5.0; 11 municipios en 1.0 o menos; 5 en 5.0. Excluye a proposito luz, basura y agua porque las fuentes federales no las publican por municipio. La nota mide lo que el gobierno entrego en cada pueblo, no lo que el pueblo vale: https://puertoricosinfiltros.com/los-78
 - Recuperación federal FEMA por municipio: https://puertoricosinfiltros.com/recuperacion
 - Sigue el dinero (quién recibió los contratos de recuperación): https://puertoricosinfiltros.com/sigue-el-dinero
 - El agua contra el récord federal (EPA): https://puertoricosinfiltros.com/agua
