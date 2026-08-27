@@ -6388,6 +6388,26 @@ async function handleEspecialista(req: any, res: any) {
     ? `<p class="not-prose mt-3 text-xs text-slate-500">${t('Ojo con la diferencia: el bloque verde es lo que dijo la oficina, y ese manda. Los demás dicen lo que cada plan imprimió en su directorio, no si te van a coger. Y si un plan no aparece aquí, eso NO quiere decir que el médico esté fuera de esa red: el cruce por número federal identifica el 33% de las filas del Plan Vital, el 51% de las de Triple-S Advantage y el 52% de las de MMM, así que casi siempre significa que esa fila no se pudo cruzar. Ojo también con las fechas: los directorios no salen el mismo día, así que uno puede estar más al día que otro. Antes de cambiarte de plan, confirma con la oficina.', 'These blocks say what each plan printed in its directory, not whether they will take you. And a plan missing here does NOT mean the provider is out of that network: the federal-number cross-check identifies 33% of Plan Vital directory rows, 51% of Triple-S Advantage\'s and 52% of MMM\'s, so it almost always means that row could not be matched. Note the dates too: these directories are not published on the same day, so one may be more current than another. Before switching plans, confirm with the office.')}</p>`
     : ''
 
+  // ═══ El mismo negocio, visto desde la otra propiedad ═══
+  // Angel pidió "fundirlas" cuando vio 2 páginas de la Dra. Joshara Pérez. NO se funden:
+  // son 2 productos distintos sobre la misma dirección. El Registro publica a la PERSONA
+  // (NPI, planes, si coge pacientes); el Mapa publica el NEGOCIO (horario, reseñas, qué
+  // vende). Fundirlas borraría una ficha viva de otra propiedad, que es justo el error que
+  // ya nos costó caro al deduplicar por NPI.
+  //
+  // Lo que sí faltaba es que se conozcan. Mismo teléfono + sin NPI + otro slug = la ficha
+  // de negocio de esta misma oficina.
+  let negocioEnMapa: { slug: string; name: string } | null = null
+  if (place.phone) {
+    const { data } = await supabase.from('places')
+      .select('slug,name').eq('phone', place.phone).is('npi', null)
+      .eq('visibility', 'published').eq('status', 'open')
+      .not('slug', 'is', null).neq('id', place.id).limit(1)
+    const n = (data || [])[0]
+    if (n) negocioEnMapa = { slug: n.slug, name: n.name }
+  }
+  const negocioHtml = !negocioEnMapa ? '' : `<p class="not-prose mt-4 text-sm text-slate-600">${t('Esta misma oficina tiene su ficha de negocio en el directorio de Cabo Rojo, con horario y reseñas:', 'This same office has its business listing in the Cabo Rojo directory, with hours and reviews:')} <a href="https://www.mapadecaborojo.com/negocio/${encodeURIComponent(negocioEnMapa.slug)}" class="text-teal-700 font-semibold underline">${escapeHtml(negocioEnMapa.name)} →</a></p>`
+
   const mapsEmbed = (place.lat && place.lon)
     ? `https://maps.google.com/maps?q=${place.lat},${place.lon}&z=15&output=embed`
     : `https://maps.google.com/maps?q=${encodeURIComponent((place.address || (muni + ', Puerto Rico')))}&z=13&output=embed`
@@ -6429,7 +6449,7 @@ async function handleEspecialista(req: any, res: any) {
       : `<div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${lang === 'en' ? 'Does this office take your plan?' : '¿Aceptan tu plan?'}</div><div class="text-slate-700 text-sm mt-1">${lang === 'en' ? 'Nobody has confirmed this office’s plans yet. Ask when you call, then help the next person below.' : 'Nadie ha confirmado los planes de esta oficina todavía. Pregunta cuando llames, y ayuda al próximo abajo.'}</div></div>`}
     ${reportedPlans.length ? `<div class="bg-sky-50 border border-sky-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-sky-700 font-bold">${lang === 'en' ? 'Neighbors report this office takes' : 'Vecinos reportan que aquí aceptan'}</div><div class="text-sky-900 font-semibold mt-1">${reportedPlans.map((r: any) => `${escapeHtml(planLabel(r.plan))}${Number(r.reportes) > 1 ? ` <span class="text-xs text-sky-600">(${r.reportes})</span>` : ''}`).join(' · ')}</div><div class="text-xs text-sky-700 mt-1">${lang === 'en' ? 'Reported by people who called, not confirmed by the office. Always double-check when you call.' : 'Reportado por gente que llamó, no confirmado por la oficina. Siempre verifica cuando llames.'}</div></div>` : ''}
   </div>
-${planDirHtml}${tsHtml}${fmvHtml}${planesNota}
+${planDirHtml}${tsHtml}${fmvHtml}${planesNota}${negocioHtml}
 ${puertaHub}
 
   <div class="not-prose mt-4 bg-white border border-slate-200 rounded-2xl p-5">
