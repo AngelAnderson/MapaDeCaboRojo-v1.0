@@ -4,7 +4,7 @@
 
 | Sitio | Qué es |
 |---|---|
-| [mapadecaborojo.com](https://www.mapadecaborojo.com) | Mapa + directorio de Cabo Rojo (1,173 negocios en CR, 35,621 fichas publicadas en PR) con El Veci detrás |
+| [mapadecaborojo.com](https://www.mapadecaborojo.com) | Mapa + directorio de Cabo Rojo (1,173 negocios en CR, 35,614 fichas publicadas en PR) con El Veci detrás |
 | [registromedicopr.com](https://registromedicopr.com) | Registro de especialistas médicos de PR pareado contra NPPES: 30,622 fichas con NPI federal, 32 especialidades × 5 regiones × 78 pueblos, desiertos médicos, guías por situación, bilingüe ES/EN |
 | [puertoricosinfiltros.com](https://puertoricosinfiltros.com) | Récords cívicos con data verificable: el número, la fuente, y qué hacer con él |
 
@@ -75,7 +75,7 @@ from places;
 
 | | |
 |---|---|
-| Fichas publicadas | **35,621** |
+| Fichas publicadas | **35,614** |
 | Municipios cubiertos | **78** |
 | Pareadas al registro federal NPPES | **30,622** |
 | **Confirmadas por una persona** | **292** (0.8%) |
