@@ -6084,7 +6084,7 @@ async function handleEspecialista(req: any, res: any) {
 
   const { data: place } = await supabase
     .from('places')
-    .select('id,name,subcategory,municipality,region,phone,address,npi,lat,lon,slug,last_verified_at,accepted_plans,cms_rating,cms_rating_type,dato_reportado,visibility,status,npi_status')
+    .select('id,name,subcategory,municipality,region,phone,address,npi,lat,lon,slug,last_verified_at,accepted_plans,cms_rating,cms_rating_type,dato_reportado,visibility,status,npi_status,verification_source')
     .eq('slug', slug).not('npi', 'is', null).maybeSingle()
 
   // Un proveedor cerrado no lleva página pública con botón de llamar.
@@ -6312,12 +6312,6 @@ async function handleEspecialista(req: any, res: any) {
     ${tsAdv.otroTel ? `<p class="m-0 mt-2 text-[15px] text-teal-900">${t('Triple-S publica otro número para esta oficina:', 'Triple-S publishes another number for this office:')} <a href="tel:${escapeHtml(tsAdv.otroTel)}" class="font-bold underline">${escapeHtml(tsAdv.otroTel.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3'))}</a>. ${t('Si el de arriba no contesta, prueba ese.', 'If the one above does not answer, try that one.')}</p>` : ''}
   </div>`
 
-  // La nota que evita el peor uso de esta página: que alguien se cambie de plan porque
-  // "aquí no salía". Solo se publica lo que SÍ se encontró; el silencio no es evidencia.
-  const planesNota = (planDirHtml || fmvHtml || tsHtml)
-    ? `<p class="not-prose mt-3 text-xs text-slate-500">${t('Estos bloques dicen lo que cada plan imprimió en su directorio, no si te van a coger. Y si un plan no aparece aquí, eso NO quiere decir que el médico esté fuera de esa red: el cruce por número federal identifica el 33% de las filas del Plan Vital, el 51% de las de Triple-S Advantage y el 52% de las de MMM, así que casi siempre significa que esa fila no se pudo cruzar. Ojo también con las fechas: los directorios no salen el mismo día, así que uno puede estar más al día que otro. Antes de cambiarte de plan, confirma con la oficina.', 'These blocks say what each plan printed in its directory, not whether they will take you. And a plan missing here does NOT mean the provider is out of that network: the federal-number cross-check identifies 33% of Plan Vital directory rows, 51% of Triple-S Advantage\'s and 52% of MMM\'s, so it almost always means that row could not be matched. Note the dates too: these directories are not published on the same day, so one may be more current than another. Before switching plans, confirm with the office.')}</p>`
-    : ''
-
   // El hub del pueblo: cuántos hay de lo mismo ahí, y el enlace que lo abre.
   let puertaHub = ''
   if (spec && muni) {
@@ -6348,14 +6342,58 @@ async function handleEspecialista(req: any, res: any) {
   // Disponibilidad verificada (registro_provider_status = la misma tabla del Censo).
   // La regla de /registro/censo aplica aquí también: dato >90 días vuelve a "desconocido".
   const { data: pstat } = await supabase.from('registro_provider_status')
-    .select('accepting_patients,wait_note,verified_at,verified_by')
+    .select('accepting_patients,wait_note,verified_at,verified_by,plans')
     .eq('place_slug', place.slug).order('verified_at', { ascending: false }).limit(1)
   const st0 = pstat?.[0] || null
+  const stFresh0 = st0   // los planes se muestran con su fecha aunque pasen 90 días: un contrato
+                         // dura más que una agenda, y la fecha impresa es la que avisa.
   const stFresh = st0 && st0.verified_at && (Date.now() - new Date(String(st0.verified_at) + 'T12:00:00').getTime()) < 90 * 86400000 ? st0 : null
   const stDate = stFresh ? new Date(String(stFresh.verified_at) + 'T12:00:00').toLocaleDateString(lang === 'en' ? 'en-US' : 'es-PR', { day: 'numeric', month: 'long', year: 'numeric' }) : null
   const dispoHtml = !stFresh || stFresh.accepting_patients == null ? '' : stFresh.accepting_patients
     ? `<div class="bg-emerald-50 border-2 border-emerald-300 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-emerald-700 font-bold">${lang === 'en' ? '✓ Accepting new patients' : '✓ Aceptando pacientes nuevos'}</div><div class="text-emerald-900 font-semibold mt-1">${lang === 'en' ? `Confirmed ${stDate}` : `Confirmado ${stDate}`}${stFresh.wait_note ? ` · ${escapeHtml(stFresh.wait_note)}` : ''}</div><div class="text-xs text-emerald-700 mt-1">${lang === 'en' ? 'Verified directly, with a date — part of the Real Medical Census. Things change: confirm when you call.' : 'Verificado directo, con fecha — parte del Censo Médico Real. Esto cambia: confirma cuando llames.'}</div></div>`
     : `<div class="bg-rose-50 border border-rose-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-rose-700 font-bold">${lang === 'en' ? 'Not accepting new patients' : 'No está aceptando pacientes nuevos'}</div><div class="text-rose-900 font-semibold mt-1">${lang === 'en' ? `Confirmed ${stDate}` : `Confirmado ${stDate}`}${stFresh.wait_note ? ` · ${escapeHtml(stFresh.wait_note)}` : ''}</div><div class="text-xs text-rose-700 mt-1">${lang === 'en' ? 'Save the call. See other options below, or have El Veci ask the offices for you:' : 'Ahórrate la llamada. Mira otras opciones más abajo, o deja que el Veci les pregunte por ti:'} <a href="https://wa.me/17874177711?text=${spec ? spec.kw : 'ESPECIALISTA'}" class="font-bold underline">${PHONE_CTA}</a></div></div>`
+
+  // ═══ Lo que dijo la OFICINA sobre sus planes ═══
+  // Va ARRIBA de los bloques de directorio a propósito, y esa jerarquía es la doctrina
+  // entera: un PDF dice a quién el plan metió en su red; la oficina dice con qué planes
+  // trabaja. Cuando los 2 hablan, manda quien contesta el teléfono.
+  //
+  // Esto estaba roto de la forma más tonta: la consulta de arriba pedía accepting_patients
+  // y verified_at pero NUNCA pidió `plans`, así que 12 oficinas que nos escribieron con su
+  // lista completa de planes no salían en ningún lado, mientras la página sí mostraba lo
+  // que imprimió un PDF de un plan médico. Enseñábamos la fuente débil y escondíamos la
+  // fuerte. Peor: /registro ya prometía "qué planes acepta" desde hace semanas.
+  //
+  // Fuente doble a propósito: registro_provider_status.plans (Censo) y places.accepted_plans
+  // (formulario de reclamo), porque el dato entró por las 2 puertas en distintos momentos.
+  const planesOficina: string[] = (stFresh0?.plans && stFresh0.plans.length ? stFresh0.plans
+    : (Array.isArray(place.accepted_plans) ? place.accepted_plans : [])) as string[]
+  const planesFecha = st0?.verified_at ? String(st0.verified_at).slice(0, 10)
+    : (place.last_verified_at ? String(place.last_verified_at).slice(0, 10) : null)
+  const planesFechaTxt = planesFecha
+    ? new Date(planesFecha + 'T12:00:00').toLocaleDateString(lang === 'en' ? 'en-US' : 'es-PR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null
+  // Quién lo dijo, en cristiano. Nunca se imprime el nombre técnico de la fuente.
+  const quienLoDijo = (() => {
+    const v = String(st0?.verified_by || place.verification_source || '').toLowerCase()
+    if (v.includes('email') || v.includes('correo')) return t('por correo', 'by email')
+    if (v.includes('sms') || v.includes('7711') || v.includes('whatsapp')) return t('por mensaje de texto', 'by text message')
+    if (v.includes('claim') || v.includes('reclamo') || v.includes('form')) return t('por el formulario de esta página', 'through this page\'s form')
+    if (v.includes('oficina') || v.includes('medico') || v.includes('doctor')) return t('directamente', 'directly')
+    return null
+  })()
+  const planesOficinaHtml = !planesOficina.length ? '' : `<div class="not-prose mt-5 bg-emerald-50 border-2 border-emerald-300 rounded-xl p-4">
+    <p class="m-0 text-xs uppercase tracking-wide text-emerald-700 font-bold">${t('Lo dijo la oficina', 'Straight from the office')}</p>
+    <p class="m-0 mt-1 text-[15px] text-emerald-900">${t('Estos son los planes con los que dijo que trabaja', 'These are the plans they said they work with')}${planesFechaTxt ? `, ${t('confirmado el', 'confirmed on')} <strong>${planesFechaTxt}</strong>` : ''}${quienLoDijo ? ` ${quienLoDijo}` : ''}:</p>
+    <p class="m-0 mt-2 flex flex-wrap gap-1.5">${planesOficina.map(pl => `<span class="inline-block bg-white border border-emerald-300 text-emerald-900 rounded-lg px-2 py-1 text-sm font-semibold">${escapeHtml(String(pl))}</span>`).join('')}</p>
+    <p class="m-0 mt-2 text-sm text-emerald-800">${t('Esto no sale de un directorio: lo dijo la propia oficina. Aun así, los contratos cambian — confirma cuando llames.', 'This does not come from a directory: the office said it themselves. Contracts still change, so confirm when you call.')}</p>
+  </div>`
+
+  // La nota que evita el peor uso de esta página: que alguien se cambie de plan porque
+  // "aquí no salía". Solo se publica lo que SÍ se encontró; el silencio no es evidencia.
+  const planesNota = (planDirHtml || fmvHtml || tsHtml || planesOficinaHtml)
+    ? `<p class="not-prose mt-3 text-xs text-slate-500">${t('Ojo con la diferencia: el bloque verde es lo que dijo la oficina, y ese manda. Los demás dicen lo que cada plan imprimió en su directorio, no si te van a coger. Y si un plan no aparece aquí, eso NO quiere decir que el médico esté fuera de esa red: el cruce por número federal identifica el 33% de las filas del Plan Vital, el 51% de las de Triple-S Advantage y el 52% de las de MMM, así que casi siempre significa que esa fila no se pudo cruzar. Ojo también con las fechas: los directorios no salen el mismo día, así que uno puede estar más al día que otro. Antes de cambiarte de plan, confirma con la oficina.', 'These blocks say what each plan printed in its directory, not whether they will take you. And a plan missing here does NOT mean the provider is out of that network: the federal-number cross-check identifies 33% of Plan Vital directory rows, 51% of Triple-S Advantage\'s and 52% of MMM\'s, so it almost always means that row could not be matched. Note the dates too: these directories are not published on the same day, so one may be more current than another. Before switching plans, confirm with the office.')}</p>`
+    : ''
 
   const mapsEmbed = (place.lat && place.lon)
     ? `https://maps.google.com/maps?q=${place.lat},${place.lon}&z=15&output=embed`
@@ -6398,7 +6436,7 @@ async function handleEspecialista(req: any, res: any) {
       : `<div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${lang === 'en' ? 'Does this office take your plan?' : '¿Aceptan tu plan?'}</div><div class="text-slate-700 text-sm mt-1">${lang === 'en' ? 'Nobody has confirmed this office’s plans yet. Ask when you call, then help the next person below.' : 'Nadie ha confirmado los planes de esta oficina todavía. Pregunta cuando llames, y ayuda al próximo abajo.'}</div></div>`}
     ${reportedPlans.length ? `<div class="bg-sky-50 border border-sky-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-sky-700 font-bold">${lang === 'en' ? 'Neighbors report this office takes' : 'Vecinos reportan que aquí aceptan'}</div><div class="text-sky-900 font-semibold mt-1">${reportedPlans.map((r: any) => `${escapeHtml(planLabel(r.plan))}${Number(r.reportes) > 1 ? ` <span class="text-xs text-sky-600">(${r.reportes})</span>` : ''}`).join(' · ')}</div><div class="text-xs text-sky-700 mt-1">${lang === 'en' ? 'Reported by people who called, not confirmed by the office. Always double-check when you call.' : 'Reportado por gente que llamó, no confirmado por la oficina. Siempre verifica cuando llames.'}</div></div>` : ''}
   </div>
-${planDirHtml}${tsHtml}${fmvHtml}${planesNota}
+${planesOficinaHtml}${planDirHtml}${tsHtml}${fmvHtml}${planesNota}
 ${puertaHub}
 
   <div class="not-prose mt-4 bg-white border border-slate-200 rounded-2xl p-5">
