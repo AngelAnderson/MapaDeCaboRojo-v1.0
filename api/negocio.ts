@@ -505,6 +505,35 @@ export default async function handler(req: any, res: any) {
     ],
   };
 
+  // ═══ La otra mitad de esta oficina: su ficha en el Registro Médico ═══
+  // Espejo del enlace que vive en mapa-pages.ts. NO se funden las 2 fichas: aquí se publica
+  // el NEGOCIO (horario, reseñas, qué vende) y allá la PERSONA (NPI, planes, si coge
+  // pacientes). Son 2 preguntas distintas sobre la misma puerta.
+  //
+  // ⚠️ El teléfono solo NO alcanza: por teléfono, una ambulancia enlazaba a una funeraria y
+  // un laboratorio a un hospital psiquiátrico, porque son centrales compartidas. Se exige
+  // mismo pueblo y al menos una palabra de verdad compartida entre los 2 nombres.
+  const PALABRA_VACIA = new Set(['DR', 'DRA', 'INC', 'CORP', 'LLC', 'PSC', 'CSP', 'CABO', 'ROJO',
+    'CLINICA', 'CENTRO', 'HEALTH', 'MEDICAL', 'SERVICES', 'GROUP', 'PUERTO', 'RICO', 'SAN', 'DE', 'LA']);
+  const palabrasNom = (t: string) => new Set(
+    (t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase()
+      .split(/[^A-Z]+/).filter(w => w.length >= 4 && !PALABRA_VACIA.has(w)));
+  let fichaRegistro: { slug: string; name: string; sub: string | null } | null = null;
+  if (!place.npi && place.phone) {
+    const { data: cands } = await supabase.from('places')
+      .select('slug,name,subcategory').eq('phone', place.phone).not('npi', 'is', null)
+      .eq('visibility', 'published').eq('status', 'open')
+      .eq('municipality', place.municipality).not('slug', 'is', null).limit(5);
+    const mias = palabrasNom(place.name);
+    const m = (cands || []).find((c: any) => [...palabrasNom(c.name)].some(w => mias.has(w)));
+    if (m) fichaRegistro = { slug: m.slug, name: m.name, sub: m.subcategory };
+  }
+  const registroHtml = !fichaRegistro ? '' : `<div class="info-card">
+      <h2>En el Registro Médico</h2>
+      <p style="font-size:0.9rem;color:#475569;margin:0 0 .5rem">Esta oficina también tiene ficha de proveedor de salud, con su número federal NPI, los planes que aceptan y la fecha en que se confirmó.</p>
+      <p style="margin:0"><a href="https://registromedicopr.com/especialista/${encodeURIComponent(fichaRegistro.slug)}" style="color:#0d9488;font-weight:600">${esc(fichaRegistro.name)}${fichaRegistro.sub ? ` · ${esc(fichaRegistro.sub)}` : ''} →</a></p>
+    </div>`;
+
   const html = `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -609,6 +638,8 @@ export default async function handler(req: any, res: any) {
       ${place.website ? `<div class="info-row"><span class="info-label">🌐 Web</span><span class="info-value"><a href="${esc(place.website)}" target="_blank" rel="noopener">${esc(place.website)}</a></span></div>` : ''}
       ${place.gmaps_url ? `<div class="info-row"><span class="info-label">🗺️ Google Maps</span><span class="info-value"><a href="${esc(place.gmaps_url)}" target="_blank" rel="noopener">Ver en Maps</a></span></div>` : ''}
     </div>
+
+    ${registroHtml}
 
     ${(parking !== 'No especificado' || petFriendly !== 'No especificado' || wifi !== 'No especificado') ? `<div class="info-card">
       <h2>Amenidades</h2>
