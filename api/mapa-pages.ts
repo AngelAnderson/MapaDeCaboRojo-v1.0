@@ -4728,11 +4728,13 @@ ${SHARE_COPY_SCRIPT}`
   const regionCap = PUEBLO_REGION_CAP[town.region] || town.region
   const pageUrl = `https://registromedicopr.com/pueblo/${slug}`
 
-  const [{ data: specRows }, { data: hpsaRows }, { data: provRows }] = await Promise.all([
+  const [{ data: specRows }, { data: hpsaRows }, { data: provRows }, { data: notaRows }] = await Promise.all([
     supabase.from('v_registro_muni_spec').select('subcategory,n').eq('municipio', town.municipio),
     supabase.from('pr_hpsa_designations').select('discipline,score,ratio,fte,shortage,manual_note').eq('municipio', town.municipio).order('score', { ascending: false }),
     supabase.rpc('registro_providers_by_muni', { muni: town.municipio }),
+    supabase.from('marcador_municipio').select('nota,pt_mitigacion,pt_primaria,pt_salud_mental,pt_cupon,pt_especialistas,estado_mitigacion,nuevo_en_camino,dias_vencido,fecha_clave,componentes_sin_dato').eq('municipio', town.municipio).limit(1),
   ])
+  const nota: any = (notaRows || [])[0] || null
   const present = (specRows || [])
     .filter((r: any) => REGISTRY_BYSUB[r.subcategory])
     .map((r: any) => ({ sub: r.subcategory as string, n: Number(r.n) || 0 }))
@@ -4885,6 +4887,52 @@ ${SHARE_COPY_SCRIPT}`
 </div>` : ''
 
   // ── Aterrizaje Veci (solo Cabo Rojo: el bot vive ahí) ──
+  // La Nota del pueblo — el marcador de los 78, sobre umbrales federales de si o no.
+  // Mide lo que el gobierno ENTREGO aqui, nunca lo que el pueblo vale. Esa linea va arriba, no en letra chica.
+  const notaBlock = (() => {
+    if (!nota || nota.nota === null) return ''
+    const v = Number(nota.nota)
+    const cl = v >= 4 ? { bg: '#ecfdf5', bd: '#6ee7b7', tx: 'text-emerald-800' }
+      : v >= 2.5 ? { bg: '#fffbeb', bd: '#fcd34d', tx: 'text-amber-800' }
+      : { bg: '#fef2f2', bd: '#fca5a5', tx: 'text-red-800' }
+    const mk = (p: any) => p === null ? '<span class="text-slate-300">&middot;</span>'
+      : Number(p) === 1 ? '<span class="text-emerald-600 font-bold">&#10003;</span>'
+      : Number(p) === 0.5 ? '<span class="text-amber-600 font-bold">&frac12;</span>'
+      : '<span class="text-red-500 font-bold">&#10007;</span>'
+    const mitTxt = nota.estado_mitigacion === 'vigente'
+      ? te('Plan de mitigación vigente ante FEMA', 'Mitigation plan current with FEMA')
+      : nota.nuevo_en_camino
+        ? te(`Plan de mitigación vencido hace ${nota.dias_vencido} días, con uno nuevo en trámite`, `Mitigation plan expired ${nota.dias_vencido} days ago, with a new one in process`)
+        : te(`Plan de mitigación vencido hace ${nota.dias_vencido} días, y no hay uno nuevo en trámite`, `Mitigation plan expired ${nota.dias_vencido} days ago, and no new one in process`)
+    const filas: Array<[any, string]> = [
+      [nota.pt_mitigacion, mitTxt],
+      [nota.pt_primaria, Number(nota.pt_primaria) === 1
+        ? te('Sin designación federal de escasez de cuidado primario', 'No federal primary care shortage designation')
+        : te('Designación federal de escasez de cuidado primario, activa', 'Active federal primary care shortage designation')],
+      [nota.pt_salud_mental, Number(nota.pt_salud_mental) === 1
+        ? te('Sin designación federal de escasez de salud mental', 'No federal mental health shortage designation')
+        : te('Designación federal de escasez de salud mental, activa', 'Active federal mental health shortage designation')],
+      [nota.pt_cupon, Number(nota.pt_cupon) === 1
+        ? te('Sin cupón federal sin cobrar', 'No unclaimed federal incentive')
+        : te('Designado en salud mental y con cero psiquiatras: el cupón está aprobado y nadie lo cobra', 'Designated for mental health with zero psychiatrists: the federal incentive is approved and unclaimed')],
+      [nota.pt_especialistas, Number(nota.pt_especialistas) === 1
+        ? te('Al menos 5 especialistas por cada 10,000 habitantes', 'At least 5 specialists per 10,000 residents')
+        : te('Menos de 5 especialistas por cada 10,000 habitantes', 'Fewer than 5 specialists per 10,000 residents')],
+    ]
+    return `
+<div class="not-prose mt-4" style="background:${cl.bg};border:2px solid ${cl.bd};border-radius:16px;padding:18px 20px;">
+  <div class="flex flex-wrap items-baseline gap-x-3">
+    <span class="text-xs uppercase tracking-widest font-bold ${cl.tx}">${te('La Nota', 'The Score')}</span>
+    <span class="text-3xl font-black text-slate-900">${v.toFixed(1)} <span class="text-lg font-bold text-slate-400">/ 5.0</span></span>
+  </div>
+  <p class="text-sm text-slate-600 mt-1">${te('Mide lo que el gobierno entregó en este pueblo, no lo que el pueblo vale. 5 umbrales federales de sí o no: no se pondera, se cuenta.', 'It measures what the government delivered in this town, not what the town is worth. 5 federal yes-or-no thresholds: nothing is weighted, they are counted.')}</p>
+  <ul class="mt-3 space-y-1.5 text-sm text-slate-700">
+    ${filas.map(([p, t]) => `<li class="flex gap-2"><span class="w-4 shrink-0">${mk(p)}</span><span>${t}</span></li>`).join('')}
+  </ul>
+  <p class="text-xs text-slate-500 mt-3">${te('Luz, basura y agua no entran: las fuentes federales no las publican por municipio, y un componente inventado tumba el índice entero.', 'Power, waste, and water are excluded: federal sources do not publish them by municipality, and one invented component would sink the whole index.')} <a href="/los-78" class="text-teal-700 font-semibold hover:underline">${te('Los 78 pueblos, comparados', 'All 78 towns, compared')} &rarr;</a> <span class="text-slate-300">&middot;</span> <a href="/rompelo" class="text-teal-700 font-semibold hover:underline">${te('¿Un número está mal? Rómpelo', 'A number is wrong? Break it')}</a></p>
+</div>`
+  })()
+
   const veciBlock = town.municipio === 'Cabo Rojo' ? `
 <div class="not-prose mt-6 bg-teal-50 border-2 border-teal-200 rounded-2xl p-5">
   <p class="font-bold text-teal-900 text-base">💬 ${te('¿No consigues cita? Pregúntale al Veci', 'Cannot get an appointment? Ask El Veci')}</p>
@@ -4957,6 +5005,7 @@ fetch('/api/mapa-pages?page=registro-alert',{method:'POST',headers:{'Content-Typ
   </div>
   ${psiqNote}
 </div>
+${notaBlock}
 ${espejoBlock}
 ${hpsaBlock}
 ${contradiccionesBlock}
