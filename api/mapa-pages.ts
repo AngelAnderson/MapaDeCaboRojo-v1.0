@@ -6258,7 +6258,7 @@ async function handleEspecialista(req: any, res: any) {
   }
 
   // Triple-S Advantage (edición 2026, el PDF dice "actualizado a 9/9/2025"). El plan #2
-  // de Medicare en la isla. Cargado el 27 ago 2026: 19,429 filas, 51.3% cruzadas por NPI,
+  // de Medicare en la isla. Cargado el 28 ago 2026: 19,429 filas, 51.3% cruzadas por NPI,
   // el mismo rendimiento que dio MMM con el mismo método.
   //
   // ⚠️ Aplica la MISMA regla que Plan Vital: solo se publica el hallazgo positivo.
@@ -9533,7 +9533,7 @@ async function handleExpedientePlanVital(req: any, res: any) {
 // método verificada: places.municipality == pueblo NPPES en 4,923 de 4,925 NPIs compartidos, y
 // el mismo SQL reproduce exacto los titulares publicados de Plan Vital: 43.4% jul / 45.5% feb).
 // La contradicción mide DESACUERDO entre 2 fuentes oficiales; no dice cuál tiene razón.
-// ⚠️ DERIVA CONOCIDA (27 ago 2026): la edición vigente ganó 34 filas con NPI al re-cruzar
+// ⚠️ DERIVA CONOCIDA (28 ago 2026): la edición vigente ganó 34 filas con NPI al re-cruzar
 // contra el registro de hoy (solo aditivo, ninguna fila perdió ni cambió de NPI). O sea
 // `conNpi` real = 7,210 y NPIs distintos = 5,580, contra los 7,176 / 5,565 horneados aquí.
 // NO se actualizó el bloque a medias a propósito: `puebloContra` y los porcentajes salen de
@@ -9614,7 +9614,7 @@ async function handleExpedienteMMM(req: any, res: any) {
     <p class="text-sm text-rose-900 m-0"><b>La otra:</b> los teléfonos. De ${nf(T.telNpis)} proveedores con número en las 2 fuentes, <b>${nf(T.telNpisDisc)} (${T.telNpisPct}%)</b> tienen en el directorio de MMM un teléfono distinto al del registro federal — 3 de cada 10. Y en 18 meses de ediciones el número no mejoró: ${D24.telFilasPct}% (dic 2024) → ${D25.telFilasPct}% (dic 2025) → ${T.telFilasPct}% (jun 2026), medido por fila. Cuadrar las 2 listas no es el trabajo de nadie, y se nota.</p>
 
   <div class="bg-amber-50 border-2 border-amber-400 rounded-xl p-4 mt-4">
-    <p class="m-0 text-sm text-amber-900"><b>Corrección en curso — 27 de agosto de 2026.</b> Los conteos de entradas y salidas de esta sección se calcularon comparando <i>números federales cruzados</i> entre ediciones: si un NPI aparecía en una y no en la siguiente, se contó como salida. Al buscar a esos proveedores <b>por nombre y por teléfono</b> dentro de la edición siguiente, la mayoría <b>sigue ahí</b>: no se fueron, lo que falló fue nuestro cruce. Según lo estricta que se ponga la búsqueda, la salida real queda entre 35 y 109 de los 264 que este método contaba. <b>Mientras se vuelve a medir, estos conteos no se deben citar.</b> Lo que sí se sostiene es lo de arriba: los desacuerdos de pueblo y de teléfono entre las 2 fuentes, que se miden fila por fila y no dependen de una ausencia.</p>
+    <p class="m-0 text-sm text-amber-900"><b>Corrección en curso — 28 de agosto de 2026.</b> Los conteos de entradas y salidas de esta sección se calcularon comparando <i>números federales cruzados</i> entre ediciones: si un NPI aparecía en una y no en la siguiente, se contó como salida. Al buscar a esos proveedores <b>por nombre y por teléfono</b> dentro de la edición siguiente, la mayoría <b>sigue ahí</b>: no se fueron, lo que falló fue nuestro cruce. Según lo estricta que se ponga la búsqueda, la salida real queda entre 35 y 109 de los 264 que este método contaba. <b>Mientras se vuelve a medir, estos conteos no se deben citar.</b> Lo que sí se sostiene es lo de arriba: los desacuerdos de pueblo y de teléfono entre las 2 fuentes, que se miden fila por fila y no dependen de una ausencia.</p>
   </div>
 
   <div class="bg-slate-900 text-white rounded-xl p-4 mt-4">
