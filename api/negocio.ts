@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { correctButtonHtml } from './_lib/correct-button.js';
 import { bloqueProcedencia, paginaLd, ldScript, CATEGORIA_ENLACE_ES, procedenciaSello } from './_lib/procedencia.js';
 import { slugVivoPara } from './_lib/redirect-archivada.js';
+import { rutaDeRecord } from './_lib/rutas-salud.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -351,17 +352,17 @@ export default async function handler(req: any, res: any) {
   }
 
   // Redirect HEALTH businesses to their enriched route (schema Dentist, Pharmacy, etc.)
-  const HEALTH_ROUTES: Record<string, string> = {
-    farmacia: 'farmacia', dentista: 'dentista', veterinario: 'veterinario',
-    medico: 'medico', hospital: 'hospital', laboratorio: 'laboratorio',
-    optica: 'optica', 'salud-mental': 'salud-mental', quiropractico: 'quiropractico',
-    gimnasio: 'gimnasio',
-  };
-  const sub = (place.subcategory || '').toLowerCase();
-  const cat = (place.category || '').toUpperCase();
-  if (cat === 'HEALTH' && HEALTH_ROUTES[sub]) {
+  // El mapa vivía copiado aquí, en api/farmacia.ts y en api/sitemap.ts, y las 3
+  // copias decían ser "espejo EXACTO" de las otras sin serlo. Ahora sale de
+  // api/_lib/rutas-salud.ts. Dos cosas cambiaron al unificarlo (1 sep 2026):
+  // esta copia no conocía `fisiatra` (259 fichas con dos casas) y ninguna
+  // normalizaba acentos, así que 621 'quiropráctico' y 11 'óptica' CON tilde
+  // nunca llegaban a su ruta y se quedaban auto-canonicalizados en /negocio/,
+  // compitiendo contra su propia página en registromedicopr.com.
+  const rutaSalud = rutaDeRecord(place.category, place.subcategory);
+  if (rutaSalud !== 'negocio') {
     const healthSlug = place.slug || place.id;
-    res.writeHead(301, { Location: `https://www.mapadecaborojo.com/${HEALTH_ROUTES[sub]}/${healthSlug}` });
+    res.writeHead(301, { Location: `https://www.mapadecaborojo.com/${rutaSalud}/${healthSlug}` });
     return res.end();
   }
 

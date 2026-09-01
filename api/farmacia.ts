@@ -23,6 +23,7 @@ import { createClient } from '@supabase/supabase-js';
 import { correctButtonHtml } from './_lib/correct-button.js';
 import { paginaLd, ldScript } from './_lib/procedencia.js';
 import { slugVivoPara } from './_lib/redirect-archivada.js';
+import { rutaDeRecord } from './_lib/rutas-salud.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -209,23 +210,12 @@ export default async function handler(req: any, res: any) {
   // mismo JSON-LD que decía "esto es una farmacia" sobre un dermatólogo. Un dato
   // verificado a mano dentro de un marcado equivocado no hereda nada, contradice.
   //
-  // La ruta correcta NO se inventa aquí: es el mismo mapa que ya usan
-  // api/negocio.ts (que hace 301 de /negocio/ hacia acá) y api/sitemap.ts (que
-  // anuncia el destino). El sitemap siempre estuvo bien; el que mentía era este
-  // handler. `fisiatra` va en la lista porque este archivo la sirve desde antes.
-  //
-  // OJO CON LOS ACENTOS: en la base hay 621 'quiropráctico' y 11 'óptica' CON
-  // tilde (y 2 'quiropractico' sin ella). Comparar sin normalizar mandaba 632
-  // fichas buenas a un 301 que no les tocaba. Verificado en `places` el 1 sep.
-  const sinTilde = (s: string) =>
-    s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const RUTAS_SALUD = new Set([
-    'farmacia', 'dentista', 'veterinario', 'medico', 'hospital', 'laboratorio',
-    'optica', 'salud-mental', 'quiropractico', 'gimnasio', 'fisiatra',
-  ]);
-  const subReal = sinTilde(String(place.subcategory || ''));
-  const esSalud = String(place.category || '').toUpperCase() === 'HEALTH';
-  const rutaReal = (esSalud && RUTAS_SALUD.has(subReal)) ? subReal : 'negocio';
+  // La ruta correcta NO se inventa aquí: sale de api/_lib/rutas-salud.ts, que es
+  // la ÚNICA copia del mapa y la que también usan api/negocio.ts y api/sitemap.ts.
+  // Ahí vive el detalle de los acentos: en `places` hay 621 'quiropráctico' y 11
+  // 'óptica' CON tilde, y comparar sin normalizar mandaba 632 fichas buenas a un
+  // 301 que no les tocaba.
+  const rutaReal = rutaDeRecord(place.category, place.subcategory);
   if (rutaReal !== type) {
     res.writeHead(301, { Location: `${siteOrigin}/${rutaReal}/${place.slug || place.id}` });
     return res.end();

@@ -131,6 +131,53 @@ async function capaHttp() {
           rr.status === 200 && html.includes(`"@type":"${tipo}"`),
           `dio ${rr.status}${rr.status === 200 ? ' pero sin el @type' : ''}`);
   }
+
+  // El acento desarmaba una guardia que YA estaba escrita. api/sitemap.ts se salta
+  // a propósito a los proveedores con NPI en ruta de especialista, porque su
+  // canónica vive en registromedicopr.com. Como HEALTH_ROUTES['quiropráctico'] daba
+  // undefined, la guardia nunca disparaba y 874 proveedores con NPI se anunciaban
+  // igual bajo /negocio/, auto-canonicalizados, compitiendo contra su propia página
+  // en el otro dominio. Los 3 mapas copiados viven ahora en _lib/rutas-salud.ts.
+  for (const [slug, ruta] of [
+    ['david-wittig-san-juan-9376',    'quiropractico'], // 'quiropráctico' CON tilde
+    ['ana-moreira-bou-san-juan-8606', 'quiropractico'],
+    ['dr-luis-del-cabo-rojo',         'optica'],        // 'óptica' CON tilde
+    ['minette-colon-carolina-4951',   'fisiatra'],      // faltaba en 2 de los 3 mapas
+  ]) {
+    const rr = await fetch(`${BASE}/negocio/${slug}`, { redirect: 'manual' });
+    const loc = rr.headers.get('location') || '';
+    check(`/negocio/${slug.slice(0, 30)}… redirige a /${ruta}/`,
+          rr.status === 301 && loc.endsWith(`/${ruta}/${slug}`),
+          `dio ${rr.status} -> ${loc || '(sin Location)'}`);
+  }
+  // Un récord, un dominio: con NPI, la canónica es del Registro.
+  {
+    const rr = await fetch(`${BASE}/quiropractico/david-wittig-san-juan-9376`);
+    const html = await rr.text();
+    check('un especialista con NPI canoniza a registromedicopr.com',
+          rr.status === 200 && html.includes('<link rel="canonical" href="https://registromedicopr.com/especialista/'),
+          `dio ${rr.status}`);
+  }
+  // Y el sitemap no puede anunciar bajo /negocio/ lo que tiene ruta de salud: esa
+  // URL redirige, y un sitemap que anuncia redirecciones se gasta el presupuesto de
+  // rastreo. Eran 21 (medido el 1 sep): 11 ópticas, 6 fisiatras, 4 quiroprácticos,
+  // todos colados por el acento o por el `fisiatra` que faltaba en 2 de los 3 mapas.
+  // 19 de los 21 NO tienen NPI, así que se quedan en el Mapa: solo cambian de ruta.
+  {
+    const sm = await fetch(sinCache(BASE + '/sitemap.xml')).then(r => r.text());
+    const colados = [
+      'optima-chiropractic-dr-carlos-a-vega', 'centro-quiropractico-de-cabo-rojo',
+      'dr-luis-del-cabo-rojo', 'optika-dra-joshara-cabo-rojo', 'optica-perichi',
+      'dr-roberto-garcia-rivera-fisiatra', 'quinones-fisiatra-san-german',
+    ].filter(s => sm.includes(`/negocio/${s}<`));
+    check('el sitemap no anuncia bajo /negocio/ lo que tiene ruta de salud',
+          colados.length === 0, `${colados.length} colados: ${colados.join(', ')}`);
+    // …y sí tiene que anunciarlos en su ruta buena (los 19 sin NPI son del Mapa).
+    check('las ópticas y quiroprácticos locales siguen anunciados, en su ruta',
+          sm.includes('/optica/dr-luis-del-cabo-rojo<') &&
+          sm.includes('/quiropractico/centro-quiropractico-de-cabo-rojo<'),
+          'se cayeron del sitemap en vez de moverse');
+  }
 }
 
 // ── Capa 2: el mapa, en un navegador de verdad. ──────────────────────────────

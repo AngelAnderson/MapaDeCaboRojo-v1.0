@@ -2,6 +2,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { MCP_ENDPOINT } from './_lib/agentes.js';
 import { SPECIALIST_SUBS } from './_lib/registro-subs.js';
+import { rutaDeRecord, esDelRegistro } from './_lib/rutas-salud.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -22,20 +23,10 @@ const AI_CRAWLERS = ['GPTBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-Web', 'anthr
 // La lista vive en _lib: la comparte llms-full.txt, que se quedó sin ella y
 // terminó anunciando 10,000 de 35,757. Una sola copia, un solo drift posible.
 
-// Espejo EXACTO de api/negocio.ts: un place HEALTH con una de estas subcategorías no se
-// sirve en /negocio/[slug], se redirige 301 a /[ruta]/[slug]. El sitemap anuncia el destino,
-// nunca la redirección.
-const HEALTH_ROUTES: Record<string, string> = {
-  farmacia: 'farmacia', dentista: 'dentista', veterinario: 'veterinario',
-  medico: 'medico', hospital: 'hospital', laboratorio: 'laboratorio',
-  optica: 'optica', 'salud-mental': 'salud-mental', quiropractico: 'quiropractico',
-  gimnasio: 'gimnasio',
-};
-
-// Espejo EXACTO de api/farmacia.ts: en estas rutas, un proveedor con NPI canonicaliza a
-// registromedicopr.com. Anunciarlo en el sitemap de mapa sería pedirle a Google que indexe
-// una página que dice "la buena está en el otro dominio".
-const REG_ESPECIALISTA_TYPES = new Set(['medico', 'dentista', 'salud-mental', 'quiropractico', 'fisiatra', 'optica']);
+// Un place HEALTH con ruta propia no se sirve en /negocio/[slug]: api/negocio.ts lo
+// redirige 301 a /[ruta]/[slug]. El sitemap anuncia el destino, nunca la redirección.
+// El mapa y la regla del Registro viven en api/_lib/rutas-salud.ts — antes había una
+// copia aquí que se decía "espejo EXACTO" de las otras dos y no lo era.
 
 function robotsFor(host: string): string {
   const isPRSF = /puertoricosinfiltros\.com/i.test(host);
@@ -438,13 +429,16 @@ export default async function handler(req: any, res: any) {
       places.forEach((p: any) => {
         const lastMod = p.verified_at ? p.verified_at.split('T')[0] : new Date().toISOString().split('T')[0];
         const slug = p.slug || p.id;
-        const sub = (p.subcategory || '').toLowerCase();
-        const cat = (p.category || '').toUpperCase();
-        const healthRoute = cat === 'HEALTH' ? HEALTH_ROUTES[sub] || null : null;
+        const ruta = rutaDeRecord(p.category, p.subcategory);
+        const healthRoute = ruta === 'negocio' ? null : ruta;
 
         // Con NPI en ruta de especialista, la página canoniza a registromedicopr.com:
         // esa URL es del registro, no de mapa. Ya sale como /especialista/[slug] arriba.
-        if (healthRoute && p.npi && REG_ESPECIALISTA_TYPES.has(healthRoute)) return;
+        // Esta guardia YA estaba escrita y el acento la desarmaba: para 'quiropráctico'
+        // la ruta salía null, la guardia no disparaba, y 874 proveedores con NPI se
+        // anunciaban igual bajo /negocio/ — la duplicación entre dominios que este
+        // mismo bloque existía para evitar. Corregido el 1 sep 2026.
+        if (healthRoute && esDelRegistro(healthRoute, p.npi)) return;
 
         urls.push(`
           <url>
