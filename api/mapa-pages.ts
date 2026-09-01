@@ -5517,6 +5517,29 @@ async function handleRegistro(req: any, res: any) {
   </div>
 </div>
 
+
+<!-- 2026-09-01: el bloque "por que existe esta pagina" - el finding del dossier de
+     directorios (29 ago) como prueba visible, no escondido en About. Los 3 numeros
+     llevan año y fuente (regla: todo numero lleva fecha). El CTA enlista al vecino:
+     el Veci tiene respuesta curada en local_knowledge (topic registro_quiero_ayudar_a_verificar). -->
+<div class="not-prose mt-8 bg-slate-900 rounded-2xl p-6 sm:p-8 text-white">
+  <p class="text-xs uppercase tracking-widest text-rose-300 font-bold">🔍 ${t('Por qué existe esta página', 'Why this page exists')}</p>
+  <h3 class="text-2xl font-black mt-1 leading-snug">${t('El problema no es que falten listas de médicos', 'The problem is not a lack of doctor lists')}</h3>
+  <p class="text-slate-300 mt-2">${t('El problema es que muchas listas no dicen lo que pasa cuando llamas.', 'The problem is that many lists do not tell you what happens when you call.')}</p>
+  <div class="grid sm:grid-cols-3 gap-4 mt-5">
+    <div><div class="text-3xl font-black text-rose-300">48.74%</div><div class="text-sm text-slate-300 mt-1">${t('de las ubicaciones en directorios de Medicare Advantage tenía al menos 1 error en la <a href="https://www.cms.gov/Medicare/Health-Plans/ManagedCareMarketing/Downloads/Provider_Directory_Review_Industry_Report_Round_3_11-28-2018.pdf" target="_blank" rel="noopener" class="underline font-semibold text-rose-200">última revisión nacional de CMS</a> (2018, la última que se hizo)', 'of locations in Medicare Advantage directories had at least 1 error in the <a href="https://www.cms.gov/Medicare/Health-Plans/ManagedCareMarketing/Downloads/Provider_Directory_Review_Industry_Report_Round_3_11-28-2018.pdf" target="_blank" rel="noopener" class="underline font-semibold text-rose-200">last national CMS review</a> (2018, the last one ever done)')}</div></div>
+    <div><div class="text-3xl font-black text-rose-300">45.64%</div><div class="text-sm text-slate-300 mt-1">${t('de las ubicaciones tenía errores capaces de impedir el acceso al cuidado, según la misma revisión', 'of locations had errors capable of blocking access to care, per the same review')}</div></div>
+    <div><div class="text-3xl font-black text-rose-300">18%</div><div class="text-sm text-slate-300 mt-1">${t('de 120 llamadas a proveedores de salud mental consiguieron cita en el <a href="https://www.finance.senate.gov/imo/media/doc/050323%20Ghost%20Network%20Hearing%20-%20Secret%20Shopper%20Study%20Report.pdf" target="_blank" rel="noopener" class="underline font-semibold text-rose-200">estudio del Senado de EE.UU.</a> (2023)', 'of 120 calls to mental health providers got an appointment in the <a href="https://www.finance.senate.gov/imo/media/doc/050323%20Ghost%20Network%20Hearing%20-%20Secret%20Shopper%20Study%20Report.pdf" target="_blank" rel="noopener" class="underline font-semibold text-rose-200">U.S. Senate study</a> (2023)')}</div></div>
+  </div>
+  <p class="text-white font-semibold mt-5">${t('RegistroMedicoPR mide algo distinto: lo que el directorio dice vs. lo que pasa cuando el paciente llama. Con fecha, con fuente, y guardando la evidencia.', 'RegistroMedicoPR measures something different: what the directory says vs. what happens when the patient calls. With a date, a source, and the evidence saved.')}</p>
+  <div class="mt-5 bg-white/10 border border-white/20 rounded-xl p-5">
+    <p class="font-black m-0">${t('Ayúdanos a medir lo que pasa cuando Puerto Rico intenta conseguir una cita.', 'Help us measure what happens when Puerto Rico tries to get an appointment.')}</p>
+    <p class="text-slate-300 mt-1 m-0">${t('Una llamada. Un dato. Una mejora. No importa quién se lleve el crédito. Importa que funcione.', 'One call. One data point. One improvement. It does not matter who gets the credit. It matters that it works.')}</p>
+    <a href="https://wa.me/17874177711?text=Quiero%20ayudar%20a%20verificar" class="inline-flex items-center gap-2 mt-3 bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold px-5 py-2.5 rounded-full text-sm">💬 ${t('Quiero ayudar a verificar', 'I want to help verify')}</a>
+    <span class="block text-xs text-slate-400 mt-2">${t('Te contesta El Veci por WhatsApp al 787-417-7711. Gratis, sin cuenta.', 'El Veci answers on WhatsApp at 787-417-7711. Free, no account.')}</span>
+  </div>
+</div>
+
 <h2>${t('¿Cuál es tu situación?', 'What is your situation?')}</h2>
 <p class="text-slate-600 -mt-2">${t('A veces uno no busca una especialidad, busca salir de un aprieto. Empieza por el tuyo:', 'Sometimes you are not looking for a specialty, you are trying to get unstuck. Start with yours:')}</p>
 <div class="not-prose mt-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
