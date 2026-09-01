@@ -73,8 +73,18 @@ async function capaHttp() {
   const ev = l3.eventos || [];
   const conPunto = ev.filter(e => e.lat != null).length;
   const pct = ev.length ? Math.round(100 * conPunto / ev.length) : 100;
+  // La pista vieja decía "el trigger events_resolver_coords puede estar caído" y
+  // mandaba a cazar un fantasma. Verificado el 1 sep 2026: el trigger está activo
+  // y funciona. Resuelve por coincidencia de `location_name` contra el nombre de un
+  // place publicado, así que cuando falla es porque **el local no está en el
+  // directorio**, no porque el trigger esté roto. Los 5 sin pin de ese día eran
+  // Teatro Sol, Club Leones AVA, Plaza Recreo Juan Ramírez Ortiz, 122 Avenida del
+  // Veterano y un evento sin local ("San Germán, Puerto Rico") — y 4 de los 5 son
+  // de San Germán, no de Cabo Rojo (el ", Cabo Rojo" del final es basura de
+  // captura). Dar de alta esos locales es decisión de Angel, no del sistema.
   check(`la mayoría de los eventos salen como pin (${conPunto}/${ev.length}, ${pct}%)`, pct >= 70,
-        'el trigger events_resolver_coords puede estar caído');
+        'el local del evento no está en `places` (el trigger resuelve por nombre). ' +
+        'Consulta para ver cuáles: events publicados con lat IS NULL, cruzados contra places por location_name');
 
   console.log('\nRutas');
   for (const ruta of ['/3d', '/clasico', '/pon-tu-negocio-en-el-mapa', '/tienda',
