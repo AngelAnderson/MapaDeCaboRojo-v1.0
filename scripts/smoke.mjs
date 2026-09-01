@@ -99,6 +99,38 @@ async function capaHttp() {
     const rr = await fetch(BASE + ruta, { redirect: 'manual' });
     check(`${ruta} redirige (podada)`, rr.status === 301 || rr.status === 308, `dio ${rr.status}`);
   }
+
+  // Un récord, una ruta (2026-09-01). api/farmacia.ts sacaba el @type de schema.org
+  // del PREFIJO del URL, no del récord, y cada prefijo se auto-canonicalizaba. O sea
+  // el mismo dermatólogo existía a la vez como Pharmacy, Dentist, Hospital y
+  // VeterinaryCare, cada uno con su propia canónica. Google ya lo había indexado:
+  // 12 URLs mal tipadas con 2,407 impresiones en 28 días, entre ellas un dermatólogo
+  // de Cabo Rojo servido como farmacia y un cardiólogo servido como gimnasio.
+  // El sitemap SIEMPRE anunció la ruta correcta; el que mentía era el handler.
+  console.log('\nUn récord, una ruta');
+  const RUTA_MAL = [
+    // [prefijo pedido, slug, ruta canónica que el sitemap ya anuncia]
+    ['farmacia',  'dr-yovin-vargas-llavona---dermatologo',                                     'negocio'],
+    ['farmacia',  'dermis-clinica-dermatologica-dra-hilda-justiniano',                          'negocio'],
+    ['farmacia',  'hospital-metropolitano-psiquiatrico-de-cabo-rojo',                           'negocio'],
+    ['dentista',  'dr-yovin-vargas-llavona---dermatologo',                                      'negocio'],
+    ['hospital',  'dr-yovin-vargas-llavona---dermatologo',                                      'negocio'],
+  ];
+  for (const [pedido, slug, canonica] of RUTA_MAL) {
+    const rr = await fetch(`${BASE}/${pedido}/${slug}`, { redirect: 'manual' });
+    const loc = rr.headers.get('location') || '';
+    check(`/${pedido}/${slug.slice(0, 34)}… redirige a /${canonica}/`,
+          rr.status === 301 && loc.endsWith(`/${canonica}/${slug}`),
+          `dio ${rr.status} -> ${loc || '(sin Location)'}`);
+  }
+  // Y la ruta que SÍ le toca al récord tiene que seguir sirviendo 200 con su tipo.
+  for (const [ruta, slug, tipo] of [['farmacia', 'farmacia-caridad-cabo-rojo', 'Pharmacy']]) {
+    const rr = await fetch(`${BASE}/${ruta}/${slug}`, { redirect: 'manual' });
+    const html = rr.status === 200 ? await rr.text() : '';
+    check(`/${ruta}/${slug} sigue en 200 con @type ${tipo}`,
+          rr.status === 200 && html.includes(`"@type":"${tipo}"`),
+          `dio ${rr.status}${rr.status === 200 ? ' pero sin el @type' : ''}`);
+  }
 }
 
 // ── Capa 2: el mapa, en un navegador de verdad. ──────────────────────────────

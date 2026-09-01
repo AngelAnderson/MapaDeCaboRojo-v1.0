@@ -196,6 +196,41 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
+  // ── Un récord, una ruta (2026-09-01) ────────────────────────────────────────
+  // Hasta hoy el `type` de arriba salía del PREFIJO del URL (vercel.json manda
+  // /farmacia/:slug, /dentista/:slug … todos a este archivo) y nunca se comparaba
+  // contra el récord. Como el @type de schema.org y la canónica se construyen con
+  // ese `type`, el MISMO dermatólogo existía a la vez como Pharmacy, Dentist,
+  // Hospital y VeterinaryCare, cada uno auto-canonicalizado. Google ya lo tenía
+  // indexado: 12 URLs mal tipadas, 2,407 impresiones en 28 días, incluyendo un
+  // dermatólogo de Cabo Rojo servido como farmacia y un cardiólogo como gimnasio.
+  //
+  // Eso le pega directo a lo que vendemos: el sello de verificación viaja en el
+  // mismo JSON-LD que decía "esto es una farmacia" sobre un dermatólogo. Un dato
+  // verificado a mano dentro de un marcado equivocado no hereda nada, contradice.
+  //
+  // La ruta correcta NO se inventa aquí: es el mismo mapa que ya usan
+  // api/negocio.ts (que hace 301 de /negocio/ hacia acá) y api/sitemap.ts (que
+  // anuncia el destino). El sitemap siempre estuvo bien; el que mentía era este
+  // handler. `fisiatra` va en la lista porque este archivo la sirve desde antes.
+  //
+  // OJO CON LOS ACENTOS: en la base hay 621 'quiropráctico' y 11 'óptica' CON
+  // tilde (y 2 'quiropractico' sin ella). Comparar sin normalizar mandaba 632
+  // fichas buenas a un 301 que no les tocaba. Verificado en `places` el 1 sep.
+  const sinTilde = (s: string) =>
+    s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  const RUTAS_SALUD = new Set([
+    'farmacia', 'dentista', 'veterinario', 'medico', 'hospital', 'laboratorio',
+    'optica', 'salud-mental', 'quiropractico', 'gimnasio', 'fisiatra',
+  ]);
+  const subReal = sinTilde(String(place.subcategory || ''));
+  const esSalud = String(place.category || '').toUpperCase() === 'HEALTH';
+  const rutaReal = (esSalud && RUTAS_SALUD.has(subReal)) ? subReal : 'negocio';
+  if (rutaReal !== type) {
+    res.writeHead(301, { Location: `${siteOrigin}/${rutaReal}/${place.slug || place.id}` });
+    return res.end();
+  }
+
   // #6 EN/ES toggle — ?lang=en triggers English variant for diáspora audience
   const lang: 'es' | 'en' = (req.query.lang as string) === 'en' ? 'en' : 'es';
   const T = lang === 'en' ? {
