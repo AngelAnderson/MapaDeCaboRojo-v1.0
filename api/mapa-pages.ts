@@ -14993,6 +14993,8 @@ ${firmaHtml}
 `
   const jsonLd = {
     '@context': 'https://schema.org', '@type': 'ProfilePage',
+    // Search Console 2 sep 2026: ProfilePage exige mainEntity (about solo no basta)
+    mainEntity: { '@type': 'Person', name: cfg.nombre, jobTitle: cfg.cargo, url: `https://puertoricosinfiltros.com/expediente/${f}` },
     about: { '@type': 'Person', name: cfg.nombre, jobTitle: cfg.cargo },
     publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
     inLanguage: 'es', url: `https://puertoricosinfiltros.com/expediente/${f}`,
