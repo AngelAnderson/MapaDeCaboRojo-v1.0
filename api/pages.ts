@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { procedenciaSello } from './_lib/procedencia.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || 'https://vprjteqgmanntvisjrvp.supabase.co',
@@ -1115,6 +1116,7 @@ async function handle_municipio(req: any, res: any) {
       realSearches90d,
       categoryBreakdownResult,
       recentVerifications,
+      frescasCR,
       upcomingEvents,
       newThisMonth,
       placesForHeat,
@@ -1124,6 +1126,10 @@ async function handle_municipio(req: any, res: any) {
       supabase.from('mv_real_searches_90d').select('*').then((r: any) => r.data || []),
       supabase.from('mv_category_breakdown').select('*').limit(12).then((r: any) => r.data || []),
       supabase.from('mv_recent_verifications').select('*').then((r: any) => r.data || []),
+      // Quien confirmo cada ficha fresca. La tarjeta decia "Angel verifico en persona" para
+      // todas y la mayoria era NPPES/SULME/merge: el mismo bug del sello, en el tablero.
+      supabase.from('places').select('verification_source,last_verified_at').eq('visibility', 'published').eq('municipality', 'Cabo Rojo')
+        .gte('last_verified_at', new Date(Date.now() - 90 * 86400000).toISOString()).range(0, 4999).then((r: any) => r.data || []),
       supabase
         .from('events')
         .select('id, title, slug, start_time, location_name, image_url, category')
@@ -1162,6 +1168,11 @@ async function handle_municipio(req: any, res: any) {
     const fresh90d = c.fresh_90d ?? 0;
     const freshnessPct = c.freshness_pct ?? 0;
     const sponsorCount = c.sponsor_count ?? 0;
+    // Particion persona / fuente / registro con la misma regla que el sello de la ficha
+    // (procedenciaSello). Un dato importado de NPPES no es "ojos humanos".
+    const sello = { persona: 0, fuente: 0, registro: 0 } as Record<string, number>;
+    for (const p of (frescasCR as any[])) sello[procedenciaSello(p)]++;
+    const tooltipFrescas = `${fresh90d.toLocaleString('es-PR')} fichas con verificación en los últimos 90 días. Quién la confirmó: ${sello.persona} una persona (Angel en sitio o el negocio mismo) · ${sello.fuente} corroborada contra fuente pública · ${sello.registro} sincronizada con un registro (NPPES, SULME, Google). Solo la primera es "ojos humanos"; cada ficha dice cuál.`;
     const newThisMonthCount = c.new_this_month ?? 0;
 
     // ============ HTML TEMPLATE ============
@@ -1233,7 +1244,7 @@ async function handle_municipio(req: any, res: any) {
     ${[
       { label: 'Negocios totales', value: total.toLocaleString('es-PR'), icon: '🏢', color: '#0d9488', tooltip: 'Todos los places de Cabo Rojo en nuestra base de datos (visibles al público). Algunos pueden estar cerrados temporalmente.' },
       { label: 'Abiertos hoy', value: openCount.toLocaleString('es-PR'), icon: '✅', color: '#16a34a', tooltip: 'Negocios con status=open en Cabo Rojo. La diferencia con "totales" son places cerrados o de estado dudoso.' },
-      { label: 'Verif. en 90 días', value: `${fresh90d.toLocaleString('es-PR')} · ${freshnessPct}%`, icon: '🛡️', color: freshnessPct >= 80 ? '#16a34a' : freshnessPct >= 60 ? '#ca8a04' : '#dc2626', tooltip: 'Negocios que Angel verificó en persona en los últimos 90 días — caminó la calle, entró, confirmó que sigue abierto. Sin Google Places, sin AI: ojos humanos.' },
+      { label: 'Verif. en 90 días', value: `${fresh90d.toLocaleString('es-PR')} · ${freshnessPct}%`, icon: '🛡️', color: freshnessPct >= 80 ? '#16a34a' : freshnessPct >= 60 ? '#ca8a04' : '#dc2626', tooltip: tooltipFrescas },
       { label: 'Búsquedas al *7711 (30d)', value: totalSearches30d.toLocaleString('es-PR'), icon: '🔍', color: '#0369a1', tooltip: 'Suma de las 10 categorías más buscadas al *7711 en los últimos 30 días. El total absoluto es mayor — esto es la concentración de demanda en lo más pedido.' },
       { label: 'Eventos próximos', value: upcomingEvents.length.toString(), icon: '📅', color: '#ea580c', tooltip: 'Eventos públicos en CR con fecha futura, mostrando los 6 más cercanos. Click en cada uno para detalles + cómo llegar.' },
       { label: 'Negocios sponsor', value: sponsorCount.toString(), icon: '⭐', color: '#7c3aed', tooltip: 'Negocios con Vitrina pagada o featured manualmente. Por hoy: Luis David Refrigeración (sponsor activo $700/año saldado) + Marina Puerto Real. Modelo: $799/año.' },
