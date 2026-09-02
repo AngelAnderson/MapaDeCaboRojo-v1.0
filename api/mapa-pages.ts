@@ -6195,18 +6195,22 @@ async function handleEspecialista(req: any, res: any) {
   // NPPES — y la página seguía diciendo "verificado en el registro federal NPPES" para todas.
   // Es exactamente la acusación que le hacemos a un plan médico que publica un teléfono
   // muerto: el sello dice que alguien comprobó algo que ya no es cierto.
-  const npiVivo = place.npi_status !== 'NO_ENCONTRADO'
+  // 2026-09-01: el cruce con el archivo mensual de desactivados de CMS marcó 24 fichas con
+  // npi_status='DEACTIVATED' (el API vivo nunca las devuelve, por eso el sync no las veía).
+  // Un NPI desactivado tampoco sostiene el sello: se dice, no se esconde.
+  const npiDesactivado = place.npi_status === 'DEACTIVATED'
+  const npiVivo = place.npi_status !== 'NO_ENCONTRADO' && !npiDesactivado
   const T = lang === 'en' ? {
     sub: `${place.phone ? `Phone: ${place.phone}. ` : ''}${specLabelClean} in ${muni}, PR. ${npiVivo ? `NPI ${npi} verified in the federal NPPES registry${verifiedDate ? `, as of ${verifiedDate}` : ''}` : `NPI ${npi} no longer appears in the federal NPPES registry`}. Free, no account.`,
     // 2026-08-20: el botón decía "Ask El Veci", que en una página que YA muestra el
     // teléfono no promete nada nuevo. Desde hoy El Veci le pregunta a las oficinas por ti.
-    verified: npiVivo ? 'Verified · federal NPI' : 'Not in the federal registry', call: 'Call', wa: 'WhatsApp', veci: 'Have El Veci ask for you',
+    verified: npiVivo ? 'Verified · federal NPI' : (npiDesactivado ? 'Federal NPI deactivated' : 'Not in the federal registry'), call: 'Call', wa: 'WhatsApp', veci: 'Have El Veci ask for you',
     addr: 'Address', regionH: 'Region', specialtyH: 'Specialty', npiH: 'Federal NPI',
     othersH: `Other ${specLabel.toLowerCase()}s in ${regionLabel || 'PR'}`,
     claimH: 'Is this your profile?', notFound: 'Not who you were looking for?',
   } : {
     sub: `${place.phone ? `Teléfono: ${place.phone}. ` : ''}${specLabelClean} en ${muni}, PR. ${npiVivo ? `NPI ${npi} verificado en el registro federal NPPES${verifiedDate ? `, al ${verifiedDate}` : ''}` : `El NPI ${npi} ya no aparece en el registro federal NPPES`}. Gratis y sin cuenta.`,
-    verified: npiVivo ? 'Verificado · NPI federal' : 'Ya no está en el registro federal', call: 'Llamar', wa: 'WhatsApp', veci: 'Que el Veci pregunte por ti',
+    verified: npiVivo ? 'Verificado · NPI federal' : (npiDesactivado ? 'NPI federal desactivado' : 'Ya no está en el registro federal'), call: 'Llamar', wa: 'WhatsApp', veci: 'Que el Veci pregunte por ti',
     addr: 'Dirección', regionH: 'Región', specialtyH: 'Especialidad', npiH: 'NPI federal',
     othersH: `Otros ${specLabel.toLowerCase()} en el ${regionLabel || 'PR'}`,
     claimH: '¿Es tu perfil?', notFound: '¿No es a quien buscabas?',
@@ -6232,7 +6236,7 @@ async function handleEspecialista(req: any, res: any) {
     // Vista pública: la tabla base está cerrada porque trae el bloque crudo del PDF.
     const { data } = await supabase.from('v_plan_directory_public')
       .select('edition_date,source_url,phones').eq('plan', 'MMM').eq('npi', npi)
-      .order('edition_date', { ascending: false })
+      .order('edition_date', { ascending: false }).order('revision', { ascending: false })
     const eds = (data || [])
     if (eds.length) {
       // El teléfono que publica el plan y que el registro federal no tiene. Un
@@ -18344,38 +18348,46 @@ async function resolveMuni(slug: string): Promise<{ name: string; region: string
 // dicen "No". El expediente ya probó que ese campo no distingue nada.
 const PLAN_ED_MMM = '2026-06-01'
 const PLAN_ED_VITAL = 'jul-2026'
+// Triple-S Advantage: una sola edición cargada (el PDF dice "actualizado a 9/9/2025", año de plan 2026).
+// Estaba en Supabase desde el 28 ago y la ficha ya lo mostraba; el hub no. Misma regla: solo el positivo.
+const PLAN_ED_TSS = '2025-09-09'
 const PLAN_ED_MMM_ES = 'junio de 2026', PLAN_ED_MMM_EN = 'June 2026'
 const PLAN_ED_VITAL_ES = 'julio de 2026', PLAN_ED_VITAL_EN = 'July 2026'
-type PlanHit = { mmm: boolean; vital: boolean }
+const PLAN_ED_TSS_ES = 'septiembre de 2025', PLAN_ED_TSS_EN = 'September 2025'
+type PlanHit = { mmm: boolean; vital: boolean; tss: boolean }
 
 async function planHitsByNpi(npis: any[]): Promise<Map<string, PlanHit>> {
   const out = new Map<string, PlanHit>()
   const list = Array.from(new Set(npis.filter(Boolean).map(String)))
   if (!list.length) return out
   try {
-    const [mRes, vRes] = await Promise.all([
+    const [mRes, vRes, tRes] = await Promise.all([
       // Vista pública: la tabla base está cerrada porque trae el bloque crudo del PDF.
       supabase.from('v_plan_directory_public').select('npi').eq('plan', 'MMM').eq('edition_date', PLAN_ED_MMM).in('npi', list),
       supabase.from('fmvital_directorio').select('npi').eq('edicion', PLAN_ED_VITAL).in('npi', list),
+      supabase.from('v_plan_directory_public').select('npi').eq('plan', 'Triple-S Advantage').eq('edition_date', PLAN_ED_TSS).in('npi', list),
     ])
-    for (const r of (((mRes as any).data) || [])) { const k = String(r.npi); out.set(k, { mmm: true, vital: out.get(k)?.vital || false }) }
-    for (const r of (((vRes as any).data) || [])) { const k = String(r.npi); const p = out.get(k); out.set(k, { mmm: p?.mmm || false, vital: true }) }
+    const mark = (k: string, f: keyof PlanHit) => { const p = out.get(k) || { mmm: false, vital: false, tss: false }; p[f] = true; out.set(k, p) }
+    for (const r of (((mRes as any).data) || [])) mark(String(r.npi), 'mmm')
+    for (const r of (((vRes as any).data) || [])) mark(String(r.npi), 'vital')
+    for (const r of (((tRes as any).data) || [])) mark(String(r.npi), 'tss')
   } catch { /* aditivo: si el cruce falla, el hub sigue sirviendo nombres y teléfonos */ }
   return out
 }
 
 const planBadges = (h: PlanHit | undefined, en: boolean) => {
-  if (!h || (!h.mmm && !h.vital)) return `<span class="text-slate-300" title="${en ? 'This row could not be cross-matched — it does NOT mean out of network' : 'Esta fila no se pudo cruzar — NO quiere decir que esté fuera de la red'}">—</span>`
+  if (!h || (!h.mmm && !h.vital && !h.tss)) return `<span class="text-slate-300" title="${en ? 'This row could not be cross-matched — it does NOT mean out of network' : 'Esta fila no se pudo cruzar — NO quiere decir que esté fuera de la red'}">—</span>`
   const b: string[] = []
   if (h.mmm) b.push(`<span class="inline-block bg-teal-50 border border-teal-200 text-teal-800 font-bold text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap">MMM</span>`)
   if (h.vital) b.push(`<span class="inline-block bg-indigo-50 border border-indigo-200 text-indigo-800 font-bold text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap">Plan Vital</span>`)
+  if (h.tss) b.push(`<span class="inline-block bg-sky-50 border border-sky-200 text-sky-800 font-bold text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap">Triple-S</span>`)
   return `<span class="inline-flex flex-wrap gap-1">${b.join('')}</span>`
 }
 
 // La nota que evita el peor uso de la columna. Va debajo de toda tabla que la pinte.
 const planNotaHub = (en: boolean) => `<p class="not-prose mt-3 text-xs text-slate-500">${en
-  ? `The <strong>Plan</strong> column says what the plan printed in its own provider directory (MMM, ${PLAN_ED_MMM_EN} · Plan Vital / First Medical, ${PLAN_ED_VITAL_EN}), not whether they will take you. A dash does <strong>not</strong> mean the provider is out of that network: the federal-number cross-check identifies 33% of the Plan Vital directory rows and 52% of MMM's, so a dash almost always means that row could not be matched. Before switching plans, confirm with the office. <a href="/expediente-mmm?lang=en" class="text-teal-700 underline">The MMM audit</a> · <a href="/expediente-planvital?lang=en" class="text-teal-700 underline">the Plan Vital audit</a>.`
-  : `La columna <strong>Plan</strong> dice lo que el plan imprimió en su propio directorio (MMM, ${PLAN_ED_MMM_ES} · Plan Vital / First Medical, ${PLAN_ED_VITAL_ES}), no si te van a coger. Una raya <strong>no</strong> quiere decir que el médico esté fuera de esa red: el cruce por número federal identifica el 33% de las filas del directorio del Plan Vital y el 52% de las de MMM, así que casi siempre significa que esa fila no se pudo cruzar. Antes de cambiarte de plan, confirma con la oficina. <a href="/expediente-mmm" class="text-teal-700 underline">El expediente MMM</a> · <a href="/expediente-planvital" class="text-teal-700 underline">el expediente Plan Vital</a>.`}</p>`
+  ? `The <strong>Plan</strong> column says what the plan printed in its own provider directory (MMM, ${PLAN_ED_MMM_EN} · Triple-S Advantage, ${PLAN_ED_TSS_EN} · Plan Vital / First Medical, ${PLAN_ED_VITAL_EN}), not whether they will take you. A dash does <strong>not</strong> mean the provider is out of that network: the federal-number cross-check identifies 33% of the Plan Vital directory rows and 52% of MMM's, so a dash almost always means that row could not be matched. Before switching plans, confirm with the office. <a href="/expediente-mmm?lang=en" class="text-teal-700 underline">The MMM audit</a> · <a href="/expediente-planvital?lang=en" class="text-teal-700 underline">the Plan Vital audit</a>.`
+  : `La columna <strong>Plan</strong> dice lo que el plan imprimió en su propio directorio (MMM, ${PLAN_ED_MMM_ES} · Triple-S Advantage, ${PLAN_ED_TSS_ES} · Plan Vital / First Medical, ${PLAN_ED_VITAL_ES}), no si te van a coger. Una raya <strong>no</strong> quiere decir que el médico esté fuera de esa red: el cruce por número federal identifica el 33% de las filas del directorio del Plan Vital y el 52% de las de MMM, así que casi siempre significa que esa fila no se pudo cruzar. Antes de cambiarte de plan, confirma con la oficina. <a href="/expediente-mmm" class="text-teal-700 underline">El expediente MMM</a> · <a href="/expediente-planvital" class="text-teal-700 underline">el expediente Plan Vital</a>.`}</p>`
 
 async function handleRegistroHub(req: any, res: any) {
   // Normalize incoming slug the same way specToUrl() built SPEC_BY_URL's keys — strip accents
