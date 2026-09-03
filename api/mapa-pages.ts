@@ -14485,6 +14485,7 @@ const MEDIDA_LABEL: Record<string, string> = { RC0211: 'La luz en la PR-2', RC02
 // Publicado 2026-08-20. Fuente: 13 documentos primarios (Junta de Supervisión
 // Fiscal, AAPP, Negociado de Energía), SEC EDGAR, docket federal, Contralor.
 // Pasó el abogado contrario el 2026-08-20 (notebook con las 19 fuentes).
+// 2026-09-03: sección 'Lo que pasó después' + recuadro de la vista de la Cámara (transcripción íntegra, Clips/2026-09-03-*).
 type PxMomento = { fecha: string; quien: string; que: string; doc: string }
 
 const PX_MOMENTOS: PxMomento[] = [
@@ -14500,6 +14501,16 @@ const PX_MOMENTOS: PxMomento[] = [
   { fecha: '25 jun 2026', quien: 'El consorcio', que: 'Vence el plazo para entregar la fianza de ejecución de $1,180 millones. Nunca se entrega. El contrato sigue vivo 54 días más.', doc: 'Carta de terminación de la AEE' },
   { fecha: '30-31 jul 2026', quien: '3PPO y AEE', que: 'El 3PPO recomienda sustituir a la empresa denunciante por otra. La AEE consiente al día siguiente, sin que se le hubieran informado las alegaciones que el 3PPO investigaba desde junio.', doc: 'Carta de la AAPP del 9 de agosto; reportado por Metro' },
   { fecha: '7 ago 2026', quien: 'La prensa', que: 'La periodista Bárbara Figueroa Rosa publica el caso. La Junta de Supervisión Fiscal se entera ese día y manda su primera carta esa misma fecha.', doc: 'Carta de la Junta del 7 de agosto de 2026' },
+]
+
+const PX_DESPUES: PxMomento[] = [
+  { fecha: '13 ago 2026', quien: '3PPO', que: 'Se divulga el referido del caso al Departamento de Justicia de Puerto Rico y al FBI. 58 días después de la denuncia del 16 de junio.', doc: 'Reportado por NotiCel' },
+  { fecha: '14 ago 2026', quien: 'Junta de Supervisión Fiscal', que: 'Revoca su aprobación del contrato, ordena a la AEE rescindirlo y refiere el asunto a las autoridades. Lo llama "irreparablemente viciado".', doc: 'Comunicado de la Junta del 14 de agosto de 2026' },
+  { fecha: '17 ago 2026', quien: 'Junta y Power Expectations', que: 'La Junta manda a la gobernadora una carta con 17 preguntas sin contestar (quién es el firmante, por qué cambió sin aviso, si la sustituta cumple el RFP). Power Expectations rompe el silencio: "total y absolutamente falsas".', doc: 'Carta de la Junta del 17 de agosto · El Nuevo Día' },
+  { fecha: '18 ago 2026', quien: 'AEE', que: 'La directora ejecutiva Mary Zapata firma la terminación del contrato 2026-P00107 por 2 causas: la fianza de $1,180 millones nunca se entregó y la Junta revocó su aprobación. Puerto Rico se queda sin plan de generación temporera en pleno agosto.', doc: 'Carta de terminación de la AEE · 8-K de Flotek del 19 de agosto' },
+  { fecha: '3 sep 2026', quien: 'Cámara de Representantes', que: 'Josué Colón declara bajo juramento ante la Comisión de Gobierno (sesión de la mañana, 2 horas y media transmitidas; continuó en la tarde). Lo que dijo está en el recuadro de abajo.', doc: 'Transmisión íntegra de la vista, transcrita completa' },
+  { fecha: '3 sep 2026', quien: 'Junta de Gobierno de la AEE', que: 'Sale Mary Zapata, la directora que firmó la cancelación, menos de 8 meses después de nombrada. La renuncia se anunció por radio mientras Colón declaraba; la Junta la aprobó unánime. Fernando Osorio queda interino.', doc: 'Primera Hora (4:41 pm) · Telemundo' },
+  { fecha: '3 sep 2026', quien: 'Power Expectations', que: 'Demanda en el Tribunal Federal para que le restauren el contrato: alega que la cancelación "no estuvo justificada por los hechos ni por el derecho aplicable" y que la fianza se atrasó porque la AEE nunca entregó documentos que las aseguradoras pedían.', doc: 'Reportado por Primera Hora. La demanda no se ha leído íntegra en esta página.' },
 ]
 
 const PX_PREDICCIONES: { p: string; cobro: string; comoSeCobra: string }[] = [
@@ -14559,6 +14570,28 @@ async function handleExpedientePowerExpectations(req: any, res: any) {
     <table class="w-full text-sm">
       <tbody>${PX_MOMENTOS.map(filaMomento).join('')}</tbody>
     </table>
+  </div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Lo que pasó después</h2>
+  <p class="text-sm text-slate-600 mb-3">Los 12 momentos de arriba se congelan el 7 de agosto porque ese día se acabó la ventana para pararlo. Esto es lo que pasó cuando ya no se podía. <b>Actualizado el 3 de septiembre de 2026.</b></p>
+
+  <div class="overflow-x-auto border border-slate-200 rounded-xl">
+    <table class="w-full text-sm">
+      <tbody>${PX_DESPUES.map(filaMomento).join('')}</tbody>
+    </table>
+  </div>
+
+  <div class="bg-slate-900 text-white rounded-2xl p-5 mt-4">
+    <div class="text-xs uppercase tracking-widest text-teal-300 font-bold">Bajo juramento · 3 de septiembre de 2026</div>
+    <p class="mt-2 text-slate-100 text-sm">El zar de Energía y director de la AAPP, Josué Colón, contestó preguntas bajo juramento toda la sesión de la mañana en la Comisión de Gobierno de la Cámara (preside Víctor Parés Otero). 5 cosas quedaron en récord, con minuto de la transmisión:</p>
+    <ul class="text-sm text-slate-100 space-y-2 pl-5 list-disc mt-2 mb-0">
+      <li><b>El 3PPO no es una oficina.</b> Parés: "pensamos que es una oficina de una agencia de gobierno con personal, con estructura. Eso no existe. No hay ningún oficial público. No hay nadie." Colón: "esa es la realidad que hay, eso fue lo que se aprobó" (min 45). Y a los 47 minutos: "nosotros no sabemos quiénes son los funcionarios" que evalúan cada subasta.</li>
+      <li><b>La AAPP no tiene abogados propios.</b> "La división legal no tiene abogados. Lo que tiene es un director y todos los abogados que están debajo son consultores." El referido del 16 de junio al 3PPO "lo hizo su abogado", un consultor externo (min 1:30).</li>
+      <li><b>El contrato del 3PPO venció el 30 de junio y se renovó el 31 de julio</b>, un día después de que el 3PPO recomendara sustituir a la empresa denunciante (min 20 y 1:45). Eso confirma la predicción 3 de esta página antes de su fecha de cobro.</li>
+      <li><b>"Cero dólares" de inversión del gobierno, pagado de la tarifa.</b> Colón: "la posibilidad de defraudar al erario público era inexistente... la inversión del gobierno en dicho proyecto era cero dólares" (min 26). A la 1:25 confirmó que el pago salía "de fondos provenientes de la tarifa". El riesgo no iba por el presupuesto: iba por la factura de luz.</li>
+      <li><b>Se enteró de la alegación de firma fraudulenta "con las cartas que hizo la Junta de Supervisión Fiscal"</b> (min 2:04). La primera carta es del 7 de agosto: 58 días después de firmar. Sobre Francisco Domenech, entonces secretario de la Gobernación: su rol fue "estar pendiente a que ese proceso se llevara a cabo", con "varias" conversaciones sobre "dónde está, cuándo va a estar", ninguna sobre las compañías (min 1:55). Eso contesta parcialmente la pregunta 3 de abajo y deja la de fondo abierta: quién más vio la denuncia del 17 de junio.</li>
+    </ul>
+    <p class="text-xs text-slate-400 mt-3 mb-0">Fuente: transmisión íntegra de la vista (canal de Jay Fonseca, 3 sep 2026), transcrita completa y cotejada palabra por palabra. Los 6 fragmentos están cortados con su fuente en el archivo de esta página. Toda persona citada tiene derecho a réplica íntegra aquí.</p>
   </div>
 
   <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Los 7 hallazgos que salen de los documentos</h2>
@@ -14623,7 +14656,7 @@ async function handleExpedientePowerExpectations(req: any, res: any) {
     <li><b>Verificaciones propias.</b> Consulta del registro del dominio enchantedrockpr.com y búsqueda en el archivo histórico de internet. Búsqueda de texto completo en los documentos de la Comisión de Valores.</li>
     <li><b>Prensa.</b> Cobertura de El Nuevo Día, NotiCel, El Vocero, Primera Hora, Metro, San Juan Daily Star, Bloomberg, el Centro de Periodismo Investigativo y el trabajo de Bárbara Figueroa Rosa, que fue quien destapó el caso el 7 de agosto. Cuando un dato viene solo de prensa, esta página lo dice.</li>
     <li><b>Control de calidad.</b> Los 13 documentos se cargaron juntos y se sometieron a un ejercicio adversarial antes de publicar: el resultado está en la sección "Lo que este récord NO dice". Se repite antes de cualquier actualización mayor.</li>
-    <li><b>¿Ves un error?</b> <a href="mailto:angel@angelanderson.com" class="text-teal-700 underline">angel@angelanderson.com</a>. Publicado el 20 de agosto de 2026.</li>
+    <li><b>¿Ves un error?</b> <a href="mailto:angel@angelanderson.com" class="text-teal-700 underline">angel@angelanderson.com</a>. Publicado el 20 de agosto de 2026. Actualizado el 3 de septiembre de 2026 con la vista de la Cámara.</li>
   </ol>
 
   <div class="mt-8">
