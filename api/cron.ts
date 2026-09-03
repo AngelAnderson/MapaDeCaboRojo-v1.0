@@ -79,11 +79,17 @@ async function runBriefing(res: any) {
 
 // --- Maintenance ---
 async function runMaintenance(res: any) {
+  // 2026-09-02: service role. El cliente anon no tiene UPDATE en events ni DELETE en admin_logs;
+  // este job fallaba con "permission denied for table events" desde el 22 jun.
+  const svc = createClient(
+    process.env.VITE_SUPABASE_URL || 'https://vprjteqgmanntvisjrvp.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  );
   const logResult = [];
 
   // 1. Archive Past Events
   const now = new Date().toISOString();
-  const { data: pastEvents } = await supabase
+  const { data: pastEvents } = await svc
     .from('events')
     .select('id, title')
     .lt('end_time', now)
@@ -91,7 +97,7 @@ async function runMaintenance(res: any) {
 
   if (pastEvents && pastEvents.length > 0) {
     const ids = pastEvents.map((e: any) => e.id);
-    const { error: updateError } = await supabase
+    const { error: updateError } = await svc
       .from('events')
       .update({ status: 'archived' })
       .in('id', ids);
@@ -99,7 +105,7 @@ async function runMaintenance(res: any) {
 
     logResult.push(`Archived ${ids.length} past events: ${pastEvents.map((e: any) => e.title).join(', ')}`);
 
-    await supabase.from('admin_logs').insert([{
+    await svc.from('admin_logs').insert([{
       action: 'UPDATE_EVENT',
       place_name: 'System Maintenance',
       details: `Auto-archived ${ids.length} events.`,
@@ -112,7 +118,7 @@ async function runMaintenance(res: any) {
   // 2. Prune Old Logs (older than 60 days)
   const sixtyDaysAgo = new Date();
   sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-  const { error: deleteError } = await supabase
+  const { error: deleteError } = await svc
     .from('admin_logs')
     .delete()
     .lt('created_at', sixtyDaysAgo.toISOString());
