@@ -519,6 +519,10 @@ ${isReg ? `<style>
   .not-prose.overflow-auto>table.w-full:not(.reg-rank) td:last-child{grid-column:2;grid-row:1/span 3;text-align:right}
   .not-prose.overflow-auto>table.w-full:not(.reg-rank) td:first-child{font-size:15px}
   .not-prose.overflow-auto>table.w-full:not(.reg-rank) .reg-call{min-height:44px;padding:0 14px}
+  /* Ranking de pueblos: 5 columnas; en móvil se esconde Región y se aprieta el # */
+  table.reg-rank th:nth-child(3),table.reg-rank td:nth-child(3){display:none}
+  table.reg-rank th,table.reg-rank td{padding:8px 6px}
+  table.reg-rank td:first-child,table.reg-rank th:first-child{width:2rem;padding-left:10px}
 }
 h1,h2,h3{text-wrap:balance}
 .reg-card .text-lg,table.w-full td,.tabular{font-variant-numeric:tabular-nums}
