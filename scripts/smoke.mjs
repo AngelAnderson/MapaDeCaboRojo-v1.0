@@ -105,9 +105,19 @@ async function capaHttp() {
     check('registromedicopr.com responde 200', rr2.status === 200, `dio ${rr2.status}`);
   }
   // Las podadas tienen que redirigir, no caer al catch-all del SPA.
-  for (const ruta of ['/moonshots', '/pueblo-en-numeros']) {
+  // /pueblo-en-numeros salió de esta lista el 3 sep 2026: se podó el 27 jul y se
+  // revivió el 23 ago (commit 3ec6ae2, vercel.json la reescribe a api/pages otra
+  // vez y 8 páginas la enlazan). La prueba siguió esperando el redirect 11 días y
+  // cada deploy decía "NO DEPLOYES" por una ruta que estaba bien. Ahora se prueba
+  // que responde 200 con su título.
+  for (const ruta of ['/moonshots']) {
     const rr = await fetch(BASE + ruta, { redirect: 'manual' });
     check(`${ruta} redirige (podada)`, rr.status === 301 || rr.status === 308, `dio ${rr.status}`);
+  }
+  {
+    const rp = await fetch(sinCache(BASE + '/pueblo-en-numeros'));
+    const tp = await rp.text().catch(() => '');
+    check('/pueblo-en-numeros responde 200 (revivida 23 ago)', rp.status === 200 && /Cabo Rojo en N/.test(tp), `dio ${rp.status}`);
   }
 
   // Un récord, una ruta (2026-09-01). api/farmacia.ts sacaba el @type de schema.org
