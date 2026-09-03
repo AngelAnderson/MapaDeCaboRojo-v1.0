@@ -519,6 +519,13 @@ ${isReg ? `<style>
   .not-prose.overflow-auto>table.w-full:not(.reg-rank) td:last-child{grid-column:2;grid-row:1/span 3;text-align:right}
   .not-prose.overflow-auto>table.w-full:not(.reg-rank) td:first-child{font-size:15px}
   .not-prose.overflow-auto>table.w-full:not(.reg-rank) .reg-call{min-height:44px;padding:0 14px}
+  /* Tablas con una columna de texto largo (ej. "Cuáles" pueblos en cero): en móvil el texto va
+     debajo, a todo el ancho. Sin esto .prose-narrative table{display:block} dejaba celdas de 700px. */
+  .prose-narrative table.reg-stack,.prose-narrative table.reg-stack tbody{display:block;width:100%;font-size:inherit}
+  .prose-narrative table.reg-stack thead{display:none}
+  .prose-narrative table.reg-stack tr{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;padding:10px 12px}
+  .prose-narrative table.reg-stack td{display:block;padding:0;min-width:0;border:0;white-space:normal}
+  .prose-narrative table.reg-stack td:nth-child(3){grid-column:1/-1;margin-top:4px}
   /* Ranking de pueblos: 5 columnas; en móvil se esconde Región y se aprieta el # */
   table.reg-rank th:nth-child(3),table.reg-rank td:nth-child(3){display:none}
   table.reg-rank th,table.reg-rank td{padding:8px 6px;min-width:0}
@@ -7443,7 +7450,7 @@ async function handleRegistroDesiertos(req: any, res: any) {
   }
   const sjRatio = barRowsData.find(m => m.municipio === 'San Juan')?.por_10k_hab || 68.9
   const crRow = barRowsData.find(m => m.municipio === 'Cabo Rojo')
-  const ratioColor = (v: number) => v >= 20 ? { bar: 'bg-emerald-500', txt: 'text-emerald-700' } : v >= 8 ? { bar: 'bg-amber-500', txt: 'text-amber-700' } : { bar: 'bg-red-600', txt: 'text-red-700' }
+  const ratioColor = (v: number) => v >= 15 ? { bar: 'bg-emerald-500', txt: 'text-emerald-700' } : v >= 5 ? { bar: 'bg-amber-500', txt: 'text-amber-700' } : { bar: 'bg-red-600', txt: 'text-red-700' }  // umbrales = puebloSemaforo (5/15); antes 8/20 y Cabo Rojo salía rojo aquí y ámbar en /pueblo
   const ratioRows = barRowsData.map(r => {
     const c = ratioColor(r.por_10k_hab)
     const w = Math.max(2, Math.round(r.por_10k_hab / sjRatio * 100))
@@ -7456,10 +7463,10 @@ async function handleRegistroDesiertos(req: any, res: any) {
   }).join('')
   const ratioSection = `
 <h2>La densidad: especialistas por cada 10,000 habitantes, pueblo por pueblo</h2>
-<p class="text-slate-600 -mt-2">El promedio regional esconde el desierto: <strong>Loíza está a media hora de San Juan, en la misma región metro — y tiene 86 veces menos especialistas por persona.</strong> Por eso esta cuenta se hace municipio por municipio, no por región. Tres pueblos no tienen <strong>ni un solo especialista de ninguna clase</strong>: Maricao, Las Marías y Florida.</p>
+<p class="text-slate-600 -mt-2">El promedio regional esconde el desierto: <strong>Loíza está a media hora de San Juan, en la misma región metro, y tiene 86 veces menos especialistas por persona.</strong> Por eso esta cuenta se hace municipio por municipio, no por región. Tres pueblos no tienen <strong>ni un solo especialista de ninguna clase</strong>: Maricao, Las Marías y Florida.</p>
 <div class="not-prose mt-4 bg-white border border-slate-200 rounded-xl p-4 sm:p-5">${ratioRows}</div>
-<p class="not-prose mt-3 text-center text-sm text-slate-600"><strong class="text-red-700">${bajo5Munis} de los 78 municipios</strong> — ${bajo5Pob.toLocaleString('en-US')} personas, casi 1 de cada 3 — viven con menos de <strong>5</strong> especialistas por cada 10,000 habitantes. Vieques y Culebra entran en esta cuenta: Vieques tiene 8,249 habitantes y <strong>un</strong> especialista. San Juan tiene <strong>${sjRatio.toFixed(1)}</strong>: el 35% de todos los especialistas del país, con el 10% de la gente.</p>
-${crRow ? `<p class="not-prose mt-2 text-center text-sm text-slate-500">Cabo Rojo, donde vivimos: ${crRow.especialistas} especialistas, ${crRow.por_10k_hab.toFixed(1)} por 10,000 — mejor que la mayoría, y aun así ${(sjRatio / crRow.por_10k_hab).toFixed(1)}× menos que San Juan.</p>` : ''}
+<p class="not-prose mt-3 text-center text-sm text-slate-600"><strong class="text-red-700">${bajo5Munis} de los 78 municipios</strong>: ${bajo5Pob.toLocaleString('en-US')} personas, casi 1 de cada 3, viven con menos de <strong>5</strong> especialistas por cada 10,000 habitantes. Vieques y Culebra entran en esta cuenta: Vieques tiene 8,249 habitantes y <strong>un</strong> especialista. San Juan tiene <strong>${sjRatio.toFixed(1)}</strong>: el 35% de todos los especialistas del país, con el 10% de la gente.</p>
+${crRow ? `<p class="not-prose mt-2 text-center text-sm text-slate-500">Cabo Rojo, donde vivimos: ${crRow.especialistas} especialistas, ${crRow.por_10k_hab.toFixed(1)} por 10,000, mejor que la mayoría, y aun así ${(sjRatio / crRow.por_10k_hab).toFixed(1)}× menos que San Juan.</p>` : ''}
 <p class="not-prose mt-2 text-center text-xs text-slate-400">Fuente: NPPES/CMS (proveedores individuales con práctica en PR, por municipio declarado) × Censo 2020 (población). Verificado julio 2026.</p>
 `
 
@@ -7490,18 +7497,18 @@ ${crRow ? `<p class="not-prose mt-2 text-center text-sm text-slate-500">Cabo Roj
 </div>
 ${ratioSection}
 <h2>Cuántas especialidades faltan por completo, por región</h2>
-<p class="text-slate-600 -mt-2">De las ${REGISTRY_SPECS.length} especialidades del registro, cuántas tienen <strong>cero</strong> proveedores en cada región. El área metro concentra casi todo — por eso no aparece aquí: es la vara contra la que se mide el resto.</p>
+<p class="text-slate-600 -mt-2">De las ${REGISTRY_SPECS.length} especialidades del registro, cuántas tienen <strong>cero</strong> proveedores en cada región. El área metro concentra casi todo, por eso no aparece aquí: es la vara contra la que se mide el resto.</p>
 <div class="not-prose grid grid-cols-2 sm:grid-cols-5 gap-3 mt-4">${scoreCards}</div>
 
-<h2>Los desiertos totales — cero proveedores en toda la región</h2>
-<p class="text-slate-600 -mt-2">Si vives aquí y necesitas a uno de estos, el registro federal dice que te toca viajar — casi siempre al área metro.</p>
+<h2>Los desiertos totales: cero proveedores en toda la región</h2>
+<p class="text-slate-600 -mt-2">Si vives aquí y necesitas a uno de estos, el registro federal dice que te toca viajar, casi siempre al área metro.</p>
 <div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
   <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
     <th class="py-2 px-3">Especialidad</th><th class="py-2 px-3">Región sin cobertura</th><th class="py-2 px-3 text-center">Hay</th><th class="py-2 px-3 text-center">Más cerca</th>
   </tr></thead><tbody>${totalDeserts.map(desertRow).join('')}</tbody></table>
 </div>
 
-<h2>Los casi-desiertos — 1 o 2 para una región entera</h2>
+<h2>Los casi-desiertos: 1 o 2 para una región entera</h2>
 <p class="text-slate-600 -mt-2">Existen, pero son tan pocos que la cita puede tardar meses. Pide el referido temprano.</p>
 <div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
   <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
@@ -7510,7 +7517,7 @@ ${ratioSection}
 </div>
 
 <h2>Por qué esto importa</h2>
-<p>Un desierto médico no es que "haya poco". Es que el sistema te obliga a manejar dos o tres horas — o a no atenderte. Eso pega más fuerte en el adulto mayor, en quien no maneja, y en quien no tiene a alguien que lo lleve. La data existía. El gobierno la tiene. Pero enterrada, en inglés, sin organizar por pueblo. La sacamos a la luz para que se pueda <strong>ver</strong>, <strong>citar</strong>, y <strong>arreglar</strong>.</p>
+<p>Un desierto médico no es que "haya poco". Es que el sistema te obliga a manejar 2 o 3 horas, o a no atenderte. Eso pega más fuerte en el adulto mayor, en quien no maneja, y en quien no tiene a alguien que lo lleve. La data existía. El gobierno la tiene. Pero enterrada, en inglés, sin organizar por pueblo. La sacamos a la luz para que se pueda <strong>ver</strong>, <strong>citar</strong>, y <strong>arreglar</strong>.</p>
 <p class="text-sm text-slate-600">¿Eres especialista y atiendes en una de estas regiones sin cobertura? El registro no te muestra. <a href="/registro" class="text-teal-700 font-semibold">Reclama tu perfil aquí</a> y aparece donde la gente te busca.</p>
 <p class="text-sm text-slate-600"><strong>¿Periodista, agencia de salud, o investigador?</strong> Esta data es citable y hay acceso programático. Escríbenos: <a href="mailto:angel@angelanderson.com" class="text-teal-600">angel@angelanderson.com</a>.</p>
 
@@ -7521,7 +7528,7 @@ ${ratioSection}
     <a href="https://wa.me/17874177711?text=ESPECIALISTA" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ESPECIALISTA</a>
     <a href="/registro" class="inline-flex items-center gap-2 bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-900"><i class="fa-solid fa-magnifying-glass"></i> Ir al registro completo</a>
   </div>
-  <p class="text-xs text-teal-200 mt-4">— Menos revolú, más sistema, mejor vida.</p>
+  <p class="text-xs text-teal-200 mt-4">- Angel | Menos revolú, más sistema, mejor vida.</p>
 </div>
 
 <section class="max-w-4xl mx-auto px-4 mt-12">
@@ -7531,7 +7538,7 @@ ${ratioSection}
     <strong>Léelo bien:</strong> que un pueblo salga en cero significa que <em>ningún proveedor de esa especialidad reporta dirección de práctica ahí</em>. No significa que no haya acceso: se puede ir al pueblo de al lado. Lo que mide esta tabla es dónde están, no cuán lejos queda el más cercano.
   </div>
   <div class="mt-4 overflow-x-auto">
-    <table class="w-full text-sm border border-slate-200 bg-white">
+    <table class="w-full text-sm border border-slate-200 bg-white reg-stack">
       <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
         <tr><th class="text-left p-3">Especialidad</th><th class="text-right p-3">Pueblos en cero</th><th class="text-left p-3">Cuáles</th></tr>
       </thead>
@@ -7564,7 +7571,7 @@ ${ratioSection}
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
   res.status(200).send(layout({
-    title: 'Los desiertos médicos de Puerto Rico — regiones sin especialistas',
+    title: 'Los desiertos médicos de Puerto Rico: regiones sin especialistas',
     description: `${totalDeserts.length} especialidades sin un solo proveedor en regiones enteras de PR, según el registro federal. La data que el gobierno tiene enterrada, puesta clara.`,
     slug: 'registro/desiertos',
     bodyHtml: body,
