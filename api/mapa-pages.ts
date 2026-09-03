@@ -6313,6 +6313,44 @@ async function handleEspecialista(req: any, res: any) {
     }
   }
 
+  // MCS Advantage (MCS Classicare, PDF "actualizado al 10 de agosto de 2026"). Cargado el
+  // 2 sep 2026: 18,283 filas, 44.9% cruzadas por NPI. Es el plan #1 de Cabo Rojo (5,066
+  // afiliados MA en mayo 2026, CMS) y hasta hoy la ficha no lo miraba. Misma regla: solo
+  // se publica el hallazgo positivo.
+  let mcsAdv: { pueblo: string | null; seccion: string | null; otroTel: string | null } | null = null
+  {
+    const { data } = await supabase.from('v_plan_directory_public')
+      .select('town,section,phones').eq('plan', 'MCS Advantage').eq('npi', npi).limit(1)
+    const r = (data || [])[0]
+    if (r) {
+      const del: string[] = (r.phones || []).filter((x: string) => x && x !== phoneDigits.slice(-10))
+      mcsAdv = { pueblo: r.town || null, seccion: r.section || null, otroTel: del.length ? del[0] : null }
+    }
+  }
+
+  // ═══ Testigos federales y de PR (2 sep 2026) ═══
+  // Dos fuentes independientes que dicen algo sobre el mismo NPI sin que nadie llame:
+  //  · testigo_orcps: la licencia de PR según el Departamento de Salud (ORCPS), consultada
+  //    caso por caso con fecha. Solo se publica cuando el match es EXACTO y el estatus es
+  //    activo. Un estatus suspendido o un match ambiguo NO se publica desde aquí: eso se
+  //    verifica 1 a 1 antes de decir nada (derecho a réplica).
+  //  · testigo_partd: recetó a beneficiarios de Medicare Part D en el año más reciente que
+  //    publica CMS. Es prueba de práctica activa, no de calidad ni de que te cojan.
+  let licAct: { expira: string | null; fecha: string } | null = null
+  let partdAct: { clms: number } | null = null
+  {
+    const [{ data: lo }, { data: lp }] = await Promise.all([
+      supabase.from('testigo_orcps').select('licencia_estatus,licencia_expira,match_confianza,consultado_en').eq('npi', npi).limit(1),
+      supabase.from('testigo_partd').select('tot_clms').eq('npi', npi).limit(1),
+    ])
+    const o = (lo || [])[0]
+    if (o && o.match_confianza === 'exacta' && String(o.licencia_estatus || '').toLowerCase() === 'activo') {
+      licAct = { expira: o.licencia_expira ? String(o.licencia_expira).slice(0, 10) : null, fecha: String(o.consultado_en || '').slice(0, 10) }
+    }
+    const p = (lp || [])[0]
+    if (p && Number(p.tot_clms) > 0) partdAct = { clms: Number(p.tot_clms) }
+  }
+
   const t = (es: string, en: string) => (lang === 'en' ? en : es)
   const MES_ES: Record<string, string> = { '2026-06-01': 'junio de 2026', '2025-12-01': 'diciembre de 2025', '2024-12-01': 'diciembre de 2024' }
   const MES_EN: Record<string, string> = { '2026-06-01': 'June 2026', '2025-12-01': 'December 2025', '2024-12-01': 'December 2024' }
@@ -6344,6 +6382,19 @@ async function handleEspecialista(req: any, res: any) {
     <p class="m-0 text-[15px] text-teal-900"><strong>Triple-S Advantage</strong> ${t('lo lista en su directorio de proveedores', 'lists this provider in its provider directory')} <strong>${t('2026', '2026')}</strong>${tsAdv.seccion ? ` · ${escapeHtml(tituloPueblo(tsAdv.seccion))}` : ''}${tsAdv.pueblo ? ` · ${t('bajo', 'under')} ${escapeHtml(tsAdv.pueblo)}` : ''}.</p>
     <p class="m-0 mt-1 text-sm text-teal-800">${t('Ese directorio lo actualizó el plan el 9 de septiembre de 2025. Es lo que publicó, no una confirmación de que te van a coger.', 'The plan last updated that directory on September 9, 2025. It is what they published, not a confirmation that they will take you.')}</p>
     ${tsAdv.otroTel ? `<p class="m-0 mt-2 text-[15px] text-teal-900">${t('Triple-S publica otro número para esta oficina:', 'Triple-S publishes another number for this office:')} <a href="tel:${escapeHtml(tsAdv.otroTel)}" class="font-bold underline">${escapeHtml(tsAdv.otroTel.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3'))}</a>. ${t('Si el de arriba no contesta, prueba ese.', 'If the one above does not answer, try that one.')}</p>` : ''}
+  </div>`
+
+  const mcsHtml = !mcsAdv ? '' : `<div class="not-prose mt-3 bg-teal-50 border border-teal-200 rounded-xl p-4">
+    <p class="m-0 text-[15px] text-teal-900"><strong>MCS Advantage</strong> ${t('lo lista en su directorio de proveedores de', 'lists this provider in its provider directory of')} <strong>${t('agosto de 2026', 'August 2026')}</strong>${mcsAdv.seccion ? ` · ${escapeHtml(tituloPueblo(mcsAdv.seccion))}` : ''}${mcsAdv.pueblo ? ` · ${t('bajo', 'under')} ${escapeHtml(tituloPueblo(mcsAdv.pueblo))}` : ''}.</p>
+    <p class="m-0 mt-1 text-sm text-teal-800">${t('Ese directorio lo actualizó el plan el 10 de agosto de 2026. Es lo que publicó, no una confirmación de que te van a coger.', 'The plan last updated that directory on August 10, 2026. It is what they published, not a confirmation that they will take you.')}</p>
+    ${mcsAdv.otroTel ? `<p class="m-0 mt-2 text-[15px] text-teal-900">${t('MCS publica otro número para esta oficina:', 'MCS publishes another number for this office:')} <a href="tel:${escapeHtml(mcsAdv.otroTel)}" class="font-bold underline">${escapeHtml(mcsAdv.otroTel.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3'))}</a>. ${t('Si el de arriba no contesta, prueba ese.', 'If the one above does not answer, try that one.')}</p>` : ''}
+  </div>`
+
+  const fechaLarga = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString(lang === 'en' ? 'en-US' : 'es-PR', { day: 'numeric', month: 'long', year: 'numeric' })
+  const testigosHtml = (!licAct && !partdAct) ? '' : `<div class="not-prose mt-3 bg-slate-50 border border-slate-200 rounded-xl p-4">
+    <p class="m-0 text-xs uppercase tracking-wide text-slate-500 font-bold">${t('Lo que dicen 2 fuentes que no dependen del plan', 'What 2 sources independent of the plan say')}</p>
+    ${licAct ? `<p class="m-0 mt-2 text-[15px] text-slate-900"><strong>${t('Licencia de Puerto Rico activa', 'Puerto Rico license active')}</strong>${licAct.expira ? ` · ${t('vence el', 'expires')} ${fechaLarga(licAct.expira)}` : ''}. <span class="text-sm text-slate-600">${t('Consultada en el registro del Departamento de Salud (ORCPS) el', 'Checked against the Department of Health registry (ORCPS) on')} ${fechaLarga(licAct.fecha)}.</span></p>` : ''}
+    ${partdAct ? `<p class="m-0 mt-2 text-[15px] text-slate-900"><strong>${t('Atendió pacientes de Medicare', 'Treated Medicare patients')}</strong>: ${partdAct.clms.toLocaleString(lang === 'en' ? 'en-US' : 'es-PR')} ${t('recetas Part D en 2024, según CMS', 'Part D prescriptions in 2024, per CMS')}. <span class="text-sm text-slate-600">${t('Es señal de práctica activa, no de calidad ni de que te cojan.', 'A sign of an active practice, not of quality or that they will take you.')}</span></p>` : ''}
   </div>`
 
   // El hub del pueblo: cuántos hay de lo mismo ahí, y el enlace que lo abre.
@@ -6418,7 +6469,7 @@ async function handleEspecialista(req: any, res: any) {
   })()
   // La nota que evita el peor uso de esta página: que alguien se cambie de plan porque
   // "aquí no salía". Solo se publica lo que SÍ se encontró; el silencio no es evidencia.
-  const planesNota = (planDirHtml || fmvHtml || tsHtml || planesOficina.length > 0)
+  const planesNota = (planDirHtml || fmvHtml || tsHtml || mcsHtml || planesOficina.length > 0)
     ? `<p class="not-prose mt-3 text-xs text-slate-500">${t('Ojo con la diferencia: el bloque verde es lo que dijo la oficina, y ese manda. Los demás dicen lo que cada plan imprimió en su directorio, no si te van a coger. Y si un plan no aparece aquí, eso NO quiere decir que el médico esté fuera de esa red: el cruce por número federal identifica el 33% de las filas del Plan Vital, el 51% de las de Triple-S Advantage y el 52% de las de MMM, así que casi siempre significa que esa fila no se pudo cruzar. Ojo también con las fechas: los directorios no salen el mismo día, así que uno puede estar más al día que otro. Antes de cambiarte de plan, confirma con la oficina.', 'These blocks say what each plan printed in its directory, not whether they will take you. And a plan missing here does NOT mean the provider is out of that network: the federal-number cross-check identifies 33% of Plan Vital directory rows, 51% of Triple-S Advantage\'s and 52% of MMM\'s, so it almost always means that row could not be matched. Note the dates too: these directories are not published on the same day, so one may be more current than another. Before switching plans, confirm with the office.')}</p>`
     : ''
 
@@ -6496,7 +6547,7 @@ async function handleEspecialista(req: any, res: any) {
       : `<div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${lang === 'en' ? 'Does this office take your plan?' : '¿Aceptan tu plan?'}</div><div class="text-slate-700 text-sm mt-1">${lang === 'en' ? 'Nobody has confirmed this office’s plans yet. Ask when you call, then help the next person below.' : 'Nadie ha confirmado los planes de esta oficina todavía. Pregunta cuando llames, y ayuda al próximo abajo.'}</div></div>`}
     ${reportedPlans.length ? `<div class="bg-sky-50 border border-sky-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-sky-700 font-bold">${lang === 'en' ? 'Neighbors report this office takes' : 'Vecinos reportan que aquí aceptan'}</div><div class="text-sky-900 font-semibold mt-1">${reportedPlans.map((r: any) => `${escapeHtml(planLabel(r.plan))}${Number(r.reportes) > 1 ? ` <span class="text-xs text-sky-600">(${r.reportes})</span>` : ''}`).join(' · ')}</div><div class="text-xs text-sky-700 mt-1">${lang === 'en' ? 'Reported by people who called, not confirmed by the office. Always double-check when you call.' : 'Reportado por gente que llamó, no confirmado por la oficina. Siempre verifica cuando llames.'}</div></div>` : ''}
   </div>
-${planDirHtml}${tsHtml}${fmvHtml}${planesNota}${negocioHtml}
+${planDirHtml}${mcsHtml}${tsHtml}${fmvHtml}${planesNota}${testigosHtml}${negocioHtml}
 ${puertaHub}
 
   <div class="not-prose mt-4 bg-white border border-slate-200 rounded-2xl p-5">
