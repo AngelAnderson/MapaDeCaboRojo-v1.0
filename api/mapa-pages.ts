@@ -512,13 +512,13 @@ ${isReg ? `<style>
 /* Tablas de proveedores: en pantallas chicas la columna del teléfono quedaba fuera del scroll
    horizontal (design-review 2026-09-02). Cada fila pasa a tarjeta con el botón visible. */
 @media (max-width:639px){
-  .not-prose.overflow-auto>table.w-full thead{display:none}
-  .not-prose.overflow-auto>table.w-full,.not-prose.overflow-auto>table.w-full tbody{display:block;width:100%}
-  .not-prose.overflow-auto>table.w-full tr{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;row-gap:2px;padding:10px 12px;align-items:center}
-  .not-prose.overflow-auto>table.w-full td{display:block;padding:0;border:0}
-  .not-prose.overflow-auto>table.w-full td:last-child{grid-column:2;grid-row:1/span 3;text-align:right}
-  .not-prose.overflow-auto>table.w-full td:first-child{font-size:15px}
-  .not-prose.overflow-auto>table.w-full .reg-call{min-height:44px;padding:0 14px}
+  .not-prose.overflow-auto>table.w-full:not(.reg-rank) thead{display:none}
+  .not-prose.overflow-auto>table.w-full:not(.reg-rank),.not-prose.overflow-auto>table.w-full:not(.reg-rank) tbody{display:block;width:100%}
+  .not-prose.overflow-auto>table.w-full:not(.reg-rank) tr{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;row-gap:2px;padding:10px 12px;align-items:center}
+  .not-prose.overflow-auto>table.w-full:not(.reg-rank) td{display:block;padding:0;border:0}
+  .not-prose.overflow-auto>table.w-full:not(.reg-rank) td:last-child{grid-column:2;grid-row:1/span 3;text-align:right}
+  .not-prose.overflow-auto>table.w-full:not(.reg-rank) td:first-child{font-size:15px}
+  .not-prose.overflow-auto>table.w-full:not(.reg-rank) .reg-call{min-height:44px;padding:0 14px}
 }
 h1,h2,h3{text-wrap:balance}
 .reg-card .text-lg,table.w-full td,.tabular{font-variant-numeric:tabular-nums}
@@ -4645,10 +4645,13 @@ const HPSA_MONEY_LOCAL: Record<string, { es: string; en: string }> = {
     en: 'Community clinics are already using it: Migrant Health Center, with two sites in Cabo Rojo, received <strong>$4 million in federal funds for community mental health</strong> (2023-2027) and <strong>$600,000 to expand behavioral services</strong> (2024). Source: USASpending.gov, retrieved Jul 2026.',
   },
 }
-function puebloSemaforo(por10k: number): { e: string; label: string; bg: string; bd: string } {
-  if (por10k >= 15) return { e: '🟢', label: 'acceso alto', bg: '#ecfdf5', bd: '#6ee7b7' }
-  if (por10k >= 5) return { e: '🟡', label: 'acceso medio', bg: '#fffbeb', bd: '#fcd34d' }
-  return { e: '🔴', label: 'acceso bajo', bg: '#fef2f2', bd: '#fca5a5' }
+// El semáforo era un emoji (🔴🟡🟢) en 78 filas y en el hero del hub: ruido de UI y color-only.
+// Ahora es un punto CSS (`e`) con el texto del nivel al lado donde hace falta (design-review 2026-09-03).
+const semDot = (c: string, big = false) => `<span aria-hidden="true" class="inline-block rounded-full align-middle ${big ? 'w-5 h-5' : 'w-2.5 h-2.5'}" style="background:${c}"></span>`
+function puebloSemaforo(por10k: number): { e: string; eBig: string; label: string; bg: string; bd: string } {
+  if (por10k >= 15) return { e: semDot('#059669'), eBig: semDot('#059669', true), label: 'acceso alto', bg: '#ecfdf5', bd: '#6ee7b7' }
+  if (por10k >= 5) return { e: semDot('#d97706'), eBig: semDot('#d97706', true), label: 'acceso medio', bg: '#fffbeb', bd: '#fcd34d' }
+  return { e: semDot('#dc2626'), eBig: semDot('#dc2626', true), label: 'acceso bajo', bg: '#fef2f2', bd: '#fca5a5' }
 }
 
 async function handlePueblo(req: any, res: any) {
@@ -4697,9 +4700,9 @@ async function handlePueblo(req: any, res: any) {
   <input id="pb-filter" type="search" placeholder="${te('Busca tu pueblo…', 'Find your town…')}" class="w-full rounded-lg border border-slate-300 p-3 text-base" autocomplete="off">
 </div>
 <div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
-  <table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">#</th><th class="py-2 px-3">${te('Pueblo', 'Town')}</th><th class="py-2 px-3">${te('Región', 'Region')}</th><th class="py-2 px-3 text-right">${te('Especialistas', 'Specialists')}</th><th class="py-2 px-3 text-right">${te('Por 10 mil', 'Per 10,000')}</th></tr></thead><tbody id="pb-body">${rows}</tbody></table>
+  <table class="w-full text-sm reg-rank"><thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">#</th><th class="py-2 px-3">${te('Pueblo', 'Town')}</th><th class="py-2 px-3">${te('Región', 'Region')}</th><th class="py-2 px-3 text-right">${te('Especialistas', 'Specialists')}</th><th class="py-2 px-3 text-right">${te('Por 10 mil', 'Per 10,000')}</th></tr></thead><tbody id="pb-body">${rows}</tbody></table>
 </div>
-<p class="not-prose text-xs text-slate-500 mt-2">${te('🔴 menos de 5 por 10 mil · 🟡 de 5 a 15 · 🟢 más de 15. El ranking va del más desatendido al mejor servido. Semáforo por cantidad, no por distancia: un pueblo pequeño al lado de Mayagüez puede estar en rojo y aun así tener el especialista a 15 minutos.', '🔴 fewer than 5 per 10,000 · 🟡 5 to 15 · 🟢 more than 15. Ranked from most underserved to best served. The light measures quantity, not distance: a small town next to Mayagüez can be red and still have the specialist 15 minutes away.')}</p>
+<p class="not-prose text-xs text-slate-500 mt-2">${semDot('#dc2626')} ${te('menos de 5 por 10 mil ·', 'fewer than 5 per 10,000 ·')} ${semDot('#d97706')} ${te('de 5 a 15 ·', '5 to 15 ·')} ${semDot('#059669')} ${te('más de 15. El ranking va del más desatendido al mejor servido. Semáforo por cantidad, no por distancia: un pueblo pequeño al lado de Mayagüez puede estar en rojo y aun así tener el especialista a 15 minutos.', 'more than 15. Ranked from most underserved to best served. The light measures quantity, not distance: a small town next to Mayagüez can be red and still have the specialist 15 minutes away.')}</p>
 <script>
 (function(){var f=document.getElementById('pb-filter'),b=document.getElementById('pb-body');if(!f)return;
 function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');}
@@ -4806,7 +4809,7 @@ ${SHARE_COPY_SCRIPT}`
 <p class="text-slate-600 -mt-2">${te('Cada nombre por categoría, en orden alfabético. Toca uno pa\' ver su perfil, teléfono y el enlace pa\' verificar su NPI en el registro federal.', 'Every name by category, alphabetical. Tap one for their profile, phone, and the link to verify their NPI in the federal registry.')}</p>
 <div class="not-prose mt-3 grid gap-2.5">${dirBlocks}</div>
 <div class="not-prose mt-3 bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-500 leading-relaxed">
-  ⚠️ ${te('Esta lista sale del registro federal NPPES: son los que tienen un número NPI activo. La regla federal (45 CFR 162.410) les exige actualizar su récord en 30 días cuando algo cambia, pero en la práctica hay récords con 10 y 20 años sin tocarse. El NPI no se apaga cuando un proveedor se retira o se muda, así que la lista es un <strong>techo</strong>, no un piso — puede incluir a alguno que ya no ejerce aquí. Por eso cada nombre enlaza su NPI federal pa\' que lo confirmes. ¿Sabes de alguno que ya no está? ', 'This list comes from the federal NPPES registry: these are the ones with an active NPI number. Federal rule 45 CFR 162.410 requires providers to update their record within 30 days of a change, yet in practice records go 10 and 20 years untouched. An NPI does not turn off when a provider retires or moves, so the list is a <strong>ceiling</strong>, not a floor — it may include someone no longer practicing here. That is why each name links its federal NPI so you can confirm it. Know of one who is no longer here? ')}<a href="mailto:angel@angelanderson.com?subject=Correccion%20registro%20${encodeURIComponent(town.municipio)}" class="text-teal-700 font-semibold">${te('Dínoslo y se corrige.', 'Tell us and we fix it.')}</a>
+  ${te('Esta lista sale del registro federal NPPES: son los que tienen un número NPI activo. La regla federal (45 CFR 162.410) les exige actualizar su récord en 30 días cuando algo cambia, pero en la práctica hay récords con 10 y 20 años sin tocarse. El NPI no se apaga cuando un proveedor se retira o se muda, así que la lista es un <strong>techo</strong>, no un piso — puede incluir a alguno que ya no ejerce aquí. Por eso cada nombre enlaza su NPI federal pa\' que lo confirmes. ¿Sabes de alguno que ya no está? ', 'This list comes from the federal NPPES registry: these are the ones with an active NPI number. Federal rule 45 CFR 162.410 requires providers to update their record within 30 days of a change, yet in practice records go 10 and 20 years untouched. An NPI does not turn off when a provider retires or moves, so the list is a <strong>ceiling</strong>, not a floor — it may include someone no longer practicing here. That is why each name links its federal NPI so you can confirm it. Know of one who is no longer here? ')}<a href="mailto:angel@angelanderson.com?subject=Correccion%20registro%20${encodeURIComponent(town.municipio)}" class="text-teal-700 font-semibold">${te('Dínoslo y se corrige.', 'Tell us and we fix it.')}</a>
 </div>` : ''
 
   const missingRows = missing.map((x: any) => {
@@ -4831,7 +4834,7 @@ ${SHARE_COPY_SCRIPT}`
 
   const hpsaBlock = hpsa.length ? `
 <div class="not-prose mt-6 bg-indigo-50 border border-indigo-200 rounded-2xl p-5">
-  <p class="font-bold text-indigo-900 text-base">🏛️ ${te('El gobierno federal ya reconoció la escasez aquí', 'The federal government already recognized the shortage here')}</p>
+  <p class="font-bold text-indigo-900 text-base">${te('El gobierno federal ya reconoció la escasez aquí', 'The federal government already recognized the shortage here')}</p>
   <p class="text-sm text-indigo-800 mt-1">${escapeHtml(town.municipio)} ${te(`tiene ${hpsa.length === 1 ? 'una designación federal activa' : hpsa.length + ' designaciones federales activas'} de escasez de proveedores (HPSA):`, `has ${hpsa.length === 1 ? 'an active federal provider-shortage designation' : hpsa.length + ' active federal provider-shortage designations'} (HPSA):`)} ${hpsa.map(h => `${escapeHtml(hpsaLbl(h.discipline))} (${te('puntuación', 'score')} ${escapeHtml(String(h.score))}/25)`).join(' · ')}. ${te('Eso no es opinión nuestra: es HRSA, la agencia federal de salud.', 'That is not our opinion: it is HRSA, the federal health agency.')} <a href="/registro/estado" class="font-semibold underline">${te('Lo que eso significa y el dinero que trae →', 'What that means and the money it brings →')}</a></p>
 </div>` : ''
 
@@ -4873,7 +4876,7 @@ ${SHARE_COPY_SCRIPT}`
 <p class="text-slate-600 -mt-2">${te('Lo oficial y lo que ves, lado a lado. Ninguno está mintiendo; miden cosas distintas. La línea de abajo explica cuál.', 'The official record and what you see, side by side. Neither one is lying; they measure different things. The line below each card explains which.')}</p>
 <div class="not-prose mt-3 grid gap-3">${contraCards.join('')}</div>
 <div class="not-prose mt-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
-  <p class="text-xs text-amber-900 leading-relaxed">⚠️ <strong>${te('Y un detalle que casi nadie sabe:', 'And a detail almost nobody knows:')}</strong> ${te('el gobierno federal no borra a nadie del registro por su cuenta. Cuando un médico o dentista se retira, se muda o cierra la oficina, le toca a él sacarse del sistema, y muchos nunca lo hacen. Por eso estos conteos son un <strong>techo, no un piso</strong>: la escasez real puede ser peor de lo que dice el número. Y por eso la gente llama a una oficina "del registro" y se encuentra con que ya cerró. Cada nombre de abajo enlaza su NPI federal pa\' que lo confirmes antes de dar el viaje.', 'the federal government does not remove anyone from the registry on its own. When a doctor or dentist retires, moves, or closes the office, it is on them to take themselves out of the system, and many never do. That is why these counts are a <strong>ceiling, not a floor</strong>: the real shortage can be worse than the number says. And it is why people call an office "in the registry" and find it already closed. Every name below links its federal NPI so you can confirm before making the trip.')}</p>
+  <p class="text-xs text-amber-900 leading-relaxed"><strong>${te('Y un detalle que casi nadie sabe:', 'And a detail almost nobody knows:')}</strong> ${te('el gobierno federal no borra a nadie del registro por su cuenta. Cuando un médico o dentista se retira, se muda o cierra la oficina, le toca a él sacarse del sistema, y muchos nunca lo hacen. Por eso estos conteos son un <strong>techo, no un piso</strong>: la escasez real puede ser peor de lo que dice el número. Y por eso la gente llama a una oficina "del registro" y se encuentra con que ya cerró. Cada nombre de abajo enlaza su NPI federal pa\' que lo confirmes antes de dar el viaje.', 'the federal government does not remove anyone from the registry on its own. When a doctor or dentist retires, moves, or closes the office, it is on them to take themselves out of the system, and many never do. That is why these counts are a <strong>ceiling, not a floor</strong>: the real shortage can be worse than the number says. And it is why people call an office "in the registry" and find it already closed. Every name below links its federal NPI so you can confirm before making the trip.')}</p>
 </div>` : ''
 
   // ── EL DINERO: la designación no es diagnóstico, es una llave (NHSC + lo que ya entra) ──
@@ -5010,7 +5013,7 @@ fetch('/api/mapa-pages?page=registro-alert',{method:'POST',headers:{'Content-Typ
 <p class="text-lg text-slate-600 mt-2">${te(`${escapeHtml(town.municipio)} tiene <strong>${town.especialistas.toLocaleString('en-US')} especialistas verificados</strong> contra el registro federal pa' ${town.poblacion.toLocaleString('en-US')} habitantes: <strong>${town.por.toFixed(1)} por cada 10,000</strong>. La mediana de la isla es ${mediana.toFixed(1)}.`, `${escapeHtml(town.municipio)} has <strong>${town.especialistas.toLocaleString('en-US')} verified specialists</strong> in the federal registry for ${town.poblacion.toLocaleString('en-US')} residents: <strong>${town.por.toFixed(1)} per 10,000</strong>. The island median is ${mediana.toFixed(1)}.`)}</p>
 <div class="not-prose mt-4" style="background:${sem.bg};border:2px solid ${sem.bd};border-radius:16px;padding:18px 20px;">
   <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-    <span class="text-4xl">${sem.e}</span>
+    <span class="inline-flex">${sem.eBig}</span>
     <div>
       <div class="font-black text-slate-900 text-xl leading-tight">${semLabel.toUpperCase()}</div>
       <div class="text-sm text-slate-600">${te(`Puesto ${rank} de 78 municipios · región ${escapeHtml(regionCap)} · fuente NPPES federal + Censo`, `Rank ${rank} of 78 municipalities · ${escapeHtml(regionCap)} region · source: federal NPPES + Census`)}</div>
@@ -5033,7 +5036,7 @@ ${missing.length ? `<h2>${te('Lo que NO hay (y dónde queda lo más cerca)', 'Wh
 <p class="text-slate-600 -mt-2">${te(`De los especialistas que más se buscan, estos no tienen práctica verificada en ${escapeHtml(town.municipio)}:`, `Of the most sought-after specialists, these have no verified practice in ${escapeHtml(town.municipio)}:`)}</p>
 <ul class="not-prose mt-3 space-y-2.5 bg-white border border-slate-200 rounded-2xl p-5">${missingRows}</ul>
 <p class="not-prose text-xs text-slate-500 mt-2">${te('Que no esté en el pueblo no siempre es crisis: lo que importa es cuán lejos queda y si la cita llega a tiempo. Por eso el dato va con el "dónde sí hay" al lado.', 'A specialist missing from town is not always a crisis: what matters is how far the nearest one is and whether the appointment comes in time. That is why each gap shows where they DO exist.')}</p>` : ''}
-<h2>📋 ${te(`Datos citables de ${escapeHtml(town.municipio)}`, `Citable facts about ${escapeHtml(town.municipio)}`)}</h2>
+<h2>${te(`Datos citables de ${escapeHtml(town.municipio)}`, `Citable facts about ${escapeHtml(town.municipio)}`)}</h2>
 <p class="text-slate-600 -mt-2">${te("Pa' prensa, alcaldías, tareas escolares o discusiones de Facebook: copia el dato con la fuente pegada.", 'For press, mayors, school papers, or Facebook arguments: copy the fact with the source attached.')}</p>
 <div class="not-prose mt-3 space-y-2">${datosHtml}</div>
 ${alertForm}
