@@ -18076,7 +18076,7 @@ async function handleRegistroMapa(req: any, res: any) {
 (function(){
   var D=${dataJson};
   function esc(t){return String(t).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
-  if(!D.munis.length){document.getElementById('reg-map').innerHTML='<p style="padding:2rem;text-align:center;color:#64748b">La data del mapa no está disponible ahora — intenta en un rato.</p>';return}
+  if(!D.munis.length){document.getElementById('reg-map').innerHTML='<p style="padding:2rem;text-align:center;color:#64748b">La data del mapa no está disponible ahora. Intenta en un rato.</p>';return}
   var map=L.map('reg-map',{scrollWheelZoom:false}).setView([18.20,-66.42],9);
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',maxZoom:12,minZoom:8}).addTo(map);
   // specialty dropdown from matrix
