@@ -18058,9 +18058,9 @@ async function handleRegistroMapa(req: any, res: any) {
   <div id="muni-panel" class="hidden absolute top-3 right-3 z-[500] w-[300px] max-w-[85vw] bg-white rounded-xl border border-slate-200 shadow-lg p-4 max-h-[480px] overflow-auto"></div>
 </div>
 <div class="not-prose mt-2 flex flex-wrap gap-4 text-xs text-slate-500">
-  <span><i class="fa-solid fa-circle" style="color:#10b981"></i> 20+ por 10,000 hab</span>
-  <span><i class="fa-solid fa-circle" style="color:#f59e0b"></i> 8–20</span>
-  <span><i class="fa-solid fa-circle" style="color:#dc2626"></i> menos de 8</span>
+  <span><i class="fa-solid fa-circle" style="color:#10b981"></i> 15+ por 10,000 hab</span>
+  <span><i class="fa-solid fa-circle" style="color:#f59e0b"></i> 5 a 15</span>
+  <span><i class="fa-solid fa-circle" style="color:#dc2626"></i> menos de 5</span>
   <span><i class="fa-regular fa-circle" style="color:#7f1d1d"></i> cero</span>
   <span>💰 = designación federal de escasez activa (HRSA)</span>
 </div>
@@ -18078,7 +18078,7 @@ async function handleRegistroMapa(req: any, res: any) {
   function esc(t){return String(t).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
   if(!D.munis.length){document.getElementById('reg-map').innerHTML='<p style="padding:2rem;text-align:center;color:#64748b">La data del mapa no está disponible ahora — intenta en un rato.</p>';return}
   var map=L.map('reg-map',{scrollWheelZoom:false}).setView([18.20,-66.42],9);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap &copy; CARTO',maxZoom:12,minZoom:8}).addTo(map);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',maxZoom:12,minZoom:8}).addTo(map);
   // specialty dropdown from matrix
   var specs={};Object.values(D.matrix).forEach(function(o){Object.keys(o).forEach(function(s){specs[s]=(specs[s]||0)+o[s]})});
   var sel=document.getElementById('spec-sel');
@@ -18110,7 +18110,7 @@ async function handleRegistroMapa(req: any, res: any) {
   function resolver(){
     var box=document.getElementById('resolver');
     if(line){map.removeLayer(line);line=null}
-    if(!town){box.className='not-prose mt-3 rounded-2xl border border-teal-200 bg-teal-50 p-4';box.innerHTML='<div class="text-teal-900">👋 <b>¿De qué pueblo eres?</b> Escógelo arriba o toca <b>📍 Usar mi ubicación</b> pa\\' ver qué especialistas tienes cerca — y a cuánto está el más cercano.</div>';return}
+    if(!town){box.className='not-prose mt-3 rounded-2xl border border-teal-200 bg-teal-50 p-4';box.innerHTML='<div class="text-teal-900">👋 <b>¿De qué pueblo eres?</b> Escógelo arriba o toca <b>📍 Usar mi ubicación</b> pa\\' ver qué especialistas tienes cerca, y a cuánto está el más cercano.</div>';return}
     var me=D.munis.filter(function(x){return x.m===town})[0];if(!me){box.className='not-prose hidden mt-3 rounded-2xl border p-4';return}
     if(!cur){catchment(me);return}
     var kw=D.kw[cur]||cur.toUpperCase().split(' ')[0];
@@ -18135,7 +18135,7 @@ async function handleRegistroMapa(req: any, res: any) {
     var mins=Math.round(bd/0.7); // ~42 km/h promedio carretera PR
     box.className='not-prose mt-3 rounded-2xl border border-amber-300 bg-amber-50 p-4';
     box.innerHTML='<div class="text-amber-900"><b>'+esc(town)+'</b> no tiene ni un '+label+' declarado.</div>'
-      +'<div class="mt-1 text-slate-800">El más cercano está en <b>'+esc(best.m)+'</b> ('+((D.matrix[best.m]||{})[cur]||best.n)+' '+label+(((D.matrix[best.m]||{})[cur]||best.n)>1?'s':'')+') — a <b>~'+bd.toFixed(0)+' km</b>, unos '+mins+' min en carro.</div>'
+      +'<div class="mt-1 text-slate-800">El más cercano está en <b>'+esc(best.m)+'</b> ('+((D.matrix[best.m]||{})[cur]||best.n)+' '+label+(((D.matrix[best.m]||{})[cur]||best.n)>1?'s':'')+'), a <b>~'+bd.toFixed(0)+' km</b>, unos '+mins+' min en carro.</div>'
       +'<div class="mt-2 flex flex-wrap gap-2"><a class="text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-full px-3 py-1.5" href="'+waLink(kw)+'">Escríbele '+kw+' al Veci</a>'
       +'<a class="text-sm font-bold text-white bg-teal-700 hover:bg-teal-800 rounded-full px-3 py-1.5" href="/pueblo/'+encodeURIComponent(best.m.normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-'))+'">Ver los nombres en '+esc(best.m)+' →</a></div>'+hatch();
     line=L.polyline([[me.lat,me.lon],[best.lat,best.lon]],{color:'#0f766e',weight:3,dashArray:'6,6',opacity:0.8}).addTo(map);
@@ -18143,7 +18143,7 @@ async function handleRegistroMapa(req: any, res: any) {
   }
   function colorFor(x){
     if(cur){var n=(D.matrix[x.m]||{})[cur]||0;return n===0?{c:'#7f1d1d',f:0.15}:n>=10?{c:'#10b981',f:0.75}:n>=3?{c:'#f59e0b',f:0.75}:{c:'#dc2626',f:0.75}}
-    return x.n===0?{c:'#7f1d1d',f:0.15}:x.r10k>=20?{c:'#10b981',f:0.7}:x.r10k>=8?{c:'#f59e0b',f:0.7}:{c:'#dc2626',f:0.7}
+    return x.n===0?{c:'#7f1d1d',f:0.15}:x.r10k>=15?{c:'#10b981',f:0.7}:x.r10k>=5?{c:'#f59e0b',f:0.7}:{c:'#dc2626',f:0.7}
   }
   function radiusFor(x){
     if(cur){var n=(D.matrix[x.m]||{})[cur]||0;return Math.max(6,Math.min(24,5+Math.sqrt(n)*2.4))}
@@ -18156,7 +18156,7 @@ async function handleRegistroMapa(req: any, res: any) {
     var kw=cur?(D.kw[cur]||cur.toUpperCase().split(' ')[0]):'ESPECIALISTA';
     var curLine=cur?('<div class="mt-1 text-sm">'+(mx[cur]?('<b>'+mx[cur]+'</b> '+esc(cur)+(mx[cur]>1?'s':'')+' aquí'):'<b style="color:#b91c1c">0 '+esc(cur)+'s aquí</b>')+'</div>'):'';
     var badges='';
-    if(x.mh||x.pc){badges='<div class="mt-2 text-xs bg-amber-50 border border-amber-200 rounded-lg p-2">💰 <b>Designación federal de escasez activa</b> — '+(x.pc?('primaria score '+x.pc):'')+(x.pc&&x.mh?' · ':'')+(x.mh?('salud mental score '+x.mh):'')+'. Un médico que practique aquí puede cualificar pa\\' repago federal de préstamos (NHSC).</div>'}
+    if(x.mh||x.pc){badges='<div class="mt-2 text-xs bg-amber-50 border border-amber-200 rounded-lg p-2">💰 <b>Designación federal de escasez activa</b>: '+(x.pc?('primaria score '+x.pc):'')+(x.pc&&x.mh?' · ':'')+(x.mh?('salud mental score '+x.mh):'')+'. Un médico que practique aquí puede cualificar pa\\' repago federal de préstamos (NHSC).</div>'}
     el.innerHTML='<div class="flex items-start justify-between"><h3 class="font-black text-slate-900">'+esc(x.m)+'</h3><button onclick="document.getElementById(\\'muni-panel\\').classList.add(\\'hidden\\')" class="text-slate-400 hover:text-slate-700 text-lg leading-none">&times;</button></div>'
       +'<div class="text-xs text-slate-500">'+x.pob.toLocaleString('en-US')+' habitantes</div>'
       +'<div class="mt-2 text-sm"><b>'+x.n+'</b> especialistas · <b>'+x.r10k.toFixed(1)+'</b> por 10,000</div>'
