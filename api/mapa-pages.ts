@@ -5473,7 +5473,6 @@ async function handleRegistro(req: any, res: any) {
   <a href="/cambios" class="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1 rounded-full hover:border-teal-400"><i class="fa-solid fa-calendar-check"></i> ${t(`Última actualización: ${REG_LAST_UPDATE.es} →`, `Last updated: ${REG_LAST_UPDATE.en} →`)}</a>
 </div>
 
-<p class="not-prose mt-3 text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">${t(`<strong>¿Prefieres preguntar por texto?</strong> Escribe lo que buscas (ej: <em>neurólogo Mayagüez</em>) al <a href="sms:+17874177711" class="font-bold text-teal-700 whitespace-nowrap">787-417-7711</a> y te contesta El Veci, con nombre y teléfono. Gratis.`, `<strong>Prefer to ask by text?</strong> Text what you need (e.g. <em>neurologist Mayagüez</em>) to <a href="sms:+17874177711" class="font-bold text-teal-700 whitespace-nowrap">787-417-7711</a> and El Veci answers with a name and phone number. Free.`)}</p>
 
 <div id="reg-tool" class="not-prose mt-5 bg-white border-2 border-teal-300 rounded-2xl p-6 shadow-sm scroll-mt-24">
   <label class="block">
@@ -5516,17 +5515,12 @@ async function handleRegistro(req: any, res: any) {
   <p id="rg-hint" class="mt-4 text-sm text-slate-400 text-center">${t('Escoge los dos y te decimos cuántos hay cerca, cuáles, y sus teléfonos.', 'Pick both and we\'ll tell you how many are near you, who, and their phone numbers.')}</p>
 </div>
 
-<p class="not-prose mt-3 text-sm text-slate-500 text-center"><a href="/registro/mapa" class="text-teal-700 font-semibold hover:underline">${t('🗺️ Mira el mapa: qué especialista hay en cada pueblo →', '🗺️ See the map: which specialists each town has →')}</a> · ${t('¿Vives lejos del área metro?', 'Live far from the metro area?')} <a href="/registro/desiertos${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold hover:underline">${t('Los desiertos médicos →', 'The medical deserts →')}</a></p>
+<p class="not-prose mt-4 text-sm text-slate-500 text-center">${t(`<strong>¿Prefieres preguntar por texto?</strong> Escribe lo que buscas (ej: <em>neurólogo Mayagüez</em>) al <a href="sms:+17874177711" class="font-bold text-teal-700 whitespace-nowrap">787-417-7711</a> y te contesta El Veci, con nombre y teléfono. Gratis.`, `<strong>Prefer to ask by text?</strong> Text what you need (e.g. <em>neurologist Mayagüez</em>) to <a href="sms:+17874177711" class="font-bold text-teal-700 whitespace-nowrap">787-417-7711</a> and El Veci answers with a name and phone number. Free.`)}</p>
+<p class="not-prose mt-3 text-sm text-slate-500 text-center"><a href="/registro/mapa" class="text-teal-700 font-semibold hover:underline">${t('Mira el mapa: qué especialista hay en cada pueblo →', 'See the map: which specialists each town has →')}</a> · ${t('¿Vives lejos del área metro?', 'Live far from the metro area?')} <a href="/registro/desiertos${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold hover:underline">${t('Los desiertos médicos →', 'The medical deserts →')}</a></p>
 
-<p class="not-prose mt-4 text-sm text-slate-500 text-center">🎙️ ${t('¿Quieres entender por qué pasa esto?', 'Want to understand why this happens?')} <a href="/observatorio${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold hover:underline">${t('Escucha el podcast y baja el reporte completo →', 'Listen to the podcast and get the full report →')}</a></p>
+<p class="not-prose mt-2 text-sm text-slate-500 text-center">${t('¿Quieres entender por qué pasa esto?', 'Want to understand why this happens?')} <a href="/observatorio${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold hover:underline">${t('Escucha el podcast y baja el reporte completo →', 'Listen to the podcast and get the full report →')}</a></p>
 
-<div class="not-prose mt-6 rounded-xl border-2 border-slate-800 bg-slate-900 text-white p-4 flex items-start gap-3">
-  <div class="text-2xl leading-none">📊</div>
-  <div class="flex-1 min-w-0">
-    <p class="font-black m-0">${t('¿Y por qué faltan tantos?', 'Why are so many missing?')}</p>
-    <p class="text-sm text-slate-300 mt-1 m-0">${t('Puerto Rico no tiene escasez de médicos. Tiene escasez de condiciones. Lo contamos en 6 números, cada uno con quién lo tiene que mover y desde cuándo nadie lo mueve.', 'Puerto Rico does not have a doctor shortage. It has a conditions shortage. We counted it in 6 numbers, each with who has to move it and how long nobody has.')} <a href="/marcador" class="text-teal-300 font-bold underline">${t('Ver El Marcador →', 'See The Scoreboard →')}</a></p>
-  </div>
-</div>
+<p class="not-prose mt-2 text-sm text-slate-500 text-center">${t('Puerto Rico no tiene escasez de médicos. Tiene escasez de condiciones.', 'Puerto Rico does not have a doctor shortage. It has a conditions shortage.')} <a href="/marcador${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold hover:underline">${t('Los 6 números, en El Marcador →', 'The 6 numbers, in El Marcador →')}</a></p>
 
 
 <!-- 2026-09-01: el bloque "por que existe esta pagina" - el finding del dossier de
