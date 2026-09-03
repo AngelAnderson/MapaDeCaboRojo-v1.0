@@ -523,7 +523,7 @@ ${isReg ? `<style>
   table.reg-rank th:nth-child(3),table.reg-rank td:nth-child(3){display:none}
   table.reg-rank th,table.reg-rank td{padding:8px 6px;min-width:0}
   table.reg-rank{table-layout:fixed}
-  table.reg-rank td:first-child,table.reg-rank th:first-child{width:2.25rem;padding-left:10px}
+  table.reg-rank td:first-child,table.reg-rank th:first-child{width:2.25rem;min-width:0;padding-left:10px}
   table.reg-rank td:nth-child(4),table.reg-rank th:nth-child(4){width:4.5rem}
   table.reg-rank td:nth-child(5),table.reg-rank th:nth-child(5){width:4.5rem}
 }
