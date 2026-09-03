@@ -18414,31 +18414,39 @@ const PLAN_ED_TSS = '2025-09-09'
 const PLAN_ED_MMM_ES = 'junio de 2026', PLAN_ED_MMM_EN = 'June 2026'
 const PLAN_ED_VITAL_ES = 'julio de 2026', PLAN_ED_VITAL_EN = 'July 2026'
 const PLAN_ED_TSS_ES = 'septiembre de 2025', PLAN_ED_TSS_EN = 'September 2025'
-type PlanHit = { mmm: boolean; vital: boolean; tss: boolean }
+// MCS Advantage (MCS Classicare): PDF "actualizado al 10 de agosto de 2026", cargado el 2 sep 2026
+// (18,283 filas, 44.9% cruzadas por NPI). Es el plan #1 de Cabo Rojo (5,066 afiliados MA, mayo
+// 2026 según CMS) y el hub no lo miraba. Misma regla que los otros 3: solo el positivo.
+const PLAN_ED_MCS = '2026-08-10'
+const PLAN_ED_MCS_ES = 'agosto de 2026', PLAN_ED_MCS_EN = 'August 2026'
+type PlanHit = { mmm: boolean; vital: boolean; tss: boolean; mcs: boolean }
 
 async function planHitsByNpi(npis: any[]): Promise<Map<string, PlanHit>> {
   const out = new Map<string, PlanHit>()
   const list = Array.from(new Set(npis.filter(Boolean).map(String)))
   if (!list.length) return out
   try {
-    const [mRes, vRes, tRes] = await Promise.all([
+    const [mRes, vRes, tRes, cRes] = await Promise.all([
       // Vista pública: la tabla base está cerrada porque trae el bloque crudo del PDF.
       supabase.from('v_plan_directory_public').select('npi').eq('plan', 'MMM').eq('edition_date', PLAN_ED_MMM).in('npi', list),
       supabase.from('fmvital_directorio').select('npi').eq('edicion', PLAN_ED_VITAL).in('npi', list),
       supabase.from('v_plan_directory_public').select('npi').eq('plan', 'Triple-S Advantage').eq('edition_date', PLAN_ED_TSS).in('npi', list),
+      supabase.from('v_plan_directory_public').select('npi').eq('plan', 'MCS Advantage').eq('edition_date', PLAN_ED_MCS).in('npi', list),
     ])
-    const mark = (k: string, f: keyof PlanHit) => { const p = out.get(k) || { mmm: false, vital: false, tss: false }; p[f] = true; out.set(k, p) }
+    const mark = (k: string, f: keyof PlanHit) => { const p = out.get(k) || { mmm: false, vital: false, tss: false, mcs: false }; p[f] = true; out.set(k, p) }
     for (const r of (((mRes as any).data) || [])) mark(String(r.npi), 'mmm')
     for (const r of (((vRes as any).data) || [])) mark(String(r.npi), 'vital')
     for (const r of (((tRes as any).data) || [])) mark(String(r.npi), 'tss')
+    for (const r of (((cRes as any).data) || [])) mark(String(r.npi), 'mcs')
   } catch { /* aditivo: si el cruce falla, el hub sigue sirviendo nombres y teléfonos */ }
   return out
 }
 
 const planBadges = (h: PlanHit | undefined, en: boolean) => {
-  if (!h || (!h.mmm && !h.vital && !h.tss)) return `<span class="text-slate-300" title="${en ? 'This row could not be cross-matched — it does NOT mean out of network' : 'Esta fila no se pudo cruzar — NO quiere decir que esté fuera de la red'}">—</span>`
+  if (!h || (!h.mmm && !h.vital && !h.tss && !h.mcs)) return `<span class="text-slate-300" title="${en ? 'This row could not be cross-matched — it does NOT mean out of network' : 'Esta fila no se pudo cruzar — NO quiere decir que esté fuera de la red'}">—</span>`
   const b: string[] = []
   if (h.mmm) b.push(`<span class="inline-block bg-teal-50 border border-teal-200 text-teal-800 font-bold text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap">MMM</span>`)
+  if (h.mcs) b.push(`<span class="inline-block bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap">MCS</span>`)
   if (h.vital) b.push(`<span class="inline-block bg-indigo-50 border border-indigo-200 text-indigo-800 font-bold text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap">Plan Vital</span>`)
   if (h.tss) b.push(`<span class="inline-block bg-sky-50 border border-sky-200 text-sky-800 font-bold text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap">Triple-S</span>`)
   return `<span class="inline-flex flex-wrap gap-1">${b.join('')}</span>`
@@ -18446,8 +18454,8 @@ const planBadges = (h: PlanHit | undefined, en: boolean) => {
 
 // La nota que evita el peor uso de la columna. Va debajo de toda tabla que la pinte.
 const planNotaHub = (en: boolean) => `<p class="not-prose mt-3 text-xs text-slate-500">${en
-  ? `The <strong>Plan</strong> column says what the plan printed in its own provider directory (MMM, ${PLAN_ED_MMM_EN} · Triple-S Advantage, ${PLAN_ED_TSS_EN} · Plan Vital / First Medical, ${PLAN_ED_VITAL_EN}), not whether they will take you. A dash does <strong>not</strong> mean the provider is out of that network: the federal-number cross-check identifies 33% of the Plan Vital directory rows and 52% of MMM's, so a dash almost always means that row could not be matched. Before switching plans, confirm with the office. <a href="/expediente-mmm?lang=en" class="text-teal-700 underline">The MMM audit</a> · <a href="/expediente-planvital?lang=en" class="text-teal-700 underline">the Plan Vital audit</a>.`
-  : `La columna <strong>Plan</strong> dice lo que el plan imprimió en su propio directorio (MMM, ${PLAN_ED_MMM_ES} · Triple-S Advantage, ${PLAN_ED_TSS_ES} · Plan Vital / First Medical, ${PLAN_ED_VITAL_ES}), no si te van a coger. Una raya <strong>no</strong> quiere decir que el médico esté fuera de esa red: el cruce por número federal identifica el 33% de las filas del directorio del Plan Vital y el 52% de las de MMM, así que casi siempre significa que esa fila no se pudo cruzar. Antes de cambiarte de plan, confirma con la oficina. <a href="/expediente-mmm" class="text-teal-700 underline">El expediente MMM</a> · <a href="/expediente-planvital" class="text-teal-700 underline">el expediente Plan Vital</a>.`}</p>`
+  ? `The <strong>Plan</strong> column says what the plan printed in its own provider directory (MMM, ${PLAN_ED_MMM_EN} · MCS Advantage, ${PLAN_ED_MCS_EN} · Triple-S Advantage, ${PLAN_ED_TSS_EN} · Plan Vital / First Medical, ${PLAN_ED_VITAL_EN}), not whether they will take you. A dash does <strong>not</strong> mean the provider is out of that network: the federal-number cross-check identifies 33% of the Plan Vital directory rows and 52% of MMM's, so a dash almost always means that row could not be matched. Before switching plans, confirm with the office. <a href="/expediente-mmm?lang=en" class="text-teal-700 underline">The MMM audit</a> · <a href="/expediente-planvital?lang=en" class="text-teal-700 underline">the Plan Vital audit</a>.`
+  : `La columna <strong>Plan</strong> dice lo que el plan imprimió en su propio directorio (MMM, ${PLAN_ED_MMM_ES} · MCS Advantage, ${PLAN_ED_MCS_ES} · Triple-S Advantage, ${PLAN_ED_TSS_ES} · Plan Vital / First Medical, ${PLAN_ED_VITAL_ES}), no si te van a coger. Una raya <strong>no</strong> quiere decir que el médico esté fuera de esa red: el cruce por número federal identifica el 33% de las filas del directorio del Plan Vital y el 52% de las de MMM, así que casi siempre significa que esa fila no se pudo cruzar. Antes de cambiarte de plan, confirma con la oficina. <a href="/expediente-mmm" class="text-teal-700 underline">El expediente MMM</a> · <a href="/expediente-planvital" class="text-teal-700 underline">el expediente Plan Vital</a>.`}</p>`
 
 async function handleRegistroHub(req: any, res: any) {
   // Normalize incoming slug the same way specToUrl() built SPEC_BY_URL's keys — strip accents
@@ -18508,6 +18516,7 @@ async function handleRegistroHub(req: any, res: any) {
     const planMap = await planHitsByNpi([...inTown, ...nearby].map((p: any) => p.npi))
     const conMMM = inTown.filter((p: any) => planMap.get(String(p.npi))?.mmm).length
     const conVital = inTown.filter((p: any) => planMap.get(String(p.npi))?.vital).length
+    const conMCS = inTown.filter((p: any) => planMap.get(String(p.npi))?.mcs).length
     const rowsOf = (list: any[], showTown: boolean) => list.map((p: any) => `<tr class="border-t border-slate-100"><td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td>${showTown ? `<td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '—')}</td>` : ''}<td class="py-2 px-3">${planBadges(planMap.get(String(p.npi)), en)}</td><td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 border border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs rounded-full whitespace-nowrap reg-call"><i class="fa-solid fa-phone"></i> ${t('Llamar', 'Call')}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td></tr>`).join('')
     const theadOf = (showTown: boolean) => `<thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(label)}</th>${showTown ? `<th class="py-2 px-3">${t('Pueblo', 'Town')}</th>` : ''}<th class="py-2 px-3">${t('Plan', 'Plan')}</th><th class="py-2 px-3 text-right">${t('Teléfono', 'Phone')}</th></tr></thead>`
     // El título compite en posición 8-11 contra "Best/Top 10". Gana el que dice el resultado:
@@ -18517,18 +18526,23 @@ async function handleRegistroHub(req: any, res: any) {
     // Entre el 15 de octubre y el 7 de diciembre la busqueda deja de ser "podiatra arecibo"
     // y pasa a ser "podiatra arecibo mmm". Si el titulo no dice "plan", esa busqueda no ve
     // esta pagina — y es la unica que la contesta por pueblo.
-    const hayPlan = (conMMM + conVital) > 0
+    const hayPlan = (conMMM + conVital + conMCS) > 0
     const planSuf = hayPlan ? t(' y plan', ' and plan') : ''
-    const frasePlanEs = !hayPlan ? '' : (conMMM && conVital)
-      ? `${conMMM} aparece${conMMM === 1 ? '' : 'n'} en el directorio de MMM (${PLAN_ED_MMM_ES}) y ${conVital} en el del Plan Vital (${PLAN_ED_VITAL_ES})`
-      : conMMM
-        ? `${conMMM} aparece${conMMM === 1 ? '' : 'n'} en el directorio de MMM (${PLAN_ED_MMM_ES})`
-        : `${conVital} aparece${conVital === 1 ? '' : 'n'} en el directorio del Plan Vital (${PLAN_ED_VITAL_ES})`
-    const frasePlanEn = !hayPlan ? '' : (conMMM && conVital)
-      ? `${conMMM} appear${conMMM === 1 ? 's' : ''} in MMM's provider directory (${PLAN_ED_MMM_EN}) and ${conVital} in Plan Vital's (${PLAN_ED_VITAL_EN})`
-      : conMMM
-        ? `${conMMM} appear${conMMM === 1 ? 's' : ''} in MMM's provider directory (${PLAN_ED_MMM_EN})`
-        : `${conVital} appear${conVital === 1 ? 's' : ''} in Plan Vital's provider directory (${PLAN_ED_VITAL_EN})`
+    // Una lista, no un árbol de ifs: con 3 planes el árbol tenía 7 ramas y el 4to lo rompía.
+    const joinEs = (xs: string[]) => xs.length <= 1 ? xs.join('') : xs.slice(0, -1).join(', ') + ' y ' + xs[xs.length - 1]
+    const joinEn = (xs: string[]) => xs.length <= 1 ? xs.join('') : xs.slice(0, -1).join(', ') + ' and ' + xs[xs.length - 1]
+    const partesEs: string[] = []
+    if (conMMM) partesEs.push(`${conMMM} aparece${conMMM === 1 ? '' : 'n'} en el directorio de MMM (${PLAN_ED_MMM_ES})`)
+    if (conMCS) partesEs.push(`${conMCS} en el de MCS Advantage (${PLAN_ED_MCS_ES})`)
+    if (conVital) partesEs.push(`${conVital} en el del Plan Vital (${PLAN_ED_VITAL_ES})`)
+    if (partesEs.length && !conMMM) partesEs[0] = partesEs[0].replace(/^(\d+) en el/, (_m, n) => `${n} aparece${Number(n) === 1 ? '' : 'n'} en el`)
+    const partesEn: string[] = []
+    if (conMMM) partesEn.push(`${conMMM} appear${conMMM === 1 ? 's' : ''} in MMM's provider directory (${PLAN_ED_MMM_EN})`)
+    if (conMCS) partesEn.push(`${conMCS} in MCS Advantage's (${PLAN_ED_MCS_EN})`)
+    if (conVital) partesEn.push(`${conVital} in Plan Vital's (${PLAN_ED_VITAL_EN})`)
+    if (partesEn.length && !conMMM) partesEn[0] = partesEn[0].replace(/^(\d+) in (.+?)'s/, (_m, n, who) => `${n} appear${Number(n) === 1 ? 's' : ''} in ${who}'s provider directory`)
+    const frasePlanEs = joinEs(partesEs)
+    const frasePlanEn = joinEn(partesEn)
     const titleT = nT
       ? t(nT === 1 ? `${cleanEs} en ${muni.name}: hay 1, con teléfono${planSuf}` : `${cleanEs} en ${muni.name}: los ${nT} que hay, con teléfono${planSuf}`,
           nT === 1 ? `${cleanEn} in ${muni.name}: there is 1, with phone${planSuf}` : `${cleanEn} in ${muni.name}: all ${nT}, with phone${planSuf}`)
@@ -18571,8 +18585,9 @@ ${regDisclaimer(en)}`
       { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [
         { '@type': 'Question', name: `¿Hay ${labelCorto} en ${muni.name}?`, acceptedAnswer: { '@type': 'Answer', text: inTown.length ? `Sí. En ${muni.name} hay ${inTown.length} ${plural(inTown.length)} verificado${inTown.length === 1 ? '' : 's'} contra el registro federal NPPES.` : `El registro federal NPPES no muestra ningún ${labelCorto} con oficina en ${muni.name}.${nearby.length && townReg ? ` Los más cercanos están en el ${townReg}.` : ''}` } },
         { '@type': 'Question', name: `¿Qué hace un ${labelCorto}?`, acceptedAnswer: { '@type': 'Answer', text: `${info.treats} ${info.whenToGo}` } },
-        ...(hayPlan ? [{ '@type': 'Question', name: `¿Qué ${labelCorto} de ${muni.name} aparece en el directorio de MMM o del Plan Vital?`, acceptedAnswer: { '@type': 'Answer', text: [
+        ...(hayPlan ? [{ '@type': 'Question', name: `¿Qué ${labelCorto} de ${muni.name} aparece en el directorio de MMM, MCS o del Plan Vital?`, acceptedAnswer: { '@type': 'Answer', text: [
           conMMM ? `En el directorio de proveedores de MMM (edición de ${PLAN_ED_MMM_ES}) aparecen ${conMMM}: ${inTown.filter((p: any) => planMap.get(String(p.npi))?.mmm).map((p: any) => cleanProviderName(p.name)).join(', ')}.` : '',
+          conMCS ? `En el de MCS Advantage (edición de ${PLAN_ED_MCS_ES}) aparecen ${conMCS}: ${inTown.filter((p: any) => planMap.get(String(p.npi))?.mcs).map((p: any) => cleanProviderName(p.name)).join(', ')}.` : '',
           conVital ? `En el del Plan Vital / First Medical (edición de ${PLAN_ED_VITAL_ES}) aparecen ${conVital}: ${inTown.filter((p: any) => planMap.get(String(p.npi))?.vital).map((p: any) => cleanProviderName(p.name)).join(', ')}.` : '',
           `Esto es lo que el plan imprimió en su directorio, no una confirmación de que te van a coger, y que un médico no salga aquí no quiere decir que esté fuera de esa red: el cruce por número federal identifica el 33% de las filas del Plan Vital y el 52% de las de MMM. Confirma con la oficina antes de cambiarte de plan.`,
         ].filter(Boolean).join(' ') } }] : []),
