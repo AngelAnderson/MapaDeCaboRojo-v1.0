@@ -130,7 +130,7 @@ ${LEAFLET_TAGS}
   ${''/* touch helpers */}${MOBILE_MAP_JS.trim()}
   var map=L.map('bmap',{scrollWheelZoom:false}).setView([18.05,-67.13],11);
   setupTouch(map,document.getElementById('bmap'));
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_nolabels/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap &copy; CARTO'}).addTo(map);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
   fetch('/barrios-caborojo.geojson').then(function(r){return r.json()}).then(function(gj){
     var layer=L.geoJSON(gj,{
       style:function(f){var m=META[f.properties.slug]||{};return{color:'#fff',weight:2.5,fillColor:m.color||'#14b8a6',fillOpacity:0.55}},
@@ -227,7 +227,7 @@ ${LEAFLET_TAGS}
   ${''/* touch helpers */}${MOBILE_MAP_JS.trim()}
   var map=L.map('bmap',{scrollWheelZoom:false}).setView([18.05,-67.13],12);
   setupTouch(map,document.getElementById('bmap'));
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap &copy; CARTO'}).addTo(map);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
   var pts=[${markers}];
   fetch('/barrios-caborojo.geojson').then(function(r){return r.json()}).then(function(gj){
     // Los demás barrios en gris suave, el activo a color
