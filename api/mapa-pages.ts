@@ -509,6 +509,17 @@ ${isReg ? `<script>(function(){try{var m=localStorage.getItem('theme');var d=m?(
   }
 </style>
 ${isReg ? `<style>
+/* Tablas de proveedores: en pantallas chicas la columna del teléfono quedaba fuera del scroll
+   horizontal (design-review 2026-09-02). Cada fila pasa a tarjeta con el botón visible. */
+@media (max-width:639px){
+  .not-prose.overflow-auto>table.w-full thead{display:none}
+  .not-prose.overflow-auto>table.w-full,.not-prose.overflow-auto>table.w-full tbody{display:block;width:100%}
+  .not-prose.overflow-auto>table.w-full tr{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;row-gap:2px;padding:10px 12px;align-items:center}
+  .not-prose.overflow-auto>table.w-full td{display:block;padding:0;border:0}
+  .not-prose.overflow-auto>table.w-full td:last-child{grid-column:2;grid-row:1/span 3;text-align:right}
+  .not-prose.overflow-auto>table.w-full td:first-child{font-size:15px}
+  .not-prose.overflow-auto>table.w-full .reg-call{min-height:44px;padding:0 14px}
+}
 html.dark body{background:#0f172a !important;color:#e2e8f0;}
 html.dark .bg-slate-50{background-color:#0f172a !important;}
 html.dark .bg-white{background-color:#1e293b !important;}
@@ -4772,7 +4783,7 @@ ${SHARE_COPY_SCRIPT}`
     const list = byCat[sub]
     const shown = list.slice(0, CAP_PER_CAT)
     const rows = shown.map(pr => {
-      const tel = pr.phone ? `<a href="tel:${escapeHtml(pr.phone.replace(/[^0-9+]/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-full whitespace-nowrap"><i class="fa-solid fa-phone"></i> ${te('Llamar', 'Call')}</a>` : ''
+      const tel = pr.phone ? `<a href="tel:${escapeHtml(pr.phone.replace(/[^0-9+]/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 border border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs rounded-full whitespace-nowrap reg-call"><i class="fa-solid fa-phone"></i> ${te('Llamar', 'Call')}</a>` : ''
       const stars = pr.rating != null ? `<span class="text-amber-500 text-xs whitespace-nowrap" title="${te('Calificación federal CMS', 'Federal CMS rating')}: ${pr.rating}/5">${starRating(pr.rating)} <span class="text-slate-400">${pr.rating}</span></span>` : ''
       return `<li class="flex items-baseline justify-between gap-3 py-1 border-b border-slate-50">
         <a href="/especialista/${encodeURIComponent(pr.slug)}${lp}" class="text-teal-700 hover:underline text-sm">${escapeHtml(cleanName(pr.name))}</a><span class="flex items-center gap-2">${acceptBadge(pr)}${stars}${tel}</span></li>`
@@ -18450,7 +18461,7 @@ async function handleRegistroHub(req: any, res: any) {
     const planMap = await planHitsByNpi([...inTown, ...nearby].map((p: any) => p.npi))
     const conMMM = inTown.filter((p: any) => planMap.get(String(p.npi))?.mmm).length
     const conVital = inTown.filter((p: any) => planMap.get(String(p.npi))?.vital).length
-    const rowsOf = (list: any[], showTown: boolean) => list.map((p: any) => `<tr class="border-t border-slate-100"><td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td>${showTown ? `<td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '—')}</td>` : ''}<td class="py-2 px-3">${planBadges(planMap.get(String(p.npi)), en)}</td><td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-full whitespace-nowrap"><i class="fa-solid fa-phone"></i> ${t('Llamar', 'Call')}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td></tr>`).join('')
+    const rowsOf = (list: any[], showTown: boolean) => list.map((p: any) => `<tr class="border-t border-slate-100"><td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td>${showTown ? `<td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '—')}</td>` : ''}<td class="py-2 px-3">${planBadges(planMap.get(String(p.npi)), en)}</td><td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 border border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs rounded-full whitespace-nowrap reg-call"><i class="fa-solid fa-phone"></i> ${t('Llamar', 'Call')}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td></tr>`).join('')
     const theadOf = (showTown: boolean) => `<thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(label)}</th>${showTown ? `<th class="py-2 px-3">${t('Pueblo', 'Town')}</th>` : ''}<th class="py-2 px-3">${t('Plan', 'Plan')}</th><th class="py-2 px-3 text-right">${t('Teléfono', 'Phone')}</th></tr></thead>`
     // El título compite en posición 8-11 contra "Best/Top 10". Gana el que dice el resultado:
     // cuántos hay y que traen teléfono. Y cuando no hay, decirlo es lo único que nadie más hace.
@@ -18541,7 +18552,7 @@ ${regDisclaimer(en)}`
     <td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td>
     <td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '—')}</td>
     <td class="py-2 px-3">${planBadges(planMapH.get(String((p as any).npi)), en)}</td>
-    <td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-full whitespace-nowrap"><i class="fa-solid fa-phone"></i> ${t('Llamar', 'Call')}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td>
+    <td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 border border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs rounded-full whitespace-nowrap reg-call"><i class="fa-solid fa-phone"></i> ${t('Llamar', 'Call')}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td>
   </tr>`).join('')
   const thead = `<thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(label)}</th><th class="py-2 px-3">${t('Pueblo', 'Town')}</th><th class="py-2 px-3">${t('Plan', 'Plan')}</th><th class="py-2 px-3 text-right">${t('Teléfono', 'Phone')}</th></tr></thead>`
 
@@ -20092,7 +20103,7 @@ async function handleRaras(req: any, res: any) {
     <tr class="border-b border-slate-100">
       <td class="py-3 pr-3"><span class="font-semibold text-slate-800">${g.n}</span><br><span class="text-xs text-slate-500">${gTax(g.tax)}</span></td>
       <td class="py-3 pr-3 text-slate-600 whitespace-nowrap">${g.mun}</td>
-      <td class="py-3 pr-3 whitespace-nowrap"><a href="tel:${g.tel.replace(/\D/g, '')}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs rounded-full whitespace-nowrap"><i class="fa-solid fa-phone"></i> ${te('Llamar', 'Call')}</a></td>
+      <td class="py-3 pr-3 whitespace-nowrap"><a href="tel:${g.tel.replace(/\D/g, '')}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 border border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs rounded-full whitespace-nowrap reg-call"><i class="fa-solid fa-phone"></i> ${te('Llamar', 'Call')}</a></td>
       <td class="py-3 text-right"><a href="https://npiregistry.cms.hhs.gov/provider-view/${g.npi}" target="_blank" rel="noopener" class="text-xs text-slate-400 hover:text-teal-700">NPI ${g.npi} ↗</a></td>
     </tr>`).join('')
 
