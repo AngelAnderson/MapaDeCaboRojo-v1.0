@@ -520,6 +520,8 @@ ${isReg ? `<style>
   .not-prose.overflow-auto>table.w-full td:first-child{font-size:15px}
   .not-prose.overflow-auto>table.w-full .reg-call{min-height:44px;padding:0 14px}
 }
+h1,h2,h3{text-wrap:balance}
+.reg-card .text-lg,table.w-full td,.tabular{font-variant-numeric:tabular-nums}
 html.dark body{background:#0f172a !important;color:#e2e8f0;}
 html.dark .bg-slate-50{background-color:#0f172a !important;}
 html.dark .bg-white{background-color:#1e293b !important;}
