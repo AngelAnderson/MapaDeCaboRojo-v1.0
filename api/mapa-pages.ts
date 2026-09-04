@@ -18,7 +18,7 @@ import { createClient } from '@supabase/supabase-js'
 import { createHash, createHmac, timingSafeEqual } from 'crypto'
 import { handleActivos } from './_lib/activos.js'
 import { conFrescura } from './_lib/agentes.js'
-import { paginaMedicaLd } from './_lib/procedencia.js'
+import { paginaMedicaLd, procedenciaSello, fechaVerificacion } from './_lib/procedencia.js'
 import { handleBarrios } from './_lib/barrios.js'
 import { cargarSenal, type SenalCategoria } from './_lib/la-senal.js'
 import { handleRentas } from './_lib/rentas.js'
@@ -6211,6 +6211,24 @@ async function handleEspecialista(req: any, res: any) {
     : null
   const pageUrl = `https://registromedicopr.com/especialista/${encodeURIComponent(place.slug)}`
 
+  // QUIEN confirmo esto, no solo CUANDO. El chip decia "Verificado <fecha>" para toda ficha
+  // con fecha, y `last_verified_at` tambien lo escribe una importacion de NPPES: o sea que
+  // 30,527 fichas que nadie miro nunca se presentaban igual que las 89 que una persona si
+  // confirmo. Es el mismo error que el Mapa ya arreglo el 24 ago 2026 (procedenciaSello) y
+  // que el Registro se quedo arrastrando — justo en la propiedad donde el sello ES el
+  // producto. Tres niveles: persona / fuente / registro. Al anadir una procedencia nueva,
+  // si no cae en persona cae en fuente, que es el lado seguro.
+  const sello = procedenciaSello(place)
+  const selloFecha = fechaVerificacion(place)
+  const selloChip = sello === 'persona' && selloFecha
+    ? { cls: 'bg-emerald-50 border-emerald-200 text-emerald-800', ico: 'fa-user-check',
+        txt: lang === 'en' ? `Confirmed by a person · ${selloFecha}` : `Confirmado por una persona · ${selloFecha}` }
+    : sello === 'fuente' && selloFecha
+      ? { cls: 'bg-sky-50 border-sky-200 text-sky-800', ico: 'fa-magnifying-glass',
+          txt: lang === 'en' ? `Checked against a public source · ${selloFecha}` : `Corroborado contra fuente pública · ${selloFecha}` }
+      : { cls: 'bg-slate-100 border-slate-200 text-slate-600', ico: 'fa-file-lines',
+          txt: lang === 'en' ? 'Copied from the federal registry · no person has confirmed it' : 'Copiado del registro federal · nadie lo ha confirmado' }
+
   // La meta abre con el teléfono a propósito: quien busca a un médico por nombre quiere el
   // número, y si lo resuelve desde el propio Google ya ganamos (la misión es bajar el costo
   // de encontrar la información correcta, no cobrar el clic).
@@ -6686,7 +6704,7 @@ ${puertaHub}
       <span class="inline-flex items-center gap-2 ${npiVivo ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-amber-50 border-amber-300 text-amber-900'} border font-semibold px-3 py-1 rounded-full text-sm"><i class="fa-solid ${npiVivo ? 'fa-shield-halved' : 'fa-triangle-exclamation'}"></i> ${T.verified}</span>
       ${place.cms_rating != null ? `<span class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 font-semibold px-3 py-1 rounded-full text-sm"><span class="text-amber-500">${starRating(Number(place.cms_rating))}</span> ${Number(place.cms_rating)}/5 ${lang === 'en' ? 'CMS rating' : 'estrellas CMS'}</span>` : ''}
       ${isMD ? '' : '<span class="inline-flex items-center gap-2 bg-slate-100 border border-slate-200 text-slate-600 font-semibold px-3 py-1 rounded-full text-sm">Proveedor licenciado (no es médico MD)</span>'}
-      ${verifiedDate ? `<span class="inline-flex items-center gap-2 bg-slate-50 border border-slate-200 text-slate-500 px-3 py-1 rounded-full text-xs">Verificado ${escapeHtml(verifiedDate)}</span>` : ''}
+      <span class="inline-flex items-center gap-2 ${selloChip.cls} border px-3 py-1 rounded-full text-xs font-semibold"><i class="fa-solid ${selloChip.ico}"></i> ${escapeHtml(selloChip.txt)}</span>
     </div>
   </div>
 </div>
