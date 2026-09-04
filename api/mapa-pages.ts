@@ -18,7 +18,7 @@ import { createClient } from '@supabase/supabase-js'
 import { createHash, createHmac, timingSafeEqual } from 'crypto'
 import { handleActivos } from './_lib/activos.js'
 import { conFrescura } from './_lib/agentes.js'
-import { paginaMedicaLd, procedenciaSello, fechaVerificacion, fechaCortaAT } from './_lib/procedencia.js'
+import { paginaMedicaLd, procedenciaSello, fechaVerificacion, fechaCortaAT, partesAT } from './_lib/procedencia.js'
 import { handleBarrios } from './_lib/barrios.js'
 import { cargarSenal, type SenalCategoria } from './_lib/la-senal.js'
 import { handleRentas } from './_lib/rentas.js'
@@ -5183,8 +5183,8 @@ async function handleCambios(req: any, res: any) {
   const totalBase = (baseCount ?? 29700).toLocaleString('en-US')
   const nuevos30 = (nuevosCount ?? 0).toLocaleString('en-US')
   const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
-  const ultimaD = ultimaRow?.[0]?.created_at ? new Date(ultimaRow[0].created_at) : null
-  const ultimaIngesta = ultimaD ? `${ultimaD.getUTCDate()} ${MESES[ultimaD.getUTCMonth()]} ${ultimaD.getUTCFullYear()}` : REG_LAST_UPDATE.es
+  const ultimaP = partesAT(ultimaRow?.[0]?.created_at)
+  const ultimaIngesta = ultimaP ? `${ultimaP.d} ${MESES[ultimaP.m]} ${ultimaP.y}` : REG_LAST_UPDATE.es
   const nCats = REGISTRY_SPECS.length
 
   const body = `
@@ -5438,7 +5438,7 @@ async function handleCambios(req: any, res: any) {
       '@context': 'https://schema.org', '@type': 'WebPage',
       url: 'https://registromedicopr.com/cambios',
       name: 'Historial y roadmap · Registro Médico PR',
-      dateModified: ultimaD ? ultimaD.toISOString().slice(0, 10) : '2026-08-07', inLanguage: 'es',
+      dateModified: ultimaP ? `${ultimaP.y}-${String(ultimaP.m + 1).padStart(2, '0')}-${String(ultimaP.d).padStart(2, '0')}` : '2026-08-07', inLanguage: 'es',
       description: 'Historial de actualizaciones del registro médico verificado de Puerto Rico.',
     },
   }))

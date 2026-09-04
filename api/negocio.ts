@@ -267,11 +267,8 @@ function honestTitle(place: any, name: string, muni: string): string {
 function verifiedTail(place: any): string {
   const raw = place.last_verified_at || place.verified_at;
   if (!raw) return '';
-  const d = new Date(raw);
-  if (isNaN(d.getTime())) return '';
-  const dd = String(d.getUTCDate()).padStart(2, '0');
-  const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
-  const fecha = `${dd}/${mm}/${d.getUTCFullYear()}`;
+  const fecha = fechaCortaAT(raw);
+  if (!fecha) return '';
   // Tener fecha no es tener testigo: NPPES tambien escribe last_verified_at. Este
   // rabito sale en el snippet de Google, asi que "a mano" solo se dice cuando lo
   // miro una persona. Lo importado no reclama nada en el SERP: un sello falso en

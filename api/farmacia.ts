@@ -21,7 +21,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { correctButtonHtml } from './_lib/correct-button.js';
-import { paginaLd, ldScript } from './_lib/procedencia.js';
+import { paginaLd, ldScript, partesAT } from './_lib/procedencia.js';
 import { slugVivoPara } from './_lib/redirect-archivada.js';
 import { rutaDeRecord } from './_lib/rutas-salud.js';
 
@@ -104,9 +104,9 @@ function isCurrentlyOpen(opening_hours: any): boolean | null {
 /** Format date to human-readable Spanish */
 function formatDateES(dateStr: string): string {
   const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-  const d = new Date(dateStr);
-  if (isNaN(d.getTime())) return dateStr;
-  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+  const p = partesAT(dateStr);
+  if (!p) return dateStr;
+  return `${p.d} ${MONTHS[p.m]} ${p.y}`;
 }
 
 function jsonLdOpeningHours(opening_hours: any): string[] {
