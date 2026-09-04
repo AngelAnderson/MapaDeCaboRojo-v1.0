@@ -18,7 +18,7 @@ import { createClient } from '@supabase/supabase-js'
 import { createHash, createHmac, timingSafeEqual } from 'crypto'
 import { handleActivos } from './_lib/activos.js'
 import { conFrescura } from './_lib/agentes.js'
-import { paginaMedicaLd, procedenciaSello, fechaVerificacion } from './_lib/procedencia.js'
+import { paginaMedicaLd, procedenciaSello, fechaVerificacion, fechaCortaAT } from './_lib/procedencia.js'
 import { handleBarrios } from './_lib/barrios.js'
 import { cargarSenal, type SenalCategoria } from './_lib/la-senal.js'
 import { handleRentas } from './_lib/rentas.js'
@@ -6564,7 +6564,8 @@ async function handleEspecialista(req: any, res: any) {
     const dr = (place as any).dato_reportado
     if (!tmReporteVivo(dr, place.last_verified_at)) return ''
     const d = new Date(dr.at)
-    const f = isNaN(d.getTime()) ? '' : ` el ${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`
+    const fc = fechaCortaAT(dr.at)
+    const f = fc ? ` el ${fc}` : ''
     return `<div class="not-prose mt-3 bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
     <p class="m-0 text-[15px] text-amber-900"><b>⚠️ ${t('Un vecino nos reportó', 'A neighbor reported')}${f}</b> ${t(`que ${TM_FRASE[dr.tipo] || 'este dato está malo'}. Todavía no lo hemos confirmado.`, 'that this phone did not work when dialed. We have not confirmed it yet.')}</p>
     <p class="m-0 mt-1 text-sm text-amber-800">${t('¿Es tu número y está bueno? Dímelo y se corrige el mismo día: texto al 787-417-7711 o angel@angelanderson.com.', 'Is this your number and it works? Tell us and it gets fixed the same day: text 787-417-7711 or angel@angelanderson.com.')} <a href="/telefonos-muertos" class="underline font-semibold">${t('El marcador de teléfonos reportados →', 'The reported-phones board →')}</a></p>
@@ -9978,11 +9979,7 @@ async function handleTelefonosMuertos(req: any, res: any) {
     totalReportes = typeof count === 'number' ? count : null
   } catch { totalReportes = null }
 
-  const fechaCorta = (iso: string) => {
-    const d = new Date(iso)
-    if (isNaN(d.getTime())) return ''
-    return `${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`
-  }
+  const fechaCorta = (iso: string) => fechaCortaAT(iso)
 
   const fila = (p: any) => {
     const dr = p.dato_reportado || {}

@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { correctButtonHtml } from './_lib/correct-button.js';
-import { bloqueProcedencia, paginaLd, ldScript, CATEGORIA_ENLACE_ES, procedenciaSello } from './_lib/procedencia.js';
+import { bloqueProcedencia, paginaLd, ldScript, CATEGORIA_ENLACE_ES, procedenciaSello, fechaCortaAT } from './_lib/procedencia.js';
 import { slugVivoPara } from './_lib/redirect-archivada.js';
 import { rutaDeRecord } from './_lib/rutas-salud.js';
 
@@ -145,7 +145,7 @@ function avisoDatoReportado(dr: any, lastVerifiedAt?: string | null): { texto: s
   try {
     const d = new Date(dr.at);
     if (!isNaN(d.getTime())) {
-      fecha = ` el ${String(d.getUTCDate()).padStart(2, '0')}/${String(d.getUTCMonth() + 1).padStart(2, '0')}/${d.getUTCFullYear()}`;
+      fecha = ` el ${fechaCortaAT(dr.at)}`;
     }
   } catch { /* sin fecha, la nota igual vale */ }
   return { texto: `Un vecino nos reportó${fecha} ${frase}. Todavía no lo hemos confirmado.`, esTel: tipo !== 'cerro' };

@@ -159,11 +159,40 @@ export function paginaMedicaLd(opts: { url: string; nombre: string; descripcion:
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
 
-export function fechaEs(iso: string | null | undefined): string | null {
+/**
+ * Las partes de una fecha EN HORA DE PUERTO RICO.
+ *
+ * El sello se formateaba con getUTC*, asi que toda verificacion hecha despues de las 8pm AT
+ * imprimia la fecha de MANANA. El 3 sep 2026 a las 8:41pm se grabo una confirmacion de un
+ * proveedor y la ficha publico "Confirmado por una persona el 4 de septiembre de 2026".
+ * En una pagina cuyo producto ES la fecha, verificar en el futuro es el peor error posible.
+ *
+ * PR es UTC-4 todo el ano (AST, sin horario de verano), asi que el corrimiento es fijo y
+ * exacto, y no depende del TZ del servidor ni de Intl.
+ */
+export function partesAT(iso: string | null | undefined): { d: number; m: number; y: number } | null {
   if (!iso) return null;
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return null;
-  return `${d.getUTCDate()} de ${MESES[d.getUTCMonth()]} de ${d.getUTCFullYear()}`;
+  const s = String(iso);
+  const t = new Date(s);
+  if (isNaN(t.getTime())) return null;
+  // Una fecha pelada ('2026-01-01') se parsea como medianoche UTC y no lleva hora real:
+  // restarle 4 horas la mandaria al dia anterior. Solo se corrige lo que trae hora.
+  const tieneHora = /[T ]\d{2}:/.test(s);
+  const at = tieneHora ? new Date(t.getTime() - 4 * 3600 * 1000) : t;
+  return { d: at.getUTCDate(), m: at.getUTCMonth(), y: at.getUTCFullYear() };
+}
+
+/** dd/mm/aaaa en hora de Puerto Rico. */
+export function fechaCortaAT(iso: string | null | undefined): string {
+  const p = partesAT(iso);
+  if (!p) return '';
+  return `${String(p.d).padStart(2, '0')}/${String(p.m + 1).padStart(2, '0')}/${p.y}`;
+}
+
+export function fechaEs(iso: string | null | undefined): string | null {
+  const p = partesAT(iso);
+  if (!p) return null;
+  return `${p.d} de ${MESES[p.m]} de ${p.y}`;
 }
 
 /**
