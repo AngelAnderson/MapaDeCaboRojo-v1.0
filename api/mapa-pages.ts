@@ -6103,10 +6103,18 @@ async function resolverSlugRenombrado(slugViejo: string): Promise<string | null>
 // 410 y no 404 a propósito: le dice a Google que la borre en vez de reintentar, y NUNCA
 // cae al resolvedor de slugs renombrados — mandar a la persona removida a la ficha de otro
 // médico con nombre parecido sería peor que el problema original.
+//
+// ⚠️ Se lee `despublicar`, NO `no_reingestar`. Esa columna cargaba los 2 significados y
+// esta función leía el equivocado: 3 personas que pidieron CORREGIR un dato (teléfono o
+// dirección) terminaron con la página en 410, o sea borrada. A una se le dijo por escrito
+// "se reemplaza, no se despublica" y se le borró la página igual. Los 2 conceptos son
+// independientes y una corrección es no_reingestar=true + despublicar=false:
+//   despublicar   → la persona pidió salir. Esta ruta sirve 410.
+//   no_reingestar → que el sync de NPPES no resucite el dato viejo. No baja nada.
 async function fueRemovidoAPeticion(slug: string): Promise<boolean> {
   const { data } = await supabase
     .from('remocion_solicitudes')
-    .select('id').eq('slug', slug).eq('no_reingestar', true).limit(1)
+    .select('id').eq('slug', slug).eq('despublicar', true).limit(1)
   return !!(data && data.length)
 }
 
