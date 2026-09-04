@@ -18749,6 +18749,47 @@ ${info.note ? `<p class="text-sm text-slate-500 mt-1"><i class="fa-solid fa-circ
     if (nearby.length) bodyT += `<h2 class="mt-6">${t('También cerca', 'Also nearby')}${townReg ? ` — ${t('en el', 'in')} ${escapeHtml(townReg)}` : ''}</h2><div class="not-prose mt-2 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${theadOf(true)}<tbody>${rowsOf(nearby.slice(0, 60), true)}</tbody></table></div>`
     if (inTown.length || nearby.length) bodyT += planNotaHub(en)
     if (!inTown.length && !nearby.length) bodyT += `<div class="not-prose mt-5 bg-amber-50 border border-amber-200 rounded-xl p-5"><p class="text-amber-900 font-semibold">${t(`No hay ${escapeHtml(x.l.toLowerCase())} verificados cerca de ${escapeHtml(muni.name)}.`, `No verified ${escapeHtml(labelLow)} near ${escapeHtml(muni.name)}.`)}</p><p class="text-sm text-amber-800 mt-1"><a href="/registro/${specUrl}/metro${lp}" class="font-semibold underline">${t('Mira el área metro', 'See the metro area')} (${metroCount}) →</a></p></div>`
+    // ── Tejido entre hubs (3 sep 2026) ──────────────────────────────────────────
+    // Habia 3,145 hubs de especialidad+pueblo y CERO enlaces entre ellos: cada uno era un
+    // callejon que solo apuntaba hacia abajo, a las fichas. Eso deja a la persona a la que
+    // le dijimos "en tu pueblo no hay" sin el proximo paso, y deja a los 3,145 sin repartirse
+    // autoridad entre si. Medido el 3 sep: el sitio convierte a 11.57% en posicion 1 a 3 y a
+    // 1.04% en posicion 4 a 10, donde estan 40,576 de las impresiones. Las paginas sirven; lo
+    // que falta es que se sostengan unas a otras.
+    // Los 2 bloques salen de data que ya estaba en memoria o de 1 consulta mas, y los 2
+    // contestan una pregunta real: "y si no hay aqui, ¿donde?" y "ya que estoy, ¿que mas hay
+    // en mi pueblo?".
+    {
+      const puebloCount = new Map<string, number>()
+      for (const p2 of nearby) {
+        const m = String((p2 as any).municipality || '')
+        if (m) puebloCount.set(m, (puebloCount.get(m) || 0) + 1)
+      }
+      const vecinos = [...puebloCount.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12)
+      if (vecinos.length) {
+        bodyT += `<h2 class="mt-6">${t(`${escapeHtml(cleanEs)} en pueblos cercanos`, `${escapeHtml(cleanEn)} in nearby towns`)}</h2>
+<p class="not-prose text-sm text-slate-600">${t('Si en tu pueblo no hay o no te cogen, estos quedan en la misma región.', 'If your town has none or they cannot take you, these are in the same region.')}</p>
+<p class="not-prose mt-2 flex flex-wrap gap-2">${vecinos.map(([m, n]) => `<a href="/registro/${specUrl}/${specToUrl(m)}${lp}" class="inline-flex items-center gap-1 px-3 py-1.5 border border-slate-300 rounded-full text-sm text-slate-700 hover:border-teal-600 hover:text-teal-700">${escapeHtml(m)} <span class="text-slate-400">${n}</span></a>`).join('')}</p>`
+      }
+
+      const { data: otras } = await supabase.from('places')
+        .select('subcategory').eq('category', 'HEALTH').eq('municipality', muni.name)
+        .not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open')
+        .or('fuera_de_pr.is.null,fuera_de_pr.eq.false').limit(4000)
+      const otrasCount = new Map<string, number>()
+      for (const r2 of (otras || [])) {
+        const sub = String((r2 as any).subcategory || '')
+        if (sub && sub !== x.s) otrasCount.set(sub, (otrasCount.get(sub) || 0) + 1)
+      }
+      const chips = [...otrasCount.entries()]
+        .map(([sub, n]) => ({ sub, n, spec: REGISTRY_SPECS.find(r => r.s === sub) }))
+        .filter(c => !!c.spec)
+        .sort((a, b) => b.n - a.n).slice(0, 14)
+      if (chips.length) {
+        bodyT += `<h2 class="mt-6">${t(`Otras especialidades en ${escapeHtml(muni.name)}`, `Other specialties in ${escapeHtml(muni.name)}`)}</h2>
+<p class="not-prose mt-2 flex flex-wrap gap-2">${chips.map(c => `<a href="/registro/${specToUrl(c.spec!.s)}/${muniSlug}${lp}" class="inline-flex items-center gap-1 px-3 py-1.5 border border-slate-300 rounded-full text-sm text-slate-700 hover:border-teal-600 hover:text-teal-700">${c.spec!.e} ${escapeHtml(cleanSpecLabel(c.spec!.l))} <span class="text-slate-400">${c.n}</span></a>`).join('')}</p>`
+      }
+    }
     bodyT += `<p class="not-prose mt-4 text-sm"><a href="/registro/${specUrl}${lp}" class="text-teal-700 font-semibold">${t(`Ver los ${x.t} ${escapeHtml(x.l.toLowerCase())} de toda la isla →`, `See all ${x.t} ${escapeHtml(labelLow)} across the island →`)}</a></p>
 ${antesDeLlamar({ specLabel: x.l, en })}
 <div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white"><p class="text-lg font-bold mb-1">${t('¿No sabes a cuál ir?', 'Not sure which one to see?')}</p><p class="text-sm text-teal-100 mb-4">${t('Escríbele al Veci. Te dice quién hay cerca y sus teléfonos. Al', 'Text El Veci. He tells you who is nearby and their phone numbers. At')} <strong>${PHONE_CTA}</strong>:</p><a href="https://wa.me/17874177711?text=${x.kw}" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${x.kw}</a></div>
