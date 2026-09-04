@@ -10138,13 +10138,72 @@ async function handleSeFueTuMedico(req: any, res: any) {
       <ul class="list-none pl-0 m-0 divide-y divide-slate-100">${porPueblo[p].map(fila).join('')}</ul>
     </section>`).join('')
 
+  // ---- PLAN VITAL (la reforma) · 3 sep 2026 ----
+  // La demanda real del Registro dice "reforma", no "Medicare" (9 de 18 busquedas de red en GSC).
+  // v_red_planvital_movimiento es la gemela de la vista de MMM: 3 ediciones de First Medical /
+  // Plan Vital (feb 2024, feb 2026, jul 2026), criterio doble NPI+nombre. Los numeros se cuentan
+  // aqui en cada render (CDN 6h), no se hardcodean: cuando entre la edicion nueva, cambian solos.
+  let pvT = { redHoy: 0, cohorte24: 0, cohorte26: 0, salieron5m: 0, salieron24_26: 0, entraron: 0, otroNpi: 0 }
+  let pvRecientes: any[] = []
+  let pvEnMmm = 0
+  try {
+    // PostgREST corta en 1,000 filas aunque pidas limit(10000): la primera version de esto
+    // conto "red hoy: 735" sobre una muestra de 1,000 y publico "263 de los 91". Se pagina.
+    const pvAll: any[] = []
+    for (let from = 0; ; from += 1000) {
+      const { data } = await supabase.from('v_red_planvital_movimiento')
+        .select('npi,estado,ventana_salida,en_feb24,en_feb26,en_jul26').range(from, from + 999)
+      pvAll.push(...(data || []))
+      if (!data || data.length < 1000) break
+    }
+    for (const r of pvAll) {
+      if (r.en_jul26) pvT.redHoy++
+      if (r.en_feb24) pvT.cohorte24++
+      if (r.en_feb26) pvT.cohorte26++
+      if (r.estado === 'salio' && r.ventana_salida === 'ultimos_5_meses') pvT.salieron5m++
+      if (r.estado === 'salio' && r.ventana_salida === 'entre_feb24_y_feb26') pvT.salieron24_26++
+      if (r.estado === 'entro') pvT.entraron++
+      if (r.estado === 'sigue_bajo_otro_npi') pvT.otroNpi++
+    }
+    const { data: pvRaw } = await supabase.from('v_red_planvital_movimiento')
+      .select('npi,name,town,specialty,page,red')
+      .eq('estado', 'salio').eq('ventana_salida', 'ultimos_5_meses').limit(1000)
+    pvRecientes = (pvRaw || []).filter((r: any) => r.name)
+      .sort((a: any, b: any) => (a.town || '').localeCompare(b.town || '', 'es') || (a.name || '').localeCompare(b.name || '', 'es'))
+    // El cruce que ningun plan publica de si mismo: cuantos de los que salieron de la reforma
+    // siguen listados por MMM. No se fueron de la medicina; se fueron del plan.
+    const pvNpis = pvRecientes.map((r: any) => r.npi).filter(Boolean)
+    for (let i = 0; i < pvNpis.length; i += 200) {
+      const { data } = await supabase.from('v_red_mmm_movimiento').select('npi').eq('en_jun26', true).in('npi', pvNpis.slice(i, i + 200))
+      pvEnMmm += (data || []).length
+      const { data: sl } = await supabase.from('places').select('npi,slug').in('npi', pvNpis.slice(i, i + 200))
+      for (const p of (sl || [])) if (p.slug) slugs[p.npi] = p.slug
+    }
+  } catch { /* aditivo: si la vista falla, la seccion de Plan Vital sale vacia y MMM sigue intacto */ }
+  const pvPct5m = pvT.cohorte26 ? Math.round(1000 * pvT.salieron5m / pvT.cohorte26) / 10 : 0
+  const pvPorPueblo: Record<string, any[]> = {}
+  for (const r of pvRecientes) (pvPorPueblo[r.town || 'Sin pueblo'] ||= []).push(r)
+  const pvPueblos = Object.keys(pvPorPueblo).sort((a, b) => a.localeCompare(b, 'es'))
+  const filaPV = (r: any) => {
+    const nombre = escapeHtml(cleanProviderName(r.name))
+    const enlace = slugs[r.npi]
+      ? `<a href="/especialista/${escapeHtml(slugs[r.npi])}" class="text-teal-700 font-semibold underline">${nombre}</a>`
+      : `<span class="font-semibold">${nombre}</span>`
+    return `<li class="py-1 text-sm" data-b="${escapeHtml((r.name + ' ' + (r.specialty || '') + ' ' + (r.town || '')).toLowerCase())}">${enlace}<span class="text-slate-500"> · ${escapeHtml(r.specialty || 'sin especialidad listada')} · aparecía en la pág. ${r.page || '?'} de la edición de feb 2026</span></li>`
+  }
+  const listadoPV = pvPueblos.map(p => `
+    <section class="pueblo mb-5" data-p="${escapeHtml(p.toLowerCase())}">
+      <h3 class="text-base font-bold text-slate-900 border-b border-slate-200 pb-1 mb-1">${escapeHtml(p)} <span class="text-slate-500 font-normal text-sm">· ${pvPorPueblo[p].length}</span></h3>
+      <ul class="list-none pl-0 m-0 divide-y divide-slate-100">${pvPorPueblo[p].map(filaPV).join('')}</ul>
+    </section>`).join('')
+
   const FAQ: [string, string][] = [
     ['¿Que mi médico no aparezca quiere decir que cerró?',
      'No, y esto es lo más importante de la página. Los 511 proveedores que salieron del directorio siguen activos en el registro federal NPPES. Ninguno aparece cerrado. Lo que cambió fue la lista del plan, no el médico. Salir de un directorio puede querer decir que renegoció, que se movió a otro plan, que se mudó, o simplemente que la lista se editó. Aviso honesto: el registro federal casi nunca desactiva un NPI, así que "activo en el federal" prueba que no hay evidencia de cierre, no prueba que siga ejerciendo.'],
     ['¿De dónde sale este número?',
      'De los propios PDF de MMM, bajados de su página pública sin login y guardados con su huella digital (sha256). Se compararon 3 ediciones de la línea Individuales: diciembre 2024, diciembre 2025 y junio 2026. Un proveedor cuenta como salido solo si su número federal (NPI) y su nombre desaparecen de la edición nueva. El método completo está en el expediente MMM.'],
     ['¿Cubre todos los planes?',
-     'No. Hoy cubre la línea Individuales de MMM, que es la que tiene 3 ediciones parseadas. Las líneas Grupales y AEE están bajadas pero sin procesar, y los demás planes (Plan Vital / First Medical tiene su propio expediente) van entrando. Además solo cuenta las filas donde se pudo parear un número federal. El total real de salidas es mayor que este, nunca menor.'],
+     'No. Hoy cubre 2 planes: la línea Individuales de MMM (Medicare, 3 ediciones: dic 2024, dic 2025, jun 2026) y Plan Vital de First Medical (la reforma, 3 ediciones: feb 2024, feb 2026, jul 2026). Las líneas Grupales y AEE de MMM están bajadas pero sin procesar, y Triple-S Advantage tiene 1 sola edición archivada, así que todavía no se puede comparar. Además solo cuenta las filas donde se pudo parear un número federal. El total real de salidas es mayor que este, nunca menor.'],
     ['Soy el proveedor y esto está mal, ¿cómo lo corrijo?',
      'Escríbeme y se corrige el mismo día: angel@angelanderson.com o texto al 787-417-7711. Dime tu nombre y tu NPI. Si apareces en la edición de junio de 2026 y el pareo falló, la fila sale de esta página y se documenta el error. Publicar un señalamiento con nombre obliga a dar la vía de réplica en la misma página, y esta es.'],
     ['¿Qué hago yo con esto antes del 15 de octubre?',
@@ -10159,7 +10218,7 @@ async function handleSeFueTuMedico(req: any, res: any) {
 
   <p class="text-lg text-slate-700 mt-4">El 15 de octubre abre la ventana para escoger plan Medicare. Vas a escoger mirando un directorio de proveedores que MMM cerró el <b>${RED_TITULARES.edicionVigente}</b>, en un PDF de ${nf(RED_TITULARES.paginas)} páginas. Nadie compara una edición contra la anterior, así que nadie sabe cuánto se movió la red mientras tanto.</p>
 
-  <p class="text-lg text-slate-700 mt-3">Comparamos 3 ediciones. Esto es lo que se movió.</p>
+  <p class="text-lg text-slate-700 mt-3">Comparamos 3 ediciones de MMM. Esto es lo que se movió. Y más abajo, lo mismo con la reforma: 3 ediciones de Plan Vital.</p>
 
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
     <div class="bg-slate-900 text-white rounded-xl p-3"><div class="text-3xl font-black">${nf(RED_TITULARES.salieron24)}</div><div class="text-xs mt-1 opacity-90">proveedores que estaban en dic 2024 y no están en jun 2026</div></div>
@@ -10219,12 +10278,33 @@ async function handleSeFueTuMedico(req: any, res: any) {
   <div id="lista">${listado}</div>
   <p id="vacio" class="hidden text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg p-3">No aparece en esta lista. Eso <b>no</b> quiere decir que esté en la red: quiere decir que no salió del directorio entre diciembre de 2025 y junio de 2026. Confírmalo con tu plan por nombre y NPI antes de escoger.</p>
 
+  <h2 class="text-2xl font-bold text-slate-900 mt-12 mb-2">La reforma también se mueve: Plan Vital</h2>
+  <p class="text-slate-700">Medicare no es el único directorio que envejece. Plan Vital (First Medical) publica el suyo cada pocos meses y tampoco compara una edición con la anterior. Guardamos 3: <b>febrero de 2024, febrero de 2026 y julio de 2026</b>. Esto es lo que se movió en los últimos 5 meses medidos.</p>
+
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
+    <div class="bg-slate-900 text-white rounded-xl p-3"><div class="text-3xl font-black">${nf(pvT.salieron5m)}</div><div class="text-xs mt-1 opacity-90">proveedores que estaban en feb 2026 y no están en jul 2026</div></div>
+    <div class="bg-slate-100 rounded-xl p-3"><div class="text-3xl font-black text-slate-900">${pvPct5m}%</div><div class="text-xs mt-1 text-slate-600">de la red, en 5 meses (1 de cada ${pvT.salieron5m ? Math.round(pvT.cohorte26 / pvT.salieron5m) : '?'})</div></div>
+    <div class="bg-slate-100 rounded-xl p-3"><div class="text-3xl font-black text-slate-900">${nf(pvT.salieron24_26)}</div><div class="text-xs mt-1 text-slate-600">salieron entre feb 2024 y feb 2026</div></div>
+    <div class="bg-slate-100 rounded-xl p-3"><div class="text-3xl font-black text-slate-900">${nf(pvT.entraron)}</div><div class="text-xs mt-1 text-slate-600">entraron desde feb 2024 (red hoy: ${nf(pvT.redHoy)})</div></div>
+  </div>
+
+  <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mt-5">
+    <p class="m-0 text-[15px] text-amber-900"><b>${nf(pvEnMmm)} de los ${nf(pvT.salieron5m)} que salieron de Plan Vital siguen listados por MMM en su edición de junio de 2026.</b> No dejaron la medicina. Dejaron un plan. Cuando un médico sale de la reforma y se queda en Medicare, el que pierde la cita es el paciente que no tiene con qué escoger. Este cruce lo permiten 2 directorios públicos puestos uno al lado del otro; ningún plan lo publica de sí mismo.</p>
+  </div>
+
+  <p class="text-sm text-slate-600 mt-4">Mismo método que arriba: un proveedor cuenta como salido solo si su NPI <b>y</b> su nombre desaparecen de la edición de julio (${nf(pvT.otroNpi)} seguían bajo otro NPI y no se cuentan). Aviso honesto sobre el lector: el 26% de las filas de Plan Vital venía sin especialidad porque en el PDF la especialidad es un encabezado que corre por columna; se releyó el 3 de septiembre de 2026 y hoy quedan sin etiqueta las farmacias (no la llevan) y unas 300 filas por edición que el lector no pudo casar. La etiqueta de cada fila dice de dónde salió.</p>
+
+  <h3 class="text-lg font-bold text-slate-900 mt-6 mb-2">Busca tu médico en Plan Vital</h3>
+  <p class="text-sm text-slate-600 mb-3">Los <b>${nf(pvRecientes.length)}</b> que salieron entre febrero y julio de 2026, por pueblo. La misma caja de búsqueda de arriba filtra esta lista también.</p>
+  <div id="lista2">${listadoPV}</div>
+  <p id="vacio2" class="hidden text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg p-3">No aparece en la lista de Plan Vital. Eso <b>no</b> quiere decir que esté en la red: quiere decir que no salió del directorio entre febrero y julio de 2026. Confírmalo con el plan antes de decidir.</p>
+
   <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Lo que esto NO prueba</h2>
   <ul class="text-sm text-slate-700 space-y-2 list-none pl-0">
     <li class="border-l-4 border-slate-300 pl-3"><b>No prueba que el médico cerró ni que dejó de coger pacientes.</b> Prueba que un documento público lo listaba y otro documento público del mismo emisor ya no.</li>
     <li class="border-l-4 border-slate-300 pl-3"><b>No prueba que MMM hizo algo mal.</b> Las redes se mueven por contrato, y un directorio impreso siempre va a ir atrás. El problema es que el rezago no se publica, así que la persona que escoge no sabe cuánto margen de error carga la lista.</li>
     <li class="border-l-4 border-slate-300 pl-3"><b>Un NPI activo no equivale a licencia vigente</b>, y aparecer en un directorio no garantiza que acepten tu plan ni que estén cogiendo pacientes nuevos.</li>
-    <li class="border-l-4 border-slate-300 pl-3"><b>Está incompleto a propósito.</b> Solo línea Individuales de MMM, y solo las filas donde se pudo parear el número federal. El universo real de salidas es mayor.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>Está incompleto a propósito.</b> Solo la línea Individuales de MMM y Plan Vital de First Medical, y solo las filas donde se pudo parear el número federal. Triple-S tiene 1 edición archivada y todavía no se puede comparar. El universo real de salidas es mayor.</li>
   </ul>
 
   <div class="bg-teal-50 border border-teal-200 rounded-xl p-4 mt-8">
@@ -10237,7 +10317,7 @@ async function handleSeFueTuMedico(req: any, res: any) {
 
   <p class="text-sm text-slate-600 mt-8">El método, edición por edición, con las huellas digitales de cada PDF: <a href="/expediente-mmm" class="text-teal-700 font-semibold underline">el expediente MMM</a> · <a href="/expediente-planvital" class="text-teal-700 font-semibold underline">el expediente Plan Vital</a> · <a href="/telefonos-muertos" class="text-teal-700 font-semibold underline">el marcador de teléfonos muertos</a>.</p>
 
-  <p class="text-sm text-slate-500 mt-6 border-t border-slate-200 pt-4">Datos de los directorios públicos de proveedores de MMM (línea Individuales), ediciones de diciembre 2024, diciembre 2025 y junio 2026, bajados sin login y guardados con su sha256. Cruce contra el registro federal NPPES. Comparación corrida el 22 de agosto de 2026. Esto no es asesoría médica ni una acusación contra ningún proveedor: es la diferencia entre 2 documentos públicos. Derecho a réplica en la misma página.</p>
+  <p class="text-sm text-slate-500 mt-6 border-t border-slate-200 pt-4">Datos de los directorios públicos de proveedores de MMM (línea Individuales: diciembre 2024, diciembre 2025 y junio 2026) y de Plan Vital / First Medical Health Plan (febrero 2024, febrero 2026 y julio 2026), bajados sin login y guardados con su sha256. Cruce contra el registro federal NPPES. Comparación de MMM corrida el 22 de agosto de 2026; la de Plan Vital se recalcula en cada carga de esta página. Esto no es asesoría médica ni una acusación contra ningún proveedor: es la diferencia entre 2 documentos públicos. Derecho a réplica en la misma página.</p>
 </article>
 <script>(function(){var q=document.getElementById('q'),L=document.getElementById('lista'),V=document.getElementById('vacio');if(!q||!L)return;
 function n(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');}
@@ -10245,13 +10325,18 @@ q.addEventListener('input',function(){var t=n(q.value.trim());var vis=0;
 L.querySelectorAll('.pueblo').forEach(function(sec){var c=0;
  sec.querySelectorAll('li').forEach(function(li){var ok=!t||n(li.getAttribute('data-b')).indexOf(t)>-1;li.style.display=ok?'':'none';if(ok)c++;});
  sec.style.display=c?'':'none';vis+=c;});
-if(V)V.classList.toggle('hidden',!(t&&vis===0));});})();</script>`
+if(V)V.classList.toggle('hidden',!(t&&vis===0));
+var L2=document.getElementById('lista2'),V2=document.getElementById('vacio2');if(L2){var vis2=0;
+L2.querySelectorAll('.pueblo').forEach(function(sec){var c=0;
+ sec.querySelectorAll('li').forEach(function(li){var ok=!t||n(li.getAttribute('data-b')).indexOf(t)>-1;li.style.display=ok?'':'none';if(ok)c++;});
+ sec.style.display=c?'':'none';vis2+=c;});
+if(V2)V2.classList.toggle('hidden',!(t&&vis2===0));}});})();</script>`
 
   const jsonLd = [
     {
       '@context': 'https://schema.org', '@type': 'Article',
-      headline: '¿Se fue tu médico de la red? 464 proveedores salieron del directorio de MMM en 18 meses',
-      description: 'Comparación de 3 ediciones del directorio público de proveedores de MMM (dic 2024, dic 2025, jun 2026): 464 proveedores salieron, 682 entraron, y los 511 que salieron siguen activos en el registro federal. Lo que cambió fue la lista, no el médico.',
+      headline: `¿Se fue tu médico de la red? 464 salieron del directorio de MMM en 18 meses y ${nf(pvT.salieron5m)} del de Plan Vital en 5`,
+      description: `Comparación de 3 ediciones del directorio de MMM (dic 2024, dic 2025, jun 2026) y 3 de Plan Vital / First Medical (feb 2024, feb 2026, jul 2026): 464 proveedores salieron de MMM en 18 meses y ${nf(pvT.salieron5m)} de Plan Vital en 5 meses. Lo que cambió fue la lista, no el médico.`,
       author: { '@type': 'Person', name: 'Angel Anderson' },
       publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
       inLanguage: 'es', url: 'https://registromedicopr.com/se-fue-tu-medico',
@@ -10267,8 +10352,8 @@ if(V)V.classList.toggle('hidden',!(t&&vis===0));});})();</script>`
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=21600, stale-while-revalidate=86400')
   res.status(200).send(layout({
-    title: '¿Sigue tu médico en la red de MMM? Los que salieron del directorio',
-    description: '464 proveedores que MMM listaba en diciembre de 2024 ya no están en la edición de junio de 2026, y 254 salieron en los últimos 6 meses. Busca tu médico por nombre, especialidad o pueblo antes de escoger plan el 15 de octubre.',
+    title: '¿Sigue tu médico en la red? Los que salieron del directorio de MMM y de Plan Vital (reforma)',
+    description: `464 proveedores que MMM listaba en diciembre de 2024 ya no están en junio de 2026, y ${nf(pvT.salieron5m)} salieron del directorio de Plan Vital (la reforma) entre febrero y julio de 2026. Busca tu médico por nombre, especialidad o pueblo antes de escoger.`,
     slug: 'se-fue-tu-medico', bodyHtml: body, jsonLd: jsonLd as any,
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
   }))
@@ -18575,12 +18660,12 @@ async function handleRegistroHub(req: any, res: any) {
     const partesEs: string[] = []
     if (conMMM) partesEs.push(`${conMMM} aparece${conMMM === 1 ? '' : 'n'} en el directorio de MMM (${PLAN_ED_MMM_ES})`)
     if (conMCS) partesEs.push(`${conMCS} en el de MCS Advantage (${PLAN_ED_MCS_ES})`)
-    if (conVital) partesEs.push(`${conVital} en el del Plan Vital (${PLAN_ED_VITAL_ES})`)
+    if (conVital) partesEs.push(`${conVital} en el del Plan Vital, la reforma (${PLAN_ED_VITAL_ES})`)
     if (partesEs.length && !conMMM) partesEs[0] = partesEs[0].replace(/^(\d+) en el/, (_m, n) => `${n} aparece${Number(n) === 1 ? '' : 'n'} en el`)
     const partesEn: string[] = []
     if (conMMM) partesEn.push(`${conMMM} appear${conMMM === 1 ? 's' : ''} in MMM's provider directory (${PLAN_ED_MMM_EN})`)
     if (conMCS) partesEn.push(`${conMCS} in MCS Advantage's (${PLAN_ED_MCS_EN})`)
-    if (conVital) partesEn.push(`${conVital} in Plan Vital's (${PLAN_ED_VITAL_EN})`)
+    if (conVital) partesEn.push(`${conVital} in Plan Vital's, the Reforma (${PLAN_ED_VITAL_EN})`)
     if (partesEn.length && !conMMM) partesEn[0] = partesEn[0].replace(/^(\d+) in (.+?)'s/, (_m, n, who) => `${n} appear${Number(n) === 1 ? 's' : ''} in ${who}'s provider directory`)
     const frasePlanEs = joinEs(partesEs)
     const frasePlanEn = joinEn(partesEn)
@@ -18597,6 +18682,28 @@ async function handleRegistroHub(req: any, res: any) {
       : t(`El registro federal no muestra ninguno con oficina en ${muni.name}.${cerca ? ` El más cercano está en ${cerca.nearest}, a unos ${Math.round(cerca.km)} km.` : ''} Aquí están los de al lado, con pueblo y teléfono. Gratis y sin cuenta.`, `The federal registry shows none with an office in ${muni.name}. Here are the closest ones${townReg ? ` in ${townReg}` : ''}, with town and phone. Free, no account.`)
     const labelCorto = cleanSpecLabel(x.l).toLocaleLowerCase('es')
     const plural = (n: number) => (n !== 1 && /^[a-záéíóúñ]+$/.test(labelCorto) && /[aeiou]$/.test(labelCorto)) ? labelCorto + 's' : labelCorto
+    // LA REFORMA (3 sep 2026). 9 de las 18 busquedas reales de red que llegan al Registro dicen
+    // "reforma" ("fisiatras que aceptan la reforma en ponce"), ninguna dice "Plan Vital". La pagina
+    // decia Plan Vital y callaba cuando el directorio no listaba a nadie del pueblo. Ahora contesta
+    // las 2 cosas, con el conteo de toda la isla por NPI (v_planvital_por_especialidad) para que
+    // "ninguno en Ponce" no se lea como "no existen".
+    let pvIsla: { medicos: number; pueblos: number } | null = null
+    try {
+      const { data: pvi } = await supabase.from('v_planvital_por_especialidad').select('medicos,pueblos').eq('subcategory', x.s).maybeSingle()
+      if (pvi) pvIsla = { medicos: Number(pvi.medicos) || 0, pueblos: Number(pvi.pueblos) || 0 }
+    } catch { /* aditivo */ }
+    const vitalNames = inTown.filter((p: any) => planMap.get(String(p.npi))?.vital).map((p: any) => cleanProviderName(p.name))
+    const reformaEs = !nT ? '' : conVital
+      ? `<strong>La reforma (Plan Vital, edición de ${PLAN_ED_VITAL_ES}):</strong> ${conVital} de los ${nT} de ${escapeHtml(muni.name)} aparece${conVital === 1 ? '' : 'n'} en su directorio: ${escapeHtml(vitalNames.join(', '))}.`
+      : `<strong>La reforma (Plan Vital, edición de ${PLAN_ED_VITAL_ES}):</strong> ninguno de los ${nT} de ${escapeHtml(muni.name)} aparece en su directorio.${pvIsla && pvIsla.medicos ? ` En toda la isla ese directorio lista ${pvIsla.medicos} ${escapeHtml(plural(pvIsla.medicos))} en ${pvIsla.pueblos} pueblo${pvIsla.pueblos === 1 ? '' : 's'}.` : ''}`
+    const reformaEn = !nT ? '' : conVital
+      ? `<strong>The Reforma (Plan Vital, ${PLAN_ED_VITAL_EN} edition):</strong> ${conVital} of the ${nT} in ${escapeHtml(muni.name)} appear${conVital === 1 ? 's' : ''} in its directory: ${escapeHtml(vitalNames.join(', '))}.`
+      : `<strong>The Reforma (Plan Vital, ${PLAN_ED_VITAL_EN} edition):</strong> none of the ${nT} in ${escapeHtml(muni.name)} appear in its directory.${pvIsla && pvIsla.medicos ? ` Island-wide that directory lists ${pvIsla.medicos} in ${pvIsla.pueblos} town${pvIsla.pueblos === 1 ? '' : 's'}.` : ''}`
+    const reformaCaveatEs = ` Aparecer en el directorio no es que te cojan como paciente, y no aparecer no prueba que estén fuera de la red: el cruce por número federal identifica el 33% de las filas del Plan Vital. Confirma con la oficina.`
+    const reformaCaveatEn = ` Appearing in the directory is not the same as taking you as a patient, and not appearing does not prove they are out of network: the federal-number cross-match identifies 33% of Plan Vital's rows. Confirm with the office.`
+    const reformaHtml = nT ? `<p class="text-slate-700 mt-3 border-l-4 border-indigo-300 pl-3">${t(reformaEs, reformaEn)}<span class="text-sm text-slate-500">${t(reformaCaveatEs, reformaCaveatEn)}</span></p>` : ''
+    const reformaFaq = nT ? [{ '@type': 'Question', name: t(`¿Qué ${labelCorto} en ${muni.name} acepta la reforma (Plan Vital)?`, `Which ${labelCorto} in ${muni.name} takes the Reforma (Plan Vital)?`),
+      acceptedAnswer: { '@type': 'Answer', text: (t(reformaEs, reformaEn) + t(reformaCaveatEs, reformaCaveatEn)).replace(/<[^>]+>/g, '') } }] : []
     const answerT = inTown.length
       ? t(`En ${escapeHtml(muni.name)} hay <strong>${inTown.length} ${escapeHtml(plural(inTown.length))}</strong> con oficina, verificado${inTown.length === 1 ? '' : 's'} contra el registro federal NPPES.${hayPlan ? ` De esos, <strong>${frasePlanEs}</strong>.` : ''}`, `${escapeHtml(muni.name)} has <strong>${inTown.length} verified ${escapeHtml(labelLow)}${inTown.length === 1 ? '' : 's'}</strong> with a local office.${hayPlan ? ` Of those, <strong>${frasePlanEn}</strong>.` : ''}`)
       : t(`El registro federal <strong>no muestra ningún ${escapeHtml(labelCorto)}</strong> con oficina en ${escapeHtml(muni.name)}. ${cercaFrase}${nearby.length ? ` Los de al lado:` : ''}`, `The federal registry shows <strong>no ${escapeHtml(labelLow)}</strong> with an office in ${escapeHtml(muni.name)}.`)
@@ -18604,6 +18711,7 @@ async function handleRegistroHub(req: any, res: any) {
     let bodyT = `${breadcrumbT}
 <h1>${x.e} ${escapeHtml(label)} ${t('en', 'in')} ${escapeHtml(muni.name)}, Puerto Rico</h1>
 <p class="text-lg text-slate-600 mt-2">${answerT}</p>
+${reformaHtml}
 ${info.treats ? `<p class="text-slate-600 mt-1">${escapeHtml(info.treats)} ${escapeHtml(info.whenToGo)}</p>` : ''}
 ${info.note ? `<p class="text-sm text-slate-500 mt-1"><i class="fa-solid fa-circle-info text-teal-600"></i> ${escapeHtml(info.note)}</p>` : ''}`
     if (inTown.length) bodyT += `<div class="not-prose mt-5 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${theadOf(false)}<tbody>${rowsOf(inTown, false)}</tbody></table></div>`
@@ -18626,7 +18734,8 @@ ${regDisclaimer(en)}`
       { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [
         { '@type': 'Question', name: `¿Hay ${labelCorto} en ${muni.name}?`, acceptedAnswer: { '@type': 'Answer', text: inTown.length ? `Sí. En ${muni.name} hay ${inTown.length} ${plural(inTown.length)} verificado${inTown.length === 1 ? '' : 's'} contra el registro federal NPPES.` : `El registro federal NPPES no muestra ningún ${labelCorto} con oficina en ${muni.name}.${nearby.length && townReg ? ` Los más cercanos están en el ${townReg}.` : ''}` } },
         { '@type': 'Question', name: `¿Qué hace un ${labelCorto}?`, acceptedAnswer: { '@type': 'Answer', text: `${info.treats} ${info.whenToGo}` } },
-        ...(hayPlan ? [{ '@type': 'Question', name: `¿Qué ${labelCorto} de ${muni.name} aparece en el directorio de MMM, MCS o del Plan Vital?`, acceptedAnswer: { '@type': 'Answer', text: [
+        ...reformaFaq,
+        ...(hayPlan ? [{ '@type': 'Question', name: `¿Qué ${labelCorto} de ${muni.name} aparece en el directorio de MMM, MCS o del Plan Vital (la reforma)?`, acceptedAnswer: { '@type': 'Answer', text: [
           conMMM ? `En el directorio de proveedores de MMM (edición de ${PLAN_ED_MMM_ES}) aparecen ${conMMM}: ${inTown.filter((p: any) => planMap.get(String(p.npi))?.mmm).map((p: any) => cleanProviderName(p.name)).join(', ')}.` : '',
           conMCS ? `En el de MCS Advantage (edición de ${PLAN_ED_MCS_ES}) aparecen ${conMCS}: ${inTown.filter((p: any) => planMap.get(String(p.npi))?.mcs).map((p: any) => cleanProviderName(p.name)).join(', ')}.` : '',
           conVital ? `En el del Plan Vital / First Medical (edición de ${PLAN_ED_VITAL_ES}) aparecen ${conVital}: ${inTown.filter((p: any) => planMap.get(String(p.npi))?.vital).map((p: any) => cleanProviderName(p.name)).join(', ')}.` : '',
