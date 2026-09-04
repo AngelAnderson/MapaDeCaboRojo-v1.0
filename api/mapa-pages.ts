@@ -6745,7 +6745,9 @@ ${othersHtml}
 
 ${regDisclaimer(lang === 'en')}
 
-<p class="text-xs text-slate-500 mt-6">${escapeHtml(name)} aparece en el <strong>NPPES</strong>, el registro oficial del gobierno federal de EE.UU. — el mismo que usan Medicare y los planes médicos. El NPI <strong>${escapeHtml(npi)}</strong> es público y cualquiera puede verificarlo. ¿Dato viejo o ya no ejerce aquí? Dínoslo: <a href="mailto:angel@angelanderson.com" class="text-teal-600">angel@angelanderson.com</a>.</p>
+<p class="text-xs text-slate-500 mt-6">${npiVivo
+  ? `${escapeHtml(name)} aparece en el <strong>NPPES</strong>, el registro oficial del gobierno federal de EE.UU. — el mismo que usan Medicare y los planes médicos. El NPI <strong>${escapeHtml(npi)}</strong> es público y cualquiera puede verificarlo. ¿Dato viejo o ya no ejerce aquí? Dínoslo: <a href="mailto:angel@angelanderson.com" class="text-teal-600">angel@angelanderson.com</a>.`
+  : `El NPI <strong>${escapeHtml(npi)}</strong> <strong>ya no aparece</strong> en el <strong>NPPES</strong>, el registro oficial del gobierno federal de EE.UU. Eso suele pasar cuando el proveedor se retiró, se mudó, o el número se dio de baja. No quiere decir que la persona no exista ni que hiciera algo malo, pero sí quiere decir que <strong>este dato no lo respalda hoy el registro federal</strong>, así que llama antes de ir. ¿Sigues ejerciendo y esto está mal? Dínoslo y se corrige el mismo día: <a href="mailto:angel@angelanderson.com" class="text-teal-600">angel@angelanderson.com</a>.`}</p>
 
 <div class="not-prose mt-3 border border-amber-200 bg-amber-50 rounded-xl px-4 py-3">
   <p class="text-sm text-amber-900"><strong>¿Eres ${escapeHtml(name)}?</strong> Si aquí aparece una dirección personal en vez de tu oficina, o el teléfono o los planes están mal, escríbenos a <a href="mailto:angel@angelanderson.com" class="font-semibold underline">angel@angelanderson.com</a> o al <a href="sms:+17874177711" class="font-semibold underline">787-417-7711</a> y <strong>se corrige el mismo día</strong>. El registro federal a veces publica la dirección postal de un proveedor; corregirlo aquí es gratis y no requiere cuenta.</p>
