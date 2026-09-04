@@ -21808,6 +21808,29 @@ function wrongHost(req: any, page: string): string | null {
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
+function handleNotFound(req: any, res: any) {
+  const host = String(req.headers?.host || '')
+  const esReg = /registromedicopr/i.test(host)
+  const canonicalHost = esReg ? 'https://registromedicopr.com' : 'https://puertoricosinfiltros.com'
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow')
+  res.status(404).send(layout({
+    title: 'Esa página no existe',
+    description: 'Esa dirección no existe. Busca por especialidad y pueblo.',
+    slug: 'registro',
+    bodyHtml: esReg
+      ? `<h1>Esa página no existe</h1>
+<p class="text-slate-600">Puede que el enlace venga cortado o viejo. No pierdas el viaje:</p>
+<ul class="text-slate-600">
+  <li><a href="/registro" class="text-teal-700 font-semibold">Busca por especialidad y pueblo →</a></li>
+  <li><a href="/necesito" class="text-teal-700 font-semibold">Dime qué necesitas y te digo por dónde empezar →</a></li>
+</ul>
+<p class="text-slate-600 mt-3">¿Es una emergencia? No busques aquí. Llama al 9-1-1 o ve a la sala más cercana.</p>`
+      : `<h1>Esa página no existe</h1><p class="text-slate-600"><a href="/" class="text-teal-700 font-semibold">Vuelve al inicio →</a></p>`,
+    host: req.headers?.host,
+    canonicalHost,
+  }))
+}
+
 export default async function handler(req: any, res: any) {
   const page = String(req.query.page || '')
 
@@ -21936,6 +21959,13 @@ export default async function handler(req: any, res: any) {
     case 'faro': return handleFaro(req, res)
     case 'subscribe': return await handleSubscribe(req, res)
     case 'defensa-y-limpieza': return handleDefensaYLimpieza(req, res)
+    // Ruta desconocida de registromedicopr.com / puertoricosinfiltros.com. Antes caia en el
+    // catch-all de vercel.json ('/(.*)' -> /clasico/index.html), que es el fallback del SPA
+    // del Mapa: devolvia HTTP 200 con una pagina vacia titulada "El Veci" y con canonical
+    // apuntando al home de mapadecaborojo.com. O sea, /esto-no-existe daba 200 y le regalaba
+    // la senal a otro dominio. Con 31,543 URLs reales en el sitemap, gastar rastreo en
+    // infinitas URLs falsas tiene costo. Ahora responde 404 de verdad, con noindex.
+    case 'notfound': return handleNotFound(req, res)
     default:
       res.status(404).send('Page not found')
   }

@@ -561,6 +561,46 @@
     },
     {
       "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "registromedicopr.com"
+        }
+      ],
+      "destination": "/api/mapa-pages?page=notfound"
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.registromedicopr.com"
+        }
+      ],
+      "destination": "/api/mapa-pages?page=notfound"
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "puertoricosinfiltros.com"
+        }
+      ],
+      "destination": "/api/mapa-pages?page=notfound"
+    },
+    {
+      "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.puertoricosinfiltros.com"
+        }
+      ],
+      "destination": "/api/mapa-pages?page=notfound"
+    },
+    {
+      "source": "/(.*)",
       "destination": "/clasico/index.html"
     }
   ],
