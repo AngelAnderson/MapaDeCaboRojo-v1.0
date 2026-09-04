@@ -10168,7 +10168,10 @@ async function handleSeFueTuMedico(req: any, res: any) {
   // v_red_planvital_movimiento es la gemela de la vista de MMM: 3 ediciones de First Medical /
   // Plan Vital (feb 2024, feb 2026, jul 2026), criterio doble NPI+nombre. Los numeros se cuentan
   // aqui en cada render (CDN 6h), no se hardcodean: cuando entre la edicion nueva, cambian solos.
-  let pvT = { redHoy: 0, cohorte24: 0, cohorte26: 0, salieron5m: 0, salieron24_26: 0, entraron: 0, otroNpi: 0 }
+  // v2 (3 sep 2026, tarde): las 4 ediciones leidas con UN solo lector (fmvital_directorio_v2). La 1ra
+  // version de esta seccion comparaba jul-2026 (lector viejo, pareo 33%) y publico "567 salieron":
+  // 250 con lector consistente. Un diff entre 2 lectores distintos mide el lector, no la red.
+  let pvT = { redHoy: 0, cohorte24: 0, cohorte26: 0, cohorteJul: 0, salieron5m: 0, salieronAgo: 0, salieronAgoSM: 0, salieron24_26: 0, entraron: 0, otroNpi: 0 }
   let pvRecientes: any[] = []
   let pvEnMmm = 0
   try {
@@ -10176,23 +10179,25 @@ async function handleSeFueTuMedico(req: any, res: any) {
     // conto "red hoy: 735" sobre una muestra de 1,000 y publico "263 de los 91". Se pagina.
     const pvAll: any[] = []
     for (let from = 0; ; from += 1000) {
-      const { data } = await supabase.from('v_red_planvital_movimiento')
-        .select('npi,estado,ventana_salida,en_feb24,en_feb26,en_jul26').range(from, from + 999)
+      const { data } = await supabase.from('v_red_planvital_movimiento_v2')
+        .select('npi,estado,ventana_salida,en_feb24,en_feb26,en_jul26,en_ago26,seccion').range(from, from + 999)
       pvAll.push(...(data || []))
       if (!data || data.length < 1000) break
     }
     for (const r of pvAll) {
-      if (r.en_jul26) pvT.redHoy++
+      if (r.en_ago26) pvT.redHoy++
       if (r.en_feb24) pvT.cohorte24++
       if (r.en_feb26) pvT.cohorte26++
-      if (r.estado === 'salio' && r.ventana_salida === 'ultimos_5_meses') pvT.salieron5m++
-      if (r.estado === 'salio' && r.ventana_salida === 'entre_feb24_y_feb26') pvT.salieron24_26++
+      if (r.en_jul26) pvT.cohorteJul++
+      if (r.estado === 'salio' && r.ventana_salida === 'feb26_a_jul26') pvT.salieron5m++
+      if (r.estado === 'salio' && r.ventana_salida === 'jul26_a_ago26') { pvT.salieronAgo++; if (r.seccion === 'Salud Mental') pvT.salieronAgoSM++ }
+      if (r.estado === 'salio' && r.ventana_salida === 'feb24_a_feb26') pvT.salieron24_26++
       if (r.estado === 'entro') pvT.entraron++
       if (r.estado === 'sigue_bajo_otro_npi') pvT.otroNpi++
     }
-    const { data: pvRaw } = await supabase.from('v_red_planvital_movimiento')
-      .select('npi,name,town,specialty,page,red')
-      .eq('estado', 'salio').eq('ventana_salida', 'ultimos_5_meses').limit(1000)
+    const { data: pvRaw } = await supabase.from('v_red_planvital_movimiento_v2')
+      .select('npi,name,town,specialty,page,red,seccion,ventana_salida')
+      .eq('estado', 'salio').in('ventana_salida', ['feb26_a_jul26', 'jul26_a_ago26']).limit(2000)
     pvRecientes = (pvRaw || []).filter((r: any) => r.name)
       .sort((a: any, b: any) => (a.town || '').localeCompare(b.town || '', 'es') || (a.name || '').localeCompare(b.name || '', 'es'))
     // El cruce que ningun plan publica de si mismo: cuantos de los que salieron de la reforma
@@ -10214,7 +10219,8 @@ async function handleSeFueTuMedico(req: any, res: any) {
     const enlace = slugs[r.npi]
       ? `<a href="/especialista/${escapeHtml(slugs[r.npi])}" class="text-teal-700 font-semibold underline">${nombre}</a>`
       : `<span class="font-semibold">${nombre}</span>`
-    return `<li class="py-1 text-sm" data-b="${escapeHtml((r.name + ' ' + (r.specialty || '') + ' ' + (r.town || '')).toLowerCase())}">${enlace}<span class="text-slate-500"> · ${escapeHtml(r.specialty || 'sin especialidad listada')} · aparecía en la pág. ${r.page || '?'} de la edición de feb 2026</span></li>`
+    const ed = r.ventana_salida === 'jul26_a_ago26' ? 'jul 2026' : 'feb 2026'
+    return `<li class="py-1 text-sm" data-b="${escapeHtml((r.name + ' ' + (r.specialty || '') + ' ' + (r.town || '') + ' ' + (r.seccion || '')).toLowerCase())}">${enlace}<span class="text-slate-500"> · ${escapeHtml(r.specialty || 'sin especialidad listada')}${r.seccion === 'Salud Mental' ? ' · Salud Mental' : ''} · aparecía en la pág. ${r.page || '?'} de la edición de ${ed}, no en la de ago 2026</span></li>`
   }
   const listadoPV = pvPueblos.map(p => `
     <section class="pueblo mb-5" data-p="${escapeHtml(p.toLowerCase())}">
@@ -10228,7 +10234,7 @@ async function handleSeFueTuMedico(req: any, res: any) {
     ['¿De dónde sale este número?',
      'De los propios PDF de MMM, bajados de su página pública sin login y guardados con su huella digital (sha256). Se compararon 3 ediciones de la línea Individuales: diciembre 2024, diciembre 2025 y junio 2026. Un proveedor cuenta como salido solo si su número federal (NPI) y su nombre desaparecen de la edición nueva. El método completo está en el expediente MMM.'],
     ['¿Cubre todos los planes?',
-     'No. Hoy cubre 2 planes: la línea Individuales de MMM (Medicare, 3 ediciones: dic 2024, dic 2025, jun 2026) y Plan Vital de First Medical (la reforma, 3 ediciones: feb 2024, feb 2026, jul 2026). Las líneas Grupales y AEE de MMM están bajadas pero sin procesar, y Triple-S Advantage tiene 1 sola edición archivada, así que todavía no se puede comparar. Además solo cuenta las filas donde se pudo parear un número federal. El total real de salidas es mayor que este, nunca menor.'],
+     'No. Hoy cubre 2 planes: la línea Individuales de MMM (Medicare, 3 ediciones: dic 2024, dic 2025, jun 2026) y Plan Vital de First Medical (la reforma, 4 ediciones: feb 2024, feb 2026, jul 2026 y ago 2026). Las líneas Grupales y AEE de MMM están bajadas pero sin procesar, y Triple-S Advantage tiene 1 sola edición archivada, así que todavía no se puede comparar. Además solo cuenta las filas donde se pudo parear un número federal. El total real de salidas es mayor que este, nunca menor.'],
     ['Soy el proveedor y esto está mal, ¿cómo lo corrijo?',
      'Escríbeme y se corrige el mismo día: angel@angelanderson.com o texto al 787-417-7711. Dime tu nombre y tu NPI. Si apareces en la edición de junio de 2026 y el pareo falló, la fila sale de esta página y se documenta el error. Publicar un señalamiento con nombre obliga a dar la vía de réplica en la misma página, y esta es.'],
     ['¿Qué hago yo con esto antes del 15 de octubre?',
@@ -10304,25 +10310,25 @@ async function handleSeFueTuMedico(req: any, res: any) {
   <p id="vacio" class="hidden text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg p-3">No aparece en esta lista. Eso <b>no</b> quiere decir que esté en la red: quiere decir que no salió del directorio entre diciembre de 2025 y junio de 2026. Confírmalo con tu plan por nombre y NPI antes de escoger.</p>
 
   <h2 class="text-2xl font-bold text-slate-900 mt-12 mb-2">La reforma también se mueve: Plan Vital</h2>
-  <p class="text-slate-700">Medicare no es el único directorio que envejece. Plan Vital (First Medical) publica el suyo cada pocos meses y tampoco compara una edición con la anterior. Guardamos 3: <b>febrero de 2024, febrero de 2026 y julio de 2026</b>. Esto es lo que se movió en los últimos 5 meses medidos.</p>
+  <p class="text-slate-700">Medicare no es el único directorio que envejece. Plan Vital (First Medical) publica el suyo cada pocos meses y tampoco compara una edición con la anterior. Guardamos 4: <b>febrero de 2024, febrero de 2026, julio de 2026 y agosto de 2026</b> (la de agosto salió el 1 de septiembre y la atrapamos 2 días después). Las 4 se leyeron con el mismo lector, que es lo único que hace comparable una edición con otra.</p>
 
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
-    <div class="bg-slate-900 text-white rounded-xl p-3"><div class="text-3xl font-black">${nf(pvT.salieron5m)}</div><div class="text-xs mt-1 opacity-90">proveedores que estaban en feb 2026 y no están en jul 2026</div></div>
-    <div class="bg-slate-100 rounded-xl p-3"><div class="text-3xl font-black text-slate-900">${pvPct5m}%</div><div class="text-xs mt-1 text-slate-600">de la red, en 5 meses (1 de cada ${pvT.salieron5m ? Math.round(pvT.cohorte26 / pvT.salieron5m) : '?'})</div></div>
+    <div class="bg-slate-900 text-white rounded-xl p-3"><div class="text-3xl font-black">${nf(pvT.salieron5m)}</div><div class="text-xs mt-1 opacity-90">proveedores que estaban en feb 2026 y no están en jul 2026 (${pvPct5m}% de la red, 1 de cada ${pvT.salieron5m ? Math.round(pvT.cohorte26 / pvT.salieron5m) : '?'})</div></div>
+    <div class="bg-slate-100 rounded-xl p-3"><div class="text-3xl font-black text-slate-900">${nf(pvT.salieronAgo)}</div><div class="text-xs mt-1 text-slate-600">salieron entre jul y ago 2026, y ${nf(pvT.salieronAgoSM)} de esos son de Salud Mental, que el plan reorganizó en agosto</div></div>
     <div class="bg-slate-100 rounded-xl p-3"><div class="text-3xl font-black text-slate-900">${nf(pvT.salieron24_26)}</div><div class="text-xs mt-1 text-slate-600">salieron entre feb 2024 y feb 2026</div></div>
-    <div class="bg-slate-100 rounded-xl p-3"><div class="text-3xl font-black text-slate-900">${nf(pvT.entraron)}</div><div class="text-xs mt-1 text-slate-600">entraron desde feb 2024 (red hoy: ${nf(pvT.redHoy)})</div></div>
+    <div class="bg-slate-100 rounded-xl p-3"><div class="text-3xl font-black text-slate-900">${nf(pvT.entraron)}</div><div class="text-xs mt-1 text-slate-600">entraron desde feb 2024 (red hoy, ago 2026: ${nf(pvT.redHoy)})</div></div>
   </div>
 
   <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mt-5">
-    <p class="m-0 text-[15px] text-amber-900"><b>${nf(pvEnMmm)} de los ${nf(pvT.salieron5m)} que salieron de Plan Vital siguen listados por MMM en su edición de junio de 2026.</b> No dejaron la medicina. Dejaron un plan. Cuando un médico sale de la reforma y se queda en Medicare, el que pierde la cita es el paciente que no tiene con qué escoger. Este cruce lo permiten 2 directorios públicos puestos uno al lado del otro; ningún plan lo publica de sí mismo.</p>
+    <p class="m-0 text-[15px] text-amber-900"><b>${nf(pvEnMmm)} de los ${nf(pvRecientes.length)} que salieron de Plan Vital desde febrero siguen listados por MMM en su edición de junio de 2026.</b> No dejaron la medicina. Dejaron un plan. Cuando un médico sale de la reforma y se queda en Medicare, el que pierde la cita es el paciente que no tiene con qué escoger. Este cruce lo permiten 2 directorios públicos puestos uno al lado del otro; ningún plan lo publica de sí mismo.</p>
   </div>
 
-  <p class="text-sm text-slate-600 mt-4">Mismo método que arriba: un proveedor cuenta como salido solo si su NPI <b>y</b> su nombre desaparecen de la edición de julio (${nf(pvT.otroNpi)} seguían bajo otro NPI y no se cuentan). Aviso honesto sobre el lector: el 26% de las filas de Plan Vital venía sin especialidad porque en el PDF la especialidad es un encabezado que corre por columna; se releyó el 3 de septiembre de 2026 y hoy quedan sin etiqueta las farmacias (no la llevan) y unas 300 filas por edición que el lector no pudo casar. La etiqueta de cada fila dice de dónde salió.</p>
+  <p class="text-sm text-slate-600 mt-4">Mismo método que arriba: un proveedor cuenta como salido solo si su NPI <b>y</b> su nombre desaparecen de la edición vigente (${nf(pvT.otroNpi)} seguían bajo otro NPI y no se cuentan). <b>Aviso honesto sobre el salto de agosto:</b> la sección de Salud Mental pasó de unas 3,100 filas a unas 1,400 y cambió de formato; casi todas las salidas jul→ago están ahí. Puede ser un cambio de proveedor de salud mental, no de la red médica. <b>Y sobre el lector:</b> la primera versión de esta sección (3 sep, mañana) publicó 567 salidas feb→jul porque comparaba una edición leída con el lector viejo contra otra leída con el nuevo. Con el mismo lector para las 4, son ${nf(pvT.salieron5m)}. Se corrigió el mismo día y queda dicho aquí.</p>
 
   <h3 class="text-lg font-bold text-slate-900 mt-6 mb-2">Busca tu médico en Plan Vital</h3>
-  <p class="text-sm text-slate-600 mb-3">Los <b>${nf(pvRecientes.length)}</b> que salieron entre febrero y julio de 2026, por pueblo. La misma caja de búsqueda de arriba filtra esta lista también.</p>
+  <p class="text-sm text-slate-600 mb-3">Los <b>${nf(pvRecientes.length)}</b> que salieron entre febrero y agosto de 2026 (las 2 ventanas), por pueblo, cada uno con la edición donde aparecía por última vez. La misma caja de búsqueda de arriba filtra esta lista también.</p>
   <div id="lista2">${listadoPV}</div>
-  <p id="vacio2" class="hidden text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg p-3">No aparece en la lista de Plan Vital. Eso <b>no</b> quiere decir que esté en la red: quiere decir que no salió del directorio entre febrero y julio de 2026. Confírmalo con el plan antes de decidir.</p>
+  <p id="vacio2" class="hidden text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-lg p-3">No aparece en la lista de Plan Vital. Eso <b>no</b> quiere decir que esté en la red: quiere decir que no salió del directorio entre febrero y agosto de 2026. Confírmalo con el plan antes de decidir.</p>
 
   <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Lo que esto NO prueba</h2>
   <ul class="text-sm text-slate-700 space-y-2 list-none pl-0">
@@ -10342,7 +10348,7 @@ async function handleSeFueTuMedico(req: any, res: any) {
 
   <p class="text-sm text-slate-600 mt-8">El método, edición por edición, con las huellas digitales de cada PDF: <a href="/expediente-mmm" class="text-teal-700 font-semibold underline">el expediente MMM</a> · <a href="/expediente-planvital" class="text-teal-700 font-semibold underline">el expediente Plan Vital</a> · <a href="/telefonos-muertos" class="text-teal-700 font-semibold underline">el marcador de teléfonos muertos</a>.</p>
 
-  <p class="text-sm text-slate-500 mt-6 border-t border-slate-200 pt-4">Datos de los directorios públicos de proveedores de MMM (línea Individuales: diciembre 2024, diciembre 2025 y junio 2026) y de Plan Vital / First Medical Health Plan (febrero 2024, febrero 2026 y julio 2026), bajados sin login y guardados con su sha256. Cruce contra el registro federal NPPES. Comparación de MMM corrida el 22 de agosto de 2026; la de Plan Vital se recalcula en cada carga de esta página. Esto no es asesoría médica ni una acusación contra ningún proveedor: es la diferencia entre 2 documentos públicos. Derecho a réplica en la misma página.</p>
+  <p class="text-sm text-slate-500 mt-6 border-t border-slate-200 pt-4">Datos de los directorios públicos de proveedores de MMM (línea Individuales: diciembre 2024, diciembre 2025 y junio 2026) y de Plan Vital / First Medical Health Plan (febrero 2024, febrero 2026, julio 2026 y agosto 2026), bajados sin login y guardados con su sha256. Cruce contra el registro federal NPPES. Comparación de MMM corrida el 22 de agosto de 2026; la de Plan Vital se recalcula en cada carga de esta página. Esto no es asesoría médica ni una acusación contra ningún proveedor: es la diferencia entre 2 documentos públicos. Derecho a réplica en la misma página.</p>
 </article>
 <script>(function(){var q=document.getElementById('q'),L=document.getElementById('lista'),V=document.getElementById('vacio');if(!q||!L)return;
 function n(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');}
@@ -10361,7 +10367,7 @@ if(V2)V2.classList.toggle('hidden',!(t&&vis2===0));}});})();</script>`
     {
       '@context': 'https://schema.org', '@type': 'Article',
       headline: `¿Se fue tu médico de la red? 464 salieron del directorio de MMM en 18 meses y ${nf(pvT.salieron5m)} del de Plan Vital en 5`,
-      description: `Comparación de 3 ediciones del directorio de MMM (dic 2024, dic 2025, jun 2026) y 3 de Plan Vital / First Medical (feb 2024, feb 2026, jul 2026): 464 proveedores salieron de MMM en 18 meses y ${nf(pvT.salieron5m)} de Plan Vital en 5 meses. Lo que cambió fue la lista, no el médico.`,
+      description: `Comparación de 3 ediciones del directorio de MMM (dic 2024, dic 2025, jun 2026) y 4 de Plan Vital / First Medical (feb 2024, feb 2026, jul 2026, ago 2026): 464 proveedores salieron de MMM en 18 meses y ${nf(pvT.salieron5m)} de Plan Vital entre febrero y julio de 2026. Lo que cambió fue la lista, no el médico.`,
       author: { '@type': 'Person', name: 'Angel Anderson' },
       publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
       inLanguage: 'es', url: 'https://registromedicopr.com/se-fue-tu-medico',
@@ -10378,7 +10384,7 @@ if(V2)V2.classList.toggle('hidden',!(t&&vis2===0));}});})();</script>`
   res.setHeader('Cache-Control', 'public, s-maxage=21600, stale-while-revalidate=86400')
   res.status(200).send(layout({
     title: '¿Sigue tu médico en la red? Los que salieron del directorio de MMM y de Plan Vital (reforma)',
-    description: `464 proveedores que MMM listaba en diciembre de 2024 ya no están en junio de 2026, y ${nf(pvT.salieron5m)} salieron del directorio de Plan Vital (la reforma) entre febrero y julio de 2026. Busca tu médico por nombre, especialidad o pueblo antes de escoger.`,
+    description: `464 proveedores que MMM listaba en diciembre de 2024 ya no están en junio de 2026, y ${nf(pvT.salieron5m)} salieron del directorio de Plan Vital (la reforma) entre febrero y julio de 2026, con la edición de agosto ya comparada. Busca tu médico por nombre, especialidad o pueblo antes de escoger.`,
     slug: 'se-fue-tu-medico', bodyHtml: body, jsonLd: jsonLd as any,
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
   }))
@@ -18558,12 +18564,12 @@ async function resolveMuni(slug: string): Promise<{ name: string; region: string
 // Tampoco se muestra `acepta_nuevos`: 17,188 de 19,453 filas del Plan Vital dicen "Sí" y 8
 // dicen "No". El expediente ya probó que ese campo no distingue nada.
 const PLAN_ED_MMM = '2026-06-01'
-const PLAN_ED_VITAL = 'jul-2026'
+const PLAN_ED_VITAL = 'ago-2026' // v2 (fmvital_directorio_v2, un solo lector para las 4 ediciones)
 // Triple-S Advantage: una sola edición cargada (el PDF dice "actualizado a 9/9/2025", año de plan 2026).
 // Estaba en Supabase desde el 28 ago y la ficha ya lo mostraba; el hub no. Misma regla: solo el positivo.
 const PLAN_ED_TSS = '2025-09-09'
 const PLAN_ED_MMM_ES = 'junio de 2026', PLAN_ED_MMM_EN = 'June 2026'
-const PLAN_ED_VITAL_ES = 'julio de 2026', PLAN_ED_VITAL_EN = 'July 2026'
+const PLAN_ED_VITAL_ES = 'agosto de 2026', PLAN_ED_VITAL_EN = 'August 2026'
 const PLAN_ED_TSS_ES = 'septiembre de 2025', PLAN_ED_TSS_EN = 'September 2025'
 // MCS Advantage (MCS Classicare): PDF "actualizado al 10 de agosto de 2026", cargado el 2 sep 2026
 // (18,283 filas, 44.9% cruzadas por NPI). Es el plan #1 de Cabo Rojo (5,066 afiliados MA, mayo
@@ -18580,7 +18586,7 @@ async function planHitsByNpi(npis: any[]): Promise<Map<string, PlanHit>> {
     const [mRes, vRes, tRes, cRes] = await Promise.all([
       // Vista pública: la tabla base está cerrada porque trae el bloque crudo del PDF.
       supabase.from('v_plan_directory_public').select('npi').eq('plan', 'MMM').eq('edition_date', PLAN_ED_MMM).in('npi', list),
-      supabase.from('fmvital_directorio').select('npi').eq('edicion', PLAN_ED_VITAL).in('npi', list),
+      supabase.from('fmvital_directorio_v2').select('npi').eq('edicion', PLAN_ED_VITAL).in('npi', list),
       supabase.from('v_plan_directory_public').select('npi').eq('plan', 'Triple-S Advantage').eq('edition_date', PLAN_ED_TSS).in('npi', list),
       supabase.from('v_plan_directory_public').select('npi').eq('plan', 'MCS Advantage').eq('edition_date', PLAN_ED_MCS).in('npi', list),
     ])
