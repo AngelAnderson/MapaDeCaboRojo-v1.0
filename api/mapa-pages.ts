@@ -716,7 +716,16 @@ function handleMision(_req: any, res: any) {
 // una vence sin cumplirse, el resultado se publica aquí mismo. Misión/visión encadenan
 // al canon del ecosistema (LOCKED 2026-08-02): "reducir el costo de encontrar la
 // información correcta" / "que decidir bien tome segundos, no semanas".
-function handleMisionSinFiltros(req: any, res: any) {
+async function handleMisionSinFiltros(req: any, res: any) {
+  // Conteo vivo de /predicciones (antes era un "12" escrito a mano que se venció).
+  let predPub = 0, predSel = 0, predPrimera = ''
+  try {
+    const { data } = await supabase.from('predicciones').select('status, vence_on, titulo').in('status', ['publicada', 'locked']).order('vence_on', { ascending: true })
+    const rows = data || []
+    predPub = rows.filter((r: any) => r.status === 'publicada').length
+    predSel = rows.filter((r: any) => r.status === 'locked').length
+    if (rows[0]) { const [y, m, d] = String(rows[0].vence_on).split('-').map(Number); predPrimera = `${d} de ${['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][m - 1]} de ${y} (${rows[0].titulo})` }
+  } catch (_) { /* empty */ }
   const MESES_M = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
   const fechaLargaM = (iso: string): string => {
     const [y, m, d] = String(iso).split('-').map(Number)
@@ -729,7 +738,7 @@ function handleMisionSinFiltros(req: any, res: any) {
     {
       titulo: 'Cobrarse en público',
       meta: 'El 100% de las predicciones que venzan publican su resultado en 14 días o menos, gane o pierda la predicción.',
-      hoy: 'Hay 12 predicciones públicas con fecha de cobro. La primera vence el 31 de diciembre de 2026 (Esencia).',
+      hoy: predPub + predSel ? `Hay ${predPub + predSel} predicciones públicas con fecha de cobro: ${predPub} publicadas y ${predSel} selladas. La primera vence el ${predPrimera}.` : 'Las predicciones viven en /predicciones.',
       criterio: 'Cualquiera abre /predicciones después de una fecha de cobro y encuentra el resultado publicado, con la fuente al lado. Una vencida sin resultado por más de 14 días = meta fallada.',
       vence: '2026-12-31',
       verificaUrl: '/predicciones', verificaText: 'Las predicciones',
@@ -21984,7 +21993,7 @@ export default async function handler(req: any, res: any) {
     case 'civico-json': return handleCivicoJson(req, res)
     case 'civico-submit': return await handleCivicoSubmit(req, res)
     case 'civico-moderate': return await handleCivicoModerate(req, res)
-    case 'mision': return /puertoricosinfiltros\.com/i.test(String(req.headers?.host || '')) ? handleMisionSinFiltros(req, res) : handleMision(req, res)
+    case 'mision': return /puertoricosinfiltros\.com/i.test(String(req.headers?.host || '')) ? await handleMisionSinFiltros(req, res) : handleMision(req, res)
     case 'transparencia': return await handleTransparencia(req, res)
     case 'equipo': return handleEquipo(req, res)
     case 'vision': return handleVision(req, res)
