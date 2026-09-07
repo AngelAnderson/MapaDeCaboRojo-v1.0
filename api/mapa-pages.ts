@@ -6156,6 +6156,16 @@ async function handleEspecialista(req: any, res: any) {
     responderRemovido(res, req); return
   }
 
+  // Contacto oculto (2026-09-06): fichas NPPES sin verificar cuya "oficina" era una casa y un
+  // celular (Urb./HC/PO Box/Apt en oficios sin oficina). phone/address van null en `places`
+  // y el snapshot vive en `contacto_oculto`; el trigger places_congela_contacto impide que
+  // el sync los resucite. La ficha lo DICE en vez de quedar en blanco, y pide la confirmación.
+  let contactoOculto = false
+  if (place) {
+    const { data: co } = await supabase.from('contacto_oculto').select('place_id').eq('place_id', place.id).is('revelado_at', null).limit(1)
+    contactoOculto = !!(co && co.length)
+  }
+
   // `visibility` significa algo o no significa nada. Al 23 ago 2026 había 63 fichas que
   // alguien puso fuera de publicación a propósito y que esta ruta seguía sirviendo enteras:
   // 16 marcadas `fuera-de-pr` (cardiólogos en Cleveland y Miami dentro de un registro de PR),
@@ -6585,6 +6595,7 @@ async function handleEspecialista(req: any, res: any) {
     ${dispoHtml}
     <div class="bg-white border border-slate-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${T.regionH}</div><div class="text-slate-900 font-semibold mt-1">${escapeHtml(muni)}${region ? ` · ${escapeHtml(region)}` : ''}</div>${region && REGION_BLURB[region] ? `<div class="text-xs text-slate-500 mt-0.5">${escapeHtml(REGION_BLURB[region])}</div>` : ''}</div>
     ${place.address ? `<div class="bg-white border border-slate-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${T.addr}</div><div class="text-slate-900 mt-1">${escapeHtml(place.address)}</div></div>` : ''}
+    ${contactoOculto ? `<div class="bg-slate-50 border-2 border-slate-300 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-500 font-bold">${lang === 'en' ? 'Contact not published' : 'Contacto no publicado'}</div><div class="text-slate-800 mt-1">${lang === 'en' ? 'The federal registry lists what looks like a home address and a personal phone for this person. We do not publish those until the person or the office confirms where they see patients.' : 'El registro federal trae para esta persona lo que parece una dirección de casa y un teléfono personal. No los publicamos hasta que la persona o la oficina confirme dónde atiende.'}</div><div class="text-sm text-slate-600 mt-2">${lang === 'en' ? 'Is this your profile? Confirm your office contact in the form below, or text 787-417-7711. It goes up the same day.' : '¿Es tu ficha? Confirma el contacto de tu oficina en el formulario de abajo, o texto al 787-417-7711. Se publica el mismo día.'}</div></div>` : ''}
     <div class="bg-white border border-slate-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${T.npiH}</div><div class="text-slate-900 font-mono mt-1">${escapeHtml(npi)} <a href="https://npiregistry.cms.hhs.gov/provider-view/${escapeHtml(npi)}" target="_blank" rel="noopener" class="text-teal-600 text-sm font-sans font-semibold ml-2">verificar en el registro federal →</a></div></div>
     ${planesOficina.length
       ? `<div class="bg-emerald-50 border-2 border-emerald-300 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-emerald-700 font-bold">${lang === 'en' ? '✓ Plans the office confirmed' : '✓ Planes que la oficina confirmó'}</div><div class="text-emerald-900 font-semibold mt-1">${escapeHtml(planesOficina.join(' · '))}</div><div class="text-xs text-emerald-700 mt-1">${planesFechaTxt ? `${lang === 'en' ? 'The office said so' : 'Lo dijo la oficina'}${quienLoDijo ? ` ${quienLoDijo}` : ''}, ${lang === 'en' ? 'on' : 'el'} ${planesFechaTxt}. ` : `${lang === 'en' ? 'Confirmed by the office itself. ' : 'Confirmado por la propia oficina. '}`}${lang === 'en' ? 'It does not come from a plan directory. Plans change: confirm again when you call.' : 'No sale del directorio de un plan. Los planes cambian: vuelve a confirmar cuando llames.'}</div></div>`
