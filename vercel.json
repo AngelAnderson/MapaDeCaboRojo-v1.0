@@ -468,6 +468,10 @@
       "destination": "/api/mapa-pages?page=transicion"
     },
     {
+      "source": "/panel",
+      "destination": "/api/mapa-pages?page=panel"
+    },
+    {
       "source": "/contradicciones",
       "destination": "/api/mapa-pages?page=contradicciones"
     },

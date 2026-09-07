@@ -295,7 +295,7 @@ function layout(opts: {
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Salud</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/marcador" class="hover:text-teal-700">El Marcador</a><a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a><a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a><a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a><a href="/espejo" class="hover:text-teal-700">El Espejo</a><a href="/telemedicina" class="hover:text-teal-700">Telemedicina</a><a href="/diabetes" class="hover:text-teal-700">Diabetes</a><a href="/registro-raras" class="hover:text-teal-700">Enfermedades raras</a><a href="https://www.recallradarpr.com" class="hover:text-teal-700">Recalls FDA (RecallRadarPR)</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/rendimiento" class="hover:text-teal-700">Rendimiento del dólar</a><a href="/cupon" class="hover:text-teal-700">Dinero sin cobrar</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/exposicion-ai" class="hover:text-teal-700">Exposición a la IA</a><a href="/cuatro-economias" class="hover:text-teal-700">Las 4 economías</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a><a href="/investigacion" class="hover:text-teal-700">Dinero de ciencia</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Servicios</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/agua" class="hover:text-teal-700">Agua</a><a href="/acueductos" class="hover:text-teal-700">El recibo del agua</a><a href="/luz" class="hover:text-teal-700">Luz</a><a href="/basura" class="hover:text-teal-700">Basura</a></div></div>
-<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">El pueblo</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/contradicciones" class="hover:text-teal-700">Contradicciones</a><a href="/transicion" class="hover:text-teal-700">Vistas de transición</a><a href="/funciona" class="hover:text-teal-700">Cuando funciona</a><a href="/los-78" class="hover:text-teal-700">La Nota de los 78</a><a href="/semaforo-fema" class="hover:text-teal-700">Semáforo FEMA</a><a href="/demanda" class="hover:text-teal-700">Lo que busca PR</a><a href="/historial" class="hover:text-teal-700">Historial de promesas</a><a href="/promesas" class="hover:text-teal-700">Promesómetro</a><a href="/calculadora" class="hover:text-teal-700">Calculadora de Promesas</a><a href="/esencia" class="hover:text-teal-700">Proyecto Esencia</a><a href="/activos" class="hover:text-teal-700">Activos dormidos</a><a href="/retiro" class="hover:text-teal-700">El Huracán Lento</a><a href="/no-se-mide" class="hover:text-teal-700">Lo que ni se mide</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">El pueblo</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/contradicciones" class="hover:text-teal-700">Contradicciones</a><a href="/panel" class="hover:text-teal-700">El Panel</a><a href="/transicion" class="hover:text-teal-700">Vistas de transición</a><a href="/funciona" class="hover:text-teal-700">Cuando funciona</a><a href="/los-78" class="hover:text-teal-700">La Nota de los 78</a><a href="/semaforo-fema" class="hover:text-teal-700">Semáforo FEMA</a><a href="/demanda" class="hover:text-teal-700">Lo que busca PR</a><a href="/historial" class="hover:text-teal-700">Historial de promesas</a><a href="/promesas" class="hover:text-teal-700">Promesómetro</a><a href="/calculadora" class="hover:text-teal-700">Calculadora de Promesas</a><a href="/esencia" class="hover:text-teal-700">Proyecto Esencia</a><a href="/activos" class="hover:text-teal-700">Activos dormidos</a><a href="/retiro" class="hover:text-teal-700">El Huracán Lento</a><a href="/no-se-mide" class="hover:text-teal-700">Lo que ni se mide</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Expedientes</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/expediente/alcalde-cabo-rojo" class="hover:text-teal-700">Alcalde de Cabo Rojo</a><a href="/expediente/representante-distrito-20" class="hover:text-teal-700">Rep. Distrito 20</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Predicción</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/prediccion" class="hover:text-teal-700">Predicción 2030</a><a href="/predicciones" class="hover:text-teal-700">Predicciones con fecha</a><a href="/sinfiltros/pulso" class="hover:text-teal-700">Pulso</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Prensa</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/buscar" class="hover:text-teal-700">Pregúntale al récord</a><a href="/comparte" class="hover:text-teal-700">Datos citables</a><a href="/rompelo" class="hover:text-teal-700">Rómpelo, si puedes</a></div></div>
@@ -13058,6 +13058,52 @@ function contradiccionInline(o: { dicenC: string; dicenQ: string; dicenUrl?: str
 // Metas MÍNIMAS federales con grade A-F calculado (nunca opinado). Data vive
 // en metas_minimas (Supabase); el vigilante semanal la refresca. 3 caras leen
 // la misma tabla: PRSF /boletin (esta), banner en registro, página CR.com.
+// /panel — El Panel: 5 agentes que no se leen entre sí y un juez. Publica el disenso:
+// lo que sobrevivió, lo que se cayó y lo que nadie contestó. Nivel 1 protege lo que
+// caborojo.com publica, nivel 2 le contesta al vecino, nivel 3 examina lo que dicen las
+// oficinas. Lee panel_publico (solo filas publicado=true, sin teléfonos). 7 sep 2026.
+async function handlePanel(req: any, res: any) {
+  const { data: filas } = await supabase.from('panel_publico').select('*').limit(200)
+  const nivelTxt: Record<number, string> = { 1: 'Lo que íbamos a publicar', 2: 'Lo que preguntó un vecino', 3: 'Lo que dijo una oficina' }
+  const fmt = (d: string) => { try { return new Date(d + 'T12:00:00Z').toLocaleDateString('es-PR', { day: 'numeric', month: 'long', year: 'numeric' }) } catch { return d } }
+  const lista = (arr: any[], k: string, sub: (x: any) => string) => (arr || []).length
+    ? `<ul class="mt-1.5 space-y-1.5">${arr.map((x: any) => `<li class="text-sm text-slate-800 leading-snug">${escapeHtml(String(x[k] || ''))}${sub(x)}</li>`).join('')}</ul>`
+    : '<p class="text-sm text-slate-400 mt-1">Nada.</p>'
+  const cards = (filas || []).map((v: any) => `
+  <article class="not-prose bg-white border border-slate-200 rounded-2xl overflow-hidden mt-5" id="${escapeHtml(v.slug)}">
+    <div class="px-4 pt-4">
+      <p class="text-[11px] uppercase tracking-widest font-bold text-teal-600">${nivelTxt[v.nivel] || 'Panel'} · ${escapeHtml(v.tema)} · ${fmt(v.fecha)}</p>
+      <p class="text-slate-900 text-lg font-black leading-snug mt-1" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(v.pregunta)}</p>
+      ${v.actor ? `<p class="text-xs text-slate-500 mt-1">Lo dijo: ${escapeHtml(v.actor)}${v.organizacion ? ` (${escapeHtml(v.organizacion)})` : ''}${v.fuente_url ? ` · <a href="${escapeHtml(v.fuente_url)}" target="_blank" rel="noopener" data-prsf="verify" data-rec="panel" class="text-teal-700 font-semibold hover:underline">la fuente ↗</a>` : ''}</p>` : ''}
+    </div>
+    <div class="grid md:grid-cols-3 gap-0 mt-3 border-t border-slate-200">
+      <div class="p-4 md:border-r border-slate-200"><p class="text-[11px] uppercase tracking-widest font-bold text-emerald-700">Sobrevivió</p>${lista(v.sobrevivio, 'afirmacion', (x) => x.fuente ? `<span class="block text-xs text-slate-500">${escapeHtml(x.fuente)}</span>` : '')}</div>
+      <div class="p-4 md:border-r border-slate-200 bg-rose-50/40"><p class="text-[11px] uppercase tracking-widest font-bold text-rose-700">Se cayó</p>${lista(v.se_cayo, 'afirmacion', (x) => `<span class="block text-xs text-slate-600 mt-0.5">${escapeHtml(x.por_que || '')}${x.fuente ? ` · ${escapeHtml(x.fuente)}` : ''}</span>`)}</div>
+      <div class="p-4 bg-amber-50/40"><p class="text-[11px] uppercase tracking-widest font-bold text-amber-700">Nadie contestó</p>${lista(v.nadie_contesto, 'pregunta', (x) => `<span class="block text-xs text-slate-600 mt-0.5">${x.a_quien ? `A: ${escapeHtml(x.a_quien)}` : ''}${x.desde ? ` · desde ${escapeHtml(x.desde)}` : ''}</span>`)}</div>
+    </div>
+    <div class="bg-slate-900 text-white px-4 py-3"><p class="text-sm leading-relaxed m-0"><span class="text-teal-300 text-[11px] uppercase tracking-widest font-bold mr-2">El veredicto</span>${escapeHtml(v.veredicto)}</p></div>
+  </article>`).join('')
+  const n = (filas || []).length
+  const body = `
+<div class="not-prose text-center mt-2">
+  <p class="text-xs font-bold text-teal-700 uppercase tracking-wide">El récord que se defiende solo</p>
+  <h1 class="text-4xl font-black text-slate-900 mt-1" style="font-family:'Fraunces',Georgia,serif">El Panel</h1>
+  <p class="mt-3 text-slate-700 max-w-2xl mx-auto">Antes de publicar algo, 5 revisores que no se leen entre sí intentan tumbarlo: uno verifica cada número en la fuente, uno busca los documentos del gobierno, uno lo compara con lo que ya dijimos, uno lo lee como vecino con el problema encima, y uno hace de abogado de la oficina contraria. Un juez decide qué sobrevive. <strong>Y aquí se publica lo que se cayó, no solo lo que quedó.</strong></p>
+  <p class="mt-2 text-xs text-slate-500">${n} ${n === 1 ? 'veredicto' : 'veredictos'} publicados · lo que dijo una oficina se cita textual y con fecha · si una oficina contesta, la respuesta se publica completa</p>
+</div>
+${cards || '<p class="text-slate-500 mt-6 text-center">Todavía no hay veredictos publicados.</p>'}
+<div class="not-prose mt-8 bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm text-slate-600">
+  <p class="m-0"><strong>Cómo se corrige un error aquí:</strong> si algo de lo que "sobrevivió" está mal, mándanos la fuente y pasa por el mismo panel. Lo que se cae, se dice. <a href="/rompelo" class="text-teal-700 font-semibold">El formato →</a> · <a href="/contradicciones" class="text-teal-700 font-semibold">El marcador de contradicciones →</a></p>
+</div>`
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 's-maxage=600, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'El Panel: lo que sobrevivió, lo que se cayó y lo que nadie contestó',
+    description: 'Cada pieza pasa por 5 revisores que intentan tumbarla y un juez que decide. Aquí se publica el disenso, no solo el resultado.',
+    slug: 'panel', bodyHtml: body, host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
 async function handleBoletin(req: any, res: any) {
   const { data: metas, error } = await supabase
     .from('metas_minimas')
@@ -21745,6 +21791,7 @@ const PAGE_CANONICAL: Record<string, string> = {
   'barrios': 'https://www.mapadecaborojo.com/barrios',
   'basura': 'https://puertoricosinfiltros.com/basura',
   'boletin': 'https://puertoricosinfiltros.com/notas',
+  'panel': 'https://puertoricosinfiltros.com/panel',
   'buscar': 'https://puertoricosinfiltros.com/buscar',
   'calculadora': 'https://puertoricosinfiltros.com/calculadora',
   'cambios': 'https://registromedicopr.com/cambios',
@@ -21955,6 +22002,7 @@ export default async function handler(req: any, res: any) {
     case 'recuperacion': return await handleRecuperacion(req, res)
     case 'sinfiltros': return await handleSinFiltros(req, res)
     case 'boletin': return await handleBoletin(req, res)
+    case 'panel': return await handlePanel(req, res)
     case 'notas-kit': return await handleNotasKit(req, res)
     case 'sinfiltros-log': return await handleSinFiltrosLog(req, res)
     case 'sinfiltros-pulso': return await handleSinFiltrosPulso(req, res)
