@@ -436,13 +436,7 @@ export default async function handler(req: any, res: any) {
     } : undefined,
     areaServed: { '@type': 'City', name: muniRaw },
     openingHours: ldHours.length > 0 ? ldHours : undefined,
-    aggregateRating: (place.google_rating && place.google_review_count > 1) ? {
-      '@type': 'AggregateRating',
-      ratingValue: place.google_rating,
-      bestRating: 5,
-      worstRating: 1,
-      ratingCount: place.google_review_count,
-    } : undefined,
+    // aggregateRating retirado 2026-09-08 (rating copiado de Google, ver api/negocio.ts)
     hasMap: place.gmaps_url || undefined,
     sameAs: [place.website, place.gmaps_url].filter(Boolean),
     // NPPES identifier when available

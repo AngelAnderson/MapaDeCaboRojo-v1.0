@@ -461,13 +461,11 @@ export default async function handler(req: any, res: any) {
       longitude: place.lon,
     } : undefined,
     openingHours: ldHours.length > 0 ? ldHours : undefined,
-    aggregateRating: place.google_rating ? {
-      '@type': 'AggregateRating',
-      ratingValue: place.google_rating,
-      bestRating: 5,
-      worstRating: 1,
-      ratingCount: 1,
-    } : undefined,
+    // 2026-09-08: sin aggregateRating. El rating venia copiado de Google con ratingCount: 1,
+    // y las guias de datos estructurados de Google solo permiten ratings de resenas
+    // recogidas en el propio sitio. 3,227 fichas lo llevaban cuando el spam update del
+    // 18-21 ago 2026 sacó al Mapa del índice (impresiones -95% el 22 ago). El Registro,
+    // que nunca lo llevó, creció esa misma semana. El ⭐ visible se queda; el JSON-LD no.
     hasMap: place.gmaps_url || undefined,
   };
 
@@ -566,7 +564,8 @@ export default async function handler(req: any, res: any) {
 
   <!-- JSON-LD -->
   <script type="application/ld+json">${JSON.stringify(cleanJsonLd)}</script>
-  <script type="application/ld+json">${JSON.stringify(faqJsonLd)}</script>
+  <!-- FAQPage schema retirado 2026-09-08: 3 preguntas plantilla identicas en ~5,000 fichas es
+       el patron exacto de "scaled content" que Google marca; el bloque visible se queda. -->
   ${ldScript(paginaLd({ url: pageUrl, nombreNegocio: place.name, fechaIso: place.last_verified_at || place.verified_at, nivel: procedenciaSello(place) }))}
 
   <style>

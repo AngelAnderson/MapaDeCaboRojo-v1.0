@@ -3779,7 +3779,6 @@ function handleDefensaYLimpieza(_req: any, res: any) {
           name: p.name,
           address: { '@type': 'PostalAddress', streetAddress: p.address, addressLocality: 'Cabo Rojo', addressRegion: 'PR', addressCountry: 'US' },
           ...(p.phone ? { telephone: p.phone } : {}),
-          ...(p.rating ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: p.rating, bestRating: 5, reviewCount: 1 } } : {}),
           url: p.slug ? `${SITE_URL}/negocio/${p.slug}` : undefined,
         }))
       ),
@@ -3789,7 +3788,6 @@ function handleDefensaYLimpieza(_req: any, res: any) {
           name: p.name,
           address: { '@type': 'PostalAddress', streetAddress: p.address, addressLocality: 'Cabo Rojo', addressRegion: 'PR', addressCountry: 'US' },
           ...(p.phone ? { telephone: p.phone } : {}),
-          ...(p.rating ? { aggregateRating: { '@type': 'AggregateRating', ratingValue: p.rating, bestRating: 5, reviewCount: 1 } } : {}),
           url: p.slug ? `${SITE_URL}/negocio/${p.slug}` : undefined,
         }))
       ),
