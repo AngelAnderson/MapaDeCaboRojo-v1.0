@@ -6748,7 +6748,8 @@ h1 em{font-style:normal;color:#f2b79c}
 .ask .si{background:#16a34a;color:#fff}.ask .no{background:#dc2626;color:#fff}
 .ask .gracias{color:#166534}
 .corta-ai{font-size:11px;line-height:1.5;color:#b5aa9c;margin:10px 0 0}
-.btn-copy{background:#fff}
+.btn-copy{background:#fff;color:var(--oceano);border:2px solid var(--oceano)}
+.btn-copy:hover{background:var(--oceano);color:#fff}
 .share-box{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--arena);border-left:5px solid #22c55e;border-radius:16px;padding:18px 20px;margin:22px 0 14px}
 .share-box h2{font-size:20px;font-weight:900;margin:0 0 4px}
 .share-box p{font-size:15px;line-height:1.55;color:#4a4036;max-width:560px;margin:0}
