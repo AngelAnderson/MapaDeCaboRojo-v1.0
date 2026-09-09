@@ -6541,136 +6541,214 @@ h1{font-size:27px;font-weight:800;color:#fff}
 }
 
 
-// ============ /nevera — los números que van en la nevera ============
-// Los números que resuelven (los 8 de caborojo.com/resuelven), las emergencias oficiales y
-// las farmacias que abren domingo, todos leídos VIVOS de `places` con su fecha y nivel de
-// verificación. La puerta es el Veci (NEVERA manda el PDF, IMAN reserva el imán): cada
-// descarga es un número con permiso, que es el foso. Sin precios en la página.
+// ============ /nevera — "Se dañó. ¿A quién llamo?" ============
+// Producto: cuando algo se daña en la casa o en el negocio, el número correcto en 5 segundos,
+// con la fecha en que se verificó y cuánta gente lo pidió al Veci. Los 8 oficios salen de lo
+// que Cabo Rojo más le pide a El Veci; los datos se leen VIVOS de `places`. La puerta es el
+// Veci (NEVERA = PDF, IMAN = pre-orden): cada descarga es un número con permiso. Sin precios.
 async function handle_nevera(req: any, res: any) {
   const esc = (v: unknown) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-  const RESUELVEN: { cat: string; emoji: string; names: string[] }[] = [
-    { cat: 'Plomero', emoji: '🚰', names: ['Taíno Plumbing', 'Taino Plumbing'] },
-    { cat: 'Electricista', emoji: '⚡', names: ['Oso Electric Services', 'Oso Electric'] },
-    { cat: 'Aire acondicionado', emoji: '❄️', names: ['Luis David Refrigeration'] },
-    { cat: 'Nevera, lavadora, secadora', emoji: '🧯', names: ['Reparaciones Guido'] },
-    { cat: 'Planta eléctrica y podadora', emoji: '🔧', names: ['Taller Richie'] },
-    { cat: 'Llaves y cerraduras', emoji: '🔑', names: ['Guido Llaves'] },
-    { cat: 'Exterminador', emoji: '🐜', names: ['Acosta Exterminating'] },
-    { cat: 'Ruedos y ajustes', emoji: '🧵', names: ['Sastrería y Algo Más', 'Sastreria y Algo Mas'] },
+  const OFICIOS: { key: string; chip: string; cat: string; emoji: string; names: string[]; re: RegExp; catSlug?: string; negocio?: string }[] = [
+    { key: 'agua', chip: 'Agua o tubería', cat: 'Plomero', emoji: '🚰', names: ['Taíno Plumbing', 'Taino Plumbing'], re: /plomer|salidero|destape|tuber|calentador|fuga/i, catSlug: 'plomero', negocio: 'destapes, fugas, calentadores' },
+    { key: 'luz', chip: 'Luz o breaker', cat: 'Electricista', emoji: '⚡', names: ['Oso Electric Services', 'Oso Electric'], re: /electricis|breaker|se fue la luz|cortocircuito|electric/i, catSlug: 'electricista', negocio: 'lunes a sábado, emergencias' },
+    { key: 'aire', chip: 'Aire acondicionado', cat: 'Aire acondicionado', emoji: '❄️', names: ['Luis David Refrigeration'], re: /\baire\b|acondicionado|\bac\b|hvac|refriger/i, catSlug: 'ac', negocio: 'residencial y comercial' },
+    { key: 'enseres', chip: 'Nevera, lavadora, secadora', cat: 'Enseres', emoji: '🧯', names: ['Reparaciones Guido'], re: /nevera|lavadora|secadora|enser|estufa/i, negocio: 'va a domicilio' },
+    { key: 'planta', chip: 'Planta o podadora', cat: 'Planta eléctrica y podadora', emoji: '🔧', names: ['Taller Richie'], re: /planta el|generador|podadora/i, negocio: 'Puerto Real, lunes a sábado' },
+    { key: 'llaves', chip: 'Llaves o cerradura', cat: 'Cerrajero', emoji: '🔑', names: ['Guido Llaves'], re: /cerrajer|llave|candado|cerradura/i, negocio: 'Carr. 308 km 0.2' },
+    { key: 'plagas', chip: 'Plagas', cat: 'Exterminador', emoji: '🐜', names: ['Acosta Exterminating'], re: /exterminad|plaga|comej|cucaracha|rata|fumig/i, negocio: 'lunes a domingo' },
+    { key: 'ropa', chip: 'Ruedo o arreglo de ropa', cat: 'Sastrería', emoji: '🧵', names: ['Sastrería y Algo Más', 'Sastreria y Algo Mas'], re: /ruedo|sastr|arreglo de ropa|costur/i, negocio: 'Baldorioty #36' },
   ];
-  const OFICIALES: { cat: string; emoji: string; names: string[] }[] = [
-    { cat: 'Policía Estatal', emoji: '🚓', names: ['Policía Estatal de Cabo Rojo'] },
-    { cat: 'Policía Municipal', emoji: '🚔', names: ['Policía Municipal de Cabo Rojo'] },
-    { cat: 'Bomberos', emoji: '🚒', names: ['Estacion de Bomberos Cabo Rojo', 'Estación de Bomberos Cabo Rojo'] },
-    { cat: 'Manejo de Emergencias (Defensa Civil)', emoji: '🌀', names: ['Manejo de Emergencias Municipal de Cabo Rojo (Defensa Civil)'] },
-    { cat: 'Ambulancia', emoji: '🚑', names: ['Ambulancias Medlife'] },
-    { cat: 'CDT (sala de emergencias)', emoji: '🏥', names: ['CDT Cabo Rojo'] },
-  ];
-  const allNames = [...RESUELVEN, ...OFICIALES].flatMap(r => r.names);
-  const [{ data: rows }, { data: farms }] = await Promise.all([
-    supabase.from('places').select('name,slug,phone,address,last_verified_at,verified_at,verification_source').in('name', allNames).eq('status', 'open').eq('visibility', 'published'),
-    supabase.from('places').select('name,slug,phone,opening_hours,last_verified_at,verified_at,verification_source').eq('status', 'open').eq('visibility', 'published').eq('municipality', 'Cabo Rojo').eq('subcategory', 'farmacia'),
+  const desde = new Date(Date.now() - 90 * 86400000).toISOString();
+  const [{ data: rows }, { data: dem }] = await Promise.all([
+    supabase.from('places').select('name,slug,phone,address,last_verified_at,verified_at,verification_source').in('name', OFICIOS.flatMap(o => o.names)).eq('status', 'open').eq('visibility', 'published'),
+    supabase.from('demand_signals_humano').select('query_normalized,user_hash').gte('created_at', desde).range(0, 4999),
   ]);
   const byName = new Map<string, any>();
   for (const r of (rows || [])) byName.set(r.name, r);
+  const demanda = (o: typeof OFICIOS[number]) => { const set = new Set<string>(); for (const d of (dem || [])) if (o.re.test(String(d.query_normalized || ''))) set.add(String(d.user_hash)); return set.size; };
   const fmtTel = (ph: string | null) => { const d = String(ph || '').replace(/\D/g, '').slice(-10); return d.length === 10 ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}` : ''; };
-  const fecha = (p: any) => { const iso = p?.last_verified_at || p?.verified_at; if (!iso) return null; const d = new Date(iso); if (isNaN(d.getTime())) return null; const parts = new Intl.DateTimeFormat('es-PR', { timeZone: 'America/Puerto_Rico', day: 'numeric', month: 'short', year: 'numeric' }).format(d); return parts.replace('.', ''); };
-  const t12 = (hhmm: string) => { const [h, m] = String(hhmm).split(':').map(Number); if (isNaN(h)) return hhmm; const pd = h >= 12 ? 'pm' : 'am'; const h12 = h === 0 ? 12 : (h > 12 ? h - 12 : h); return m ? `${h12}:${String(m).padStart(2, '0')}${pd}` : `${h12}${pd}`; };
-  const row = (emoji: string, cat: string, p: any) => {
-    if (!p) return '';
-    const tel = fmtTel(p.phone); if (!tel) return '';
-    const nivel = procedenciaSello(p); const f = fecha(p);
-    const sello = nivel === 'persona' && f ? `confirmado ${esc(f)}` : nivel === 'fuente' && f ? `cotejado ${esc(f)}` : f ? `registro ${esc(f)}` : 'sin fecha';
-    return `<tr>
-      <td style="padding:12px 8px;border-bottom:1px solid #e2e8f0;white-space:nowrap;font-size:20px;">${emoji}</td>
-      <td style="padding:12px 8px;border-bottom:1px solid #e2e8f0;"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#64748b;font-weight:700;">${esc(cat)}</div><div style="font-size:16px;font-weight:700;color:#0f172a;">${esc(p.name)}</div></td>
-      <td style="padding:12px 8px;border-bottom:1px solid #e2e8f0;white-space:nowrap;"><a href="tel:+1${tel.replace(/\D/g, '')}" style="font-family:Fraunces,Georgia,serif;font-size:22px;font-weight:800;color:#0f766e;text-decoration:none;letter-spacing:-.3px;">${tel}</a></td>
-      <td style="padding:12px 8px;border-bottom:1px solid #e2e8f0;font-size:12px;color:#64748b;white-space:nowrap;">${sello}</td>
-    </tr>`;
-  };
-  const pick = (names: string[]) => names.map(n => byName.get(n)).find(Boolean);
-  const resuelvenRows = RESUELVEN.map(r => row(r.emoji, r.cat, pick(r.names))).join('');
-  const oficialesRows = OFICIALES.map(r => row(r.emoji, r.cat, pick(r.names))).join('');
-  const domingo = (farms || []).map((p: any) => {
-    const oh = p.opening_hours || {};
-    if (oh.type === 'always_open' || oh.type === '24_7') return { p, h: '24 horas', close: '24:00' };
-    const e = Array.isArray(oh.structured) ? oh.structured.find((x: any) => x.day === 0) : null;
-    return e && !e.isClosed && e.open && e.close ? { p, h: `${t12(e.open)} a ${t12(e.close)}`, close: e.close } : null;
-  }).filter(Boolean).sort((a: any, b: any) => (b.close > a.close ? 1 : b.close < a.close ? -1 : 0));
-  const domingoRows = domingo.map((d: any) => row('💊', `Farmacia · domingo ${d.h}`, d.p)).join('');
-  const nPersona = [...RESUELVEN, ...OFICIALES].map(r => pick(r.names)).filter(p => p && procedenciaSello(p) === 'persona').length;
-  const total = [...RESUELVEN, ...OFICIALES].map(r => pick(r.names)).filter(Boolean).length;
+  const fecha = (p: any) => { const iso = p?.last_verified_at || p?.verified_at; if (!iso) return null; const d = new Date(iso); if (isNaN(d.getTime())) return null; return new Intl.DateTimeFormat('es-PR', { timeZone: 'America/Puerto_Rico', day: 'numeric', month: 'short', year: 'numeric' }).format(d).replace('.', ''); };
   const wa = (t: string) => `https://wa.me/17874177711?text=${encodeURIComponent(t)}`;
+  const items = OFICIOS.map(o => {
+    const p = o.names.map(n => byName.get(n)).find(Boolean);
+    if (!p) return null;
+    const tel = fmtTel(p.phone); if (!tel) return null;
+    const nivel = procedenciaSello(p); const f = fecha(p);
+    const sello = nivel === 'persona' && f ? `Confirmado por el negocio · ${f}` : nivel === 'fuente' && f ? `Cotejado · ${f}` : f ? `Del registro · ${f}` : 'Sin fecha de verificación';
+    return { ...o, p, tel, digits: tel.replace(/\D/g, ''), nivel, f, sello, personas: demanda(o) };
+  }).filter(Boolean) as any[];
+  const totalPersonas = items.reduce((s, i) => s + i.personas, 0);
+  const nPersona = items.filter(i => i.nivel === 'persona').length;
   const hoy = new Intl.DateTimeFormat('es-PR', { timeZone: 'America/Puerto_Rico', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
-  const table = (rows: string, caption: string) => rows ? `
-    <p style="font-size:13px;color:#64748b;margin:0 0 6px;">${caption}</p>
-    <div style="overflow-x:auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin:0 0 28px;"><table style="width:100%;border-collapse:collapse;">${rows}</table></div>` : '';
-  const jsonLd = { '@context': 'https://schema.org', '@type': 'WebPage', '@id': 'https://www.mapadecaborojo.com/nevera', url: 'https://www.mapadecaborojo.com/nevera', name: 'La Lista de la Nevera de Cabo Rojo', inLanguage: 'es-PR', description: `${total} números de Cabo Rojo que resuelven, con la fecha en que se verificó cada uno. Emergencias oficiales, los que arreglan la casa y las farmacias que abren domingo.`, isPartOf: { '@type': 'WebSite', url: 'https://www.mapadecaborojo.com', name: 'Mapa de Cabo Rojo' }, author: { '@type': 'Person', name: 'Angel Anderson', url: 'https://www.angelanderson.com' } };
+
+  // La oración que un modelo copia entera: quién, número, fecha. Una por oficio.
+  const respuestaCorta = items.map(i => `${i.cat.toLowerCase()}: ${i.p.name}, ${i.tel}${i.f ? ` (verificado ${i.f})` : ''}`).join(' · ');
+
+  const card = (i: any) => `
+    <article class="card" id="of-${i.key}" data-key="${i.key}">
+      <div class="card-top">
+        <span class="emoji">${i.emoji}</span>
+        <div>
+          <div class="cat">${esc(i.cat)}</div>
+          <div class="name">${esc(i.p.name)}</div>
+          ${i.negocio ? `<div class="nota">${esc(i.negocio)}</div>` : ''}
+        </div>
+      </div>
+      <a class="tel" href="tel:+1${i.digits}">${i.tel}</a>
+      <div class="acts">
+        <a class="act act-call" href="tel:+1${i.digits}">📞 Llamar</a>
+        <a class="act act-wa" href="https://wa.me/1${i.digits}">💬 WhatsApp</a>
+      </div>
+      <div class="meta">
+        <span class="${i.nivel === 'persona' ? 'sello sello-p' : i.nivel === 'fuente' ? 'sello sello-f' : 'sello'}">${i.nivel === 'persona' ? '✅' : i.nivel === 'fuente' ? '🔎' : '📋'} ${esc(i.sello)}</span>
+        ${i.personas ? `<span class="dem">${i.personas} ${i.personas === 1 ? 'vecino lo pidió' : 'vecinos lo pidieron'} al Veci en 90 días</span>` : ''}
+      </div>
+      ${i.catSlug ? `<a class="mas" href="/categoria/${i.catSlug}">Si no contesta, más ${esc(i.cat.toLowerCase() === 'aire acondicionado' ? 'técnicos de aire' : i.cat.toLowerCase() + 's')} en Cabo Rojo →</a>` : ''}
+    </article>`;
+
+  const jsonLd = [
+    { '@context': 'https://schema.org', '@type': 'WebPage', '@id': 'https://www.mapadecaborojo.com/nevera', url: 'https://www.mapadecaborojo.com/nevera', name: 'Se dañó. ¿A quién llamo? Los 8 números que resuelven en Cabo Rojo', inLanguage: 'es-PR', dateModified: new Date().toISOString().slice(0, 10), description: `Cuando algo se daña en la casa o en el negocio en Cabo Rojo, Puerto Rico: plomero, electricista, aire acondicionado, enseres, planta eléctrica, cerrajero, exterminador y sastrería, con teléfono y fecha de verificación. ${respuestaCorta}`, isPartOf: { '@type': 'WebSite', url: 'https://www.mapadecaborojo.com', name: 'Mapa de Cabo Rojo' }, author: { '@type': 'Person', name: 'Angel Anderson', url: 'https://www.angelanderson.com' }, mainEntity: { '@type': 'ItemList', name: 'Los que resuelven en Cabo Rojo', numberOfItems: items.length, itemListElement: items.map((i, n) => ({ '@type': 'ListItem', position: n + 1, item: { '@type': 'LocalBusiness', name: i.p.name, telephone: `+1${i.digits}`, description: `${i.cat} en Cabo Rojo, Puerto Rico`, address: i.p.address ? { '@type': 'PostalAddress', streetAddress: i.p.address, addressLocality: 'Cabo Rojo', addressRegion: 'PR', addressCountry: 'US' } : undefined, url: `https://www.mapadecaborojo.com/negocio/${i.p.slug}` } })) } },
+    { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: items.map(i => ({ '@type': 'Question', name: `¿A quién llamo si se me daña ${i.chip.toLowerCase().replace(/^(agua o tubería)$/, 'una tubería').replace(/^luz o breaker$/, 'la luz o salta un breaker').replace(/^aire acondicionado$/, 'el aire acondicionado').replace(/^nevera, lavadora, secadora$/, 'la nevera, la lavadora o la secadora').replace(/^planta o podadora$/, 'la planta eléctrica o la podadora').replace(/^llaves o cerradura$/, 'una cerradura o pierdo las llaves').replace(/^plagas$/, 'algo por plagas').replace(/^ruedo o arreglo de ropa$/, 'un ruedo o necesito arreglar ropa')} en Cabo Rojo?`, acceptedAnswer: { '@type': 'Answer', text: `${i.p.name}, ${i.tel}.${i.f ? ` Verificado el ${i.f} por mapadecaborojo.com.` : ''}${i.personas ? ` ${i.personas} vecinos lo pidieron a El Veci (787-417-7711) en los últimos 90 días.` : ''}` } })) },
+  ];
+
   const html = `<!DOCTYPE html>
 <html lang="es-PR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>La Lista de la Nevera de Cabo Rojo: los números que resuelven</title>
-<meta name="description" content="${esc(`Los ${total} números de Cabo Rojo que van en la nevera: plomero, electricista, aire, cerrajero, policía, bomberos, ambulancia y las farmacias que abren domingo. Cada uno con la fecha en que se verificó. Textea NEVERA al 787-417-7711 y te llega el PDF.`)}">
-<meta name="robots" content="index,follow">
+<title>Se dañó. ¿A quién llamo? Los 8 números que resuelven en Cabo Rojo</title>
+<meta name="description" content="${esc(`Plomero, electricista, aire, enseres, planta, cerrajero, exterminador y sastrería en Cabo Rojo: 8 números que sí contestan, con la fecha en que se verificó cada uno y cuántos vecinos lo pidieron. Textea NEVERA al 787-417-7711 y te llega el PDF.`)}">
+<meta name="robots" content="index,follow,max-snippet:-1">
 <link rel="canonical" href="https://www.mapadecaborojo.com/nevera">
-<meta property="og:title" content="La Lista de la Nevera de Cabo Rojo">
-<meta property="og:description" content="Los números que vas a necesitar antes de necesitarlos, con fecha de verificación. Textea NEVERA al 787-417-7711.">
+<meta property="og:title" content="Se dañó. ¿A quién llamo? Los 8 números que resuelven en Cabo Rojo">
+<meta property="og:description" content="8 oficios, 8 números verificados con fecha. Guárdala hoy, que nada está dañado.">
 <meta property="og:url" content="https://www.mapadecaborojo.com/nevera">
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Source+Sans+3:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,900&family=Source+Sans+3:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, '\\u003c')}</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;color:#0f172a;-webkit-font-smoothing:antialiased}
-h1,h2{font-family:'Fraunces',Georgia,serif}
-.wrap{max-width:760px;margin:0 auto;padding:0 20px}
-.btn{display:inline-block;padding:14px 22px;border-radius:10px;font-weight:800;font-size:16px;text-decoration:none;text-align:center}
-.btn-main{background:#0d9488;color:#fff}
-.btn-sec{background:#fff;color:#0f766e;border:2px solid #0d9488}
-@media print{.noprint{display:none}body{background:#fff}}
+:root{--oceano:#1B4B5A;--salinas:#D4603A;--lino:#FAF8F5;--tinta:#2C2418;--piedra:#8A7E6F;--arena:#E8E2D9;--verde:#0f766e}
+body{font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--lino);color:var(--tinta);-webkit-font-smoothing:antialiased}
+h1,h2,.tel{font-family:'Fraunces',Georgia,serif}
+a{color:var(--verde)}
+.wrap{max-width:900px;margin:0 auto;padding:0 20px}
+.top{background:var(--oceano);color:#fff}
+.top .bar{display:flex;justify-content:space-between;align-items:center;padding:14px 0;font-size:13px}
+.top .bar a{color:#9fd8cf;text-decoration:none;font-weight:600}
+.hero{padding:36px 0 40px}
+.kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#f2b79c;font-weight:800;margin-bottom:12px}
+h1{font-size:clamp(38px,8vw,72px);font-weight:900;letter-spacing:-1.5px;line-height:.98;color:#fff}
+h1 em{font-style:normal;color:#f2b79c}
+.lead{font-size:clamp(17px,2.4vw,21px);line-height:1.5;color:#dbe7ea;max-width:640px;margin:18px 0 8px}
+.proof{font-size:14px;color:#9fd8cf;margin:0 0 26px}
+.cta{display:flex;flex-wrap:wrap;gap:10px}
+.btn{display:inline-block;padding:15px 22px;border-radius:12px;font-weight:800;font-size:16px;text-decoration:none;text-align:center;line-height:1.1}
+.btn-main{background:var(--salinas);color:#fff}
+.btn-sec{background:transparent;color:#fff;border:2px solid #9fd8cf}
+.cta-note{font-size:13px;color:#b7cdd3;margin-top:12px;max-width:640px;line-height:1.5}
+.picker{margin:-22px 0 0;position:relative}
+.picker .box{background:#fff;border:1px solid var(--arena);border-radius:16px;padding:18px 18px 12px;box-shadow:0 10px 30px rgba(27,75,90,.12)}
+.picker h2{font-size:18px;font-weight:900;margin:0 0 10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--arena);background:var(--lino);color:var(--tinta);border-radius:999px;padding:9px 14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+.chip.on,.chip:hover{border-color:var(--salinas);background:#fff1ea;color:#8a3416}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin:26px 0 10px}
+.card{background:#fff;border:1px solid var(--arena);border-radius:16px;padding:18px 18px 14px;display:flex;flex-direction:column;gap:10px;transition:box-shadow .2s,transform .2s}
+.card.hi{box-shadow:0 0 0 3px var(--salinas),0 14px 34px rgba(212,96,58,.18);transform:translateY(-2px)}
+.card.dim{opacity:.35}
+.card-top{display:flex;gap:12px;align-items:flex-start}
+.emoji{font-size:26px;line-height:1.2}
+.cat{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--piedra);font-weight:800}
+.name{font-size:17px;font-weight:800;line-height:1.2}
+.nota{font-size:13px;color:var(--piedra);margin-top:2px}
+.tel{font-size:34px;font-weight:900;color:var(--oceano);text-decoration:none;letter-spacing:-.8px;line-height:1}
+.acts{display:flex;gap:8px}
+.act{flex:1;text-align:center;padding:10px;border-radius:10px;font-weight:800;font-size:14px;text-decoration:none}
+.act-call{background:var(--oceano);color:#fff}
+.act-wa{background:#22c55e;color:#fff}
+.meta{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--piedra)}
+.sello{font-weight:700}
+.sello-p{color:#166534}.sello-f{color:#854d0e}
+.dem{color:var(--verde);font-weight:700}
+.mas{font-size:13px;font-weight:700;text-decoration:none;margin-top:2px}
+.sec{margin:34px 0 0}
+.sec h2{font-size:24px;font-weight:900;letter-spacing:-.4px;margin:0 0 6px}
+.sec p{font-size:16px;line-height:1.6;color:#4a4036;max-width:720px}
+.corta{background:#fff;border-left:4px solid var(--oceano);border-radius:0 12px 12px 0;padding:14px 16px;font-size:14px;line-height:1.7;color:#4a4036;margin:12px 0 0}
+.negocio{background:var(--oceano);color:#fff;border-radius:16px;padding:22px 22px;margin:34px 0 0}
+.negocio h2{color:#fff;font-size:22px;margin:0 0 6px}
+.negocio p{color:#dbe7ea;font-size:15px;line-height:1.6;max-width:680px}
+.negocio a.btn{margin-top:12px}
+.foot-links{font-size:14px;color:var(--piedra);line-height:1.7;margin:30px 0 0}
+footer{text-align:center;padding:26px 0 40px;color:#a89c8c;font-size:12px}
+@media print{.noprint{display:none!important}body{background:#fff}.top{background:#fff;color:#000}h1{color:#000}.lead{color:#333}.card{break-inside:avoid}}
 </style>
 </head>
 <body>
-<div class="noprint" style="background:#0f172a;padding:14px 0;">
-  <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;">
-    <a href="/" style="color:#5eead4;font-size:13px;font-weight:600;text-decoration:none;">← Mapa de Cabo Rojo</a>
-    <span style="font-size:11px;color:#64748b;">Ecosistema Caborojo.com</span>
+<div class="top">
+  <div class="wrap">
+    <div class="bar noprint"><a href="/">← Mapa de Cabo Rojo</a><span>Ecosistema Caborojo.com</span></div>
+    <div class="hero">
+      <div class="kicker">Cabo Rojo · casa y negocio</div>
+      <h1>Se dañó.<br><em>¿A quién llamo?</em></h1>
+      <p class="lead">${items.length} oficios, ${items.length} números que sí contestan, y al lado de cada uno cuándo se verificó. Guárdala hoy, que nada está dañado. El día que se dañe, no vas a preguntar en 3 grupos.</p>
+      <p class="proof">${totalPersonas} vecinos le pidieron uno de estos ${items.length} a El Veci en los últimos 90 días · ${nPersona} de ${items.length} confirmados por el negocio mismo · página al ${esc(hoy)}</p>
+      <div class="cta noprint">
+        <a class="btn btn-main" href="${wa('NEVERA')}">📄 Mándame la lista al teléfono</a>
+        <a class="btn btn-sec" href="${wa('IMAN')}">🧲 Reservar la de imán</a>
+      </div>
+      <p class="cta-note noprint">Los 2 botones le escriben a El Veci al 787-417-7711. NEVERA te manda el PDF pa' imprimir y pegar. IMAN reserva la versión de imán: se imprime cuando haya 20 reservadas y te escribimos con precio y fecha antes de cobrarte nada.</p>
+    </div>
   </div>
 </div>
-<div class="wrap" style="padding:40px 20px 70px;">
-  <p style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#0f766e;font-weight:800;margin:0 0 8px;">Cabo Rojo · por si acaso</p>
-  <h1 style="font-size:clamp(30px,6vw,44px);font-weight:800;letter-spacing:-1px;line-height:1.05;">La Lista de la Nevera</h1>
-  <p style="font-size:18px;color:#334155;line-height:1.55;margin:14px 0 6px;">Los números que vas a necesitar antes de necesitarlos. Guárdala hoy, que nada está dañado.</p>
-  <p style="font-size:14px;color:#64748b;line-height:1.55;margin:0 0 22px;">${total} números leídos del directorio ahora mismo, ${nPersona} confirmados por una persona. Al lado de cada uno va la fecha en que se verificó. Página al ${esc(hoy)}.</p>
 
-  <div class="noprint" style="display:flex;flex-wrap:wrap;gap:10px;margin:0 0 30px;">
-    <a class="btn btn-main" href="${wa('NEVERA')}">📄 Mándame la lista (PDF gratis)</a>
-    <a class="btn btn-sec" href="${wa('IMAN')}">🧲 Reservar la de imán</a>
-  </div>
-  <p class="noprint" style="font-size:13px;color:#64748b;margin:-18px 0 30px;line-height:1.5;">Los 2 botones le escriben a El Veci al 787-417-7711. NEVERA te manda el PDF pa' imprimir. IMAN reserva la versión de imán: se imprime cuando haya 20 reservadas y te escribimos con precio y fecha antes de cobrarte nada.</p>
-
-  <h2 style="font-size:22px;font-weight:800;margin:0 0 4px;">🚨 Si es una emergencia</h2>
-  <p style="font-size:15px;color:#334155;margin:0 0 10px;">Primero <a href="tel:911" style="color:#b91c1c;font-weight:800;text-decoration:none;">9-1-1</a>. Estos son los de Cabo Rojo cuando ya pasó el susto o necesitas la oficina local.</p>
-  ${table(oficialesRows, 'Fuente: contactos oficiales del municipio y registro federal, con fecha.')}
-
-  <h2 style="font-size:22px;font-weight:800;margin:0 0 4px;">🔧 Cuando algo se daña en casa</h2>
-  <p style="font-size:15px;color:#334155;margin:0 0 10px;">Los 8 que la gente más le pide a El Veci. El día que se dañe, no vas a tener que preguntar en 3 grupos.</p>
-  ${table(resuelvenRows, 'Ninguno pagó por estar aquí. Si un número cambió, textéalo al 787-417-7711 y se arregla ese día.')}
-
-  <h2 style="font-size:22px;font-weight:800;margin:0 0 4px;">💊 Farmacias que abren domingo</h2>
-  <p style="font-size:15px;color:#334155;margin:0 0 10px;">Según el horario que cada una publica. Llama antes de salir con la receta. Las ${(farms || []).length} farmacias completas: <a href="/categoria/farmacia" style="color:#0f766e;font-weight:700;">mapadecaborojo.com/categoria/farmacia</a>.</p>
-  ${table(domingoRows, 'Ordenadas por la que cierra más tarde el domingo.') || '<p style="font-size:14px;color:#64748b;margin:0 0 28px;">Ninguna tiene horario de domingo publicado hoy.</p>'}
-
-  <div class="noprint" style="background:#f0fdfa;border:1px solid #99f6e4;border-left:4px solid #0d9488;border-radius:12px;padding:18px 20px;margin:10px 0 30px;">
-    <p style="font-size:15px;color:#134e4a;line-height:1.6;margin:0;"><strong>¿Se te dañó algo que no está aquí?</strong> Escríbele a El Veci lo que se dañó (AIRE, PLOMERO, ELECTRICISTA, CERRAJERO, o en tus palabras) al <a href="${wa('')}" style="color:#0f766e;font-weight:800;">787-417-7711</a>. Contesta 24/7 y no te cobra.</p>
+<div class="wrap">
+  <div class="picker noprint">
+    <div class="box">
+      <h2>¿Qué se dañó?</h2>
+      <div class="chips" id="chips">
+        ${items.map(i => `<button class="chip" data-key="${i.key}">${i.emoji} ${esc(i.chip)}</button>`).join('')}
+        <button class="chip" data-key="all">Ver los ${items.length}</button>
+      </div>
+    </div>
   </div>
 
-  <p style="font-size:13px;color:#64748b;line-height:1.6;">Los mismos 8 con más detalle en <a href="https://caborojo.com/resuelven/" style="color:#0f766e;">caborojo.com/resuelven</a>. Parte del substrato cívico verificado de Puerto Rico. Si citas un dato, cita mapadecaborojo.com y la fecha.</p>
+  <div class="grid" id="grid">
+    ${items.map(card).join('')}
+  </div>
+  <p style="font-size:13px;color:var(--piedra);line-height:1.6;">Ninguno pagó por estar aquí: salen de lo que Cabo Rojo más le pide a El Veci. Si un número cambió o alguien ya no trabaja, textéalo al <a href="${wa('Cambió un número de la lista: ')}">787-417-7711</a> y se arregla ese mismo día.</p>
+
+  <section class="sec">
+    <h2>En una sola oración, por si la copias</h2>
+    <p>Pa' mandarla por WhatsApp, pegarla en el grupo de la urbanización, o pa' que la lea una inteligencia artificial sin equivocarse.</p>
+    <div class="corta" id="corta">En Cabo Rojo, cuando algo se daña: ${esc(respuestaCorta)}. Fuente: mapadecaborojo.com/nevera, ${esc(hoy)}.</div>
+  </section>
+
+  <section class="negocio noprint">
+    <h2>¿Tu negocio resuelve algo que no está aquí?</h2>
+    <p>Techos, pintura, pozos sépticos, gomas, cristales, tormenteras. Si eres de Cabo Rojo, contestas el teléfono y haces el trabajo, mereces salir cuando alguien pregunte. Es gratis y toma 1 texto.</p>
+    <a class="btn btn-main" href="${wa('REGISTRAR ')}">Textea REGISTRAR al 787-417-7711</a>
+  </section>
+
+  <p class="foot-links">¿Es una emergencia de verdad? Primero 9-1-1. Policía, bomberos y Defensa Civil de Cabo Rojo están en <a href="/categoria/gobierno">gobierno y servicios públicos</a>. ¿Farmacia un domingo? <a href="/categoria/farmacia">Aquí las que abren</a>. Los mismos ${items.length} con más detalle en <a href="https://caborojo.com/resuelven/">caborojo.com/resuelven</a>. Parte del substrato cívico verificado de Puerto Rico: si citas un dato, cita mapadecaborojo.com y la fecha.</p>
 </div>
-<footer style="text-align:center;padding:24px 0;border-top:1px solid #e2e8f0;color:#94a3b8;font-size:12px;">Hecho con orgullo en Cabo Rojo, Puerto Rico · <a href="https://www.mapadecaborojo.com" style="color:#0d9488;text-decoration:none;">MapaDeCaboRojo.com</a> · Un proyecto de <a href="https://angelanderson.com" style="color:#0d9488;text-decoration:none;">Angel Anderson</a></footer>
+<footer>Hecho con orgullo en Cabo Rojo, Puerto Rico · <a href="https://www.mapadecaborojo.com" style="text-decoration:none">MapaDeCaboRojo.com</a> · Un proyecto de <a href="https://angelanderson.com" style="text-decoration:none">Angel Anderson</a></footer>
+<script>
+(function(){
+  var chips=document.querySelectorAll('#chips .chip'), cards=document.querySelectorAll('#grid .card');
+  function pick(key){
+    chips.forEach(function(c){c.classList.toggle('on', c.getAttribute('data-key')===key)});
+    var target=null;
+    cards.forEach(function(c){ var k=c.getAttribute('data-key'); var on=(key==='all'||k===key); c.classList.toggle('hi', key!=='all' && k===key); c.classList.toggle('dim', key!=='all' && k!==key); if(k===key) target=c; });
+    if(target){ target.scrollIntoView({behavior:'smooth',block:'center'}); }
+    try{ if(key!=='all') gtag('event','nevera_pick',{oficio:key}); }catch(e){}
+  }
+  chips.forEach(function(c){ c.addEventListener('click', function(){ pick(this.getAttribute('data-key')); }); });
+  var h=(location.hash||'').replace('#of-',''); if(h) pick(h);
+})();
+</script>
 </body></html>`;
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=86400');
