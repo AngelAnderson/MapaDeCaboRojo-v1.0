@@ -6659,7 +6659,7 @@ async function handle_nevera(req: any, res: any) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Se dañó. ¿A quién llamo? Los 8 números que resuelven en Cabo Rojo</title>
-<meta name="description" content="${esc(`Plomero, electricista, aire, cerrajero y más en Cabo Rojo: ${items.length} números que sí contestan, cada uno con su fecha de verificación. Textea NEVERA al 787-417-7711.`)}">
+<meta name="description" content="${esc(`Plomero, electricista, aire, cerrajero y más en Cabo Rojo: ${items.length} números cotejados, cada uno con la fecha en que se verificó. Textea NEVERA al 787-417-7711.`)}">
 <meta name="robots" content="index,follow,max-snippet:-1">
 <link rel="canonical" href="https://www.mapadecaborojo.com/nevera">
 <meta property="og:title" content="Se dañó. ¿A quién llamo? Los 8 números que resuelven en Cabo Rojo">
