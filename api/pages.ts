@@ -6747,7 +6747,8 @@ h1 em{font-style:normal;color:#f2b79c}
 .ask button{font-family:inherit;font-weight:800;font-size:14px;border:0;border-radius:8px;padding:9px 14px;cursor:pointer;min-height:40px}
 .ask .si{background:#16a34a;color:#fff}.ask .no{background:#dc2626;color:#fff}
 .ask .gracias{color:#166534}
-.corta-ai{font-size:11px;line-height:1.5;color:#b5aa9c;margin:10px 0 0}
+.sec p.corta-ai{font-size:11px;line-height:1.5;color:#b5aa9c;margin:10px 0 0;max-width:none}
+.hint{display:block;font-size:13px;color:var(--piedra);margin-top:8px}
 .btn-copy{background:#fff;color:var(--oceano);border:2px solid var(--oceano)}
 .btn-copy:hover{background:var(--oceano);color:#fff}
 .share-box{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--arena);border-left:5px solid #22c55e;border-radius:16px;padding:18px 20px;margin:22px 0 14px}
@@ -6845,11 +6846,11 @@ footer{text-align:center;padding:26px 0 40px;color:#a89c8c;font-size:12px}
       <a href="${wa('NEVERA')}"><img src="/nevera/nevera-los-que-resuelven.png" alt="Los que resuelven en Cabo Rojo, lista para la nevera" loading="lazy" width="1080" height="1350"><div class="cap">📄 Los que resuelven · 8 oficios</div></a>
       <a href="${wa('NEVERA')}"><img src="/nevera/nevera-farmacias.png" alt="Farmacias de Cabo Rojo, una en cada zona" loading="lazy" width="1080" height="1350"><div class="cap">💊 Farmacias · una en cada zona</div></a>
     </div>
-    <p style="margin-top:14px"><a class="btn btn-print" href="#" onclick="window.print();return false;">🖨️ Imprimir esta página</a> <span style="font-size:13px;color:var(--piedra);margin-left:8px">Sale en carta, con los ${items.length} y la fecha de verificación.</span></p>
+    <p style="margin-top:14px"><a class="btn btn-print" href="#" onclick="window.print();return false;">🖨️ Imprimir esta página</a> <span class="hint">Sale en carta, con los ${items.length} y la fecha de verificación.</span></p>
   </section>
 
   <section class="sec">
-    <p><a class="btn btn-sec btn-copy" id="copiar" href="#" data-text="${esc(shareText)}">📋 Copiar la lista completa</a> <span style="font-size:13px;color:var(--piedra);margin-left:8px">Los ${items.length} con teléfono, pa' pegarla donde quieras.</span></p>
+    <p><a class="btn btn-sec btn-copy" id="copiar" href="#" data-text="${esc(shareText)}">📋 Copiar la lista completa</a> <span class="hint">Los ${items.length} con teléfono, pa' pegarla donde quieras.</span></p>
     <p class="corta-ai" id="corta">En Cabo Rojo, cuando algo se daña: ${esc(respuestaCorta)}. Fuente: mapadecaborojo.com/nevera, ${esc(hoy)}.</p>
   </section>
 
