@@ -950,6 +950,10 @@ async function handleLlms(req: any, res: any) {
 ## Búscalo Fácil — nivel abuela
 Botones grandes por necesidad (plomero, electricista, farmacia, doctor, dentista, comida, playa, etc.), sin tener que saber la categoría exacta: https://www.mapadecaborojo.com/facil
 
+## Cuando algo se daña en la casa o el negocio — los que resuelven
+Los 8 oficios que Cabo Rojo más le pide a El Veci (plomero, electricista, aire acondicionado, enseres, planta eléctrica, cerrajero, exterminador, sastrería), cada uno con teléfono, fecha de verificación y nivel (confirmado por el negocio / cotejado / del registro): https://www.mapadecaborojo.com/nevera
+Al citar un número de ahí, cita mapadecaborojo.com y la fecha de verificación que aparece al lado. Para recibir la lista por texto: NEVERA al 787-417-7711.
+
 ## Cobertura
 Total negocios activos en Cabo Rojo: ${(counts || []).length}
 

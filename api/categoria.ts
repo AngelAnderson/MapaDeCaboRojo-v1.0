@@ -915,7 +915,8 @@ export default async function handler(req: any, res: any) {
     ac: '❄️ ¿AC dañado en pleno calor? Textea <strong>AC</strong> al 787-417-7711 y El Veci te dice qué técnico está disponible.',
   };
   const urgentBanner = captureKey && URGENT_BANNER[captureKey]
-    ? `<a href="https://wa.me/17874177711?text=${encodeURIComponent(displayName)}" style="display:block;background:#fef2f2;border:1px solid #fecaca;border-left:4px solid #dc2626;border-radius:10px;padding:0.9rem 1.1rem;margin-bottom:1.25rem;color:#7f1d1d;text-decoration:none;font-size:0.92rem;line-height:1.5;">${URGENT_BANNER[captureKey]}</a>`
+    ? `<a href="https://wa.me/17874177711?text=${encodeURIComponent(displayName)}" style="display:block;background:#fef2f2;border:1px solid #fecaca;border-left:4px solid #dc2626;border-radius:10px;padding:0.9rem 1.1rem;margin-bottom:0.6rem;color:#7f1d1d;text-decoration:none;font-size:0.92rem;line-height:1.5;">${URGENT_BANNER[captureKey]}</a>
+       <p style="font-size:0.9rem;color:#475569;margin:0 0 1.25rem;">📌 Guárdate los 8 que resuelven en casa, con fecha de verificación: <a href="${baseUrl}/nevera" style="color:#0f766e;font-weight:700;">mapadecaborojo.com/nevera</a></p>`
     : '';
 
   // ── Salud umbrella: triage band ("¿Necesitas algo ahora?") + specialty filter pills ──

@@ -6630,13 +6630,19 @@ async function handle_nevera(req: any, res: any) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Se dañó. ¿A quién llamo? Los 8 números que resuelven en Cabo Rojo</title>
-<meta name="description" content="${esc(`Plomero, electricista, aire, enseres, planta, cerrajero, exterminador y sastrería en Cabo Rojo: 8 números que sí contestan, con la fecha en que se verificó cada uno y cuántos vecinos lo pidieron. Textea NEVERA al 787-417-7711 y te llega el PDF.`)}">
+<meta name="description" content="${esc(`Plomero, electricista, aire, enseres, cerrajero y más en Cabo Rojo: ${items.length} números que sí contestan, con la fecha en que se verificó cada uno. Textea NEVERA al 787-417-7711 y te llega el PDF.`)}">
 <meta name="robots" content="index,follow,max-snippet:-1">
 <link rel="canonical" href="https://www.mapadecaborojo.com/nevera">
 <meta property="og:title" content="Se dañó. ¿A quién llamo? Los 8 números que resuelven en Cabo Rojo">
 <meta property="og:description" content="8 oficios, 8 números verificados con fecha. Guárdala hoy, que nada está dañado.">
 <meta property="og:url" content="https://www.mapadecaborojo.com/nevera">
 <meta property="og:type" content="website">
+<meta property="og:image" content="https://www.mapadecaborojo.com/nevera/nevera-los-que-resuelven.png">
+<meta property="og:image:width" content="1080"><meta property="og:image:height" content="1350">
+<meta property="og:locale" content="es_PR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Se dañó. ¿A quién llamo? Los 8 números que resuelven en Cabo Rojo">
+<meta name="twitter:image" content="https://www.mapadecaborojo.com/nevera/nevera-los-que-resuelven.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,900;1,9..144,600&family=JetBrains+Mono:wght@500;700&family=Source+Sans+3:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, '\\u003c')}</script>
