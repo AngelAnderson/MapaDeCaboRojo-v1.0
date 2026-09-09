@@ -6666,12 +6666,12 @@ async function handle_nevera(req: any, res: any) {
 <meta property="og:description" content="8 oficios, 8 números verificados con fecha. Guárdala hoy, que nada está dañado.">
 <meta property="og:url" content="https://www.mapadecaborojo.com/nevera">
 <meta property="og:type" content="website">
-<meta property="og:image" content="https://www.mapadecaborojo.com/nevera/nevera-los-que-resuelven.png">
-<meta property="og:image:width" content="1080"><meta property="og:image:height" content="1350">
+<meta property="og:image" content="https://www.mapadecaborojo.com/nevera/nevera-og-1200x630.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
 <meta property="og:locale" content="es_PR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Se dañó. ¿A quién llamo? Los 8 números que resuelven en Cabo Rojo">
-<meta name="twitter:image" content="https://www.mapadecaborojo.com/nevera/nevera-los-que-resuelven.png">
+<meta name="twitter:image" content="https://www.mapadecaborojo.com/nevera/nevera-og-1200x630.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,900;1,9..144,600&family=JetBrains+Mono:wght@500;700&family=Source+Sans+3:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, '\\u003c')}</script>
@@ -6807,7 +6807,7 @@ footer{text-align:center;padding:26px 0 40px;color:#a89c8c;font-size:12px}
       <p class="proof">Los ${items.length} que Cabo Rojo más pidió este trimestre: ${totalPersonas} vecinos le pidieron uno de estos a El Veci en 90 días · ${nPersona} de ${items.length} confirmados por el negocio mismo · página al ${esc(hoy)}</p>
       <div class="cta noprint">
         <a class="btn btn-share" id="share-top" href="https://wa.me/?text=${encodeURIComponent(shareText)}" data-text="${esc(shareText)}">💬 Enviar por WhatsApp</a>
-        <a class="btn btn-main" href="/nevera/nevera-los-que-resuelven.png" target="_blank" rel="noopener">📱 Guardar la imagen</a>
+        <a class="btn btn-main" href="/nevera/nevera-hero-4x5.png" target="_blank" rel="noopener">📱 Guardar la imagen</a>
         <a class="btn btn-sec" href="#" onclick="window.print();return false;">🖨️ Imprimir pa' la nevera</a>
       </div>
       <p class="cta-note noprint">¿La quieres en PDF por texto? Escribe NEVERA al 787-417-7711. ¿De imán? Escribe IMAN: se imprime cuando haya 20 reservadas y te escribimos con precio y fecha antes de cobrarte nada.</p>
@@ -6843,7 +6843,8 @@ footer{text-align:center;padding:26px 0 40px;color:#a89c8c;font-size:12px}
     <h2>Así se ve en la nevera</h2>
     <p>La misma lista, diseñada pa' imprimir en tamaño carta o guardar en Fotos. Toca una y El Veci te la manda al teléfono.</p>
     <div class="gal">
-      <a href="${wa('NEVERA')}"><img src="/nevera/nevera-los-que-resuelven.png" alt="Los que resuelven en Cabo Rojo, lista para la nevera" loading="lazy" width="1080" height="1350"><div class="cap">📄 Los que resuelven · 8 oficios</div></a>
+      <a href="${wa('NEVERA')}"><img src="/nevera/nevera-hero-4x5.png" alt="Se dañó. ¿A quién llamo? Los 8 oficios de Cabo Rojo con demanda real" loading="lazy" width="1080" height="1350"><div class="cap">📲 Pa' compartir · con cuántos vecinos lo pidieron</div></a>
+      <a href="${wa('NEVERA')}"><img src="/nevera/nevera-los-que-resuelven.png" alt="Los que resuelven en Cabo Rojo, lista para la nevera" loading="lazy" width="1080" height="1350"><div class="cap">📄 Pa' imprimir · la lista de 8</div></a>
       <a href="${wa('NEVERA')}"><img src="/nevera/nevera-farmacias.png" alt="Farmacias de Cabo Rojo, una en cada zona" loading="lazy" width="1080" height="1350"><div class="cap">💊 Farmacias · una en cada zona</div></a>
     </div>
     <p style="margin-top:14px"><a class="btn btn-print" href="#" onclick="window.print();return false;">🖨️ Imprimir esta página</a> <span class="hint">Sale en carta, con los ${items.length} y la fecha de verificación.</span></p>
@@ -6927,7 +6928,7 @@ footer{text-align:center;padding:26px 0 40px;color:#a89c8c;font-size:12px}
       var text=btn.getAttribute('data-text')||'';
       if(!(navigator.share && navigator.canShare)) { try{ gtag('event','nevera_share',{via:'wa_link'}); }catch(e){} return; }
       ev.preventDefault();
-      fetch('/nevera/nevera-los-que-resuelven.png').then(function(r){return r.blob();}).then(function(b){
+      fetch('/nevera/nevera-hero-4x5.png').then(function(r){return r.blob();}).then(function(b){
         var file=new File([b],'los-que-resuelven-cabo-rojo.png',{type:'image/png'});
         var data={ files:[file], text:text };
         if(!navigator.canShare(data)) data={ text:text };
