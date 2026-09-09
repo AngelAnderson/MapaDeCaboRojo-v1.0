@@ -6541,6 +6541,25 @@ h1{font-size:27px;font-weight:800;color:#fff}
 }
 
 
+// ============ POST /api/pages?page=nevera-feedback — "¿Te contestó?" ============
+// El dato que Google no tiene: si el número contestó y si resolvió. Solo INSERT (RLS),
+// campos acotados, sin identidad del vecino. Se lee agregado por la vista nevera_contesta.
+async function handle_nevera_feedback(req: any, res: any) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'POST' });
+  const b = (typeof req.body === 'string' ? (() => { try { return JSON.parse(req.body); } catch { return {}; } })() : (req.body || {})) as any;
+  const slug = String(b.slug || '').slice(0, 120); const oficio = String(b.oficio || '').slice(0, 40);
+  const accion = b.accion === 'whatsapp' ? 'whatsapp' : 'llamar';
+  if (!/^[a-z0-9-]{1,120}$/.test(slug) || !/^[a-z]{1,40}$/.test(oficio) || typeof b.contesto !== 'boolean') return res.status(400).json({ error: 'bad' });
+  const row: any = { place_slug: slug, oficio, accion, contesto: b.contesto };
+  if (typeof b.resolvio === 'boolean') row.resolvio = b.resolvio;
+  if (Number.isFinite(+b.segundos)) row.segundos = Math.max(0, Math.min(604800, Math.trunc(+b.segundos)));
+  if (typeof b.ref === 'string' && /^[a-z0-9_-]{1,24}$/.test(b.ref)) row.ref = b.ref;
+  const { error } = await supabase.from('nevera_feedback').insert(row);
+  if (error) return res.status(500).json({ error: 'insert' });
+  res.setHeader('Cache-Control', 'no-store');
+  return res.status(200).json({ ok: true });
+}
+
 // ============ /nevera — "Se dañó. ¿A quién llamo?" ============
 // Producto: cuando algo se daña en la casa o en el negocio, el número correcto en 5 segundos,
 // con la fecha en que se verificó y cuánta gente lo pidió al Veci. Los 8 oficios salen de lo
@@ -6559,10 +6578,12 @@ async function handle_nevera(req: any, res: any) {
     { key: 'ropa', chip: 'Ruedo o arreglo de ropa', cat: 'Sastrería', emoji: '🧵', names: ['Sastrería y Algo Más', 'Sastreria y Algo Mas'], re: /ruedo|sastr|arreglo de ropa|costur/i, negocio: 'Baldorioty #36' },
   ];
   const desde = new Date(Date.now() - 90 * 86400000).toISOString();
-  const [{ data: rows }, { data: dem }] = await Promise.all([
+  const [{ data: rows }, { data: dem }, { data: fb }] = await Promise.all([
     supabase.from('places').select('name,slug,phone,address,image_url,last_verified_at,verified_at,verification_source').in('name', OFICIOS.flatMap(o => o.names)).eq('status', 'open').eq('visibility', 'published'),
     supabase.from('demand_signals_humano').select('query_normalized,user_hash').gte('created_at', desde).range(0, 4999),
+    supabase.from('nevera_contesta').select('place_slug,si,no,resolvio,ultimo_si,total'),
   ]);
+  const fbBySlug = new Map<string, any>(); for (const r of (fb || [])) fbBySlug.set(r.place_slug, r);
   const byName = new Map<string, any>();
   for (const r of (rows || [])) byName.set(r.name, r);
   const demanda = (o: typeof OFICIOS[number]) => { const set = new Set<string>(); for (const d of (dem || [])) if (o.re.test(String(d.query_normalized || ''))) set.add(String(d.user_hash)); return set.size; };
@@ -6575,8 +6596,11 @@ async function handle_nevera(req: any, res: any) {
     const tel = fmtTel(p.phone); if (!tel) return null;
     const nivel = procedenciaSello(p); const f = fecha(p);
     const sello = nivel === 'persona' && f ? `Confirmado por el negocio · ${f}` : nivel === 'fuente' && f ? `Cotejado · ${f}` : f ? `Del registro · ${f}` : 'Sin fecha de verificación';
-    return { ...o, p, tel, digits: tel.replace(/\D/g, ''), nivel, f, sello, personas: demanda(o) };
+    const c = fbBySlug.get(p.slug) || null;
+    return { ...o, p, tel, digits: tel.replace(/\D/g, ''), nivel, f, sello, personas: demanda(o), c };
   }).filter(Boolean) as any[];
+  // Los 8 se ordenan por lo que Cabo Rojo más pidió en 90 días. No es Angel escogiendo: es la demanda.
+  items.sort((a, b) => b.personas - a.personas);
   const totalPersonas = items.reduce((s, i) => s + i.personas, 0);
   const mesCorto = (iso: string) => new Intl.DateTimeFormat('es-PR', { timeZone: 'America/Puerto_Rico', month: 'short', year: 'numeric' }).format(new Date(iso)).replace('.', '').toUpperCase();
   const fechasIso = items.map(i => i.p.last_verified_at || i.p.verified_at).filter(Boolean).sort();
@@ -6609,14 +6633,19 @@ async function handle_nevera(req: any, res: any) {
       </div>
       <a class="tel" href="tel:+1${i.digits}">${i.tel}</a>
       <div class="acts">
-        <a class="act act-call" href="tel:+1${i.digits}">📞 Llamar</a>
-        <a class="act act-wa" href="https://wa.me/1${i.digits}">💬 WhatsApp</a>
+        <a class="act act-call" href="tel:+1${i.digits}" data-fb="llamar" data-slug="${esc(i.p.slug)}" data-oficio="${i.key}">📞 Llamar</a>
+        <a class="act act-wa" href="https://wa.me/1${i.digits}" data-fb="whatsapp" data-slug="${esc(i.p.slug)}" data-oficio="${i.key}">💬 WhatsApp</a>
       </div>
+      <div class="ask" hidden></div>
       <div class="meta">
         <span class="${i.nivel === 'persona' ? 'sello sello-p' : i.nivel === 'fuente' ? 'sello sello-f' : 'sello'}">${i.nivel === 'persona' ? '✅' : i.nivel === 'fuente' ? '🔎' : '📋'} ${esc(i.sello)}</span>
+        ${i.c && i.c.si ? `<span class="ok">📞 Contestó ${esc(fecha({ last_verified_at: i.c.ultimo_si }) || '')} · ${i.c.si} de ${i.c.total} ${i.c.total === 1 ? 'vecino' : 'vecinos'} que llamaron${i.c.resolvio ? ` · ${i.c.resolvio} resuelto${i.c.resolvio === 1 ? '' : 's'}` : ''}</span>` : ''}
         ${i.personas ? `<span class="dem">${i.personas} ${i.personas === 1 ? 'vecino lo pidió' : 'vecinos lo pidieron'} al Veci en 90 días</span>` : ''}
       </div>
-      ${i.catSlug ? `<a class="mas" href="/categoria/${i.catSlug}">Si no contesta, más ${esc(i.cat.toLowerCase() === 'aire acondicionado' ? 'técnicos de aire' : i.cat.toLowerCase() + 's')} en Cabo Rojo →</a>` : ''}
+      <div class="fallback">
+        ${i.catSlug ? `<a class="mas" href="/categoria/${i.catSlug}">Si no contesta, más ${esc(i.cat.toLowerCase() === 'aire acondicionado' ? 'técnicos de aire' : i.cat.toLowerCase() + 's')} en Cabo Rojo →</a>` : ''}
+        <a class="mas mas-veci" href="${wa(`Nadie me contestó para ${i.cat.toLowerCase()} en Cabo Rojo. ¿Me buscas otro?`)}">¿Nadie contestó? Dile al Veci y busca otro →</a>
+      </div>
     </article>`;
 
   const jsonLd = [
@@ -6709,6 +6738,17 @@ h1 em{font-style:normal;color:#f2b79c}
 .gal .cap{font-size:13px;color:var(--piedra);margin-top:8px;font-weight:700}
 .btn-print{background:var(--oceano);color:#fff}
 .btn-share{background:#22c55e;color:#fff}
+.legend{font-size:12.5px;color:var(--piedra);line-height:1.55;margin:12px 0 2px}
+.legend b{color:var(--tinta);font-weight:700}
+.ok{color:#166534;font-weight:800}
+.fallback{display:flex;flex-direction:column}
+.mas-veci{color:var(--salinas)}
+.ask{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:10px 12px;font-size:14px;font-weight:700;color:#7c2d12;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ask button{font-family:inherit;font-weight:800;font-size:14px;border:0;border-radius:8px;padding:9px 14px;cursor:pointer;min-height:40px}
+.ask .si{background:#16a34a;color:#fff}.ask .no{background:#dc2626;color:#fff}
+.ask .gracias{color:#166534}
+.corta-ai{font-size:11px;line-height:1.5;color:#b5aa9c;margin:10px 0 0}
+.btn-copy{background:#fff}
 .share-box{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--arena);border-left:5px solid #22c55e;border-radius:16px;padding:18px 20px;margin:22px 0 14px}
 .share-box h2{font-size:20px;font-weight:900;margin:0 0 4px}
 .share-box p{font-size:15px;line-height:1.55;color:#4a4036;max-width:560px;margin:0}
@@ -6761,14 +6801,14 @@ footer{text-align:center;padding:26px 0 40px;color:#a89c8c;font-size:12px}
       <div class="kicker">Cabo Rojo · casa y negocio</div>
       <h1>Se dañó.<br><em>¿A quién llamo?</em></h1>
       <div class="stamp">${esc(stamp)}</div>
-      <p class="lead">${items.length} oficios, ${items.length} números que sí contestan, y al lado de cada uno cuándo se verificó. Guárdala hoy, que nada está dañado. El día que se dañe, no vas a preguntar en 3 grupos.</p>
-      <p class="proof">${totalPersonas} vecinos le pidieron uno de estos ${items.length} a El Veci en los últimos 90 días · ${nPersona} de ${items.length} confirmados por el negocio mismo · página al ${esc(hoy)}</p>
+      <p class="lead">${items.length} oficios. ${items.length} números cotejados. Y te decimos exactamente cuándo se verificó cada uno. Guárdala hoy, que nada está dañado.</p>
+      <p class="proof">Los ${items.length} que Cabo Rojo más pidió este trimestre: ${totalPersonas} vecinos le pidieron uno de estos a El Veci en 90 días · ${nPersona} de ${items.length} confirmados por el negocio mismo · página al ${esc(hoy)}</p>
       <div class="cta noprint">
-        <a class="btn btn-main" href="${wa('NEVERA')}">📄 Mándame la lista al teléfono</a>
-        <a class="btn btn-sec" href="${wa('IMAN')}">🧲 Reservar la de imán</a>
-        <a class="btn btn-share" id="share-top" href="https://wa.me/?text=${encodeURIComponent(shareText)}" data-text="${esc(shareText)}">📲 Mándasela a alguien</a>
+        <a class="btn btn-share" id="share-top" href="https://wa.me/?text=${encodeURIComponent(shareText)}" data-text="${esc(shareText)}">💬 Enviar por WhatsApp</a>
+        <a class="btn btn-main" href="/nevera/nevera-los-que-resuelven.png" target="_blank" rel="noopener">📱 Guardar la imagen</a>
+        <a class="btn btn-sec" href="#" onclick="window.print();return false;">🖨️ Imprimir pa' la nevera</a>
       </div>
-      <p class="cta-note noprint">Los 2 botones le escriben a El Veci al 787-417-7711. NEVERA te manda el PDF pa' imprimir y pegar. IMAN reserva la versión de imán: se imprime cuando haya 20 reservadas y te escribimos con precio y fecha antes de cobrarte nada.</p>
+      <p class="cta-note noprint">¿La quieres en PDF por texto? Escribe NEVERA al 787-417-7711. ¿De imán? Escribe IMAN: se imprime cuando haya 20 reservadas y te escribimos con precio y fecha antes de cobrarte nada.</p>
     </div>
   </div>
 </div>
@@ -6781,6 +6821,7 @@ footer{text-align:center;padding:26px 0 40px;color:#a89c8c;font-size:12px}
         ${items.map(i => `<button class="chip" data-key="${i.key}">${i.emoji} ${esc(i.chip)}</button>`).join('')}
         <button class="chip" data-key="all">Ver los ${items.length}</button>
       </div>
+      <p class="legend">Cómo leer el sello: <b>✅ Confirmado por el negocio</b> = el negocio mismo o Angel en sitio lo confirmó, con fecha · <b>🔎 Cotejado</b> = se comprobó contra una fuente pública, la oficina no lo ha jurado · <b>📋 Del registro</b> = viene de un registro público y nadie lo ha llamado todavía. Y desde hoy, <b>📞 Contestó</b> = un vecino llamó desde aquí y dijo que sí.</p>
     </div>
   </div>
 
@@ -6807,9 +6848,8 @@ footer{text-align:center;padding:26px 0 40px;color:#a89c8c;font-size:12px}
   </section>
 
   <section class="sec">
-    <h2>En una sola oración, por si la copias</h2>
-    <p>Pa' mandarla por WhatsApp, pegarla en el grupo de la urbanización, o pa' que la lea una inteligencia artificial sin equivocarse.</p>
-    <div class="corta" id="corta">En Cabo Rojo, cuando algo se daña: ${esc(respuestaCorta)}. Fuente: mapadecaborojo.com/nevera, ${esc(hoy)}.</div>
+    <p><a class="btn btn-sec btn-copy" id="copiar" href="#" data-text="${esc(shareText)}">📋 Copiar la lista completa</a> <span style="font-size:13px;color:var(--piedra);margin-left:8px">Los ${items.length} con teléfono, pa' pegarla donde quieras.</span></p>
+    <p class="corta-ai" id="corta">En Cabo Rojo, cuando algo se daña: ${esc(respuestaCorta)}. Fuente: mapadecaborojo.com/nevera, ${esc(hoy)}.</p>
   </section>
 
   <section class="negocio noprint">
@@ -6843,6 +6883,41 @@ footer{text-align:center;padding:26px 0 40px;color:#a89c8c;font-size:12px}
   var h=(location.hash||'').replace('#of-',''); if(h) pick(h);
   // Compartir: en móvil, la card PNG + el texto van juntos al chat (Web Share con archivo).
   // Si el navegador no puede, abre WhatsApp con el texto (los números van adentro).
+  // ¿Te contestó? Se pregunta en la misma tarjeta cuando la persona vuelve a la página
+  // después de tocar Llamar/WhatsApp. Guarda segundos desde que llegó (KPI madre: minutos
+  // desde "se dañó" hasta hablar con alguien). Sin identidad.
+  var t0=Date.now(), pend=null;
+  function ask(card, slug, oficio, accion){
+    var box=card.querySelector('.ask'); if(!box) return;
+    var segs=Math.round((Date.now()-t0)/1000);
+    function send(contesto, resolvio){
+      var body={slug:slug,oficio:oficio,accion:accion,contesto:contesto,segundos:segs};
+      if(typeof resolvio==='boolean') body.resolvio=resolvio;
+      var r=new URLSearchParams(location.search).get('ref'); if(r) body.ref=r;
+      try{ fetch('/api/pages?page=nevera-feedback',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); }catch(e){}
+      try{ gtag('event','nevera_contesto',{oficio:oficio,contesto:contesto,resolvio:resolvio}); }catch(e){}
+      box.innerHTML='<span class="gracias">Gracias. Eso ayuda al próximo que llame.</span>'+(contesto===false?' <a class="mas-veci" href="https://wa.me/17874177711?text='+encodeURIComponent('Nadie me contestó para '+oficio+' en Cabo Rojo. ¿Me buscas otro?')+'" style="font-weight:800">Dile al Veci, busca otro →</a>':'');
+      setTimeout(function(){ box.hidden=true; },6000);
+    }
+    box.hidden=false;
+    box.innerHTML='<span>¿Te contestó?</span><button class="si">👍 Sí</button><button class="no">👎 No</button>';
+    box.querySelector('.no').onclick=function(){ send(false); };
+    box.querySelector('.si').onclick=function(){
+      box.innerHTML='<span>¿Te resolvió?</span><button class="si">Sí</button><button class="no">Todavía no</button>';
+      box.querySelector('.si').onclick=function(){ send(true,true); };
+      box.querySelector('.no').onclick=function(){ send(true,false); };
+    };
+    box.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+  document.querySelectorAll('[data-fb]').forEach(function(a){
+    a.addEventListener('click', function(){
+      var card=a.closest('.card'); pend={card:card,slug:a.getAttribute('data-slug'),oficio:a.getAttribute('data-oficio'),accion:a.getAttribute('data-fb'),at:Date.now()};
+      try{ gtag('event','nevera_contacto',{oficio:pend.oficio,accion:pend.accion}); }catch(e){}
+      setTimeout(function(){ if(pend && Date.now()-pend.at>=25000){ ask(pend.card,pend.slug,pend.oficio,pend.accion); pend=null; } },26000);
+    });
+  });
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible' && pend && Date.now()-pend.at>8000){ ask(pend.card,pend.slug,pend.oficio,pend.accion); pend=null; } });
+  var cp=document.getElementById('copiar'); if(cp){ cp.addEventListener('click', function(ev){ ev.preventDefault(); var t=cp.getAttribute('data-text')||''; (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){ cp.textContent='✅ Copiada'; try{ gtag('event','nevera_copiar'); }catch(e){} }).catch(function(){ window.prompt('Copia la lista:', t); }); }); }
   var ref=new URLSearchParams(location.search).get('ref'); if(ref){ try{ gtag('event','nevera_llegada',{ref:ref}); }catch(e){} }
   var shareBtns=[document.getElementById('share-top'),document.getElementById('share-bottom')].filter(Boolean);
   shareBtns.forEach(function(btn){
@@ -6885,6 +6960,7 @@ export default async function handler(req: any, res: any) {
     case 'cultura': return handle_cultura(req, res);
     case 'privacidad': return handle_privacidad(req, res);
     case 'nevera': return handle_nevera(req, res);
+    case 'nevera-feedback': return handle_nevera_feedback(req, res);
     default: return res.status(404).json({ error: 'Page not found' });
   }
 }
