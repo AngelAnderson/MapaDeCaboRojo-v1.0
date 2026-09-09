@@ -6808,7 +6808,7 @@ footer{text-align:center;padding:26px 0 40px;color:#a89c8c;font-size:12px}
       <div class="cta noprint">
         <a class="btn btn-share" id="share-top" href="https://wa.me/?text=${encodeURIComponent(shareText)}" data-text="${esc(shareText)}">💬 Enviar por WhatsApp</a>
         <a class="btn btn-main" href="/nevera/nevera-hero-4x5.png" target="_blank" rel="noopener">📱 Guardar la imagen</a>
-        <a class="btn btn-sec" href="#" onclick="window.print();return false;">🖨️ Imprimir pa' la nevera</a>
+        <a class="btn btn-sec" href="/nevera/nevera-carta.pdf" target="_blank" rel="noopener">🖨️ Imprimir pa' la nevera (PDF)</a>
       </div>
       <p class="cta-note noprint">¿La quieres en PDF por texto? Escribe NEVERA al 787-417-7711. ¿De imán? Escribe IMAN: se imprime cuando haya 20 reservadas y te escribimos con precio y fecha antes de cobrarte nada.</p>
     </div>
@@ -6847,7 +6847,7 @@ footer{text-align:center;padding:26px 0 40px;color:#a89c8c;font-size:12px}
       <a href="${wa('NEVERA')}"><img src="/nevera/nevera-los-que-resuelven.png" alt="Los que resuelven en Cabo Rojo, lista para la nevera" loading="lazy" width="1080" height="1350"><div class="cap">📄 Pa' imprimir · la lista de 8</div></a>
       <a href="${wa('NEVERA')}"><img src="/nevera/nevera-farmacias.png" alt="Farmacias de Cabo Rojo, una en cada zona" loading="lazy" width="1080" height="1350"><div class="cap">💊 Farmacias · una en cada zona</div></a>
     </div>
-    <p style="margin-top:14px"><a class="btn btn-print" href="#" onclick="window.print();return false;">🖨️ Imprimir esta página</a> <span class="hint">Sale en carta, con los ${items.length} y la fecha de verificación.</span></p>
+    <p style="margin-top:14px"><a class="btn btn-print" href="/nevera/nevera-carta.pdf" target="_blank" rel="noopener">🖨️ PDF carta (8.5×11)</a> <a class="btn btn-sec btn-copy" href="/nevera/nevera-media-carta.pdf" target="_blank" rel="noopener" style="margin-left:8px">✂️ Media carta, 2 por hoja</a> <span class="hint">Papel común. La media carta se corta o se dobla: una pa' ti, otra pa' un vecino. Con QR pa' ver la lista al día.</span></p>
   </section>
 
   <section class="sec">
