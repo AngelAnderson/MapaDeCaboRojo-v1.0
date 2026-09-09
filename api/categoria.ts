@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { correctButtonHtml } from './_lib/correct-button.js';
-import { coleccionLd, bloqueRespuesta, pluralEs, ldScript } from './_lib/procedencia.js';
+import { coleccionLd, bloqueRespuesta, pluralEs, ldScript, selloConFecha } from './_lib/procedencia.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -254,7 +254,7 @@ export default async function handler(req: any, res: any) {
 
   let placesQuery = supabase
     .from('places')
-    .select('id,name,slug,category,subcategory,image_url,phone,address,municipality,google_rating,google_review_count,status,plan,sponsor_weight,tags,services,opening_hours,lat,lon,npi,one_liner,is_emergency_resource,last_verified_at,verified_at')
+    .select('id,name,slug,category,subcategory,image_url,phone,address,municipality,google_rating,google_review_count,status,plan,sponsor_weight,tags,services,opening_hours,lat,lon,npi,one_liner,is_emergency_resource,last_verified_at,verified_at,verification_source')
     .eq('status', 'open')
     // Lista negra: quien busca POR NOMBRE los encuentra (ficha propia y pin en el mapa
     // siguen vivos), pero quien busca una CATEGORÍA no los recibe como recomendación.
@@ -336,6 +336,11 @@ export default async function handler(req: any, res: any) {
 
   // Category-specific SEO content
   const CATEGORY_SEO: Record<string, { title?: string; description: string; intro: string }> = {
+    farmacia: {
+      title: 'Farmacias en Cabo Rojo, horario, domingos y delivery',
+      description: `${filtered.length} farmacias en Cabo Rojo, PR con teléfono, horario y quién abre domingo. Mira cuál está abierta antes de salir con la receta.`,
+      intro: `La receta no espera al lunes. Aquí tienes ${filtered.length} farmacias de Cabo Rojo con teléfono y horario, y arriba te decimos cuáles abren domingo y cuál cierra más tarde. ¿No sabes cuál te queda cerca? Escríbele FARMACIA a El Veci al 787-417-7711. ¿Quieres saber si un medicamento tiene recall de la FDA? Escríbele RECALL y el nombre del medicamento.`,
+    },
     salud: {
       title: 'Salud en Cabo Rojo — Médicos, Farmacias, Dentistas y más',
       description: `Directorio de salud en Cabo Rojo, PR: ${filtered.length} médicos, farmacias, dentistas, laboratorios y especialistas — con teléfono, horario y verificación en el registro federal de salud (NPPES).`,
@@ -536,6 +541,7 @@ export default async function handler(req: any, res: any) {
       intro: `En Cabo Rojo se come por zona: mariscos frente al mar en Joyuda, el ambiente del poblado de Boquerón, el atardecer de El Combate y la comida criolla del pueblo. Aquí tienes ${filtered.length} restaurantes verificados con teléfono, horario y rating real — filtra por zona, mira cuál está abierto ahora, y llama antes de dar la vuelta en balde. ¿No sabes cuál escoger? Escríbele COMIDA a El Veci al 787-417-7711.`,
     };
   }
+  if (cat === 'farmacias' && CATEGORY_SEO.farmacia) CATEGORY_SEO.farmacias = CATEGORY_SEO.farmacia;
   const catSeo = CATEGORY_SEO[cat];
 
   const baseUrl = 'https://www.mapadecaborojo.com';
@@ -672,7 +678,9 @@ export default async function handler(req: any, res: any) {
 
   // Frescura real de ESTA categoria — los mismos numeros que van al parrafo extraible.
   const _hace90 = Date.now() - 90 * 86400000;
-  const _verif = filtered.filter((p: any) => p.last_verified_at || p.verified_at);
+  // "Verificado a mano por una persona" se cuenta por QUIEN confirmo (sello persona), no por
+  // si hay fecha: una importacion NPPES tambien escribe last_verified_at (regla del sello, 24 ago).
+  const _verif = filtered.filter((p: any) => selloConFecha(p).nivel === 'persona');
   const _frescos = _verif.filter((p: any) => new Date(p.last_verified_at || p.verified_at).getTime() > _hace90);
   const _mejor = filtered
     .filter((p: any) => p.google_rating)
@@ -687,6 +695,31 @@ export default async function handler(req: any, res: any) {
   // FAQ — health categories + high-LTV capture categories (electricista/plomero/ac/solar)
   const isHealthCat = !!detailRoute;
   const topRated = filtered.filter((p: any) => p.google_rating).sort((a: any, b: any) => Number(b.google_rating) - Number(a.google_rating))[0];
+
+  // ── Farmacia: lo que la persona con la receta en la mano quiere saber ──
+  // Todo sale del horario publicado (opening_hours.structured, day 0 = domingo). Sin horario, no se afirma.
+  const t12s = (hhmm: string) => { const [h, m] = String(hhmm).split(':').map(Number); if (isNaN(h)) return hhmm; const pd = h >= 12 ? 'pm' : 'am'; const h12 = h === 0 ? 12 : (h > 12 ? h - 12 : h); return m ? `${h12}:${String(m).padStart(2, '0')}${pd}` : `${h12}${pd}`; };
+  const dayEntry = (p: any, day: number) => (Array.isArray(p.opening_hours?.structured) ? p.opening_hours.structured.find((e: any) => e.day === day) : null);
+  const is247 = (p: any) => p.opening_hours?.type === 'always_open' || p.opening_hours?.type === '24_7';
+  const farmaciaDomingo = (cat === 'farmacia' || cat === 'farmacias')
+    ? filtered.map((p: any) => { const e = dayEntry(p, 0); return is247(p) ? { name: p.name, slug: p.slug || p.id, h: '24 horas', close: '24:00' } : (e && !e.isClosed && e.open && e.close ? { name: p.name, slug: p.slug || p.id, h: `${t12s(e.open)} a ${t12s(e.close)}`, close: e.close } : null); }).filter(Boolean).sort((a: any, b: any) => (b.close > a.close ? 1 : b.close < a.close ? -1 : 0))
+    : [];
+  const farmaciaTarde = (cat === 'farmacia' || cat === 'farmacias')
+    ? filtered.map((p: any) => { const e = dayEntry(p, 3); return is247(p) ? { name: p.name, slug: p.slug || p.id, close: '24:00', h: '24 horas' } : (e && !e.isClosed && e.close ? { name: p.name, slug: p.slug || p.id, close: e.close, h: `hasta las ${t12s(e.close)}` } : null); }).filter(Boolean).sort((a: any, b: any) => (b.close > a.close ? 1 : b.close < a.close ? -1 : 0)).slice(0, 3)
+    : [];
+  const farmaciaDelivery = (cat === 'farmacia' || cat === 'farmacias')
+    ? filtered.filter((p: any) => (Array.isArray(p.tags) && p.tags.some((t: string) => /delivery|entrega/i.test(t))) || (Array.isArray(p.services) && p.services.some((t: string) => /delivery|entrega/i.test(t))))
+    : [];
+  const farmaciaLink = (f: any) => `<a href="${baseUrl}/${detailRoute || 'negocio'}/${esc(f.slug)}" style="color:#0f766e;text-decoration:none;font-weight:600;">${esc(f.name)}</a>`;
+  const farmaciaHoyHtml = (cat === 'farmacia' || cat === 'farmacias') && filtered.length ? `
+    <div style="background:#f0fdfa;border:1px solid #99f6e4;border-left:4px solid #0d9488;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem;max-width:720px;font-size:0.92rem;line-height:1.6;color:#134e4a;">
+      <p style="margin:0 0 0.35rem;font-weight:700;color:#0f172a;">💊 Lo que importa cuando tienes la receta en la mano</p>
+      <p style="margin:0 0 0.25rem;"><strong>Abiertas ahora:</strong> <span id="farm-open-now">se calcula al abrir la página</span></p>
+      ${farmaciaDomingo.length ? `<p style="margin:0 0 0.25rem;"><strong>Abren domingo:</strong> ${farmaciaDomingo.map((f: any) => `${farmaciaLink(f)} (${esc(f.h)})`).join(' · ')}</p>` : `<p style="margin:0 0 0.25rem;"><strong>Domingo:</strong> ninguna tiene horario de domingo publicado. Llama antes de salir.</p>`}
+      ${farmaciaTarde.length ? `<p style="margin:0 0 0.25rem;"><strong>Cierran más tarde entre semana:</strong> ${farmaciaTarde.map((f: any) => `${farmaciaLink(f)} (${esc(f.h)})`).join(' · ')}</p>` : ''}
+      ${farmaciaDelivery.length ? `<p style="margin:0 0 0.25rem;"><strong>Con delivery:</strong> ${farmaciaDelivery.map((f: any) => farmaciaLink({ name: f.name, slug: f.slug || f.id })).join(' · ')}</p>` : ''}
+      <p style="margin:0.35rem 0 0;font-size:0.8rem;color:#475569;">Horarios según lo que cada farmacia publica. Si encuentras uno cambiado, <a href="https://wa.me/17874177711?text=${encodeURIComponent('DATO farmacia: ')}" style="color:#0f766e;">cuéntaselo a El Veci</a> y lo corregimos.</p>
+    </div>` : '';
 
   // Resolve capture-category key + singular noun for FAQ + urgency banner
   const CAPTURE_KEY: Record<string, string> = {
@@ -709,10 +742,19 @@ export default async function handler(req: any, res: any) {
 
   let faqItems: { q: string; a: string }[] = [];
   if (isHealthCat) {
+    // displayName trae "en Cabo Rojo" pegado ("Farmacias en Cabo Rojo"), y eso daba
+    // "¿Cuántos farmacias en cabo rojo hay en Cabo Rojo?". Sustantivo limpio y con articulo.
+    const nounPl = pluralEs(cat, displayName);
+    const nounSg = HEALTH_CTA_NOUN[cat]?.noun || nounPl.replace(/s$/, '');
+    const artSg = HEALTH_CTA_NOUN[cat]?.article || 'un';
+    const artPl = artSg === 'una' ? 'las' : 'los';
+    const artPlQ = artSg === 'una' ? 'Cuántas' : 'Cuántos';
+    const kw = nounSg.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase();
     faqItems = [
-      { q: `¿Cuántos ${displayName.toLowerCase()} hay en Cabo Rojo?`, a: `Actualmente hay ${filtered.length} ${displayName.toLowerCase()} registrados en Cabo Rojo, Puerto Rico en MapaDeCaboRojo.com.` },
-      ...(topRated ? [{ q: `¿Cuál es el ${displayName.toLowerCase().replace(/s$/, '')} con mejor rating en Cabo Rojo?`, a: `${topRated.name} tiene la mejor valoración con ${topRated.google_rating}/5 estrellas${topRated.google_review_count ? ` basado en ${topRated.google_review_count} reseñas` : ''}.` }] : []),
-      { q: `¿Cómo encuentro ${displayName.toLowerCase()} cerca de mí en Cabo Rojo?`, a: `Puedes explorar todos los ${displayName.toLowerCase()} aquí en MapaDeCaboRojo.com o textear "${displayName}" al 787-417-7711 para que El Veci te recomiende.` },
+      { q: `¿${artPlQ} ${nounPl} hay en Cabo Rojo?`, a: `Hay ${filtered.length} ${nounPl} en Cabo Rojo, Puerto Rico en MapaDeCaboRojo.com, cada una con teléfono, dirección y la fecha en que se verificó.` },
+      ...(topRated ? [{ q: `¿Cuál es ${artSg === 'una' ? 'la' : 'el'} ${nounSg} con mejor rating en Cabo Rojo?`, a: `${topRated.name} tiene la mejor valoración en Google con ${topRated.google_rating}/5 estrellas${topRated.google_review_count ? ` basado en ${topRated.google_review_count} reseñas` : ''}.` }] : []),
+      ...((cat === 'farmacia' || cat === 'farmacias') && farmaciaDomingo.length ? [{ q: '¿Qué farmacias abren domingo en Cabo Rojo?', a: `Según el horario publicado: ${farmaciaDomingo.map((f: any) => `${f.name} (${f.h})`).join(', ')}. Llama antes de ir, el horario puede cambiar.` }] : []),
+      { q: `¿Cómo encuentro ${artPl} ${nounPl} cerca de mí en Cabo Rojo?`, a: `Explora la lista aquí en MapaDeCaboRojo.com o escríbele ${kw} a El Veci al 787-417-7711 y te recomienda al momento.` },
     ];
   } else if (captureKey) {
     const singular = CAPTURE_SINGULAR[captureKey];
@@ -779,9 +821,18 @@ export default async function handler(req: any, res: any) {
               ? (rc >= 3 ? `⭐ ${p.google_rating} <span style="color:#94a3b8;font-weight:400;">(${rc})</span>` : '')
               : `⭐ ${p.google_rating}`)
           : '';
-        const npiBadge = (isHealth && p.npi)
-          ? `<div style="display:inline-flex;align-items:center;gap:0.25rem;font-size:0.68rem;font-weight:700;color:#0369a1;background:#e0f2fe;padding:0.15rem 0.5rem;border-radius:999px;margin-bottom:0.4rem;" title="Verificado en el registro federal de salud (NPPES)">✅ Verificado · registro federal</div>`
-          : '';
+        // El sello se escoge por QUIEN confirmo. Tener NPI es estar en un registro, no estar
+        // verificado; decir "Verificado" ahi era el incidente del sello del 24 ago.
+        const npiBadge = (() => {
+          if (!isHealth) return '';
+          const { nivel, fecha } = selloConFecha(p);
+          const pill = (bg: string, fg: string, txt: string, tip: string) =>
+            `<div style="display:inline-flex;align-items:center;gap:0.25rem;font-size:0.68rem;font-weight:700;color:${fg};background:${bg};padding:0.15rem 0.5rem;border-radius:999px;margin-bottom:0.4rem;" title="${tip}">${txt}</div>`;
+          if (nivel === 'persona') return pill('#dcfce7', '#166534', `✅ Confirmado por una persona${fecha ? ' · ' + esc(fecha) : ''}`, 'Lo confirmó el negocio o Angel en sitio');
+          if (nivel === 'fuente') return pill('#fef9c3', '#854d0e', `🔎 Corroborado${fecha ? ' · ' + esc(fecha) : ''}`, 'Cotejado contra una fuente pública; la oficina todavía no lo confirmó');
+          if (p.npi) return pill('#f1f5f9', '#475569', '📋 En el registro federal (NPI)', 'Copia del registro NPPES; nadie lo ha confirmado todavía');
+          return '';
+        })();
         const oneLinerHtml = (isHealth && p.one_liner)
           ? `<p style="font-size:0.8rem;color:#475569;margin:0 0 0.45rem;line-height:1.4;">${esc(p.one_liner)}</p>`
           : '';
@@ -1094,6 +1145,7 @@ export default async function handler(req: any, res: any) {
     })}
     ${urgentBanner}
     ${catSeo?.intro ? `<p style="font-size:1.05rem;line-height:1.6;color:#475569;margin-bottom:1.5rem;max-width:720px">${esc(catSeo.intro)}</p>` : ''}
+    ${farmaciaHoyHtml}
 
     ${(cat === 'fisiatra' || cat === 'fisiatras') && filtered.length > 0 ? `
     <!-- #1 Quiz: "¿Cuál fisiatra te conviene?" -->
@@ -1298,7 +1350,7 @@ export default async function handler(req: any, res: any) {
       <a href="https://wa.me/17874177711?text=${encodeURIComponent(displayName)}">Textea al 787-417-7711</a>
     </div>`}
 
-    <div class="grid">
+    <div class="grid"${detailRoute && !isSaludUmbrella ? ' data-open-first="1"' : ''}>
       ${cardsHtml}
     </div>
 
@@ -1337,10 +1389,11 @@ export default async function handler(req: any, res: any) {
       <p style="color:rgba(255,255,255,0.9);font-size:0.9rem;margin-bottom:1rem;">${(() => {
         const totalUsers = demandRows.reduce((s, r) => s + r.users, 0);
         const totalFailed = demandRows.reduce((s, r) => s + r.failed, 0);
-        if (isRestaurant) return `Así se ve un negocio que la gente encuentra primero: arriba, con foto, horario y reseñas a la vista. Los de arriba no pagaron por el orden — se lo ganaron. Si quieres que tu restaurante aparezca donde la gente decide dónde comer, La Vitrina te pone ahí. $799/año.`;
-        if (totalFailed >= 2) return `${totalFailed} vecinos buscaron y NO encontraron resultado este trimestre. Destaca con La Vitrina — apareces primero, servicios y fotos visibles. $799/año.`;
-        if (totalUsers >= 3) return `${totalUsers} vecinos buscaron ${displayName.toLowerCase()} en El Veci este trimestre. Destaca con La Vitrina — apareces primero. $799/año.`;
-        return `Destaca con La Vitrina — servicios, fotos, reviews, y apareces primero. $799/año.`;
+        // Sin precios en páginas públicas (capa discovery, 27 ago): el negocio trae su idea y se habla 1 a 1.
+        if (isRestaurant) return `Así se ve un negocio que la gente encuentra primero: arriba, con foto, horario y reseñas a la vista. Los de arriba no pagaron por el orden, se lo ganaron. Si quieres que tu restaurante aparezca donde la gente decide dónde comer, tráeme tu idea y lo cuadramos.`;
+        if (totalFailed >= 2) return `${totalFailed} vecinos buscaron y NO encontraron resultado este trimestre. Si ese negocio es el tuyo, tráeme tu idea: te digo cómo aparecer primero, con tus servicios y fotos a la vista.`;
+        if (totalUsers >= 3) return `${totalUsers} vecinos buscaron ${pluralEs(cat, displayName)} en El Veci este trimestre. Si quieres que te encuentren primero, tráeme tu idea y lo cuadramos.`;
+        return `Si quieres aparecer primero, con servicios, fotos y reseñas a la vista, tráeme tu idea y lo cuadramos.`;
       })()}</p>
       <a href="https://wa.me/17874177711?text=${encodeURIComponent('VITRINA ' + displayName)}" style="display:inline-block;background:white;color:#0d9488;text-decoration:none;padding:0.65rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.95rem;">Textea VITRINA al 787-417-7711</a>
     </div>
@@ -1479,6 +1532,20 @@ export default async function handler(req: any, res: any) {
         el.textContent = lbl;
         el.style.color = lbl.indexOf('🟢') === 0 ? '#16a34a' : '#dc2626';
       });
+      // Salud (farmacia, dentista, etc.): las abiertas AHORA suben, y el bloque de arriba las nombra.
+      var grid = document.querySelector('.grid[data-open-first]');
+      if (grid) {
+        var cards = Array.prototype.slice.call(grid.children), open = [], rest = [];
+        cards.forEach(function (c) { var st = c.querySelector('.open-status'); if (st && st.textContent.indexOf('🟢') === 0) open.push(c); else rest.push(c); });
+        if (open.length) open.concat(rest).forEach(function (c) { grid.appendChild(c); });
+        var now = document.getElementById('farm-open-now');
+        if (now) {
+          if (!open.length) { now.textContent = 'ninguna a esta hora, según su horario publicado'; }
+          else {
+            now.innerHTML = open.map(function (c) { var h = c.querySelector('h2'); var a = c.querySelector('a[href]'); var n = h ? h.textContent.replace(/VIP$/, '').trim() : ''; return a ? '<a href="' + a.getAttribute('href') + '" style="color:#0f766e;text-decoration:none;font-weight:600;">' + n.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</a>' : n; }).join(' · ');
+          }
+        }
+      }
     } catch (e) {}
   })();
   </script>

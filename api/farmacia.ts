@@ -21,7 +21,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { correctButtonHtml } from './_lib/correct-button.js';
-import { paginaLd, ldScript, partesAT } from './_lib/procedencia.js';
+import { paginaLd, ldScript, partesAT, selloConFecha } from './_lib/procedencia.js';
 import { slugVivoPara } from './_lib/redirect-archivada.js';
 import { rutaDeRecord } from './_lib/rutas-salud.js';
 
@@ -237,8 +237,8 @@ export default async function handler(req: any, res: any) {
     // La promesa de ranking es de Cabo Rojo. Fuera de CR se ofrece La Vitrina sin prometer
     // un pueblo que no servimos: la página ya dice el pueblo real arriba.
     standOut: (l: string, cr: boolean) => cr
-      ? `Feature your ${l.toLowerCase()} with La Vitrina. Photos, services, verified hours, and rank first when people search ${l.toLowerCase()}s in Cabo Rojo. $799/year.`
-      : `Feature your ${l.toLowerCase()} with La Vitrina. Photos, services, verified hours, and your own page like this one. $799/year.`,
+      ? `Feature your ${l.toLowerCase()} with La Vitrina. Photos, services, verified hours, and rank first when people search ${l.toLowerCase()}s in Cabo Rojo. Bring us your idea and we work it out 1-on-1.`
+      : `Feature your ${l.toLowerCase()} with La Vitrina. Photos, services, verified hours, and your own page like this one. Bring us your idea and we work it out 1-on-1.`,
     learnVitrina: 'Learn about La Vitrina',
     waPreText: (n: string) => `Hello, I found ${n} on ${brandDomain} — I'd like to make an appointment / ask a question.`,
     ctaSubtitle: (n: string) => `Need something from ${n}?`,
@@ -257,8 +257,8 @@ export default async function handler(req: any, res: any) {
     // La promesa de ranking es de Cabo Rojo. Fuera de CR se ofrece La Vitrina sin prometer
     // un pueblo que no servimos: la página ya dice el pueblo real arriba.
     standOut: (l: string, cr: boolean) => cr
-      ? `Destaca tu ${l.toLowerCase()} con La Vitrina. Fotos, servicios, horarios verificados, y apareces primero cuando busquen ${l.toLowerCase()}s en Cabo Rojo. $799/año.`
-      : `Destaca tu ${l.toLowerCase()} con La Vitrina. Fotos, servicios, horarios verificados, y tu propia página como esta. $799/año.`,
+      ? `Destaca tu ${l.toLowerCase()} con La Vitrina. Fotos, servicios, horarios verificados, y apareces primero cuando busquen ${l.toLowerCase()}s en Cabo Rojo. Tráeme tu idea y lo cuadramos 1 a 1.`
+      : `Destaca tu ${l.toLowerCase()} con La Vitrina. Fotos, servicios, horarios verificados, y tu propia página como esta. Tráeme tu idea y lo cuadramos 1 a 1.`,
     learnVitrina: 'Conoce La Vitrina',
     waPreText: (n: string) => `Hola, encontré ${n} en ${brandDomain} — quisiera agendar cita / hacer una pregunta.`,
     ctaSubtitle: (n: string) => `¿Necesitas algo de ${n}?`,
@@ -357,7 +357,12 @@ export default async function handler(req: any, res: any) {
     qualityBadge = `<span class="badge" style="background:#ef4444;" title="Google reporta esta farmacia como cerrada permanentemente">Cerrado según Google</span>`;
   } else if (qualityScore !== null && qualityScore >= 90) {
     const dateStr = lastVerifiedAt ? formatDateES(lastVerifiedAt) : '';
-    qualityBadge = `<span class="badge" style="background:#10b981;" title="Verificado contra Google Places el ${dateStr}">&#10003; Verificado ${dateStr}</span>`;
+    // Cotejar con Google es nivel "fuente", no "verificado": solo una persona (el negocio o
+    // Angel en sitio) sube el sello a verificado. Regla del sello, 24 ago 2026.
+    const selloDetalle = selloConFecha(place);
+    qualityBadge = selloDetalle.nivel === 'persona'
+      ? `<span class="badge" style="background:#10b981;" title="Confirmado por el negocio o por Angel en sitio">&#10003; Confirmado por una persona ${dateStr}</span>`
+      : `<span class="badge" style="background:#0ea5e9;" title="Cotejado contra Google Places el ${dateStr}; la oficina todavía no lo confirmó">&#128269; Cotejado con Google ${dateStr}</span>`;
   } else if (qualityScore !== null && qualityScore >= 50) {
     qualityBadge = `<span class="badge" style="background:#f59e0b;" title="Datos posiblemente desactualizados: ${esc(verificationIssues.join(', '))}">&#9888; Posiblemente desactualizado</span>`;
   }
@@ -568,8 +573,8 @@ export default async function handler(req: any, res: any) {
       <div class="info-row"><span class="info-label">&#128336; ${T.hours}</span><span class="info-value">${hoursText}</span></div>
       ${place.website ? `<div class="info-row"><span class="info-label">&#127758; ${T.website}</span><span class="info-value"><a href="${esc(place.website)}" target="_blank" rel="noopener">${esc(place.website)}</a></span></div>` : ''}
       ${place.gmaps_url ? `<div class="info-row"><span class="info-label">&#128507; Google Maps</span><span class="info-value"><a href="${esc(place.gmaps_url)}" target="_blank" rel="noopener">Ver en Maps</a></span></div>` : ''}
-      ${npi ? `<div class="info-row"><span class="info-label">&#10003; NPI</span><span class="info-value">${esc(npi)} &mdash; Registro NPPES verificado</span></div>` : ''}
-      ${lastVerifiedAt ? `<div class="info-row"><span class="info-label">&#128260; Verificado</span><span class="info-value">${formatDateES(lastVerifiedAt)} — datos confirmados contra Google</span></div>` : ''}
+      ${npi ? `<div class="info-row"><span class="info-label">&#10003; NPI</span><span class="info-value">${esc(npi)} &mdash; en el registro federal NPPES</span></div>` : ''}
+      ${lastVerifiedAt ? (() => { const sd = selloConFecha(place); const lbl = sd.nivel === 'persona' ? 'Confirmado por una persona' : sd.nivel === 'fuente' ? 'Cotejado con una fuente pública' : 'Última revisión del registro'; return `<div class="info-row"><span class="info-label">&#128260; Revisado</span><span class="info-value">${formatDateES(lastVerifiedAt)} — ${lbl}</span></div>`; })() : ''}
     </div>
 
     ${telLink || waLink ? `

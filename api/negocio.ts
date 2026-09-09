@@ -689,7 +689,7 @@ export default async function handler(req: any, res: any) {
       <p style="color: rgba(255,255,255,0.9); font-size: 0.95rem; margin-bottom: 1.25rem;">Verifica tu información, actualiza horarios, y aparece primero cuando busquen tu categoría.</p>
       <a href="https://wa.me/17874177711?text=RECLAMAR%20${encodeURIComponent(place.name)}" style="display: inline-block; background: white; color: #0d9488; text-decoration: none; padding: 0.75rem 1.75rem; border-radius: 8px; font-weight: 700; font-size: 1rem; margin-bottom: 1rem;">Verificar mi información</a>
       <br>
-      <a href="https://wa.me/17874177711?text=VITRINA%20${encodeURIComponent(place.name)}" style="color: rgba(255,255,255,0.9); font-size: 0.875rem; text-decoration: underline;">Destaca tu negocio con La Vitrina — $799/año →</a>
+      <a href="https://wa.me/17874177711?text=VITRINA%20${encodeURIComponent(place.name)}" style="color: rgba(255,255,255,0.9); font-size: 0.875rem; text-decoration: underline;">Destaca tu negocio con La Vitrina. Tráeme tu idea →</a>
       <p style="color: rgba(255,255,255,0.75); font-size: 0.8rem; margin-top: 0.75rem; margin-bottom: 0;">Textea al 787-417-7711 y El Veci te guía paso a paso.</p>
     </div>`}
 
