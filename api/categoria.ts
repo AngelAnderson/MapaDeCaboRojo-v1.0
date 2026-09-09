@@ -718,6 +718,7 @@ export default async function handler(req: any, res: any) {
       ${farmaciaDomingo.length ? `<p style="margin:0 0 0.25rem;"><strong>Abren domingo:</strong> ${farmaciaDomingo.map((f: any) => `${farmaciaLink(f)} (${esc(f.h)})`).join(' · ')}</p>` : `<p style="margin:0 0 0.25rem;"><strong>Domingo:</strong> ninguna tiene horario de domingo publicado. Llama antes de salir.</p>`}
       ${farmaciaTarde.length ? `<p style="margin:0 0 0.25rem;"><strong>Cierran más tarde entre semana:</strong> ${farmaciaTarde.map((f: any) => `${farmaciaLink(f)} (${esc(f.h)})`).join(' · ')}</p>` : ''}
       ${farmaciaDelivery.length ? `<p style="margin:0 0 0.25rem;"><strong>Con delivery:</strong> ${farmaciaDelivery.map((f: any) => farmaciaLink({ name: f.name, slug: f.slug || f.id })).join(' · ')}</p>` : ''}
+      <p style="margin:0.35rem 0 0.25rem;"><strong>Pa' la nevera:</strong> <a href="${baseUrl}/nevera" style="color:#0f766e;font-weight:600;">los números que resuelven en Cabo Rojo</a>, con fecha de verificación y PDF gratis.</p>
       <p style="margin:0.35rem 0 0;font-size:0.8rem;color:#475569;">Horarios según lo que cada farmacia publica. Si encuentras uno cambiado, <a href="https://wa.me/17874177711?text=${encodeURIComponent('DATO farmacia: ')}" style="color:#0f766e;">cuéntaselo a El Veci</a> y lo corregimos.</p>
     </div>` : '';
 

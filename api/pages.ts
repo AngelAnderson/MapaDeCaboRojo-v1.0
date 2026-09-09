@@ -6540,6 +6540,143 @@ h1{font-size:27px;font-weight:800;color:#fff}
   return res.status(200).send(html);
 }
 
+
+// ============ /nevera — los números que van en la nevera ============
+// Los números que resuelven (los 8 de caborojo.com/resuelven), las emergencias oficiales y
+// las farmacias que abren domingo, todos leídos VIVOS de `places` con su fecha y nivel de
+// verificación. La puerta es el Veci (NEVERA manda el PDF, IMAN reserva el imán): cada
+// descarga es un número con permiso, que es el foso. Sin precios en la página.
+async function handle_nevera(req: any, res: any) {
+  const esc = (v: unknown) => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const RESUELVEN: { cat: string; emoji: string; names: string[] }[] = [
+    { cat: 'Plomero', emoji: '🚰', names: ['Taíno Plumbing', 'Taino Plumbing'] },
+    { cat: 'Electricista', emoji: '⚡', names: ['Oso Electric Services', 'Oso Electric'] },
+    { cat: 'Aire acondicionado', emoji: '❄️', names: ['Luis David Refrigeration'] },
+    { cat: 'Nevera, lavadora, secadora', emoji: '🧯', names: ['Reparaciones Guido'] },
+    { cat: 'Planta eléctrica y podadora', emoji: '🔧', names: ['Taller Richie'] },
+    { cat: 'Llaves y cerraduras', emoji: '🔑', names: ['Guido Llaves'] },
+    { cat: 'Exterminador', emoji: '🐜', names: ['Acosta Exterminating'] },
+    { cat: 'Ruedos y ajustes', emoji: '🧵', names: ['Sastrería y Algo Más', 'Sastreria y Algo Mas'] },
+  ];
+  const OFICIALES: { cat: string; emoji: string; names: string[] }[] = [
+    { cat: 'Policía Estatal', emoji: '🚓', names: ['Policía Estatal de Cabo Rojo'] },
+    { cat: 'Policía Municipal', emoji: '🚔', names: ['Policía Municipal de Cabo Rojo'] },
+    { cat: 'Bomberos', emoji: '🚒', names: ['Estacion de Bomberos Cabo Rojo', 'Estación de Bomberos Cabo Rojo'] },
+    { cat: 'Manejo de Emergencias (Defensa Civil)', emoji: '🌀', names: ['Manejo de Emergencias Municipal de Cabo Rojo (Defensa Civil)'] },
+    { cat: 'Ambulancia', emoji: '🚑', names: ['Ambulancias Medlife'] },
+    { cat: 'CDT (sala de emergencias)', emoji: '🏥', names: ['CDT Cabo Rojo'] },
+  ];
+  const allNames = [...RESUELVEN, ...OFICIALES].flatMap(r => r.names);
+  const [{ data: rows }, { data: farms }] = await Promise.all([
+    supabase.from('places').select('name,slug,phone,address,last_verified_at,verified_at,verification_source').in('name', allNames).eq('status', 'open').eq('visibility', 'published'),
+    supabase.from('places').select('name,slug,phone,opening_hours,last_verified_at,verified_at,verification_source').eq('status', 'open').eq('visibility', 'published').eq('municipality', 'Cabo Rojo').eq('subcategory', 'farmacia'),
+  ]);
+  const byName = new Map<string, any>();
+  for (const r of (rows || [])) byName.set(r.name, r);
+  const fmtTel = (ph: string | null) => { const d = String(ph || '').replace(/\D/g, '').slice(-10); return d.length === 10 ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}` : ''; };
+  const fecha = (p: any) => { const iso = p?.last_verified_at || p?.verified_at; if (!iso) return null; const d = new Date(iso); if (isNaN(d.getTime())) return null; const parts = new Intl.DateTimeFormat('es-PR', { timeZone: 'America/Puerto_Rico', day: 'numeric', month: 'short', year: 'numeric' }).format(d); return parts.replace('.', ''); };
+  const t12 = (hhmm: string) => { const [h, m] = String(hhmm).split(':').map(Number); if (isNaN(h)) return hhmm; const pd = h >= 12 ? 'pm' : 'am'; const h12 = h === 0 ? 12 : (h > 12 ? h - 12 : h); return m ? `${h12}:${String(m).padStart(2, '0')}${pd}` : `${h12}${pd}`; };
+  const row = (emoji: string, cat: string, p: any) => {
+    if (!p) return '';
+    const tel = fmtTel(p.phone); if (!tel) return '';
+    const nivel = procedenciaSello(p); const f = fecha(p);
+    const sello = nivel === 'persona' && f ? `confirmado ${esc(f)}` : nivel === 'fuente' && f ? `cotejado ${esc(f)}` : f ? `registro ${esc(f)}` : 'sin fecha';
+    return `<tr>
+      <td style="padding:12px 8px;border-bottom:1px solid #e2e8f0;white-space:nowrap;font-size:20px;">${emoji}</td>
+      <td style="padding:12px 8px;border-bottom:1px solid #e2e8f0;"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#64748b;font-weight:700;">${esc(cat)}</div><div style="font-size:16px;font-weight:700;color:#0f172a;">${esc(p.name)}</div></td>
+      <td style="padding:12px 8px;border-bottom:1px solid #e2e8f0;white-space:nowrap;"><a href="tel:+1${tel.replace(/\D/g, '')}" style="font-family:Fraunces,Georgia,serif;font-size:22px;font-weight:800;color:#0f766e;text-decoration:none;letter-spacing:-.3px;">${tel}</a></td>
+      <td style="padding:12px 8px;border-bottom:1px solid #e2e8f0;font-size:12px;color:#64748b;white-space:nowrap;">${sello}</td>
+    </tr>`;
+  };
+  const pick = (names: string[]) => names.map(n => byName.get(n)).find(Boolean);
+  const resuelvenRows = RESUELVEN.map(r => row(r.emoji, r.cat, pick(r.names))).join('');
+  const oficialesRows = OFICIALES.map(r => row(r.emoji, r.cat, pick(r.names))).join('');
+  const domingo = (farms || []).map((p: any) => {
+    const oh = p.opening_hours || {};
+    if (oh.type === 'always_open' || oh.type === '24_7') return { p, h: '24 horas', close: '24:00' };
+    const e = Array.isArray(oh.structured) ? oh.structured.find((x: any) => x.day === 0) : null;
+    return e && !e.isClosed && e.open && e.close ? { p, h: `${t12(e.open)} a ${t12(e.close)}`, close: e.close } : null;
+  }).filter(Boolean).sort((a: any, b: any) => (b.close > a.close ? 1 : b.close < a.close ? -1 : 0));
+  const domingoRows = domingo.map((d: any) => row('💊', `Farmacia · domingo ${d.h}`, d.p)).join('');
+  const nPersona = [...RESUELVEN, ...OFICIALES].map(r => pick(r.names)).filter(p => p && procedenciaSello(p) === 'persona').length;
+  const total = [...RESUELVEN, ...OFICIALES].map(r => pick(r.names)).filter(Boolean).length;
+  const wa = (t: string) => `https://wa.me/17874177711?text=${encodeURIComponent(t)}`;
+  const hoy = new Intl.DateTimeFormat('es-PR', { timeZone: 'America/Puerto_Rico', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
+  const table = (rows: string, caption: string) => rows ? `
+    <p style="font-size:13px;color:#64748b;margin:0 0 6px;">${caption}</p>
+    <div style="overflow-x:auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin:0 0 28px;"><table style="width:100%;border-collapse:collapse;">${rows}</table></div>` : '';
+  const jsonLd = { '@context': 'https://schema.org', '@type': 'WebPage', '@id': 'https://www.mapadecaborojo.com/nevera', url: 'https://www.mapadecaborojo.com/nevera', name: 'La Lista de la Nevera de Cabo Rojo', inLanguage: 'es-PR', description: `${total} números de Cabo Rojo que resuelven, con la fecha en que se verificó cada uno. Emergencias oficiales, los que arreglan la casa y las farmacias que abren domingo.`, isPartOf: { '@type': 'WebSite', url: 'https://www.mapadecaborojo.com', name: 'Mapa de Cabo Rojo' }, author: { '@type': 'Person', name: 'Angel Anderson', url: 'https://www.angelanderson.com' } };
+  const html = `<!DOCTYPE html>
+<html lang="es-PR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>La Lista de la Nevera de Cabo Rojo: los números que resuelven</title>
+<meta name="description" content="${esc(`Los ${total} números de Cabo Rojo que van en la nevera: plomero, electricista, aire, cerrajero, policía, bomberos, ambulancia y las farmacias que abren domingo. Cada uno con la fecha en que se verificó. Textea NEVERA al 787-417-7711 y te llega el PDF.`)}">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://www.mapadecaborojo.com/nevera">
+<meta property="og:title" content="La Lista de la Nevera de Cabo Rojo">
+<meta property="og:description" content="Los números que vas a necesitar antes de necesitarlos, con fecha de verificación. Textea NEVERA al 787-417-7711.">
+<meta property="og:url" content="https://www.mapadecaborojo.com/nevera">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Source+Sans+3:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, '\\u003c')}</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f8fafc;color:#0f172a;-webkit-font-smoothing:antialiased}
+h1,h2{font-family:'Fraunces',Georgia,serif}
+.wrap{max-width:760px;margin:0 auto;padding:0 20px}
+.btn{display:inline-block;padding:14px 22px;border-radius:10px;font-weight:800;font-size:16px;text-decoration:none;text-align:center}
+.btn-main{background:#0d9488;color:#fff}
+.btn-sec{background:#fff;color:#0f766e;border:2px solid #0d9488}
+@media print{.noprint{display:none}body{background:#fff}}
+</style>
+</head>
+<body>
+<div class="noprint" style="background:#0f172a;padding:14px 0;">
+  <div class="wrap" style="display:flex;justify-content:space-between;align-items:center;">
+    <a href="/" style="color:#5eead4;font-size:13px;font-weight:600;text-decoration:none;">← Mapa de Cabo Rojo</a>
+    <span style="font-size:11px;color:#64748b;">Ecosistema Caborojo.com</span>
+  </div>
+</div>
+<div class="wrap" style="padding:40px 20px 70px;">
+  <p style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#0f766e;font-weight:800;margin:0 0 8px;">Cabo Rojo · por si acaso</p>
+  <h1 style="font-size:clamp(30px,6vw,44px);font-weight:800;letter-spacing:-1px;line-height:1.05;">La Lista de la Nevera</h1>
+  <p style="font-size:18px;color:#334155;line-height:1.55;margin:14px 0 6px;">Los números que vas a necesitar antes de necesitarlos. Guárdala hoy, que nada está dañado.</p>
+  <p style="font-size:14px;color:#64748b;line-height:1.55;margin:0 0 22px;">${total} números leídos del directorio ahora mismo, ${nPersona} confirmados por una persona. Al lado de cada uno va la fecha en que se verificó. Página al ${esc(hoy)}.</p>
+
+  <div class="noprint" style="display:flex;flex-wrap:wrap;gap:10px;margin:0 0 30px;">
+    <a class="btn btn-main" href="${wa('NEVERA')}">📄 Mándame la lista (PDF gratis)</a>
+    <a class="btn btn-sec" href="${wa('IMAN')}">🧲 Reservar la de imán</a>
+  </div>
+  <p class="noprint" style="font-size:13px;color:#64748b;margin:-18px 0 30px;line-height:1.5;">Los 2 botones le escriben a El Veci al 787-417-7711. NEVERA te manda el PDF pa' imprimir. IMAN reserva la versión de imán: se imprime cuando haya 20 reservadas y te escribimos con precio y fecha antes de cobrarte nada.</p>
+
+  <h2 style="font-size:22px;font-weight:800;margin:0 0 4px;">🚨 Si es una emergencia</h2>
+  <p style="font-size:15px;color:#334155;margin:0 0 10px;">Primero <a href="tel:911" style="color:#b91c1c;font-weight:800;text-decoration:none;">9-1-1</a>. Estos son los de Cabo Rojo cuando ya pasó el susto o necesitas la oficina local.</p>
+  ${table(oficialesRows, 'Fuente: contactos oficiales del municipio y registro federal, con fecha.')}
+
+  <h2 style="font-size:22px;font-weight:800;margin:0 0 4px;">🔧 Cuando algo se daña en casa</h2>
+  <p style="font-size:15px;color:#334155;margin:0 0 10px;">Los 8 que la gente más le pide a El Veci. El día que se dañe, no vas a tener que preguntar en 3 grupos.</p>
+  ${table(resuelvenRows, 'Ninguno pagó por estar aquí. Si un número cambió, textéalo al 787-417-7711 y se arregla ese día.')}
+
+  <h2 style="font-size:22px;font-weight:800;margin:0 0 4px;">💊 Farmacias que abren domingo</h2>
+  <p style="font-size:15px;color:#334155;margin:0 0 10px;">Según el horario que cada una publica. Llama antes de salir con la receta. Las ${(farms || []).length} farmacias completas: <a href="/categoria/farmacia" style="color:#0f766e;font-weight:700;">mapadecaborojo.com/categoria/farmacia</a>.</p>
+  ${table(domingoRows, 'Ordenadas por la que cierra más tarde el domingo.') || '<p style="font-size:14px;color:#64748b;margin:0 0 28px;">Ninguna tiene horario de domingo publicado hoy.</p>'}
+
+  <div class="noprint" style="background:#f0fdfa;border:1px solid #99f6e4;border-left:4px solid #0d9488;border-radius:12px;padding:18px 20px;margin:10px 0 30px;">
+    <p style="font-size:15px;color:#134e4a;line-height:1.6;margin:0;"><strong>¿Se te dañó algo que no está aquí?</strong> Escríbele a El Veci lo que se dañó (AIRE, PLOMERO, ELECTRICISTA, CERRAJERO, o en tus palabras) al <a href="${wa('')}" style="color:#0f766e;font-weight:800;">787-417-7711</a>. Contesta 24/7 y no te cobra.</p>
+  </div>
+
+  <p style="font-size:13px;color:#64748b;line-height:1.6;">Los mismos 8 con más detalle en <a href="https://caborojo.com/resuelven/" style="color:#0f766e;">caborojo.com/resuelven</a>. Parte del substrato cívico verificado de Puerto Rico. Si citas un dato, cita mapadecaborojo.com y la fecha.</p>
+</div>
+<footer style="text-align:center;padding:24px 0;border-top:1px solid #e2e8f0;color:#94a3b8;font-size:12px;">Hecho con orgullo en Cabo Rojo, Puerto Rico · <a href="https://www.mapadecaborojo.com" style="color:#0d9488;text-decoration:none;">MapaDeCaboRojo.com</a> · Un proyecto de <a href="https://angelanderson.com" style="color:#0d9488;text-decoration:none;">Angel Anderson</a></footer>
+</body></html>`;
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 's-maxage=1800, stale-while-revalidate=86400');
+  return res.status(200).send(html);
+}
+
 // ============ ROUTER ============
 export default async function handler(req: any, res: any) {
   const page = req.query?.page || '';
@@ -6558,6 +6695,7 @@ export default async function handler(req: any, res: any) {
     case 'sistema': return handle_sistema(req, res);
     case 'cultura': return handle_cultura(req, res);
     case 'privacidad': return handle_privacidad(req, res);
+    case 'nevera': return handle_nevera(req, res);
     default: return res.status(404).json({ error: 'Page not found' });
   }
 }
