@@ -6587,6 +6587,14 @@ async function handle_nevera(req: any, res: any) {
 
   // La oración que un modelo copia entera: quién, número, fecha. Una por oficio.
   const respuestaCorta = items.map(i => `${i.cat.toLowerCase()}: ${i.p.name}, ${i.tel}${i.f ? ` (verificado ${i.f})` : ''}`).join(' · ');
+  // El mensaje que viaja por WhatsApp. Corto, con los números adentro (sirve aunque nadie
+  // abra el link) y con el link con ?ref=wa para medir cuántos llegan por un vecino.
+  const shareText = [
+    'Se dañó. ¿A quién llamo? Los que resuelven en Cabo Rojo, verificados:',
+    ...items.map(i => `${i.emoji} ${i.cat}: ${String(i.p.name).split(' — ')[0]} ${i.tel}`),
+    '',
+    'Guárdala hoy que nada está dañado. Al día siempre en mapadecaborojo.com/nevera?ref=wa',
+  ].join('\n');
 
   const card = (i: any) => `
     <article class="card" id="of-${i.key}" data-key="${i.key}">
@@ -6694,6 +6702,10 @@ h1 em{font-style:normal;color:#f2b79c}
 .gal a:hover img{transform:translateY(-3px)}
 .gal .cap{font-size:13px;color:var(--piedra);margin-top:8px;font-weight:700}
 .btn-print{background:var(--oceano);color:#fff}
+.btn-share{background:#22c55e;color:#fff}
+.share-box{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--arena);border-left:5px solid #22c55e;border-radius:16px;padding:18px 20px;margin:22px 0 14px}
+.share-box h2{font-size:20px;font-weight:900;margin:0 0 4px}
+.share-box p{font-size:15px;line-height:1.55;color:#4a4036;max-width:560px;margin:0}
 .print-sheet{display:none}
 .sec{margin:34px 0 0}
 .sec h2{font-size:24px;font-weight:900;letter-spacing:-.4px;margin:0 0 6px}
@@ -6748,6 +6760,7 @@ footer{text-align:center;padding:26px 0 40px;color:#a89c8c;font-size:12px}
       <div class="cta noprint">
         <a class="btn btn-main" href="${wa('NEVERA')}">📄 Mándame la lista al teléfono</a>
         <a class="btn btn-sec" href="${wa('IMAN')}">🧲 Reservar la de imán</a>
+        <a class="btn btn-share" id="share-top" href="https://wa.me/?text=${encodeURIComponent(shareText)}" data-text="${esc(shareText)}">📲 Mándasela a alguien</a>
       </div>
       <p class="cta-note noprint">Los 2 botones le escriben a El Veci al 787-417-7711. NEVERA te manda el PDF pa' imprimir y pegar. IMAN reserva la versión de imán: se imprime cuando haya 20 reservadas y te escribimos con precio y fecha antes de cobrarte nada.</p>
     </div>
@@ -6767,6 +6780,13 @@ footer{text-align:center;padding:26px 0 40px;color:#a89c8c;font-size:12px}
 
   <div class="grid" id="grid">
     ${items.map(card).join('')}
+  </div>
+  <div class="share-box noprint">
+    <div>
+      <h2>La que se comparte es la que sirve</h2>
+      <p>Mándala al grupo de la familia o de la urbanización ahora, que nadie tiene nada dañado. El día que a alguien se le dañe algo, va a saber a quién llamar sin preguntar.</p>
+    </div>
+    <a class="btn btn-main" id="share-bottom" href="https://wa.me/?text=${encodeURIComponent(shareText)}" data-text="${esc(shareText)}">📲 Mandar por WhatsApp</a>
   </div>
   <p style="font-size:13px;color:var(--piedra);line-height:1.6;">Ninguno pagó por estar aquí: salen de lo que Cabo Rojo más le pide a El Veci. Si un número cambió o alguien ya no trabaja, textéalo al <a href="${wa('Cambió un número de la lista: ')}">787-417-7711</a> y se arregla ese mismo día.</p>
 
@@ -6815,6 +6835,23 @@ footer{text-align:center;padding:26px 0 40px;color:#a89c8c;font-size:12px}
   }
   chips.forEach(function(c){ c.addEventListener('click', function(){ pick(this.getAttribute('data-key')); }); });
   var h=(location.hash||'').replace('#of-',''); if(h) pick(h);
+  // Compartir: en móvil, la card PNG + el texto van juntos al chat (Web Share con archivo).
+  // Si el navegador no puede, abre WhatsApp con el texto (los números van adentro).
+  var ref=new URLSearchParams(location.search).get('ref'); if(ref){ try{ gtag('event','nevera_llegada',{ref:ref}); }catch(e){} }
+  var shareBtns=[document.getElementById('share-top'),document.getElementById('share-bottom')].filter(Boolean);
+  shareBtns.forEach(function(btn){
+    btn.addEventListener('click', function(ev){
+      var text=btn.getAttribute('data-text')||'';
+      if(!(navigator.share && navigator.canShare)) { try{ gtag('event','nevera_share',{via:'wa_link'}); }catch(e){} return; }
+      ev.preventDefault();
+      fetch('/nevera/nevera-los-que-resuelven.png').then(function(r){return r.blob();}).then(function(b){
+        var file=new File([b],'los-que-resuelven-cabo-rojo.png',{type:'image/png'});
+        var data={ files:[file], text:text };
+        if(!navigator.canShare(data)) data={ text:text };
+        return navigator.share(data).then(function(){ try{ gtag('event','nevera_share',{via:data.files?'webshare_img':'webshare_text'}); }catch(e){} });
+      }).catch(function(){ location.href=btn.getAttribute('href'); });
+    });
+  });
 })();
 </script>
 </body></html>`;
