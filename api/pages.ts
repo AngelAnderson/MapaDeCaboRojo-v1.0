@@ -6553,7 +6553,7 @@ async function handle_nevera(req: any, res: any) {
     { key: 'luz', chip: 'Luz o breaker', cat: 'Electricista', emoji: '⚡', names: ['Oso Electric Services', 'Oso Electric'], re: /electricis|breaker|se fue la luz|cortocircuito|electric/i, catSlug: 'electricista', negocio: 'lunes a sábado, emergencias' },
     { key: 'aire', chip: 'Aire acondicionado', cat: 'Aire acondicionado', emoji: '❄️', names: ['Luis David Refrigeration'], re: /\baire\b|acondicionado|\bac\b|hvac|refriger/i, catSlug: 'ac', negocio: 'residencial y comercial' },
     { key: 'enseres', chip: 'Nevera, lavadora, secadora', cat: 'Enseres', emoji: '🧯', names: ['Reparaciones Guido'], re: /nevera|lavadora|secadora|enser|estufa/i, negocio: 'va a domicilio' },
-    { key: 'planta', chip: 'Planta o podadora', cat: 'Planta eléctrica y podadora', emoji: '🔧', names: ['Taller Richie'], re: /planta el|generador|podadora/i, negocio: 'Puerto Real, lunes a sábado' },
+    { key: 'planta', chip: 'Planta o podadora', cat: 'Planta eléctrica y podadora', emoji: '🔧', names: ['Taller Richie — Reparación de Equipo de Jardinería', 'Taller Richie'], re: /planta el|generador|podadora/i, negocio: 'Puerto Real, lunes a sábado' },
     { key: 'llaves', chip: 'Llaves o cerradura', cat: 'Cerrajero', emoji: '🔑', names: ['Guido Llaves'], re: /cerrajer|llave|candado|cerradura/i, negocio: 'Carr. 308 km 0.2' },
     { key: 'plagas', chip: 'Plagas', cat: 'Exterminador', emoji: '🐜', names: ['Acosta Exterminating'], re: /exterminad|plaga|comej|cucaracha|rata|fumig/i, negocio: 'lunes a domingo' },
     { key: 'ropa', chip: 'Ruedo o arreglo de ropa', cat: 'Sastrería', emoji: '🧵', names: ['Sastrería y Algo Más', 'Sastreria y Algo Mas'], re: /ruedo|sastr|arreglo de ropa|costur/i, negocio: 'Baldorioty #36' },
@@ -6628,7 +6628,8 @@ async function handle_nevera(req: any, res: any) {
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,900&family=Source+Sans+3:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, '\\u003c')}</script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
+*{box-sizing:border-box;margin:0;padding:0;min-width:0}
+html,body{max-width:100%;overflow-x:hidden}
 :root{--oceano:#1B4B5A;--salinas:#D4603A;--lino:#FAF8F5;--tinta:#2C2418;--piedra:#8A7E6F;--arena:#E8E2D9;--verde:#0f766e}
 body{font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--lino);color:var(--tinta);-webkit-font-smoothing:antialiased}
 h1,h2,.tel{font-family:'Fraunces',Georgia,serif}
@@ -6676,7 +6677,7 @@ h1 em{font-style:normal;color:#f2b79c}
 .sec{margin:34px 0 0}
 .sec h2{font-size:24px;font-weight:900;letter-spacing:-.4px;margin:0 0 6px}
 .sec p{font-size:16px;line-height:1.6;color:#4a4036;max-width:720px}
-.corta{background:#fff;border-left:4px solid var(--oceano);border-radius:0 12px 12px 0;padding:14px 16px;font-size:14px;line-height:1.7;color:#4a4036;margin:12px 0 0}
+.corta{overflow-wrap:anywhere;background:#fff;border-left:4px solid var(--oceano);border-radius:0 12px 12px 0;padding:14px 16px;font-size:14px;line-height:1.7;color:#4a4036;margin:12px 0 0}
 .negocio{background:var(--oceano);color:#fff;border-radius:16px;padding:22px 22px;margin:34px 0 0}
 .negocio h2{color:#fff;font-size:22px;margin:0 0 6px}
 .negocio p{color:#dbe7ea;font-size:15px;line-height:1.6;max-width:680px}
