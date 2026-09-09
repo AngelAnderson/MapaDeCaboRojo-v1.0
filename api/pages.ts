@@ -6560,7 +6560,7 @@ async function handle_nevera(req: any, res: any) {
   ];
   const desde = new Date(Date.now() - 90 * 86400000).toISOString();
   const [{ data: rows }, { data: dem }] = await Promise.all([
-    supabase.from('places').select('name,slug,phone,address,last_verified_at,verified_at,verification_source').in('name', OFICIOS.flatMap(o => o.names)).eq('status', 'open').eq('visibility', 'published'),
+    supabase.from('places').select('name,slug,phone,address,image_url,last_verified_at,verified_at,verification_source').in('name', OFICIOS.flatMap(o => o.names)).eq('status', 'open').eq('visibility', 'published'),
     supabase.from('demand_signals_humano').select('query_normalized,user_hash').gte('created_at', desde).range(0, 4999),
   ]);
   const byName = new Map<string, any>();
@@ -6578,6 +6578,10 @@ async function handle_nevera(req: any, res: any) {
     return { ...o, p, tel, digits: tel.replace(/\D/g, ''), nivel, f, sello, personas: demanda(o) };
   }).filter(Boolean) as any[];
   const totalPersonas = items.reduce((s, i) => s + i.personas, 0);
+  const mesCorto = (iso: string) => new Intl.DateTimeFormat('es-PR', { timeZone: 'America/Puerto_Rico', month: 'short', year: 'numeric' }).format(new Date(iso)).replace('.', '').toUpperCase();
+  const fechasIso = items.map(i => i.p.last_verified_at || i.p.verified_at).filter(Boolean).sort();
+  const stamp = fechasIso.length ? `VERIFICADA · ${mesCorto(fechasIso[0]) === mesCorto(fechasIso[fechasIso.length - 1]) ? mesCorto(fechasIso[0]) : mesCorto(fechasIso[0]).split(' ')[0] + '–' + mesCorto(fechasIso[fechasIso.length - 1])}` : 'SIN FECHA';
+  const BUCKET = 'https://vprjteqgmanntvisjrvp.supabase.co/storage/v1/object/public/lead-magnets';
   const nPersona = items.filter(i => i.nivel === 'persona').length;
   const hoy = new Intl.DateTimeFormat('es-PR', { timeZone: 'America/Puerto_Rico', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date());
 
@@ -6586,11 +6590,12 @@ async function handle_nevera(req: any, res: any) {
 
   const card = (i: any) => `
     <article class="card" id="of-${i.key}" data-key="${i.key}">
+      ${i.p.image_url ? `<div class="pic"><img src="${esc(i.p.image_url)}" alt="${esc(i.p.name)}" loading="lazy" onerror="this.parentElement.remove()"><span class="idx">${String(items.indexOf(i) + 1).padStart(2, '0')}</span></div>` : `<div class="pic pic-empty"><span class="pic-emoji">${i.emoji}</span><span class="idx">${String(items.indexOf(i) + 1).padStart(2, '0')}</span></div>`}
       <div class="card-top">
-        <span class="emoji">${i.emoji}</span>
+        ${i.p.image_url ? `<span class="emoji">${i.emoji}</span>` : ''}
         <div>
           <div class="cat">${esc(i.cat)}</div>
-          <div class="name">${esc(i.p.name)}</div>
+          <div class="name">${esc(String(i.p.name).split(' — ')[0])}</div>
           ${i.negocio ? `<div class="nota">${esc(i.negocio)}</div>` : ''}
         </div>
       </div>
@@ -6625,7 +6630,7 @@ async function handle_nevera(req: any, res: any) {
 <meta property="og:url" content="https://www.mapadecaborojo.com/nevera">
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,900&family=Source+Sans+3:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;0,9..144,900;1,9..144,600&family=JetBrains+Mono:wght@500;700&family=Source+Sans+3:wght@400;600;700;800&display=swap" rel="stylesheet">
 <script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, '\\u003c')}</script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;min-width:0}
@@ -6656,7 +6661,13 @@ h1 em{font-style:normal;color:#f2b79c}
 .chip{border:1.5px solid var(--arena);background:var(--lino);color:var(--tinta);border-radius:999px;padding:9px 14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
 .chip.on,.chip:hover{border-color:var(--salinas);background:#fff1ea;color:#8a3416}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;margin:26px 0 10px}
-.card{background:#fff;border:1px solid var(--arena);border-radius:16px;padding:18px 18px 14px;display:flex;flex-direction:column;gap:10px;transition:box-shadow .2s,transform .2s}
+.card{background:#fff;border:1px solid var(--arena);border-radius:16px;padding:0 18px 14px;display:flex;flex-direction:column;gap:10px;transition:box-shadow .2s,transform .2s;overflow:hidden}
+.pic{position:relative;height:132px;margin:0 -18px 6px;background:linear-gradient(135deg,#e8f1f3,#f6efe9)}
+.pic img{width:100%;height:100%;object-fit:cover;display:block}
+.pic-empty{display:flex;align-items:center;justify-content:center}
+.pic-emoji{font-size:54px;filter:saturate(.9)}
+.idx{position:absolute;top:10px;left:12px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;font-weight:700;color:#fff;background:var(--salinas);padding:3px 8px;border-radius:999px;letter-spacing:.06em}
+.stamp{display:inline-block;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;font-weight:700;letter-spacing:.14em;color:#f2b79c;border:2px solid #f2b79c;border-radius:6px;padding:6px 12px;transform:rotate(-2deg);margin:0 0 18px}
 .card.hi{box-shadow:0 0 0 3px var(--salinas),0 14px 34px rgba(212,96,58,.18);transform:translateY(-2px)}
 .card.dim{opacity:.35}
 .card-top{display:flex;gap:12px;align-items:flex-start}
@@ -6664,16 +6675,26 @@ h1 em{font-style:normal;color:#f2b79c}
 .cat{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--piedra);font-weight:800}
 .name{font-size:17px;font-weight:800;line-height:1.2}
 .nota{font-size:13px;color:var(--piedra);margin-top:2px}
-.tel{font-size:34px;font-weight:900;color:var(--oceano);text-decoration:none;letter-spacing:-.8px;line-height:1}
+.tel{font-size:34px;color:var(--oceano);text-decoration:none;line-height:1;display:block;padding:6px 0;font-family:'JetBrains Mono',ui-monospace,monospace;font-weight:700;letter-spacing:-1px;white-space:nowrap}
+@media(min-width:620px){.tel{font-size:27px;letter-spacing:-.6px}}
+@media(max-width:619px){.pic{height:104px}.pic-emoji{font-size:44px}}
 .acts{display:flex;gap:8px}
-.act{flex:1;text-align:center;padding:10px;border-radius:10px;font-weight:800;font-size:14px;text-decoration:none}
+.act{flex:1;text-align:center;padding:13px 10px;border-radius:10px;font-weight:800;font-size:15px;text-decoration:none;min-height:46px}
 .act-call{background:var(--oceano);color:#fff}
 .act-wa{background:#22c55e;color:#fff}
 .meta{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--piedra)}
 .sello{font-weight:700}
 .sello-p{color:#166534}.sello-f{color:#854d0e}
 .dem{color:var(--verde);font-weight:700}
-.mas{font-size:13px;font-weight:700;text-decoration:none;margin-top:2px}
+.mas{font-size:13px;font-weight:700;text-decoration:none;margin-top:2px;padding:12px 0;display:block}
+.top .bar a{padding:12px 0;display:inline-block}
+.gal{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:14px 0 0}
+.gal a{display:block;text-decoration:none;color:inherit}
+.gal img{width:100%;height:auto;display:block;border-radius:12px;border:1px solid var(--arena);box-shadow:0 8px 24px rgba(27,75,90,.10);transition:transform .2s}
+.gal a:hover img{transform:translateY(-3px)}
+.gal .cap{font-size:13px;color:var(--piedra);margin-top:8px;font-weight:700}
+.btn-print{background:var(--oceano);color:#fff}
+.print-sheet{display:none}
 .sec{margin:34px 0 0}
 .sec h2{font-size:24px;font-weight:900;letter-spacing:-.4px;margin:0 0 6px}
 .sec p{font-size:16px;line-height:1.6;color:#4a4036;max-width:720px}
@@ -6684,16 +6705,44 @@ h1 em{font-style:normal;color:#f2b79c}
 .negocio a.btn{margin-top:12px}
 .foot-links{font-size:14px;color:var(--piedra);line-height:1.7;margin:30px 0 0}
 footer{text-align:center;padding:26px 0 40px;color:#a89c8c;font-size:12px}
-@media print{.noprint{display:none!important}body{background:#fff}.top{background:#fff;color:#000}h1{color:#000}.lead{color:#333}.card{break-inside:avoid}}
+@page{size:letter;margin:.4in .5in}
+@media print{
+  .screen{display:none!important}
+  body{background:#fff;color:#2C2418}
+  .print-sheet{display:block;font-family:"Source Sans 3",sans-serif}
+  .ps-kicker{font-family:'JetBrains Mono',monospace;font-size:11pt;letter-spacing:.18em;color:#D4603A;font-weight:700}
+  .ps-title{font-family:'Fraunces',serif;font-size:40pt;font-weight:900;letter-spacing:-1.5pt;line-height:.95;color:#1B4B5A;margin:2pt 0 4pt}
+  .ps-sub{display:flex;justify-content:space-between;align-items:center;gap:12pt;border-bottom:2px solid #E8E2D9;padding-bottom:10pt;margin-bottom:6pt}
+  .ps-sub em{font-family:'Fraunces',serif;font-style:italic;font-size:15pt;color:#8A7E6F}
+  .ps-stamp{font-family:'JetBrains Mono',monospace;font-size:10pt;letter-spacing:.14em;font-weight:700;color:#D4603A;border:2px solid #D4603A;border-radius:4pt;padding:4pt 9pt;transform:rotate(-2deg);white-space:nowrap}
+  .ps-row{display:grid;grid-template-columns:28pt 1fr 1.25fr;align-items:center;border-bottom:1px solid #E8E2D9;padding:6pt 0;break-inside:avoid}
+  .ps-idx{font-family:'JetBrains Mono',monospace;font-size:9pt;color:#D4603A;font-weight:700}
+  .ps-cat{font-family:'Fraunces',serif;font-size:14pt;font-weight:600;color:#2C2418}
+  .ps-biz{border-left:1px solid #E8E2D9;padding-left:12pt}
+  .ps-name{font-family:'Fraunces',serif;font-size:11pt;font-weight:600;color:#1B4B5A}
+  .ps-tel{font-family:'JetBrains Mono',monospace;font-size:18pt;font-weight:700;color:#2C2418;letter-spacing:-.5pt;line-height:1.1}
+  .ps-nota{font-family:'Fraunces',serif;font-style:italic;font-size:8.5pt;color:#8A7E6F}
+  .ps-cta{margin-top:10pt;border:2px dashed #9fd8cf;background:#1B4B5A;color:#fff;border-radius:6pt;padding:10pt 14pt;-webkit-print-color-adjust:exact;print-color-adjust:exact;break-inside:avoid}
+  .ps-cta em{font-family:'Fraunces',serif;font-style:italic;font-size:12pt;color:#dbe7ea;display:block;margin-bottom:4pt}
+  .ps-cta strong{font-family:'Fraunces',serif;font-size:16pt;font-weight:900;display:block;line-height:1.25}
+  .ps-cta strong b{color:#F2B79C}
+  .ps-foot{display:flex;justify-content:space-between;align-items:baseline;margin-top:8pt;padding-top:6pt;border-top:2px solid #E8E2D9;break-inside:avoid}
+  .print-sheet{break-after:avoid}
+  .ps-brand{font-family:'Fraunces',serif;font-size:13pt;font-weight:900;color:#1B4B5A;white-space:nowrap}
+  .ps-brand b{color:#D4603A}
+  .ps-tag{font-family:'JetBrains Mono',monospace;font-size:8pt;color:#8A7E6F;white-space:nowrap}
+  .idx,.stamp{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
 </style>
 </head>
 <body>
-<div class="top">
+<div class="top screen">
   <div class="wrap">
     <div class="bar noprint"><a href="/">← Mapa de Cabo Rojo</a><span>Ecosistema Caborojo.com</span></div>
     <div class="hero">
       <div class="kicker">Cabo Rojo · casa y negocio</div>
       <h1>Se dañó.<br><em>¿A quién llamo?</em></h1>
+      <div class="stamp">${esc(stamp)}</div>
       <p class="lead">${items.length} oficios, ${items.length} números que sí contestan, y al lado de cada uno cuándo se verificó. Guárdala hoy, que nada está dañado. El día que se dañe, no vas a preguntar en 3 grupos.</p>
       <p class="proof">${totalPersonas} vecinos le pidieron uno de estos ${items.length} a El Veci en los últimos 90 días · ${nPersona} de ${items.length} confirmados por el negocio mismo · página al ${esc(hoy)}</p>
       <div class="cta noprint">
@@ -6705,7 +6754,7 @@ footer{text-align:center;padding:26px 0 40px;color:#a89c8c;font-size:12px}
   </div>
 </div>
 
-<div class="wrap">
+<div class="wrap screen">
   <div class="picker noprint">
     <div class="box">
       <h2>¿Qué se dañó?</h2>
@@ -6721,6 +6770,16 @@ footer{text-align:center;padding:26px 0 40px;color:#a89c8c;font-size:12px}
   </div>
   <p style="font-size:13px;color:var(--piedra);line-height:1.6;">Ninguno pagó por estar aquí: salen de lo que Cabo Rojo más le pide a El Veci. Si un número cambió o alguien ya no trabaja, textéalo al <a href="${wa('Cambió un número de la lista: ')}">787-417-7711</a> y se arregla ese mismo día.</p>
 
+  <section class="sec noprint">
+    <h2>Así se ve en la nevera</h2>
+    <p>La misma lista, diseñada pa' imprimir en tamaño carta o guardar en Fotos. Toca una y El Veci te la manda al teléfono.</p>
+    <div class="gal">
+      <a href="${wa('NEVERA')}"><img src="/nevera/nevera-los-que-resuelven.png" alt="Los que resuelven en Cabo Rojo, lista para la nevera" loading="lazy" width="1080" height="1350"><div class="cap">📄 Los que resuelven · 8 oficios</div></a>
+      <a href="${wa('NEVERA')}"><img src="/nevera/nevera-farmacias.png" alt="Farmacias de Cabo Rojo, una en cada zona" loading="lazy" width="1080" height="1350"><div class="cap">💊 Farmacias · una en cada zona</div></a>
+    </div>
+    <p style="margin-top:14px"><a class="btn btn-print" href="#" onclick="window.print();return false;">🖨️ Imprimir esta página</a> <span style="font-size:13px;color:var(--piedra);margin-left:8px">Sale en carta, con los ${items.length} y la fecha de verificación.</span></p>
+  </section>
+
   <section class="sec">
     <h2>En una sola oración, por si la copias</h2>
     <p>Pa' mandarla por WhatsApp, pegarla en el grupo de la urbanización, o pa' que la lea una inteligencia artificial sin equivocarse.</p>
@@ -6735,7 +6794,15 @@ footer{text-align:center;padding:26px 0 40px;color:#a89c8c;font-size:12px}
 
   <p class="foot-links">¿Es una emergencia de verdad? Primero 9-1-1. Policía, bomberos y Defensa Civil de Cabo Rojo están en <a href="/categoria/gobierno">gobierno y servicios públicos</a>. ¿Farmacia un domingo? <a href="/categoria/farmacia">Aquí las que abren</a>. Los mismos ${items.length} con más detalle en <a href="https://caborojo.com/resuelven/">caborojo.com/resuelven</a>. Parte del substrato cívico verificado de Puerto Rico: si citas un dato, cita mapadecaborojo.com y la fecha.</p>
 </div>
-<footer>Hecho con orgullo en Cabo Rojo, Puerto Rico · <a href="https://www.mapadecaborojo.com" style="text-decoration:none">MapaDeCaboRojo.com</a> · Un proyecto de <a href="https://angelanderson.com" style="text-decoration:none">Angel Anderson</a></footer>
+<div class="print-sheet">
+  <div class="ps-kicker">EN CABO ROJO · CUANDO ALGO SE DAÑA</div>
+  <div class="ps-title">LOS QUE RESUELVEN</div>
+  <div class="ps-sub"><em>Guárdala hoy que nada está dañado.</em><span class="ps-stamp">${esc(stamp)}</span></div>
+  ${items.map((i, n) => `<div class="ps-row"><span class="ps-idx">${String(n + 1).padStart(2, '0')}</span><span class="ps-cat">${esc(i.cat)}</span><span class="ps-biz"><div class="ps-name">${esc(i.p.name.split(' — ')[0])}</div><div class="ps-tel">${i.tel}</div><div class="ps-nota">${esc([i.negocio, i.f ? `verificado ${i.f}` : ''].filter(Boolean).join(' · '))}</div></span></div>`).join('')}
+  <div class="ps-cta"><em>¿Cambió un número, o se dañó algo que no está aquí?</em><strong>Textea NEVERA al <b>787-417-7711</b><br>y lo arreglamos pa' el próximo que la necesite</strong></div>
+  <div class="ps-foot"><span class="ps-brand">CaboRojo<b>.com</b> · mapadecaborojo.com/nevera</span><span class="ps-tag">Menos revolú, más sistema, mejor vida.</span></div>
+</div>
+<footer class="screen">Hecho con orgullo en Cabo Rojo, Puerto Rico · <a href="https://www.mapadecaborojo.com" style="text-decoration:none">MapaDeCaboRojo.com</a> · Un proyecto de <a href="https://angelanderson.com" style="text-decoration:none">Angel Anderson</a></footer>
 <script>
 (function(){
   var chips=document.querySelectorAll('#chips .chip'), cards=document.querySelectorAll('#grid .card');
