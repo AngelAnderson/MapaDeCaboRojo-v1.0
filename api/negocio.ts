@@ -368,6 +368,15 @@ export default async function handler(req: any, res: any) {
   // Use the business's REAL municipality (was hardcoded "Cabo Rojo" — hurt CTR + local
   // relevance for every business outside CR, e.g. "penfed mayaguez" showing "| Cabo Rojo").
   const muniRaw = place.municipality || 'Cabo Rojo';
+  // 2026-09-10 · compuerta de recuperación tras el spam update (18-21 ago 2026): 4,061 de las
+  // 4,988 fichas publicadas están fuera de Cabo Rojo y ~2,300 no traen ni teléfono ni
+  // descripción propia. A ojos de Google son doorway pages. Con MAPA_NOINDEX_SIN_DATO=1
+  // (Vercel env) esas fichas salen con noindex,follow; siguen sirviendo al Veci y al mapa.
+  // Apagada por defecto: la decisión es de Angel (fechas.mapa-spam-update-recuperacion).
+  const noindexSinDato = process.env.MAPA_NOINDEX_SIN_DATO === '1'
+    && muniRaw !== 'Cabo Rojo'
+    && !place.phone
+    && (!place.description || String(place.description).trim().length < 40);
   const muni = esc(muniRaw);
   // CTR formula: name + pueblo + what the searcher actually wants (phone/hours/address).
   // seo_title/seo_description are overrides written by the fabrica-seo nightly engine.
@@ -546,6 +555,7 @@ export default async function handler(req: any, res: any) {
   <title>${title}</title>
   <meta name="description" content="${description}">
   <link rel="canonical" href="${pageUrl}">
+  ${noindexSinDato ? '<meta name="robots" content="noindex, follow">' : ''}
 
   <!-- Open Graph -->
   <meta property="og:type" content="business.business">
@@ -716,6 +726,7 @@ export default async function handler(req: any, res: any) {
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate=604800');
+  if (noindexSinDato) res.setHeader('X-Robots-Tag', 'noindex, follow');
   logApiCall('negocio', null, slug, req.headers['user-agent'] as string, req.headers['x-forwarded-for'] as string, 1, req.headers['referer'] as string);
   return res.status(200).send(html);
 }

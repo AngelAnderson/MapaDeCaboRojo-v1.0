@@ -74,7 +74,7 @@ export default async function handler(req: any, res: any) {
     // o canonicalizan a registromedicopr.com — y los negocios reales de Cabo Rojo se quedaban
     // fuera por el corte. Ahora se piden solo los que mapa sí es dueño de indexar.
     const SUBS_IN = `(${SPECIALIST_SUBS.map((s) => `"${s}"`).join(',')})`;
-    const COLS = 'slug, id, verified_at, category, subcategory, npi';
+    const COLS = 'slug, id, verified_at, category, subcategory, npi, municipality, phone, description';
     // Ordenar NO es cosmético: sin ORDER BY, Postgres no promete el mismo orden entre
     // las 12 consultas, así que las fronteras de página se corren y salen filas dobles
     // mientras otras no salen nunca (16 ago 2026: 58 proveedores perdidos y 9 duplicados
@@ -101,7 +101,13 @@ export default async function handler(req: any, res: any) {
     };
     const places = [
       // (a) directorio puro — sin NPI, nunca fue del registro
-      ...(await fetchAll(() => supabase.from('places').select(COLS).eq('status', 'open').is('npi', null), ['slug'])),
+      // 2026-09-10 · misma compuerta que api/negocio.ts (MAPA_NOINDEX_SIN_DATO=1): una ficha
+      // con noindex no va en el sitemap, si no Search Console la reporta como contradicción.
+      ...(await fetchAll(() => supabase.from('places').select(COLS).eq('status', 'open').is('npi', null), ['slug']))
+        .filter((p: any) => !(process.env.MAPA_NOINDEX_SIN_DATO === '1'
+          && (p.municipality || 'Cabo Rojo') !== 'Cabo Rojo'
+          && !p.phone
+          && (!p.description || String(p.description).trim().length < 40))),
       // (b) con NPI pero fuera de las 56 categorías del registro (farmacias, equipo médico…)
       ...(await fetchAll(() => supabase.from('places').select(COLS).eq('status', 'open').not('npi', 'is', null).not('subcategory', 'in', SUBS_IN), ['slug'])),
       // (c) con NPI y sin subcategoría — `NOT IN` los deja fuera porque NULL no compara
