@@ -18851,6 +18851,72 @@ async function handleRegistroHub(req: any, res: any) {
     const answerT = inTown.length
       ? t(`En ${escapeHtml(muni.name)} hay <strong>${inTown.length} ${escapeHtml(plural(inTown.length))}</strong> con oficina, verificado${inTown.length === 1 ? '' : 's'} contra el registro federal NPPES.${hayPlan ? ` De esos, <strong>${frasePlanEs}</strong>.` : ''}`, `${escapeHtml(muni.name)} has <strong>${inTown.length} verified ${escapeHtml(labelLow)}${inTown.length === 1 ? '' : 's'}</strong> with a local office.${hayPlan ? ` Of those, <strong>${frasePlanEn}</strong>.` : ''}`)
       : t(`El registro federal <strong>no muestra ningún ${escapeHtml(labelCorto)}</strong> con oficina en ${escapeHtml(muni.name)}. ${cercaFrase}${nearby.length ? ` Los de al lado:` : ''}`, `The federal registry shows <strong>no ${escapeHtml(labelLow)}</strong> with an office in ${escapeHtml(muni.name)}.`)
+    // --- La misma pagina, en el formato que el agente lee (api/_lib/agente-md.ts) ---
+    // Estas son 2,641 paginas de especialidad x pueblo: el volumen grande del Registro.
+    // 2 de las acciones abiertas del Citador viven aqui (dentista/cabo-rojo y
+    // dermatologo/mayaguez, ambas `pagina_contesta_pero_no_cita`). El markdown dice
+    // exactamente lo que dice el HTML de abajo, derivado de las mismas variables.
+    if (quiereMarkdown(req)) {
+      const nivelDe = (pp: any) => {
+        const h = planMap.get(String(pp.npi))
+        const planes = [h?.mmm && 'MMM', h?.mcs && 'MCS Advantage', h?.vital && 'Plan Vital (la reforma)'].filter(Boolean).join(', ')
+        return planes || '—'
+      }
+      const filaProv = (pp: any, conPueblo: boolean) => [
+        cleanProviderName(pp.name),
+        ...(conPueblo ? [String(pp.municipality || '—')] : []),
+        String(pp.phone || 'sin teléfono'),
+        nivelDe(pp),
+        `https://registromedicopr.com/especialista/${encodeURIComponent(pp.slug)}`,
+      ]
+      const tablas: any[] = []
+      if (inTown.length) tablas.push({
+        titulo: `${cleanEs} con oficina en ${muni.name}`,
+        encabezados: [cleanEs, 'Teléfono', 'Aparece en el directorio de', 'Ficha'],
+        filas: inTown.map((pp: any) => filaProv(pp, false)),
+      })
+      if (nearby.length) tablas.push({
+        titulo: `Los más cercanos${townReg ? `, en ${townReg}` : ''}`,
+        encabezados: [cleanEs, 'Pueblo', 'Teléfono', 'Aparece en el directorio de', 'Ficha'],
+        filas: nearby.slice(0, 40).map((pp: any) => filaProv(pp, true)),
+        nota: nearby.length > 40 ? `Se muestran 40 de ${nearby.length}.` : undefined,
+      })
+      const respuesta = nT
+        ? `En ${muni.name}, Puerto Rico hay ${nT} ${plural(nT)} con oficina en el pueblo, según el registro federal NPPES.${hayPlan ? ` De esos, ${frasePlanEs}.` : ''}`
+        : `El registro federal no lista ningún ${labelCorto} con oficina en ${muni.name}, Puerto Rico.${cerca ? ` El más cercano está en ${cerca.nearest}, a unos ${Math.round(cerca.km)} km.` : ''}${nearby.length ? ` Abajo están los ${nearby.length} más cercanos, con pueblo y teléfono.` : ''}`
+      // El caveat NO es opcional y va en el cuerpo, no en un pie: es la diferencia entre
+      // "aparece en un directorio" y "te va a coger de paciente", y es justo lo que un
+      // modelo aplana si no se lo decimos en la misma respiracion que el dato.
+      const caveat = 'Aparecer en el directorio de un plan no significa que la oficina te vaya a coger como paciente, y no aparecer no prueba que esté fuera de la red: el cruce por número federal identifica el 33% de las filas del Plan Vital. Confirma siempre con la oficina antes de ir.'
+      return enviarMd(res, {
+        pregunta: nT
+          ? `¿Qué ${labelCorto} hay en ${muni.name}, Puerto Rico, y cuál acepta mi plan?`
+          : `¿Hay ${labelCorto} en ${muni.name}, Puerto Rico? ¿Y dónde está el más cercano?`,
+        respuesta,
+        contexto: [
+          info.treats ? `${info.treats} ${info.whenToGo}`.trim() : '',
+          nT && conVital === 0 && pvIsla?.medicos
+            ? `Ninguno de los ${nT} de ${muni.name} aparece en el directorio del Plan Vital (la reforma, edición de ${PLAN_ED_VITAL_ES}); en toda la isla ese directorio lista ${pvIsla.medicos} en ${pvIsla.pueblos} pueblos.`
+            : '',
+          caveat,
+        ].filter(Boolean).join(' '),
+        canonical: `https://registromedicopr.com/registro/${specUrl}/${muniSlug}`,
+        tablas,
+        verificacion: {
+          quien: 'Registro Médico PR (registromedicopr.com), proyecto de Angel Anderson',
+          cuando: `NPPES al día de hoy; MMM edición de ${PLAN_ED_MMM_ES}; MCS Advantage edición de ${PLAN_ED_MCS_ES}; Plan Vital edición de ${PLAN_ED_VITAL_ES}`,
+          fuente: 'Registro federal NPPES/CMS, cruzado por número federal (NPI) contra los directorios que publican los propios planes médicos',
+          nivel: 'registro',
+          cobertura: 'Copia de registros públicos: nadie de esta oficina lo confirmó a mano. Si eres la oficina y quieres que el dato lleve tu confirmación, escribe CONFIRMA al 787-417-7711.',
+        },
+        relacionadas: [
+          { pregunta: `¿Dónde más hay ${plural(2)} en Puerto Rico?`, url: `https://registromedicopr.com/registro/${specUrl}` },
+          { pregunta: '¿Qué regiones de Puerto Rico no tienen ciertos especialistas?', url: 'https://registromedicopr.com/registro/desiertos' },
+          { pregunta: '¿Qué médicos están aceptando pacientes nuevos?', url: 'https://registromedicopr.com/necesito' },
+        ],
+      }, req)
+    }
+
     const breadcrumbT = `<nav class="not-prose text-sm text-slate-500 mb-3"><a href="/registro${lp}" class="hover:text-teal-700">Registro Médico PR</a> <span class="text-slate-300">/</span> <a href="/registro/${specUrl}${lp}" class="hover:text-teal-700">${escapeHtml(label)}</a> <span class="text-slate-300">/</span> <span class="text-slate-700">${escapeHtml(muni.name)}</span></nav>`
     let bodyT = `${breadcrumbT}
 <h1>${x.e} ${escapeHtml(label)} ${t('en', 'in')} ${escapeHtml(muni.name)}, Puerto Rico</h1>
@@ -18938,7 +19004,7 @@ ${regDisclaimer(en)}`
     ]
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
     res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
-    res.status(200).send(layout({ bareTitle: true, title: titleT, description: descT, slug: canonicalPathT, bodyHtml: bodyT, jsonLd: jsonLdT, ogImage: REGISTRO_OG, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com', lang: en ? 'en' : 'es' }))
+    res.status(200).send(layout({ bareTitle: true, title: titleT, description: descT, slug: canonicalPathT, bodyHtml: bodyT + pieMd(`https://registromedicopr.com/${canonicalPathT}`), jsonLd: jsonLdT, md: true, ogImage: REGISTRO_OG, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com', lang: en ? 'en' : 'es' }))
     return
   }
 
