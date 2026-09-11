@@ -678,6 +678,11 @@ export default async function handler(req: any, res: any) {
     belleza: 'BeautySalon', spa: 'BeautySalon', peluqueria: 'HairSalon', barberia: 'HairSalon',
     hospedaje: 'LodgingBusiness', lavanderia: 'DryCleaningOrLaundry', imprenta: 'LocalBusiness',
     automotriz: 'AutoRepair', educacion: 'EducationalOrganization',
+    // Lo que NO es un negocio no se marca como negocio. Una playa con @type
+    // LocalBusiness es peor que no marcarla: le dice a Google una cosa falsa.
+    playas: 'Beach', playa: 'Beach',
+    turismo: 'TouristAttraction', entretenimiento: 'TouristAttraction',
+    gobierno: 'GovernmentOffice', marina: 'Place',
   };
   const schemaType = SCHEMA_TYPE_BY_CAT[cat] || (isHealth ? 'MedicalBusiness' : 'LocalBusiness');
   const DAY_SCHEMA = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
