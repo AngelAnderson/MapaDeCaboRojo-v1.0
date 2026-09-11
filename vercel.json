@@ -496,6 +496,10 @@
       "destination": "/api/mapa-pages?page=funciona"
     },
     {
+      "source": "/examen",
+      "destination": "/api/mapa-pages?page=examen"
+    },
+    {
       "source": "/salud-que-falta",
       "destination": "/api/mapa-pages?page=salud-que-falta"
     },

@@ -21906,6 +21906,7 @@ const PAGE_CANONICAL: Record<string, string> = {
   'rentas': 'https://www.mapadecaborojo.com/rentas',
   'retiro': 'https://puertoricosinfiltros.com/retiro',
   'rompelo': 'https://puertoricosinfiltros.com/rompelo',
+  'examen': 'https://puertoricosinfiltros.com/examen',
   'salud-que-falta': 'https://puertoricosinfiltros.com/salud-que-falta',
   'semaforo-fema': 'https://puertoricosinfiltros.com/semaforo-fema',
   'sigue-el-dinero': 'https://puertoricosinfiltros.com/sigue-el-dinero',
@@ -22071,6 +22072,7 @@ export default async function handler(req: any, res: any) {
     case 'los-78': return await handleLos78(req, res)
     case 'funciona': return await handleFunciona(req, res)
     case 'salud-que-falta': return await handleSaludQueFalta(req, res)
+    case 'examen': return await handleExamen(req, res)
     case 'retiro': return await handleRetiro(req, res)
     case 'buscar': return handleBuscar(req, res)
     case 'buscar-ia': return await handleBuscarIa(req, res)
@@ -22132,4 +22134,219 @@ export default async function handler(req: any, res: any) {
     default:
       res.status(404).send('Page not found')
   }
+}
+
+// ============ /examen — el récord público del juez del Veci ============
+// Tier 3 del 11 sep 2026: nadie en PR ha publicado nunca que su AI se equivocó.
+// El producto no es la AI, es el estándar con el que se le cobra. Por eso esta
+// página enseña los fallos ANTES que los aciertos, declara su punto ciego, y
+// nombra el tamaño de la muestra en cada número. Un marcador que solo enseña
+// lo bueno no es un marcador, es un anuncio.
+async function handleExamen(req: any, res: any) {
+  let evals: any[] = []
+  let reglas: any[] = []
+  try {
+    const [{ data: e }, { data: r }] = await Promise.all([
+      supabase.from('evaluaciones').select('run_date,aprobado,puntuacion,fallos,intent,objeto_tipo').order('run_date', { ascending: false }).limit(3000),
+      supabase.from('reglas_evaluador').select('id,tipo,severidad,aplica_a,origen,activa').eq('activa', true).order('severidad').order('id'),
+    ])
+    evals = e || []; reglas = r || []
+  } catch (_) { /* fallback abajo */ }
+
+  const total = evals.length
+  const pass = evals.filter((x: any) => x.aprobado).length
+  const pct = total ? Math.round((pass / total) * 1000) / 10 : 0
+  const prom = total ? (evals.reduce((a: number, x: any) => a + Number(x.puntuacion || 0), 0) / total).toFixed(1) : '0'
+  const fechas = evals.map((x: any) => x.run_date).filter(Boolean).sort()
+  const desde = fechas[0] || '2026-09-08'
+  const hasta = fechas[fechas.length - 1] || desde
+  const dias = new Set(fechas).size
+
+  // fallos por regla
+  const fallo: Record<string, number> = {}
+  for (const x of evals) for (const f of (Array.isArray(x.fallos) ? x.fallos : [])) {
+    const k = String((f && f.regla) || 'otro'); fallo[k] = (fallo[k] || 0) + 1
+  }
+  const fallosOrd = Object.entries(fallo).sort((a, b) => b[1] - a[1])
+
+  // por día
+  const porDia: Record<string, { n: number; ok: number }> = {}
+  for (const x of evals) {
+    const d = x.run_date || ''; if (!d) continue
+    porDia[d] = porDia[d] || { n: 0, ok: 0 }
+    porDia[d].n++; if (x.aprobado) porDia[d].ok++
+  }
+  const dias7 = Object.entries(porDia).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 14)
+
+  // por intent
+  const porIntent: Record<string, { n: number; mal: number }> = {}
+  for (const x of evals) {
+    const k = x.intent || '(sin intent)'
+    porIntent[k] = porIntent[k] || { n: 0, mal: 0 }
+    porIntent[k].n++; if (!x.aprobado) porIntent[k].mal++
+  }
+  const intents = Object.entries(porIntent).filter(([, v]) => v.n >= 3).sort((a, b) => b[1].n - a[1].n).slice(0, 10)
+
+  const fechaLarga = (d: string) => { try { const [y, m, dd] = d.split('-').map(Number); return `${dd} ${['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'][m - 1]} ${y}` } catch (_) { return d } }
+  const SEV: Record<string, string> = { grave: 'bg-red-50 text-red-700 border-red-200', menor: 'bg-amber-50 text-amber-700 border-amber-200' }
+  const NOMBRE: Record<string, string> = {
+    correcta: 'No contestó lo que se preguntó',
+    em_dash: 'Usó la raya larga que delata a una máquina',
+    no_eres_el_negocio: 'Dejó creer que le escribía al negocio',
+    alivio: 'Le añadió peso al vecino en vez de quitárselo',
+    cinco_nunca: 'Rompió uno de los 5 NUNCA de la voz',
+    callejon_sin_salida: 'Cerró sin decirle al vecino qué hacer',
+    plan_medico_no_es_negocio: 'Trató un plan médico como si fuera un negocio',
+    aspiracional_ai: 'Habló como folleto de tecnología',
+    frase_prohibida: 'Usó una frase de vendedor',
+    numeros_en_cifra: 'Escribió el número en palabra',
+    no_profesor: 'Sonó a profesor, no a vecino',
+    plata_por_dinero: 'Dijo "plata" por dinero',
+    noelia_farmaceutica: 'Le cambió el título a una persona real',
+    firma_transparente: 'No dijo quién escribía',
+    absurdo_del_sistema: 'El chiste cayó sobre la persona, no sobre el sistema',
+    no_promete_vida: 'Prometió arreglarle la vida a alguien',
+    precio_en_publico: 'Puso un precio donde no va',
+    cta_7711_corto: 'Dio el número en formato que no funciona en todos los teléfonos',
+  }
+
+  const body = `
+<p class="text-xs text-slate-400 mb-4">Marcador vivo · puertoricosinfiltros.com/examen · se actualiza todos los días · <a href="/comparte" class="text-teal-600">datos citables</a></p>
+
+<h1>El Examen</h1>
+<p class="text-lg"><strong>Todas las noches, un juez que no escribió las respuestas le pone nota a las respuestas.</strong> El juez es otro modelo, con reglas escritas antes, y la nota se publica aquí gane o pierda. Este es el récord completo de El Veci, el asistente que contesta al 787-417-7711.</p>
+
+<div class="not-prose grid grid-cols-2 md:grid-cols-4 gap-3 my-6">
+  <div class="bg-slate-900 text-white rounded-2xl p-5"><div class="text-4xl font-black">${pct}%</div><div class="text-xs mt-1 text-slate-300">pasó el examen</div></div>
+  <div class="bg-white border border-slate-200 rounded-2xl p-5"><div class="text-4xl font-black text-slate-900">${total}</div><div class="text-xs mt-1 text-slate-500">respuestas juzgadas</div></div>
+  <div class="bg-white border border-slate-200 rounded-2xl p-5"><div class="text-4xl font-black text-slate-900">${prom}</div><div class="text-xs mt-1 text-slate-500">nota promedio de 12</div></div>
+  <div class="bg-white border border-slate-200 rounded-2xl p-5"><div class="text-4xl font-black text-slate-900">${reglas.length || 18}</div><div class="text-xs mt-1 text-slate-500">reglas activas</div></div>
+</div>
+
+<div class="not-prose bg-amber-50 border-2 border-amber-300 rounded-2xl p-5 my-6">
+  <p class="font-black text-slate-900">Lo primero, para que no haya sorpresa: mi AI falla más de lo que pasa.</p>
+  <p class="text-sm text-slate-700 mt-2">De ${total} respuestas juzgadas entre el ${fechaLarga(desde)} y el ${fechaLarga(hasta)}, pasaron ${pass}. O sea ${total - pass} no llegaron a la nota. No es un número que me conviene. Es el número que hay, y publicarlo es el punto: <strong>una AI que nadie examina no es una AI confiable, es una AI sin récord.</strong></p>
+</div>
+
+<h2 id="como">Cómo funciona el examen</h2>
+<p>Son 4 piezas, y las 4 importan por igual:</p>
+<div class="not-prose space-y-2 mt-3">
+  ${[
+    ['1. El juez no es el que escribe', 'El Veci contesta con un modelo. Al juzgarlo se usa OTRO proceso, con otro prompt, que no sabe nada de lo que el primero intentaba lograr. Pedirle a un modelo que se autoevalúe da notas altas y no significa nada.'],
+    ['2. Las reglas están escritas ANTES, y están abajo completas', 'No se inventa el criterio después de leer la respuesta. Las ' + (reglas.length || 18) + ' reglas viven en una tabla, cada una con su origen y la fecha en que se escribió. Cuando alguien corrige algo, entra una regla nueva; no se le pide al modelo que "lo haga mejor".'],
+    ['3. La nota es de 0 a 12 y se pasa con 11', 'Una falta grave tumba la respuesta aunque todo lo demás esté bien. Contestar bonito y no contestar lo que se preguntó es fallar.'],
+    ['4. Muestra chica no acusa', 'Un día con menos de 20 respuestas juzgadas sale con su número pero no se usa para decir que algo empeoró. Un porciento sobre 6 casos es ruido con cara de dato.'],
+  ].map(([t, d]) => `<div class="bg-white border border-slate-200 rounded-xl p-4"><p class="font-bold text-slate-900">${t}</p><p class="text-sm text-slate-600 mt-1">${d}</p></div>`).join('')}
+</div>
+
+<h2 id="marcador">El marcador, día por día</h2>
+<div class="not-prose overflow-auto border border-slate-200 rounded-xl mt-3">
+  <table class="w-full text-sm">
+    <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Día</th><th class="py-2 px-3 text-right">Juzgadas</th><th class="py-2 px-3 text-right">Pasaron</th><th class="py-2 px-3 text-right">%</th><th class="py-2 px-3">Muestra</th></tr></thead>
+    <tbody>${dias7.length ? dias7.map(([d, v]) => `<tr class="border-t border-slate-100"><td class="py-2 px-3">${fechaLarga(d)}</td><td class="py-2 px-3 text-right">${v.n}</td><td class="py-2 px-3 text-right">${v.ok}</td><td class="py-2 px-3 text-right font-bold ${v.ok / v.n >= 0.5 ? 'text-teal-700' : 'text-red-600'}">${Math.round((v.ok / v.n) * 100)}%</td><td class="py-2 px-3 text-xs text-slate-500">${v.n < 20 ? 'chica, no acusa' : 'suficiente'}</td></tr>`).join('') : '<tr><td colspan="5" class="py-3 px-3 text-slate-500 text-sm">Marcador en vivo no disponible ahora mismo.</td></tr>'}</tbody>
+  </table>
+</div>
+<p class="text-sm text-slate-500 mt-2">El récord empezó el ${fechaLarga(desde)}. Lleva ${dias} ${dias === 1 ? 'día' : 'días'}. Eso es poco, y por eso está dicho aquí y no escondido.</p>
+
+<h2 id="fallos">Qué fue exactamente lo que falló</h2>
+<p>No "hubo errores". Esto:</p>
+<div class="not-prose overflow-auto border border-slate-200 rounded-xl mt-3">
+  <table class="w-full text-sm">
+    <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">El fallo</th><th class="py-2 px-3">Regla</th><th class="py-2 px-3 text-right">Veces</th></tr></thead>
+    <tbody>${fallosOrd.length ? fallosOrd.map(([k, v]) => `<tr class="border-t border-slate-100"><td class="py-2 px-3">${NOMBRE[k] || k}</td><td class="py-2 px-3"><code class="text-xs text-slate-500">${k}</code></td><td class="py-2 px-3 text-right font-bold">${v}</td></tr>`).join('') : '<tr><td colspan="3" class="py-3 px-3 text-slate-500 text-sm">Sin data en vivo ahora mismo.</td></tr>'}</tbody>
+  </table>
+</div>
+<p class="text-sm text-slate-600 mt-3">El fallo número 1 no es de estilo: es <strong>no contestar lo que se preguntó</strong>. Ese es el único que importa de verdad, y es el que más sale. Los de voz (la raya larga, el número en palabra) son baratos de arreglar; ese no.</p>
+
+<h2 id="donde">Dónde falla más</h2>
+<div class="not-prose overflow-auto border border-slate-200 rounded-xl mt-3">
+  <table class="w-full text-sm">
+    <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Tipo de respuesta</th><th class="py-2 px-3 text-right">Juzgadas</th><th class="py-2 px-3 text-right">Fallaron</th></tr></thead>
+    <tbody>${intents.length ? intents.map(([k, v]) => `<tr class="border-t border-slate-100"><td class="py-2 px-3"><code class="text-xs">${k}</code></td><td class="py-2 px-3 text-right">${v.n}</td><td class="py-2 px-3 text-right font-bold ${v.mal / v.n >= 0.5 ? 'text-red-600' : 'text-slate-700'}">${v.mal}</td></tr>`).join('') : '<tr><td colspan="3" class="py-3 px-3 text-slate-500 text-sm">Sin data en vivo ahora mismo.</td></tr>'}</tbody>
+  </table>
+</div>
+<p class="text-sm text-slate-500 mt-2">Solo salen los tipos con 3 o más casos. Aquí no se publica lo que el vecino escribió: la pregunta de una persona no es dato público, y una página sobre estándares que filtra a alguien no vale nada.</p>
+
+<h2 id="reglas">Las ${reglas.length || 18} reglas, completas</h2>
+<p>Cada una salió de una corrección real, con fecha. Ninguna se escribió para que el modelo saliera bien en la foto.</p>
+<div class="not-prose overflow-auto border border-slate-200 rounded-xl mt-3">
+  <table class="w-full text-sm">
+    <thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">Regla</th><th class="py-2 px-3">Qué castiga</th><th class="py-2 px-3">Peso</th><th class="py-2 px-3">Cómo se mide</th><th class="py-2 px-3">De dónde salió</th></tr></thead>
+    <tbody>${reglas.length ? reglas.map((r: any) => `<tr class="border-t border-slate-100"><td class="py-2 px-3"><code class="text-xs">${escapeHtml(r.id)}</code></td><td class="py-2 px-3">${NOMBRE[r.id] || '—'}</td><td class="py-2 px-3"><span class="text-xs px-2 py-0.5 rounded border ${SEV[r.severidad] || 'bg-slate-50 text-slate-600 border-slate-200'}">${escapeHtml(r.severidad || '')}</span></td><td class="py-2 px-3 text-xs text-slate-500">${r.tipo === 'regex' ? 'automático' : 'a juicio del juez'}</td><td class="py-2 px-3 text-xs text-slate-500">${escapeHtml(r.origen || '')}</td></tr>`).join('') : '<tr><td colspan="5" class="py-3 px-3 text-slate-500 text-sm">Sin data en vivo ahora mismo.</td></tr>'}</tbody>
+  </table>
+</div>
+
+<h2 id="limites">Lo que este examen NO prueba</h2>
+<p>Un marcador que no declara su punto ciego es propaganda. Los 3 de este:</p>
+<ol class="mt-2">
+  <li><strong>El récord es corto.</strong> ${dias} ${dias === 1 ? 'día' : 'días'} y ${total} respuestas. Sirve para enseñar el método, no todavía para decir que El Veci mejoró o empeoró con el tiempo.</li>
+  <li><strong>El juez también se puede equivocar.</strong> Es 1 solo modelo. Cuando marca "no contestó lo que se preguntó" y en realidad sí contestó, ese falso positivo entra en el número y baja el porciento. Preferimos que baje.</li>
+  <li><strong>Esto mide el texto, no el mundo.</strong> Que una respuesta pase el examen no prueba que el negocio abrió hoy ni que el teléfono repica. Eso se mide aparte, con la fecha de verificación de cada ficha.</li>
+</ol>
+
+${shareRow({ text: `En Puerto Rico nadie publica cuándo su AI se equivoca. Este es el récord completo de la mía: ${total} respuestas juzgadas por un juez separado, ${pass} pasaron. Las reglas y los fallos, abiertos:`, url: 'https://puertoricosinfiltros.com/examen', toWho: 'Al que está decidiendo si mete AI en su operación. Al periodista que cubre tecnología. Al que ya la tiene corriendo y no sabe si funciona.' })}
+
+<h2 id="por-que">Por qué esto está público</h2>
+<p>La razón por la que en Puerto Rico casi nadie tiene AI corriendo de verdad no es que no sepan usarla. Es que <strong>nadie puede responder por lo que hizo.</strong> Si se equivoca con un paciente, con un cliente, con un expediente: no hay récord, no hay regla escrita, no hay a quién señalar. Y sin eso, la respuesta responsable de cualquier hospital, plan médico u oficina es no.</p>
+<p>Esto es lo que falta. No una herramienta más: <strong>una forma de comprobar</strong>. Las reglas de arriba se pueden copiar, discutir y mejorar. Preferimos que alguien nos diga que una está mal a que nadie mire.</p>
+
+<div class="not-prose bg-white border border-slate-200 rounded-xl p-4 mt-4">
+  <p class="font-bold text-slate-900">Si operas una AI que le habla a personas</p>
+  <p class="text-sm text-slate-600 mt-1">Lo mínimo son 3 cosas, y ninguna necesita presupuesto: un juez que no sea el que escribe · reglas escritas antes y guardadas con su fecha · el número publicado aunque salga feo. Si quieres las reglas en crudo para arrancar, <a href="mailto:angel@angelanderson.com" class="text-teal-700 font-semibold">escríbeme</a> y te las paso.</p>
+</div>
+
+<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
+  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Si tu AI nunca ha fallado, lo más probable es que nadie la esté midiendo.</p>
+  <p class="mt-2 text-sm text-slate-600 italic">Preferimos enseñar el número feo a que nos crean por la cara.</p>
+</div>
+
+<p class="text-sm text-slate-500 mt-6">Cómo se hizo: cada noche un proceso aparte (<code>evaluador-12-10</code>) toma las respuestas que El Veci le dio a vecinos reales, las pasa por las ${reglas.length || 18} reglas de la tabla pública <code>reglas_evaluador</code>, y guarda la nota y los fallos en <code>evaluaciones</code>. Esta página lee esas dos tablas en vivo. Récord desde el ${fechaLarga(desde)}. El Veci contesta en el 787-417-7711. ¿Ves un error en una regla? <a href="mailto:angel@angelanderson.com" class="text-teal-700">escríbeme</a>.</p>
+<p class="text-sm text-slate-500 mt-4">- Angel | Menos revolú, más sistema, mejor vida.</p>
+${SHARE_COPY_SCRIPT}
+`
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Report', '@id': 'https://puertoricosinfiltros.com/examen#report',
+        name: 'El Examen: el récord público del juez de El Veci',
+        about: 'Marcador abierto de una AI municipal en Puerto Rico, juzgada cada noche por un evaluador separado contra reglas escritas de antemano.',
+        author: { '@type': 'Person', name: 'Angel Anderson' },
+        publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+        inLanguage: 'es', datePublished: '2026-09-11', dateModified: hasta,
+        url: 'https://puertoricosinfiltros.com/examen',
+      },
+      {
+        '@type': 'Dataset', '@id': 'https://puertoricosinfiltros.com/examen#dataset',
+        name: 'Evaluaciones nocturnas de El Veci (Puerto Rico)',
+        description: `Récord de ${total} respuestas de un asistente de AI municipal en Puerto Rico, cada una juzgada por un evaluador separado contra ${reglas.length || 18} reglas publicadas. Incluye nota de 0 a 12, aprobación, y el detalle de qué regla falló.`,
+        creator: { '@type': 'Person', name: 'Angel Anderson' },
+        publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+        temporalCoverage: `${desde}/${hasta}`, dateModified: hasta,
+        spatialCoverage: { '@type': 'Place', name: 'Puerto Rico' },
+        variableMeasured: ['nota de 0 a 12', 'aprobado', 'regla incumplida', 'tipo de respuesta'],
+        distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/examen', encodingFormat: 'text/html' },
+        url: 'https://puertoricosinfiltros.com/examen',
+      },
+      {
+        '@type': 'FAQPage', '@id': 'https://puertoricosinfiltros.com/examen#faq',
+        mainEntity: [
+          { '@type': 'Question', name: '¿Quién juzga las respuestas de El Veci?', acceptedAnswer: { '@type': 'Answer', text: 'Un proceso separado del que escribe las respuestas, con otro prompt, que corre todas las noches y aplica reglas escritas de antemano. No es autoevaluación: pedirle a un modelo que se califique a sí mismo da notas altas que no significan nada.' } },
+          { '@type': 'Question', name: '¿Qué porciento de las respuestas pasa el examen?', acceptedAnswer: { '@type': 'Answer', text: `De ${total} respuestas juzgadas desde el ${desde}, pasaron ${pass}, o sea ${pct}%. La nota va de 0 a 12 y se pasa con 11. El fallo más común es no contestar lo que se preguntó.` } },
+          { '@type': 'Question', name: '¿Por qué publicar los fallos de tu propia AI?', acceptedAnswer: { '@type': 'Answer', text: 'Porque lo que frena la adopción de AI en Puerto Rico no es falta de herramientas, es que nadie puede responder por lo que la AI hizo. Una AI sin récord público de errores no es una AI confiable: es una AI que nadie está midiendo.' } },
+          { '@type': 'Question', name: '¿Qué NO prueba este examen?', acceptedAnswer: { '@type': 'Answer', text: 'Tres cosas: el récord es corto, el juez también puede equivocarse y sus falsos positivos bajan el porciento, y mide el texto de la respuesta, no si el negocio abrió hoy o si el teléfono repica.' } },
+        ],
+      },
+    ],
+  }
+  const ogImage = `https://puertoricosinfiltros.com/api/og?theme=sinfiltros&t=${encodeURIComponent('El|| Examen')}&k=${encodeURIComponent(`${pct}% de mi AI pasó anoche`)}&sub=${encodeURIComponent('El juez no es el que escribe. Las reglas están abajo. El número sale gane o pierda.')}&site=puertoricosinfiltros.com/examen`
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=600')
+  res.status(200).send(layout({
+    title: 'El Examen — el récord público de una AI que sí se mide',
+    description: `Todas las noches un juez separado le pone nota a El Veci contra ${reglas.length || 18} reglas escritas. De ${total} respuestas, pasaron ${pass}. Las reglas, los fallos y los límites, abiertos.`,
+    slug: 'examen', bodyHtml: body, jsonLd, ogImage,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
 }
