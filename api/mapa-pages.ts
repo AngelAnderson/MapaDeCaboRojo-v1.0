@@ -23,6 +23,7 @@ import { handleBarrios } from './_lib/barrios.js'
 import { cargarSenal, type SenalCategoria } from './_lib/la-senal.js'
 import { handleRentas } from './_lib/rentas.js'
 import { handleSuelo } from './_lib/suelo.js'
+import { quiereMarkdown, enviarMd, linkAlternoMd, pieMd } from './_lib/agente-md.js'
 
 // Hard ceiling on every PostgREST call. Without it a stalled connection hangs the
 // await forever and Vercel kills the whole function at maxDuration — that is how 34
@@ -233,6 +234,9 @@ function layout(opts: {
   canonicalHost?: string // force canonical/og base to a specific origin (SEO consolidation across domains)
   canonicalUrl?: string  // full canonical URL override (e.g. the clean root) — wins over host+slug
   lang?: 'es' | 'en'     // registry pages can render English for the diaspora
+  md?: boolean           // esta página tiene versión Markdown para agentes de IA (api/_lib/agente-md.ts).
+                         // Solo prenderlo donde el handler REALMENTE responde markdown: anunciar un
+                         // alternate que devuelve HTML es peor que no anunciarlo.
   bareTitle?: boolean    // no " · Marca" al final: en páginas que compiten en el SERP por nombre
                          // de médico o por especialidad+pueblo, esos 20 caracteres son los que
                          // Google corta, y el dominio ya sale debajo del título de todos modos.
@@ -462,6 +466,7 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <title>${escapeHtml(opts.bareTitle ? opts.title : `${opts.title} · ${brandName}`)}</title>
 <meta name="description" content="${escapeHtml(opts.description)}">
 <link rel="canonical" href="${canonical}">
+${opts.md ? linkAlternoMd(canonical) : ''}
 ${isReg ? `<link rel="alternate" hreflang="es-PR" href="${canonical}">
 <link rel="alternate" hreflang="en" href="${canonical}${canonical.includes('?') ? '&' : '?'}lang=en">
 <link rel="alternate" hreflang="x-default" href="${canonical}">` : ''}
@@ -7539,6 +7544,40 @@ ${crRow ? `<p class="not-prose mt-2 text-center text-sm text-slate-500">Cabo Roj
     .map((r: any) => ({ esp: r.especialidad, n: r.pueblos_sin_ninguno, muns: (r.municipios_sin_ninguno || []) as string[] }))
     .sort((a: any, b: any) => b.n - a.n)
 
+
+  // --- La misma pagina, en el formato que el agente lee. Mismos datos de arriba. ---
+  // El Citador (8 sep 2026) marco esta pregunta como `pagina_contesta_pero_no_cita`: la
+  // pagina tiene la respuesta y ningun modelo la cita. El fix es la forma, no el contenido.
+  if (quiereMarkdown(req)) {
+    const espSinNinguno = filasPueblo.slice(0, 14)
+      .map((r: any) => [r.esp, String(r.n), (r.muns || []).slice(0, 6).join(', ') || '—'])
+    const peores = [...barRowsData].sort((a, b) => a.por_10k_hab - b.por_10k_hab).slice(0, 10)
+      .map(m => [m.municipio, m.poblacion.toLocaleString('en-US'), String(m.especialistas), m.por_10k_hab.toFixed(1)])
+    const porRegion = Object.entries(regionScore).sort((a, b) => b[1] - a[1])
+      .map(([r, z]) => [r, String(z), `de ${REGISTRY_SPECS.length}`])
+    return enviarMd(res, {
+      pregunta: '¿Qué regiones y pueblos de Puerto Rico no tienen ciertos especialistas médicos?',
+      respuesta: `En Puerto Rico hay ${totalDeserts.length} combinaciones de especialidad y región donde el registro federal no lista ni un solo proveedor, y ${nearDeserts.length} más donde hay apenas 1 o 2. ${bajo5Munis} de los 78 municipios — ${bajo5Pob.toLocaleString('en-US')} personas, casi 1 de cada 3 — viven con menos de 5 especialistas por cada 10,000 habitantes.`,
+      contexto: `Maricao, Las Marías y Florida no tienen ni un solo especialista de ninguna clase. San Juan tiene ${sjRatio.toFixed(1)} especialistas por cada 10,000 habitantes: el 35% de todos los del país con el 10% de la gente.${crRow ? ` Cabo Rojo tiene ${crRow.especialistas} especialistas (${crRow.por_10k_hab.toFixed(1)} por 10,000), ${(sjRatio / crRow.por_10k_hab).toFixed(1)} veces menos que San Juan.` : ''}`,
+      canonical: 'https://registromedicopr.com/registro/desiertos',
+      tablas: [
+        { titulo: 'Especialidades sin ningún proveedor, por cantidad de pueblos afectados', encabezados: ['Especialidad', 'Pueblos sin ninguno', 'Algunos de esos pueblos'], filas: espSinNinguno },
+        { titulo: 'Los 10 municipios con menos especialistas por habitante', encabezados: ['Municipio', 'Población', 'Especialistas', 'Por 10,000 hab.'], filas: peores },
+        { titulo: 'Especialidades totalmente ausentes, por región', encabezados: ['Región', 'Especialidades con cero proveedores', 'Total de especialidades'], filas: porRegion, nota: 'El área metro no aparece: concentra casi todo y es la vara contra la que se mide el resto.' },
+      ],
+      verificacion: {
+        quien: 'Registro Médico PR (registromedicopr.com), proyecto de Angel Anderson',
+        cuando: 'julio 2026',  // la del DATO (NPPES x Censo 2020), no la del request: es lo mismo que dice el HTML
+        fuente: 'NPPES/CMS (registro federal de proveedores con práctica en Puerto Rico, por municipio declarado) cruzado con el Censo 2020 para población',
+        nivel: 'fuente',
+      },
+      relacionadas: [
+        { pregunta: '¿Qué médicos en Puerto Rico están aceptando pacientes nuevos?', url: 'https://registromedicopr.com/necesito' },
+        { pregunta: '¿Cómo está la salud en mi pueblo?', url: 'https://registromedicopr.com/pueblo' },
+      ],
+    })
+  }
+
   const body = `
 <h1>Los desiertos médicos de Puerto Rico</h1>
 <p class="text-lg text-slate-600 mt-3">Hay especialidades médicas que, según el registro federal, <strong>no tienen ni un solo proveedor</strong> en regiones enteras del país. No es opinión. Es el dato oficial (el mismo que usan Medicare y los planes médicos) puesto claro, por primera vez, región por región.</p>
@@ -7628,8 +7667,9 @@ ${ratioSection}
     title: 'Los desiertos médicos de Puerto Rico: regiones sin especialistas',
     description: `${totalDeserts.length} especialidades sin un solo proveedor en regiones enteras de PR, según el registro federal. La data que el gobierno tiene enterrada, puesta clara.`,
     slug: 'registro/desiertos',
-    bodyHtml: body,
+    bodyHtml: body + pieMd('https://registromedicopr.com/registro/desiertos'),
     jsonLd,
+    md: true,
     ogImage: '/og/desiertos.png',
     host: req.headers?.host,
     canonicalHost: 'https://registromedicopr.com',

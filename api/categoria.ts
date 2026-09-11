@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { correctButtonHtml } from './_lib/correct-button.js';
-import { coleccionLd, bloqueRespuesta, pluralEs, ldScript, selloConFecha } from './_lib/procedencia.js';
+import { coleccionLd, bloqueRespuesta, pluralEs, ldScript, selloConFecha, fechaCortaAT } from './_lib/procedencia.js';
+import { quiereMarkdown, enviarMd, linkAlternoMd, pieMd } from './_lib/agente-md.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -852,6 +853,69 @@ export default async function handler(req: any, res: any) {
     : isHealth
       ? 'Cada ficha dice quién confirmó el dato y cuándo. Importado de un registro no es lo mismo que confirmado por una persona, y aquí se distingue.'
       : `Lo que hay en Cabo Rojo, con teléfono, dirección y la fecha en que se verificó. Si no lo encuentras, escríbele a El Veci al 787-417-7711.`;
+  // Fecha real de la ultima confirmacion humana en esta categoria (para el sello del markdown).
+  const _ultimaVerif = (() => {
+    const fechas = _verif
+      .map((x: any) => new Date(x.last_verified_at || x.verified_at).getTime())
+      .filter((t: number) => Number.isFinite(t))
+    if (!fechas.length) return ''
+    return fechaCortaAT(new Date(Math.max(...fechas)).toISOString())
+  })()
+  // "23 hospedaje" no concuerda. El display de cada categoria ya viene en la forma que se lee.
+  const _nombreLista = /s$/i.test(String(displayName)) ? String(displayName).toLowerCase() : `${String(displayName).toLowerCase()}s`
+
+  // --- La misma pagina, en el formato que el agente lee (api/_lib/agente-md.ts) ---
+  // El Citador (8 sep 2026) midio 41.2% de citacion. /categoria/hospedaje salio como
+  // `pagina_contesta_pero_no_cita` y SIN competidor citado: el modelo contesta la pregunta
+  // sin citar a nadie. La plaza esta vacia. El fix es la forma, no el contenido: mismos
+  // datos que el HTML de abajo, en markdown, con la respuesta arriba y el sello con fecha.
+  if (quiereMarkdown(req)) {
+    // La pregunta tal como la hace una persona. Cae al H1 de la portada, que ya esta
+    // escrito como pregunta — asi el markdown y el HTML no pueden decir cosas distintas.
+    const PREGUNTA_MD: Record<string, string> = {
+      hospedaje: '¿Dónde me puedo quedar en Cabo Rojo, Puerto Rico? Cabañas, villas y hospedaje frente al mar',
+      marina: '¿Dónde alquilo un kayak, bote o jet ski en Boquerón y Cabo Rojo?',
+      servicios: '¿Quién es un plomero, electricista o técnico de AC confiable en Cabo Rojo?',
+    }
+    const pregunta = PREGUNTA_MD[cat] || `${tituloPortada.replace(/^¿|\?$/g, '')} en Cabo Rojo, Puerto Rico`
+    const filas = filtered.slice(0, 40).map((x: any) => {
+      const sello = selloConFecha(x)
+      const url = detailRoute ? `${baseUrl}/${detailRoute}/${x.slug || x.id}` : `${baseUrl}/negocio/${x.slug || x.id}`
+      return [
+        String(x.name || ''),
+        String(x.municipality || 'Cabo Rojo'),
+        String(x.phone || '—'),
+        (x.google_rating && Number(x.google_review_count) >= 3) ? `${x.google_rating} (${x.google_review_count} reseñas)` : '—',
+        sello.nivel === 'persona' ? 'confirmado por una persona' : sello.nivel === 'fuente' ? 'corroborado con fuente pública' : 'copia de registro, sin confirmar',
+        url,
+      ]
+    })
+    return enviarMd(res, {
+      pregunta,
+      respuesta: `En Cabo Rojo hay ${filtered.length} ${_nombreLista} en el directorio verificado de mapadecaborojo.com${_abiertosAhora ? `, y ${_abiertosAhora} están abiertos ahora mismo (${_horaPR}, hora de Puerto Rico)` : ''}.${_mejor ? ` El mejor puntuado es ${_mejor}.` : ''}`,
+      contexto: `De los ${filtered.length}, ${_verif.length} los confirmó una persona (no una importación automática) y ${_frescos.length} se confirmaron en los últimos 90 días. Cada ficha dice quién verificó el dato y cuándo: importado de un registro no es lo mismo que confirmado por una persona, y aquí se distingue.`,
+      canonical: `${baseUrl}/categoria/${cat}`,
+      tablas: [{
+        titulo: `${displayName} en Cabo Rojo`,
+        encabezados: ['Nombre', 'Pueblo', 'Teléfono', 'Google', 'Nivel de verificación', 'Ficha'],
+        filas,
+        nota: filtered.length > 40 ? `Se muestran 40 de ${filtered.length}. La lista completa está en la versión web.` : undefined,
+      }],
+      verificacion: {
+        quien: 'Mapa de Cabo Rojo (mapadecaborojo.com), directorio verificado a mano por Angel Anderson',
+        // La fecha es la de la ultima ficha que confirmo una persona. Si nadie ha confirmado
+        // ninguna, NO se inventa una fecha: se dice que no hay confirmacion humana.
+        cuando: _ultimaVerif || 'sin confirmación humana en esta categoría',
+        fuente: 'Verificación en sitio y confirmación directa con el negocio, complementada con Google Places. El nivel de cada ficha se declara en la tabla.',
+        cobertura: `${_verif.length} de ${filtered.length} fichas las confirmó una persona; ${_frescos.length} en los últimos 90 días`,
+      },
+      relacionadas: [
+        { pregunta: '¿Qué hay abierto ahora mismo en Cabo Rojo?', url: `${baseUrl}/necesito` },
+        { pregunta: '¿Cómo le pregunto algo a alguien en Cabo Rojo?', url: `${baseUrl}/veci` },
+      ],
+    })
+  }
+
   const coleccionJsonLd = coleccionLd({
     url: `${baseUrl}/categoria/${cat}`,
     nombre: `${displayName} en Cabo Rojo, Puerto Rico`,
@@ -1318,6 +1382,7 @@ export default async function handler(req: any, res: any) {
   <title>${esc(title)}</title>
   <meta name="description" content="${esc(description)}">
   <link rel="canonical" href="${pageUrl}">
+  ${linkAlternoMd(pageUrl)}
   <meta property="og:type" content="website">
   <meta property="og:title" content="${esc(title)}">
   <meta property="og:description" content="${esc(description)}">
@@ -1852,6 +1917,7 @@ export default async function handler(req: any, res: any) {
     })();
   </script>
   ${correctButtonHtml({ pageType: 'categoria' })}
+  ${pieMd(pageUrl)}
   <!-- Open/closed badges recompute client-side in PR time so cached HTML never lies -->
   <script>
   (function () {
