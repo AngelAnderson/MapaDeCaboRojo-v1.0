@@ -5569,6 +5569,13 @@ async function handleRegistro(req: any, res: any) {
     <a href="https://wa.me/17874177711?text=Quiero%20ayudar%20a%20verificar" class="inline-flex items-center gap-2 mt-3 bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold px-5 py-2.5 rounded-full text-sm">💬 ${t('Quiero ayudar a verificar', 'I want to help verify')}</a>
     <span class="block text-xs text-slate-400 mt-2">${t('Te contesta El Veci por WhatsApp al 787-417-7711. Gratis, sin cuenta.', 'El Veci answers on WhatsApp at 787-417-7711. Free, no account.')}</span>
   </div>
+  <!-- Apuesta ficha-confirmada-oficina (2026-09-10): la oficina que confirma sus datos sale con la
+       fecha de hoy. Sin precio en la página (Capa Discovery 2026-08-27): lo que se paga se conversa 1-a-1. -->
+  <div class="mt-3 bg-white text-slate-900 rounded-xl p-5">
+    <p class="font-black m-0">${t('¿Es tu oficina? Confírmala.', 'Is this your office? Confirm it.')}</p>
+    <p class="text-slate-600 text-sm mt-1 m-0">${t('Un texto desde el teléfono de la oficina: teléfono, planes que aceptan y si están cogiendo pacientes nuevos. Sale publicado con la fecha de hoy, arriba de lo que dice el registro federal. Confirmar es gratis.', 'One text from the office phone: phone number, accepted plans, and whether you are taking new patients. Published with today\'s date, above what the federal registry says. Confirming is free.')}</p>
+    <a href="https://wa.me/17874177711?text=CONFIRMA" class="inline-flex items-center gap-2 mt-3 bg-teal-700 hover:bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm">🩺 ${t('Textea CONFIRMA al 787-417-7711', 'Text CONFIRMA to 787-417-7711')}</a>
+  </div>
 </div>
 
 <h2>${t('¿Cuál es tu situación?', 'What is your situation?')}</h2>
@@ -18857,6 +18864,13 @@ ${info.note ? `<p class="text-sm text-slate-500 mt-1"><i class="fa-solid fa-circ
     bodyT += `<p class="not-prose mt-4 text-sm"><a href="/registro/${specUrl}${lp}" class="text-teal-700 font-semibold">${t(`Ver los ${x.t} ${escapeHtml(x.l.toLowerCase())} de toda la isla →`, `See all ${x.t} ${escapeHtml(labelLow)} across the island →`)}</a></p>
 ${antesDeLlamar({ specLabel: x.l, en })}
 <div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white"><p class="text-lg font-bold mb-1">${t('¿No sabes a cuál ir?', 'Not sure which one to see?')}</p><p class="text-sm text-teal-100 mb-4">${t('Escríbele al Veci. Te dice quién hay cerca y sus teléfonos. Al', 'Text El Veci. He tells you who is nearby and their phone numbers. At')} <strong>${PHONE_CTA}</strong>:</p><a href="https://wa.me/17874177711?text=${x.kw}" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${x.kw}</a></div>
+<!-- Apuesta ficha-confirmada-oficina (2026-09-10): la oficina que confirma sus datos sale con la fecha
+     de hoy. Sin precio en la página (Capa Discovery 2026-08-27): lo que se paga se conversa 1-a-1. -->
+<div class="not-prose mt-4 bg-white border-2 border-teal-700 rounded-2xl p-5">
+  <p class="font-black text-slate-900 m-0">${t('¿Es tu oficina? Confírmala.', 'Is this your office? Confirm it.')}</p>
+  <p class="text-slate-600 text-sm mt-1 m-0">${t('Un texto desde el teléfono de la oficina: teléfono, planes que aceptan y si están cogiendo pacientes nuevos. Sale publicado con la fecha de hoy, arriba de lo que dice el registro federal. Confirmar es gratis.', "One text from the office phone: phone number, accepted plans, and whether you are taking new patients. Published with today's date, above what the federal registry says. Confirming is free.")}</p>
+  <a href="https://wa.me/17874177711?text=CONFIRMA" class="inline-flex items-center gap-2 mt-3 bg-teal-700 hover:bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm">🩺 ${t('Textea CONFIRMA al 787-417-7711', 'Text CONFIRMA to 787-417-7711')}</a>
+</div>
 ${regDisclaimer(en)}`
     const canonicalPathT = `registro/${specUrl}/${muniSlug}`
     const allT = [...inTown, ...nearby]
