@@ -348,23 +348,23 @@ export default async function handler(req: any, res: any) {
     },
     cardiologo: {
       title: 'Cardiólogos en Cabo Rojo y el Oeste de PR — Verificados, con teléfono',
-      description: `Cardiólogos en Cabo Rojo, Mayagüez, San Germán, Aguadilla y todo el oeste de Puerto Rico — ${filtered.length} verificados en el registro federal NPPES, con nombre, pueblo y teléfono. PR tiene 339 cardiólogos y más de la mitad están en San Juan; aquí están los del oeste.`,
-      intro: `El corazón no espera, y en el oeste hay pocos cardiólogos — por eso casi todos hay que buscarlos por teléfono. Aquí tienes ${filtered.length} cardiólogos del oeste (Cabo Rojo, Mayagüez, San Germán, Aguadilla, Añasco y más), verificados uno por uno, con su teléfono. Llama antes de ir para confirmar tu plan médico. ¿Buscas en otro pueblo? Escríbele CARDIOLOGO a El Veci al 787-417-7711.`,
+      description: `Cardiólogos en Cabo Rojo, Mayagüez, San Germán, Aguadilla y todo el oeste de Puerto Rico — ${filtered.length} del registro federal NPPES, con nombre, pueblo y teléfono. PR tiene 339 cardiólogos y más de la mitad están en San Juan; aquí están los del oeste.`,
+      intro: `El corazón no espera, y en el oeste hay pocos cardiólogos — por eso casi todos hay que buscarlos por teléfono. Aquí tienes ${filtered.length} cardiólogos del oeste (Cabo Rojo, Mayagüez, San Germán, Aguadilla, Añasco y más), del registro federal NPPES, con su teléfono. Llama antes de ir para confirmar tu plan médico. ¿Buscas en otro pueblo? Escríbele CARDIOLOGO a El Veci al 787-417-7711.`,
     },
     cardiologos: {
       title: 'Cardiólogos en Cabo Rojo y el Oeste de PR — Verificados, con teléfono',
-      description: `Cardiólogos en Cabo Rojo, Mayagüez, San Germán, Aguadilla y todo el oeste de Puerto Rico — ${filtered.length} verificados en el registro federal NPPES, con nombre, pueblo y teléfono. PR tiene 339 cardiólogos y más de la mitad están en San Juan; aquí están los del oeste.`,
-      intro: `El corazón no espera, y en el oeste hay pocos cardiólogos — por eso casi todos hay que buscarlos por teléfono. Aquí tienes ${filtered.length} cardiólogos del oeste (Cabo Rojo, Mayagüez, San Germán, Aguadilla, Añasco y más), verificados uno por uno, con su teléfono. Llama antes de ir para confirmar tu plan médico. ¿Buscas en otro pueblo? Escríbele CARDIOLOGO a El Veci al 787-417-7711.`,
+      description: `Cardiólogos en Cabo Rojo, Mayagüez, San Germán, Aguadilla y todo el oeste de Puerto Rico — ${filtered.length} del registro federal NPPES, con nombre, pueblo y teléfono. PR tiene 339 cardiólogos y más de la mitad están en San Juan; aquí están los del oeste.`,
+      intro: `El corazón no espera, y en el oeste hay pocos cardiólogos — por eso casi todos hay que buscarlos por teléfono. Aquí tienes ${filtered.length} cardiólogos del oeste (Cabo Rojo, Mayagüez, San Germán, Aguadilla, Añasco y más), del registro federal NPPES, con su teléfono. Llama antes de ir para confirmar tu plan médico. ¿Buscas en otro pueblo? Escríbele CARDIOLOGO a El Veci al 787-417-7711.`,
     },
     cardiologia: {
       title: 'Cardiólogos en Cabo Rojo y el Oeste de PR — Verificados, con teléfono',
-      description: `Cardiólogos en Cabo Rojo, Mayagüez, San Germán, Aguadilla y todo el oeste de Puerto Rico — ${filtered.length} verificados en el registro federal NPPES, con nombre, pueblo y teléfono. PR tiene 339 cardiólogos y más de la mitad están en San Juan; aquí están los del oeste.`,
-      intro: `El corazón no espera, y en el oeste hay pocos cardiólogos — por eso casi todos hay que buscarlos por teléfono. Aquí tienes ${filtered.length} cardiólogos del oeste (Cabo Rojo, Mayagüez, San Germán, Aguadilla, Añasco y más), verificados uno por uno, con su teléfono. Llama antes de ir para confirmar tu plan médico. ¿Buscas en otro pueblo? Escríbele CARDIOLOGO a El Veci al 787-417-7711.`,
+      description: `Cardiólogos en Cabo Rojo, Mayagüez, San Germán, Aguadilla y todo el oeste de Puerto Rico — ${filtered.length} del registro federal NPPES, con nombre, pueblo y teléfono. PR tiene 339 cardiólogos y más de la mitad están en San Juan; aquí están los del oeste.`,
+      intro: `El corazón no espera, y en el oeste hay pocos cardiólogos — por eso casi todos hay que buscarlos por teléfono. Aquí tienes ${filtered.length} cardiólogos del oeste (Cabo Rojo, Mayagüez, San Germán, Aguadilla, Añasco y más), del registro federal NPPES, con su teléfono. Llama antes de ir para confirmar tu plan médico. ¿Buscas en otro pueblo? Escríbele CARDIOLOGO a El Veci al 787-417-7711.`,
     },
     'cardiología': {
       title: 'Cardiólogos en Cabo Rojo y el Oeste de PR — Verificados, con teléfono',
-      description: `Cardiólogos en Cabo Rojo, Mayagüez, San Germán, Aguadilla y todo el oeste de Puerto Rico — ${filtered.length} verificados en el registro federal NPPES, con nombre, pueblo y teléfono. PR tiene 339 cardiólogos y más de la mitad están en San Juan; aquí están los del oeste.`,
-      intro: `El corazón no espera, y en el oeste hay pocos cardiólogos — por eso casi todos hay que buscarlos por teléfono. Aquí tienes ${filtered.length} cardiólogos del oeste (Cabo Rojo, Mayagüez, San Germán, Aguadilla, Añasco y más), verificados uno por uno, con su teléfono. Llama antes de ir para confirmar tu plan médico. ¿Buscas en otro pueblo? Escríbele CARDIOLOGO a El Veci al 787-417-7711.`,
+      description: `Cardiólogos en Cabo Rojo, Mayagüez, San Germán, Aguadilla y todo el oeste de Puerto Rico — ${filtered.length} del registro federal NPPES, con nombre, pueblo y teléfono. PR tiene 339 cardiólogos y más de la mitad están en San Juan; aquí están los del oeste.`,
+      intro: `El corazón no espera, y en el oeste hay pocos cardiólogos — por eso casi todos hay que buscarlos por teléfono. Aquí tienes ${filtered.length} cardiólogos del oeste (Cabo Rojo, Mayagüez, San Germán, Aguadilla, Añasco y más), del registro federal NPPES, con su teléfono. Llama antes de ir para confirmar tu plan médico. ¿Buscas en otro pueblo? Escríbele CARDIOLOGO a El Veci al 787-417-7711.`,
     },
     gimnasio: {
       title: 'Gimnasios y Fitness en Cabo Rojo',
@@ -431,12 +431,12 @@ export default async function handler(req: any, res: any) {
     helados: {
       title: 'Heladerías en Cabo Rojo, dónde comer helados y mantecado',
       description: `${filtered.length} heladerías y sitios de mantecado en Cabo Rojo, PR, con dirección, horario y rating real. Mira cuál está abierto antes de salir con el calor.`,
-      intro: `Con el calor de Cabo Rojo, un helado no se discute. Aquí tienes ${filtered.length} heladerías y sitios de mantecado verificados, con su pueblo, horario y rating real, pa' que no llegues y esté cerrado. ¿Buscas algo cerca ahora mismo? Escríbele HELADOS a El Veci al 787-417-7711.`,
+      intro: `Con el calor de Cabo Rojo, un helado no se discute. Aquí tienes ${filtered.length} heladerías y sitios de mantecado con su pueblo, horario y rating real, pa' que no llegues y esté cerrado. ¿Buscas algo cerca ahora mismo? Escríbele HELADOS a El Veci al 787-417-7711.`,
     },
     panaderia: {
       title: 'Panaderías y Reposterías en Cabo Rojo',
       description: `${filtered.length} panaderías y reposterías en Cabo Rojo, PR. Pan caliente, bizcochos y repostería por encargo, con teléfono y horario.`,
-      intro: `El pan de la mañana y el bizcocho del cumpleaños salen de aquí. ${filtered.length} panaderías y reposterías de Cabo Rojo verificadas, con teléfono pa' encargar y horario pa' que no llegues tarde. ¿Necesitas un bizcocho pa' este finde? Escríbele PANADERIA a El Veci al 787-417-7711.`,
+      intro: `El pan de la mañana y el bizcocho del cumpleaños salen de aquí. ${filtered.length} panaderías y reposterías de Cabo Rojo, con teléfono pa' encargar y horario pa' que no llegues tarde. ¿Necesitas un bizcocho pa' este finde? Escríbele PANADERIA a El Veci al 787-417-7711.`,
     },
     pizza: {
       title: 'Pizzerías en Cabo Rojo, dónde comer pizza',
@@ -446,17 +446,17 @@ export default async function handler(req: any, res: any) {
     mariscos: {
       title: 'Restaurantes de Mariscos en Cabo Rojo, de Joyuda a Boquerón',
       description: `${filtered.length} restaurantes de mariscos y pescado fresco en Cabo Rojo, PR, con dirección, horario y rating. Joyuda, Boquerón y El Combate.`,
-      intro: `Cabo Rojo es mariscos: Joyuda, Boquerón, El Combate. Aquí tienes ${filtered.length} restaurantes de mariscos verificados, con su zona, horario y rating real, pa' que escojas con calma y no por el primer letrero. ¿Cuál tiene vista al mar y está abierto? Escríbele MARISCOS a El Veci al 787-417-7711.`,
+      intro: `Cabo Rojo es mariscos: Joyuda, Boquerón, El Combate. Aquí tienes ${filtered.length} restaurantes de mariscos con su zona, horario y rating real, pa' que escojas con calma y no por el primer letrero. ¿Cuál tiene vista al mar y está abierto? Escríbele MARISCOS a El Veci al 787-417-7711.`,
     },
     lavanderia: {
       title: 'Lavanderías en Cabo Rojo, laundromats abiertos',
       description: `${filtered.length} lavanderías y laundromats en Cabo Rojo, PR, con dirección y horario. La utilidad que nadie te dice dónde queda, aquí sí.`,
-      intro: `Buscar una lavandería en un pueblo nuevo es un dolor de cabeza, y Google casi nunca lo resuelve. Aquí tienes ${filtered.length} lavanderías y laundromats de Cabo Rojo con su dirección y horario, verificados. ¿La más cerca de ti? Escríbele LAVANDERIA a El Veci al 787-417-7711.`,
+      intro: `Buscar una lavandería en un pueblo nuevo es un dolor de cabeza, y Google casi nunca lo resuelve. Aquí tienes ${filtered.length} lavanderías y laundromats de Cabo Rojo con su dirección y horario. ¿La más cerca de ti? Escríbele LAVANDERIA a El Veci al 787-417-7711.`,
     },
     cafe: {
       title: 'Cafés y Brunch en Cabo Rojo',
       description: `${filtered.length} cafés y sitios de brunch en Cabo Rojo, PR, con horario y rating real. Café de la mañana, desayuno tarde y buen ambiente.`,
-      intro: `Un buen café o un brunch sin prisa cambian el día. Aquí tienes ${filtered.length} cafés y sitios de brunch de Cabo Rojo verificados, con horario y rating real. ¿Cuál abre temprano cerca de ti? Escríbele CAFE a El Veci al 787-417-7711.`,
+      intro: `Un buen café o un brunch sin prisa cambian el día. Aquí tienes ${filtered.length} cafés y sitios de brunch de Cabo Rojo, con horario y rating real. ¿Cuál abre temprano cerca de ti? Escríbele CAFE a El Veci al 787-417-7711.`,
     },
     barberia: {
       title: 'Barberías en Cabo Rojo',
@@ -466,7 +466,7 @@ export default async function handler(req: any, res: any) {
     peluqueria: {
       title: 'Peluquerías y Salones de Belleza en Cabo Rojo',
       description: `${filtered.length} peluquerías y salones en Cabo Rojo, PR, con teléfono y horario. Corte, color, uñas y más, con rating real.`,
-      intro: `Aquí tienes ${filtered.length} peluquerías y salones de Cabo Rojo verificados, con teléfono pa' coger cita y rating real. ¿Cuál te queda cerca y tiene buena reseña? Escríbele PELUQUERIA a El Veci al 787-417-7711.`,
+      intro: `Aquí tienes ${filtered.length} peluquerías y salones de Cabo Rojo, con teléfono pa' coger cita y rating real. ¿Cuál te queda cerca y tiene buena reseña? Escríbele PELUQUERIA a El Veci al 787-417-7711.`,
     },
     imprenta: {
       title: 'Imprentas y Rotulación en Cabo Rojo, flyers, banners y letreros',
@@ -538,7 +538,7 @@ export default async function handler(req: any, res: any) {
     CATEGORY_SEO.restaurante = CATEGORY_SEO.restaurantes = {
       title: 'Restaurantes en Cabo Rojo — Joyuda, Boquerón, El Combate y el pueblo',
       description: `${filtered.length} restaurantes en Cabo Rojo, PR con teléfono, horario y rating real. Mariscos en Joyuda, ambiente en Boquerón, atardecer en El Combate y la comida criolla del pueblo — mira cuál está abierto antes de salir.`,
-      intro: `En Cabo Rojo se come por zona: mariscos frente al mar en Joyuda, el ambiente del poblado de Boquerón, el atardecer de El Combate y la comida criolla del pueblo. Aquí tienes ${filtered.length} restaurantes verificados con teléfono, horario y rating real — filtra por zona, mira cuál está abierto ahora, y llama antes de dar la vuelta en balde. ¿No sabes cuál escoger? Escríbele COMIDA a El Veci al 787-417-7711.`,
+      intro: `En Cabo Rojo se come por zona: mariscos frente al mar en Joyuda, el ambiente del poblado de Boquerón, el atardecer de El Combate y la comida criolla del pueblo. Aquí tienes ${filtered.length} lugares para comer con teléfono, horario y rating real — filtra por zona, mira cuál está abierto ahora, y llama antes de dar la vuelta en balde. ¿No sabes cuál escoger? Escríbele COMIDA a El Veci al 787-417-7711.`,
     };
   }
   if (cat === 'farmacias' && CATEGORY_SEO.farmacia) CATEGORY_SEO.farmacias = CATEGORY_SEO.farmacia;
@@ -792,6 +792,28 @@ export default async function handler(req: any, res: any) {
     })[0];
   })();
   const _mejor = _mejorPuntuado?.name || null;
+
+  // ── El orden de la lista usa la MISMA regla que "el mejor puntuado" ──
+  // La consulta ordenaba por google_rating ANTES que por resenas, asi que un
+  // 5.0 de 1 resena le ganaba a un 4.9 de 203. Se reordena con el promedio
+  // ponderado; los patrocinadores siguen primero y eso se dice en la pagina.
+  if (!isSaludUmbrella) {
+    const conR = filtered.filter((p: any) => p.google_rating && Number(p.google_rating) > 0);
+    const M = 25;
+    const media = conR.length ? conR.reduce((a: number, p: any) => a + Number(p.google_rating), 0) / conR.length : 0;
+    const puntaje = (p: any) => {
+      if (!p.google_rating) return -1;
+      const n = Number(p.google_review_count) || 0;
+      return (n * Number(p.google_rating) + M * media) / (n + M);
+    };
+    filtered.sort((a: any, b: any) => {
+      const sw = (Number(b.sponsor_weight) || 0) - (Number(a.sponsor_weight) || 0);
+      if (sw) return sw;
+      const d = puntaje(b) - puntaje(a);
+      if (d) return d;
+      return (Number(b.google_review_count) || 0) - (Number(a.google_review_count) || 0);
+    });
+  }
   // Lo que esta abierto AHORA es la respuesta; el total es solo inventario.
   // deno-lint-ignore no-explicit-any
   const _abiertosAhora = filtered.filter((p: any) => (getOpenStatusLabel(p.opening_hours) || '').startsWith('\u{1F7E2}')).length;
@@ -800,12 +822,33 @@ export default async function handler(req: any, res: any) {
     const h = d.getUTCHours(), m = d.getUTCMinutes();
     return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
   })();
+  // ── La portada contesta la pregunta, no describe la base de datos ──
+  // "Restaurantes en Cabo Rojo" es el nombre de una tabla. La gente no llega
+  // buscando un directorio: llega con una pregunta y una hora.
+  const PREGUNTA_H1: Record<string, string> = {
+    restaurante: '¿Dónde comer en Cabo Rojo ahora?', restaurantes: '¿Dónde comer en Cabo Rojo ahora?',
+    mariscos: '¿Dónde comer mariscos ahora?', pizza: '¿Quién tiene pizza abierta ahora?',
+    cafe: '¿Dónde desayunar en Cabo Rojo?', panaderia: '¿Qué panadería está abierta?',
+    helados: '¿Dónde hay helado ahora mismo?',
+    farmacia: '¿Qué farmacia está abierta ahora?', farmacias: '¿Qué farmacia está abierta ahora?',
+    dentista: '¿Qué dentista te puede ver?', dentistas: '¿Qué dentista te puede ver?',
+    hospital: '¿A dónde vas si es ahora?', hospitales: '¿A dónde vas si es ahora?',
+    veterinario: '¿Qué veterinario está abierto?', veterinarios: '¿Qué veterinario está abierto?',
+    laboratorio: '¿Dónde te hacen el laboratorio?', laboratorios: '¿Dónde te hacen el laboratorio?',
+    lavanderia: '¿Qué lavandería está abierta?',
+    barberia: '¿Quién te corta el pelo hoy?', peluqueria: '¿Quién te atiende hoy?',
+    playas: '¿A qué playa vas hoy?', playa: '¿A qué playa vas hoy?',
+    gimnasio: '¿Qué gimnasio está abierto?', gimnasios: '¿Qué gimnasio está abierto?',
+  };
+  const tituloPortada = PREGUNTA_H1[cat]
+    || `¿${alreadyHasCaboRojo ? esc(displayName) : `${esc(displayName)} en Cabo Rojo`}?`;
+
   // Una linea, no el meta description de 160 caracteres. Dice de que va el
   // sitio, no repite el titulo.
   // Cortar a los N caracteres partia nombres a media palabra ("JOYUD").
   const recorta = (t: string, n: number) => t.length <= n ? t : t.slice(0, n).replace(/[\s\-–·]+\S*$/, '') + '…';
   const subtituloPortada = isRestaurant
-    ? 'Aquí se come por zona: mariscos frente al mar en Joyuda, el poblado de Boquerón, el atardecer de El Combate y la comida criolla del pueblo.'
+    ? `${filtered.length} lugares para comer. Mira cuáles están abiertos, compáralos y evita la vuelta en balde. Aquí se come por zona: Joyuda, Boquerón, El Combate y el pueblo.`
     : isHealth
       ? 'Cada ficha dice quién confirmó el dato y cuándo. Importado de un registro no es lo mismo que confirmado por una persona, y aquí se distingue.'
       : `Lo que hay en Cabo Rojo, con teléfono, dirección y la fecha en que se verificó. Si no lo encuentras, escríbele a El Veci al 787-417-7711.`;
@@ -885,7 +928,7 @@ export default async function handler(req: any, res: any) {
     const singular = CAPTURE_SINGULAR[captureKey];
     faqItems = [
       CAPTURE_URGENT_FAQ[captureKey],
-      { q: `¿Cuántos ${displayName.toLowerCase()} hay en Cabo Rojo?`, a: `Hay ${filtered.length} ${displayName.toLowerCase()} listados en Cabo Rojo en MapaDeCaboRojo.com, con teléfono y rating verificados.` },
+      { q: `¿Cuántos ${displayName.toLowerCase()} hay en Cabo Rojo?`, a: `Hay ${filtered.length} ${displayName.toLowerCase()} listados en Cabo Rojo en MapaDeCaboRojo.com, con teléfono y rating. De esos, ${_verif.length} los confirmó una persona; el resto sale de registros públicos y de Google.` },
       ...(topRated ? [{ q: `¿Cuál es el ${singular} mejor evaluado en Cabo Rojo?`, a: `${topRated.name} tiene ${topRated.google_rating}/5 estrellas${topRated.google_review_count ? ` (${topRated.google_review_count} reseñas)` : ''}.` }] : []),
       { q: `¿Cómo encuentro un ${singular} cerca de mí en Cabo Rojo?`, a: `Explora la lista aquí en MapaDeCaboRojo.com o textea "${displayName}" al 787-417-7711 para que El Veci te recomiende al momento.` },
     ];
@@ -971,7 +1014,11 @@ export default async function handler(req: any, res: any) {
         const locHtml = (servesCR && !inCR)
           ? `<p class="ficha-dir">${esc(p.municipality || '')}${p.municipality ? ' · ' : ''}<span style="color:var(--salinas);font-weight:600;">sirve Cabo Rojo</span></p>`
           : (p.address ? `<p class="ficha-dir">${esc(p.address)}</p>` : '');
-        const planBadge = p.plan === 'vip' ? '<span style="background:#f97316;color:white;font-size:0.65rem;padding:0.15rem 0.4rem;border-radius:999px;text-transform:uppercase;margin-left:0.4rem;">VIP</span>' : '';
+        const planBadge = p.plan === 'vip'
+          ? '<span style="background:var(--salinas);color:#fff;font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;padding:3px 8px;border-radius:999px;text-transform:uppercase;margin-left:6px;vertical-align:middle;">Cliente</span>'
+          : (Number(p.sponsor_weight) > 0
+              ? '<span style="background:var(--arena-suave);color:var(--piedra-honda);border:1px solid var(--arena);font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;padding:3px 8px;border-radius:999px;text-transform:uppercase;margin-left:6px;vertical-align:middle;" title="Lo subimos a mano en el orden; no pagó por estar ahí">Destacado</span>'
+              : '');
         const detailPath = detailRoute ? `${baseUrl}/${detailRoute}/${esc(slug)}` : `${baseUrl}/negocio/${esc(slug)}`;
         const phoneInfo = normalizePhone(p.phone);
         const contactBlock = phoneInfo
@@ -1144,7 +1191,8 @@ export default async function handler(req: any, res: any) {
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin:0.35rem 0 0.85rem;">
         ${FOOD_SUBPAGES.map(s => `<a href="${baseUrl}/categoria/${s.slug}" style="display:inline-flex;align-items:center;gap:5px;background:white;border:1px solid #cbd5e1;border-radius:20px;padding:5px 13px;font-size:0.82rem;color:#334155;text-decoration:none;">${s.emoji} ${esc(s.label)} →</a>`).join('')}
       </div>
-      <a class="triage-veci" href="https://wa.me/17874177711?text=${encodeURIComponent('COMIDA: ')}">¿Antojo y no sabes dónde? Dile a El Veci → 787-417-7711</a>
+      <p style="font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--piedra-honda);margin:18px 0 0;line-height:1.7;">Cómo se ordena: la nota de Google pesada por cuántas reseñas la sostienen. Un 5 de 3 reseñas no le gana a un 4.9 de 200. Arriba van los <strong>Destacados</strong>, que subimos a mano y llevan su etiqueta: ninguno pagó por ese puesto.</p>
+      <a class="triage-veci" href="https://wa.me/17874177711?text=${encodeURIComponent('COMIDA: ')}">No escojas entre ${filtered.length}. Dile a El Veci qué quieres comer y te da 3 opciones abiertas → 787-417-7711</a>
     </div>
     <style>
       /* Paleta del sistema (DESIGN.md). Antes: degradado ambar + naranja
@@ -1171,6 +1219,29 @@ export default async function handler(req: any, res: any) {
         var chk = document.getElementById('open-now-chk');
         var countEl = document.getElementById('result-count');
         if (!typeWrap || !zoneWrap) return;
+
+        // Atajos de la portada: no duplican logica de filtrado, mueven el estado
+        // que ya existe y bajan a la rejilla. Si manana cambia un filtro, esto
+        // sigue sirviendo porque hace click en la misma pastilla que el humano.
+        var atajos = document.querySelectorAll('[data-salto]');
+        for (var a=0;a<atajos.length;a++){
+          atajos[a].addEventListener('click', function(){
+            var v = this.getAttribute('data-salto') || '';
+            var destino = document.querySelector('.grid');
+            if (v === 'abierto') {
+              if (chk) { chk.checked = true; state.open = true; apply(); }
+            } else if (v === 'filtros') {
+              destino = typeWrap.closest('.triage') || typeWrap;
+            } else if (v.indexOf('tipo:') === 0) {
+              var bt = typeWrap.querySelector('[data-type-filter="' + v.slice(5) + '"]');
+              if (bt) bt.click(); else destino = typeWrap;
+            } else if (v.indexOf('zona:') === 0) {
+              var bz = zoneWrap.querySelector('[data-zone-filter="' + v.slice(5) + '"]');
+              if (bz) bz.click(); else destino = zoneWrap;
+            }
+            if (destino) destino.scrollIntoView({ behavior:'smooth', block:'start' });
+          });
+        }
         function apply(){
           var cards = document.querySelectorAll('.grid [data-type]');
           var shown = 0;
@@ -1213,6 +1284,7 @@ export default async function handler(req: any, res: any) {
           open.concat(rest).forEach(function(c){ grid.appendChild(c); });
           var n = document.getElementById('open-count'); if (n) n.textContent = open.length + (open.length === 1 ? ' abierto ahora mismo' : ' abiertos ahora mismo') + ' · arriba';
           var hn = document.getElementById('hero-abiertos'); if (hn) hn.textContent = String(open.length);
+          var an = document.getElementById('atajo-n'); if (an) an.textContent = String(open.length);
         }
         if (document.readyState === 'complete') openFirst(); else window.addEventListener('load', openFirst);
       }
@@ -1301,6 +1373,17 @@ export default async function handler(req: any, res: any) {
     .cifra-abierto .cifra-n { color:#7FD4A8; }
     .cifra-l { font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.12em; color:rgba(250,248,245,.62); margin-top:8px; display:block; line-height:1.45; }
 
+    /* ── Atajos de decisión: la primera fila que ve la persona ──
+       La pregunta no es "¿qué categorías existen?" sino "¿qué hago ahora?".
+       Estos 5 botones bajan a los filtros que ya existen y los aplican. */
+    .atajos { padding:22px 0 26px; position:relative; z-index:1; }
+    .atajos-lbl { display:block; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.14em; color:rgba(250,248,245,.55); margin-bottom:10px; }
+    .atajos-fila { display:flex; flex-wrap:wrap; gap:8px; }
+    .atajo { font-family:"Source Sans 3", sans-serif; font-size:.92rem; font-weight:600; color:var(--lino); background:rgba(250,248,245,.09); border:1px solid rgba(250,248,245,.26); padding:9px 17px; border-radius:999px; cursor:pointer; transition:all .15s; }
+    .atajo:hover { background:rgba(250,248,245,.18); border-color:rgba(250,248,245,.5); }
+    .atajo-vivo { background:#7FD4A8; border-color:#7FD4A8; color:#123B29; }
+    .atajo-vivo:hover { background:#96E0BA; border-color:#96E0BA; }
+
     /* ── Mapa ── */
     #cat-map { width:100%; height:52vw; max-height:400px; min-height:240px; background:var(--arena); }
     .map-section-label { font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.12em; text-align:center; color:var(--piedra-honda); padding:10px 0; background:var(--arena-suave); border-bottom:1px solid var(--arena); }
@@ -1362,8 +1445,8 @@ export default async function handler(req: any, res: any) {
 <body>
   <header class="portada">
     <div class="container">
-      <span class="kicker">${emoji}&nbsp; Directorio verificado a mano &middot; Cabo Rojo, Puerto Rico</span>
-      <h1>${alreadyHasCaboRojo ? esc(displayName) : `${esc(displayName)} en Cabo Rojo`}</h1>
+      <span class="kicker">${emoji}&nbsp; ${_verif.length} de ${filtered.length} confirmados por una persona &middot; Cabo Rojo, Puerto Rico</span>
+      <h1>${tituloPortada}</h1>
       <p class="portada-sub">${esc(subtituloPortada)}</p>
       <div class="cifras">
         <div class="cifra cifra-abierto">
@@ -1383,6 +1466,16 @@ export default async function handler(req: any, res: any) {
           <span class="cifra-l">mejor puntuado<br>${esc(recorta(String(_mejorPuntuado.name), 26))}</span>
         </div>` : ''}
       </div>
+      ${isRestaurant ? `<div class="atajos">
+        <span class="atajos-lbl">Empieza por aquí</span>
+        <div class="atajos-fila">
+          <button type="button" class="atajo atajo-vivo" data-salto="abierto">Abiertos ahora (<span id="atajo-n">${_abiertosAhora}</span>)</button>
+          <button type="button" class="atajo" data-salto="tipo:mariscos">Mariscos</button>
+          <button type="button" class="atajo" data-salto="tipo:cafe">Desayuno y café</button>
+          <button type="button" class="atajo" data-salto="zona:joyuda">Frente al mar · Joyuda</button>
+          <button type="button" class="atajo" data-salto="filtros">Por zona</button>
+        </div>
+      </div>` : ''}
     </div>
   </header>
 
@@ -1647,7 +1740,7 @@ export default async function handler(req: any, res: any) {
         const totalUsers = demandRows.reduce((s, r) => s + r.users, 0);
         const totalFailed = demandRows.reduce((s, r) => s + r.failed, 0);
         // Sin precios en páginas públicas (capa discovery, 27 ago): el negocio trae su idea y se habla 1 a 1.
-        if (isRestaurant) return `Así se ve un negocio que la gente encuentra primero: arriba, con foto, horario y reseñas a la vista. Los de arriba no pagaron por el orden, se lo ganaron. Si quieres que tu restaurante aparezca donde la gente decide dónde comer, tráeme tu idea y lo cuadramos.`;
+        if (isRestaurant) return `<strong>La Selección se gana. La Vitrina se compra. El ranking no se vende.</strong> El orden sale de la nota de Google pesada por cuántas reseñas la sostienen, para que un 5 de 3 reseñas no le gane a un 4.9 de 200. Los marcados «Destacado» los subimos a mano por criterio editorial y no pagaron por ese puesto. Lo que sí se paga es la ficha: foto, horario y datos al día, donde la gente decide dónde comer. Si te interesa, tráeme tu idea y lo cuadramos.`;
         if (totalFailed >= 2) return `${totalFailed} vecinos buscaron y NO encontraron resultado este trimestre. Si ese negocio es el tuyo, tráeme tu idea: te digo cómo aparecer primero, con tus servicios y fotos a la vista.`;
         if (totalUsers >= 3) return `${totalUsers} vecinos buscaron ${pluralEs(cat, displayName)} en El Veci este trimestre. Si quieres que te encuentren primero, tráeme tu idea y lo cuadramos.`;
         return `Si quieres aparecer primero, con servicios, fotos y reseñas a la vista, tráeme tu idea y lo cuadramos.`;

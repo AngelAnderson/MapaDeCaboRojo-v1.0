@@ -325,7 +325,7 @@ export function bloqueRespuesta(opts: {
   return `
     <p style="font-size:1.05rem;line-height:1.65;color:#334155;max-width:720px;margin:0 0 1.25rem 0">
       En Cabo Rojo, Puerto Rico hay <strong>${total} ${nombrePlural}</strong> en el directorio.${verif}${top}
-      Cada ficha trae teléfono, dirección y la fecha en que se verificó.
+      Toda ficha trae teléfono y dirección; las que confirmó una persona traen además la fecha.
     </p>`;
 }
 
