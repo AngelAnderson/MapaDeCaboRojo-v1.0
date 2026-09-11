@@ -307,6 +307,7 @@ export function coleccionLd(opts: { url: string; nombre: string; descripcion: st
  */
 export function bloqueRespuesta(opts: {
   nombrePlural: string; total: number; verificados: number; frescos90: number; mejor?: string | null;
+  mejorRating?: number | null; mejorResenas?: number | null;
 }): string {
   const total = num(opts.total);
   if (!total) return '';
@@ -315,7 +316,12 @@ export function bloqueRespuesta(opts: {
   const verif = verificados
     ? ` De esos, ${verificados} los verificó a mano una persona, y ${frescos90} en los últimos 3 meses.`
     : ' Ninguno lo ha verificado un humano todavía, así que confírmalo antes de ir.';
-  const top = opts.mejor ? ` El mejor puntuado en Google es ${esc(opts.mejor)}.` : '';
+  // Un nombre suelto no es un dato: "el mejor puntuado es X" sin la nota ni cuantas resenas
+  // la sostienen es una afirmacion sin fuente. El piso de credibilidad lo pone quien llama.
+  const topDetalle = (opts.mejorRating && opts.mejorResenas)
+    ? ` (${opts.mejorRating}/5 con ${num(opts.mejorResenas)} reseñas)`
+    : (opts.mejorRating ? ` (${opts.mejorRating}/5)` : '');
+  const top = opts.mejor ? ` El mejor puntuado en Google es ${esc(opts.mejor)}${topDetalle}.` : '';
   return `
     <p style="font-size:1.05rem;line-height:1.65;color:#334155;max-width:720px;margin:0 0 1.25rem 0">
       En Cabo Rojo, Puerto Rico hay <strong>${total} ${nombrePlural}</strong> en el directorio.${verif}${top}

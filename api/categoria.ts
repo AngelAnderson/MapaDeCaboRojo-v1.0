@@ -660,12 +660,92 @@ export default async function handler(req: any, res: any) {
     fisiatras:      { article: 'un',  noun: 'fisiatra' },
   };
 
-  const itemListElements = filtered.map((p: any, i: number) => ({
-    '@type': 'ListItem',
-    position: i + 1,
-    name: p.name,
-    url: detailRoute ? `${baseUrl}/${detailRoute}/${p.slug || p.id}` : `${baseUrl}/negocio/${p.slug || p.id}`,
-  }));
+  // ── El @type real del negocio, no un nombre suelto en una lista ──
+  // El ItemList llevaba solo name+url: 183 fichas con telefono, direccion, horario y rating
+  // en la pagina y ni una marcada como negocio, o sea cero elegibilidad para rich results.
+  // Aqui cada item sale como la entidad que es, con los MISMOS datos que ve el humano.
+  const SCHEMA_TYPE_BY_CAT: Record<string, string> = {
+    restaurante: 'Restaurant', restaurantes: 'Restaurant', mariscos: 'Restaurant',
+    pizza: 'Restaurant', cafe: 'CafeOrCoffeeShop', panaderia: 'Bakery', helados: 'IceCreamShop',
+    farmacia: 'Pharmacy', farmacias: 'Pharmacy',
+    dentista: 'Dentist', dentistas: 'Dentist',
+    hospital: 'Hospital', hospitales: 'Hospital',
+    medico: 'Physician', medicos: 'Physician', especialista: 'Physician',
+    laboratorio: 'MedicalClinic', laboratorios: 'MedicalClinic',
+    optica: 'Optician', opticas: 'Optician',
+    veterinario: 'VeterinaryCare', veterinarios: 'VeterinaryCare',
+    gimnasio: 'ExerciseGym', gimnasios: 'ExerciseGym',
+    belleza: 'BeautySalon', spa: 'BeautySalon', peluqueria: 'HairSalon', barberia: 'HairSalon',
+    hospedaje: 'LodgingBusiness', lavanderia: 'DryCleaningOrLaundry', imprenta: 'LocalBusiness',
+    automotriz: 'AutoRepair', educacion: 'EducationalOrganization',
+  };
+  const schemaType = SCHEMA_TYPE_BY_CAT[cat] || (isHealth ? 'MedicalBusiness' : 'LocalBusiness');
+  const DAY_SCHEMA = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+  // deno-lint-ignore no-explicit-any
+  const openingSpec = (p: any) => {
+    const oh = p.opening_hours;
+    if (!oh || typeof oh !== 'object') return null;
+    if (oh.type === 'always_open' || oh.type === '24_7') {
+      return [{ '@type': 'OpeningHoursSpecification', dayOfWeek: DAY_SCHEMA, opens: '00:00', closes: '23:59' }];
+    }
+    if (!Array.isArray(oh.structured)) return null;
+    const spec = oh.structured
+      .filter((e: any) => e && !e.isClosed && e.open && e.close && DAY_SCHEMA[e.day])
+      .map((e: any) => ({
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: DAY_SCHEMA[e.day],
+        opens: String(e.open),
+        closes: String(e.close),
+      }));
+    return spec.length ? spec : null;
+  };
+
+  const itemListElements = filtered.map((p: any, i: number) => {
+    const url = detailRoute ? `${baseUrl}/${detailRoute}/${p.slug || p.id}` : `${baseUrl}/negocio/${p.slug || p.id}`;
+    const rc = Number(p.google_review_count) || 0;
+    const hours = openingSpec(p);
+    // aggregateRating solo con >=3 resenas: es la misma valla que ya aplican las fichas de
+    // salud en pantalla. Un 5/5 de una resena es un numero sin fuente, y marcarlo es peor
+    // que no marcarlo porque Google exige que lo marcado sea lo que el humano ve.
+    const rating = (p.google_rating && rc >= 3)
+      ? {
+          '@type': 'AggregateRating',
+          ratingValue: Number(p.google_rating),
+          reviewCount: rc,
+          bestRating: 5,
+          worstRating: 1,
+        }
+      : null;
+    return {
+      '@type': 'ListItem',
+      position: i + 1,
+      item: {
+        '@type': schemaType,
+        '@id': url,
+        name: p.name,
+        url,
+        ...(p.image_url ? { image: p.image_url } : {}),
+        ...(p.phone ? { telephone: p.phone } : {}),
+        ...(p.address
+          ? {
+              address: {
+                '@type': 'PostalAddress',
+                streetAddress: p.address,
+                addressLocality: p.municipality || 'Cabo Rojo',
+                addressRegion: 'PR',
+                addressCountry: 'US',
+              },
+            }
+          : {}),
+        ...(p.lat && p.lon
+          ? { geo: { '@type': 'GeoCoordinates', latitude: Number(p.lat), longitude: Number(p.lon) } }
+          : {}),
+        ...(rating ? { aggregateRating: rating } : {}),
+        ...(hours ? { openingHoursSpecification: hours } : {}),
+      },
+    };
+  });
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -682,9 +762,31 @@ export default async function handler(req: any, res: any) {
   // si hay fecha: una importacion NPPES tambien escribe last_verified_at (regla del sello, 24 ago).
   const _verif = filtered.filter((p: any) => selloConFecha(p).nivel === 'persona');
   const _frescos = _verif.filter((p: any) => new Date(p.last_verified_at || p.verified_at).getTime() > _hace90);
-  const _mejor = filtered
-    .filter((p: any) => p.google_rating)
-    .sort((a: any, b: any) => Number(b.google_rating) - Number(a.google_rating))[0]?.name || null;
+  // ── "El mejor puntuado" se pondera, no se ordena por el numero mas alto ──
+  // Ordenar por rating crudo contestaba mal la pregunta: en restaurantes sacaba una
+  // reposteria con 5/5 de 48 resenas por encima de Treasure of The Seas (4.9 de 203),
+  // que es lo que un vecino de verdad compara. Se usa el promedio ponderado clasico
+  // (media bayesiana): el rating se jala hacia el promedio de la categoria mientras haya
+  // pocas resenas, asi que un 5/5 de 3 resenas no le gana a un 4.9 de 200.
+  // El numero que se ENSENA sigue siendo el crudo de Google — se cambia a quien se escoge,
+  // no lo que se afirma de el.
+  // deno-lint-ignore no-explicit-any
+  const _mejorPuntuado = (() => {
+    const conRating = filtered.filter((p: any) => p.google_rating && Number(p.google_rating) > 0);
+    if (!conRating.length) return null;
+    const M = 25; // resenas que hacen falta para que el rating propio pese la mitad
+    const media = conRating.reduce((a: number, p: any) => a + Number(p.google_rating), 0) / conRating.length;
+    const puntaje = (p: any) => {
+      const n = Number(p.google_review_count) || 0;
+      return (n * Number(p.google_rating) + M * media) / (n + M);
+    };
+    return conRating.slice().sort((a: any, b: any) => {
+      const d = puntaje(b) - puntaje(a);
+      if (d) return d;
+      return (Number(b.google_review_count) || 0) - (Number(a.google_review_count) || 0);
+    })[0];
+  })();
+  const _mejor = _mejorPuntuado?.name || null;
   const coleccionJsonLd = coleccionLd({
     url: `${baseUrl}/categoria/${cat}`,
     nombre: `${displayName} en Cabo Rojo, Puerto Rico`,
@@ -694,7 +796,7 @@ export default async function handler(req: any, res: any) {
 
   // FAQ — health categories + high-LTV capture categories (electricista/plomero/ac/solar)
   const isHealthCat = !!detailRoute;
-  const topRated = filtered.filter((p: any) => p.google_rating).sort((a: any, b: any) => Number(b.google_rating) - Number(a.google_rating))[0];
+  const topRated = _mejorPuntuado;  // mismo piso de credibilidad que la intro — la pagina no puede decir 2 cosas distintas
 
   // ── Farmacia: lo que la persona con la receta en la mano quiere saber ──
   // Todo sale del horario publicado (opening_hours.structured, day 0 = domingo). Sin horario, no se afirma.
@@ -1144,6 +1246,8 @@ export default async function handler(req: any, res: any) {
       verificados: _verif.length,
       frescos90: _frescos.length,
       mejor: _mejor,
+      mejorRating: _mejorPuntuado ? Number(_mejorPuntuado.google_rating) : null,
+      mejorResenas: _mejorPuntuado ? (Number(_mejorPuntuado.google_review_count) || null) : null,
     })}
     ${urgentBanner}
     ${catSeo?.intro ? `<p style="font-size:1.05rem;line-height:1.6;color:#475569;margin-bottom:1.5rem;max-width:720px">${esc(catSeo.intro)}</p>` : ''}
