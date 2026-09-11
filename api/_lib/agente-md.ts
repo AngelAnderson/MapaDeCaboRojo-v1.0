@@ -85,7 +85,11 @@ export function construirMd(doc: DocMd): string {
   p.push(`**${doc.respuesta.trim()}**`)
   if (doc.contexto) { p.push(''); p.push(doc.contexto.trim()) }
 
-  for (const t of doc.tablas || []) {
+  // Una tabla vacia es peor que no tenerla: publica un encabezado que promete un dato y
+  // entrega nada, y el modelo se lleva la promesa rota. Si la consulta fallo (RLS, timeout,
+  // vista vacia), la seccion no sale. Descubierto el 11 sep 2026 probando en local, donde
+  // desiertos_resumen devolvia vacio por falta de service key y el doc publicaba el hueco.
+  for (const t of (doc.tablas || []).filter(t => t.filas && t.filas.length)) {
     p.push('')
     if (t.titulo) p.push(`## ${t.titulo}`)
     p.push('')

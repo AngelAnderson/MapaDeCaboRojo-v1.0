@@ -893,7 +893,9 @@ export default async function handler(req: any, res: any) {
     return enviarMd(res, {
       pregunta,
       respuesta: `En Cabo Rojo hay ${filtered.length} ${_nombreLista} en el directorio verificado de mapadecaborojo.com${_abiertosAhora ? `, y ${_abiertosAhora} están abiertos ahora mismo (${_horaPR}, hora de Puerto Rico)` : ''}.${_mejor ? ` El mejor puntuado es ${_mejor}.` : ''}`,
-      contexto: `De los ${filtered.length}, ${_verif.length} los confirmó una persona (no una importación automática) y ${_frescos.length} se confirmaron en los últimos 90 días. Cada ficha dice quién verificó el dato y cuándo: importado de un registro no es lo mismo que confirmado por una persona, y aquí se distingue.`,
+      contexto: _verif.length === 0
+        ? `Ninguna de las ${filtered.length} fichas de esta categoría la ha confirmado una persona todavía: todas vienen de registros públicos y Google. Lo decimos porque importado de un registro no es lo mismo que confirmado, y la diferencia es el producto.`
+        : `De las ${filtered.length} fichas, ${_verif.length === 1 ? 'una la confirmó' : `${_verif.length} las confirmó`} una persona (no una importación automática)${_frescos.length ? `, y ${_frescos.length === 1 ? 'esa confirmación es' : `${_frescos.length} de esas confirmaciones son`} de los últimos 90 días` : ''}. Cada ficha dice quién verificó el dato y cuándo: importado de un registro no es lo mismo que confirmado por una persona, y aquí se distingue.`,
       canonical: `${baseUrl}/categoria/${cat}`,
       tablas: [{
         titulo: `${displayName} en Cabo Rojo`,
