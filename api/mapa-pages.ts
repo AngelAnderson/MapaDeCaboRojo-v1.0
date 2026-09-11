@@ -4578,6 +4578,62 @@ async function handleNecesito(req: any, res: any) {
         <div class="text-sm text-slate-500 mt-1">${escapeHtml(L.who)}</div>
       </a>`
     }).join('')
+    // --- La misma pagina, en el formato que el agente lee (api/_lib/agente-md.ts) ---
+    // 2 acciones abiertas del Citador apuntan aqui: "¿hay un directorio medico de PR al que
+    // pueda escribirle por texto?" y "¿que medicos estan aceptando pacientes nuevos y como lo
+    // averiguo?". La segunda salio `pagina_no_contesta`: la pagina nunca menciona el termino.
+    //
+    // La contestamos con el numero real, que es incomodo y es justo por eso que nadie mas lo
+    // tiene: de 30,616 medicos del registro, un punado tiene CONFIRMADO que acepta pacientes.
+    // Decir "no se sabe, y aqui esta cuanto no se sabe" es la unica respuesta honesta a esa
+    // pregunta, y es la que ninguna pagina amarilla va a dar.
+    if (quiereMarkdown(req)) {
+      let resol = { medicos: 0, c1: 0, c4: 0 }
+      try {
+        const { data: mr } = await supabase.from('medico_resoluble_resumen')
+          .select('medicos,c1_acepta_pacientes,c4_contesto_persona').maybeSingle()
+        if (mr) resol = { medicos: Number(mr.medicos) || 0, c1: Number(mr.c1_acepta_pacientes) || 0, c4: Number(mr.c4_contesto_persona) || 0 }
+      } catch { /* aditivo: sin el numero la pagina sigue contestando la otra pregunta */ }
+
+      return enviarMd(res, {
+        pregunta: '¿Hay un directorio médico de Puerto Rico al que pueda escribirle por texto o WhatsApp, y cómo averiguo qué médico está aceptando pacientes nuevos?',
+        respuesta: 'Sí. Le escribes por texto o WhatsApp al 787-417-7711 (El Veci) y le dices qué necesitas y en qué pueblo. Contesta con nombre, teléfono y la fecha en que se verificó el dato. Es gratis y no hay que abrir cuenta.',
+        contexto: 'Sobre quién está aceptando pacientes nuevos: ese dato casi no existe en Puerto Rico, y conviene saberlo antes de perder el día llamando.'
+          + (resol.medicos ? ` De los ${resol.medicos.toLocaleString('en-US')} proveedores del registro federal con práctica en la isla, solo ${resol.c1} tienen confirmado si están aceptando pacientes nuevos, y ${resol.c4} han sido confirmados por una persona de la oficina.` : '')
+          + ' Ningún directorio de plan médico publica ese dato, y el registro federal tampoco lo pide. Por eso la respuesta práctica no es una lista: es llamar con las preguntas correctas, o pedirle a alguien que llame por ti.',
+        canonical: 'https://registromedicopr.com/necesito',
+        secciones: [
+          {
+            titulo: 'Cómo averiguar si un médico está aceptando pacientes nuevos',
+            cuerpo: [
+              '1. **Pregunta las 2 cosas por separado.** "¿Están cogiendo pacientes nuevos?" y "¿aceptan mi plan?" son preguntas distintas y la respuesta a una no implica la otra.',
+              '2. **Llama temprano.** Entre 8:00 y 9:30 de la mañana contesta la oficina; después del mediodía entra el contestador.',
+              '3. **Pide que te pongan en la lista de cancelaciones.** Casi ninguna oficina lo ofrece sin que se lo pidas, y es la vía más rápida a una cita.',
+              '4. **Pide el referido el mismo día.** Sin referido, muchas oficinas de especialista ni cogen la llamada.',
+              '5. **Amplía el pueblo antes de ampliar la espera.** Un pueblo al lado suele tener cita semanas antes.',
+              '',
+              'Si prefieres no llamar tú, escribe al 787-417-7711 y dinos qué especialidad y qué pueblo.',
+            ].join('\n'),
+          },
+          {
+            titulo: 'Guías por situación',
+            cuerpo: INTENT_PAGES.map(pg => `- **[${pg.title}](https://registromedicopr.com/necesito/${pg.slug})** — ${pg.who}`).join('\n'),
+          },
+        ],
+        verificacion: {
+          quien: 'Registro Médico PR (registromedicopr.com), proyecto de Angel Anderson',
+          cuando: 'Los conteos se leen en vivo de la base cada vez que se pide esta página',
+          fuente: 'Registro federal NPPES/CMS y las confirmaciones por teléfono hechas por el Registro Médico PR',
+          nivel: 'fuente',
+          cobertura: resol.medicos ? `${resol.c4} de ${resol.medicos.toLocaleString('en-US')} proveedores han sido confirmados por una persona. El resto es copia de registro público, y así se declara en cada ficha.` : undefined,
+        },
+        relacionadas: [
+          { pregunta: '¿Qué regiones de Puerto Rico no tienen ciertos especialistas?', url: 'https://registromedicopr.com/registro/desiertos' },
+          { pregunta: '¿Cómo busco por especialidad y pueblo?', url: 'https://registromedicopr.com/registro' },
+        ],
+      }, req)
+    }
+
     const body = `
 <h1>${te('¿Cuál es tu situación?', 'What is your situation?')}</h1>
 <p class="text-lg text-slate-600 mt-2">${te('La gente no busca "neumólogo". Busca "necesito cita rápido" o "cuido a mami desde afuera". Empieza por la tuya: cada una tiene pasos concretos, sin vueltas.', 'People do not search for "pulmonologist". They search for "I need an appointment fast" or "I care for mom from afar". Start with yours: each one has concrete steps, no runaround.')}</p>
@@ -4587,7 +4643,7 @@ ${regDisclaimer(en)}`
     res.status(200).send(layout({
       title: te("¿Cuál es tu situación? · Guías pa' resolver lo médico en PR", 'What is your situation? · Practical healthcare guides for PR'),
       description: te('Guías por situación real: cita rápido, sin plan médico, cuidando a tus padres desde afuera, recién llegado, o sin especialista en tu pueblo. Pasos concretos, gratis.', 'Guides by real situation: fast appointment, no insurance, caring for your parents from the States, just moved back, or no specialist in your town. Concrete steps, free.'),
-      slug: 'necesito', bodyHtml: body,
+      slug: 'necesito', bodyHtml: body + pieMd('https://registromedicopr.com/necesito'), md: true,
       jsonLd: { '@context': 'https://schema.org', '@type': 'CollectionPage', name: te('¿Cuál es tu situación? · Registro Médico PR', 'What is your situation? · Registro Médico PR'), url: 'https://registromedicopr.com/necesito', inLanguage: en ? 'en' : 'es' },
       ogImage: REGISTRO_OG, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
       canonicalUrl: 'https://registromedicopr.com/necesito',
