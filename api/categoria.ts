@@ -1037,10 +1037,16 @@ export default async function handler(req: any, res: any) {
                <p style="font-size:0.65rem;color:#a16207;margin:0.3rem 0 0;font-style:italic;">— ${memoriaSig}</p>
              </div>`
           : (detailRoute
-            ? `<a href="https://wa.me/17874177711?text=${encodeURIComponent('DATO ' + p.name + ': ')}" style="display:block;border-top:1px solid #f1f5f9;padding:0.55rem 1rem;background:#f8fafc;color:#475569;text-decoration:none;font-size:0.75rem;text-align:center;">
-                 ¿Sabes algo de ${esc(p.name)}? Cuéntale a El Veci →
+            ? `<a href="https://wa.me/17874177711?text=${encodeURIComponent('DATO ' + p.name + ': ')}" style="display:block;border-top:1px solid var(--arena-suave);padding:0.6rem 1rem;background:var(--lino);color:var(--piedra-honda);text-decoration:none;font-size:0.78rem;text-align:center;">
+                 ¿Sabes algo de ${esc(p.name)}? Cuéntale a El Veci &rarr;
                </a>`
-            : '');
+            : (!getOpenStatusLabel(p.opening_hours)
+              // La palabra es la misma que lleva el flyer impreso: 1 sistema,
+              // no 2. El bot la contesta (twilio-webhook, keyword HORARIO).
+              ? `<a href="https://wa.me/17874177711?text=${encodeURIComponent('HORARIO ' + p.name + ': ')}" style="display:block;border-top:1px solid var(--arena-suave);padding:0.6rem 1rem;background:var(--lino);color:var(--piedra-honda);text-decoration:none;font-size:0.78rem;text-align:center;">
+                   ¿Sabes a qué hora abre? Dilo y lo arreglamos &rarr;
+                 </a>`
+              : ''));
         // La zona (Joyuda, Boqueron, El Combate...) es el dato que nadie mas
         // tiene, asi que sube a kicker encima del nombre en vez de esconderse
         // dentro de la direccion.
@@ -1073,7 +1079,11 @@ export default async function handler(req: any, res: any) {
                 ${stars}
                 ${(() => {
                 const openLabel = getOpenStatusLabel(p.opening_hours);
-                if (!openLabel) return '';
+                // Sin horario NO es lo mismo que cerrado, y hasta hoy se veian
+                // igual: la ficha no ensenaba nada. 405 de los 1,008 negocios de
+                // Cabo Rojo estan asi, y son justo los que nunca pueden salir en
+                // "abierto ahora". Decirlo convierte el hueco en una puerta.
+                if (!openLabel) return `<span class="estado estado-nosabe" title="El negocio todavía no nos ha dado su horario">Horario sin confirmar</span>`;
                 const isOpen = openLabel.startsWith('🟢');
                 // Emit structured hours so the badge recomputes client-side on
                 // every view (PR time). SSR HTML is cached up to 24h via
@@ -1410,6 +1420,7 @@ export default async function handler(req: any, res: any) {
     .estado { display:inline-flex; align-items:center; font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.03em; padding:3px 9px; border-radius:999px; }
     .estado-abierto { background:#E8F3EB; color:#2F6B3C; }
     .estado-cerrado { background:#F5EFEA; color:var(--piedra-honda); }
+    .estado-nosabe { background:transparent; color:var(--piedra); border:1px dashed var(--arena); }
     .ficha-dir { font-size:.86rem; color:var(--piedra-honda); line-height:1.5; margin-bottom:8px; }
     .ficha-contacto { display:flex; gap:8px; padding:0 20px 18px; }
     .ficha-contacto a { flex:1; text-align:center; padding:9px 6px; border-radius:8px; font-size:.82rem; font-weight:600; text-decoration:none; font-family:var(--mono); letter-spacing:.02em; }
@@ -1880,7 +1891,10 @@ export default async function handler(req: any, res: any) {
         var oh; try { oh = JSON.parse(el.getAttribute('data-oh')); } catch (e) { return; }
         var lbl = label(oh); if (!lbl) return;
         el.textContent = lbl;
-        el.style.color = lbl.indexOf('🟢') === 0 ? '#16a34a' : '#dc2626';
+        var abierto = lbl.indexOf('🟢') === 0;
+        el.classList.remove('estado-abierto', 'estado-cerrado');
+        el.classList.add('estado', abierto ? 'estado-abierto' : 'estado-cerrado');
+        el.style.color = '';
       });
       // Salud (farmacia, dentista, etc.): las abiertas AHORA suben, y el bloque de arriba las nombra.
       var grid = document.querySelector('.grid[data-open-first]');
