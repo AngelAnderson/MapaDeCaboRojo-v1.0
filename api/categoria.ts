@@ -792,6 +792,23 @@ export default async function handler(req: any, res: any) {
     })[0];
   })();
   const _mejor = _mejorPuntuado?.name || null;
+  // Lo que esta abierto AHORA es la respuesta; el total es solo inventario.
+  // deno-lint-ignore no-explicit-any
+  const _abiertosAhora = filtered.filter((p: any) => (getOpenStatusLabel(p.opening_hours) || '').startsWith('\u{1F7E2}')).length;
+  const _horaPR = (() => {
+    const d = new Date(Date.now() - 4 * 3600_000);
+    const h = d.getUTCHours(), m = d.getUTCMinutes();
+    return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
+  })();
+  // Una linea, no el meta description de 160 caracteres. Dice de que va el
+  // sitio, no repite el titulo.
+  // Cortar a los N caracteres partia nombres a media palabra ("JOYUD").
+  const recorta = (t: string, n: number) => t.length <= n ? t : t.slice(0, n).replace(/[\s\-–·]+\S*$/, '') + '…';
+  const subtituloPortada = isRestaurant
+    ? 'Aquí se come por zona: mariscos frente al mar en Joyuda, el poblado de Boquerón, el atardecer de El Combate y la comida criolla del pueblo.'
+    : isHealth
+      ? 'Cada ficha dice quién confirmó el dato y cuándo. Importado de un registro no es lo mismo que confirmado por una persona, y aquí se distingue.'
+      : `Lo que hay en Cabo Rojo, con teléfono, dirección y la fecha en que se verificó. Si no lo encuentras, escríbele a El Veci al 787-417-7711.`;
   const coleccionJsonLd = coleccionLd({
     url: `${baseUrl}/categoria/${cat}`,
     nombre: `${displayName} en Cabo Rojo, Puerto Rico`,
@@ -918,16 +935,18 @@ export default async function handler(req: any, res: any) {
   }
 
   const cardsHtml = filtered.length === 0
-    ? `<p style="color:#64748b;text-align:center;padding:2rem;">No encontramos negocios en esta categoría todavía.</p>`
+    ? `<p style="color:var(--piedra-honda);text-align:center;padding:3rem 1rem;">Todavía no tenemos negocios en esta categoría. Si conoces uno, escríbele a El Veci al 787-417-7711.</p>`
     : filtered.map((p: any) => {
         const slug = p.slug || p.id;
         const rc = Number(p.google_review_count) || 0;
         // On health pages a bare "⭐5" with 0–1 reviews is misleading (number needs a source).
         // Require ≥3 reviews to show the rating, and always show the count when we do.
+        // La nota va como dato tabular (Geist Mono), con su conteo al lado: un
+        // numero sin cuantas resenas lo sostienen es un numero sin fuente.
         const stars = p.google_rating
           ? (isHealth
-              ? (rc >= 3 ? `⭐ ${p.google_rating} <span style="color:#94a3b8;font-weight:400;">(${rc})</span>` : '')
-              : `⭐ ${p.google_rating}`)
+              ? (rc >= 3 ? `<span class="nota">★ ${p.google_rating} <span>(${rc})</span></span>` : '')
+              : `<span class="nota">★ ${p.google_rating}${rc ? ` <span>(${rc})</span>` : ''}</span>`)
           : '';
         // El sello se escoge por QUIEN confirmo. Tener NPI es estar en un registro, no estar
         // verificado; decir "Verificado" ahi era el incidente del sello del 24 ago.
@@ -950,15 +969,15 @@ export default async function handler(req: any, res: any) {
         const servesCR = Array.isArray(p.tags) && p.tags.includes('sirve-cabo-rojo');
         const inCR = (p.address || '').toLowerCase().includes('cabo rojo');
         const locHtml = (servesCR && !inCR)
-          ? `<p style="font-size:0.8rem;color:#64748b;margin-bottom:0.4rem;">📍 ${esc(p.municipality || '')}${p.municipality ? ' · ' : ''}<span style="color:#0d9488;font-weight:600;">sirve Cabo Rojo</span></p>`
-          : (p.address ? `<p style="font-size:0.8rem;color:#64748b;margin-bottom:0.4rem;">📍 ${esc(p.address)}</p>` : '');
+          ? `<p class="ficha-dir">${esc(p.municipality || '')}${p.municipality ? ' · ' : ''}<span style="color:var(--salinas);font-weight:600;">sirve Cabo Rojo</span></p>`
+          : (p.address ? `<p class="ficha-dir">${esc(p.address)}</p>` : '');
         const planBadge = p.plan === 'vip' ? '<span style="background:#f97316;color:white;font-size:0.65rem;padding:0.15rem 0.4rem;border-radius:999px;text-transform:uppercase;margin-left:0.4rem;">VIP</span>' : '';
         const detailPath = detailRoute ? `${baseUrl}/${detailRoute}/${esc(slug)}` : `${baseUrl}/negocio/${esc(slug)}`;
         const phoneInfo = normalizePhone(p.phone);
         const contactBlock = phoneInfo
-          ? `<div style="display:flex;gap:0.4rem;padding:0.55rem 1rem 0.65rem;border-top:1px solid #f1f5f9;">
-               <a href="tel:+1${phoneInfo.digits10}" style="flex:1;background:#0d9488;color:white;text-decoration:none;padding:0.45rem;border-radius:6px;font-size:0.78rem;text-align:center;font-weight:600;">📞 ${phoneInfo.display}</a>
-               <a href="https://wa.me/1${phoneInfo.digits10}" style="flex:1;background:#22c55e;color:white;text-decoration:none;padding:0.45rem;border-radius:6px;font-size:0.78rem;text-align:center;font-weight:600;">💬 WhatsApp</a>
+          ? `<div class="ficha-contacto">
+               <a class="btn-tel" href="tel:+1${phoneInfo.digits10}">${phoneInfo.display}</a>
+               <a class="btn-wa" href="https://wa.me/1${phoneInfo.digits10}">WhatsApp</a>
              </div>`
           : '';
         const memoria = memoriaByPlace.get(p.id) || null;
@@ -975,18 +994,37 @@ export default async function handler(req: any, res: any) {
                  ¿Sabes algo de ${esc(p.name)}? Cuéntale a El Veci →
                </a>`
             : '');
+        // La zona (Joyuda, Boqueron, El Combate...) es el dato que nadie mas
+        // tiene, asi que sube a kicker encima del nombre en vez de esconderse
+        // dentro de la direccion.
+        const zonaKicker = isRestaurant
+          ? `<span class="ficha-zona">${esc((zoneMap.get(p.id) || { label: 'Cabo Rojo' }).label)}</span>`
+          : (isHealth ? `<span class="ficha-zona">${esc((specMap.get(p.id) || { label: '' }).label || '')}</span>` : '');
         return `
-        <div${dataSpec} style="position:relative;background:white;border-radius:10px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.07);transition:box-shadow 0.2s;">
+        <article${dataSpec} class="ficha">
           <a href="${detailPath}" style="display:block;text-decoration:none;color:inherit;">
-            ${p.image_url
-              ? `<div style="width:100%;height:160px;background:linear-gradient(135deg,#0d9488,#f97316);display:flex;align-items:center;justify-content:center;font-size:2.5rem;" data-emoji="${esc(emoji)}"><img src="${esc(p.image_url)}" alt="${esc(p.name)}" style="width:100%;height:160px;object-fit:cover;display:block;" loading="lazy" onerror="this.style.display='none';this.parentElement.textContent=this.parentElement.dataset.emoji"></div>`
-              : `<div style="width:100%;height:160px;background:linear-gradient(135deg,#0d9488,#f97316);display:flex;align-items:center;justify-content:center;font-size:2.5rem;">${emoji}</div>`}
-            <div style="padding:1rem;">
-              <h2 style="font-size:1rem;font-weight:700;color:#0f172a;margin-bottom:0.25rem;">${esc(p.name)}${planBadge}</h2>
+            ${(() => {
+              // Sin foto, la ficha enseñaba 172px de azul vacío con un emoji chiquito:
+              // se leía como imagen rota. El marcador tipográfico (inicial en Fraunces
+              // + zona en mono) se lee como decisión de diseño, no como hueco.
+              // Va SIEMPRE debajo: si la foto falla, basta con esconderla y queda algo
+              // presentable — sin meter HTML dentro de un atributo.
+              const zonaTxt = isRestaurant
+                ? (zoneMap.get(p.id) || { label: 'Cabo Rojo' }).label
+                : (isHealth ? ((specMap.get(p.id) || { label: '' }).label || 'Cabo Rojo') : 'Cabo Rojo');
+              const inicial = (String(p.name).trim()[0] || '·').toUpperCase();
+              return `<div class="ficha-foto ficha-foto-vacia">
+                <span class="marca-inicial">${esc(inicial)}</span>
+                ${p.image_url ? `<img src="${esc(p.image_url)}" alt="${esc(p.name)}" loading="lazy" onerror="this.style.display='none'">` : ''}
+              </div>`;
+            })()}
+            <div class="ficha-cuerpo">
+              ${zonaKicker}
+              <h2>${esc(p.name)}${planBadge}</h2>
               ${npiBadge}
-              ${stars ? `<div style="color:#f59e0b;font-size:0.85rem;margin-bottom:0.25rem;">${stars}</div>` : ''}
-              ${oneLinerHtml}
-              ${(() => {
+              <div class="ficha-datos">
+                ${stars}
+                ${(() => {
                 const openLabel = getOpenStatusLabel(p.opening_hours);
                 if (!openLabel) return '';
                 const isOpen = openLabel.startsWith('🟢');
@@ -1004,15 +1042,19 @@ export default async function handler(req: any, res: any) {
                     ? oh.structured.map((e: any) => ({ day: e.day, open: e.open, close: e.close, isClosed: !!e.isClosed }))
                     : [],
                 }));
-                return `<div class="open-status" data-oh="${payload}" style="font-size:0.78rem;font-weight:600;margin-bottom:0.4rem;color:${isOpen ? '#16a34a' : '#dc2626'};">${esc(openLabel)}</div>`;
+                // El emoji se queda DENTRO del textContent: 3 lugares del JS de
+                // filtros comprueban `textContent.indexOf('\u{1F7E2}') === 0`.
+                return `<span class="open-status estado ${isOpen ? 'estado-abierto' : 'estado-cerrado'}" data-oh="${payload}">${esc(openLabel)}</span>`;
               })()}
+              </div>
+              ${oneLinerHtml}
               ${locHtml}
-              ${Array.isArray(p.services) && p.services.length > 0 ? `<div style="display:flex;flex-wrap:wrap;gap:0.25rem;">${p.services.slice(0, 4).map((s: string) => `<span style="font-size:0.65rem;background:#f0fdf4;color:#166534;padding:0.15rem 0.4rem;border-radius:999px;">${esc(s)}</span>`).join('')}${p.services.length > 4 ? `<span style="font-size:0.65rem;color:#94a3b8;">+${p.services.length - 4}</span>` : ''}</div>` : ''}
+              ${Array.isArray(p.services) && p.services.length > 0 ? `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:2px;">${p.services.slice(0, 4).map((s: string) => `<span style="font-family:var(--mono);font-size:10px;letter-spacing:.04em;background:var(--arena-suave);color:var(--piedra-honda);padding:3px 8px;border-radius:999px;">${esc(s)}</span>`).join('')}${p.services.length > 4 ? `<span style="font-family:var(--mono);font-size:10px;color:var(--piedra);align-self:center;">+${p.services.length - 4}</span>` : ''}</div>` : ''}
             </div>
           </a>
           ${contactBlock}
           ${memoriaBlock}
-        </div>`;
+        </article>`;
       }).join('');
 
   // Emergency banner for urgent service categories (solar excluded — not an emergency)
@@ -1048,11 +1090,11 @@ export default async function handler(req: any, res: any) {
       .triage { background:linear-gradient(135deg,#ecfeff,#f0fdfa); border:1px solid #99f6e4; border-radius:14px; padding:1.1rem 1.25rem; margin-bottom:1.1rem; }
       .triage h2 { font-size:1.05rem; font-weight:700; color:#0f766e; margin-bottom:0.7rem; }
       .triage-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:0.85rem; }
-      .triage-veci { display:block; background:#0d9488; color:white; text-decoration:none; text-align:center; padding:0.7rem 1rem; border-radius:10px; font-weight:600; font-size:0.9rem; }
+      .triage-veci { display:block; background:var(--oceano); color:#fff; text-decoration:none; text-align:center; padding:14px 18px; border-radius:8px; font-weight:700; font-size:.95rem; }
       .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:1.25rem; }
-      .sb-pill { background:white; border:1.5px solid #5eead4; color:#0f766e; padding:7px 14px; border-radius:999px; font-size:0.85rem; cursor:pointer; font-weight:600; transition:all 0.15s; }
-      .sb-pill:hover { background:#ccfbf1; }
-      .sb-pill.active { background:#0d9488; color:white; border-color:#0d9488; }
+      .sb-pill { background:var(--lino); border:1px solid var(--arena); color:var(--tinta); padding:8px 15px; border-radius:999px; font-size:.88rem; cursor:pointer; font-weight:600; transition:all .15s; }
+      .sb-pill:hover { border-color:var(--oceano); background:var(--papel); }
+      .sb-pill.active { background:var(--oceano); color:#fff; border-color:var(--oceano); }
     </style>
     <script>
     (function(){
@@ -1084,7 +1126,7 @@ export default async function handler(req: any, res: any) {
   ];
   const restaurantHtml = (isRestaurant && filtered.length > 0) ? `
     <div class="triage">
-      <h2>🍽️ ¿Qué buscas hoy?</h2>
+      <h2>¿Qué buscas hoy?</h2>
       <p class="triage-lbl">Por tipo</p>
       <div class="pills" id="type-pills">
         <button type="button" class="sb-pill active" data-type-filter="all">Todo (${filtered.length})</button>
@@ -1105,17 +1147,20 @@ export default async function handler(req: any, res: any) {
       <a class="triage-veci" href="https://wa.me/17874177711?text=${encodeURIComponent('COMIDA: ')}">¿Antojo y no sabes dónde? Dile a El Veci → 787-417-7711</a>
     </div>
     <style>
-      .triage { background:linear-gradient(135deg,#fff7ed,#fefce8); border:1px solid #fed7aa; border-radius:14px; padding:1.1rem 1.25rem; margin-bottom:1.25rem; }
-      .triage h2 { font-size:1.05rem; font-weight:700; color:#9a3412; margin-bottom:0.6rem; }
-      .triage-lbl { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#c2683a; margin:0.5rem 0 0.4rem; }
-      .triage-veci { display:block; background:#0d9488; color:white; text-decoration:none; text-align:center; padding:0.7rem 1rem; border-radius:10px; font-weight:600; font-size:0.9rem; }
+      /* Paleta del sistema (DESIGN.md). Antes: degradado ambar + naranja
+         tailwind, que chocaba con el lino y no existe en la marca. */
+      .triage { background:var(--papel); border:1px solid var(--arena); border-radius:12px; padding:24px; margin-bottom:32px; box-shadow:var(--sombra-sm); }
+      .triage h2 { font-size:1.3rem; font-weight:700; color:var(--tinta); margin-bottom:16px; }
+      .triage-lbl { font-family:var(--mono); font-size:10.5px; font-weight:500; text-transform:uppercase; letter-spacing:.14em; color:var(--salinas); margin:16px 0 10px; }
+      .triage-veci { display:block; background:var(--oceano); color:#fff; text-decoration:none; text-align:center; padding:14px 18px; border-radius:8px; font-weight:700; font-size:.95rem; margin-top:20px; }
+      .triage-veci:hover { background:#16404D; }
       .pills { display:flex; flex-wrap:wrap; gap:8px; }
-      .sb-pill { background:white; border:1.5px solid #fdba74; color:#9a3412; padding:7px 14px; border-radius:999px; font-size:0.85rem; cursor:pointer; font-weight:600; transition:all 0.15s; }
-      .sb-pill:hover { background:#ffedd5; }
-      .sb-pill.active { background:#ea580c; color:white; border-color:#ea580c; }
-      .open-toggle { display:inline-flex; align-items:center; gap:6px; font-size:0.85rem; font-weight:600; color:#15803d; margin:0.85rem 0 0.2rem; cursor:pointer; }
-      .open-count { font-size:0.82rem; font-weight:700; color:#15803d; margin:0.3rem 0 0; min-height:1rem; }
-      .result-count { font-size:0.78rem; color:#9a3412; margin:0.35rem 0 0; min-height:1rem; }
+      .sb-pill { background:var(--lino); border:1px solid var(--arena); color:var(--tinta); padding:8px 15px; border-radius:999px; font-size:.88rem; cursor:pointer; font-weight:600; transition:all .15s; }
+      .sb-pill:hover { border-color:var(--oceano); background:var(--papel); }
+      .sb-pill.active { background:var(--oceano); color:#fff; border-color:var(--oceano); }
+      .open-toggle { display:inline-flex; align-items:center; gap:8px; font-size:.9rem; font-weight:600; color:var(--mangle); margin:20px 0 4px; cursor:pointer; }
+      .open-count { font-family:var(--mono); font-size:12px; letter-spacing:.03em; font-weight:600; color:var(--mangle); margin:6px 0 0; min-height:1rem; }
+      .result-count { font-family:var(--mono); font-size:11px; letter-spacing:.05em; color:var(--piedra-honda); margin:6px 0 0; min-height:1rem; }
     </style>
     <script>
     (function(){
@@ -1167,6 +1212,7 @@ export default async function handler(req: any, res: any) {
           if (!open.length) return;
           open.concat(rest).forEach(function(c){ grid.appendChild(c); });
           var n = document.getElementById('open-count'); if (n) n.textContent = open.length + (open.length === 1 ? ' abierto ahora mismo' : ' abiertos ahora mismo') + ' · arriba';
+          var hn = document.getElementById('hero-abiertos'); if (hn) hn.textContent = String(open.length);
         }
         if (document.readyState === 'complete') openFirst(); else window.addEventListener('load', openFirst);
       }
@@ -1209,42 +1255,142 @@ export default async function handler(req: any, res: any) {
   ${faqSchema ? `<script type="application/ld+json">${JSON.stringify(faqSchema)}</script>` : ''}
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,500&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
+    /* ─────────────────────────────────────────────────────────────
+       Sistema de diseño de Cabo Rojo (DESIGN.md). Esta página corría
+       con #0d9488 y grises fríos — o sea con la lista de anti-patrones
+       del propio sistema: fondo blanco puro, gris frío, todo centrado,
+       emoji en el H1. Los colores tienen nombre porque significan algo.
+       ───────────────────────────────────────────────────────────── */
+    :root {
+      --oceano:#1B4B5A; --oceano-claro:#2A6B80; --salinas:#D4603A; --salinas-hondo:#B04A28;
+      --lino:#FAF8F5; --papel:#FFFFFF; --tinta:#2C2418; --piedra:#8A7E6F; --piedra-honda:#6B6052;
+      --arena:#E8E2D9; --arena-suave:#F0EBE4;
+      --mangle:#3D7A4A; --mango:#C4841D; --bandera:#B83B2E;
+      --sombra-sm:0 1px 3px rgba(44,36,24,.06), 0 1px 2px rgba(44,36,24,.04);
+      --sombra-md:0 4px 12px rgba(44,36,24,.08), 0 2px 4px rgba(44,36,24,.04);
+      --sombra-lg:0 12px 32px rgba(44,36,24,.12), 0 4px 8px rgba(44,36,24,.05);
+      --mono:'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: "Source Sans 3", -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #faf9f7; color: #1c1917; }
-    h1, h2, h3, .font-display { font-family: 'Fraunces', Georgia, serif; letter-spacing: -0.01em; }
-    .container { max-width: 960px; margin: 0 auto; padding: 1rem; }
-    header { background: linear-gradient(135deg, #0d9488, #0f766e); color: white; padding: 2rem 1rem; text-align: center; margin-bottom: 0; }
-    header h1 { font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
-    header p { opacity: 0.85; font-size: 0.95rem; }
-    #cat-map { width: 100%; height: 55vw; max-height: 380px; min-height: 240px; background: #e2e8f0; }
-    .back { display: inline-block; margin-bottom: 1.25rem; color: #0d9488; text-decoration: none; font-size: 0.9rem; }
-    .back:hover { text-decoration: underline; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-    .cta-bar { background: #0d9488; color: white; text-align: center; padding: 1.25rem; border-radius: 10px; margin-bottom: 2rem; }
-    .cta-bar p { margin-bottom: 0.5rem; font-size: 0.9rem; opacity: 0.9; }
-    .cta-bar a { display: inline-block; background: #f97316; color: white; text-decoration: none; padding: 0.6rem 1.5rem; border-radius: 8px; font-weight: 600; }
-    footer { text-align: center; padding: 1.5rem 0; color: #94a3b8; font-size: 0.8rem; }
-    /* Leaflet popup override for dark branding */
-    .leaflet-popup-content-wrapper { border-radius: 8px; }
-    .leaflet-popup-content { margin: 10px 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 13px; line-height: 1.45; }
-    .leaflet-popup-content a { color: #0d9488; text-decoration: none; font-weight: 600; }
-    .leaflet-popup-content a:hover { text-decoration: underline; }
-    .map-section-label { font-size: 0.7rem; text-align: center; color: #94a3b8; padding: 0.35rem 0; background: #f1f5f9; margin-bottom: 1.5rem; letter-spacing: 0.03em; }
+    body { font-family:"Source Sans 3", -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background:var(--lino); color:var(--tinta); -webkit-font-smoothing:antialiased; }
+    h1, h2, h3, .font-display { font-family:'Fraunces', Georgia, serif; letter-spacing:-0.02em; }
+    a { color:var(--oceano); }
+    .container { max-width:1120px; margin:0 auto; padding:0 24px; }
+
+    /* ── Kicker: la etiqueta mono en versalitas que ordena cada sección ── */
+    .kicker { font-family:var(--mono); font-size:11px; font-weight:500; text-transform:uppercase; letter-spacing:.14em; color:var(--salinas); }
+
+    /* ── Portada editorial ───────────────────────────────────────────
+       Antes: banda teal en degradado, centrada, con el conteo debajo
+       del título. Un conteo no es una respuesta. Ahora la portada ES
+       el tablero: lo que está abierto AHORA manda sobre el total.     */
+    .portada { background:var(--oceano); color:var(--lino); padding:56px 0 0; position:relative; overflow:hidden; }
+    .portada::after { content:''; position:absolute; right:-120px; top:-120px; width:420px; height:420px; border-radius:50%; background:radial-gradient(circle, rgba(212,96,58,.28), transparent 68%); pointer-events:none; }
+    .portada .kicker { color:#E8A98E; }
+    .portada h1 { font-size:clamp(2.4rem, 7vw, 4.2rem); font-weight:800; line-height:1.02; margin:10px 0 14px; color:#FFFFFF; max-width:16ch; position:relative; z-index:1; }
+    .portada-sub { font-size:1.05rem; line-height:1.6; color:rgba(250,248,245,.78); max-width:52ch; margin-bottom:30px; position:relative; z-index:1; }
+
+    /* ── Tablero de cifras: Fraunces grande + etiqueta mono ── */
+    .cifras { display:flex; flex-wrap:wrap; gap:0; border-top:1px solid rgba(232,226,217,.2); position:relative; z-index:1; }
+    .cifra { flex:1 1 0; min-width:132px; padding:20px 22px 24px; border-right:1px solid rgba(232,226,217,.16); }
+    .cifra:last-child { border-right:none; }
+    .cifra-n { font-family:'Fraunces', Georgia, serif; font-size:2.6rem; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; display:block; }
+    .cifra-abierto .cifra-n { color:#7FD4A8; }
+    .cifra-l { font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.12em; color:rgba(250,248,245,.62); margin-top:8px; display:block; line-height:1.45; }
+
+    /* ── Mapa ── */
+    #cat-map { width:100%; height:52vw; max-height:400px; min-height:240px; background:var(--arena); }
+    .map-section-label { font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.12em; text-align:center; color:var(--piedra-honda); padding:10px 0; background:var(--arena-suave); border-bottom:1px solid var(--arena); }
+
+    .bloque { padding:40px 0 0; }
+    .back { display:inline-block; margin-bottom:24px; color:var(--salinas); text-decoration:none; font-weight:600; font-size:.9rem; }
+    .back:hover { text-decoration:underline; }
+
+    /* ── Rejilla de fichas ── */
+    .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(268px, 1fr)); gap:24px; margin:0 0 48px; }
+    .ficha { position:relative; background:var(--papel); border:1px solid var(--arena); border-radius:12px; overflow:hidden; box-shadow:var(--sombra-sm); transition:transform .2s ease-out, box-shadow .2s ease-out, border-color .2s ease-out; }
+    .ficha:hover { transform:translateY(-2px); box-shadow:var(--sombra-md); border-color:#D9D0C3; }
+    .ficha-foto { width:100%; height:172px; background:var(--oceano); display:flex; align-items:center; justify-content:center; font-size:2.5rem; overflow:hidden; }
+    .ficha-foto-vacia { position:relative; flex-direction:column; background:var(--oceano); background-image:radial-gradient(circle at 78% 18%, rgba(212,96,58,.34), transparent 62%); }
+    .marca-inicial { font-family:'Fraunces', Georgia, serif; font-size:4.6rem; font-weight:900; line-height:1; color:rgba(250,248,245,.16); letter-spacing:-.04em; }
+    .marca-zona { position:absolute; bottom:14px; left:0; right:0; text-align:center; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.16em; color:rgba(250,248,245,.5); }
+    .ficha-foto img { position:absolute; inset:0; width:100%; height:172px; object-fit:cover; display:block; z-index:1; }
+    .ficha-cuerpo { padding:18px 20px 16px; }
+    .ficha-zona { font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.13em; color:var(--salinas); display:block; margin-bottom:6px; }
+    .ficha h2 { font-size:1.18rem; font-weight:700; line-height:1.22; color:var(--tinta); margin:0 0 8px; }
+    .ficha-datos { display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-family:var(--mono); font-size:12px; font-variant-numeric:tabular-nums; color:var(--piedra-honda); margin-bottom:8px; }
+    .nota { color:var(--mango); font-weight:600; }
+    .nota span { color:var(--piedra); font-weight:400; }
+    .estado { display:inline-flex; align-items:center; font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.03em; padding:3px 9px; border-radius:999px; }
+    .estado-abierto { background:#E8F3EB; color:#2F6B3C; }
+    .estado-cerrado { background:#F5EFEA; color:var(--piedra-honda); }
+    .ficha-dir { font-size:.86rem; color:var(--piedra-honda); line-height:1.5; margin-bottom:8px; }
+    .ficha-contacto { display:flex; gap:8px; padding:0 20px 18px; }
+    .ficha-contacto a { flex:1; text-align:center; padding:9px 6px; border-radius:8px; font-size:.82rem; font-weight:600; text-decoration:none; font-family:var(--mono); letter-spacing:.02em; }
+    .btn-tel { background:var(--oceano); color:#fff; }
+    .btn-wa { background:var(--papel); color:var(--oceano); border:1.5px solid var(--arena); }
+    .btn-wa:hover { border-color:var(--oceano); }
+
+    /* ── Filtros ── */
+    .panel-filtros { background:var(--papel); border:1px solid var(--arena); border-radius:12px; padding:24px; margin-bottom:32px; box-shadow:var(--sombra-sm); }
+    .sb-pill { font-family:"Source Sans 3", sans-serif; }
+
+    .cta-bar { background:var(--oceano); color:#fff; text-align:center; padding:32px 24px; border-radius:12px; margin-bottom:40px; }
+    .cta-bar p { margin-bottom:14px; font-size:1rem; color:rgba(250,248,245,.82); }
+    .cta-bar a { display:inline-block; background:var(--salinas); color:#fff; text-decoration:none; padding:13px 28px; border-radius:8px; font-weight:700; }
+    .cta-bar a:hover { background:var(--salinas-hondo); }
+    footer { text-align:center; padding:40px 24px 56px; color:var(--piedra); font-size:.85rem; border-top:1px solid var(--arena); margin-top:24px; }
+
+    .leaflet-popup-content-wrapper { border-radius:10px; }
+    .leaflet-popup-content { margin:12px 16px; font-family:"Source Sans 3", sans-serif; font-size:13px; line-height:1.45; }
+    .leaflet-popup-content a { color:var(--oceano); text-decoration:none; font-weight:700; }
+    .leaflet-popup-content a:hover { text-decoration:underline; }
+
+    @media (max-width:640px) {
+      .container { padding:0 18px; }
+      .portada { padding-top:38px; }
+      .cifra { flex:1 1 50%; min-width:0; padding:16px 18px 18px; }
+      .cifra:nth-child(2n) { border-right:none; }
+      .cifra-n { font-size:2.1rem; }
+      .grid { grid-template-columns:1fr; gap:18px; }
+    }
   </style>
 </head>
 <body>
-  <header>
-    <h1>${emoji} ${alreadyHasCaboRojo ? esc(displayName) : `${esc(displayName)} en Cabo Rojo`}</h1>
-    <p>${filtered.length} negocio${filtered.length !== 1 ? 's' : ''} encontrado${filtered.length !== 1 ? 's' : ''} · Cabo Rojo, Puerto Rico</p>
+  <header class="portada">
+    <div class="container">
+      <span class="kicker">${emoji}&nbsp; Directorio verificado a mano &middot; Cabo Rojo, Puerto Rico</span>
+      <h1>${alreadyHasCaboRojo ? esc(displayName) : `${esc(displayName)} en Cabo Rojo`}</h1>
+      <p class="portada-sub">${esc(subtituloPortada)}</p>
+      <div class="cifras">
+        <div class="cifra cifra-abierto">
+          <span class="cifra-n" id="hero-abiertos">${_abiertosAhora}</span>
+          <span class="cifra-l">abierto${_abiertosAhora === 1 ? '' : 's'} ahora<br>son las ${_horaPR} en PR</span>
+        </div>
+        <div class="cifra">
+          <span class="cifra-n">${filtered.length}</span>
+          <span class="cifra-l">en el directorio<br>con teléfono y dirección</span>
+        </div>
+        <div class="cifra">
+          <span class="cifra-n">${_verif.length}</span>
+          <span class="cifra-l">confirmado${_verif.length === 1 ? '' : 's'} por<br>una persona, no por un registro</span>
+        </div>
+        ${_mejorPuntuado ? `<div class="cifra">
+          <span class="cifra-n">${Number(_mejorPuntuado.google_rating)}</span>
+          <span class="cifra-l">mejor puntuado<br>${esc(recorta(String(_mejorPuntuado.name), 26))}</span>
+        </div>` : ''}
+      </div>
+    </div>
   </header>
 
   <!-- Leaflet map embedded at top of category page -->
   <div id="cat-map" aria-label="Mapa de ${esc(displayName)} en Cabo Rojo"></div>
-  <p class="map-section-label">📍 ${mapPlaces.length} ubicaciones en el mapa</p>
+  <p class="map-section-label">${mapPlaces.length} ubicaciones en el mapa</p>
 
-  <div class="container">
+  <div class="container bloque">
     ${bloqueRespuesta({
       nombrePlural: pluralEs(cat, displayName),
       total: filtered.length,
