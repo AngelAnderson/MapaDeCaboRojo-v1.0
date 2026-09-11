@@ -142,12 +142,30 @@ export function construirMd(doc: DocMd): string {
   return p.join('\n')
 }
 
-export function enviarMd(res: any, doc: DocMd): void {
+export function enviarMd(res: any, doc: DocMd, req?: any): void {
   const cuerpo = construirMd(doc)
   res.setHeader('Content-Type', 'text/markdown; charset=utf-8')
   res.setHeader('Link', `<${doc.canonical}>; rel="canonical"`)
   res.setHeader('X-Robots-Tag', 'noindex')  // la que indexa Google es la HTML, no esta
-  res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400')
+
+  // ⚠️ EL BUG DEL 11 SEP 2026, Y POR QUE ESTE BLOQUE NO SE SIMPLIFICA.
+  // La primera version mandaba `s-maxage=3600` siempre. El CDN cacheo la respuesta markdown
+  // de la PRIMERA visita (un ClaudeBot) y se la empezo a servir a TODO EL MUNDO en esa URL:
+  // medido en produccion, /categoria/hospedaje y /registro/desiertos devolvian text/markdown
+  // a un navegador normal Y A GOOGLEBOT. En un sitio que ya perdio indexacion (spam update,
+  // 22 ago) eso es el peor daño posible, y lo causamos nosotros.
+  //
+  // La regla: una respuesta que varia por User-Agent NO se cachea en el CDN. Punto.
+  // Solo se cachea cuando la variacion vive en la URL (?md=1 o .md), que es una clave de
+  // cache distinta y por lo tanto segura.
+  const porUrl = String(req?.query?.md || '') === '1' || /\.md$/.test(String(req?.url || '').split('?')[0])
+  if (porUrl) {
+    res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400')
+  } else {
+    res.setHeader('Cache-Control', 'private, no-store, max-age=0')
+    res.setHeader('CDN-Cache-Control', 'no-store')
+    res.setHeader('Vary', 'User-Agent, Accept')
+  }
   res.status(200).send(cuerpo)
 }
 

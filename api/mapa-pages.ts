@@ -7575,7 +7575,7 @@ ${crRow ? `<p class="not-prose mt-2 text-center text-sm text-slate-500">Cabo Roj
         { pregunta: '¿Qué médicos en Puerto Rico están aceptando pacientes nuevos?', url: 'https://registromedicopr.com/necesito' },
         { pregunta: '¿Cómo está la salud en mi pueblo?', url: 'https://registromedicopr.com/pueblo' },
       ],
-    })
+    }, req)
   }
 
   const body = `

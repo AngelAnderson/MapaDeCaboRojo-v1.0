@@ -915,7 +915,7 @@ export default async function handler(req: any, res: any) {
         { pregunta: '¿Qué hay abierto ahora mismo en Cabo Rojo?', url: `${baseUrl}/necesito` },
         { pregunta: '¿Cómo le pregunto algo a alguien en Cabo Rojo?', url: `${baseUrl}/veci` },
       ],
-    })
+    }, req)
   }
 
   const coleccionJsonLd = coleccionLd({
