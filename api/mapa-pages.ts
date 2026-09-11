@@ -22344,7 +22344,7 @@ ${SHARE_COPY_SCRIPT}
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=600')
   res.status(200).send(layout({
-    title: 'El Examen — el récord público de una AI que sí se mide',
+    title: 'El Examen · el récord público de una AI que sí se mide',
     description: `Todas las noches un juez separado le pone nota a El Veci contra ${reglas.length || 18} reglas escritas. De ${total} respuestas, pasaron ${pass}. Las reglas, los fallos y los límites, abiertos.`,
     slug: 'examen', bodyHtml: body, jsonLd, ogImage,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
