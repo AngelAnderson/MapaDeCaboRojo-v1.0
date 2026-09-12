@@ -190,6 +190,9 @@ const CATEGORY_MAP: Record<string, { match: string[]; display: string; emoji: st
 };
 
 export default async function handler(req: any, res: any) {
+  // Misma URL, 2 cuerpos (HTML y markdown para agentes). Sin `Vary` el CDN guarda el
+  // primero que pasó. Ver la nota larga en api/mapa-pages.ts, mismo bug, mismo dia.
+  res.setHeader('Vary', 'Accept, User-Agent')
   const cat = (req.query.cat as string || '').toLowerCase().trim();
 
   if (!cat) {

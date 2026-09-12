@@ -22130,6 +22130,17 @@ function handleNotFound(req: any, res: any) {
 export default async function handler(req: any, res: any) {
   const page = String(req.query.page || '')
 
+  // Estas rutas sirven DOS cuerpos distintos en la misma URL: HTML para el navegador
+  // y markdown cuando el que pide es un agente (`quiereMarkdown`: header Accept, .md,
+  // ?md=1, o User-Agent de crawler de IA). Sin `Vary`, el CDN guarda el primero que
+  // pasó y se lo da a todo el mundo: probado el 12 sep 2026 contra produccion, un
+  // GET normal seguido de uno con `Accept: text/markdown` en la MISMA URL devolvia
+  // el HTML cacheado. Como los humanos llegan primero y son muchisimos mas, el
+  // markdown para agentes estaba construido y practicamente no llegaba: solo salia
+  // cuando el agente pedia `?md=1`, que es otra clave de cache. `?md=1` y `.md` no
+  // necesitan esto (URL distinta), pero Accept y User-Agent si.
+  res.setHeader('Vary', 'Accept, User-Agent')
+
   const canonicalElsewhere = wrongHost(req, page)
   if (canonicalElsewhere) {
     // El 301 se cachea en el CDN. Sin esta línea cada redirect era una invocación
