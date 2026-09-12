@@ -142,7 +142,40 @@ export function construirMd(doc: DocMd): string {
   return p.join('\n')
 }
 
-export function enviarMd(res: any, doc: DocMd, req?: any): void {
+
+// --- El contador del canal (11 sep 2026) ---
+// Regla del canon de la voz del 7711: todo canal nuevo llega sin vista, y un canal que no
+// tiene vista no existe para el sistema. Sin esto, el 30 nov no se puede decir si los agentes
+// llegaron a tomar el markdown o si el Citador subio por otra razon.
+//
+// Se AWAITEA a proposito, con techo de 800ms: en serverless una promesa sin await se muere
+// cuando la funcion termina y el contador quedaria en cero mintiendo. Solo corre en la rama
+// markdown (nunca para humanos ni Googlebot) y nunca puede romper la respuesta.
+const UA_CORTO = (ua: string): string => {
+  const m = ua.match(/(gptbot|oai-searchbot|chatgpt-user|claudebot|claude-web|anthropic-ai|perplexitybot|perplexity-user|google-extended|bytespider|ccbot|applebot-extended|meta-externalagent|cohere-ai|diffbot|amazonbot|youbot|timpibot)/i)
+  return m ? m[1].toLowerCase() : 'otro'
+}
+
+async function contarHit(req: any, porUrl: boolean): Promise<void> {
+  const url = process.env.VITE_SUPABASE_URL || 'https://vprjteqgmanntvisjrvp.supabase.co'
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  if (!key) return
+  try {
+    await fetch(`${url}/rest/v1/rpc/agente_md_bump`, {
+      method: 'POST',
+      headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        p_dominio: String(req?.headers?.host || '?'),
+        p_ruta: String(req?.url || '/').split('?')[0],
+        p_agente: UA_CORTO(String(req?.headers?.['user-agent'] || '')),
+        p_por_url: porUrl,
+      }),
+      signal: AbortSignal.timeout(800),
+    })
+  } catch { /* el contador nunca rompe la respuesta */ }
+}
+
+export async function enviarMd(res: any, doc: DocMd, req?: any): Promise<void> {
   const cuerpo = construirMd(doc)
   res.setHeader('Content-Type', 'text/markdown; charset=utf-8')
   res.setHeader('Link', `<${doc.canonical}>; rel="canonical"`)
@@ -166,6 +199,7 @@ export function enviarMd(res: any, doc: DocMd, req?: any): void {
     res.setHeader('CDN-Cache-Control', 'no-store')
     res.setHeader('Vary', 'User-Agent, Accept')
   }
+  await contarHit(req, porUrl)
   res.status(200).send(cuerpo)
 }
 
