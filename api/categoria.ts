@@ -840,6 +840,11 @@ export default async function handler(req: any, res: any) {
     barberia: '¿Quién te corta el pelo hoy?', peluqueria: '¿Quién te atiende hoy?',
     playas: '¿A qué playa vas hoy?', playa: '¿A qué playa vas hoy?',
     gimnasio: '¿Qué gimnasio está abierto?', gimnasios: '¿Qué gimnasio está abierto?',
+    // El Citador (8 sep 2026) marco /categoria/servicios como `pagina_no_contesta`: la
+    // pregunta real trae la palabra "plomero" y el HTML no la decia en ningun sitio. El
+    // markdown para agentes SI la decia (PREGUNTA_MD abajo), asi que las 2 versiones de la
+    // misma pagina le contestaban distinto al mismo modelo. Ahora dicen lo mismo.
+    servicios: '¿Quién es un plomero, electricista o técnico de AC confiable en Cabo Rojo?',
   };
   const tituloPortada = PREGUNTA_H1[cat]
     || `¿${alreadyHasCaboRojo ? esc(displayName) : `${esc(displayName)} en Cabo Rojo`}?`;
@@ -874,7 +879,13 @@ export default async function handler(req: any, res: any) {
     // escrito como pregunta — asi el markdown y el HTML no pueden decir cosas distintas.
     const PREGUNTA_MD: Record<string, string> = {
       hospedaje: '¿Dónde me puedo quedar en Cabo Rojo, Puerto Rico? Cabañas, villas y hospedaje frente al mar',
-      marina: '¿Dónde alquilo un kayak, bote o jet ski en Boquerón y Cabo Rojo?',
+      // Decia "kayak, bote o jet ski en Boqueron". Verificado el 12 sep 2026: el directorio
+      // no tiene NI UN alquiler de kayak en Boqueron ni en Cabo Rojo (16 en la isla, 0 aqui),
+      // y jet ski tampoco. Lo unico que sale es Marina Puerto Real por un tag `alquiler de
+      // kayak` que nadie confirmo (su sello es relleno, nivel registro), y Puerto Real no es
+      // Boqueron. Prometerle kayak a un modelo que nos va a citar es exactamente la mentira
+      // que el resto del sistema existe para no cometer. La pregunta ahora dice lo que hay.
+      marina: '¿Dónde consigo marina, atraques o chárter de pesca en Puerto Real y Cabo Rojo?',
       servicios: '¿Quién es un plomero, electricista o técnico de AC confiable en Cabo Rojo?',
     }
     const pregunta = PREGUNTA_MD[cat] || `${tituloPortada.replace(/^¿|\?$/g, '')} en Cabo Rojo, Puerto Rico`

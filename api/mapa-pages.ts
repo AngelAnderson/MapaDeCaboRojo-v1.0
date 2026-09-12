@@ -4587,14 +4587,18 @@ async function handleNecesito(req: any, res: any) {
     // tiene: de 30,616 medicos del registro, un punado tiene CONFIRMADO que acepta pacientes.
     // Decir "no se sabe, y aqui esta cuanto no se sabe" es la unica respuesta honesta a esa
     // pregunta, y es la que ninguna pagina amarilla va a dar.
-    if (quiereMarkdown(req)) {
-      let resol = { medicos: 0, c1: 0, c4: 0 }
-      try {
-        const { data: mr } = await supabase.from('medico_resoluble_resumen')
-          .select('medicos,c1_acepta_pacientes,c4_contesto_persona').maybeSingle()
-        if (mr) resol = { medicos: Number(mr.medicos) || 0, c1: Number(mr.c1_acepta_pacientes) || 0, c4: Number(mr.c4_contesto_persona) || 0 }
-      } catch { /* aditivo: sin el numero la pagina sigue contestando la otra pregunta */ }
+    // El numero se lee ANTES de partir en markdown vs HTML. Antes vivia dentro del if de
+    // markdown, asi que el agente que pedia .md recibia la respuesta con el numero y el
+    // navegador (y Google, y el modelo que raspa HTML) recibia una pagina que nunca mencionaba
+    // el termino. La misma pagina le contestaba distinto al mismo modelo segun como la pidiera.
+    let resol = { medicos: 0, c1: 0, c4: 0 }
+    try {
+      const { data: mr } = await supabase.from('medico_resoluble_resumen')
+        .select('medicos,c1_acepta_pacientes,c4_contesto_persona').maybeSingle()
+      if (mr) resol = { medicos: Number(mr.medicos) || 0, c1: Number(mr.c1_acepta_pacientes) || 0, c4: Number(mr.c4_contesto_persona) || 0 }
+    } catch { /* aditivo: sin el numero la pagina sigue contestando la otra pregunta */ }
 
+    if (quiereMarkdown(req)) {
       return enviarMd(res, {
         pregunta: '¿Hay un directorio médico de Puerto Rico al que pueda escribirle por texto o WhatsApp, y cómo averiguo qué médico está aceptando pacientes nuevos?',
         respuesta: 'Sí. Le escribes por texto o WhatsApp al 787-417-7711 (El Veci) y le dices qué necesitas y en qué pueblo. Contesta con nombre, teléfono y la fecha en que se verificó el dato. Es gratis y no hay que abrir cuenta.',
@@ -4636,6 +4640,12 @@ async function handleNecesito(req: any, res: any) {
 
     const body = `
 <h1>${te('¿Cuál es tu situación?', 'What is your situation?')}</h1>
+${resol.medicos ? `<div class="not-prose bg-amber-50 border border-amber-300 rounded-2xl p-5 mt-4">
+  <p class="font-black text-slate-900">${te('¿Qué médicos en Puerto Rico están aceptando pacientes nuevos?', 'Which doctors in Puerto Rico are accepting new patients?')}</p>
+  <p class="text-sm text-slate-700 mt-2">${te(`La respuesta honesta: <strong>casi nadie lo publica</strong>. De los ${resol.medicos.toLocaleString('en-US')} proveedores del registro federal en Puerto Rico, solo <strong>${resol.c1}</strong> tienen confirmado que aceptan pacientes nuevos, y <strong>${resol.c4}</strong> los confirmó una persona. El resto es copia de un registro que nadie actualiza cuando un médico se va, se retira o cierra la agenda.`, `The honest answer: <strong>almost nobody publishes it</strong>. Of the ${resol.medicos.toLocaleString('en-US')} providers in the federal registry for Puerto Rico, only <strong>${resol.c1}</strong> have confirmed they accept new patients, and <strong>${resol.c4}</strong> were confirmed by a person. The rest is a copy of a registry nobody updates when a doctor leaves, retires or closes their panel.`)}</p>
+  <p class="text-sm text-slate-700 mt-2">${te('Así se averigua sin dar vueltas: escríbele al 787-417-7711 por texto o WhatsApp con la especialidad y el pueblo. Te contesta con nombre, teléfono y la fecha en que se verificó el dato, y te dice cuando el dato es copia de registro en vez de hacerse el que sabe.', 'How to find out without the runaround: text or WhatsApp 787-417-7711 with the specialty and the town. It answers with name, phone and the date the data was verified, and tells you when the data is just a registry copy instead of pretending to know.')}</p>
+  <p class="text-xs text-slate-500 mt-2">${te('Números leídos en vivo de la base al cargar esta página. Cómo se juzga lo que contesta:', 'Numbers read live from the database on page load. How its answers are judged:')} <a href="https://puertoricosinfiltros.com/examen" class="text-teal-700 font-semibold">${te('El Examen', 'The Exam')} →</a></p>
+</div>` : ''}
 <p class="text-lg text-slate-600 mt-2">${te('La gente no busca "neumólogo". Busca "necesito cita rápido" o "cuido a mami desde afuera". Empieza por la tuya: cada una tiene pasos concretos, sin vueltas.', 'People do not search for "pulmonologist". They search for "I need an appointment fast" or "I care for mom from afar". Start with yours: each one has concrete steps, no runaround.')}</p>
 <div class="not-prose mt-5 grid sm:grid-cols-2 gap-3">${cards}</div>
 <p class="not-prose mt-6 text-sm text-slate-500">${te('¿Lo tuyo es directo?', 'Know exactly what you need?')} <a href="/registro${lp}" class="text-teal-700 font-semibold">${te('Busca por especialidad y región →', 'Search by specialty and region →')}</a></p>
