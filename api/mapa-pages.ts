@@ -6876,7 +6876,30 @@ ${SHARE_COPY_SCRIPT}
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
   res.status(200).send(layout({
     bareTitle: true,
-    title: lang === 'en' ? `${nameTitle}, ${specLabelClean} in ${muni} · phone and NPI` : `${nameTitle}, ${specLabelClean} en ${muni} · teléfono y NPI`,
+    // El titulo empieza por lo que la gente escribio, no por el nombre del medico.
+    // GSC 14 sep 2026: "titulo que empiece con la busqueda principal" es el arreglo
+    // de 8,873 paginas y 99,989 impresiones perdidas, y 4,198 de esas son del
+    // Registro. La busqueda real es "dermatologo en Mayaguez", no el nombre propio:
+    // el nombre se queda en el titulo (la busqueda de marca sigue casando) pero
+    // pasa detras, para que lo primero que se lea sea lo que se busco. Si Google
+    // trunca, ahora corta el nombre y no el termino.
+    // Y el rabito solo promete lo que existe: 1,457 de 30,615 fichas de salud no
+    // tienen telefono (4.8%), y prometerlo en el SERP para que el que hace clic no
+    // lo encuentre es la misma falla que ya se corrigio en negocio.ts.
+    title: (() => {
+      const tieneTel = !!(place.phone && String(place.phone).trim())
+      const cola = lang === 'en'
+        ? (tieneTel ? ' · phone and NPI' : ' · NPI')
+        : (tieneTel ? ' · teléfono y NPI' : ' · NPI')
+      if (!specLabelClean) {
+        return lang === 'en'
+          ? `${nameTitle} in ${muni}${cola}`
+          : `${nameTitle} en ${muni}${cola}`
+      }
+      return lang === 'en'
+        ? `${specLabelClean} in ${muni} · ${nameTitle}${cola}`
+        : `${specLabelClean} en ${muni} · ${nameTitle}${cola}`
+    })(),
     // En la ventana Medicare (15 oct – 7 dic) la búsqueda deja de ser "dr fulano" y
     // pasa a ser "dr fulano mmm". Nombrar en la descripción los planes que SÍ lo
     // listan es la diferencia entre salir o no en esa búsqueda. Solo positivos: la
