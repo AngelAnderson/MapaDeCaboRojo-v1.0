@@ -44,7 +44,7 @@ Herramienta: `buscar_medico`. Argumentos:
 
 | Campo | Tipo | Notas |
 |---|---|---|
-| `especialidad` | string | **En minúscula y con acento, tal como se escribe en español:** "reumatólogo", "pediatra", "dentista", "farmacia", "laboratorio". Sin acento o con mayúscula devuelve 0 (limitación conocida del servidor). |
+| `especialidad` | string | En español: "reumatólogo", "pediatra", "dentista", "farmacia", "laboratorio". Desde el 16 sep 2026 el servidor ignora acentos y mayúsculas ("reumatologo" y "Mayaguez" funcionan). |
 | `municipio` | string | Uno de los 78 municipios. Vacío = toda la isla |
 | `nombre` | string | Nombre del proveedor o NPI de 10 dígitos |
 | `solo_confirmados` | boolean | `true` = solo fichas que una persona confirmó |
@@ -97,5 +97,5 @@ Antes de devolver la respuesta, comprueba: (a) el JSON trae `total` y `proveedor
 
 ## Historial
 
-- 1.1 (16 sep 2026): corregida la instrucción del acento (iba al revés), documentado `directorio_plan_medico` y su cobertura, añadida la ruta para chats sin herramientas. Salió del examen con un agente sin contexto.
+- 1.1 (16 sep 2026): el servidor ya ignora acentos (antes "reumatologo" daba 0), documentado `directorio_plan_medico` y su cobertura, añadida la ruta para chats sin herramientas. Salió del examen con un agente sin contexto.
 - 1.0 (16 sep 2026): primera versión.
