@@ -5561,6 +5561,7 @@ async function handleRegistro(req: any, res: any) {
 
   const body = `
 <h1>${t('Registro de Especialistas Médicos de Puerto Rico', 'Registry of Puerto Rico Medical Specialists')}</h1>
+<p class="text-xl text-slate-700 font-semibold mt-1">${t('Buscar médico no debería requerir más paciencia que ir al médico.', 'Finding a doctor should not take more patience than seeing one.')}</p>
 
 <p class="text-lg text-slate-600 mt-2">${t(`<strong>¿A cuál médico llamo hoy?</strong> Escoge especialidad y región, y en 10 segundos tienes los nombres, el pueblo y el teléfono. Gratis, sin cuenta y sin plan. Son ${totalVerified} proveedores del registro federal NPPES, puestos en orden en español.`, `<strong>Which doctor do I call today?</strong> Pick specialty and region and in 10 seconds you have the names, the town, and the phone number. Free, no account, no plan required. That is ${totalVerified} providers from the federal NPPES registry, organized in Spanish.`)}</p>
 
@@ -5983,7 +5984,7 @@ async function handleRegistro(req: any, res: any) {
 </script>
 
 <div class="not-prose mt-10 mb-2">
-  <h2 class="text-xl font-bold text-slate-900 mb-1">${t('Por qué existe esto', 'Why this exists')}</h2>
+  <h2 class="text-xl font-bold text-slate-900 mb-1">${t('Encuentra opciones de médicos sin llamar a medio Puerto Rico', 'Find doctor options without calling half of Puerto Rico')}</h2>
   <p class="text-sm text-slate-600 mb-4">${t('Nos dijeron en mayo que la cita era para octubre. Esta es la historia, en 3 minutos.', 'In May we were told the appointment would be in October. Here is the story, in 3 minutes.')}</p>
   <div class="mx-auto" style="max-width:360px;aspect-ratio:9/16;">
     <iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/4gu4-h8Ji7Q" title="Por qué existe RegistroMedicoPR" style="width:100%;height:100%;border:0;border-radius:16px;" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen></iframe>
@@ -6038,7 +6039,7 @@ ${regDisclaimer(en)}
   res.status(200).send(layout({
     bareTitle: true,
     title: t('Registro de Especialistas Médicos de PR: por pueblo y con teléfono', 'Puerto Rico Medical Specialist Registry: by town, with phone numbers'),
-    description: t(`${totalVerified} especialistas de PR verificados contra el registro federal NPPES/CMS. Busca por especialidad y región, en español, gratis.`, `${totalVerified} PR specialists verified against the federal NPPES/CMS registry. Search by specialty and region. Free.`),
+    description: t(`${totalVerified} especialistas de PR del registro federal NPPES/CMS, por especialidad y pueblo, con teléfono. Encuentra opciones de médicos sin llamar a medio Puerto Rico. Gratis.`, `${totalVerified} PR specialists from the federal NPPES/CMS registry, by specialty and town, with phone numbers. Find doctor options without calling half of Puerto Rico. Free.`),
     slug: 'registro',
     bodyHtml: body,
     jsonLd,
