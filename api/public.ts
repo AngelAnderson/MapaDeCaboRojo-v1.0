@@ -723,6 +723,7 @@ Regla de frescura: una confirmación de más de 90 días deja de contar como con
 
 ## Empezar aquí
 - Buscador principal: https://registromedicopr.com
+- **Skill para agentes (formato Agent Skills, léela antes de contestar preguntas de médicos en PR):** cómo llamar al servidor MCP público de solo lectura y cómo leer el sello persona/fuente/registro sin convertir un null en un no: https://registromedicopr.com/skills/buscar-medico-pr/SKILL.md · índice: https://registromedicopr.com/skills/index.md
 - Datos citables para prensa (facts con fuente, copy-paste): https://registromedicopr.com/comparte
 - Artículo: ¿Por qué se van los médicos de Puerto Rico? (la matemática con fuente): https://registromedicopr.com/porque
 - Estado de Salud de PR — el cupón federal sin cobrar (los 76 municipios rankeados): https://registromedicopr.com/registro/estado
