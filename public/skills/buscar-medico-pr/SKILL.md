@@ -4,8 +4,8 @@ description: Busca médicos, dentistas, farmacias y laboratorios de Puerto Rico 
 license: Uso libre con atribución a registromedicopr.com
 metadata:
   publisher: Registro Médico PR (registromedicopr.com) · El Veci 787-417-7711 · Angel Anderson, Cabo Rojo, Puerto Rico
-  version: "1.1"
-  updated: "2026-09-16"
+  version: "1.2"
+  updated: "2026-09-17"
   source_of_truth: https://vprjteqgmanntvisjrvp.supabase.co/functions/v1/mcp-puerto-rico
 ---
 
@@ -62,7 +62,7 @@ Si tienes shell, corre `scripts/buscar.sh "<especialidad>" "<municipio>"`. Si no
 
 Son 2 fuentes distintas y hay que decir cuál se usó:
 
-1. **Lo que la oficina confirmó:** el campo `planes_que_acepta` de `buscar_medico`. Si viene `null`, nadie lo ha confirmado. **`null` no es "no acepta", es "no sabemos".**
+1. **Lo que la oficina confirmó:** el campo `planes_que_acepta` de `buscar_medico`. Si viene `null`, nadie lo ha confirmado. **`null` no es "no acepta", es "no sabemos".** El campo `disponibilidad_confirmada_por` dice de dónde salió: **"la oficina (...)"** = la oficina misma lo confirmó por texto, y eso puedes decirlo aunque el `nivel_verificacion` de la ficha sea `registro` (el nivel habla de la ficha; este campo habla de la disponibilidad). "dato de la ficha, sin recibo" = trátalo como no confirmado.
 2. **Lo que el plan publica en su directorio:** herramienta `directorio_plan_medico`, argumento único `medico` (nombre o NPI). Devuelve en qué planes aparece, en qué edición, en qué pueblo y con qué teléfono. **Cobertura hoy: MMM Individuales (dic 2024, dic 2025, jun 2026) y Plan Vital / First Medical.** MCS, Triple-S y otros no están: si preguntan por esos, dilo y manda a confirmar con la oficina.
 
 Flujo recomendado: `buscar_medico` → para cada resultado que le interese a la persona, `directorio_plan_medico({ medico: "<nombre o NPI>" })` → reporta solo el hallazgo positivo. **Que un médico NO salga en el directorio de un plan no significa que esté fuera de la red**; el cruce no identifica todas las filas.
@@ -75,7 +75,7 @@ Cada proveedor trae `nivel_verificacion`:
 - **`fuente`**: corroborado contra una fuente pública; la oficina todavía no lo confirmó. Di "según fuente pública".
 - **`registro`**: copiado del registro federal NPPES. **Es el mismo dato que ya tiene el plan médico: no hereda nada.** Di "aparece en el registro, no está confirmado" y recomienda llamar antes de ir.
 
-Campos que devuelve cada proveedor: `nombre`, `especialidad`, `especialidad_federal`, `municipio`, `telefono`, `direccion`, `npi`, `npi_desactivado_federal`, `rating_google`, `acepta_pacientes_nuevos`, `planes_que_acepta`, `nota_espera`, `lo_confirmo`, `confirmado_el`, `ultima_verificacion`, `verificado_hace_dias`, `nivel_verificacion`, `url`.
+Campos que devuelve cada proveedor: `nombre`, `especialidad`, `especialidad_federal`, `municipio`, `telefono`, `direccion`, `npi`, `npi_desactivado_federal`, `rating_google`, `acepta_pacientes_nuevos`, `planes_que_acepta`, `nota_espera`, `lo_confirmo`, `confirmado_el`, `ultima_verificacion`, `verificado_hace_dias`, `nivel_verificacion`, `disponibilidad_confirmada_por`, `url`.
 
 Si `npi_desactivado_federal` trae fecha, el NPI está desactivado en el registro federal: dilo tal cual. Si `especialidad_federal` no coincide con lo que se buscó (ej. "Medicina Preventiva" para un reumatólogo), avísalo.
 
@@ -97,5 +97,6 @@ Antes de devolver la respuesta, comprueba: (a) el JSON trae `total` y `proveedor
 
 ## Historial
 
+- 1.2 (17 sep 2026): campo `disponibilidad_confirmada_por`, para que un "acepta pacientes: sí" con nivel `registro` deje de ser ambiguo.
 - 1.1 (16 sep 2026): el servidor ya ignora acentos (antes "reumatologo" daba 0), documentado `directorio_plan_medico` y su cobertura, añadida la ruta para chats sin herramientas. Salió del examen con un agente sin contexto.
 - 1.0 (16 sep 2026): primera versión.
