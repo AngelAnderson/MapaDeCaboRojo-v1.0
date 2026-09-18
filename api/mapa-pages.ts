@@ -352,7 +352,7 @@ function layout(opts: {
 </details>
 </nav>
 <script>document.addEventListener('click',function(e){var d=document.getElementById('nav-more');if(d&&d.open&&!d.contains(e.target))d.removeAttribute('open');});</script>
-<a href="${langHref}" class="text-xs font-bold text-slate-500 hover:text-teal-700 border border-slate-200 rounded-lg px-2.5 h-9 inline-flex items-center" aria-label="Language">${isEn ? 'ES' : 'EN'}</a>
+<a href="${langHref}" class="text-[15px] font-bold text-slate-700 hover:text-teal-700 border border-slate-300 rounded-lg px-3 h-10 inline-flex items-center" aria-label="Language">${isEn ? 'ES' : 'EN'}</a>
 <button id="theme-toggle" type="button" aria-label="Theme" class="w-9 h-9 rounded-lg border border-slate-200 text-slate-600 hover:border-teal-400 flex items-center justify-center"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
 <button id="mnav-btn" type="button" aria-label="Menu" aria-expanded="false" class="md:hidden w-9 h-9 rounded-lg border border-slate-200 text-slate-600 hover:border-teal-400 flex items-center justify-center"><i class="fa-solid fa-bars" id="mnav-icon"></i></button>
 </div>
