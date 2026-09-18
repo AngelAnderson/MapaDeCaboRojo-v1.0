@@ -6347,7 +6347,7 @@ async function handleEspecialista(req: any, res: any) {
   const npiDesactivado = place.npi_status === 'DEACTIVATED'
   const npiVivo = place.npi_status !== 'NO_ENCONTRADO' && !npiDesactivado
   const T = lang === 'en' ? {
-    sub: `${place.phone ? `Phone: ${place.phone}. ` : ''}${specLabelClean} in ${muni}, PR. ${npiVivo ? `NPI ${npi} verified in the federal NPPES registry${verifiedDate ? `, as of ${verifiedDate}` : ''}` : `NPI ${npi} no longer appears in the federal NPPES registry`}. Free, no account.`,
+    sub: `${place.phone ? `Phone: ${place.phone}. ` : ''}${specLabelClean} in ${muni}, PR. ${npiVivo ? `NPI ${npi} active in the federal NPPES registry${verifiedDate ? `, as of ${verifiedDate}` : ''}` : `NPI ${npi} no longer appears in the federal NPPES registry`}. Free, no account.`,
     // 2026-08-20: el botón decía "Ask El Veci", que en una página que YA muestra el
     // teléfono no promete nada nuevo. Desde hoy El Veci le pregunta a las oficinas por ti.
     verified: npiVivo ? 'Verified · federal NPI' : (npiDesactivado ? 'Federal NPI deactivated' : 'Not in the federal registry'), call: 'Call', wa: 'WhatsApp', veci: 'Have El Veci ask for you',
@@ -6355,7 +6355,7 @@ async function handleEspecialista(req: any, res: any) {
     othersH: `Other ${specLabel.toLowerCase()}s in ${regionLabel || 'PR'}`,
     claimH: 'Is this your profile?', notFound: 'Not who you were looking for?',
   } : {
-    sub: `${place.phone ? `Teléfono: ${place.phone}. ` : ''}${specLabelClean} en ${muni}, PR. ${npiVivo ? `NPI ${npi} verificado en el registro federal NPPES${verifiedDate ? `, al ${verifiedDate}` : ''}` : `El NPI ${npi} ya no aparece en el registro federal NPPES`}. Gratis y sin cuenta.`,
+    sub: `${place.phone ? `Teléfono: ${place.phone}. ` : ''}${specLabelClean} en ${muni}, PR. ${npiVivo ? `NPI ${npi} activo en el registro federal NPPES${verifiedDate ? `, al ${verifiedDate}` : ''}` : `El NPI ${npi} ya no aparece en el registro federal NPPES`}. Gratis y sin cuenta.`,
     verified: npiVivo ? 'Verificado · NPI federal' : (npiDesactivado ? 'NPI federal desactivado' : 'Ya no está en el registro federal'), call: 'Llamar', wa: 'WhatsApp', veci: 'Que el Veci pregunte por ti',
     addr: 'Dirección', regionH: 'Región', specialtyH: 'Especialidad', npiH: 'NPI federal',
     othersH: `Otros ${specLabel.toLowerCase()} en el ${regionLabel || 'PR'}`,
@@ -6647,70 +6647,216 @@ async function handleEspecialista(req: any, res: any) {
   const safeSpec = spec ? place.subcategory : ''
   const safeRegion = REG_REGIONS.has(region) ? region : ''
   const evtAttr = `specialty:'${safeSpec}',region:'${safeRegion}'`
-  const actionBtns = `<div class="not-prose flex flex-wrap gap-3 mt-5">
-    ${telLink ? `<a href="${telLink}" onclick="try{gtag('event','click_to_call',{${evtAttr}})}catch(e){}" class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-bold px-5 py-3 rounded-xl text-base"><i class="fa-solid fa-phone"></i> ${T.call} ${escapeHtml(place.phone)}</a>` : ''}
-    ${waLink ? `<a href="${waLink}" onclick="try{gtag('event','click_whatsapp',{${evtAttr}})}catch(e){}" class="inline-flex items-center gap-2 bg-white border-2 border-teal-600 text-teal-700 font-bold px-5 py-3 rounded-xl text-base hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${T.wa}</a>` : ''}
-    <a href="https://wa.me/17874177711?text=${spec ? spec.kw : 'ESPECIALISTA'}" class="inline-flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-5 py-3 rounded-xl text-base"><i class="fa-brands fa-whatsapp"></i> ${T.veci}</a>
-  </div>${(() => {
-    // Cuarentena visible en la ficha del Registro (2026-08-22). El bot y la ficha del
-    // Mapa ya avisaban; esta ficha — que es donde caen los clics de Google del Registro —
-    // seguía sirviendo el número con cara de bueno. Mismas reglas que negocio.ts:
-    // se atribuye, se fecha, caduca sola (verificación posterior o 90 días), derecho a
-    // réplica en la misma línea, y NO toca el JSON-LD.
-    const dr = (place as any).dato_reportado
-    if (!tmReporteVivo(dr, place.last_verified_at)) return ''
-    const d = new Date(dr.at)
-    const fc = fechaCortaAT(dr.at)
-    const f = fc ? ` el ${fc}` : ''
-    return `<div class="not-prose mt-3 bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
-    <p class="m-0 text-[15px] text-amber-900"><b>⚠️ ${t('Un vecino nos reportó', 'A neighbor reported')}${f}</b> ${t(`que ${TM_FRASE[dr.tipo] || 'este dato está malo'}. Todavía no lo hemos confirmado.`, 'that this phone did not work when dialed. We have not confirmed it yet.')}</p>
-    <p class="m-0 mt-1 text-sm text-amber-800">${t('¿Es tu número y está bueno? Dímelo y se corrige el mismo día: texto al 787-417-7711 o angel@angelanderson.com.', 'Is this your number and it works? Tell us and it gets fixed the same day: text 787-417-7711 or angel@angelanderson.com.')} <a href="/telefonos-muertos" class="underline font-semibold">${t('El marcador de teléfonos reportados →', 'The reported-phones board →')}</a></p>
+  // 18 sep 2026: la alerta de teléfono reportado se mudó a la fila 1 de la Hoja de evidencia.
+  // "Llamar" va primero y a lo ancho: es lo que vino a hacer la persona.
+  const actionBtns = `<div class="not-prose grid grid-cols-2 gap-2 mt-5">
+    ${telLink ? `<a href="${telLink}" onclick="try{gtag('event','click_to_call',{${evtAttr}})}catch(e){}" class="col-span-2 flex items-center justify-center gap-2 bg-teal-700 hover:bg-teal-800 text-white font-bold px-5 min-h-[56px] rounded-xl text-lg no-underline"><i class="fa-solid fa-phone"></i> ${T.call} ${escapeHtml(place.phone)}</a>` : ''}
+    ${waLink ? `<a href="${waLink}" onclick="try{gtag('event','click_whatsapp',{${evtAttr}})}catch(e){}" class="flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-[15px] no-underline hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${T.wa}</a>` : ''}
+    <a href="https://wa.me/17874177711?text=${spec ? spec.kw : 'ESPECIALISTA'}" class="${waLink ? '' : 'col-span-2 '}flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-[15px] no-underline hover:bg-teal-50"><i class="fa-brands fa-whatsapp"></i> ${T.veci}</a>
   </div>`
-  })()}`
 
-  const dataRows = `<div class="not-prose grid sm:grid-cols-2 gap-3 mt-6">
-    ${dispoHtml}
-    <div class="bg-white border border-slate-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${T.regionH}</div><div class="text-slate-900 font-semibold mt-1">${escapeHtml(muni)}${region ? ` · ${escapeHtml(region)}` : ''}</div>${region && REGION_BLURB[region] ? `<div class="text-xs text-slate-500 mt-0.5">${escapeHtml(REGION_BLURB[region])}</div>` : ''}</div>
-    ${place.address ? `<div class="bg-white border border-slate-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${T.addr}</div><div class="text-slate-900 mt-1">${escapeHtml(place.address)}</div></div>` : ''}
-    ${contactoOculto ? `<div class="bg-slate-50 border-2 border-slate-300 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-500 font-bold">${lang === 'en' ? 'Contact not published' : 'Contacto no publicado'}</div><div class="text-slate-800 mt-1">${lang === 'en' ? 'The federal registry lists what looks like a home address and a personal phone for this person. We do not publish those until the person or the office confirms where they see patients.' : 'El registro federal trae para esta persona lo que parece una dirección de casa y un teléfono personal. No los publicamos hasta que la persona o la oficina confirme dónde atiende.'}</div><div class="text-sm text-slate-600 mt-2">${lang === 'en' ? 'Is this your profile? Confirm your office contact in the form below, or text 787-417-7711. It goes up the same day.' : '¿Es tu ficha? Confirma el contacto de tu oficina en el formulario de abajo, o texto al 787-417-7711. Se publica el mismo día.'}</div></div>` : ''}
-    <div class="bg-white border border-slate-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${T.npiH}</div><div class="text-slate-900 font-mono mt-1">${escapeHtml(npi)} <a href="https://npiregistry.cms.hhs.gov/provider-view/${escapeHtml(npi)}" target="_blank" rel="noopener" class="text-teal-600 text-sm font-sans font-semibold ml-2">verificar en el registro federal →</a></div></div>
-    ${planesOficina.length
-      ? `<div class="bg-emerald-50 border-2 border-emerald-300 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-emerald-700 font-bold">${lang === 'en' ? '✓ Plans the office confirmed' : '✓ Planes que la oficina confirmó'}</div><div class="text-emerald-900 font-semibold mt-1">${escapeHtml(planesOficina.join(' · '))}</div><div class="text-xs text-emerald-700 mt-1">${planesFechaTxt ? `${lang === 'en' ? 'The office said so' : 'Lo dijo la oficina'}${quienLoDijo ? ` ${quienLoDijo}` : ''}, ${lang === 'en' ? 'on' : 'el'} ${planesFechaTxt}. ` : `${lang === 'en' ? 'Confirmed by the office itself. ' : 'Confirmado por la propia oficina. '}`}${lang === 'en' ? 'It does not come from a plan directory. Plans change: confirm again when you call.' : 'No sale del directorio de un plan. Los planes cambian: vuelve a confirmar cuando llames.'}</div></div>`
-      : `<div class="bg-slate-50 border border-slate-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-slate-400 font-bold">${lang === 'en' ? 'Does this office take your plan?' : '¿Aceptan tu plan?'}</div><div class="text-slate-700 text-sm mt-1">${lang === 'en' ? 'Nobody has confirmed this office’s plans yet. Ask when you call, then help the next person below.' : 'Nadie ha confirmado los planes de esta oficina todavía. Pregunta cuando llames, y ayuda al próximo abajo.'}</div></div>`}
-    ${reportedPlans.length ? `<div class="bg-sky-50 border border-sky-200 rounded-xl p-4 sm:col-span-2"><div class="text-xs uppercase tracking-wide text-sky-700 font-bold">${lang === 'en' ? 'Neighbors report this office takes' : 'Vecinos reportan que aquí aceptan'}</div><div class="text-sky-900 font-semibold mt-1">${reportedPlans.map((r: any) => `${escapeHtml(planLabel(r.plan))}${Number(r.reportes) > 1 ? ` <span class="text-xs text-sky-600">(${r.reportes})</span>` : ''}`).join(' · ')}</div><div class="text-xs text-sky-700 mt-1">${lang === 'en' ? 'Reported by people who called, not confirmed by the office. Always double-check when you call.' : 'Reportado por gente que llamó, no confirmado por la oficina. Siempre verifica cuando llames.'}</div></div>` : ''}
-  </div>
-${planesDirCard}${planesNota}${testigosHtml}${negocioHtml}
+  // ═══ La Hoja de evidencia (18 sep 2026) ═══
+  // La ficha es el producto: el 69% de las sesiones del Registro caen aquí (13,455 de
+  // 19,472 en 28 días, ga4_humano). Antes, la evidencia estaba regada en 6-8 tarjetas y
+  // arriba de todo salía un chip verde "Verificado · NPI federal" que solo quería decir
+  // "el NPI está activo", mientras justo al lado otro chip decía "nadie lo ha confirmado".
+  // Ahora son las 5 preguntas con las que llega la gente, cada una con QUIÉN lo dijo:
+  //   ● persona  = lo confirmó la oficina o el Registro, con fecha
+  //   ◐ dice     = lo dice un documento público o un vecino, sin confirmar
+  //   ○ nadie    = nadie lo ha dicho; se dice en voz alta, no se esconde
+  //   ▲ alerta   = hay evidencia en contra (NPI desactivado, teléfono reportado, salió de MMM)
+  // Reglas que NO cambian (ver arriba): solo se publica el hallazgo POSITIVO de un directorio
+  // de plan; su silencio nunca se escribe como "no está en la red". El reporte de un vecino
+  // no es el sello. Un "no contestó" de la web NO se publica: va a la cola del Verificador.
+  type Nivel = 'persona' | 'dice' | 'nadie' | 'alerta'
+  const SYM: Record<Nivel, { s: string; cls: string; es: string; en: string }> = {
+    persona: { s: '●', cls: 'text-teal-700', es: 'Lo confirmó una persona', en: 'Confirmed by a person' },
+    dice: { s: '◐', cls: 'text-teal-700', es: 'Lo dice un documento o un vecino, sin confirmar', en: 'A document or a neighbor says so, unconfirmed' },
+    nadie: { s: '○', cls: 'text-stone-400', es: 'Nadie lo ha confirmado', en: 'Nobody has confirmed it' },
+    alerta: { s: '▲', cls: 'text-orange-700', es: 'Hay algo en contra', en: 'There is evidence against it' },
+  }
+  const fechaTxt = (d: string | null | undefined) => d
+    ? new Date(String(d).slice(0, 10) + 'T12:00:00').toLocaleDateString(lang === 'en' ? 'en-US' : 'es-PR', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null
+
+  // Vecinos que dijeron que el teléfono SÍ contestó (90 días). Solo el positivo es público.
+  let telContesto: { n: number; ultimo: string } | null = null
+  if (place.phone) {
+    const { data: tr } = await supabase.from('registro_provider_corrections')
+      .select('created_at').eq('npi', npi).eq('reported_status', 'telefono_contesta')
+      .gte('created_at', new Date(Date.now() - 90 * 86400000).toISOString())
+      .order('created_at', { ascending: false }).limit(50)
+    if (tr && tr.length) telContesto = { n: tr.length, ultimo: String(tr[0].created_at) }
+  }
+  const otroTelPlan = (planDir?.otroTel && { plan: 'MMM', tel: planDir.otroTel })
+    || (mcsAdv?.otroTel && { plan: 'MCS', tel: mcsAdv.otroTel })
+    || (tsAdv?.otroTel && { plan: 'Triple-S', tel: tsAdv.otroTel })
+    || (fmv?.otroTel && { plan: 'Plan Vital', tel: fmv.otroTel }) || null
+  const fmtTel = (d: string) => { const x = String(d).replace(/\D/g, '').slice(-10); return x.length === 10 ? `(${x.slice(0, 3)}) ${x.slice(3, 6)}-${x.slice(6)}` : d }
+
+  const drVivo = tmReporteVivo((place as any).dato_reportado, place.last_verified_at)
+  const esPersona = sello === 'persona' && !!selloFecha
+  type Fila = { q: string; nivel: Nivel; a: string; src?: string; extra?: string }
+  const filas: Fila[] = []
+
+  // 1 · ¿Ese teléfono contesta?
+  {
+    const q = t('¿Ese teléfono contesta?', 'Does that phone answer?')
+    const otro = otroTelPlan ? t(` Si no contesta, prueba el que publica ${otroTelPlan.plan}: <b>${escapeHtml(fmtTel(otroTelPlan.tel))}</b>.`, ` If nobody answers, try the one ${otroTelPlan.plan} publishes: <b>${escapeHtml(fmtTel(otroTelPlan.tel))}</b>.`) : ''
+    if (!place.phone) {
+      filas.push({ q, nivel: 'nadie', a: contactoOculto
+        ? t('No lo publicamos: el registro federal trae lo que parece un celular personal.', 'Not published: the federal registry lists what looks like a personal cell phone.')
+        : t('El registro federal no trae teléfono.', 'The federal registry has no phone.') })
+    } else if (drVivo) {
+      const dr = (place as any).dato_reportado
+      const fc = fechaCortaAT(dr.at)
+      filas.push({ q, nivel: 'alerta', a: t(`Un vecino nos reportó${fc ? ` el ${fc}` : ''} que ${TM_FRASE[dr.tipo] || 'este dato está malo'}.`, 'A neighbor reported that this phone did not work when dialed.') + otro,
+        src: t('Todavía no lo hemos confirmado. ¿Es tu número y está bueno? Texto al 787-417-7711 y se corrige el mismo día.', 'Not confirmed yet. Is this your number and it works? Text 787-417-7711 and it gets fixed the same day.'),
+        extra: `<a href="/telefonos-muertos" class="text-sm font-semibold text-teal-700 underline">${t('El marcador de teléfonos reportados →', 'The reported-phones board →')}</a>` })
+    } else if (esPersona) {
+      filas.push({ q, nivel: 'persona', a: t(`Sí. Lo confirmó una persona el ${selloFecha}.`, `Yes. A person confirmed it on ${selloFecha}.`) + otro })
+    } else if (telContesto) {
+      filas.push({ q, nivel: 'dice', a: t(`${telContesto.n === 1 ? '1 vecino dijo' : `${telContesto.n} vecinos dijeron`} que contestaron.`, `${telContesto.n === 1 ? '1 neighbor said' : `${telContesto.n} neighbors said`} someone answered.`) + otro,
+        src: t(`El último, el ${fechaTxt(telContesto.ultimo)}. Reportado por gente que llamó.`, `Most recent: ${fechaTxt(telContesto.ultimo)}. Reported by people who called.`) })
+    } else {
+      filas.push({ q, nivel: 'nadie', a: t('Nadie lo ha probado todavía.', 'Nobody has tried it yet.') + otro })
+    }
+  }
+
+  // 2 · ¿Acepta mi plan?
+  {
+    const q = t('¿Acepta mi plan?', 'Does it take my plan?')
+    const listaPlanes = planRows.length ? `<ul class="m-0 mt-2 p-0 list-none divide-y divide-stone-100 text-[15px]">${planRows.join('')}</ul>` : ''
+    const vecinosTxt = reportedPlans.length
+      ? t(`Vecinos que llamaron dicen que aceptan: <b>${reportedPlans.map((r: any) => escapeHtml(planLabel(r.plan)) + (Number(r.reportes) > 1 ? ` (${r.reportes})` : '')).join(' · ')}</b>.`,
+          `Neighbors who called say they take: <b>${reportedPlans.map((r: any) => escapeHtml(planLabel(r.plan)) + (Number(r.reportes) > 1 ? ` (${r.reportes})` : '')).join(' · ')}</b>.`)
+      : ''
+    if (planesOficina.length) {
+      filas.push({ q, nivel: 'persona', a: t(`La oficina dice que acepta: <b>${escapeHtml(planesOficina.join(' · '))}</b>.`, `The office says it takes: <b>${escapeHtml(planesOficina.join(' · '))}</b>.`),
+        src: t(`Lo dijo la oficina${quienLoDijo ? ` ${quienLoDijo}` : ''}${planesFechaTxt ? `, el ${planesFechaTxt}` : ''}. Los planes cambian: vuelve a preguntar cuando llames.`, `The office said so${quienLoDijo ? ` ${quienLoDijo}` : ''}${planesFechaTxt ? `, on ${planesFechaTxt}` : ''}. Plans change: ask again when you call.`),
+        extra: (vecinosTxt ? `<p class="m-0 mt-2 text-sm text-stone-600">${vecinosTxt}</p>` : '') + listaPlanes + planWarn })
+    } else if (planRows.length || reportedPlans.length) {
+      filas.push({ q, nivel: 'dice', a: planRows.length
+          ? t('Aparece en el directorio de estos planes. Eso no es lo mismo que "te cogen": pregunta cuando llames.', 'Listed in these plans\' directories. That is not the same as "they will take you": ask when you call.')
+          : vecinosTxt,
+        extra: (planRows.length && vecinosTxt ? `<p class="m-0 mt-2 text-sm text-stone-600">${vecinosTxt}</p>` : '') + listaPlanes + planWarn })
+    } else {
+      filas.push({ q, nivel: planWarn ? 'alerta' : 'nadie', a: t('Nadie ha preguntado todavía.', 'Nobody has asked yet.'), extra: planWarn })
+    }
+  }
+
+  // 3 · ¿Está cogiendo pacientes nuevos? (regla del Censo: >90 días vuelve a "no se sabe")
+  {
+    const q = t('¿Está cogiendo pacientes nuevos?', 'Taking new patients?')
+    if (stFresh && stFresh.accepting_patients != null) {
+      filas.push({ q, nivel: 'persona',
+        a: stFresh.accepting_patients ? t('<b>Sí.</b>', '<b>Yes.</b>') : t('<b>No.</b> Ahórrate la llamada: mira otras opciones más abajo.', '<b>No.</b> Save the call: see other options below.'),
+        src: t(`Confirmado directo el ${stDate}${stFresh.wait_note ? ` · ${escapeHtml(stFresh.wait_note)}` : ''}. Esto cambia: confirma cuando llames.`, `Confirmed directly on ${stDate}${stFresh.wait_note ? ` · ${escapeHtml(stFresh.wait_note)}` : ''}. This changes: confirm when you call.`) })
+    } else {
+      filas.push({ q, nivel: 'nadie', a: st0 ? t('Lo último que sabemos tiene más de 90 días, así que no cuenta.', 'What we last heard is over 90 days old, so it does not count.') : t('Nadie sabe todavía.', 'Nobody knows yet.') })
+    }
+  }
+
+  // 4 · ¿Sigue atendiendo?
+  {
+    const q = t('¿Sigue atendiendo?', 'Still practicing?')
+    const npiLink = `<a href="https://npiregistry.cms.hhs.gov/provider-view/${escapeHtml(npi)}" target="_blank" rel="noopener" class="font-semibold text-teal-700 underline">${t('verifícalo', 'check it')}</a>`
+    if (!npiVivo) {
+      filas.push({ q, nivel: 'alerta', a: npiDesactivado
+          ? t('Su número federal (NPI) fue <b>desactivado</b>. Llama antes de ir.', 'The federal number (NPI) was <b>deactivated</b>. Call before you go.')
+          : t('Su número federal (NPI) <b>ya no aparece</b> en el registro. Llama antes de ir.', 'The federal number (NPI) <b>no longer appears</b> in the registry. Call before you go.'),
+        src: `NPI ${escapeHtml(npi)} · ${npiLink}` })
+    } else {
+      const partes: string[] = []
+      if (partdAct) partes.push(t(`Atendió pacientes de Medicare: <b>${partdAct.clms.toLocaleString('es-PR')}</b> recetas en el año más reciente que publica CMS.`, `Treated Medicare patients: <b>${partdAct.clms.toLocaleString('en-US')}</b> prescriptions in CMS's most recent year.`))
+      if (licAct) partes.push(t(`Licencia de Puerto Rico <b>activa</b>${licAct.expira ? `, vence el ${fechaTxt(licAct.expira)}` : ''}.`, `Puerto Rico license <b>active</b>${licAct.expira ? `, expires ${fechaTxt(licAct.expira)}` : ''}.`))
+      filas.push({ q, nivel: 'dice',
+        a: partes.length ? partes.join(' ') : t('Su número federal (NPI) está <b>activo</b>. Eso dice que está registrado, no que atiende hoy.', 'The federal number (NPI) is <b>active</b>. That says they are registered, not that they see patients today.'),
+        src: `${partes.length ? t('Medicare Part D (CMS)', 'Medicare Part D (CMS)') + (licAct ? t(` y Departamento de Salud, consultado el ${fechaTxt(licAct.fecha)}`, ` and PR Health Dept., checked ${fechaTxt(licAct.fecha)}`) : '') + ' · ' : ''}NPI ${escapeHtml(npi)}${verifiedDate ? t(`, registro federal al ${verifiedDate}`, `, federal registry as of ${verifiedDate}`) : ''} · ${npiLink}` })
+    }
+  }
+
+  // 5 · ¿Dónde queda?
+  {
+    const q = t('¿Dónde queda?', 'Where is it?')
+    const lugar = `${escapeHtml(muni)}${region ? ` · ${escapeHtml(region)}` : ''}${region && REGION_BLURB[region] ? ` <span class="text-stone-500">(${escapeHtml(REGION_BLURB[region])})</span>` : ''}`
+    if (contactoOculto || !place.address) {
+      filas.push({ q, nivel: 'nadie', a: contactoOculto
+          ? t('No publicamos la dirección: el registro federal trae lo que parece una casa, no una oficina.', 'We do not publish the address: the federal registry lists what looks like a home, not an office.')
+          : t('El registro federal no trae dirección.', 'The federal registry has no address.'),
+        src: lugar + (contactoOculto ? t('. ¿Es tu ficha? Confirma dónde atiendes en el formulario de abajo.', '. Is this your profile? Confirm where you see patients in the form below.') : '') })
+    } else {
+      const postal = /^\s*(p\.?\s*o\.?\s*box|po box|apartado|hc\s*\d|pmb|rr\s*\d|call box)/i.test(place.address)
+      filas.push({ q, nivel: esPersona ? 'persona' : 'dice',
+        a: escapeHtml(place.address) + (postal ? t(' <b>Es un apartado postal, no la oficina:</b> pregunta dónde atienden.', ' <b>That is a mailing address, not the office:</b> ask where they see patients.') : ''),
+        src: lugar + ' · ' + (esPersona ? t(`confirmado por una persona el ${selloFecha}`, `confirmed by a person on ${selloFecha}`) : t('según el registro federal. Confírmalo cuando llames.', 'per the federal registry. Confirm it when you call.')) })
+    }
+  }
+
+  const conTestigo = filas.filter(f => f.nivel !== 'nadie').length
+  const puntos = filas.map(f => `<span class="${SYM[f.nivel].cls}">${SYM[f.nivel].s}</span>`).join('')
+  const conteoHtml = `<p class="m-0 mt-3 flex items-center gap-2.5 text-[15px] text-stone-700"><span class="text-lg tracking-[3px]" aria-hidden="true">${puntos}</span><span><b class="tabular-nums">${conTestigo} ${t('de', 'of')} ${filas.length}</b> ${t('preguntas tienen testigo', 'questions have a witness')}</span></p>`
+
+  // .prose-narrative p/h2 (0,1,1) le gana a .m-0 (0,1,0): sin esto cada fila de la hoja salía
+  // con 12px de aire entre pregunta, respuesta y fuente, y el título con 32px arriba.
+  const hojaHtml = `<style>.hoja-ev p,.hoja-ev h2{margin:0!important}.hoja-ev .src{padding-top:2px}</style><section class="hoja-ev not-prose mt-6 bg-white border border-stone-200 rounded-2xl shadow-sm overflow-hidden" aria-labelledby="h-hoja">
+    <h2 id="h-hoja" class="font-display text-[21px] font-bold text-stone-900 m-0 px-5 pt-5">${t('Lo que sabemos, y quién lo dice', 'What we know, and who says so')}</h2>
+    <p class="m-0 px-5 pb-3 pt-0.5 text-[14.5px] text-stone-600">${t('Las 5 cosas que la gente quiere saber antes de llamar. Si nadie lo ha confirmado, te lo decimos.', 'The 5 things people want to know before calling. If nobody has confirmed it, we say so.')}</p>
+    ${filas.map(f => `<div class="grid grid-cols-[26px_1fr] gap-x-2 px-5 py-3.5 border-t border-stone-200">
+      <span class="${SYM[f.nivel].cls} text-[19px] leading-snug row-span-4" role="img" aria-label="${escapeHtml(t(SYM[f.nivel].es, SYM[f.nivel].en))}">${SYM[f.nivel].s}</span>
+      <p class="m-0 text-[13px] font-bold uppercase tracking-wide text-stone-500">${escapeHtml(f.q)}</p>
+      <p class="m-0 text-[17px] leading-snug ${f.nivel === 'nadie' ? 'text-stone-600' : 'text-stone-900'}">${f.a}</p>
+      ${f.src ? `<p class="src text-[13px] text-stone-500">${f.src}</p>` : ''}
+      ${f.extra ? `<div>${f.extra}</div>` : ''}
+    </div>`).join('')}
+    <a href="#testigo" class="block px-5 py-3 border-t border-stone-200 text-sm font-bold text-teal-700 no-underline">${t('¿Llamaste? Llena un hueco en 5 segundos →', 'Did you call? Fill a gap in 5 seconds →')}</a>
+    <div class="flex flex-wrap gap-x-4 gap-y-1 px-5 py-3 bg-stone-100 text-[12.5px] text-stone-600">
+      <span><span class="text-teal-700">●</span> ${t('lo confirmó una persona', 'confirmed by a person')}</span>
+      <span><span class="text-teal-700">◐</span> ${t('lo dice un documento o un vecino', 'a document or a neighbor says so')}</span>
+      <span><span class="text-stone-400">○</span> ${t('nadie lo ha confirmado', 'nobody has confirmed it')}</span>
+      <span><span class="text-orange-700">▲</span> ${t('hay algo en contra', 'evidence against')}</span>
+    </div>
+  </section>`
+
+  const chip = 'inline-flex items-center gap-1.5 bg-white hover:bg-teal-50 border border-stone-200 text-stone-800 font-semibold px-3.5 min-h-[44px] rounded-full text-[15px]'
+  const dataRows = `${hojaHtml}
+${planesNota}${negocioHtml}
 ${puertaHub}
 
-  <div class="not-prose mt-4 bg-white border border-slate-200 rounded-2xl p-5">
-    <p class="font-bold text-slate-800 text-sm">${lang === 'en' ? 'Did you call? Help the next person' : '¿Llamaste? Ayuda al próximo'}</p>
-    <p class="text-sm text-slate-500 mt-1">${lang === 'en' ? 'Tap the plans they told you they accept. 5 seconds. This is how the whole town fills the answer nobody else has.' : 'Toca los planes que te dijeron que aceptan. 5 segundos. Así es que el pueblo entero llena la respuesta que nadie más tiene.'}</p>
-    <div id="pr-chips" class="flex flex-wrap gap-2 mt-3" data-place="${escapeHtml(place.id)}">
-      ${PR_PLANS.map(p => `<button type="button" class="pr-chip inline-flex items-center gap-1.5 bg-slate-100 hover:bg-sky-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-sm" data-plan="${escapeHtml(p.v)}">${escapeHtml(p.l)}</button>`).join('')}
+  <div id="testigo" class="not-prose mt-4 bg-teal-50 border border-teal-200 rounded-2xl p-5">
+    <p class="m-0 font-bold text-stone-900 text-lg">${t('¿Llamaste? Sé el testigo', 'Did you call? Be the witness')}</p>
+    <p class="m-0 text-sm text-stone-600 mt-1">${t('5 segundos. Así el próximo que busque no empieza a ciegas.', '5 seconds. That way the next person does not start blind.')}</p>
+    ${place.phone ? `<p class="m-0 font-bold text-stone-800 text-sm mt-4">${t('¿Contestaron?', 'Did someone answer?')}</p>
+    <div id="tel-chips" class="flex flex-wrap gap-2 mt-2" data-place="${escapeHtml(place.id)}">
+      <button type="button" class="tel-chip ${chip}" data-tel="contesta">✓ ${t('Sí, contestaron', 'Yes, someone answered')}</button>
+      <button type="button" class="tel-chip ${chip}" data-tel="no_contesta">${t('No contestó nadie', 'Nobody answered')}</button>
+      <button type="button" class="tel-chip ${chip}" data-tel="equivocado">${t('Número equivocado', 'Wrong number')}</button>
     </div>
-    <div id="pr-ok" hidden class="mt-2 text-sm text-emerald-700 font-semibold">✓ ${lang === 'en' ? 'Thank you. You just helped the next person who searches.' : 'Gracias. Acabas de ayudar al próximo que busque.'}</div>
-    <p class="font-bold text-slate-800 text-sm mt-4">${lang === 'en' ? 'Did they tell you if they are taking new patients?' : '¿Te dijeron si están cogiendo pacientes nuevos?'}</p>
+    <div id="tel-ok" hidden class="mt-2 text-sm text-teal-800 font-semibold">✓ ${t('Anotado. Si fue un problema, el Veci lo va a verificar antes de publicarlo.', 'Noted. If it was a problem, El Veci will verify it before publishing.')}</div>` : ''}
+    <p class="m-0 font-bold text-stone-800 text-sm mt-4">${t('¿Están cogiendo pacientes nuevos?', 'Are they taking new patients?')}</p>
     <div id="ac-chips" class="flex flex-wrap gap-2 mt-2" data-place="${escapeHtml(place.id)}">
-      <button type="button" class="ac-chip inline-flex items-center gap-1.5 bg-slate-100 hover:bg-emerald-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-sm" data-acepta="si">✓ ${lang === 'en' ? 'Yes, taking patients' : 'Sí, están cogiendo'}</button>
-      <button type="button" class="ac-chip inline-flex items-center gap-1.5 bg-slate-100 hover:bg-rose-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-sm" data-acepta="no">✕ ${lang === 'en' ? 'No, not taking patients' : 'No están cogiendo'}</button>
+      <button type="button" class="ac-chip ${chip}" data-acepta="si">✓ ${t('Sí', 'Yes')}</button>
+      <button type="button" class="ac-chip ${chip}" data-acepta="no">✕ ${t('No', 'No')}</button>
     </div>
-    <div id="ac-ok" hidden class="mt-2 text-sm text-emerald-700 font-semibold">✓ ${lang === 'en' ? 'Noted. El Veci will re-check with the office to confirm it with a date.' : 'Anotado. El Veci le va a preguntar a la oficina pa\' confirmarlo con fecha.'}</div>
+    <div id="ac-ok" hidden class="mt-2 text-sm text-teal-800 font-semibold">✓ ${t('Anotado. El Veci le va a preguntar a la oficina pa\' confirmarlo con fecha.', 'Noted. El Veci will re-check with the office to confirm it with a date.')}</div>
+    <p class="m-0 font-bold text-stone-800 text-sm mt-4">${t('¿Qué planes te dijeron que aceptan?', 'Which plans did they say they take?')}</p>
+    <div id="pr-chips" class="flex flex-wrap gap-2 mt-2" data-place="${escapeHtml(place.id)}">
+      ${PR_PLANS.map(p => `<button type="button" class="pr-chip ${chip}" data-plan="${escapeHtml(p.v)}">${escapeHtml(p.l)}</button>`).join('')}
+    </div>
+    <div id="pr-ok" hidden class="mt-2 text-sm text-teal-800 font-semibold">✓ ${t('Gracias. Acabas de ayudar al próximo que busque.', 'Thank you. You just helped the next person who searches.')}</div>
   </div>
   <script>
-  (function(){var box=document.getElementById('pr-chips');if(!box)return;var pid=box.getAttribute('data-place');
-  box.addEventListener('click',function(e){var b=e.target.closest('.pr-chip');if(!b||b.disabled)return;
-    b.disabled=true;b.className='pr-chip inline-flex items-center gap-1.5 bg-sky-600 border border-sky-600 text-white font-semibold px-3 py-1.5 rounded-full text-sm';
-    try{gtag('event','plan_report',{plan:b.getAttribute('data-plan')})}catch(_){}
-    fetch('/api/mapa-pages?page=plan-report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({place_id:pid,plan:b.getAttribute('data-plan')})}).catch(function(){});
-    document.getElementById('pr-ok').hidden=false;});})();
-  (function(){var box=document.getElementById('ac-chips');if(!box)return;var pid=box.getAttribute('data-place');
-  box.addEventListener('click',function(e){var b=e.target.closest('.ac-chip');if(!b||b.disabled)return;
-    var v=b.getAttribute('data-acepta');
-    box.querySelectorAll('.ac-chip').forEach(function(x){x.disabled=true});
-    b.className='ac-chip inline-flex items-center gap-1.5 '+(v==='si'?'bg-emerald-600 border-emerald-600':'bg-rose-600 border-rose-600')+' border text-white font-semibold px-3 py-1.5 rounded-full text-sm';
-    try{gtag('event','acepta_report',{acepta:v})}catch(_){}
-    fetch('/api/mapa-pages?page=acepta-report',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({place_id:pid,acepta:v})}).catch(function(){});
-    document.getElementById('ac-ok').hidden=false;});})();
+  (function(){var on='inline-flex items-center gap-1.5 bg-teal-700 border border-teal-700 text-white font-semibold px-3.5 min-h-[44px] rounded-full text-[15px]';
+  function wire(id,cls,page,key,okId,one,evt){var box=document.getElementById(id);if(!box)return;var pid=box.getAttribute('data-place');
+    box.addEventListener('click',function(e){var b=e.target.closest('.'+cls);if(!b||b.disabled)return;var v=b.getAttribute('data-'+key);
+      if(one)box.querySelectorAll('.'+cls).forEach(function(x){x.disabled=true});b.disabled=true;b.className=cls+' '+on;
+      try{var o={};o[key]=v;gtag('event',evt,o)}catch(_){}
+      var body={place_id:pid};body[key==='tel'?'resultado':key]=v;
+      fetch('/api/mapa-pages?page='+page,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).catch(function(){});
+      document.getElementById(okId).hidden=false;});}
+  wire('tel-chips','tel-chip','telefono-report','tel','tel-ok',true,'telefono_report');
+  wire('ac-chips','ac-chip','acepta-report','acepta','ac-ok',true,'acepta_report');
+  wire('pr-chips','pr-chip','plan-report','plan','pr-ok',false,'plan_report');})();
   </script>`
 
   const othersHtml = others.length ? `<h2>${escapeHtml(T.othersH)}</h2>
@@ -6806,12 +6952,11 @@ ${puertaHub}
   <div>
     <h1 class="text-3xl font-black text-slate-900 leading-tight">${escapeHtml(name)}</h1>
     <p class="text-lg text-slate-600 mt-1">${escapeHtml(specLabel)} · ${escapeHtml(muni)}${region ? ` · ${escapeHtml(region)}` : ''}</p>
-    <div class="mt-3 flex flex-wrap gap-2">
-      <span class="inline-flex items-center gap-2 ${npiVivo ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-amber-50 border-amber-300 text-amber-900'} border font-semibold px-3 py-1 rounded-full text-sm"><i class="fa-solid ${npiVivo ? 'fa-shield-halved' : 'fa-triangle-exclamation'}"></i> ${T.verified}</span>
+    ${conteoHtml}
+    ${(place.cms_rating != null || !isMD) ? `<div class="mt-2 flex flex-wrap gap-2">
       ${place.cms_rating != null ? `<span class="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 font-semibold px-3 py-1 rounded-full text-sm"><span class="text-amber-500">${starRating(Number(place.cms_rating))}</span> ${Number(place.cms_rating)}/5 ${lang === 'en' ? 'CMS rating' : 'estrellas CMS'}</span>` : ''}
-      ${isMD ? '' : '<span class="inline-flex items-center gap-2 bg-slate-100 border border-slate-200 text-slate-600 font-semibold px-3 py-1 rounded-full text-sm">Proveedor licenciado (no es médico MD)</span>'}
-      <span class="inline-flex items-center gap-2 ${selloChip.cls} border px-3 py-1 rounded-full text-xs font-semibold"><i class="fa-solid ${selloChip.ico}"></i> ${escapeHtml(selloChip.txt)}</span>
-    </div>
+      ${isMD ? '' : `<span class="inline-flex items-center gap-2 bg-stone-100 border border-stone-200 text-stone-600 font-semibold px-3 py-1 rounded-full text-sm">${t('Proveedor licenciado (no es médico MD)', 'Licensed provider (not an MD)')}</span>`}
+    </div>` : ''}
   </div>
 </div>
 
@@ -6915,7 +7060,7 @@ ${SHARE_COPY_SCRIPT}
     bodyHtml: body,
     jsonLd,
     // Tarjeta OG personalizada por proveedor (motor /api/og, theme medico) — cubre todo el registro
-    ogImage: `https://registromedicopr.com/api/og?theme=medico&t=${encodeURIComponent(name)}&k=${encodeURIComponent(specLabel)}&sub=${encodeURIComponent(`${muni}, Puerto Rico · NPI ${npi}`)}&badge=${encodeURIComponent('Verificado NPPES')}&site=registromedicopr.com`,
+    ogImage: `https://registromedicopr.com/api/og?theme=medico&t=${encodeURIComponent(name)}&k=${encodeURIComponent(specLabel)}&sub=${encodeURIComponent(`${muni}, Puerto Rico · NPI ${npi}`)}&badge=${encodeURIComponent(npiVivo ? 'NPI activo' : 'NPI no vigente')}&site=registromedicopr.com`,
     host: req.headers?.host,
     canonicalHost: 'https://registromedicopr.com',
     lang,
@@ -7070,6 +7215,46 @@ async function handleAceptaReport(req: any, res: any) {
         place_id: placeId, municipio: p0.municipality || null,
         especialidad: p0.subcategory || null, source: 'web_report',
       })
+    }
+    res.status(200).send(JSON.stringify({ ok: true }))
+  } catch { res.status(200).send(JSON.stringify({ ok: false })) }
+}
+
+// =============== Teléfono report (¿contestó? — el vecino que llamó, 1-tap, 18 sep 2026) ===============
+// Mismo camino que acepta-report: el reporte NO es el sello. Queda como señal en
+// registro_provider_corrections. Solo "contesta" se muestra en la ficha (fila 1 de la Hoja
+// de evidencia, 90 días). "no_contesta" y "equivocado" NUNCA se publican desde un clic
+// anónimo — sería poner un teléfono en cuarentena pública con 1 toque — y van a la cola
+// del Verificador, que es quien llama y decide.
+async function handleTelefonoReport(req: any, res: any) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8')
+  try {
+    const ip = getClientIp(req)
+    if (await isRateLimited('telefono-report', ip, 5, 10 * 60_000)) {
+      res.status(429).send(JSON.stringify({ ok: false, error: 'rate_limited' })); return
+    }
+    const b = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}')
+    const placeId = String(b.place_id || '').trim()
+    const r = String(b.resultado || '').trim().toLowerCase()
+    const MAPA: Record<string, string> = { contesta: 'telefono_contesta', no_contesta: 'telefono_no_contesta', equivocado: 'telefono_equivocado' }
+    if (!/^[0-9a-f-]{36}$/.test(placeId) || !MAPA[r]) { res.status(200).send(JSON.stringify({ ok: false })); return }
+    const { data: pl } = await supabase.from('places').select('npi,name,subcategory,municipality,phone').eq('id', placeId).not('npi', 'is', null).limit(1)
+    const p0 = pl?.[0]
+    if (!p0) { res.status(200).send(JSON.stringify({ ok: false })); return }
+    await supabase.from('registro_provider_corrections').insert({
+      npi: p0.npi, provider_name: p0.name || null, subcategory: p0.subcategory || null,
+      municipality: p0.municipality || null, reported_status: MAPA[r], reported_by: 'vecino_web',
+      notes: `Chip 1-tap en la ficha /especialista (telefono-report) · tel ${p0.phone || '—'}`,
+    })
+    if (r !== 'contesta') {
+      const { data: dup } = await supabase.from('registro_demanda_verificacion')
+        .select('id').eq('place_id', placeId).eq('atendida', false).limit(1)
+      if (!dup?.length) {
+        await supabase.from('registro_demanda_verificacion').insert({
+          place_id: placeId, municipio: p0.municipality || null,
+          especialidad: p0.subcategory || null, source: 'web_report',
+        })
+      }
     }
     res.status(200).send(JSON.stringify({ ok: true }))
   } catch { res.status(200).send(JSON.stringify({ ok: false })) }
@@ -22193,6 +22378,7 @@ export default async function handler(req: any, res: any) {
     case 'especialista-claim': return await handleEspecialistaClaim(req, res)
     case 'plan-report': return await handlePlanReport(req, res)
     case 'acepta-report': return await handleAceptaReport(req, res)
+    case 'telefono-report': return await handleTelefonoReport(req, res)
     case 'conserje-intent': return await handleConserjeIntent(req, res)
     case 'registro-lead': return await handleRegistroLead(req, res)
     case 'registro-desiertos': return await handleRegistroDesiertos(req, res)
