@@ -28,7 +28,7 @@
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   :root{
     --teal:#0d9488; --teal-dark:#0f766e; --coral:#f97316;
-    --canvas:#faf9f7; --paper:#fff; --ink:#1c1917; --ink-soft:#57534e; --ink-mut:#a8a29e;
+    --canvas:#faf9f7; --paper:#fff; --ink:#1c1917; --ink-soft:#57534e; --ink-mut:#a8a29e; --ink-cap:#78716c; --coral-ink:#c2410c;
     --line:#e7e5e4; --shadow:0 1px 2px rgba(28,25,23,.06),0 8px 24px rgba(28,25,23,.06);
   }
   html{-webkit-text-size-adjust:100%}
@@ -88,7 +88,7 @@
   .volver{display:block;margin:16px 0 0;background:var(--paper);border:1px solid var(--line);
      border-radius:10px;padding:11px 16px;font-family:inherit;font-size:.95rem;font-weight:700;
      color:var(--ink);cursor:pointer;box-shadow:var(--shadow)}
-  .volver:hover{border-color:var(--coral);color:var(--coral)}
+  .volver:hover{border-color:var(--coral);color:var(--coral-ink)}
   /* display:block le ganaba al atributo hidden del navegador, asi que el boton
      "Volver al inicio" se veia estando en el inicio. El atributo tiene que ganar. */
   .volver[hidden]{display:none}
@@ -97,7 +97,7 @@
   .vacio h2{font-size:1.1rem;margin-bottom:6px}
   .vacio p{font-size:.94rem;color:var(--ink-soft);margin-bottom:14px}
 
-  .btn{display:inline-block;background:var(--coral);color:#fff;text-decoration:none;
+  .btn{display:inline-block;background:var(--coral-ink);color:#fff;text-decoration:none;
        padding:11px 20px;border-radius:10px;font-weight:700;font-size:.95rem}
 
   /* ── pulso ── */
@@ -109,7 +109,7 @@
   .pterm{background:#f5f5f4;border:1px solid var(--line);border-radius:10px;padding:7px 12px;
          font-size:.88rem;font-weight:600;cursor:pointer;font-family:inherit;color:var(--ink)}
   .pterm:hover{border-color:var(--teal);color:var(--teal-dark)}
-  .pterm b{color:var(--ink-mut);font-weight:600;margin-left:5px;font-size:.8rem}
+  .pterm b{color:var(--ink-cap);font-weight:600;margin-left:5px;font-size:.8rem}
   .pterm.hueco{background:#fff7ed;border-color:#fed7aa}
 
   .dos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
@@ -127,7 +127,7 @@
   .dueno .t{font-weight:700;font-size:.98rem;color:#9a3412;margin-bottom:2px}
   .dueno .d{font-size:.86rem;color:var(--ink-soft)}
 
-  footer{text-align:center;padding:26px 20px 40px;color:var(--ink-mut);font-size:.82rem;line-height:1.7}
+  footer{text-align:center;padding:26px 20px 40px;color:var(--ink-cap);font-size:.82rem;line-height:1.7}
   footer a{color:var(--teal-dark);font-weight:600}
   .conteo{font-variant-numeric:tabular-nums}
 
@@ -250,7 +250,7 @@
     <a href="/negocio/nuevo">Añade tu negocio</a> ·
     <a href="/clasico">Versión clásica</a>
   </p>
-  <p style="margin-top:10px;color:var(--ink-mut)">Verificado a mano, uno por uno, desde Cabo Rojo.</p>
+  <p style="margin-top:10px;color:var(--ink-cap)">Verificado a mano, uno por uno, desde Cabo Rojo.</p>
 </footer>
 
 <script>
