@@ -62,8 +62,8 @@ Use them only to say "what kind of place", never as UI accents.
 - **Header:** teal gradient `150deg`, white Fraunces h1, 1-line promise, search box, starter chips, live-number row separated by 1px white dividers.
 - **Search box:** white, `14px` radius, emoji icon left, spinner right while busy, teal focus ring `0 0 0 3px rgba(13,148,136,.16)`.
 - **Result card:** name (700) + tags, meta line in `--ink-soft`, action row: call button filled teal, others outlined with `--teal-dark` text.
-- **Empty state (`.vacio`):** says what happened and offers the next step (coral button → rewrite per the contrast debt below). An empty result is an invitation, never an apology.
-- **Pulse panel:** "Lo que el pueblo buscó este mes": terms as recessed chips with the count in `--ink-mut` (count is decoration next to a readable label, so it is allowed there), holes (`.hueco`) tinted orange.
+- **Empty state (`.vacio`):** says what happened and offers the next step (button in `--coral-ink` with white text). An empty result is an invitation, never an apology.
+- **Pulse panel:** "Lo que el pueblo buscó este mes": terms as recessed chips with the count in `--ink-cap`, holes (`.hueco`) tinted orange.
 - **Business tile:** orange-50 background, orange-700 heading: "¿Tienes negocio en Cabo Rojo?" / "Verificarte es gratis."
 - **Footer:** the promise ("Cada ficha de aquí la verificó una persona..."), data timestamp, link row, "Verificado a mano, uno por uno, desde Cabo Rojo."
 
