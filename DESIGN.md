@@ -23,7 +23,7 @@
 ### Color
 | Token | Hex | Role |
 |---|---|---|
-| `--teal` | `#0d9488` | Brand. Header gradient start, focus ring, spinner, call button |
+| `--teal` | `#0d9488` | Brand. Focus ring, spinner, call button. **Never under white text smaller than 24px** (3.74:1). Header gradient starts at `--teal-dark` since 2026-09-18 |
 | `--teal-dark` | `#0f766e` | Header gradient end, links, secondary action text. **Use this for any small white-on-teal text** (5.47:1) |
 | `--coral` | `#f97316` | Business CTA, "recomendado" warmth, hover on "Volver". **Never as a background under white text** (2.80:1, fails AA) |
 | `--canvas` | `#faf9f7` | Page background (warm, never pure white) |
@@ -73,7 +73,7 @@ Spanish first, abuelita-friendly. "El Veci", never bot or AI. CTA phone **787-41
 ## Debt (verified 2026-09-17, fix in this order)
 1. **Coral button fails contrast (2.80:1).** `.btn{background:var(--coral)}` with white text. Fix: button background `#c2410c` (5.18:1), keep `--coral` for borders and hovers. It is the rescue button on an empty search ("escríbele al Veci"). **FIXED 2026-09-18 (`fe15195`)** via `--coral-ink`.
 2. **`--ink-mut` used as readable text (2.40:1)** in the timestamp and footer lines. Fix: `#78716c` (4.56:1) for text; keep `#a8a29e` for placeholders only. **FIXED 2026-09-18** via `--ink-cap`.
-3. **White chips on teal (3.74:1)** at 14.4px bold. Fix: move the header gradient toward `#0f766e`, or darken the chip text shadow. Needs a render to judge.
+3. **White chips on teal (3.74:1)** at 14.4px bold. **FIXED 2026-09-18:** header gradient now `#0f766e → #115e59` (white text 5.47:1+), nothing under 15px on the portada.
 4. **`theme-color` in `index.html` is `#374C8A`** (a blue that exists nowhere in the system). **FIXED 2026-09-18.** (The portada already had `#0d9488`; the blue was the app shell.)
 5. **Dialect C (SEO pages) uses cold slate + system font.** Largest surface Google sees. Migrate token by token: slate → stone/sand equivalents, add the Fraunces/Source Sans link, headings in Fraunces.
 6. **Dialect B coral `#f0491f` ≠ A coral `#f97316`.** Pick A's.

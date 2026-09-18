@@ -38,10 +38,10 @@
   a{color:inherit}
   .wrap{max-width:640px;margin:0 auto;padding:0 20px}
 
-  header{background:linear-gradient(150deg,var(--teal),var(--teal-dark));color:#fff;
+  header{background:linear-gradient(150deg,var(--teal-dark),#115e59);color:#fff;
          padding:34px 0 30px;text-align:center}
   header h1{font-size:1.6rem;font-weight:700;margin-bottom:6px}
-  header p{opacity:.9;font-size:1rem}
+  header p{font-size:1.05rem}
 
   /* ── buscador ── */
   .searchbox{margin-top:20px;position:relative;text-align:left}
@@ -58,7 +58,7 @@
 
   .chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;justify-content:center}
   .chip{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);color:#fff;
-        border-radius:999px;padding:10px 16px;font-size:.9rem;font-weight:600;cursor:pointer;
+        border-radius:999px;padding:10px 16px;font-size:1rem;font-weight:600;cursor:pointer;
         font-family:inherit;transition:background .15s;min-height:44px}
   /* 44px es el minimo comodo para un dedo. Estaban en 33 y habia que apuntar. */
   .ev a{min-height:52px}
@@ -72,17 +72,17 @@
   .card a.hit{display:block;padding:14px 16px;text-decoration:none}
   .card a.hit:hover{background:#f5f5f4}
   .nm{font-weight:700;font-size:1.02rem;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
-  .meta{font-size:.87rem;color:var(--ink-soft);margin-top:3px}
-  .tag{font-size:.68rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  .meta{font-size:.95rem;color:var(--ink-soft);margin-top:3px}
+  .tag{font-size:15px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
        padding:2px 8px;border-radius:999px;white-space:nowrap}
   .tag.rec{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa}
   .tag.fuera{background:#f5f5f4;color:var(--ink-soft);border:1px solid var(--line)}
   .acts{display:flex;gap:8px;padding:0 16px 13px;flex-wrap:wrap}
-  .act{font-size:.85rem;font-weight:600;text-decoration:none;padding:7px 13px;border-radius:9px;
+  .act{font-size:.95rem;font-weight:600;text-decoration:none;padding:7px 13px;border-radius:9px;
        border:1px solid var(--line);color:var(--teal-dark);background:#fff}
   .act.tel{background:var(--teal);color:#fff;border-color:var(--teal)}
 
-  .note{font-size:.85rem;color:var(--ink-soft);margin:14px 2px 8px;font-weight:600}
+  .note{font-size:.95rem;color:var(--ink-soft);margin:14px 2px 8px;font-weight:600}
   /* Salida visible de los resultados. Sin esto el unico camino de vuelta era el
      back del browser, que como la busqueda no tocaba el URL sacaba del sitio. */
   .volver{display:block;margin:16px 0 0;background:var(--paper);border:1px solid var(--line);
@@ -104,12 +104,12 @@
   .panel{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px;
          box-shadow:var(--shadow);margin-top:26px}
   .panel h2{font-size:1.12rem;margin-bottom:3px}
-  .panel .sub{font-size:.85rem;color:var(--ink-soft);margin-bottom:13px}
+  .panel .sub{font-size:.95rem;color:var(--ink-soft);margin-bottom:13px}
   .pulso{display:flex;flex-wrap:wrap;gap:8px}
-  .pterm{background:#f5f5f4;border:1px solid var(--line);border-radius:10px;padding:7px 12px;
-         font-size:.88rem;font-weight:600;cursor:pointer;font-family:inherit;color:var(--ink)}
+  .pterm{background:#f5f5f4;border:1px solid var(--line);border-radius:10px;padding:9px 13px;
+         font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit;color:var(--ink)}
   .pterm:hover{border-color:var(--teal);color:var(--teal-dark)}
-  .pterm b{color:var(--ink-cap);font-weight:600;margin-left:5px;font-size:.8rem}
+  .pterm b{color:var(--ink-soft);font-weight:700;margin-left:6px;font-size:.95rem}
   .pterm.hueco{background:#fff7ed;border-color:#fed7aa}
 
   .dos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
@@ -117,7 +117,7 @@
         border-radius:14px;padding:15px;box-shadow:var(--shadow)}
   .tile:hover{border-color:var(--teal)}
   .tile .t{font-weight:700;font-size:.98rem;margin-bottom:2px}
-  .tile .d{font-size:.83rem;color:var(--ink-soft)}
+  .tile .d{font-size:.95rem;color:var(--ink-soft)}
   @media(max-width:420px){.dos{grid-template-columns:1fr}}
 
   /* La puerta del dueño: presente pero callada. 90% utilidad, 10% venta. */
@@ -125,9 +125,9 @@
          background:#fff7ed;border:1px solid #fed7aa;box-shadow:var(--shadow)}
   .dueno:hover{border-color:var(--coral)}
   .dueno .t{font-weight:700;font-size:.98rem;color:#9a3412;margin-bottom:2px}
-  .dueno .d{font-size:.86rem;color:var(--ink-soft)}
+  .dueno .d{font-size:.95rem;color:var(--ink-soft)}
 
-  footer{text-align:center;padding:26px 20px 40px;color:var(--ink-cap);font-size:.82rem;line-height:1.7}
+  footer{text-align:center;padding:26px 20px 40px;color:var(--ink-cap);font-size:.95rem;line-height:1.7}
   footer a{color:var(--teal-dark);font-weight:600}
   .conteo{font-variant-numeric:tabular-nums}
 
@@ -135,13 +135,13 @@
      Los tres conteos vivian en gris de 13px al fondo del footer: son el
      unico numero que ningun otro directorio de PR puede enseñar, y eran
      el texto mas chiquito de la pagina. */
-  .prueba{display:flex;justify-content:center;gap:0;margin-top:18px;flex-wrap:wrap}
-  .prueba div{padding:0 18px;border-right:1px solid rgba(255,255,255,.26);text-align:center}
+  .prueba{display:grid;grid-template-columns:repeat(3,1fr);margin-top:18px}
+  .prueba div{padding:0 6px;border-right:1px solid rgba(255,255,255,.26);text-align:center}
   .prueba div:last-child{border-right:0}
-  .prueba b{display:block;font-family:'Fraunces',Georgia,serif;font-size:1.32rem;font-weight:700;
+  .prueba b{display:block;font-family:'Fraunces',Georgia,serif;font-size:1.3rem;font-weight:700;
     color:#fff;font-variant-numeric:tabular-nums;line-height:1.15}
-  .prueba span{display:block;font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;
-    color:rgba(255,255,255,.82);margin-top:2px}
+  .prueba span{display:block;font-size:.95rem;text-transform:uppercase;letter-spacing:.02em;
+    color:#fff;margin-top:2px}
   .prueba.vacia{display:none}
 
   /* ── eventos ──────────────────────────────────────────────────────
@@ -151,13 +151,13 @@
   .ev a{display:flex;gap:11px;align-items:baseline;text-decoration:none;padding:9px 11px;
     border:1px solid var(--line);border-radius:11px;background:#fafaf9}
   .ev a:hover{border-color:var(--teal)}
-  .ev .cuando{font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  .ev .cuando{font-size:.95rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
     color:var(--teal-dark);white-space:nowrap;flex:0 0 auto}
   .ev .qué{font-size:.98rem;font-weight:700;line-height:1.25}
-  .ev .dónde{font-size:.86rem;color:var(--ink-soft);font-weight:400;display:block;margin-top:1px}
+  .ev .dónde{font-size:.95rem;color:var(--ink-soft);font-weight:400;display:block;margin-top:1px}
 
   .cierre{text-align:center;margin-top:26px;padding:20px 18px;border-top:1px solid var(--line)}
-  .cierre p{font-size:.9rem;color:var(--ink-soft);max-width:46ch;margin:0 auto}
+  .cierre p{font-size:1rem;color:var(--ink-soft);max-width:46ch;margin:0 auto}
   .cierre a{color:var(--teal-dark);font-weight:700}
 
   /* ── escritorio: el contenido usaba 570px de 1280 ── */
@@ -200,7 +200,7 @@
 
   <div id="inicio">
     <div class="panel">
-      <h2>Lo que el pueblo buscó este mes</h2>
+      <h2>Lo que el pueblo buscó en los últimos 30 días</h2>
       <p class="sub">El número dice cuántos vecinos buscaron eso. Toca uno para ver quién lo resuelve.</p>
       <div class="pulso" id="pulso"><span class="sub">Cargando…</span></div>
     </div>

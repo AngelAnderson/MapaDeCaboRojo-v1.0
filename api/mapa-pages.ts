@@ -114,7 +114,7 @@ function subscribeForm(source: string, opts?: { compact?: boolean; audience?: st
   ${audienceTag}
   <input type="text" name="company" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" aria-hidden="true">
   <input type="email" name="email" required placeholder="tu@correo.com" class="flex-1 px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" autocomplete="email">
-  <button type="submit" class="px-4 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold whitespace-nowrap">Suscríbete</button>
+  <button type="submit" class="px-4 py-2 rounded-lg bg-teal-700 hover:bg-teal-800 text-white text-base font-semibold whitespace-nowrap">Suscríbete</button>
   <div class="text-xs text-slate-500 mt-1 hidden" data-subscribe-status></div>
 </form>`
   }
@@ -127,7 +127,7 @@ function subscribeForm(source: string, opts?: { compact?: boolean; audience?: st
   <input type="text" name="company" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0;" aria-hidden="true">
   <div class="flex flex-col sm:flex-row gap-2">
     <input type="email" name="email" required placeholder="tu@correo.com" class="flex-1 px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" autocomplete="email">
-    <button type="submit" class="px-5 py-2 rounded-lg bg-teal-600 hover:bg-teal-700 text-white text-sm font-bold whitespace-nowrap">Suscríbete</button>
+    <button type="submit" class="px-5 py-2 rounded-lg bg-teal-700 hover:bg-teal-800 text-white text-base font-bold whitespace-nowrap">Suscríbete</button>
   </div>
   <div class="text-xs text-slate-500 mt-2 hidden" data-subscribe-status></div>
   <p class="text-[10px] text-slate-400 mt-2 italic">Si te sirve, llégate. Si no, "Unsubscribe" un click y listo.</p>
@@ -394,16 +394,16 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <footer class="border-t border-slate-200 mt-12 py-10 bg-white">
 <div class="max-w-4xl mx-auto px-4">
 <p class="text-base font-semibold text-teal-800 text-center">${isEn ? 'The verified registry of Puerto Rico medical specialists.' : 'El registro verificado de especialistas médicos de Puerto Rico.'}</p>
-<p class="text-xs text-slate-500 mt-1 text-center">${isEn ? 'Every name verified against the federal NPPES/CMS registry. By specialty, region, and town.' : 'Cada nombre verificado contra el registro federal NPPES/CMS. Por especialidad, región y pueblo.'}</p>
-<p class="mt-4 text-xs text-slate-500 text-center max-w-md mx-auto">${isEn ? 'RegistroMedicoPR.com does not guarantee appointments. It does not replace doctors, health plans, or the government. It does something more basic: so the next person does not have to start blind.' : 'RegistroMedicoPR.com no garantiza citas. No reemplaza a los médicos, a los planes ni al gobierno. Hace algo más básico: que la próxima persona no empiece a ciegas.'}</p>
-<div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6 text-xs">
-<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">${isEn ? 'Find' : 'Busca'}</div><div class="flex flex-col gap-1.5 text-slate-500">
+<p class="text-[15px] text-slate-600 mt-1 text-center">${isEn ? 'Every name verified against the federal NPPES/CMS registry. By specialty, region, and town.' : 'Cada nombre verificado contra el registro federal NPPES/CMS. Por especialidad, región y pueblo.'}</p>
+<p class="mt-4 text-[15px] text-slate-600 text-center max-w-md mx-auto">${isEn ? 'RegistroMedicoPR.com does not guarantee appointments. It does not replace doctors, health plans, or the government. It does something more basic: so the next person does not have to start blind.' : 'RegistroMedicoPR.com no garantiza citas. No reemplaza a los médicos, a los planes ni al gobierno. Hace algo más básico: que la próxima persona no empiece a ciegas.'}</p>
+<div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6 text-[15px]">
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">${isEn ? 'Find' : 'Busca'}</div><div class="flex flex-col gap-1.5 text-slate-600">
 <a href="/registro${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Find a specialist' : 'Buscar especialista'}</a>
 <a href="/pueblo${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Your town' : 'Tu pueblo'}</a>
 <a href="/necesito${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Your situation' : 'Tu situación'}</a>
 <a href="/registro/mapa" class="hover:text-teal-700">${isEn ? 'The interactive map' : 'El mapa interactivo'}</a>
 </div></div>
-<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">${isEn ? 'Understand' : 'Entiende'}</div><div class="flex flex-col gap-1.5 text-slate-500">
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">${isEn ? 'Understand' : 'Entiende'}</div><div class="flex flex-col gap-1.5 text-slate-600">
 <a href="/registro/desiertos${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Medical deserts' : 'Desiertos médicos'}</a>
 <a href="/registro/estado" class="hover:text-teal-700">${isEn ? 'PR health status' : 'Estado de salud de PR'}</a>
 <a href="/raras" class="hover:text-teal-700">${isEn ? 'Rare diseases' : 'Enfermedades raras'}</a>
@@ -418,33 +418,33 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <a href="https://www.recallradarpr.com" class="hover:text-teal-700">${isEn ? 'FDA recalls (RecallRadarPR)' : '¿Tu medicamento tiene recall? (RecallRadarPR)'}</a>
 <a href="https://puertoricosinfiltros.com" class="hover:text-teal-700">${isEn ? 'The public record of PR (Sin Filtros)' : 'El récord público de PR (Sin Filtros)'}</a>
 </div></div>
-<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">${isEn ? 'Cite & share' : 'Cita y comparte'}</div><div class="flex flex-col gap-1.5 text-slate-500">
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">${isEn ? 'Cite & share' : 'Cita y comparte'}</div><div class="flex flex-col gap-1.5 text-slate-600">
 <a href="/comparte" class="hover:text-teal-700">${isEn ? 'Citable facts' : 'Datos citables'}</a>
 <a href="/pueblo${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Facts by town' : 'Datos por pueblo'}</a>
 </div></div>
-<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">${isEn ? 'The house' : 'La casa'}</div><div class="flex flex-col gap-1.5 text-slate-500">
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">${isEn ? 'The house' : 'La casa'}</div><div class="flex flex-col gap-1.5 text-slate-600">
 <a href="/registro#como-se-hizo" class="hover:text-teal-700">${isEn ? 'How it is verified' : 'Cómo se verifica'}</a>
 <a href="mailto:angel@angelanderson.com" class="hover:text-teal-700">${isEn ? 'Report an outdated fact' : 'Reporta un dato viejo'}</a>
 <a href="https://wa.me/17874177711?text=ESPECIALISTA" class="hover:text-teal-700">${isEn ? 'Ask El Veci (WhatsApp)' : 'Pregúntale al Veci (WhatsApp)'}</a>
 </div></div>
 </div>
-<p class="mt-8 text-xs text-slate-400 text-center">${isEn ? 'Questions about who to see? Text El Veci:' : '¿Dudas de a quién ir? Escríbele al Veci:'} <strong>${PHONE_CTA}</strong>. ${isEn ? '' : 'Si te sirve, llégate.'}</p>
-<p class="mt-3 text-xs text-slate-500 text-center">🚑 ${isEn ? 'Is it an emergency? Do not search here: call 911 or go to the nearest ER.' : '¿Es una emergencia? No busques aquí: llama al 911 o ve a la sala más cercana.'}</p>
-<p class="mt-2 text-xs text-slate-500 text-center">🧠 ${isEn ? 'If it is an emotional crisis, do not wait for an appointment:' : 'Si es una crisis emocional, no esperes cita:'} <strong>${isEn ? '988 Lifeline' : 'Línea PAS 988'}</strong> (${isEn ? 'or' : 'o'} 1-800-981-0023), 24/7, ${isEn ? 'free' : 'gratis'}.</p>
-<p class="mt-2 text-xs text-slate-400 text-center">${isEn ? 'You do not have to memorize anything. The registry stays here for whenever you or yours need it.' : 'No tienes que memorizar nada. El registro se queda aquí, para cuando te haga falta a ti o a los tuyos.'}</p>
+<p class="mt-8 text-[15px] text-slate-600 text-center">${isEn ? 'Questions about who to see? Text El Veci:' : '¿Dudas de a quién ir? Escríbele al Veci:'} <strong>${PHONE_CTA}</strong>. ${isEn ? '' : 'Si te sirve, llégate.'}</p>
+<p class="mt-3 text-[15px] text-slate-600 text-center">🚑 ${isEn ? 'Is it an emergency? Do not search here: call 911 or go to the nearest ER.' : '¿Es una emergencia? No busques aquí: llama al 911 o ve a la sala más cercana.'}</p>
+<p class="mt-2 text-[15px] text-slate-600 text-center">🧠 ${isEn ? 'If it is an emotional crisis, do not wait for an appointment:' : 'Si es una crisis emocional, no esperes cita:'} <strong>${isEn ? '988 Lifeline' : 'Línea PAS 988'}</strong> (${isEn ? 'or' : 'o'} 1-800-981-0023), 24/7, ${isEn ? 'free' : 'gratis'}.</p>
+<p class="mt-2 text-[15px] text-slate-600 text-center">${isEn ? 'You do not have to memorize anything. The registry stays here for whenever you or yours need it.' : 'No tienes que memorizar nada. El registro se queda aquí, para cuando te haga falta a ti o a los tuyos.'}</p>
 </div>
 </footer>` : `
 <footer class="border-t border-slate-200 mt-12 py-8 bg-white">
 <div class="max-w-4xl mx-auto px-4 text-center">
 <p class="text-base font-semibold text-teal-700">Menos revolú. Mejores decisiones. Mejor vida.</p>
-<p class="text-xs text-slate-500 mt-1">El mapa vivo pa' poner orden en el revolú de Cabo Rojo.</p>
+<p class="text-[15px] text-slate-600 mt-1">El mapa vivo pa' poner orden en el revolú de Cabo Rojo.</p>
 
 <div class="mt-5 mx-auto max-w-md">
-  <p class="text-xs font-bold uppercase tracking-wide text-slate-500 mb-2">📬 Recibe el espejo del pueblo · mensual</p>
+  <p class="text-[15px] font-bold uppercase tracking-wide text-slate-600 mb-2">📬 Recibe el espejo del pueblo · mensual</p>
   ${subscribeForm(`footer-${opts.slug}`, { compact: true })}
 </div>
 
-<div class="mt-6 flex justify-center gap-4 text-xs text-slate-500 flex-wrap">
+<div class="mt-6 flex justify-center gap-4 text-[15px] text-slate-600 flex-wrap">
 <a href="/facil" class="hover:text-teal-600 font-semibold text-teal-700">Búscalo Fácil</a>
 <a href="/pon-tu-negocio-en-el-mapa" class="hover:text-teal-600 font-semibold text-teal-700">Pon tu negocio</a>
 <a href="/tienda" class="hover:text-teal-600 font-semibold text-teal-700">Tienda</a>
@@ -453,8 +453,8 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <a href="/mision" class="hover:text-teal-600">Misión</a>
 <a href="/equipo" class="hover:text-teal-600">Equipo</a>
 </div>
-<p class="mt-4 text-xs text-slate-400">Textea al <strong>${PHONE_CTA}</strong> · El Veci te contesta. Si te sirve, llégate. Si no, sigue tu camino.</p>
-<p class="mt-3 text-xs text-slate-500"><strong>CABO ROJO 2036</strong> · ¿Qué Cabo Rojo quieres en 10 años? Dilo en 1 oración: textea <strong>2036</strong> y tu oración al <strong>${PHONE_CTA}</strong>. A las 100 oraciones se publica la vara del pueblo.</p>
+<p class="mt-4 text-[15px] text-slate-600">Textea al <strong>${PHONE_CTA}</strong> · El Veci te contesta. Si te sirve, llégate. Si no, sigue tu camino.</p>
+<p class="mt-3 text-[15px] text-slate-600"><strong>CABO ROJO 2036</strong> · ¿Qué Cabo Rojo quieres en 10 años? Dilo en 1 oración: textea <strong>2036</strong> y tu oración al <strong>${PHONE_CTA}</strong>. A las 100 oraciones se publica la vara del pueblo.</p>
 </div>
 </footer>`
 
@@ -4315,9 +4315,9 @@ function regDisclaimer(en = false): string {
 <div class="not-prose mt-8 bg-slate-50 border border-slate-200 rounded-2xl p-5 flex gap-4 items-start">
   <div class="text-2xl leading-none">🤙</div>
   <div>
-    <p class="font-bold text-slate-800 text-sm">${t.h}</p>
-    <p class="text-sm text-slate-600 mt-1">${t.body}</p>
-    <p class="text-xs text-slate-400 mt-2">${t.tail} <a href="mailto:angel@angelanderson.com" class="text-teal-600">angel@angelanderson.com</a></p>
+    <p class="font-bold text-slate-900 text-base">${t.h}</p>
+    <p class="text-base text-slate-700 mt-1">${t.body}</p>
+    <p class="text-[15px] text-slate-700 mt-2">${t.tail} <a href="mailto:angel@angelanderson.com" class="text-teal-800 underline">angel@angelanderson.com</a></p>
   </div>
 </div>`
 }
@@ -5552,46 +5552,40 @@ async function handleRegistro(req: any, res: any) {
   function card(x: typeof REGISTRY_SPECS[number]) {
     return `<a href="/registro/${specToUrl(x.s)}${en ? '?lang=en' : ''}" class="reg-card block text-left bg-white border border-slate-200 rounded-xl p-4 hover:border-teal-400 hover:shadow-sm transition">
       <div class="flex items-baseline justify-between gap-2">
-        <span class="font-bold text-slate-900 text-sm leading-tight">${x.e} ${escapeHtml(en ? (SPEC_LABEL_EN[x.s] || x.l) : x.l)}</span>
+        <span class="font-bold text-slate-900 text-lg leading-tight">${x.e} ${escapeHtml(en ? (SPEC_LABEL_EN[x.s] || x.l) : x.l)}</span>
         <span class="text-teal-700 font-black text-lg">${x.t}</span>
       </div>
-      <div class="text-xs text-slate-500 mt-1">${t('con NPI en PR · toca pa\' ver la lista', 'with federal NPI in PR · tap to see the list')}</div>
+      <div class="text-[15px] text-slate-700 mt-1">${t('con NPI en PR · toca pa\' ver la lista', 'with federal NPI in PR · tap to see the list')}</div>
     </a>`
   }
 
   const body = `
-<h1>${t('Registro de Especialistas Médicos de Puerto Rico', 'Registry of Puerto Rico Medical Specialists')}</h1>
-<p class="text-xl text-slate-700 font-semibold mt-1">${t('Buscar médico no debería requerir más paciencia que ir al médico.', 'Finding a doctor should not take more patience than seeing one.')}</p>
-
-<p class="text-lg text-slate-600 mt-2">${t(`<strong>¿A cuál médico llamo hoy?</strong> Escoge especialidad y región, y en 10 segundos tienes los nombres, el pueblo y el teléfono. Gratis, sin cuenta y sin plan. Son ${totalVerified} proveedores del registro federal NPPES, puestos en orden en español.`, `<strong>Which doctor do I call today?</strong> Pick specialty and region and in 10 seconds you have the names, the town, and the phone number. Free, no account, no plan required. That is ${totalVerified} providers from the federal NPPES registry, organized in Spanish.`)}</p>
-
-<div class="not-prose mt-3 flex flex-wrap gap-2 text-xs">
-  <span class="inline-flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-shield-halved"></i> ${t('Del registro federal NPI', 'From the federal NPI registry')}</span>
-  <span class="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-200 text-teal-800 font-semibold px-3 py-1 rounded-full"><i class="fa-solid fa-list-check"></i> ${REGISTRY_SPECS.length} ${t('especialidades', 'specialties')}</span>
-  <a href="/cambios" class="inline-flex items-center gap-1.5 bg-slate-100 border border-slate-200 text-slate-700 font-semibold px-3 py-1 rounded-full hover:border-teal-400"><i class="fa-solid fa-calendar-check"></i> ${t(`Última actualización: ${REG_LAST_UPDATE.es} →`, `Last updated: ${REG_LAST_UPDATE.en} →`)}</a>
-</div>
-
+<!-- 18 sep 2026 (pedido de Angel): portada legible para una abuela en el celular. Antes: 18 pantallas,
+     253 de 461 textos bajo 15 px y el buscador casi fuera de la 1ra pantalla. Ahora el buscador va arriba. -->
+<h1 class="!text-3xl sm:!text-4xl !leading-tight">${t('Registro de Especialistas Médicos de Puerto Rico', 'Registry of Puerto Rico Medical Specialists')}</h1>
+<p class="not-prose text-xl text-slate-800 font-semibold mt-2 leading-snug">${t('¿A cuál médico llamo hoy? Escoge especialidad y región: en 10 segundos tienes el nombre, el pueblo y el teléfono.', 'Which doctor do I call today? Pick specialty and region: in 10 seconds you have the name, the town, and the phone.')}</p>
+<p class="not-prose text-lg text-slate-700 mt-2">${t(`Gratis, sin cuenta y sin plan. ${totalVerified} proveedores del registro federal NPPES, en español.`, `Free, no account, no plan required. ${totalVerified} providers from the federal NPPES registry, in Spanish.`)}</p>
 
 <div id="reg-tool" class="not-prose mt-5 bg-white border-2 border-teal-300 rounded-2xl p-6 shadow-sm scroll-mt-24">
   <label class="block">
-    <span class="text-sm font-bold text-slate-700"><i class="fa-solid fa-magnifying-glass text-teal-600"></i> ${t('Busca por nombre o especialidad', 'Search by name or specialty')}</span>
-    <input id="rg-search" type="search" autocomplete="off" aria-label="Busca tu médico, especialidad, pueblo o síntoma" placeholder="${t('El nombre de tu médico, \'cardiólogo\', o lo que sientes: \'me falta el aire\'…', 'Your doctor\'s name, \'cardiologist\', or what you feel: \'chest pain\'…')}" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-base">
+    <span class="text-lg font-bold text-slate-900"><i class="fa-solid fa-magnifying-glass text-teal-700"></i> ${t('Busca por nombre o especialidad', 'Search by name or specialty')}</span>
+    <input id="rg-search" type="search" autocomplete="off" aria-label="Busca tu médico, especialidad, pueblo o síntoma" placeholder="${t('El nombre de tu médico, \'cardiólogo\', o lo que sientes: \'me falta el aire\'…', 'Your doctor\'s name, \'cardiologist\', or what you feel: \'chest pain\'…')}" class="mt-2 w-full rounded-lg border-2 border-slate-400 p-3 text-lg">
   </label>
   <div id="rg-search-result" class="mt-3"></div>
-  <div class="flex items-center gap-3 my-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
+  <div class="flex items-center gap-3 my-5 text-base font-semibold text-slate-700">
     <span class="flex-1 h-px bg-slate-200"></span>${t('o escoge especialidad y región', 'or pick specialty and region')}<span class="flex-1 h-px bg-slate-200"></span>
   </div>
   <div class="grid sm:grid-cols-3 gap-4">
     <label class="block">
-      <span class="text-sm font-bold text-slate-700">1. ${t('¿Qué especialista buscas?', 'Which specialist?')}</span>
-      <select id="rg-spec" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-base bg-white">
+      <span class="text-lg font-bold text-slate-900">1. ${t('¿Qué especialista buscas?', 'Which specialist?')}</span>
+      <select id="rg-spec" class="mt-2 w-full rounded-lg border-2 border-slate-400 p-3 text-lg bg-white">
         <option value="">${t('Escoge...', 'Choose...')}</option>
         ${optionsHtml}
       </select>
     </label>
     <label class="block">
-      <span class="text-sm font-bold text-slate-700">2. ${t('¿En qué región estás?', 'Which region?')}</span>
-      <select id="rg-region" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-base bg-white">
+      <span class="text-lg font-bold text-slate-900">2. ${t('¿En qué región estás?', 'Which region?')}</span>
+      <select id="rg-region" class="mt-2 w-full rounded-lg border-2 border-slate-400 p-3 text-lg bg-white">
         <option value="">${t('Escoge...', 'Choose...')}</option>
         <option value="Oeste">${t('Oeste', 'West')} (Mayagüez, Cabo Rojo, Aguadilla...)</option>
         <option value="Metro">${t('Área Metro', 'Metro')} (San Juan...)</option>
@@ -5602,23 +5596,78 @@ async function handleRegistro(req: any, res: any) {
       </select>
     </label>
     <label class="block">
-      <span class="text-sm font-bold text-slate-700">3. ${t('¿Qué plan tienes?', 'Your health plan?')} <span class="font-normal text-slate-400">(${t('opcional', 'optional')})</span></span>
-      <select id="rg-plan" class="mt-1 w-full rounded-lg border border-slate-300 p-3 text-base bg-white">
+      <span class="text-lg font-bold text-slate-900">3. ${t('¿Qué plan tienes?', 'Your health plan?')} <span class="font-normal text-slate-700">(${t('opcional', 'optional')})</span></span>
+      <select id="rg-plan" class="mt-2 w-full rounded-lg border-2 border-slate-400 p-3 text-lg bg-white">
         <option value="">${t('Cualquiera / no sé', 'Any / not sure')}</option>
         ${PR_PLANS.map(p => `<option value="${p.v}">${escapeHtml(p.l)}</option>`).join('')}
       </select>
     </label>
   </div>
   <div id="rg-result" class="mt-5"></div>
-  <p id="rg-hint" class="mt-4 text-sm text-slate-400 text-center">${t('Escoge los dos y te decimos cuántos hay cerca, cuáles, y sus teléfonos.', 'Pick both and we\'ll tell you how many are near you, who, and their phone numbers.')}</p>
+  <p id="rg-hint" class="mt-4 text-base text-slate-700 text-center">${t('Escoge los dos y te decimos cuántos hay cerca, cuáles, y sus teléfonos.', 'Pick both and we\'ll tell you how many are near you, who, and their phone numbers.')}</p>
 </div>
 
-<p class="not-prose mt-4 text-sm text-slate-500 text-center">${t(`<strong>¿Prefieres preguntar por texto?</strong> Escribe lo que buscas (ej: <em>neurólogo Mayagüez</em>) al <a href="sms:+17874177711" class="font-bold text-teal-700 whitespace-nowrap">787-417-7711</a> y te contesta El Veci, con nombre y teléfono. Gratis.`, `<strong>Prefer to ask by text?</strong> Text what you need (e.g. <em>neurologist Mayagüez</em>) to <a href="sms:+17874177711" class="font-bold text-teal-700 whitespace-nowrap">787-417-7711</a> and El Veci answers with a name and phone number. Free.`)}</p>
-<p class="not-prose mt-3 text-sm text-slate-500 text-center"><a href="/registro/mapa" class="text-teal-700 font-semibold hover:underline">${t('Mira el mapa: qué especialista hay en cada pueblo →', 'See the map: which specialists each town has →')}</a> · ${t('¿Vives lejos del área metro?', 'Live far from the metro area?')} <a href="/registro/desiertos${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold hover:underline">${t('Los desiertos médicos →', 'The medical deserts →')}</a></p>
+<p class="not-prose mt-3 text-base text-slate-700 text-center"><a href="/cambios" class="underline text-slate-800">${t(`Última actualización: ${REG_LAST_UPDATE.es}`, `Last updated: ${REG_LAST_UPDATE.en}`)}</a></p>
 
-<p class="not-prose mt-2 text-sm text-slate-500 text-center">${t('¿Quieres entender por qué pasa esto?', 'Want to understand why this happens?')} <a href="/observatorio${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold hover:underline">${t('Escucha el podcast y baja el reporte completo →', 'Listen to the podcast and get the full report →')}</a></p>
+<div class="not-prose mt-5 bg-teal-50 border-2 border-teal-200 rounded-2xl p-5">
+  <p class="text-lg text-slate-900 m-0">${t(`<strong>¿Prefieres preguntar por texto?</strong> Escribe lo que buscas (ej: <em>neurólogo Mayagüez</em>) al <a href="sms:+17874177711" class="font-bold text-teal-800 underline whitespace-nowrap">787-417-7711</a> y te contesta El Veci, con nombre y teléfono. Gratis.`, `<strong>Prefer to ask by text?</strong> Text what you need (e.g. <em>neurologist Mayagüez</em>) to <a href="sms:+17874177711" class="font-bold text-teal-800 underline whitespace-nowrap">787-417-7711</a> and El Veci answers with a name and phone number. Free.`)}</p>
+</div>
 
-<p class="not-prose mt-2 text-sm text-slate-500 text-center">${t('Puerto Rico no tiene escasez de médicos. Tiene escasez de condiciones.', 'Puerto Rico does not have a doctor shortage. It has a conditions shortage.')} <a href="/marcador${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold hover:underline">${t('Los 6 números, en El Marcador →', 'The 6 numbers, in El Marcador →')}</a></p>
+<div class="not-prose mt-5 grid gap-3">
+  <a href="/registro/mapa" class="flex items-center justify-between gap-3 bg-white border-2 border-slate-200 rounded-xl px-4 py-3 min-h-[56px] hover:border-teal-500 no-underline"><span class="text-lg font-semibold text-teal-800">${t('Mira el mapa: qué especialista hay en cada pueblo', 'See the map: which specialists each town has')}</span><span class="text-teal-800 text-xl" aria-hidden="true">→</span></a>
+  <a href="/registro/desiertos${en ? '?lang=en' : ''}" class="flex items-center justify-between gap-3 bg-white border-2 border-slate-200 rounded-xl px-4 py-3 min-h-[56px] hover:border-teal-500 no-underline"><span class="text-lg font-semibold text-teal-800">${t('Los desiertos médicos: dónde no hay', 'The medical deserts: where there is no one')}</span><span class="text-teal-800 text-xl" aria-hidden="true">→</span></a>
+  <a href="/marcador${en ? '?lang=en' : ''}" class="flex items-center justify-between gap-3 bg-white border-2 border-slate-200 rounded-xl px-4 py-3 min-h-[56px] hover:border-teal-500 no-underline"><span class="text-lg font-semibold text-teal-800">${t('Los 6 números del acceso a la salud, en El Marcador', 'The 6 access numbers, in El Marcador')}</span><span class="text-teal-800 text-xl" aria-hidden="true">→</span></a>
+  <a href="/observatorio${en ? '?lang=en' : ''}" class="flex items-center justify-between gap-3 bg-white border-2 border-slate-200 rounded-xl px-4 py-3 min-h-[56px] hover:border-teal-500 no-underline"><span class="text-lg font-semibold text-teal-800">${t('Por qué pasa esto: el podcast y el reporte completo', 'Why this happens: the podcast and the full report')}</span><span class="text-teal-800 text-xl" aria-hidden="true">→</span></a>
+</div>
+
+<h2>${t('¿Cuál es tu situación?', 'What is your situation?')}</h2>
+<p class="text-lg text-slate-700 -mt-2">${t('A veces uno no busca una especialidad, busca salir de un aprieto. Empieza por el tuyo:', 'Sometimes you are not looking for a specialty, you are trying to get unstuck. Start with yours:')}</p>
+<div class="not-prose mt-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+  ${INTENT_PAGES.map(p => `<a href="/necesito/${p.slug}" class="block bg-white border border-slate-200 rounded-xl p-4 hover:border-teal-400 hover:shadow-sm transition">
+    <div class="flex items-start gap-2.5"><span class="text-2xl leading-none">${p.e}</span><span class="font-bold text-slate-900 text-lg leading-snug">${escapeHtml(p.title)}</span></div>
+  </a>`).join('')}
+</div>
+
+<h2>${t(`Las ${REGISTRY_SPECS.length} especialidades del registro`, `The ${REGISTRY_SPECS.length} specialties in the registry`)}</h2>
+<p class="text-lg text-slate-700 -mt-2">${t('El número es cuántos hay <strong>en toda la isla</strong> según el registro federal. Toca cualquiera pa\' ver dónde están y sus teléfonos.', 'The number is how many there are <strong>across the whole island</strong> according to the federal registry. Tap any to see where they are and their phone numbers.')}</p>
+
+<details class="not-prose mt-4 group">
+  <summary class="list-none cursor-pointer flex items-center justify-between gap-3 bg-teal-800 text-white rounded-xl px-5 py-4 min-h-[56px] text-lg font-bold">${t(`Ver las ${REGISTRY_SPECS.length} especialidades`, `See all ${REGISTRY_SPECS.length} specialties`)}<span aria-hidden="true" class="text-2xl group-open:rotate-90 transition">›</span></summary>
+  <div class="mt-4">
+<div class="not-prose mt-4 text-base font-bold uppercase tracking-wide text-teal-800 mb-3">${t('Médicos especialistas', 'Medical specialists')}</div>
+<div class="not-prose grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+  ${md.map(card).join('')}
+</div>
+
+<div class="not-prose mt-8 text-base font-bold uppercase tracking-wide text-slate-700 mb-1">${t('Otros proveedores de salud licenciados (no son médicos MD)', 'Other licensed health providers (not medical doctors / MDs)')}</div>
+<p class="not-prose text-base text-slate-700 mb-3">${t('Psicólogos, dentistas, terapistas, nutricionistas y más: tienen licencia y NPI federal, pero no son médicos MD. Los separamos pa\' que sepas exactamente a quién vas.', 'Psychologists, dentists, therapists, nutritionists, and more: licensed with a federal NPI, but not medical doctors. We list them separately so you know exactly who you are seeing.')}</p>
+<div class="not-prose grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+  ${allied.map(card).join('')}
+</div>
+
+<div class="not-prose mt-8 text-base font-bold uppercase tracking-wide text-slate-700 mb-1">${t('Facilidades y organizaciones de salud (NPI-2)', 'Health facilities and organizations (NPI-2)')}</div>
+<p class="not-prose text-base text-slate-700 mb-3">${t('Hospitales, clínicas comunitarias, cuidado en el hogar, hospicios y más — organizaciones verificadas contra el registro federal.', 'Hospitals, community health centers, home health, hospices, and more — organizations verified against the federal registry.')}</p>
+<div class="not-prose grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+  ${orgs.map(card).join('')}
+</div>
+  </div>
+</details>
+
+<div class="not-prose mt-10 bg-slate-900 rounded-2xl p-6 sm:p-8 text-white">
+  <p class="text-base uppercase tracking-wide text-amber-200 font-bold">🏜️ ${t('Los desiertos médicos', 'The medical deserts')}</p>
+  <h3 class="text-2xl font-black mt-1 leading-snug">${t('Lo que este registro también enseña: dónde NO hay', 'What this registry also shows: where there is NO ONE')}</h3>
+  <div class="grid sm:grid-cols-3 gap-4 mt-5">
+    <div><div class="text-3xl font-black text-amber-300">36</div><div class="text-base text-slate-200 mt-1">${t('municipios sin un solo psiquiatra', 'municipalities without a single psychiatrist')}</div></div>
+    <div><div class="text-3xl font-black text-amber-300">0</div><div class="text-base text-slate-200 mt-1">${t('neumólogos, geriatras y otorrinos en toda la región central', 'pulmonologists, geriatricians and ENTs in the entire central region')}</div></div>
+    <div><div class="text-3xl font-black text-amber-300">1</div><div class="text-base text-slate-200 mt-1">${t('neurocirujano pa\' todo el oeste de la isla', 'neurosurgeon for the entire west of the island')}</div></div>
+  </div>
+  <p class="text-base text-slate-200 mt-5">${t('No es queja: es el registro federal, municipio por municipio, con la fuente al lado. Esto empieza a cambiar cuando se ve.', 'Not a complaint: it is the federal registry, town by town, with the source next to each number. This starts to change when it is seen.')}</p>
+  <div class="mt-4 flex flex-wrap gap-3">
+    <a href="/pueblo" class="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold px-5 py-3 rounded-full text-base">${t('¿Cómo está TU pueblo? →', 'How is YOUR town? →')}</a>
+    <a href="/registro/desiertos${en ? '?lang=en' : ''}" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-5 py-3 rounded-full text-base">${t('El mapa del abandono', 'The map')}</a>
+    <a href="/registro/mapa" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-5 py-3 rounded-full text-base">🗺️ ${t('Especialistas por pueblo', 'Specialists by town')}</a>
+  </div>
+</div>
 
 
 <!-- 2026-09-01: el bloque "por que existe esta pagina" - el finding del dossier de
@@ -5626,73 +5675,30 @@ async function handleRegistro(req: any, res: any) {
      llevan año y fuente (regla: todo numero lleva fecha). El CTA enlista al vecino:
      el Veci tiene respuesta curada en local_knowledge (topic registro_quiero_ayudar_a_verificar). -->
 <div class="not-prose mt-8 bg-slate-900 rounded-2xl p-6 sm:p-8 text-white">
-  <p class="text-xs uppercase tracking-widest text-rose-300 font-bold">🔍 ${t('Por qué existe esta página', 'Why this page exists')}</p>
+  <p class="text-base uppercase tracking-wide text-rose-200 font-bold">🔍 ${t('Por qué existe esta página', 'Why this page exists')}</p>
   <h3 class="text-2xl font-black mt-1 leading-snug">${t('El problema no es que falten listas de médicos', 'The problem is not a lack of doctor lists')}</h3>
   <p class="text-slate-300 mt-2">${t('El problema es que muchas listas no dicen lo que pasa cuando llamas.', 'The problem is that many lists do not tell you what happens when you call.')}</p>
   <div class="grid sm:grid-cols-3 gap-4 mt-5">
-    <div><div class="text-3xl font-black text-rose-300">48.74%</div><div class="text-sm text-slate-300 mt-1">${t('de las ubicaciones en directorios de Medicare Advantage tenía al menos 1 error en la <a href="https://www.cms.gov/Medicare/Health-Plans/ManagedCareMarketing/Downloads/Provider_Directory_Review_Industry_Report_Round_3_11-28-2018.pdf" target="_blank" rel="noopener" class="underline font-semibold text-rose-200">última revisión nacional de CMS</a> (2018, la última que se hizo)', 'of locations in Medicare Advantage directories had at least 1 error in the <a href="https://www.cms.gov/Medicare/Health-Plans/ManagedCareMarketing/Downloads/Provider_Directory_Review_Industry_Report_Round_3_11-28-2018.pdf" target="_blank" rel="noopener" class="underline font-semibold text-rose-200">last national CMS review</a> (2018, the last one ever done)')}</div></div>
-    <div><div class="text-3xl font-black text-rose-300">45.64%</div><div class="text-sm text-slate-300 mt-1">${t('de las ubicaciones tenía errores capaces de impedir el acceso al cuidado, según la misma revisión', 'of locations had errors capable of blocking access to care, per the same review')}</div></div>
-    <div><div class="text-3xl font-black text-rose-300">18%</div><div class="text-sm text-slate-300 mt-1">${t('de 120 llamadas a proveedores de salud mental consiguieron cita en el <a href="https://www.finance.senate.gov/imo/media/doc/050323%20Ghost%20Network%20Hearing%20-%20Secret%20Shopper%20Study%20Report.pdf" target="_blank" rel="noopener" class="underline font-semibold text-rose-200">estudio del Senado de EE.UU.</a> (2023)', 'of 120 calls to mental health providers got an appointment in the <a href="https://www.finance.senate.gov/imo/media/doc/050323%20Ghost%20Network%20Hearing%20-%20Secret%20Shopper%20Study%20Report.pdf" target="_blank" rel="noopener" class="underline font-semibold text-rose-200">U.S. Senate study</a> (2023)')}</div></div>
+    <div><div class="text-3xl font-black text-rose-300">48.74%</div><div class="text-base text-slate-200 mt-1">${t('de las ubicaciones en directorios de Medicare Advantage tenía al menos 1 error en la <a href="https://www.cms.gov/Medicare/Health-Plans/ManagedCareMarketing/Downloads/Provider_Directory_Review_Industry_Report_Round_3_11-28-2018.pdf" target="_blank" rel="noopener" class="underline font-semibold text-rose-200">última revisión nacional de CMS</a> (2018, la última que se hizo)', 'of locations in Medicare Advantage directories had at least 1 error in the <a href="https://www.cms.gov/Medicare/Health-Plans/ManagedCareMarketing/Downloads/Provider_Directory_Review_Industry_Report_Round_3_11-28-2018.pdf" target="_blank" rel="noopener" class="underline font-semibold text-rose-200">last national CMS review</a> (2018, the last one ever done)')}</div></div>
+    <div><div class="text-3xl font-black text-rose-300">45.64%</div><div class="text-base text-slate-200 mt-1">${t('de las ubicaciones tenía errores capaces de impedir el acceso al cuidado, según la misma revisión', 'of locations had errors capable of blocking access to care, per the same review')}</div></div>
+    <div><div class="text-3xl font-black text-rose-300">18%</div><div class="text-base text-slate-200 mt-1">${t('de 120 llamadas a proveedores de salud mental consiguieron cita en el <a href="https://www.finance.senate.gov/imo/media/doc/050323%20Ghost%20Network%20Hearing%20-%20Secret%20Shopper%20Study%20Report.pdf" target="_blank" rel="noopener" class="underline font-semibold text-rose-200">estudio del Senado de EE.UU.</a> (2023)', 'of 120 calls to mental health providers got an appointment in the <a href="https://www.finance.senate.gov/imo/media/doc/050323%20Ghost%20Network%20Hearing%20-%20Secret%20Shopper%20Study%20Report.pdf" target="_blank" rel="noopener" class="underline font-semibold text-rose-200">U.S. Senate study</a> (2023)')}</div></div>
   </div>
   <p class="text-white font-semibold mt-5">${t('RegistroMedicoPR mide algo distinto: lo que el directorio dice vs. lo que pasa cuando el paciente llama. Con fecha, con fuente, y guardando la evidencia.', 'RegistroMedicoPR measures something different: what the directory says vs. what happens when the patient calls. With a date, a source, and the evidence saved.')}</p>
   <div class="mt-5 bg-white/10 border border-white/20 rounded-xl p-5">
     <p class="font-black m-0">${t('Ayúdanos a medir lo que pasa cuando Puerto Rico intenta conseguir una cita.', 'Help us measure what happens when Puerto Rico tries to get an appointment.')}</p>
     <p class="text-slate-300 mt-1 m-0">${t('Una llamada. Un dato. Una mejora. No importa quién se lleve el crédito. Importa que funcione.', 'One call. One data point. One improvement. It does not matter who gets the credit. It matters that it works.')}</p>
-    <a href="https://wa.me/17874177711?text=Quiero%20ayudar%20a%20verificar" class="inline-flex items-center gap-2 mt-3 bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold px-5 py-2.5 rounded-full text-sm">💬 ${t('Quiero ayudar a verificar', 'I want to help verify')}</a>
-    <span class="block text-xs text-slate-400 mt-2">${t('Te contesta El Veci por WhatsApp al 787-417-7711. Gratis, sin cuenta.', 'El Veci answers on WhatsApp at 787-417-7711. Free, no account.')}</span>
+    <a href="https://wa.me/17874177711?text=Quiero%20ayudar%20a%20verificar" class="inline-flex items-center gap-2 mt-3 bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-bold px-5 py-3 rounded-full text-base">💬 ${t('Quiero ayudar a verificar', 'I want to help verify')}</a>
+    <span class="block text-base text-slate-200 mt-2">${t('Te contesta El Veci por WhatsApp al 787-417-7711. Gratis, sin cuenta.', 'El Veci answers on WhatsApp at 787-417-7711. Free, no account.')}</span>
   </div>
   <!-- Apuesta ficha-confirmada-oficina (2026-09-10): la oficina que confirma sus datos sale con la
        fecha de hoy. Sin precio en la página (Capa Discovery 2026-08-27): lo que se paga se conversa 1-a-1. -->
   <div class="mt-3 bg-white text-slate-900 rounded-xl p-5">
     <p class="font-black m-0">${t('¿Es tu oficina? Confírmala.', 'Is this your office? Confirm it.')}</p>
-    <p class="text-slate-600 text-sm mt-1 m-0">${t('Un texto desde el teléfono de la oficina: teléfono, planes que aceptan y si están cogiendo pacientes nuevos. Sale publicado con la fecha de hoy, arriba de lo que dice el registro federal. Confirmar es gratis.', 'One text from the office phone: phone number, accepted plans, and whether you are taking new patients. Published with today\'s date, above what the federal registry says. Confirming is free.')}</p>
-    <a href="https://wa.me/17874177711?text=CONFIRMA" class="inline-flex items-center gap-2 mt-3 bg-teal-700 hover:bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm">🩺 ${t('Textea CONFIRMA al 787-417-7711', 'Text CONFIRMA to 787-417-7711')}</a>
+    <p class="text-slate-700 text-base mt-1 m-0">${t('Un texto desde el teléfono de la oficina: teléfono, planes que aceptan y si están cogiendo pacientes nuevos. Sale publicado con la fecha de hoy, arriba de lo que dice el registro federal. Confirmar es gratis.', 'One text from the office phone: phone number, accepted plans, and whether you are taking new patients. Published with today\'s date, above what the federal registry says. Confirming is free.')}</p>
+    <a href="https://wa.me/17874177711?text=CONFIRMA" class="inline-flex items-center gap-2 mt-3 bg-teal-700 hover:bg-teal-800 text-white font-bold px-5 py-3 rounded-full text-base">🩺 ${t('Textea CONFIRMA al 787-417-7711', 'Text CONFIRMA to 787-417-7711')}</a>
   </div>
 </div>
 
-<h2>${t('¿Cuál es tu situación?', 'What is your situation?')}</h2>
-<p class="text-slate-600 -mt-2">${t('A veces uno no busca una especialidad, busca salir de un aprieto. Empieza por el tuyo:', 'Sometimes you are not looking for a specialty, you are trying to get unstuck. Start with yours:')}</p>
-<div class="not-prose mt-3 grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-  ${INTENT_PAGES.map(p => `<a href="/necesito/${p.slug}" class="block bg-white border border-slate-200 rounded-xl p-4 hover:border-teal-400 hover:shadow-sm transition">
-    <div class="flex items-start gap-2.5"><span class="text-2xl leading-none">${p.e}</span><span class="font-bold text-slate-900 text-sm leading-snug">${escapeHtml(p.title)}</span></div>
-  </a>`).join('')}
-</div>
-
-<div class="not-prose mt-10 bg-slate-900 rounded-2xl p-6 sm:p-8 text-white">
-  <p class="text-xs uppercase tracking-widest text-amber-300 font-bold">🏜️ ${t('Los desiertos médicos', 'The medical deserts')}</p>
-  <h3 class="text-2xl font-black mt-1 leading-snug">${t('Lo que este registro también enseña: dónde NO hay', 'What this registry also shows: where there is NO ONE')}</h3>
-  <div class="grid sm:grid-cols-3 gap-4 mt-5">
-    <div><div class="text-3xl font-black text-amber-300">36</div><div class="text-sm text-slate-300 mt-1">${t('municipios sin un solo psiquiatra', 'municipalities without a single psychiatrist')}</div></div>
-    <div><div class="text-3xl font-black text-amber-300">0</div><div class="text-sm text-slate-300 mt-1">${t('neumólogos, geriatras y otorrinos en toda la región central', 'pulmonologists, geriatricians and ENTs in the entire central region')}</div></div>
-    <div><div class="text-3xl font-black text-amber-300">1</div><div class="text-sm text-slate-300 mt-1">${t('neurocirujano pa\' todo el oeste de la isla', 'neurosurgeon for the entire west of the island')}</div></div>
-  </div>
-  <p class="text-sm text-slate-300 mt-5">${t('No es queja: es el registro federal, municipio por municipio, con la fuente al lado. Esto empieza a cambiar cuando se ve.', 'Not a complaint: it is the federal registry, town by town, with the source next to each number. This starts to change when it is seen.')}</p>
-  <div class="mt-4 flex flex-wrap gap-3">
-    <a href="/pueblo" class="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-slate-900 font-bold px-5 py-2.5 rounded-full text-sm">${t('¿Cómo está TU pueblo? →', 'How is YOUR town? →')}</a>
-    <a href="/registro/desiertos${en ? '?lang=en' : ''}" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-5 py-2.5 rounded-full text-sm">${t('El mapa del abandono', 'The map')}</a>
-    <a href="/registro/mapa" class="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-5 py-2.5 rounded-full text-sm">🗺️ ${t('Especialistas por pueblo', 'Specialists by town')}</a>
-  </div>
-</div>
-
-<h2>${t(`Las ${REGISTRY_SPECS.length} especialidades del registro`, `The ${REGISTRY_SPECS.length} specialties in the registry`)}</h2>
-<p class="text-slate-600 -mt-2">${t('El número es cuántos hay <strong>en toda la isla</strong> según el registro federal. Toca cualquiera pa\' ver dónde están y sus teléfonos.', 'The number is how many there are <strong>across the whole island</strong> according to the federal registry. Tap any to see where they are and their phone numbers.')}</p>
-
-<div class="not-prose mt-4 text-xs font-bold uppercase tracking-widest text-teal-700 mb-3">${t('Médicos especialistas', 'Medical specialists')}</div>
-<div class="not-prose grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-  ${md.map(card).join('')}
-</div>
-
-<div class="not-prose mt-8 text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">${t('Otros proveedores de salud licenciados (no son médicos MD)', 'Other licensed health providers (not medical doctors / MDs)')}</div>
-<p class="not-prose text-sm text-slate-500 mb-3">${t('Psicólogos, dentistas, terapistas, nutricionistas y más: tienen licencia y NPI federal, pero no son médicos MD. Los separamos pa\' que sepas exactamente a quién vas.', 'Psychologists, dentists, therapists, nutritionists, and more: licensed with a federal NPI, but not medical doctors. We list them separately so you know exactly who you are seeing.')}</p>
-<div class="not-prose grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-  ${allied.map(card).join('')}
-</div>
-
-<div class="not-prose mt-8 text-xs font-bold uppercase tracking-widest text-slate-500 mb-1">${t('Facilidades y organizaciones de salud (NPI-2)', 'Health facilities and organizations (NPI-2)')}</div>
-<p class="not-prose text-sm text-slate-500 mb-3">${t('Hospitales, clínicas comunitarias, cuidado en el hogar, hospicios y más — organizaciones verificadas contra el registro federal.', 'Hospitals, community health centers, home health, hospices, and more — organizations verified against the federal registry.')}</p>
-<div class="not-prose grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-  ${orgs.map(card).join('')}
-</div>
 
 <div class="not-prose mt-10 bg-gradient-to-br from-amber-50 to-white border-2 border-amber-200 rounded-2xl p-6">
   <div class="text-3xl leading-none">🤝</div>
@@ -5705,10 +5711,10 @@ async function handleRegistro(req: any, res: any) {
       <input id="cj-email" type="email" placeholder="${t('Tu email', 'Your email')}" aria-label="${t('Tu email', 'Your email')}" class="w-full rounded-lg border border-slate-300 p-3 text-base">
       <input id="cj-wa" type="tel" placeholder="${t('WhatsApp (opcional)', 'WhatsApp (optional)')}" aria-label="${t('WhatsApp (opcional)', 'WhatsApp (optional)')}" class="w-full rounded-lg border border-slate-300 p-3 text-base">
     </div>
-    <button id="cj-send" type="submit" class="w-full sm:w-auto justify-self-start bg-amber-600 hover:bg-amber-700 text-white font-bold px-6 py-3 rounded-full text-base">${t('Cuéntame — te escribo', 'Tell me — I will write you')}</button>
+    <button id="cj-send" type="submit" class="w-full sm:w-auto justify-self-start bg-amber-700 hover:bg-amber-800 text-white font-bold px-6 py-3 rounded-full text-base">${t('Cuéntame y te escribo', 'Tell me and I will write you')}</button>
   </form>
-  <div id="cj-thanks" hidden class="mt-2 bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-emerald-900 text-[15px]">${t('Gracias. Te escribo pronto, yo mismo. — Angel', 'Thank you. I will write you soon, myself. — Angel')}</div>
-  <p class="text-xs text-slate-400 mt-3">${t('Te responde Angel directo. No es un formulario que cae en un buzón muerto.', 'Angel replies directly. This is not a form that lands in a dead inbox.')}</p>
+  <div id="cj-thanks" hidden class="mt-2 bg-emerald-50 border border-emerald-200 rounded-xl p-4 text-emerald-900 text-[15px]">${t('Gracias. Te escribo pronto, yo mismo. Angel', 'Thank you. I will write you soon, myself. Angel')}</div>
+  <p class="text-base text-slate-700 mt-3">${t('Te responde Angel directo. No es un formulario que cae en un buzón muerto.', 'Angel replies directly. This is not a form that lands in a dead inbox.')}</p>
 </div>
 
 <script>
@@ -5749,12 +5755,12 @@ async function handleRegistro(req: any, res: any) {
   }
   function loadList(spec,region){
     var box=document.getElementById('rg-list');if(!box)return;
-    box.innerHTML='<div style="color:#64748b;font-size:14px;padding:8px 0;">Cargando los teléfonos...</div>';
+    box.innerHTML='<div style="color:#475569;font-size:16px;padding:8px 0;">Cargando los teléfonos...</div>';
     fetch('/api/mapa-pages?page=registro-data&spec='+encodeURIComponent(spec)+'&region='+encodeURIComponent(region))
       .then(function(r){return r.json();})
       .then(function(d){
         var list=(d&&d.providers)||[];
-        if(!list.length){try{gtag('event','search_no_results',{spec:spec,region:region})}catch(e){}box.innerHTML='<div style="color:#64748b;font-size:14px;">No hay teléfonos cargados pa\\'esta combinación todavía. Escríbele al Veci abajo.</div>';return;}
+        if(!list.length){try{gtag('event','search_no_results',{spec:spec,region:region})}catch(e){}box.innerHTML='<div style="color:#475569;font-size:16px;">No hay teléfonos cargados pa\\'esta combinación todavía. Escríbele al Veci abajo.</div>';return;}
         var plan=pl&&pl.value?pl.value:'';
         if(plan){
           try{gtag('event','filter_plan',{plan:plan,spec:spec,region:region})}catch(e){}
@@ -5773,21 +5779,21 @@ async function handleRegistro(req: any, res: any) {
           return 0;
         });
         var rows=list.map(function(p){
-          var tel=p.phone?('<a href="tel:'+esc(p.phone.replace(/[^0-9]/g,''))+'" style="display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:40px;box-sizing:border-box;padding:8px 14px;background:#0d9488;color:#fff;font-weight:700;font-size:13px;border-radius:9999px;text-decoration:none;white-space:nowrap;">📞 Llamar</a>'):'<span style="color:#94a3b8;">sin teléfono</span>';
+          var tel=p.phone?('<a href="tel:'+esc(p.phone.replace(/[^0-9]/g,''))+'" style="display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:40px;box-sizing:border-box;padding:8px 14px;background:#0d9488;color:#fff;font-weight:700;font-size:15px;border-radius:9999px;text-decoration:none;white-space:nowrap;">📞 Llamar</a>'):'<span style="color:#475569;">sin teléfono</span>';
           var nm=p.slug?('<a href="/especialista/'+encodeURIComponent(p.slug)+'" style="color:#0f172a;font-weight:600;text-decoration:none;border-bottom:1px dotted #94a3b8;">'+esc(p.name)+'</a>'):esc(p.name);
           var badge='';
-          if(plan&&planMatch(p.plans,plan)){nm+='<div style="font-size:11px;color:#059669;font-weight:700;margin-top:2px;">✓ la oficina confirmó que acepta '+esc(PLAN_LABELS[plan]||plan)+'</div>';}
-          else if(p.plans&&p.plans.length){nm+='<div style="font-size:11px;color:#64748b;margin-top:2px;">planes confirmados: '+esc(p.plans.join(', '))+'</div>';}
-          if(p.acc===1){nm+='<div style="font-size:11px;color:#059669;font-weight:700;margin-top:2px;">✓ está cogiendo pacientes'+(p.ver?' · confirmado '+esc(p.ver):'')+'</div>';}
-          else if(p.ver){nm+='<div style="font-size:11px;color:#0f766e;margin-top:2px;">✓ teléfono confirmado '+esc(p.ver)+'</div>';}
-          else {nm+='<div style="font-size:11px;color:#94a3b8;margin-top:2px;">sin confirmar todavía</div>';}
+          if(plan&&planMatch(p.plans,plan)){nm+='<div style="font-size:15px;color:#059669;font-weight:700;margin-top:2px;">✓ la oficina confirmó que acepta '+esc(PLAN_LABELS[plan]||plan)+'</div>';}
+          else if(p.plans&&p.plans.length){nm+='<div style="font-size:15px;color:#475569;margin-top:2px;">planes confirmados: '+esc(p.plans.join(', '))+'</div>';}
+          if(p.acc===1){nm+='<div style="font-size:15px;color:#059669;font-weight:700;margin-top:2px;">✓ está cogiendo pacientes'+(p.ver?' · confirmado '+esc(p.ver):'')+'</div>';}
+          else if(p.ver){nm+='<div style="font-size:15px;color:#0f766e;margin-top:2px;">✓ teléfono confirmado '+esc(p.ver)+'</div>';}
+          else {nm+='<div style="font-size:15px;color:#475569;margin-top:2px;">sin confirmar todavía</div>';}
           return '<tr style="border-top:1px solid #e2e8f0;"><td style="padding:7px 8px;font-weight:600;color:#0f172a;">'+nm+badge+'</td><td style="padding:7px 8px;color:#475569;">'+esc(p.municipality||'—')+'</td><td style="padding:7px 8px;text-align:right;">'+tel+'</td></tr>';
         }).join('');
-        var planNote=plan?'<div style="font-size:12px;color:#92400e;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:8px 10px;margin:4px 0 8px;">Las oficinas casi nunca publican qué planes aceptan. El ✓ sale solo cuando la oficina lo confirmó con nosotros. Que no tenga ✓ <b>no</b> significa que no acepte '+esc(PLAN_LABELS[plan]||plan)+': llama y pregunta primero.</div>':'';
-        box.innerHTML='<div style="font-size:12px;color:#64748b;margin:4px 0 6px;">'+list.length+' en '+regionLabel(region)+(d.capped?'+ (mostrando los primeros '+list.length+')':'')+' · fuente NPPES federal</div>'+planNote
-          +'<div style="max-height:340px;overflow:auto;border:1px solid #e2e8f0;border-radius:10px;"><table style="width:100%;border-collapse:collapse;font-size:14px;"><tbody>'+rows+'</tbody></table></div>';
+        var planNote=plan?'<div style="font-size:15px;color:#92400e;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:8px 10px;margin:4px 0 8px;">Las oficinas casi nunca publican qué planes aceptan. El ✓ sale solo cuando la oficina lo confirmó con nosotros. Que no tenga ✓ <b>no</b> significa que no acepte '+esc(PLAN_LABELS[plan]||plan)+': llama y pregunta primero.</div>':'';
+        box.innerHTML='<div style="font-size:15px;color:#475569;margin:4px 0 6px;">'+list.length+' en '+regionLabel(region)+(d.capped?'+ (mostrando los primeros '+list.length+')':'')+' · fuente NPPES federal</div>'+planNote
+          +'<div style="max-height:340px;overflow:auto;border:1px solid #e2e8f0;border-radius:10px;"><table style="width:100%;border-collapse:collapse;font-size:16px;"><tbody>'+rows+'</tbody></table></div>';
       })
-      .catch(function(){box.innerHTML='<div style="color:#dc2626;font-size:14px;">No se pudo cargar la lista. Intenta de nuevo.</div>';});
+      .catch(function(){box.innerHTML='<div style="color:#dc2626;font-size:16px;">No se pudo cargar la lista. Intenta de nuevo.</div>';});
   }
   // --- La respuesta vive en el URL: se comparte, se guarda y se vuelve a abrir sin repetir el camino ---
   var T0=(window.performance&&performance.now)?performance.now():Date.now(),answered=false,VIA='formulario';
@@ -5809,9 +5815,9 @@ async function handleRegistro(req: any, res: any) {
       ?('Te mando la lista: '+x.l+' en '+regionLabel(region)+' ('+n+'), con el pueblo y el teléfono de cada uno. '+url)
       :('En '+regionLabel(region)+' el registro federal no muestra ninguno. Aquí se ve dónde sí hay, con teléfono. '+url);
     return '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(15,23,42,.10);">'
-      +'<a href="https://wa.me/?text='+encodeURIComponent(txt)+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#0f766e;color:#fff;font-weight:700;font-size:13px;padding:8px 14px;border-radius:999px;text-decoration:none;">💬 Mandarle esto a alguien</a>'
-      +'<button type="button" data-copy="'+esc(url)+'" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #cbd5e1;color:#334155;font-weight:700;font-size:13px;padding:8px 14px;border-radius:999px;cursor:pointer;">🔗 Copiar el enlace de esta respuesta</button>'
-      +'<span style="font-size:11px;color:#64748b;align-self:center;">Ese enlace abre directo en esta lista. No hay que volver a buscar.</span>'
+      +'<a href="https://wa.me/?text='+encodeURIComponent(txt)+'" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;background:#0f766e;color:#fff;font-weight:700;font-size:15px;padding:8px 14px;border-radius:999px;text-decoration:none;">💬 Mandarle esto a alguien</a>'
+      +'<button type="button" data-copy="'+esc(url)+'" style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #cbd5e1;color:#334155;font-weight:700;font-size:15px;padding:8px 14px;border-radius:999px;cursor:pointer;">🔗 Copiar el enlace de esta respuesta</button>'
+      +'<span style="font-size:15px;color:#475569;align-self:center;">Ese enlace abre directo en esta lista. No hay que volver a buscar.</span>'
       +'</div>';
   }
   function bindCopy(){
@@ -5846,7 +5852,7 @@ async function handleRegistro(req: any, res: any) {
     var bg=tone==='ok'?'#ecfdf5':tone==='warn'?'#fffbeb':'#fef2f2',bd=tone==='ok'?'#6ee7b7':tone==='warn'?'#fcd34d':'#fca5a5';
     out.innerHTML='<div style="background:'+bg+';border:2px solid '+bd+';border-radius:14px;padding:18px 20px;">'
       +'<p style="font-size:17px;line-height:1.5;color:#0f172a;margin:0 0 14px;">'+msg+'</p>'
-      +'<div style="font-size:14px;color:#334155;line-height:1.6;margin-bottom:12px;">'
+      +'<div style="font-size:16px;color:#334155;line-height:1.6;margin-bottom:12px;">'
       +'<b>👉 Qué hacer:</b> pídele a tu médico primario un <b>referido</b> y pregunta si está en tu plan. ¿Buscas rápido? Escríbele <a href="https://wa.me/17874177711?text='+x.kw+'" style="color:#0f766e;font-weight:700;text-decoration:underline;">'+x.kw+' al 787-417-7711</a>.'
       +'</div>'
       +'<div id="rg-list"></div>'
@@ -5883,13 +5889,13 @@ async function handleRegistro(req: any, res: any) {
     try{gtag('event','symptom_match',{q:qn.slice(0,40)})}catch(ex){}
     var chips=specs.slice(0,4).map(function(s){
       var x=SPECS.filter(function(z){return z.s===s;})[0];if(!x)return '';
-      return '<button type="button" data-jump="'+esc(x.s)+'" style="background:#0f766e;border:1px solid #0f766e;color:#fff;font-weight:700;font-size:13px;padding:6px 13px;border-radius:999px;cursor:pointer;">'+x.e+' '+esc(x.l)+' ('+x.t+' en PR)</button>';
+      return '<button type="button" data-jump="'+esc(x.s)+'" style="background:#0f766e;border:1px solid #0f766e;color:#fff;font-weight:700;font-size:15px;padding:6px 13px;border-radius:999px;cursor:pointer;">'+x.e+' '+esc(x.l)+' ('+x.t+' en PR)</button>';
     }).join('');
     return '<div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:12px;padding:12px 14px;margin-bottom:10px;">'
-      +'<div style="font-size:13px;color:#134e4a;font-weight:700;margin-bottom:7px;">🧭 Pa\\' eso suele verse:</div>'
+      +'<div style="font-size:15px;color:#134e4a;font-weight:700;margin-bottom:7px;">🧭 Pa\\' eso suele verse:</div>'
       +'<div style="display:flex;flex-wrap:wrap;gap:6px;">'+chips+'</div>'
-      +(urgent?'<div style="font-size:12px;color:#b91c1c;font-weight:700;margin-top:8px;">⚠️ Si te dio de repente y fuerte, eso no espera cita: 911 o sala de emergencias primero.</div>':'')
-      +'<div style="font-size:11px;color:#64748b;margin-top:6px;">Orientación general, no diagnóstico. Tu médico primario decide el referido.</div>'
+      +(urgent?'<div style="font-size:15px;color:#b91c1c;font-weight:700;margin-top:8px;">⚠️ Si te dio de repente y fuerte, eso no espera cita: 911 o sala de emergencias primero.</div>':'')
+      +'<div style="font-size:15px;color:#475569;margin-top:6px;">Orientación general, no diagnóstico. Tu médico primario decide el referido.</div>'
       +'</div>';
   }
   function slugc(s){return norm(s).replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');}
@@ -5907,16 +5913,16 @@ async function handleRegistro(req: any, res: any) {
       specs=POP.map(function(s){return SPECS.filter(function(z){return z.s===s;})[0];}).filter(Boolean);
     }
     return '<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;margin-bottom:10px;">'
-      +'<div style="font-size:13px;color:#92400e;font-weight:700;margin-bottom:7px;">📍 '+esc(m)+' — busca por pueblo:</div>'
+      +'<div style="font-size:15px;color:#92400e;font-weight:700;margin-bottom:7px;">📍 '+esc(m)+' — busca por pueblo:</div>'
       +'<div style="display:flex;flex-wrap:wrap;gap:6px;">'
-      +specs.map(function(x){return '<a href="/registro/'+slugc(x.s)+'/'+slugc(m)+'" style="background:#0f766e;border:1px solid #0f766e;color:#fff;font-weight:700;font-size:13px;padding:6px 13px;border-radius:999px;text-decoration:none;">'+x.e+' '+esc(x.l)+' en '+esc(m)+'</a>';}).join('')
+      +specs.map(function(x){return '<a href="/registro/'+slugc(x.s)+'/'+slugc(m)+'" style="background:#0f766e;border:1px solid #0f766e;color:#fff;font-weight:700;font-size:15px;padding:6px 13px;border-radius:999px;text-decoration:none;">'+x.e+' '+esc(x.l)+' en '+esc(m)+'</a>';}).join('')
       +'</div></div>';
   }
   function specChips(qn){
     var hits=SPECS.filter(function(x){return norm(x.l).indexOf(qn)>=0||norm(x.s).indexOf(qn)>=0;}).slice(0,8);
     if(!hits.length)return '';
-    return '<div style="margin-bottom:10px;"><div style="font-size:12px;color:#64748b;margin-bottom:6px;">Especialidades:</div><div style="display:flex;flex-wrap:wrap;gap:6px;">'
-      +hits.map(function(x){return '<button type="button" data-jump="'+esc(x.s)+'" style="background:#f0fdfa;border:1px solid #99f6e4;color:#0f766e;font-weight:700;font-size:13px;padding:5px 11px;border-radius:999px;cursor:pointer;">'+x.e+' '+esc(x.l)+' ('+x.t+')</button>';}).join('')
+    return '<div style="margin-bottom:10px;"><div style="font-size:15px;color:#475569;margin-bottom:6px;">Especialidades:</div><div style="display:flex;flex-wrap:wrap;gap:6px;">'
+      +hits.map(function(x){return '<button type="button" data-jump="'+esc(x.s)+'" style="background:#f0fdfa;border:1px solid #99f6e4;color:#0f766e;font-weight:700;font-size:15px;padding:5px 11px;border-radius:999px;cursor:pointer;">'+x.e+' '+esc(x.l)+' ('+x.t+')</button>';}).join('')
       +'</div></div>';
   }
   function bindJumps(){
@@ -5925,15 +5931,15 @@ async function handleRegistro(req: any, res: any) {
     });
   }
   function renderProviders(list,capped,q){
-    if(!list.length)return '<div style="color:#64748b;font-size:14px;padding:6px 0;">No hay nadie con ese nombre en el registro. Prueba con el apellido, o escoge la especialidad abajo.</div>';
+    if(!list.length)return '<div style="color:#475569;font-size:16px;padding:6px 0;">No hay nadie con ese nombre en el registro. Prueba con el apellido, o escoge la especialidad abajo.</div>';
     var rows=list.map(function(p){
       var lab=(BYID[p.subcategory]&&BYID[p.subcategory].l)||p.subcategory;
-      var tel=p.phone?('<a href="tel:'+esc(p.phone.replace(/[^0-9]/g,''))+'" style="display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:40px;box-sizing:border-box;padding:8px 14px;background:#0d9488;color:#fff;font-weight:700;font-size:13px;border-radius:9999px;text-decoration:none;white-space:nowrap;">📞 Llamar</a>'):'<span style="color:#94a3b8;">sin teléfono</span>';
+      var tel=p.phone?('<a href="tel:'+esc(p.phone.replace(/[^0-9]/g,''))+'" style="display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:40px;box-sizing:border-box;padding:8px 14px;background:#0d9488;color:#fff;font-weight:700;font-size:15px;border-radius:9999px;text-decoration:none;white-space:nowrap;">📞 Llamar</a>'):'<span style="color:#475569;">sin teléfono</span>';
       var nm=p.slug?('<a href="/especialista/'+encodeURIComponent(p.slug)+'" style="color:#0f172a;font-weight:600;text-decoration:none;border-bottom:1px dotted #94a3b8;">'+esc(p.name)+'</a>'):esc(p.name);
       return '<tr style="border-top:1px solid #e2e8f0;"><td style="padding:7px 8px;font-weight:600;color:#0f172a;">'+nm+'</td><td style="padding:7px 8px;color:#475569;">'+esc(lab)+'</td><td style="padding:7px 8px;color:#475569;">'+esc(p.municipality||'—')+'</td><td style="padding:7px 8px;text-align:right;">'+tel+'</td></tr>';
     }).join('');
-    return '<div style="font-size:12px;color:#64748b;margin:4px 0 6px;">'+list.length+(capped?'+':'')+' con "'+esc(q)+'" en el nombre · fuente NPPES federal</div>'
-      +'<div style="max-height:340px;overflow:auto;border:1px solid #e2e8f0;border-radius:10px;"><table style="width:100%;border-collapse:collapse;font-size:14px;"><tbody>'+rows+'</tbody></table></div>';
+    return '<div style="font-size:15px;color:#475569;margin:4px 0 6px;">'+list.length+(capped?'+':'')+' con "'+esc(q)+'" en el nombre · fuente NPPES federal</div>'
+      +'<div style="max-height:340px;overflow:auto;border:1px solid #e2e8f0;border-radius:10px;"><table style="width:100%;border-collapse:collapse;font-size:16px;"><tbody>'+rows+'</tbody></table></div>';
   }
   var st;
   srch.addEventListener('input',function(){
@@ -5941,7 +5947,7 @@ async function handleRegistro(req: any, res: any) {
     clearTimeout(st);
     if(qn.length<2){srchOut.innerHTML='';return;}
     var chips=muniChips(qn)+symChips(qn)+specChips(qn);
-    srchOut.innerHTML=chips+(q.length>=3?'<div style="color:#64748b;font-size:14px;padding:6px 0;">Buscando "'+esc(q)+'"…</div>':'');
+    srchOut.innerHTML=chips+(q.length>=3?'<div style="color:#475569;font-size:16px;padding:6px 0;">Buscando "'+esc(q)+'"…</div>':'');
     bindJumps();
     if(q.length<3)return;
     st=setTimeout(function(){
@@ -5952,7 +5958,7 @@ async function handleRegistro(req: any, res: any) {
           srchOut.innerHTML=muniChips(qn)+symChips(qn)+specChips(qn)+renderProviders((d&&d.providers)||[],d&&d.capped,q);
           bindJumps();
         })
-        .catch(function(){srchOut.innerHTML=muniChips(qn)+symChips(qn)+specChips(qn)+'<div style="color:#dc2626;font-size:14px;">No se pudo buscar. Intenta de nuevo.</div>';bindJumps();});
+        .catch(function(){srchOut.innerHTML=muniChips(qn)+symChips(qn)+specChips(qn)+'<div style="color:#dc2626;font-size:16px;">No se pudo buscar. Intenta de nuevo.</div>';bindJumps();});
     },280);
   });
 
@@ -5985,27 +5991,28 @@ async function handleRegistro(req: any, res: any) {
 
 <div class="not-prose mt-10 mb-2">
   <h2 class="text-xl font-bold text-slate-900 mb-1">${t('Encuentra opciones de médicos sin llamar a medio Puerto Rico', 'Find doctor options without calling half of Puerto Rico')}</h2>
-  <p class="text-sm text-slate-600 mb-4">${t('Nos dijeron en mayo que la cita era para octubre. Esta es la historia, en 3 minutos.', 'In May we were told the appointment would be in October. Here is the story, in 3 minutes.')}</p>
+  <p class="text-base text-slate-700 mb-4">${t('Nos dijeron en mayo que la cita era para octubre. Esta es la historia, en 3 minutos.', 'In May we were told the appointment would be in October. Here is the story, in 3 minutes.')}</p>
   <div class="mx-auto" style="max-width:360px;aspect-ratio:9/16;">
     <iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/4gu4-h8Ji7Q" title="Por qué existe RegistroMedicoPR" style="width:100%;height:100%;border:0;border-radius:16px;" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen></iframe>
   </div>
 </div>
 
-<h2 id="como-se-hizo">${t('Cómo se hizo (y por qué puedes confiar)', 'How it was made (and why you can trust it)')}</h2>
-<p>${t('Cada persona en este registro existe en el <strong>NPPES</strong> (National Plan and Provider Enumeration System), el registro oficial del gobierno federal de EE.UU. — el mismo que usan Medicare y los planes médicos. Tomamos solo <strong>proveedores individuales con práctica en Puerto Rico</strong>, por código de taxonomía (la especialidad oficial), y lo pusimos en español, por región. El <strong>NPI</strong> de cada uno es un número público que cualquiera puede verificar.', 'Every person in this registry exists in the <strong>NPPES</strong> (National Plan and Provider Enumeration System), the official US federal registry that Medicare and health plans use. We took only <strong>individual providers practicing in Puerto Rico</strong>, by taxonomy code (the official specialty), and organized them by region. Each <strong>NPI</strong> is a public number anyone can verify.')}</p>
-<p class="text-sm text-slate-600">${t('Lo que no encontrarás en ningún otro sitio: el gobierno tiene la data, pero enterrada, en inglés, sin organizar por pueblo. La pusimos clara, en un solo sitio, en español y por pueblo. Si ves un dato viejo o un especialista que ya no ejerce, dínoslo y se corrige — ', 'What you won\'t find anywhere else: the government has the data, but buried, in English, not organized by town. We made it clear, in one place, in Spanish and by town. See something outdated or a provider who no longer practices here? Tell us and we fix it — ')}<a href="mailto:angel@angelanderson.com" class="text-teal-600 hover:underline">angel@angelanderson.com</a>.</p>
-<p class="text-sm text-slate-600"><strong>${t('¿Periodista, plan médico, o investigador?', 'Journalist, health plan, or researcher?')}</strong> ${t('Esta data es citable y hay acceso programático. Escríbenos.', 'This data is citable and programmatic access is available. Reach out.')}</p>
+<details class="not-prose mt-8 bg-white border-2 border-slate-200 rounded-2xl p-5" id="como-se-hizo"><summary class="cursor-pointer text-lg font-bold text-slate-900 min-h-[44px]">${t('Cómo se hizo (y por qué puedes confiar)', 'How it was made (and why you can trust it)')}</summary>
+<p class="text-base text-slate-800 mt-3">${t('Cada persona en este registro existe en el <strong>NPPES</strong> (National Plan and Provider Enumeration System), el registro oficial del gobierno federal de EE.UU. — el mismo que usan Medicare y los planes médicos. Tomamos solo <strong>proveedores individuales con práctica en Puerto Rico</strong>, por código de taxonomía (la especialidad oficial), y lo pusimos en español, por región. El <strong>NPI</strong> de cada uno es un número público que cualquiera puede verificar.', 'Every person in this registry exists in the <strong>NPPES</strong> (National Plan and Provider Enumeration System), the official US federal registry that Medicare and health plans use. We took only <strong>individual providers practicing in Puerto Rico</strong>, by taxonomy code (the official specialty), and organized them by region. Each <strong>NPI</strong> is a public number anyone can verify.')}</p>
+<p class="text-base text-slate-700">${t('Lo que no encontrarás en ningún otro sitio: el gobierno tiene la data, pero enterrada, en inglés, sin organizar por pueblo. La pusimos clara, en un solo sitio, en español y por pueblo. Si ves un dato viejo o un especialista que ya no ejerce, dínoslo y se corrige — ', 'What you won\'t find anywhere else: the government has the data, but buried, in English, not organized by town. We made it clear, in one place, in Spanish and by town. See something outdated or a provider who no longer practices here? Tell us and we fix it — ')}<a href="mailto:angel@angelanderson.com" class="text-teal-800 underline">angel@angelanderson.com</a>.</p>
+<p class="text-base text-slate-700"><strong>${t('¿Periodista, plan médico, o investigador?', 'Journalist, health plan, or researcher?')}</strong> ${t('Esta data es citable y hay acceso programático. Escríbenos.', 'This data is citable and programmatic access is available. Reach out.')}</p>
+</details>
 
 ${regDisclaimer(en)}
 
 <div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
   <p class="text-lg font-bold mb-1">${t('¿No sabes por dónde empezar?', 'Not sure where to start?')}</p>
-  <p class="text-sm text-teal-100 mb-4">${t('Antes de dar vueltas, escríbele al Veci. Te dice quién resuelve, sin enredos. Al', 'Before driving around, text El Veci. He tells you who can help, no hassle. At')} <strong>${PHONE_CTA}</strong>:</p>
+  <p class="text-base text-white mb-4">${t('Antes de dar vueltas, escríbele al Veci. Te dice quién resuelve, sin enredos. Al', 'Before driving around, text El Veci. He tells you who can help, no hassle. At')} <strong>${PHONE_CTA}</strong>:</p>
   <div class="flex flex-wrap gap-3 justify-center">
-    <a href="https://wa.me/17874177711?text=ESPECIALISTA" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ESPECIALISTA</a>
-    <a href="/acceso" class="inline-flex items-center gap-2 bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-900"><i class="fa-solid fa-chart-simple"></i> ${t('Ver el reporte de acceso', 'See the access report')}</a>
+    <a href="https://wa.me/17874177711?text=ESPECIALISTA" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-3 rounded-full text-base hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ESPECIALISTA</a>
+    <a href="/acceso" class="inline-flex items-center gap-2 bg-teal-800 text-white font-bold px-5 py-3 rounded-full text-base hover:bg-teal-900"><i class="fa-solid fa-chart-simple"></i> ${t('Ver el reporte de acceso', 'See the access report')}</a>
   </div>
-  <p class="text-xs text-teal-200 mt-4">— Menos revolú, más sistema, mejor vida.</p>
+  <p class="text-base text-white mt-4">Menos revolú, más sistema, mejor vida.</p>
 </div>
 `
   const jsonLd = [
