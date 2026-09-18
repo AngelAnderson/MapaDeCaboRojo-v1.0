@@ -30,6 +30,8 @@
 | `--paper` | `#ffffff` | Cards, search box, panels |
 | `--ink` | `#1c1917` | Primary text |
 | `--ink-soft` | `#57534e` | Secondary text (7.63:1 on paper) |
+| `--ink-cap` | `#78716c` | Small readable captions: footer, timestamp, counts (4.56:1) |
+| `--coral-ink` | `#c2410c` | Coral when it carries white text or is itself text (5.18:1) |
 | `--ink-mut` | `#a8a29e` | Placeholder only. **Not for readable text** (2.40:1 on canvas) |
 | `--line` | `#e7e5e4` | Hairline borders |
 | Tints | `#fff7ed` / `#fed7aa` / `#c2410c` | "Recomendado" tag and "hueco" (search with no answer): orange-50 bg, orange-200 border, orange-700 text |
@@ -69,10 +71,10 @@ Use them only to say "what kind of place", never as UI accents.
 Spanish first, abuelita-friendly. "El Veci", never bot or AI. CTA phone **787-417-7711**. Numbers in digits with a date ("Datos al 17 de septiembre a las 10:22 p. m."). "Verificado" only where a person verified it (`procedenciaSello()` is the single source). Verification badge is free; La Vitrina buys prominence, never verification. No public prices.
 
 ## Debt (verified 2026-09-17, fix in this order)
-1. **Coral button fails contrast (2.80:1).** `.btn{background:var(--coral)}` with white text. Fix: button background `#c2410c` (5.18:1), keep `--coral` for borders and hovers. This is the money button ("Añade tu negocio"). Status: proposed, not deployed.
-2. **`--ink-mut` used as readable text (2.40:1)** in the timestamp and footer lines. Fix: `#78716c` (4.56:1) for text; keep `#a8a29e` for placeholders only.
+1. **Coral button fails contrast (2.80:1).** `.btn{background:var(--coral)}` with white text. Fix: button background `#c2410c` (5.18:1), keep `--coral` for borders and hovers. It is the rescue button on an empty search ("escríbele al Veci"). **FIXED 2026-09-18 (`fe15195`)** via `--coral-ink`.
+2. **`--ink-mut` used as readable text (2.40:1)** in the timestamp and footer lines. Fix: `#78716c` (4.56:1) for text; keep `#a8a29e` for placeholders only. **FIXED 2026-09-18** via `--ink-cap`.
 3. **White chips on teal (3.74:1)** at 14.4px bold. Fix: move the header gradient toward `#0f766e`, or darken the chip text shadow. Needs a render to judge.
-4. **`theme-color` in `index.html` is `#374C8A`** (a blue that exists nowhere in the system). Fix: `#0d9488`.
+4. **`theme-color` in `index.html` is `#374C8A`** (a blue that exists nowhere in the system). **FIXED 2026-09-18.** (The portada already had `#0d9488`; the blue was the app shell.)
 5. **Dialect C (SEO pages) uses cold slate + system font.** Largest surface Google sees. Migrate token by token: slate → stone/sand equivalents, add the Fraunces/Source Sans link, headings in Fraunces.
 6. **Dialect B coral `#f0491f` ≠ A coral `#f97316`.** Pick A's.
 7. `components/PlaceCard.tsx` has 18 off-system color classes in public UI.
