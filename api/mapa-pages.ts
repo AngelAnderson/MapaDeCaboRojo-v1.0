@@ -6295,6 +6295,10 @@ async function handleEspecialistaRemover(req: any, res: any) {
         const j: any = await r.json()
         estado = j?.estado === 'codigo_enviado' ? 'codigo_enviado' : 'revision_manual'
       } catch { estado = 'revision_manual' }
+      // Si el envío falló, la fila tiene que decir lo mismo que la página: revisión manual.
+      if (estado !== 'codigo_enviado') {
+        await supabase.rpc('remocion_a_manual', { p_peticion: data.peticion, p_razon: 'envio de codigo fallo' })
+      }
     }
     if (estado === 'codigo_enviado') {
       pagina(200, formCodigo(data.peticion, `Te mandamos un código de 6 números por texto al teléfono que aparece en la ficha (${escapeHtml(data.tel_mask)}). Así sabemos que eres tú y no otra persona.`)); return
