@@ -6223,6 +6223,70 @@ function responderRemovido(res: any, req: any) {
   }))
 }
 
+// Auto-remoción (21 sep 2026): el titular se saca solo, sin escribirle a nadie. Antes cada
+// solicitud era un SMS/correo que un humano procesaba a mano (8 casos; a una persona la hicimos
+// pedirlo 5 veces). Todo el trabajo vive en la RPC `remocion_autoservicio` (security definer,
+// solo service_role): snapshot → phone/address/website en null → archived → fila en
+// remocion_solicitudes con despublicar + no_reingestar. El trigger places_congela_contacto
+// impide que ningún sync la devuelva. Los últimos 4 del NPI son fricción, no identidad: el
+// NPI es público. El freno real es 3/día por IP y 15/día en total, y que todo es reversible.
+async function handleEspecialistaRemover(req: any, res: any) {
+  const slug = String(req.query.slug || '').trim()
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow')
+  res.setHeader('Cache-Control', 'no-store')
+  const pagina = (status: number, html: string) => res.status(status).send(layout({
+    title: 'Quitar mi ficha del registro', description: 'Saca tu ficha de registromedicopr.com.',
+    slug: 'registro', bodyHtml: html, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+  }))
+  if (!slug) { pagina(400, '<h1>Falta la ficha</h1>'); return }
+
+  const { data: place } = await supabase.from('places')
+    .select('name,slug,npi').eq('slug', slug).not('npi', 'is', null).maybeSingle()
+  if (!place && !(await fueRemovidoAPeticion(slug))) {
+    pagina(404, '<h1>No encontramos esa ficha</h1><p class="text-slate-600"><a href="/registro" class="text-teal-700 font-semibold">Vuelve al registro →</a></p>')
+    return
+  }
+
+  const hecho = `<h1>Listo. Tu ficha salió del registro.</h1><p class="text-slate-600">Borramos el teléfono, la dirección y la web, y la página ya no se publica. Le pedimos a Google que la saque (puede tardar unos días en desaparecer de sus resultados). La actualización mensual del registro federal no la va a volver a poner.</p><p class="text-slate-600 mt-3">Si fue un error, escríbenos por texto al <a href="sms:+17874177711" class="text-teal-700 font-semibold">787-417-7711</a> y la devolvemos.</p>`
+
+  if (req.method === 'POST') {
+    const b: any = typeof req.body === 'string'
+      ? Object.fromEntries(new URLSearchParams(req.body)) : (req.body || {})
+    if (String(b.confirmo || '') !== 'si') {
+      pagina(400, '<h1>Falta marcar la confirmación</h1><p class="text-slate-600"><a href="" class="text-teal-700 font-semibold">Vuelve atrás</a> y marca la casilla.</p>'); return
+    }
+    const { data, error } = await supabase.rpc('remocion_autoservicio', {
+      p_slug: slug,
+      p_npi4: String(b.npi4 || '').replace(/\D/g, '').slice(0, 4),
+      p_contacto: String(b.contacto || '').slice(0, 120),
+      p_motivo: String(b.motivo || '').slice(0, 500),
+      p_ip_hash: hashIp(getClientIp(req)) || 'unknown',
+    })
+    if (error || !data) { pagina(500, '<h1>No pudimos completarlo</h1><p class="text-slate-600">Escríbenos por texto al <a href="sms:+17874177711" class="text-teal-700 font-semibold">787-417-7711</a> y lo hacemos a mano hoy.</p>'); return }
+    if (data.ok) { pagina(200, hecho); return }
+    const msg = data.error === 'npi'
+      ? 'Los 4 números no son los últimos 4 del NPI de esta ficha.'
+      : data.error === 'limite'
+        ? 'Hoy llegamos al límite de solicitudes automáticas. Escríbenos por texto al 787-417-7711 y lo hacemos a mano.'
+        : 'No encontramos esa ficha.'
+    pagina(400, `<h1>No se pudo</h1><p class="text-slate-600">${msg}</p><p class="mt-3"><a href="/especialista/${escapeHtml(slug)}/remover" class="text-teal-700 font-semibold">Intentar otra vez →</a></p>`)
+    return
+  }
+
+  if (await fueRemovidoAPeticion(slug)) { pagina(200, hecho); return }
+  const p: any = place
+  pagina(200, `<h1>Quitar mi ficha del registro</h1>
+<p class="text-slate-600">Ficha: <b>${escapeHtml(p.name)}</b>. Si eres tú y no quieres salir aquí, la sacamos ahora mismo. Borramos el teléfono, la dirección y la web, la página deja de publicarse y la actualización del registro federal no la vuelve a poner.</p>
+<form method="post" class="mt-5 space-y-4">
+<label class="block"><span class="font-semibold text-slate-800">Últimos 4 números de tu NPI</span><br><input name="npi4" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required class="mt-1 border border-slate-300 rounded-lg px-3 py-2 w-32 text-lg"></label>
+<label class="block"><span class="font-semibold text-slate-800">Teléfono o correo para avisarte</span> <span class="text-slate-500">(opcional)</span><br><input name="contacto" maxlength="120" class="mt-1 border border-slate-300 rounded-lg px-3 py-2 w-full"></label>
+<label class="block"><span class="font-semibold text-slate-800">¿Por qué?</span> <span class="text-slate-500">(opcional, nos ayuda a mejorar)</span><br><textarea name="motivo" maxlength="500" rows="2" class="mt-1 border border-slate-300 rounded-lg px-3 py-2 w-full"></textarea></label>
+<label class="flex gap-2 items-start"><input type="checkbox" name="confirmo" value="si" required class="mt-1"><span class="text-slate-700">Soy la persona de esta ficha (o la represento) y quiero que la saquen.</span></label>
+<button type="submit" class="bg-red-700 text-white font-bold rounded-lg px-5 py-3">Quitar mi ficha</button>
+</form>
+<p class="text-sm text-slate-500 mt-5">¿Solo quieres corregir un dato? No hace falta salir: escríbenos por texto al <a href="sms:+17874177711" class="text-teal-700 font-semibold">787-417-7711</a>.</p>`)
+}
+
 async function handleEspecialista(req: any, res: any) {
   const slug = String(req.query.slug || '').trim()
   const lang: 'es' | 'en' = String(req.query.lang || '') === 'en' ? 'en' : 'es'
@@ -7064,7 +7128,7 @@ ${SHARE_COPY_SCRIPT}
         ].filter(Boolean).join(' · ')}.`
       : ''),
     slug: `especialista/${place.slug}`,
-    bodyHtml: body,
+    bodyHtml: body + `<p class="text-xs text-slate-500 mt-8 border-t border-slate-200 pt-3">${t('¿Eres tú y no quieres salir aquí?', 'Is this you and you don\'t want to be listed?')} <a href="/especialista/${escapeHtml(place.slug)}/remover" rel="nofollow" class="text-teal-700 font-semibold underline">${t('Quita tu ficha en 1 clic', 'Remove your listing in 1 click')}</a>.</p>`,
     jsonLd,
     // Tarjeta OG personalizada por proveedor (motor /api/og, theme medico) — cubre todo el registro
     ogImage: `https://registromedicopr.com/api/og?theme=medico&t=${encodeURIComponent(name)}&k=${encodeURIComponent(specLabel)}&sub=${encodeURIComponent(`${muni}, Puerto Rico · NPI ${npi}`)}&badge=${encodeURIComponent(npiVivo ? 'NPI activo' : 'NPI no vigente')}&site=registromedicopr.com`,
@@ -22382,6 +22446,7 @@ export default async function handler(req: any, res: any) {
     case 'registro-data': return await handleRegistroData(req, res)
     case 'registro-search': return await handleRegistroSearch(req, res)
     case 'especialista': return await handleEspecialista(req, res)
+    case 'especialista-remover': return await handleEspecialistaRemover(req, res)
     case 'especialista-claim': return await handleEspecialistaClaim(req, res)
     case 'plan-report': return await handlePlanReport(req, res)
     case 'acepta-report': return await handleAceptaReport(req, res)
