@@ -6289,7 +6289,7 @@ async function handleEspecialistaRemover(req: any, res: any) {
       try {
         const r = await fetch(`${process.env.VITE_SUPABASE_URL || 'https://vprjteqgmanntvisjrvp.supabase.co'}/functions/v1/registro-remocion-codigo`, {
           method: 'POST',
-          headers: { Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY || ''}`, 'Content-Type': 'application/json' },
+          headers: { 'x-remocion-secret': process.env.REGISTRO_REMOCION_SECRET || '', 'Content-Type': 'application/json' },
           body: JSON.stringify({ peticion: data.peticion }),
         })
         const j: any = await r.json()
