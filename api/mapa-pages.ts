@@ -6223,13 +6223,14 @@ function responderRemovido(res: any, req: any) {
   }))
 }
 
-// Auto-remoción (21 sep 2026): el titular se saca solo, sin escribirle a nadie. Antes cada
-// solicitud era un SMS/correo que un humano procesaba a mano (8 casos; a una persona la hicimos
-// pedirlo 5 veces). Todo el trabajo vive en la RPC `remocion_autoservicio` (security definer,
-// solo service_role): snapshot → phone/address/website en null → archived → fila en
-// remocion_solicitudes con despublicar + no_reingestar. El trigger places_congela_contacto
-// impide que ningún sync la devuelva. Los últimos 4 del NPI son fricción, no identidad: el
-// NPI es público. El freno real es 3/día por IP y 15/día en total, y que todo es reversible.
+// Auto-remoción verificada (21 sep 2026). Nadie sale del registro sin probar que controla
+// el teléfono QUE YA ESTÁ en la ficha, o sin aprobación humana. El visitante nunca escoge a
+// dónde va el código, así que la competencia no puede sacar a nadie: lo más que logra es que
+// el titular reciba un SMS diciendo que alguien lo intentó. Sin celular en la ficha → revisión
+// manual y la página NO cambia. Toda la lógica y los frenos viven en la base (remocion_pedir,
+// remocion_confirmar, remocion_resolver_manual, remocion_revertir); cada paso queda en
+// remocion_bitacora (append-only: ni service_role puede editarla ni borrarla) con IP y
+// navegador. La versión anterior (últimos 4 del NPI) no probaba nada: el NPI es público.
 async function handleEspecialistaRemover(req: any, res: any) {
   const slug = String(req.query.slug || '').trim()
   res.setHeader('X-Robots-Tag', 'noindex, nofollow')
@@ -6238,53 +6239,79 @@ async function handleEspecialistaRemover(req: any, res: any) {
     title: 'Quitar mi ficha del registro', description: 'Saca tu ficha de registromedicopr.com.',
     slug: 'registro', bodyHtml: html, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
   }))
+  const tel = `<a href="sms:+17874177711" class="text-teal-700 font-semibold">787-417-7711</a>`
   if (!slug) { pagina(400, '<h1>Falta la ficha</h1>'); return }
-
+  const yaSalio = await fueRemovidoAPeticion(slug)
+  const hecho = `<h1>Listo. Tu ficha salió del registro.</h1><p class="text-slate-600">Borramos el teléfono, la dirección y la web, y la página ya no se publica. Le pedimos a Google que la saque (puede tardar unos días). La actualización mensual del registro federal no la va a volver a poner.</p><p class="text-slate-600 mt-3">Si fue un error, escríbenos por texto al ${tel}.</p>`
   const { data: place } = await supabase.from('places')
-    .select('name,slug,npi').eq('slug', slug).not('npi', 'is', null).maybeSingle()
-  if (!place && !(await fueRemovidoAPeticion(slug))) {
-    pagina(404, '<h1>No encontramos esa ficha</h1><p class="text-slate-600"><a href="/registro" class="text-teal-700 font-semibold">Vuelve al registro →</a></p>')
-    return
+    .select('name,slug').eq('slug', slug).not('npi', 'is', null).maybeSingle()
+  if (!place && !yaSalio) {
+    pagina(404, '<h1>No encontramos esa ficha</h1><p class="text-slate-600"><a href="/registro" class="text-teal-700 font-semibold">Vuelve al registro →</a></p>'); return
   }
+  if (yaSalio) { pagina(200, hecho); return }
 
-  const hecho = `<h1>Listo. Tu ficha salió del registro.</h1><p class="text-slate-600">Borramos el teléfono, la dirección y la web, y la página ya no se publica. Le pedimos a Google que la saque (puede tardar unos días en desaparecer de sus resultados). La actualización mensual del registro federal no la va a volver a poner.</p><p class="text-slate-600 mt-3">Si fue un error, escríbenos por texto al <a href="sms:+17874177711" class="text-teal-700 font-semibold">787-417-7711</a> y la devolvemos.</p>`
+  const ip = getClientIp(req)
+  const ua = String(req.headers?.['user-agent'] || '').slice(0, 300)
+  const volver = `<p class="mt-3"><a href="/especialista/${escapeHtml(slug)}/remover" class="text-teal-700 font-semibold">Empezar otra vez →</a></p>`
+  const formCodigo = (peticion: string, aviso: string) => `<h1>Escribe el código</h1>
+<p class="text-slate-600">${aviso}</p>
+<form method="post" class="mt-5 space-y-4"><input type="hidden" name="paso" value="confirmar"><input type="hidden" name="peticion" value="${escapeHtml(peticion)}">
+<input name="codigo" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required class="border border-slate-300 rounded-lg px-3 py-2 w-40 text-2xl tracking-widest">
+<button type="submit" class="block bg-red-700 text-white font-bold rounded-lg px-5 py-3">Quitar mi ficha</button></form>
+<p class="text-sm text-slate-500 mt-5">¿Ese teléfono ya no es tuyo? Escríbenos por texto al ${tel} y lo verificamos a mano.</p>`
 
   if (req.method === 'POST') {
-    const b: any = typeof req.body === 'string'
-      ? Object.fromEntries(new URLSearchParams(req.body)) : (req.body || {})
-    if (String(b.confirmo || '') !== 'si') {
-      pagina(400, '<h1>Falta marcar la confirmación</h1><p class="text-slate-600"><a href="" class="text-teal-700 font-semibold">Vuelve atrás</a> y marca la casilla.</p>'); return
+    const b: any = typeof req.body === 'string' ? Object.fromEntries(new URLSearchParams(req.body)) : (req.body || {})
+
+    if (b.paso === 'confirmar') {
+      const peticion = String(b.peticion || '').slice(0, 40)
+      const { data, error } = await supabase.rpc('remocion_confirmar', {
+        p_peticion: peticion, p_code: String(b.codigo || '').replace(/\D/g, '').slice(0, 6), p_ip: ip, p_ua: ua })
+      if (error || !data) { pagina(500, `<h1>No pudimos completarlo</h1><p class="text-slate-600">Escríbenos por texto al ${tel}.</p>`); return }
+      if (data.ok) { pagina(200, hecho); return }
+      if (data.error === 'codigo') { pagina(400, formCodigo(peticion, `Ese código no es. Te quedan ${Math.max(0, data.quedan)} intentos.`)); return }
+      pagina(400, `<h1>El código venció</h1><p class="text-slate-600">Dura 15 minutos y 5 intentos.</p>${volver}`); return
     }
-    const { data, error } = await supabase.rpc('remocion_autoservicio', {
-      p_slug: slug,
-      p_npi4: String(b.npi4 || '').replace(/\D/g, '').slice(0, 4),
-      p_contacto: String(b.contacto || '').slice(0, 120),
-      p_motivo: String(b.motivo || '').slice(0, 500),
-      p_ip_hash: hashIp(getClientIp(req)) || 'unknown',
-    })
-    if (error || !data) { pagina(500, '<h1>No pudimos completarlo</h1><p class="text-slate-600">Escríbenos por texto al <a href="sms:+17874177711" class="text-teal-700 font-semibold">787-417-7711</a> y lo hacemos a mano hoy.</p>'); return }
-    if (data.ok) { pagina(200, hecho); return }
-    const msg = data.error === 'npi'
-      ? 'Los 4 números no son los últimos 4 del NPI de esta ficha.'
-      : data.error === 'limite'
-        ? 'Hoy llegamos al límite de solicitudes automáticas. Escríbenos por texto al 787-417-7711 y lo hacemos a mano.'
-        : 'No encontramos esa ficha.'
-    pagina(400, `<h1>No se pudo</h1><p class="text-slate-600">${msg}</p><p class="mt-3"><a href="/especialista/${escapeHtml(slug)}/remover" class="text-teal-700 font-semibold">Intentar otra vez →</a></p>`)
+
+    if (String(b.confirmo || '') !== 'si') { pagina(400, `<h1>Falta marcar la confirmación</h1>${volver}`); return }
+    const { data, error } = await supabase.rpc('remocion_pedir', {
+      p_slug: slug, p_contacto: String(b.contacto || '').slice(0, 160),
+      p_motivo: String(b.motivo || '').slice(0, 500), p_ip: ip, p_ua: ua })
+    if (error || !data) { pagina(500, `<h1>No pudimos completarlo</h1><p class="text-slate-600">Escríbenos por texto al ${tel}.</p>`); return }
+    if (!data.ok) {
+      pagina(429, data.error === 'limite'
+        ? `<h1>Demasiadas solicitudes hoy</h1><p class="text-slate-600">Por seguridad hay un límite diario. Escríbenos por texto al ${tel}.</p>`
+        : '<h1>No encontramos esa ficha</h1>'); return
+    }
+    if (data.estado === 'ejecutada') { pagina(200, hecho); return }
+    let estado = data.estado
+    if (estado === 'enviar_codigo') {
+      try {
+        const r = await fetch(`${process.env.VITE_SUPABASE_URL || 'https://vprjteqgmanntvisjrvp.supabase.co'}/functions/v1/registro-remocion-codigo`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY || ''}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ peticion: data.peticion }),
+        })
+        const j: any = await r.json()
+        estado = j?.estado === 'codigo_enviado' ? 'codigo_enviado' : 'revision_manual'
+      } catch { estado = 'revision_manual' }
+    }
+    if (estado === 'codigo_enviado') {
+      pagina(200, formCodigo(data.peticion, `Te mandamos un código de 6 números por texto al teléfono que aparece en la ficha (${escapeHtml(data.tel_mask)}). Así sabemos que eres tú y no otra persona.`)); return
+    }
+    pagina(200, `<h1>Recibimos tu solicitud</h1><p class="text-slate-600">Para proteger a los proveedores, no sacamos una ficha sin confirmar que quien lo pide es la persona. Esta ficha no tiene un celular donde mandarte un código, así que la revisamos a mano en menos de 2 días laborables${b.contacto ? ' y te escribimos al contacto que dejaste' : ''}. Puede que te pidamos una foto de tu licencia.</p><p class="text-slate-600 mt-3">Mientras tanto la ficha sigue igual. ¿Prisa? Escríbenos por texto al ${tel}.</p>`)
     return
   }
 
-  if (await fueRemovidoAPeticion(slug)) { pagina(200, hecho); return }
-  const p: any = place
   pagina(200, `<h1>Quitar mi ficha del registro</h1>
-<p class="text-slate-600">Ficha: <b>${escapeHtml(p.name)}</b>. Si eres tú y no quieres salir aquí, la sacamos ahora mismo. Borramos el teléfono, la dirección y la web, la página deja de publicarse y la actualización del registro federal no la vuelve a poner.</p>
-<form method="post" class="mt-5 space-y-4">
-<label class="block"><span class="font-semibold text-slate-800">Últimos 4 números de tu NPI</span><br><input name="npi4" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required class="mt-1 border border-slate-300 rounded-lg px-3 py-2 w-32 text-lg"></label>
-<label class="block"><span class="font-semibold text-slate-800">Teléfono o correo para avisarte</span> <span class="text-slate-500">(opcional)</span><br><input name="contacto" maxlength="120" class="mt-1 border border-slate-300 rounded-lg px-3 py-2 w-full"></label>
-<label class="block"><span class="font-semibold text-slate-800">¿Por qué?</span> <span class="text-slate-500">(opcional, nos ayuda a mejorar)</span><br><textarea name="motivo" maxlength="500" rows="2" class="mt-1 border border-slate-300 rounded-lg px-3 py-2 w-full"></textarea></label>
-<label class="flex gap-2 items-start"><input type="checkbox" name="confirmo" value="si" required class="mt-1"><span class="text-slate-700">Soy la persona de esta ficha (o la represento) y quiero que la saquen.</span></label>
-<button type="submit" class="bg-red-700 text-white font-bold rounded-lg px-5 py-3">Quitar mi ficha</button>
+<p class="text-slate-600">Ficha: <b>${escapeHtml((place as any).name)}</b>. Si eres tú y no quieres salir aquí, te la sacamos. Para que nadie más pueda sacarla, te mandamos un código por texto al teléfono que ya aparece en la ficha.</p>
+<form method="post" class="mt-5 space-y-4"><input type="hidden" name="paso" value="pedir">
+<label class="block"><span class="font-semibold text-slate-800">Teléfono o correo para avisarte</span> <span class="text-slate-500">(opcional)</span><br><input name="contacto" maxlength="160" class="mt-1 border border-slate-300 rounded-lg px-3 py-2 w-full"></label>
+<label class="block"><span class="font-semibold text-slate-800">¿Por qué?</span> <span class="text-slate-500">(opcional)</span><br><textarea name="motivo" maxlength="500" rows="2" class="mt-1 border border-slate-300 rounded-lg px-3 py-2 w-full"></textarea></label>
+<label class="flex gap-2 items-start"><input type="checkbox" name="confirmo" value="si" required class="mt-1"><span class="text-slate-700">Soy la persona de esta ficha (o la represento) y quiero que la saquen. Entiendo que guardamos la IP y la hora de esta solicitud.</span></label>
+<button type="submit" class="bg-red-700 text-white font-bold rounded-lg px-5 py-3">Mandarme el código</button>
 </form>
-<p class="text-sm text-slate-500 mt-5">¿Solo quieres corregir un dato? No hace falta salir: escríbenos por texto al <a href="sms:+17874177711" class="text-teal-700 font-semibold">787-417-7711</a>.</p>`)
+<p class="text-sm text-slate-500 mt-5">¿Solo quieres corregir un dato? No hace falta salir: escríbenos por texto al ${tel}.</p>`)
 }
 
 async function handleEspecialista(req: any, res: any) {
