@@ -578,6 +578,7 @@ html.dark #rg-result [style*="#e2e8f0"],html.dark #rg-search-result [style*="#e2
 html.dark #rg-result [style*="background:#ecfdf5"]{background:#064e3b !important;border-color:#047857 !important;}
 html.dark #rg-result [style*="background:#fffbeb"]{background:#451a03 !important;border-color:#b45309 !important;}
 html.dark #rg-result [style*="background:#fef2f2"]{background:#450a0a !important;border-color:#b91c1c !important;}
+@media (max-width:560px){.rg-t tr{display:flex;flex-wrap:wrap;align-items:center;border-bottom:1px solid rgba(148,163,184,.35);}.rg-t td{border:0 !important;}.rg-t td:first-child{flex:1 1 100%;padding-bottom:2px !important;}.rg-t td:last-child{margin-left:auto;padding-top:2px !important;}}
 html.dark #rg-search-result button[style]{background:#1e293b !important;border-color:#0f766e !important;color:#5eead4 !important;}
 /* Full-coverage dark overrides — every color token used by reg pages (audit 2026-07-16: dark-on-dark text) */
 html.dark .text-teal-600{color:#2dd4bf !important;}
@@ -5791,7 +5792,7 @@ async function handleRegistro(req: any, res: any) {
         }).join('');
         var planNote=plan?'<div style="font-size:15px;color:#92400e;background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:8px 10px;margin:4px 0 8px;">Las oficinas casi nunca publican qué planes aceptan. El ✓ sale solo cuando la oficina lo confirmó con nosotros. Que no tenga ✓ <b>no</b> significa que no acepte '+esc(PLAN_LABELS[plan]||plan)+': llama y pregunta primero.</div>':'';
         box.innerHTML='<div style="font-size:15px;color:#475569;margin:4px 0 6px;">'+list.length+' en '+regionLabel(region)+(d.capped?'+ (mostrando los primeros '+list.length+')':'')+' · fuente NPPES federal</div>'+planNote
-          +'<div style="max-height:340px;overflow:auto;border:1px solid #e2e8f0;border-radius:10px;"><table style="width:100%;border-collapse:collapse;font-size:16px;"><tbody>'+rows+'</tbody></table></div>';
+          +'<div style="max-height:340px;overflow:auto;border:1px solid #e2e8f0;border-radius:10px;"><table class="rg-t" style="width:100%;border-collapse:collapse;font-size:16px;"><tbody>'+rows+'</tbody></table></div>';
       })
       .catch(function(){box.innerHTML='<div style="color:#dc2626;font-size:16px;">No se pudo cargar la lista. Intenta de nuevo.</div>';});
   }
@@ -5939,7 +5940,7 @@ async function handleRegistro(req: any, res: any) {
       return '<tr style="border-top:1px solid #e2e8f0;"><td style="padding:7px 8px;font-weight:600;color:#0f172a;">'+nm+'</td><td style="padding:7px 8px;color:#475569;">'+esc(lab)+'</td><td style="padding:7px 8px;color:#475569;">'+esc(p.municipality||'—')+'</td><td style="padding:7px 8px;text-align:right;">'+tel+'</td></tr>';
     }).join('');
     return '<div style="font-size:15px;color:#475569;margin:4px 0 6px;">'+list.length+(capped?'+':'')+' con "'+esc(q)+'" en el nombre · fuente NPPES federal</div>'
-      +'<div style="max-height:340px;overflow:auto;border:1px solid #e2e8f0;border-radius:10px;"><table style="width:100%;border-collapse:collapse;font-size:16px;"><tbody>'+rows+'</tbody></table></div>';
+      +'<div style="max-height:340px;overflow:auto;border:1px solid #e2e8f0;border-radius:10px;"><table class="rg-t" style="width:100%;border-collapse:collapse;font-size:16px;"><tbody>'+rows+'</tbody></table></div>';
   }
   var st;
   srch.addEventListener('input',function(){
