@@ -14208,12 +14208,15 @@ ${SHARE_COPY_SCRIPT}
 // de credibilidad (no se puede "ajustar" una predicción después de verla venir).
 async function handlePredicciones(req: any, res: any) {
   let rows: any[] = []
+  let totalEscritas = 0
   try {
     const { data } = await supabase.from('predicciones')
       .select('num, titulo, prediccion, criterio, decision, bolsillo, fuente_url, vence_on, ojala_falle, status')
       .in('status', ['publicada', 'locked'])
       .order('num', { ascending: true, nullsFirst: false })
     rows = data || []
+    const { count } = await supabase.from('predicciones').select('id', { count: 'exact', head: true })
+    totalEscritas = count ?? rows.length
   } catch (_) { /* empty */ }
 
   const publicadas = rows.filter((r: any) => r.status === 'publicada')
@@ -14226,6 +14229,13 @@ async function handlePredicciones(req: any, res: any) {
     if (!y || !m || !d) return String(iso)
     return `${d} de ${MESES_PRED[m - 1]} de ${y}`
   }
+
+  const hoyISO = new Date().toISOString().slice(0, 10)
+  const cobradas = rows.filter((r: any) => r.vence_on && String(r.vence_on) < hoyISO)
+  const pendientes = rows.filter((r: any) => r.vence_on && String(r.vence_on) >= hoyISO)
+    .sort((a: any, b: any) => String(a.vence_on).localeCompare(String(b.vence_on)))
+  const proxima = pendientes[0]
+  const ojalaFallen = rows.filter((r: any) => r.ojala_falle).length
 
   const publicadaCards = publicadas.map((p: any) => {
     const copyTxt = `${p.titulo}. ${p.prediccion} Se cobra: ${fechaLargaPred(p.vence_on)}. puertoricosinfiltros.com/predicciones`
@@ -14263,17 +14273,32 @@ async function handlePredicciones(req: any, res: any) {
 
   const body = `
 <h1>Predicciones</h1>
-<p class="text-lg text-slate-600 mt-2">Predicciones con fecha, criterio y fuente. Si fallamos, queda escrito.</p>
+<p class="text-lg text-slate-600 mt-2">Todo lo que Angel Anderson cree que va a pasar en Puerto Rico, con fecha, criterio y fuente. Si me equivoco, lo lees aquí.</p>
 
-<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
-  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">Cómo se lee</p>
-  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Cada predicción tiene fecha de cobro. Cuando llega, el resultado se publica aquí mismo — gane o pierda.</p>
-  <p class="text-slate-300 mt-2 text-sm leading-relaxed">Las <strong class="text-white">publicadas</strong> van con su fuente, el criterio exacto de verificación y qué hacer con la información. Las <strong class="text-white">selladas</strong> ya están escritas — el contenido no se muestra hasta que se publican, casi siempre un viernes. Lo único público antes de eso es que existen y cuándo se cobran. Eso evita que una predicción se "ajuste" después de ver para dónde sopla el viento.</p>
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5 sm:p-7">
+  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">Qué es esto</p>
+  <p class="text-2xl sm:text-3xl font-black mt-1 leading-tight" style="font-family:'Fraunces',Georgia,serif">Cualquiera puede decir que el país va mal. Yo pongo fecha, número y a quién le toca. Cuando llega el día, vuelvo y digo si acerté o me di contra la pared.</p>
+  <p class="text-slate-300 mt-3 leading-relaxed">Esto no es adivinanza ni pesimismo. Cada predicción sale de un récord: lo que ya pasó las veces anteriores, lo que dice el dato federal, lo que el presupuesto ya tiene firmado. Predecir aquí es leer ese récord en voz alta y ponerle una fecha, para que después no se pueda decir que nadie avisó.</p>
+  <p class="text-slate-300 mt-3 leading-relaxed">Lo escribo antes, no después. El criterio de cómo se verifica queda fijo desde el día 1, así que no hay manera de acomodarlo cuando se vea para dónde sopla el viento. Y el resultado se publica gane o pierda: equivocarme en público es el precio de que esto valga algo.</p>
+  <div class="mt-5 pt-5 border-t border-white/15 grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div><p class="text-3xl font-black text-white leading-none">${totalEscritas}</p><p class="text-[11px] uppercase tracking-widest text-slate-400 font-bold mt-1">escritas</p></div>
+    <div><p class="text-3xl font-black text-teal-300 leading-none">${publicadas.length}</p><p class="text-[11px] uppercase tracking-widest text-slate-400 font-bold mt-1">públicas hoy</p></div>
+    <div><p class="text-3xl font-black text-white leading-none">${selladas.length}</p><p class="text-[11px] uppercase tracking-widest text-slate-400 font-bold mt-1">selladas</p></div>
+    <div><p class="text-3xl font-black text-amber-300 leading-none">${cobradas.length}</p><p class="text-[11px] uppercase tracking-widest text-slate-400 font-bold mt-1">ya cobradas</p></div>
+  </div>
+  ${proxima ? `<p class="text-sm text-slate-300 mt-4 m-0">El marcador arranca en <strong class="text-white">0 de 0</strong>. La primera se cobra el <strong class="text-white">${escapeHtml(fechaLargaPred(proxima.vence_on))}</strong>: ${escapeHtml(proxima.titulo)}.</p>` : ''}
+  ${ojalaFallen ? `<p class="text-sm text-slate-400 mt-2 m-0">${ojalaFallen} de estas llevan la etiqueta 🤞 <strong class="text-slate-200">Ojalá falle</strong>. Esas las quiero perder.</p>` : ''}
+</div>
+
+<div class="not-prose mt-4 bg-white border border-slate-200 rounded-2xl p-5">
+  <p class="text-xs uppercase tracking-widest text-teal-600 font-bold">Cómo se lee cada una</p>
+  <p class="text-slate-700 mt-2 leading-relaxed m-0">Las <strong>públicas</strong> traen la predicción completa, la fuente, el criterio exacto con el que se va a verificar y qué te toca hacer a ti con esa información. Las <strong>selladas</strong> ya están escritas, pero el contenido no se enseña hasta que se publican. Lo único público antes de eso es que existen y cuándo se cobran.</p>
 </div>
 
 ${shareRow({ text: 'Predicciones sobre Puerto Rico con fecha, criterio y fuente. Si fallan, queda escrito en público:', url: 'https://puertoricosinfiltros.com/predicciones', toWho: 'Al que decide con números, no con corazonadas.' })}
 
-<h2>Publicadas${publicadas.length ? '' : ' — ninguna todavía'}</h2>
+<h2>Las públicas${publicadas.length ? '' : ' — ninguna todavía'}</h2>
+<p class="text-sm text-slate-600">Cada una con su fecha de cobro. Ninguna se edita después.</p>
 ${publicadas.length ? publicadaCards : '<p class="text-slate-500 text-sm">Las primeras salen cuando llega su fecha de cobro. Mientras tanto, abajo están las que ya quedaron selladas.</p>'}
 
 <h2>Selladas — escritas, esperando su fecha</h2>
@@ -14290,14 +14315,15 @@ ${selladaCards || '<p class="text-slate-500 text-sm">Ninguna sellada por ahora.<
 
 <div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
   <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Una predicción sin fecha de verificación es opinión disfrazada. Estas tienen fecha.</p>
+  <p class="mt-2 text-sm text-slate-700">Las escribe Angel Anderson, vecino de Cabo Rojo, con el dato a la vista y el nombre puesto. <a href="https://angelanderson.com" class="text-teal-700 font-semibold">Quién soy</a>.</p>
   <p class="mt-2 text-sm text-slate-600 italic">Si te sirve, úsalo. Si no, sigue tu camino.</p>
 </div>
 ${SHARE_COPY_SCRIPT}
 `
   const jsonLd = {
     '@context': 'https://schema.org', '@type': 'Dataset',
-    name: 'Predicciones de Puerto Rico Sin Filtros: fecha, criterio y fuente',
-    description: 'Predicciones concretas sobre Puerto Rico, cada una escrita y sellada antes de poder verificarse, con fecha de cobro, criterio de verificación y fuente. Publicadas cuando llega su fecha, gane o pierda la predicción.',
+    name: 'Predicciones de Angel Anderson sobre Puerto Rico: fecha, criterio y fuente',
+    description: 'Todo lo que Angel Anderson predice que va a pasar en Puerto Rico, y por qué. Cada predicción escrita y sellada antes de poder verificarse, con fecha de cobro, criterio de verificación y fuente. El resultado se publica cuando llega la fecha, gane o pierda.',
     creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
     publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
     isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/predicciones',
@@ -14306,8 +14332,8 @@ ${SHARE_COPY_SCRIPT}
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=1800, stale-while-revalidate=600')
   res.status(200).send(layout({
-    title: 'Predicciones de Puerto Rico: con fecha, criterio y fuente',
-    description: 'Predicciones concretas sobre Puerto Rico, escritas y selladas antes de verificarse. Cuando llega la fecha de cobro, el resultado se publica aquí — gane o pierda. Con fuente al lado.',
+    title: 'Predicciones de Angel Anderson sobre Puerto Rico: con fecha, criterio y fuente',
+    description: 'Todo lo que Angel Anderson cree que va a pasar en Puerto Rico, y por qué. Cada predicción con fecha de cobro, criterio de verificación y fuente, escrita antes de poder verificarse. Cuando llega el día, el resultado se publica gane o pierda.',
     slug: 'predicciones', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
