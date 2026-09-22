@@ -237,6 +237,8 @@ function layout(opts: {
   md?: boolean           // esta página tiene versión Markdown para agentes de IA (api/_lib/agente-md.ts).
                          // Solo prenderlo donde el handler REALMENTE responde markdown: anunciar un
                          // alternate que devuelve HTML es peor que no anunciarlo.
+  sinMaquina?: boolean   // PRSF: no colgar "Pásalo por la máquina" al pie. Páginas que deben cerrar
+                         // sobre su propio tema (el marcador de /predicciones) y no diluirse.
   bareTitle?: boolean    // no " · Marca" al final: en páginas que compiten en el SERP por nombre
                          // de médico o por especialidad+pueblo, esos 20 caracteres son los que
                          // Google corta, y el dominio ya sale debajo del título de todos modos.
@@ -390,7 +392,7 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 </header>`
 
   // --- Footer (host-aware). Registro = quiet, no newsletter/tienda; desiertos kept low-key. ---
-  const footer = isPRSF ? (laMaquinaPRSF + prsfFooter) : isReg ? `
+  const footer = isPRSF ? ((opts.sinMaquina ? '' : laMaquinaPRSF) + prsfFooter) : isReg ? `
 <footer class="border-t border-slate-200 mt-12 py-10 bg-white">
 <div class="max-w-4xl mx-auto px-4">
 <p class="text-base font-semibold text-teal-800 text-center">${isEn ? 'The verified registry of Puerto Rico medical specialists.' : 'El registro verificado de especialistas médicos de Puerto Rico.'}</p>
@@ -14201,141 +14203,244 @@ ${SHARE_COPY_SCRIPT}
 // /predicciones — el archivo público de predicciones con fecha, criterio y fuente.
 // Lee en vivo de la tabla `predicciones` (Supabase; RLS on, sin políticas — nadie con
 // anon/authenticated puede leerla vía PostgREST; solo el service role de este server
-// la toca, igual que esencia_timeline, quien_responde_promesas, etc. arriba en este
-// archivo). Solo status IN ('publicada','locked') sale a la calle: 'banco' ni se
-// selecciona, y la columna `notas` nunca se pide en el SELECT — ni por accidente.
-// Las selladas muestran título + fecha de cobro y nada más: el sello es el mecanismo
-// de credibilidad (no se puede "ajustar" una predicción después de verla venir).
+// la toca). Solo status IN ('publicada','locked') sale a la calle: 'banco' ni se
+// selecciona (solo se cuenta), y la columna `notas` nunca se pide en el SELECT.
+// Las selladas muestran título, tema y fecha de cobro y nada más: el sello es el
+// mecanismo de credibilidad. Rediseño 22 sep 2026 (notas de Angel): la página es un
+// MARCADOR, no una lista. Arriba: el récord en números + la próxima a cobrar con
+// countdown. Las cobradas (columna `resultado`) van ARRIBA de las públicas, y las
+// que fallan no se esconden. Selladas agrupadas por `tema`. Cierra sobre el récord,
+// sin La Máquina ni navegación extra (sinMaquina en layout).
+const TEMAS_PRED: Array<[string, string, string]> = [
+  ['energia', 'Energía y agua', '⚡'],
+  ['gobierno', 'Gobierno', '🏛️'],
+  ['economia', 'Economía y comida', '🛒'],
+  ['salud', 'Salud', '🩺'],
+  ['ai', 'AI y trabajo', '🤖'],
+  ['cabo-rojo', 'Cabo Rojo', '📍'],
+  ['sistemas', 'Nuestros sistemas', '🔧'],
+]
 async function handlePredicciones(req: any, res: any) {
   let rows: any[] = []
   let totalEscritas = 0
   try {
     const { data } = await supabase.from('predicciones')
-      .select('num, titulo, prediccion, criterio, decision, bolsillo, fuente_url, vence_on, ojala_falle, status')
+      .select('num, slug, titulo, prediccion, criterio, decision, bolsillo, fuente_url, vence_on, ojala_falle, status, tema, resultado, resultado_nota, resultado_url, cobrada_on')
       .in('status', ['publicada', 'locked'])
-      .order('num', { ascending: true, nullsFirst: false })
+      .order('vence_on', { ascending: true })
     rows = data || []
     const { count } = await supabase.from('predicciones').select('id', { count: 'exact', head: true })
     totalEscritas = count ?? rows.length
   } catch (_) { /* empty */ }
 
-  const publicadas = rows.filter((r: any) => r.status === 'publicada')
-  const selladas = rows.filter((r: any) => r.status === 'locked')
-
   const MESES_PRED = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+  const MESES_CORTO = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC']
   const fechaLargaPred = (iso: string): string => {
     if (!iso) return ''
     const [y, m, d] = String(iso).split('-').map(Number)
     if (!y || !m || !d) return String(iso)
     return `${d} de ${MESES_PRED[m - 1]} de ${y}`
   }
+  const fechaCorta = (iso: string): string => {
+    if (!iso) return ''
+    const [y, m, d] = String(iso).split('-').map(Number)
+    if (!y || !m || !d) return String(iso)
+    return `${d} ${MESES_CORTO[m - 1]} ${y}`
+  }
+  // "Hoy" en Puerto Rico, no en UTC: a las 9pm de PR todavía no es mañana.
+  const hoyISO = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Puerto_Rico' })
+  const diasHasta = (iso: string): number => Math.round((Date.parse(iso + 'T00:00:00Z') - Date.parse(hoyISO + 'T00:00:00Z')) / 86400000)
 
-  const hoyISO = new Date().toISOString().slice(0, 10)
-  const cobradas = rows.filter((r: any) => r.vence_on && String(r.vence_on) < hoyISO)
-  const pendientes = rows.filter((r: any) => r.vence_on && String(r.vence_on) >= hoyISO)
-    .sort((a: any, b: any) => String(a.vence_on).localeCompare(String(b.vence_on)))
+  const publicadas = rows.filter((r: any) => r.status === 'publicada')
+  const selladas = rows.filter((r: any) => r.status === 'locked')
+  const cobradas = rows.filter((r: any) => r.resultado === 'cumplida' || r.resultado === 'fallida')
+  const cumplidas = cobradas.filter((r: any) => r.resultado === 'cumplida')
+  const fallidas = cobradas.filter((r: any) => r.resultado === 'fallida')
+  const vencidasSinCobrar = rows.filter((r: any) => !r.resultado && r.vence_on && String(r.vence_on) < hoyISO)
+  const pendientes = rows.filter((r: any) => !r.resultado && r.vence_on && String(r.vence_on) >= hoyISO)
   const proxima = pendientes[0]
   const ojalaFallen = rows.filter((r: any) => r.ojala_falle).length
+  const temaLabel = (t: string) => TEMAS_PRED.find((x) => x[0] === t)
+  const idDe = (p: any) => escapeHtml(String(p.slug || p.num || ''))
 
-  const publicadaCards = publicadas.map((p: any) => {
-    const copyTxt = `${p.titulo}. ${p.prediccion} Se cobra: ${fechaLargaPred(p.vence_on)}. puertoricosinfiltros.com/predicciones`
+  // ── Tarjeta de una predicción pública: 4 renglones fijos + "por qué importa" plegado.
+  const publicadaCard = (p: any, destacada = false) => {
+    const copyTxt = `${p.titulo}. ${p.prediccion} Se cobra: ${fechaLargaPred(p.vence_on)}. puertoricosinfiltros.com/predicciones#${p.slug || ''}`
+    const dias = p.vence_on ? diasHasta(String(p.vence_on)) : null
+    const tl = temaLabel(p.tema)
+    const detalle = (p.bolsillo || p.decision) ? `
+      <details class="mt-3 group">
+        <summary class="cursor-pointer list-none text-sm font-bold text-teal-700 inline-flex items-center gap-1.5 select-none">Por qué importa <span class="transition-transform group-open:rotate-90">→</span></summary>
+        <div class="mt-2 text-sm text-stone-700 leading-relaxed space-y-2">
+          ${p.bolsillo ? `<p class="m-0">${escapeHtml(p.bolsillo)}</p>` : ''}
+          ${p.decision ? `<p class="m-0">${escapeHtml(p.decision)}</p>` : ''}
+        </div>
+      </details>` : ''
     return `
-  <div class="not-prose bg-white border border-slate-200 rounded-2xl overflow-hidden mt-5" id="p-${escapeHtml(String(p.num ?? ''))}">
-    <div class="px-4 pt-4 flex items-start justify-between gap-3 flex-wrap">
-      <p class="font-black text-slate-900 text-lg leading-snug flex-1" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(p.titulo)}</p>
-      ${p.ojala_falle ? `<span class="text-[11px] font-bold rounded-full px-2.5 py-0.5 border bg-emerald-50 border-emerald-200 text-emerald-800">🤞 Ojalá falle</span>` : ''}
-    </div>
-    <p class="px-4 mt-2 text-slate-700 leading-relaxed">${escapeHtml(p.prediccion)}</p>
-    ${p.bolsillo ? `<div class="mx-4 mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3"><p class="text-[11px] uppercase tracking-widest font-bold text-amber-700">🎒 Lo que te toca a ti</p><p class="text-sm text-slate-800 mt-1">${escapeHtml(p.bolsillo)}</p></div>` : ''}
-    <div class="px-4 mt-3 pb-4 border-t border-slate-100 pt-3">
-      <p class="text-[11px] uppercase tracking-widest font-bold text-teal-600">Cómo se verifica</p>
-      <p class="text-sm text-slate-700 mt-1 leading-relaxed">${escapeHtml(p.criterio)}</p>
-      ${p.decision ? `<p class="text-[11px] uppercase tracking-widest font-bold text-teal-600 mt-3">Qué hacer con esto</p><p class="text-sm text-slate-700 mt-1 leading-relaxed">${escapeHtml(p.decision)}</p>` : ''}
-    </div>
-    <div class="bg-slate-900 text-white px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
-      <p class="font-bold text-sm sm:text-base m-0"><span class="text-teal-300 text-[11px] uppercase tracking-widest font-bold mr-2">Se cobra</span>${escapeHtml(fechaLargaPred(p.vence_on))}</p>
-      <div class="flex items-center gap-2 shrink-0">
-        ${p.fuente_url ? `<a href="${escapeHtml(p.fuente_url)}" target="_blank" rel="noopener" class="text-teal-300 text-xs font-bold hover:underline">Fuente ↗</a>` : ''}
-        <button type="button" class="share-copy inline-flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white font-bold px-3 py-1.5 rounded-full text-xs" data-copy="${escapeHtml(copyTxt)}"><i class="fa-regular fa-copy"></i> Copiar</button>
+  <article class="not-prose bg-white border ${destacada ? 'border-amber-300 ring-2 ring-amber-200' : 'border-stone-200'} rounded-2xl overflow-hidden mt-4" id="${idDe(p)}">
+    <div class="px-4 pt-4">
+      <div class="flex items-center gap-2 flex-wrap text-[11px] uppercase tracking-widest font-bold">
+        ${tl ? `<span class="text-stone-500">${tl[2]} ${escapeHtml(tl[1])}</span>` : ''}
+        ${p.ojala_falle ? `<span class="rounded-full px-2 py-0.5 border bg-emerald-50 border-emerald-200 text-emerald-800 normal-case tracking-normal">🤞 Ojalá falle</span>` : ''}
       </div>
+      <p class="text-[11px] uppercase tracking-widest font-bold text-teal-700 mt-3">Predicción</p>
+      <h3 class="font-black text-stone-900 text-xl leading-snug mt-1 m-0" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(p.titulo)}</h3>
+      <p class="mt-2 text-stone-700 leading-relaxed">${escapeHtml(p.prediccion)}</p>
+      <div class="mt-4 grid sm:grid-cols-[auto_1fr] gap-x-6 gap-y-3 border-t border-stone-100 pt-4">
+        <div>
+          <p class="text-[11px] uppercase tracking-widest font-bold text-stone-500 m-0">Se cobra</p>
+          <p class="font-black text-stone-900 text-lg m-0 leading-tight" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(fechaCorta(p.vence_on))}</p>
+          ${dias !== null && dias >= 0 ? `<p class="text-xs text-stone-500 m-0" data-countdown="${escapeHtml(String(p.vence_on))}">${dias === 0 ? 'Se cobra hoy' : dias === 1 ? 'Falta 1 día' : `Faltan ${dias} días`}</p>` : dias !== null ? `<p class="text-xs text-amber-700 font-bold m-0">Vencida. Resultado en 14 días o menos.</p>` : ''}
+        </div>
+        <div>
+          <p class="text-[11px] uppercase tracking-widest font-bold text-stone-500 m-0">Cómo se cobra</p>
+          <p class="text-sm text-stone-800 leading-relaxed m-0 mt-0.5">${escapeHtml(p.criterio)}</p>
+          ${p.fuente_url ? `<p class="text-sm m-0 mt-1.5"><span class="text-[11px] uppercase tracking-widest font-bold text-stone-500 mr-2">Se verifica aquí</span><a href="${escapeHtml(p.fuente_url)}" target="_blank" rel="noopener" class="text-teal-700 font-bold hover:underline break-all">${escapeHtml(String(p.fuente_url).replace(/^https?:\/\/(www\.)?/, '').slice(0, 48))}${String(p.fuente_url).replace(/^https?:\/\/(www\.)?/, '').length > 48 ? '…' : ''} ↗</a></p>` : ''}
+        </div>
+      </div>
+      ${detalle}
+    </div>
+    <div class="mt-4 px-4 py-2.5 bg-stone-50 border-t border-stone-100 flex items-center justify-between gap-3 flex-wrap">
+      <p class="text-xs text-stone-500 m-0">${p.num ? `#${escapeHtml(String(p.num))} · ` : ''}Escrita antes. El criterio no cambia después.</p>
+      <button type="button" class="share-copy inline-flex items-center gap-1.5 bg-stone-900 hover:bg-stone-700 text-white font-bold px-3 py-1.5 rounded-full text-xs" data-copy="${escapeHtml(copyTxt)}"><i class="fa-regular fa-copy"></i> Copiar</button>
+    </div>
+  </article>`
+  }
+
+  // ── Tarjeta de una cobrada: el resultado manda, y las que fallan no se esconden.
+  const cobradaCard = (p: any) => {
+    const ok = p.resultado === 'cumplida'
+    return `
+  <article class="not-prose rounded-2xl overflow-hidden mt-4 border ${ok ? 'border-emerald-300 bg-emerald-50/40' : 'border-red-300 bg-red-50/40'}" id="${idDe(p)}">
+    <div class="px-4 py-2.5 ${ok ? 'bg-emerald-700' : 'bg-red-700'} text-white flex items-center justify-between gap-3 flex-wrap">
+      <p class="font-black text-sm uppercase tracking-widest m-0">${ok ? '✅ Acertamos' : '❌ Fallamos'}</p>
+      <p class="text-xs m-0 text-white/85">Cobrada el ${escapeHtml(fechaLargaPred(p.cobrada_on || p.vence_on))}</p>
+    </div>
+    <div class="px-4 py-4">
+      <p class="text-[11px] uppercase tracking-widest font-bold text-stone-500 m-0">Predijimos</p>
+      <h3 class="font-black text-stone-900 text-xl leading-snug mt-1 m-0" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(p.titulo)}</h3>
+      <p class="mt-1 text-stone-700 leading-relaxed text-sm">${escapeHtml(p.prediccion)}</p>
+      <p class="text-[11px] uppercase tracking-widest font-bold text-stone-500 m-0 mt-3">Resultado</p>
+      <p class="mt-1 text-stone-900 leading-relaxed">${escapeHtml(p.resultado_nota || (ok ? 'Pasó lo que dijimos.' : 'No pasó lo que dijimos.'))}</p>
+      ${p.resultado_url ? `<p class="text-sm m-0 mt-2"><a href="${escapeHtml(p.resultado_url)}" target="_blank" rel="noopener" class="text-teal-700 font-bold hover:underline">La prueba ↗</a></p>` : ''}
+      <details class="mt-3 group"><summary class="cursor-pointer list-none text-sm font-bold text-teal-700 inline-flex items-center gap-1.5 select-none">El criterio con el que se cobró <span class="transition-transform group-open:rotate-90">→</span></summary><p class="mt-2 text-sm text-stone-700 leading-relaxed">${escapeHtml(p.criterio)}</p></details>
+    </div>
+  </article>`
+  }
+
+  // ── Selladas, agrupadas por tema. Solo título + fecha: el contenido no se enseña.
+  const selladasPorTema = TEMAS_PRED.map(([key, label, emoji]) => {
+    const grupo = selladas.filter((p: any) => p.tema === key)
+    if (!grupo.length) return ''
+    return `
+  <div class="not-prose mt-6">
+    <p class="text-[11px] uppercase tracking-widest font-bold text-stone-500 m-0 mb-2">${emoji} ${escapeHtml(label)} · ${grupo.length}</p>
+    <div class="divide-y divide-stone-200 border border-stone-200 rounded-2xl bg-stone-50 overflow-hidden">
+      ${grupo.map((p: any) => `
+      <div class="px-4 py-3 flex items-center justify-between gap-3 flex-wrap" id="${idDe(p)}">
+        <p class="font-semibold text-stone-800 m-0 flex-1 min-w-[12rem]">🔒 ${escapeHtml(p.titulo)}${p.ojala_falle ? ' <span class="text-xs font-normal text-emerald-800">🤞</span>' : ''}</p>
+        <span class="text-xs font-bold text-stone-600 shrink-0">Se cobra ${escapeHtml(fechaCorta(p.vence_on))}</span>
+      </div>`).join('')}
     </div>
   </div>`
   }).join('')
+  const selladasSinTema = selladas.filter((p: any) => !temaLabel(p.tema))
+  const selladasOtras = selladasSinTema.length ? `
+  <div class="not-prose mt-6"><p class="text-[11px] uppercase tracking-widest font-bold text-stone-500 m-0 mb-2">Otras · ${selladasSinTema.length}</p><div class="divide-y divide-stone-200 border border-stone-200 rounded-2xl bg-stone-50 overflow-hidden">${selladasSinTema.map((p: any) => `<div class="px-4 py-3 flex items-center justify-between gap-3 flex-wrap" id="${idDe(p)}"><p class="font-semibold text-stone-800 m-0 flex-1">🔒 ${escapeHtml(p.titulo)}</p><span class="text-xs font-bold text-stone-600 shrink-0">Se cobra ${escapeHtml(fechaCorta(p.vence_on))}</span></div>`).join('')}</div></div>` : ''
 
-  const selladaCards = selladas.map((p: any) => `
-  <div class="not-prose bg-slate-50 border border-slate-200 border-dashed rounded-2xl p-4 mt-3 flex items-center justify-between gap-3 flex-wrap">
-    <div>
-      <p class="font-bold text-slate-800">${escapeHtml(p.titulo)}</p>
-      <p class="text-xs text-slate-500 mt-1">🔒 Escrita y sellada. Se publica un viernes.</p>
-    </div>
-    <span class="text-xs font-bold bg-white border border-slate-200 text-slate-600 px-2.5 py-1 rounded-full shrink-0">Se cobra: ${escapeHtml(fechaLargaPred(p.vence_on))}</span>
-  </div>`).join('')
+  // ── Próxima a cobrar: la firma de la página. Enorme, con countdown.
+  const proximaDias = proxima ? diasHasta(String(proxima.vence_on)) : null
+  const proximaBlock = proxima ? `
+<div class="not-prose mt-4 bg-amber-50 border-2 border-amber-300 rounded-2xl p-5 sm:p-6">
+  <p class="text-[11px] uppercase tracking-widest text-amber-800 font-bold m-0">Próxima a cobrar</p>
+  <div class="mt-2 flex items-end gap-4 flex-wrap">
+    <p class="m-0 leading-none"><span class="text-6xl sm:text-7xl font-black text-stone-900 tabular-nums" style="font-family:'Fraunces',Georgia,serif" data-countdown-n="${escapeHtml(String(proxima.vence_on))}">${proximaDias}</span></p>
+    <p class="m-0 pb-1 text-stone-700 font-bold text-lg leading-tight" data-countdown-l="${escapeHtml(String(proxima.vence_on))}">${proximaDias === 0 ? 'Se cobra hoy' : proximaDias === 1 ? 'día para cobrar esta' : 'días para cobrar esta'}<br><span class="text-sm font-semibold text-stone-500">${escapeHtml(fechaLargaPred(proxima.vence_on))}</span></p>
+  </div>
+  <p class="mt-3 font-black text-stone-900 text-xl leading-snug m-0" style="font-family:'Fraunces',Georgia,serif"><a href="#${idDe(proxima)}" class="hover:underline">${escapeHtml(proxima.titulo)}</a></p>
+  ${proxima.status === 'locked' ? `<p class="text-sm text-stone-600 mt-1 m-0">🔒 Está sellada. Se abre cuando se cobre.</p>` : `<p class="text-sm text-stone-700 mt-1 m-0">${escapeHtml(String(proxima.criterio || '').slice(0, 220))}${String(proxima.criterio || '').length > 220 ? '…' : ''}</p>`}
+</div>` : ''
+
+  // ── Marcador. Cuando no hay cobradas, lo dice sin vergüenza: "0 cobradas todavía".
+  const marcador = `
+<div class="not-prose mt-5 bg-stone-900 text-white rounded-2xl p-5 sm:p-7">
+  <p class="text-[11px] uppercase tracking-widest text-teal-300 font-bold m-0">El marcador</p>
+  <div class="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <div><p class="text-4xl font-black text-white leading-none m-0 tabular-nums" style="font-family:'Fraunces',Georgia,serif">${totalEscritas}</p><p class="text-[11px] uppercase tracking-widest text-stone-400 font-bold mt-1 m-0">registradas</p></div>
+    <div><p class="text-4xl font-black text-teal-300 leading-none m-0 tabular-nums" style="font-family:'Fraunces',Georgia,serif">${publicadas.length}</p><p class="text-[11px] uppercase tracking-widest text-stone-400 font-bold mt-1 m-0">públicas</p></div>
+    <div><p class="text-4xl font-black text-white leading-none m-0 tabular-nums" style="font-family:'Fraunces',Georgia,serif">${selladas.length}</p><p class="text-[11px] uppercase tracking-widest text-stone-400 font-bold mt-1 m-0">selladas</p></div>
+    <div><p class="text-4xl font-black text-amber-300 leading-none m-0 tabular-nums" style="font-family:'Fraunces',Georgia,serif">${cobradas.length}</p><p class="text-[11px] uppercase tracking-widest text-stone-400 font-bold mt-1 m-0">cobradas${cobradas.length ? '' : ' todavía'}</p></div>
+  </div>
+  ${cobradas.length ? `<p class="mt-4 pt-4 border-t border-white/15 text-base font-bold m-0">✅ ${cumplidas.length} ${cumplidas.length === 1 ? 'cumplida' : 'cumplidas'} · ❌ ${fallidas.length} ${fallidas.length === 1 ? 'fallida' : 'fallidas'} · ⏳ ${pendientes.length} pendientes</p>` : `<p class="mt-4 pt-4 border-t border-white/15 text-sm text-stone-300 m-0">Ninguna ha llegado a su fecha. El marcador arranca en <strong class="text-white">0 de 0</strong> y aquí se va a escribir, gane o pierda.</p>`}
+  ${ojalaFallen ? `<p class="text-sm text-stone-400 mt-2 m-0">${ojalaFallen} llevan la etiqueta 🤞 <strong class="text-stone-200">Ojalá falle</strong>: esas las queremos perder.</p>` : ''}
+  <p class="text-[11px] text-stone-500 mt-3 m-0">Contado en vivo de la tabla, hoy ${escapeHtml(fechaLargaPred(hoyISO))}. Las ${totalEscritas - rows.length} que faltan están escritas pero todavía sin sellar en público.</p>
+</div>`
+
+  const COUNTDOWN_SCRIPT = `<script>(function(){function hoy(){return new Date(new Date().toLocaleString('en-US',{timeZone:'America/Puerto_Rico'}));}function dias(iso){var p=iso.split('-');var t=hoy();var a=Date.UTC(t.getFullYear(),t.getMonth(),t.getDate());var b=Date.UTC(+p[0],+p[1]-1,+p[2]);return Math.round((b-a)/86400000);}function tick(){document.querySelectorAll('[data-countdown-n]').forEach(function(e){var d=dias(e.getAttribute('data-countdown-n'));e.textContent=d<0?0:d;});document.querySelectorAll('[data-countdown-l]').forEach(function(e){var d=dias(e.getAttribute('data-countdown-l'));var s=e.querySelector('span');var t=d<=0?'Se cobra hoy':d===1?'día para cobrar esta':'días para cobrar esta';e.innerHTML=t+'<br>'+(s?s.outerHTML:'');});document.querySelectorAll('[data-countdown]').forEach(function(e){var d=dias(e.getAttribute('data-countdown'));if(d<0)return;e.textContent=d===0?'Se cobra hoy':d===1?'Falta 1 día':'Faltan '+d+' días';});}tick();setInterval(tick,60000);})();</script>`
 
   const body = `
-<h1>Predicciones</h1>
-<p class="text-lg text-slate-600 mt-2">Todo lo que Angel Anderson cree que va a pasar en Puerto Rico, con fecha, criterio y fuente. Si me equivoco, lo lees aquí.</p>
+<h1>Puerto Rico habla mucho del futuro.<br>Aquí guardamos el recibo.</h1>
+<p class="not-prose text-lg text-stone-700 mt-3 leading-snug m-0"><span class="font-bold text-stone-900">Predicción. Fecha. Fuente. Criterio.</span><br>Cuando llegue el día, cobramos. Si acertamos, queda escrito. Si fallamos, también.</p>
 
-<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5 sm:p-7">
-  <p class="text-xs uppercase tracking-widest text-teal-300 font-bold">Qué es esto</p>
-  <p class="text-2xl sm:text-3xl font-black mt-1 leading-tight" style="font-family:'Fraunces',Georgia,serif">Cualquiera puede decir que el país va mal. Yo pongo fecha, número y a quién le toca. Cuando llega el día, vuelvo y digo si acerté o me di contra la pared.</p>
-  <p class="text-slate-300 mt-3 leading-relaxed">Esto no es adivinanza ni pesimismo. Cada predicción sale de un récord: lo que ya pasó las veces anteriores, lo que dice el dato federal, lo que el presupuesto ya tiene firmado. Predecir aquí es leer ese récord en voz alta y ponerle una fecha, para que después no se pueda decir que nadie avisó.</p>
-  <p class="text-slate-300 mt-3 leading-relaxed">Lo escribo antes, no después. El criterio de cómo se verifica queda fijo desde el día 1, así que no hay manera de acomodarlo cuando se vea para dónde sopla el viento. Y el resultado se publica gane o pierda: equivocarme en público es el precio de que esto valga algo.</p>
-  <div class="mt-5 pt-5 border-t border-white/15 grid grid-cols-2 sm:grid-cols-4 gap-4">
-    <div><p class="text-3xl font-black text-white leading-none">${totalEscritas}</p><p class="text-[11px] uppercase tracking-widest text-slate-400 font-bold mt-1">escritas</p></div>
-    <div><p class="text-3xl font-black text-teal-300 leading-none">${publicadas.length}</p><p class="text-[11px] uppercase tracking-widest text-slate-400 font-bold mt-1">públicas hoy</p></div>
-    <div><p class="text-3xl font-black text-white leading-none">${selladas.length}</p><p class="text-[11px] uppercase tracking-widest text-slate-400 font-bold mt-1">selladas</p></div>
-    <div><p class="text-3xl font-black text-amber-300 leading-none">${cobradas.length}</p><p class="text-[11px] uppercase tracking-widest text-slate-400 font-bold mt-1">ya cobradas</p></div>
-  </div>
-  ${proxima ? `<p class="text-sm text-slate-300 mt-4 m-0">El marcador arranca en <strong class="text-white">0 de 0</strong>. La primera se cobra el <strong class="text-white">${escapeHtml(fechaLargaPred(proxima.vence_on))}</strong>: ${escapeHtml(proxima.titulo)}.</p>` : ''}
-  ${ojalaFallen ? `<p class="text-sm text-slate-400 mt-2 m-0">${ojalaFallen} de estas llevan la etiqueta 🤞 <strong class="text-slate-200">Ojalá falle</strong>. Esas las quiero perder.</p>` : ''}
-</div>
+${marcador}
+${proximaBlock}
 
-<div class="not-prose mt-4 bg-white border border-slate-200 rounded-2xl p-5">
-  <p class="text-xs uppercase tracking-widest text-teal-600 font-bold">Cómo se lee cada una</p>
-  <p class="text-slate-700 mt-2 leading-relaxed m-0">Las <strong>públicas</strong> traen la predicción completa, la fuente, el criterio exacto con el que se va a verificar y qué te toca hacer a ti con esa información. Las <strong>selladas</strong> ya están escritas, pero el contenido no se enseña hasta que se publican. Lo único público antes de eso es que existen y cuándo se cobran.</p>
-</div>
+${cobradas.length ? `
+<h2 class="mt-10">Cobradas</h2>
+<p class="text-sm text-stone-600">Las que ya llegaron a su fecha. Las que fallan van primero: eso es lo que hace que valga lo demás.</p>
+${fallidas.map(cobradaCard).join('')}
+${cumplidas.map(cobradaCard).join('')}` : ''}
+
+${vencidasSinCobrar.length ? `
+<div class="not-prose mt-8 bg-amber-50 border border-amber-200 rounded-2xl p-4">
+  <p class="text-[11px] uppercase tracking-widest font-bold text-amber-800 m-0">Vencidas, resultado en camino</p>
+  <p class="text-sm text-stone-700 mt-1 m-0">${vencidasSinCobrar.length === 1 ? 'Esta ya llegó a su fecha' : `Estas ${vencidasSinCobrar.length} ya llegaron a su fecha`}. La regla: resultado publicado en 14 días o menos, gane o pierda. Si pasan los 14 días sin resultado, cuenta como falla nuestra.</p>
+  <ul class="mt-2 text-sm text-stone-800 list-disc pl-5 m-0">${vencidasSinCobrar.map((p: any) => `<li><a href="#${idDe(p)}" class="text-teal-700 font-semibold">${escapeHtml(p.titulo)}</a> · venció ${escapeHtml(fechaCorta(p.vence_on))}</li>`).join('')}</ul>
+</div>` : ''}
+
+<h2 class="mt-10">Públicas${publicadas.length ? ` · ${publicadas.length}` : ' · ninguna todavía'}</h2>
+<p class="text-sm text-stone-600">Ordenadas por fecha de cobro, la más cercana primero. Ninguna se edita después.</p>
+${publicadas.filter((p: any) => !p.resultado).map((p: any) => publicadaCard(p, proxima && p.slug === proxima.slug)).join('') || '<p class="text-stone-500 text-sm">Las primeras salen cuando llega su fecha de cobro.</p>'}
+
+<h2 class="mt-10">Selladas · ${selladas.length}</h2>
+<p class="text-sm text-stone-600">Escritas y guardadas. Lo único público es que existen, de qué son y cuándo se cobran. Nadie las edita después, ni nosotros.</p>
+${selladasPorTema}${selladasOtras}${(selladas.length === 0) ? '<p class="text-stone-500 text-sm">Ninguna sellada por ahora.</p>' : ''}
+
+<h2 class="mt-10">Método</h2>
+<ol class="text-stone-700 list-decimal pl-5">
+  <li>Se escribe y se sella <strong>antes</strong> de poder verificarse. El criterio queda fijo desde el día 1.</li>
+  <li>Cuando llega la fecha, el resultado se publica aquí mismo en 14 días o menos, con la fuente al lado.</li>
+  <li>Las que fallan van arriba, no escondidas. Con lo que no vimos y lo que cambia.</li>
+  <li>🤞 <strong>Ojalá falle</strong> marca las que preferimos perder: significan que a Puerto Rico le fue mejor de lo que el récord proyecta.</li>
+</ol>
 
 ${shareRow({ text: 'Predicciones sobre Puerto Rico con fecha, criterio y fuente. Si fallan, queda escrito en público:', url: 'https://puertoricosinfiltros.com/predicciones', toWho: 'Al que decide con números, no con corazonadas.' })}
 
-<h2>Las públicas${publicadas.length ? '' : ' — ninguna todavía'}</h2>
-<p class="text-sm text-slate-600">Cada una con su fecha de cobro. Ninguna se edita después.</p>
-${publicadas.length ? publicadaCards : '<p class="text-slate-500 text-sm">Las primeras salen cuando llega su fecha de cobro. Mientras tanto, abajo están las que ya quedaron selladas.</p>'}
-
-<h2>Selladas — escritas, esperando su fecha</h2>
-<p class="text-sm text-slate-600">${selladas.length} ${selladas.length === 1 ? 'predicción más ya está escrita y sellada' : 'predicciones más ya están escritas y selladas'}. Nadie las edita después del hecho — ni siquiera nosotros.</p>
-${selladaCards || '<p class="text-slate-500 text-sm">Ninguna sellada por ahora.</p>'}
-
-<h2>Método</h2>
-<ul class="text-slate-700">
-  <li>Cada predicción se escribe y se sella ANTES de que se pueda verificar — el criterio queda fijo, no se mueve después de ver hacia dónde va la cosa.</li>
-  <li>Cuando llega la fecha de cobro, se publica el resultado en esta misma página: cumplió o no cumplió, con la fuente que lo prueba.</li>
-  <li>Algunas llevan la etiqueta 🤞 <strong>Ojalá falle</strong> — son las que preferiríamos perder, porque significan que algo le fue mejor a Puerto Rico de lo que el récord proyecta.</li>
-  <li>¿Ves un error en una publicada? Se corrige en público: <a href="/rompelo" class="text-teal-700 font-semibold">/rompelo</a>.</li>
-</ul>
-
-<div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 mt-8 text-center">
-  <p class="text-lg font-black text-slate-900" style="font-family:'Fraunces',Georgia,serif">Una predicción sin fecha de verificación es opinión disfrazada. Estas tienen fecha.</p>
-  <p class="mt-2 text-sm text-slate-700">Las escribe Angel Anderson, vecino de Cabo Rojo, con el dato a la vista y el nombre puesto. <a href="https://angelanderson.com" class="text-teal-700 font-semibold">Quién soy</a>.</p>
-  <p class="mt-2 text-sm text-slate-600 italic">Si te sirve, úsalo. Si no, sigue tu camino.</p>
+<div class="not-prose bg-stone-900 text-white rounded-2xl p-6 sm:p-8 mt-8">
+  <p class="text-2xl sm:text-3xl font-black leading-tight m-0" style="font-family:'Fraunces',Georgia,serif">Una predicción sin fecha es opinión.<br>Una predicción con fecha deja recibo.</p>
+  <p class="mt-3 text-stone-300 m-0">Aquí guardamos los recibos. No hacemos predicciones para tener razón: las fechamos para saber quién estaba mirando.</p>
+  <p class="mt-4 m-0"><a href="/rompelo" class="inline-flex items-center gap-2 bg-white text-stone-900 hover:bg-stone-200 font-bold px-4 py-2.5 rounded-full text-sm">¿Ves una que está mal? Rómpela →</a></p>
+  <p class="mt-4 text-xs text-stone-500 m-0">Las escribe Angel Anderson, vecino de Cabo Rojo, con el dato a la vista y el nombre puesto. <a href="https://angelanderson.com" class="text-teal-300 font-semibold">Quién soy</a>.</p>
 </div>
-${SHARE_COPY_SCRIPT}
+${SHARE_COPY_SCRIPT}${COUNTDOWN_SCRIPT}
 `
   const jsonLd = {
     '@context': 'https://schema.org', '@type': 'Dataset',
-    name: 'Predicciones de Angel Anderson sobre Puerto Rico: fecha, criterio y fuente',
-    description: 'Todo lo que Angel Anderson predice que va a pasar en Puerto Rico, y por qué. Cada predicción escrita y sellada antes de poder verificarse, con fecha de cobro, criterio de verificación y fuente. El resultado se publica cuando llega la fecha, gane o pierda.',
+    name: 'Predicciones sobre Puerto Rico con fecha, criterio y fuente: el marcador',
+    description: `${totalEscritas} predicciones registradas sobre Puerto Rico: ${publicadas.length} públicas, ${selladas.length} selladas, ${cobradas.length} cobradas (${cumplidas.length} cumplidas, ${fallidas.length} fallidas). Cada una escrita y sellada antes de poder verificarse, con fecha de cobro, criterio fijo y fuente. El resultado se publica cuando llega la fecha, gane o pierda.`,
     creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
     publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
     isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/predicciones',
-    keywords: ['predicciones', 'Puerto Rico', 'verificacion', 'datos'],
+    keywords: ['predicciones', 'Puerto Rico', 'verificacion', 'datos', 'marcador'],
+    dateModified: hoyISO,
   }
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=1800, stale-while-revalidate=600')
   res.status(200).send(layout({
-    title: 'Predicciones de Angel Anderson sobre Puerto Rico: con fecha, criterio y fuente',
-    description: 'Todo lo que Angel Anderson cree que va a pasar en Puerto Rico, y por qué. Cada predicción con fecha de cobro, criterio de verificación y fuente, escrita antes de poder verificarse. Cuando llega el día, el resultado se publica gane o pierda.',
+    title: 'Predicciones sobre Puerto Rico: el marcador, con fecha, criterio y fuente',
+    description: `${publicadas.length} predicciones públicas y ${selladas.length} selladas sobre Puerto Rico, con fecha de cobro y criterio fijo. ${proxima ? `La próxima se cobra el ${fechaLargaPred(proxima.vence_on)}.` : ''} Si fallamos, queda escrito.`,
     slug: 'predicciones', bodyHtml: body, jsonLd, ogImage: OG_SINFILTROS,
-    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com', sinMaquina: true,
   }))
 }
 
