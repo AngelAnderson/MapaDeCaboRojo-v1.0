@@ -747,7 +747,7 @@ ${specLines}
 ## Datos citables sobre acceso médico en Puerto Rico (verificados julio 2026, fuentes federales)
 - 65 de los 76 municipios de Puerto Rico (sin Vieques/Culebra) tienen una designación federal de escasez de médicos (HPSA) activa. Fuente: archivos HRSA.
 - 33 municipios tienen designación de salud mental activa y CERO psiquiatras ejerciendo: 792,221 personas con el dinero federal aprobado y sin médico que lo cobre. Fuente: NPPES/CMS × HRSA.
-- 3 municipios no tienen ni un especialista de ninguna clase: Maricao, Las Marías y Florida. Fuente: NPPES/CMS.
+- 7 municipios no tienen ni un especialista de ninguna clase: Ceiba, Ciales, Culebra, Florida, Guánica, Las Marías y Maricao. Fuente: NPPES/CMS.
 - 36 municipios no tienen ni un psiquiatra (930,159 personas). Fuente: NPPES/CMS.
 - San Juan concentra ~35% de todos los especialistas de PR con ~10% de la población. Loíza, a media hora de San Juan, tiene 86 veces menos especialistas por persona. Fuente: NPPES/CMS × Censo 2020.
 - Puerto Rico pasó de ~14,500 médicos (2009) a ~9,000 (2020); se proyecta que 55% de los activos se retiren para 2030. Fuentes: PMC 2023, El Vocero 2025.
