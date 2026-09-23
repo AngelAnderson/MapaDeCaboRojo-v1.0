@@ -228,6 +228,8 @@ export default async function handler(req: any, res: any) {
       // el guard de host las redirige, así que anunciarlas aquí sería anunciar un 301.
       { slug: 'registro/desiertos', priority: 0.8, changefreq: 'monthly' },
       { slug: 'marcador', priority: 0.9, changefreq: 'weekly' },
+      { slug: 'a-quien-voy', priority: 0.9, changefreq: 'weekly' },   // 23 sep 2026: síntoma → especialista
+      { slug: 'recibo', priority: 0.8, changefreq: 'daily' },          // 23 sep 2026: contador público
       { slug: 'kit', priority: 0.7, changefreq: 'weekly' },
       { slug: 'registro/estado', priority: 0.9, changefreq: 'weekly' },
       { slug: 'registro/mapa', priority: 0.85, changefreq: 'weekly' },
