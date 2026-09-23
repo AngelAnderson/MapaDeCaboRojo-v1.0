@@ -7902,7 +7902,7 @@ async function handleRegistroDesiertos(req: any, res: any) {
   }).join('')
   const ratioSection = `
 <h2>La densidad: especialistas por cada 10,000 habitantes, pueblo por pueblo</h2>
-<p class="text-slate-600 -mt-2">El promedio regional esconde el desierto: <strong>Loíza está a media hora de San Juan, en la misma región metro, y tiene 86 veces menos especialistas por persona.</strong> Por eso esta cuenta se hace municipio por municipio, no por región. Siete pueblos no tienen <strong>ni un solo especialista de ninguna clase</strong>: Ceiba, Ciales, Culebra, Florida, Guánica, Las Marías y Maricao.</p>
+<p class="text-slate-600 -mt-2">El promedio regional esconde el desierto: <strong>Loíza está a media hora de San Juan, en la misma región metro, y tiene 86 veces menos especialistas por persona.</strong> Por eso esta cuenta se hace municipio por municipio, no por región. Tres pueblos no tienen <strong>ni un solo especialista de ninguna clase</strong>: Maricao, Las Marías y Florida.</p>
 <div class="not-prose mt-4 bg-white border border-slate-200 rounded-xl p-4 sm:p-5">${ratioRows}</div>
 <p class="not-prose mt-3 text-center text-sm text-slate-600"><strong class="text-red-700">${bajo5Munis} de los 78 municipios</strong>: ${bajo5Pob.toLocaleString('en-US')} personas, casi 1 de cada 3, viven con menos de <strong>5</strong> especialistas por cada 10,000 habitantes. Vieques y Culebra entran en esta cuenta: Vieques tiene 8,249 habitantes y <strong>un</strong> especialista. San Juan tiene <strong>${sjRatio.toFixed(1)}</strong>: el 35% de todos los especialistas del país, con el 10% de la gente.</p>
 ${crRow ? `<p class="not-prose mt-2 text-center text-sm text-slate-500">Cabo Rojo, donde vivimos: ${crRow.especialistas} especialistas, ${crRow.por_10k_hab.toFixed(1)} por 10,000, mejor que la mayoría, y aun así ${(sjRatio / crRow.por_10k_hab).toFixed(1)}× menos que San Juan.</p>` : ''}
@@ -7938,7 +7938,7 @@ ${crRow ? `<p class="not-prose mt-2 text-center text-sm text-slate-500">Cabo Roj
     return enviarMd(res, {
       pregunta: '¿Qué regiones y pueblos de Puerto Rico no tienen ciertos especialistas médicos?',
       respuesta: `En Puerto Rico hay ${totalDeserts.length} combinaciones de especialidad y región donde el registro federal no lista ni un solo proveedor, y ${nearDeserts.length} más donde hay apenas 1 o 2. ${bajo5Munis} de los 78 municipios — ${bajo5Pob.toLocaleString('en-US')} personas, casi 1 de cada 3 — viven con menos de 5 especialistas por cada 10,000 habitantes.`,
-      contexto: `Ceiba, Ciales, Culebra, Florida, Guánica, Las Marías y Maricao no tienen ni un solo especialista de ninguna clase. San Juan tiene ${sjRatio.toFixed(1)} especialistas por cada 10,000 habitantes: el 35% de todos los del país con el 10% de la gente.${crRow ? ` Cabo Rojo tiene ${crRow.especialistas} especialistas (${crRow.por_10k_hab.toFixed(1)} por 10,000), ${(sjRatio / crRow.por_10k_hab).toFixed(1)} veces menos que San Juan.` : ''}`,
+      contexto: `Maricao, Las Marías y Florida no tienen ni un solo especialista de ninguna clase. San Juan tiene ${sjRatio.toFixed(1)} especialistas por cada 10,000 habitantes: el 35% de todos los del país con el 10% de la gente.${crRow ? ` Cabo Rojo tiene ${crRow.especialistas} especialistas (${crRow.por_10k_hab.toFixed(1)} por 10,000), ${(sjRatio / crRow.por_10k_hab).toFixed(1)} veces menos que San Juan.` : ''}`,
       canonical: 'https://registromedicopr.com/registro/desiertos',
       tablas: [
         { titulo: 'Especialidades sin ningún proveedor, por cantidad de pueblos afectados', encabezados: ['Especialidad', 'Pueblos sin ninguno', 'Algunos de esos pueblos'], filas: espSinNinguno },
@@ -8264,7 +8264,7 @@ async function handleRegistroPorque(req: any, res: any) {
 </div>
 <h2>El problema, en una página</h2>
 
-<p>En Puerto Rico hay <b>7 municipios donde no queda ni un solo especialista médico de ninguna clase</b>: Ceiba, Ciales, Culebra, Florida, Guánica, Las Marías y Maricao. <b>42 de los 78 municipios</b> — más de un millón de personas, casi 1 de cada 3 — viven con menos de 5 especialistas por cada 10,000 habitantes. Vieques, con 8,249 habitantes, tiene un solo especialista. San Juan tiene 68.9. <b>36 municipios no tienen ni un psiquiatra</b> (930,159 personas). <i>(Fuente: registro federal NPPES cruzado con el Censo 2020, verificado municipio por municipio en registromedicopr.com, julio 2026.)</i></p>
+<p>En Puerto Rico hay <b>3 municipios donde no queda ni un solo especialista médico de ninguna clase</b>: Maricao, Las Marías y Florida. <b>42 de los 78 municipios</b> — más de un millón de personas, casi 1 de cada 3 — viven con menos de 5 especialistas por cada 10,000 habitantes. Vieques, con 8,249 habitantes, tiene un solo especialista. San Juan tiene 68.9. <b>36 municipios no tienen ni un psiquiatra</b> (930,159 personas). <i>(Fuente: registro federal NPPES cruzado con el Censo 2020, verificado municipio por municipio en registromedicopr.com, julio 2026.)</i></p>
 
 <p>¿Cómo llegamos aquí? En 2009, Puerto Rico tenía <b>14,500 médicos</b>. Para 2020 quedaban <b>9,000</b>. Después de María, perdimos ~15% del personal médico en un solo año. Y lo que viene es peor: un estudio de la firma FARO para la Asociación de Industriales Farmacéuticos proyecta que <b>el 55% de los médicos activos se habrá retirado para el 2030, sin sustitutos.</b> Un ejemplo con números: hoy hay unos 84 endocrinólogos activos; para 2030 harían falta 379 — cuatro veces y media más de los que hay. <i>(FARO/PIA vía Univision y Medicina y Salud Pública, 2024-2025.)</i> Y no es que quieran ser ricos. Es que aquí <b>la hora del médico vale menos cada año</b> mientras la renta, la nómina y el seguro suben.</p>
 
@@ -10943,7 +10943,7 @@ export function citableFacts(g = COMPARTE_G_DEFAULT): CitableFact[] {
   return [
     { q: '¿Cuántos municipios de Puerto Rico están declarados en escasez de médicos por el gobierno federal?', a: `${g.conHpsa} de 76 municipios tienen una designación federal de escasez de profesionales de la salud (HPSA) activa, de cuidado primario o salud mental. Son 76 y no 78 porque el archivo federal de HRSA no incluye a Vieques ni a Culebra: la exclusión es del gobierno federal, no nuestra. En nuestras propias cuentas (registro NPPES cruzado con el censo) las dos islas sí entran, y ahí se ve que Vieques tiene 8,249 habitantes y un solo especialista.`, srcText: 'Archivos oficiales de HRSA (Health Resources & Services Administration), designaciones activas, julio 2026.', srcUrl: 'https://data.hrsa.gov/tools/shortage-area/hpsa-find' },
     { q: '¿Cuánto dinero federal para atraer médicos se está quedando sin reclamar en Puerto Rico?', a: `${g.cupon} municipios de PR tienen una designación federal de salud mental activa (que destraba repago de préstamos del NHSC y bono de Medicare) y a la vez CERO psiquiatras ejerciendo. Son ${n(g.cuponPob)} personas con el dinero aprobado y sin médico que lo cobre.`, srcText: 'Cruce NPPES/CMS × archivos HRSA, verificado municipio por municipio (ver el detalle).', srcUrl: 'https://registromedicopr.com/registro/estado' },
-    { q: '¿Cuántos pueblos de Puerto Rico no tienen ni un solo especialista médico?', a: `${g.cero} municipios de PR no tienen ni un especialista médico de ninguna clase con práctica declarada: Ceiba, Ciales, Culebra, Florida, Guánica, Las Marías y Maricao.`, srcText: 'Registro federal NPPES/CMS por municipio (ver el mapa).', srcUrl: 'https://registromedicopr.com/registro/mapa' },
+    { q: '¿Cuántos pueblos de Puerto Rico no tienen ni un solo especialista médico?', a: `${g.cero} municipios de PR no tienen ni un especialista médico de ninguna clase con práctica declarada: Maricao, Las Marías y Florida.`, srcText: 'Registro federal NPPES/CMS por municipio (ver el mapa).', srcUrl: 'https://registromedicopr.com/registro/mapa' },
     { q: '¿Le llegó dinero de recuperación a los pueblos que no tienen médicos?', a: 'Sí, pero solo el de cemento. $3,469 millones de fondos federales de recuperación (FEMA) fueron a los 33 municipios de PR que tienen designación de salud mental activa y cero psiquiatras. Se reconstruyeron edificios, carreteras y sistemas de agua. No llegó ni un médico de la mente. Ejemplo: Jayuya recibió $424 millones y tiene 2 especialistas y cero psiquiatras.', srcText: 'OpenFEMA (Public Assistance) × NPPES/CMS × HRSA, julio 2026.', srcUrl: 'https://www.fema.gov/openfema-data-page/public-assistance-funded-projects-summaries-v1' },
     { q: '¿Cómo está Cabo Rojo de médicos comparado con sus vecinos del oeste?', a: 'Cabo Rojo tiene 32 especialistas y 3 psiquiatras (6.5 por cada 10,000 habitantes), y se apoya en el hub de Mayagüez, a unos 20 minutos, que concentra 279. Pero está rodeado de desiertos: a menos de una hora, en la montaña, Maricao y Las Marías no tienen ni un especialista de ninguna clase.', srcText: 'NPPES/CMS × Censo 2020 (ver el mapa).', srcUrl: 'https://registromedicopr.com/registro/mapa', tag: 'local' },
     { q: '¿Cuántos pueblos del oeste no tienen ni un psiquiatra?', a: 'Seis municipios del oeste no tienen ni un psiquiatra: Maricao, Las Marías, Hormigueros, Añasco, Lajas y Moca. Todo el oeste depende de los 26 psiquiatras de Mayagüez. Y Añasco recibió $316 millones de fondos federales de recuperación sin un solo psiquiatra en el pueblo.', srcText: 'NPPES/CMS × HRSA × OpenFEMA (ver el estado).', srcUrl: 'https://registromedicopr.com/registro/estado', tag: 'local' },
@@ -14361,6 +14361,32 @@ async function handlePredicciones(req: any, res: any) {
   ${proxima.status === 'locked' ? `<p class="text-sm text-stone-600 mt-1 m-0">🔒 Está sellada. Se abre cuando se cobre.</p>` : `<p class="text-sm text-stone-700 mt-1 m-0">${escapeHtml(String(proxima.criterio || '').slice(0, 220))}${String(proxima.criterio || '').length > 220 ? '…' : ''}</p>`}
 </div>` : ''
 
+  // ── La lista: todas las pendientes en 1 vista, ordenadas por lo único que manda de
+  // verdad: la fecha de cobro (la que se cobra primero es la que primero se puede romper).
+  // Toggle "por tema" en cliente. Cada línea ancla a su tarjeta.
+  const listaRows = pendientes.map((p: any, i: number) => {
+    const d = diasHasta(String(p.vence_on))
+    const tl = temaLabel(p.tema)
+    return `<li class="flex items-baseline gap-3 px-3 py-2.5 ${i % 2 ? 'bg-stone-50' : 'bg-white'}" data-tema="${escapeHtml(p.tema || 'otros')}" data-fecha="${escapeHtml(String(p.vence_on))}">
+      <span class="text-xs font-bold text-stone-400 tabular-nums w-7 shrink-0 text-right">${i + 1}</span>
+      <span class="flex-1 min-w-0"><a href="#${idDe(p)}" class="font-semibold text-stone-900 hover:text-teal-700">${p.status === 'locked' ? '🔒 ' : ''}${escapeHtml(p.titulo)}</a>${tl ? `<span class="ml-2 text-[11px] uppercase tracking-widest font-bold text-stone-500 whitespace-nowrap">${tl[2]} ${escapeHtml(tl[1])}</span>` : ''}${p.ojala_falle ? ' <span class="text-xs text-emerald-800">🤞</span>' : ''}</span>
+      <span class="shrink-0 text-right leading-tight"><span class="block text-sm font-black text-stone-900 tabular-nums" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(fechaCorta(p.vence_on))}</span><span class="block text-[11px] text-stone-500 tabular-nums">${d === 0 ? 'hoy' : d === 1 ? '1 día' : `${d} días`}</span></span>
+    </li>`
+  }).join('')
+  const listaBlock = pendientes.length ? `
+<div class="not-prose mt-6 border border-stone-200 rounded-2xl overflow-hidden bg-white" id="lista">
+  <div class="px-4 py-3 bg-stone-100 border-b border-stone-200 flex items-center justify-between gap-3 flex-wrap">
+    <p class="m-0 font-black text-stone-900" style="font-family:'Fraunces',Georgia,serif">La lista · ${pendientes.length} por cobrar</p>
+    <div class="flex gap-1 text-xs font-bold" role="group" aria-label="Ordenar">
+      <button type="button" data-orden="fecha" class="orden-btn px-3 py-1.5 rounded-full bg-stone-900 text-white" aria-pressed="true">Por fecha de cobro</button>
+      <button type="button" data-orden="tema" class="orden-btn px-3 py-1.5 rounded-full bg-white border border-stone-300 text-stone-700" aria-pressed="false">Por tema</button>
+    </div>
+  </div>
+  <ol id="lista-ol" class="m-0 p-0 list-none divide-y divide-stone-100">${listaRows}</ol>
+  <p class="px-4 py-2.5 text-[11px] text-stone-500 m-0 border-t border-stone-200">Primero la que se cobra primero: es la que primero se puede romper. 🔒 = sellada, se abre al cobrarse.</p>
+</div>
+<script>(function(){var ol=document.getElementById('lista-ol');if(!ol)return;var T=${JSON.stringify(TEMAS_PRED.map((t) => t[0]))};var items=Array.prototype.slice.call(ol.children);function paint(){items.forEach(function(li,i){li.className=li.className.replace(/bg-(white|stone-50)/,i%2?'bg-stone-50':'bg-white');var n=li.querySelector('span');if(n)n.textContent=String(i+1);});}document.querySelectorAll('.orden-btn').forEach(function(b){b.addEventListener('click',function(){var o=b.getAttribute('data-orden');items.sort(function(a,c){if(o==='tema'){var ta=T.indexOf(a.getAttribute('data-tema')),tc=T.indexOf(c.getAttribute('data-tema'));if(ta!==tc)return ta-tc;}return a.getAttribute('data-fecha')<c.getAttribute('data-fecha')?-1:1;});items.forEach(function(li){ol.appendChild(li);});paint();document.querySelectorAll('.orden-btn').forEach(function(x){var on=x===b;x.setAttribute('aria-pressed',on?'true':'false');x.className='orden-btn px-3 py-1.5 rounded-full '+(on?'bg-stone-900 text-white':'bg-white border border-stone-300 text-stone-700');});});});})();</script>` : ''
+
   // ── Marcador. Cuando no hay cobradas, lo dice sin vergüenza: "0 cobradas todavía".
   const marcador = `
 <div class="not-prose mt-5 bg-stone-900 text-white rounded-2xl p-5 sm:p-7">
@@ -14384,6 +14410,7 @@ async function handlePredicciones(req: any, res: any) {
 
 ${marcador}
 ${proximaBlock}
+${listaBlock}
 
 ${cobradas.length ? `
 <h2 class="mt-10">Cobradas</h2>
@@ -17951,7 +17978,7 @@ ${[
     { label: '1 de cada 3', txt: `${agg.sinPsiq} municipios de Puerto Rico no tienen ni un psiquiatra con práctica declarada. Son ${agg.sinPsiqPob.toLocaleString('en-US')} personas, cerca de 1 de cada 3 boricuas.` },
     { label: 'El cemento sin médico', txt: `$${femaCuponM.toLocaleString('en-US')} millones de fondos de recuperación (FEMA) llegaron a los ${agg.cupon} pueblos de PR que no tienen ni un psiquiatra. Le llegó el cemento, pero no el médico. Jayuya: $424 millones, 2 especialistas, cero psiquiatras.` },
     { label: 'El oeste', txt: `6 pueblos del oeste de Puerto Rico no tienen ni un psiquiatra: Maricao, Las Marías, Hormigueros, Añasco, Lajas y Moca. Todo el oeste depende de los 26 psiquiatras de Mayagüez.`, tag: 'local' as const },
-    { label: 'Cero de todo', txt: `7 pueblos de Puerto Rico no tienen ni un especialista médico de ninguna clase: Ceiba, Ciales, Culebra, Florida, Guánica, Las Marías y Maricao.` },
+    { label: 'Cero de todo', txt: `3 pueblos de Puerto Rico no tienen ni un especialista médico de ninguna clase: Maricao, Las Marías y Florida.` },
     { label: 'El más pobre', txt: `Guánica es el municipio más pobre de Puerto Rico (63.6% bajo el nivel de pobreza). Tiene la designación federal de salud mental con el puntaje máximo posible y cero psiquiatras.` },
     { label: 'Para médicos y psicólogos', txt: `Si eres psiquiatra, psicólogo o médico primario: el gobierno federal repaga tus préstamos estudiantiles (hasta $75,000 en primaria, $50,000 en salud mental) por ejercer donde hace falta. En 26 pueblos de PR no tendrías competencia local. El dinero ya está aprobado.`, tag: 'medicos' as const },
     { label: 'El programa sin operar', txt: `Puerto Rico usa el programa federal que trae médicos (NHSC) a la tasa más baja de cualquier jurisdicción comparable: 2.5 clínicos por 100,000 habitantes contra 15.3 en West Virginia, que tiene la mitad de nuestra población. Solo 6 médicos de cuidado primario NHSC en toda la isla. Y tres programas hermanos en cero: becas, Students-to-Service y el programa estatal de repago con pareo federal que 40+ estados sí tienen. Fuente: HRSA FY2025, en puertoricosinfiltros.com/registro/estado`, tag: 'medicos' as const },
@@ -18111,7 +18138,7 @@ ${[
 // sin dependencias externas ni llamadas de red.
 async function handleKit(req: any, res: any) {
   // Los números salen del marcador vivo para que el kit no pueda quedar desfasado de la página.
-  let pctTel = '43.6', cupon = '33', ceroEsp = '3', sinSitio = '5'
+  let pctTel = '43.9', cupon = '33', ceroEsp = '3', sinSitio = '5'
   try {
     const { data } = await supabase.from('marcador_salud').select('metric_key,valor,medido_on').order('medido_on', { ascending: false }).range(0, 200)
     const latest: Record<string, any> = {}
@@ -18143,7 +18170,7 @@ async function handleKit(req: any, res: any) {
 
   const datos: { k: string; v: string; f: string }[] = [
     { k: 'El titular', v: `${cupon} municipios de Puerto Rico tienen el dinero federal de salud mental aprobado y cero psiquiatras: 792,221 personas. Verificado pueblo por pueblo contra el registro federal.`, f: 'HRSA × NPPES/CMS' },
-    { k: 'Los que están en cero de todo', v: `${ceroEsp} pueblos de Puerto Rico no tienen ni un especialista médico de ninguna clase: Ceiba, Ciales, Culebra, Florida, Guánica, Las Marías y Maricao.`, f: 'NPPES/CMS' },
+    { k: 'Los que están en cero de todo', v: `${ceroEsp} pueblos de Puerto Rico no tienen ni un especialista médico de ninguna clase: Maricao, Las Marías y Florida.`, f: 'NPPES/CMS' },
     { k: 'El papel que falta', v: `A ${sinSitio} pueblos designados les falta hasta el papel: Añasco, Guánica, Guayanilla, Hormigueros y Loíza no tienen sitio NHSC aprobado donde un médico pueda cobrar el repago.`, f: 'HRSA BHW' },
     { k: 'La comparación que duele', v: 'Puerto Rico usa el programa federal que trae médicos a razón de 2.5 clínicos por cada 100,000 habitantes. West Virginia, con la mitad de nuestra población, tiene 15.3. Seis veces más.', f: 'HRSA NHSC Field Strength FY2025' },
     { k: 'La prueba de que sí se puede', v: 'Aibonito (11 participantes), Naranjito (7), Morovis (5), Orocovis (2) y el corredor de Lares (9) concentran cerca de un tercio de todos los clínicos NHSC de Puerto Rico. Y 21 de los pueblos con el cupón sin cobrar no tienen ni un participante.', f: 'HRSA BHW, julio 2026' },
@@ -18476,7 +18503,7 @@ async function handleMarcador(req: any, res: any) {
 
   const fallback: M[] = [
     { metric_key: 'cupon_sin_cobrar', orden: 1, label: 'Pueblos con el cupón de salud mental sin cobrar', valor: 33, valor_txt: null, unidad: 'municipios', meta_valor: 0, meta_txt: '0', dueno: 'Departamento de Salud de PR + los centros 330', accion: 'Que en cada uno de esos pueblos un clínico reclame el repago de préstamos ya aprobado.', fuente: 'HRSA (designaciones HPSA) × NPPES/CMS', fuente_url: 'https://data.hrsa.gov/tools/shortage-area/hpsa-find', nota: 'Designación federal de salud mental activa y cero psiquiatras con práctica declarada.', medido_on: '2026-07-28' },
-    { metric_key: 'cero_especialistas', orden: 2, label: 'Pueblos con cero especialistas de toda clase', valor: 7, valor_txt: null, unidad: 'municipios', meta_valor: 0, meta_txt: '0', dueno: 'Departamento de Salud + el municipio', accion: 'Clínica itinerante o telemedicina desde el centro del pueblo. No hace falta que el médico se mude.', fuente: 'NPPES/CMS, registro federal', fuente_url: 'https://npiregistry.cms.hhs.gov/', nota: 'Ceiba, Ciales, Culebra, Florida, Guánica, Las Marías y Maricao. Eran 3 el 28 jul 2026.', medido_on: '2026-09-22' },
+    { metric_key: 'cero_especialistas', orden: 2, label: 'Pueblos con cero especialistas de toda clase', valor: 3, valor_txt: null, unidad: 'municipios', meta_valor: 0, meta_txt: '0', dueno: 'Departamento de Salud + el municipio', accion: 'Clínica itinerante o telemedicina desde el centro del pueblo. No hace falta que el médico se mude.', fuente: 'NPPES/CMS, registro federal', fuente_url: 'https://npiregistry.cms.hhs.gov/', nota: 'Maricao, Las Marías y Florida.', medido_on: '2026-07-28' },
     { metric_key: 'sin_sitio_nhsc', orden: 3, label: 'Pueblos del cupón sin sitio NHSC aprobado', valor: 5, valor_txt: null, unidad: 'municipios', meta_valor: 0, meta_txt: '0', dueno: 'Oficina de Cuidado Primario, Departamento de Salud', accion: 'Radicar ante HRSA para que un centro 330 regional inscriba un sitio. Es papeleo, no ley, no presupuesto.', fuente: 'HRSA BHW, mapa de sitios NHSC', fuente_url: 'https://nhsc.hrsa.gov/', nota: 'Añasco, Guánica, Guayanilla, Hormigueros y Loíza.', medido_on: '2026-07-28' },
     { metric_key: 'nhsc_por_100k', orden: 4, label: 'Clínicos NHSC por cada 100,000 habitantes', valor: 2.5, valor_txt: null, unidad: 'clínicos/100k', meta_valor: 15.3, meta_txt: '15.3 (nivel West Virginia)', dueno: 'Departamento de Salud + los centros 330', accion: 'Operar el programa: reclutar, inscribir sitios y dirigir participantes hacia lo rural.', fuente: 'HRSA — NHSC Field Strength FY2025', fuente_url: 'https://nhsc.hrsa.gov/', nota: 'West Virginia tiene la mitad de nuestra población y 15.3. PR: 79 clínicos, solo 6 de cuidado primario.', medido_on: '2026-07-28' },
     { metric_key: 'comparten_telefono', orden: 5, label: 'Proveedores que comparten teléfono con otro proveedor', valor: 40.9, valor_txt: null, unidad: '%', meta_valor: 15, meta_txt: 'bajo 15%', dueno: 'Los planes médicos', accion: 'Dejar de medir la red contando nombres. Publicar cuántos de sus proveedores de verdad contestan.', fuente: 'Este registro, sobre NPPES', fuente_url: 'https://registromedicopr.com/registro/estado', nota: 'Un directorio con cientos de nombres detrás del mismo teléfono no es una red, es una lista.', medido_on: '2026-07-28' },
