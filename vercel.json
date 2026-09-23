@@ -216,6 +216,14 @@
       "destination": "/api/mapa-pages?page=registro-desiertos"
     },
     {
+      "source": "/a-quien-voy",
+      "destination": "/api/mapa-pages?page=a-quien-voy"
+    },
+    {
+      "source": "/recibo",
+      "destination": "/api/mapa-pages?page=recibo"
+    },
+    {
       "source": "/espejo",
       "destination": "/api/mapa-pages?page=espejo"
     },

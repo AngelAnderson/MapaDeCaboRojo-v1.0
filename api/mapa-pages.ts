@@ -6714,13 +6714,31 @@ async function handleEspecialista(req: any, res: any) {
   // Un solo bloque para lo que los planes imprimieron (design-review 2026-09-03: eran 4 cajas
   // verdes idénticas repitiendo la misma frase). El aviso amarillo de MMM (salió de la red)
   // es otro mensaje y se queda aparte.
+  // ═══ El Libro de Testigos (23 sep 2026, Recibo Cero) ═══
+  // 299 personas tocaron un chip de plan sin que nadie se lo pidiera y la ficha no lo enseñaba.
+  // Se enseña el CONTEO ("3 personas dijeron Vital en septiembre"), nunca como sello: el sello lo
+  // pone la oficina. Solo cuentan reportes de 1-2 planes por persona (vista testigos_plan_por_ficha);
+  // el que marcó los 7 planes es la oficina y va como "dice", no como testigo.
+  let testigosCard = ''
+  try {
+    const { data: tg } = await supabase.from('testigos_plan_por_ficha').select('plan,testigos,ultimo').eq('place_id', place.id).order('testigos', { ascending: false }).limit(7)
+    if (tg && tg.length) {
+      const mesTxt = (d: string) => new Date(String(d).slice(0, 10) + 'T12:00:00').toLocaleDateString(lang === 'en' ? 'en-US' : 'es-PR', { month: 'long', year: 'numeric' })
+      const total = tg.reduce((a: number, r: any) => a + Number(r.testigos || 0), 0)
+      testigosCard = `<div class="not-prose mt-3 bg-white border border-stone-200 rounded-xl p-4">
+    <p class="m-0 text-xs uppercase tracking-wide text-stone-500 font-bold">${t('Lo que dijeron los que ya llamaron', 'What people who already called said')}</p>
+    <ul class="m-0 mt-1 p-0 list-none text-[15px] text-stone-800">${tg.map((r: any) => `<li class="py-1">● <strong>${escapeHtml(planLabel(String(r.plan)))}</strong>: ${Number(r.testigos)} ${Number(r.testigos) === 1 ? t('persona dijo que lo aceptan', 'person said they take it') : t('personas dijeron que lo aceptan', 'people said they take it')} <span class="text-stone-500">(${t('la última en', 'last one in')} ${mesTxt(r.ultimo)})</span></li>`).join('')}</ul>
+    <p class="m-0 mt-2 text-sm text-stone-600">${t(`${total} ${total === 1 ? 'vecino llamó y lo contó' : 'vecinos llamaron y lo contaron'} aquí abajo. No es garantía: es lo que les dijeron ese día. Llama y confirma.`, `${total} neighbors called and reported it below. Not a guarantee: it is what they were told that day. Call and confirm.`)}</p>
+  </div>`
+    }
+  } catch { /* la ficha vive sin testigos */ }
   const planRows = [planDirHtml, mcsHtml, tsHtml, fmvHtml].filter(h => h.startsWith('<li'))
   const planWarn = [planDirHtml].filter(h => h.startsWith('<div')).join('')
   const planesDirCard = (planRows.length ? `<div class="not-prose mt-5 bg-teal-50 border border-teal-200 rounded-xl p-4">
     <p class="m-0 text-xs uppercase tracking-wide text-teal-700 font-bold">${t('Aparece en el directorio de estos planes', 'Listed in these plans\' directories')}</p>
     <ul class="m-0 mt-1 p-0 list-none divide-y divide-teal-100 text-[15px]">${planRows.join('')}</ul>
     <p class="m-0 mt-2 text-sm text-teal-800">${t('Es lo que cada plan publicó, no una confirmación de que te van a coger. Antes de ir, llama y pregunta si aceptan tu plan y si están cogiendo pacientes nuevos.', 'That is what each plan published, not a confirmation that they will take you. Before you go, call and ask whether they take your plan and whether they are accepting new patients.')}</p>
-  </div>` : '') + planWarn
+  </div>` : '') + planWarn + testigosCard
   const planesNota = (planDirHtml || fmvHtml || tsHtml || mcsHtml || planesOficina.length > 0)
     ? `<details class="not-prose mt-3 text-xs text-slate-500"><summary class="cursor-pointer text-teal-700 font-semibold">${t('¿Por qué "aparece en el directorio" no es "aceptan tu plan"?', 'Why "listed in the directory" is not "they take your plan"?')}</summary><p class="mt-2">${t('Ojo con la diferencia: el bloque verde es lo que dijo la oficina, y ese manda. Los demás dicen lo que cada plan imprimió en su directorio, no si te van a coger. Y si un plan no aparece aquí, eso NO quiere decir que el médico esté fuera de esa red: el cruce por número federal identifica el 33% de las filas del Plan Vital, el 51% de las de Triple-S Advantage y el 52% de las de MMM, así que casi siempre significa que esa fila no se pudo cruzar. Ojo también con las fechas: los directorios no salen el mismo día, así que uno puede estar más al día que otro. Antes de cambiarte de plan, confirma con la oficina.', 'These blocks say what each plan printed in its directory, not whether they will take you. And a plan missing here does NOT mean the provider is out of that network: the federal-number cross-check identifies 33% of Plan Vital directory rows, 51% of Triple-S Advantage\'s and 52% of MMM\'s, so it almost always means that row could not be matched. Note the dates too: these directories are not published on the same day, so one may be more current than another. Before switching plans, confirm with the office.')}</p></details>`
     : ''
@@ -6776,6 +6794,22 @@ async function handleEspecialista(req: any, res: any) {
     <a href="https://wa.me/17874177711?text=${spec ? spec.kw : 'ESPECIALISTA'}" class="${waLink ? '' : 'col-span-2 '}flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-[15px] no-underline hover:bg-teal-50"><i class="fa-brands fa-whatsapp"></i> ${T.veci}</a>
   </div>`
 
+  // ═══ La Cita del Lunes (23 sep 2026, Recibo Cero) ═══
+  // El Registro se muere el fin de semana (sáb 63 clics en Llamar, dom 20, contra 360-723 entre
+  // semana): la gente sabe que nadie contesta. Se le deja pedido y el lunes, si Angel aprueba el
+  // lote, el Veci le textea "ya abrieron, llama". Solo se ve fuera de horario (JS decide con la
+  // hora de PR) para no estorbar al que sí puede llamar ahora. Kill: 30 días sin 50 pedidas.
+  const citaLunes = telLink ? `<div id="cita-lunes" hidden class="not-prose mt-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
+    <p class="m-0 font-bold text-stone-900">${t('Ahora mismo no contestan.', 'Right now nobody answers.')}</p>
+    <p class="m-0 text-sm text-stone-700 mt-1">${t('Deja tu número y el lunes en la mañana te texteamos: "ya abrieron, llama". Gratis. Solo ese texto.', 'Leave your number and Monday morning we text you: "they are open, call now". Free. Just that one text.')}</p>
+    <form id="cita-form" class="flex flex-wrap gap-2 mt-3">
+      <input type="tel" name="phone" required placeholder="787-000-0000" inputmode="tel" class="flex-1 min-w-[160px] min-h-[48px] px-3 rounded-xl border border-stone-300 text-base">
+      <select name="plan" class="min-h-[48px] px-3 rounded-xl border border-stone-300 text-base bg-white"><option value="">${t('Mi plan (opcional)', 'My plan (optional)')}</option>${PR_PLANS.map(p => `<option value="${escapeHtml(p.v)}">${escapeHtml(p.l)}</option>`).join('')}</select>
+      <button type="submit" class="min-h-[48px] px-5 rounded-xl bg-amber-600 text-white font-bold">${t('Déjalo pedido', 'Leave it requested')}</button>
+    </form>
+    <p id="cita-ok" hidden class="m-0 mt-2 text-sm text-teal-800 font-semibold">✓ ${t('Anotado. El lunes te llega el texto.', 'Noted. The text arrives Monday.')}</p>
+  </div>
+  <script>(function(){try{var n=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Puerto_Rico'}));var d=n.getDay(),h=n.getHours()+n.getMinutes()/60;var cerrado=(d===0||d===6)||h<8||h>=16.5;if(!cerrado)return;var b=document.getElementById('cita-lunes');if(!b)return;b.hidden=false;var f=document.getElementById('cita-form');f.addEventListener('submit',function(e){e.preventDefault();var ph=f.phone.value.replace(/\D/g,'');if(ph.length===10)ph='1'+ph;if(ph.length!==11){f.phone.focus();return;}fetch('/api/mapa-pages?page=cita-lunes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({place_id:'${escapeHtml(place.id)}',place_name:${JSON.stringify(cleanProviderName(place.name || ''))},phone:'+'+ph,plan:f.plan.value})}).catch(function(){});f.hidden=true;document.getElementById('cita-ok').hidden=false;try{gtag('event','cita_lunes')}catch(x){}});}catch(e){}})();</script>` : ''
   // ═══ La Hoja de evidencia (18 sep 2026) ═══
   // La ficha es el producto: el 69% de las sesiones del Registro caen aquí (13,455 de
   // 19,472 en 28 días, ga4_humano). Antes, la evidencia estaba regada en 6-8 tarjetas y
@@ -7090,7 +7124,7 @@ ${puertaHub}
 ${place.cms_rating != null ? `<div class="not-prose mt-4 bg-amber-50 border border-amber-200 rounded-2xl p-4">
   <p class="text-sm text-amber-900"><span class="text-amber-500 text-base">${starRating(Number(place.cms_rating))}</span> <strong>${Number(place.cms_rating)} de 5 estrellas</strong> ${lang === 'en' ? 'in the federal CMS quality rating' : 'en la calificación federal de calidad de CMS'} (${place.cms_rating_type === 'overall' ? (lang === 'en' ? 'overall rating' : 'calificación general') : (lang === 'en' ? 'quality of patient care' : 'calidad del cuidado al paciente')}). ${lang === 'en' ? 'This is the U.S. government\'s own rating, updated 2026. Compare on Medicare Care Compare.' : 'Es la calificación del propio gobierno federal, actualizada en 2026. Compara en Medicare Care Compare.'} <a href="https://www.medicare.gov/care-compare/" target="_blank" rel="noopener" class="text-teal-700 font-semibold hover:underline">medicare.gov/care-compare →</a></p>
 </div>` : ''}
-${actionBtns}
+${actionBtns}${citaLunes}
 ${dataRows}
 
 ${waFamiliaBlock({ name, specLabel, muni, phone: place.phone, url: pageUrl, en: lang === 'en' })}
@@ -12018,6 +12052,108 @@ async function handleRegistroLog(req: any, res: any) {
     }
   } catch { /* analytics must never break the page */ }
   res.status(204).end()
+}
+
+// ═══ La Cita del Lunes: POST desde la ficha (23 sep 2026) ═══
+async function handleCitaLunes(req: any, res: any) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8')
+  try {
+    const b = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}')
+    const placeId = String(b.place_id || '').trim()
+    const phone = String(b.phone || '').replace(/[^0-9+]/g, '')
+    const plan = String(b.plan || '').trim().toLowerCase()
+    if (!/^[0-9a-f-]{36}$/.test(placeId) || !/^\+1[0-9]{10}$/.test(phone)) { res.status(200).send(JSON.stringify({ ok: false })); return }
+    await supabase.from('citas_del_lunes').insert({
+      place_id: placeId, place_name: String(b.place_name || '').slice(0, 120), phone,
+      plan: PR_PLAN_VALS.has(plan) ? planLabel(plan) : null,
+    })
+    res.status(200).send(JSON.stringify({ ok: true }))
+  } catch { res.status(200).send(JSON.stringify({ ok: false })) }
+}
+
+// ═══ /a-quien-voy (23 sep 2026, Recibo Cero) ═══
+// 405 personas escribieron un síntoma en el buscador del Registro en 10 semanas: 1 de cada 4 no
+// sabe a qué especialista ir. El motor (SYMPTOM_MAP) ya existía adentro del buscador; esto es la
+// puerta sola: escribes lo que sientes, te dice a quién, y te lleva a la lista con teléfono.
+async function handleAQuienVoy(req: any, res: any) {
+  const en = String(req.query.lang || '') === 'en'
+  const t = (es: string, env: string) => en ? env : es
+  const specLinks: Record<string, string> = {}
+  for (const e of SYMPTOM_MAP) for (const sp of e.s) if (!specLinks[sp]) specLinks[sp] = `/registro/${specToUrl(sp)}`
+  const body = `
+  <h1 class="text-3xl sm:text-4xl font-black text-stone-900 leading-tight">${t('¿A quién voy?', 'Who do I go to?')}</h1>
+  <p class="text-lg text-stone-700 mt-2">${t('Escribe lo que sientes, en tus palabras. Te decimos qué especialista lo ve y te damos la lista con teléfono.', 'Type what you feel, in your own words. We tell you which specialist sees that and give you the list with phone numbers.')}</p>
+  <div class="not-prose mt-5">
+    <input id="aq-q" type="text" autocomplete="off" placeholder="${t('ej: me duele la rodilla, se me duerme la mano, no puedo dormir', 'e.g. my knee hurts, my hand goes numb, I cannot sleep')}" class="w-full min-h-[56px] px-4 rounded-xl border-2 border-teal-600 text-lg">
+    <div id="aq-out" class="mt-4"></div>
+    <p class="mt-4 text-sm text-stone-500">${t('Esto orienta, no diagnostica. Si es una emergencia, llama al 911.', 'This is orientation, not a diagnosis. If it is an emergency, call 911.')}</p>
+  </div>
+  <div class="not-prose mt-8 bg-teal-50 border border-teal-200 rounded-2xl p-5">
+    <p class="m-0 font-bold text-stone-900">${t('¿Prefieres preguntarlo por texto?', 'Prefer to ask by text?')}</p>
+    <p class="m-0 text-sm text-stone-700 mt-1">${t('Textea al 787-417-7711 lo que sientes y el pueblo. El Veci te contesta con quién lo ve cerca de ti.', 'Text 787-417-7711 what you feel and your town. El Veci replies with who sees that near you.')}</p>
+  </div>
+  <script>(function(){var SYM=${JSON.stringify(SYMPTOM_MAP)};var LINKS=${JSON.stringify(specLinks)};var q=document.getElementById('aq-q'),out=document.getElementById('aq-out'),tm=null,last='';
+  function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function run(){var qn=norm(q.value).trim();if(qn.length<3){out.innerHTML='';return;}var specs=[],urgent=false;
+    SYM.forEach(function(e){var hit=e.k.some(function(kw){return qn.indexOf(kw)>=0||(kw.length>=4&&kw.indexOf(qn)>=0);});if(!hit)return;if(e.u)urgent=true;e.s.forEach(function(s){if(specs.indexOf(s)<0)specs.push(s);});});
+    if(!specs.length){out.innerHTML='<p class="text-stone-700">${t('Todavía no lo reconozco. Prueba con otra palabra, o textéalo al 787-417-7711.', 'I do not recognize it yet. Try another word, or text it to 787-417-7711.')}</p>';if(qn!==last){last=qn;log(qn,[]);}return;}
+    var h=(urgent?'<p class="m-0 mb-3 p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 font-semibold">${t('Si esto es ahora mismo y es fuerte, llama al 911.', 'If this is happening now and it is strong, call 911.')}</p>':'')+'<p class="m-0 font-bold text-stone-900 text-lg">${t('Eso lo ve:', 'That is seen by:')}</p><div class="flex flex-wrap gap-2 mt-2">';
+    specs.slice(0,4).forEach(function(s){h+='<a href="'+esc(LINKS[s]||'/registro')+'" class="inline-flex items-center min-h-[52px] px-5 rounded-xl bg-teal-700 text-white font-bold text-lg no-underline">'+esc(s.charAt(0).toUpperCase()+s.slice(1))+' →</a>';});
+    h+='</div><p class="mt-2 text-sm text-stone-600">${t('Toca uno y ves la lista por pueblo, con teléfono y qué planes dicen que aceptan.', 'Tap one and you see the list by town, with phone and which plans they say they take.')}</p>';
+    out.innerHTML=h;if(qn!==last){last=qn;log(qn,specs);}}
+  function log(qn,specs){try{gtag('event','symptom_match',{q:qn.slice(0,40)})}catch(e){}try{fetch('/api/mapa-pages?page=registro-log',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'symptom_match',record:'/a-quien-voy',target:qn.slice(0,80)+' -> '+specs.slice(0,4).join(',')})});}catch(e){}}
+  q.addEventListener('input',function(){clearTimeout(tm);tm=setTimeout(run,350);});q.focus();})();</script>`
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
+  res.status(200).send(layout({
+    title: t('¿A quién voy? Escribe lo que sientes y te decimos qué especialista lo ve', 'Who do I go to? Type what you feel and we tell you which specialist'),
+    description: t('Escribe tu síntoma en tus palabras (me duele la rodilla, se me duerme la mano) y te decimos qué especialista lo ve en Puerto Rico, con la lista por pueblo y teléfono. Gratis.', 'Type your symptom in your own words and we tell you which specialist sees it in Puerto Rico, with the list by town and phone. Free.'),
+    slug: 'a-quien-voy', bodyHtml: body, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com', lang: en ? 'en' : 'es',
+  }))
+}
+
+// ═══ /recibo (23 sep 2026) · el contador público, en cristiano ═══
+// Lee recibo_cero (hoy) y recibo_snapshots (hace 7 días) y lo dice sin que haya que pensar.
+// Regla: alcance no es ayudada; se enseña lo que la gente HIZO, no lo que vimos.
+async function handleRecibo(req: any, res: any) {
+  const en = String(req.query.lang || '') === 'en'
+  const t = (es: string, env: string) => en ? env : es
+  let hoy: any[] = [], hace7: any[] = []
+  try {
+    const r1 = await supabase.from('recibo_cero').select('capa,medida,valor,fuente'); hoy = r1.data || []
+    const r2 = await supabase.from('recibo_snapshots').select('medida,valor,dia').lte('dia', new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10)).order('dia', { ascending: false }).limit(40); hace7 = r2.data || []
+  } catch { /* página vive vacía */ }
+  const v = (m: string) => Number(String((hoy.find(r => r.medida === m) || {}).valor || '0').replace(/[^0-9.]/g, '')) || 0
+  const v7 = (m: string) => { const r = hace7.find(x => x.medida === m); return r ? Number(r.valor) : null }
+  const fmt = (n: number) => n.toLocaleString('en-US')
+  const delta = (m: string) => { const a = v(m), b = v7(m); if (b === null || b === a) return ''; const d = a - b; return ` <span class="text-sm font-semibold ${d > 0 ? 'text-teal-700' : 'text-stone-500'}">${d > 0 ? '+' : ''}${fmt(d)} ${t('en 7 días', 'in 7 days')}</span>` }
+  const llamaron = v('personas que dieron clic en Llamar (Registro)'), wa = v('personas que dieron clic en WhatsApp (Registro)')
+  const horas = v('horas de espera que no ocurrieron'), veci = v('personas distintas que escribieron al Veci'), si = v('dijeron que sí resolvió')
+  const minVideo = v('minutos de video consumidos')
+  const fecha = new Date().toLocaleDateString(en ? 'en-US' : 'es-PR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Puerto_Rico' })
+  const fila = (num: string, txt: string, sub: string) => `<div class="py-5 border-b border-stone-200"><p class="m-0 text-4xl sm:text-5xl font-black text-stone-900 leading-none">${num}</p><p class="m-0 mt-2 text-lg text-stone-800">${txt}</p><p class="m-0 mt-1 text-sm text-stone-500">${sub}</p></div>`
+  const body = `
+  <p class="text-xs uppercase tracking-wide text-teal-700 font-bold">${t('El Recibo', 'The Receipt')} · ${fecha}</p>
+  <h1 class="text-3xl sm:text-4xl font-black text-stone-900 leading-tight mt-1">${t('Lo que la gente hizo aquí este año', 'What people did here this year')}</h1>
+  <p class="text-lg text-stone-700 mt-2">${t('No es lo que vimos. Es lo que hicieron. Se actualiza solo, todos los días.', 'Not what we saw. What they did. Updates itself, every day.')}</p>
+  <div class="not-prose mt-4">
+    ${fila(fmt(llamaron + wa) + delta('personas que dieron clic en Llamar (Registro)'), t('personas escogieron un médico y lo llamaron o le escribieron', 'people chose a doctor and called or messaged them'), t('desde el 14 de julio de 2026, en registromedicopr.com', 'since July 14, 2026, on registromedicopr.com'))}
+    ${fila(fmt(horas) + delta('horas de espera que no ocurrieron'), t('horas que nadie tuvo que esperar a que abriera una oficina', 'hours nobody had to wait for an office to open'), t(`son ${fmt(Math.round(horas / 24))} días. Preguntas al Veci fuera de horario que igual tuvieron respuesta.`, `that is ${fmt(Math.round(horas / 24))} days. Questions to El Veci outside office hours that got an answer anyway.`))}
+    ${fila(fmt(veci) + delta('personas distintas que escribieron al Veci'), t('personas le escribieron al Veci (787-417-7711)', 'people texted El Veci (787-417-7711)'), t('desde el 5 de febrero de 2026. La mitad escribió cuando toda oficina estaba cerrada.', 'since February 5, 2026. Half wrote when every office was closed.'))}
+    ${fila(fmt(si), t('nos dijeron "sí, resolvió"', 'told us "yes, it worked"'), t('solo contamos a quien contestó. El que no contesta no es un sí.', 'we only count those who answered. Silence is not a yes.'))}
+    ${fila(fmt(Math.round(minVideo / 60)), t('horas de su vida que nuestros videos se llevaron', 'hours of your life our videos took'), t('lo restamos porque también cuenta. Devolvimos más de lo que nos llevamos.', 'we subtract it because it counts too. We returned more than we took.'))}
+  </div>
+  <div class="not-prose mt-8 bg-stone-100 rounded-2xl p-5 text-sm text-stone-700">
+    <p class="m-0 font-bold text-stone-900">${t('Cómo se cuenta', 'How it is counted')}</p>
+    <p class="m-0 mt-1">${t('Un clic en "Llamar" cuenta 1 vez por persona por día. Las horas son la espera real hasta la próxima oficina abierta (lunes a viernes, 8:00 a 4:30), sumadas pregunta por pregunta. Nada aquí es una proyección.', 'A "Call" tap counts once per person per day. Hours are the real wait until the next open office (Monday to Friday, 8:00 to 4:30), added question by question. Nothing here is a projection.')}</p>
+    <p class="m-0 mt-2">${t('La meta: 50,000 personas viviendo menos ajoradas y eligiendo mejor antes del 31 de diciembre de 2027. Este es el contador.', 'The goal: 50,000 people living with less rush and choosing better before December 31, 2027. This is the counter.')}</p>
+  </div>`
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
+  res.status(200).send(layout({
+    title: t('El Recibo: lo que la gente hizo aquí este año', 'The Receipt: what people did here this year'),
+    description: t(`${fmt(llamaron + wa)} personas escogieron un médico y lo llamaron. ${fmt(horas)} horas que nadie esperó. Contador público, se actualiza solo.`, `${fmt(llamaron + wa)} people chose a doctor and called. ${fmt(horas)} hours nobody waited. Public counter, updates itself.`),
+    slug: 'recibo', bodyHtml: body, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com', lang: en ? 'en' : 'es',
+  }))
 }
 
 // Pulso de PuertoRicoSinFiltros.com — qué mira la gente (lee prsf_events). Público, solo agregados.
@@ -22721,6 +22857,9 @@ export default async function handler(req: any, res: any) {
     case 'notas-kit': return await handleNotasKit(req, res)
     case 'sinfiltros-log': return await handleSinFiltrosLog(req, res)
     case 'registro-log': return await handleRegistroLog(req, res)
+    case 'cita-lunes': return await handleCitaLunes(req, res)
+    case 'a-quien-voy': return await handleAQuienVoy(req, res)
+    case 'recibo': return await handleRecibo(req, res)
     case 'sinfiltros-pulso': return await handleSinFiltrosPulso(req, res)
     case 'luz': return await handleDatoRecord(req, res)
     case 'basura': return await handleDatoRecord(req, res)
