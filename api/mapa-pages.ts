@@ -14269,46 +14269,40 @@ async function handlePredicciones(req: any, res: any) {
   const temaLabel = (t: string) => TEMAS_PRED.find((x) => x[0] === t)
   const idDe = (p: any) => escapeHtml(String(p.slug || p.num || ''))
 
-  // ── Tarjeta de una predicción pública: 4 renglones fijos + "por qué importa" plegado.
+  // ── Tarjeta de una predicción pública. Orden para el que lee en celular:
+  // qué va a pasar → qué te toca a ti → qué puedes hacer → cuándo se cobra.
+  // Lo técnico (criterio y fuente) va plegado: está, pero no estorba.
   const publicadaCard = (p: any, destacada = false) => {
     const copyTxt = `${p.titulo}. ${p.prediccion} Se cobra: ${fechaLargaPred(p.vence_on)}. puertoricosinfiltros.com/predicciones#${p.slug || ''}`
     const dias = p.vence_on ? diasHasta(String(p.vence_on)) : null
     const tl = temaLabel(p.tema)
-    const detalle = (p.bolsillo || p.decision) ? `
-      <details class="mt-3 group">
-        <summary class="cursor-pointer list-none text-sm font-bold text-teal-700 inline-flex items-center gap-1.5 select-none">Por qué importa <span class="transition-transform group-open:rotate-90">→</span></summary>
-        <div class="mt-2 text-sm text-stone-700 leading-relaxed space-y-2">
-          ${p.bolsillo ? `<p class="m-0">${escapeHtml(p.bolsillo)}</p>` : ''}
-          ${p.decision ? `<p class="m-0">${escapeHtml(p.decision)}</p>` : ''}
-        </div>
-      </details>` : ''
     return `
   <article class="not-prose bg-white border ${destacada ? 'border-amber-300 ring-2 ring-amber-200' : 'border-stone-200'} rounded-2xl overflow-hidden mt-4" id="${idDe(p)}">
-    <div class="px-4 pt-4">
-      <div class="flex items-center gap-2 flex-wrap text-[11px] uppercase tracking-widest font-bold">
-        ${tl ? `<span class="text-stone-500">${tl[2]} ${escapeHtml(tl[1])}</span>` : ''}
-        ${p.ojala_falle ? `<span class="rounded-full px-2 py-0.5 border bg-emerald-50 border-emerald-200 text-emerald-800 normal-case tracking-normal">🤞 Ojalá falle</span>` : ''}
-      </div>
-      <p class="text-[11px] uppercase tracking-widest font-bold text-teal-700 mt-3">Predicción</p>
-      <h3 class="font-black text-stone-900 text-xl leading-snug mt-1 m-0" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(p.titulo)}</h3>
-      <p class="mt-2 text-stone-700 leading-relaxed">${escapeHtml(p.prediccion)}</p>
-      <div class="mt-4 grid sm:grid-cols-[auto_1fr] gap-x-6 gap-y-3 border-t border-stone-100 pt-4">
-        <div>
-          <p class="text-[11px] uppercase tracking-widest font-bold text-stone-500 m-0">Se cobra</p>
-          <p class="font-black text-stone-900 text-lg m-0 leading-tight" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(fechaCorta(p.vence_on))}</p>
-          ${dias !== null && dias >= 0 ? `<p class="text-xs text-stone-500 m-0" data-countdown="${escapeHtml(String(p.vence_on))}">${dias === 0 ? 'Se cobra hoy' : dias === 1 ? 'Falta 1 día' : `Faltan ${dias} días`}</p>` : dias !== null ? `<p class="text-xs text-amber-700 font-bold m-0">Vencida. Resultado en 14 días o menos.</p>` : ''}
-        </div>
-        <div>
-          <p class="text-[11px] uppercase tracking-widest font-bold text-stone-500 m-0">Cómo se cobra</p>
-          <p class="text-sm text-stone-800 leading-relaxed m-0 mt-0.5">${escapeHtml(p.criterio)}</p>
-          ${p.fuente_url ? `<p class="text-sm m-0 mt-1.5"><span class="text-[11px] uppercase tracking-widest font-bold text-stone-500 mr-2">Se verifica aquí</span><a href="${escapeHtml(p.fuente_url)}" target="_blank" rel="noopener" class="text-teal-700 font-bold hover:underline break-all">${escapeHtml(String(p.fuente_url).replace(/^https?:\/\/(www\.)?/, '').slice(0, 48))}${String(p.fuente_url).replace(/^https?:\/\/(www\.)?/, '').length > 48 ? '…' : ''} ↗</a></p>` : ''}
-        </div>
-      </div>
-      ${detalle}
+    <div class="px-4 pt-3 flex items-center justify-between gap-2 flex-wrap">
+      <span class="text-[11px] uppercase tracking-widest font-bold text-stone-500">${tl ? `${tl[2]} ${escapeHtml(tl[1])}` : ''}</span>
+      <span class="text-[11px] uppercase tracking-widest font-bold ${dias !== null && dias < 0 ? 'text-amber-700' : 'text-stone-500'}">Se cobra ${escapeHtml(fechaCorta(p.vence_on))}${dias !== null && dias >= 0 ? ` · <span data-countdown="${escapeHtml(String(p.vence_on))}">${dias === 0 ? 'hoy' : dias === 1 ? 'falta 1 día' : `faltan ${dias} días`}</span>` : ''}</span>
     </div>
-    <div class="mt-4 px-4 py-2.5 bg-stone-50 border-t border-stone-100 flex items-center justify-between gap-3 flex-wrap">
-      <p class="text-xs text-stone-500 m-0">${p.num ? `#${escapeHtml(String(p.num))} · ` : ''}Escrita antes. El criterio no cambia después.</p>
-      <button type="button" class="share-copy inline-flex items-center gap-1.5 bg-stone-900 hover:bg-stone-700 text-white font-bold px-3 py-1.5 rounded-full text-xs" data-copy="${escapeHtml(copyTxt)}"><i class="fa-regular fa-copy"></i> Copiar</button>
+    <div class="px-4 pt-2">
+      <h3 class="font-black text-stone-900 text-xl leading-snug m-0" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(p.titulo)}</h3>
+      <p class="mt-2 text-stone-700 leading-relaxed m-0">${escapeHtml(p.prediccion)}</p>
+    </div>
+    ${p.bolsillo ? `<div class="mx-4 mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3">
+      <p class="text-[11px] uppercase tracking-widest font-bold text-amber-800 m-0">Lo que te toca a ti</p>
+      <p class="text-base text-stone-900 font-semibold mt-1 m-0 leading-snug">${escapeHtml(p.bolsillo)}</p>
+    </div>` : ''}
+    ${p.decision ? `<div class="mx-4 mt-2 flex gap-2.5 items-start">
+      <span class="shrink-0 mt-0.5 w-6 h-6 rounded-full bg-teal-700 text-white text-xs font-black inline-flex items-center justify-center">✓</span>
+      <p class="text-sm text-stone-800 leading-relaxed m-0"><span class="font-bold text-teal-800">Qué puedes hacer:</span> ${escapeHtml(p.decision)}</p>
+    </div>` : ''}
+    <details class="mx-4 mt-3 group border-t border-stone-100 pt-2">
+      <summary class="cursor-pointer list-none text-xs font-bold text-stone-500 inline-flex items-center gap-1.5 select-none py-1">Cómo se cobra y dónde se verifica <span class="transition-transform group-open:rotate-90">→</span></summary>
+      <p class="text-sm text-stone-700 leading-relaxed mt-1 m-0">${escapeHtml(p.criterio)}</p>
+      ${p.fuente_url ? `<p class="text-sm m-0 mt-1.5"><a href="${escapeHtml(p.fuente_url)}" target="_blank" rel="noopener" class="text-teal-700 font-bold hover:underline">Ver la fuente ↗</a></p>` : ''}
+      ${p.ojala_falle ? `<p class="text-xs text-emerald-800 mt-1.5 m-0">🤞 Ojalá falle: esta la queremos perder.</p>` : ''}
+    </details>
+    <div class="mt-3 px-4 py-2.5 bg-stone-50 border-t border-stone-100 flex items-center justify-between gap-3">
+      <p class="text-xs text-stone-500 m-0">${p.num ? `#${escapeHtml(String(p.num))} · ` : ''}Escrita antes. No se edita después.</p>
+      <button type="button" class="share-copy inline-flex items-center gap-1.5 bg-stone-900 hover:bg-stone-700 text-white font-bold px-3 py-1.5 rounded-full text-xs shrink-0" data-copy="${escapeHtml(copyTxt)}"><i class="fa-regular fa-copy"></i> Copiar</button>
     </div>
   </article>`
   }
@@ -14364,7 +14358,7 @@ async function handlePredicciones(req: any, res: any) {
     <p class="m-0 pb-1 text-stone-700 font-bold text-lg leading-tight" data-countdown-l="${escapeHtml(String(proxima.vence_on))}">${proximaDias === 0 ? 'Se cobra hoy' : proximaDias === 1 ? 'día para cobrar esta' : 'días para cobrar esta'}<br><span class="text-sm font-semibold text-stone-500">${escapeHtml(fechaLargaPred(proxima.vence_on))}</span></p>
   </div>
   <p class="mt-3 font-black text-stone-900 text-xl leading-snug m-0" style="font-family:'Fraunces',Georgia,serif"><a href="#${idDe(proxima)}" class="hover:underline">${escapeHtml(proxima.titulo)}</a></p>
-  ${proxima.status === 'locked' ? `<p class="text-sm text-stone-600 mt-1 m-0">🔒 Está sellada. Se abre cuando se cobre.</p>` : `<p class="text-sm text-stone-700 mt-1 m-0">${escapeHtml(String(proxima.criterio || '').slice(0, 220))}${String(proxima.criterio || '').length > 220 ? '…' : ''}</p>`}
+  ${proxima.status === 'locked' ? `<p class="text-sm text-stone-600 mt-1 m-0">🔒 Está sellada. Se abre cuando se cobre.</p>` : `${proxima.bolsillo ? `<p class="text-base text-stone-800 mt-2 m-0 leading-snug"><span class="text-[11px] uppercase tracking-widest font-bold text-amber-800 mr-1">Lo que te toca a ti</span><br>${escapeHtml(proxima.bolsillo)}</p>` : ''}<p class="text-sm text-stone-600 mt-2 m-0">Vuelve el ${escapeHtml(fechaLargaPred(proxima.vence_on))} y mira si acertamos. <a href="#${idDe(proxima)}" class="text-teal-700 font-bold">Léela completa →</a></p>`}
 </div>` : ''
 
   // ── La lista: todas las pendientes en 1 vista, ordenadas por lo único que manda de
@@ -14373,9 +14367,9 @@ async function handlePredicciones(req: any, res: any) {
   const listaRows = pendientes.map((p: any, i: number) => {
     const d = diasHasta(String(p.vence_on))
     const tl = temaLabel(p.tema)
-    return `<li class="flex items-baseline gap-3 px-3 py-2.5 ${i % 2 ? 'bg-stone-50' : 'bg-white'}" data-tema="${escapeHtml(p.tema || 'otros')}" data-fecha="${escapeHtml(String(p.vence_on))}">
+    return `<li class="flex items-baseline gap-3 px-3 py-2.5 ${i % 2 ? 'bg-stone-50' : 'bg-white'}${i >= 6 ? ' lista-mas hidden' : ''}" data-tema="${escapeHtml(p.tema || 'otros')}" data-fecha="${escapeHtml(String(p.vence_on))}">
       <span class="text-xs font-bold text-stone-400 tabular-nums w-7 shrink-0 text-right">${i + 1}</span>
-      <span class="flex-1 min-w-0"><a href="#${idDe(p)}" class="font-semibold text-stone-900 hover:text-teal-700">${p.status === 'locked' ? '🔒 ' : ''}${escapeHtml(p.titulo)}</a>${tl ? `<span class="ml-2 text-[11px] uppercase tracking-widest font-bold text-stone-500 whitespace-nowrap">${tl[2]} ${escapeHtml(tl[1])}</span>` : ''}${p.ojala_falle ? ' <span class="text-xs text-emerald-800">🤞</span>' : ''}</span>
+      <span class="flex-1 min-w-0"><a href="#${idDe(p)}" class="font-semibold text-stone-900 hover:text-teal-700 leading-snug block">${p.status === 'locked' ? '🔒 ' : ''}${escapeHtml(p.titulo)}</a>${tl ? `<span class="block mt-0.5 text-[11px] uppercase tracking-widest font-bold text-stone-500">${tl[2]} ${escapeHtml(tl[1])}${p.ojala_falle ? ' · 🤞' : ''}</span>` : ''}</span>
       <span class="shrink-0 text-right leading-tight"><span class="block text-sm font-black text-stone-900 tabular-nums" style="font-family:'Fraunces',Georgia,serif">${escapeHtml(fechaCorta(p.vence_on))}</span><span class="block text-[11px] text-stone-500 tabular-nums">${d === 0 ? 'hoy' : d === 1 ? '1 día' : `${d} días`}</span></span>
     </li>`
   }).join('')
@@ -14389,9 +14383,10 @@ async function handlePredicciones(req: any, res: any) {
     </div>
   </div>
   <ol id="lista-ol" class="m-0 p-0 list-none divide-y divide-stone-100">${listaRows}</ol>
+  ${pendientes.length > 6 ? `<button type="button" id="lista-ver" class="w-full py-3 text-sm font-bold text-teal-800 bg-teal-50 hover:bg-teal-100 border-t border-stone-200">Ver las ${pendientes.length} →</button>` : ''}
   <p class="px-4 py-2.5 text-[11px] text-stone-500 m-0 border-t border-stone-200">Primero la que se cobra primero: es la que primero se puede romper. 🔒 = sellada, se abre al cobrarse.</p>
 </div>
-<script>(function(){var ol=document.getElementById('lista-ol');if(!ol)return;var T=${JSON.stringify(TEMAS_PRED.map((t) => t[0]))};var items=Array.prototype.slice.call(ol.children);function paint(){items.forEach(function(li,i){li.className=li.className.replace(/bg-(white|stone-50)/,i%2?'bg-stone-50':'bg-white');var n=li.querySelector('span');if(n)n.textContent=String(i+1);});}document.querySelectorAll('.orden-btn').forEach(function(b){b.addEventListener('click',function(){var o=b.getAttribute('data-orden');items.sort(function(a,c){if(o==='tema'){var ta=T.indexOf(a.getAttribute('data-tema')),tc=T.indexOf(c.getAttribute('data-tema'));if(ta!==tc)return ta-tc;}return a.getAttribute('data-fecha')<c.getAttribute('data-fecha')?-1:1;});items.forEach(function(li){ol.appendChild(li);});paint();document.querySelectorAll('.orden-btn').forEach(function(x){var on=x===b;x.setAttribute('aria-pressed',on?'true':'false');x.className='orden-btn px-3 py-1.5 rounded-full '+(on?'bg-stone-900 text-white':'bg-white border border-stone-300 text-stone-700');});});});})();</script>` : ''
+<script>(function(){var ol=document.getElementById('lista-ol');if(!ol)return;var T=${JSON.stringify(TEMAS_PRED.map((t) => t[0]))};var items=Array.prototype.slice.call(ol.children);var v=document.getElementById('lista-ver');function verTodo(){items.forEach(function(li){li.classList.remove('hidden');});if(v)v.remove();v=null;}if(v)v.addEventListener('click',verTodo);function paint(){verTodo();items.forEach(function(li,i){li.className=li.className.replace(/bg-(white|stone-50)/,i%2?'bg-stone-50':'bg-white');var n=li.querySelector('span');if(n)n.textContent=String(i+1);});}document.querySelectorAll('.orden-btn').forEach(function(b){b.addEventListener('click',function(){var o=b.getAttribute('data-orden');items.sort(function(a,c){if(o==='tema'){var ta=T.indexOf(a.getAttribute('data-tema')),tc=T.indexOf(c.getAttribute('data-tema'));if(ta!==tc)return ta-tc;}return a.getAttribute('data-fecha')<c.getAttribute('data-fecha')?-1:1;});items.forEach(function(li){ol.appendChild(li);});paint();document.querySelectorAll('.orden-btn').forEach(function(x){var on=x===b;x.setAttribute('aria-pressed',on?'true':'false');x.className='orden-btn px-3 py-1.5 rounded-full '+(on?'bg-stone-900 text-white':'bg-white border border-stone-300 text-stone-700');});});});})();</script>` : ''
 
   // ── Marcador. Cuando no hay cobradas, lo dice sin vergüenza: "0 cobradas todavía".
   const marcador = `
@@ -14412,7 +14407,8 @@ async function handlePredicciones(req: any, res: any) {
 
   const body = `
 <h1>Puerto Rico habla mucho del futuro.<br>Aquí guardamos el recibo.</h1>
-<p class="not-prose text-lg text-stone-700 mt-3 leading-snug m-0"><span class="font-bold text-stone-900">Predicción. Fecha. Fuente. Criterio.</span><br>Cuando llegue el día, cobramos. Si acertamos, queda escrito. Si fallamos, también.</p>
+<p class="not-prose text-lg text-stone-800 mt-3 leading-snug m-0">Lo que va a pasar con tu luz, tu plan médico y tu pueblo, <span class="font-bold text-stone-900">con fecha</span>. Pa' que no te coja de sorpresa.</p>
+<p class="not-prose text-sm text-stone-600 mt-2 leading-snug m-0">Cada una lleva fecha, fuente y criterio. Cuando llega el día, cobramos. Si acertamos, queda escrito. Si fallamos, también.</p>
 
 ${marcador}
 ${proximaBlock}
@@ -14431,12 +14427,12 @@ ${vencidasSinCobrar.length ? `
   <ul class="mt-2 text-sm text-stone-800 list-disc pl-5 m-0">${vencidasSinCobrar.map((p: any) => `<li><a href="#${idDe(p)}" class="text-teal-700 font-semibold">${escapeHtml(p.titulo)}</a> · venció ${escapeHtml(fechaCorta(p.vence_on))}</li>`).join('')}</ul>
 </div>` : ''}
 
-<h2 class="mt-10">Públicas${publicadas.length ? ` · ${publicadas.length}` : ' · ninguna todavía'}</h2>
-<p class="text-sm text-stone-600">Ordenadas por fecha de cobro, la más cercana primero. Ninguna se edita después.</p>
+<h2 class="mt-10">Lo que va a pasar, y lo que te toca${publicadas.length ? ` · ${publicadas.length}` : ''}</h2>
+<p class="text-sm text-stone-600">La más cercana primero. Cada una te dice qué te toca a ti y qué puedes hacer hoy.</p>
 ${publicadas.filter((p: any) => !p.resultado).map((p: any) => publicadaCard(p, proxima && p.slug === proxima.slug)).join('') || '<p class="text-stone-500 text-sm">Las primeras salen cuando llega su fecha de cobro.</p>'}
 
 <h2 class="mt-10">Selladas · ${selladas.length}</h2>
-<p class="text-sm text-stone-600">Escritas y guardadas. Lo único público es que existen, de qué son y cuándo se cobran. Nadie las edita después, ni nosotros.</p>
+<p class="text-sm text-stone-600">Ya están escritas, pero no se enseñan hasta que se cobren. Así nadie puede decir que se acomodaron después. Lo público: de qué son y cuándo se cobran.</p>
 ${selladasPorTema}${selladasOtras}${(selladas.length === 0) ? '<p class="text-stone-500 text-sm">Ninguna sellada por ahora.</p>' : ''}
 
 <h2 class="mt-10">Método</h2>
@@ -14452,6 +14448,7 @@ ${shareRow({ text: 'Predicciones sobre Puerto Rico con fecha, criterio y fuente.
 <div class="not-prose bg-stone-900 text-white rounded-2xl p-6 sm:p-8 mt-8">
   <p class="text-2xl sm:text-3xl font-black leading-tight m-0" style="font-family:'Fraunces',Georgia,serif">Una predicción sin fecha es opinión.<br>Una predicción con fecha deja recibo.</p>
   <p class="mt-3 text-stone-300 m-0">Aquí guardamos los recibos. No hacemos predicciones para tener razón: las fechamos para saber quién estaba mirando.</p>
+  ${proxima ? `<p class="mt-3 text-white font-bold m-0">Vuelve el ${escapeHtml(fechaLargaPred(proxima.vence_on))}. Ahí se cobra la próxima.</p>` : ''}
   <p class="mt-4 m-0"><a href="/rompelo" class="inline-flex items-center gap-2 bg-white text-stone-900 hover:bg-stone-200 font-bold px-4 py-2.5 rounded-full text-sm">¿Ves una que está mal? Rómpela →</a></p>
   <p class="mt-4 text-xs text-stone-500 m-0">Las escribe Angel Anderson, vecino de Cabo Rojo, con el dato a la vista y el nombre puesto. <a href="https://angelanderson.com" class="text-teal-300 font-semibold">Quién soy</a>.</p>
 </div>
