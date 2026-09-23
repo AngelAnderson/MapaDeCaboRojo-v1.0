@@ -5541,6 +5541,12 @@ async function handleRegistro(req: any, res: any) {
     .not('npi', 'is', null).eq('status', 'open')
     .in('subcategory', REGISTRY_SPECS.map(x => x.s))
   const totalVerified = (npiCount ?? 20618).toLocaleString('en-US')
+  // Total con NPI (todas las categorías): el número que sale en correos y prensa. Se enseña junto al
+  // del buscador para que nadie vea 2 números distintos y piense que uno miente (22 sep 2026).
+  const { count: npiTodos } = await supabase
+    .from('places').select('id', { count: 'exact', head: true })
+    .not('npi', 'is', null).eq('status', 'open')
+  const totalConNpi = (npiTodos ?? npiCount ?? 20618).toLocaleString('en-US')
 
   // Pueblos pa'l buscador (v_health_munis evita el cap de 1000 filas)
   let muniNames: string[] = []
@@ -5567,7 +5573,7 @@ async function handleRegistro(req: any, res: any) {
      253 de 461 textos bajo 15 px y el buscador casi fuera de la 1ra pantalla. Ahora el buscador va arriba. -->
 <h1 class="!text-3xl sm:!text-4xl !leading-tight">${t('Registro de Especialistas Médicos de Puerto Rico', 'Registry of Puerto Rico Medical Specialists')}</h1>
 <p class="not-prose text-xl text-slate-800 font-semibold mt-2 leading-snug">${t('¿A cuál médico llamo hoy? Escoge especialidad y región: en 10 segundos tienes el nombre, el pueblo y el teléfono.', 'Which doctor do I call today? Pick specialty and region: in 10 seconds you have the name, the town, and the phone.')}</p>
-<p class="not-prose text-lg text-slate-700 mt-2">${t(`Gratis, sin cuenta y sin plan. ${totalVerified} proveedores del registro federal NPPES, en español.`, `Free, no account, no plan required. ${totalVerified} providers from the federal NPPES registry, in Spanish.`)}</p>
+<p class="not-prose text-lg text-slate-700 mt-2">${t(`Gratis, sin cuenta y sin plan. ${totalConNpi} proveedores con NPI del registro federal NPPES, ${totalVerified} en las ${REGISTRY_SPECS.length} categorías del buscador, en español.`, `Free, no account, no plan required. ${totalConNpi} providers with an NPI from the federal NPPES registry, ${totalVerified} across the ${REGISTRY_SPECS.length} search categories, in Spanish.`)}</p>
 
 <div id="reg-tool" class="not-prose mt-5 bg-white border-2 border-teal-300 rounded-2xl p-6 shadow-sm scroll-mt-24">
   <label class="block">
