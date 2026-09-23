@@ -6738,7 +6738,7 @@ async function handleEspecialista(req: any, res: any) {
     <p class="m-0 text-xs uppercase tracking-wide text-teal-700 font-bold">${t('Aparece en el directorio de estos planes', 'Listed in these plans\' directories')}</p>
     <ul class="m-0 mt-1 p-0 list-none divide-y divide-teal-100 text-[15px]">${planRows.join('')}</ul>
     <p class="m-0 mt-2 text-sm text-teal-800">${t('Es lo que cada plan publicó, no una confirmación de que te van a coger. Antes de ir, llama y pregunta si aceptan tu plan y si están cogiendo pacientes nuevos.', 'That is what each plan published, not a confirmation that they will take you. Before you go, call and ask whether they take your plan and whether they are accepting new patients.')}</p>
-  </div>` : '') + planWarn + testigosCard
+  </div>` : '') + planWarn
   const planesNota = (planDirHtml || fmvHtml || tsHtml || mcsHtml || planesOficina.length > 0)
     ? `<details class="not-prose mt-3 text-xs text-slate-500"><summary class="cursor-pointer text-teal-700 font-semibold">${t('¿Por qué "aparece en el directorio" no es "aceptan tu plan"?', 'Why "listed in the directory" is not "they take your plan"?')}</summary><p class="mt-2">${t('Ojo con la diferencia: el bloque verde es lo que dijo la oficina, y ese manda. Los demás dicen lo que cada plan imprimió en su directorio, no si te van a coger. Y si un plan no aparece aquí, eso NO quiere decir que el médico esté fuera de esa red: el cruce por número federal identifica el 33% de las filas del Plan Vital, el 51% de las de Triple-S Advantage y el 52% de las de MMM, así que casi siempre significa que esa fila no se pudo cruzar. Ojo también con las fechas: los directorios no salen el mismo día, así que uno puede estar más al día que otro. Antes de cambiarte de plan, confirma con la oficina.', 'These blocks say what each plan printed in its directory, not whether they will take you. And a plan missing here does NOT mean the provider is out of that network: the federal-number cross-check identifies 33% of Plan Vital directory rows, 51% of Triple-S Advantage\'s and 52% of MMM\'s, so it almost always means that row could not be matched. Note the dates too: these directories are not published on the same day, so one may be more current than another. Before switching plans, confirm with the office.')}</p></details>`
     : ''
@@ -7124,7 +7124,7 @@ ${puertaHub}
 ${place.cms_rating != null ? `<div class="not-prose mt-4 bg-amber-50 border border-amber-200 rounded-2xl p-4">
   <p class="text-sm text-amber-900"><span class="text-amber-500 text-base">${starRating(Number(place.cms_rating))}</span> <strong>${Number(place.cms_rating)} de 5 estrellas</strong> ${lang === 'en' ? 'in the federal CMS quality rating' : 'en la calificación federal de calidad de CMS'} (${place.cms_rating_type === 'overall' ? (lang === 'en' ? 'overall rating' : 'calificación general') : (lang === 'en' ? 'quality of patient care' : 'calidad del cuidado al paciente')}). ${lang === 'en' ? 'This is the U.S. government\'s own rating, updated 2026. Compare on Medicare Care Compare.' : 'Es la calificación del propio gobierno federal, actualizada en 2026. Compara en Medicare Care Compare.'} <a href="https://www.medicare.gov/care-compare/" target="_blank" rel="noopener" class="text-teal-700 font-semibold hover:underline">medicare.gov/care-compare →</a></p>
 </div>` : ''}
-${actionBtns}${citaLunes}
+${actionBtns}${citaLunes}${testigosCard}
 ${dataRows}
 
 ${waFamiliaBlock({ name, specLabel, muni, phone: place.phone, url: pageUrl, en: lang === 'en' })}
