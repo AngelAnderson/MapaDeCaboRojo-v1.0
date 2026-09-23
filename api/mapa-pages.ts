@@ -623,6 +623,7 @@ ${opts.bodyHtml}
 </main>
 ${footer}
 ${isReg ? `<script>(function(){var t=document.getElementById('theme-toggle'),ic=document.getElementById('theme-icon');function set(d){document.documentElement.classList.toggle('dark',d);if(ic)ic.className=d?'fa-solid fa-sun':'fa-solid fa-moon';try{localStorage.setItem('theme',d?'dark':'light');}catch(e){}}if(ic)ic.className=document.documentElement.classList.contains('dark')?'fa-solid fa-sun':'fa-solid fa-moon';if(t)t.addEventListener('click',function(){set(!document.documentElement.classList.contains('dark'));});})();</script>` : SUBSCRIBE_FORM_SCRIPT}
+${isReg ? `<script>(function(){function L(ev,t){try{fetch('/api/mapa-pages?page=registro-log',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({event:ev,record:location.pathname.slice(0,120),target:(t||'').slice(0,200),referrer:document.referrer||''})});}catch(e){}}document.addEventListener('click',function(e){var a=e.target.closest?e.target.closest('a'):null;if(!a)return;var h=a.getAttribute('href')||'';if(h.indexOf('tel:')===0){L('click_to_call',h);if(a.className.indexOf('reg-call')>=0){try{gtag('event','click_to_call',{lista:1});}catch(e){}}return;}if(h.indexOf('wa.me/17874177711')>=0){L('veci_click',h);return;}if(h.indexOf('wa.me/')>=0||h.indexOf('whatsapp.com')>=0){L('click_whatsapp',h);}},true);})();</script>` : ''}
 ${isPRSF ? `<script>(function(){function L(ev,rec,t){try{fetch('/api/mapa-pages?page=sinfiltros-log',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({event:ev,record:rec||'',target:t||'',referrer:document.referrer||''})});}catch(e){}try{gtag('event',ev,{record:rec||'',target:(t||'').slice(0,90)});}catch(e){}}var R=location.pathname.replace(/^\\//,'')||'home';L('page_view','',location.pathname);try{var Q=new URLSearchParams(location.search).get('q');if(Q&&R==='buscar')L('search','buscar',Q.slice(0,120));}catch(e){}document.addEventListener('click',function(e){var a=e.target.closest?e.target.closest('a'):null;if(a){var p=a.getAttribute('data-prsf');if(p){L(p+'_click',a.getAttribute('data-rec')||R,a.getAttribute('href')||'');return;}var h=a.getAttribute('href')||'';if(h.indexOf('youtu.be')>=0||h.indexOf('youtube.com')>=0){L('video_click',R,h.slice(0,120));return;}if(h.indexOf('angelanderson.com/te-programaron')>=0){L('outbound_click',R,'te-programaron');return;}if(/^https?:/.test(h)&&h.indexOf('puertoricosinfiltros.com')<0){L('outbound_click',R,h.slice(0,120));return;}}var b=e.target.closest?e.target.closest('.copy-btn,.share-copy'):null;if(b)L('cite_click',R,(b.getAttribute('data-copy')||'copy').slice(0,90));},true);document.addEventListener('play',function(e){if(e.target&&e.target.tagName==='AUDIO')L('audio_play',R,'');},true);})();</script>` : ''}
 </body>
 </html>`
@@ -6886,6 +6887,12 @@ async function handleEspecialista(req: any, res: any) {
           ? t('Su número federal (NPI) fue <b>desactivado</b>. Llama antes de ir.', 'The federal number (NPI) was <b>deactivated</b>. Call before you go.')
           : t('Su número federal (NPI) <b>ya no aparece</b> en el registro. Llama antes de ir.', 'The federal number (NPI) <b>no longer appears</b> in the registry. Call before you go.'),
         src: `NPI ${escapeHtml(npi)} · ${npiLink}` })
+    } else if (licNoVig) {
+      // 22 sep 2026: match exacto y la Junta dice no vigente. Se dice con fecha, sin adjetivos,
+      // y con la puerta abierta a corregir. Manda sobre Part D: una receta no es una licencia.
+      filas.push({ q, nivel: 'alerta',
+        a: t(`Su licencia de Puerto Rico <b>no aparece vigente</b> en el registro de la Junta de Licenciamiento${licNoVig.desde ? ` (venció el ${fechaTxt(licNoVig.desde)})` : ''}. Su número federal (NPI) sigue activo. Si el registro está atrasado o ya renovó, escríbenos por texto y lo corregimos.`, `The Puerto Rico license <b>does not appear current</b> in the Licensing Board registry${licNoVig.desde ? ` (expired ${fechaTxt(licNoVig.desde)})` : ''}. The federal number (NPI) is still active. If the registry is behind or it was renewed, text us and we will fix it.`),
+        src: `${t(`Departamento de Salud (ORCPS), consultado el ${fechaTxt(licNoVig.fecha)}`, `PR Health Dept. (ORCPS), checked ${fechaTxt(licNoVig.fecha)}`)} · NPI ${escapeHtml(npi)} · ${npiLink}` })
     } else {
       const partes: string[] = []
       if (partdAct) partes.push(t(`Atendió pacientes de Medicare: <b>${partdAct.clms.toLocaleString('es-PR')}</b> recetas en el año más reciente que publica CMS.`, `Treated Medicare patients: <b>${partdAct.clms.toLocaleString('en-US')}</b> prescriptions in CMS's most recent year.`))
@@ -11979,6 +11986,31 @@ async function handleSinFiltrosLog(req: any, res: any) {
       await supabase.from('prsf_events').insert({
         event,
         record: body.record ? String(body.record).slice(0, 60) : null,
+        target: body.target ? String(body.target).slice(0, 200) : null,
+        referrer: body.referrer ? String(body.referrer).slice(0, 200) : null,
+        ua: String(req.headers['user-agent'] || '').slice(0, 300),
+      })
+    }
+  } catch { /* analytics must never break the page */ }
+  res.status(204).end()
+}
+
+// Registro Médico PR — 22 sep 2026 (Recibo Cero). Un clic en "Llamar" o "WhatsApp" es
+// la medida más barata de "eligió mejor": la persona escogió un médico y actuó. La ficha
+// ya mandaba click_to_call a GA4, pero solo desde la ficha (las listas con .reg-call no) y
+// GA4 no es nuestra tabla. Mismo patrón fail-safe que sinfiltros-log: allowlist + insert
+// service-role, nunca rompe la página. Se lee en `recibo_cero`.
+const REGISTRO_EVENTS = new Set(['click_to_call', 'click_whatsapp', 'veci_click'])
+async function handleRegistroLog(req: any, res: any) {
+  try {
+    let body: any = req.body
+    if (typeof body === 'string') { try { body = JSON.parse(body) } catch { body = {} } }
+    body = body || {}
+    const event = String(body.event || '').slice(0, 40)
+    if (REGISTRO_EVENTS.has(event)) {
+      await supabase.from('registro_events').insert({
+        event,
+        record: body.record ? String(body.record).slice(0, 120) : null,
         target: body.target ? String(body.target).slice(0, 200) : null,
         referrer: body.referrer ? String(body.referrer).slice(0, 200) : null,
         ua: String(req.headers['user-agent'] || '').slice(0, 300),
@@ -22688,6 +22720,7 @@ export default async function handler(req: any, res: any) {
     case 'panel': return await handlePanel(req, res)
     case 'notas-kit': return await handleNotasKit(req, res)
     case 'sinfiltros-log': return await handleSinFiltrosLog(req, res)
+    case 'registro-log': return await handleRegistroLog(req, res)
     case 'sinfiltros-pulso': return await handleSinFiltrosPulso(req, res)
     case 'luz': return await handleDatoRecord(req, res)
     case 'basura': return await handleDatoRecord(req, res)
