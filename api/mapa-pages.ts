@@ -12121,7 +12121,10 @@ async function handleRecibo(req: any, res: any) {
   let hoy: any[] = [], hace7: any[] = []
   try {
     const r1 = await supabase.from('recibo_cero').select('capa,medida,valor,fuente'); hoy = r1.data || []
-    const r2 = await supabase.from('recibo_snapshots').select('medida,valor,dia').lte('dia', new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10)).order('dia', { ascending: false }).limit(40); hace7 = r2.data || []
+    const r2 = await supabase.from('recibo_snapshots').select('medida,valor,dia').lte('dia', new Date(Date.now() - 7 * 864e5).toISOString().slice(0, 10)).order('dia', { ascending: false }).limit(60); hace7 = r2.data || []
+    // Contador 50K (23 sep 2026): personas únicas que reportaron algo (QUITA/RETO al 7711, "sí" al Veci).
+    // Vive en vidas_ayudadas; 1 persona = 1 aunque llame 3 veces. Nunca views ni proyecciones.
+    const r3 = await supabase.from('recibo_cero_contador').select('capa,medida,valor,fuente'); hoy = hoy.concat(r3.data || [])
   } catch { /* página vive vacía */ }
   const v = (m: string) => Number(String((hoy.find(r => r.medida === m) || {}).valor || '0').replace(/[^0-9.]/g, '')) || 0
   const v7 = (m: string) => { const r = hace7.find(x => x.medida === m); return r ? Number(r.valor) : null }
@@ -12130,22 +12133,30 @@ async function handleRecibo(req: any, res: any) {
   const llamaron = v('personas que dieron clic en Llamar (Registro)'), wa = v('personas que dieron clic en WhatsApp (Registro)')
   const horas = v('horas de espera que no ocurrieron'), veci = v('personas distintas que escribieron al Veci'), si = v('dijeron que sí resolvió')
   const minVideo = v('minutos de video consumidos')
+  const ayudadas = v('personas ayudadas (únicas, con reporte)'), quitaron = v('menos ajorao: quitaron 1 y lo reportaron'), faltan = v('faltan'), ritmo = v('ritmo necesario por día')
   const fecha = new Date().toLocaleDateString(en ? 'en-US' : 'es-PR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Puerto_Rico' })
   const fila = (num: string, txt: string, sub: string) => `<div class="py-5 border-b border-stone-200"><p class="m-0 text-4xl sm:text-5xl font-black text-stone-900 leading-none">${num}</p><p class="m-0 mt-2 text-lg text-stone-800">${txt}</p><p class="m-0 mt-1 text-sm text-stone-500">${sub}</p></div>`
   const body = `
   <p class="text-xs uppercase tracking-wide text-teal-700 font-bold">${t('El Recibo', 'The Receipt')} · ${fecha}</p>
   <h1 class="text-3xl sm:text-4xl font-black text-stone-900 leading-tight mt-1">${t('Lo que la gente hizo aquí este año', 'What people did here this year')}</h1>
   <p class="text-lg text-stone-700 mt-2">${t('No es lo que vimos. Es lo que hicieron. Se actualiza solo, todos los días.', 'Not what we saw. What they did. Updates itself, every day.')}</p>
-  <div class="not-prose mt-4">
+  <div class="not-prose mt-4 bg-teal-50 border border-teal-200 rounded-2xl p-5">
+    <p class="m-0 text-xs uppercase tracking-wide text-teal-800 font-bold">${t('El contador de la meta', 'The goal counter')}</p>
+    <p class="m-0 mt-1 text-5xl sm:text-6xl font-black text-stone-900 leading-none">${fmt(ayudadas)}${delta('personas ayudadas (únicas, con reporte)')}</p>
+    <p class="m-0 mt-2 text-lg text-stone-800">${t('personas nos dijeron que algo cambió: quitaron 1 cosa que no hacía falta, o eligieron y nos dijeron "sí, resolvió"', 'people told us something changed: they removed 1 thing that was not needed, or chose and told us "yes, it worked"')}</p>
+    <p class="m-0 mt-1 text-sm text-stone-600">${t(`${fmt(quitaron)} quitaron algo · faltan ${fmt(faltan)} para 50,000 · hacen falta ${fmt(Math.round(ritmo))} por día hasta el 31 de diciembre de 2027`, `${fmt(quitaron)} removed something · ${fmt(faltan)} to go to 50,000 · needs ${fmt(Math.round(ritmo))} a day until December 31, 2027`)}</p>
+    <p class="m-0 mt-3 text-sm text-stone-700">${t('Solo cuenta quien lo reporta. Textea <b>QUITA</b> y lo que quitaste al <a href="sms:+17874177711&body=QUITA%20" class="font-bold text-teal-800">787-417-7711</a>.', 'Only those who report count. Text <b>QUITA</b> and what you removed to <a href="sms:+17874177711&body=QUITA%20" class="font-bold text-teal-800">787-417-7711</a>.')}</p>
+  </div>
+  <p class="text-xs uppercase tracking-wide text-stone-500 font-bold mt-6">${t('Lo demás que la gente hizo (no se suma al contador)', 'Everything else people did (not added to the counter)')}</p>
+  <div class="not-prose mt-1">
     ${fila(fmt(llamaron + wa) + delta('personas que dieron clic en Llamar (Registro)'), t('personas escogieron un médico y lo llamaron o le escribieron', 'people chose a doctor and called or messaged them'), t('desde el 14 de julio de 2026, en registromedicopr.com', 'since July 14, 2026, on registromedicopr.com'))}
     ${fila(fmt(horas) + delta('horas de espera que no ocurrieron'), t('horas que nadie tuvo que esperar a que abriera una oficina', 'hours nobody had to wait for an office to open'), t(`son ${fmt(Math.round(horas / 24))} días. Preguntas al Veci fuera de horario que igual tuvieron respuesta.`, `that is ${fmt(Math.round(horas / 24))} days. Questions to El Veci outside office hours that got an answer anyway.`))}
     ${fila(fmt(veci) + delta('personas distintas que escribieron al Veci'), t('personas le escribieron al Veci (787-417-7711)', 'people texted El Veci (787-417-7711)'), t('desde el 5 de febrero de 2026. La mitad escribió cuando toda oficina estaba cerrada.', 'since February 5, 2026. Half wrote when every office was closed.'))}
-    ${fila(fmt(si), t('nos dijeron "sí, resolvió"', 'told us "yes, it worked"'), t('solo contamos a quien contestó. El que no contesta no es un sí.', 'we only count those who answered. Silence is not a yes.'))}
     ${fila(fmt(Math.round(minVideo / 60)), t('horas de su vida que nuestros videos se llevaron', 'hours of your life our videos took'), t('lo restamos porque también cuenta. Devolvimos más de lo que nos llevamos.', 'we subtract it because it counts too. We returned more than we took.'))}
   </div>
   <div class="not-prose mt-8 bg-stone-100 rounded-2xl p-5 text-sm text-stone-700">
     <p class="m-0 font-bold text-stone-900">${t('Cómo se cuenta', 'How it is counted')}</p>
-    <p class="m-0 mt-1">${t('Un clic en "Llamar" cuenta 1 vez por persona por día. Las horas son la espera real hasta la próxima oficina abierta (lunes a viernes, 8:00 a 4:30), sumadas pregunta por pregunta. Nada aquí es una proyección.', 'A "Call" tap counts once per person per day. Hours are the real wait until the next open office (Monday to Friday, 8:00 to 4:30), added question by question. Nothing here is a projection.')}</p>
+    <p class="m-0 mt-1">${t('El contador de arriba solo suma personas únicas que reportaron algo. Un clic en "Llamar" cuenta 1 vez por persona por día y no entra al contador porque no sabemos quién fue. Las horas son la espera real hasta la próxima oficina abierta (lunes a viernes, 8:00 a 4:30), sumadas pregunta por pregunta. Nada aquí es una proyección.', 'The counter above only adds unique people who reported something. A "Call" tap counts once per person per day and is not in the counter because we do not know who it was. Hours are the real wait until the next open office (Monday to Friday, 8:00 to 4:30), added question by question. Nothing here is a projection.')}</p>
     <p class="m-0 mt-2">${t('La meta: 50,000 personas viviendo menos ajoradas y eligiendo mejor antes del 31 de diciembre de 2027. Este es el contador.', 'The goal: 50,000 people living with less rush and choosing better before December 31, 2027. This is the counter.')}</p>
   </div>`
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
