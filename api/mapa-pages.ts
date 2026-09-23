@@ -5896,7 +5896,7 @@ async function handleRegistro(req: any, res: any) {
       e.s.forEach(function(s){if(specs.indexOf(s)<0)specs.push(s);});
     });
     if(!specs.length)return '';
-    try{gtag('event','symptom_match',{q:qn.slice(0,40)})}catch(ex){}
+    try{gtag('event','symptom_match',{q:qn.slice(0,40)})}catch(ex){}try{fetch('/api/mapa-pages?page=registro-log',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'symptom_match',record:location.pathname.slice(0,120),target:qn.slice(0,80)+' -> '+specs.slice(0,4).join(',')})});}catch(ex){}
     var chips=specs.slice(0,4).map(function(s){
       var x=SPECS.filter(function(z){return z.s===s;})[0];if(!x)return '';
       return '<button type="button" data-jump="'+esc(x.s)+'" style="background:#0f766e;border:1px solid #0f766e;color:#fff;font-weight:700;font-size:15px;padding:6px 13px;border-radius:999px;cursor:pointer;">'+x.e+' '+esc(x.l)+' ('+x.t+' en PR)</button>';
@@ -12000,7 +12000,7 @@ async function handleSinFiltrosLog(req: any, res: any) {
 // ya mandaba click_to_call a GA4, pero solo desde la ficha (las listas con .reg-call no) y
 // GA4 no es nuestra tabla. Mismo patrón fail-safe que sinfiltros-log: allowlist + insert
 // service-role, nunca rompe la página. Se lee en `recibo_cero`.
-const REGISTRO_EVENTS = new Set(['click_to_call', 'click_whatsapp', 'veci_click'])
+const REGISTRO_EVENTS = new Set(['click_to_call', 'click_whatsapp', 'veci_click', 'symptom_match'])
 async function handleRegistroLog(req: any, res: any) {
   try {
     let body: any = req.body
