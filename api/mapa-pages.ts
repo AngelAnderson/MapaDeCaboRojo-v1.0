@@ -6587,6 +6587,7 @@ async function handleEspecialista(req: any, res: any) {
   //  · testigo_partd: recetó a beneficiarios de Medicare Part D en el año más reciente que
   //    publica CMS. Es prueba de práctica activa, no de calidad ni de que te cojan.
   let licAct: { expira: string | null; fecha: string } | null = null
+  let licNoVig: { desde: string | null; fecha: string } | null = null
   let partdAct: { clms: number } | null = null
   {
     const [{ data: lo }, { data: lp }] = await Promise.all([
@@ -6596,6 +6597,13 @@ async function handleEspecialista(req: any, res: any) {
     const o = (lo || [])[0]
     if (o && o.match_confianza === 'exacta' && String(o.licencia_estatus || '').toLowerCase() === 'activo') {
       licAct = { expira: o.licencia_expira ? String(o.licencia_expira).slice(0, 10) : null, fecha: String(o.consultado_en || '').slice(0, 10) }
+    }
+    // 22 sep 2026 (dale de Angel, panel orcps-282-vs-67): si el match es EXACTO y la Junta dice
+    // que la licencia no está vigente, se dice con fecha y sin adjetivos. Un match 'probable' o
+    // 'ambigua' sigue sin publicarse: eso se confirma 1 a 1 antes.
+    const estO = String((o && o.licencia_estatus) || '').toLowerCase()
+    if (o && o.match_confianza === 'exacta' && estO && estO !== 'activo') {
+      licNoVig = { desde: o.licencia_expira ? String(o.licencia_expira).slice(0, 10) : null, fecha: String(o.consultado_en || '').slice(0, 10) }
     }
     const p = (lp || [])[0]
     if (p && Number(p.tot_clms) > 0) partdAct = { clms: Number(p.tot_clms) }
@@ -6623,9 +6631,10 @@ async function handleEspecialista(req: any, res: any) {
   const mcsHtml = !mcsAdv ? '' : `<li class="py-2 flex flex-wrap items-baseline gap-x-2"><strong class="text-teal-900">MCS Advantage</strong> <span class="text-slate-700">${t('actualizado 10 ago 2026', 'updated Aug 10, 2026')}${mcsAdv.seccion ? ` · ${escapeHtml(tituloPueblo(String(mcsAdv.seccion).replace(/_/g, ' ')))}` : ''}${mcsAdv.pueblo ? ` · ${t('bajo', 'under')} ${escapeHtml(tituloPueblo(mcsAdv.pueblo))}` : ''}</span>${mcsAdv.otroTel ? ` <span class="text-slate-700">· ${t('otro número:', 'other number:')} <a href="tel:${escapeHtml(mcsAdv.otroTel)}" class="font-bold underline text-teal-800">${escapeHtml(mcsAdv.otroTel.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3'))}</a></span>` : ''}</li>`
 
   const fechaLarga = (d: string) => new Date(d + 'T12:00:00').toLocaleDateString(lang === 'en' ? 'en-US' : 'es-PR', { day: 'numeric', month: 'long', year: 'numeric' })
-  const testigosHtml = (!licAct && !partdAct) ? '' : `<div class="not-prose mt-3 bg-slate-50 border border-slate-200 rounded-xl p-4">
+  const testigosHtml = (!licAct && !licNoVig && !partdAct) ? '' : `<div class="not-prose mt-3 bg-slate-50 border border-slate-200 rounded-xl p-4">
     <p class="m-0 text-xs uppercase tracking-wide text-slate-500 font-bold">${t('Lo que dicen 2 fuentes que no dependen del plan', 'What 2 sources independent of the plan say')}</p>
     ${licAct ? `<p class="m-0 mt-2 text-[15px] text-slate-900"><strong>${t('Licencia de Puerto Rico activa', 'Puerto Rico license active')}</strong>${licAct.expira ? ` · ${t('vence el', 'expires')} ${fechaLarga(licAct.expira)}` : ''}. <span class="text-sm text-slate-600">${t('Consultada en el registro del Departamento de Salud (ORCPS) el', 'Checked against the Department of Health registry (ORCPS) on')} ${fechaLarga(licAct.fecha)}.</span></p>` : ''}
+    ${licNoVig ? `<p class="m-0 mt-2 text-[15px] text-slate-900"><strong>${t('Licencia de Puerto Rico: no vigente según la Junta', 'Puerto Rico license: not current per the Board')}</strong>${licNoVig.desde ? ` · ${t('venció el', 'expired on')} ${fechaLarga(licNoVig.desde)}` : ''}. <span class="text-sm text-slate-600">${t('Consultada en el registro del Departamento de Salud (ORCPS) el', 'Checked against the Department of Health registry (ORCPS) on')} ${fechaLarga(licNoVig.fecha)}. ${t('Si es un error del registro o ya renovó, escríbenos por texto y lo corregimos.', 'If the registry is wrong or it was renewed, text us and we will fix it.')}</span></p>` : ''}
     ${partdAct ? `<p class="m-0 mt-2 text-[15px] text-slate-900"><strong>${t('Atendió pacientes de Medicare', 'Treated Medicare patients')}</strong>: ${partdAct.clms.toLocaleString(lang === 'en' ? 'en-US' : 'es-PR')} ${t('recetas Part D en 2024, según CMS', 'Part D prescriptions in 2024, per CMS')}. <span class="text-sm text-slate-600">${t('Es señal de práctica activa, no de calidad ni de que te cojan.', 'A sign of an active practice, not of quality or that they will take you.')}</span></p>` : ''}
   </div>`
 
