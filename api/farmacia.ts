@@ -30,6 +30,15 @@ const supabase = createClient(
   process.env.VITE_SUPABASE_ANON_KEY || ''
 );
 
+// 24 sep 2026: cliente de SERVIDOR solo para lecturas agregadas que anon no puede hacer.
+// place_reviews_approved (security_invoker) y place_review_stats / get_demand_for_keywords
+// (INVOKER) leen place_reviews y demand_signals, que traen telefono y no son publicas.
+// Con la anon daban 401 el 100% del tiempo (fichas sin resenas, categorias sin demanda).
+// NO se usa para places ni local_knowledge: esas siguen con anon para respetar el RLS.
+const supabaseSrv = process.env.SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(process.env.VITE_SUPABASE_URL || '', process.env.SUPABASE_SERVICE_ROLE_KEY)
+  : supabase;
+
 // Medical green — matches HEALTH marker color override in constants.ts
 const MEDICAL_GREEN = '#10b981';
 const MEDICAL_DARK  = '#059669';
@@ -170,8 +179,8 @@ export default async function handler(req: any, res: any) {
   let reviewStats: { count: number; avg_rating: number | null; recommend_pct: number | null } = { count: 0, avg_rating: null, recommend_pct: null };
   if (place) {
     const [{ data: revData }, { data: statsData }] = await Promise.all([
-      supabase.from('place_reviews_approved').select('*').eq('place_id', place.id).order('created_at', { ascending: false }).limit(3),
-      supabase.rpc('place_review_stats', { p_place_id: place.id }),
+      supabaseSrv.from('place_reviews_approved').select('*').eq('place_id', place.id).order('created_at', { ascending: false }).limit(3),
+      supabaseSrv.rpc('place_review_stats', { p_place_id: place.id }),
     ]);
     if (revData) reviews = revData;
     if (statsData && statsData[0]) reviewStats = statsData[0];

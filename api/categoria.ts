@@ -8,6 +8,15 @@ const supabase = createClient(
   process.env.VITE_SUPABASE_ANON_KEY || ''
 );
 
+// 24 sep 2026: cliente de SERVIDOR solo para lecturas agregadas que anon no puede hacer.
+// place_reviews_approved (security_invoker) y place_review_stats / get_demand_for_keywords
+// (INVOKER) leen place_reviews y demand_signals, que traen telefono y no son publicas.
+// Con la anon daban 401 el 100% del tiempo (fichas sin resenas, categorias sin demanda).
+// NO se usa para places ni local_knowledge: esas siguen con anon para respetar el RLS.
+const supabaseSrv = process.env.SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(process.env.VITE_SUPABASE_URL || '', process.env.SUPABASE_SERVICE_ROLE_KEY)
+  : supabase;
+
 async function logApiCall(endpoint: string, method: string | null, query: string | null, userAgent: string | null, ip: string | null, responseCount: number | null, referrer?: string | null) {
   try {
     await supabase.from('api_logs').insert({
@@ -290,7 +299,7 @@ export default async function handler(req: any, res: any) {
   let demandRows: DemandRow[] = [];
   try {
     const demandKeywords = matchTerms.map(t => `%${t.toLowerCase()}%`);
-    const { data: demandData } = await supabase
+    const { data: demandData } = await supabaseSrv
       .rpc('get_demand_for_keywords', { p_keywords: demandKeywords, p_days: 90 });
     if (Array.isArray(demandData)) demandRows = demandData as DemandRow[];
   } catch { /* fail open */ }
