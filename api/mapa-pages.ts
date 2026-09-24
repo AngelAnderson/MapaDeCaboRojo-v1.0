@@ -6333,6 +6333,15 @@ async function handleEspecialista(req: any, res: any) {
   const lang: 'es' | 'en' = String(req.query.lang || '') === 'en' ? 'en' : 'es'
   if (!slug) { res.status(400).send('Slug requerido'); return }
 
+  // Esta ruta NO tiene variante markdown: navegador, Googlebot, GPTBot y Accept:
+  // text/markdown reciben el MISMO HTML (medido 24 sep 2026). El `Vary: Accept,
+  // User-Agent` que pone el dispatcher le partía la caché del CDN en una entrada por
+  // cada User-Agent distinto: ~2,756 renders en 50 min, ~10 consultas a Supabase cada
+  // uno (~800K lecturas/día en una instancia Micro), porque cada crawler con su UA era
+  // un MISS. Aquí la clave de caché es solo la URL (+ host y ?lang). Si algún día esta
+  // ruta sirve markdown por header, esta línea se quita y se vuelve a poner el Vary.
+  res.setHeader('Vary', 'Accept-Encoding')
+
   if (await fueRemovidoAPeticion(slug)) { responderRemovido(res, req); return }
 
   const { data: place } = await supabase
@@ -7180,7 +7189,7 @@ ${SHARE_COPY_SCRIPT}
   }
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
-  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800')
   res.status(200).send(layout({
     bareTitle: true,
     // El titulo empieza por lo que la gente escribio, no por el nombre del medico.
