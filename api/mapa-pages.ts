@@ -4229,7 +4229,7 @@ const REGISTRY_SPECS: Array<{s:string;l:string;e:string;kw:string;md:boolean;t:n
   {s:'urgent care',l:'Urgent Care (urgencias)',e:'⏱️',kw:'URGENTE',md:false,org:true,t:50,r:{Oeste:12,Norte:7,Centro:2,Sur:5,Este:7,Metro:17}},
   {s:'clínica comunitaria',l:'Clínica Comunitaria (FQHC/330)',e:'🏘️',kw:'CLINICA',md:false,org:true,t:91,r:{Oeste:33,Norte:11,Centro:5,Sur:8,Este:11,Metro:23}},
   {s:'laboratorio clínico',l:'Laboratorio Clínico (pruebas y análisis)',e:'🧪',kw:'LABORATORIO',md:false,org:true,t:1367,r:{Oeste:301,Norte:167,Centro:38,Sur:158,Este:194,Metro:509}},
-  {s:'radiología',l:'Radiología e Imágenes (rayos X, MRI, CT)',e:'🩻',kw:'RADIOGRAFIA',md:false,org:true,t:252,r:{Oeste:34,Norte:18,Centro:2,Sur:22,Este:29,Metro:147}},
+  {s:'radiología',l:'Radiología e Imágenes (rayos X, sonogramas, mamografía y más)',e:'🩻',kw:'RADIOGRAFIA',md:false,org:true,t:252,r:{Oeste:34,Norte:18,Centro:2,Sur:22,Este:29,Metro:147}},
   {s:'ambulancia',l:'Ambulancia / Transporte Médico',e:'🚑',kw:'AMBULANCIA',md:false,org:true,t:869,r:{Oeste:224,Norte:129,Centro:45,Sur:102,Este:131,Metro:238}},
 ]
 
