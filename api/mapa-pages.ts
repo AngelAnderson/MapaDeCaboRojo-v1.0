@@ -12050,6 +12050,10 @@ const REGISTRO_EVENTS = new Set(['click_to_call', 'click_whatsapp', 'veci_click'
 const CALL_OUTCOMES = new Set(['cita', 'contesto_no_resolvio', 'no_contestaron', 'no_aceptan', 'otra_opcion', 'descartado'])
 async function handleRegistroLog(req: any, res: any) {
   try {
+    // 28 sep 2026: único POST del registro sin rate limit. Fail-silent como el resto del
+    // endpoint: si se pasa del límite, sigue devolviendo 204 (nunca rompe la página).
+    const ip = getClientIp(req)
+    if (await isRateLimited('registro-log', ip, 30, 10 * 60_000)) { res.status(204).end(); return }
     let body: any = req.body
     if (typeof body === 'string') { try { body = JSON.parse(body) } catch { body = {} } }
     body = body || {}
@@ -12074,6 +12078,11 @@ async function handleRegistroLog(req: any, res: any) {
 async function handleCitaLunes(req: any, res: any) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8')
   try {
+    // Mismo rate limit que especialista-claim y sus vecinos (28 sep 2026).
+    const ip = getClientIp(req)
+    if (await isRateLimited('cita-lunes', ip, 5, 10 * 60_000)) {
+      res.status(429).send(JSON.stringify({ ok: false, error: 'rate_limited' })); return
+    }
     const b = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}')
     const placeId = String(b.place_id || '').trim()
     const phone = String(b.phone || '').replace(/[^0-9+]/g, '')
