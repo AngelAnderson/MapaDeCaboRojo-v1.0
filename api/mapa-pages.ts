@@ -19681,7 +19681,7 @@ async function planHitsByNpi(npis: any[]): Promise<Map<string, PlanHit>> {
 }
 
 const planBadges = (h: PlanHit | undefined, en: boolean) => {
-  if (!h || (!h.mmm && !h.vital && !h.tss && !h.mcs)) return `<span class="text-slate-300" title="${en ? 'This row could not be cross-matched — it does NOT mean out of network' : 'Esta fila no se pudo cruzar — NO quiere decir que esté fuera de la red'}">—</span>`
+  if (!h || (!h.mmm && !h.vital && !h.tss && !h.mcs)) return `<span class="text-slate-500" title="${en ? 'This row could not be cross-matched. It does NOT mean out of network' : 'Esta fila no se pudo cruzar. NO quiere decir que esté fuera de la red'}"><span aria-hidden="true">–</span><span class="sr-only">${en ? 'no plan data' : 'sin dato de plan'}</span></span>`
   const b: string[] = []
   if (h.mmm) b.push(`<span class="inline-block bg-teal-50 border border-teal-200 text-teal-800 font-bold text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap">MMM</span>`)
   if (h.mcs) b.push(`<span class="inline-block bg-emerald-50 border border-emerald-200 text-emerald-800 font-bold text-[11px] px-2 py-0.5 rounded-full whitespace-nowrap">MCS</span>`)
