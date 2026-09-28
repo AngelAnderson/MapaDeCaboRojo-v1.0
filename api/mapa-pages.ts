@@ -396,7 +396,7 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <footer class="border-t border-slate-200 mt-12 py-10 bg-white">
 <div class="max-w-4xl mx-auto px-4">
 <p class="text-base font-semibold text-teal-800 text-center">${isEn ? 'The verified registry of Puerto Rico medical specialists.' : 'El registro verificado de especialistas médicos de Puerto Rico.'}</p>
-<p class="text-[15px] text-slate-600 mt-1 text-center">${isEn ? 'Every name verified against the federal NPPES/CMS registry. By specialty, region, and town.' : 'Cada nombre verificado contra el registro federal NPPES/CMS. Por especialidad, región y pueblo.'}</p>
+<p class="text-[15px] text-slate-600 mt-1 text-center">${isEn ? 'Every name verified against the federal NPPES/CMS registry. By specialty, region, and town.' : 'Cada nombre verificado en el registro federal de médicos (NPPES). Por especialidad, región y pueblo.'}</p>
 <p class="mt-4 text-[15px] text-slate-600 text-center max-w-md mx-auto">${isEn ? 'RegistroMedicoPR.com does not guarantee appointments. It does not replace doctors, health plans, or the government. It does something more basic: so the next person does not have to start blind.' : 'RegistroMedicoPR.com no garantiza citas. No reemplaza a los médicos, a los planes ni al gobierno. Hace algo más básico: que la próxima persona no empiece a ciegas.'}</p>
 <div class="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6 text-[15px]">
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">${isEn ? 'Find' : 'Busca'}</div><div class="flex flex-col gap-1.5 text-slate-600">
@@ -434,9 +434,9 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <p class="mt-3 text-[15px] text-slate-600 text-center">🚑 ${isEn ? 'Is it an emergency? Do not search here: call 911 or go to the nearest ER.' : '¿Es una emergencia? No busques aquí: llama al 911 o ve a la sala más cercana.'}</p>
 <p class="mt-2 text-[15px] text-slate-600 text-center">🧠 ${isEn ? 'If it is an emotional crisis, do not wait for an appointment:' : 'Si es una crisis emocional, no esperes cita:'} <strong>${isEn ? '988 Lifeline' : 'Línea PAS 988'}</strong> (${isEn ? 'or' : 'o'} 1-800-981-0023), 24/7, ${isEn ? 'free' : 'gratis'}.</p>
 <p class="mt-2 text-[15px] text-slate-600 text-center">${isEn ? 'You do not have to memorize anything. The registry stays here for whenever you or yours need it.' : 'No tienes que memorizar nada. El registro se queda aquí, para cuando te haga falta a ti o a los tuyos.'}</p>
-<p class="mt-4 text-xs text-slate-500 text-center max-w-xl mx-auto">${isEn
-  ? `Nobody pays to be listed here or to rank higher. Data comes from the federal registry (NPPES), Puerto Rico's licensing board, and the offices and patients who confirm it. <a href="/como-sabemos?lang=en" class="text-teal-700 hover:underline">How we know what we say →</a>`
-  : `Nadie paga por aparecer aquí ni por salir primero. Los datos salen del registro federal (NPPES), de la Junta de Licenciamiento y de las oficinas y pacientes que los confirman. <a href="/como-sabemos" class="text-teal-700 hover:underline">Cómo sabemos lo que decimos →</a>`}</p>
+<p class="mt-4 text-sm text-slate-600 text-center max-w-xl mx-auto">${isEn
+  ? `Nobody pays to be listed here or to rank higher. Data comes from the federal registry (NPPES), Puerto Rico's licensing board, and the offices and patients who confirm it. <a href="/como-sabemos?lang=en" class="text-teal-700 underline font-semibold">How we know what we say →</a>`
+  : `Nadie paga por aparecer aquí ni por salir primero. Los datos salen del registro federal (NPPES), de la Junta de Licenciamiento y de las oficinas y pacientes que los confirman. <a href="/como-sabemos" class="text-teal-700 underline font-semibold">Cómo sabemos lo que decimos →</a>`}</p>
 </div>
 </footer>` : `
 <footer class="border-t border-slate-200 mt-12 py-8 bg-white">
@@ -7349,8 +7349,8 @@ ${othersHtml}
 ${regDisclaimer(lang === 'en')}
 
 <p class="text-xs text-slate-500 mt-6">${npiVivo
-  ? `${escapeHtml(name)} aparece en el <strong>NPPES</strong>, el registro oficial del gobierno federal de EE.UU. — el mismo que usan Medicare y los planes médicos. El NPI <strong>${escapeHtml(npi)}</strong> es público y cualquiera puede verificarlo. ¿Dato viejo o ya no ejerce aquí? Dínoslo: <a href="mailto:angel@angelanderson.com" class="text-teal-600">angel@angelanderson.com</a>.`
-  : `El NPI <strong>${escapeHtml(npi)}</strong> <strong>ya no aparece</strong> en el <strong>NPPES</strong>, el registro oficial del gobierno federal de EE.UU. Eso suele pasar cuando el proveedor se retiró, se mudó, o el número se dio de baja. No quiere decir que la persona no exista ni que hiciera algo malo, pero sí quiere decir que <strong>este dato no lo respalda hoy el registro federal</strong>, así que llama antes de ir. ¿Sigues ejerciendo y esto está mal? Dínoslo y se corrige el mismo día: <a href="mailto:angel@angelanderson.com" class="text-teal-600">angel@angelanderson.com</a>.`}</p>
+  ? `${escapeHtml(name)} aparece en el <strong>NPPES</strong>, el registro oficial del gobierno federal de EE.UU. — el mismo que usan Medicare y los planes médicos. El NPI <strong>${escapeHtml(npi)}</strong> es público y cualquiera puede verificarlo. ¿Dato viejo o ya no ejerce aquí? Dínoslo: <a href="mailto:angel@angelanderson.com" class="text-teal-700 underline">angel@angelanderson.com</a>.`
+  : `El NPI <strong>${escapeHtml(npi)}</strong> <strong>ya no aparece</strong> en el <strong>NPPES</strong>, el registro oficial del gobierno federal de EE.UU. Eso suele pasar cuando el proveedor se retiró, se mudó, o el número se dio de baja. No quiere decir que la persona no exista ni que hiciera algo malo, pero sí quiere decir que <strong>este dato no lo respalda hoy el registro federal</strong>, así que llama antes de ir. ¿Sigues ejerciendo y esto está mal? Dínoslo y se corrige el mismo día: <a href="mailto:angel@angelanderson.com" class="text-teal-700 underline">angel@angelanderson.com</a>.`}</p>
 
 <div class="not-prose mt-3 border border-amber-200 bg-amber-50 rounded-xl px-4 py-3">
   <p class="text-sm text-amber-900"><strong>¿Eres ${escapeHtml(name)}?</strong> Si aquí aparece una dirección personal en vez de tu oficina, o el teléfono o los planes están mal, escríbenos a <a href="mailto:angel@angelanderson.com" class="font-semibold underline">angel@angelanderson.com</a> o al <a href="sms:+17874177711" class="font-semibold underline">787-417-7711</a> y <strong>se corrige el mismo día</strong>. El registro federal a veces publica la dirección postal de un proveedor; corregirlo aquí es gratis y no requiere cuenta.</p>
@@ -8250,7 +8250,7 @@ ${ratioSection}
 <h2>Por qué esto importa</h2>
 <p>Un desierto médico no es que "haya poco". Es que el sistema te obliga a manejar 2 o 3 horas, o a no atenderte. Eso pega más fuerte en el adulto mayor, en quien no maneja, y en quien no tiene a alguien que lo lleve. La data existía. El gobierno la tiene. Pero enterrada, en inglés, sin organizar por pueblo. La sacamos a la luz para que se pueda <strong>ver</strong>, <strong>citar</strong>, y <strong>arreglar</strong>.</p>
 <p class="text-sm text-slate-600">¿Eres especialista y atiendes en una de estas regiones sin cobertura? El registro no te muestra. <a href="/registro" class="text-teal-700 font-semibold">Reclama tu perfil aquí</a> y aparece donde la gente te busca.</p>
-<p class="text-sm text-slate-600"><strong>¿Periodista, agencia de salud, o investigador?</strong> Esta data es citable y hay acceso programático. Escríbenos: <a href="mailto:angel@angelanderson.com" class="text-teal-600">angel@angelanderson.com</a>.</p>
+<p class="text-sm text-slate-600"><strong>¿Periodista, agencia de salud, o investigador?</strong> Esta data es citable y hay acceso programático. Escríbenos: <a href="mailto:angel@angelanderson.com" class="text-teal-700 underline">angel@angelanderson.com</a>.</p>
 
 <div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
   <p class="text-lg font-bold mb-1">¿Necesitas un especialista y no sabes a dónde ir?</p>
@@ -18494,7 +18494,7 @@ ${[
   </div>
 </div>
 <p class="text-sm text-slate-700 mt-4"><strong>La síntesis:</strong> un formulario esta semana, telemedicina y clínica itinerante este año, residencias esta década, y paridad en el Congreso. Lo trágico no es que sea difícil: es que el primer escalón es casi gratis y nadie lo ha subido.</p>
-<p class="text-sm text-slate-600">¿Eres médico, psicólogo o residente? En estos pueblos no tienes competencia y el gobierno te paga los préstamos. ¿Alcalde, legislador o centro 330? El expediente de tu pueblo se arma con esta data. Escríbenos: <a href="mailto:angel@angelanderson.com" class="text-teal-600">angel@angelanderson.com</a>.</p>
+<p class="text-sm text-slate-600">¿Eres médico, psicólogo o residente? En estos pueblos no tienes competencia y el gobierno te paga los préstamos. ¿Alcalde, legislador o centro 330? El expediente de tu pueblo se arma con esta data. Escríbenos: <a href="mailto:angel@angelanderson.com" class="text-teal-700 underline">angel@angelanderson.com</a>.</p>
 
 <div class="mt-8 bg-slate-900 text-white rounded-2xl p-6">
   <p class="text-lg font-bold">📍 ¿Te aviso cuando cambie la salud de tu pueblo?</p>
