@@ -22605,6 +22605,7 @@ async function handleCuido(req: any, res: any) {
 <h1>Hogares de cuido en ${escapeHtml(muni)}</h1>
 <p class="text-lg text-slate-600 mt-3">Hay <strong>${list.length}</strong> establecimiento${list.length === 1 ? '' : 's'} de cuido con licencia del Departamento de la Familia en ${escapeHtml(muni)}. Entre todos suman <strong>${camas}</strong> camas, con <strong>${ocup}</strong> ocupadas según el registro.</p>
 ${aviso}
+<h2 class="sr-only">Los ${list.length} hogares de cuido de ${escapeHtml(muni)}</h2>
 <div class="not-prose mt-6 grid gap-3 sm:grid-cols-2">${cards}</div>
 ${comoVerificar}
 ${cruces}
