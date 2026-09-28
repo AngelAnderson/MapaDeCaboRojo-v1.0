@@ -4330,6 +4330,25 @@ function regDisclaimer(en = false): string {
 }
 
 // Checklist "qué hacer antes de llamar". Se usa en /especialista, hubs y páginas de intención.
+// Línea PAS arriba en salud mental (design-review 28 sep 2026). Antes solo estaba en el pie,
+// a 6,800 caracteres del H1. Va DEBAJO del botón Llamar en la ficha y debajo del H1 en los hubs.
+// Sin enlace tel: a propósito: el registrador de llamadas captura todo tel: y le abriría la hoja
+// "¿Cómo te fue con la llamada?" a quien marcó una línea de crisis.
+const SALUD_MENTAL_SUBS = new Set(['psiquiatra', 'psicólogo', 'trabajador social', 'consejero', 'terapeuta de familia'])
+function lineaPAS(sub: string | null | undefined, en = false): string {
+  if (!sub || !SALUD_MENTAL_SUBS.has(sub)) return ''
+  return `<p class="not-prose mt-3 mb-0 bg-rose-50 border border-rose-200 rounded-xl px-4 py-3 text-[15px] leading-snug text-rose-800">🧠 ${en
+    ? `<strong>If it is a crisis, do not wait for an appointment.</strong> Call or text <strong>988</strong> (Línea PAS, or 1-800-981-0023). 24/7, free, in Spanish.`
+    : `<strong>Si es una crisis, no esperes cita.</strong> Llama o textea al <strong>988</strong> (Línea PAS, o 1-800-981-0023). 24/7, gratis, en español.`}</p>`
+}
+
+// "538 psiquiatra" -> "538 psiquiatras". Misma regla que el modo pueblo: 1 palabra terminada en
+// vocal lleva s; las etiquetas de 2+ palabras se quedan como están (no se inventa el plural).
+function specPluralEs(n: number, label: string): string {
+  const c = cleanSpecLabel(label).toLocaleLowerCase('es')
+  return (n !== 1 && /^[a-záéíóúñ]+$/.test(c) && /[aeiou]$/.test(c)) ? c + 's' : c
+}
+
 function antesDeLlamar(opts: { specLabel?: string; en?: boolean } = {}): string {
   const en = !!opts.en
   const spec = opts.specLabel
@@ -7292,7 +7311,7 @@ ${puertaHub}
 ${place.cms_rating != null ? `<div class="not-prose mt-4 bg-amber-50 border border-amber-200 rounded-2xl p-4">
   <p class="text-sm text-amber-900"><span class="text-amber-500 text-base">${starRating(Number(place.cms_rating))}</span> <strong>${Number(place.cms_rating)} de 5 estrellas</strong> ${lang === 'en' ? 'in the federal CMS quality rating' : 'en la calificación federal de calidad de CMS'} (${place.cms_rating_type === 'overall' ? (lang === 'en' ? 'overall rating' : 'calificación general') : (lang === 'en' ? 'quality of patient care' : 'calidad del cuidado al paciente')}). ${lang === 'en' ? 'This is the U.S. government\'s own rating, updated 2026. Compare on Medicare Care Compare.' : 'Es la calificación del propio gobierno federal, actualizada en 2026. Compara en Medicare Care Compare.'} <a href="https://www.medicare.gov/care-compare/" target="_blank" rel="noopener" class="text-teal-700 font-semibold hover:underline">medicare.gov/care-compare →</a></p>
 </div>` : ''}
-${actionBtns}${citaLunes}${testigosCard}
+${actionBtns}${lineaPAS(place.subcategory, lang === 'en')}${citaLunes}${testigosCard}
 ${dataRows}
 
 ${waFamiliaBlock({ name, specLabel, muni, phone: place.phone, url: pageUrl, en: lang === 'en' })}
@@ -19843,6 +19862,7 @@ async function handleRegistroHub(req: any, res: any) {
     let bodyT = `${breadcrumbT}
 <h1>${x.e} ${escapeHtml(label)} ${t('en', 'in')} ${escapeHtml(muni.name)}, Puerto Rico</h1>
 <p class="text-lg text-slate-600 mt-2">${answerT}</p>
+${lineaPAS(x.s, en)}
 ${reformaHtml}
 ${info.treats ? `<p class="text-slate-600 mt-1">${escapeHtml(info.treats)} ${escapeHtml(info.whenToGo)}</p>` : ''}
 ${info.note ? `<p class="text-sm text-slate-500 mt-1"><i class="fa-solid fa-circle-info text-teal-600"></i> ${escapeHtml(info.note)}</p>` : ''}`
@@ -19996,6 +20016,7 @@ ${regDisclaimer(en)}`
     body = `${breadcrumb}
 <h1>${x.e} ${escapeHtml(label)} ${t('en', 'in')} ${escapeHtml(region)}, Puerto Rico</h1>
 <p class="text-lg text-slate-600 mt-2">${answerFirst}</p>
+${lineaPAS(x.s, en)}
 ${info.treats ? `<p class="text-slate-600 mt-1">${escapeHtml(info.treats)} ${escapeHtml(info.whenToGo)}</p>` : ''}
 ${noteHtml}
 ${providers.length ? `<div class="not-prose mt-5 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${thead}<tbody>${provRows}</tbody></table></div>` : `<div class="not-prose mt-5 bg-amber-50 border border-amber-200 rounded-xl p-5"><p class="text-amber-900 font-semibold">${t(`No hay ${escapeHtml(x.l.toLowerCase())} verificados en ${escapeHtml(region)}.`, `No verified ${escapeHtml(labelLow)} in ${escapeHtml(region)}.`)}</p><p class="text-sm text-amber-800 mt-1">${t('Te va a tocar viajar. Mira los de', 'You will have to travel. See those in')} <a href="/registro/${specUrl}/metro${lp}" class="font-semibold underline">${t('el área metro', 'the metro area')} (${metroCount}) →</a></p></div>`}
@@ -20033,6 +20054,7 @@ ${REGION_TOWNS[region] ? `<div class="not-prose mt-5"><div class="text-xs font-b
     body = `${breadcrumb}
 <h1>${x.e} ${escapeHtml(label)} ${t('en', 'in')} Puerto Rico</h1>
 <p class="text-lg text-slate-600 mt-2">${answerFirst}</p>
+${lineaPAS(x.s, en)}
 <div class="not-prose mt-4 grid sm:grid-cols-2 gap-3">
   <div class="bg-teal-50 border border-teal-200 rounded-xl p-4"><div class="text-xs font-bold text-teal-700 uppercase tracking-wide mb-1">${t('¿Qué resuelve?', 'What do they handle?')}</div><p class="text-sm text-slate-700">${escapeHtml(info.treats)}</p></div>
   <div class="bg-amber-50 border border-amber-200 rounded-xl p-4"><div class="text-xs font-bold text-amber-700 uppercase tracking-wide mb-1">${t('¿Cuándo ir?', 'When to go')}</div><p class="text-sm text-slate-700">${escapeHtml(info.whenToGo)}</p></div>
