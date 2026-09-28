@@ -354,20 +354,20 @@ function layout(opts: {
 </details>
 </nav>
 <script>document.addEventListener('click',function(e){var d=document.getElementById('nav-more');if(d&&d.open&&!d.contains(e.target))d.removeAttribute('open');});</script>
-<a href="${langHref}" class="text-[15px] font-bold text-slate-700 hover:text-teal-700 border border-slate-300 rounded-lg px-3 h-10 inline-flex items-center" aria-label="Language">${isEn ? 'ES' : 'EN'}</a>
-<button id="theme-toggle" type="button" aria-label="Theme" class="w-9 h-9 rounded-lg border border-slate-200 text-slate-600 hover:border-teal-400 flex items-center justify-center"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
-<button id="mnav-btn" type="button" aria-label="Menu" aria-expanded="false" class="md:hidden w-9 h-9 rounded-lg border border-slate-200 text-slate-600 hover:border-teal-400 flex items-center justify-center"><i class="fa-solid fa-bars" id="mnav-icon"></i></button>
+<a href="${langHref}" class="text-[15px] font-bold text-slate-700 hover:text-teal-700 border border-slate-300 rounded-lg px-3 h-11 inline-flex items-center" aria-label="${isEn ? 'Leer en español' : 'Read in English'}">${isEn ? 'ES' : 'EN'}</a>
+<button id="theme-toggle" type="button" aria-label="${isEn ? 'Light or dark mode' : 'Modo claro u oscuro'}" class="w-11 h-11 rounded-lg border border-slate-200 text-slate-600 hover:border-teal-400 flex items-center justify-center"><i class="fa-solid fa-moon" id="theme-icon"></i></button>
+<button id="mnav-btn" type="button" aria-label="${isEn ? 'Menu' : 'Menú'}" aria-expanded="false" class="md:hidden w-11 h-11 rounded-lg border border-slate-200 text-slate-600 hover:border-teal-400 flex items-center justify-center"><i class="fa-solid fa-bars" id="mnav-icon"></i></button>
 </div>
 </div>
 <nav id="mnav" hidden class="md:hidden border-t border-slate-100 bg-white">
 <div class="max-w-4xl mx-auto px-4 py-2 flex flex-col text-[15px] font-semibold text-slate-700">
-<a href="/registro${isEn ? '?lang=en' : ''}" class="py-2.5 border-b border-slate-100">${isEn ? 'Find a specialist' : 'Buscar especialista'}</a>
-<a href="/pueblo${isEn ? '?lang=en' : ''}" class="py-2.5 border-b border-slate-100">${isEn ? 'Your town' : 'Tu pueblo'}</a>
-<a href="/registro/desiertos${isEn ? '?lang=en' : ''}" class="py-2.5 border-b border-slate-100 text-amber-700">${isEn ? 'Medical deserts' : 'Desiertos médicos'}</a>
-<a href="/necesito${isEn ? '?lang=en' : ''}" class="py-2.5 border-b border-slate-100">${isEn ? 'Your situation' : 'Tu situación'}</a>
-<a href="/registro/mapa" class="py-2.5 border-b border-slate-100">${isEn ? 'The interactive map' : 'El mapa interactivo'}</a>
-<a href="/porque" class="py-2.5 border-b border-slate-100">${isEn ? 'Why doctors leave' : '¿Por qué se van?'}</a>
-<a href="/comparte" class="py-2.5">${isEn ? 'Citable facts' : 'Datos citables'}</a>
+<a href="/registro${isEn ? '?lang=en' : ''}" class="py-3 border-b border-slate-100">${isEn ? 'Find a specialist' : 'Buscar especialista'}</a>
+<a href="/pueblo${isEn ? '?lang=en' : ''}" class="py-3 border-b border-slate-100">${isEn ? 'Your town' : 'Tu pueblo'}</a>
+<a href="/registro/desiertos${isEn ? '?lang=en' : ''}" class="py-3 border-b border-slate-100 text-amber-700">${isEn ? 'Medical deserts' : 'Desiertos médicos'}</a>
+<a href="/necesito${isEn ? '?lang=en' : ''}" class="py-3 border-b border-slate-100">${isEn ? 'Your situation' : 'Tu situación'}</a>
+<a href="/registro/mapa" class="py-3 border-b border-slate-100">${isEn ? 'The interactive map' : 'El mapa interactivo'}</a>
+<a href="/porque" class="py-3 border-b border-slate-100">${isEn ? 'Why doctors leave' : '¿Por qué se van?'}</a>
+<a href="/comparte" class="py-3">${isEn ? 'Citable facts' : 'Datos citables'}</a>
 </div>
 </nav>
 <script>(function(){var b=document.getElementById('mnav-btn'),n=document.getElementById('mnav'),i=document.getElementById('mnav-icon');if(!b||!n)return;
