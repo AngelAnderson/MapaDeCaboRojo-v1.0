@@ -19790,7 +19790,7 @@ async function handleRegistroHub(req: any, res: any) {
     const reformaFaq = nT ? [{ '@type': 'Question', name: t(`¿Qué ${labelCorto} en ${muni.name} acepta la reforma (Plan Vital)?`, `Which ${labelCorto} in ${muni.name} takes the Reforma (Plan Vital)?`),
       acceptedAnswer: { '@type': 'Answer', text: (t(reformaEs, reformaEn) + t(reformaCaveatEs, reformaCaveatEn)).replace(/<[^>]+>/g, '') } }] : []
     const answerT = inTown.length
-      ? t(`En ${escapeHtml(muni.name)} hay <strong>${inTown.length} ${escapeHtml(plural(inTown.length))}</strong> con oficina, verificado${inTown.length === 1 ? '' : 's'} contra el registro federal NPPES.${hayPlan ? ` De esos, <strong>${frasePlanEs}</strong>.` : ''}`, `${escapeHtml(muni.name)} has <strong>${inTown.length} verified ${escapeHtml(labelLow)}${inTown.length === 1 ? '' : 's'}</strong> with a local office.${hayPlan ? ` Of those, <strong>${frasePlanEn}</strong>.` : ''}`)
+      ? t(`En ${escapeHtml(muni.name)} hay <strong>${inTown.length} ${escapeHtml(plural(inTown.length))}</strong> con oficina, verificado${inTown.length === 1 ? '' : 's'} en el registro federal de médicos (NPPES).${hayPlan ? ` De esos, <strong>${frasePlanEs}</strong>.` : ''}`, `${escapeHtml(muni.name)} has <strong>${inTown.length} verified ${escapeHtml(labelLow)}${inTown.length === 1 ? '' : 's'}</strong> with a local office.${hayPlan ? ` Of those, <strong>${frasePlanEn}</strong>.` : ''}`)
       : t(`El registro federal <strong>no muestra ningún ${escapeHtml(labelCorto)}</strong> con oficina en ${escapeHtml(muni.name)}. ${cercaFrase}${nearby.length ? ` Los de al lado:` : ''}`, `The federal registry shows <strong>no ${escapeHtml(labelLow)}</strong> with an office in ${escapeHtml(muni.name)}.`)
     // --- La misma pagina, en el formato que el agente lee (api/_lib/agente-md.ts) ---
     // Estas son 2,641 paginas de especialidad x pueblo: el volumen grande del Registro.
@@ -20009,7 +20009,7 @@ ${regDisclaimer(en)}`
   let body: string, title: string, description: string, answerFirst: string
   if (region) {
     answerFirst = regionCount > 0
-      ? t(`En ${regionFull(region)} hay <strong>${regionCount} ${escapeHtml(x.l.toLowerCase())}</strong> verificados contra el registro federal NPPES.`, `${regionFull(region)} has <strong>${regionCount} verified ${escapeHtml(labelLow)}${regionCount === 1 ? '' : 's'}</strong> in the federal NPPES registry.`)
+      ? t(`En ${regionFull(region)} hay <strong>${regionCount} ${escapeHtml(specPluralEs(regionCount, x.l))}</strong> verificado${regionCount === 1 ? '' : 's'} en el registro federal de médicos (NPPES).`, `${regionFull(region)} has <strong>${regionCount} verified ${escapeHtml(labelLow)}${regionCount === 1 ? '' : 's'}</strong> in the federal NPPES registry.`)
       : t(`Según el registro federal, en ${regionFull(region)} no hay ningún ${escapeHtml(x.l.toLowerCase())} verificado. El grupo más grande está en el área metro (${metroCount}).`, `According to the federal registry, ${regionFull(region)} has no verified ${escapeHtml(labelLow)}. The largest group is in the metro area (${metroCount}).`)
     title = regionCount > 0
       ? t(regionCount === 1 ? `${cleanSpecLabel(x.l)} en ${regionPhrase(region)}: hay 1, con teléfono` : `${cleanSpecLabel(x.l)} en ${regionPhrase(region)}: los ${regionCount}, con teléfono`, `${cleanSpecLabel(label)} in ${region}, PR: ${regionCount === 1 ? 'there is 1' : 'all ' + regionCount}, with phone numbers`)
@@ -20045,7 +20045,7 @@ ${REGION_TOWNS[region] ? `<div class="not-prose mt-5"><div class="text-xs font-b
       ? t(` <strong>Solo ${pueblosCon} de los 78 municipios</strong> tienen al menos uno; en los otros ${78 - pueblosCon} no hay ninguno registrado.`,
           ` <strong>Only ${pueblosCon} of the 78 municipalities</strong> have at least one; the other ${78 - pueblosCon} have none registered.`)
       : ''
-    answerFirst = t(`En Puerto Rico hay <strong>${total} ${escapeHtml(x.l.toLowerCase())}</strong> verificados contra el registro federal NPPES, distribuidos por región.`, `Puerto Rico has <strong>${total} verified ${escapeHtml(labelLow)}</strong> in the federal NPPES registry, spread across regions.`) + huecoFrase + puebloFrase
+    answerFirst = t(`En Puerto Rico hay <strong>${total} ${escapeHtml(specPluralEs(total, x.l))}</strong> verificados en el registro federal de médicos (NPPES), repartidos por región.`, `Puerto Rico has <strong>${total} verified ${escapeHtml(labelLow)}</strong> in the federal NPPES registry, spread across regions.`) + huecoFrase + puebloFrase
     title = t(`${cleanSpecLabel(x.l)} en Puerto Rico: los ${total}, por pueblo y con teléfono`, `${cleanSpecLabel(label)} in Puerto Rico: all ${total}, by town and with phone`)
     description = t(`${cleanSpecLabel(x.l)} en Puerto Rico: ${total} en total, por región y por pueblo, con el teléfono al lado. Del registro federal NPPES. Gratis y sin cuenta.`, `${cleanSpecLabel(label)} in Puerto Rico: ${total} in total, by region and town, with phone numbers. From the federal NPPES registry. Free, no account.`)
     const regionCards = HUB_REGIONS.map(r => {
@@ -20068,7 +20068,7 @@ ${noteHtml}
 <p class="text-slate-600 -mt-2">${t('Cuántos hay en cada región. Toca una para ver la lista con teléfonos.', 'How many in each region. Tap one to see the list with phone numbers.')}</p>
 <div class="not-prose mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">${regionCards}</div>
 ${townChips}
-<h2>${t(`Los ${total} ${escapeHtml(x.l.toLowerCase())} de Puerto Rico`, `All ${total} ${escapeHtml(labelLow)} in Puerto Rico`)}</h2>
+<h2>${t(`Los ${total} ${escapeHtml(specPluralEs(total, x.l))} de Puerto Rico`, `All ${total} ${escapeHtml(labelLow)} in Puerto Rico`)}</h2>
 <div class="not-prose mt-2 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${thead}<tbody>${provRows}</tbody></table></div>
 ${providers.length ? planNotaHub(en) : ''}
 ${providers.length >= 200 ? `<p class="text-xs text-slate-500 mt-2">${t('Mostrando los primeros 200. Usa las regiones de arriba para ver la lista completa de tu zona.', 'Showing the first 200. Use the regions above to see the full list for your area.')}</p>` : ''}`
