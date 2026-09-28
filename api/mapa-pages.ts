@@ -6227,7 +6227,7 @@ ${regDisclaimer(en)}
     <a href="https://wa.me/17874177711?text=ESPECIALISTA" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-3 rounded-full text-base hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ESPECIALISTA</a>
     <a href="/acceso" class="inline-flex items-center gap-2 bg-teal-800 text-white font-bold px-5 py-3 rounded-full text-base hover:bg-teal-900"><i class="fa-solid fa-chart-simple"></i> ${t('Ver el reporte de acceso', 'See the access report')}</a>
   </div>
-  <p class="text-base text-white mt-4">Menos revolú, más sistema, mejor vida.</p>
+  <p class="text-base text-white mt-4">Menos revolú. Más vida.</p>
 </div>
 `
   const jsonLd = [
@@ -8273,7 +8273,7 @@ ${ratioSection}
     <a href="https://wa.me/17874177711?text=ESPECIALISTA" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ESPECIALISTA</a>
     <a href="/registro" class="inline-flex items-center gap-2 bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-900"><i class="fa-solid fa-magnifying-glass"></i> Ir al registro completo</a>
   </div>
-  <p class="text-xs text-teal-200 mt-4">- Angel | Menos revolú, más sistema, mejor vida.</p>
+  <p class="text-xs text-teal-200 mt-4">- Angel | Menos revolú. Más vida.</p>
 </div>
 
 <section class="max-w-4xl mx-auto px-4 mt-12">
