@@ -551,6 +551,14 @@ ${isReg ? `<style>
   table.reg-rank td:nth-child(5),table.reg-rank th:nth-child(5){width:4.5rem}
 }
 h1,h2,h3{text-wrap:balance}
+/* design-review 28 sep 2026: las fuentes ya no bloquean el render (FINDING-012), así que el cambio
+   de la letra de respaldo a Source Sans movía la tabla de Llamar (CLS 0.17 en /registro/psiquiatra/ponce).
+   Respaldo con las medidas de la fuente real (fontTools contra Arial y Georgia Bold): el cambio no mueve nada. */
+@font-face{font-family:"SS3 Fallback";src:local("Arial"),local("ArialMT");size-adjust:93.19%;ascent-override:109.88%;descent-override:42.92%;line-gap-override:0%}
+@font-face{font-family:"SS3 Fallback";font-weight:600 900;src:local("Arial Bold"),local("Arial-BoldMT");size-adjust:93.19%;ascent-override:109.88%;descent-override:42.92%;line-gap-override:0%}
+@font-face{font-family:"Fraunces Fallback";src:local("Georgia Bold"),local("Georgia-Bold");size-adjust:96.51%;ascent-override:101.34%;descent-override:26.42%;line-gap-override:0%}
+body{font-family:"Source Sans 3","SS3 Fallback",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.prose-narrative h1,.prose-narrative h2,.prose-narrative h3,.font-display{font-family:'Fraunces','Fraunces Fallback',Georgia,serif}
 .reg-card .text-lg,table.w-full td,.tabular{font-variant-numeric:tabular-nums}
 html.dark body{background:#0f172a !important;color:#e2e8f0;}
 html.dark .bg-slate-50{background-color:#0f172a !important;}
