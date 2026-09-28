@@ -18,7 +18,7 @@ import { createClient } from '@supabase/supabase-js'
 import { createHash, createHmac, timingSafeEqual } from 'crypto'
 import { handleActivos } from './_lib/activos.js'
 import { conFrescura } from './_lib/agentes.js'
-import { paginaMedicaLd, procedenciaSello, fechaVerificacion, fechaCortaAT, partesAT } from './_lib/procedencia.js'
+import { paginaMedicaLd, procedenciaSello, fechaVerificacion, fechaCortaAT, partesAT, fechaEs, VERIFICADOR, EDITOR_REGISTRO } from './_lib/procedencia.js'
 import { handleBarrios } from './_lib/barrios.js'
 import { cargarSenal, type SenalCategoria } from './_lib/la-senal.js'
 import { handleRentas } from './_lib/rentas.js'
@@ -434,6 +434,9 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <p class="mt-3 text-[15px] text-slate-600 text-center">🚑 ${isEn ? 'Is it an emergency? Do not search here: call 911 or go to the nearest ER.' : '¿Es una emergencia? No busques aquí: llama al 911 o ve a la sala más cercana.'}</p>
 <p class="mt-2 text-[15px] text-slate-600 text-center">🧠 ${isEn ? 'If it is an emotional crisis, do not wait for an appointment:' : 'Si es una crisis emocional, no esperes cita:'} <strong>${isEn ? '988 Lifeline' : 'Línea PAS 988'}</strong> (${isEn ? 'or' : 'o'} 1-800-981-0023), 24/7, ${isEn ? 'free' : 'gratis'}.</p>
 <p class="mt-2 text-[15px] text-slate-600 text-center">${isEn ? 'You do not have to memorize anything. The registry stays here for whenever you or yours need it.' : 'No tienes que memorizar nada. El registro se queda aquí, para cuando te haga falta a ti o a los tuyos.'}</p>
+<p class="mt-4 text-xs text-slate-500 text-center max-w-xl mx-auto">${isEn
+  ? `Nobody pays to be listed here or to rank higher. Data comes from the federal registry (NPPES), Puerto Rico's licensing board, and the offices and patients who confirm it. <a href="/como-sabemos?lang=en" class="text-teal-700 hover:underline">How we know what we say →</a>`
+  : `Nadie paga por aparecer aquí ni por salir primero. Los datos salen del registro federal (NPPES), de la Junta de Licenciamiento y de las oficinas y pacientes que los confirman. <a href="/como-sabemos" class="text-teal-700 hover:underline">Cómo sabemos lo que decimos →</a>`}</p>
 </div>
 </footer>` : `
 <footer class="border-t border-slate-200 mt-12 py-8 bg-white">
@@ -5240,6 +5243,154 @@ function starRating(r: number): string {
   if (half) s += '<i class="fa-solid fa-star-half-stroke"></i>'
   for (let i = full + (half ? 1 : 0); i < 5; i++) s += '<i class="fa-regular fa-star"></i>'
   return s
+}
+
+// =============== /como-sabemos — de dónde sale cada dato (registromedicopr.com) ===============
+// 28 sep 2026, dale de Angel: subir la credibilidad con la línea de neutralidad (footer, todas
+// las páginas del Registro) + esta página. Los conteos son en vivo, no una foto vieja — se
+// calculan en cada render (cache 1h como las páginas vecinas) para que nunca digan una cosa
+// mientras la base dice otra.
+//
+// La clasificación persona/fuente/registro replica EXACTO la regla de procedenciaSello() en
+// _lib/procedencia.ts (el único lugar que decide eso): REGISTRO se prueba primero, PERSONA
+// después, todo lo demás es "fuente". No se inventa una tercera vara aquí.
+const REGISTRO_KEYWORDS = ['nppes', 'npi', 'sulme', 'google_places', 'merge', 'osm_', 'infopaginas', 'legacy_import']
+const PERSONA_KEYWORDS = ['angel', 'human_angel', 'on-site visit', 'field-visit', 'field_visit', 'field_audit', 'ground_photo', 'campo_', 'dueno_', 'dueño_', 'owner_', 'proveedor', 'provider_claim', 'user-submitted', 'self-submitted', 'sms del negocio', 'email_20', 'tarjeta oficial']
+
+async function handleComoSabemos(req: any, res: any) {
+  const en = String(req.query?.lang || '') === 'en'
+  const te = (es: string, eng: string) => en ? eng : es
+  const hoy = fechaEs(new Date().toISOString()) || ''
+
+  const baseNpi = () => supabase.from('places').select('id', { count: 'exact', head: true })
+    .not('npi', 'is', null).eq('visibility', 'published')
+
+  const registroOrFilter = ['verification_source.is.null', 'verification_source.imatch.fecha_retirada',
+    ...REGISTRO_KEYWORDS.map(k => `verification_source.imatch.${k}`)].join(',')
+  const personaOrFilter = PERSONA_KEYWORDS.map(k => `verification_source.imatch.${k}`).join(',')
+
+  let qPersona: any = baseNpi().not('verification_source', 'is', null)
+  for (const k of ['fecha_retirada', ...REGISTRO_KEYWORDS]) qPersona = qPersona.not('verification_source', 'imatch', k)
+  qPersona = qPersona.or(personaOrFilter)
+
+  const [
+    { count: totalNpi }, { count: registroCount }, { count: personaCount },
+    { count: conAccepts }, { count: conPlans },
+    { count: llamadasRecibidas }, { count: llamadasCorregidas }, { count: llamadasBuenas }, { count: llamadasPendientes },
+    { data: resueltos },
+    { count: remocionesAtendidas },
+    { data: licenciasRows },
+    { data: llamadaRows },
+  ] = await Promise.all([
+    baseNpi(),
+    baseNpi().or(registroOrFilter),
+    qPersona,
+    baseNpi().not('accepts_new_patients', 'is', null),
+    baseNpi().not('accepted_plans', 'is', null),
+    supabase.from('telefono_reportado').select('id', { count: 'exact', head: true }),
+    supabase.from('telefono_reportado').select('id', { count: 'exact', head: true }).eq('estado', 'corregido'),
+    supabase.from('telefono_reportado').select('id', { count: 'exact', head: true }).eq('estado', 'verificado_bueno'),
+    supabase.from('telefono_reportado').select('id', { count: 'exact', head: true }).not('estado', 'in', '("corregido","verificado_bueno")'),
+    supabase.from('telefono_reportado').select('reportado_en,resuelto_en').not('resuelto_en', 'is', null),
+    supabase.from('remocion_solicitudes').select('id', { count: 'exact', head: true })
+      .not('atendido_at', 'is', null).not('motivo', 'ilike', 'PRUEBA%').neq('motivo', '1'),
+    supabase.from('testigo_orcps').select('npi').not('licencia_numero', 'is', null),
+    supabase.from('registro_resultados_llamada').select('resultado').not('ficha', 'like', '/prueba%'),
+  ])
+
+  const total = totalNpi || 0
+  const registro = registroCount || 0
+  const persona = personaCount || 0
+  const fuente = Math.max(0, total - registro - persona)
+  const pctCopia = total ? Math.round((registro / total) * 100) : 0
+
+  const licenciasCotejadas = new Set((licenciasRows || []).map((r: any) => r.npi)).size
+
+  const diasResuelto = (resueltos || [])
+    .map((r: any) => (new Date(r.resuelto_en).getTime() - new Date(r.reportado_en).getTime()) / 86400000)
+    .filter((n: number) => Number.isFinite(n) && n >= 0)
+  const diasProm = diasResuelto.length ? Math.round(diasResuelto.reduce((a: number, b: number) => a + b, 0) / diasResuelto.length) : null
+
+  const llamadasValidas = (llamadaRows || []).filter((r: any) => r.resultado && r.resultado !== 'descartado')
+  const llamadasTotal = llamadasValidas.length
+  const llamadasPorResultado: Record<string, number> = {}
+  for (const r of llamadasValidas) llamadasPorResultado[r.resultado] = (llamadasPorResultado[r.resultado] || 0) + 1
+  const RESULTADO_LABEL: Record<string, string> = {
+    cita: te('Consiguió cita', 'Got an appointment'),
+    contesto_no_resolvio: te('Contestaron pero no resolvió', 'They answered but it did not resolve it'),
+    no_contestaron: te('No contestaron', 'No answer'),
+    no_aceptan: te('No aceptan pacientes nuevos', 'Not accepting new patients'),
+    otra_opcion: te('Buscó otra opción', 'Looked elsewhere'),
+  }
+
+  const nf = (n: number) => n.toLocaleString('en-US')
+
+  const body = `
+<section class="max-w-3xl mx-auto px-4 pt-10 prose-narrative">
+<h1 class="font-display">${te('Cómo sabemos lo que decimos', 'How we know what we say')} · Registro Médico PR</h1>
+<p><strong>${te('Nadie paga por aparecer aquí ni por salir primero. No le cobramos a ningún médico ni a ningún plan.', 'Nobody pays to be listed here or to rank higher. We do not charge any doctor or any health plan.')}</strong> ${te('Este registro cruza el registro federal de proveedores de salud (NPPES) con la Junta de Licenciamiento de Puerto Rico y con lo que confirman las propias oficinas y los pacientes que llaman. Esta página dice, con número y fecha, de dónde sale cada parte.', 'This registry cross-references the federal health provider registry (NPPES) with Puerto Rico\'s licensing board and with what offices and patients confirm by phone. This page states, with number and date, exactly where each part comes from.')}</p>
+
+<h2 class="font-display">${te('De dónde sale cada dato', 'Where each fact comes from')}</h2>
+<div class="not-prose overflow-auto"><table class="w-full text-sm border-collapse">
+<thead><tr><th class="text-left border-b border-slate-200 py-2 pr-3">${te('Fuente', 'Source')}</th><th class="text-right border-b border-slate-200 py-2">${te('Cantidad', 'Count')}</th></tr></thead>
+<tbody>
+<tr><td class="py-2 pr-3 border-b border-slate-100">${te('Proveedores publicados (existen en el registro federal NPPES)', 'Published providers (exist in the federal NPPES registry)')}</td><td class="py-2 text-right border-b border-slate-100 font-bold">${nf(total)}</td></tr>
+<tr><td class="py-2 pr-3 border-b border-slate-100">${te('Con licencia cotejada contra la Junta de Licenciamiento de Puerto Rico', 'License cross-checked against Puerto Rico\'s Licensing Board')}</td><td class="py-2 text-right border-b border-slate-100 font-bold">${nf(licenciasCotejadas)}</td></tr>
+<tr><td class="py-2 pr-3 border-b border-slate-100">${te('Confirmados por una persona o por la oficina', 'Confirmed by a person or by the office')}</td><td class="py-2 text-right border-b border-slate-100 font-bold">${nf(persona)}</td></tr>
+<tr><td class="py-2 pr-3 border-b border-slate-100">${te('Confirmados contra una fuente pública corroborada', 'Confirmed against a corroborated public source')}</td><td class="py-2 text-right border-b border-slate-100 font-bold">${nf(fuente)}</td></tr>
+<tr><td class="py-2 pr-3">${te('Solo copia del registro federal, todavía sin confirmar', 'Only a copy of the federal registry, not yet confirmed')}</td><td class="py-2 text-right font-bold">${nf(registro)}</td></tr>
+</tbody></table></div>
+<p class="text-slate-600">${te(`${pctCopia} de cada 100 fichas todavía son solo copia del registro federal. Por eso cada ficha te dice de dónde salió cada dato y te pide confirmar al llamar.`, `${pctCopia} out of every 100 profiles are still just a copy of the federal registry. That is why every profile tells you where each fact came from and asks you to confirm it when you call.`)}</p>
+
+<h2 class="font-display">${te('Cuando alguien nos avisa de un error', 'When someone reports an error to us')}</h2>
+<p>${te(`Reportes de teléfono recibidos: <strong>${nf(llamadasRecibidas || 0)}</strong>. Corregidos: <strong>${nf(llamadasCorregidas || 0)}</strong>. Confirmados como buenos: <strong>${nf(llamadasBuenas || 0)}</strong>. Pendientes: <strong>${nf(llamadasPendientes || 0)}</strong>.${diasProm !== null ? ` El promedio entre reportado y resuelto es de <strong>${diasProm} días</strong>.` : ''}`, `Phone reports received: <strong>${nf(llamadasRecibidas || 0)}</strong>. Corrected: <strong>${nf(llamadasCorregidas || 0)}</strong>. Confirmed good: <strong>${nf(llamadasBuenas || 0)}</strong>. Pending: <strong>${nf(llamadasPendientes || 0)}</strong>.${diasProm !== null ? ` The average time from report to resolution is <strong>${diasProm} days</strong>.` : ''}`)}</p>
+<p>${te(`Solicitudes de remoción o de quitar datos personales atendidas: <strong>${nf(remocionesAtendidas || 0)}</strong>.`, `Removal or personal-data-takedown requests handled: <strong>${nf(remocionesAtendidas || 0)}</strong>.`)}</p>
+
+<h2 class="font-display">${te('Qué pasa cuando la gente llama', 'What happens when people call')}</h2>
+${llamadasTotal < 20
+    ? `<p>${te(`Llamadas con seguimiento desde el 28 de septiembre de 2026: <strong>${nf(llamadasTotal)}</strong>. Todavía son pocas respuestas para sacar conclusiones; se publican cuando haya al menos 20.`, `Calls followed up since September 28, 2026: <strong>${nf(llamadasTotal)}</strong>. Still too few responses to draw conclusions; we publish the breakdown once there are at least 20.`)}</p>`
+    : `<p>${te(`Llamadas con seguimiento desde el 28 de septiembre de 2026: <strong>${nf(llamadasTotal)}</strong>.`, `Calls followed up since September 28, 2026: <strong>${nf(llamadasTotal)}</strong>.`)}</p>
+<div class="not-prose overflow-auto"><table class="w-full text-sm border-collapse"><thead><tr><th class="text-left border-b border-slate-200 py-2 pr-3">${te('Resultado', 'Result')}</th><th class="text-right border-b border-slate-200 py-2">${te('Cantidad', 'Count')}</th></tr></thead><tbody>
+${Object.entries(llamadasPorResultado).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<tr><td class="py-2 pr-3 border-b border-slate-100">${RESULTADO_LABEL[k] || escapeHtml(k)}</td><td class="py-2 text-right border-b border-slate-100 font-bold">${nf(v)}</td></tr>`).join('')}
+</tbody></table></div>`}
+
+<h2 class="font-display">${te('Lo que no sabemos', 'What we don\'t know')}</h2>
+<ul>
+<li>${te(`Si el teléfono contesta hoy: solo se confirma cuando alguien llama y lo reporta (arriba).`, `Whether the phone answers today: only confirmed when someone calls and reports it (above).`)}</li>
+<li>${te(`Si acepta pacientes nuevos: solo <strong>${nf(conAccepts || 0)}</strong> de ${nf(total)} fichas lo tienen confirmado.`, `Whether they accept new patients: only <strong>${nf(conAccepts || 0)}</strong> of ${nf(total)} profiles have this confirmed.`)}</li>
+<li>${te(`Qué planes médicos acepta: solo <strong>${nf(conPlans || 0)}</strong> de ${nf(total)} fichas lo tienen confirmado.`, `What health plans they accept: only <strong>${nf(conPlans || 0)}</strong> of ${nf(total)} profiles have this confirmed.`)}</li>
+</ul>
+
+<h2 class="font-display">${te('Cómo corregir un dato', 'How to correct a fact')}</h2>
+<p>${te(`Cada ficha tiene el botón "¿Es tu perfil?" para que la oficina misma corrija sus datos. Si prefieres, escribe a <a href="mailto:angel@angelanderson.com">angel@angelanderson.com</a> o textea al <strong>787-417-7711</strong>.`, `Every profile has an "Is this your profile?" button so the office itself can correct its data. You can also write to <a href="mailto:angel@angelanderson.com">angel@angelanderson.com</a> or text <strong>787-417-7711</strong>.`)}</p>
+
+<p class="text-sm text-slate-500 mt-6">${te('Más:', 'More:')} <a href="/cambios${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold">${te('Historial de cambios →', 'Change history →')}</a> · <a href="/recibo" class="text-teal-700 font-semibold">${te('El recibo público →', 'The public receipt →')}</a></p>
+<p class="text-xs text-slate-400 mt-6">${te(`Actualizado ${hoy}.`, `Updated ${hoy}.`)}</p>
+</section>
+`
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400')
+  res.status(200).send(layout({
+    title: te('Cómo sabemos lo que decimos · Registro Médico PR', 'How we know what we say · Registro Médico PR'),
+    description: te(`De dónde sale cada dato del Registro Médico PR: ${nf(total)} proveedores, ${nf(persona)} confirmados por una persona, ${pctCopia} de cada 100 todavía solo copia del registro federal. Actualizado ${hoy}.`, `Where every fact in Registro Médico PR comes from: ${nf(total)} providers, ${nf(persona)} confirmed by a person, ${pctCopia} out of 100 still just a copy of the federal registry. Updated ${hoy}.`),
+    slug: 'como-sabemos',
+    lang: en ? 'en' : 'es',
+    ogImage: REGISTRO_OG,
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+    canonicalUrl: `https://registromedicopr.com/como-sabemos${en ? '?lang=en' : ''}`,
+    bodyHtml: body,
+    jsonLd: {
+      '@context': 'https://schema.org', '@type': 'WebPage',
+      url: 'https://registromedicopr.com/como-sabemos',
+      name: 'Cómo sabemos lo que decimos · Registro Médico PR',
+      dateModified: new Date().toISOString().slice(0, 10),
+      inLanguage: en ? 'en' : 'es',
+      description: 'De dónde sale cada dato del Registro Médico PR, con número y fecha.',
+      author: VERIFICADOR,
+      publisher: EDITOR_REGISTRO,
+    },
+  }))
 }
 
 // =============== /cambios — historial y roadmap del registro (registromedicopr.com) ===============
@@ -22948,6 +23099,7 @@ export default async function handler(req: any, res: any) {
     case 'rentas': return await handleRentas(req, res, { layout, escapeHtml, supabase })
     case 'registro-hub': return await handleRegistroHub(req, res)
     case 'cambios': return await handleCambios(req, res)
+    case 'como-sabemos': return await handleComoSabemos(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)
     case 'calculadora': return handleCalculadora(req, res)

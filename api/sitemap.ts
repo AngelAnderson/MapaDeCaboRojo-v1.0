@@ -234,6 +234,7 @@ export default async function handler(req: any, res: any) {
       { slug: 'registro/estado', priority: 0.9, changefreq: 'weekly' },
       { slug: 'registro/mapa', priority: 0.85, changefreq: 'weekly' },
       { slug: 'cambios', priority: 0.8, changefreq: 'weekly' },
+      { slug: 'como-sabemos', priority: 0.75, changefreq: 'daily' },   // 28 sep 2026: la línea de neutralidad
       { slug: 'comparte', priority: 0.85, changefreq: 'monthly' },
       { slug: 'porque', priority: 0.9, changefreq: 'monthly' },
       // Par de /porque: aquella explica POR QUÉ, esta contesta ¿Y AHORA QUÉ?

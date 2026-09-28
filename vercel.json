@@ -288,6 +288,10 @@
       "destination": "/api/mapa-pages?page=cambios"
     },
     {
+      "source": "/como-sabemos",
+      "destination": "/api/mapa-pages?page=como-sabemos"
+    },
+    {
       "source": "/raras",
       "destination": "/api/mapa-pages?page=raras"
     },
