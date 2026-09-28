@@ -4267,7 +4267,7 @@ function shareRow(opts: { text: string; url: string; toWho: string; dark?: boole
     <p class="font-bold text-base mb-1">📤 Pásalo a quien le toca</p>
     <p class="text-sm ${tone.sub} mb-3">${escapeHtml(opts.toWho)}</p>
     <div class="flex flex-wrap gap-2">
-      <a href="${wa}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-full text-sm"><i class="fa-brands fa-whatsapp"></i> Compartir por WhatsApp</a>
+      <a href="${wa}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-4 py-2.5 rounded-full text-sm"><i class="fa-brands fa-whatsapp"></i> Compartir por WhatsApp</a>
       <button type="button" class="share-copy inline-flex items-center gap-2 ${tone.copyBtn} font-bold px-4 py-2.5 rounded-full text-sm" data-copy="${escapeHtml(full)}"><i class="fa-regular fa-copy"></i> Copiar el texto</button>
     </div>
   </div>`
@@ -4401,7 +4401,7 @@ function waFamiliaBlock(opts: { name: string; specLabel: string; muni: string; p
   <p class="font-bold text-emerald-900 text-base">${en ? 'Is this for your mom or dad?' : '¿Esto es pa\' tu mamá o tu papá?'}</p>
   <p class="text-sm text-emerald-800 mt-1">${en ? 'Send it ready to go: name, specialty, phone, and the reminder to confirm the plan. One tap.' : 'Mándaselo listo: nombre, especialidad, teléfono y el recordatorio de confirmar el plan. Un solo toque.'}</p>
   <div class="mt-3 flex flex-wrap gap-2">
-    <a href="${wa}" target="_blank" rel="noopener" onclick="try{gtag('event','share_familia')}catch(e){}" class="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-3 rounded-xl text-base"><i class="fa-brands fa-whatsapp text-lg"></i> ${en ? 'Send by WhatsApp to mom or dad' : 'Enviárselo por WhatsApp a mami o papi'}</a>
+    <a href="${wa}" target="_blank" rel="noopener" onclick="try{gtag('event','share_familia')}catch(e){}" class="inline-flex items-center gap-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-5 py-3 rounded-xl text-base"><i class="fa-brands fa-whatsapp text-lg"></i> ${en ? 'Send by WhatsApp to mom or dad' : 'Enviárselo por WhatsApp a mami o papi'}</a>
     <button type="button" class="share-copy inline-flex items-center gap-2 bg-white border border-emerald-300 text-emerald-800 font-bold px-4 py-3 rounded-xl text-sm" data-copy="${escapeHtml(text)}"><i class="fa-regular fa-copy"></i> ${en ? 'Copy the message' : 'Copiar el mensaje'}</button>
   </div>
 </div>`
@@ -7005,7 +7005,7 @@ async function handleEspecialista(req: any, res: any) {
     <form id="cita-form" class="flex flex-wrap gap-2 mt-3">
       <input type="tel" name="phone" required placeholder="787-000-0000" inputmode="tel" class="flex-1 min-w-[160px] min-h-[48px] px-3 rounded-xl border border-stone-300 text-base">
       <select name="plan" class="min-h-[48px] px-3 rounded-xl border border-stone-300 text-base bg-white"><option value="">${t('Mi plan (opcional)', 'My plan (optional)')}</option>${PR_PLANS.map(p => `<option value="${escapeHtml(p.v)}">${escapeHtml(p.l)}</option>`).join('')}</select>
-      <button type="submit" class="min-h-[48px] px-5 rounded-xl bg-amber-600 text-white font-bold">${t('Déjalo pedido', 'Leave it requested')}</button>
+      <button type="submit" class="min-h-[48px] px-5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-bold">${t('Déjalo pedido', 'Leave it requested')}</button>
     </form>
     <p id="cita-ok" hidden class="m-0 mt-2 text-sm text-teal-800 font-semibold">✓ ${t('Anotado. El lunes te llega el texto.', 'Noted. The text arrives Monday.')}</p>
   </div>
