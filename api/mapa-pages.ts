@@ -7331,7 +7331,7 @@ ${waFamiliaBlock({ name, specLabel, muni, phone: place.phone, url: pageUrl, en: 
 
 ${antesDeLlamar({ specLabel, en: lang === 'en' })}
 
-<div class="not-prose mt-6 rounded-2xl overflow-hidden border border-slate-200"><iframe src="${mapsEmbed}" width="100%" height="280" style="border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+<div class="not-prose mt-6 rounded-2xl overflow-hidden border border-slate-200"><iframe src="${mapsEmbed}" title="${t('Mapa de la oficina', 'Office map')}" width="100%" height="280" style="border:0;" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
 
 ${claimForm}
 
