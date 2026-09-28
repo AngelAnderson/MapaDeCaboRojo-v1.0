@@ -487,7 +487,7 @@ ${isPRSF ? '<meta name="google-site-verification" content="N42qvVBU_PKj99wLrOAEe
 <meta property="og:locale" content="es_PR">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="${ogImageUrl}">
-<link rel="icon" href="/favicon.ico">
+${isReg ? `<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230f766e'/%3E%3Cpath d='M13 7h6v6h6v6h-6v6h-6v-6H7v-6h6z' fill='%23fff'/%3E%3C/svg%3E">` : `<link rel="icon" href="/favicon.ico">`}
 <script async src="https://www.googletagmanager.com/gtag/js?id=${GA}"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA}');</script>
 <script defer src="/_vercel/insights/script.js"></script>
