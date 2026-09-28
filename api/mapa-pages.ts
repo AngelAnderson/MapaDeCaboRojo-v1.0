@@ -5276,11 +5276,11 @@ async function handleComoSabemos(req: any, res: any) {
   const [
     { count: totalNpi }, { count: registroCount }, { count: personaCount },
     { count: conAccepts }, { count: conPlans },
-    { count: llamadasRecibidas }, { count: llamadasCorregidas }, { count: llamadasBuenas }, { count: llamadasPendientes },
+    { count: llamadasRecibidas }, { count: llamadasCorregidas }, { count: llamadasBuenas }, { count: llamadasPendientes }, { count: llamadasCerradas },
     { data: resueltos },
     { count: remocionesAtendidas },
     { data: licenciasRows },
-    { data: llamadaRows },
+    llamadaCounts,
   ] = await Promise.all([
     baseNpi(),
     baseNpi().or(registroOrFilter),
@@ -5290,19 +5290,25 @@ async function handleComoSabemos(req: any, res: any) {
     supabase.from('telefono_reportado').select('id', { count: 'exact', head: true }),
     supabase.from('telefono_reportado').select('id', { count: 'exact', head: true }).eq('estado', 'corregido'),
     supabase.from('telefono_reportado').select('id', { count: 'exact', head: true }).eq('estado', 'verificado_bueno'),
-    supabase.from('telefono_reportado').select('id', { count: 'exact', head: true }).not('estado', 'in', '("corregido","verificado_bueno")'),
+    supabase.from('telefono_reportado').select('id', { count: 'exact', head: true }).eq('estado', 'pendiente'),
+    supabase.from('telefono_reportado').select('id', { count: 'exact', head: true }).eq('estado', 'cerrado'),
     supabase.from('telefono_reportado').select('reportado_en,resuelto_en').not('resuelto_en', 'is', null),
     supabase.from('remocion_solicitudes').select('id', { count: 'exact', head: true })
       .not('atendido_at', 'is', null).not('motivo', 'ilike', 'PRUEBA%').neq('motivo', '1'),
     supabase.from('testigo_orcps').select('npi').not('licencia_numero', 'is', null),
-    supabase.from('registro_resultados_llamada').select('resultado').not('ficha', 'like', '/prueba%'),
+    // Conteos, no filas: PostgREST corta en 1,000 filas y la tabla pasa de eso en días (28 sep 2026).
+    Promise.all([null, 'descartado', 'cita', 'contesto_no_resolvio', 'no_contestaron', 'no_aceptan', 'otra_opcion'].map((r) => {
+      let q: any = supabase.from('registro_resultados_llamada').select('cid', { count: 'exact', head: true }).not('ficha', 'like', '/prueba%')
+      if (r) q = q.eq('resultado', r)
+      return q.then((x: any) => [r || 'total', x.count || 0] as [string, number])
+    })).then((pares) => Object.fromEntries(pares) as Record<string, number>),
   ])
 
   const total = totalNpi || 0
   const registro = registroCount || 0
   const persona = personaCount || 0
   const fuente = Math.max(0, total - registro - persona)
-  const pctCopia = total ? Math.round((registro / total) * 100) : 0
+  const pctCopia = total ? (registro / total * 100).toFixed(1) : '0'
 
   const licenciasCotejadas = new Set((licenciasRows || []).map((r: any) => r.npi)).size
 
@@ -5311,15 +5317,17 @@ async function handleComoSabemos(req: any, res: any) {
     .filter((n: number) => Number.isFinite(n) && n >= 0)
   const diasProm = diasResuelto.length ? Math.round(diasResuelto.reduce((a: number, b: number) => a + b, 0) / diasResuelto.length) : null
 
-  const llamadasValidas = (llamadaRows || []).filter((r: any) => r.resultado && r.resultado !== 'descartado')
-  const llamadasTotal = llamadasValidas.length
+  const lc: Record<string, number> = llamadaCounts || {}
+  const llamadasConSeguimiento = lc.total || 0
+  const llamadasCerraronHoja = lc.descartado || 0
   const llamadasPorResultado: Record<string, number> = {}
-  for (const r of llamadasValidas) llamadasPorResultado[r.resultado] = (llamadasPorResultado[r.resultado] || 0) + 1
+  for (const k of ['cita', 'contesto_no_resolvio', 'no_contestaron', 'no_aceptan', 'otra_opcion']) if (lc[k]) llamadasPorResultado[k] = lc[k]
+  const llamadasTotal = Object.values(llamadasPorResultado).reduce((a, b) => a + b, 0)
   const RESULTADO_LABEL: Record<string, string> = {
     cita: te('Consiguió cita', 'Got an appointment'),
     contesto_no_resolvio: te('Contestaron pero no resolvió', 'They answered but it did not resolve it'),
     no_contestaron: te('No contestaron', 'No answer'),
-    no_aceptan: te('No aceptan pacientes nuevos', 'Not accepting new patients'),
+    no_aceptan: te('No aceptan pacientes nuevos o su plan', 'Not accepting new patients or their plan'),
     otra_opcion: te('Buscó otra opción', 'Looked elsewhere'),
   }
 
@@ -5340,16 +5348,16 @@ async function handleComoSabemos(req: any, res: any) {
 <tr><td class="py-2 pr-3 border-b border-slate-100">${te('Confirmados contra una fuente pública corroborada', 'Confirmed against a corroborated public source')}</td><td class="py-2 text-right border-b border-slate-100 font-bold">${nf(fuente)}</td></tr>
 <tr><td class="py-2 pr-3">${te('Solo copia del registro federal, todavía sin confirmar', 'Only a copy of the federal registry, not yet confirmed')}</td><td class="py-2 text-right font-bold">${nf(registro)}</td></tr>
 </tbody></table></div>
-<p class="text-slate-600">${te(`${pctCopia} de cada 100 fichas todavía son solo copia del registro federal. Por eso cada ficha te dice de dónde salió cada dato y te pide confirmar al llamar.`, `${pctCopia} out of every 100 profiles are still just a copy of the federal registry. That is why every profile tells you where each fact came from and asks you to confirm it when you call.`)}</p>
+<p class="text-slate-600">${te(`El ${pctCopia}% de las fichas todavía son solo copia del registro federal. Por eso cada ficha te dice de dónde salió cada dato y te pide confirmar al llamar.`, `${pctCopia}% of profiles are still just a copy of the federal registry. That is why every profile tells you where each fact came from and asks you to confirm it when you call.`)}</p>
 
 <h2 class="font-display">${te('Cuando alguien nos avisa de un error', 'When someone reports an error to us')}</h2>
-<p>${te(`Reportes de teléfono recibidos: <strong>${nf(llamadasRecibidas || 0)}</strong>. Corregidos: <strong>${nf(llamadasCorregidas || 0)}</strong>. Confirmados como buenos: <strong>${nf(llamadasBuenas || 0)}</strong>. Pendientes: <strong>${nf(llamadasPendientes || 0)}</strong>.${diasProm !== null ? ` El promedio entre reportado y resuelto es de <strong>${diasProm} días</strong>.` : ''}`, `Phone reports received: <strong>${nf(llamadasRecibidas || 0)}</strong>. Corrected: <strong>${nf(llamadasCorregidas || 0)}</strong>. Confirmed good: <strong>${nf(llamadasBuenas || 0)}</strong>. Pending: <strong>${nf(llamadasPendientes || 0)}</strong>.${diasProm !== null ? ` The average time from report to resolution is <strong>${diasProm} days</strong>.` : ''}`)}</p>
+<p>${te(`Reportes de teléfono recibidos: <strong>${nf(llamadasRecibidas || 0)}</strong>. Corregidos: <strong>${nf(llamadasCorregidas || 0)}</strong>. Confirmados como buenos: <strong>${nf(llamadasBuenas || 0)}</strong>. Cerrados sin poder confirmarlo: <strong>${nf(llamadasCerradas || 0)}</strong>. Pendientes de una llamada de prueba: <strong>${nf(llamadasPendientes || 0)}</strong>.${diasProm !== null ? ` El promedio entre reportado y resuelto es de <strong>${diasProm} días</strong>.` : ''}`, `Phone reports received: <strong>${nf(llamadasRecibidas || 0)}</strong>. Corrected: <strong>${nf(llamadasCorregidas || 0)}</strong>. Confirmed good: <strong>${nf(llamadasBuenas || 0)}</strong>. Closed without being able to confirm: <strong>${nf(llamadasCerradas || 0)}</strong>. Waiting for a test call: <strong>${nf(llamadasPendientes || 0)}</strong>.${diasProm !== null ? ` The average time from report to resolution is <strong>${diasProm} days</strong>.` : ''}`)}</p>
 <p>${te(`Solicitudes de remoción o de quitar datos personales atendidas: <strong>${nf(remocionesAtendidas || 0)}</strong>.`, `Removal or personal-data-takedown requests handled: <strong>${nf(remocionesAtendidas || 0)}</strong>.`)}</p>
 
 <h2 class="font-display">${te('Qué pasa cuando la gente llama', 'What happens when people call')}</h2>
 ${llamadasTotal < 20
-    ? `<p>${te(`Llamadas con seguimiento desde el 28 de septiembre de 2026: <strong>${nf(llamadasTotal)}</strong>. Todavía son pocas respuestas para sacar conclusiones; se publican cuando haya al menos 20.`, `Calls followed up since September 28, 2026: <strong>${nf(llamadasTotal)}</strong>. Still too few responses to draw conclusions; we publish the breakdown once there are at least 20.`)}</p>`
-    : `<p>${te(`Llamadas con seguimiento desde el 28 de septiembre de 2026: <strong>${nf(llamadasTotal)}</strong>.`, `Calls followed up since September 28, 2026: <strong>${nf(llamadasTotal)}</strong>.`)}</p>
+    ? `<p>${te(`Desde el 28 de septiembre de 2026, después de tocar Llamar, le preguntamos a la gente cómo le fue. Llamadas: <strong>${nf(llamadasConSeguimiento)}</strong>. Contestaron qué pasó: <strong>${nf(llamadasTotal)}</strong>. Todavía son pocas respuestas para sacar conclusiones; el reparto se publica cuando haya al menos 20.`, `Since September 28, 2026, after people tap Call we ask how it went. Calls: <strong>${nf(llamadasConSeguimiento)}</strong>. Told us what happened: <strong>${nf(llamadasTotal)}</strong>. Still too few responses to draw conclusions; the breakdown is published once there are at least 20.`)}</p>`
+    : `<p>${te(`Desde el 28 de septiembre de 2026, después de tocar Llamar, le preguntamos a la gente cómo le fue. Llamadas: <strong>${nf(llamadasConSeguimiento)}</strong>. Contestaron qué pasó: <strong>${nf(llamadasTotal)}</strong> (otras <strong>${nf(llamadasCerraronHoja)}</strong> cerraron la pregunta sin contestar). Es una muestra de quien quiso contestar, no de todas las llamadas.`, `Since September 28, 2026, after people tap Call we ask how it went. Calls: <strong>${nf(llamadasConSeguimiento)}</strong>. Told us what happened: <strong>${nf(llamadasTotal)}</strong> (another <strong>${nf(llamadasCerraronHoja)}</strong> closed the question without answering). It is a sample of those who chose to answer, not of every call.`)}</p>
 <div class="not-prose overflow-auto"><table class="w-full text-sm border-collapse"><thead><tr><th class="text-left border-b border-slate-200 py-2 pr-3">${te('Resultado', 'Result')}</th><th class="text-right border-b border-slate-200 py-2">${te('Cantidad', 'Count')}</th></tr></thead><tbody>
 ${Object.entries(llamadasPorResultado).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<tr><td class="py-2 pr-3 border-b border-slate-100">${RESULTADO_LABEL[k] || escapeHtml(k)}</td><td class="py-2 text-right border-b border-slate-100 font-bold">${nf(v)}</td></tr>`).join('')}
 </tbody></table></div>`}
@@ -5373,7 +5381,7 @@ ${Object.entries(llamadasPorResultado).sort((a, b) => b[1] - a[1]).map(([k, v]) 
   res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400')
   res.status(200).send(layout({
     title: te('Cómo sabemos lo que decimos · Registro Médico PR', 'How we know what we say · Registro Médico PR'),
-    description: te(`De dónde sale cada dato del Registro Médico PR: ${nf(total)} proveedores, ${nf(persona)} confirmados por una persona, ${pctCopia} de cada 100 todavía solo copia del registro federal. Actualizado ${hoy}.`, `Where every fact in Registro Médico PR comes from: ${nf(total)} providers, ${nf(persona)} confirmed by a person, ${pctCopia} out of 100 still just a copy of the federal registry. Updated ${hoy}.`),
+    description: te(`De dónde sale cada dato del Registro Médico PR: ${nf(total)} proveedores, ${nf(persona)} confirmados por una persona, el ${pctCopia}% todavía solo copia del registro federal. Actualizado ${hoy}.`, `Where every fact in Registro Médico PR comes from: ${nf(total)} providers, ${nf(persona)} confirmed by a person, ${pctCopia}% still just a copy of the federal registry. Updated ${hoy}.`),
     slug: 'como-sabemos',
     lang: en ? 'en' : 'es',
     ogImage: REGISTRO_OG,
