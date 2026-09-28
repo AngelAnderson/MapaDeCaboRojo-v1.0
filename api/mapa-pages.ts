@@ -616,6 +616,19 @@ html.dark .border-purple-200{border-color:#7e22ce !important;}
 html.dark .border-emerald-300,html.dark .border-emerald-400{border-color:#047857 !important;}
 html.dark .border-amber-400,html.dark .border-amber-500{border-color:#b45309 !important;}
 html.dark [class*="from-teal-50"],html.dark [class*="from-amber-50"],html.dark [class*="from-brand-50"]{background-image:none !important;background-color:#1e293b !important;}
+/* design-review 28 sep 2026: la ficha (69% de las sesiones) está hecha en stone, no en slate, y el
+   modo oscuro no la cubría: texto #1c1917 sobre #1e293b (1.19:1). Lighthouse corre con el tema del
+   sistema; un iPhone en modo oscuro veía la Hoja de evidencia casi en negro. */
+html.dark .text-stone-900,html.dark .text-stone-800{color:#f1f5f9 !important;}
+html.dark .text-stone-700,html.dark .text-stone-600{color:#cbd5e1 !important;}
+html.dark .text-stone-500,html.dark .text-stone-400{color:#94a3b8 !important;}
+html.dark .bg-stone-50,html.dark .bg-stone-100{background-color:#1e293b !important;}
+html.dark .border-stone-200,html.dark .border-stone-300{border-color:#475569 !important;}
+html.dark textarea{background-color:#1e293b !important;color:#e2e8f0 !important;border-color:#475569 !important;}
+html.dark textarea::placeholder{color:#94a3b8 !important;}
+html.dark .bg-amber-400.text-slate-900,html.dark .bg-amber-400 .text-slate-900,html.dark .bg-amber-300.text-slate-900{color:#0f172a !important;}
+html.dark .bg-emerald-500,html.dark .bg-emerald-600{background-color:#047857 !important;}
+html.dark .text-rose-900{color:#fecdd3 !important;}
 </style>` : ''}
 ${jsonLd}
 </head>
