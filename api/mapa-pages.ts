@@ -19364,6 +19364,16 @@ const SPEC_INFO_EN: Record<string, { treats: string; whenToGo: string; note: str
 }
 const SPEC_BY_URL: Record<string, typeof REGISTRY_SPECS[number]> = {}
 REGISTRY_SPECS.forEach(x => { SPEC_BY_URL[specToUrl(x.s)] = x })
+// Alias de slugs que la gente busca pero que no coinciden con el nombre oficial de la
+// especialidad (28 sep 2026: "maxilofacial bayamon" caía en 301 a /registro con 545
+// impresiones en GSC). Apunta al slug real ya presente en SPEC_BY_URL.
+const SPEC_URL_ALIAS: Record<string, string> = {
+  'maxilofacial': 'cirujano-oral',
+  'cirujano-maxilofacial': 'cirujano-oral',
+}
+Object.entries(SPEC_URL_ALIAS).forEach(([alias, real]) => {
+  if (SPEC_BY_URL[real] && !SPEC_BY_URL[alias]) SPEC_BY_URL[alias] = SPEC_BY_URL[real]
+})
 const HUB_REGIONS = ['Oeste', 'Norte', 'Centro', 'Sur', 'Este', 'Metro'] as const
 // Main towns per region → chips on the region hub that link the /registro/:spec/:pueblo pages
 // (internal crawl path + user shortcut to "[especialidad] [pueblo]").
