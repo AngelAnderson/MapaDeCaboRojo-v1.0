@@ -7305,7 +7305,7 @@ ${puertaHub}
       fetch('/api/mapa-pages?page=especialista-claim',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
        .then(function(r){return r.json();}).then(function(d){
          st.classList.remove('hidden');st.className='text-sm text-emerald-700 font-semibold';
-         st.textContent='✓ Gracias. Lo revisamos y te confirmamos. — Angel';f.querySelector('button').style.display='none';
+         st.textContent='✓ Gracias. Lo revisamos y te confirmamos. - Angel';f.querySelector('button').style.display='none';
        }).catch(function(){st.classList.remove('hidden');st.className='text-sm text-red-600';st.textContent='No se pudo enviar. Escríbele al Veci al 787-417-7711.';btn.disabled=false;btn.textContent='Enviar confirmación';});
     });
   })();
@@ -19890,7 +19890,7 @@ ${lineaPAS(x.s, en)}`
 ${reformaHtml}
 ${info.treats ? `<p class="text-slate-600 mt-1">${escapeHtml(info.treats)} ${escapeHtml(info.whenToGo)}</p>` : ''}
 ${info.note ? `<p class="text-sm text-slate-500 mt-1"><i class="fa-solid fa-circle-info text-teal-600"></i> ${escapeHtml(info.note)}</p>` : ''}`
-    if (nearby.length) bodyT += `<h2 class="mt-6">${t('También cerca', 'Also nearby')}${townReg ? ` — ${t('en el', 'in')} ${escapeHtml(townReg)}` : ''}</h2><div class="not-prose mt-2 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${theadOf(true)}<tbody>${rowsOf(nearby.slice(0, 60), true)}</tbody></table></div>`
+    if (nearby.length) bodyT += `<h2 class="mt-6">${t('También cerca', 'Also nearby')}${townReg ? `, ${t('en el', 'in the')} ${escapeHtml(townReg)}` : ''}</h2><div class="not-prose mt-2 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${theadOf(true)}<tbody>${rowsOf(nearby.slice(0, 60), true)}</tbody></table></div>`
     if (inTown.length || nearby.length) bodyT += planNotaHub(en)
     if (!inTown.length && !nearby.length) bodyT += `<div class="not-prose mt-5 bg-amber-50 border border-amber-200 rounded-xl p-5"><p class="text-amber-900 font-semibold">${t(`No hay ${escapeHtml(x.l.toLowerCase())} verificados cerca de ${escapeHtml(muni.name)}.`, `No verified ${escapeHtml(labelLow)} near ${escapeHtml(muni.name)}.`)}</p><p class="text-sm text-amber-800 mt-1"><a href="/registro/${specUrl}/metro${lp}" class="font-semibold underline">${t('Mira el área metro', 'See the metro area')} (${metroCount}) →</a></p></div>`
     // ── Tejido entre hubs (3 sep 2026) ──────────────────────────────────────────
