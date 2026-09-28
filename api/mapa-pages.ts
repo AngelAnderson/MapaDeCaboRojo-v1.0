@@ -5771,7 +5771,7 @@ async function handleRegistro(req: any, res: any) {
      253 de 461 textos bajo 15 px y el buscador casi fuera de la 1ra pantalla. Ahora el buscador va arriba. -->
 <h1 class="!text-3xl sm:!text-4xl !leading-tight">${t('Registro de Especialistas Médicos de Puerto Rico', 'Registry of Puerto Rico Medical Specialists')}</h1>
 <p class="not-prose text-xl text-slate-800 font-semibold mt-2 leading-snug">${t('¿A cuál médico llamo hoy? Escoge especialidad y región: en 10 segundos tienes el nombre, el pueblo y el teléfono.', 'Which doctor do I call today? Pick specialty and region: in 10 seconds you have the name, the town, and the phone.')}</p>
-<p class="not-prose text-lg text-slate-700 mt-2">${t(`Gratis, sin cuenta y sin plan. ${totalConNpi} proveedores con NPI del registro federal NPPES, ${totalVerified} en las ${REGISTRY_SPECS.length} categorías del buscador, en español.`, `Free, no account, no plan required. ${totalConNpi} providers with an NPI from the federal NPPES registry, ${totalVerified} across the ${REGISTRY_SPECS.length} search categories, in Spanish.`)}</p>
+<p class="not-prose text-lg text-slate-700 mt-2">${t(`Gratis, sin cuenta y sin plan. ${totalVerified} proveedores de salud en ${REGISTRY_SPECS.length} especialidades, sacados del registro federal de médicos (NPPES).`, `Free, no account, no plan required. ${totalConNpi} providers with an NPI from the federal NPPES registry, ${totalVerified} across the ${REGISTRY_SPECS.length} search categories, in Spanish.`)}</p>
 
 <div id="reg-tool" class="not-prose mt-5 bg-white border-2 border-teal-300 rounded-2xl p-6 shadow-sm scroll-mt-24">
   <label class="block">
