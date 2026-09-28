@@ -7003,8 +7003,8 @@ async function handleEspecialista(req: any, res: any) {
     <p class="m-0 font-bold text-stone-900">${t('Ahora mismo no contestan.', 'Right now nobody answers.')}</p>
     <p class="m-0 text-sm text-stone-700 mt-1">${t('Deja tu número y el lunes en la mañana te texteamos: "ya abrieron, llama". Gratis. Solo ese texto.', 'Leave your number and Monday morning we text you: "they are open, call now". Free. Just that one text.')}</p>
     <form id="cita-form" class="flex flex-wrap gap-2 mt-3">
-      <input type="tel" name="phone" required placeholder="787-000-0000" inputmode="tel" class="flex-1 min-w-[160px] min-h-[48px] px-3 rounded-xl border border-stone-300 text-base">
-      <select name="plan" class="min-h-[48px] px-3 rounded-xl border border-stone-300 text-base bg-white"><option value="">${t('Mi plan (opcional)', 'My plan (optional)')}</option>${PR_PLANS.map(p => `<option value="${escapeHtml(p.v)}">${escapeHtml(p.l)}</option>`).join('')}</select>
+      <input type="tel" name="phone" required placeholder="787-000-0000" inputmode="tel" autocomplete="tel" aria-label="${t('Tu número de celular', 'Your cell number')}" class="flex-1 min-w-[160px] min-h-[48px] px-3 rounded-xl border border-stone-300 text-base">
+      <select name="plan" aria-label="${t('Tu plan médico (opcional)', 'Your health plan (optional)')}" class="min-h-[48px] px-3 rounded-xl border border-stone-300 text-base bg-white"><option value="">${t('Mi plan (opcional)', 'My plan (optional)')}</option>${PR_PLANS.map(p => `<option value="${escapeHtml(p.v)}">${escapeHtml(p.l)}</option>`).join('')}</select>
       <button type="submit" class="min-h-[48px] px-5 rounded-xl bg-amber-700 hover:bg-amber-800 text-white font-bold">${t('Déjalo pedido', 'Leave it requested')}</button>
     </form>
     <p id="cita-ok" hidden class="m-0 mt-2 text-sm text-teal-800 font-semibold">✓ ${t('Anotado. El lunes te llega el texto.', 'Noted. The text arrives Monday.')}</p>
