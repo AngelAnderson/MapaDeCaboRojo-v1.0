@@ -28,6 +28,22 @@ Cada récord junta data pública verificable + data propia del substrato, y cier
 
 Regla de data: todo per cápita sale de las vistas canónicas (`v_registro_muni_ratio` / `v_registro_muni_spec`), nunca de `places.region` crudo.
 
+### Quién contesta (desde 28 sep 2026): el foco del Registro
+
+> *"En Puerto Rico, conseguir médico no es un problema de información. Es un problema de quién contesta."* Canon y roadmap: `~/Dropbox/Claude/Outbox/Estrategia/Registro-Quien-Contesta-2026-09-28.md`.
+
+**La regla de producto:** toda feature del Registro tiene que **resolver**, **aprender** o **descubrir**. Si no hace ninguna de las 3, sobra.
+
+| Capa | Qué hay en el código | Dónde se lee |
+|---|---|---|
+| Resolver | Hoja "¿Cómo te fue con la llamada?" (5 resultados: `cita` · `contesto_no_resolvio` · `no_contestaron` · `no_aceptan` · `otra_opcion`; `descartado` si la cierra). Sale al volver de tocar Llamar (8 s a 2 h), 1 vez por llamada. Script del registrador en `api/mapa-pages.ts` (bloque `isReg`), handler `handleRegistroLog` con allowlist `REGISTRO_EVENTS` + `CALL_OUTCOMES`. | vista `registro_resultados_llamada` (1 fila por intento, unida por `registro_events.cid`, id aleatorio sin datos de la persona) |
+| Aprender | Reportes de teléfono (`telefono_reportado`) y resultados malos por ficha. | vista `registro_fallos_pendientes`: cada fila es una ficha a corregir esa semana |
+| Descubrir | Presión = visitas 28 días a `/registro/<esp>/<pueblo>` ÷ proveedores alcanzables. La etiqueta "cubierto" de desiertos cuenta proveedores, no capacidad. | vista `registro_presion` |
+
+**Reglas de medición (2 errores del 28 sep):** visitas = `ga4_humano` con `dim='sessionSourceMedium'` (nunca sumar todas las dims) · `click_to_call` en GA4 incluye los botones de las listas desde el 22 sep 10:26pm (3ff08b2): no se compara con antes · resultados públicos solo con hechos observados, nunca proyecciones.
+
+**Dinero (línea roja):** nadie paga para parecer que resuelve mejor de lo que los datos dicen. Nunca se cobra a una oficina por llamada o paciente enviado (Anti-Kickback). La verificación básica es gratis.
+
 ## El motor SEO que se auto-repara (fabrica-seo)
 
 Cada noche (4:45am AT) la edge function `fabrica-seo` (repo Vecinoai) lee Search Console, encuentra páginas "borde de página 1" (posición 3-15, impresiones reales, CTR flojo) y escribe título/meta mejorados a `places.seo_title/seo_description` (máx. 3/noche). Cada cambio es un **experimento** en `seo_experiments` con baseline; a los 14 días el motor re-mide el CTR contra GSC y decide solo: se queda (`kept`) o **revierte automáticamente** (`reverted`). Recibo diario en `nightly_receipts` (routine `fabrica-seo`). Las páginas `/negocio` y `/farmacia` respetan los overrides; sin override usan la fórmula CTR (`Nombre en Pueblo · Teléfono, Horario y Dirección`) + FAQPage JSON-LD + badge "Abierto ahora" calculado en tiempo real (AST).
