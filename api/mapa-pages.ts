@@ -19913,7 +19913,7 @@ ${info.note ? `<p class="text-sm text-slate-500 mt-1"><i class="fa-solid fa-circ
       if (vecinos.length) {
         bodyT += `<h2 class="mt-6">${t(`${escapeHtml(cleanEs)} en pueblos cercanos`, `${escapeHtml(cleanEn)} in nearby towns`)}</h2>
 <p class="not-prose text-sm text-slate-600">${t('Si en tu pueblo no hay o no te cogen, estos quedan en la misma región.', 'If your town has none or they cannot take you, these are in the same region.')}</p>
-<p class="not-prose mt-2 flex flex-wrap gap-2">${vecinos.map(([m, n]) => `<a href="/registro/${specUrl}/${specToUrl(m)}${lp}" class="inline-flex items-center gap-1 px-3 py-1.5 border border-slate-300 rounded-full text-sm text-slate-700 hover:border-teal-600 hover:text-teal-700">${escapeHtml(m)} <span class="text-slate-400">${n}</span></a>`).join('')}</p>`
+<p class="not-prose mt-2 flex flex-wrap gap-2">${vecinos.map(([m, n]) => `<a href="/registro/${specUrl}/${specToUrl(m)}${lp}" class="inline-flex items-center gap-1 min-h-[44px] px-3.5 py-1.5 border border-slate-300 rounded-full text-[15px] text-slate-700 hover:border-teal-600 hover:text-teal-700">${escapeHtml(m)} <span class="text-slate-400">${n}</span></a>`).join('')}</p>`
       }
 
       const { data: otras } = await supabase.from('places')
@@ -19931,7 +19931,7 @@ ${info.note ? `<p class="text-sm text-slate-500 mt-1"><i class="fa-solid fa-circ
         .sort((a, b) => b.n - a.n).slice(0, 14)
       if (chips.length) {
         bodyT += `<h2 class="mt-6">${t(`Otras especialidades en ${escapeHtml(muni.name)}`, `Other specialties in ${escapeHtml(muni.name)}`)}</h2>
-<p class="not-prose mt-2 flex flex-wrap gap-2">${chips.map(c => `<a href="/registro/${specToUrl(c.spec!.s)}/${muniSlug}${lp}" class="inline-flex items-center gap-1 px-3 py-1.5 border border-slate-300 rounded-full text-sm text-slate-700 hover:border-teal-600 hover:text-teal-700">${c.spec!.e} ${escapeHtml(cleanSpecLabel(c.spec!.l))} <span class="text-slate-400">${c.n}</span></a>`).join('')}</p>`
+<p class="not-prose mt-2 flex flex-wrap gap-2">${chips.map(c => `<a href="/registro/${specToUrl(c.spec!.s)}/${muniSlug}${lp}" class="inline-flex items-center gap-1 min-h-[44px] px-3.5 py-1.5 border border-slate-300 rounded-full text-[15px] text-slate-700 hover:border-teal-600 hover:text-teal-700">${c.spec!.e} ${escapeHtml(cleanSpecLabel(c.spec!.l))} <span class="text-slate-400">${c.n}</span></a>`).join('')}</p>`
       }
     }
     bodyT += `<p class="not-prose mt-4 text-sm"><a href="/registro/${specUrl}${lp}" class="text-teal-700 font-semibold">${t(`Ver los ${x.t} ${escapeHtml(x.l.toLowerCase())} de toda la isla →`, `See all ${x.t} ${escapeHtml(labelLow)} across the island →`)}</a></p>
@@ -20014,7 +20014,7 @@ ${regDisclaimer(en)}`
       // va como lista de enlaces reales: menos prominente, pero rastreable y clicable.
       const rest = townsAll.slice(30)
       const chip = ([m, n]: [string, number]) =>
-        `<a href="/registro/${specUrl}/${specToUrl(m)}${lp}" class="inline-flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-sm hover:border-teal-400 hover:text-teal-700">${escapeHtml(m)} <span class="text-teal-700 font-black">${n}</span></a>`
+        `<a href="/registro/${specUrl}/${specToUrl(m)}${lp}" class="inline-flex items-center gap-1.5 min-h-[44px] bg-white border border-slate-200 text-slate-700 font-semibold px-3.5 py-1.5 rounded-full text-[15px] hover:border-teal-400 hover:text-teal-700">${escapeHtml(m)} <span class="text-teal-700 font-black">${n}</span></a>`
       const restLinks = rest.length
         ? `<details class="not-prose mt-3"><summary class="cursor-pointer text-sm font-semibold text-teal-700 hover:underline">${t(`Ver los otros ${rest.length} pueblos`, `See the other ${rest.length} towns`)}</summary>
 <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1.5">${rest.map(([m, n]) => `<a href="/registro/${specUrl}/${specToUrl(m)}${lp}" class="text-sm text-slate-600 hover:text-teal-700 hover:underline">${escapeHtml(m)} <span class="text-slate-400">(${n})</span></a>`).join('')}</div></details>`
@@ -20044,7 +20044,7 @@ ${info.treats ? `<p class="text-slate-600 mt-1">${escapeHtml(info.treats)} ${esc
 ${noteHtml}
 ${providers.length ? `<div class="not-prose mt-5 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${thead}<tbody>${provRows}</tbody></table></div>` : `<div class="not-prose mt-5 bg-amber-50 border border-amber-200 rounded-xl p-5"><p class="text-amber-900 font-semibold">${t(`No hay ${escapeHtml(x.l.toLowerCase())} verificados en ${escapeHtml(region)}.`, `No verified ${escapeHtml(labelLow)} in ${escapeHtml(region)}.`)}</p><p class="text-sm text-amber-800 mt-1">${t('Te va a tocar viajar. Mira los de', 'You will have to travel. See those in')} <a href="/registro/${specUrl}/metro${lp}" class="font-semibold underline">${t('el área metro', 'the metro area')} (${metroCount}) →</a></p></div>`}
 ${providers.length ? planNotaHub(en) : ''}
-${REGION_TOWNS[region] ? `<div class="not-prose mt-5"><div class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">${t('Por pueblo', 'By town')}</div><div class="flex flex-wrap gap-2">${REGION_TOWNS[region].map(([ts, tn]) => `<a href="/registro/${specUrl}/${ts}${lp}" class="inline-flex items-center bg-white border border-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-full text-sm hover:border-teal-400 hover:text-teal-700">${escapeHtml(x.l)} ${t('en', 'in')} ${escapeHtml(tn)}</a>`).join('')}</div></div>` : ''}
+${REGION_TOWNS[region] ? `<div class="not-prose mt-5"><div class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">${t('Por pueblo', 'By town')}</div><div class="flex flex-wrap gap-2">${REGION_TOWNS[region].map(([ts, tn]) => `<a href="/registro/${specUrl}/${ts}${lp}" class="inline-flex items-center min-h-[44px] bg-white border border-slate-200 text-slate-700 font-semibold px-3.5 py-1.5 rounded-full text-sm hover:border-teal-400 hover:text-teal-700">${escapeHtml(x.l)} ${t('en', 'in')} ${escapeHtml(tn)}</a>`).join('')}</div></div>` : ''}
 <p class="not-prose mt-4 text-sm"><a href="/registro/${specUrl}${lp}" class="text-teal-700 font-semibold">${t(`Ver los ${total} ${escapeHtml(x.l.toLowerCase())} de toda la isla →`, `See all ${total} ${escapeHtml(labelLow)} across the island →`)}</a></p>`
   } else {
     // El hueco es el dato citable, no el conteo: "cuantos hay" lo tiene cualquiera, "cuantas
