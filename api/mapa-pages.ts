@@ -19862,11 +19862,15 @@ async function handleRegistroHub(req: any, res: any) {
     let bodyT = `${breadcrumbT}
 <h1>${x.e} ${escapeHtml(label)} ${t('en', 'in')} ${escapeHtml(muni.name)}, Puerto Rico</h1>
 <p class="text-lg text-slate-600 mt-2">${answerT}</p>
-${lineaPAS(x.s, en)}
+${lineaPAS(x.s, en)}`
+    // design-review 28 sep 2026: la lista con los botones Llamar va ANTES del bloque de la
+    // reforma. En Ponce el primer "Llamar" caía en y=1004 (debajo del pliegue a 390px) detrás
+    // de un párrafo de 13 nombres; la persona vino a llamar, no a leer el directorio del plan.
+    if (inTown.length) bodyT += `<div class="not-prose mt-5 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${theadOf(false)}<tbody>${rowsOf(inTown, false)}</tbody></table></div>`
+    bodyT += `
 ${reformaHtml}
 ${info.treats ? `<p class="text-slate-600 mt-1">${escapeHtml(info.treats)} ${escapeHtml(info.whenToGo)}</p>` : ''}
 ${info.note ? `<p class="text-sm text-slate-500 mt-1"><i class="fa-solid fa-circle-info text-teal-600"></i> ${escapeHtml(info.note)}</p>` : ''}`
-    if (inTown.length) bodyT += `<div class="not-prose mt-5 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${theadOf(false)}<tbody>${rowsOf(inTown, false)}</tbody></table></div>`
     if (nearby.length) bodyT += `<h2 class="mt-6">${t('También cerca', 'Also nearby')}${townReg ? ` — ${t('en el', 'in')} ${escapeHtml(townReg)}` : ''}</h2><div class="not-prose mt-2 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${theadOf(true)}<tbody>${rowsOf(nearby.slice(0, 60), true)}</tbody></table></div>`
     if (inTown.length || nearby.length) bodyT += planNotaHub(en)
     if (!inTown.length && !nearby.length) bodyT += `<div class="not-prose mt-5 bg-amber-50 border border-amber-200 rounded-xl p-5"><p class="text-amber-900 font-semibold">${t(`No hay ${escapeHtml(x.l.toLowerCase())} verificados cerca de ${escapeHtml(muni.name)}.`, `No verified ${escapeHtml(labelLow)} near ${escapeHtml(muni.name)}.`)}</p><p class="text-sm text-amber-800 mt-1"><a href="/registro/${specUrl}/metro${lp}" class="font-semibold underline">${t('Mira el área metro', 'See the metro area')} (${metroCount}) →</a></p></div>`
