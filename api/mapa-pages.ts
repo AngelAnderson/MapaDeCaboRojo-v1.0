@@ -22597,7 +22597,7 @@ async function handleCuido(req: any, res: any) {
           ${r.n.camas ? `<span><strong>${r.n.camas}</strong> camas${libres > 0 ? ` · <strong>${libres}</strong> disponibles` : ''}</span>` : ''}
           ${r.n.cumplimiento ? `<span>${escapeHtml(r.n.cumplimiento)}</span>` : ''}
         </div>
-        ${tel ? `<a href="tel:${tel}" class="inline-block mt-3 bg-teal-700 text-white font-bold text-sm px-4 py-2 rounded-lg no-underline">Llamar ${escapeHtml(r.phone || '')}</a>` : ''}
+        ${tel ? `<a href="tel:${tel}" class="inline-flex items-center gap-2 mt-3 min-h-[48px] bg-teal-700 hover:bg-teal-800 text-white font-bold text-base px-5 rounded-xl no-underline"><i class="fa-solid fa-phone" aria-hidden="true"></i> Llamar ${escapeHtml(r.phone || '')}</a>` : ''}
       </div>`
     }).join('')
 
