@@ -968,14 +968,14 @@ export default async function handler(req: any, res: any) {
     : [];
   const farmaciaLink = (f: any) => `<a href="${baseUrl}/${detailRoute || 'negocio'}/${esc(f.slug)}" style="color:#0f766e;text-decoration:none;font-weight:600;">${esc(f.name)}</a>`;
   const farmaciaHoyHtml = (cat === 'farmacia' || cat === 'farmacias') && filtered.length ? `
-    <div style="background:#f0fdfa;border:1px solid #99f6e4;border-left:4px solid #0d9488;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem;max-width:720px;font-size:0.92rem;line-height:1.6;color:#134e4a;">
+    <div style="background:#f0fdfa;border:1px solid #99f6e4;border-left:4px solid #0f766e;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem;max-width:720px;font-size:1rem;line-height:1.6;color:#134e4a;">
       <p style="margin:0 0 0.35rem;font-weight:700;color:#0f172a;">💊 Lo que importa cuando tienes la receta en la mano</p>
       <p style="margin:0 0 0.25rem;"><strong>Abiertas ahora:</strong> <span id="farm-open-now">se calcula al abrir la página</span></p>
       ${farmaciaDomingo.length ? `<p style="margin:0 0 0.25rem;"><strong>Abren domingo:</strong> ${farmaciaDomingo.map((f: any) => `${farmaciaLink(f)} (${esc(f.h)})`).join(' · ')}</p>` : `<p style="margin:0 0 0.25rem;"><strong>Domingo:</strong> ninguna tiene horario de domingo publicado. Llama antes de salir.</p>`}
       ${farmaciaTarde.length ? `<p style="margin:0 0 0.25rem;"><strong>Cierran más tarde entre semana:</strong> ${farmaciaTarde.map((f: any) => `${farmaciaLink(f)} (${esc(f.h)})`).join(' · ')}</p>` : ''}
       ${farmaciaDelivery.length ? `<p style="margin:0 0 0.25rem;"><strong>Con delivery:</strong> ${farmaciaDelivery.map((f: any) => farmaciaLink({ name: f.name, slug: f.slug || f.id })).join(' · ')}</p>` : ''}
       <p style="margin:0.35rem 0 0.25rem;"><strong>Pa' la nevera:</strong> <a href="${baseUrl}/nevera" style="color:#0f766e;font-weight:600;">los números que resuelven en Cabo Rojo</a>, con fecha de verificación y PDF gratis.</p>
-      <p style="margin:0.35rem 0 0;font-size:0.8rem;color:#475569;">Horarios según lo que cada farmacia publica. Si encuentras uno cambiado, <a href="https://wa.me/17874177711?text=${encodeURIComponent('DATO farmacia: ')}" style="color:#0f766e;">cuéntaselo a El Veci</a> y lo corregimos.</p>
+      <p style="margin:0.35rem 0 0;font-size:1rem;color:#475569;">Horarios según lo que cada farmacia publica. Si encuentras uno cambiado, <a href="https://wa.me/17874177711?text=${encodeURIComponent('DATO farmacia: ')}" style="color:#0f766e;">cuéntaselo a El Veci</a> y lo corregimos.</p>
     </div>` : '';
 
   // Resolve capture-category key + singular noun for FAQ + urgency banner
@@ -1086,14 +1086,14 @@ export default async function handler(req: any, res: any) {
           if (!isHealth) return '';
           const { nivel, fecha } = selloConFecha(p);
           const pill = (bg: string, fg: string, txt: string, tip: string) =>
-            `<div style="display:inline-flex;align-items:center;gap:0.25rem;font-size:0.68rem;font-weight:700;color:${fg};background:${bg};padding:0.15rem 0.5rem;border-radius:999px;margin-bottom:0.4rem;" title="${tip}">${txt}</div>`;
+            `<div style="display:inline-flex;align-items:center;gap:0.25rem;font-size:1rem;font-weight:700;color:${fg};background:${bg};padding:0.15rem 0.5rem;border-radius:999px;margin-bottom:0.4rem;" title="${tip}">${txt}</div>`;
           if (nivel === 'persona') return pill('#dcfce7', '#166534', `✅ Confirmado por una persona${fecha ? ' · ' + esc(fecha) : ''}`, 'Lo confirmó el negocio o Angel en sitio');
           if (nivel === 'fuente') return pill('#fef9c3', '#854d0e', `🔎 Corroborado${fecha ? ' · ' + esc(fecha) : ''}`, 'Cotejado contra una fuente pública; la oficina todavía no lo confirmó');
           if (p.npi) return pill('#f1f5f9', '#475569', '📋 En el registro federal (NPI)', 'Copia del registro NPPES; nadie lo ha confirmado todavía');
           return '';
         })();
         const oneLinerHtml = (isHealth && p.one_liner)
-          ? `<p style="font-size:0.8rem;color:#475569;margin:0 0 0.45rem;line-height:1.4;">${esc(p.one_liner)}</p>`
+          ? `<p style="font-size:1rem;color:#475569;margin:0 0 0.45rem;line-height:1.4;">${esc(p.one_liner)}</p>`
           : '';
         const dataSpec = isHealth
           ? ` data-specialty="${esc((specMap.get(p.id) || { key: 'otros' }).key)}"`
@@ -1104,9 +1104,9 @@ export default async function handler(req: any, res: any) {
           ? `<p class="ficha-dir">${esc(p.municipality || '')}${p.municipality ? ' · ' : ''}<span style="color:var(--salinas);font-weight:600;">sirve Cabo Rojo</span></p>`
           : (p.address ? `<p class="ficha-dir">${esc(p.address)}</p>` : '');
         const planBadge = p.plan === 'vip'
-          ? '<span style="background:var(--salinas);color:#fff;font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;padding:3px 8px;border-radius:999px;text-transform:uppercase;margin-left:6px;vertical-align:middle;">Cliente</span>'
+          ? '<span style="background:var(--salinas);color:#fff;font-family:var(--mono);font-size:1rem;letter-spacing:0.01em;padding:3px 8px;border-radius:999px;margin-left:6px;vertical-align:middle;">Cliente</span>'
           : (Number(p.sponsor_weight) > 0
-              ? '<span style="background:var(--arena-suave);color:var(--piedra-honda);border:1px solid var(--arena);font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;padding:3px 8px;border-radius:999px;text-transform:uppercase;margin-left:6px;vertical-align:middle;" title="Lo subimos a mano en el orden; no pagó por estar ahí">Destacado</span>'
+              ? '<span style="background:var(--arena-suave);color:var(--piedra-honda);border:1px solid var(--arena);font-family:var(--mono);font-size:1rem;letter-spacing:0.01em;padding:3px 8px;border-radius:999px;margin-left:6px;vertical-align:middle;" title="Lo subimos a mano en el orden; no pagó por estar ahí">Destacado</span>'
               : '');
         const detailPath = detailRoute ? `${baseUrl}/${detailRoute}/${esc(slug)}` : `${baseUrl}/negocio/${esc(slug)}`;
         const phoneInfo = normalizePhone(p.phone);
@@ -1120,19 +1120,19 @@ export default async function handler(req: any, res: any) {
         const memoriaSig = memoria?.voice_style === 'collective' ? 'Dato compartido por vecinos' : 'De la memoria del pueblo';
         const memoriaBlock = memoria
           ? `<div style="border-top:1px solid #f1f5f9;padding:0.65rem 1rem 0.75rem;background:#fefce8;">
-               <p style="font-size:0.78rem;color:#713f12;line-height:1.45;margin:0;">
-                 <span style="font-size:0.85rem;">📜</span> ${esc(memoria.answer.slice(0, 200))}${memoria.answer.length > 200 ? '…' : ''}
+               <p style="font-size:1rem;color:#713f12;line-height:1.45;margin:0;">
+                 <span style="font-size:1rem;">📜</span> ${esc(memoria.answer.slice(0, 200))}${memoria.answer.length > 200 ? '…' : ''}
                </p>
-               <p style="font-size:0.65rem;color:#a16207;margin:0.3rem 0 0;font-style:italic;">— ${memoriaSig}</p>
+               <p style="font-size:1rem;color:#a16207;margin:0.3rem 0 0;font-style:italic;">— ${memoriaSig}</p>
              </div>`
           : (detailRoute
-            ? `<a href="https://wa.me/17874177711?text=${encodeURIComponent('DATO ' + p.name + ': ')}" style="display:block;border-top:1px solid var(--arena-suave);padding:0.6rem 1rem;background:var(--lino);color:var(--piedra-honda);text-decoration:none;font-size:0.78rem;text-align:center;">
+            ? `<a href="https://wa.me/17874177711?text=${encodeURIComponent('DATO ' + p.name + ': ')}" style="display:block;border-top:1px solid var(--arena-suave);padding:0.6rem 1rem;background:var(--lino);color:var(--piedra-honda);text-decoration:none;font-size:1rem;text-align:center;">
                  ¿Sabes algo de ${esc(p.name)}? Cuéntale a El Veci &rarr;
                </a>`
             : (!getOpenStatusLabel(p.opening_hours)
               // La palabra es la misma que lleva el flyer impreso: 1 sistema,
               // no 2. El bot la contesta (twilio-webhook, keyword HORARIO).
-              ? `<a href="https://wa.me/17874177711?text=${encodeURIComponent('HORARIO ' + p.name + ': ')}" style="display:block;border-top:1px solid var(--arena-suave);padding:0.6rem 1rem;background:var(--lino);color:var(--piedra-honda);text-decoration:none;font-size:0.78rem;text-align:center;">
+              ? `<a href="https://wa.me/17874177711?text=${encodeURIComponent('HORARIO ' + p.name + ': ')}" style="display:block;border-top:1px solid var(--arena-suave);padding:0.6rem 1rem;background:var(--lino);color:var(--piedra-honda);text-decoration:none;font-size:1rem;text-align:center;">
                    ¿Sabes a qué hora abre? Dilo y lo arreglamos &rarr;
                  </a>`
               : ''));
@@ -1195,7 +1195,7 @@ export default async function handler(req: any, res: any) {
               </div>
               ${oneLinerHtml}
               ${locHtml}
-              ${Array.isArray(p.services) && p.services.length > 0 ? `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:2px;">${p.services.slice(0, 4).map((s: string) => `<span style="font-family:var(--mono);font-size:10px;letter-spacing:.04em;background:var(--arena-suave);color:var(--piedra-honda);padding:3px 8px;border-radius:999px;">${esc(s)}</span>`).join('')}${p.services.length > 4 ? `<span style="font-family:var(--mono);font-size:10px;color:var(--piedra);align-self:center;">+${p.services.length - 4}</span>` : ''}</div>` : ''}
+              ${Array.isArray(p.services) && p.services.length > 0 ? `<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:2px;">${p.services.slice(0, 4).map((s: string) => `<span style="font-family:var(--mono);font-size:1rem;letter-spacing:0.01em;background:var(--arena-suave);color:var(--piedra-honda);padding:3px 8px;border-radius:999px;">${esc(s)}</span>`).join('')}${p.services.length > 4 ? `<span style="font-family:var(--mono);font-size:1rem;color:var(--piedra);align-self:center;">+${p.services.length - 4}</span>` : ''}</div>` : ''}
             </div>
           </a>
           ${contactBlock}
@@ -1210,8 +1210,8 @@ export default async function handler(req: any, res: any) {
     ac: '❄️ ¿AC dañado en pleno calor? Textea <strong>AC</strong> al 787-417-7711 y El Veci te dice qué técnico está disponible.',
   };
   const urgentBanner = captureKey && URGENT_BANNER[captureKey]
-    ? `<a href="https://wa.me/17874177711?text=${encodeURIComponent(displayName)}" style="display:block;background:#fef2f2;border:1px solid #fecaca;border-left:4px solid #dc2626;border-radius:10px;padding:0.9rem 1.1rem;margin-bottom:0.6rem;color:#7f1d1d;text-decoration:none;font-size:0.92rem;line-height:1.5;">${URGENT_BANNER[captureKey]}</a>
-       <p style="font-size:0.9rem;color:#475569;margin:0 0 1.25rem;">📌 Guárdate los 8 que resuelven en casa, con fecha de verificación: <a href="${baseUrl}/nevera" style="color:#0f766e;font-weight:700;">mapadecaborojo.com/nevera</a></p>`
+    ? `<a href="https://wa.me/17874177711?text=${encodeURIComponent(displayName)}" style="display:block;background:#fef2f2;border:1px solid #fecaca;border-left:4px solid #dc2626;border-radius:10px;padding:0.9rem 1.1rem;margin-bottom:0.6rem;color:#7f1d1d;text-decoration:none;font-size:1rem;line-height:1.5;">${URGENT_BANNER[captureKey]}</a>
+       <p style="font-size:1rem;color:#475569;margin:0 0 1.25rem;">📌 Guárdate los 8 que resuelven en casa, con fecha de verificación: <a href="${baseUrl}/nevera" style="color:#0f766e;font-weight:700;">mapadecaborojo.com/nevera</a></p>`
     : '';
 
   // ── Salud umbrella: triage band ("¿Necesitas algo ahora?") + specialty filter pills ──
@@ -1236,9 +1236,9 @@ export default async function handler(req: any, res: any) {
       .triage { background:linear-gradient(135deg,#ecfeff,#f0fdfa); border:1px solid #99f6e4; border-radius:14px; padding:1.1rem 1.25rem; margin-bottom:1.1rem; }
       .triage h2 { font-size:1.05rem; font-weight:700; color:#0f766e; margin-bottom:0.7rem; }
       .triage-row { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:0.85rem; }
-      .triage-veci { display:block; background:var(--oceano); color:#fff; text-decoration:none; text-align:center; padding:14px 18px; border-radius:8px; font-weight:700; font-size:.95rem; }
+      .triage-veci { display:block; background:var(--oceano); color:#fff; text-decoration:none; text-align:center; padding:14px 18px; border-radius:8px; font-weight:700; font-size:1rem; }
       .pills { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:1.25rem; }
-      .sb-pill { background:var(--lino); border:1px solid var(--arena); color:var(--tinta); padding:8px 15px; border-radius:999px; font-size:.88rem; cursor:pointer; font-weight:600; transition:all .15s; }
+      .sb-pill { background:var(--lino); border:1px solid var(--arena); color:var(--tinta); padding:8px 15px; border-radius:999px; font-size:1rem; cursor:pointer; font-weight:600; transition:all .15s; }
       .sb-pill:hover { border-color:var(--oceano); background:var(--papel); }
       .sb-pill.active { background:var(--oceano); color:#fff; border-color:var(--oceano); }
     </style>
@@ -1288,9 +1288,9 @@ export default async function handler(req: any, res: any) {
       <p class="open-count" id="open-count"></p>
       <p class="result-count" id="result-count"></p>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin:0.35rem 0 0.85rem;">
-        ${FOOD_SUBPAGES.map(s => `<a href="${baseUrl}/categoria/${s.slug}" style="display:inline-flex;align-items:center;gap:5px;background:white;border:1px solid #cbd5e1;border-radius:20px;padding:5px 13px;font-size:0.82rem;color:#334155;text-decoration:none;">${s.emoji} ${esc(s.label)} →</a>`).join('')}
+        ${FOOD_SUBPAGES.map(s => `<a href="${baseUrl}/categoria/${s.slug}" style="display:inline-flex;align-items:center;gap:5px;background:white;border:1px solid #cbd5e1;border-radius:20px;padding:5px 13px;font-size:1rem;color:#334155;text-decoration:none;">${s.emoji} ${esc(s.label)} →</a>`).join('')}
       </div>
-      <p style="font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;color:var(--piedra-honda);margin:18px 0 0;line-height:1.7;">Cómo se ordena: la nota de Google pesada por cuántas reseñas la sostienen. Un 5 de 3 reseñas no le gana a un 4.9 de 200. Arriba van los <strong>Destacados</strong>, que subimos a mano y llevan su etiqueta: ninguno pagó por ese puesto.</p>
+      <p style="font-family:var(--mono);font-size:1rem;letter-spacing:0.01em;color:var(--piedra-honda);margin:18px 0 0;line-height:1.7;">Cómo se ordena: la nota de Google pesada por cuántas reseñas la sostienen. Un 5 de 3 reseñas no le gana a un 4.9 de 200. Arriba van los <strong>Destacados</strong>, que subimos a mano y llevan su etiqueta: ninguno pagó por ese puesto.</p>
       <a class="triage-veci" href="https://wa.me/17874177711?text=${encodeURIComponent('COMIDA: ')}">No escojas entre ${filtered.length}. Dile a El Veci qué quieres comer y te da 3 opciones abiertas → 787-417-7711</a>
     </div>
     <style>
@@ -1298,16 +1298,16 @@ export default async function handler(req: any, res: any) {
          tailwind, que chocaba con el lino y no existe en la marca. */
       .triage { background:var(--papel); border:1px solid var(--arena); border-radius:12px; padding:24px; margin-bottom:32px; box-shadow:var(--sombra-sm); }
       .triage h2 { font-size:1.3rem; font-weight:700; color:var(--tinta); margin-bottom:16px; }
-      .triage-lbl { font-family:var(--mono); font-size:10.5px; font-weight:500; text-transform:uppercase; letter-spacing:.14em; color:var(--salinas); margin:16px 0 10px; }
-      .triage-veci { display:block; background:var(--oceano); color:#fff; text-decoration:none; text-align:center; padding:14px 18px; border-radius:8px; font-weight:700; font-size:.95rem; margin-top:20px; }
+      .triage-lbl { font-family:var(--mono); font-size:1rem; font-weight:500;  letter-spacing:0.01em; color:var(--salinas); margin:16px 0 10px; }
+      .triage-veci { display:block; background:var(--oceano); color:#fff; text-decoration:none; text-align:center; padding:14px 18px; border-radius:8px; font-weight:700; font-size:1rem; margin-top:20px; }
       .triage-veci:hover { background:#16404D; }
       .pills { display:flex; flex-wrap:wrap; gap:8px; }
-      .sb-pill { background:var(--lino); border:1px solid var(--arena); color:var(--tinta); padding:8px 15px; border-radius:999px; font-size:.88rem; cursor:pointer; font-weight:600; transition:all .15s; }
+      .sb-pill { background:var(--lino); border:1px solid var(--arena); color:var(--tinta); padding:8px 15px; border-radius:999px; font-size:1rem; cursor:pointer; font-weight:600; transition:all .15s; }
       .sb-pill:hover { border-color:var(--oceano); background:var(--papel); }
       .sb-pill.active { background:var(--oceano); color:#fff; border-color:var(--oceano); }
-      .open-toggle { display:inline-flex; align-items:center; gap:8px; font-size:.9rem; font-weight:600; color:var(--mangle); margin:20px 0 4px; cursor:pointer; }
-      .open-count { font-family:var(--mono); font-size:12px; letter-spacing:.03em; font-weight:600; color:var(--mangle); margin:6px 0 0; min-height:1rem; }
-      .result-count { font-family:var(--mono); font-size:11px; letter-spacing:.05em; color:var(--piedra-honda); margin:6px 0 0; min-height:1rem; }
+      .open-toggle { display:inline-flex; align-items:center; gap:8px; font-size:1rem; font-weight:600; color:var(--mangle); margin:20px 0 4px; cursor:pointer; }
+      .open-count { font-family:var(--mono); font-size:1rem; letter-spacing:0.01em; font-weight:600; color:var(--mangle); margin:6px 0 0; min-height:1rem; }
+      .result-count { font-family:var(--mono); font-size:1rem; letter-spacing:0.01em; color:var(--piedra-honda); margin:6px 0 0; min-height:1rem; }
     </style>
     <script>
     (function(){
@@ -1432,13 +1432,13 @@ export default async function handler(req: any, res: any) {
   <style>
     /* ─────────────────────────────────────────────────────────────
        Sistema de diseño de Cabo Rojo (DESIGN.md). Esta página corría
-       con #0d9488 y grises fríos — o sea con la lista de anti-patrones
+       con #0f766e y grises fríos — o sea con la lista de anti-patrones
        del propio sistema: fondo blanco puro, gris frío, todo centrado,
        emoji en el H1. Los colores tienen nombre porque significan algo.
        ───────────────────────────────────────────────────────────── */
     :root {
-      --oceano:#1B4B5A; --oceano-claro:#2A6B80; --salinas:#D4603A; --salinas-hondo:#B04A28;
-      --lino:#FAF8F5; --papel:#FFFFFF; --tinta:#2C2418; --piedra:#8A7E6F; --piedra-honda:#6B6052;
+      --oceano:#1B4B5A; --oceano-claro:#2A6B80; --salinas:#B84E2C; --salinas-hondo:#B04A28; /* 29 sep: salinas de texto (4.5+), DESIGN.md */
+      --lino:#FAF8F5; --papel:#FFFFFF; --tinta:#2C2418; --piedra:#6B6052; --piedra-honda:#6B6052;
       --arena:#E8E2D9; --arena-suave:#F0EBE4;
       --mangle:#3D7A4A; --mango:#C4841D; --bandera:#B83B2E;
       --sombra-sm:0 1px 3px rgba(44,36,24,.06), 0 1px 2px rgba(44,36,24,.04);
@@ -1453,7 +1453,7 @@ export default async function handler(req: any, res: any) {
     .container { max-width:1120px; margin:0 auto; padding:0 24px; }
 
     /* ── Kicker: la etiqueta mono en versalitas que ordena cada sección ── */
-    .kicker { font-family:var(--mono); font-size:11px; font-weight:500; text-transform:uppercase; letter-spacing:.14em; color:var(--salinas); }
+    .kicker { font-family:var(--mono); font-size:1rem; font-weight:500;  letter-spacing:0.01em; color:var(--salinas); }
 
     /* ── Portada editorial ───────────────────────────────────────────
        Antes: banda teal en degradado, centrada, con el conteo debajo
@@ -1471,26 +1471,29 @@ export default async function handler(req: any, res: any) {
     .cifra:last-child { border-right:none; }
     .cifra-n { font-family:'Fraunces', Georgia, serif; font-size:2.6rem; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; display:block; }
     .cifra-abierto .cifra-n { color:#7FD4A8; }
-    .cifra-l { font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.12em; color:rgba(250,248,245,.62); margin-top:8px; display:block; line-height:1.45; }
+    .cifra-l { font-family:var(--mono); font-size:1rem;  letter-spacing:0.01em; color:rgba(250,248,245,.62); margin-top:8px; display:block; line-height:1.45; }
 
     /* ── Atajos de decisión: la primera fila que ve la persona ──
        La pregunta no es "¿qué categorías existen?" sino "¿qué hago ahora?".
        Estos 5 botones bajan a los filtros que ya existen y los aplican. */
     .atajos { padding:22px 0 26px; position:relative; z-index:1; }
-    .atajos-lbl { display:block; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.14em; color:rgba(250,248,245,.55); margin-bottom:10px; }
+    .atajos-lbl { display:block; font-family:var(--mono); font-size:1rem;  letter-spacing:0.01em; color:rgba(250,248,245,.55); margin-bottom:10px; }
     .atajos-fila { display:flex; flex-wrap:wrap; gap:8px; }
-    .atajo { font-family:"Source Sans 3", sans-serif; font-size:.92rem; font-weight:600; color:var(--lino); background:rgba(250,248,245,.09); border:1px solid rgba(250,248,245,.26); padding:9px 17px; border-radius:999px; cursor:pointer; transition:all .15s; }
+    .atajo { font-family:"Source Sans 3", sans-serif; font-size:1rem; font-weight:600; color:var(--lino); background:rgba(250,248,245,.09); border:1px solid rgba(250,248,245,.26); padding:9px 17px; border-radius:999px; cursor:pointer; transition:all .15s; }
     .atajo:hover { background:rgba(250,248,245,.18); border-color:rgba(250,248,245,.5); }
     .atajo-vivo { background:#7FD4A8; border-color:#7FD4A8; color:#123B29; }
     .atajo-vivo:hover { background:#96E0BA; border-color:#96E0BA; }
 
     /* ── Mapa ── */
     #cat-map { width:100%; height:52vw; max-height:400px; min-height:240px; background:var(--arena); }
-    .map-section-label { font-family:var(--mono); font-size:10.5px; text-transform:uppercase; letter-spacing:.12em; text-align:center; color:var(--piedra-honda); padding:10px 0; background:var(--arena-suave); border-bottom:1px solid var(--arena); }
+    .map-section-label { font-family:var(--mono); font-size:1rem;  letter-spacing:0.01em; text-align:center; color:var(--piedra-honda); padding:10px 0; background:var(--arena-suave); border-bottom:1px solid var(--arena); }
 
     .bloque { padding:40px 0 0; }
-    .back { display:inline-block; margin-bottom:24px; color:var(--salinas); text-decoration:none; font-weight:600; font-size:.9rem; }
+    .back { display:inline-block; margin-bottom:24px; color:var(--salinas); text-decoration:none; font-weight:600; font-size:1rem; }
     .back:hover { text-decoration:underline; }
+    /* 29 sep 2026 (mayores primero): todo lo que se toca mide 48px; la vuelta atrás también. */
+    .back { display:inline-flex; align-items:center; min-height:48px; }
+    .atajo, .pills a, .pills button, .pills label { min-height:48px; display:inline-flex; align-items:center; }
 
     /* ── Rejilla de fichas ── */
     .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(268px, 1fr)); gap:24px; margin:0 0 48px; }
@@ -1499,21 +1502,21 @@ export default async function handler(req: any, res: any) {
     .ficha-foto { width:100%; height:172px; background:var(--oceano); display:flex; align-items:center; justify-content:center; font-size:2.5rem; overflow:hidden; }
     .ficha-foto-vacia { position:relative; flex-direction:column; background:var(--oceano); background-image:radial-gradient(circle at 78% 18%, rgba(212,96,58,.34), transparent 62%); }
     .marca-inicial { font-family:'Fraunces', Georgia, serif; font-size:4.6rem; font-weight:900; line-height:1; color:rgba(250,248,245,.16); letter-spacing:-.04em; }
-    .marca-zona { position:absolute; bottom:14px; left:0; right:0; text-align:center; font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.16em; color:rgba(250,248,245,.5); }
+    .marca-zona { position:absolute; bottom:14px; left:0; right:0; text-align:center; font-family:var(--mono); font-size:1rem;  letter-spacing:0.01em; color:rgba(250,248,245,.5); }
     .ficha-foto img { position:absolute; inset:0; width:100%; height:172px; object-fit:cover; display:block; z-index:1; }
     .ficha-cuerpo { padding:18px 20px 16px; }
-    .ficha-zona { font-family:var(--mono); font-size:10px; text-transform:uppercase; letter-spacing:.13em; color:var(--salinas); display:block; margin-bottom:6px; }
+    .ficha-zona { font-family:var(--mono); font-size:1rem;  letter-spacing:0.01em; color:var(--salinas); display:block; margin-bottom:6px; }
     .ficha h2 { font-size:1.18rem; font-weight:700; line-height:1.22; color:var(--tinta); margin:0 0 8px; }
-    .ficha-datos { display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-family:var(--mono); font-size:12px; font-variant-numeric:tabular-nums; color:var(--piedra-honda); margin-bottom:8px; }
+    .ficha-datos { display:flex; align-items:center; gap:10px; flex-wrap:wrap; font-family:var(--mono); font-size:1rem; font-variant-numeric:tabular-nums; color:var(--piedra-honda); margin-bottom:8px; }
     .nota { color:var(--mango); font-weight:600; }
     .nota span { color:var(--piedra); font-weight:400; }
-    .estado { display:inline-flex; align-items:center; font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.03em; padding:3px 9px; border-radius:999px; }
+    .estado { display:inline-flex; align-items:center; font-family:var(--mono); font-size:1rem; font-weight:600; letter-spacing:0.01em; padding:3px 9px; border-radius:999px; }
     .estado-abierto { background:#E8F3EB; color:#2F6B3C; }
     .estado-cerrado { background:#F5EFEA; color:var(--piedra-honda); }
     .estado-nosabe { background:transparent; color:var(--piedra); border:1px dashed var(--arena); }
-    .ficha-dir { font-size:.86rem; color:var(--piedra-honda); line-height:1.5; margin-bottom:8px; }
+    .ficha-dir { font-size:1rem; color:var(--piedra-honda); line-height:1.5; margin-bottom:8px; }
     .ficha-contacto { display:flex; gap:8px; padding:0 20px 18px; }
-    .ficha-contacto a { flex:1; text-align:center; padding:9px 6px; border-radius:8px; font-size:.82rem; font-weight:600; text-decoration:none; font-family:var(--mono); letter-spacing:.02em; }
+    .ficha-contacto a { flex:1; text-align:center; padding:9px 6px; border-radius:8px; font-size:1rem; font-weight:600; text-decoration:none; font-family:var(--mono); letter-spacing:.02em; }
     .btn-tel { background:var(--oceano); color:#fff; }
     .btn-wa { background:var(--papel); color:var(--oceano); border:1.5px solid var(--arena); }
     .btn-wa:hover { border-color:var(--oceano); }
@@ -1526,10 +1529,10 @@ export default async function handler(req: any, res: any) {
     .cta-bar p { margin-bottom:14px; font-size:1rem; color:rgba(250,248,245,.82); }
     .cta-bar a { display:inline-block; background:var(--salinas); color:#fff; text-decoration:none; padding:13px 28px; border-radius:8px; font-weight:700; }
     .cta-bar a:hover { background:var(--salinas-hondo); }
-    footer { text-align:center; padding:40px 24px 56px; color:var(--piedra); font-size:.85rem; border-top:1px solid var(--arena); margin-top:24px; }
+    footer { text-align:center; padding:40px 24px 56px; color:var(--piedra); font-size:1rem; border-top:1px solid var(--arena); margin-top:24px; }
 
     .leaflet-popup-content-wrapper { border-radius:10px; }
-    .leaflet-popup-content { margin:12px 16px; font-family:"Source Sans 3", sans-serif; font-size:13px; line-height:1.45; }
+    .leaflet-popup-content { margin:12px 16px; font-family:"Source Sans 3", sans-serif; font-size:1rem; line-height:1.45; }
     .leaflet-popup-content a { color:var(--oceano); text-decoration:none; font-weight:700; }
     .leaflet-popup-content a:hover { text-decoration:underline; }
 
@@ -1602,9 +1605,9 @@ export default async function handler(req: any, res: any) {
     <!-- #1 Quiz: "¿Cuál fisiatra te conviene?" -->
     <div id="fis-quiz" style="background:linear-gradient(135deg,#ecfeff,#f0fdfa);border:1px solid #67e8f9;border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;max-width:720px;">
       <h2 style="font-size:1.15rem;font-weight:700;color:#0e7490;margin-bottom:0.5rem;">🩺 ¿Cuál fisiatra te conviene?</h2>
-      <p style="font-size:0.9rem;color:#475569;margin-bottom:1rem;">3 preguntas. Te recomendamos la mejor opción según tu zona, plan médico y necesidad.</p>
+      <p style="font-size:1rem;color:#475569;margin-bottom:1rem;">3 preguntas. Te recomendamos la mejor opción según tu zona, plan médico y necesidad.</p>
       <div id="fis-quiz-step-1">
-        <p style="font-weight:600;color:#0f172a;margin-bottom:0.5rem;font-size:0.95rem;">1. ¿Por qué necesitas fisiatra?</p>
+        <p style="font-weight:600;color:#0f172a;margin-bottom:0.5rem;font-size:1rem;">1. ¿Por qué necesitas fisiatra?</p>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
           <button data-need="postop" class="fis-q-btn">🩹 Post-cirugía / lesión</button>
           <button data-need="sport" class="fis-q-btn">🏃 Lesión deportiva</button>
@@ -1614,7 +1617,7 @@ export default async function handler(req: any, res: any) {
         </div>
       </div>
       <div id="fis-quiz-step-2" style="display:none;">
-        <p style="font-weight:600;color:#0f172a;margin-bottom:0.5rem;font-size:0.95rem;">2. ¿En qué zona te queda mejor?</p>
+        <p style="font-weight:600;color:#0f172a;margin-bottom:0.5rem;font-size:1rem;">2. ¿En qué zona te queda mejor?</p>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
           <button data-zone="cr_pueblo" class="fis-q-btn">📍 Cabo Rojo (pueblo / Santos Ortiz)</button>
           <button data-zone="cr_joyuda" class="fis-q-btn">🌊 Cabo Rojo (Joyuda / Carr 102)</button>
@@ -1624,7 +1627,7 @@ export default async function handler(req: any, res: any) {
         </div>
       </div>
       <div id="fis-quiz-step-3" style="display:none;">
-        <p style="font-weight:600;color:#0f172a;margin-bottom:0.5rem;font-size:0.95rem;">3. ¿Tienes preferencia de horario?</p>
+        <p style="font-weight:600;color:#0f172a;margin-bottom:0.5rem;font-size:1rem;">3. ¿Tienes preferencia de horario?</p>
         <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:1rem;">
           <button data-time="weekday_am" class="fis-q-btn">🌅 L-V mañana</button>
           <button data-time="weekday_pm" class="fis-q-btn">🌇 L-V tarde</button>
@@ -1633,11 +1636,11 @@ export default async function handler(req: any, res: any) {
       </div>
       <div id="fis-quiz-result" style="display:none;background:white;border-radius:10px;padding:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);"></div>
       <div id="fis-quiz-reset" style="display:none;margin-top:0.75rem;text-align:right;">
-        <a href="#" id="fis-quiz-restart" style="color:#0e7490;font-size:0.85rem;text-decoration:underline;">↺ Empezar de nuevo</a>
+        <a href="#" id="fis-quiz-restart" style="color:#0e7490;font-size:1rem;text-decoration:underline;">↺ Empezar de nuevo</a>
       </div>
     </div>
     <style>
-      .fis-q-btn { background:white; border:1.5px solid #67e8f9; color:#0e7490; padding:8px 14px; border-radius:20px; font-size:0.85rem; cursor:pointer; transition:all 0.15s; font-weight:500; }
+      .fis-q-btn { background:white; border:1.5px solid #67e8f9; color:#0e7490; padding:8px 14px; border-radius:20px; font-size:1rem; cursor:pointer; transition:all 0.15s; font-weight:500; }
       .fis-q-btn:hover { background:#0e7490; color:white; border-color:#0e7490; }
     </style>
     <script>
@@ -1696,15 +1699,15 @@ export default async function handler(req: any, res: any) {
           var p = winner.p;
           var reasons = winner.reasons.length ? winner.reasons.slice(0,2).join(' · ') : 'mejor match disponible para tu búsqueda';
           var fmtPhone = (p.phone || '').replace(/\\D/g, '');
-          var telLink = fmtPhone ? '<a href="tel:+1' + esc(fmtPhone) + '" style="display:inline-block;background:#0e7490;color:white;text-decoration:none;padding:10px 16px;border-radius:8px;font-weight:700;font-size:0.95rem;margin-right:6px;margin-top:6px;">📞 Llamar ' + esc(p.phone || '') + '</a>' : '';
-          var waLink = fmtPhone.length >= 10 ? '<a href="https://wa.me/1' + esc(fmtPhone.slice(-10)) + '?text=' + encodeURIComponent('Hola, mapadecaborojo.com me recomendó su práctica — quisiera agendar') + '" target="_blank" rel="noopener" style="display:inline-block;background:#25D366;color:white;text-decoration:none;padding:10px 16px;border-radius:8px;font-weight:700;font-size:0.95rem;margin-top:6px;">💬 WhatsApp</a>' : '';
-          var detail = '<a href="/fisiatra/' + esc(p.slug) + '" style="color:#0e7490;font-size:0.9rem;text-decoration:underline;display:inline-block;margin-top:10px;">Ver perfil completo →</a>';
+          var telLink = fmtPhone ? '<a href="tel:+1' + esc(fmtPhone) + '" style="display:inline-block;background:#0e7490;color:white;text-decoration:none;padding:10px 16px;border-radius:8px;font-weight:700;font-size:1rem;margin-right:6px;margin-top:6px;">📞 Llamar ' + esc(p.phone || '') + '</a>' : '';
+          var waLink = fmtPhone.length >= 10 ? '<a href="https://wa.me/1' + esc(fmtPhone.slice(-10)) + '?text=' + encodeURIComponent('Hola, mapadecaborojo.com me recomendó su práctica — quisiera agendar') + '" target="_blank" rel="noopener" style="display:inline-block;background:#25D366;color:white;text-decoration:none;padding:10px 16px;border-radius:8px;font-weight:700;font-size:1rem;margin-top:6px;">💬 WhatsApp</a>' : '';
+          var detail = '<a href="/fisiatra/' + esc(p.slug) + '" style="color:#0e7490;font-size:1rem;text-decoration:underline;display:inline-block;margin-top:10px;">Ver perfil completo →</a>';
           // All dynamic strings escaped (name, address, municipality, phone, slug, reasons) — XSS-safe
           document.getElementById('fis-quiz-result').innerHTML =
-            '<p style="font-size:0.85rem;color:#64748b;margin-bottom:0.25rem;">Te conviene:</p>' +
+            '<p style="font-size:1rem;color:#475569;margin-bottom:0.25rem;">Te conviene:</p>' +
             '<h3 style="font-size:1.2rem;font-weight:700;color:#0e7490;margin-bottom:0.5rem;">🩺 ' + esc(p.name) + '</h3>' +
-            '<p style="font-size:0.9rem;color:#475569;margin-bottom:1rem;">📍 ' + esc(p.address || p.municipality) + '</p>' +
-            '<p style="font-size:0.9rem;color:#0f172a;margin-bottom:1rem;"><strong>Por qué:</strong> ' + esc(reasons) + '.</p>' +
+            '<p style="font-size:1rem;color:#475569;margin-bottom:1rem;">📍 ' + esc(p.address || p.municipality) + '</p>' +
+            '<p style="font-size:1rem;color:#0f172a;margin-bottom:1rem;"><strong>Por qué:</strong> ' + esc(reasons) + '.</p>' +
             telLink + waLink + '<br>' + detail;
           show('fis-quiz-result');
           document.getElementById('fis-quiz-reset').style.display = 'block';
@@ -1734,8 +1737,8 @@ export default async function handler(req: any, res: any) {
     <!-- Solar capture: savings calculator + why-now + pre-sign checklist -->
     <div style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fcd34d;border-radius:14px;padding:1.5rem;margin-bottom:1.5rem;">
       <h2 style="font-size:1.2rem;font-weight:700;color:#92400e;margin-bottom:0.4rem;">☀️ ¿Te conviene solar? Calcula en 10 segundos</h2>
-      <p style="font-size:0.9rem;color:#78350f;margin-bottom:1rem;">Dinos cuánto pagas de luz al mes y te decimos cuánto podrías ahorrar.</p>
-      <p style="font-weight:600;color:#1f2937;margin-bottom:0.5rem;font-size:0.92rem;">¿Cuánto pagas de luz al mes?</p>
+      <p style="font-size:1rem;color:#78350f;margin-bottom:1rem;">Dinos cuánto pagas de luz al mes y te decimos cuánto podrías ahorrar.</p>
+      <p style="font-weight:600;color:#1f2937;margin-bottom:0.5rem;font-size:1rem;">¿Cuánto pagas de luz al mes?</p>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:0.5rem;">
         <button class="solar-bill-btn" data-bill="75">$50–100</button>
         <button class="solar-bill-btn" data-bill="125">$100–150</button>
@@ -1745,7 +1748,7 @@ export default async function handler(req: any, res: any) {
       <div id="solar-calc-result" style="display:none;background:white;border-radius:10px;padding:1.1rem;margin-top:0.75rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);"></div>
     </div>
     <style>
-      .solar-bill-btn { background:white; border:1.5px solid #f59e0b; color:#92400e; padding:8px 16px; border-radius:20px; font-size:0.9rem; cursor:pointer; font-weight:600; transition:all 0.15s; }
+      .solar-bill-btn { background:white; border:1.5px solid #f59e0b; color:#92400e; padding:8px 16px; border-radius:20px; font-size:1rem; cursor:pointer; font-weight:600; transition:all 0.15s; }
       .solar-bill-btn:hover { background:#f59e0b; color:white; }
     </style>
     <script>
@@ -1761,10 +1764,10 @@ export default async function handler(req: any, res: any) {
             var msg = 'SOLAR — pago como $' + bill + ' al mes de luz, quiero una cotización';
             var res = document.getElementById('solar-calc-result');
             res.innerHTML =
-              '<p style="font-size:0.9rem;color:#374151;margin-bottom:0.5rem;">Con un sistema bien diseñado, una factura de ~$'+bill+'/mes podría bajar a <strong>$'+newLow+'–$'+newHigh+'</strong> al mes.</p>'+
+              '<p style="font-size:1rem;color:#374151;margin-bottom:0.5rem;">Con un sistema bien diseñado, una factura de ~$'+bill+'/mes podría bajar a <strong>$'+newLow+'–$'+newHigh+'</strong> al mes.</p>'+
               '<p style="font-size:1.05rem;color:#92400e;font-weight:700;margin-bottom:0.5rem;">Ahorro estimado: $'+saveLow+'–$'+saveHigh+' al año</p>'+
-              '<p style="font-size:0.72rem;color:#9ca3af;margin-bottom:0.9rem;font-style:italic;">Estimado — depende de tu techo, tu consumo real y el sistema. La cotización exacta es gratis.</p>'+
-              '<a href="'+WA+encodeURIComponent(msg)+'" style="display:inline-block;background:#f59e0b;color:white;text-decoration:none;padding:0.6rem 1.2rem;border-radius:8px;font-weight:700;font-size:0.9rem;">Textea tu factura al 787-417-7711 → '+esc(rec)+' te cotiza</a>';
+              '<p style="font-size:1rem;color:#9ca3af;margin-bottom:0.9rem;font-style:italic;">Estimado — depende de tu techo, tu consumo real y el sistema. La cotización exacta es gratis.</p>'+
+              '<a href="'+WA+encodeURIComponent(msg)+'" style="display:inline-block;background:#f59e0b;color:white;text-decoration:none;padding:0.6rem 1.2rem;border-radius:8px;font-weight:700;font-size:1rem;">Textea tu factura al 787-417-7711 → '+esc(rec)+' te cotiza</a>';
             res.style.display='block';
             try { gtag('event','solar_calc',{ bill: bill }); } catch(e) {}
           });
@@ -1774,13 +1777,13 @@ export default async function handler(req: any, res: any) {
 
     <div style="background:white;border-radius:12px;padding:1.4rem 1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:1.5rem;border-left:4px solid #f59e0b;">
       <h2 style="font-size:1.1rem;font-weight:700;color:#0f172a;margin-bottom:0.6rem;">¿Por qué ahora?</h2>
-      <p style="font-size:0.9rem;color:#475569;line-height:1.6;margin-bottom:0.6rem;">La luz en Puerto Rico solo sube — LUMA pasó de $0.27 a $0.33 el kWh, y va a seguir. Mi mamá pasó de pagar <strong>$90 a $42 al mes</strong> con un programa que casi nadie conoce.</p>
-      <p style="font-size:0.9rem;color:#475569;line-height:1.6;margin:0;">Además hay fondos federales (HUD, FEMA) ayudando con la instalación — pero cierran, y mucha gente ni sabe que existen. Por eso vale preguntar ahora, no cuando ya cerraron.</p>
+      <p style="font-size:1rem;color:#475569;line-height:1.6;margin-bottom:0.6rem;">La luz en Puerto Rico solo sube — LUMA pasó de $0.27 a $0.33 el kWh, y va a seguir. Mi mamá pasó de pagar <strong>$90 a $42 al mes</strong> con un programa que casi nadie conoce.</p>
+      <p style="font-size:1rem;color:#475569;line-height:1.6;margin:0;">Además hay fondos federales (HUD, FEMA) ayudando con la instalación — pero cierran, y mucha gente ni sabe que existen. Por eso vale preguntar ahora, no cuando ya cerraron.</p>
     </div>
 
     <div style="background:white;border-radius:12px;padding:1.4rem 1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:1.5rem;">
       <h2 style="font-size:1.1rem;font-weight:700;color:#0f172a;margin-bottom:0.3rem;">Antes de firmar, pregunta esto</h2>
-      <p style="font-size:0.8rem;color:#64748b;margin-bottom:0.9rem;">Pa' que no te cojan de bobo. Un buen instalador contesta las 6 sin rodeos.</p>
+      <p style="font-size:1rem;color:#475569;margin-bottom:0.9rem;">Pa' que no te cojan de bobo. Un buen instalador contesta las 6 sin rodeos.</p>
       <ul style="list-style:none;padding:0;margin:0;">
         ${[
           '¿Cuánto de mi consumo real cubre el sistema — no el promedio del pueblo, el mío?',
@@ -1789,7 +1792,7 @@ export default async function handler(req: any, res: any) {
           '¿Están certificados? ¿Cuántas instalaciones llevan en la zona?',
           '¿El financiamiento es préstamo, lease o PPA? ¿A nombre de quién queda el sistema?',
           '¿Qué pasa con el sistema si vendo la casa?',
-        ].map(q => `<li style="padding:0.5rem 0;border-bottom:1px solid #f1f5f9;font-size:0.9rem;color:#334155;line-height:1.45;"><span style="color:#f59e0b;font-weight:700;margin-right:0.4rem;">✓</span>${q}</li>`).join('')}
+        ].map(q => `<li style="padding:0.5rem 0;border-bottom:1px solid #f1f5f9;font-size:1rem;color:#334155;line-height:1.45;"><span style="color:#f59e0b;font-weight:700;margin-right:0.4rem;">✓</span>${q}</li>`).join('')}
       </ul>
     </div>
     ` : ''}
@@ -1810,8 +1813,8 @@ export default async function handler(req: any, res: any) {
       <h2 style="font-size:1.15rem;font-weight:700;color:#0f172a;margin-bottom:1rem;">Preguntas frecuentes</h2>
       ${faqItems.map(f => `
         <div style="margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid #f1f5f9;">
-          <h3 style="font-size:0.95rem;font-weight:600;color:#1e293b;margin-bottom:0.35rem;">${esc(f.q)}</h3>
-          <p style="font-size:0.875rem;color:#475569;margin:0;">${esc(f.a)}</p>
+          <h3 style="font-size:1rem;font-weight:600;color:#1e293b;margin-bottom:0.35rem;">${esc(f.q)}</h3>
+          <p style="font-size:1rem;color:#475569;margin:0;">${esc(f.a)}</p>
         </div>`).join('')}
     </div>` : ''}
 
@@ -1820,24 +1823,24 @@ export default async function handler(req: any, res: any) {
       const totalFailed = demandRows.reduce((s, r) => s + r.failed, 0);
       const subtitle = `Últimos 90 días en El Veci (*7711) · ${totalUsers} ${totalUsers === 1 ? 'persona' : 'personas'}${totalFailed > 0 ? ` · ${totalFailed} sin resultado` : ''}`;
       const items = demandRows.map(r => {
-        const failBadge = r.failed > 0 ? '<span style="font-size:0.7rem;color:#dc2626;background:#fee2e2;padding:0.1rem 0.45rem;border-radius:999px;margin-left:0.5rem;font-weight:600;">sin resultado</span>' : '';
-        return `<li style="padding:0.55rem 0;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:0.5rem;font-size:0.9rem;color:#334155;">
-          <strong style="color:#0d9488;min-width:2.5rem;font-variant-numeric:tabular-nums;">${r.users}×</strong>
+        const failBadge = r.failed > 0 ? '<span style="font-size:1rem;color:#dc2626;background:#fee2e2;padding:0.1rem 0.45rem;border-radius:999px;margin-left:0.5rem;font-weight:600;">sin resultado</span>' : '';
+        return `<li style="padding:0.55rem 0;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:0.5rem;font-size:1rem;color:#334155;">
+          <strong style="color:#0f766e;min-width:2.5rem;font-variant-numeric:tabular-nums;">${r.users}×</strong>
           <span>"${esc(r.query_normalized)}"</span>
           ${failBadge}
         </li>`;
       }).join('');
       return `
-    <div style="background:white;border-radius:12px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:2rem;border-left:4px solid #0d9488;">
+    <div style="background:white;border-radius:12px;padding:1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.06);margin-bottom:2rem;border-left:4px solid #0f766e;">
       <h2 style="font-size:1.1rem;font-weight:700;color:#0f172a;margin-bottom:0.35rem;">📊 Lo que vecinos están buscando</h2>
-      <p style="font-size:0.8rem;color:#64748b;margin-bottom:1rem;">${esc(subtitle)}</p>
+      <p style="font-size:1rem;color:#475569;margin-bottom:1rem;">${esc(subtitle)}</p>
       <ul style="list-style:none;padding:0;margin:0;">${items}</ul>
     </div>`;
     })() : ''}
 
-    <div style="background:linear-gradient(135deg,#0d9488 0%,#f97316 100%);border-radius:12px;padding:1.75rem 1.5rem;text-align:center;margin-bottom:2rem;">
+    <div style="background:linear-gradient(135deg,#0f766e 0%,#9a3412 100%);border-radius:12px;padding:1.75rem 1.5rem;text-align:center;margin-bottom:2rem;">
       <h2 style="color:white;font-size:1.2rem;font-weight:700;margin-bottom:0.5rem;">${isRestaurant ? '¿Tu restaurante debería estar en La Selección?' : `¿Tienes ${detailRoute && HEALTH_CTA_NOUN[cat] ? `${HEALTH_CTA_NOUN[cat].article} ${HEALTH_CTA_NOUN[cat].noun}` : 'un negocio'} en Cabo Rojo?`}</h2>
-      <p style="color:rgba(255,255,255,0.9);font-size:0.9rem;margin-bottom:1rem;">${(() => {
+      <p style="color:rgba(255,255,255,0.9);font-size:1rem;margin-bottom:1rem;">${(() => {
         const totalUsers = demandRows.reduce((s, r) => s + r.users, 0);
         const totalFailed = demandRows.reduce((s, r) => s + r.failed, 0);
         // Sin precios en páginas públicas (capa discovery, 27 ago): el negocio trae su idea y se habla 1 a 1.
@@ -1846,16 +1849,16 @@ export default async function handler(req: any, res: any) {
         if (totalUsers >= 3) return `${totalUsers} vecinos buscaron ${pluralEs(cat, displayName)} en El Veci este trimestre. Si quieres que te encuentren primero, tráeme tu idea y lo cuadramos.`;
         return `Si quieres aparecer primero, con servicios, fotos y reseñas a la vista, tráeme tu idea y lo cuadramos.`;
       })()}</p>
-      <a href="https://wa.me/17874177711?text=${encodeURIComponent('VITRINA ' + displayName)}" style="display:inline-block;background:white;color:#0d9488;text-decoration:none;padding:0.65rem 1.5rem;border-radius:8px;font-weight:700;font-size:0.95rem;">Textea VITRINA al 787-417-7711</a>
+      <a href="https://wa.me/17874177711?text=${encodeURIComponent('VITRINA ' + displayName)}" style="display:inline-block;background:white;color:#0f766e;text-decoration:none;padding:0.65rem 1.5rem;border-radius:8px;font-weight:700;font-size:1rem;">Textea VITRINA al 787-417-7711</a>
     </div>
 
     <footer style="margin-top: 48px; padding: 24px 0; border-top: 1px solid #e2e8f0; text-align: center;">
-      <p style="color: #94a3b8; font-size: 12px; margin: 0;">
+      <p style="color: #475569; font-size: 1rem; margin: 0;">
         Hecho con orgullo en Cabo Rojo, Puerto Rico
       </p>
-      <p style="color: #94a3b8; font-size: 11px; margin: 4px 0 0 0;">
-        <a href="https://www.mapadecaborojo.com" style="color: #0d9488; text-decoration: none;">MapaDeCaboRojo.com</a>
-        · Un proyecto de <a href="https://angelanderson.com" style="color: #0d9488; text-decoration: none;">Angel Anderson</a>
+      <p style="color: #475569; font-size: 1rem; margin: 4px 0 0 0;">
+        <a href="https://www.mapadecaborojo.com" style="color: #0f766e; text-decoration: none;">MapaDeCaboRojo.com</a>
+        · Un proyecto de <a href="https://angelanderson.com" style="color: #0f766e; text-decoration: none;">Angel Anderson</a>
       </p>
     </footer>
   </div>
@@ -1901,7 +1904,7 @@ export default async function handler(req: any, res: any) {
       }).addTo(map);
 
       var markers = [];
-      var teal = '#0d9488';
+      var teal = '#0f766e';
 
       places.forEach(function(p) {
         var popupParts = [

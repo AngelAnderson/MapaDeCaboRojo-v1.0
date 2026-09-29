@@ -40,8 +40,8 @@ const supabaseSrv = process.env.SUPABASE_SERVICE_ROLE_KEY
   : supabase;
 
 // Medical green — matches HEALTH marker color override in constants.ts
-const MEDICAL_GREEN = '#10b981';
-const MEDICAL_DARK  = '#059669';
+const MEDICAL_GREEN = '#047857'; // 29 sep: #10b981 daba 2.5 de contraste (mayores primero)
+const MEDICAL_DARK  = '#065f46';
 
 // Multi-type health detail config — farmacia.ts handles ALL health subcategories
 const HEALTH_CONFIG: Record<string, { schemaType: string; label: string; labelPlural: string; emoji: string; color: string; colorDark: string }> = {
@@ -53,8 +53,8 @@ const HEALTH_CONFIG: Record<string, { schemaType: string; label: string; labelPl
   laboratorio:    { schemaType: 'MedicalClinic',       label: 'Laboratorio',        labelPlural: 'Laboratorios',          emoji: '🔬', color: '#f59e0b', colorDark: '#d97706' },
   optica:         { schemaType: 'Optician',            label: 'Óptica',             labelPlural: 'Ópticas',               emoji: '👓', color: '#6366f1', colorDark: '#4f46e5' },
   'salud-mental': { schemaType: 'Physician',           label: 'Salud Mental',       labelPlural: 'Salud Mental',          emoji: '🧠', color: '#ec4899', colorDark: '#db2777' },
-  quiropractico:  { schemaType: 'Physician',           label: 'Quiropráctico',      labelPlural: 'Quiroprácticos',        emoji: '🦴', color: '#14b8a6', colorDark: '#0d9488' },
-  gimnasio:       { schemaType: 'ExerciseGym',         label: 'Gimnasio',           labelPlural: 'Gimnasios & Fitness',   emoji: '💪', color: '#f97316', colorDark: '#ea580c' },
+  quiropractico:  { schemaType: 'Physician',           label: 'Quiropráctico',      labelPlural: 'Quiroprácticos',        emoji: '🦴', color: '#14b8a6', colorDark: '#0f766e' },
+  gimnasio:       { schemaType: 'ExerciseGym',         label: 'Gimnasio',           labelPlural: 'Gimnasios & Fitness',   emoji: '💪', color: '#9a3412', colorDark: '#ea580c' },
   fisiatra:       { schemaType: 'Physician',           label: 'Fisiatra',           labelPlural: 'Fisiatras',             emoji: '🩺', color: '#0891b2', colorDark: '#0e7490' },
 };
 
@@ -497,46 +497,49 @@ export default async function handler(req: any, res: any) {
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0fdf4; color: #1e293b; line-height: 1.6; }
     .container { max-width: 720px; margin: 0 auto; padding: 1rem; }
-    .back { display: inline-block; margin-bottom: 1rem; color: ${MEDICAL_GREEN}; text-decoration: none; font-size: 0.9rem; }
+    .back { display: inline-block; margin-bottom: 1rem; color: ${MEDICAL_GREEN}; text-decoration: none; font-size: 1rem; }
     .back:hover { text-decoration: underline; }
+    /* 29 sep 2026 (mayores primero) */
+    .back { display: inline-flex; align-items: center; min-height: 48px; }
+    a[href^="tel:"] { display: inline-block; min-height: 44px; padding: 0.5rem 0; font-weight: 700; }
     .hero { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 1.5rem; }
     .hero-img { width: 100%; aspect-ratio: 16/9; object-fit: cover; object-position: center 30%; display: block; }
     .hero-img-placeholder { width: 100%; aspect-ratio: 16/9; background: linear-gradient(135deg, ${MEDICAL_GREEN} 0%, ${MEDICAL_DARK} 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 3.5rem; }
     .hero-body { padding: 1.5rem; }
-    .badge { display: inline-block; background: ${MEDICAL_GREEN}; color: white; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; margin-right: 0.4rem; }
+    .badge { display: inline-block; background: ${MEDICAL_GREEN}; color: white; font-size: 1rem; padding: 0.2rem 0.6rem; border-radius: 999px;  letter-spacing: 0.01em; margin-bottom: 0.5rem; margin-right: 0.4rem; }
     .badge-npi { background: #1d4ed8; }
     .badge-open { background: #10b981; }
     .badge-closed { background: #ef4444; }
-    .badge-unknown { background: #94a3b8; }
+    .badge-unknown { background: #475569; }
     h1 { font-size: 1.75rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem; margin-top: 0.5rem; }
     .rating { color: #f59e0b; font-size: 1rem; margin-bottom: 0.75rem; }
-    .description { color: #475569; font-size: 0.95rem; }
+    .description { color: #475569; font-size: 1rem; }
     .info-card { background: white; border-radius: 12px; padding: 1.25rem 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 1rem; }
     .info-card h2 { font-size: 1rem; font-weight: 600; color: ${MEDICAL_GREEN}; margin-bottom: 0.75rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; }
-    .info-row { display: flex; gap: 0.5rem; padding: 0.4rem 0; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+    .info-row { display: flex; gap: 0.5rem; padding: 0.4rem 0; border-bottom: 1px solid #f1f5f9; font-size: 1rem; }
     .info-row:last-child { border-bottom: none; }
-    .info-label { color: #64748b; min-width: 120px; font-weight: 500; }
+    .info-label { color: #475569; min-width: 120px; font-weight: 500; }
     .info-value { color: #1e293b; }
     .info-value a { color: ${MEDICAL_GREEN}; text-decoration: none; }
     .info-value a:hover { text-decoration: underline; }
     .map-embed { width: 100%; height: 220px; border: 0; border-radius: 12px; display: block; margin-bottom: 1rem; }
     .cta { background: linear-gradient(135deg, ${MEDICAL_GREEN}, ${MEDICAL_DARK}); border-radius: 12px; padding: 1.5rem; text-align: center; margin-bottom: 1rem; }
-    .cta p { color: rgba(255,255,255,0.85); margin-bottom: 0.75rem; font-size: 0.95rem; }
-    .cta a { display: inline-block; background: #f97316; color: white; text-decoration: none; padding: 0.75rem 1.75rem; border-radius: 8px; font-weight: 600; font-size: 1rem; }
+    .cta p { color: rgba(255,255,255,0.85); margin-bottom: 0.75rem; font-size: 1rem; }
+    .cta a { display: inline-block; background: #9a3412; color: white; text-decoration: none; padding: 0.75rem 1.75rem; border-radius: 8px; font-weight: 600; font-size: 1rem; }
     .faq { background: white; border-radius: 12px; padding: 1.25rem 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 1rem; }
     .faq h2 { font-size: 1rem; font-weight: 600; color: ${MEDICAL_GREEN}; margin-bottom: 0.75rem; }
     .faq-item { margin-bottom: 1rem; }
-    .faq-item h3 { font-size: 0.9rem; font-weight: 600; color: #0f172a; margin-bottom: 0.25rem; }
-    .faq-item p { font-size: 0.875rem; color: #475569; }
+    .faq-item h3 { font-size: 1rem; font-weight: 600; color: #0f172a; margin-bottom: 0.25rem; }
+    .faq-item p { font-size: 1rem; color: #475569; }
     .reclaim-card { background: linear-gradient(135deg, ${MEDICAL_GREEN} 0%, ${MEDICAL_DARK} 100%); border-radius: 12px; padding: 1.75rem 1.5rem; text-align: center; margin-bottom: 1rem; }
     .reclaim-card h2 { color: white; font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
-    .reclaim-card p { color: rgba(255,255,255,0.9); font-size: 0.9rem; margin-bottom: 1.25rem; }
+    .reclaim-card p { color: rgba(255,255,255,0.9); font-size: 1rem; margin-bottom: 1.25rem; }
     .reclaim-btn { display: inline-block; background: white; color: ${MEDICAL_DARK}; text-decoration: none; padding: 0.75rem 1.75rem; border-radius: 8px; font-weight: 700; font-size: 1rem; }
-    footer { text-align: center; padding: 1.5rem 0 2rem; color: #94a3b8; font-size: 0.8rem; border-top: 1px solid #e2e8f0; margin-top: 2rem; }
+    footer { text-align: center; padding: 1.5rem 0 2rem; color: #475569; font-size: 1rem; border-top: 1px solid #e2e8f0; margin-top: 2rem; }
     footer a { color: ${MEDICAL_GREEN}; text-decoration: none; }
     .services { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
-    .service-badge { display: inline-flex; align-items: center; gap: 0.3rem; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; font-size: 0.8rem; padding: 0.3rem 0.7rem; border-radius: 999px; font-weight: 500; }
-    .wa-btn { display: inline-flex; align-items: center; gap: 0.5rem; background: #25D366; color: white; text-decoration: none; padding: 0.65rem 1.5rem; border-radius: 8px; font-weight: 600; font-size: 0.95rem; margin-right: 0.5rem; }
+    .service-badge { display: inline-flex; align-items: center; gap: 0.3rem; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; font-size: 1rem; padding: 0.3rem 0.7rem; border-radius: 999px; font-weight: 500; }
+    .wa-btn { display: inline-flex; align-items: center; gap: 0.5rem; background: #25D366; color: white; text-decoration: none; padding: 0.65rem 1.5rem; border-radius: 8px; font-weight: 600; font-size: 1rem; margin-right: 0.5rem; }
     .wa-btn:hover { background: #1da851; }
     .btn-row { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 0.75rem; }
     @media (max-width: 480px) { h1 { font-size: 1.4rem; } .map-embed { height: 180px; } }
@@ -569,7 +572,7 @@ export default async function handler(req: any, res: any) {
     </div>
 
     <!-- #6 Language toggle -->
-    <div style="text-align:right;margin-bottom:8px;font-size:0.85rem;">
+    <div style="text-align:right;margin-bottom:8px;font-size:1rem;">
       ${lang === 'es'
         ? `<a href="${pageUrlEn}" style="color:${config.color};text-decoration:none;">🇺🇸 English version</a>`
         : `<a href="${pageUrlEs}" style="color:${config.color};text-decoration:none;">🇵🇷 Versión en español</a>`}
@@ -623,31 +626,31 @@ export default async function handler(req: any, res: any) {
       const hasData = plans && PLAN_LABELS.some(p => plans[p.key] === true || plans[p.key] === false);
       const headerEs = '💳 Planes médicos aceptados';
       const headerEn = '💳 Insurance plans accepted';
-      const updatedEs = plans?.updated_at ? `<p style="font-size:0.75rem;color:#94a3b8;margin-top:0.5rem;">Actualizado: ${esc(String(plans.updated_at))} · siempre confirma con tu plan antes de la cita.</p>` : '';
-      const updatedEn = plans?.updated_at ? `<p style="font-size:0.75rem;color:#94a3b8;margin-top:0.5rem;">Updated: ${esc(String(plans.updated_at))} · always confirm with your insurance before your appointment.</p>` : '';
-      const noteEs = '<p style="font-size:0.8rem;color:#64748b;margin-top:0.75rem;">Los datos vienen de la práctica. Si ves algo desactualizado, textea <strong>PLANES ' + esc(place.name) + '</strong> al 787-417-7711.</p>';
-      const noteEn = '<p style="font-size:0.8rem;color:#64748b;margin-top:0.75rem;">Data provided by the practice. See something outdated? Text <strong>PLANES ' + esc(place.name) + '</strong> to 787-417-7711.</p>';
+      const updatedEs = plans?.updated_at ? `<p style="font-size:1rem;color:#475569;margin-top:0.5rem;">Actualizado: ${esc(String(plans.updated_at))} · siempre confirma con tu plan antes de la cita.</p>` : '';
+      const updatedEn = plans?.updated_at ? `<p style="font-size:1rem;color:#475569;margin-top:0.5rem;">Updated: ${esc(String(plans.updated_at))} · always confirm with your insurance before your appointment.</p>` : '';
+      const noteEs = '<p style="font-size:1rem;color:#475569;margin-top:0.75rem;">Los datos vienen de la práctica. Si ves algo desactualizado, textea <strong>PLANES ' + esc(place.name) + '</strong> al 787-417-7711.</p>';
+      const noteEn = '<p style="font-size:1rem;color:#475569;margin-top:0.75rem;">Data provided by the practice. See something outdated? Text <strong>PLANES ' + esc(place.name) + '</strong> to 787-417-7711.</p>';
       const emptyEs = `
-        <p style="color:#475569;font-size:0.9rem;margin-bottom:0.75rem;">Aún no tenemos los planes médicos confirmados de ${placeName}.</p>
-        <div style="background:#fef3c7;border-left:3px solid #f59e0b;padding:0.75rem 1rem;border-radius:6px;font-size:0.85rem;color:#78350f;">
+        <p style="color:#475569;font-size:1rem;margin-bottom:0.75rem;">Aún no tenemos los planes médicos confirmados de ${placeName}.</p>
+        <div style="background:#fef3c7;border-left:3px solid #f59e0b;padding:0.75rem 1rem;border-radius:6px;font-size:1rem;color:#78350f;">
           <strong>¿Eres dueño o trabajas aquí?</strong> Textea <strong>PLANES ${esc(place.name)}</strong> al 787-417-7711 con los planes que aceptan — actualizamos esto en 24h. Pacientes con tu plan te encuentran primero.
         </div>`;
       const emptyEn = `
-        <p style="color:#475569;font-size:0.9rem;margin-bottom:0.75rem;">We don't yet have confirmed insurance data for ${placeName}.</p>
-        <div style="background:#fef3c7;border-left:3px solid #f59e0b;padding:0.75rem 1rem;border-radius:6px;font-size:0.85rem;color:#78350f;">
+        <p style="color:#475569;font-size:1rem;margin-bottom:0.75rem;">We don't yet have confirmed insurance data for ${placeName}.</p>
+        <div style="background:#fef3c7;border-left:3px solid #f59e0b;padding:0.75rem 1rem;border-radius:6px;font-size:1rem;color:#78350f;">
           <strong>Are you the owner or staff?</strong> Text <strong>PLANES ${esc(place.name)}</strong> to 787-417-7711 with the plans you accept — we update within 24h. Patients with your insurance find you first.
         </div>`;
       const table = hasData ? `
         <table style="width:100%;border-collapse:collapse;margin-top:0.5rem;">
           <thead><tr style="background:#f8fafc;text-align:left;">
-            <th style="padding:8px 12px;font-size:0.85rem;color:#334155;font-weight:600;">${lang==='en'?'Plan':'Plan médico'}</th>
-            <th style="padding:8px 12px;font-size:0.85rem;color:#334155;font-weight:600;text-align:center;">${lang==='en'?'Accepted':'Acepta'}</th>
+            <th style="padding:8px 12px;font-size:1rem;color:#334155;font-weight:600;">${lang==='en'?'Plan':'Plan médico'}</th>
+            <th style="padding:8px 12px;font-size:1rem;color:#334155;font-weight:600;text-align:center;">${lang==='en'?'Accepted':'Acepta'}</th>
           </tr></thead>
           <tbody>
           ${PLAN_LABELS.map(p => {
             const v = plans![p.key];
-            const cell = v === true ? '<span style="color:#16a34a;font-weight:700;font-size:1.1rem;">✓</span>' : v === false ? '<span style="color:#dc2626;font-weight:700;font-size:1.1rem;">✗</span>' : '<span style="color:#94a3b8;font-size:1.1rem;">—</span>';
-            return `<tr style="border-top:1px solid #f1f5f9;"><td style="padding:8px 12px;font-size:0.9rem;color:#1e293b;">${lang==='en'?p.en:p.es}</td><td style="padding:8px 12px;text-align:center;">${cell}</td></tr>`;
+            const cell = v === true ? '<span style="color:#16a34a;font-weight:700;font-size:1.1rem;">✓</span>' : v === false ? '<span style="color:#dc2626;font-weight:700;font-size:1.1rem;">✗</span>' : '<span style="color:#475569;font-size:1.1rem;">—</span>';
+            return `<tr style="border-top:1px solid #f1f5f9;"><td style="padding:8px 12px;font-size:1rem;color:#1e293b;">${lang==='en'?p.en:p.es}</td><td style="padding:8px 12px;text-align:center;">${cell}</td></tr>`;
           }).join('')}
           </tbody>
         </table>
@@ -665,37 +668,37 @@ export default async function handler(req: any, res: any) {
       if (!['fisiatra','medico','dentista','laboratorio','optica','salud-mental','quiropractico','hospital','farmacia'].includes(type)) return '';
       const heading = lang === 'en' ? '⭐ What vecinos say' : '⭐ Lo que dicen los vecinos';
       const empty = lang === 'en'
-        ? `<p style="color:#475569;font-size:0.9rem;margin-bottom:0.75rem;">No reviews yet for ${placeName}.</p>
-           <div style="background:#dbeafe;border-left:3px solid #3b82f6;padding:0.75rem 1rem;border-radius:6px;font-size:0.85rem;color:#1e3a8a;">
+        ? `<p style="color:#475569;font-size:1rem;margin-bottom:0.75rem;">No reviews yet for ${placeName}.</p>
+           <div style="background:#dbeafe;border-left:3px solid #3b82f6;padding:0.75rem 1rem;border-radius:6px;font-size:1rem;color:#1e3a8a;">
              <strong>Been here? Help other vecinos.</strong> Text <strong>REVIEW ${esc(place.name)} [1-5] [your experience]</strong> to 787-417-7711. Approved within 24h. Plan-specific reviews = trust signal for diáspora.
            </div>`
-        : `<p style="color:#475569;font-size:0.9rem;margin-bottom:0.75rem;">Aún no hay reseñas de vecinos para ${placeName}.</p>
-           <div style="background:#dbeafe;border-left:3px solid #3b82f6;padding:0.75rem 1rem;border-radius:6px;font-size:0.85rem;color:#1e3a8a;">
+        : `<p style="color:#475569;font-size:1rem;margin-bottom:0.75rem;">Aún no hay reseñas de vecinos para ${placeName}.</p>
+           <div style="background:#dbeafe;border-left:3px solid #3b82f6;padding:0.75rem 1rem;border-radius:6px;font-size:1rem;color:#1e3a8a;">
              <strong>¿Has ido? Ayuda a otros vecinos.</strong> Textea <strong>REVIEW ${esc(place.name)} [1-5] [tu experiencia]</strong> al 787-417-7711. Aprobamos en 24h. Reseñas con tu plan médico = señal de confianza pa' diáspora.
            </div>`;
       const renderReview = (r: any) => {
         const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
-        const planChip = r.plan_medico ? `<span style="background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:10px;font-size:0.7rem;margin-left:6px;">${esc(r.plan_medico)}</span>` : '';
+        const planChip = r.plan_medico ? `<span style="background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:10px;font-size:1rem;margin-left:6px;">${esc(r.plan_medico)}</span>` : '';
         const recBadge = r.recommends ? (lang === 'en' ? '👍 Recommends' : '👍 Recomienda') : '';
         const dateStr = new Date(r.created_at).toLocaleDateString(lang === 'en' ? 'en-US' : 'es-PR', { year: 'numeric', month: 'short' });
         return `
           <div style="padding:0.9rem 0;border-bottom:1px solid #f1f5f9;">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-              <span style="color:#f59e0b;font-size:0.95rem;">${stars}</span>
+              <span style="color:#f59e0b;font-size:1rem;">${stars}</span>
               ${planChip}
-              <span style="margin-left:auto;font-size:0.75rem;color:#94a3b8;">${esc(r.phone_last4)} · ${dateStr}</span>
+              <span style="margin-left:auto;font-size:1rem;color:#475569;">${esc(r.phone_last4)} · ${dateStr}</span>
             </div>
-            <p style="font-size:0.9rem;color:#1e293b;line-height:1.55;margin-bottom:6px;">${esc(r.body)}</p>
-            ${recBadge ? `<p style="font-size:0.75rem;color:#16a34a;font-weight:600;">${recBadge}${r.condition_treated ? ` · ${esc(r.condition_treated)}` : ''}</p>` : ''}
+            <p style="font-size:1rem;color:#1e293b;line-height:1.55;margin-bottom:6px;">${esc(r.body)}</p>
+            ${recBadge ? `<p style="font-size:1rem;color:#16a34a;font-weight:600;">${recBadge}${r.condition_treated ? ` · ${esc(r.condition_treated)}` : ''}</p>` : ''}
           </div>`;
       };
       const statsHtml = reviewStats.count > 0 && reviewStats.avg_rating
         ? `<div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem;padding-bottom:0.75rem;border-bottom:1px solid #e2e8f0;">
             <div style="display:flex;align-items:baseline;gap:6px;">
               <span style="font-size:1.6rem;font-weight:800;color:${config.color};">${reviewStats.avg_rating}</span>
-              <span style="font-size:0.85rem;color:#64748b;">/5</span>
+              <span style="font-size:1rem;color:#475569;">/5</span>
             </div>
-            <div style="font-size:0.8rem;color:#64748b;">
+            <div style="font-size:1rem;color:#475569;">
               ${reviewStats.count} ${lang === 'en' ? (reviewStats.count === 1 ? 'review' : 'reviews') : 'reseña' + (reviewStats.count === 1 ? '' : 's')}
               ${reviewStats.recommend_pct !== null ? ` · ${reviewStats.recommend_pct}% ${lang === 'en' ? 'recommend' : 'recomienda'}` : ''}
             </div>
@@ -714,9 +717,9 @@ export default async function handler(req: any, res: any) {
       <p>&#128140; ${T.ctaSubtitle(placeName)}</p>
       <div class="btn-row">
         ${waLink ? `<a class="wa-btn" href="${waLink}" target="_blank" rel="noopener">WhatsApp directo</a>` : ''}
-        <a href="https://wa.me/17874177711?text=${smsBody}" style="display:inline-flex;align-items:center;gap:0.5rem;background:#f97316;color:white;text-decoration:none;padding:0.65rem 1.5rem;border-radius:8px;font-weight:600;font-size:0.95rem;">Textea a El Veci</a>
+        <a href="https://wa.me/17874177711?text=${smsBody}" style="display:inline-flex;align-items:center;gap:0.5rem;background:#9a3412;color:white;text-decoration:none;padding:0.65rem 1.5rem;border-radius:8px;font-weight:600;font-size:1rem;">Textea a El Veci</a>
       </div>
-      ${displayPhone ? `<p style="margin-top:0.5rem;font-size:0.85rem;"><a href="tel:${esc(displayPhone)}" style="color:rgba(255,255,255,0.9);">&#128222; Llamar al ${esc(displayPhone)}</a></p>` : ''}
+      ${displayPhone ? `<p style="margin-top:0.5rem;font-size:1rem;"><a href="tel:${esc(displayPhone)}" style="color:rgba(255,255,255,0.9);">&#128222; Llamar al ${esc(displayPhone)}</a></p>` : ''}
     </div>
 
     <div class="faq">
@@ -754,14 +757,14 @@ export default async function handler(req: any, res: any) {
       <h2>${T.isYourBusiness}</h2>
       <p>${T.standOut(localizedLabel, isCaboRojo)}</p>
       <a class="reclaim-btn" href="https://wa.me/17874177711?text=VITRINA%20${encodeURIComponent(place.name)}">${T.learnVitrina}</a>
-      <a href="https://wa.me/17874177711?text=RECLAMAR%20${encodeURIComponent(place.name)}" style="display:inline-block;background:transparent;color:white;text-decoration:underline;padding:0.4rem 1rem;font-size:0.85rem;margin-top:0.5rem;">Solo verificar mi info (gratis)</a>
-      <p style="color:rgba(255,255,255,0.75);font-size:0.8rem;margin-top:0.75rem;">Textea al 787-417-7711 y El Veci te guía paso a paso.</p>
+      <a href="https://wa.me/17874177711?text=RECLAMAR%20${encodeURIComponent(place.name)}" style="display:inline-block;background:transparent;color:white;text-decoration:underline;padding:0.4rem 1rem;font-size:1rem;margin-top:0.5rem;">Solo verificar mi info (gratis)</a>
+      <p style="color:rgba(255,255,255,0.75);font-size:1rem;margin-top:0.75rem;">Textea al 787-417-7711 y El Veci te guía paso a paso.</p>
     </div>`}
 
     <div style="background:white;border-radius:12px;padding:1.25rem 1.5rem;box-shadow:0 2px 8px rgba(0,0,0,0.08);margin-bottom:1rem;">
       <h2 style="font-size:1rem;font-weight:600;color:${MEDICAL_GREEN};margin-bottom:0.5rem;">&#129302; Pregúntale a El Veci sobre ${placeName}</h2>
-      <p style="font-size:0.875rem;color:#475569;margin-bottom:0.75rem;">El Veci es tu vecino digital. Pregúntale lo que quieras — horarios, servicios, cómo llegar, o qué ${config.labelPlural.toLowerCase()} están disponibles ahora.</p>
-      <a href="https://wa.me/17874177711?text=${encodeURIComponent(`¿Está abierta ${place.name}?`)}" style="display:inline-block;background:${MEDICAL_GREEN};color:white;text-decoration:none;padding:0.6rem 1.25rem;border-radius:8px;font-weight:600;font-size:0.9rem;">Textea a El Veci</a>
+      <p style="font-size:1rem;color:#475569;margin-bottom:0.75rem;">El Veci es tu vecino digital. Pregúntale lo que quieras — horarios, servicios, cómo llegar, o qué ${config.labelPlural.toLowerCase()} están disponibles ahora.</p>
+      <a href="https://wa.me/17874177711?text=${encodeURIComponent(`¿Está abierta ${place.name}?`)}" style="display:inline-block;background:${MEDICAL_GREEN};color:white;text-decoration:none;padding:0.6rem 1.25rem;border-radius:8px;font-weight:600;font-size:1rem;">Textea a El Veci</a>
     </div>
 
     ${(() => {
@@ -784,15 +787,15 @@ export default async function handler(req: any, res: any) {
       const labelsEn: Record<string,string> = { farmacias:'pharmacies', médicos:'physicians', quiroprácticos:'chiropractors', laboratorios:'labs', hospitales:'hospitals', fisiatras:'physiatrists' };
       return `
     <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;">
-      <p style="font-size:0.85rem;color:#64748b;margin:0 0 0.5rem;font-weight:600;">${T.relatedSearches}:</p>
+      <p style="font-size:1rem;color:#475569;margin:0 0 0.5rem;font-weight:600;">${T.relatedSearches}:</p>
       <div style="display:flex;flex-wrap:wrap;gap:8px;">
-        ${links.map(l => `<a href="${baseUrl}/categoria/${l.slug}${lang==='en'?'?lang=en':''}" style="display:inline-flex;align-items:center;gap:6px;background:white;border:1px solid #cbd5e1;border-radius:20px;padding:6px 14px;font-size:0.85rem;color:#334155;text-decoration:none;">${l.emoji} ${lang==='en' && labelsEn[l.label] ? labelsEn[l.label] : l.label}</a>`).join('')}
+        ${links.map(l => `<a href="${baseUrl}/categoria/${l.slug}${lang==='en'?'?lang=en':''}" style="display:inline-flex;align-items:center;gap:6px;background:white;border:1px solid #cbd5e1;border-radius:20px;padding:6px 14px;font-size:1rem;color:#334155;text-decoration:none;">${l.emoji} ${lang==='en' && labelsEn[l.label] ? labelsEn[l.label] : l.label}</a>`).join('')}
       </div>
     </div>`;
     })()}
 
     <div style="text-align:center;margin-bottom:1.5rem;">
-      <a href="${baseUrl}/?place=${esc(place.slug || place.id)}" style="color:${MEDICAL_GREEN};text-decoration:none;font-size:0.9rem;">${T.viewOnMap(placeName)} &rarr;</a>
+      <a href="${baseUrl}/?place=${esc(place.slug || place.id)}" style="color:${MEDICAL_GREEN};text-decoration:none;font-size:1rem;">${T.viewOnMap(placeName)} &rarr;</a>
     </div>
 
     <footer>
