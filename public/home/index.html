@@ -72,21 +72,21 @@
   .card a.hit{display:block;padding:14px 16px;text-decoration:none}
   .card a.hit:hover{background:#f5f5f4}
   .nm{font-weight:700;font-size:1.02rem;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
-  .meta{font-size:.95rem;color:var(--ink-soft);margin-top:3px}
-  .tag{font-size:15px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  .meta{font-size:1rem;color:var(--ink-soft);margin-top:3px}
+  .tag{font-size:1rem;font-weight:700;letter-spacing:.04em;
        padding:2px 8px;border-radius:999px;white-space:nowrap}
   .tag.rec{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa}
   .tag.fuera{background:#f5f5f4;color:var(--ink-soft);border:1px solid var(--line)}
   .acts{display:flex;gap:8px;padding:0 16px 13px;flex-wrap:wrap}
-  .act{font-size:.95rem;font-weight:600;text-decoration:none;padding:7px 13px;border-radius:9px;
+  .act{font-size:1rem;font-weight:600;text-decoration:none;padding:7px 13px;border-radius:9px;
        border:1px solid var(--line);color:var(--teal-dark);background:#fff}
   .act.tel{background:var(--teal);color:#fff;border-color:var(--teal)}
 
-  .note{font-size:.95rem;color:var(--ink-soft);margin:14px 2px 8px;font-weight:600}
+  .note{font-size:1rem;color:var(--ink-soft);margin:14px 2px 8px;font-weight:600}
   /* Salida visible de los resultados. Sin esto el unico camino de vuelta era el
      back del browser, que como la busqueda no tocaba el URL sacaba del sitio. */
   .volver{display:block;margin:16px 0 0;background:var(--paper);border:1px solid var(--line);
-     border-radius:10px;padding:11px 16px;font-family:inherit;font-size:.95rem;font-weight:700;
+     border-radius:10px;padding:11px 16px;font-family:inherit;font-size:1rem;font-weight:700;
      color:var(--ink);cursor:pointer;box-shadow:var(--shadow)}
   .volver:hover{border-color:var(--coral);color:var(--coral-ink)}
   /* display:block le ganaba al atributo hidden del navegador, asi que el boton
@@ -95,39 +95,39 @@
   .vacio{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:22px 18px;
          box-shadow:var(--shadow);text-align:center}
   .vacio h2{font-size:1.1rem;margin-bottom:6px}
-  .vacio p{font-size:.94rem;color:var(--ink-soft);margin-bottom:14px}
+  .vacio p{font-size:1rem;color:var(--ink-soft);margin-bottom:14px}
 
   .btn{display:inline-block;background:var(--coral-ink);color:#fff;text-decoration:none;
-       padding:11px 20px;border-radius:10px;font-weight:700;font-size:.95rem}
+       padding:11px 20px;border-radius:10px;font-weight:700;font-size:1rem}
 
   /* ── pulso ── */
   .panel{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px;
          box-shadow:var(--shadow);margin-top:26px}
   .panel h2{font-size:1.12rem;margin-bottom:3px}
-  .panel .sub{font-size:.95rem;color:var(--ink-soft);margin-bottom:13px}
+  .panel .sub{font-size:1rem;color:var(--ink-soft);margin-bottom:13px}
   .pulso{display:flex;flex-wrap:wrap;gap:8px}
   .pterm{background:#f5f5f4;border:1px solid var(--line);border-radius:10px;padding:9px 13px;
          font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit;color:var(--ink)}
   .pterm:hover{border-color:var(--teal);color:var(--teal-dark)}
-  .pterm b{color:var(--ink-soft);font-weight:700;margin-left:6px;font-size:.95rem}
+  .pterm b{color:var(--ink-soft);font-weight:700;margin-left:6px;font-size:1rem}
   .pterm.hueco{background:#fff7ed;border-color:#fed7aa}
 
   .dos{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
   .tile{display:block;text-decoration:none;background:var(--paper);border:1px solid var(--line);
         border-radius:14px;padding:15px;box-shadow:var(--shadow)}
   .tile:hover{border-color:var(--teal)}
-  .tile .t{font-weight:700;font-size:.98rem;margin-bottom:2px}
-  .tile .d{font-size:.95rem;color:var(--ink-soft)}
+  .tile .t{font-weight:700;font-size:1rem;margin-bottom:2px}
+  .tile .d{font-size:1rem;color:var(--ink-soft)}
   @media(max-width:420px){.dos{grid-template-columns:1fr}}
 
   /* La puerta del dueño: presente pero callada. 90% utilidad, 10% venta. */
   .dueno{display:block;text-decoration:none;margin-top:12px;padding:15px 17px;border-radius:14px;
          background:#fff7ed;border:1px solid #fed7aa;box-shadow:var(--shadow)}
   .dueno:hover{border-color:var(--coral)}
-  .dueno .t{font-weight:700;font-size:.98rem;color:#9a3412;margin-bottom:2px}
-  .dueno .d{font-size:.95rem;color:var(--ink-soft)}
+  .dueno .t{font-weight:700;font-size:1rem;color:#9a3412;margin-bottom:2px}
+  .dueno .d{font-size:1rem;color:var(--ink-soft)}
 
-  footer{text-align:center;padding:26px 20px 40px;color:var(--ink-cap);font-size:.95rem;line-height:1.7}
+  footer{text-align:center;padding:26px 20px 40px;color:var(--ink-cap);font-size:1rem;line-height:1.7}
   footer a{color:var(--teal-dark);font-weight:600}
   .conteo{font-variant-numeric:tabular-nums}
 
@@ -140,7 +140,7 @@
   .prueba div:last-child{border-right:0}
   .prueba b{display:block;font-family:'Fraunces',Georgia,serif;font-size:1.3rem;font-weight:700;
     color:#fff;font-variant-numeric:tabular-nums;line-height:1.15}
-  .prueba span{display:block;font-size:.95rem;text-transform:uppercase;letter-spacing:.02em;
+  .prueba span{display:block;font-size:1rem;letter-spacing:.02em;
     color:#fff;margin-top:2px}
   .prueba.vacia{display:none}
 
@@ -151,10 +151,10 @@
   .ev a{display:flex;gap:11px;align-items:baseline;text-decoration:none;padding:9px 11px;
     border:1px solid var(--line);border-radius:11px;background:#fafaf9}
   .ev a:hover{border-color:var(--teal)}
-  .ev .cuando{font-size:.95rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  .ev .cuando{font-size:1rem;font-weight:700;letter-spacing:.05em;
     color:var(--teal-dark);white-space:nowrap;flex:0 0 auto}
-  .ev .qué{font-size:.98rem;font-weight:700;line-height:1.25}
-  .ev .dónde{font-size:.95rem;color:var(--ink-soft);font-weight:400;display:block;margin-top:1px}
+  .ev .qué{font-size:1rem;font-weight:700;line-height:1.25}
+  .ev .dónde{font-size:1rem;color:var(--ink-soft);font-weight:400;display:block;margin-top:1px}
 
   .cierre{text-align:center;margin-top:26px;padding:20px 18px;border-top:1px solid var(--line)}
   .cierre p{font-size:1rem;color:var(--ink-soft);max-width:46ch;margin:0 auto}
@@ -173,6 +173,8 @@
   }
 
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* 29 sep 2026 (mayores primero): todo lo que se toca mide 48px */
+  a[class],button{min-height:48px}
 </style>
 </head>
 <body>
@@ -306,7 +308,7 @@
       '<p>Nadie ha registrado “'+esc(term)+'” por aquí. El Veci sí puede buscarte la vuelta a mano.</p>'+
       '<a class="btn" target="_blank" rel="noopener" href="https://wa.me/17874177711?text='+
       encodeURIComponent('Busco '+term+' en Cabo Rojo')+'">Preguntarle al Veci</a>'+
-      '<p style="margin:14px 0 0;font-size:.85rem">¿Tú resuelves esto? '+
+      '<p style="margin:14px 0 0;font-size:1rem">¿Tú resuelves esto? '+
       '<a href="/pon-tu-negocio-en-el-mapa" style="color:var(--teal-dark);font-weight:600">Ponte en el mapa</a>.</p>';
     return li;
   }
