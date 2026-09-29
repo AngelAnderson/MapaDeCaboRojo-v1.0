@@ -12262,7 +12262,8 @@ async function handleSinFiltrosLog(req: any, res: any) {
 // ya mandaba click_to_call a GA4, pero solo desde la ficha (las listas con .reg-call no) y
 // GA4 no es nuestra tabla. Mismo patrón fail-safe que sinfiltros-log: allowlist + insert
 // service-role, nunca rompe la página. Se lee en `recibo_cero`.
-const REGISTRO_EVENTS = new Set(['click_to_call', 'click_whatsapp', 'veci_click', 'symptom_match', 'call_outcome'])
+// loqueviene_click (29 sep 2026): caborojo.com manda sus clics aquí (pie de página, marker cr-salidas-v1).
+const REGISTRO_EVENTS = new Set(['click_to_call', 'click_whatsapp', 'veci_click', 'symptom_match', 'call_outcome', 'loqueviene_click'])
 // 28 sep 2026: resultado de la llamada ("la verdad después del click"). Solo estas claves.
 // no_llame (28 sep 2026): 72% cerraba la hoja con la ×; las 5 opciones suponían que alguien habló.
 // Quien marcó y colgó o llama después no tenía botón. No cuenta como resultado de llamada.
@@ -12283,7 +12284,10 @@ async function handleRegistroLog(req: any, res: any) {
     if (event === 'call_outcome' && !CALL_OUTCOMES.has(String(body.target || ''))) { res.status(204).end(); return }
     if (REGISTRO_EVENTS.has(event)) {
       // sitio lo decide el host, no el navegador: los números públicos del Registro no se mezclan con el directorio.
-      const sitio = /registromedicopr\.com/i.test(String(req.headers['x-forwarded-host'] || req.headers.host || '')) ? 'registro' : 'directorio'
+      // caborojo.com llega por fetch no-cors: lo delata el Origin/Referer que pone el navegador.
+      const desde = String(req.headers.origin || req.headers.referer || '')
+      const sitio = /registromedicopr\.com/i.test(String(req.headers['x-forwarded-host'] || req.headers.host || '')) ? 'registro'
+        : /^https:\/\/(www\.)?caborojo\.com(\/|$)/i.test(desde) ? 'caborojo' : 'directorio'
       await supabase.from('registro_events').insert({
         sitio,
         vid,
