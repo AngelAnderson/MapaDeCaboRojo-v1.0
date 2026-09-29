@@ -555,6 +555,9 @@ h1,h2,h3{text-wrap:balance}
 /* 29 sep 2026 (orden de Angel, mayores primero): ningún texto del Registro baja de 16px. */
 .text-\\[15px\\],.text-\\[14px\\],.text-\\[13px\\]{font-size:16px!important}
 .prose table td,.prose table th,.not-prose table td,.not-prose table th{font-size:max(16px,1em)!important}
+.text-xs,.text-sm,.text-\\[11px\\],.text-\\[12px\\],.reg-call{font-size:16px!important}
+.text-slate-400,.text-slate-500{color:#475569!important}
+main nav a,.reg-call{min-height:44px;display:inline-flex;align-items:center}
 /* design-review 28 sep 2026: las fuentes ya no bloquean el render (FINDING-012), así que el cambio
    de la letra de respaldo a Source Sans movía la tabla de Llamar (CLS 0.17 en /registro/psiquiatra/ponce).
    Respaldo con las medidas de la fuente real (fontTools contra Arial y Georgia Bold): el cambio no mueve nada. */
