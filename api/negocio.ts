@@ -1,3 +1,4 @@
+import { hojaLlamadaScript } from './_lib/hoja-llamada'
 import { createClient } from '@supabase/supabase-js';
 import { correctButtonHtml } from './_lib/correct-button.js';
 import { bloqueProcedencia, paginaLd, ldScript, CATEGORIA_ENLACE_ES, procedenciaSello, fechaCortaAT } from './_lib/procedencia.js';
@@ -721,6 +722,7 @@ export default async function handler(req: any, res: any) {
     </footer>
   </div>
   ${correctButtonHtml({ pageType: 'negocio', placeId: place.id })}
+${hojaLlamadaScript('directorio')}
 </body>
 </html>`;
 
