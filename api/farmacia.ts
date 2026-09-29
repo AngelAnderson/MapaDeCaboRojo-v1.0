@@ -50,7 +50,7 @@ const HEALTH_CONFIG: Record<string, { schemaType: string; label: string; labelPl
   veterinario:    { schemaType: 'VeterinaryCare',      label: 'Veterinario',        labelPlural: 'Veterinarios',          emoji: '🐾', color: '#8b5cf6', colorDark: '#7c3aed' },
   medico:         { schemaType: 'Physician',           label: 'Médico',             labelPlural: 'Médicos',               emoji: '👨‍⚕️', color: MEDICAL_GREEN, colorDark: MEDICAL_DARK },
   hospital:       { schemaType: 'Hospital',            label: 'Hospital / Clínica', labelPlural: 'Hospitales y Clínicas', emoji: '🏥', color: '#ef4444', colorDark: '#dc2626' },
-  laboratorio:    { schemaType: 'MedicalClinic',       label: 'Laboratorio',        labelPlural: 'Laboratorios',          emoji: '🔬', color: '#f59e0b', colorDark: '#d97706' },
+  laboratorio:    { schemaType: 'MedicalClinic',       label: 'Laboratorio',        labelPlural: 'Laboratorios',          emoji: '🔬', color: '#b45309', colorDark: '#92400e' },
   optica:         { schemaType: 'Optician',            label: 'Óptica',             labelPlural: 'Ópticas',               emoji: '👓', color: '#6366f1', colorDark: '#4f46e5' },
   'salud-mental': { schemaType: 'Physician',           label: 'Salud Mental',       labelPlural: 'Salud Mental',          emoji: '🧠', color: '#ec4899', colorDark: '#db2777' },
   quiropractico:  { schemaType: 'Physician',           label: 'Quiropráctico',      labelPlural: 'Quiroprácticos',        emoji: '🦴', color: '#14b8a6', colorDark: '#0f766e' },
@@ -370,10 +370,10 @@ export default async function handler(req: any, res: any) {
     // Angel en sitio) sube el sello a verificado. Regla del sello, 24 ago 2026.
     const selloDetalle = selloConFecha(place);
     qualityBadge = selloDetalle.nivel === 'persona'
-      ? `<span class="badge" style="background:#10b981;" title="Confirmado por el negocio o por Angel en sitio">&#10003; Confirmado por una persona ${dateStr}</span>`
-      : `<span class="badge" style="background:#0ea5e9;" title="Cotejado contra Google Places el ${dateStr}; la oficina todavía no lo confirmó">&#128269; Cotejado con Google ${dateStr}</span>`;
+      ? `<span class="badge" style="background:#047857;" title="Confirmado por el negocio o por Angel en sitio">&#10003; Confirmado por una persona ${dateStr}</span>`
+      : `<span class="badge" style="background:#0369a1;" title="Cotejado contra Google Places el ${dateStr}; la oficina todavía no lo confirmó">&#128269; Cotejado con Google ${dateStr}</span>`;
   } else if (qualityScore !== null && qualityScore >= 50) {
-    qualityBadge = `<span class="badge" style="background:#f59e0b;" title="Datos posiblemente desactualizados: ${esc(verificationIssues.join(', '))}">&#9888; Posiblemente desactualizado</span>`;
+    qualityBadge = `<span class="badge" style="background:#b45309;" title="Datos posiblemente desactualizados: ${esc(verificationIssues.join(', '))}">&#9888; Posiblemente desactualizado</span>`;
   }
 
   // Service badges — from DB `services` column first, then fallback to description parsing
@@ -508,11 +508,11 @@ export default async function handler(req: any, res: any) {
     .hero-body { padding: 1.5rem; }
     .badge { display: inline-block; background: ${MEDICAL_GREEN}; color: white; font-size: 1rem; padding: 0.2rem 0.6rem; border-radius: 999px;  letter-spacing: 0.01em; margin-bottom: 0.5rem; margin-right: 0.4rem; }
     .badge-npi { background: #1d4ed8; }
-    .badge-open { background: #10b981; }
+    .badge-open { background: #047857; }
     .badge-closed { background: #ef4444; }
     .badge-unknown { background: #475569; }
     h1 { font-size: 1.75rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem; margin-top: 0.5rem; }
-    .rating { color: #f59e0b; font-size: 1rem; margin-bottom: 0.75rem; }
+    .rating { color: #1e293b; font-size: 1.1rem; font-weight: 600; margin-bottom: 0.75rem; }
     .description { color: #475569; font-size: 1rem; }
     .info-card { background: white; border-radius: 12px; padding: 1.25rem 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 1rem; }
     .info-card h2 { font-size: 1rem; font-weight: 600; color: ${MEDICAL_GREEN}; margin-bottom: 0.75rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; }

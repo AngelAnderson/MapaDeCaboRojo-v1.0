@@ -558,6 +558,7 @@ h1,h2,h3{text-wrap:balance}
 .text-xs,.text-sm,.text-\\[11px\\],.text-\\[12px\\],.reg-call{font-size:16px!important}
 .text-slate-400,.text-slate-500{color:#475569!important}
 main nav a,.reg-call{min-height:44px;display:inline-flex;align-items:center}
+.not-prose table td a:not(.reg-call){display:inline-block;padding:10px 0}
 /* design-review 28 sep 2026: las fuentes ya no bloquean el render (FINDING-012), así que el cambio
    de la letra de respaldo a Source Sans movía la tabla de Llamar (CLS 0.17 en /registro/psiquiatra/ponce).
    Respaldo con las medidas de la fuente real (fontTools contra Arial y Georgia Bold): el cambio no mueve nada. */
