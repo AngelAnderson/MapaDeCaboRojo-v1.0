@@ -14,7 +14,7 @@
  * Style: Tailwind via Play CDN · matches site visual canon (teal/slate · Font Awesome)
  */
 
-import { hojaLlamadaScript } from './_lib/hoja-llamada'
+import { hojaLlamadaScript } from './_lib/hoja-llamada.js'
 import { createClient } from '@supabase/supabase-js'
 import { createHash, createHmac, timingSafeEqual } from 'crypto'
 import { handleActivos } from './_lib/activos.js'

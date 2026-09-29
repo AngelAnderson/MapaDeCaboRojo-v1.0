@@ -1,4 +1,4 @@
-import { hojaLlamadaScript } from './_lib/hoja-llamada'
+import { hojaLlamadaScript } from './_lib/hoja-llamada.js'
 import { createClient } from '@supabase/supabase-js';
 import { correctButtonHtml } from './_lib/correct-button.js';
 import { bloqueProcedencia, paginaLd, ldScript, CATEGORIA_ENLACE_ES, procedenciaSello, fechaCortaAT } from './_lib/procedencia.js';
