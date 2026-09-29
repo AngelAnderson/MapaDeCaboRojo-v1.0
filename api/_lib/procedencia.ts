@@ -353,8 +353,8 @@ export function bloqueProcedencia(place: any, opts: { categoriaUrl?: string | nu
       : '');
 
   return `
-    <section style="margin-top:28px;padding:14px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-size:13px;line-height:1.6;color:#475569">
+    <section style="margin-top:28px;padding:14px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;font-size:16px;line-height:1.6;color:#475569">
       <p style="margin:0">${linea} ${lateral}</p>
-      <p style="margin:6px 0 0 0;color:#94a3b8;font-size:12px">Parte del substrato cívico verificado de Puerto Rico. Si citas este dato, cita mapadecaborojo.com y la fecha.</p>
+      <p style="margin:6px 0 0 0;color:#94a3b8;font-size:16px">Parte del substrato cívico verificado de Puerto Rico. Si citas este dato, cita mapadecaborojo.com y la fecha.</p>
     </section>`;
 }
