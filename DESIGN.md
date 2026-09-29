@@ -81,3 +81,13 @@ Spanish first, abuelita-friendly. "El Veci", never bot or AI. CTA phone **787-41
 
 ## How to verify a change
 `bash ~/.claude/skills/diseno-web/scripts/render.sh https://mapadecaborojo.com <dir>` → read `movil-390.png` and `escritorio-1280.png`. Deploy with `/deploy` (6 gates) and look at the live URL, not the preview.
+
+## Mayores primero (LOCKED 29 sep 2026, Angel · aplica a todas las marcas)
+El público que más crece es gente mayor. Todo lo público se lee y se toca bien a los 70:
+- Letra: cuerpo 17-18px, **nada por debajo de 16px** (pies de foto, meta, etiquetas y footer incluidos).
+- **Sin MAYÚSCULAS con letras espaciadas** ni letra monoespaciada en lo que hay que leer.
+- **Contraste 4.5:1** mínimo para texto (3:1 solo en 24px+). Si un color de la marca no pasa, se usa su versión honda para texto y botones (ver `Dropbox/Claude/DESIGN.md`, tabla "Text-safe versions").
+- **Todo lo que se toca mide 48px** de alto (44px mínimo). El teléfono es un botón grande, nunca un enlace chiquito.
+- **Celular primero (390px):** nada de 4 columnas apretadas, sin scroll horizontal.
+- **Cero inglés** en la copia; cifras en número.
+- Prueba: `node ~/.claude/skills/diseno-web/scripts/audit-mayores.mjs <url>` → 0 textos chicos · 0 contraste · 0 botones chicos antes de decir LISTO.

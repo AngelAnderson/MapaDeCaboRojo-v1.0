@@ -5355,7 +5355,7 @@ async function handleComoSabemos(req: any, res: any) {
     supabase.from('telefono_reportado').select('reportado_en,resuelto_en').not('resuelto_en', 'is', null),
     supabase.from('remocion_solicitudes').select('id', { count: 'exact', head: true })
       .not('atendido_at', 'is', null).not('motivo', 'ilike', 'PRUEBA%').neq('motivo', '1'),
-    supabase.from('testigo_orcps').select('npi').not('licencia_numero', 'is', null),
+    supabase.from('testigo_orcps').select('npi,licencia_estatus,match_confianza').not('licencia_numero', 'is', null),
     // Conteos, no filas: PostgREST corta en 1,000 filas y la tabla pasa de eso en días (28 sep 2026).
     Promise.all([null, 'descartado', 'no_llame', 'cita', 'contesto_no_resolvio', 'no_contestaron', 'no_aceptan', 'otra_opcion'].map((r) => {
       let q: any = supabase.from('registro_resultados_llamada').select('cid', { count: 'exact', head: true }).not('ficha', 'like', '/prueba%').eq('sitio', 'registro')
@@ -5371,6 +5371,8 @@ async function handleComoSabemos(req: any, res: any) {
   const pctCopia = total ? (registro / total * 100).toFixed(1) : '0'
 
   const licenciasCotejadas = new Set((licenciasRows || []).map((r: any) => r.npi)).size
+  // 29 sep 2026: 'cotejada' no es 'vigente'. Se separa lo que la Junta NO da como vigente (match exacto), sin nombres.
+  const licNoVigentes = new Set((licenciasRows || []).filter((r: any) => r.match_confianza === 'exacta' && String(r.licencia_estatus || '').toLowerCase() !== 'activo').map((r: any) => r.npi)).size
 
   const diasResuelto = (resueltos || [])
     .map((r: any) => (new Date(r.resuelto_en).getTime() - new Date(r.reportado_en).getTime()) / 86400000)
@@ -5405,6 +5407,7 @@ async function handleComoSabemos(req: any, res: any) {
 <tbody>
 <tr><td class="py-2 pr-3 border-b border-slate-100">${te('Proveedores publicados (existen en el registro federal NPPES)', 'Published providers (exist in the federal NPPES registry)')}</td><td class="py-2 text-right border-b border-slate-100 font-bold">${nf(total)}</td></tr>
 <tr><td class="py-2 pr-3 border-b border-slate-100">${te('Con licencia cotejada contra la Junta de Licenciamiento de Puerto Rico', 'License cross-checked against Puerto Rico\'s Licensing Board')}</td><td class="py-2 text-right border-b border-slate-100 font-bold">${nf(licenciasCotejadas)}</td></tr>
+<tr><td class="py-2 pr-3 border-b border-slate-100">${te('De esas, la Junta NO las da como vigentes (suspendida, inactiva o vencida). La ficha lo dice con la fecha.', 'Of those, the Board does NOT list as current (suspended, inactive or expired). The profile says so, with the date.')}</td><td class="py-2 text-right border-b border-slate-100 font-bold">${nf(licNoVigentes)}</td></tr>
 <tr><td class="py-2 pr-3 border-b border-slate-100">${te('Confirmados por una persona o por la oficina', 'Confirmed by a person or by the office')}</td><td class="py-2 text-right border-b border-slate-100 font-bold">${nf(persona)}</td></tr>
 <tr><td class="py-2 pr-3 border-b border-slate-100">${te('Confirmados contra una fuente pública corroborada', 'Confirmed against a corroborated public source')}</td><td class="py-2 text-right border-b border-slate-100 font-bold">${nf(fuente)}</td></tr>
 <tr><td class="py-2 pr-3">${te('Solo copia del registro federal, todavía sin confirmar', 'Only a copy of the federal registry, not yet confirmed')}</td><td class="py-2 text-right font-bold">${nf(registro)}</td></tr>
