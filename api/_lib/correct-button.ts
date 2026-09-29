@@ -45,7 +45,7 @@ export function correctButtonHtml(opts: CorrectButtonOpts = {}): string {
     <input type="text" id="cb-website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true" />
 
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
-      <a id="cb-wa" href="#" style="display:block;background:#25D366;color:#fff;text-align:center;padding:12px 16px;border-radius:8px;text-decoration:none;font-weight:600;font-size:1rem">
+      <a id="cb-wa" href="#" style="display:block;background:#15803D;color:#fff;text-align:center;padding:12px 16px;border-radius:8px;text-decoration:none;font-weight:600;font-size:1rem">
         Enviar por WhatsApp (787-417-7711)
       </a>
       <button id="cb-submit" type="button" style="background:#0f172a;color:#fff;border:0;padding:12px 16px;border-radius:8px;font-weight:600;font-size:1rem;cursor:pointer">

@@ -2698,7 +2698,7 @@ ${event.image_url ? `
       ${event.ticket_link ? `<a href="${esc(event.ticket_link)}" target="_blank" rel="noopener" style="background:#7c3aed;color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;">🎟️ Boletos</a>` : ''}
       ${event.official_website ? `<a href="${esc(event.official_website)}" target="_blank" rel="noopener" style="background:#1e293b;color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;">🌐 Sitio oficial</a>` : ''}
       ${event.instagram_handle ? `<a href="https://instagram.com/${esc(event.instagram_handle.replace('@',''))}" target="_blank" rel="noopener" style="background:#e1306c;color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;">📸 Instagram</a>` : ''}
-      <a href="https://wa.me/17874177711?text=${encodeURIComponent('Info sobre el evento: ' + event.title)}" style="background:#25D366;color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;">💬 Pregunta al *7711</a>
+      <a href="https://wa.me/17874177711?text=${encodeURIComponent('Info sobre el evento: ' + event.title)}" style="background:#15803D;color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;">💬 Pregunta al *7711</a>
     </div>
 
   </div>
@@ -3213,7 +3213,7 @@ async function handle_admin_municipio(req: any, res: any) {
           <td style="text-align:right;color:${churnColor};font-weight:600;">${s.days_since_contact ?? '—'}${s.days_since_contact != null ? 'd' : ''}</td>
           <td style="text-align:right;font-weight:600;">${s.bot_leads_30d || '—'}</td>
           <td style="text-align:right;">${fmtMoney(s.revenue_cents)}</td>
-          <td>${followUpUrl ? `<a href="${esc(followUpUrl)}" target="_blank" style="background:#25D366;color:#fff;padding:3px 9px;border-radius:6px;text-decoration:none;font-size:10px;font-weight:600;">WA</a>` : ''}</td>
+          <td>${followUpUrl ? `<a href="${esc(followUpUrl)}" target="_blank" style="background:#15803D;color:#fff;padding:3px 9px;border-radius:6px;text-decoration:none;font-size:10px;font-weight:600;">WA</a>` : ''}</td>
         </tr>`;
       }).join('')}
       </tbody>
@@ -3916,7 +3916,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
     </div>` : ''}
     <div style="margin-top:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
       <span style="font-size:12px;color:#64748b;font-weight:600;">¿Útil? Mándaselo a alguien:</span>
-      <a href="https://wa.me/?text=${encodeURIComponent('Esto es lo que Cabo Rojo buscó este mes (búsquedas reales del *7711): https://www.mapadecaborojo.com/pueblo-en-numeros')}" target="_blank" rel="noopener" style="background:#25d366;color:#fff;padding:8px 14px;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none;min-height:38px;display:inline-flex;align-items:center;gap:6px;">💬 WhatsApp</a>
+      <a href="https://wa.me/?text=${encodeURIComponent('Esto es lo que Cabo Rojo buscó este mes (búsquedas reales del *7711): https://www.mapadecaborojo.com/pueblo-en-numeros')}" target="_blank" rel="noopener" style="background:#15803D;color:#fff;padding:8px 14px;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none;min-height:38px;display:inline-flex;align-items:center;gap:6px;">💬 WhatsApp</a>
       <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://www.mapadecaborojo.com/pueblo-en-numeros')}" target="_blank" rel="noopener" style="background:#1877f2;color:#fff;padding:8px 14px;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none;min-height:38px;display:inline-flex;align-items:center;gap:6px;">f Facebook</a>
     </div>
   </div>
@@ -4494,7 +4494,7 @@ async function handle_pueblo_en_numeros(req: any, res: any) {
     <div style="font-size:18px;font-weight:800;color:#134e4a;margin-bottom:6px;line-height:1.35;">Si alguien en tu mesa está pensando abrir negocio — mándale esta página.</div>
     <div style="font-size:13px;color:#0f766e;line-height:1.5;margin-bottom:16px;">Es la única regla: que no abra a ciegas. Léela una vez. Compártela una vez. Y vuelve cuando alguien diga "voy a abrir X."</div>
     <div style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px;">
-      <a href="https://wa.me/?text=${encodeURIComponent('Mira esta página de Cabo Rojo en números — útil si alguien en la mesa está pensando abrir negocio: https://www.mapadecaborojo.com/pueblo-en-numeros')}" target="_blank" rel="noopener" style="background:#25d366;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:8px;min-height:44px;">
+      <a href="https://wa.me/?text=${encodeURIComponent('Mira esta página de Cabo Rojo en números — útil si alguien en la mesa está pensando abrir negocio: https://www.mapadecaborojo.com/pueblo-en-numeros')}" target="_blank" rel="noopener" style="background:#15803D;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:8px;min-height:44px;">
         <span style="font-size:18px;">💬</span> Compartir por WhatsApp
       </a>
       <a href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://www.mapadecaborojo.com/pueblo-en-numeros')}" target="_blank" rel="noopener" style="background:#1877f2;color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:8px;min-height:44px;">
@@ -6486,7 +6486,7 @@ body{font-family:-apple-system,system-ui,sans-serif;background:#0f172a;color:#e2
 h1{font-size:27px;font-weight:800;color:#fff}
 .sub{color:#94a3b8;font-size:15px;margin:8px 0 28px;max-width:340px;line-height:1.55}
 .btn{display:block;width:100%;max-width:360px;padding:16px;border-radius:14px;font-size:17px;font-weight:700;text-decoration:none;margin-bottom:12px}
-.wa{background:#25D366;color:#062e14}
+.wa{background:#15803D;color:#062e14}
 .sms{background:#0d9488;color:#fff}
 .save{background:#fff;color:#0f172a}
 .card{background:#1e293b;border-radius:16px;padding:20px;max-width:360px;width:100%;margin-top:16px;text-align:left}

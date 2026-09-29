@@ -539,7 +539,7 @@ export default async function handler(req: any, res: any) {
     footer a { color: ${MEDICAL_GREEN}; text-decoration: none; }
     .services { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
     .service-badge { display: inline-flex; align-items: center; gap: 0.3rem; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; font-size: 1rem; padding: 0.3rem 0.7rem; border-radius: 999px; font-weight: 500; }
-    .wa-btn { display: inline-flex; align-items: center; gap: 0.5rem; background: #25D366; color: white; text-decoration: none; padding: 0.65rem 1.5rem; border-radius: 8px; font-weight: 600; font-size: 1rem; margin-right: 0.5rem; }
+    .wa-btn { display: inline-flex; align-items: center; gap: 0.5rem; background: #15803D; color: white; text-decoration: none; padding: 0.65rem 1.5rem; border-radius: 8px; font-weight: 600; font-size: 1rem; margin-right: 0.5rem; }
     .wa-btn:hover { background: #1da851; }
     .btn-row { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-bottom: 0.75rem; }
     @media (max-width: 480px) { h1 { font-size: 1.4rem; } .map-embed { height: 180px; } }
@@ -593,7 +593,7 @@ export default async function handler(req: any, res: any) {
     <!-- Primary CTA: direct contact (gtag tracked — pitch ammo for Vitrina) -->
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 20px;">
       ${telLink ? `<a href="${telLink}" ${trackCall} style="flex:1 1 200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:${config.color};color:white;text-decoration:none;padding:14px 20px;border-radius:10px;font-weight:700;font-size:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.12);">&#128222; ${T.callNow}</a>` : ''}
-      ${waLink ? `<a href="${waLink}" target="_blank" rel="noopener" ${trackWa} style="flex:1 1 200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#25D366;color:white;text-decoration:none;padding:14px 20px;border-radius:10px;font-weight:700;font-size:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.12);">&#128241; ${T.waDirect}</a>` : ''}
+      ${waLink ? `<a href="${waLink}" target="_blank" rel="noopener" ${trackWa} style="flex:1 1 200px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#15803D;color:white;text-decoration:none;padding:14px 20px;border-radius:10px;font-weight:700;font-size:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.12);">&#128241; ${T.waDirect}</a>` : ''}
     </div>
     ` : ''}
 
