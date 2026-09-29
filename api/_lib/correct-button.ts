@@ -26,7 +26,7 @@ export function correctButtonHtml(opts: CorrectButtonOpts = {}): string {
   return `
 <!-- El Botón de Corregir -->
 <div id="cb-root" style="max-width:720px;margin:32px auto 16px;padding:16px;text-align:center;font-family:system-ui,-apple-system,sans-serif">
-  <button id="cb-open" type="button" style="background:transparent;border:1px solid #94a3b8;color:#475569;padding:10px 18px;border-radius:999px;font-size:14px;cursor:pointer;line-height:1.4">
+  <button id="cb-open" type="button" style="background:transparent;border:1px solid #475569;color:#475569;padding:10px 18px;border-radius:999px;font-size:1rem;cursor:pointer;line-height:1.4">
     🛠 ¿Algo está mal o falta? Avísanos.
   </button>
 </div>
@@ -35,27 +35,27 @@ export function correctButtonHtml(opts: CorrectButtonOpts = {}): string {
   <div style="background:#fff;max-width:520px;width:100%;border-radius:12px;padding:24px;box-shadow:0 20px 50px rgba(0,0,0,0.3);max-height:90vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:12px">
       <h2 id="cb-title" style="margin:0;font-size:20px;color:#0f172a">Corrige lo que veas</h2>
-      <button id="cb-close" type="button" aria-label="Cerrar" style="background:transparent;border:0;font-size:24px;cursor:pointer;color:#64748b;line-height:1">×</button>
+      <button id="cb-close" type="button" aria-label="Cerrar" style="background:transparent;border:0;font-size:24px;cursor:pointer;color:#475569;line-height:1">×</button>
     </div>
-    <p style="margin:0 0 16px;color:#475569;font-size:14px;line-height:1.5">Vio algo mal o que falta en esta página? Cuéntenos en una línea — Angel lo revisa el lunes.</p>
+    <p style="margin:0 0 16px;color:#475569;font-size:1rem;line-height:1.5">Vio algo mal o que falta en esta página? Cuéntenos en una línea — Angel lo revisa el lunes.</p>
 
-    <textarea id="cb-msg" rows="4" placeholder="Ej: la farmacia cerró · este horario está mal · falta el teléfono · etc." maxlength="2000" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:14px;resize:vertical;margin-bottom:12px"></textarea>
+    <textarea id="cb-msg" rows="4" placeholder="Ej: la farmacia cerró · este horario está mal · falta el teléfono · etc." maxlength="2000" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:1rem;resize:vertical;margin-bottom:12px"></textarea>
 
     <!-- Honeypot: hidden from humans, bots fill it -->
     <input type="text" id="cb-website" tabindex="-1" autocomplete="off" style="position:absolute;left:-9999px" aria-hidden="true" />
 
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
-      <a id="cb-wa" href="#" style="display:block;background:#25D366;color:#fff;text-align:center;padding:12px 16px;border-radius:8px;text-decoration:none;font-weight:600;font-size:15px">
+      <a id="cb-wa" href="#" style="display:block;background:#25D366;color:#fff;text-align:center;padding:12px 16px;border-radius:8px;text-decoration:none;font-weight:600;font-size:1rem">
         Enviar por WhatsApp (787-417-7711)
       </a>
-      <button id="cb-submit" type="button" style="background:#0f172a;color:#fff;border:0;padding:12px 16px;border-radius:8px;font-weight:600;font-size:15px;cursor:pointer">
+      <button id="cb-submit" type="button" style="background:#0f172a;color:#fff;border:0;padding:12px 16px;border-radius:8px;font-weight:600;font-size:1rem;cursor:pointer">
         O enviar aquí
       </button>
     </div>
 
-    <div id="cb-feedback" style="display:none;padding:10px;border-radius:6px;font-size:14px;margin-bottom:12px"></div>
+    <div id="cb-feedback" style="display:none;padding:10px;border-radius:6px;font-size:1rem;margin-bottom:12px"></div>
 
-    <p style="margin:16px 0 0;font-size:12px;color:#64748b;font-style:italic;line-height:1.5;border-top:1px solid #e2e8f0;padding-top:12px">Google no siempre sabe. Facebook se pierde. Pero si los vecinos corrigen, Cabo Rojo se organiza.</p>
+    <p style="margin:16px 0 0;font-size:1rem;color:#475569;font-style:italic;line-height:1.5;border-top:1px solid #e2e8f0;padding-top:12px">Google no siempre sabe. Facebook se pierde. Pero si los vecinos corrigen, Cabo Rojo se organiza.</p>
   </div>
 </div>
 

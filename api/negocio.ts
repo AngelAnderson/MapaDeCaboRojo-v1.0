@@ -444,7 +444,7 @@ export default async function handler(req: any, res: any) {
         .or(`category.ilike.${subRaw},category.ilike.${subPlain}`);
       if ((count || 0) >= 3) {
         senalFicha = `<div style="background: #f0fdfa; border: 1px solid #99f6e4; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1rem;">
-      <p style="margin: 0; color: #134e4a; font-size: 0.95rem;"><strong>📡 ${count} búsquedas</strong> de ${esc(subRaw)} le llegaron a El Veci en los últimos 28 días. <a href="https://www.mapadecaborojo.com/demanda" style="color: #0d9488; font-weight: 600;">Lo que Cabo Rojo está buscando →</a></p>
+      <p style="margin: 0; color: #134e4a; font-size: 1rem;"><strong>📡 ${count} búsquedas</strong> de ${esc(subRaw)} le llegaron a El Veci en los últimos 28 días. <a href="https://www.mapadecaborojo.com/demanda" style="color: #0f766e; font-weight: 600;">Lo que Cabo Rojo está buscando →</a></p>
     </div>`;
       }
     }
@@ -536,8 +536,8 @@ export default async function handler(req: any, res: any) {
   }
   const registroHtml = !fichaRegistro ? '' : `<div class="info-card">
       <h2>En el Registro Médico</h2>
-      <p style="font-size:0.9rem;color:#475569;margin:0 0 .5rem">Esta oficina también tiene ficha de proveedor de salud, con su número federal NPI, los planes que aceptan y la fecha en que se confirmó.</p>
-      <p style="margin:0"><a href="https://registromedicopr.com/especialista/${encodeURIComponent(fichaRegistro.slug)}" style="color:#0d9488;font-weight:600">${esc(fichaRegistro.name)}${fichaRegistro.sub ? ` · ${esc(fichaRegistro.sub)}` : ''} →</a></p>
+      <p style="font-size:1rem;color:#475569;margin:0 0 .5rem">Esta oficina también tiene ficha de proveedor de salud, con su número federal NPI, los planes que aceptan y la fecha en que se confirmó.</p>
+      <p style="margin:0"><a href="https://registromedicopr.com/especialista/${encodeURIComponent(fichaRegistro.slug)}" style="color:#0f766e;font-weight:600">${esc(fichaRegistro.name)}${fichaRegistro.sub ? ` · ${esc(fichaRegistro.sub)}` : ''} →</a></p>
     </div>`;
 
   const html = `<!DOCTYPE html>
@@ -587,8 +587,8 @@ export default async function handler(req: any, res: any) {
     .back { display: inline-flex; align-items: center; min-height: 48px; margin-bottom: 0.5rem; color: #0f766e; text-decoration: none; font-size: 1.05rem; font-weight: 600; }
     .back:hover { text-decoration: underline; }
     .hero { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 1.5rem; }
-    .hero-img { width: 100%; height: 220px; object-fit: cover; background: linear-gradient(135deg, #0d9488 0%, #f97316 100%); display: block; }
-    .hero-img-placeholder { width: 100%; height: 220px; background: linear-gradient(135deg, #0d9488 0%, #f97316 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; }
+    .hero-img { width: 100%; height: 220px; object-fit: cover; background: linear-gradient(135deg, #0f766e 0%, #f97316 100%); display: block; }
+    .hero-img-placeholder { width: 100%; height: 220px; background: linear-gradient(135deg, #0f766e 0%, #f97316 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; }
     .hero-body { padding: 1.5rem; }
     .badge { display: inline-block; background: #0f766e; color: white; font-size: 1rem; padding: 0.25rem 0.75rem; border-radius: 999px; margin: 0 0.25rem 0.75rem 0; }
     .status-open { background: #047857; }
@@ -605,7 +605,7 @@ export default async function handler(req: any, res: any) {
     .info-value { color: #1e293b; }
     .info-value a { color: #0f766e; text-decoration: underline; display: inline-block; padding: 0.4rem 0; min-height: 44px; font-weight: 600; }
     .info-value a:hover { text-decoration: underline; }
-    .cta { background: linear-gradient(135deg, #0d9488, #0f766e); border-radius: 12px; padding: 1.5rem; text-align: center; margin-bottom: 1rem; }
+    .cta { background: linear-gradient(135deg, #0f766e, #0f766e); border-radius: 12px; padding: 1.5rem; text-align: center; margin-bottom: 1rem; }
     .cta p { color: #ffffff; margin-bottom: 0.75rem; font-size: 1.05rem; }
     .cta a { display: inline-block; background: #9a3412; color: white; text-decoration: none; padding: 0.9rem 1.75rem; min-height: 52px; border-radius: 8px; font-weight: 700; font-size: 1.1rem; }
     .cta a:hover { background: #ea6c10; }
@@ -644,7 +644,7 @@ export default async function handler(req: any, res: any) {
     <div class="info-card">
       <h2>Información</h2>
       ${place.address ? `<div class="info-row"><span class="info-label">📍 Dirección</span><span class="info-value">${esc(place.address)}</span></div>` : ''}
-      ${place.phone ? `<div class="info-row"><span class="info-label">📞 Teléfono</span><span class="info-value"><a href="tel:${esc(place.phone)}">${esc(formatPhone(place.phone))}</a>${avisoTel ? `<div style="margin-top:6px;font-size:0.85rem;line-height:1.45;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px"><strong>⚠️ Dato reportado.</strong> ${esc(avisoTel.texto)} Si es tu negocio y el número está bien, escríbenos al <strong>787-417-7711</strong> y lo corregimos.</div>` : ''}</span></div>` : ''}
+      ${place.phone ? `<div class="info-row"><span class="info-label">📞 Teléfono</span><span class="info-value"><a href="tel:${esc(place.phone)}">${esc(formatPhone(place.phone))}</a>${avisoTel ? `<div style="margin-top:6px;font-size:1rem;line-height:1.45;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px"><strong>⚠️ Dato reportado.</strong> ${esc(avisoTel.texto)} Si es tu negocio y el número está bien, escríbenos al <strong>787-417-7711</strong> y lo corregimos.</div>` : ''}</span></div>` : ''}
       ${hoursKnown ? `<div class="info-row"><span class="info-label">🕐 Horario</span><span class="info-value">${hoursText}</span></div>` : ''}
       ${place.website ? `<div class="info-row"><span class="info-label">🌐 Web</span><span class="info-value"><a href="${esc(place.website)}" target="_blank" rel="noopener">${esc(place.website)}</a></span></div>` : ''}
       ${place.gmaps_url ? `<div class="info-row"><span class="info-label">🗺️ Google Maps</span><span class="info-value"><a href="${esc(place.gmaps_url)}" target="_blank" rel="noopener">Ver en Maps</a></span></div>` : ''}
@@ -693,18 +693,18 @@ export default async function handler(req: any, res: any) {
     </div>
 
     ${(place.plan && place.plan !== 'free')
-      ? `<div style="background: linear-gradient(135deg, #0d9488 0%, #f97316 100%); border-radius: 12px; padding: 1.75rem 1.5rem; text-align: center; margin-bottom: 1rem;">
+      ? `<div style="background: linear-gradient(135deg, #0f766e 0%, #f97316 100%); border-radius: 12px; padding: 1.75rem 1.5rem; text-align: center; margin-bottom: 1rem;">
       <h2 style="color: white; font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem;">★ Eres parte de La Vitrina</h2>
-      <p style="color: rgba(255,255,255,0.95); font-size: 0.95rem; margin-bottom: 1.25rem;">Para actualizar tu información, fotos u horarios, textea al 787-417-7711.</p>
-      <a href="https://wa.me/17874177711?text=ACTUALIZAR%20${encodeURIComponent(place.name)}" style="display: inline-block; background: white; color: #0d9488; text-decoration: none; padding: 0.75rem 1.75rem; border-radius: 8px; font-weight: 700; font-size: 1rem;">Actualizar mi información</a>
+      <p style="color: rgba(255,255,255,0.95); font-size: 1rem; margin-bottom: 1.25rem;">Para actualizar tu información, fotos u horarios, textea al 787-417-7711.</p>
+      <a href="https://wa.me/17874177711?text=ACTUALIZAR%20${encodeURIComponent(place.name)}" style="display: inline-block; background: white; color: #0f766e; text-decoration: none; padding: 0.75rem 1.75rem; border-radius: 8px; font-weight: 700; font-size: 1rem;">Actualizar mi información</a>
     </div>`
-      : `<div style="background: linear-gradient(135deg, #0d9488 0%, #f97316 100%); border-radius: 12px; padding: 1.75rem 1.5rem; text-align: center; margin-bottom: 1rem;">
+      : `<div style="background: linear-gradient(135deg, #0f766e 0%, #f97316 100%); border-radius: 12px; padding: 1.75rem 1.5rem; text-align: center; margin-bottom: 1rem;">
       <h2 style="color: white; font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem;">¿Es tu negocio?</h2>
-      <p style="color: rgba(255,255,255,0.9); font-size: 0.95rem; margin-bottom: 1.25rem;">Verifica tu información, actualiza horarios, y aparece primero cuando busquen tu categoría.</p>
-      <a href="https://wa.me/17874177711?text=RECLAMAR%20${encodeURIComponent(place.name)}" style="display: inline-block; background: white; color: #0d9488; text-decoration: none; padding: 0.75rem 1.75rem; border-radius: 8px; font-weight: 700; font-size: 1rem; margin-bottom: 1rem;">Verificar mi información</a>
+      <p style="color: rgba(255,255,255,0.9); font-size: 1rem; margin-bottom: 1.25rem;">Verifica tu información, actualiza horarios, y aparece primero cuando busquen tu categoría.</p>
+      <a href="https://wa.me/17874177711?text=RECLAMAR%20${encodeURIComponent(place.name)}" style="display: inline-block; background: white; color: #0f766e; text-decoration: none; padding: 0.75rem 1.75rem; border-radius: 8px; font-weight: 700; font-size: 1rem; margin-bottom: 1rem;">Verificar mi información</a>
       <br>
-      <a href="https://wa.me/17874177711?text=VITRINA%20${encodeURIComponent(place.name)}" style="color: rgba(255,255,255,0.9); font-size: 0.875rem; text-decoration: underline;">Destaca tu negocio con La Vitrina. Tráeme tu idea →</a>
-      <p style="color: rgba(255,255,255,0.75); font-size: 0.8rem; margin-top: 0.75rem; margin-bottom: 0;">Textea al 787-417-7711 y El Veci te guía paso a paso.</p>
+      <a href="https://wa.me/17874177711?text=VITRINA%20${encodeURIComponent(place.name)}" style="color: rgba(255,255,255,0.9); font-size: 1rem; text-decoration: underline;">Destaca tu negocio con La Vitrina. Tráeme tu idea →</a>
+      <p style="color: rgba(255,255,255,0.75); font-size: 1rem; margin-top: 0.75rem; margin-bottom: 0;">Textea al 787-417-7711 y El Veci te guía paso a paso.</p>
     </div>`}
 
     ${senalFicha}
@@ -715,12 +715,12 @@ export default async function handler(req: any, res: any) {
     })}
 
     <footer style="margin-top: 48px; padding: 24px 0; border-top: 1px solid #e2e8f0; text-align: center;">
-      <p style="color: #94a3b8; font-size: 12px; margin: 0;">
+      <p style="color: #475569; font-size: 1rem; margin: 0;">
         Hecho con orgullo en Cabo Rojo, Puerto Rico
       </p>
-      <p style="color: #94a3b8; font-size: 11px; margin: 4px 0 0 0;">
-        <a href="https://www.mapadecaborojo.com" style="color: #0d9488; text-decoration: none;">MapaDeCaboRojo.com</a>
-        · Un proyecto de <a href="https://angelanderson.com" style="color: #0d9488; text-decoration: none;">Angel Anderson</a>
+      <p style="color: #475569; font-size: 1rem; margin: 4px 0 0 0;">
+        <a href="https://www.mapadecaborojo.com" style="color: #0f766e; text-decoration: none;">MapaDeCaboRojo.com</a>
+        · Un proyecto de <a href="https://angelanderson.com" style="color: #0f766e; text-decoration: none;">Angel Anderson</a>
       </p>
     </footer>
   </div>

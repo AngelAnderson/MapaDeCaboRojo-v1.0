@@ -5399,7 +5399,7 @@ async function handleComoSabemos(req: any, res: any) {
 <p><strong>${te('Nadie paga por aparecer aquí ni por salir primero. No le cobramos a ningún médico ni a ningún plan.', 'Nobody pays to be listed here or to rank higher. We do not charge any doctor or any health plan.')}</strong> ${te('Este registro cruza el registro federal de proveedores de salud (NPPES) con la Junta de Licenciamiento de Puerto Rico y con lo que confirman las propias oficinas y los pacientes que llaman. Esta página dice, con número y fecha, de dónde sale cada parte.', 'This registry cross-references the federal health provider registry (NPPES) with Puerto Rico\'s licensing board and with what offices and patients confirm by phone. This page states, with number and date, exactly where each part comes from.')}</p>
 
 <h2 class="font-display">${te('De dónde sale cada dato', 'Where each fact comes from')}</h2>
-<div class="not-prose overflow-auto"><table class="w-full text-sm border-collapse">
+<div class="not-prose overflow-auto"><table class="w-full text-base border-collapse">
 <thead><tr><th class="text-left border-b border-slate-200 py-2 pr-3">${te('Fuente', 'Source')}</th><th class="text-right border-b border-slate-200 py-2">${te('Cantidad', 'Count')}</th></tr></thead>
 <tbody>
 <tr><td class="py-2 pr-3 border-b border-slate-100">${te('Proveedores publicados (existen en el registro federal NPPES)', 'Published providers (exist in the federal NPPES registry)')}</td><td class="py-2 text-right border-b border-slate-100 font-bold">${nf(total)}</td></tr>
@@ -5418,7 +5418,7 @@ async function handleComoSabemos(req: any, res: any) {
 ${llamadasTotal < 20
     ? `<p>${te(`Desde el 28 de septiembre de 2026, después de tocar Llamar, le preguntamos a la gente cómo le fue. Llamadas: <strong>${nf(llamadasConSeguimiento)}</strong>. Contestaron qué pasó: <strong>${nf(llamadasTotal)}</strong>. Todavía son pocas respuestas para sacar conclusiones; el reparto se publica cuando haya al menos 20.`, `Since September 28, 2026, after people tap Call we ask how it went. Calls: <strong>${nf(llamadasConSeguimiento)}</strong>. Told us what happened: <strong>${nf(llamadasTotal)}</strong>. Still too few responses to draw conclusions; the breakdown is published once there are at least 20.`)}</p>`
     : `<p>${te(`Desde el 28 de septiembre de 2026, después de tocar Llamar, le preguntamos a la gente cómo le fue. Llamadas: <strong>${nf(llamadasConSeguimiento)}</strong>. Contestaron qué pasó: <strong>${nf(llamadasTotal)}</strong> (otras <strong>${nf(llamadasCerraronHoja)}</strong> cerraron la pregunta sin contestar${llamadasNoHablaron ? ` y <strong>${nf(llamadasNoHablaron)}</strong> no llegaron a hablar con nadie` : ''}). Es una muestra de quien quiso contestar, no de todas las llamadas.`, `Since September 28, 2026, after people tap Call we ask how it went. Calls: <strong>${nf(llamadasConSeguimiento)}</strong>. Told us what happened: <strong>${nf(llamadasTotal)}</strong> (another <strong>${nf(llamadasCerraronHoja)}</strong> closed the question without answering${llamadasNoHablaron ? ` and <strong>${nf(llamadasNoHablaron)}</strong> never reached anyone` : ''}). It is a sample of those who chose to answer, not of every call.`)}</p>
-<div class="not-prose overflow-auto"><table class="w-full text-sm border-collapse"><thead><tr><th class="text-left border-b border-slate-200 py-2 pr-3">${te('Resultado', 'Result')}</th><th class="text-right border-b border-slate-200 py-2">${te('Cantidad', 'Count')}</th></tr></thead><tbody>
+<div class="not-prose overflow-auto"><table class="w-full text-base border-collapse"><thead><tr><th class="text-left border-b border-slate-200 py-2 pr-3">${te('Resultado', 'Result')}</th><th class="text-right border-b border-slate-200 py-2">${te('Cantidad', 'Count')}</th></tr></thead><tbody>
 ${Object.entries(llamadasPorResultado).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<tr><td class="py-2 pr-3 border-b border-slate-100">${RESULTADO_LABEL[k] || escapeHtml(k)}</td><td class="py-2 text-right border-b border-slate-100 font-bold">${nf(v)}</td></tr>`).join('')}
 </tbody></table></div>`}
 
@@ -5432,8 +5432,8 @@ ${Object.entries(llamadasPorResultado).sort((a, b) => b[1] - a[1]).map(([k, v]) 
 <h2 class="font-display">${te('Cómo corregir un dato', 'How to correct a fact')}</h2>
 <p>${te(`Cada ficha tiene el botón "¿Es tu perfil?" para que la oficina misma corrija sus datos. Si prefieres, escribe a <a href="mailto:angel@angelanderson.com">angel@angelanderson.com</a> o textea al <strong>787-417-7711</strong>.`, `Every profile has an "Is this your profile?" button so the office itself can correct its data. You can also write to <a href="mailto:angel@angelanderson.com">angel@angelanderson.com</a> or text <strong>787-417-7711</strong>.`)}</p>
 
-<p class="text-sm text-slate-500 mt-6">${te('Más:', 'More:')} <a href="/cambios${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold">${te('Historial de cambios →', 'Change history →')}</a> · <a href="/recibo" class="text-teal-700 font-semibold">${te('El recibo público →', 'The public receipt →')}</a></p>
-<p class="text-xs text-slate-400 mt-6">${te(`Actualizado ${hoy}.`, `Updated ${hoy}.`)}</p>
+<p class="text-base text-slate-700 mt-6">${te('Más:', 'More:')} <a href="/cambios${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold">${te('Historial de cambios →', 'Change history →')}</a> · <a href="/recibo" class="text-teal-700 font-semibold">${te('El recibo público →', 'The public receipt →')}</a></p>
+<p class="text-base text-slate-600 mt-6">${te(`Actualizado ${hoy}.`, `Updated ${hoy}.`)}</p>
 </section>
 `
 
