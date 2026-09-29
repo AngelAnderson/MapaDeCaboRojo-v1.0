@@ -12279,12 +12279,14 @@ async function handleRegistroLog(req: any, res: any) {
     body = body || {}
     const event = String(body.event || '').slice(0, 40)
     const cid = /^[a-z0-9]{6,40}$/.test(String(body.cid || '')) ? String(body.cid) : null
+    const vid = /^[a-z0-9]{6,40}$/.test(String(body.vid || '')) ? String(body.vid) : null
     if (event === 'call_outcome' && !CALL_OUTCOMES.has(String(body.target || ''))) { res.status(204).end(); return }
     if (REGISTRO_EVENTS.has(event)) {
       // sitio lo decide el host, no el navegador: los números públicos del Registro no se mezclan con el directorio.
       const sitio = /registromedicopr\.com/i.test(String(req.headers['x-forwarded-host'] || req.headers.host || '')) ? 'registro' : 'directorio'
       await supabase.from('registro_events').insert({
         sitio,
+        vid,
         cid,
         event,
         record: body.record ? String(body.record).slice(0, 120) : null,
