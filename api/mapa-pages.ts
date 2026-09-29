@@ -4312,7 +4312,10 @@ function planLabel(v: string): string { return (PR_PLANS.find(p => p.v === v) ||
 // Mapa síntoma → especialidad (búsqueda en cristiano: "me falta el aire" → neumólogo).
 // Keywords normalizados (minúscula, sin acentos). u:1 = puede ser emergencia → warning 911.
 // Orientación general, NO diagnóstico — el microcopy lo dice siempre.
-const SYMPTOM_MAP: Array<{ k: string[]; s: string[]; u?: number }> = [
+// x = si la búsqueda trae una de estas palabras, la entrada no aplica (28 sep 2026: "terapia
+// ocupacional" caía en psicólogo y "terapi" en oncólogo por quimioterapia; ~2,400 terapistas
+// de habla, física y ocupacional no salían. La genérica va primero pa' que psicólogo salga en los 4 chips).
+const SYMPTOM_MAP: Array<{ k: string[]; s: string[]; u?: number; x?: string[] }> = [
   { k: ['pecho', 'corazon', 'palpitacion', 'presion alta', 'hipertension', 'arritmia', 'chest', 'heart'], s: ['cardiólogo'], u: 1 },
   { k: ['aire', 'respirar', 'respiracion', 'asma', 'tos', 'pulmon', 'ahogo', 'apnea', 'breath', 'lungs'], s: ['neumólogo'], u: 1 },
   { k: ['azucar', 'diabetes', 'tiroides', 'hormona', 'insulina'], s: ['endocrinólogo'] },
@@ -4321,7 +4324,14 @@ const SYMPTOM_MAP: Array<{ k: string[]; s: string[]; u?: number }> = [
   { k: ['rinon', 'rinones', 'dialisis', 'kidney'], s: ['nefrólogo'] },
   { k: ['orina', 'orinar', 'prostata', 'vejiga', 'piedra en el rinon'], s: ['urólogo'] },
   { k: ['ansiedad', 'depresion', 'panico', 'insomnio', 'no duermo', 'bipolar', 'anxiety', 'depression'], s: ['psiquiatra', 'psicólogo'] },
-  { k: ['terapia', 'duelo', 'estres', 'therapy'], s: ['psicólogo'] },
+  { k: ['terapia', 'therapy'], s: ['psicólogo', 'terapista físico', 'terapista ocupacional', 'terapeuta del habla'], x: ['ocupacional', 'habla', 'fisica', 'fisio', 'quimio', 'pareja', 'familia', 'lenguaje'] },
+  { k: ['terapia ocupacional', 'terapista ocupacional', 'terapeuta ocupacional', 'ocupacional', 'integracion sensorial', 'motor fino', 'occupational therapy'], s: ['terapista ocupacional'], x: ['medicina'] },
+  { k: ['terapia del habla', 'terapia de habla', 'terapeuta del habla', 'patologa del habla', 'patologo del habla', 'retraso del habla', 'retraso en el habla', 'no habla', 'tartamud', 'terapia de lenguaje', 'speech therapy'], s: ['terapeuta del habla'] },
+  { k: ['terapia fisica', 'terapista fisico', 'terapeuta fisico', 'fisioterapia', 'physical therapy'], s: ['terapista físico'] },
+  { k: ['terapia de pareja', 'terapia de familia', 'terapia familiar', 'pareja'], s: ['terapeuta de familia', 'psicólogo'] },
+  { k: ['autismo', 'autista', 'educacion especial', 'autism'], s: ['terapeuta del habla', 'terapista ocupacional', 'psicólogo', 'pediatra'] },
+  { k: ['audicion', 'sordera', 'no oigo', 'no oye', 'audifono', 'audiologo', 'hearing'], s: ['audiólogo', 'otorrinolaringólogo'] },
+  { k: ['duelo', 'estres'], s: ['psicólogo'] },
   { k: ['hueso', 'rodilla', 'hombro', 'fractura', 'cadera', 'knee', 'bone'], s: ['ortopeda'] },
   { k: ['espalda', 'ciatica', 'dolor muscular', 'rehabilitacion', 'back pain'], s: ['fisiatra', 'ortopeda'] },
   { k: ['cabeza', 'migrana', 'jaqueca', 'mareo', 'convulsion', 'temblor', 'memoria', 'alzheimer', 'parkinson', 'derrame', 'headache', 'seizure'], s: ['neurólogo'], u: 1 },
@@ -6095,7 +6105,7 @@ async function handleRegistro(req: any, res: any) {
     if(qn.length<3)return '';
     var specs=[],urgent=false;
     SYM.forEach(function(e){
-      var hit=e.k.some(function(kw){return qn.indexOf(kw)>=0||(kw.length>=4&&kw.indexOf(qn)>=0);});
+      if(e.x&&e.x.some(function(w){return qn.indexOf(w)>=0;}))return;var hit=e.k.some(function(kw){return qn.indexOf(kw)>=0||(kw.length>=4&&(kw.indexOf(qn)===0||kw.split(' ').some(function(w){return w.indexOf(qn)===0;})));});
       if(!hit)return;
       if(e.u)urgent=true;
       e.s.forEach(function(s){if(specs.indexOf(s)<0)specs.push(s);});
@@ -12326,7 +12336,7 @@ async function handleAQuienVoy(req: any, res: any) {
   function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');}
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function run(){var qn=norm(q.value).trim();if(qn.length<3){out.innerHTML='';return;}var specs=[],urgent=false;
-    SYM.forEach(function(e){var hit=e.k.some(function(kw){return qn.indexOf(kw)>=0||(kw.length>=4&&kw.indexOf(qn)>=0);});if(!hit)return;if(e.u)urgent=true;e.s.forEach(function(s){if(specs.indexOf(s)<0)specs.push(s);});});
+    SYM.forEach(function(e){if(e.x&&e.x.some(function(w){return qn.indexOf(w)>=0;}))return;var hit=e.k.some(function(kw){return qn.indexOf(kw)>=0||(kw.length>=4&&(kw.indexOf(qn)===0||kw.split(' ').some(function(w){return w.indexOf(qn)===0;})));});if(!hit)return;if(e.u)urgent=true;e.s.forEach(function(s){if(specs.indexOf(s)<0)specs.push(s);});});
     if(!specs.length){out.innerHTML='<p class="text-stone-700">${t('Todavía no lo reconozco. Prueba con otra palabra, o textéalo al 787-417-7711.', 'I do not recognize it yet. Try another word, or text it to 787-417-7711.')}</p>';if(qn!==last){last=qn;log(qn,[]);}return;}
     var h=(urgent?'<p class="m-0 mb-3 p-3 rounded-xl bg-red-50 border border-red-200 text-red-800 font-semibold">${t('Si esto es ahora mismo y es fuerte, llama al 911.', 'If this is happening now and it is strong, call 911.')}</p>':'')+'<p class="m-0 font-bold text-stone-900 text-lg">${t('Eso lo ve:', 'That is seen by:')}</p><div class="flex flex-wrap gap-2 mt-2">';
     specs.slice(0,4).forEach(function(s){h+='<a href="'+esc(LINKS[s]||'/registro')+'" class="inline-flex items-center min-h-[52px] px-5 rounded-xl bg-teal-700 text-white font-bold text-lg no-underline">'+esc(s.charAt(0).toUpperCase()+s.slice(1))+' →</a>';});
