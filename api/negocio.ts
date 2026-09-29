@@ -580,42 +580,44 @@ export default async function handler(req: any, res: any) {
   ${ldScript(paginaLd({ url: pageUrl, nombreNegocio: place.name, fechaIso: place.last_verified_at || place.verified_at, nivel: procedenciaSello(place) }))}
 
   <style>
+    /* 29 sep 2026 (orden de Angel): mayores primero. Nada de menos de 16px, contraste 4.5+, botones de 48px o más, teléfono como botón grande. */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.6; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.6; font-size: 18px; }
     .container { max-width: 720px; margin: 0 auto; padding: 1rem; }
-    .back { display: inline-block; margin-bottom: 1rem; color: #0d9488; text-decoration: none; font-size: 0.9rem; }
+    .back { display: inline-flex; align-items: center; min-height: 48px; margin-bottom: 0.5rem; color: #0f766e; text-decoration: none; font-size: 1.05rem; font-weight: 600; }
     .back:hover { text-decoration: underline; }
     .hero { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 1.5rem; }
     .hero-img { width: 100%; height: 220px; object-fit: cover; background: linear-gradient(135deg, #0d9488 0%, #f97316 100%); display: block; }
     .hero-img-placeholder { width: 100%; height: 220px; background: linear-gradient(135deg, #0d9488 0%, #f97316 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 3rem; }
     .hero-body { padding: 1.5rem; }
-    .badge { display: inline-block; background: #0d9488; color: white; font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.75rem; }
-    .status-open { background: #10b981; }
-    .status-closed { background: #ef4444; }
+    .badge { display: inline-block; background: #0f766e; color: white; font-size: 1rem; padding: 0.25rem 0.75rem; border-radius: 999px; margin: 0 0.25rem 0.75rem 0; }
+    .status-open { background: #047857; }
+    .status-closed { background: #b91c1c; }
     h1 { font-size: 1.75rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem; }
-    .rating { color: #f59e0b; font-size: 1rem; margin-bottom: 0.75rem; }
-    .description { color: #475569; font-size: 0.95rem; }
+    .rating { color: #1e293b; font-size: 1.1rem; font-weight: 600; margin-bottom: 0.75rem; }
+    .description { color: #334155; font-size: 1.05rem; }
+    .llamar { display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-top: 1rem; min-height: 56px; background: #0f766e; color: #fff; font-size: 1.2rem; font-weight: 700; border-radius: 10px; text-decoration: none; padding: 0.75rem 1rem; }
     .info-card { background: white; border-radius: 12px; padding: 1.25rem 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 1rem; }
-    .info-card h2 { font-size: 1rem; font-weight: 600; color: #0d9488; margin-bottom: 0.75rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; }
-    .info-row { display: flex; gap: 0.5rem; padding: 0.4rem 0; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+    .info-card h2 { font-size: 1.15rem; font-weight: 700; color: #0f766e; margin-bottom: 0.75rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem; }
+    .info-row { display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem; padding: 0.6rem 0; border-bottom: 1px solid #f1f5f9; font-size: 1.05rem; }
     .info-row:last-child { border-bottom: none; }
-    .info-label { color: #64748b; min-width: 110px; font-weight: 500; }
+    .info-label { color: #475569; min-width: 110px; font-weight: 600; }
     .info-value { color: #1e293b; }
-    .info-value a { color: #0d9488; text-decoration: none; }
+    .info-value a { color: #0f766e; text-decoration: underline; display: inline-block; padding: 0.4rem 0; min-height: 44px; font-weight: 600; }
     .info-value a:hover { text-decoration: underline; }
     .cta { background: linear-gradient(135deg, #0d9488, #0f766e); border-radius: 12px; padding: 1.5rem; text-align: center; margin-bottom: 1rem; }
-    .cta p { color: rgba(255,255,255,0.85); margin-bottom: 0.75rem; font-size: 0.95rem; }
-    .cta a { display: inline-block; background: #f97316; color: white; text-decoration: none; padding: 0.75rem 1.75rem; border-radius: 8px; font-weight: 600; font-size: 1rem; }
+    .cta p { color: #ffffff; margin-bottom: 0.75rem; font-size: 1.05rem; }
+    .cta a { display: inline-block; background: #9a3412; color: white; text-decoration: none; padding: 0.9rem 1.75rem; min-height: 52px; border-radius: 8px; font-weight: 700; font-size: 1.1rem; }
     .cta a:hover { background: #ea6c10; }
     .faq { background: white; border-radius: 12px; padding: 1.25rem 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 1rem; }
-    .faq h2 { font-size: 1rem; font-weight: 600; color: #0d9488; margin-bottom: 0.75rem; }
+    .faq h2 { font-size: 1.15rem; font-weight: 700; color: #0f766e; margin-bottom: 0.75rem; }
     .faq-item { margin-bottom: 1rem; }
-    .faq-item h3 { font-size: 0.9rem; font-weight: 600; color: #0f172a; margin-bottom: 0.25rem; }
-    .faq-item p { font-size: 0.875rem; color: #475569; }
+    .faq-item h3 { font-size: 1.05rem; font-weight: 600; color: #0f172a; margin-bottom: 0.25rem; }
+    .faq-item p { font-size: 1.05rem; color: #334155; }
     .map-link { text-align: center; padding: 0.75rem; }
-    .map-link a { color: #0d9488; text-decoration: none; font-size: 0.9rem; }
+    .map-link a { color: #0f766e; text-decoration: underline; font-size: 1.05rem; display: inline-block; min-height: 48px; padding: 0.6rem 0; font-weight: 600; }
     .map-link a:hover { text-decoration: underline; }
-    footer { text-align: center; padding: 1.5rem 0; color: #94a3b8; font-size: 0.8rem; }
+    footer { text-align: center; padding: 1.5rem 0; color: #475569; font-size: 1rem; }
     @media (max-width: 480px) { h1 { font-size: 1.4rem; } .hero-img, .hero-img-placeholder { height: 160px; } }
   </style>
 </head>
@@ -635,6 +637,7 @@ export default async function handler(req: any, res: any) {
         <h1>${esc(place.name)}</h1>
         ${place.google_rating ? `<div class="rating">⭐ ${place.google_rating}/5</div>` : ''}
         ${place.description ? `<p class="description">${esc(place.description)}</p>` : ''}
+        ${place.phone ? `<a class="llamar" href="tel:${esc(place.phone)}">📞 Llamar al ${esc(formatPhone(place.phone))}</a>` : ''}
       </div>
     </div>
 

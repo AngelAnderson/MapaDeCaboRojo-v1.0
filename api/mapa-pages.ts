@@ -534,7 +534,7 @@ ${isReg ? `<style>
   .not-prose.overflow-auto>table.w-full:not(.reg-rank) tr{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:12px;row-gap:2px;padding:10px 12px;align-items:center}
   .not-prose.overflow-auto>table.w-full:not(.reg-rank) td{display:block;padding:0;border:0}
   .not-prose.overflow-auto>table.w-full:not(.reg-rank) td:last-child{grid-column:2;grid-row:1/span 3;text-align:right}
-  .not-prose.overflow-auto>table.w-full:not(.reg-rank) td:first-child{font-size:15px}
+  .not-prose.overflow-auto>table.w-full:not(.reg-rank) td:first-child{font-size:16px}
   .not-prose.overflow-auto>table.w-full:not(.reg-rank) .reg-call{min-height:44px;padding:0 14px}
   /* Tablas con una columna de texto largo (ej. "Cuáles" pueblos en cero): en móvil el texto va
      debajo, a todo el ancho. Sin esto .prose-narrative table{display:block} dejaba celdas de 700px. */
@@ -552,6 +552,8 @@ ${isReg ? `<style>
   table.reg-rank td:nth-child(5),table.reg-rank th:nth-child(5){width:4.5rem}
 }
 h1,h2,h3{text-wrap:balance}
+/* 29 sep 2026 (orden de Angel, mayores primero): ningún texto del Registro baja de 16px. */
+.text-\\[15px\\],.text-\\[14px\\],.text-\\[13px\\]{font-size:16px!important}
 /* design-review 28 sep 2026: las fuentes ya no bloquean el render (FINDING-012), así que el cambio
    de la letra de respaldo a Source Sans movía la tabla de Llamar (CLS 0.17 en /registro/psiquiatra/ponce).
    Respaldo con las medidas de la fuente real (fontTools contra Arial y Georgia Bold): el cambio no mueve nada. */
