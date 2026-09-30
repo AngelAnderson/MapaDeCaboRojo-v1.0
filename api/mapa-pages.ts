@@ -18612,6 +18612,20 @@ async function handleKit(req: any, res: any) {
   // /comparte. Las cifras se leen en vivo: pedir ayuda con un numero viejo es quedar mal
   // ante la primera persona que lo verifique.
   const milla = await leerContadorUltimaMilla()
+  // Recibo de acción (dale verbal de Angel, 25 sep 2026): cuántas fichas salieron a petición
+  // del titular, cuántas se corrigieron a petición y cuántas confirmó una persona. Lee la
+  // vista `remociones_recibo` (service_role; la regla PERSONA es la misma de procedencia.ts).
+  // Los removidos siguen contando: el snapshot vive en remocion_solicitudes, no se borra.
+  let recibo: { salieron: number; corregidas: number; pendientes: number; confirmadas: number; frescas: number; ultima: string } | null = null
+  try {
+    const { data: rr } = await supabase.from('remociones_recibo').select('*').limit(1).maybeSingle()
+    if (rr) recibo = {
+      salieron: Number(rr.salieron_a_peticion || 0), corregidas: Number(rr.corregidas_a_peticion || 0),
+      pendientes: Number(rr.pendientes || 0), confirmadas: Number(rr.confirmadas_por_oficina || 0),
+      frescas: Number(rr.confirmadas_frescas_90d || 0),
+      ultima: rr.ultima_atendida ? new Date(rr.ultima_atendida).toLocaleDateString('es-PR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Puerto_Rico' }) : '',
+    }
+  } catch (_) { /* sin recibo, la página sigue */ }
   const nTotal = milla.totalPR.toLocaleString('en-US')
   const nConf = milla.confirmados.toLocaleString('en-US')
   const postsMision: { titulo: string; donde: string; txt: string }[] = [
@@ -18735,6 +18749,19 @@ ${pieTxt}
 <div class="not-prose mt-4 rounded-xl bg-slate-50 border border-slate-200 p-4">
   <p class="text-sm text-slate-700 m-0"><b>¿Por qué hace falta preguntar?</b> Las listas ya existen: te da una el plan, otra el gobierno federal, otra Google. Y el vecino igual pierde el día llamando, porque <b>43.6% de los proveedores comparte teléfono con otro</b>. Llamas y te contesta otra oficina. Eso no lo arregla una lista más larga. <a href="/comparte" class="font-bold text-teal-700 underline">Ver la evidencia completa</a>.</p>
 </div>
+
+${recibo ? `<div class="not-prose mt-4 rounded-2xl border-2 border-slate-200 bg-white p-6 sm:p-8">
+  <p class="text-xs uppercase tracking-widest text-teal-700 font-bold m-0">Recibo de acción</p>
+  <p class="text-2xl sm:text-3xl font-black text-slate-900 mt-1 mb-2 leading-tight">Lo que se pidió, se hizo.</p>
+  <p class="text-base text-slate-700 m-0">Si tu ficha está aquí y no quieres, o está mal, se corrige o sale. Esto es lo que ha pasado desde agosto de 2026:</p>
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-5">
+    <div><p class="text-4xl font-black m-0 text-slate-900">${recibo.salieron}</p><p class="text-sm text-slate-600 m-0 mt-1 leading-tight">fichas salieron porque el titular lo pidió</p></div>
+    <div><p class="text-4xl font-black m-0 text-slate-900">${recibo.corregidas}</p><p class="text-sm text-slate-600 m-0 mt-1 leading-tight">fichas corregidas a petición (dirección, teléfono)</p></div>
+    <div><p class="text-4xl font-black m-0 ${recibo.pendientes ? 'text-red-700' : 'text-teal-700'}">${recibo.pendientes}</p><p class="text-sm text-slate-600 m-0 mt-1 leading-tight">peticiones esperando (la meta: 2 días)</p></div>
+    <div><p class="text-4xl font-black m-0 text-teal-700">${recibo.confirmadas.toLocaleString('en-US')}</p><p class="text-sm text-slate-600 m-0 mt-1 leading-tight">fichas confirmadas por una persona, ${recibo.frescas} en los últimos 90 días</p></div>
+  </div>
+  <p class="text-sm text-slate-600 mt-5 mb-0">Las que salieron siguen contando aquí: quitar una ficha no borra que alguien la pidió. ${recibo.ultima ? `Última petición atendida: ${recibo.ultima}.` : ''} Para pedir la tuya: al pie de cada ficha está el enlace «Quita tu ficha en 1 clic». Cómo tratamos los datos: <a href="/privacidad" class="text-teal-700 font-semibold">privacidad</a>.</p>
+</div>` : ''}
 
 <h2>Y si quieres compartirlo</h2>
 <p class="text-slate-600 -mt-2">Esto es lo segundo, no lo primero. Compartir da alcance; preguntar construye la lista.</p>
