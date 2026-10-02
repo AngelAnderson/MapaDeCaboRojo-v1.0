@@ -6573,7 +6573,7 @@ async function handleEspecialista(req: any, res: any) {
 
   const { data: place } = await supabase
     .from('places')
-    .select('id,name,subcategory,municipality,region,phone,address,npi,lat,lon,slug,last_verified_at,accepted_plans,cms_rating,cms_rating_type,dato_reportado,visibility,status,npi_status,verification_source')
+    .select('id,name,subcategory,municipality,region,phone,address,npi,lat,lon,slug,last_verified_at,accepted_plans,cms_rating,cms_rating_type,dato_reportado,visibility,status,npi_status,verification_source,hours,website,contact_info')
     .eq('slug', slug).not('npi', 'is', null).maybeSingle()
 
   // Un proveedor cerrado no lleva página pública con botón de llamar.
@@ -6657,7 +6657,19 @@ async function handleEspecialista(req: any, res: any) {
   const npi = place.npi as string
   const phoneDigits = (place.phone || '').replace(/\D/g, '')
   const telLink = phoneDigits.length >= 7 ? `tel:${phoneDigits}` : null
-  const waLink = phoneDigits.length >= 10 ? `https://wa.me/1${phoneDigits.slice(-10)}` : null
+  // 2 oct 2026 (Galería Radiológica): el botón WhatsApp abría el teléfono de la oficina, que es
+  // línea fija. Si la oficina nos dio un WhatsApp público, va `contact_info.whatsapp` y manda.
+  // `owner_whatsapp` NO sirve aquí: es el número privado del dueño para hablar con nosotros.
+  const waDigits = String((place.contact_info as any)?.whatsapp || '').replace(/\D/g, '')
+  const waLink = waDigits.length >= 10 ? `https://wa.me/1${waDigits.slice(-10)}`
+    : phoneDigits.length >= 10 ? `https://wa.me/1${phoneDigits.slice(-10)}` : null
+  // Horario de "Ahora mismo no contestan": sale de `hours` si dice "lun-vie 7:30am-4:00pm";
+  // si no se entiende, se queda el supuesto viejo de 8:00 a 4:30.
+  const aHora = (h: string, m: string | undefined, ap: string) => (+h % 12) + (ap.toLowerCase() === 'pm' ? 12 : 0) + (m ? +m / 60 : 0)
+  const hm = /lun[a-z]*\s*-\s*vie[a-z]*\s+(\d{1,2})(?::(\d{2}))?\s*(am|pm)\s*-\s*(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i.exec(place.hours || '')
+  const abre = hm ? aHora(hm[1], hm[2], hm[3]) : 8
+  const cierra = hm ? aHora(hm[4], hm[5], hm[6]) : 16.5
+  const webUrl = /^https?:\/\/[^\s"'<>]+$/i.test(place.website || '') ? place.website as string : null
   const verifiedDate = place.last_verified_at
     ? new Date(place.last_verified_at).toLocaleDateString('es-PR', { year: 'numeric', month: 'long' })
     : null
@@ -7028,7 +7040,8 @@ async function handleEspecialista(req: any, res: any) {
     ${telLink ? `<a href="${telLink}" onclick="try{gtag('event','click_to_call',{${evtAttr}})}catch(e){}" class="col-span-2 flex items-center justify-center gap-2 bg-teal-700 hover:bg-teal-800 text-white font-bold px-5 min-h-[56px] rounded-xl text-lg no-underline"><i class="fa-solid fa-phone"></i> ${T.call} ${escapeHtml(place.phone)}</a>` : ''}
     ${waLink ? `<a href="${waLink}" onclick="try{gtag('event','click_whatsapp',{${evtAttr}})}catch(e){}" class="flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-[15px] no-underline hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${T.wa}</a>` : ''}
     <a href="https://wa.me/17874177711?text=${spec ? spec.kw : 'ESPECIALISTA'}" class="${waLink ? '' : 'col-span-2 '}flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-[15px] no-underline hover:bg-teal-50"><i class="fa-brands fa-whatsapp"></i> ${T.veci}</a>
-  </div>`
+    ${webUrl ? `<a href="${escapeHtml(webUrl)}" target="_blank" rel="noopener nofollow" class="col-span-2 flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-base no-underline hover:bg-teal-50"><i class="fa-solid fa-globe"></i> ${t('Página web de la oficina', 'Office website')}</a>` : ''}
+  </div>${place.hours ? `<p class="not-prose mt-3 text-base text-stone-700"><b>${t('Horario', 'Hours')}:</b> ${escapeHtml(place.hours)}</p>` : ''}`
 
   // ═══ La Cita del Lunes (23 sep 2026, Recibo Cero) ═══
   // El Registro se muere el fin de semana (sáb 63 clics en Llamar, dom 20, contra 360-723 entre
@@ -7045,7 +7058,7 @@ async function handleEspecialista(req: any, res: any) {
     </form>
     <p id="cita-ok" hidden class="m-0 mt-2 text-sm text-teal-800 font-semibold">✓ ${t('Anotado. El lunes te llega el texto.', 'Noted. The text arrives Monday.')}</p>
   </div>
-  <script>(function(){try{var n=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Puerto_Rico'}));var d=n.getDay(),h=n.getHours()+n.getMinutes()/60;var cerrado=(d===0||d===6)||h<8||h>=16.5;if(!cerrado)return;var b=document.getElementById('cita-lunes');if(!b)return;b.hidden=false;var f=document.getElementById('cita-form');f.addEventListener('submit',function(e){e.preventDefault();var ph=f.phone.value.replace(/\D/g,'');if(ph.length===10)ph='1'+ph;if(ph.length!==11){f.phone.focus();return;}fetch('/api/mapa-pages?page=cita-lunes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({place_id:'${escapeHtml(place.id)}',place_name:${JSON.stringify(cleanProviderName(place.name || ''))},phone:'+'+ph,plan:f.plan.value})}).catch(function(){});f.hidden=true;document.getElementById('cita-ok').hidden=false;try{gtag('event','cita_lunes')}catch(x){}});}catch(e){}})();</script>` : ''
+  <script>(function(){try{var n=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Puerto_Rico'}));var d=n.getDay(),h=n.getHours()+n.getMinutes()/60;var cerrado=(d===0||d===6)||h<${abre}||h>=${cierra};if(!cerrado)return;var b=document.getElementById('cita-lunes');if(!b)return;b.hidden=false;var f=document.getElementById('cita-form');f.addEventListener('submit',function(e){e.preventDefault();var ph=f.phone.value.replace(/\D/g,'');if(ph.length===10)ph='1'+ph;if(ph.length!==11){f.phone.focus();return;}fetch('/api/mapa-pages?page=cita-lunes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({place_id:'${escapeHtml(place.id)}',place_name:${JSON.stringify(cleanProviderName(place.name || ''))},phone:'+'+ph,plan:f.plan.value})}).catch(function(){});f.hidden=true;document.getElementById('cita-ok').hidden=false;try{gtag('event','cita_lunes')}catch(x){}});}catch(e){}})();</script>` : ''
   // ═══ La Hoja de evidencia (18 sep 2026) ═══
   // La ficha es el producto: el 69% de las sesiones del Registro caen aquí (13,455 de
   // 19,472 en 28 días, ga4_humano). Antes, la evidencia estaba regada en 6-8 tarjetas y
