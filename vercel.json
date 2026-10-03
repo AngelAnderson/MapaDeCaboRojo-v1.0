@@ -292,6 +292,10 @@
       "destination": "/api/mapa-pages?page=como-sabemos"
     },
     {
+      "source": "/quien-esta-detras",
+      "destination": "/api/mapa-pages?page=quien-esta-detras"
+    },
+    {
       "source": "/raras",
       "destination": "/api/mapa-pages?page=raras"
     },

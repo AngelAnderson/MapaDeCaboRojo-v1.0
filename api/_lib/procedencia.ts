@@ -28,7 +28,8 @@ export const VERIFICADOR = {
   '@id': `${ANGEL_URL}#angel`,
   name: 'Angel Anderson',
   url: ANGEL_URL,
-  jobTitle: 'Verificador del substrato civico de Puerto Rico',
+  // Era 'Verificador del substrato civico', jerga interna. Lo que un lector reconoce (3 oct 2026).
+  jobTitle: 'Fundador de Registro Médico PR, CaboRojo.com y MapaDeCaboRojo.com',
   sameAs: RED_URLS,
 };
 

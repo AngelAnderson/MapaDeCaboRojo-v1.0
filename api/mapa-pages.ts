@@ -427,6 +427,7 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 </div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">${isEn ? 'The house' : 'La casa'}</div><div class="flex flex-col gap-1.5 text-slate-600">
 <a href="/como-sabemos${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'How it is verified' : 'Cómo se verifica'}</a>
+<a href="/quien-esta-detras${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Who is behind it' : 'Quién está detrás'}</a>
 <a href="mailto:angel@angelanderson.com" class="hover:text-teal-700">${isEn ? 'Report an outdated fact' : 'Reporta un dato viejo'}</a>
 <a href="https://wa.me/17874177711?text=ESPECIALISTA" class="hover:text-teal-700">${isEn ? 'Ask El Veci (WhatsApp)' : 'Pregúntale al Veci (WhatsApp)'}</a>
 </div></div>
@@ -5345,6 +5346,7 @@ async function handleComoSabemos(req: any, res: any) {
     { count: remocionesAtendidas },
     { data: licenciasRows },
     llamadaCounts,
+    { count: enBuscadorCount },
   ] = await Promise.all([
     baseNpi(),
     baseNpi().or(registroOrFilter),
@@ -5366,9 +5368,12 @@ async function handleComoSabemos(req: any, res: any) {
       if (r) q = q.eq('resultado', r)
       return q.then((x: any) => [r || 'total', x.count || 0] as [string, number])
     })).then((pares) => Object.fromEntries(pares) as Record<string, number>),
+    // Lo que enseña el buscador de la portada (las especialidades de REGISTRY_SPECS)
+    baseNpi().in('subcategory', REGISTRY_SPECS.map(x => x.s)),
   ])
 
   const total = totalNpi || 0
+  const enBuscador = enBuscadorCount || 0
   const registro = registroCount || 0
   const persona = personaCount || 0
   const fuente = Math.max(0, total - registro - persona)
@@ -5417,6 +5422,7 @@ async function handleComoSabemos(req: any, res: any) {
 <tr><td class="py-2 pr-3">${te('Solo copia del registro federal, todavía sin confirmar', 'Only a copy of the federal registry, not yet confirmed')}</td><td class="py-2 text-right font-bold">${nf(registro)}</td></tr>
 </tbody></table></div>
 <p class="text-slate-600">${te(`El ${pctCopia}% de las fichas todavía son solo copia del registro federal. Por eso cada ficha te dice de dónde salió cada dato y te pide confirmar al llamar.`, `${pctCopia}% of profiles are still just a copy of the federal registry. That is why every profile tells you where each fact came from and asks you to confirm it when you call.`)}</p>
+<p class="text-slate-600">${te(`¿Por qué la portada dice ${nf(enBuscador)} y aquí ${nf(total)}? El buscador de la portada enseña las ${REGISTRY_SPECS.length} especialidades. Los otros ${nf(total - enBuscador)} tienen ficha pero no salen en ese buscador: mayormente farmacias y suplidores de equipo médico. Los 2 números salen de la misma base.`, `Why does the home page say ${nf(enBuscador)} and this page ${nf(total)}? The home search shows the ${REGISTRY_SPECS.length} specialties. The other ${nf(total - enBuscador)} have a profile but are not in that search: mostly pharmacies and medical equipment suppliers. Both numbers come from the same database.`)}</p>
 
 <h2 class="font-display">${te('Cuando alguien nos avisa de un error', 'When someone reports an error to us')}</h2>
 <p>${te(`Reportes de teléfono recibidos: <strong>${nf(llamadasRecibidas || 0)}</strong>. Corregidos: <strong>${nf(llamadasCorregidas || 0)}</strong>. Confirmados como buenos: <strong>${nf(llamadasBuenas || 0)}</strong>. Cerrados sin poder confirmarlo: <strong>${nf(llamadasCerradas || 0)}</strong>. Pendientes de una llamada de prueba: <strong>${nf(llamadasPendientes || 0)}</strong>.${diasProm !== null ? ` El promedio entre reportado y resuelto es de <strong>${diasProm} días</strong>.` : ''}`, `Phone reports received: <strong>${nf(llamadasRecibidas || 0)}</strong>. Corrected: <strong>${nf(llamadasCorregidas || 0)}</strong>. Confirmed good: <strong>${nf(llamadasBuenas || 0)}</strong>. Closed without being able to confirm: <strong>${nf(llamadasCerradas || 0)}</strong>. Waiting for a test call: <strong>${nf(llamadasPendientes || 0)}</strong>.${diasProm !== null ? ` The average time from report to resolution is <strong>${diasProm} days</strong>.` : ''}`)}</p>
@@ -5440,7 +5446,7 @@ ${Object.entries(llamadasPorResultado).sort((a, b) => b[1] - a[1]).map(([k, v]) 
 <h2 class="font-display">${te('Cómo corregir un dato', 'How to correct a fact')}</h2>
 <p>${te(`Cada ficha tiene el botón "¿Es tu perfil?" para que la oficina misma corrija sus datos. Si prefieres, escribe a <a href="mailto:angel@angelanderson.com">angel@angelanderson.com</a> o textea al <strong>787-417-7711</strong>.`, `Every profile has an "Is this your profile?" button so the office itself can correct its data. You can also write to <a href="mailto:angel@angelanderson.com">angel@angelanderson.com</a> or text <strong>787-417-7711</strong>.`)}</p>
 
-<p class="text-base text-slate-700 mt-6">${te('Más:', 'More:')} <a href="/cambios${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold">${te('Historial de cambios →', 'Change history →')}</a> · <a href="/recibo" class="text-teal-700 font-semibold">${te('El recibo público →', 'The public receipt →')}</a></p>
+<p class="text-base text-slate-700 mt-6">${te('Más:', 'More:')} <a href="/cambios${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold">${te('Historial de cambios →', 'Change history →')}</a> · <a href="/recibo" class="text-teal-700 font-semibold">${te('El recibo público →', 'The public receipt →')}</a> · <a href="/quien-esta-detras${en ? '?lang=en' : ''}" class="text-teal-700 font-semibold">${te('Quién está detrás →', 'Who is behind it →')}</a></p>
 <p class="text-base text-slate-600 mt-6">${te(`Actualizado ${hoy}.`, `Updated ${hoy}.`)}</p>
 </section>
 `
@@ -5465,6 +5471,78 @@ ${Object.entries(llamadasPorResultado).sort((a, b) => b[1] - a[1]).map(([k, v]) 
       inLanguage: en ? 'en' : 'es',
       description: 'De dónde sale cada dato del Registro Médico PR, con número y fecha.',
       author: VERIFICADOR,
+      publisher: EDITOR_REGISTRO,
+    },
+  }))
+}
+
+// =============== /quien-esta-detras — quién hace el registro (registromedicopr.com) ===============
+// 3 oct 2026: en un sitio de salud lo primero que se pregunta es quién está detrás y quién paga.
+// La bio sale de la de Amazon aprobada el 1 oct (Outbox/Libro/amazon-author-page-2026-10-01.md);
+// no se le añade nada que no esté ahí. Angel no es médico: la página lo dice primero.
+async function handleQuienEstaDetras(req: any, res: any) {
+  const en = String(req.query?.lang || '') === 'en'
+  const te = (es: string, eng: string) => en ? eng : es
+  const q = en ? '?lang=en' : ''
+
+  const body = `
+<section class="max-w-3xl mx-auto px-4 pt-10 prose-narrative">
+<h1 class="font-display">${te('Quién está detrás del Registro Médico PR', 'Who is behind Registro Médico PR')}</h1>
+<p class="text-lg">${te('Me llamo <strong>Angel Anderson</strong>. Nací y vivo en Cabo Rojo. <strong>No soy médico.</strong> Hice este registro porque nos pasó a nosotros: en mayo nos dijeron que la cita con el especialista era para octubre.', 'My name is <strong>Angel Anderson</strong>. I was born and live in Cabo Rojo. <strong>I am not a doctor.</strong> I built this registry because it happened to us: in May we were told the specialist appointment would be in October.')}</p>
+
+<h2 class="font-display">${te('Quién soy', 'Who I am')}</h2>
+<p>${te('Serví 20 años en la Fuerza Aérea de Estados Unidos, gran parte como Instructor de Sistemas de Armamento. Después trabajé en marketing y negocios en Estados Unidos, Arabia Saudita, Alaska y Puerto Rico.', 'I served 20 years in the United States Air Force, much of it as a Weapons Systems Instructor. Then I worked in marketing and business in the United States, Saudi Arabia, Alaska and Puerto Rico.')}</p>
+<p>${te('Desde Cabo Rojo documento el pueblo con número, fecha y fuente: <a href="https://caborojo.com">CaboRojo.com</a>, <a href="https://www.mapadecaborojo.com">MapaDeCaboRojo.com</a> y El Veci, que contesta por texto al <strong>787-417-7711</strong>. Mi página: <a href="https://www.angelanderson.com">angelanderson.com</a>.', 'From Cabo Rojo I document my town with numbers, dates and sources: <a href="https://caborojo.com">CaboRojo.com</a>, <a href="https://www.mapadecaborojo.com">MapaDeCaboRojo.com</a> and El Veci, who answers by text at <strong>787-417-7711</strong>. My page: <a href="https://www.angelanderson.com">angelanderson.com</a>.')}</p>
+
+<h2 class="font-display">${te('Lo que este sitio no es', 'What this site is not')}</h2>
+<ul>
+<li>${te('<strong>No da consejo médico.</strong> Te ayuda a encontrar a quién llamar. Lo que te pasa, lo decide tu médico.', '<strong>It does not give medical advice.</strong> It helps you find who to call. What is wrong with you is for your doctor to decide.')}</li>
+<li>${te('<strong>No es de un plan médico, de un hospital ni del gobierno.</strong> No trabajo para ninguno.', '<strong>It does not belong to a health plan, a hospital or the government.</strong> I do not work for any of them.')}</li>
+<li>${te('<strong>Nadie paga por aparecer ni por salir primero.</strong> No le cobramos a ningún médico ni a ningún plan.', '<strong>Nobody pays to be listed or to rank higher.</strong> We do not charge any doctor or any plan.')}</li>
+<li>${te('<strong>No garantiza citas.</strong> Que alguien aparezca aquí no quiere decir que contesta ni que acepta tu plan. Eso solo se sabe llamando.', '<strong>It does not guarantee appointments.</strong> Being listed does not mean they answer or take your plan. Only a call tells you that.')}</li>
+</ul>
+
+<h2 class="font-display">${te('Cómo trabajamos', 'How we work')}</h2>
+<p>${te('La base es el registro federal de proveedores de salud (NPPES), el mismo que usan Medicare y los planes. Eso prueba que la persona existe y tiene número federal, no que el teléfono contesta. Lo que confirma una persona o la oficina sale en la ficha con la fecha.', 'The base is the federal provider registry (NPPES), the same one Medicare and the plans use. That proves the person exists and has a federal number, not that the phone gets answered. What a person or the office confirms shows on the profile with its date.')}</p>
+<p>${te(`Cuánto es solo copia del registro federal y cuánto está confirmado, con número y fecha: <a href="/como-sabemos${q}">Cómo sabemos lo que decimos</a>. Cada cambio queda anotado en <a href="/cambios${q}">el historial</a>.`, `How much is just a copy of the federal registry and how much is confirmed, with numbers and dates: <a href="/como-sabemos${q}">How we know what we say</a>. Every change is logged in <a href="/cambios${q}">the history</a>.`)}</p>
+
+<h2 class="font-display">${te('Si ves algo mal', 'If you see something wrong')}</h2>
+<p>${te('Escríbeme a <a href="mailto:angel@angelanderson.com">angel@angelanderson.com</a> o textea al <strong>787-417-7711</strong>. Te contesto yo. Si eres el médico o la oficina, cada ficha tiene el botón "¿Es tu perfil?" para corregir tus datos gratis.', 'Write to me at <a href="mailto:angel@angelanderson.com">angel@angelanderson.com</a> or text <strong>787-417-7711</strong>. I answer myself. If you are the doctor or the office, every profile has an "Is this your profile?" button to fix your data for free.')}</p>
+
+<div class="not-prose mt-8 mb-2">
+  <p class="text-base text-slate-700 mb-4">${te('La historia de por qué existe, en 3 minutos.', 'The story of why it exists, in 3 minutes.')}</p>
+  <div class="mx-auto" style="max-width:360px;aspect-ratio:9/16;">
+    <iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/4gu4-h8Ji7Q" title="${te('Por qué existe RegistroMedicoPR', 'Why RegistroMedicoPR exists')}" style="width:100%;height:100%;border:0;border-radius:16px;" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+  </div>
+</div>
+<p class="text-base text-slate-700 mt-8"><a href="/registro${q}" class="text-teal-700 font-semibold">${te('Buscar un especialista →', 'Find a specialist →')}</a></p>
+</section>
+`
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=86400, stale-while-revalidate=604800')
+  res.status(200).send(layout({
+    bareTitle: true,
+    title: te('Quién está detrás del Registro Médico PR', 'Who is behind Registro Médico PR'),
+    description: te('Angel Anderson, de Cabo Rojo, hace el Registro Médico PR. No es médico, no trabaja para ningún plan ni hospital, y nadie paga por aparecer. Cómo trabajamos y cómo corregir un dato.', 'Angel Anderson, from Cabo Rojo, runs Registro Médico PR. He is not a doctor, does not work for any plan or hospital, and nobody pays to be listed. How we work and how to correct a fact.'),
+    slug: 'quien-esta-detras',
+    lang: en ? 'en' : 'es',
+    ogImage: REGISTRO_OG,
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+    canonicalUrl: `https://registromedicopr.com/quien-esta-detras${q}`,
+    bodyHtml: body,
+    jsonLd: {
+      '@context': 'https://schema.org', '@type': 'AboutPage',
+      url: 'https://registromedicopr.com/quien-esta-detras',
+      name: 'Quién está detrás del Registro Médico PR',
+      inLanguage: en ? 'en' : 'es',
+      dateModified: '2026-10-03',
+      about: EDITOR_REGISTRO,
+      mainEntity: {
+        ...VERIFICADOR,
+        description: 'Nació y vive en Cabo Rojo, Puerto Rico. Sirvió 20 años en la Fuerza Aérea de Estados Unidos. No es médico. Fundó el Registro Médico PR.',
+        homeLocation: { '@type': 'Place', name: 'Cabo Rojo, Puerto Rico' },
+      },
       publisher: EDITOR_REGISTRO,
     },
   }))
@@ -5767,7 +5845,7 @@ async function handleRegistro(req: any, res: any) {
   // Las 56 categorías del registro (REGISTRY_SPECS) cuentan como "verificados".
   const { count: npiCount } = await supabase
     .from('places').select('id', { count: 'exact', head: true })
-    .not('npi', 'is', null).eq('status', 'open')
+    .not('npi', 'is', null).eq('visibility', 'published')
     .in('subcategory', REGISTRY_SPECS.map(x => x.s))
   const totalVerified = (npiCount ?? 20618).toLocaleString('en-US')
   // La fecha sale de la base (la última ficha que entró), igual que /cambios. Antes era un texto fijo
@@ -5785,7 +5863,7 @@ async function handleRegistro(req: any, res: any) {
   // del buscador para que nadie vea 2 números distintos y piense que uno miente (22 sep 2026).
   const { count: npiTodos } = await supabase
     .from('places').select('id', { count: 'exact', head: true })
-    .not('npi', 'is', null).eq('status', 'open')
+    .not('npi', 'is', null).eq('visibility', 'published')
   const totalConNpi = (npiTodos ?? npiCount ?? 20618).toLocaleString('en-US')
 
   // Pueblos pa'l buscador (v_health_munis evita el cap de 1000 filas)
@@ -5813,7 +5891,7 @@ async function handleRegistro(req: any, res: any) {
      253 de 461 textos bajo 15 px y el buscador casi fuera de la 1ra pantalla. Ahora el buscador va arriba. -->
 <h1 class="!text-3xl sm:!text-4xl !leading-tight">${t('Registro de Especialistas Médicos de Puerto Rico', 'Registry of Puerto Rico Medical Specialists')}</h1>
 <p class="not-prose text-xl text-slate-800 font-semibold mt-2 leading-snug">${t('¿A cuál médico llamo hoy? Escoge especialidad y región: en 10 segundos tienes el nombre, el pueblo y el teléfono.', 'Which doctor do I call today? Pick specialty and region: in 10 seconds you have the name, the town, and the phone.')}</p>
-<p class="not-prose text-lg text-slate-700 mt-2">${t(`Gratis, sin cuenta y sin plan. ${totalVerified} proveedores de salud en ${REGISTRY_SPECS.length} especialidades, sacados del registro federal de médicos (NPPES).`, `Free, no account, no plan required. ${totalConNpi} providers with an NPI from the federal NPPES registry, ${totalVerified} across the ${REGISTRY_SPECS.length} search categories, in Spanish.`)}</p>
+<p class="not-prose text-lg text-slate-700 mt-2">${t(`Gratis, sin cuenta y sin plan. ${totalVerified} proveedores de salud en ${REGISTRY_SPECS.length} especialidades, sacados del registro federal de médicos (NPPES). Con farmacias y equipo médico son ${totalConNpi}: <a href="/como-sabemos" class="underline">de dónde sale cada número</a>.`, `Free, no account, no plan required. ${totalConNpi} providers with an NPI from the federal NPPES registry, ${totalVerified} across the ${REGISTRY_SPECS.length} search categories, in Spanish.`)}</p>
 
 <div id="reg-tool" class="not-prose mt-5 bg-white border-2 border-teal-300 rounded-2xl p-6 shadow-sm scroll-mt-24">
   <label class="block">
@@ -23253,6 +23331,7 @@ export default async function handler(req: any, res: any) {
     case 'registro-hub': return await handleRegistroHub(req, res)
     case 'cambios': return await handleCambios(req, res)
     case 'como-sabemos': return await handleComoSabemos(req, res)
+    case 'quien-esta-detras': return await handleQuienEstaDetras(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)
     case 'calculadora': return handleCalculadora(req, res)
