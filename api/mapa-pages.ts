@@ -20216,7 +20216,7 @@ ${regDisclaimer(en)}
     { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [
       { '@type': 'Question', name: `¿Qué hace un ${x.l.toLowerCase()}?`, acceptedAnswer: { '@type': 'Answer', text: `${info.treats} ${info.whenToGo}` } },
       { '@type': 'Question', name: region ? `¿Cuántos ${x.l.toLowerCase()} hay en ${region}, Puerto Rico?` : `¿Cuántos ${x.l.toLowerCase()} hay en Puerto Rico?`,
-        acceptedAnswer: { '@type': 'Answer', text: region ? `En ${region} hay ${regionCount} ${x.l.toLowerCase()} en el registro federal NPPES.` : `En Puerto Rico hay ${total} ${x.l.toLowerCase()} en el registro federal NPPES.` } },
+        acceptedAnswer: { '@type': 'Answer', text: region ? `En ${region} hay ${regionCount} ${specPluralEs(regionCount, x.l).toLowerCase()} en el registro federal NPPES.` : `En Puerto Rico hay ${total} ${specPluralEs(total, x.l).toLowerCase()} en el registro federal NPPES.` } },
       ...(!region && pueblosCon > 0 && pueblosCon < 78 ? [{ '@type': 'Question', name: `¿Cuántos municipios de Puerto Rico tienen ${x.l.toLowerCase()}?`,
         acceptedAnswer: { '@type': 'Answer', text: `Solo ${pueblosCon} de los 78 municipios de Puerto Rico tienen al menos 1 ${x.l.toLowerCase()} registrado en NPPES; los otros ${78 - pueblosCon} no tienen ninguno. Fuente: registromedicopr.com, cruce del registro federal NPPES por municipio.` } }] : []),
     ] },
@@ -21740,7 +21740,7 @@ ${citasHtml}
 
 <div class="not-prose mt-8 bg-slate-900 rounded-2xl p-6 text-center text-white">
   <p class="text-lg font-bold mb-1">${te('¿Necesitas encontrar un especialista hoy?', 'Need to find a specialist today?')}</p>
-  <p class="text-sm text-slate-300 mb-4">${te('El registro te dice quién existe, en qué pueblo y con qué teléfono, verificado contra el gobierno federal. Sin cuenta, sin registro, gratis.', 'The registry tells you who exists, in what town and with what phone, verified against the federal government. No account, no signup, free.')}</p>
+  <p class="text-sm text-slate-300 mb-4">${te('El registro te dice quién existe, en qué pueblo y con qué teléfono, sacado del registro del gobierno federal. Sin cuenta, sin registro, gratis.', 'The registry tells you who exists, in what town and with what phone, verified against the federal government. No account, no signup, free.')}</p>
   <div class="flex flex-wrap gap-3 justify-center">
     <a href="/registro${lp}" class="inline-flex items-center gap-2 bg-white text-slate-900 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-slate-100"><i class="fa-solid fa-magnifying-glass"></i> ${te('Buscar en el registro', 'Search the registry')}</a>
     <a href="/pueblo${lp}" class="inline-flex items-center gap-2 bg-teal-700 text-white font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-800"><i class="fa-solid fa-location-dot"></i> ${te('El semáforo de tu pueblo', 'Your town\'s health map')}</a>
@@ -22311,7 +22311,7 @@ async function handleProspecto(req: any, res: any) {
 <p class="text-sm text-slate-500">${te('Detalle con fuente: la brecha de diagnóstico en', 'Sourced detail: the diagnostic gap at')} <a href="/raras${lp}" class="text-teal-700 font-semibold">registromedicopr.com/raras</a> · ${te('la brecha de dinero en', 'the funding gap at')} <a href="https://puertoricosinfiltros.com/investigacion" class="text-teal-700 font-semibold">puertoricosinfiltros.com/investigacion</a>.</p>
 
 <h2>${te('El mapa ya existe (y se verifica contra fuentes federales)', 'The map already exists (and is verified against federal sources)')}</h2>
-<p>${te('Lo que un equipo de investigación o de fondos normalmente pasa un año construyendo, aquí ya está construido y verificado contra el registro federal NPPES:', 'What a research or funding team normally spends a year building is already built here, verified against the federal NPPES registry:')}</p>
+<p>${te('Lo que un equipo de investigación o de fondos normalmente pasa un año construyendo, aquí ya está construido, con el registro federal NPPES como base:', 'What a research or funding team normally spends a year building is already built here, verified against the federal NPPES registry:')}</p>
 <ul class="text-slate-700">
   <li>${te('<strong>El Atlas de fundadoras</strong> — 6 condiciones por pueblo, con prevalencia y fuente científica primaria.', '<strong>The founder-disease Atlas</strong> — 6 conditions by town, with prevalence and primary scientific source.')}</li>
   <li>${te('<strong>El registro médico</strong> — 30,000+ proveedores y facilidades sacados del registro federal NPPES, en 72 categorías, por especialidad y municipio.', '<strong>The medical registry</strong> — 30,000+ providers and facilities from the federal NPPES registry, across 72 categories, by specialty and municipality.')}</li>
@@ -22324,7 +22324,7 @@ async function handleProspecto(req: any, res: any) {
 
 <div class="not-prose bg-teal-50 border border-teal-200 rounded-2xl p-6 my-8">
   <p class="font-black text-teal-900 text-lg">${te('La puerta', 'The door')}</p>
-  <p class="text-sm text-teal-800 mt-1">${te('Esta data es pública y gratis. La mantenemos nosotros desde Cabo Rojo, verificada contra el registro federal. No vendemos un reporte ni pedimos nada. Si vas a traer investigación, financiamiento o cobertura a Puerto Rico, este es tu mapa de arranque. Si quieres hablar, la puerta está abierta.', 'This data is public and free. We maintain it ourselves from Cabo Rojo, verified against the federal registry. We are not selling a report or asking for anything. If you are bringing research, funding, or coverage to Puerto Rico, this is your starting map. If you want to talk, the door is open.')}</p>
+  <p class="text-sm text-teal-800 mt-1">${te('Esta data es pública y gratis. La mantenemos nosotros desde Cabo Rojo, con el registro federal como base y lo confirmado con fecha. No vendemos un reporte ni pedimos nada. Si vas a traer investigación, financiamiento o cobertura a Puerto Rico, este es tu mapa de arranque. Si quieres hablar, la puerta está abierta.', 'This data is public and free. We maintain it ourselves from Cabo Rojo, verified against the federal registry. We are not selling a report or asking for anything. If you are bringing research, funding, or coverage to Puerto Rico, this is your starting map. If you want to talk, the door is open.')}</p>
   <a href="mailto:angel@angelanderson.com?subject=${encodeURIComponent(te('Prospecto genética PR', 'PR genetics prospectus'))}" class="inline-flex items-center gap-2 mt-3 bg-teal-700 hover:bg-teal-800 text-white font-bold px-5 py-2.5 rounded-full text-sm"><i class="fa-solid fa-envelope"></i> angel@angelanderson.com</a>
 </div>
 
