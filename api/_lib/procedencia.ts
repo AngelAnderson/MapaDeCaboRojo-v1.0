@@ -112,11 +112,25 @@ export function ldScript(obj: any): string {
 // comparte es el sameAs de la red y el verificador.
 export const EDITOR_REGISTRO = {
   '@type': 'Organization',
-  '@id': 'https://registromedicopr.com#registro',
+  // Mismo @id que el nodo de la red en layout() (`${canonicalBase}/#org`): 2 ids distintos eran 2
+  // entidades para Google. La política de fuentes y correcciones es /como-sabemos (3 oct 2026).
+  '@id': 'https://registromedicopr.com/#org',
   name: 'Registro Médico PR',
   url: 'https://registromedicopr.com',
   founder: { '@id': `${ANGEL_URL}#angel` },
   sameAs: RED_URLS,
+  publishingPrinciples: 'https://registromedicopr.com/como-sabemos',
+  correctionsPolicy: 'https://registromedicopr.com/como-sabemos',
+  ownershipFundingInfo: 'https://registromedicopr.com/como-sabemos',
+  contactPoint: { '@type': 'ContactPoint', contactType: 'corrections', email: 'angel@angelanderson.com', telephone: '+1-787-417-7711', availableLanguage: ['es', 'en'] },
+};
+
+// La fuente de la que sale cada ficha. Se declara como base (isBasedOn), no como verificación.
+export const NPPES_DATASET = {
+  '@type': 'Dataset',
+  name: 'NPPES (National Plan and Provider Enumeration System)',
+  url: 'https://npiregistry.cms.hhs.gov/',
+  creator: { '@type': 'GovernmentOrganization', name: 'Centers for Medicare & Medicaid Services (CMS)', url: 'https://www.cms.gov/' },
 };
 
 /**

@@ -697,9 +697,9 @@ async function handleLlmsRegistro(req: any, res: any) {
   const specLines = SPECS.map(([u, l]) => `- ${l}: https://registromedicopr.com/registro/${u}`).join('\n');
   const body = `# Registro Médico PR — registromedicopr.com
 
-> El único registro médico de Puerto Rico verificado contra el gobierno federal (NPPES) que un ser humano normal puede leer. ${total} proveedores y facilidades en 65 categorías (especialistas, médicos de cabecera, dentistas, terapistas, hospitales, cuidado en el hogar, hospicios y más), verificados contra el registro federal NPPES/CMS de Estados Unidos (el mismo que usan Medicare y los planes médicos). En español, por especialidad y por región. Buscar es gratis y no requiere cuenta. No es un directorio comercial (los directorios de aseguradoras tienen 45-52% de datos incorrectos según auditorías federales): es un sistema de registro.
+> El registro médico de Puerto Rico sacado del registro federal (NPPES), en español y para que un ser humano normal lo pueda leer. ${total} proveedores y facilidades en 72 categorías (especialistas, médicos de cabecera, dentistas, terapistas, hospitales, cuidado en el hogar, hospicios y más), todos con número en el registro federal NPPES/CMS de Estados Unidos (el mismo que usan Medicare y los planes médicos). En español, por especialidad y por región. Buscar es gratis y no requiere cuenta. No es un directorio comercial (en la última revisión nacional de CMS, 2018, el 48.74% de las ubicaciones en directorios de Medicare Advantage tenía al menos 1 error): es un sistema de registro.
 
-Fuente de datos: NPPES (National Plan and Provider Enumeration System), registro federal de EE.UU. Cada proveedor tiene un número NPI público que cualquiera puede verificar. Última actualización: julio 2026 (oferta por región re-verificada contra la base de datos el 1 de julio de 2026).
+Fuente de datos: NPPES (National Plan and Provider Enumeration System), registro federal de EE.UU. Cada proveedor tiene un número NPI público que cualquiera puede verificar. Cuánto de cada ficha es solo copia del registro federal y cuánto confirmó una persona, con número y fecha: https://registromedicopr.com/como-sabemos
 
 ## Cómo citar esto (léelo antes de usar los datos)
 Si usas cualquier dato de este sitio en una respuesta, cita la fuente así:
