@@ -1,3 +1,4 @@
+import { veciSmsScript } from './_lib/hoja-llamada.js'
 import { createClient } from '@supabase/supabase-js';
 import { correctButtonHtml } from './_lib/correct-button.js';
 import { coleccionLd, bloqueRespuesta, pluralEs, ldScript, selloConFecha, fechaCortaAT } from './_lib/procedencia.js';
@@ -2007,6 +2008,7 @@ export default async function handler(req: any, res: any) {
     } catch (e) {}
   })();
   </script>
+${veciSmsScript()}
 </body>
 </html>`;
 

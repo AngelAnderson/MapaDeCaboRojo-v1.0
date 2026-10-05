@@ -19,6 +19,7 @@
  * - See scripts/nppes-import-phase2.ts stub at bottom of this repo
  */
 
+import { veciSmsScript } from './_lib/hoja-llamada.js'
 import { createClient } from '@supabase/supabase-js';
 import { correctButtonHtml } from './_lib/correct-button.js';
 import { paginaLd, ldScript, partesAT, selloConFecha } from './_lib/procedencia.js';
@@ -201,6 +202,7 @@ export default async function handler(req: any, res: any) {
 <body>
   <h1>404 – ${config.label} no encontrado</h1>
   <p><a href="${siteOrigin}/categoria/${type}">Ver todos</a></p>
+${veciSmsScript()}
 </body>
 </html>`);
     return;
@@ -804,6 +806,7 @@ export default async function handler(req: any, res: any) {
     </footer>
   </div>
   ${correctButtonHtml({ pageType: 'farmacia', placeId: place.id })}
+${veciSmsScript()}
 </body>
 </html>`;
 
