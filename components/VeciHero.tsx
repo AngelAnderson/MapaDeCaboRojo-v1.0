@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Place } from '../types';
 import { isOpenNow } from '../utils/timeUtils';
+import { veciHref } from '../utils/veciLink';
 
 /**
  * VeciHero — the home stops being "a map you look at" and becomes
@@ -147,7 +148,7 @@ const VeciHero: React.FC<Props> = ({ places, onSelectPlace, onClose, onShowNumer
         {error && (
           <div className="text-sm text-ink-soft bg-amber-500/10 border border-amber-500/30 rounded-xl p-3">
             Se me trabó la búsqueda. Textea tu pregunta al{' '}
-            <a className="font-bold text-brand-600" href="https://wa.me/17874177711">787-417-7711</a> y te contesto por ahí.
+            <a className="font-bold text-brand-600" href={veciHref()}>787-417-7711</a> y te contesto por ahí.
           </div>
         )}
 
@@ -180,7 +181,7 @@ const VeciHero: React.FC<Props> = ({ places, onSelectPlace, onClose, onShowNumer
               );
             })}
             {results.length === 0 && (
-              <a href="https://wa.me/17874177711" className="inline-block text-xs font-bold text-brand-600 border border-brand-500/40 rounded-lg px-3 py-1.5 hover:bg-brand-500/10">
+              <a href={veciHref()} className="inline-block text-xs font-bold text-brand-600 border border-brand-500/40 rounded-lg px-3 py-1.5 hover:bg-brand-500/10">
                 Textea al 787-417-7711 y El Veci te lo consigue
               </a>
             )}
@@ -217,7 +218,7 @@ const VeciHero: React.FC<Props> = ({ places, onSelectPlace, onClose, onShowNumer
         <button onClick={onShowNumeros} className="font-bold text-ink-soft hover:text-ink">
           📊 El pueblo en números
         </button>
-        <a href="https://wa.me/17874177711" className="font-bold text-brand-600 hover:text-brand-500">
+        <a href={veciHref()} className="font-bold text-brand-600 hover:text-brand-500">
           <i className="fa-brands fa-whatsapp mr-1"></i>*7711
         </a>
       </div>

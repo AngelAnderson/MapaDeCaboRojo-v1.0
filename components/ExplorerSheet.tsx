@@ -13,6 +13,7 @@ import PlaceCardSponsorBadge from './PlaceCardSponsorBadge';
 import AudienceToggle from './AudienceToggle';
 import { isFresh } from '../utils/freshness';
 import { AudienceMode, sortCategoriesByAudience } from '../utils/audience';
+import { veciHref } from '../utils/veciLink';
 
 interface ExplorerSheetProps {
   places: Place[];
@@ -310,7 +311,7 @@ const ExplorerSheet: React.FC<ExplorerSheetProps> = ({
                       Pregúntale a El Veci aquí
                   </button>
                   <a
-                    href={`https://wa.me/17874177711?text=${encodeURIComponent(searchText || 'Hola Veci')}`}
+                    href={veciHref(searchText || 'Hola Veci')}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 bg-white dark:bg-slate-700 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 text-sm font-bold px-5 py-3 rounded-full shadow-sm transition-all active:scale-95 hover:bg-emerald-50 dark:hover:bg-slate-600"

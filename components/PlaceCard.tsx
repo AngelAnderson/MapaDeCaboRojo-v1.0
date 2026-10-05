@@ -7,6 +7,7 @@ import { getPlaceReviews, submitReview, PlaceReviewSummary } from '../services/s
 import FreshnessBadge from './FreshnessBadge';
 import PlaceCardSponsorBadge from './PlaceCardSponsorBadge';
 import HoursDisplay from './PlaceCardHours';
+import { veciHref } from '../utils/veciLink';
 
 // ============================================================================
 // PlaceCard — responsive detail view
@@ -349,8 +350,7 @@ const PlaceCard: React.FC<PlaceCardProps> = ({
 
   // El Veci SMS deeplink — lockfile rule: full number 787-417-7711, SMS preferred.
   const handleElVeciSMS = useCallback(() => {
-    const body = encodeURIComponent(placeName || '');
-    window.open(`https://wa.me/17874177711?text=${body}`, '_self');
+    window.open(veciHref(placeName || ''), '_self');
   }, [placeName]);
 
   // Mobile swipe-down to close (only active on mobile bottom-sheet layout)
