@@ -248,7 +248,7 @@
     var oh       = biz.opening_hours || biz.horario || null;
     var status   = getOpenStatus(oh);
     var detailURL = BASE_URL + '/negocio/' + encodeURIComponent(slug);
-    var veciSMS   = 'https://wa.me/17874177711?text=' + encodeURIComponent(name);
+    var veciSMS   = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent||'') ? 'sms:+17874177711?&body=' + encodeURIComponent(name) : 'https://wa.me/17874177711?text=' + encodeURIComponent(name); // 5 oct 2026: SMS en el celular
 
     var card = el('div', 'mdc-card');
     card.setAttribute('role', 'article');
