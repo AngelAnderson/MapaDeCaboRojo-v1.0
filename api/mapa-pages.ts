@@ -6749,6 +6749,13 @@ async function handleEspecialista(req: any, res: any) {
   const npi = place.npi as string
   const phoneDigits = (place.phone || '').replace(/\D/g, '')
   const telLink = phoneDigits.length >= 7 ? `tel:${phoneDigits}` : null
+  // 5 oct 2026: 787-888-8888 y compañía. NPPES trae relleno (7 dígitos iguales después del área)
+  // y los directorios de los planes lo copian. Se sacó de places (telefonos_no_marcables) y
+  // reapareció como "otro número" del plan. Un número así no se ofrece en ningún lado.
+  const telMarcable = (x: string) => {
+    const d = String(x || '').replace(/\D/g, '').slice(-10)
+    return d.length === 10 && !/^[01]/.test(d) && !/^(\d)\1{6}$/.test(d.slice(3))
+  }
   // 2 oct 2026 (Galería Radiológica): el botón WhatsApp abría el teléfono de la oficina, que es
   // línea fija. Si la oficina nos dio un WhatsApp público, va `contact_info.whatsapp` y manda.
   // `owner_whatsapp` NO sirve aquí: es el número privado del dueño para hablar con nosotros.
@@ -6839,7 +6846,7 @@ async function handleEspecialista(req: any, res: any) {
     if (eds.length) {
       // El teléfono que publica el plan y que el registro federal no tiene. Un
       // número más que probar antes de darse por vencido.
-      const delPlan: string[] = (eds[0].phones || []).filter((x: string) => x && x !== phoneDigits.slice(-10))
+      const delPlan: string[] = (eds[0].phones || []).filter((x: string) => telMarcable(x) && x !== phoneDigits.slice(-10))
       planDir = {
         ultima: eds[0].edition_date,
         primera: eds[eds.length - 1].edition_date,
@@ -6877,7 +6884,7 @@ async function handleEspecialista(req: any, res: any) {
       .eq('npi', npi).eq('edicion', 'jul-2026').limit(1)
     const r = (data || [])[0]
     if (r) {
-      const del: string[] = (r.telefonos || []).filter((x: string) => x && x !== phoneDigits.slice(-10))
+      const del: string[] = (r.telefonos || []).filter((x: string) => telMarcable(x) && x !== phoneDigits.slice(-10))
       fmv = { pueblo: r.pueblo_plan || null, seccion: r.seccion || null, pagina: r.pagina_pdf || null, otroTel: del.length ? del[0] : null }
     }
   }
@@ -6899,7 +6906,7 @@ async function handleEspecialista(req: any, res: any) {
       .select('town,section,phones').eq('plan', 'Triple-S Advantage').eq('npi', npi).limit(1)
     const r = (data || [])[0]
     if (r) {
-      const del: string[] = (r.phones || []).filter((x: string) => x && x !== phoneDigits.slice(-10))
+      const del: string[] = (r.phones || []).filter((x: string) => telMarcable(x) && x !== phoneDigits.slice(-10))
       tsAdv = { pueblo: r.town || null, seccion: r.section || null, otroTel: del.length ? del[0] : null }
     }
   }
@@ -6914,7 +6921,7 @@ async function handleEspecialista(req: any, res: any) {
       .select('town,section,phones').eq('plan', 'MCS Advantage').eq('npi', npi).limit(1)
     const r = (data || [])[0]
     if (r) {
-      const del: string[] = (r.phones || []).filter((x: string) => x && x !== phoneDigits.slice(-10))
+      const del: string[] = (r.phones || []).filter((x: string) => telMarcable(x) && x !== phoneDigits.slice(-10))
       mcsAdv = { pueblo: r.town || null, seccion: r.section || null, otroTel: del.length ? del[0] : null }
     }
   }
