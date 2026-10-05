@@ -6371,7 +6371,7 @@ ${regDisclaimer(en)}
     },
   ]
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
-  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=300')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800')
   res.status(200).send(layout({
     bareTitle: true,
     title: t('Registro de Especialistas Médicos de PR: por pueblo y con teléfono', 'Puerto Rico Medical Specialist Registry: by town, with phone numbers'),
@@ -7133,7 +7133,8 @@ async function handleEspecialista(req: any, res: any) {
     ${waLink ? `<a href="${waLink}" onclick="try{gtag('event','click_whatsapp',{${evtAttr}})}catch(e){}" class="flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-base no-underline hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${T.wa}</a>` : ''}
     <a href="https://wa.me/17874177711?text=${spec ? spec.kw : 'ESPECIALISTA'}" class="${waLink ? '' : 'col-span-2 '}flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-base no-underline hover:bg-teal-50"><i class="fa-brands fa-whatsapp"></i> ${T.veci}</a>
     ${webUrl ? `<a href="${escapeHtml(webUrl)}" target="_blank" rel="noopener nofollow" class="col-span-2 flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-base no-underline hover:bg-teal-50"><i class="fa-solid fa-globe"></i> ${t('Página web de la oficina', 'Office website')}</a>` : ''}
-  </div>${place.hours ? `<p class="not-prose mt-3 text-base text-stone-700"><b>${t('Horario', 'Hours')}:</b> ${escapeHtml(place.hours)}</p>` : ''}`
+  </div>
+  <p class="not-prose mt-3 text-base font-semibold text-stone-800" style="font-size:16px">${t('Antes de ir, pregunta: ¿aceptan mi plan 2027?', 'Before you go, ask: do you take my 2027 plan?')}</p>${place.hours ? `<p class="not-prose mt-3 text-base text-stone-700"><b>${t('Horario', 'Hours')}:</b> ${escapeHtml(place.hours)}</p>` : ''}`
 
   // ═══ La Cita del Lunes (23 sep 2026, Recibo Cero) ═══
   // El Registro se muere el fin de semana (sáb 63 clics en Llamar, dom 20, contra 360-723 entre
@@ -20145,7 +20146,7 @@ ${regDisclaimer(en)}`
       ...(itemListT.length ? [{ '@context': 'https://schema.org', '@type': 'ItemList', name: titleT, numberOfItems: allT.length, itemListElement: itemListT }] : []),
     ]
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
-    res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+    res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800')
     res.status(200).send(layout({ bareTitle: true, title: titleT, description: descT, slug: canonicalPathT, bodyHtml: bodyT + pieMd(`https://registromedicopr.com/${canonicalPathT}`), jsonLd: jsonLdT, md: true, ogImage: REGISTRO_OG, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com', lang: en ? 'en' : 'es' }))
     return
   }
@@ -20308,7 +20309,7 @@ ${regDisclaimer(en)}
   ]
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
-  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800')
   res.status(200).send(layout({
     bareTitle: true, title, description, slug: canonicalPath, bodyHtml: body, jsonLd,
     ogImage: REGISTRO_OG, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
