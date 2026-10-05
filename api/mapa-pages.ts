@@ -7116,6 +7116,20 @@ async function handleEspecialista(req: any, res: any) {
   }
   const negocioHtml = !negocioEnMapa ? '' : `<p class="not-prose mt-4 text-sm text-slate-600">${t('Esta misma oficina tiene su ficha de negocio en el directorio de Cabo Rojo, con horario y reseñas:', 'This same office has its business listing in the Cabo Rojo directory, with hours and reviews:')} <a href="https://www.mapadecaborojo.com/negocio/${encodeURIComponent(negocioEnMapa.slug)}" class="text-teal-700 font-semibold underline">${escapeHtml(negocioEnMapa.name)} →</a></p>`
 
+  // 5 oct 2026 (LA CENTRAL, dale de Angel): 2,302 fichas caen en 26 números que comparten
+  // entre 33 y 587 proveedores (787-641-7582 = 587). La persona cree que llama a la oficina
+  // y le contesta el cuadro del hospital. Si 11+ comparten el número, se le dice antes de marcar.
+  // El conteo sale de places en vivo (idx_places_phone_digits); sin tabla nueva.
+  let centralN = 0
+  const d10 = phoneDigits.slice(-10)
+  if (d10.length === 10) {
+    const { count: nTel } = await supabase.from('places')
+      .select('id', { count: 'exact', head: true })
+      .in('phone_digits', [d10, '1' + d10]).not('npi', 'is', null).eq('visibility', 'published')
+    if (Number(nTel || 0) >= 11) centralN = Number(nTel)
+  }
+  const centralHtml = !centralN || !telLink ? '' : `<p class="not-prose mt-5 mb-0 rounded-xl border border-amber-300 bg-amber-50 text-stone-900 px-4 py-3" style="font-size:17px;line-height:1.45"><b>${t('Este número es una central.', 'This number is a switchboard.')}</b> ${t(`Lo comparten ${centralN.toLocaleString('es-PR')} proveedores. Cuando contesten, pide la oficina de ${escapeHtml(nameTitle)}.`, `${centralN.toLocaleString('en-US')} providers share it. When they answer, ask for ${escapeHtml(nameTitle)}'s office.`)}</p>`
+
   const mapsEmbed = (place.lat && place.lon)
     ? `https://maps.google.com/maps?q=${place.lat},${place.lon}&z=15&output=embed`
     : `https://maps.google.com/maps?q=${encodeURIComponent((place.address || (muni + ', Puerto Rico')))}&z=13&output=embed`
@@ -7128,7 +7142,7 @@ async function handleEspecialista(req: any, res: any) {
   const evtAttr = `specialty:'${safeSpec}',region:'${safeRegion}'`
   // 18 sep 2026: la alerta de teléfono reportado se mudó a la fila 1 de la Hoja de evidencia.
   // "Llamar" va primero y a lo ancho: es lo que vino a hacer la persona.
-  const actionBtns = `<div class="not-prose grid grid-cols-2 gap-2 mt-5">
+  const actionBtns = `${centralHtml}<div class="not-prose grid grid-cols-2 gap-2 ${centralHtml ? 'mt-3' : 'mt-5'}">
     ${telLink ? `<a href="${telLink}" onclick="try{gtag('event','click_to_call',{${evtAttr}})}catch(e){}" class="col-span-2 flex items-center justify-center gap-2 bg-teal-700 hover:bg-teal-800 text-white font-bold px-5 min-h-[56px] rounded-xl text-lg no-underline"><i class="fa-solid fa-phone"></i> ${T.call} ${escapeHtml(place.phone)}</a>` : ''}
     ${waLink ? `<a href="${waLink}" onclick="try{gtag('event','click_whatsapp',{${evtAttr}})}catch(e){}" class="flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-base no-underline hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${T.wa}</a>` : ''}
     <a href="https://wa.me/17874177711?text=${spec ? spec.kw : 'ESPECIALISTA'}" class="${waLink ? '' : 'col-span-2 '}flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-base no-underline hover:bg-teal-50"><i class="fa-brands fa-whatsapp"></i> ${T.veci}</a>
@@ -12382,12 +12396,14 @@ async function handleSinFiltrosLog(req: any, res: any) {
 // GA4 no es nuestra tabla. Mismo patrón fail-safe que sinfiltros-log: allowlist + insert
 // service-role, nunca rompe la página. Se lee en `recibo_cero`.
 // loqueviene_click (29 sep 2026): caborojo.com manda sus clics aquí (pie de página, marker cr-salidas-v1).
-const REGISTRO_EVENTS = new Set(['click_to_call', 'click_whatsapp', 'veci_click', 'symptom_match', 'call_outcome', 'loqueviene_click'])
+// numero_reportado (5 oct 2026, LA CENTRAL): la persona llamó a una central y le dieron el directo de la oficina.
+// target = 10 dígitos exactos o no entra. Es el número de una oficina, no de la persona.
+const REGISTRO_EVENTS = new Set(['click_to_call', 'click_whatsapp', 'veci_click', 'symptom_match', 'call_outcome', 'loqueviene_click', 'numero_reportado'])
 // 28 sep 2026: resultado de la llamada ("la verdad después del click"). Solo estas claves.
 // no_llame (28 sep 2026): 72% cerraba la hoja con la ×; las 5 opciones suponían que alguien habló.
 // Quien marcó y colgó o llama después no tenía botón. No cuenta como resultado de llamada.
 // resuelto / numero_malo (28 sep 2026): la misma hoja en las fichas del directorio (mapadecaborojo.com).
-const CALL_OUTCOMES = new Set(['cita', 'contesto_no_resolvio', 'no_contestaron', 'no_aceptan', 'otra_opcion', 'descartado', 'no_llame', 'resuelto', 'numero_malo'])
+const CALL_OUTCOMES = new Set(['cita', 'contesto_no_resolvio', 'no_contestaron', 'no_aceptan', 'otra_opcion', 'descartado', 'no_llame', 'resuelto', 'numero_malo', 'otro_numero'])
 async function handleRegistroLog(req: any, res: any) {
   try {
     // 28 sep 2026: único POST del registro sin rate limit. Fail-silent como el resto del
@@ -12401,6 +12417,7 @@ async function handleRegistroLog(req: any, res: any) {
     const cid = /^[a-z0-9]{6,40}$/.test(String(body.cid || '')) ? String(body.cid) : null
     const vid = /^[a-z0-9]{6,40}$/.test(String(body.vid || '')) ? String(body.vid) : null
     if (event === 'call_outcome' && !CALL_OUTCOMES.has(String(body.target || ''))) { res.status(204).end(); return }
+    if (event === 'numero_reportado' && !/^[0-9]{10}$/.test(String(body.target || ''))) { res.status(204).end(); return }
     if (REGISTRO_EVENTS.has(event)) {
       // sitio lo decide el host, no el navegador: los números públicos del Registro no se mezclan con el directorio.
       // caborojo.com llega por fetch no-cors: lo delata el Origin/Referer que pone el navegador.
