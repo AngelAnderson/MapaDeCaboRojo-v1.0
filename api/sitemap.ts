@@ -43,8 +43,12 @@ function robotsFor(host: string): string {
     'Allow: /',
     'Disallow: /admin/',
     'Disallow: /api/admin/',
+    // 8 oct 2026: ~60,000 fichas/día de rastreadores tumbaron la base Micro 11 h.
+    // Googlebot ignora Crawl-delay (se regula en Search Console); Bing, Yandex, Apple,
+    // Amazon y la mayoría sí lo respetan. 10 s = 8,640 páginas/día por rastreador.
+    'Crawl-delay: 10',
     '',
-    ...AI_CRAWLERS.flatMap((ua) => [`User-agent: ${ua}`, 'Allow: /', '']),
+    ...AI_CRAWLERS.flatMap((ua) => [`User-agent: ${ua}`, 'Allow: /', 'Crawl-delay: 10', '']),
     `Sitemap: ${base}/sitemap.xml`,
   ];
   // El puntero a llms.txt vivia solo en mapa. registro y PRSF tambien sirven llms.txt
