@@ -6652,6 +6652,23 @@ async function handleEspecialista(req: any, res: any) {
   const lang: 'es' | 'en' = String(req.query.lang || '') === 'en' ? 'en' : 'es'
   if (!slug) { res.status(400).send('Slug requerido'); return }
 
+  // INTERRUPTOR DE EMERGENCIA (8 oct 2026, 02:15 UTC): los rastreadores leyeron ~60,000
+  // fichas en 24 h (10 consultas cada una) y la base Micro de Supabase se cayó (522 en
+  // todo, Registro 504, Veci sin base). Con REGISTRO_BOTS_503=1 en Vercel, SOLO los
+  // rastreadores reciben 503 + Retry-After (señal estándar de "vuelve después", no
+  // desindexa); las personas siguen viendo la ficha. Quitar la variable y redeployar
+  // cuando la base tenga compute suficiente o la ficha baje a 1 consulta.
+  if (process.env.REGISTRO_BOTS_503 === '1') {
+    const ua = String(req.headers?.['user-agent'] || '')
+    if (/bot|crawl|spider|slurp|GPTBot|ClaudeBot|Claude-Web|anthropic-ai|Perplexity|Bytespider|CCBot|Amazonbot|meta-external|OAI-SearchBot|Applebot|DuckDuck|YandexBot|Bingbot|Googlebot|Google-Extended|cohere/i.test(ua)) {
+      res.setHeader('Retry-After', '3600')
+      res.setHeader('Cache-Control', 'no-store')
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+      res.status(503).send('Mantenimiento temporal. Vuelve en 1 hora. / Temporary maintenance, retry in 1 hour.')
+      return
+    }
+  }
+
   // Esta ruta NO tiene variante markdown: navegador, Googlebot, GPTBot y Accept:
   // text/markdown reciben el MISMO HTML (medido 24 sep 2026). El `Vary: Accept,
   // User-Agent` que pone el dispatcher le partía la caché del CDN en una entrada por
