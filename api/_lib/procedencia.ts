@@ -130,8 +130,12 @@ export const EDITOR_REGISTRO = {
 export const NPPES_DATASET = {
   '@type': 'Dataset',
   name: 'NPPES (National Plan and Provider Enumeration System)',
+  // GSC (8 oct 2026) "critical Datasets issues": description es requerida (50-5000) y el validador
+  // solo acepta Person/Organization en creator (GovernmentOrganization no). Mismo arreglo que paginaMedicaLd.
+  description: 'Registro federal público de proveedores de salud de Estados Unidos y sus territorios. Cada proveedor tiene un NPI (National Provider Identifier) verificable, con especialidad, dirección de práctica y estado de licencia. Es el mismo registro que usan Medicare y los planes médicos.',
   url: 'https://npiregistry.cms.hhs.gov/',
-  creator: { '@type': 'GovernmentOrganization', name: 'Centers for Medicare & Medicaid Services (CMS)', url: 'https://www.cms.gov/' },
+  license: 'https://www.usa.gov/government-works',
+  creator: { '@type': 'Organization', name: 'Centers for Medicare & Medicaid Services', url: 'https://www.cms.gov' },
 };
 
 /**
