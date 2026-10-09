@@ -6975,15 +6975,18 @@ async function handleEspecialista(req: any, res: any) {
   }
 
   const t = (es: string, en: string) => (lang === 'en' ? en : es)
-  const MES_ES: Record<string, string> = { '2026-06-01': 'junio de 2026', '2025-12-01': 'diciembre de 2025', '2024-12-01': 'diciembre de 2024' }
-  const MES_EN: Record<string, string> = { '2026-06-01': 'June 2026', '2025-12-01': 'December 2025', '2024-12-01': 'December 2024' }
-  const EDICION_VIGENTE = '2026-06-01'
+  const MES_ES: Record<string, string> = { '2027-01-01': 'enero de 2027', '2026-06-01': 'junio de 2026', '2025-12-01': 'diciembre de 2025', '2024-12-01': 'diciembre de 2024' }
+  const MES_EN: Record<string, string> = { '2027-01-01': 'January 2027', '2026-06-01': 'June 2026', '2025-12-01': 'December 2025', '2024-12-01': 'December 2024' }
+  // 9 oct 2026: edición 2027 de MMM ("actualizado a partir de Enero 2027", PDF del 15 sep), cargada el 8 oct.
+  // OJO: cargarla sin mover esta constante puso a ~5,600 fichas a decir "aparecía en 2027-01-01 y ya no
+  // aparece en junio de 2026" durante unas horas. La constante y la data se mueven juntas.
+  const EDICION_VIGENTE = '2027-01-01'
   const mes = (d: string) => (lang === 'en' ? MES_EN[d] : MES_ES[d]) || d
 
   const planDirHtml = !planDir ? '' : planDir.ultima === EDICION_VIGENTE
     ? `<li class="py-2 flex flex-wrap items-baseline gap-x-2"><strong class="text-teal-900">MMM</strong> <span class="text-slate-700">${mes(planDir.ultima)}</span>${planDir.otroTel ? ` <span class="text-slate-700">· ${t('otro número:', 'other number:')} <a href="tel:${escapeHtml(planDir.otroTel)}" class="font-bold underline text-teal-800">${escapeHtml(planDir.otroTel.replace(/^(\d{3})(\d{3})(\d{4})$/, '$1-$2-$3'))}</a></span>` : ''} ${planDir.fuente ? `<a href="${escapeHtml(planDir.fuente)}" target="_blank" rel="noopener" class="text-xs text-teal-700 underline">PDF</a> · ` : ''}<a href="/expediente-mmm" class="text-xs text-teal-700 underline">${t('el cruce', 'the audit')}</a></li>`
     : `<div class="not-prose mt-5 bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
-    <p class="m-0 text-base text-amber-900"><strong>${t('Ojo si tienes MMM:', 'Heads up if you have MMM:')}</strong> ${t('aparecía en el directorio de', 'this provider appeared in the')} <strong>${mes(planDir.ultima)}</strong> ${t('y ya no aparece en el de', 'directory and no longer appears in the')} <strong>${mes(EDICION_VIGENTE)}</strong>.</p>
+    <p class="m-0 text-base text-amber-900"><strong>${t('Ojo si tienes MMM:', 'Heads up if you have MMM:')}</strong> ${t('aparecía en el directorio de', 'this provider appeared in the')} <strong>${mes(planDir.ultima)}</strong> ${t('y no lo encontramos en el de', 'directory and we could not find them in the')} <strong>${mes(EDICION_VIGENTE)}</strong>.</p>
     <p class="m-0 mt-1 text-sm text-amber-800">${t('Puede que haya salido de la red. Confirma con MMM antes de coger cita, o te toca pagar de tu bolsillo.', 'They may have left the network. Confirm with MMM before booking, or you could end up paying out of pocket.')}</p>
     <p class="m-0 mt-1 text-sm text-amber-800">${t('No es el único: el directorio de MMM cambia de una edición a la otra.', 'They are not the only one: the MMM directory changes from one edition to the next.')} <a href="/se-fue-tu-medico" class="font-semibold underline">${t('El reloj de la red →', 'The network clock →')}</a></p>
     ${planDir.fuente ? `<p class="m-0 mt-2 text-xs"><a href="${escapeHtml(planDir.fuente)}" target="_blank" rel="noopener" class="text-amber-800 font-semibold underline">${t('Ver el directorio donde aparecía (PDF) →', 'See the directory where they appeared (PDF) →')}</a> · <a href="/expediente-mmm" class="text-amber-800 underline">${t('El expediente MMM', 'The MMM audit')}</a></p>` : `<p class="m-0 mt-2 text-xs"><a href="/expediente-mmm" class="text-amber-800 underline">${t('De dónde sale este cruce: el expediente MMM', 'Where this cross-check comes from: the MMM audit')}</a></p>`}
@@ -10846,7 +10849,7 @@ async function handleTelefonosMuertos(req: any, res: any) {
       const conNum = (mmm || []).filter((e: any) => (e.phones || []).includes(tel10))
       if (conNum.length) {
         const desde = String(conNum[0].edition_date)
-        const MES: Record<string, string> = { '2024-12-01': 'dic 2024', '2025-12-01': 'dic 2025', '2026-06-01': 'jun 2026' }
+        const MES: Record<string, string> = { '2024-12-01': 'dic 2024', '2025-12-01': 'dic 2025', '2026-06-01': 'jun 2026', '2027-01-01': 'ene 2027' }
         pubs.push(`MMM (${conNum.length} ${conNum.length === 1 ? 'edición' : 'ediciones'}, desde ${MES[desde] || desde})`)
       }
     } catch { /* el cruce es aditivo: si falla, la fila sale sin publicadores */ }
@@ -19855,12 +19858,12 @@ async function resolveMuni(slug: string): Promise<{ name: string; region: string
 //
 // Tampoco se muestra `acepta_nuevos`: 17,188 de 19,453 filas del Plan Vital dicen "Sí" y 8
 // dicen "No". El expediente ya probó que ese campo no distingue nada.
-const PLAN_ED_MMM = '2026-06-01'
+const PLAN_ED_MMM = '2027-01-01' // 9 oct 2026: edición 2027 (antes 2026-06-01)
 const PLAN_ED_VITAL = 'ago-2026' // v2 (fmvital_directorio_v2, un solo lector para las 4 ediciones)
 // Triple-S Advantage: una sola edición cargada (el PDF dice "actualizado a 9/9/2025", año de plan 2026).
 // Estaba en Supabase desde el 28 ago y la ficha ya lo mostraba; el hub no. Misma regla: solo el positivo.
 const PLAN_ED_TSS = '2025-09-09'
-const PLAN_ED_MMM_ES = 'junio de 2026', PLAN_ED_MMM_EN = 'June 2026'
+const PLAN_ED_MMM_ES = 'enero de 2027', PLAN_ED_MMM_EN = 'January 2027'
 const PLAN_ED_VITAL_ES = 'agosto de 2026', PLAN_ED_VITAL_EN = 'August 2026'
 const PLAN_ED_TSS_ES = 'septiembre de 2025', PLAN_ED_TSS_EN = 'September 2025'
 // MCS Advantage (MCS Classicare): PDF "actualizado al 10 de agosto de 2026", cargado el 2 sep 2026
