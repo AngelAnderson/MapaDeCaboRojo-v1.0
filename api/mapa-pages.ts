@@ -559,7 +559,7 @@ h1,h2,h3{text-wrap:balance}
 .text-xs,.text-sm,.text-\\[11px\\],.text-\\[12px\\],.reg-call{font-size:16px!important}
 .text-slate-400,.text-slate-500{color:#475569!important}
 main nav a,.reg-call{min-height:44px;display:inline-flex;align-items:center}
-.not-prose table td a:not(.reg-call){display:inline-block;padding:10px 0}
+.not-prose table td a:not(.reg-call){display:inline-block;padding:14px 0} /* 9 oct 2026: 48px de alto (mayores primero) */
 /* design-review 28 sep 2026: las fuentes ya no bloquean el render (FINDING-012), así que el cambio
    de la letra de respaldo a Source Sans movía la tabla de Llamar (CLS 0.17 en /registro/psiquiatra/ponce).
    Respaldo con las medidas de la fuente real (fontTools contra Arial y Georgia Bold): el cambio no mueve nada. */
@@ -4952,7 +4952,7 @@ ${SHARE_COPY_SCRIPT}`
     const list = byCat[sub]
     const shown = list.slice(0, CAP_PER_CAT)
     const rows = shown.map(pr => {
-      const tel = pr.phone ? `<a href="tel:${escapeHtml(pr.phone.replace(/[^0-9+]/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 border border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs rounded-full whitespace-nowrap reg-call"><i class="fa-solid fa-phone"></i> ${te('Llamar', 'Call')}</a>` : ''
+      const tel = pr.phone ? `<a href="tel:${escapeHtml(pr.phone.replace(/[^0-9+]/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[48px] px-3 border border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs rounded-full whitespace-nowrap reg-call"><i class="fa-solid fa-phone"></i> ${te('Llamar', 'Call')}</a>` : ''
       const stars = pr.rating != null ? `<span class="text-amber-500 text-xs whitespace-nowrap" title="${te('Calificación federal CMS', 'Federal CMS rating')}: ${pr.rating}/5">${starRating(pr.rating)} <span class="text-slate-400">${pr.rating}</span></span>` : ''
       return `<li class="flex items-baseline justify-between gap-3 py-1 border-b border-slate-50">
         <a href="/especialista/${encodeURIComponent(pr.slug)}${lp}" class="text-teal-700 hover:underline text-sm">${escapeHtml(cleanName(pr.name))}</a><span class="flex items-center gap-2">${acceptBadge(pr)}${stars}${tel}</span></li>`
@@ -19909,6 +19909,37 @@ const planNotaHub = (en: boolean) => `<p class="not-prose mt-3 text-xs text-slat
   ? `The <strong>Plan</strong> column says what the plan printed in its own provider directory (MMM, ${PLAN_ED_MMM_EN} · MCS Advantage, ${PLAN_ED_MCS_EN} · Triple-S Advantage, ${PLAN_ED_TSS_EN} · Plan Vital / First Medical, ${PLAN_ED_VITAL_EN}), not whether they will take you. A dash does <strong>not</strong> mean the provider is out of that network: the federal-number cross-check identifies 33% of the Plan Vital directory rows and 52% of MMM's, so a dash almost always means that row could not be matched. Before switching plans, confirm with the office. <a href="/expediente-mmm?lang=en" class="text-teal-700 underline">The MMM audit</a> · <a href="/expediente-planvital?lang=en" class="text-teal-700 underline">the Plan Vital audit</a>.`
   : `La columna <strong>Plan</strong> dice lo que el plan imprimió en su propio directorio (MMM, ${PLAN_ED_MMM_ES} · MCS Advantage, ${PLAN_ED_MCS_ES} · Triple-S Advantage, ${PLAN_ED_TSS_ES} · Plan Vital / First Medical, ${PLAN_ED_VITAL_ES}), no si te van a coger. Una raya <strong>no</strong> quiere decir que el médico esté fuera de esa red: el cruce por número federal identifica el 33% de las filas del directorio del Plan Vital y el 52% de las de MMM, así que casi siempre significa que esa fila no se pudo cruzar. Antes de cambiarte de plan, confirma con la oficina. <a href="/expediente-mmm" class="text-teal-700 underline">El expediente MMM</a> · <a href="/expediente-planvital" class="text-teal-700 underline">el expediente Plan Vital</a>.`}</p>`
 
+// 9 oct 2026 (Angel miró /registro/geriatra/oeste: "deberían haber más"). Las listas de especialidad
+// salen por `subcategory` (la especialidad PRINCIPAL). Hay 9 médicos activos en PR con geriatría como
+// SEGUNDA especialidad en NPPES (207RG0300X medicina interna-geriatría, 207QG0300X familia-geriatría),
+// ej. una endocrinóloga en Mayagüez. No son "geriatras" en el conteo, pero sí atienden geriatría: van
+// en su propia lista, debajo, sin sumarse al número. Se buscan en vivo por código, sin cifra fija.
+async function geriatriaSegunda(filtro: { region?: string } = {}): Promise<any[]> {
+  try {
+    let q = supabase.from('places').select('name,municipality,slug,phone,npi,subcategory')
+      .eq('category', 'HEALTH').eq('status', 'open').eq('visibility', 'published').eq('npi_status', 'A')
+      .not('slug', 'is', null).not('npi', 'is', null).neq('subcategory', 'geriatra').like('taxonomy_code', '20%') // solo médicos: 4 organizaciones traen el código de geriatría
+      .or('fuera_de_pr.is.null,fuera_de_pr.eq.false')
+      .or('taxonomy_all.cs.[{"code":"207RG0300X"}],taxonomy_all.cs.[{"code":"207QG0300X"}]')
+      .order('municipality', { ascending: true }).limit(60)
+    if (filtro.region) q = q.eq('region', filtro.region)
+    const { data } = await q
+    return data || []
+  } catch { return [] }
+}
+function geriatriaSegundaHtml(list: any[], en: boolean, lp: string): string {
+  if (!list.length) return ''
+  const t = (es: string, eng: string) => en ? eng : es
+  const filas = list.map((p: any) => `<tr class="border-t border-slate-100">
+    <td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a><br><span class="text-slate-600">${escapeHtml(cleanSpecLabel((REGISTRY_SPECS as any[]).find((r: any) => r.s === p.subcategory)?.l || String(p.subcategory || '')))}</span></td>
+    <td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '')}</td>
+    <td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[48px] px-3 border border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs rounded-full whitespace-nowrap reg-call"><i class="fa-solid fa-phone"></i> ${t('Llamar', 'Call')}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td>
+  </tr>`).join('')
+  return `<h2 class="mt-6">${t('También atienden geriatría', 'They also practice geriatrics')}</h2>
+<p class="text-slate-600 -mt-2">${t(`${list.length === 1 ? 'Este médico tiene' : `Estos ${list.length} médicos tienen`} la geriatría como segunda especialidad en el registro federal. No se cuentan arriba como geriatras.`, `${list.length === 1 ? 'This doctor lists' : `These ${list.length} doctors list`} geriatrics as a second specialty in the federal registry. They are not counted above as geriatricians.`)}</p>
+<div class="not-prose mt-2 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-slate-600"><th class="py-2 px-3">${t('Médico', 'Doctor')}</th><th class="py-2 px-3">${t('Pueblo', 'Town')}</th><th class="py-2 px-3 text-right">${t('Teléfono', 'Phone')}</th></tr></thead><tbody>${filas}</tbody></table></div>`
+}
+
 async function handleRegistroHub(req: any, res: any) {
   // Normalize incoming slug the same way specToUrl() built SPEC_BY_URL's keys — strip accents
   // (á/é/í/ó/ú/ñ) so /registro/cardiólogo matches the 'cardiologo' key instead of 302ing to /registro.
@@ -19969,7 +20000,7 @@ async function handleRegistroHub(req: any, res: any) {
     const conMMM = inTown.filter((p: any) => planMap.get(String(p.npi))?.mmm).length
     const conVital = inTown.filter((p: any) => planMap.get(String(p.npi))?.vital).length
     const conMCS = inTown.filter((p: any) => planMap.get(String(p.npi))?.mcs).length
-    const rowsOf = (list: any[], showTown: boolean) => list.map((p: any) => `<tr class="border-t border-slate-100"><td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td>${showTown ? `<td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '—')}</td>` : ''}<td class="py-2 px-3">${planBadges(planMap.get(String(p.npi)), en)}</td><td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 border border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs rounded-full whitespace-nowrap reg-call"><i class="fa-solid fa-phone"></i> ${t('Llamar', 'Call')}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td></tr>`).join('')
+    const rowsOf = (list: any[], showTown: boolean) => list.map((p: any) => `<tr class="border-t border-slate-100"><td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td>${showTown ? `<td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '—')}</td>` : ''}<td class="py-2 px-3">${planBadges(planMap.get(String(p.npi)), en)}</td><td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[48px] px-3 border border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs rounded-full whitespace-nowrap reg-call"><i class="fa-solid fa-phone"></i> ${t('Llamar', 'Call')}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td></tr>`).join('')
     const theadOf = (showTown: boolean) => `<thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(label)}</th>${showTown ? `<th class="py-2 px-3">${t('Pueblo', 'Town')}</th>` : ''}<th class="py-2 px-3">${t('Plan', 'Plan')}</th><th class="py-2 px-3 text-right">${t('Teléfono', 'Phone')}</th></tr></thead>`
     // El título compite en posición 8-11 contra "Best/Top 10". Gana el que dice el resultado:
     // cuántos hay y que traen teléfono. Y cuando no hay, decirlo es lo único que nadie más hace.
@@ -20114,6 +20145,7 @@ ${info.treats ? `<p class="text-slate-600 mt-1">${escapeHtml(info.treats)} ${esc
 ${info.note ? `<p class="text-sm text-slate-500 mt-1"><i class="fa-solid fa-circle-info text-teal-600"></i> ${escapeHtml(info.note)}</p>` : ''}`
     if (nearby.length) bodyT += `<h2 class="mt-6">${t('También cerca', 'Also nearby')}${townReg ? `, ${t('en el', 'in the')} ${escapeHtml(townReg)}` : ''}</h2><div class="not-prose mt-2 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${theadOf(true)}<tbody>${rowsOf(nearby.slice(0, 60), true)}</tbody></table></div>`
     if (inTown.length || nearby.length) bodyT += planNotaHub(en)
+    if (x.s === 'geriatra') bodyT += geriatriaSegundaHtml(await geriatriaSegunda({ region: townReg || undefined }), en, lp)
     if (!inTown.length && !nearby.length) bodyT += `<div class="not-prose mt-5 bg-amber-50 border border-amber-200 rounded-xl p-5"><p class="text-amber-900 font-semibold">${t(`No hay ${escapeHtml(x.l.toLowerCase())} verificados cerca de ${escapeHtml(muni.name)}.`, `No verified ${escapeHtml(labelLow)} near ${escapeHtml(muni.name)}.`)}</p><p class="text-sm text-amber-800 mt-1"><a href="/registro/${specUrl}/metro${lp}" class="font-semibold underline">${t('Mira el área metro', 'See the metro area')} (${metroCount}) →</a></p></div>`
     // ── Tejido entre hubs (3 sep 2026) ──────────────────────────────────────────
     // Habia 3,145 hubs de especialidad+pueblo y CERO enlaces entre ellos: cada uno era un
@@ -20209,7 +20241,7 @@ ${regDisclaimer(en)}`
     <td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td>
     <td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '—')}</td>
     <td class="py-2 px-3">${planBadges(planMapH.get(String((p as any).npi)), en)}</td>
-    <td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 border border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs rounded-full whitespace-nowrap reg-call"><i class="fa-solid fa-phone"></i> ${t('Llamar', 'Call')}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td>
+    <td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[48px] px-3 border border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs rounded-full whitespace-nowrap reg-call"><i class="fa-solid fa-phone"></i> ${t('Llamar', 'Call')}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td>
   </tr>`).join('')
   const thead = `<thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(label)}</th><th class="py-2 px-3">${t('Pueblo', 'Town')}</th><th class="py-2 px-3">${t('Plan', 'Plan')}</th><th class="py-2 px-3 text-right">${t('Teléfono', 'Phone')}</th></tr></thead>`
 
@@ -20245,6 +20277,44 @@ ${regDisclaimer(en)}`
 <p class="text-slate-600 -mt-2">${t('Toca tu pueblo pa\' ver quién hay ahí mismo, con teléfono.', 'Tap your town to see who is right there, with phone numbers.')}</p>
 <div class="not-prose mt-3 flex flex-wrap gap-2">${top.map(chip).join('')}</div>${restLinks}`
     } catch { /* chips are optional */ }
+  }
+
+  // 9 oct 2026 (dale de Angel, expediente "gas y país viejo"): en geriatría, el dato que sirve no es
+  // cuántos hay sino adónde va el que no tiene. Por cada pueblo sin geriatra, el más cercano y a cuántos
+  // km (registro_cercania, la misma tabla que usa la página del pueblo). Los 349,843 de 65+ de esos 53
+  // pueblos salen del estimado 2025 del Census (Context/datos-pueblos, verificado 9 oct 2026): es una
+  // cifra fechada, se dice con su fecha y se cambia cuando salga el estimado 2026.
+  let geriBloque = ''
+  if (x.s === 'geriatra' && !region) {
+    try {
+      const { data: cer } = await supabase.from('registro_cercania')
+        .select('municipality,nearest,km,isla').eq('subcategory', 'geriatra').gt('km', 0)
+        .order('municipality', { ascending: true })
+      const sin = (cer || []) as { municipality: string; nearest: string; km: number; isla: boolean }[]
+      if (sin.length) {
+        const fila = (r: typeof sin[number]) => `<tr class="border-t border-slate-100">
+    <td class="py-2 px-3"><a href="/registro/geriatra/${specToUrl(r.municipality)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline" style="display:inline-flex;align-items:center;min-height:48px">${escapeHtml(r.municipality)}</a></td>
+    <td class="py-2 px-3"><a href="/registro/geriatra/${specToUrl(r.nearest)}${lp}" class="text-teal-700 font-semibold hover:underline" style="display:inline-flex;align-items:center;min-height:48px">${escapeHtml(r.nearest)}</a> <span class="text-slate-600 whitespace-nowrap">· ${Number(r.km).toFixed(0)} km${r.isla ? t(' cruzando', ' by sea') : ''}</span></td>
+  </tr>`
+        const enMedicare = (() => { const d = new Date(); const md = (d.getUTCMonth() + 1) * 100 + d.getUTCDate(); return md >= 1015 && md <= 1207 })()
+        geriBloque = `<h2>${t(`¿Tu pueblo no tiene geriatra? Así queda el más cercano`, `No geriatrician in your town? Here is the closest one`)}</h2>
+<p class="text-slate-700 -mt-2">${t(`En ${sin.length} de los 78 pueblos no hay ningún geriatra registrado. En esos ${sin.length} pueblos viven <strong>349,843 personas de 65 años o más</strong> (estimado 2025 del Census).`, `${sin.length} of the 78 towns have no registered geriatrician. <strong>349,843 people aged 65 or older</strong> live in those ${sin.length} towns (Census 2025 estimate).`)}</p>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-slate-600"><th class="py-2 px-3">${t('Tu pueblo', 'Your town')}</th><th class="py-2 px-3">${t('El más cerca está en', 'Closest is in')}</th></tr></thead><tbody>${sin.map(fila).join('')}</tbody></table></div>
+<p class="text-sm text-slate-600 mt-2">${t('Distancia en línea recta entre los pueblos. Por carretera es más.', 'Straight-line distance between towns. By road it is more.')}</p>
+<div class="not-prose mt-5 bg-white border-2 border-teal-700 rounded-2xl p-5">
+  <p class="font-bold text-slate-900 text-lg">${t('No tener geriatra no es no tener médico', 'No geriatrician does not mean no doctor')}</p>
+  <p class="text-slate-700 mt-1" style="font-size:17px">${t('El médico de familia y el internista también atienden a las personas mayores. El geriatra es el especialista. Hay además internistas y médicos de familia que tienen la geriatría como segunda especialidad.', 'Family doctors and internists also care for older adults. The geriatrician is the specialist. Some internists and family doctors also hold geriatrics as a second specialty.')}</p>
+  <div class="mt-3 flex flex-wrap gap-2">
+    <a href="/registro/internista${lp}" class="inline-flex items-center min-h-[48px] bg-teal-700 hover:bg-teal-800 text-white font-bold px-5 rounded-xl text-base no-underline">${t('Buscar internista por pueblo', 'Find an internist by town')}</a>
+    <a href="/registro/generalista${lp}" class="inline-flex items-center min-h-[48px] bg-white border border-stone-300 text-stone-800 font-bold px-5 rounded-xl text-base no-underline">${t('Buscar médico generalista', 'Find a general doctor')}</a>
+  </div>
+</div>
+${enMedicare ? `<div class="not-prose mt-5 bg-indigo-50 border border-indigo-200 rounded-2xl p-5">
+  <p class="font-bold text-slate-900 text-lg">${t('Medicare: del 15 de octubre al 7 de diciembre', 'Medicare: October 15 to December 7')}</p>
+  <p class="text-slate-700 mt-1" style="font-size:17px">${t('Es cuando puedes cambiar de plan. Antes de cambiar, llama a tu médico y pregunta: "¿Aceptan el plan ___ en el 2027?"', 'That is when you can change plans. Before you change, call your doctor and ask: "Do you accept plan ___ in 2027?"')}</p>
+</div>` : ''}`
+      }
+    } catch { /* el bloque es opcional: sin él queda la página de siempre */ }
   }
 
   let body: string, title: string, description: string, answerFirst: string
@@ -20308,6 +20378,7 @@ ${noteHtml}
 <h2>${t('Por región', 'By region')}</h2>
 <p class="text-slate-600 -mt-2">${t('Cuántos hay en cada región. Toca una para ver la lista con teléfonos.', 'How many in each region. Tap one to see the list with phone numbers.')}</p>
 <div class="not-prose mt-3 grid grid-cols-2 sm:grid-cols-3 gap-2">${regionCards}</div>
+${geriBloque}
 ${townChips}
 <h2>${t(`Los ${total} ${escapeHtml(specPluralEs(total, x.l))} de Puerto Rico`, `All ${total} ${escapeHtml(labelLow)} in Puerto Rico`)}</h2>
 <div class="not-prose mt-2 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm">${thead}<tbody>${provRows}</tbody></table></div>
@@ -20315,6 +20386,7 @@ ${providers.length ? planNotaHub(en) : ''}
 ${providers.length >= 200 ? `<p class="text-xs text-slate-500 mt-2">${t('Mostrando los primeros 200. Usa las regiones de arriba para ver la lista completa de tu zona.', 'Showing the first 200. Use the regions above to see the full list for your area.')}</p>` : ''}`
   }
 
+  if (x.s === 'geriatra') body += geriatriaSegundaHtml(await geriatriaSegunda({ region: region || undefined }), en, lp)
   body += `
 ${antesDeLlamar({ specLabel: x.l, en })}
 <div class="not-prose mt-8 bg-teal-700 rounded-2xl p-6 text-center text-white">
@@ -20323,7 +20395,7 @@ ${antesDeLlamar({ specLabel: x.l, en })}
   <a href="https://wa.me/17874177711?text=${x.kw}" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-2.5 rounded-full text-sm hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${x.kw}</a>
 </div>
 ${regDisclaimer(en)}
-<p class="text-xs text-slate-500 mt-6">${t('Datos del <strong>NPPES</strong>, el registro federal de proveedores de EE.UU. (el que usan Medicare y los planes). Cada NPI es público y verificable.', 'Data from the <strong>NPPES</strong>, the US federal provider registry (the same one Medicare and health plans use). Every NPI is public and verifiable.')} <a href="/registro/desiertos${lp}" class="text-teal-600">${t('Mira el acceso por región en toda la isla →', 'See access by region across the island →')}</a></p>`
+<p class="text-xs text-slate-500 mt-6">${t('Datos del <strong>NPPES</strong>, el registro federal de proveedores de EE.UU. (el que usan Medicare y los planes). Cada NPI es público y verificable.', 'Data from the <strong>NPPES</strong>, the US federal provider registry (the same one Medicare and health plans use). Every NPI is public and verifiable.')} <a href="/registro/desiertos${lp}" class="text-teal-700">${t('Mira el acceso por región en toda la isla →', 'See access by region across the island →')}</a></p>`
 
   const canonicalPath = region ? `registro/${specUrl}/${specToUrl(region).toLowerCase()}` : `registro/${specUrl}`
   const itemList = providers.slice(0, 50).map((p, i) => ({
@@ -21762,7 +21834,7 @@ async function handleRaras(req: any, res: any) {
     <tr class="border-b border-slate-100">
       <td class="py-3 pr-3"><span class="font-semibold text-slate-800">${g.n}</span><br><span class="text-xs text-slate-500">${gTax(g.tax)}</span></td>
       <td class="py-3 pr-3 text-slate-600 whitespace-nowrap">${g.mun}</td>
-      <td class="py-3 pr-3 whitespace-nowrap"><a href="tel:${g.tel.replace(/\D/g, '')}" class="inline-flex items-center justify-center gap-1 min-h-[40px] px-3 border border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs rounded-full whitespace-nowrap reg-call"><i class="fa-solid fa-phone"></i> ${te('Llamar', 'Call')}</a></td>
+      <td class="py-3 pr-3 whitespace-nowrap"><a href="tel:${g.tel.replace(/\D/g, '')}" class="inline-flex items-center justify-center gap-1 min-h-[48px] px-3 border border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs rounded-full whitespace-nowrap reg-call"><i class="fa-solid fa-phone"></i> ${te('Llamar', 'Call')}</a></td>
       <td class="py-3 text-right"><a href="https://npiregistry.cms.hhs.gov/provider-view/${g.npi}" target="_blank" rel="noopener" class="text-xs text-slate-400 hover:text-teal-700">NPI ${g.npi} ↗</a></td>
     </tr>`).join('')
 
