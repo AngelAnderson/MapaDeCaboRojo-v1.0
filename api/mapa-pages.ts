@@ -11009,11 +11009,12 @@ const RED_TITULARES = {
 // Churn jun-2026 -> ene-2027 medido con Dropbox/Claude/scripts/churn-directorio.py (corrido otra vez
 // el 10 oct, mismo resultado que el recibo Outbox/Registro/directorios-planes-2027/churn-mmm-2026-06-a-2027-01.json):
 // 5,539 NPIs cruzados en jun 2026 -> 5,590 en ene 2027; diferencia cruda 177 (NO se publica);
-// verificado por nombre y teléfono en el texto de la edición 2027: entre 22 y 70 salidas reales.
-// Sin lista con nombres para 2027 a propósito: en las 22 más seguras hay filas donde el NPI quedó
-// pegado a otro nombre (farmacia como radiología, corporación como cardiología). Un NPI equivocado
-// es peor que ninguno. Cuando el pareo aguante revisión a mano, entra la lista.
-const RED_2027 = { npisJun26: 5539, npisEne27: 5590, salidaMin: 22, salidaMax: 70, edicion: 'enero de 2027', pdf: '15 de septiembre de 2026' }
+// 10 oct (tarde): los 70 candidatos se revisaron a mano uno por uno contra NPPES y 3 extracciones del
+// PDF 2027 (Dropbox/Claude/Outbox/Registro/MMM-2027-Bajas-Revisadas-2026-10-10.md): 13 SE FUE, 35 siguen
+// (el parser les partió el nombre), 22 tenían el NPI de otra persona. Se publica 13, no el rango 22-70.
+// Sin lista con nombres a propósito: Angel decide si sale (11 son médicos o clínicos, 1 ambulancia,
+// 1 naturópata). Un NPI equivocado es peor que ninguno.
+const RED_2027 = { npisJun26: 5539, npisEne27: 5590, salidas: 13, edicion: 'enero de 2027', pdf: '15 de septiembre de 2026' }
 
 async function handleSeFueTuMedico(req: any, res: any) {
   const nf = (n: number) => n.toLocaleString('en-US')
@@ -11137,7 +11138,7 @@ async function handleSeFueTuMedico(req: any, res: any) {
     ['¿De dónde sale este número?',
      'De los propios PDF de MMM, bajados de su página pública sin login y guardados con su huella digital (sha256). Se compararon 3 ediciones de la línea Individuales: diciembre 2024, diciembre 2025 y junio 2026. Un proveedor cuenta como salido solo si su número federal (NPI) y su nombre desaparecen de la edición nueva. El método completo está en el expediente MMM.'],
     ['¿Cubre todos los planes?',
-     'No. Hoy cubre 2 planes: la línea Individuales de MMM (Medicare, 4 ediciones: dic 2024, dic 2025, jun 2026 y la de enero 2027; la de 2027 se compara solo en conteo, entre 22 y 70 salidas, sin lista de nombres todavía) y Plan Vital de First Medical (la reforma, 4 ediciones: feb 2024, feb 2026, jul 2026 y ago 2026). Las líneas Grupales y AEE de MMM están bajadas pero sin procesar, y Triple-S Advantage tiene 1 sola edición archivada, así que todavía no se puede comparar. Además solo cuenta las filas donde se pudo parear un número federal. El total real de salidas es mayor que este, nunca menor.'],
+     'No. Hoy cubre 2 planes: la línea Individuales de MMM (Medicare, 4 ediciones: dic 2024, dic 2025, jun 2026 y la de enero 2027; la de 2027 se compara en conteo: 13 proveedores que estaban en el directorio de junio 2026 no aparecen en el de enero 2027, revisados uno por uno contra el registro federal, sin lista de nombres todavía) y Plan Vital de First Medical (la reforma, 4 ediciones: feb 2024, feb 2026, jul 2026 y ago 2026). Las líneas Grupales y AEE de MMM están bajadas pero sin procesar, y Triple-S Advantage tiene 1 sola edición archivada, así que todavía no se puede comparar. Además solo cuenta las filas donde se pudo parear un número federal. El total real de salidas es mayor que este, nunca menor.'],
     ['Soy el proveedor y esto está mal, ¿cómo lo corrijo?',
      'Escríbeme y se corrige el mismo día: angel@angelanderson.com o texto al 787-417-7711. Dime tu nombre y tu NPI. Si apareces en la edición de junio de 2026 y el pareo falló, la fila sale de esta página y se documenta el error. Publicar un señalamiento con nombre obliga a dar la vía de réplica en la misma página, y esta es.'],
     ['¿Qué hago yo con esto entre el 15 de octubre y el 7 de diciembre?',
@@ -11154,9 +11155,9 @@ async function handleSeFueTuMedico(req: any, res: any) {
 
   <div class="bg-teal-50 border-2 border-teal-300 rounded-xl p-4 mt-6">
     <h2 class="text-xl font-bold text-slate-900 m-0">Junio 2026 contra enero 2027: lo nuevo</h2>
-    <p class="text-[16px] text-slate-800 mt-2 mb-0">Comparamos el directorio de MMM de junio de 2026 con el de enero de 2027. De ${nf(RED_2027.npisJun26)} proveedores que pudimos cruzar con su número federal, <b>entre ${RED_2027.salidaMin} y ${RED_2027.salidaMax} ya no aparecen en la edición 2027</b>. El resto sigue ahí. Ese rango sale de buscar a cada uno por nombre y por teléfono dentro de la edición nueva: el que aparece, no cuenta como salida.</p>
+    <p class="text-[16px] text-slate-800 mt-2 mb-0">Comparamos el directorio de MMM de junio de 2026 con el de enero de 2027. De ${nf(RED_2027.npisJun26)} proveedores que pudimos cruzar con su número federal, <b>${RED_2027.salidas} que estaban en el directorio de junio 2026 no aparecen en el de enero 2027</b>. El resto sigue ahí. Los revisamos uno por uno contra el registro federal y buscamos a cada uno por nombre y por teléfono dentro de la edición nueva: el que aparece, no cuenta como salida. Que no aparezca no dice por qué: puede ser retiro, mudanza o cambio de grupo.</p>
     <p class="text-[16px] text-slate-800 mt-2 mb-0">Para saber si <b>tu</b> médico aparece en la edición 2027, búscalo por nombre en el <a href="/" class="text-teal-700 font-semibold underline">buscador del Registro</a>: su página dice si está en el directorio de MMM de ${RED_2027.edicion}. O busca por <a href="/registro" class="text-teal-700 font-semibold underline">especialidad y pueblo</a>: cada lista marca quién aparece en MMM.</p>
-    <p class="text-sm text-slate-600 mt-2 mb-0">Por qué no ponemos aquí los nombres de esos ${RED_2027.salidaMin} a ${RED_2027.salidaMax}: en varias filas de la edición vieja el número federal quedó pegado al nombre equivocado (una farmacia leída como radiología, por ejemplo). Un nombre equivocado en esta lista le hace más daño a ese médico que no ponerlo. Cuando cada fila aguante revisión a mano, entra la lista.</p>
+    <p class="text-sm text-slate-600 mt-2 mb-0">Por qué no ponemos aquí los nombres de esos ${RED_2027.salidas}: un directorio dice quién aparece, no por qué alguien dejó de aparecer, y un nombre en esta lista pesa. Antes de llegar a ${RED_2027.salidas} descartamos filas donde el número federal estaba pegado al nombre equivocado (una farmacia leída como radiología, por ejemplo). Si tu médico es uno de ellos, su página en el Registro te lo dice.</p>
   </div>
 
   <p class="text-lg text-slate-700 mt-6">Antes de eso, comparamos 3 ediciones de MMM (dic 2024, dic 2025 y jun 2026). Esto es lo que se movió. Y más abajo, lo mismo con la reforma: las ediciones de Plan Vital.</p>
@@ -11210,7 +11211,7 @@ async function handleSeFueTuMedico(req: any, res: any) {
 
   <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">El estimado que hicimos, contra lo que pasó</h2>
   <p class="text-slate-700">En agosto, con la edición de junio de 2026 en la mano, proyectamos el ritmo de salidas (${nf(RED_TITULARES.salieron6m)} en 6 meses, unas 42 al mes) y estimamos que cerca de <b>${nf(RED_TITULARES.proyeccionSalidas)}</b> proveedores de ese PDF ya no iban a estar cuando abriera la ventana.</p>
-  <p class="text-slate-700 mt-2">MMM publicó la edición 2027 y la medimos: <b>entre ${RED_2027.salidaMin} y ${RED_2027.salidaMax}</b>. El estimado se pasó. Lo dejamos escrito porque un estimado que no se coteja con la medición no vale nada. Y una lección para todos: el conteo crudo (comparar números federales de una lista contra la otra) también daba un número mucho más alto, porque cuenta los errores del cruce como si fueran gente saliendo de la red.</p>
+  <p class="text-slate-700 mt-2">MMM publicó la edición 2027 y la medimos: <b>${RED_2027.salidas} proveedores que estaban en el directorio de junio 2026 no aparecen en el de enero 2027</b>, revisados uno por uno contra el registro federal. El estimado se pasó por mucho. Lo dejamos escrito porque un estimado que no se coteja con la medición no vale nada. Y una lección para todos: el conteo crudo (comparar números federales de una lista contra la otra) también daba un número mucho más alto, porque cuenta los errores del cruce como si fueran gente saliendo de la red.</p>
 
   <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Busca tu médico por nombre o pueblo: los que salieron entre dic 2025 y jun 2026</h2>
   <p class="text-sm text-slate-600 mb-3">De los ${nf(RED_TITULARES.salieron6m)} que salieron entre diciembre de 2025 y junio de 2026, aquí van los <b>${nf(recientes.length)}</b> a los que nuestro lector de PDF le pudo leer el nombre, por pueblo. Escribe un nombre, una especialidad o un pueblo.</p>
@@ -11276,8 +11277,8 @@ if(V2)V2.classList.toggle('hidden',!(t&&vis2===0));}});})();</script>`
   const jsonLd = [
     {
       '@context': 'https://schema.org', '@type': 'Article',
-      headline: `¿Tu médico sigue en MMM para 2027? Entre ${RED_2027.salidaMin} y ${RED_2027.salidaMax} salieron del directorio entre junio 2026 y enero 2027`,
-      description: `Comparación del directorio de MMM de junio 2026 con el de enero 2027 (entre ${RED_2027.salidaMin} y ${RED_2027.salidaMax} salidas verificadas por nombre y teléfono), de 3 ediciones anteriores de MMM (dic 2024, dic 2025, jun 2026) y 4 de Plan Vital / First Medical (feb 2024, feb 2026, jul 2026, ago 2026): 464 proveedores salieron de MMM en 18 meses y ${nf(pvT.salieron5m)} de Plan Vital entre febrero y julio de 2026. Lo que cambió fue la lista, no el médico.`,
+      headline: `¿Tu médico sigue en MMM para 2027? ${RED_2027.salidas} proveedores del directorio de junio 2026 no aparecen en el de enero 2027`,
+      description: `Comparación del directorio de MMM de junio 2026 con el de enero 2027 (${RED_2027.salidas} proveedores que estaban en junio 2026 no aparecen en enero 2027, revisados uno por uno contra el registro federal), de 3 ediciones anteriores de MMM (dic 2024, dic 2025, jun 2026) y 4 de Plan Vital / First Medical (feb 2024, feb 2026, jul 2026, ago 2026): 464 proveedores salieron de MMM en 18 meses y ${nf(pvT.salieron5m)} de Plan Vital entre febrero y julio de 2026. Lo que cambió fue la lista, no el médico.`,
       author: { '@type': 'Person', name: 'Angel Anderson' },
       publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
       inLanguage: 'es', url: 'https://registromedicopr.com/se-fue-tu-medico',
@@ -19905,11 +19906,15 @@ async function planHitsByNpi(npis: any[]): Promise<Map<string, PlanHit>> {
   if (!list.length) return out
   try {
     const [mRes, vRes, tRes, cRes] = await Promise.all([
-      // Vista pública: la tabla base está cerrada porque trae el bloque crudo del PDF.
-      supabase.from('v_plan_directory_public').select('npi').eq('plan', 'MMM').eq('edition_date', PLAN_ED_MMM).in('npi', list),
+      // MMM y MCS: solo filas con npi_score >= 1 (10 oct 2026). La revisión a mano de las bajas de MMM
+      // (Outbox/Registro/MMM-2027-Bajas-Revisadas-2026-10-10.md) halló 19 NPIs pegados a otra persona,
+      // todos con score < 1 (0.667/0.75). La vista pública no trae npi_score, así que se lee la tabla
+      // base (solo la columna npi, con la llave de servidor). Si la llave no la puede leer, el resultado
+      // viene vacío y el hub no nombra el plan: falla cerrado, nunca dice de más.
+      supabase.from('plan_directory_snapshot').select('npi').eq('plan', 'MMM').eq('edition_date', PLAN_ED_MMM).gte('npi_score', 1).in('npi', list),
       supabase.from('fmvital_directorio_v2').select('npi').eq('edicion', PLAN_ED_VITAL).in('npi', list),
       supabase.from('v_plan_directory_public').select('npi').eq('plan', 'Triple-S Advantage').eq('edition_date', PLAN_ED_TSS).in('npi', list),
-      supabase.from('v_plan_directory_public').select('npi').eq('plan', 'MCS Advantage').eq('edition_date', PLAN_ED_MCS).in('npi', list),
+      supabase.from('plan_directory_snapshot').select('npi').eq('plan', 'MCS Advantage').eq('edition_date', PLAN_ED_MCS).gte('npi_score', 1).in('npi', list),
     ])
     const mark = (k: string, f: keyof PlanHit) => { const p = out.get(k) || { mmm: false, vital: false, tss: false, mcs: false }; p[f] = true; out.set(k, p) }
     for (const r of (((mRes as any).data) || [])) mark(String(r.npi), 'mmm')
