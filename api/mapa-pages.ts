@@ -6855,12 +6855,22 @@ async function handleEspecialista(req: any, res: any) {
   // ahorra la llamada es el otro: estaba en una edición anterior y ya no está.
   let planDir: { ultima: string; primera: string; fuente: string | null; otroTel: string | null } | null = null
   {
-    // Vista pública: la tabla base está cerrada porque trae el bloque crudo del PDF.
-    const { data } = await supabase.from('v_plan_directory_public')
-      .select('edition_date,source_url,phones').eq('plan', 'MMM').eq('npi', npi)
+    // 10 oct 2026: solo filas con npi_score >= 1 (mismo patrón que planHitsByNpi). Las filas con
+    // score < 1 salen de un cruce por pueblo+nombre o teléfono+nombre, y la revisión a mano
+    // (Outbox/Registro/MMM-2027-Bajas-Revisadas-2026-10-10.md) halló muchas pegadas a otra persona.
+    // La vista pública no trae npi_score: se lee la tabla base con la llave de servidor, sin el
+    // bloque crudo. Falla cerrado: si la lectura falla, data viene null y la ficha no nombra MMM.
+    // El aviso de "no lo encontramos en la vigente" exige que el NPI no tenga NINGUNA fila (ni
+    // fuzzy) en la edición vigente: un pareo dudoso no prueba presencia, pero tampoco ausencia.
+    const { data } = await supabase.from('plan_directory_snapshot')
+      .select('edition_date,source_url,phones,npi_score').eq('plan', 'MMM').eq('npi', npi)
       .order('edition_date', { ascending: false }).order('revision', { ascending: false })
-    const eds = (data || [])
-    if (eds.length) {
+    const todas = (data || [])
+    const eds = todas.filter((r: any) => Number(r.npi_score) >= 1)
+    // '2027-01-01' = EDICION_VIGENTE de abajo (se declara después; se mueven juntas).
+    const vigenteDudosa = eds.length && String(eds[0].edition_date) !== '2027-01-01'
+      && todas.some((r: any) => String(r.edition_date) === '2027-01-01')
+    if (eds.length && !vigenteDudosa) {
       // El teléfono que publica el plan y que el registro federal no tiene. Un
       // número más que probar antes de darse por vencido.
       const delPlan: string[] = (eds[0].phones || []).filter((x: string) => telMarcable(x) && x !== phoneDigits.slice(-10))
@@ -6919,8 +6929,9 @@ async function handleEspecialista(req: any, res: any) {
   // fotos que comparar. El reloj de la red es de MMM hasta que exista una segunda.
   let tsAdv: { pueblo: string | null; seccion: string | null; otroTel: string | null } | null = null
   {
-    const { data } = await supabase.from('v_plan_directory_public')
-      .select('town,section,phones').eq('plan', 'Triple-S Advantage').eq('npi', npi).limit(1)
+    // 10 oct 2026: solo npi_score >= 1 (tabla base, llave de servidor; falla cerrado).
+    const { data } = await supabase.from('plan_directory_snapshot')
+      .select('town,section,phones').eq('plan', 'Triple-S Advantage').eq('npi', npi).gte('npi_score', 1).limit(1)
     const r = (data || [])[0]
     if (r) {
       const del: string[] = (r.phones || []).filter((x: string) => telMarcable(x) && x !== phoneDigits.slice(-10))
@@ -6934,8 +6945,9 @@ async function handleEspecialista(req: any, res: any) {
   // se publica el hallazgo positivo.
   let mcsAdv: { pueblo: string | null; seccion: string | null; otroTel: string | null } | null = null
   {
-    const { data } = await supabase.from('v_plan_directory_public')
-      .select('town,section,phones').eq('plan', 'MCS Advantage').eq('npi', npi).limit(1)
+    // 10 oct 2026: solo npi_score >= 1 (tabla base, llave de servidor; falla cerrado).
+    const { data } = await supabase.from('plan_directory_snapshot')
+      .select('town,section,phones').eq('plan', 'MCS Advantage').eq('npi', npi).gte('npi_score', 1).limit(1)
     const r = (data || [])[0]
     if (r) {
       const del: string[] = (r.phones || []).filter((x: string) => telMarcable(x) && x !== phoneDigits.slice(-10))
@@ -10847,8 +10859,8 @@ async function handleTelefonosMuertos(req: any, res: any) {
     if (tel10.length !== 10) continue
     const pubs: string[] = []
     try {
-      const { data: mmm } = await supabase.from('v_plan_directory_public')
-        .select('edition_date,phones').eq('plan', 'MMM').eq('npi', p.npi)
+      const { data: mmm } = await supabase.from('plan_directory_snapshot')
+        .select('edition_date,phones').eq('plan', 'MMM').eq('npi', p.npi).gte('npi_score', 1)
         .order('edition_date', { ascending: true })
       const conNum = (mmm || []).filter((e: any) => (e.phones || []).includes(tel10))
       if (conNum.length) {
@@ -11040,8 +11052,21 @@ async function handleSeFueTuMedico(req: any, res: any) {
 
   // La ficha propia, pa' que el nombre no quede colgando: si el proveedor está en el
   // Registro (y están los 511), la fila enlaza a su página con su teléfono y sus planes.
+  // 10 oct 2026: el enlace solo sale si el NPI de esa fila vino de un cruce exacto (npi_score >= 1
+  // en dic 2025, la última edición donde aparecía). Con score < 1 el NPI salió de pueblo+nombre o
+  // teléfono+nombre y la revisión a mano halló muchos pegados a otra persona: enlazar el nombre del
+  // PDF a la ficha de otro médico es peor que no enlazar. Falla cerrado: si la lectura falla, sin enlaces.
   const slugs: Record<string, string> = {}
-  const npis = recientes.map((r: any) => r.npi).filter(Boolean)
+  const npisTodos = recientes.map((r: any) => r.npi).filter(Boolean)
+  const exactos = new Set<string>()
+  for (let i = 0; i < npisTodos.length; i += 200) {
+    try {
+      const { data } = await supabase.from('plan_directory_snapshot').select('npi')
+        .eq('plan', 'MMM').eq('edition_date', '2025-12-01').gte('npi_score', 1).in('npi', npisTodos.slice(i, i + 200))
+      for (const r of (data || [])) exactos.add(String(r.npi))
+    } catch { /* falla cerrado */ }
+  }
+  const npis = npisTodos.filter((n: string) => exactos.has(String(n)))
   for (let i = 0; i < npis.length; i += 200) {
     try {
       const { data } = await supabase.from('places').select('npi,slug').in('npi', npis.slice(i, i + 200))
@@ -11108,8 +11133,10 @@ async function handleSeFueTuMedico(req: any, res: any) {
     // siguen listados por MMM. No se fueron de la medicina; se fueron del plan.
     const pvNpis = pvRecientes.map((r: any) => r.npi).filter(Boolean)
     for (let i = 0; i < pvNpis.length; i += 200) {
-      const { data } = await supabase.from('v_red_mmm_movimiento').select('npi').eq('en_jun26', true).in('npi', pvNpis.slice(i, i + 200))
-      pvEnMmm += (data || []).length
+      // 10 oct 2026: "sigue en MMM" solo con cruce exacto (npi_score >= 1) en jun 2026.
+      const { data } = await supabase.from('plan_directory_snapshot').select('npi').eq('plan', 'MMM').eq('plan_line', 'Individuales')
+        .eq('edition_date', '2026-06-01').gte('npi_score', 1).in('npi', pvNpis.slice(i, i + 200))
+      pvEnMmm += new Set((data || []).map((r: any) => String(r.npi))).size
       const { data: sl } = await supabase.from('places').select('npi,slug').in('npi', pvNpis.slice(i, i + 200))
       for (const p of (sl || [])) if (p.slug) slugs[p.npi] = p.slug
     }
@@ -19913,7 +19940,7 @@ async function planHitsByNpi(npis: any[]): Promise<Map<string, PlanHit>> {
       // viene vacío y el hub no nombra el plan: falla cerrado, nunca dice de más.
       supabase.from('plan_directory_snapshot').select('npi').eq('plan', 'MMM').eq('edition_date', PLAN_ED_MMM).gte('npi_score', 1).in('npi', list),
       supabase.from('fmvital_directorio_v2').select('npi').eq('edicion', PLAN_ED_VITAL).in('npi', list),
-      supabase.from('v_plan_directory_public').select('npi').eq('plan', 'Triple-S Advantage').eq('edition_date', PLAN_ED_TSS).in('npi', list),
+      supabase.from('plan_directory_snapshot').select('npi').eq('plan', 'Triple-S Advantage').eq('edition_date', PLAN_ED_TSS).gte('npi_score', 1).in('npi', list),
       supabase.from('plan_directory_snapshot').select('npi').eq('plan', 'MCS Advantage').eq('edition_date', PLAN_ED_MCS).gte('npi_score', 1).in('npi', list),
     ])
     const mark = (k: string, f: keyof PlanHit) => { const p = out.get(k) || { mmm: false, vital: false, tss: false, mcs: false }; p[f] = true; out.set(k, p) }
