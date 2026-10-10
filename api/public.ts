@@ -673,7 +673,7 @@ async function handleLogSearch(req: any, res: any) {
 async function handleLlmsRegistro(req: any, res: any) {
   const { count } = await supabase
     .from('places').select('id', { count: 'exact', head: true })
-    .not('npi', 'is', null).eq('status', 'open')
+    .not('npi', 'is', null).eq('status', 'open').eq('visibility', 'published')
     .in('subcategory', ['cardiólogo','psiquiatra','fisiatra','ginecólogo','pediatra','dermatólogo','gastroenterólogo','oftalmólogo','ortopeda','neurólogo','urólogo','endocrinólogo','nefrólogo','neumólogo','oncólogo','reumatólogo','geriatra','otorrinolaringólogo','infectólogo','alergista','medicina de emergencia','cirujano general','anestesiólogo','radiólogo','neurocirujano','cirujano plástico','cirujano torácico','coloproctólogo','manejo de dolor','psicólogo','optómetra','podiatra','dentista','internista','medicina de familia','generalista','va','terapeuta del habla','terapista físico','terapista ocupacional','quiropráctico','consejero','trabajador social','terapeuta de familia','nutricionista','physician assistant','enfermera practicante','audiólogo','partera','farmacéutico','hospital','cuidado en el hogar','hospicio','hogar de envejecientes','centro de diálisis','urgent care','clínica comunitaria','laboratorio clínico','radiología','ambulancia','dentista pediátrico','ortodoncista','cirujano oral','naturópata','acupunturista','neonatólogo','cirujano vascular','patólogo','medicina ocupacional','hospitalista','medicina nuclear','genetista']);
   const total = (count ?? 20700).toLocaleString('en-US');
   // La ultima milla, en vivo. Un modelo que cite este registro tiene que poder distinguir

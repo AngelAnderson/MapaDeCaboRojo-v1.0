@@ -5556,14 +5556,14 @@ async function handleCambios(req: any, res: any) {
   const hace30d = new Date(Date.now() - 30 * 86400000).toISOString()
   const [{ count: npiCount }, { count: baseCount }, { count: nuevosCount }, { data: ultimaRow }, { data: muniList }] = await Promise.all([
     supabase.from('places').select('id', { count: 'exact', head: true })
-      .not('npi', 'is', null).eq('status', 'open')
+      .not('npi', 'is', null).eq('status', 'open').eq('visibility', 'published')
       .in('subcategory', REGISTRY_SPECS.map(x => x.s)),
     supabase.from('places').select('id', { count: 'exact', head: true })
-      .not('npi', 'is', null).eq('status', 'open'),
+      .not('npi', 'is', null).eq('status', 'open').eq('visibility', 'published'),
     supabase.from('places').select('id', { count: 'exact', head: true })
-      .not('npi', 'is', null).eq('status', 'open').gt('created_at', hace30d),
+      .not('npi', 'is', null).eq('status', 'open').eq('visibility', 'published').gt('created_at', hace30d),
     supabase.from('places').select('created_at')
-      .not('npi', 'is', null).eq('status', 'open')
+      .not('npi', 'is', null).eq('status', 'open').eq('visibility', 'published')
       .order('created_at', { ascending: false }).limit(1),
     supabase.from('v_registro_muni_ratio').select('municipio').order('municipio'),
   ])
@@ -5851,7 +5851,7 @@ async function handleRegistro(req: any, res: any) {
   // La fecha sale de la base (la última ficha que entró), igual que /cambios. Antes era un texto fijo
   // que se quedó en '18 ago' mientras el registro seguía cambiando (3 oct 2026).
   const { data: ultimaRow } = await supabase.from('places').select('created_at')
-    .not('npi', 'is', null).eq('status', 'open')
+    .not('npi', 'is', null).eq('status', 'open').eq('visibility', 'published')
     .order('created_at', { ascending: false }).limit(1)
   const uP = partesAT(ultimaRow?.[0]?.created_at)
   const MESES_C = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
@@ -6505,7 +6505,7 @@ async function resolverSlugRenombrado(slugViejo: string): Promise<string | null>
     .from('places')
     .select('slug,npi')
     .not('npi', 'is', null).not('slug', 'is', null)
-    .eq('status', 'open')
+    .eq('status', 'open').eq('visibility', 'published')
     .like('slug', `${prefijoNombre}-%`)
     .limit(25)
 
@@ -7013,7 +7013,7 @@ async function handleEspecialista(req: any, res: any) {
     const { count: nMuni } = await supabase.from('places')
       .select('id', { count: 'exact', head: true })
       .eq('subcategory', place.subcategory).eq('category', 'HEALTH')
-      .not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open')
+      .not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').eq('visibility', 'published')
       .or('fuera_de_pr.is.null,fuera_de_pr.eq.false').eq('municipality', muni)
     const n = Number(nMuni || 0)
     // Misma trampa que en el hub: specLabel trae el parentesis explicativo ("Dentista
@@ -19983,8 +19983,8 @@ async function handleRegistroHub(req: any, res: any) {
     const muniSlug = specToUrl(muni.name)
     const townReg = muni.region || ''
     const [inTownRes, inRegionRes] = await Promise.all([
-      supabase.from('places').select('name,municipality,slug,phone,npi').eq('subcategory', x.s).eq('category', 'HEALTH').not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').or('fuera_de_pr.is.null,fuera_de_pr.eq.false').eq('municipality', muni.name).order('name', { ascending: true }).limit(80),
-      townReg ? supabase.from('places').select('name,municipality,slug,phone,npi').eq('subcategory', x.s).eq('category', 'HEALTH').not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').or('fuera_de_pr.is.null,fuera_de_pr.eq.false').eq('region', townReg).order('municipality', { ascending: true }).limit(120) : Promise.resolve({ data: [] as any[] }),
+      supabase.from('places').select('name,municipality,slug,phone,npi').eq('subcategory', x.s).eq('category', 'HEALTH').not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').eq('visibility', 'published').or('fuera_de_pr.is.null,fuera_de_pr.eq.false').eq('municipality', muni.name).order('name', { ascending: true }).limit(80),
+      townReg ? supabase.from('places').select('name,municipality,slug,phone,npi').eq('subcategory', x.s).eq('category', 'HEALTH').not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').eq('visibility', 'published').or('fuera_de_pr.is.null,fuera_de_pr.eq.false').eq('region', townReg).order('municipality', { ascending: true }).limit(120) : Promise.resolve({ data: [] as any[] }),
     ])
     const inTown = (inTownRes.data || [])
     const nearby = ((inRegionRes as any).data || []).filter((p: any) => p.municipality !== muni.name)
@@ -20178,7 +20178,7 @@ ${info.note ? `<p class="text-sm text-slate-500 mt-1"><i class="fa-solid fa-circ
 
       const { data: otras } = await supabase.from('places')
         .select('subcategory').eq('category', 'HEALTH').eq('municipality', muni.name)
-        .not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open')
+        .not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').eq('visibility', 'published')
         .or('fuera_de_pr.is.null,fuera_de_pr.eq.false').limit(4000)
       const otrasCount = new Map<string, number>()
       for (const r2 of (otras || [])) {
@@ -20236,7 +20236,7 @@ ${regDisclaimer(en)}`
   // provider list (this specialty, optionally this region)
   let q = supabase.from('places')
     .select('name,municipality,region,slug,phone,npi')
-    .eq('subcategory', x.s).not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open')
+    .eq('subcategory', x.s).not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').eq('visibility', 'published')
     .order('municipality', { ascending: true }).limit(200)
   if (region) q = q.eq('region', region)
   const { data: provData } = await q

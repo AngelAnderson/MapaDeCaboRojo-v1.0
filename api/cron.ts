@@ -166,7 +166,7 @@ async function runAlertas(res: any) {
     const { data: matches } = await svc
       .from('places')
       .select('name,subcategory,municipality,phone,slug,created_at')
-      .eq('category', 'HEALTH').eq('status', 'open')
+      .eq('category', 'HEALTH').eq('status', 'open').eq('visibility', 'published')
       .not('npi', 'is', null).not('slug', 'is', null)
       .eq('municipality', a.municipio)
       .gt('created_at', a.created_at)

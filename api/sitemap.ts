@@ -113,9 +113,9 @@ export default async function handler(req: any, res: any) {
           && !p.phone
           && (!p.description || String(p.description).trim().length < 40))),
       // (b) con NPI pero fuera de las 56 categorías del registro (farmacias, equipo médico…)
-      ...(await fetchAll(() => supabase.from('places').select(COLS).eq('status', 'open').not('npi', 'is', null).not('subcategory', 'in', SUBS_IN), ['slug'])),
+      ...(await fetchAll(() => supabase.from('places').select(COLS).eq('status', 'open').eq('visibility', 'published').not('npi', 'is', null).not('subcategory', 'in', SUBS_IN), ['slug'])),
       // (c) con NPI y sin subcategoría — `NOT IN` los deja fuera porque NULL no compara
-      ...(await fetchAll(() => supabase.from('places').select(COLS).eq('status', 'open').not('npi', 'is', null).is('subcategory', null), ['slug'])),
+      ...(await fetchAll(() => supabase.from('places').select(COLS).eq('status', 'open').eq('visibility', 'published').not('npi', 'is', null).is('subcategory', null), ['slug'])),
     ];
 
     const { data: events } = await supabase
@@ -288,7 +288,7 @@ export default async function handler(req: any, res: any) {
       const { data } = await supabase
         .from('places')
         .select('slug, updated_at')
-        .not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open')
+        .not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').eq('visibility', 'published')
         .in('subcategory', SPECIALIST_SUBS)
         // Sin ORDER BY, cada una de las 29 páginas se pide con un orden que Postgres
         // no promete repetir: las fronteras se mueven y salen filas dobles mientras
