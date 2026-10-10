@@ -11004,6 +11004,16 @@ const RED_TITULARES = {
   // 4.5 meses. 42 x 4.5 = ~190. Se publica como estimado y se dice que es estimado.
   rezagoDias: 136, proyeccionSalidas: 190,
 }
+// 10 oct 2026 (dale de Angel): la página pasa a la edición 2027 de MMM ("actualizado a partir de
+// Enero 2027", PDF del 15 sep, cargado el 8 oct en plan_directory_snapshot edition_date=2027-01-01).
+// Churn jun-2026 -> ene-2027 medido con Dropbox/Claude/scripts/churn-directorio.py (corrido otra vez
+// el 10 oct, mismo resultado que el recibo Outbox/Registro/directorios-planes-2027/churn-mmm-2026-06-a-2027-01.json):
+// 5,539 NPIs cruzados en jun 2026 -> 5,590 en ene 2027; diferencia cruda 177 (NO se publica);
+// verificado por nombre y teléfono en el texto de la edición 2027: entre 22 y 70 salidas reales.
+// Sin lista con nombres para 2027 a propósito: en las 22 más seguras hay filas donde el NPI quedó
+// pegado a otro nombre (farmacia como radiología, corporación como cardiología). Un NPI equivocado
+// es peor que ninguno. Cuando el pareo aguante revisión a mano, entra la lista.
+const RED_2027 = { npisJun26: 5539, npisEne27: 5590, salidaMin: 22, salidaMax: 70, edicion: 'enero de 2027', pdf: '15 de septiembre de 2026' }
 
 async function handleSeFueTuMedico(req: any, res: any) {
   const nf = (n: number) => n.toLocaleString('en-US')
@@ -11127,11 +11137,11 @@ async function handleSeFueTuMedico(req: any, res: any) {
     ['¿De dónde sale este número?',
      'De los propios PDF de MMM, bajados de su página pública sin login y guardados con su huella digital (sha256). Se compararon 3 ediciones de la línea Individuales: diciembre 2024, diciembre 2025 y junio 2026. Un proveedor cuenta como salido solo si su número federal (NPI) y su nombre desaparecen de la edición nueva. El método completo está en el expediente MMM.'],
     ['¿Cubre todos los planes?',
-     'No. Hoy cubre 2 planes: la línea Individuales de MMM (Medicare, 3 ediciones: dic 2024, dic 2025, jun 2026) y Plan Vital de First Medical (la reforma, 4 ediciones: feb 2024, feb 2026, jul 2026 y ago 2026). Las líneas Grupales y AEE de MMM están bajadas pero sin procesar, y Triple-S Advantage tiene 1 sola edición archivada, así que todavía no se puede comparar. Además solo cuenta las filas donde se pudo parear un número federal. El total real de salidas es mayor que este, nunca menor.'],
+     'No. Hoy cubre 2 planes: la línea Individuales de MMM (Medicare, 4 ediciones: dic 2024, dic 2025, jun 2026 y la de enero 2027; la de 2027 se compara solo en conteo, entre 22 y 70 salidas, sin lista de nombres todavía) y Plan Vital de First Medical (la reforma, 4 ediciones: feb 2024, feb 2026, jul 2026 y ago 2026). Las líneas Grupales y AEE de MMM están bajadas pero sin procesar, y Triple-S Advantage tiene 1 sola edición archivada, así que todavía no se puede comparar. Además solo cuenta las filas donde se pudo parear un número federal. El total real de salidas es mayor que este, nunca menor.'],
     ['Soy el proveedor y esto está mal, ¿cómo lo corrijo?',
      'Escríbeme y se corrige el mismo día: angel@angelanderson.com o texto al 787-417-7711. Dime tu nombre y tu NPI. Si apareces en la edición de junio de 2026 y el pareo falló, la fila sale de esta página y se documenta el error. Publicar un señalamiento con nombre obliga a dar la vía de réplica en la misma página, y esta es.'],
-    ['¿Qué hago yo con esto antes del 15 de octubre?',
-     'Busca tu médico aquí. Si aparece, llama a tu plan y pregunta por él por nombre y NPI antes de escoger, porque el directorio con el que vas a decidir se cerró el 1 de junio. Si no aparece, no asumas nada tampoco: confírmalo con el plan. La lista es un punto de partida para preguntar, nunca la respuesta final.'],
+    ['¿Qué hago yo con esto entre el 15 de octubre y el 7 de diciembre?',
+     'Busca tu médico por nombre en el Registro: su página dice si aparece en el directorio de MMM de enero 2027. Aparezca o no, llama a la oficina y pregunta por nombre y NPI antes de escoger, porque un directorio impreso siempre va atrás. Si no aparece, no asumas nada tampoco: confírmalo con el plan. La lista es un punto de partida para preguntar, nunca la respuesta final.'],
   ]
 
   const body = `
@@ -11140,9 +11150,16 @@ async function handleSeFueTuMedico(req: any, res: any) {
 
   <h1 class="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">El directorio de tu plan no miente. Envejece.</h1>
 
-  <p class="text-lg text-slate-700 mt-4">El 15 de octubre abre la ventana para escoger plan Medicare. Vas a escoger mirando un directorio de proveedores que MMM cerró el <b>${RED_TITULARES.edicionVigente}</b>, en un PDF de ${nf(RED_TITULARES.paginas)} páginas. Nadie compara una edición contra la anterior, así que nadie sabe cuánto se movió la red mientras tanto.</p>
+  <p class="text-lg text-slate-700 mt-4">El 15 de octubre abre la ventana para escoger plan Medicare, y cierra el 7 de diciembre. MMM ya publicó su directorio para 2027 (dice "actualizado a partir de enero 2027"; el PDF es del ${RED_2027.pdf}). Nadie compara una edición contra la anterior, así que nadie sabe cuánto se movió la red. Aquí sí.</p>
 
-  <p class="text-lg text-slate-700 mt-3">Comparamos 3 ediciones de MMM. Esto es lo que se movió. Y más abajo, lo mismo con la reforma: 3 ediciones de Plan Vital.</p>
+  <div class="bg-teal-50 border-2 border-teal-300 rounded-xl p-4 mt-6">
+    <h2 class="text-xl font-bold text-slate-900 m-0">Junio 2026 contra enero 2027: lo nuevo</h2>
+    <p class="text-[16px] text-slate-800 mt-2 mb-0">Comparamos el directorio de MMM de junio de 2026 con el de enero de 2027. De ${nf(RED_2027.npisJun26)} proveedores que pudimos cruzar con su número federal, <b>entre ${RED_2027.salidaMin} y ${RED_2027.salidaMax} ya no aparecen en la edición 2027</b>. El resto sigue ahí. Ese rango sale de buscar a cada uno por nombre y por teléfono dentro de la edición nueva: el que aparece, no cuenta como salida.</p>
+    <p class="text-[16px] text-slate-800 mt-2 mb-0">Para saber si <b>tu</b> médico aparece en la edición 2027, búscalo por nombre en el <a href="/" class="text-teal-700 font-semibold underline">buscador del Registro</a>: su página dice si está en el directorio de MMM de ${RED_2027.edicion}. O busca por <a href="/registro" class="text-teal-700 font-semibold underline">especialidad y pueblo</a>: cada lista marca quién aparece en MMM.</p>
+    <p class="text-sm text-slate-600 mt-2 mb-0">Por qué no ponemos aquí los nombres de esos ${RED_2027.salidaMin} a ${RED_2027.salidaMax}: en varias filas de la edición vieja el número federal quedó pegado al nombre equivocado (una farmacia leída como radiología, por ejemplo). Un nombre equivocado en esta lista le hace más daño a ese médico que no ponerlo. Cuando cada fila aguante revisión a mano, entra la lista.</p>
+  </div>
+
+  <p class="text-lg text-slate-700 mt-6">Antes de eso, comparamos 3 ediciones de MMM (dic 2024, dic 2025 y jun 2026). Esto es lo que se movió. Y más abajo, lo mismo con la reforma: las ediciones de Plan Vital.</p>
 
   <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
     <div class="bg-slate-900 text-white rounded-xl p-3"><div class="text-3xl font-black">${nf(RED_TITULARES.salieron24)}</div><div class="text-xs mt-1 opacity-90">proveedores que estaban en dic 2024 y no están en jun 2026</div></div>
@@ -11191,11 +11208,11 @@ async function handleSeFueTuMedico(req: any, res: any) {
 
   <p class="text-sm text-slate-500 mt-3">Aviso honesto sobre esta misma página: los conteos de arriba salen del archivo del <b>4 de agosto</b>, que es el que está parseado. La revisión del 22 de agosto está bajada, guardada con su sha256 y registrada, pero todavía no procesada. Cuando se procese, los números se corrigen aquí y se dice qué se movió.</p>
 
-  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">El rezago, que es lo que de verdad te toca</h2>
-  <p class="text-slate-700">La edición vigente cerró el 1 de junio. La ventana abre el 15 de octubre. Son <b>${RED_TITULARES.rezagoDias} días</b> de rezago el primer día. Al ritmo medido (${nf(RED_TITULARES.salieron6m)} salidas en 6 meses de ediciones, o sea unas 42 al mes), <b>cerca de ${nf(RED_TITULARES.proyeccionSalidas)} proveedores listados en ese PDF ya no van a estar en la red cuando lo abras en octubre.</b></p>
-  <p class="text-sm text-slate-500 mt-2">Ese último número es un <b>estimado</b>, no una medición: proyecta hacia adelante el ritmo de las 3 ediciones. El número medido son los ${nf(RED_TITULARES.salieron6m)} de arriba. Cuando MMM publique la edición de diciembre, se mide otra vez y se corrige aquí.</p>
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">El estimado que hicimos, contra lo que pasó</h2>
+  <p class="text-slate-700">En agosto, con la edición de junio de 2026 en la mano, proyectamos el ritmo de salidas (${nf(RED_TITULARES.salieron6m)} en 6 meses, unas 42 al mes) y estimamos que cerca de <b>${nf(RED_TITULARES.proyeccionSalidas)}</b> proveedores de ese PDF ya no iban a estar cuando abriera la ventana.</p>
+  <p class="text-slate-700 mt-2">MMM publicó la edición 2027 y la medimos: <b>entre ${RED_2027.salidaMin} y ${RED_2027.salidaMax}</b>. El estimado se pasó. Lo dejamos escrito porque un estimado que no se coteja con la medición no vale nada. Y una lección para todos: el conteo crudo (comparar números federales de una lista contra la otra) también daba un número mucho más alto, porque cuenta los errores del cruce como si fueran gente saliendo de la red.</p>
 
-  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Busca tu médico</h2>
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Busca tu médico por nombre o pueblo: los que salieron entre dic 2025 y jun 2026</h2>
   <p class="text-sm text-slate-600 mb-3">De los ${nf(RED_TITULARES.salieron6m)} que salieron entre diciembre de 2025 y junio de 2026, aquí van los <b>${nf(recientes.length)}</b> a los que nuestro lector de PDF le pudo leer el nombre, por pueblo. Escribe un nombre, una especialidad o un pueblo.</p>
   <p class="text-xs text-slate-500 mb-3">Los otros ${nf(RED_TITULARES.salieron6m - recientes.length)} salen de la sección de médicos clínicos (páginas 1,600 a 1,850 del PDF), donde la tabla tiene otro formato y nuestro lector se queda con el pueblo, la especialidad y el teléfono, pero no con el nombre. Eso es un hueco nuestro, no del directorio, y va escrito aquí en vez de escondido en la diferencia entre 2 números.</p>
   <input id="q" type="search" placeholder="Escribe un nombre, especialidad o pueblo…" class="w-full border border-slate-300 rounded-lg px-3 py-2 mb-4 text-base" autocomplete="off">
@@ -11241,7 +11258,7 @@ async function handleSeFueTuMedico(req: any, res: any) {
 
   <p class="text-sm text-slate-600 mt-8">El método, edición por edición, con las huellas digitales de cada PDF: <a href="/expediente-mmm" class="text-teal-700 font-semibold underline">el expediente MMM</a> · <a href="/expediente-planvital" class="text-teal-700 font-semibold underline">el expediente Plan Vital</a> · <a href="/telefonos-muertos" class="text-teal-700 font-semibold underline">el marcador de teléfonos muertos</a>.</p>
 
-  <p class="text-sm text-slate-500 mt-6 border-t border-slate-200 pt-4">Datos de los directorios públicos de proveedores de MMM (línea Individuales: diciembre 2024, diciembre 2025 y junio 2026) y de Plan Vital / First Medical Health Plan (febrero 2024, febrero 2026, julio 2026 y agosto 2026), bajados sin login y guardados con su sha256. Cruce contra el registro federal NPPES. Comparación de MMM corrida el 22 de agosto de 2026; la de Plan Vital se recalcula en cada carga de esta página. Esto no es asesoría médica ni una acusación contra ningún proveedor: es la diferencia entre 2 documentos públicos. Derecho a réplica en la misma página.</p>
+  <p class="text-sm text-slate-500 mt-6 border-t border-slate-200 pt-4">Datos de los directorios públicos de proveedores de MMM (línea Individuales: diciembre 2024, diciembre 2025, junio 2026 y enero 2027) y de Plan Vital / First Medical Health Plan (febrero 2024, febrero 2026, julio 2026 y agosto 2026), bajados sin login y guardados con su sha256. Cruce contra el registro federal NPPES. Comparación de MMM corrida el 22 de agosto de 2026 (dic 2024 a jun 2026) y el 10 de octubre de 2026 (jun 2026 a ene 2027); la de Plan Vital se recalcula en cada carga de esta página. Esto no es asesoría médica ni una acusación contra ningún proveedor: es la diferencia entre 2 documentos públicos. Derecho a réplica en la misma página.</p>
 </article>
 <script>(function(){var q=document.getElementById('q'),L=document.getElementById('lista'),V=document.getElementById('vacio');if(!q||!L)return;
 function n(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');}
@@ -11259,8 +11276,8 @@ if(V2)V2.classList.toggle('hidden',!(t&&vis2===0));}});})();</script>`
   const jsonLd = [
     {
       '@context': 'https://schema.org', '@type': 'Article',
-      headline: `¿Se fue tu médico de la red? 464 salieron del directorio de MMM en 18 meses y ${nf(pvT.salieron5m)} del de Plan Vital en 5`,
-      description: `Comparación de 3 ediciones del directorio de MMM (dic 2024, dic 2025, jun 2026) y 4 de Plan Vital / First Medical (feb 2024, feb 2026, jul 2026, ago 2026): 464 proveedores salieron de MMM en 18 meses y ${nf(pvT.salieron5m)} de Plan Vital entre febrero y julio de 2026. Lo que cambió fue la lista, no el médico.`,
+      headline: `¿Tu médico sigue en MMM para 2027? Entre ${RED_2027.salidaMin} y ${RED_2027.salidaMax} salieron del directorio entre junio 2026 y enero 2027`,
+      description: `Comparación del directorio de MMM de junio 2026 con el de enero 2027 (entre ${RED_2027.salidaMin} y ${RED_2027.salidaMax} salidas verificadas por nombre y teléfono), de 3 ediciones anteriores de MMM (dic 2024, dic 2025, jun 2026) y 4 de Plan Vital / First Medical (feb 2024, feb 2026, jul 2026, ago 2026): 464 proveedores salieron de MMM en 18 meses y ${nf(pvT.salieron5m)} de Plan Vital entre febrero y julio de 2026. Lo que cambió fue la lista, no el médico.`,
       author: { '@type': 'Person', name: 'Angel Anderson' },
       publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
       inLanguage: 'es', url: 'https://registromedicopr.com/se-fue-tu-medico',
@@ -11276,8 +11293,11 @@ if(V2)V2.classList.toggle('hidden',!(t&&vis2===0));}});})();</script>`
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=21600, stale-while-revalidate=86400')
   res.status(200).send(layout({
-    title: '¿Sigue tu médico en la red? Los que salieron del directorio de MMM y de Plan Vital (reforma)',
-    description: `464 proveedores que MMM listaba en diciembre de 2024 ya no están en junio de 2026, y ${nf(pvT.salieron5m)} salieron del directorio de Plan Vital (la reforma) entre febrero y julio de 2026, con la edición de agosto ya comparada. Busca tu médico por nombre, especialidad o pueblo antes de escoger.`,
+    // 10 oct 2026 (dale de Angel): título de búsqueda para la ventana Medicare. bareTitle para que
+    // " · Registro Médico PR" no lo empuje a 80+ caracteres. Meta ≤155, sin "acepta", sin recomendar plan.
+    bareTitle: true,
+    title: '¿Tu médico sigue en MMM para 2027? Búscalo por nombre o pueblo',
+    description: 'Comparamos el directorio de MMM de junio 2026 con el de enero 2027. Busca a tu médico antes del 7 de diciembre. Gratis, sin cuenta.',
     slug: 'se-fue-tu-medico', bodyHtml: body, jsonLd: jsonLd as any,
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
   }))
@@ -20032,7 +20052,21 @@ async function handleRegistroHub(req: any, res: any) {
     if (partesEn.length && !conMMM) partesEn[0] = partesEn[0].replace(/^(\d+) in (.+?)'s/, (_m, n, who) => `${n} appear${Number(n) === 1 ? 's' : ''} in ${who}'s provider directory`)
     const frasePlanEs = joinEs(partesEs)
     const frasePlanEn = joinEn(partesEn)
-    const titleT = nT
+    // 10 oct 2026 (dale de Angel, ventana Medicare 15 oct - 7 dic): cuando el hub tiene proveedores
+    // en algún directorio de plan, el título nombra el plan primero ("Dentista en Mayagüez: 55 con
+    // teléfono · MMM 2027, MCS y Vital"). Todo sale de la data de este render: el conteo es de los
+    // que tienen teléfono, y un plan solo se nombra si hay al menos 1 del pueblo en ese directorio.
+    // Dice "aparece en el directorio", nunca "acepta" ni recomienda. Triple-S queda fuera del
+    // título porque su única edición cargada es de 2025. Sin plan, el título de siempre.
+    const nTel = inTown.filter((p: any) => p.phone).length
+    const planesTit: string[] = []
+    if (conMMM) planesTit.push(`MMM ${PLAN_ED_MMM.slice(0, 4)}`)
+    if (conMCS) planesTit.push('MCS')
+    if (conVital) planesTit.push('Vital')
+    const titlePlan = (nT && nTel && planesTit.length)
+      ? t(`${cleanEs} en ${muni.name}: ${nTel} con teléfono · ${joinEs(planesTit)}`, `${cleanEn} in ${muni.name}: ${nTel} with phone · ${joinEn(planesTit)}`)
+      : ''
+    const titleT = titlePlan ? titlePlan : nT
       ? t(nT === 1 ? `${cleanEs} en ${muni.name}: hay 1, con teléfono${planSuf}` : `${cleanEs} en ${muni.name}: los ${nT} que hay, con teléfono${planSuf}`,
           nT === 1 ? `${cleanEn} in ${muni.name}: there is 1, with phone${planSuf}` : `${cleanEn} in ${muni.name}: all ${nT}, with phone${planSuf}`)
       : cerca
