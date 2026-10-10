@@ -8479,6 +8479,10 @@ ${ratioSection}
     description: `${totalDeserts.length} combinaciones de especialidad y región sin ningún proveedor, según el registro federal NPPES/CMS. Datos abiertos de acceso a especialistas en Puerto Rico, en español.`,
     creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
     license: 'https://npiregistry.cms.hhs.gov/',
+    // Fechas reales del dato: el HTML dice "Medido el 16 de agosto de 2026" (no la hora del render).
+    dateModified: '2026-08-16',
+    temporalCoverage: '2026-08-16',
+    spatialCoverage: { '@type': 'Place', name: 'Puerto Rico' },
     isAccessibleForFree: true,
     inLanguage: 'es',
     keywords: ['acceso a salud', 'especialistas', 'Puerto Rico', 'desiertos médicos', 'NPPES'],
@@ -11919,6 +11923,8 @@ ${postsEscasez({ U: 'registromedicopr.com/marcador', pctTel: '43.6', cupon: Stri
     name: 'Datos citables de acceso médico en Puerto Rico',
     description: `${g.conHpsa} de 76 municipios de PR con designación federal de escasez activa, ${g.cupon} con el cupón de salud mental sin cobrar (${n(g.cuponPob)} personas), 3 municipios sin ningún especialista. Fuentes: NPPES/CMS, HRSA, Censo.`,
     creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+    // Fecha real del dato: el HTML dice "Última actualización: julio 2026".
+    dateModified: '2026-07', temporalCoverage: '2026-07',
     isAccessibleForFree: true, inLanguage: 'es', url: 'https://registromedicopr.com/comparte',
     keywords: ['acceso médico Puerto Rico', 'escasez de médicos', 'HPSA', 'NPPES', 'desiertos médicos', 'datos citables'],
   }
