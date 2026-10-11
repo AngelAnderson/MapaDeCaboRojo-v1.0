@@ -25,7 +25,7 @@ import { cargarSenal, type SenalCategoria } from './_lib/la-senal.js'
 import { handleRentas } from './_lib/rentas.js'
 import { handleSuelo } from './_lib/suelo.js'
 import { quiereMarkdown, enviarMd, linkAlternoMd, pieMd } from './_lib/agente-md.js'
-import { LF_META, LF_RAZON, LF_OIG, LF_REIN, LF_OPTOUT, LF_OPTOUT_YA_NO, LF_OIG_POR_NPI, LF_OPTOUT_POR_NPI } from './_lib/listas-federales.js'
+import { LF_META, LF_RAZON, LF_OIG, LF_REIN, LF_OPTOUT, LF_OPTOUT_YA_NO, LF_OIG_POR_NPI, LF_OPTOUT_POR_NPI, LF_TELESALUD } from './_lib/listas-federales.js'
 
 // Hard ceiling on every PostgREST call. Without it a stalled connection hangs the
 // await forever and Vercel kills the whole function at maxDuration — that is how 34
@@ -11542,6 +11542,107 @@ if(V)V.classList.toggle('hidden',!(t&&vis===0));});})();</script>`
     title: '¿Medicare le paga a tu médico? Excluidos y fuera de Medicare en PR',
     description: `${LF_OIG.length} excluidos por la OIG y ${LF_OPTOUT.length} médicos fuera de Medicare en Puerto Rico, con la razón y la fecha. Busca por nombre o pueblo. Gratis.`,
     slug: 'listas-federales', bodyHtml: body, jsonLd: jsonLd as any,
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
+// =============== /los-que-si — LA LISTA DE LOS BUENOS ===============
+// 11 oct 2026 (dale de Angel: "las otras listas que debemos tener"). La hermana positiva de
+// /listas-federales: una lista negativa trae búsquedas, una positiva trae gente (el médico QUIERE
+// estar aquí y nos da su dato solo). 3 secciones, todas con fuente y fecha:
+//  · le dieron cita: registro_resultados_llamada resultado='cita' en 90 días (lo reporta el paciente)
+//  · cogiendo pacientes nuevos: registro_provider_status confirmado en 90 días (regla del Censo)
+//  · telesalud: Care Compare (LF_TELESALUD), solo con NPI y nombre que casan
+// Nunca dice "acepta tu plan" ni recomienda a nadie: dice qué pasó y cuándo.
+async function handleLosQueSi(req: any, res: any) {
+  const nf = (n: number) => n.toLocaleString('en-US')
+  try {
+    supabase.from('api_logs').insert({
+      endpoint: 'mapa-pages/los-que-si', method: 'GET', query: null,
+      user_agent: String(req.headers['user-agent'] || '').substring(0, 500),
+      ip: String(req.headers['x-forwarded-for'] || '').split(',')[0].substring(0, 45),
+      referrer: String(req.headers['referer'] || '').substring(0, 500) || null, response_count: 0,
+    }).then(() => {}, () => {})
+  } catch { /* fire-and-forget */ }
+  const fecha = (d: string) => new Date(String(d).slice(0, 10) + 'T12:00:00').toLocaleDateString('es-PR', { day: 'numeric', month: 'long', year: 'numeric' })
+  const desde = new Date(Date.now() - 90 * 86400000).toISOString()
+
+  const citas: Record<string, string> = {}
+  const acepta: Record<string, string> = {}
+  try {
+    const { data } = await supabase.from('registro_resultados_llamada').select('ficha,llamo_pr').eq('resultado', 'cita').gte('llamo_pr', desde).like('ficha', '/especialista/%').limit(1000)
+    for (const r of (data || [])) { const s = String(r.ficha).replace('/especialista/', ''); if (!citas[s] || r.llamo_pr > citas[s]) citas[s] = r.llamo_pr }
+  } catch { /* aditivo */ }
+  try {
+    const { data } = await supabase.from('registro_provider_status').select('place_slug,verified_at').eq('accepting_patients', true).gte('verified_at', desde).limit(1000)
+    for (const r of (data || [])) { if (!acepta[r.place_slug] || r.verified_at > acepta[r.place_slug]) acepta[r.place_slug] = r.verified_at }
+  } catch { /* aditivo */ }
+  const slugs = [...new Set([...Object.keys(citas), ...Object.keys(acepta)])]
+  const fichas: Record<string, any> = {}
+  for (let i = 0; i < slugs.length; i += 200) {
+    try {
+      const { data } = await supabase.from('places').select('slug,name,subcategory,municipality').in('slug', slugs.slice(i, i + 200)).eq('status', 'open').eq('visibility', 'published')
+      for (const p of (data || [])) fichas[p.slug] = p
+    } catch { /* aditivo */ }
+  }
+  const nombre = (p: any) => escapeHtml(String(p.name || '').replace(/^Dr\(a\)\.\s*/, ''))
+  const fila = (s: string, p: any, txt: string) => `<li class="py-3" data-b="${escapeHtml((p.name + ' ' + (p.subcategory || '') + ' ' + (p.municipality || '')).toLowerCase())}">
+      <p class="m-0 text-[17px]"><a href="/especialista/${escapeHtml(s)}" class="text-teal-700 font-semibold underline">${nombre(p)}</a> <span class="text-slate-600">· ${escapeHtml(p.subcategory || '')} · ${escapeHtml(p.municipality || '')}</span></p>
+      <p class="m-0 mt-1 text-[16px] text-slate-800">${txt}</p></li>`
+  const listaCitas = Object.keys(citas).filter(s => fichas[s]).sort((a, b) => citas[b].localeCompare(citas[a]))
+    .map(s => fila(s, fichas[s], `Un paciente que llamó desde el Registro reportó que <b>le dieron cita</b> el ${fecha(citas[s])}.`)).join('')
+  const listaAcepta = Object.keys(acepta).filter(s => fichas[s]).sort((a, b) => acepta[b].localeCompare(acepta[a]))
+    .map(s => fila(s, fichas[s], `<b>Cogiendo pacientes nuevos</b>, confirmado directo el ${fecha(acepta[s])}. Esto cambia: confírmalo al llamar.`)).join('')
+  const porPueblo: Record<string, typeof LF_TELESALUD> = {}
+  for (const x of LF_TELESALUD) (porPueblo[x.pueblo || 'Sin pueblo'] ||= []).push(x)
+  const listaTele = Object.keys(porPueblo).sort((a, b) => a.localeCompare(b, 'es')).map(p => `<section class="grupo mb-4"><h3 class="text-lg font-bold text-slate-900 border-b-2 border-slate-200 pb-1 mb-0">${escapeHtml(p)} <span class="text-slate-600 font-normal text-base">· ${porPueblo[p].length}</span></h3><ul class="list-none pl-0 m-0 divide-y divide-slate-100">${porPueblo[p].map(x => `<li class="py-2 text-[17px]" data-b="${escapeHtml((x.nom + ' ' + x.esp + ' ' + x.pueblo).toLowerCase())}"><a href="/especialista/${escapeHtml(x.s)}" class="text-teal-700 font-semibold underline">${escapeHtml(x.nom)}</a> <span class="text-slate-600">· ${escapeHtml(x.esp)}</span></li>`).join('')}</ul></section>`).join('')
+  const nCitas = Object.keys(citas).filter(s => fichas[s]).length
+  const nAcepta = Object.keys(acepta).filter(s => fichas[s]).length
+
+  const body = `
+<article class="max-w-3xl mx-auto px-4 py-8">
+  <nav class="text-[16px] text-slate-600 mb-3"><a href="/" class="hover:text-teal-700 underline">Registro Médico PR</a> › Los que sí</nav>
+  <h1 class="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">Los que sí: dieron cita, cogen pacientes, atienden por telesalud</h1>
+  <p class="text-lg text-slate-700 mt-4">Casi todo lo que se publica de médicos en Puerto Rico es quién no contesta. Esta es la otra lista: los que sí. Cada nombre dice qué pasó y cuándo, y sale de lo que nos contaron los pacientes, de lo que confirmamos directo o de lo que publica Medicare.</p>
+  <div class="grid grid-cols-2 gap-3 mt-6">
+    <div class="bg-teal-700 text-white rounded-xl p-4"><div class="text-4xl font-black">${nf(nCitas)}</div><div class="text-[16px] mt-1">le dieron cita a alguien en los últimos 90 días</div></div>
+    <div class="bg-slate-100 rounded-xl p-4"><div class="text-4xl font-black text-slate-900">${nf(nAcepta)}</div><div class="text-[16px] mt-1 text-slate-700">cogiendo pacientes nuevos, confirmado en 90 días</div></div>
+    <div class="bg-slate-100 rounded-xl p-4 col-span-2"><div class="text-4xl font-black text-slate-900">${nf(LF_TELESALUD.length)}</div><div class="text-[16px] mt-1 text-slate-700">médicos que atienden por telesalud, según el archivo de Medicare</div></div>
+  </div>
+  <label for="q" class="block text-lg font-bold text-slate-900 mt-8 mb-2">Busca un nombre, una especialidad o un pueblo</label>
+  <input id="q" type="search" placeholder="Ejemplo: Mayagüez o internista" class="w-full border-2 border-slate-400 rounded-lg px-3 py-3 text-lg" autocomplete="off">
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Le dieron cita</h2>
+  <p class="text-[17px] text-slate-700">Pacientes que llamaron desde el Registro y nos dijeron qué pasó.</p>
+  <ul class="lista list-none pl-0 m-0 divide-y divide-slate-100">${listaCitas || '<li class="py-2 text-[16px]">Todavía nadie ha reportado una cita en estos 90 días.</li>'}</ul>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Cogiendo pacientes nuevos</h2>
+  <p class="text-[17px] text-slate-700">Confirmado directo con la oficina. Pasados 90 días, sale de esta lista hasta que se confirme otra vez.</p>
+  <ul class="lista list-none pl-0 m-0 divide-y divide-slate-100">${listaAcepta || '<li class="py-2 text-[16px]">Ninguno confirmado en estos 90 días.</li>'}</ul>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Atienden por telesalud</h2>
+  <p class="text-[17px] text-slate-700">Según el archivo de médicos de Medicare (Care Compare). Sirve para quien no puede guiar o vive lejos. Pregunta al llamar si la telesalud aplica a tu plan.</p>
+  <div id="tele">${listaTele}</div>
+
+  <div class="bg-teal-50 border-2 border-teal-300 rounded-xl p-4 mt-8">
+    <p class="text-[17px] text-slate-900 m-0"><b>¿Llamaste a un médico del Registro? Dinos qué pasó.</b> Con 1 texto ayudas al próximo que llame. ¿Eres la oficina y estás cogiendo pacientes? Escríbenos y sales aquí.</p>
+    <a href="sms:+17874177711" class="mt-3 flex items-center justify-center min-h-[56px] rounded-xl bg-teal-700 text-white text-lg font-bold no-underline">Textea al 787-417-7711</a>
+  </div>
+  <p class="text-[16px] text-slate-600 mt-8 border-t border-slate-200 pt-4">Fuentes: reportes de pacientes que llamaron desde el Registro (90 días), confirmaciones directas con las oficinas (90 días) y el archivo de médicos de Medicare, Care Compare (actualizado el ${fecha(LF_META.generado)}). Estar aquí no quiere decir que acepta tu plan: eso se pregunta al llamar. La lista de los que Medicare no paga está en <a href="/listas-federales" class="underline text-teal-700">las listas federales</a>.</p>
+</article>
+<script>(function(){var q=document.getElementById('q');if(!q)return;
+function n(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');}
+q.addEventListener('input',function(){var t=n(q.value.trim());
+document.querySelectorAll('.lista li[data-b]').forEach(function(li){li.style.display=!t||n(li.getAttribute('data-b')).indexOf(t)>-1?'':'none';});
+document.querySelectorAll('#tele .grupo').forEach(function(sec){var c=0;sec.querySelectorAll('li').forEach(function(li){var ok=!t||n(li.getAttribute('data-b')).indexOf(t)>-1;li.style.display=ok?'':'none';if(ok)c++;});sec.style.display=c?'':'none';});});})();</script>`
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
+  res.status(200).send(layout({
+    bareTitle: true,
+    title: 'Médicos que sí contestan, dan cita y cogen pacientes en PR',
+    description: `${nCitas} médicos le dieron cita a alguien en 90 días, ${nAcepta} cogen pacientes nuevos y ${LF_TELESALUD.length} atienden por telesalud. Con fecha y fuente. Gratis.`,
+    slug: 'los-que-si', bodyHtml: body,
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
   }))
 }
@@ -23516,6 +23617,7 @@ const PAGE_CANONICAL: Record<string, string> = {
   'telefonos-muertos': 'https://registromedicopr.com/telefonos-muertos',
   'se-fue-tu-medico': 'https://registromedicopr.com/se-fue-tu-medico',
   'listas-federales': 'https://registromedicopr.com/listas-federales',
+  'los-que-si': 'https://registromedicopr.com/los-que-si',
   'expediente-power-expectations': 'https://puertoricosinfiltros.com/expediente-power-expectations',
   'registro-puedo-volver': 'https://registromedicopr.com/puedo-volver',
   'rendimiento': 'https://puertoricosinfiltros.com/rendimiento',
@@ -23682,6 +23784,7 @@ export default async function handler(req: any, res: any) {
     case 'telefonos-muertos': return await handleTelefonosMuertos(req, res)
     case 'se-fue-tu-medico': return await handleSeFueTuMedico(req, res)
     case 'listas-federales': return await handleListasFederales(req, res)
+    case 'los-que-si': return await handleLosQueSi(req, res)
     case 'carta-141': return await handleCarta141(req, res)
     case 'registro-puedo-volver': return await handleRegistroPuedoVolver(req, res)
     case 'recuperacion': return await handleRecuperacion(req, res)
