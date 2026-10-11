@@ -140,10 +140,14 @@ function titleLines(text: string, base: string, accent: string, size: number) {
 
 export default async function handler(req: Request) {
   const { searchParams } = new URL(req.url);
-  const t = (searchParams.get('t') || 'Cabo Rojo, verificado').slice(0, 90);
-  const k = (searchParams.get('k') || '').slice(0, 40);
-  const subRaw = (searchParams.get('sub') || '').slice(0, 140);
-  const badge = (searchParams.get('badge') || '').slice(0, 40);
+  // 11 oct 2026: los caracteres que la fuente no trae ("⊂=", "–") hacían que @vercel/og pidiera una fuente
+  // dinámica y fallara (23 errores). Se normalizan a lo que sí existe: rayas a guion, símbolos raros fuera.
+  const limpio = (v: string) => v.replace(/[\u2012-\u2015]/g, '-').replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"')
+    .replace(/[^\p{L}\p{N}\p{Zs}.,:;!?¡¿'"()%$#&@+\-\/]/gu, '').replace(/\s+/g, ' ').trim();
+  const t = limpio(searchParams.get('t') || 'Cabo Rojo, verificado').slice(0, 90) || 'Cabo Rojo, verificado';
+  const k = limpio(searchParams.get('k') || '').slice(0, 40);
+  const subRaw = limpio(searchParams.get('sub') || '').slice(0, 140);
+  const badge = limpio(searchParams.get('badge') || '').slice(0, 40);
   const tp = searchParams.get('theme');
   const themeKey =
     tp === 'medico' || tp === 'caborojo' || tp === 'angel' || tp === 'sinfiltros' ? tp : 'mapa';

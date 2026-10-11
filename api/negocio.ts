@@ -1,5 +1,6 @@
 import { hojaLlamadaScript } from './_lib/hoja-llamada.js'
 import { createClient } from '@supabase/supabase-js';
+import { opcionesConPlazo } from './_lib/db-plazo.js'
 import { correctButtonHtml } from './_lib/correct-button.js';
 import { bloqueProcedencia, paginaLd, ldScript, CATEGORIA_ENLACE_ES, procedenciaSello, fechaCortaAT } from './_lib/procedencia.js';
 import { slugVivoPara } from './_lib/redirect-archivada.js';
@@ -7,7 +8,8 @@ import { rutaDeRecord } from './_lib/rutas-salud.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
-  process.env.VITE_SUPABASE_ANON_KEY || ''
+  process.env.VITE_SUPABASE_ANON_KEY || '',
+  opcionesConPlazo(8000),
 );
 
 async function logApiCall(endpoint: string, method: string | null, query: string | null, userAgent: string | null, ip: string | null, responseCount: number | null, referrer?: string | null) {

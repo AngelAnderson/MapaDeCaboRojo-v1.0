@@ -12795,12 +12795,15 @@ async function handleSinFiltrosLog(req: any, res: any) {
 // loqueviene_click (29 sep 2026): caborojo.com manda sus clics aquí (pie de página, marker cr-salidas-v1).
 // numero_reportado (5 oct 2026, LA CENTRAL): la persona llamó a una central y le dieron el directo de la oficina.
 // target = 10 dígitos exactos o no entra. Es el número de una oficina, no de la persona.
-const REGISTRO_EVENTS = new Set(['click_to_call', 'click_whatsapp', 'veci_click', 'symptom_match', 'call_outcome', 'loqueviene_click', 'numero_reportado'])
+// 'salida' (11 oct 2026): quien sale de una ficha SIN llamar, con el tiempo en la página por tramo. Era la incógnita #5:
+// medíamos el clic, no la duda. target = tramo de segundos ('0-10','10-30','30-90','90+'), nada más.
+const REGISTRO_EVENTS = new Set(['click_to_call', 'click_whatsapp', 'veci_click', 'symptom_match', 'call_outcome', 'loqueviene_click', 'numero_reportado', 'salida'])
+const SALIDA_TRAMOS = new Set(['0-10', '10-30', '30-90', '90+'])
 // 28 sep 2026: resultado de la llamada ("la verdad después del click"). Solo estas claves.
 // no_llame (28 sep 2026): 72% cerraba la hoja con la ×; las 5 opciones suponían que alguien habló.
 // Quien marcó y colgó o llama después no tenía botón. No cuenta como resultado de llamada.
 // resuelto / numero_malo (28 sep 2026): la misma hoja en las fichas del directorio (mapadecaborojo.com).
-const CALL_OUTCOMES = new Set(['cita', 'contesto_no_resolvio', 'no_contestaron', 'no_aceptan', 'otra_opcion', 'descartado', 'no_llame', 'resuelto', 'numero_malo', 'otro_numero'])
+const CALL_OUTCOMES = new Set(['contesto', 'cita', 'contesto_no_resolvio', 'no_contestaron', 'no_aceptan', 'otra_opcion', 'descartado', 'no_llame', 'resuelto', 'numero_malo', 'otro_numero'])
 async function handleRegistroLog(req: any, res: any) {
   try {
     // 28 sep 2026: único POST del registro sin rate limit. Fail-silent como el resto del
@@ -12815,6 +12818,7 @@ async function handleRegistroLog(req: any, res: any) {
     const vid = /^[a-z0-9]{6,40}$/.test(String(body.vid || '')) ? String(body.vid) : null
     if (event === 'call_outcome' && !CALL_OUTCOMES.has(String(body.target || ''))) { res.status(204).end(); return }
     if (event === 'numero_reportado' && !/^[0-9]{10}$/.test(String(body.target || ''))) { res.status(204).end(); return }
+    if (event === 'salida' && !SALIDA_TRAMOS.has(String(body.target || ''))) { res.status(204).end(); return }
     if (REGISTRO_EVENTS.has(event)) {
       // sitio lo decide el host, no el navegador: los números públicos del Registro no se mezclan con el directorio.
       // caborojo.com llega por fetch no-cors: lo delata el Origin/Referer que pone el navegador.

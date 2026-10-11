@@ -2,13 +2,15 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Buffer } from "buffer";
 import { createClient } from '@supabase/supabase-js';
+import { opcionesConPlazo } from './_lib/db-plazo.js'
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 // Initialize Supabase (Only needed for specific actions like JCA analysis)
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
-  process.env.VITE_SUPABASE_ANON_KEY || ''
+  process.env.VITE_SUPABASE_ANON_KEY || '',
+  opcionesConPlazo(8000),
 );
 
 // Node-safe HTML Escaper

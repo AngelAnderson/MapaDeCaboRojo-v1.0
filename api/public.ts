@@ -1,11 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
+import { opcionesConPlazo } from './_lib/db-plazo.js'
 import { bloqueAgentes, MCP_REGISTRY_AUTH } from './_lib/agentes.js';
 import { SUBS_IN_LIST } from './_lib/registro-subs.js';
 
 // ── Shared anon client ────────────────────────────────────────────────────────
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
-  process.env.VITE_SUPABASE_ANON_KEY || ''
+  process.env.VITE_SUPABASE_ANON_KEY || '',
+  opcionesConPlazo(8000),
 );
 
 async function logApiCall(endpoint: string, method: string | null, query: string | null, userAgent: string | null, ip: string | null, responseCount: number | null, referrer?: string | null) {

@@ -1,12 +1,14 @@
 
 import { createClient } from '@supabase/supabase-js';
+import { opcionesConPlazo } from './_lib/db-plazo.js'
 import { MCP_ENDPOINT } from './_lib/agentes.js';
 import { SPECIALIST_SUBS } from './_lib/registro-subs.js';
 import { rutaDeRecord, esDelRegistro } from './_lib/rutas-salud.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
-  process.env.VITE_SUPABASE_ANON_KEY || ''
+  process.env.VITE_SUPABASE_ANON_KEY || '',
+  opcionesConPlazo(12000),
 );
 
 // Host-aware robots.txt — served via rewrite /robots.txt → /api/sitemap?robots=1
@@ -94,9 +96,16 @@ export default async function handler(req: any, res: any) {
       for (let page = 0; page < 12; page++) {
         let q = build();
         for (const col of orderBy) q = q.order(col, { ascending: true });
-        const { data, error } = await q.range(page * 1000, (page + 1) * 1000 - 1);
-        // Un error aquí encogía el sitemap en silencio. Que reviente y se vea.
-        if (error) throw new Error(`[sitemap] fetchAll falló ordenando por ${orderBy.join(',')}: ${error.message}`);
+        let { data, error } = await q.range(page * 1000, (page + 1) * 1000 - 1);
+        // 11 oct 2026: 1 reintento antes de reventar (el 8 oct, 17 fallos fueron un 522 pasajero de Supabase).
+        if (error) {
+          await new Promise(r => setTimeout(r, 1500));
+          let q2 = build();
+          for (const col of orderBy) q2 = q2.order(col, { ascending: true });
+          ({ data, error } = await q2.range(page * 1000, (page + 1) * 1000 - 1));
+        }
+        // Un error aquí encogía el sitemap en silencio. Que reviente y se vea (mensaje corto: el 522 traía la página entera de Cloudflare).
+        if (error) throw new Error(`[sitemap] fetchAll falló ordenando por ${orderBy.join(',')}: ${String(error.message || '').replace(/\s+/g, ' ').slice(0, 200)}`);
         if (!data || data.length === 0) break;
         out.push(...data);
         if (data.length < 1000) break;

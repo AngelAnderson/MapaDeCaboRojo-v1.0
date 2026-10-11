@@ -1,11 +1,13 @@
 import { createClient } from '@supabase/supabase-js';
+import { opcionesConPlazo } from './_lib/db-plazo.js'
 import { BUSCAR_INDEX } from './_lib/buscar-index.js';
 import { cargarSenal, type SenalCategoria } from './_lib/la-senal.js';
 import { GoogleGenAI } from "@google/genai";
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
-  process.env.VITE_SUPABASE_ANON_KEY || ''
+  process.env.VITE_SUPABASE_ANON_KEY || '',
+  opcionesConPlazo(20000),
 );
 
 export default async function handler(req: any, res: any) {

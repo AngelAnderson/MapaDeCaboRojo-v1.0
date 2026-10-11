@@ -1,9 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
+import { opcionesConPlazo } from './_lib/db-plazo.js'
 import { procedenciaSello } from './_lib/procedencia.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || 'https://vprjteqgmanntvisjrvp.supabase.co',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || '',
+  opcionesConPlazo(8000),
 );
 
 // =============== INLINED economicConstants (Vercel module bundle workaround) ===============
