@@ -2,10 +2,6 @@
   "trailingSlash": false,
   "crons": [
     {
-      "path": "/api/cron?job=briefing",
-      "schedule": "0 11 * * *"
-    },
-    {
       "path": "/api/cron?job=maintenance",
       "schedule": "0 3 * * 1"
     },
