@@ -6965,7 +6965,7 @@ async function handleEspecialista(req: any, res: any) {
   //  · testigo_partd: recetó a beneficiarios de Medicare Part D en el año más reciente que
   //    publica CMS. Es prueba de práctica activa, no de calidad ni de que te cojan.
   let licAct: { expira: string | null; fecha: string } | null = null
-  let licNoVig: { desde: string | null; fecha: string } | null = null
+  let licNoVig: { desde: string | null; fecha: string; estatus: string } | null = null
   let partdAct: { clms: number } | null = null
   {
     const [{ data: lo }, { data: lp }] = await Promise.all([
@@ -6981,7 +6981,7 @@ async function handleEspecialista(req: any, res: any) {
     // 'ambigua' sigue sin publicarse: eso se confirma 1 a 1 antes.
     const estO = String((o && o.licencia_estatus) || '').toLowerCase()
     if (o && o.match_confianza === 'exacta' && estO && estO !== 'activo') {
-      licNoVig = { desde: o.licencia_expira ? String(o.licencia_expira).slice(0, 10) : null, fecha: String(o.consultado_en || '').slice(0, 10) }
+      licNoVig = { desde: o.licencia_expira ? String(o.licencia_expira).slice(0, 10) : null, fecha: String(o.consultado_en || '').slice(0, 10), estatus: estO }
     }
     const p = (lp || [])[0]
     if (p && Number(p.tot_clms) > 0) partdAct = { clms: Number(p.tot_clms) }
@@ -7321,7 +7321,15 @@ async function handleEspecialista(req: any, res: any) {
       // 22 sep 2026: match exacto y la Junta dice no vigente. Se dice con fecha, sin adjetivos,
       // y con la puerta abierta a corregir. Manda sobre Part D: una receta no es una licencia.
       filas.push({ q, nivel: 'alerta',
-        a: t(`Su licencia de Puerto Rico <b>no aparece vigente</b> en el registro de la Junta de Licenciamiento${licNoVig.desde ? ` (venció el ${fechaTxt(licNoVig.desde)})` : ''}. Su número federal (NPI) sigue activo. Si el registro está atrasado o ya renovó, escríbenos por texto y lo corregimos.`, `The Puerto Rico license <b>does not appear current</b> in the Licensing Board registry${licNoVig.desde ? ` (expired ${fechaTxt(licNoVig.desde)})` : ''}. The federal number (NPI) is still active. If the registry is behind or it was renewed, text us and we will fix it.`),
+        // 11 oct 2026: el estatus exacto de la Junta (1 activo, 2 inactivo, 3 vencido, 4 cancelado, 5 suspendido).
+        // Antes decía "venció el X" para todos, y eso es falso para una licencia cancelada o suspendida.
+        a: (() => {
+          const EST: Record<string, [string, string]> = { vencido: ['vencida', 'expired'], cancelado: ['cancelada', 'cancelled'], suspendido: ['suspendida', 'suspended'], inactivo: ['inactiva', 'inactive'] }
+          const [es, en] = EST[licNoVig.estatus] || ['no vigente', 'not current']
+          const fechaEs = licNoVig.desde ? (licNoVig.estatus === 'vencido' ? ` (venció el ${fechaTxt(licNoVig.desde)})` : ` (fecha de expiración en el registro: ${fechaTxt(licNoVig.desde)})`) : ''
+          const fechaEn = licNoVig.desde ? ` (registry expiration date: ${fechaTxt(licNoVig.desde)})` : ''
+          return t(`Su licencia de Puerto Rico aparece <b>${es}</b> en el registro de la Junta de Licenciamiento${fechaEs}. Su número federal (NPI) sigue activo. Si el registro está atrasado o ya renovó, escríbenos por texto y lo corregimos.`, `The Puerto Rico license appears <b>${en}</b> in the Licensing Board registry${fechaEn}. The federal number (NPI) is still active. If the registry is behind or it was renewed, text us and we will fix it.`)
+        })(),
         src: `${t(`Departamento de Salud (ORCPS), consultado el ${fechaTxt(licNoVig.fecha)}`, `PR Health Dept. (ORCPS), checked ${fechaTxt(licNoVig.fecha)}`)} · NPI ${escapeHtml(npi)} · ${npiLink}` })
     } else {
       const partes: string[] = []
@@ -11480,7 +11488,7 @@ async function handleListasFederales(req: any, res: any) {
     <tr class="border-b border-slate-200"><td class="py-2 pr-3 text-[16px]">Médicos en la fila del cruce</td><td class="py-2 text-right text-[16px] font-bold">${nf(junta.total)}</td></tr>
     <tr class="border-b border-slate-200"><td class="py-2 pr-3 text-[16px]">Cruzados con el número de licencia exacto</td><td class="py-2 text-right text-[16px] font-bold">${nf(junta.exacta)}</td></tr>
     <tr class="border-b border-slate-200"><td class="py-2 pr-3 text-[16px]">Con licencia activa</td><td class="py-2 text-right text-[16px] font-bold">${nf(junta.activa)}</td></tr>
-    <tr class="border-b border-slate-200"><td class="py-2 pr-3 text-[16px]">Con licencia que la Junta no da como vigente (vencida, inactiva o suspendida)</td><td class="py-2 text-right text-[16px] font-bold">${nf(junta.noVig)}</td></tr>
+    <tr class="border-b border-slate-200"><td class="py-2 pr-3 text-[16px]">Con licencia que la Junta no da como vigente (vencida, inactiva, cancelada o suspendida)</td><td class="py-2 text-right text-[16px] font-bold">${nf(junta.noVig)}</td></tr>
   </tbody></table>
   <p class="text-[16px] text-slate-600 mt-2">La ficha de cada médico dice su estatus con la fecha en que lo consultamos. Una licencia vencida puede ser una renovación atrasada en el registro: por eso no se publica aquí en lista.</p>
 
