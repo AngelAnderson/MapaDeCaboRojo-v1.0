@@ -25,6 +25,7 @@ import { cargarSenal, type SenalCategoria } from './_lib/la-senal.js'
 import { handleRentas } from './_lib/rentas.js'
 import { handleSuelo } from './_lib/suelo.js'
 import { quiereMarkdown, enviarMd, linkAlternoMd, pieMd } from './_lib/agente-md.js'
+import { LF_META, LF_RAZON, LF_OIG, LF_REIN, LF_OPTOUT, LF_OPTOUT_YA_NO, LF_OIG_POR_NPI, LF_OPTOUT_POR_NPI } from './_lib/listas-federales.js'
 
 // Hard ceiling on every PostgREST call. Without it a stalled connection hangs the
 // await forever and Vercel kills the whole function at maxDuration — that is how 34
@@ -7332,6 +7333,25 @@ async function handleEspecialista(req: any, res: any) {
     }
   }
 
+  // 4b · ¿Medicare le paga? (11 oct 2026, dale de Angel). Solo sale si el NPI está en la lista de
+  // excluidos de la OIG o en la Opt-Out de CMS Y el nombre casa (lo decide listas-federales.py).
+  {
+    const ex = LF_OIG_POR_NPI.get(String(npi))
+    const oo = LF_OPTOUT_POR_NPI.get(String(npi))
+    if (ex || oo) {
+      const q = t('¿Medicare le paga a este proveedor?', 'Does Medicare pay this provider?')
+      if (ex) {
+        filas.push({ q, nivel: 'alerta',
+          a: t(`<b>No.</b> Está en la lista de excluidos de la OIG desde el ${fechaTxt(ex.f || '')}: Medicare, Medicaid y Plan Vital no pagan nada que haga, recete u ordene. Razón legal: ${escapeHtml(LF_RAZON[ex.cod]?.es || ex.cod)}.`, `<b>No.</b> On the OIG exclusion list since ${fechaTxt(ex.f || '')}: Medicare, Medicaid and Plan Vital pay for nothing they do, prescribe or order. Legal reason code: ${escapeHtml(ex.cod)}.`),
+          src: `${t('OIG, lista de excluidos, actualizada el', 'OIG exclusion list, updated')} ${fechaTxt(LF_META.generado)} · NPI ${escapeHtml(npi)} · <a href="/listas-federales" class="font-semibold text-teal-700 underline">${t('las listas', 'the lists')}</a> · <a href="https://exclusions.oig.hhs.gov/" target="_blank" rel="noopener" class="font-semibold text-teal-700 underline">${t('verifícalo', 'check it')}</a>` })
+      } else if (oo) {
+        filas.push({ q, nivel: 'alerta',
+          a: t(`<b>No.</b> Se salió de Medicare desde el ${fechaTxt(oo.desde || '')}. Si tienes Medicare, pagas la consulta completa de tu bolsillo y Medicare no te devuelve nada.${oo.ord ? ' Los laboratorios y estudios que ordene sí los paga Medicare.' : ''}`, `<b>No.</b> Opted out of Medicare since ${fechaTxt(oo.desde || '')}. With Medicare, you pay the full visit out of pocket and Medicare reimburses nothing.${oo.ord ? ' Labs and tests they order are still covered.' : ''}`),
+          src: `${t('CMS, lista Opt-Out, edición del', 'CMS Opt-Out list, edition')} ${fechaTxt(LF_META.optout_edicion)} · NPI ${escapeHtml(npi)} · <a href="/listas-federales" class="font-semibold text-teal-700 underline">${t('las listas', 'the lists')}</a>` })
+      }
+    }
+  }
+
   // 5 · ¿Dónde queda?
   {
     const q = t('¿Dónde queda?', 'Where is it?')
@@ -11327,6 +11347,193 @@ if(V2)V2.classList.toggle('hidden',!(t&&vis2===0));}});})();</script>`
     title: '¿Tu médico sigue en MMM para 2027? Búscalo por nombre o pueblo',
     description: 'Comparamos el directorio de MMM de junio 2026 con el de enero 2027. Busca a tu médico antes del 7 de diciembre. Gratis, sin cuenta.',
     slug: 'se-fue-tu-medico', bodyHtml: body, jsonLd: jsonLd as any,
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+  }))
+}
+
+// =============== /listas-federales — QUIÉN NO LE PUEDE COBRAR A MEDICARE ===============
+// 11 oct 2026 (dale de Angel: "esa lista debe ser pública, con razones y por qué"). 2 listas
+// públicas del gobierno federal que nadie en PR revisa antes de llamar: la de excluidos de la OIG
+// (Medicare, Medicaid y Plan Vital no pagan) y la de Opt-Out de CMS (se salieron de Medicare).
+// La data vive en _lib/listas-federales.ts, generada por registro-sync/scripts/listas-federales.py:
+// sin tabla y sin cron; refrescar = correr el script y desplegar.
+// REGLA DE TONO: es un registro público, no una acusación. Cada fila dice la razón LEGAL exacta
+// (b14 = un préstamo de estudios, que no es un delito), con fecha y fuente, y la página da la vía
+// de réplica. Nunca dirección ni fecha de nacimiento: solo pueblo. Enlace a la ficha solo si el
+// NPI casa exacto Y el nombre casa (2 palabras).
+// Care Compare (10 oct, scratchpad de la sesión): de 5,300 médicos del Registro con teléfono en el
+// archivo de Medicare, en 2,751 el número del Registro no está entre los de Medicare.
+const LF_TEL = { conTel: 5300, distinto: 2751, fecha: '10 de octubre de 2026' }
+
+async function handleListasFederales(req: any, res: any) {
+  const nf = (n: number) => n.toLocaleString('en-US')
+  try {
+    supabase.from('api_logs').insert({
+      endpoint: 'mapa-pages/listas-federales', method: 'GET', query: null,
+      user_agent: String(req.headers['user-agent'] || '').substring(0, 500),
+      ip: String(req.headers['x-forwarded-for'] || '').split(',')[0].substring(0, 45),
+      referrer: String(req.headers['referer'] || '').substring(0, 500) || null,
+      response_count: 0,
+    }).then(() => {}, () => {})
+  } catch { /* fire-and-forget */ }
+
+  const fecha = (d: string | null) => d ? new Date(d + 'T12:00:00').toLocaleDateString('es-PR', { day: 'numeric', month: 'long', year: 'numeric' }) : 'sin fecha'
+  const razon = (c: string) => LF_RAZON[c]?.es || `Código ${c}`
+  const anioActual = String(new Date().getFullYear())
+  const oigAnio = LF_OIG.filter(x => (x.f || '').startsWith(anioActual)).length
+
+  // Cuántos por razón, de la más común a la menos.
+  const porRazon: Record<string, number> = {}
+  for (const x of LF_OIG) porRazon[x.cod] = (porRazon[x.cod] || 0) + 1
+  const razones = Object.entries(porRazon).sort((a, b) => b[1] - a[1])
+
+  // La Junta: lo que ya cruzamos, contado en vivo (el cruce de 10,254 médicos corre desde el 10 oct).
+  let junta = { total: 0, exacta: 0, activa: 0, noVig: 0 }
+  try {
+    for (let from = 0; ; from += 1000) {
+      const { data } = await supabase.from('testigo_orcps').select('match_confianza,licencia_estatus').range(from, from + 999)
+      for (const r of (data || [])) {
+        junta.total++
+        if (r.match_confianza === 'exacta') {
+          junta.exacta++
+          if (String(r.licencia_estatus || '').toLowerCase() === 'activo') junta.activa++; else junta.noVig++
+        }
+      }
+      if (!data || data.length < 1000) break
+    }
+  } catch { /* aditivo: sin la Junta, la sección sale sin números */ }
+
+  const nombre = (nom: string, s: string | null) => s
+    ? `<a href="/especialista/${escapeHtml(s)}" class="text-teal-700 font-semibold underline">${escapeHtml(nom)}</a>`
+    : `<span class="font-semibold text-slate-900">${escapeHtml(nom)}</span>`
+  const quien = (cat: string, esp: string) => escapeHtml(esp ? `${cat} · ${esp}` : cat)
+
+  const filaOig = (x: typeof LF_OIG[number]) => `<li class="py-3" data-b="${escapeHtml((x.nom + ' ' + x.cat + ' ' + x.esp + ' ' + x.pueblo + ' ' + razon(x.cod)).toLowerCase())}">
+      <p class="m-0 text-[17px]">${nombre(x.nom, x.s)} <span class="text-slate-600">· ${quien(x.cat, x.esp)} · ${escapeHtml(x.pueblo || 'sin pueblo')}${x.est && x.est !== 'PR' ? ` (lista de ${escapeHtml(x.est)})` : ''}</span></p>
+      <p class="m-0 mt-1 text-[16px] text-slate-800">Excluido desde el <b>${fecha(x.f)}</b>. Razón: ${escapeHtml(razon(x.cod))}.</p></li>`
+  const porAnio: Record<string, typeof LF_OIG> = {}
+  for (const x of LF_OIG) (porAnio[(x.f || '').slice(0, 4) || 'Sin fecha'] ||= []).push(x)
+  const anios = Object.keys(porAnio).sort((a, b) => b.localeCompare(a))
+  const listaOig = anios.map(a => `<section class="grupo mb-4"><h3 class="text-lg font-bold text-slate-900 border-b-2 border-slate-200 pb-1 mb-0">${escapeHtml(a)} <span class="text-slate-600 font-normal text-base">· ${porAnio[a].length}</span></h3>
+      <ul class="list-none pl-0 m-0 divide-y divide-slate-100">${porAnio[a].map(filaOig).join('')}</ul></section>`).join('')
+
+  const listaRein = LF_REIN.map(x => `<li class="py-3"><p class="m-0 text-[17px]"><span class="font-semibold text-slate-900">${escapeHtml(x.nom)}</span> <span class="text-slate-600">· ${quien(x.cat, x.esp)} · ${escapeHtml(x.pueblo || 'sin pueblo')}</span></p>
+      <p class="m-0 mt-1 text-[16px] text-slate-800">Excluido el ${fecha(x.f)} (${escapeHtml(razon(x.cod))}). <b>Reinstalado el ${fecha(x.fr)}</b>: ya puede volver a cobrarle a Medicare.</p></li>`).join('')
+
+  const filaOpt = (x: typeof LF_OPTOUT[number]) => `<li class="py-3" data-b="${escapeHtml((x.nom + ' ' + x.esp + ' ' + x.pueblo).toLowerCase())}">
+      <p class="m-0 text-[17px]">${nombre(x.nom, x.s)} <span class="text-slate-600">· ${escapeHtml(x.esp)} · ${escapeHtml(x.pueblo || 'sin pueblo')}</span>${x.nuevo ? ' <span class="inline-block bg-amber-100 text-amber-900 text-[15px] font-semibold rounded px-2">nuevo este año</span>' : ''}</p>
+      <p class="m-0 mt-1 text-[16px] text-slate-800">Fuera de Medicare desde el <b>${fecha(x.desde)}</b>, hasta el ${fecha(x.hasta)} (se renueva sola si no la cancela).${x.ord ? ' Medicare sí paga los laboratorios y estudios que ordene.' : ''}</p></li>`
+  const listaOpt = LF_OPTOUT.map(filaOpt).join('')
+  const listaYaNo = LF_OPTOUT_YA_NO.map(x => `<li class="py-2 text-[16px]"><span class="font-semibold text-slate-900">${escapeHtml(x.nom)}</span> <span class="text-slate-600">· ${escapeHtml(x.esp)} · ${escapeHtml(x.pueblo || 'sin pueblo')}</span> · estaba fuera desde el ${fecha(x.desde)}; ya no aparece en la lista.</li>`).join('')
+
+  const pctTel = Math.round(100 * LF_TEL.distinto / LF_TEL.conTel)
+  const pctGrad = LF_META.cc_con_grad ? Math.round(100 * LF_META.cc_grad_1987 / LF_META.cc_con_grad) : 0
+
+  const FAQ: [string, string][] = [
+    ['¿Qué quiere decir que alguien esté excluido por la OIG?',
+     'Que Medicare, Medicaid (en Puerto Rico, Plan Vital) y cualquier programa federal de salud no pagan nada que esa persona o negocio haga, recete u ordene, ni siquiera si trabaja como empleado de otro. La OIG es la Oficina del Inspector General del Departamento de Salud federal. La razón legal de cada uno está escrita al lado de su nombre: no todas son delitos (no pagar un préstamo de estudios también excluye).'],
+    ['¿Qué quiere decir que un médico se salió de Medicare?',
+     'Que firmó con Medicare que no le va a facturar por 2 años, y se renueva sola. Si tienes Medicare y vas, pagas la consulta completa de tu bolsillo con un contrato privado y Medicare no te devuelve nada. No es una falta: es una decisión del médico. Lo importante es saberlo antes de ir.'],
+    ['¿De dónde sale esto?',
+     `De 2 archivos públicos: la lista de excluidos de la OIG (archivo completo y los reinstalados de cada mes) y la lista Opt-Out de CMS (edición del ${fecha(LF_META.optout_edicion)}, comparada con la de ${fecha(LF_META.optout_comparada)}). Se cruzan con el Registro por número federal (NPI) y nombre. Actualizado el ${fecha(LF_META.generado)}.`],
+    ['Estoy en esta lista y está mal, o ya me reinstalaron. ¿Cómo lo corrijo?',
+     'Escríbeme por texto al 787-417-7711 o a angel@angelanderson.com con tu nombre y NPI, y se corrige el mismo día. Si la OIG te reinstaló, sales de la lista de excluidos en la próxima actualización y pasas a la de reinstalados. La fuente oficial para confirmar cualquier nombre es la búsqueda de la OIG.'],
+  ]
+
+  const body = `
+<article class="max-w-3xl mx-auto px-4 py-8">
+  <nav class="text-[16px] text-slate-600 mb-3"><a href="/" class="hover:text-teal-700 underline">Registro Médico PR</a> › Listas federales</nav>
+
+  <h1 class="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">Antes de llamar, mira si Medicare le paga</h1>
+
+  <p class="text-lg text-slate-700 mt-4">El gobierno federal publica 2 listas que casi nadie en Puerto Rico revisa: <b>a quién no le paga Medicare</b> porque lo excluyó, y <b>qué médicos se salieron de Medicare</b> por su cuenta. Las cruzamos con el Registro y las ponemos aquí, con el nombre, el pueblo, la fecha y la razón legal de cada uno.</p>
+
+  <div class="grid grid-cols-2 gap-3 mt-6">
+    <div class="bg-slate-900 text-white rounded-xl p-4"><div class="text-4xl font-black">${nf(LF_OIG.length)}</div><div class="text-[16px] mt-1">personas y negocios de Puerto Rico excluidos por la OIG hoy</div></div>
+    <div class="bg-slate-100 rounded-xl p-4"><div class="text-4xl font-black text-slate-900">${nf(oigAnio)}</div><div class="text-[16px] mt-1 text-slate-700">de esos, excluidos en ${anioActual}</div></div>
+    <div class="bg-slate-100 rounded-xl p-4"><div class="text-4xl font-black text-slate-900">${nf(LF_OPTOUT.length)}</div><div class="text-[16px] mt-1 text-slate-700">médicos que se salieron de Medicare</div></div>
+    <div class="bg-slate-100 rounded-xl p-4"><div class="text-4xl font-black text-slate-900">${nf(LF_REIN.length)}</div><div class="text-[16px] mt-1 text-slate-700">reinstalados en Puerto Rico desde enero de 2025</div></div>
+  </div>
+
+  <label for="q" class="block text-lg font-bold text-slate-900 mt-8 mb-2">Busca un nombre, una especialidad o un pueblo</label>
+  <input id="q" type="search" placeholder="Ejemplo: Ponce o un apellido" class="w-full border-2 border-slate-400 rounded-lg px-3 py-3 text-lg" autocomplete="off">
+  <p id="vacio" class="hidden text-[16px] text-slate-800 bg-slate-50 border border-slate-300 rounded-lg p-3 mt-3">No aparece en ninguna de las 2 listas. Eso quiere decir que el gobierno federal no lo tiene excluido ni fuera de Medicare. No dice nada de si acepta tu plan: eso se pregunta al llamar.</p>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">1. Excluidos por la OIG: Medicare, Medicaid y Plan Vital no les pagan</h2>
+  <p class="text-[17px] text-slate-700">Nada que hagan, receten u ordenen lo paga un programa federal de salud. Las razones, de la más común a la menos:</p>
+  <table class="w-full mt-3 text-[16px]"><tbody>${razones.map(([c, n]) => `<tr class="border-b border-slate-200"><td class="py-2 pr-3 text-[16px] text-slate-800">${escapeHtml(razon(c))}</td><td class="py-2 text-right text-[16px] font-bold text-slate-900">${nf(n)}</td></tr>`).join('')}</tbody></table>
+  <p class="text-[16px] text-slate-600 mt-3">Ordenados del más reciente al más viejo. Los nombres en azul tienen ficha en el Registro y el número federal casa exacto.</p>
+  <div id="lista1" class="mt-4">${listaOig}</div>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Los que volvieron: reinstalados</h2>
+  <p class="text-[17px] text-slate-700">Cumplieron su exclusión y la OIG los reinstaló. Ya pueden cobrarle a Medicare otra vez.</p>
+  <ul class="list-none pl-0 m-0 divide-y divide-slate-100">${listaRein || '<li class="py-2 text-[16px]">Ninguno en Puerto Rico desde enero de 2025.</li>'}</ul>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">2. Se salieron de Medicare</h2>
+  <p class="text-[17px] text-slate-700">Firmaron con Medicare que no le facturan. Si tienes Medicare y vas, pagas todo de tu bolsillo y Medicare no te devuelve nada. Es una decisión del médico, no una falta: lo importante es saberlo antes de ir.</p>
+  <ul id="lista2" class="list-none pl-0 m-0 mt-3 divide-y divide-slate-100">${listaOpt}</ul>
+  ${listaYaNo ? `<h3 class="text-lg font-bold text-slate-900 mt-6 mb-1">Ya no aparecen fuera de Medicare</h3><p class="text-[16px] text-slate-700 m-0">Estaban en la lista de ${fecha(LF_META.optout_comparada)} y no en la de ${fecha(LF_META.optout_edicion)}. Puede ser que volvieron a Medicare, que se retiraron o que se mudaron.</p><ul class="list-none pl-0 m-0">${listaYaNo}</ul>` : ''}
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">3. La licencia de Puerto Rico, según la Junta</h2>
+  <p class="text-[17px] text-slate-700">Estamos cruzando cada médico del Registro con el registro de licencias del Departamento de Salud, por número de licencia. Va despacio a propósito, para no cargar el sistema del gobierno.</p>
+  <table class="w-full mt-3 text-[16px]"><tbody>
+    <tr class="border-b border-slate-200"><td class="py-2 pr-3 text-[16px]">Médicos en la fila del cruce</td><td class="py-2 text-right text-[16px] font-bold">${nf(junta.total)}</td></tr>
+    <tr class="border-b border-slate-200"><td class="py-2 pr-3 text-[16px]">Cruzados con el número de licencia exacto</td><td class="py-2 text-right text-[16px] font-bold">${nf(junta.exacta)}</td></tr>
+    <tr class="border-b border-slate-200"><td class="py-2 pr-3 text-[16px]">Con licencia activa</td><td class="py-2 text-right text-[16px] font-bold">${nf(junta.activa)}</td></tr>
+    <tr class="border-b border-slate-200"><td class="py-2 pr-3 text-[16px]">Con licencia que la Junta no da como vigente (vencida, inactiva o suspendida)</td><td class="py-2 text-right text-[16px] font-bold">${nf(junta.noVig)}</td></tr>
+  </tbody></table>
+  <p class="text-[16px] text-slate-600 mt-2">La ficha de cada médico dice su estatus con la fecha en que lo consultamos. Una licencia vencida puede ser una renovación atrasada en el registro: por eso no se publica aquí en lista.</p>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">4. Lo que dice el archivo de Medicare (Care Compare)</h2>
+  <p class="text-[17px] text-slate-700">Medicare publica su propio archivo de médicos. ${nf(LF_META.cc_en_registro)} médicos del Registro están ahí. 2 cosas que salen de ponerlo al lado:</p>
+  <ul class="list-none pl-0 mt-3 space-y-3">
+    <li class="border-l-4 border-teal-500 pl-3 text-[17px]"><b>En ${pctTel} de cada 100 médicos, el teléfono no cuadra.</b> De ${nf(LF_TEL.conTel)} médicos con teléfono en el archivo de Medicare, en ${nf(LF_TEL.distinto)} el número que tiene el registro federal no está entre los de Medicare (${LF_TEL.fecha}). El gobierno no se pone de acuerdo con el gobierno sobre a qué número llamar. Si no te contestan, pídenos el otro número por texto.</li>
+    <li class="border-l-4 border-teal-500 pl-3 text-[17px]"><b>${pctGrad} de cada 100 se graduaron en 1987 o antes.</b> De ${nf(LF_META.cc_con_grad)} médicos con año de graduación, ${nf(LF_META.cc_grad_1987)} tienen hoy unos 65 años o más. Es el tamaño del relevo que viene.</li>
+  </ul>
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Lo que esto NO dice</h2>
+  <ul class="list-none pl-0 space-y-2 text-[16px] text-slate-800">
+    <li class="border-l-4 border-slate-300 pl-3"><b>No es una acusación.</b> Es lo que dicen 2 archivos públicos del gobierno federal, con la razón legal que el gobierno escribió.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>No todas las exclusiones son delitos.</b> No pagar un préstamo de estudios de salud también excluye, y así lo dice al lado del nombre.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>Un nombre parecido no es la misma persona.</b> Solo enlazamos a la ficha cuando el número federal casa exacto. Para estar seguro, confirma en la búsqueda oficial de la OIG.</li>
+    <li class="border-l-4 border-slate-300 pl-3"><b>No aparecer no quiere decir que acepta tu plan.</b> Eso se pregunta al llamar.</li>
+  </ul>
+
+  <div class="bg-teal-50 border-2 border-teal-300 rounded-xl p-4 mt-8">
+    <p class="text-[17px] text-slate-900 m-0"><b>¿Estás en la lista y está mal, o ya te reinstalaron?</b> Escríbeme y se corrige el mismo día.</p>
+    <a href="sms:+17874177711" class="mt-3 flex items-center justify-center min-h-[56px] rounded-xl bg-teal-700 text-white text-lg font-bold no-underline">Textea al 787-417-7711</a>
+    <p class="text-[16px] text-slate-700 mt-3 mb-0">O por correo: <a href="mailto:angel@angelanderson.com" class="text-teal-700 underline">angel@angelanderson.com</a>, con tu nombre y tu NPI.</p>
+  </div>
+
+  <p class="text-[16px] text-slate-600 mt-8 border-t border-slate-200 pt-4">Fuentes: lista de excluidos de la OIG (<a href="https://oig.hhs.gov/exclusions/exclusions_list.asp" class="underline" rel="noopener">archivo completo y reinstalados mensuales</a>; <a href="https://exclusions.oig.hhs.gov/" class="underline" rel="noopener">búsqueda oficial</a>) y lista Opt-Out de CMS (<a href="https://data.cms.gov/provider-characteristics/medicare-provider-supplier-enrollment/opt-out-affidavits" class="underline" rel="noopener">data.cms.gov</a>), edición del ${fecha(LF_META.optout_edicion)}. Razones legales según la página de autoridades de exclusión de la OIG. Care Compare: archivo de médicos de Medicare (Doctors and Clinicians). Actualizado el ${fecha(LF_META.generado)}. Sin dirección ni fecha de nacimiento: solo el pueblo.</p>
+</article>
+<script>(function(){var q=document.getElementById('q'),V=document.getElementById('vacio');if(!q)return;
+function n(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');}
+q.addEventListener('input',function(){var t=n(q.value.trim());var vis=0;
+document.querySelectorAll('#lista1 .grupo').forEach(function(sec){var c=0;sec.querySelectorAll('li').forEach(function(li){var ok=!t||n(li.getAttribute('data-b')).indexOf(t)>-1;li.style.display=ok?'':'none';if(ok)c++;});sec.style.display=c?'':'none';vis+=c;});
+document.querySelectorAll('#lista2 li').forEach(function(li){var ok=!t||n(li.getAttribute('data-b')).indexOf(t)>-1;li.style.display=ok?'':'none';if(ok)vis++;});
+if(V)V.classList.toggle('hidden',!(t&&vis===0));});})();</script>`
+
+  const jsonLd = [
+    {
+      '@context': 'https://schema.org', '@type': 'Article',
+      headline: 'Antes de llamar, mira si Medicare le paga: excluidos por la OIG y médicos fuera de Medicare en Puerto Rico',
+      description: `${LF_OIG.length} personas y negocios de Puerto Rico excluidos por la OIG (Medicare, Medicaid y Plan Vital no les pagan) y ${LF_OPTOUT.length} médicos que se salieron de Medicare, con la razón legal y la fecha de cada uno.`,
+      author: { '@type': 'Person', name: 'Angel Anderson' },
+      publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
+      inLanguage: 'es', url: 'https://registromedicopr.com/listas-federales', dateModified: LF_META.generado,
+      spatialCoverage: [{ '@type': 'Place', name: 'Puerto Rico' }],
+    },
+    { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: FAQ.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) },
+  ]
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=21600, stale-while-revalidate=86400')
+  res.status(200).send(layout({
+    bareTitle: true,
+    title: '¿Medicare le paga a tu médico? Excluidos y fuera de Medicare en PR',
+    description: `${LF_OIG.length} excluidos por la OIG y ${LF_OPTOUT.length} médicos fuera de Medicare en Puerto Rico, con la razón y la fecha. Busca por nombre o pueblo. Gratis.`,
+    slug: 'listas-federales', bodyHtml: body, jsonLd: jsonLd as any,
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
   }))
 }
@@ -23300,6 +23507,7 @@ const PAGE_CANONICAL: Record<string, string> = {
   'expediente-mmm': 'https://registromedicopr.com/expediente-mmm',
   'telefonos-muertos': 'https://registromedicopr.com/telefonos-muertos',
   'se-fue-tu-medico': 'https://registromedicopr.com/se-fue-tu-medico',
+  'listas-federales': 'https://registromedicopr.com/listas-federales',
   'expediente-power-expectations': 'https://puertoricosinfiltros.com/expediente-power-expectations',
   'registro-puedo-volver': 'https://registromedicopr.com/puedo-volver',
   'rendimiento': 'https://puertoricosinfiltros.com/rendimiento',
@@ -23465,6 +23673,7 @@ export default async function handler(req: any, res: any) {
     case 'expediente-mmm': return await handleExpedienteMMM(req, res)
     case 'telefonos-muertos': return await handleTelefonosMuertos(req, res)
     case 'se-fue-tu-medico': return await handleSeFueTuMedico(req, res)
+    case 'listas-federales': return await handleListasFederales(req, res)
     case 'carta-141': return await handleCarta141(req, res)
     case 'registro-puedo-volver': return await handleRegistroPuedoVolver(req, res)
     case 'recuperacion': return await handleRecuperacion(req, res)

@@ -263,6 +263,7 @@ export default async function handler(req: any, res: any) {
       // El reloj de la red: quién salió del directorio de MMM entre ediciones. Publicado
       // 22 ago 2026, 54 días antes de que abra la ventana Medicare. Cambia con cada edición.
       { slug: 'se-fue-tu-medico', priority: 0.9, changefreq: 'weekly' },
+      { slug: 'listas-federales', priority: 0.8, changefreq: 'monthly' },
       // El clúster de cuido de mayores: existían, servían 200 desde los 3 dominios
       // y ningún sitemap las anunciaba. Ya tienen dueño en PAGE_CANONICAL.
       { slug: 'cuido', priority: 0.8, changefreq: 'monthly' },                 // hogares de cuido licenciados por Familia

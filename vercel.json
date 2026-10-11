@@ -276,6 +276,10 @@
       "destination": "/api/mapa-pages?page=se-fue-tu-medico"
     },
     {
+      "source": "/listas-federales",
+      "destination": "/api/mapa-pages?page=listas-federales"
+    },
+    {
       "source": "/expediente-power-expectations",
       "destination": "/api/mapa-pages?page=expediente-power-expectations"
     },
