@@ -15,7 +15,8 @@ const supabase = createClient(
 // place_reviews_approved (security_invoker) y place_review_stats / get_demand_for_keywords
 // (INVOKER) leen place_reviews y demand_signals, que traen telefono y no son publicas.
 // Con la anon daban 401 el 100% del tiempo (fichas sin resenas, categorias sin demanda).
-// NO se usa para places ni local_knowledge: esas siguen con anon para respetar el RLS.
+// NO se usa para places: esa sigue con anon para respetar el RLS. local_knowledge SÍ va por aquí
+// (12 oct 2026: anon no tiene grant, daba 401 en cada categoría; la consulta filtra verified=true).
 const supabaseSrv = process.env.SUPABASE_SERVICE_ROLE_KEY
   ? createClient(process.env.VITE_SUPABASE_URL || '', process.env.SUPABASE_SERVICE_ROLE_KEY)
   : supabase;
@@ -1055,7 +1056,7 @@ export default async function handler(req: any, res: any) {
   if (detailRoute && filtered.length > 0) {
     try {
       const placeIds = filtered.map((p: any) => p.id).filter(Boolean);
-      const { data: memorias } = await supabase
+      const { data: memorias } = await supabaseSrv
         .from('local_knowledge')
         .select('place_id, answer, voice_style, created_at')
         .in('place_id', placeIds)

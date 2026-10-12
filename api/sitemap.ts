@@ -11,6 +11,12 @@ const supabase = createClient(
   opcionesConPlazo(12000),
 );
 
+// 12 oct 2026: v_registro_muni_ratio ya no es legible por anon (401 el 100% del tiempo) y el
+// sitemap salía sin las 78 páginas /pueblo/. Cliente de SERVIDOR solo para esa lectura agregada.
+const supabaseSrv = process.env.SUPABASE_SERVICE_ROLE_KEY
+  ? createClient(process.env.VITE_SUPABASE_URL || '', process.env.SUPABASE_SERVICE_ROLE_KEY, opcionesConPlazo(12000))
+  : supabase;
+
 // Host-aware robots.txt — served via rewrite /robots.txt → /api/sitemap?robots=1
 // (the static public/robots.txt was removed: it advertised only mapa+registro
 // sitemaps on all three domains, leaving puertoricosinfiltros.com undiscoverable).
@@ -335,7 +341,7 @@ export default async function handler(req: any, res: any) {
     });
 
     // Registro Médico PR — /pueblo/:municipio (78 semáforos de acceso por pueblo)
-    const { data: puebloMunis } = await supabase
+    const { data: puebloMunis } = await supabaseSrv
       .from('v_registro_muni_ratio')
       .select('municipio');
     (puebloMunis || []).forEach((m: any) => {
