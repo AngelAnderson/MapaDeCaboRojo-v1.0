@@ -636,8 +636,16 @@
       "destination": "/api/mapa-pages?page=notfound"
     },
     {
-      "source": "/(.*)",
+      "source": "/",
       "destination": "/clasico/index.html"
+    },
+    {
+      "source": "/clasico",
+      "destination": "/clasico/index.html"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/api/mapa-pages?page=notfound"
     }
   ],
   "functions": {
