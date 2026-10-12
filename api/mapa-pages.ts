@@ -23739,6 +23739,17 @@ function wrongHost(req: any, page: string): string | null {
     }
     return 'https://' + OWN_WWW[host] + ((PAGE_CANONICAL[page] || 'https://x/').replace(/^https?:\/\/[^/]+/, '') || '/')
   }
+  // Fichas y hubs del Registro desde otro dominio (12 oct 2026): antes daban 200 con canonical
+  // al Registro desde mapadecaborojo.com y puertoricosinfiltros.com (Search Console: "Duplicada,
+  // Google eligió otra canónica"). La ruta varía, así que no cabe en PAGE_CANONICAL: 301 con la
+  // misma ruta. Solo se conserva ?lang=en (el único parámetro con página propia).
+  if ((page === 'especialista' || page === 'registro-hub') && host && host !== 'registromedicopr.com' && !/\.vercel\.app$/.test(host)) {
+    const [p, qs] = String(req.url || '').split('?')
+    if (/^\/(especialista|registro)\//.test(p)) {
+      const en = new URLSearchParams(qs || '').get('lang') === 'en'
+      return 'https://registromedicopr.com' + p + (en ? '?lang=en' : '')
+    }
+  }
   const target = PAGE_CANONICAL[page]
   if (!target) return null
   if (!host) return null

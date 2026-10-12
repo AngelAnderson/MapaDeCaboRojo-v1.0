@@ -404,7 +404,10 @@ export default async function handler(req: any, res: any) {
     // entidad de salud y otras 10 que no son del Registro: 187 URLs que dan 301 a /registro y
     // que Search Console reporta como "Página con redirección" dentro del sitemap.
     const specUrlSet = new Set(SPEC_URLS);
-    (combos || []).filter((c: any) => specUrlSet.has(slugify(c.subcategory))).forEach((c: { subcategory: string; municipality: string; n: number }) => {
+    // Y solo pueblos de verdad (12 oct 2026): un dato sucio ("Área Norte") generaba
+    // /registro/terapeuta-del-habla/area-norte, que redirige. Lista = los 78 de puebloMunis.
+    const pueblosOk = new Set((puebloMunis || []).map((m: any) => slugify(String(m.municipio || ''))));
+    (combos || []).filter((c: any) => specUrlSet.has(slugify(c.subcategory)) && (!pueblosOk.size || pueblosOk.has(slugify(c.municipality)))).forEach((c: { subcategory: string; municipality: string; n: number }) => {
       // Más proveedores en el pueblo = página más completa = más prioridad de rastreo.
       const priority = c.n >= 10 ? 0.65 : c.n >= 3 ? 0.55 : 0.45;
       urls.push(`
