@@ -254,9 +254,12 @@ function layout(opts: {
   const brandName = isPRSF ? 'Puerto Rico Sin Filtros' : isReg ? 'Registro Médico PR' : 'Mapa de Cabo Rojo'
   // Each domain has its own GA4 property — keep data clean/separate from Mapa.
   const GA = isReg ? 'G-P1H28B6EET' : isPRSF ? 'G-S848YPDVZT' : 'G-6KBMV0LKQ4'
-  const canonical = opts.canonicalUrl || `${canonicalBase}/${opts.slug}`
+  // La versión en inglés lleva SU propio canonical (12 oct 2026). Antes apuntaba a la española
+  // y Google trataba la ?lang=en como duplicado, así que ignoraba el hreflang.
+  const canonicalEs = opts.canonicalUrl || `${canonicalBase}/${opts.slug}`
+  const canonical = isEn && isReg ? `${canonicalEs}${canonicalEs.includes('?') ? '&' : '?'}lang=en` : canonicalEs
   const jsonLd = (opts.jsonLd
-    ? `<script type="application/ld+json">${JSON.stringify(opts.jsonLd)}</script>`
+    ? `<script type="application/ld+json">${JSON.stringify(opts.jsonLd).replace(/</g, '\\u003c')}</script>`
     : '') + entityGraphLd(canonicalBase, brandName)
 
   // OG image — per-page if provided, else fall back to canonical /menos-revolu OG.
@@ -474,10 +477,10 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <title>${escapeHtml(opts.bareTitle ? opts.title : `${opts.title} · ${brandName}`)}</title>
 <meta name="description" content="${escapeHtml(opts.description)}">
 <link rel="canonical" href="${canonical}">
-${opts.md ? linkAlternoMd(canonical) : ''}
-${isReg ? `<link rel="alternate" hreflang="es-PR" href="${canonical}">
-<link rel="alternate" hreflang="en" href="${canonical}${canonical.includes('?') ? '&' : '?'}lang=en">
-<link rel="alternate" hreflang="x-default" href="${canonical}">` : ''}
+${opts.md ? linkAlternoMd(canonicalEs) : ''}
+${isReg ? `<link rel="alternate" hreflang="es-PR" href="${canonicalEs}">
+<link rel="alternate" hreflang="en" href="${canonicalEs}${canonicalEs.includes('?') ? '&' : '?'}lang=en">
+<link rel="alternate" hreflang="x-default" href="${canonicalEs}">` : ''}
 ${isPRSF ? '<meta name="google-site-verification" content="N42qvVBU_PKj99wLrOAEelsysbx3cT_ZtNgD5iFzXQk">' : ''}
 <meta property="og:title" content="${escapeHtml(opts.title)}">
 <meta property="og:description" content="${escapeHtml(opts.description)}">
@@ -4877,7 +4880,7 @@ ${shareRow({ text: te(`¿Cuántos médicos especialistas tiene tu pueblo? Los 78
 ${regDisclaimer(en)}
 ${SHARE_COPY_SCRIPT}`
     const jsonLd = [
-      { '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com', encodingFormat: 'text/html' }, name: 'Acceso a especialistas médicos por municipio de Puerto Rico',
+      { '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com/pueblo', encodingFormat: 'text/html' }, name: 'Acceso a especialistas médicos por municipio de Puerto Rico',
         description: `Los 78 municipios de Puerto Rico rankeados por especialistas médicos verificados (NPPES) por cada 10,000 habitantes. Mediana de la isla: ${mediana.toFixed(1)}. ${rojos} municipios bajo 5 por 10,000. ${ceros.length} municipios con cero especialistas.`,
         url: 'https://registromedicopr.com/pueblo', inLanguage: 'es', license: 'https://creativecommons.org/licenses/by/4.0/',
         creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' } },
@@ -5219,7 +5222,7 @@ ${regDisclaimer(en)}
 ${SHARE_COPY_SCRIPT}`
 
   const jsonLd = [
-    { '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
+    { '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: pageUrl, encodingFormat: 'text/html' }, license: 'https://creativecommons.org/licenses/by/4.0/',
       name: `Acceso a especialistas médicos en ${town.municipio}, Puerto Rico`,
       description: `${town.municipio} tiene ${town.especialistas} especialistas médicos verificados (NPPES) para ${town.poblacion.toLocaleString('en-US')} habitantes: ${town.por.toFixed(1)} por cada 10,000 (mediana de PR: ${mediana.toFixed(1)}). Puesto ${rank} de 78 municipios.`,
       url: pageUrl, inLanguage: 'es', spatialCoverage: { '@type': 'Place', name: `${town.municipio}, Puerto Rico` },
@@ -6535,10 +6538,23 @@ async function resolverSlugRenombrado(slugViejo: string): Promise<string | null>
 //   despublicar   → la persona pidió salir. Esta ruta sirve 410.
 //   no_reingestar → que el sync de NPPES no resucite el dato viejo. No baja nada.
 async function fueRemovidoAPeticion(slug: string): Promise<boolean> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('remocion_solicitudes')
     .select('id').eq('slug', slug).eq('despublicar', true).limit(1)
+  if (error) throw new BaseCaida(error.message)
   return !!(data && data.length)
+}
+
+// La base no contestó (timeout, 401 por llave vencida, 522). Eso NO es "la ficha no existe":
+// un 404 le dice a Google que la borre, y pasó 2 veces (24 ago-2 sep llave vencida, 7-8 oct
+// apagón). 503 + Retry-After es "vuelve después" y no desindexa. Sin caché para que el CDN no
+// guarde el error.
+class BaseCaida extends Error {}
+function responderBaseCaida(res: any) {
+  res.setHeader('Retry-After', '600')
+  res.setHeader('Cache-Control', 'no-store')
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+  res.status(503).send('El registro no pudo leer la base en este momento. Vuelve en unos minutos. / Temporarily unavailable, retry shortly.')
 }
 
 function responderRemovido(res: any, req: any) {
@@ -6571,7 +6587,8 @@ async function handleEspecialistaRemover(req: any, res: any) {
   }))
   const tel = `<a href="sms:+17874177711" class="text-teal-700 font-semibold">787-417-7711</a>`
   if (!slug) { pagina(400, '<h1>Falta la ficha</h1>'); return }
-  const yaSalio = await fueRemovidoAPeticion(slug)
+  let yaSalio = false
+  try { yaSalio = await fueRemovidoAPeticion(slug) } catch { responderBaseCaida(res); return }
   const hecho = `<h1>Listo. Tu ficha salió del registro.</h1><p class="text-slate-600">Borramos el teléfono, la dirección y la web, y la página ya no se publica. Le pedimos a Google que la saque (puede tardar unos días). La actualización mensual del registro federal no la va a volver a poner.</p><p class="text-slate-600 mt-3">Si fue un error, escríbenos por texto al ${tel}.</p>`
   const { data: place } = await supabase.from('places')
     .select('name,slug').eq('slug', slug).not('npi', 'is', null).maybeSingle()
@@ -6659,9 +6676,16 @@ async function handleEspecialista(req: any, res: any) {
   // rastreadores reciben 503 + Retry-After (señal estándar de "vuelve después", no
   // desindexa); las personas siguen viendo la ficha. Quitar la variable y redeployar
   // cuando la base tenga compute suficiente o la ficha baje a 1 consulta.
+  //
+  // 12 oct 2026: Googlebot y Bingbot PASAN aunque el interruptor esté puesto. Desde el 8 oct
+  // las ~28,000 fichas del sitemap le daban 503 a Google (medido: 3 de 3) y Search Console las
+  // reportaba como error de servidor; una semana más y empiezan a salir del índice. La ficha
+  // se cachea 24 h + 7 días stale en el CDN, así que los 2 buscadores cuestan ~1 render por
+  // URL al día. Los demás rastreadores (IA, SEO, scrapers) siguen cerrados con la variable.
   if (process.env.REGISTRO_BOTS_503 === '1') {
     const ua = String(req.headers?.['user-agent'] || '')
-    if (/bot|crawl|spider|slurp|GPTBot|ClaudeBot|Claude-Web|anthropic-ai|Perplexity|Bytespider|CCBot|Amazonbot|meta-external|OAI-SearchBot|Applebot|DuckDuck|YandexBot|Bingbot|Googlebot|Google-Extended|cohere/i.test(ua)) {
+    const buscador = /Googlebot|Google-InspectionTool|bingbot/i.test(ua) && !/Google-Extended/i.test(ua)
+    if (!buscador && /bot|crawl|spider|slurp|GPTBot|ClaudeBot|Claude-Web|anthropic-ai|Perplexity|Bytespider|CCBot|Amazonbot|meta-external|OAI-SearchBot|Applebot|DuckDuck|YandexBot|Bingbot|Googlebot|Google-Extended|cohere/i.test(ua)) {
       res.setHeader('Retry-After', '3600')
       res.setHeader('Cache-Control', 'no-store')
       res.setHeader('Content-Type', 'text/plain; charset=utf-8')
@@ -6679,12 +6703,15 @@ async function handleEspecialista(req: any, res: any) {
   // ruta sirve markdown por header, esta línea se quita y se vuelve a poner el Vary.
   res.setHeader('Vary', 'Accept-Encoding')
 
-  if (await fueRemovidoAPeticion(slug)) { responderRemovido(res, req); return }
+  let removido = false
+  try { removido = await fueRemovidoAPeticion(slug) } catch { responderBaseCaida(res); return }
+  if (removido) { responderRemovido(res, req); return }
 
-  const { data: place } = await supabase
+  const { data: place, error: placeErr } = await supabase
     .from('places')
     .select('id,name,subcategory,municipality,region,phone,address,npi,lat,lon,slug,last_verified_at,accepted_plans,cms_rating,cms_rating_type,dato_reportado,visibility,status,npi_status,verification_source,hours,website,contact_info')
     .eq('slug', slug).not('npi', 'is', null).maybeSingle()
+  if (placeErr) { responderBaseCaida(res); return }
 
   // Un proveedor cerrado no lleva página pública con botón de llamar.
   if (place && (place.status === 'closed' || place.status === 'permanently_closed')) {
@@ -6844,6 +6871,8 @@ async function handleEspecialista(req: any, res: any) {
   if (place.subcategory) {
     let q = supabase.from('places')
       .select('name,municipality,slug,phone').eq('subcategory', place.subcategory)
+      // Solo publicadas y abiertas: antes enlazaba fichas que contestan 410 (12 oct 2026).
+      .eq('status', 'open').eq('visibility', 'published')
       .not('npi', 'is', null).not('slug', 'is', null).neq('id', place.id)
       .order('municipality', { ascending: true }).limit(8)
     if (region) q = q.eq('region', region)
@@ -7581,16 +7610,24 @@ ${regDisclaimer(lang === 'en')}
 ${SHARE_COPY_SCRIPT}
 `
 
+  // NPPES guarda la dirección entera en 1 campo ("667 CALLE LA PAZ, San Juan, 00907, PR").
+  // Para Google: la calle sola en streetAddress, el ZIP en postalCode y el teléfono en
+  // formato +1-787-... (12 oct 2026). La página visible no cambia.
+  const zipLd = (String(place.address || '').match(/\b(00[6-9]\d{2})(?:-\d{4})?\b/) || [])[1]
+  const calleLd = String(place.address || '').split(',')[0].trim() || undefined
+  const telDig = String(place.phone || '').replace(/\D/g, '').replace(/^1(?=\d{10}$)/, '')
+  const telLd = telDig.length === 10 ? `+1-${telDig.slice(0, 3)}-${telDig.slice(3, 6)}-${telDig.slice(6)}` : (place.phone || undefined)
   const jsonLd: any = {
     '@context': 'https://schema.org',
     '@type': isMD ? 'Physician' : 'MedicalBusiness',
     name,
     medicalSpecialty: specLabel,
-    telephone: place.phone || undefined,
+    telephone: telLd,
     url: pageUrl,
     address: {
       '@type': 'PostalAddress',
-      streetAddress: place.address || undefined,
+      streetAddress: calleLd,
+      postalCode: zipLd,
       addressLocality: muni,
       addressRegion: 'Puerto Rico',
       addressCountry: 'US',
@@ -10554,7 +10591,7 @@ async function handleExpedientePlanVital(req: any, res: any) {
       description: `${nf(T.filas + F.filas)} filas parseadas de los 2 PDF oficiales del Directorio de Proveedores del Plan Vital (aprobados ${F.aprobado} y ${T.aprobado}), con NPI asignado por cruce reproducible, contradicción de municipio y clasificación de discrepancia telefónica fila por fila. SHA-256 de los PDF fuente: ${F.sha256} (feb) y ${T.sha256} (jul).`,
       creator: { '@type': 'Person', name: 'Angel Anderson' },
       publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
-      inLanguage: 'es', url: 'https://registromedicopr.com/expediente-planvital',
+      inLanguage: 'es', url: 'https://registromedicopr.com/expediente-planvital', license: 'https://creativecommons.org/licenses/by/4.0/', isAccessibleForFree: true,
       temporalCoverage: '2026-02/2026-07', spatialCoverage: { '@type': 'Place', name: 'Puerto Rico' },
       variableMeasured: ['contradiccion_municipio', 'telefono_flag', 'acepta_nuevos', 'npi', 'edicion'],
     },
@@ -10795,7 +10832,7 @@ async function handleExpedienteMMM(req: any, res: any) {
       description: `${nf(T.filas + D25.filas + D24.filas)} filas parseadas de los 3 PDF oficiales del Directorio de Proveedores de MMM, con NPI asignado por cruce reproducible, contradicción de municipio y triage de discrepancia telefónica (central compartida / estable 18 meses / 2 oficinas / sin explicación). SHA-256 de los PDF fuente: ${D24.sha256} (dic 2024), ${D25.sha256} (dic 2025), ${T.sha256} (jun 2026).`,
       creator: { '@type': 'Person', name: 'Angel Anderson' },
       publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
-      inLanguage: 'es', url: 'https://registromedicopr.com/expediente-mmm',
+      inLanguage: 'es', url: 'https://registromedicopr.com/expediente-mmm', license: 'https://creativecommons.org/licenses/by/4.0/', isAccessibleForFree: true,
       temporalCoverage: '2024-12/2026-06', spatialCoverage: { '@type': 'Place', name: 'Puerto Rico' },
       variableMeasured: ['contradiccion_municipio', 'discrepancia_telefono', 'clase_triage', 'npi', 'edition_date'],
     },
@@ -11934,7 +11971,7 @@ ${SHARE_COPY_SCRIPT}`
     name: 'Cabo Rojo en datos: directorio verificado y demanda real medida',
     description: `${n(placesCr)} negocios y lugares de Cabo Rojo publicados (${n(verifTotal)} verificados a mano), ${n(senales)} búsquedas reales de ${n(vecinos)} vecinos en 90 días vía el 787-417-7711, ${n(eventos)} eventos próximos verificados. Números calculados en vivo.`,
     creator: { '@type': 'Organization', '@id': 'https://www.mapadecaborojo.com/#org', name: 'Mapa de Cabo Rojo', url: SITE_URL },
-    isAccessibleForFree: true, inLanguage: 'es',
+    isAccessibleForFree: true, inLanguage: 'es', license: 'https://creativecommons.org/licenses/by/4.0/',
     url: `${SITE_URL}/datos`,
     temporalCoverage: `${desde.slice(0, 10)}/${new Date().toISOString().slice(0, 10)}`,
     distribution: { '@type': 'DataDownload', contentUrl: `${SITE_URL}/api/feed.json`, encodingFormat: 'application/json' },
@@ -15439,7 +15476,7 @@ ${SHARE_COPY_SCRIPT}${COUNTDOWN_SCRIPT}
     description: `${totalEscritas} predicciones registradas sobre Puerto Rico: ${publicadas.length} públicas, ${selladas.length} selladas, ${cobradas.length} cobradas (${cumplidas.length} cumplidas, ${fallidas.length} fallidas). Cada una escrita y sellada antes de poder verificarse, con fecha de cobro, criterio fijo y fuente. El resultado se publica cuando llega la fecha, gane o pierda.`,
     creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
     publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
-    isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/predicciones',
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/predicciones', license: 'https://creativecommons.org/licenses/by/4.0/',
     keywords: ['predicciones', 'Puerto Rico', 'verificacion', 'datos', 'marcador'],
     dateModified: hoyISO,
   }
@@ -20199,18 +20236,21 @@ const REGION_FULL: Record<string, string> = {
 let MUNI_CACHE: Map<string, { name: string; region: string }> | null = null
 async function resolveMuni(slug: string): Promise<{ name: string; region: string } | null> {
   if (!MUNI_CACHE) {
-    MUNI_CACHE = new Map()
-    try {
-      // v_health_munis = distinct municipalities (135 rows) — avoids the PostgREST 1000-row
-      // cap that silently truncated a select over all ~20k HEALTH providers.
-      const { data } = await supabase.from('v_health_munis')
-        .select('municipality,region').limit(500)
-      for (const r of (data || [])) {
-        if (!r.municipality) continue
-        const s = specToUrl(r.municipality)
-        if (!MUNI_CACHE.has(s)) MUNI_CACHE.set(s, { name: r.municipality, region: r.region || '' })
-      }
-    } catch { /* leave cache empty; town mode just 302s to the spec hub */ }
+    // v_health_munis = distinct municipalities (78 rows) — avoids the PostgREST 1000-row
+    // cap that silently truncated a select over all ~20k HEALTH providers.
+    // 12 oct 2026: si la consulta falla NO se guarda un Map vacío. Antes se quedaba vacío
+    // para siempre en esa instancia y cada hub de pueblo daba 301 a la especialidad (y el
+    // CDN guardaba ese 301 un día): Google vio /registro/ambulancia/jayuya como redirección.
+    const { data, error } = await supabase.from('v_health_munis')
+      .select('municipality,region').limit(500)
+    if (error || !data || !data.length) throw new BaseCaida(error?.message || 'v_health_munis vacía')
+    const m = new Map<string, { name: string; region: string }>()
+    for (const r of data) {
+      if (!r.municipality) continue
+      const s = specToUrl(r.municipality)
+      if (!m.has(s)) m.set(s, { name: r.municipality, region: r.region || '' })
+    }
+    MUNI_CACHE = m
   }
   return MUNI_CACHE.get(slug) || null
 }
@@ -20348,7 +20388,8 @@ async function handleRegistroHub(req: any, res: any) {
 
   // ── Town mode: /registro/:spec/:municipio — targets "[especialidad] [pueblo]" searches ──
   if (regionUrl && !region) {
-    const muni = await resolveMuni(regionUrl)
+    let muni: { name: string; region: string } | null = null
+    try { muni = await resolveMuni(regionUrl) } catch { responderBaseCaida(res); return }
     // TTL corto (1 día) a propósito: resolveMuni pega a la base, y si se añade un
     // municipio el redirect tiene que soltar la ruta sin esperar una semana.
     if (!muni) { res.statusCode = 301; res.setHeader('Location', `/registro/${specUrl}${lp}`); res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=86400'); res.end(); return }
@@ -20358,7 +20399,11 @@ async function handleRegistroHub(req: any, res: any) {
       supabase.from('places').select('name,municipality,slug,phone,npi').eq('subcategory', x.s).eq('category', 'HEALTH').not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').eq('visibility', 'published').or('fuera_de_pr.is.null,fuera_de_pr.eq.false').eq('municipality', muni.name).order('name', { ascending: true }).limit(80),
       townReg ? supabase.from('places').select('name,municipality,slug,phone,npi').eq('subcategory', x.s).eq('category', 'HEALTH').not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').eq('visibility', 'published').or('fuera_de_pr.is.null,fuera_de_pr.eq.false').eq('region', townReg).order('municipality', { ascending: true }).limit(120) : Promise.resolve({ data: [] as any[] }),
     ])
+    if (inTownRes.error || (inRegionRes as any).error) { responderBaseCaida(res); return }
     const inTown = (inTownRes.data || [])
+    // Pueblo sin ninguno: la página sirve (dice a dónde ir), pero no se indexa. Google la
+    // contaba como soft 404 ("no hay ninguno" con 200).
+    if (!inTown.length) res.setHeader('X-Robots-Tag', 'noindex, follow')
     const nearby = ((inRegionRes as any).data || []).filter((p: any) => p.municipality !== muni.name)
     // Cuando en el pueblo no hay ninguno, lo útil no es repetir que no hay: es
     // decir a dónde le toca ir y cuán lejos queda. Distancia entre centroides de
@@ -20625,7 +20670,9 @@ ${regDisclaimer(en)}`
     .eq('subcategory', x.s).not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').eq('visibility', 'published')
     .order('municipality', { ascending: true }).limit(200)
   if (region) q = q.eq('region', region)
-  const { data: provData } = await q
+  const { data: provData, error: provErr } = await q
+  // Si la base falla, 503 sin caché: antes salía 200 "no hay ninguno" y el CDN lo guardaba 1 día.
+  if (provErr) { responderBaseCaida(res); return }
   const providers = provData || []
 
   const planMapH = await planHitsByNpi(providers.map((p: any) => p.npi))
@@ -20818,6 +20865,8 @@ ${regDisclaimer(en)}
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800')
+  // Región sin ninguno = soft 404 para Google. Se sirve (dice a dónde ir) pero no se indexa.
+  if (!providers.length) res.setHeader('X-Robots-Tag', 'noindex, follow')
   res.status(200).send(layout({
     bareTitle: true, title, description, slug: canonicalPath, bodyHtml: body, jsonLd,
     ogImage: REGISTRO_OG, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
@@ -21215,7 +21264,7 @@ ${CIVIC_FORM_SCRIPT}
 `
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
+    '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: `${SITE_URL}/promesas`, encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'Promesas del alcalde de Cabo Rojo en cámara',
     description: 'Lista de compromisos y declaraciones del alcalde de Cabo Rojo en entrevistas públicas de video (2023-2024), organizada por tema con su estado. No-partidista.',
     creator: { '@type': 'Organization', name: 'mapadecaborojo.com' },
@@ -21599,7 +21648,7 @@ ${CIVIC_FORM_SCRIPT}
   const jsonLd = {
     '@context': 'https://schema.org',
     '@graph': [
-      { '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works', name: 'Lista de problemas reales de Cabo Rojo', description: 'Demanda ciudadana real (9,016 búsquedas al asistente vecinal *7711) cruzada con el récord público de fondos, recuperación e infraestructura del municipio de Cabo Rojo.', creator: { '@type': 'Organization', name: 'mapadecaborojo.com' }, spatialCoverage: { '@type': 'Place', name: 'Cabo Rojo, Puerto Rico' }, isAccessibleForFree: true },
+      { '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: `${SITE_URL}/observatorio`, encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works', name: 'Lista de problemas reales de Cabo Rojo', description: 'Demanda ciudadana real (9,016 búsquedas al asistente vecinal *7711) cruzada con el récord público de fondos, recuperación e infraestructura del municipio de Cabo Rojo.', creator: { '@type': 'Organization', name: 'mapadecaborojo.com' }, spatialCoverage: { '@type': 'Place', name: 'Cabo Rojo, Puerto Rico' }, isAccessibleForFree: true },
       { '@type': 'FAQPage', mainEntity: [
         { '@type': 'Question', name: '¿En qué distrito representativo está Cabo Rojo?', acceptedAnswer: { '@type': 'Answer', text: 'Cabo Rojo está en el Distrito Representativo 20, junto a Hormigueros y San Germán. El representante actual es Emilio Carlo Acosta (PNP), desde enero de 2025.' } },
         { '@type': 'Question', name: '¿Quién es el alcalde de Cabo Rojo?', acceptedAnswer: { '@type': 'Answer', text: 'Jorge A. Morales Wiscovitch (PNP), en el cargo desde enero de 2021, con término hasta enero de 2029.' } },
@@ -21741,7 +21790,7 @@ ${CIVIC_FORM_SCRIPT}
 `
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
+    '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: `${SITE_URL}/quien-responde`, encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'Quién Responde — estructura de gobierno de Cabo Rojo',
     description: 'Quién representa a un residente de Cabo Rojo (municipal, estatal, federal y cuerpos no electos), de qué responde cada cargo por ley, y cómo contactarlo. No-partidista.',
     creator: { '@type': 'Organization', name: 'mapadecaborojo.com' },
@@ -22177,7 +22226,7 @@ function handleAgua(req: any, res: any) {
 
   const jsonLd = {
     '@context': 'https://schema.org',
-    '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
+    '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: `${SITE_URL}/agua`, encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
     name: 'Calidad del agua potable — Cabo Rojo y pueblos aledaños (récord EPA)',
     description: 'Violaciones de salud del agua potable por sistema comunitario en Cabo Rojo y pueblos del oeste de Puerto Rico, verificadas contra la base de datos federal EPA SDWIS. Separa violaciones activas de resueltas.',
     creator: { '@type': 'Organization', name: 'Mapa de Cabo Rojo' },
@@ -22343,7 +22392,7 @@ ${SHARE_COPY_SCRIPT}`
     { '@context': 'https://schema.org', '@type': 'MedicalWebPage', name: te('Enfermedades raras en Puerto Rico: quién las diagnostica', 'Rare diseases in Puerto Rico: who can diagnose them'), url: CANON, inLanguage: en ? 'en' : 'es',
       about: { '@type': 'MedicalCondition', name: 'Rare diseases / Enfermedades raras' },
       publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' } },
-    { '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com', encodingFormat: 'text/html' }, name: 'Genetistas clínicos y neurología por región en Puerto Rico',
+    { '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: CANON, encodingFormat: 'text/html' }, name: 'Genetistas clínicos y neurología por región en Puerto Rico',
       description: 'Conteo verificado contra el registro federal NPPES de genetistas clínicos y neurólogos por región en Puerto Rico, en el contexto del liderato de la isla en enfermedades raras.',
       url: CANON, inLanguage: 'es', license: 'https://creativecommons.org/licenses/by/4.0/',
       creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
@@ -22558,7 +22607,7 @@ ${SHARE_COPY_SCRIPT}`
     { '@context': 'https://schema.org', '@type': 'MedicalWebPage', name: te('Atlas de las enfermedades fundadoras boricuas', 'Atlas of Boricua founder diseases'), url: CANON, inLanguage: en ? 'en' : 'es',
       publisher: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
       about: condiciones.map(c => ({ '@type': 'MedicalCondition', name: pk(c, 'nombre') })) },
-    { '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://registromedicopr.com', encodingFormat: 'text/html' }, name: 'Enfermedades genéticas con variante fundadora en Puerto Rico',
+    { '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: CANON, encodingFormat: 'text/html' }, name: 'Enfermedades genéticas con variante fundadora en Puerto Rico',
       description: 'Mapa consolidado de enfermedades con mutación fundadora documentada en Puerto Rico (HPS-1, HPS-3, TBCK, RSPH4A, LGMD2C/SGCG, BRCA2), con región de concentración, prevalencia y fuente científica primaria.',
       url: CANON, inLanguage: 'es', license: 'https://creativecommons.org/licenses/by/4.0/',
       creator: { '@type': 'Organization', name: 'Registro Médico PR', url: 'https://registromedicopr.com' } },
@@ -22806,7 +22855,7 @@ ${SHARE_COPY_SCRIPT}`
   const jsonLd = [
     { '@context': 'https://schema.org', '@type': 'WebPage', name: 'El ADN más valioso de EE.UU. y el dinero de ciencia que no llega a Puerto Rico', url: 'https://puertoricosinfiltros.com/investigacion', inLanguage: 'es',
       publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' } },
-    { '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com', encodingFormat: 'text/html' }, name: 'Financiamiento NIH por estado de población similar, año fiscal 2024',
+    { '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/investigacion', encodingFormat: 'text/html' }, name: 'Financiamiento NIH por estado de población similar, año fiscal 2024',
       description: 'Financiamiento de los Institutos Nacionales de Salud (NIH) para Puerto Rico frente a estados de EE.UU. de población similar, en total y por persona, año fiscal 2024.',
       url: 'https://puertoricosinfiltros.com/investigacion', inLanguage: 'es', license: 'https://creativecommons.org/licenses/by/4.0/',
       creator: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
@@ -24072,7 +24121,7 @@ ${SHARE_COPY_SCRIPT}
         spatialCoverage: { '@type': 'Place', name: 'Puerto Rico' },
         variableMeasured: ['nota de 0 a 12', 'aprobado', 'regla incumplida', 'tipo de respuesta'],
         distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/examen', encodingFormat: 'text/html' },
-        url: 'https://puertoricosinfiltros.com/examen',
+        url: 'https://puertoricosinfiltros.com/examen', license: 'https://creativecommons.org/licenses/by/4.0/',
       },
       {
         '@type': 'FAQPage', '@id': 'https://puertoricosinfiltros.com/examen#faq',

@@ -296,9 +296,9 @@ export default async function handler(req: any, res: any) {
     // y 3,098 proveedores publicados no tenían por dónde ser descubiertos (9 ago 2026). El corte
     // era invisible porque un sitemap lleno se ve igual que uno completo — de ahí el aviso de abajo.
     for (let page = 0; page < 50; page++) {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('places')
-        .select('slug, updated_at')
+        .select('slug, updated_at, subcategory, region')
         .not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').eq('visibility', 'published')
         .in('subcategory', SPECIALIST_SUBS)
         // Sin ORDER BY, cada una de las 29 páginas se pide con un orden que Postgres
@@ -308,6 +308,10 @@ export default async function handler(req: any, res: any) {
         // así que ordenar por él da una paginación estable y reproducible.
         .order('slug', { ascending: true })
         .range(page * 1000, (page + 1) * 1000 - 1);
+      // 12 oct 2026: una página que falla ya no corta el sitemap callado. Antes un timeout en
+      // la página 14 servía 13,000 fichas como si fueran todas (y se cacheaba 6 h). Ahora el
+      // error sube y el sitemap responde 503: Google reintenta y no ve URLs "desaparecer".
+      if (error) throw new Error(`sitemap especialistas p${page}: ${error.message}`);
       if (!data || data.length === 0) break;
       specialists.push(...data);
       if (data.length < 1000) break;
@@ -350,7 +354,12 @@ export default async function handler(req: any, res: any) {
     // Derivado de SPECIALIST_SUBS (single source) — mata el drift de listas hardcoded.
     const SPEC_URLS = SPECIALIST_SUBS.map((x) => x.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''));
     const HUB_REGION_SLUGS = ['oeste','norte','centro','sur','este','metro'];
-    SPEC_URLS.forEach((s) => {
+    // Solo los combos especialidad×región que tienen a alguien (12 oct 2026). Antes entraban las
+    // 6 regiones de cada especialidad a ciegas, y una región vacía es "no hay ninguno" con 200:
+    // soft 404 para Google. La página vacía ahora lleva noindex y aquí no se anuncia.
+    const conRegion = new Set(specialists.map((p: any) => `${p.subcategory}|${String(p.region || '').toLowerCase()}`));
+    SPEC_URLS.forEach((s, i) => {
+      const sub = SPECIALIST_SUBS[i];
       urls.push(`
         <url>
           <loc>${REG_BASE}/registro/${s}</loc>
@@ -359,6 +368,7 @@ export default async function handler(req: any, res: any) {
         </url>
       `);
       HUB_REGION_SLUGS.forEach((r) => {
+        if (!conRegion.has(`${sub}|${r}`)) return;
         urls.push(`
         <url>
           <loc>${REG_BASE}/registro/${s}/${r}</loc>
@@ -384,7 +394,11 @@ export default async function handler(req: any, res: any) {
     const combos = await fetchAll(() => supabase.rpc('registro_spec_town_combos', { p_min: 1 }), ['subcategory', 'municipality']);
     const slugify = (v: string) => v.normalize('NFD').replace(/[̀-ͯ]/g, '')
       .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    (combos || []).forEach((c: { subcategory: string; municipality: string; n: number }) => {
+    // Solo especialidades con hub (12 oct 2026). El RPC trae también farmacia, equipo médico,
+    // entidad de salud y otras 10 que no son del Registro: 187 URLs que dan 301 a /registro y
+    // que Search Console reporta como "Página con redirección" dentro del sitemap.
+    const specUrlSet = new Set(SPEC_URLS);
+    (combos || []).filter((c: any) => specUrlSet.has(slugify(c.subcategory))).forEach((c: { subcategory: string; municipality: string; n: number }) => {
       // Más proveedores en el pueblo = página más completa = más prioridad de rastreo.
       const priority = c.n >= 10 ? 0.65 : c.n >= 3 ? 0.55 : 0.45;
       urls.push(`
@@ -537,6 +551,9 @@ export default async function handler(req: any, res: any) {
 
   } catch (e) {
     console.error(e);
-    return res.status(500).json({ error: 'Error generating sitemap' });
+    // 503 + Retry-After y sin caché: "vuelve después", no "este sitemap está roto".
+    res.setHeader('Retry-After', '600');
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(503).json({ error: 'Error generating sitemap' });
   }
 }

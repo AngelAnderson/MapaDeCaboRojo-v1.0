@@ -156,7 +156,7 @@ export function paginaMedicaLd(opts: { url: string; nombre: string; descripcion:
     name: opts.nombre,
     description: opts.descripcion,
     inLanguage: 'es-PR',
-    dateModified: new Date().toISOString().slice(0, 10),
+    // Sin dateModified (12 oct 2026): ponía la fecha de HOY en cada render, frescura falsa.
     author: VERIFICADOR,
     publisher: EDITOR_REGISTRO,
     isPartOf: { '@type': 'WebSite', '@id': 'https://registromedicopr.com#website', name: 'Registro Médico PR', url: 'https://registromedicopr.com' },
@@ -310,7 +310,7 @@ export function coleccionLd(opts: { url: string; nombre: string; descripcion: st
     name: opts.nombre,
     description: opts.descripcion,
     inLanguage: 'es-PR',
-    dateModified: new Date().toISOString().slice(0, 10),
+    // Sin dateModified (12 oct 2026): era la fecha de HOY en cada render, frescura falsa.
     author: VERIFICADOR,
     publisher: EDITOR_RED,
     isPartOf: { '@type': 'WebSite', '@id': 'https://www.mapadecaborojo.com#website', name: 'MapaDeCaboRojo.com', url: 'https://www.mapadecaborojo.com' },
