@@ -178,6 +178,17 @@ async function capaHttp() {
           rr.status === 200 && html.includes('<link rel="canonical" href="https://registromedicopr.com/especialista/'),
           `dio ${rr.status}`);
   }
+  // A/B del título de la ficha (12 oct 2026): NPI par = nombre primero, impar = control.
+  // Si alguien "arregla" el título para todas antes del cobro (26 oct), el experimento muere.
+  for (const [slug, empieza] of [
+    ['mediko-imaging-inc-humacao-8514',  'Mediko Imaging'],    // NPI ...8514, par
+    ['clinica-yaguez-inc-mayaguez-6651', 'Laboratorio Clínico'], // NPI ...6651, impar
+  ]) {
+    const rr = await fetch(`https://registromedicopr.com/especialista/${slug}`);
+    const t = ((await rr.text()).match(/<title>([^<]*)<\/title>/) || [])[1] || '';
+    check(`título A/B de ${slug.slice(0, 20)}… empieza con "${empieza}"`,
+          rr.status === 200 && t.startsWith(empieza), `dio ${rr.status}: ${t}`);
+  }
   // Y el sitemap no puede anunciar bajo /negocio/ lo que tiene ruta de salud: esa
   // URL redirige, y un sitemap que anuncia redirecciones se gasta el presupuesto de
   // rastreo. Eran 21 (medido el 1 sep): 11 ópticas, 6 fisiatras, 4 quiroprácticos,

@@ -7666,6 +7666,17 @@ ${SHARE_COPY_SCRIPT}
           ? `${nameTitle} in ${muni}${cola}`
           : `${nameTitle} en ${muni}${cola}`
       }
+      // A/B 12 oct 2026: en las fichas la teoría de arriba no se cumplió. De las 6,332
+      // fichas en gsc_paginas_que_no_contestan (79,093 impresiones perdidas, pos 7.3),
+      // la búsqueda principal es nombre + pueblo ("clinica yaguez", "dr gavilanes
+      // aguadilla"); "especialidad + pueblo" entra por los hubs /registro/. NPI que
+      // termina en par = nombre primero; impar = se queda igual (control). Cobro 26 oct
+      // y 9 nov (fechas registro-titulo-nombre-*): si par gana CTR por 20%+, va a todas.
+      if (/[02468]$/.test(String(npi || ''))) {
+        return lang === 'en'
+          ? `${nameTitle} in ${muni} · ${specLabelClean}${cola}`
+          : `${nameTitle} en ${muni} · ${specLabelClean}${cola}`
+      }
       return lang === 'en'
         ? `${specLabelClean} in ${muni} · ${nameTitle}${cola}`
         : `${specLabelClean} en ${muni} · ${nameTitle}${cola}`
