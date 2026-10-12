@@ -6684,7 +6684,12 @@ async function handleEspecialista(req: any, res: any) {
   // URL al día. Los demás rastreadores (IA, SEO, scrapers) siguen cerrados con la variable.
   if (process.env.REGISTRO_BOTS_503 === '1') {
     const ua = String(req.headers?.['user-agent'] || '')
-    const buscador = /Googlebot|Google-InspectionTool|bingbot/i.test(ua) && !/Google-Extended/i.test(ua)
+    // También pasan los que CITAN (12 oct, 2da ronda): búsqueda de ChatGPT, Perplexity y Claude
+    // cuando alguien pregunta, y los buscadores de Apple y DuckDuckGo. Son de poco volumen y son
+    // los que ponen al Registro en una respuesta. Siguen cerrados los que ENTRENAN o raspan
+    // (GPTBot, ClaudeBot, Bytespider, CCBot, Amazonbot, meta), que fueron los ~60,000 del 7 oct.
+    const buscador = /Googlebot|Google-InspectionTool|bingbot|OAI-SearchBot|ChatGPT-User|PerplexityBot|Perplexity-User|Claude-SearchBot|Claude-User|Applebot|DuckDuckBot/i.test(ua)
+      && !/Google-Extended|Applebot-Extended/i.test(ua)
     if (!buscador && /bot|crawl|spider|slurp|GPTBot|ClaudeBot|Claude-Web|anthropic-ai|Perplexity|Bytespider|CCBot|Amazonbot|meta-external|OAI-SearchBot|Applebot|DuckDuck|YandexBot|Bingbot|Googlebot|Google-Extended|cohere/i.test(ua)) {
       res.setHeader('Retry-After', '3600')
       res.setHeader('Cache-Control', 'no-store')
