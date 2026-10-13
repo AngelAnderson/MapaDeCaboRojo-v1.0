@@ -25,6 +25,7 @@ import { cargarSenal, type SenalCategoria } from './_lib/la-senal.js'
 import { handleRentas } from './_lib/rentas.js'
 import { handleSuelo } from './_lib/suelo.js'
 import { quiereMarkdown, enviarMd, linkAlternoMd, pieMd } from './_lib/agente-md.js'
+import { DEUDA_MUNI, DEUDA_META, deudaDe } from './_lib/deuda-municipios.js'
 import { LF_META, LF_RAZON, LF_OIG, LF_REIN, LF_OPTOUT, LF_OPTOUT_YA_NO, LF_OIG_POR_NPI, LF_OPTOUT_POR_NPI, LF_TELESALUD } from './_lib/listas-federales.js'
 
 // Hard ceiling on every PostgREST call. Without it a stalled connection hangs the
@@ -306,7 +307,7 @@ function layout(opts: {
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Salud</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/marcador" class="hover:text-teal-700">El Marcador</a><a href="/registro/estado" class="hover:text-teal-700">Estado de salud PR</a><a href="/registro/mapa" class="hover:text-teal-700">El mapa médico</a><a href="/registro/desiertos" class="hover:text-teal-700">Los desiertos</a><a href="/espejo" class="hover:text-teal-700">El Espejo</a><a href="/telemedicina" class="hover:text-teal-700">Telemedicina</a><a href="/diabetes" class="hover:text-teal-700">Diabetes</a><a href="/registro-raras" class="hover:text-teal-700">Enfermedades raras</a><a href="https://www.recallradarpr.com" class="hover:text-teal-700">Recalls FDA (RecallRadarPR)</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Dinero</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/costo-de-vida" class="hover:text-teal-700">Costo de vida</a><a href="/rendimiento" class="hover:text-teal-700">Rendimiento del dólar</a><a href="/cupon" class="hover:text-teal-700">Dinero sin cobrar</a><a href="/trabajo" class="hover:text-teal-700">Trabajo y AI</a><a href="/exposicion-ai" class="hover:text-teal-700">Exposición a la IA</a><a href="/cuatro-economias" class="hover:text-teal-700">Las 4 economías</a><a href="/recuperacion" class="hover:text-teal-700">Dinero de María</a><a href="/sigue-el-dinero" class="hover:text-teal-700">Sigue el dinero</a><a href="/investigacion" class="hover:text-teal-700">Dinero de ciencia</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Servicios</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/agua" class="hover:text-teal-700">Agua</a><a href="/acueductos" class="hover:text-teal-700">El recibo del agua</a><a href="/luz" class="hover:text-teal-700">Luz</a><a href="/basura" class="hover:text-teal-700">Basura</a></div></div>
-<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">El pueblo</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/contradicciones" class="hover:text-teal-700">Contradicciones</a><a href="/panel" class="hover:text-teal-700">El Panel</a><a href="/examen" class="hover:text-teal-700">El Examen</a><a href="/transicion" class="hover:text-teal-700">Vistas de transición</a><a href="/funciona" class="hover:text-teal-700">Cuando funciona</a><a href="/los-78" class="hover:text-teal-700">La Nota de los 78</a><a href="/semaforo-fema" class="hover:text-teal-700">Semáforo FEMA</a><a href="/demanda" class="hover:text-teal-700">Lo que busca PR</a><a href="/historial" class="hover:text-teal-700">Historial de promesas</a><a href="/promesas" class="hover:text-teal-700">Promesómetro</a><a href="/calculadora" class="hover:text-teal-700">Calculadora de Promesas</a><a href="/esencia" class="hover:text-teal-700">Proyecto Esencia</a><a href="/activos" class="hover:text-teal-700">Activos dormidos</a><a href="/retiro" class="hover:text-teal-700">El Huracán Lento</a><a href="/no-se-mide" class="hover:text-teal-700">Lo que ni se mide</a></div></div>
+<div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">El pueblo</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/contradicciones" class="hover:text-teal-700">Contradicciones</a><a href="/panel" class="hover:text-teal-700">El Panel</a><a href="/examen" class="hover:text-teal-700">El Examen</a><a href="/transicion" class="hover:text-teal-700">Vistas de transición</a><a href="/funciona" class="hover:text-teal-700">Cuando funciona</a><a href="/los-78" class="hover:text-teal-700">La Nota de los 78</a><a href="/deuda" class="hover:text-teal-700">La deuda de PR</a><a href="/semaforo-fema" class="hover:text-teal-700">Semáforo FEMA</a><a href="/demanda" class="hover:text-teal-700">Lo que busca PR</a><a href="/historial" class="hover:text-teal-700">Historial de promesas</a><a href="/promesas" class="hover:text-teal-700">Promesómetro</a><a href="/esencia" class="hover:text-teal-700">Proyecto Esencia</a><a href="/activos" class="hover:text-teal-700">Activos dormidos</a><a href="/retiro" class="hover:text-teal-700">El Huracán Lento</a><a href="/no-se-mide" class="hover:text-teal-700">Lo que ni se mide</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Expedientes</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/expediente/alcalde-cabo-rojo" class="hover:text-teal-700">Alcalde de Cabo Rojo</a><a href="/expediente/representante-distrito-20" class="hover:text-teal-700">Rep. Distrito 20</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Predicción</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/prediccion" class="hover:text-teal-700">Predicción 2030</a><a href="/predicciones" class="hover:text-teal-700">Predicciones con fecha</a><a href="/sinfiltros/pulso" class="hover:text-teal-700">Pulso</a></div></div>
 <div><div class="font-bold text-slate-700 uppercase tracking-wide mb-2">Prensa</div><div class="flex flex-col gap-1.5 text-slate-500"><a href="/buscar" class="hover:text-teal-700">Pregúntale al récord</a><a href="/comparte" class="hover:text-teal-700">Datos citables</a><a href="/rompelo" class="hover:text-teal-700">Rómpelo, si puedes</a></div></div>
@@ -5117,6 +5118,24 @@ ${SHARE_COPY_SCRIPT}`
 </div>`
   })()
 
+  // La deuda del pueblo: cuánto de la contribución sobre la propiedad va a bonos (CAE + 1.03%), FY2027,
+  // del Apéndice 6 del Plan Fiscal del CRIM certificado el 26 jun 2026. Datos estáticos en _lib/deuda-municipios.ts.
+  const deudaBlock = (() => {
+    const d = deudaDe(town.municipio)
+    if (!d) return ''
+    const [, t, cae, red, adel] = d
+    const cien = Math.round((cae + red) / t * 100)
+    const isla = Math.round((DEUDA_META.cae + DEUDA_META.redencion) / DEUDA_META.total * 100)
+    const mm = (k: number) => `$${(k / 1000).toFixed(1)}M`
+    return `
+<div class="not-prose mt-4 bg-white border-2 border-slate-200 rounded-2xl p-5">
+  <p class="text-sm uppercase tracking-wide font-bold text-slate-600">${te('La deuda en tu factura del CRIM', 'Debt in your property tax bill')}</p>
+  <p class="text-2xl font-black text-slate-900 mt-1">$${cien} ${te('de cada $100', 'of every $100')}</p>
+  <p class="text-base text-slate-700 mt-1">${te(`De ${mm(t)} de contribución sobre la propiedad en ${escapeHtml(town.municipio)} (año fiscal 2027), ${mm(cae)} van al fondo de los bonos del municipio (CAE) y ${mm(red)} a la contribución de 1.03% para bonos del Gobierno central. Al municipio le llegan ${mm(adel)}. En la isla son $${isla} de cada $100.`, `Of ${mm(t)} in property tax in ${escapeHtml(town.municipio)} (fiscal year 2027), ${mm(cae)} goes to the municipal bond fund (CAE) and ${mm(red)} to the 1.03% tax for central government bonds. The municipality receives ${mm(adel)}. Island-wide it is $${isla} of every $100.`)}</p>
+  <p class="text-sm text-slate-500 mt-2">${te('Plan Fiscal Revisado del CRIM, certificado por la Junta el 26 jun 2026, Apéndice 6. Lo que sobra del CAE después de pagar los bonos regresa al municipio.', 'CRIM Revised Fiscal Plan, certified by the Oversight Board on Jun 26, 2026, Appendix 6. CAE left over after bond payments returns to the municipality.')} <a href="https://puertoricosinfiltros.com/deuda" class="text-teal-700 font-semibold hover:underline">${te('Los 78 pueblos y la deuda de PR', 'All 78 towns and PR debt')} &rarr;</a></p>
+</div>`
+  })()
+
   const veciBlock = town.municipio === 'Cabo Rojo' ? `
 <div class="not-prose mt-6 bg-teal-50 border-2 border-teal-200 rounded-2xl p-5">
   <p class="font-bold text-teal-900 text-base">💬 ${te('¿No consigues cita? Pregúntale al Veci', 'Cannot get an appointment? Ask El Veci')}</p>
@@ -5190,6 +5209,7 @@ fetch('/api/mapa-pages?page=registro-alert',{method:'POST',headers:{'Content-Typ
   ${psiqNote}
 </div>
 ${notaBlock}
+${deudaBlock}
 ${espejoBlock}
 ${hpsaBlock}
 ${contradiccionesBlock}
@@ -12562,6 +12582,7 @@ ${heroNotas}
     <a href="/demanda" data-prsf="record" data-rec="idx-demanda" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Demanda</a>
     <a href="/agua" data-prsf="record" data-rec="idx-agua" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Agua</a>
     <a href="/acueductos" data-prsf="record" data-rec="idx-acueductos" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">El recibo del agua</a>
+    <a href="/deuda" data-prsf="record" data-rec="idx-deuda" class="inline-block bg-teal-50 border border-teal-300 rounded-full px-3 py-1.5 font-semibold text-teal-800 hover:bg-teal-100">La deuda, en cristiano</a>
     <a href="/transicion" data-prsf="record" data-rec="idx-transicion" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">La Transición</a>
     <a href="/retiro" data-prsf="record" data-rec="idx-retiro" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">El Huracán Lento</a>
     <a href="/luz" data-prsf="record" data-rec="idx-luz" class="inline-block bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5 font-semibold text-slate-700 hover:bg-teal-50 hover:border-teal-300">Luz</a>
@@ -13322,6 +13343,182 @@ ${SHARE_COPY_SCRIPT}
     title: 'El recibo del agua, contra el récord: tarifas AAA hasta 2039 y el dinero federal sin llegar',
     description: 'Los aumentos de la AAA están aprobados hasta 2039 y suman $2,598 millones. El 91% del dinero federal identificado no ha llegado a la caja. Verificado contra el plan fiscal certificado, con la fuente al lado.',
     slug: 'acueductos', bodyHtml: body, jsonLd: [jsonLd, jsonLdVideo], ogImage: OG_SINFILTROS,
+    host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
+  }))
+}
+
+// /deuda — La deuda de Puerto Rico, en cristiano: cuánto se debía, cuánto quedó, qué falta (AEE) y
+// cuánto de TU contribución sobre la propiedad se va a pagar bonos, por pueblo.
+// Fuentes primarias (todas de la Junta, oversightboard.pr.gov): Plan Fiscal certificado revisado 19 jun 2026,
+// Informe Anual FY2025 Vol. I (17 nov 2025), comunicados de la AEE (16 mar, 30 jun, 14 jul, 6 oct 2026),
+// Plan Fiscal Revisado 2025 del CRIM (cert. 26 jun 2026, Apéndice 6). Recibos: Outbox/Estrategia/PRSF-Deuda-Receipts-2026-10-13.md
+async function handleDeuda(req: any, res: any) {
+  const m = (k: number) => `$${(k / 1000).toFixed(1)}M`
+  const rows = DEUDA_MUNI.map(([mu, t, cae, red, adel]) => ({ mu, t, cae, red, adel, pc: cae / t * 100, pr: red / t * 100 }))
+    .sort((a, b) => (b.pc + b.pr) - (a.pc + a.pr))
+  const rank = new Map(rows.map((r, i) => [r.mu, i + 1]))
+  const cr = rows.find(r => r.mu === 'Cabo Rojo')!
+  const isla = { pc: DEUDA_META.cae / DEUDA_META.total * 100, pr: DEUDA_META.redencion / DEUDA_META.total * 100 }
+  const slug = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-')
+  const tabla = rows.map(r => {
+    const esCR = r.mu === 'Cabo Rojo'
+    return `<tr id="d-${slug(r.mu)}" class="border-t border-slate-100${esCR ? ' bg-emerald-50 font-bold' : ''}">
+      <td class="py-2 px-3 text-slate-900"><span class="text-slate-400 text-sm mr-1">${rank.get(r.mu)}</span>${escapeHtml(r.mu)}</td>
+      <td class="py-2 px-3 text-right whitespace-nowrap font-bold text-slate-900">$${Math.round(r.pc + r.pr)}</td>
+      <td class="py-2 px-3 text-right whitespace-nowrap hidden sm:table-cell">${m(r.t)}</td>
+      <td class="py-2 px-3 text-right whitespace-nowrap hidden sm:table-cell">$${Math.round(r.pc)}</td>
+      <td class="py-2 px-3 text-right whitespace-nowrap hidden sm:table-cell">$${Math.round(r.pr)}</td>
+    </tr>`
+  }).join('')
+  const opciones = [...rows].sort((a, b) => a.mu.localeCompare(b.mu, 'es')).map(r => `<option value="d-${slug(r.mu)}">${escapeHtml(r.mu)}</option>`).join('')
+
+  const JUNTA = 'https://oversightboard.pr.gov/documents/'
+  const citables = [
+    `De cada $100 de contribución sobre la propiedad que se cobra en Puerto Rico, $37 van al fondo que paga los bonos de los municipios (CAE) y $11 a la contribución de 1.03% que paga bonos del Gobierno central. Son $567 millones de $1,170 millones proyectados para el año fiscal 2027. Fuente: Plan Fiscal Revisado del CRIM, certificado por la Junta el 26 jun 2026, Apéndice 6. puertoricosinfiltros.com/deuda`,
+    `Antes de la quiebra, 25 centavos de cada dólar de impuestos de Puerto Rico se iban a pagar deuda. Después de la reestructuración, son cerca de 6. Fuente: Plan Fiscal certificado revisado de la Junta, 19 jun 2026, pp. 9 y 19. puertoricosinfiltros.com/deuda`,
+    `La deuda de la AEE es la única que sigue en el tribunal. Los bonistas reclaman cerca de $12 mil millones; la Junta ofreció $3 mil millones el 1 de junio de 2026 y el 14 de julio un grupo de bonistas lo rechazó sin contraoferta. Fuente: comunicados de la Junta del 30 jun y 14 jul 2026. puertoricosinfiltros.com/deuda`,
+    `En Cabo Rojo, de $14.7 millones de contribución sobre la propiedad proyectados para el año fiscal 2027, $4.7 millones van al fondo de los bonos del municipio y $1.6 millones a la contribución de 1.03% del Gobierno central: $43 de cada $100. Al municipio le llegan $8.0 millones. Fuente: Plan Fiscal Revisado del CRIM (cert. 26 jun 2026), Apéndice 6. puertoricosinfiltros.com/deuda`,
+  ]
+  const citableCards = citables.map((c) => `
+    <div class="flex items-start gap-2 bg-white border border-slate-200 rounded-xl p-3 mt-2">
+      <p class="flex-1 text-base text-slate-700 leading-relaxed">${escapeHtml(c)}</p>
+      <button type="button" class="share-copy shrink-0 inline-flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-3 rounded-lg text-sm" style="min-height:48px" data-copy="${escapeHtml(c)}"><i class="fa-regular fa-copy"></i> Copiar</button>
+    </div>`).join('')
+
+  const body = `
+<h1>La deuda de Puerto Rico, en cristiano</h1>
+<p class="text-lg text-slate-600 mt-2">La deuda del país es pública. El problema es que viene en más de 6,500 documentos de la Junta, casi todos en inglés, y nadie tiene una semana libre pa' leerlos. Aquí está lo que importa en una página, con el documento al lado de cada número.</p>
+
+<div class="not-prose mt-5 bg-slate-900 text-white rounded-2xl p-5 sm:p-6">
+  <p class="text-sm uppercase tracking-wide text-teal-300 font-bold">En 2 líneas</p>
+  <p class="text-xl sm:text-2xl font-black mt-1 leading-snug">Antes de la quiebra, 25 centavos de cada dólar de impuestos se iban a pagar deuda. Hoy son cerca de 6.</p>
+  <p class="text-slate-300 mt-2 text-base leading-relaxed">Pero en tu factura del CRIM la cuenta es otra: de cada $100 de contribución sobre la propiedad, <strong class="text-white">$48 se van a pagar bonos</strong> ($37 de los municipios y $11 del Gobierno central). Y la deuda de la luz todavía no se ha resuelto.</p>
+  <p class="text-sm text-slate-400 mt-3">Plan Fiscal certificado revisado (Junta, 19 jun 2026), pp. 9 y 19 · Plan Fiscal del CRIM (cert. 26 jun 2026), Apéndice 6.</p>
+</div>
+
+${shareRow({ text: 'De cada $100 de contribución sobre la propiedad en Puerto Rico, $48 se van a pagar bonos. Busca tu pueblo, con el documento de la Junta al lado:', url: 'https://puertoricosinfiltros.com/deuda', toWho: 'Al que paga el CRIM sin saber a dónde va. Y al grupo de la familia.' })}
+
+<h2 id="cuanto">Cuánto se debía y cuánto quedó</h2>
+<p>Antes de la ley PROMESA (2016), el Gobierno había acumulado <strong>$71 mil millones</strong> en deuda: más del doble del promedio de los estados por persona, y más que Nueva York, donde el ingreso de un hogar es 3.4 veces el de aquí. La quiebra de Puerto Rico es la más grande de un gobierno en la historia de Estados Unidos.</p>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-base">
+    <thead><tr class="bg-slate-50 text-left text-sm text-slate-600"><th class="py-2 px-3">Quién debía</th><th class="py-2 px-3 text-right">Antes</th><th class="py-2 px-3 text-right">Después</th></tr></thead>
+    <tbody>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3">COFINA (la deuda que se paga con el IVU)</td><td class="py-2 px-3 text-right whitespace-nowrap">$17.6 mil millones</td><td class="py-2 px-3 text-right whitespace-nowrap font-bold">$12 mil millones</td></tr>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3">Carreteras (ACT)</td><td class="py-2 px-3 text-right whitespace-nowrap">$6.4 mil millones</td><td class="py-2 px-3 text-right whitespace-nowrap font-bold">$1.245 mil millones</td></tr>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3">Gobierno central (bonos de obligación general)</td><td class="py-2 px-3 text-right" colspan="2">Bajó cerca de 80%; el 15 mar 2022 se pagaron más de $10 mil millones en un solo día</td></tr>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3">Acueductos (AAA)</td><td class="py-2 px-3 text-right" colspan="2">Cerca de $1 mil millones en préstamos modificados en 2019</td></tr>
+      <tr class="border-t-2 border-slate-300 bg-slate-50"><td class="py-2 px-3 font-black">Las 12 reestructuraciones, juntas</td><td class="py-2 px-3 text-right whitespace-nowrap font-black">$63 mil millones</td><td class="py-2 px-3 text-right whitespace-nowrap font-black">$27 mil millones</td></tr>
+    </tbody>
+  </table>
+</div>
+<p class="text-sm text-slate-500 mt-2">Fuente: Informe Anual FY2025 de la Junta, Vol. I (17 nov 2025), pp. 43-47. Los $63 mil millones no incluyen los cerca de $10 mil millones de la AEE, que siguen sin resolver. Plan Fiscal certificado revisado, 19 jun 2026, p. 19 (los $71 mil millones).</p>
+<p>Lo que quedó tiene tope: el pago anual de los bonos del Gobierno central y de COFINA no puede pasar de <strong>$1.15 mil millones</strong> (Plan Fiscal, p. 70). Y la Junta dice que la reestructuración le ahorra al país al menos <strong>$62 mil millones</strong> en pagos de deuda en las próximas décadas (p. 68).</p>
+
+<h2 id="luz">La que falta: la deuda de la luz</h2>
+<p>La AEE es la única deuda que sigue en el tribunal desde julio de 2017. En números de la Junta:</p>
+<div class="not-prose space-y-3 mt-3">
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-base text-slate-800 leading-relaxed"><strong>Lo que reclaman los bonistas:</strong> cerca de <strong>$12 mil millones</strong>: $8.5 mil millones de antes de la quiebra, más intereses desde 2017.</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-base text-slate-800 leading-relaxed"><strong>Lo que ofrece el plan:</strong> hasta <strong>$2.6 mil millones</strong> para todos los acreedores. El 1 de junio de 2026 la Junta subió la oferta a los bonistas que no han firmado a <strong>$3 mil millones</strong> (cerca de 35% de lo que reclamaban al entrar a la quiebra).</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-base text-slate-800 leading-relaxed"><strong>La respuesta:</strong> el 14 de julio de 2026 un grupo de esos bonistas la llamó "dead on arrival" (muerta al llegar) y no hizo contraoferta.</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-base text-slate-800 leading-relaxed"><strong>Aparte:</strong> la AEE le debe cerca de <strong>$5.9 mil millones</strong> a su propio sistema de retiro. Eso no entra en la pelea con los bonistas.</p></div>
+</div>
+<p class="text-sm text-slate-500 mt-2">Fuentes: comunicados de la Junta del 16 mar, 30 jun y 14 jul 2026; Informe Anual FY2025, Vol. I, p. 43. El 16 mar 2026 la jueza Laura Taylor Swain rechazó el reclamo de prioridad de por lo menos $3.7 mil millones de los bonistas.</p>
+<p>Lo que esto tiene que ver contigo: mientras la AEE no salga de la quiebra, nadie sabe cuánto de esa deuda va a terminar en la factura de la luz. El plan de marzo de 2025 eliminó el "cargo de legado" que lo iba a cobrar en la factura, pero el caso no ha terminado.</p>
+
+<h2 id="tu-pueblo">La deuda en tu factura del CRIM</h2>
+<p>Esta es la parte que casi nadie sabe. La contribución sobre la propiedad que pagas al CRIM no va entera a tu pueblo. Antes de que el municipio vea un peso, salen dos pedazos para deuda:</p>
+<div class="not-prose grid sm:grid-cols-2 gap-3 mt-3">
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-3xl font-black text-slate-900">$${Math.round(isla.pc)} <span class="text-base font-bold text-slate-500">de cada $100</span></p><p class="text-base text-slate-700 mt-1"><strong>CAE (Contribución Adicional Especial).</strong> Va a un fideicomiso que paga los bonos que tomó tu municipio. Lo que sobra después de pagar, regresa al municipio.</p></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><p class="text-3xl font-black text-slate-900">$${Math.round(isla.pr)} <span class="text-base font-bold text-slate-500">de cada $100</span></p><p class="text-base text-slate-700 mt-1"><strong>La contribución de 1.03%.</strong> Va a Hacienda para pagar bonos del Gobierno central. Por ley, una parte (42%) vuelve a los pueblos para basura y reciclaje, si se cumple una condición de los fondos Medicaid.</p></div>
+</div>
+<p class="text-sm text-slate-500 mt-2">Isla completa, año fiscal 2027 (proyectado): $1,170.4 millones de contribución; $437.9 millones de CAE; $129.1 millones de 1.03%. Plan Fiscal Revisado del CRIM, certificado el 26 jun 2026, p. 9, Apéndice 2 (tasas; el 1.03% aparece como "State Redemption Fund (GO)") y Apéndice 6. Qué es el CAE: borrador de la Regla de Financiamiento Municipal de AAFAF (2026), definición de "Fondo de Redención CAE", y la Junta en su carta a Hormigueros del 29 sep 2020 (Código Municipal, sec. 8.001(101)). El 1.03% y el 42%: Ley 53-2021, arts. 203 y 403, según los cita el P. del S. 774 (2025).</p>
+
+<div class="not-prose mt-4 bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-5">
+  <p class="text-sm uppercase tracking-wide font-bold text-emerald-800">Y en Cabo Rojo</p>
+  <p class="text-xl font-black text-slate-900 mt-1">De $14.7 millones, $6.3 millones van a deuda: $${Math.round(cr.pc + cr.pr)} de cada $100.</p>
+  <p class="text-base text-slate-700 mt-2">$4.7 millones al fondo de los bonos del municipio (CAE) y $1.6 millones a la contribución de 1.03%. Al municipio le llegan <strong>$8.0 millones</strong> en adelantos. Cabo Rojo está en el puesto <strong>${rank.get('Cabo Rojo')} de 78</strong> (el 1 es el que más manda a deuda), por debajo del promedio de la isla ($48). Y recibe <strong>$0</strong> del Fondo de Equiparación.</p>
+  <p class="text-sm text-slate-500 mt-2">Lo que no sabemos todavía: cuánto debe hoy el municipio en bonos, a quién, y cuánto CAE sobró y regresó el año pasado. Eso lo contesta la Oficina de Finanzas del municipio o AAFAF.</p>
+</div>
+
+<div class="not-prose mt-5 bg-white border border-slate-200 rounded-2xl p-4">
+  <label for="busca-pueblo" class="block text-base font-bold text-slate-900">Busca tu pueblo</label>
+  <select id="busca-pueblo" class="mt-2 w-full border border-slate-300 rounded-lg px-3 text-base" style="min-height:48px"><option value="">Escoge tu pueblo</option>${opciones}</select>
+</div>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-base">
+    <thead><tr class="bg-slate-50 text-left text-sm text-slate-600"><th class="py-2 px-3">Pueblo</th><th class="py-2 px-3 text-right">A deuda, de cada $100</th><th class="py-2 px-3 text-right hidden sm:table-cell">Contribución</th><th class="py-2 px-3 text-right hidden sm:table-cell">Bonos del pueblo</th><th class="py-2 px-3 text-right hidden sm:table-cell">Bonos del Gobierno</th></tr></thead>
+    <tbody>${tabla}</tbody>
+  </table>
+</div>
+<p class="text-sm text-slate-500 mt-2">Año fiscal 2027, proyectado. En pantalla grande se ve el desglose (contribución en millones, y cuánto va a bonos del pueblo y del Gobierno). Ordenado de más a menos deuda por cada $100. Transcrito del Apéndice 6 (pp. 41-42) el 13 oct 2026; las 78 filas cuadran con la aritmética del propio documento.</p>
+
+<h2 id="no-dice">Lo que esta tabla no dice</h2>
+<ul class="text-slate-700">
+  <li><strong>No es dinero perdido.</strong> El CAE paga bonos que el municipio tomó para obras o para operar. Lo que sobra regresa al pueblo. Un pueblo con más CAE no es "peor": tomó más prestado, y lo está pagando.</li>
+  <li><strong>Es una proyección.</strong> Son los números que la Junta certificó para el año fiscal 2027 (jul 2026 a jun 2027). Lo cobrado de verdad se sabe al cierre del año.</li>
+  <li><strong>Cada pueblo tiene su CAE.</strong> En propiedad inmueble la tasa va de 1.2% a 5.5%, según lo que deba cada municipio. En Cabo Rojo es 3.25% de una tasa total de 10.28% (6% básica, 1.03% para bonos del Gobierno y 3.25% de CAE).</li>
+</ul>
+
+<h2 id="frena">Lo que la Junta frena, y lo que costaba</h2>
+<p>Con la deuda en tope, la Junta revisa cada ley que gaste dinero. Unas que tocan tu bolsillo:</p>
+<div class="not-prose mt-3 overflow-auto border border-slate-200 rounded-xl">
+  <table class="w-full text-base">
+    <thead><tr class="bg-slate-50 text-left text-sm text-slate-600"><th class="py-2 px-3">Proyecto</th><th class="py-2 px-3">Lo que prometía</th><th class="py-2 px-3">Lo que costaba</th></tr></thead>
+    <tbody>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3 font-bold">P. de la C. 1014</td><td class="py-2 px-3">Subir el tope de la tasa de 33% de $61,500 a $150,000</td><td class="py-2 px-3 whitespace-nowrap">$563M el primer año</td></tr>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3 font-bold">R. C. de la C. 315</td><td class="py-2 px-3">45 días sin arbitrio en gasolina y diésel</td><td class="py-2 px-3 whitespace-nowrap">hasta $25M</td></tr>
+      <tr class="border-t border-slate-100"><td class="py-2 px-3 font-bold">P. de la C. 272</td><td class="py-2 px-3">Días sin IVU escolar de 4 a 14</td><td class="py-2 px-3 whitespace-nowrap">$3.4M al año</td></tr>
+    </tbody>
+  </table>
+</div>
+<p class="text-sm text-slate-500 mt-2">Cartas de la Junta sobre cada proyecto, 2025-2026 (catálogo público de documentos). El veredicto en las 3: "inconsistente" con el Plan Fiscal.</p>
+
+<h2 id="citables">Citables (copia y pega, con fuente)</h2>
+${citableCards}
+
+<h2 id="verifica">Verifícalo tú mismo</h2>
+<ul class="text-slate-700">
+  <li><a href="https://drive.google.com/file/d/1MXEvsNyGcLN7f9EDiVhjSAaioqnvaImP/view" target="_blank" rel="noopener" data-prsf="verify" data-rec="deuda" class="text-teal-700 font-semibold">Plan Fiscal certificado revisado del Gobierno, 19 jun 2026 (PDF) ↗</a> · pp. 9, 19, 68 y 70.</li>
+  <li><a href="https://drive.google.com/file/d/1Jsf9UG_AF8UtMpRYo3-Xo1ZSBf7aQk5b/view" target="_blank" rel="noopener" data-prsf="verify" data-rec="deuda" class="text-teal-700 font-semibold">Informe Anual FY2025 de la Junta, Vol. I (PDF) ↗</a> · capítulo 2, pp. 43-47.</li>
+  <li><a href="https://drive.google.com/file/d/1BSwXWTy5IKXo7D5-w9OhJCgno6oBljbB/view" target="_blank" rel="noopener" data-prsf="verify" data-rec="deuda" class="text-teal-700 font-semibold">Plan Fiscal Revisado del CRIM, certificado 26 jun 2026 (PDF) ↗</a> · p. 9 y Apéndice 6.</li>
+  <li><a href="https://drive.google.com/file/d/1xLj4bVXcfD5ApZRIBtq1kZt56KfjQsMf/view" target="_blank" rel="noopener" data-prsf="verify" data-rec="deuda" class="text-teal-700 font-semibold">AEE: la oferta de $3 mil millones (30 jun 2026) ↗</a> · <a href="https://drive.google.com/file/d/1x_JSXjP1GUUl_v6ilb9aL91NP4leQLYG/view" target="_blank" rel="noopener" data-prsf="verify" data-rec="deuda" class="text-teal-700 font-semibold">el rechazo (14 jul 2026) ↗</a> · <a href="https://drive.google.com/file/d/1Bdh1Og_hkw3n-XkJ6YDBrGCG4W0MyzGK/view" target="_blank" rel="noopener" data-prsf="verify" data-rec="deuda" class="text-teal-700 font-semibold">la decisión del tribunal (16 mar 2026) ↗</a></li>
+  <li><a href="${JUNTA}" target="_blank" rel="noopener" data-prsf="verify" data-rec="deuda" class="text-teal-700 font-semibold">Todos los documentos de la Junta ↗</a> · también como archivo abierto: oversightboard.pr.gov/wp-content/uploads/data/docs_es.json</li>
+</ul>
+
+${mientrasTanto([
+  `Saca tu factura del CRIM y busca la línea del CAE (Contribución Adicional Especial). Esa parte de lo que pagas va a los bonos de tu municipio. Ya sabes qué estás pagando y por qué.`,
+  `La tabla del CRIM trae un descuento de 0.20% en la tasa (en Cabo Rojo, de 10.28% a 10.08%). En una propiedad con $50,000 de valor tasado son $100 al año. Pregúntale al CRIM si cualificas antes de pagar.`,
+], [
+  `Pregúntale a tu Legislatura Municipal, por escrito: ¿cuánto debe el municipio en bonos, a quién, cuándo se termina de pagar, y cuánto CAE sobró y regresó el año pasado? Son 4 preguntas. Respuesta o silencio, aquí se anota.`,
+  `O copia un citable (botón arriba) y pásaselo al que dice que "nadie sabe a dónde va el dinero".`,
+])}
+
+<p class="text-sm text-slate-500 mt-6">Este récord se cortó el 13 oct 2026 con los documentos más recientes de la Junta. Cuando la AEE salga de la quiebra o el CRIM publique el cierre del año, se actualiza. ¿Ves un error? <a href="/rompelo" class="text-teal-700 font-semibold">Rómpelo</a> y se corrige con el documento en la mano.</p>
+<script>document.getElementById('busca-pueblo').addEventListener('change',function(){var t=document.getElementById(this.value);if(!t)return;document.querySelectorAll('tr.ring-2').forEach(function(r){r.classList.remove('ring-2','ring-teal-500','bg-teal-50')});t.classList.add('ring-2','ring-teal-500','bg-teal-50');t.scrollIntoView({behavior:'smooth',block:'center'});});</script>
+${SHARE_COPY_SCRIPT}
+`
+  const jsonLd = [{
+    '@context': 'https://schema.org', '@type': 'Dataset', distribution: { '@type': 'DataDownload', contentUrl: 'https://puertoricosinfiltros.com/deuda', encodingFormat: 'text/html' }, license: 'https://www.usa.gov/government-works',
+    name: 'La deuda de Puerto Rico en cristiano: reestructuración, AEE y la deuda en la contribución sobre la propiedad de los 78 municipios',
+    description: 'Deuda de Puerto Rico antes y después de PROMESA ($71 mil millones; 12 reestructuraciones de $63 mil millones a $27 mil millones), estado de la deuda de la AEE, y cuánto de la contribución sobre la propiedad de cada municipio va a CAE y a la contribución de 1.03% en el año fiscal 2027. Fuentes: Junta de Supervisión Fiscal y Plan Fiscal del CRIM.',
+    creator: { '@type': 'Person', name: 'Angel Anderson', url: 'https://angelanderson.com' },
+    publisher: { '@type': 'Organization', name: 'Puerto Rico Sin Filtros', url: 'https://puertoricosinfiltros.com' },
+    isAccessibleForFree: true, inLanguage: 'es', url: 'https://puertoricosinfiltros.com/deuda', dateModified: '2026-10-13',
+    keywords: ['deuda de Puerto Rico', 'Junta de Supervisión Fiscal', 'PROMESA', 'AEE', 'CRIM', 'CAE', 'COFINA', 'plan de ajuste'],
+  }, {
+    '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: [
+      { '@type': 'Question', name: '¿Cuánto debía Puerto Rico antes de la quiebra?', acceptedAnswer: { '@type': 'Answer', text: 'Antes de PROMESA el Gobierno había acumulado $71 mil millones en deuda, según el Plan Fiscal certificado revisado de la Junta (19 jun 2026, p. 19). Las 12 reestructuraciones bajaron $63 mil millones en reclamos a $27 mil millones (Informe Anual FY2025).' } },
+      { '@type': 'Question', name: '¿Qué parte de la contribución sobre la propiedad va a pagar deuda?', acceptedAnswer: { '@type': 'Answer', text: `En el año fiscal 2027, de cada $100 de contribución sobre la propiedad, $${Math.round(isla.pc)} van al CAE (bonos de los municipios) y $${Math.round(isla.pr)} a la contribución de 1.03% (bonos del Gobierno central). En Cabo Rojo son $${Math.round(cr.pc + cr.pr)} de cada $100. Fuente: Plan Fiscal Revisado del CRIM, Apéndice 6.` } },
+      { '@type': 'Question', name: '¿Cómo va la deuda de la AEE?', acceptedAnswer: { '@type': 'Answer', text: 'Es la única deuda que sigue en el tribunal. Los bonistas reclaman cerca de $12 mil millones; la Junta ofreció $3 mil millones el 1 jun 2026 y un grupo de bonistas lo rechazó el 14 jul 2026 sin contraoferta.' } },
+    ],
+  }]
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+  res.status(200).send(layout({
+    title: 'La deuda de Puerto Rico, en cristiano: cuánto se debía, la AEE y lo que paga tu pueblo',
+    description: 'De cada $100 de contribución sobre la propiedad en Puerto Rico, $48 se van a pagar bonos. Busca tu pueblo. La deuda de la isla, la de la AEE y la de tu municipio, con el documento de la Junta al lado.',
+    slug: 'deuda', bodyHtml: body, jsonLd: jsonLd as any, ogImage: OG_SINFILTROS,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
 }
@@ -23625,6 +23822,7 @@ ${detalle.some(d => d.coge === null) ? `
 const PAGE_CANONICAL: Record<string, string> = {
   'activos': 'https://puertoricosinfiltros.com/activos',
   'acueductos': 'https://puertoricosinfiltros.com/acueductos',
+  'deuda': 'https://puertoricosinfiltros.com/deuda',
   'agua': 'https://puertoricosinfiltros.com/agua',
   'atlas': 'https://registromedicopr.com/atlas',
   'barrios': 'https://www.mapadecaborojo.com/barrios',
@@ -23881,6 +24079,7 @@ export default async function handler(req: any, res: any) {
     case 'luz': return await handleDatoRecord(req, res)
     case 'basura': return await handleDatoRecord(req, res)
     case 'acueductos': return await handleAcueductos(req, res)
+    case 'deuda': return await handleDeuda(req, res)
     case 'transicion': return await handleTransicion(req, res)
     case 'rompelo': return await handleRompelo(req, res)
     case 'metodologia': return handleMetodologia(req, res)

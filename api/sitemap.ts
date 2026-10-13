@@ -532,7 +532,9 @@ export default async function handler(req: any, res: any) {
       // Lista a mano = se queda corta: el 11 ago 2026 habia 9 records vivos (200) que nunca
       // entraron aqui, y GSC mostraba 0 impresiones para el dominio. Al anadir un record
       // nuevo de PRSF, anadirlo AQUI tambien (los 308 como /diabetes y /telemedicina no van).
-      const paths = ['/', '/ultima-cifra', '/numero-mas-nuevo', '/prediccion', '/predicciones', '/mision', '/calculadora', '/costo-de-vida', '/rendimiento', '/cupon', '/trabajo', '/decidir', '/exposicion-ai', '/examen', '/sigue-el-dinero', '/recuperacion', '/agua', '/activos', '/luz', '/basura', '/historial', '/no-se-mide', '/esencia', '/sinfiltros/pulso', '/expediente-power-expectations', '/expediente/alcalde-cabo-rojo', '/expediente/representante-distrito-20', '/salud-que-falta', '/contradicciones', '/acueductos', '/funciona', '/transicion', '/retiro', '/semaforo-fema', '/los-78', '/notas'];
+      const paths = ['/', '/ultima-cifra', '/numero-mas-nuevo', '/prediccion', '/predicciones', '/mision', '/costo-de-vida', '/rendimiento', '/cupon', '/trabajo', '/decidir', '/examen', '/sigue-el-dinero', '/recuperacion', '/agua', '/activos', '/luz', '/basura', '/historial', '/no-se-mide', '/esencia', '/sinfiltros/pulso', '/expediente-power-expectations', '/expediente/alcalde-cabo-rojo', '/expediente/representante-distrito-20', '/salud-que-falta', '/contradicciones', '/acueductos', '/deuda', '/funciona', '/transicion', '/retiro', '/semaforo-fema', '/los-78', '/notas'];
+      // '/calculadora' y '/exposicion-ai' salieron el 13 oct 2026 al entrar '/deuda' (regla antes de añadir, quita):
+      // 0 sesiones en 56 días en los 3 dominios (ga4_daily). La página sigue viva; volver a ponerlas si GA4 las ve.
       // '/salud-mental' salió el 12 oct 2026: no hay página con ese nombre en Sin Filtros (404).
       outUrls = paths.map((p) => `<url><loc>${B}${p}</loc><changefreq>weekly</changefreq><priority>${p === '/' ? '1.0' : '0.8'}</priority></url>`);
     } else if (isReg) {
