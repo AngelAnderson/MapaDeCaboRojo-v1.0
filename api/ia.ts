@@ -14,7 +14,7 @@
 //   IA_DAILY_CAP (opcional, default 200)
 
 const OPENAI_KEY = process.env.OPENAI_API_KEY || "";
-const MODEL = "gpt-4o";
+const MODEL = "gpt-6-luna";
 
 // Tope de gasto diario (global, todo el sitio). ~$0.05–0.10 por chequeo.
 const DAILY_CAP = parseInt(process.env.IA_DAILY_CAP || "200", 10);
@@ -100,7 +100,7 @@ function outText(data: any): string {
 
 async function checkVisibility(name: string, cat: string): Promise<Check> {
   const question = `Soy de Puerto Rico. ¿Cuáles son los mejores ${cat} en Cabo Rojo, Puerto Rico? Menciona nombres de negocios específicos.`;
-  const search = await openai({ model: MODEL, tools: [{ type: "web_search_preview" }], input: question });
+  const search = await openai({ model: MODEL, reasoning: { effort: "low" }, tools: [{ type: "web_search_preview" }], input: question });
   const answer = outText(search);
   if (!answer) return { cited: false, answer: "" };
 
@@ -109,6 +109,7 @@ async function checkVisibility(name: string, cat: string): Promise<Check> {
   const safeName = name.replace(/["\n\r]/g, " ").trim();
   const judge = await openai({
     model: MODEL,
+    reasoning: { effort: "none" },
     input: `Texto:\n"""${answer.slice(0, 4000)}"""\n\n¿El texto anterior menciona o recomienda un negocio llamado "${safeName}" (o una variación obvia del mismo nombre)? Responde únicamente con la palabra SI o la palabra NO.`,
   });
   // Normaliza acentos ("sí" → "si") — el \b de JS no reconoce la í.

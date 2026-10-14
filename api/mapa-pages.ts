@@ -17791,7 +17791,7 @@ async function handleBuscarIa(req: any, res: any) {
     let answer: string | null = null
     try {
       const chat = await fetchJson('https://api.openai.com/v1/chat/completions', {
-        model: 'gpt-4o-mini', temperature: 0.2, max_tokens: 350,
+        model: 'gpt-6-luna', reasoning_effort: 'none', temperature: 0.2, max_completion_tokens: 350,
         messages: [
           { role: 'system', content: 'Eres el buscador de Puerto Rico Sin Filtros, un sitio de récord público verificado. Contesta en español boricua claro y neutral, máximo 120 palabras. REGLAS ESTRICTAS: (1) usa SOLO los datos numerados que te doy — cero conocimiento externo, cero opinión política; (2) cada afirmación termina con su referencia [n]; (3) si los datos no contestan la pregunta, di exactamente qué parte no está en el récord; (4) no inventes números ni fechas; (5) no uses el guion largo.' },
           { role: 'user', content: `Pregunta: ${q}\n\nDatos del récord:\n${ctx}` },
