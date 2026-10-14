@@ -92,6 +92,27 @@ function formatHours(opening_hours: any): string {
   return days.length > 0 ? days.join(', ') : 'No disponible';
 }
 
+// 14-oct-2026: 775 fichas publicadas traen en la columna de texto `hours` el horario de
+// Google como JSON ({"monday": "8:30 AM – 5:00 PM", "saturday": "Closed"}) y la ficha lo
+// imprimía crudo, con llaves y comillas en inglés. Si `hours` es ese JSON, se escribe en
+// español (lunes primero); si no, se respeta el texto libre ("Por cita", "Lun a Vie 8am").
+function horasTexto(hours: string): string {
+  const t = hours.trim();
+  if (!t.startsWith('{')) return esc(t);
+  let o: Record<string, unknown>;
+  try { o = JSON.parse(t); } catch { return esc(t); }
+  if (!o || typeof o !== 'object') return esc(t);
+  const porDia: Record<number, string> = {};
+  for (const [k, v] of Object.entries(o)) {
+    const idx = DAY_INDEX[k.toLowerCase()];
+    if (idx === undefined || typeof v !== 'string' || !v.trim()) continue;
+    porDia[idx] = /^closed$/i.test(v.trim()) ? 'cerrado' : /open 24 hours/i.test(v) ? 'abierto 24 horas' : v.trim();
+  }
+  const dias = [1, 2, 3, 4, 5, 6, 0].filter((i) => porDia[i]);
+  if (!dias.length) return 'No disponible';
+  return dias.map((i) => `${DAY_ES[i]}: ${esc(porDia[i])}`).join(', ');
+}
+
 // Cuarentena visible (2026-08-21). El bot ya avisaba al proximo que TEXTEA
 // (search.ts usa caveatTelReportado), pero mapadecaborojo.com no leia
 // places.dato_reportado: cero referencias en todo el repo. O sea que el vecino
@@ -412,7 +433,7 @@ export default async function handler(req: any, res: any) {
   const structuredHours = formatHours(place.opening_hours);
   const hoursText = structuredHours !== 'No disponible'
     ? structuredHours
-    : (place.hours ? esc(place.hours) : 'No disponible');
+    : (place.hours ? horasTexto(String(place.hours)) : 'No disponible');
   const hoursKnown = hoursText !== 'No disponible';
   const openNow = isOpenNow(place.opening_hours);
   // openNow (computed from hours) wins over the coarse status flag when available
