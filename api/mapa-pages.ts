@@ -7242,7 +7242,7 @@ async function handleEspecialista(req: any, res: any) {
     <a href="https://wa.me/17874177711?text=${spec ? spec.kw : 'ESPECIALISTA'}" class="${waLink ? '' : 'col-span-2 '}flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-base no-underline hover:bg-teal-50"><i class="fa-brands fa-whatsapp"></i> ${T.veci}</a>
     ${webUrl ? `<a href="${escapeHtml(webUrl)}" target="_blank" rel="noopener nofollow" class="col-span-2 flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-base no-underline hover:bg-teal-50"><i class="fa-solid fa-globe"></i> ${t('Página web de la oficina', 'Office website')}</a>` : ''}
   </div>
-  <p class="not-prose mt-3 text-base font-semibold text-stone-800" style="font-size:16px">${t('Antes de ir, pregunta: ¿aceptan mi plan 2027?', 'Before you go, ask: do you take my 2027 plan?')}</p>${place.hours ? `<p class="not-prose mt-3 text-base text-stone-700"><b>${t('Horario', 'Hours')}:</b> ${escapeHtml(place.hours)}</p>` : ''}`
+  <p class="not-prose mt-3 text-base font-semibold text-stone-800" style="font-size:16px">${t('Antes de ir, pregunta: ¿aceptan mi plan 2027?', 'Before you go, ask: do you take my 2027 plan?')}</p>${place.hours ? `<p class="not-prose mt-3 text-base text-stone-700"><b>${t('Horario', 'Hours')}:</b> ${horasLegibles(place.hours, t)}</p>` : ''}`
 
   // ═══ La Cita del Lunes (23 sep 2026, Recibo Cero) ═══
   // El Registro se muere el fin de semana (sáb 63 clics en Llamar, dom 20, contra 360-723 entre
@@ -24369,4 +24369,25 @@ ${SHARE_COPY_SCRIPT}
     slug: 'examen', bodyHtml: body, jsonLd, ogImage,
     host: req.headers?.host, canonicalHost: 'https://puertoricosinfiltros.com',
   }))
+}
+
+// 14-oct-2026: 775 fichas traen en `hours` el horario de Google como JSON ({"monday": "8:30 AM – 5:00 PM"})
+// y /especialista lo imprimía crudo. Si es ese JSON se escribe por día en el idioma de la página; si es
+// texto libre ("Por cita", "L-V 8am-4pm") se deja como está. Igual que horasTexto en api/negocio.ts.
+function horasLegibles(hours: unknown, t: (es: string, en: string) => string): string {
+  const raw = String(hours ?? '').trim();
+  if (!raw.startsWith('{')) return escapeHtml(raw);
+  let o: Record<string, unknown>;
+  try { o = JSON.parse(raw); } catch { return escapeHtml(raw); }
+  const ES = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+  const EN = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const idx: Record<string, number> = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
+  const porDia: Record<number, string> = {};
+  for (const [k, v] of Object.entries(o || {})) {
+    const i = idx[k.toLowerCase()];
+    if (i === undefined || typeof v !== 'string' || !v.trim()) continue;
+    porDia[i] = /^closed$/i.test(v.trim()) ? t('cerrado', 'closed') : /open 24 hours/i.test(v) ? t('abierto 24 horas', 'open 24 hours') : v.trim();
+  }
+  const dias = [1, 2, 3, 4, 5, 6, 0].filter((i) => porDia[i]);
+  return dias.length ? dias.map((i) => `${t(ES[i], EN[i])}: ${escapeHtml(porDia[i])}`).join(', ') : escapeHtml(raw);
 }
