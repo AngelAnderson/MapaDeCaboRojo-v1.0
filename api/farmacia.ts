@@ -96,6 +96,25 @@ function formatHours(opening_hours: any): string {
   return 'No disponible';
 }
 
+// 14-oct-2026: igual que api/negocio.ts. Muchas farmacias y hospitales solo traen el horario de
+// Google como JSON en la columna de texto `hours`; aquí salía "No disponible" aunque el dato existía.
+const DIA_EN: Record<string, number> = { sunday: 0, monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6 };
+function horasTexto(hours: unknown): string {
+  if (typeof hours !== 'string' || !hours.trim()) return 'No disponible';
+  const t = hours.trim();
+  if (!t.startsWith('{')) return esc(t);
+  let o: Record<string, unknown>;
+  try { o = JSON.parse(t); } catch { return esc(t); }
+  const porDia: Record<number, string> = {};
+  for (const [k, v] of Object.entries(o || {})) {
+    const idx = DIA_EN[k.toLowerCase()];
+    if (idx === undefined || typeof v !== 'string' || !v.trim()) continue;
+    porDia[idx] = /^closed$/i.test(v.trim()) ? 'Cerrado' : /open 24 hours/i.test(v) ? 'Abierto 24 horas' : v.trim();
+  }
+  const dias = [1, 2, 3, 4, 5, 6, 0].filter((i) => porDia[i]);
+  return dias.length ? dias.map((i) => `${DAY_NAMES_ES[i]}: ${esc(porDia[i])}`).join(' · ') : 'No disponible';
+}
+
 /** Check if the business is currently open based on structured hours */
 function isCurrentlyOpen(opening_hours: any): boolean | null {
   if (!opening_hours || !Array.isArray(opening_hours.structured)) return null;
@@ -315,7 +334,7 @@ ${veciSmsScript()}
       ? esc(place.description).slice(0, 160)
       : T.descFallback(placeName, localizedLabel, muni);
   const image       = place.image_url || `${siteOrigin}/api/og?t=${encodeURIComponent(place.name)}&k=Farmacia&badge=Verificado`;
-  const hoursText   = formatHours(place.opening_hours);
+  const hoursText   = formatHours(place.opening_hours) !== 'No disponible' ? formatHours(place.opening_hours) : horasTexto(place.hours);
   const openNow     = isCurrentlyOpen(place.opening_hours);
   // Three-state status. We only claim "open"/"closed" when we actually have
   // confirmed structured hours. When openNow is null we show a neutral
