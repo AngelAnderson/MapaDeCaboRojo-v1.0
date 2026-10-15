@@ -12993,14 +12993,49 @@ async function handleRecibo(req: any, res: any) {
     // Vive en vidas_ayudadas; 1 persona = 1 aunque llame 3 veces. Nunca views ni proyecciones.
     const r3 = await supabase.from('recibo_cero_contador').select('capa,medida,valor,fuente'); hoy = hoy.concat(r3.data || [])
   } catch { /* página vive vacía */ }
+  // Por dónde llegaron (15 oct 2026): personas únicas por propiedad desde ayudadas_salidas (dia, propiedad, persona).
+  // Se trae la vista paginada (límite 1000 de PostgREST) y se cuenta aquí; la base no se toca.
+  const PROPS: Array<[string, string]> = [['registro', 'Registro Médico PR'], ['directorio', t('el directorio (mapadecaborojo.com)', 'the directory (mapadecaborojo.com)')], ['veci', 'El Veci'], ['caborojo', 'caborojo.com']]
+  const hoyPR = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Puerto_Rico' })
+  const diaMenos = (n: number) => { const d = new Date(hoyPR + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() - n); return d.toISOString().slice(0, 10) }
+  const d7 = diaMenos(6), d30 = diaMenos(29)
+  const llegaron: Record<string, { hoy: Set<string>; s7: Set<string>; s30: Set<string>; todas: Set<string>; desde: string }> = {}
+  let llegaronOk = false
+  try {
+    const PAGE = 1000
+    for (let from = 0; from < 50 * PAGE; from += PAGE) {
+      const r = await supabase.from('ayudadas_salidas').select('dia,propiedad,persona').range(from, from + PAGE - 1)
+      if (r.error) { console.error('[recibo] ayudadas_salidas:', r.error.message); break }
+      const rows = r.data || []
+      for (const x of rows) {
+        const p = String(x.propiedad || ''), per = String(x.persona || ''), dia = String(x.dia || '')
+        if (!p || !per || !dia) continue
+        const s = llegaron[p] || (llegaron[p] = { hoy: new Set(), s7: new Set(), s30: new Set(), todas: new Set(), desde: dia })
+        s.todas.add(per); if (dia >= d30) s.s30.add(per); if (dia >= d7) s.s7.add(per); if (dia === hoyPR) s.hoy.add(per)
+        if (dia < s.desde) s.desde = dia
+      }
+      if (rows.length < PAGE) { llegaronOk = true; break }
+    }
+  } catch (e: any) { console.error('[recibo] ayudadas_salidas:', e?.message || e) }
+  // 15 oct 2026: la vista renombró la medida y la página pintó 0 con 3,152 personas en la base.
+  // Se busca por la etiqueta nueva, la vieja y, de respaldo, por prefijo. Si da 0 con datos presentes, se grita en logs.
+  const buscar = (...ms: string[]) => { for (const m of ms) { const r = hoy.find(r => r.medida === m); if (r) return r } return hoy.find(r => String(r.medida || '').startsWith(ms[ms.length - 1])) }
   const v = (m: string) => Number(String((hoy.find(r => r.medida === m) || {}).valor || '0').replace(/[^0-9.]/g, '')) || 0
+  const num = (r: any) => Number(String((r || {}).valor || '0').replace(/[^0-9.]/g, '')) || 0
   const v7 = (m: string) => { const r = hace7.find(x => x.medida === m); return r ? Number(r.valor) : null }
   const fmt = (n: number) => n.toLocaleString('en-US')
-  const delta = (m: string) => { const a = v(m), b = v7(m); if (b === null || b === a) return ''; const d = a - b; return ` <span class="text-sm font-semibold ${d > 0 ? 'text-teal-700' : 'text-stone-500'}">${d > 0 ? '+' : ''}${fmt(d)} ${t('en 7 días', 'in 7 days')}</span>` }
+  const deltaDe = (a: number, ...ms: string[]) => { let b: number | null = null; for (const m of ms) { b = v7(m); if (b !== null) break } if (b === null || b === a) return ''; const d = a - b; return ` <span class="text-sm font-semibold ${d > 0 ? 'text-teal-700' : 'text-stone-500'}">${d > 0 ? '+' : ''}${fmt(d)} ${t('en 7 días', 'in 7 days')}</span>` }
+  const delta = (m: string) => deltaDe(v(m), m)
   const llamaron = v('personas que dieron clic en Llamar (Registro)'), wa = v('personas que dieron clic en WhatsApp (Registro)')
   const horas = v('horas de espera que no ocurrieron'), veci = v('personas distintas que escribieron al Veci'), si = v('dijeron que sí resolvió')
   const minVideo = v('minutos de video consumidos')
-  const ayudadas = v('personas ayudadas (únicas, con reporte)'), quitaron = v('menos ajorao: quitaron 1 y lo reportaron'), faltan = v('faltan'), ritmo = v('ritmo necesario por día')
+  const ETQ_AYUDADAS_NUEVA = 'personas ayudadas (llegaron con una pregunta y se fueron con una salida)', ETQ_AYUDADAS_VIEJA = 'personas ayudadas (únicas, con reporte)'
+  const filaAyudadas = buscar(ETQ_AYUDADAS_NUEVA, ETQ_AYUDADAS_VIEJA, 'personas ayudadas')
+  const ayudadas = num(filaAyudadas)
+  const conRecibo = num(buscar('con recibo (dijeron que les funcionó)', 'menos ajorao: quitaron 1 y lo reportaron', 'con recibo'))
+  const faltan = v('faltan'), ritmo = v('ritmo necesario por día')
+  if (ayudadas === 0 && hoy.some(r => r.medida === 'meta')) console.error('[recibo] contador en 0 con recibo_cero_contador presente; etiquetas:', hoy.filter(r => r.capa === 'contador 50K').map(r => r.medida).join(' | '))
+  const deltaAyudadas = deltaDe(ayudadas, String((filaAyudadas || {}).medida || ETQ_AYUDADAS_NUEVA), ETQ_AYUDADAS_VIEJA)
   const fecha = new Date().toLocaleDateString(en ? 'en-US' : 'es-PR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Puerto_Rico' })
   const fila = (num: string, txt: string, sub: string) => `<div class="py-5 border-b border-stone-200"><p class="m-0 text-4xl sm:text-5xl font-black text-stone-900 leading-none">${num}</p><p class="m-0 mt-2 text-lg text-stone-800">${txt}</p><p class="m-0 mt-1 text-sm text-stone-500">${sub}</p></div>`
   const body = `
@@ -13009,11 +13044,19 @@ async function handleRecibo(req: any, res: any) {
   <p class="text-lg text-stone-700 mt-2">${t('No es lo que vimos. Es lo que hicieron. Se actualiza solo, todos los días.', 'Not what we saw. What they did. Updates itself, every day.')}</p>
   <div class="not-prose mt-4 bg-teal-50 border border-teal-200 rounded-2xl p-5">
     <p class="m-0 text-xs uppercase tracking-wide text-teal-800 font-bold">${t('El contador de la meta', 'The goal counter')}</p>
-    <p class="m-0 mt-1 text-5xl sm:text-6xl font-black text-stone-900 leading-none">${fmt(ayudadas)}${delta('personas ayudadas (únicas, con reporte)')}</p>
-    <p class="m-0 mt-2 text-lg text-stone-800">${t('personas nos dijeron que algo cambió: quitaron 1 cosa que no hacía falta, o eligieron y nos dijeron "sí, resolvió"', 'people told us something changed: they removed 1 thing that was not needed, or chose and told us "yes, it worked"')}</p>
-    <p class="m-0 mt-1 text-sm text-stone-600">${t(`${fmt(quitaron)} quitaron algo · faltan ${fmt(faltan)} para 50,000 · hacen falta ${fmt(Math.round(ritmo))} por día hasta el 31 de diciembre de 2027`, `${fmt(quitaron)} removed something · ${fmt(faltan)} to go to 50,000 · needs ${fmt(Math.round(ritmo))} a day until December 31, 2027`)}</p>
+    <p class="m-0 mt-1 text-5xl sm:text-6xl font-black text-stone-900 leading-none">${fmt(ayudadas)}${deltaAyudadas}</p>
+    <p class="m-0 mt-2 text-lg text-stone-800">${t('personas llegaron con una pregunta y se fueron con una salida: un médico que llamaron, una respuesta del Veci, un negocio que encontraron', 'people arrived with a question and left with a way out: a doctor they called, an answer from El Veci, a business they found')}</p>
+    <p class="m-0 mt-1 text-sm text-stone-600">${t(`${fmt(conRecibo)} dijeron que les funcionó · faltan ${fmt(faltan)} para 50,000 · hacen falta ${fmt(Math.round(ritmo))} por día hasta el 31 de diciembre de 2027`, `${fmt(conRecibo)} said it worked for them · ${fmt(faltan)} to go to 50,000 · needs ${fmt(Math.round(ritmo))} a day until December 31, 2027`)}</p>
     <p class="m-0 mt-3 text-sm text-stone-700">${t('Solo cuenta quien lo reporta. Textea <b>QUITA</b> y lo que quitaste al <a href="sms:+17874177711&body=QUITA%20" class="font-bold text-teal-800">787-417-7711</a>.', 'Only those who report count. Text <b>QUITA</b> and what you removed to <a href="sms:+17874177711&body=QUITA%20" class="font-bold text-teal-800">787-417-7711</a>.')}</p>
   </div>
+  ${llegaronOk ? `<div class="not-prose mt-6">
+    <p class="m-0 text-xs uppercase tracking-wide text-stone-500 font-bold">${t('Por dónde llegaron', 'Where they came in')}</p>
+    <table class="w-full mt-2 text-base text-stone-800" style="border-collapse:collapse;font-size:16px">
+      <thead><tr class="text-left text-sm text-stone-500 border-b border-stone-300"><th class="py-2 pr-2 font-semibold">${t('Puerta', 'Door')}</th><th class="py-2 px-2 text-right font-semibold">${t('Hoy', 'Today')}</th><th class="py-2 px-2 text-right font-semibold">${t('7 días', '7 days')}</th><th class="py-2 px-2 text-right font-semibold">${t('30 días', '30 days')}</th><th class="py-2 pl-2 text-right font-semibold">${t('Desde cuándo', 'Since')}</th></tr></thead>
+      <tbody>${PROPS.map(([k, nombre]) => { const s = llegaron[k]; const desde = s ? new Date(s.desde + 'T12:00:00Z').toLocaleDateString(en ? 'en-US' : 'es-PR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) : '-'; return `<tr class="border-b border-stone-200"><td class="py-2 pr-2">${nombre}</td><td class="py-2 px-2 text-right font-bold">${fmt(s ? s.hoy.size : 0)}</td><td class="py-2 px-2 text-right">${fmt(s ? s.s7.size : 0)}</td><td class="py-2 px-2 text-right">${fmt(s ? s.s30.size : 0)}</td><td class="py-2 pl-2 text-right text-stone-600">${desde}</td></tr>` }).join('')}</tbody>
+    </table>
+    <p class="m-0 mt-2 text-sm text-stone-500">${t(`personas distintas por puerta, hora de Puerto Rico · verificado el ${fecha}`, `distinct people per door, Puerto Rico time · verified on ${fecha}`)}</p>
+  </div>` : ''}
   <p class="text-xs uppercase tracking-wide text-stone-500 font-bold mt-6">${t('Lo demás que la gente hizo (no se suma al contador)', 'Everything else people did (not added to the counter)')}</p>
   <div class="not-prose mt-1">
     ${fila(fmt(llamaron + wa) + delta('personas que dieron clic en Llamar (Registro)'), t('personas escogieron un médico y lo llamaron o le escribieron', 'people chose a doctor and called or messaged them'), t('desde el 14 de julio de 2026, en registromedicopr.com', 'since July 14, 2026, on registromedicopr.com'))}
@@ -13023,7 +13066,7 @@ async function handleRecibo(req: any, res: any) {
   </div>
   <div class="not-prose mt-8 bg-stone-100 rounded-2xl p-5 text-sm text-stone-700">
     <p class="m-0 font-bold text-stone-900">${t('Cómo se cuenta', 'How it is counted')}</p>
-    <p class="m-0 mt-1">${t('El contador de arriba solo suma personas únicas que reportaron algo. Un clic en "Llamar" cuenta 1 vez por persona por día y no entra al contador porque no sabemos quién fue. Las horas son la espera real hasta la próxima oficina abierta (lunes a viernes, 8:00 a 4:30), sumadas pregunta por pregunta. Nada aquí es una proyección.', 'The counter above only adds unique people who reported something. A "Call" tap counts once per person per day and is not in the counter because we do not know who it was. Hours are the real wait until the next open office (Monday to Friday, 8:00 to 4:30), added question by question. Nothing here is a projection.')}</p>
+    <p class="m-0 mt-1">${t('El contador de arriba suma personas distintas que llegaron con una pregunta y se fueron con una salida: llamaron o escribieron a un médico desde su ficha, le escribieron al Veci y tuvieron respuesta, o llamaron desde una página. 1 persona cuenta 1 aunque vuelva 3 veces. Las filas de abajo cuentan 1 por persona por día sin saber quién fue, y por eso no entran al contador. Las horas son la espera real hasta la próxima oficina abierta (lunes a viernes, 8:00 a 4:30), sumadas pregunta por pregunta. Nada aquí es una proyección.', 'The counter above only adds unique people who reported something. A "Call" tap counts once per person per day and is not in the counter because we do not know who it was. Hours are the real wait until the next open office (Monday to Friday, 8:00 to 4:30), added question by question. Nothing here is a projection.')}</p>
     <p class="m-0 mt-2">${t('La meta: 50,000 personas viviendo menos ajoradas y eligiendo mejor antes del 31 de diciembre de 2027. Este es el contador.', 'The goal: 50,000 people living with less rush and choosing better before December 31, 2027. This is the counter.')}</p>
   </div>`
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
