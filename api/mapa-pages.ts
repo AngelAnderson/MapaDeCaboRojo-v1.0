@@ -6985,8 +6985,10 @@ async function handleEspecialista(req: any, res: any) {
   let tsAdv: { pueblo: string | null; seccion: string | null; otroTel: string | null } | null = null
   {
     // 10 oct 2026: solo npi_score >= 1 (tabla base, llave de servidor; falla cerrado).
+    // 15 oct 2026: fijada a PLAN_ED_TSS. Se cargó la edición 2027 y sin este filtro la ficha podía
+    // enseñar una fila de 2027 bajo el rótulo "actualizado 9 sep 2025". Se mueven juntos (rótulo + constante).
     const { data } = await supabase.from('plan_directory_snapshot')
-      .select('town,section,phones').eq('plan', 'Triple-S Advantage').eq('npi', npi).gte('npi_score', 1).limit(1)
+      .select('town,section,phones').eq('plan', 'Triple-S Advantage').eq('edition_date', PLAN_ED_TSS).eq('npi', npi).gte('npi_score', 1).limit(1)
     const r = (data || [])[0]
     if (r) {
       const del: string[] = (r.phones || []).filter((x: string) => telMarcable(x) && x !== phoneDigits.slice(-10))
