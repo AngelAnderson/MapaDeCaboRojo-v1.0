@@ -15,6 +15,7 @@
  */
 
 import { hojaLlamadaScript } from './_lib/hoja-llamada.js'
+import { telefonoAlternoMedicare } from './_lib/telefono-alterno.js'
 import { createClient } from '@supabase/supabase-js'
 import { createHash, createHmac, timingSafeEqual } from 'crypto'
 import { handleActivos } from './_lib/activos.js'
@@ -6734,7 +6735,7 @@ async function handleEspecialista(req: any, res: any) {
 
   const { data: place, error: placeErr } = await supabase
     .from('places')
-    .select('id,name,subcategory,municipality,region,phone,address,npi,lat,lon,slug,last_verified_at,accepted_plans,cms_rating,cms_rating_type,dato_reportado,visibility,status,npi_status,verification_source,hours,website,contact_info')
+    .select('id,name,subcategory,municipality,region,phone,address,npi,lat,lon,slug,last_verified_at,accepted_plans,cms_rating,cms_rating_type,dato_reportado,visibility,status,npi_status,verification_source,hours,website,contact_info,verification_issues')
     .eq('slug', slug).not('npi', 'is', null).maybeSingle()
   if (placeErr) { responderBaseCaida(res); return }
 
@@ -6822,6 +6823,7 @@ async function handleEspecialista(req: any, res: any) {
   // 5 oct 2026: 787-888-8888 y compañía. NPPES trae relleno (7 dígitos iguales después del área)
   // y los directorios de los planes lo copian. Se sacó de places (telefonos_no_marcables) y
   // reapareció como "otro número" del plan. Un número así no se ofrece en ningún lado.
+  const fmtTelAlt = (d: string) => `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`
   const telMarcable = (x: string) => {
     const d = String(x || '').replace(/\D/g, '').slice(-10)
     return d.length === 10 && !/^[01]/.test(d) && !/^(\d)\1{6}$/.test(d.slice(3))
@@ -7236,10 +7238,16 @@ async function handleEspecialista(req: any, res: any) {
   const safeSpec = spec ? place.subcategory : ''
   const safeRegion = REG_REGIONS.has(region) ? region : ''
   const evtAttr = `specialty:'${safeSpec}',region:'${safeRegion}'`
+  // 15 oct 2026 (decisión de Angel 10 oct): si el teléfono no contestó en 30 días y Medicare trae
+  // otro número para este NPI, va debajo del principal con el rótulo exacto. Sin "verificado".
+  const altMedicare = contactoOculto ? null : telefonoAlternoMedicare((place as any).verification_issues, place.phone, place.last_verified_at)
+  const altMedicareOk = altMedicare && telMarcable(altMedicare.digitos) ? altMedicare : null
+  const altMedicareBtn = altMedicareOk ? `<a href="tel:${altMedicareOk.digitos}" onclick="try{gtag('event','click_to_call',{${evtAttr},alterno:'medicare'})}catch(e){}" class="col-span-2 flex flex-col items-center justify-center bg-white border-2 border-teal-700 text-teal-900 font-bold px-4 py-2 min-h-[56px] rounded-xl text-lg no-underline hover:bg-teal-50"><span style="font-size:16px;font-weight:600">${t('Otro número según Medicare', 'Another number according to Medicare')}</span><span><i class="fa-solid fa-phone"></i> ${escapeHtml(fmtTelAlt(altMedicareOk.digitos))}</span></a>` : ''
   // 18 sep 2026: la alerta de teléfono reportado se mudó a la fila 1 de la Hoja de evidencia.
   // "Llamar" va primero y a lo ancho: es lo que vino a hacer la persona.
   const actionBtns = `${centralHtml}<div class="not-prose grid grid-cols-2 gap-2 ${centralHtml ? 'mt-3' : 'mt-5'}">
     ${telLink ? `<a href="${telLink}" onclick="try{gtag('event','click_to_call',{${evtAttr}})}catch(e){}" class="col-span-2 flex items-center justify-center gap-2 bg-teal-700 hover:bg-teal-800 text-white font-bold px-5 min-h-[56px] rounded-xl text-lg no-underline"><i class="fa-solid fa-phone"></i> ${T.call} ${escapeHtml(place.phone)}</a>` : ''}
+    ${telLink ? altMedicareBtn : ''}
     ${waLink ? `<a href="${waLink}" onclick="try{gtag('event','click_whatsapp',{${evtAttr}})}catch(e){}" class="flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-base no-underline hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${T.wa}</a>` : ''}
     <a href="https://wa.me/17874177711?text=${spec ? spec.kw : 'ESPECIALISTA'}" class="${waLink ? '' : 'col-span-2 '}flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-base no-underline hover:bg-teal-50"><i class="fa-brands fa-whatsapp"></i> ${T.veci}</a>
     ${webUrl ? `<a href="${escapeHtml(webUrl)}" target="_blank" rel="noopener nofollow" class="col-span-2 flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-base no-underline hover:bg-teal-50"><i class="fa-solid fa-globe"></i> ${t('Página web de la oficina', 'Office website')}</a>` : ''}
