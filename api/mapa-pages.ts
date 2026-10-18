@@ -7094,7 +7094,7 @@ async function handleEspecialista(req: any, res: any) {
     const labelHub = (n !== 1 && /^[a-záéíóúñ]+$/.test(lc) && /[aeiou]$/.test(lc)) ? lc + 's' : lc
     if (n > 1) {
       const lpF = lang === 'en' ? '?lang=en' : ''
-      puertaHub = `<p class="not-prose mt-4 text-sm"><a href="/registro/${specUrlF}/${muniSlugF}${lpF}" class="text-teal-700 font-semibold hover:underline">${lang === 'en'
+      puertaHub = `<p class="not-prose mt-4 text-sm"><a data-rg-lista="1" href="/registro/${specUrlF}/${muniSlugF}${lpF}" class="text-teal-700 font-semibold hover:underline">${lang === 'en'
         ? `Comparing plans? See all ${n} ${escapeHtml(labelHub)} in ${escapeHtml(muni)} and which plan lists each one →`
         : `¿Estás comparando planes? Mira los ${n} ${escapeHtml(labelHub)} de ${escapeHtml(muni)} y cuál plan lista a cada uno →`}</a></p>`
     }
