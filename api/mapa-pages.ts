@@ -20624,6 +20624,19 @@ function geriatriaSegundaHtml(list: any[], en: boolean, lp: string): string {
 <div class="not-prose mt-2 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-slate-600"><th class="py-2 px-3">${t('Médico', 'Doctor')}</th><th class="py-2 px-3">${t('Pueblo', 'Town')}</th><th class="py-2 px-3 text-right">${t('Teléfono', 'Phone')}</th></tr></thead><tbody>${filas}</tbody></table></div>`
 }
 
+// 21 oct 2026 (libro en páginas, Angel): bloque de libro en los hubs del Registro. Sin precio. Solo en español (el libro es en español).
+// Medida: clics a amazon.com con utm_source=registromedicopr (GA4 link_click) y pedidos KDP (pantallazo semanal). Cobro 18 nov.
+function libroBloqueRegistro(slug: string): string {
+  const u = `https://amazon.com/dp/B0HLQ66J6Z?utm_source=registromedicopr&utm_medium=libro-block&utm_campaign=${encodeURIComponent(slug)}`
+  return `<!-- libro-v1 --><div id="libro-v1" data-libro="${escapeHtml(slug)}" style="max-width:760px;margin:32px auto 24px;padding:20px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;">`
+    + `<p style="font-size:16px;line-height:1.4;color:#9A3412;margin:0 0 8px;font-weight:700;">Lo que todavía no aprendemos</p>`
+    + `<p style="font-size:22px;line-height:1.3;color:#0F172A;margin:0 0 10px;font-weight:700;">Salvador Brau, de Cabo Rojo: «Verifica antes de repetir.»</p>`
+    + `<p style="font-size:17px;line-height:1.55;color:#1E293B;margin:0;">Por eso este directorio dice cuándo se verificó cada ficha y de dónde salió el dato. Esa lección y otras 49 de figuras de Puerto Rico están en un libro, cada una con una pregunta para esta semana.</p>`
+    + `<p style="margin:16px 0 12px;"><a href="${u}" rel="noopener" target="_blank" style="display:inline-block;min-height:48px;line-height:20px;padding:14px 22px;background:#0F172A;color:#FFFFFF;font-size:17px;font-weight:700;text-decoration:none;border-radius:8px;">Ver Lo que todavía no aprendemos en Amazon</a></p>`
+    + `<p style="font-size:16px;line-height:1.55;color:#1E293B;margin:0;">Si es para tu equipo, <a href="https://mastiempo.net/mayoreo" style="color:#0F172A;text-decoration:underline;">mira los pedidos por cantidad</a> o escríbeme <strong>LIBROS</strong> por privado al <a href="https://wa.me/17874177711?text=LIBROS" rel="noopener" style="color:#0F172A;text-decoration:underline;">787-417-7711</a>.</p>`
+    + `</div><!-- /libro-v1 -->`
+}
+
 async function handleRegistroHub(req: any, res: any) {
   // Normalize incoming slug the same way specToUrl() built SPEC_BY_URL's keys — strip accents
   // (á/é/í/ó/ú/ñ) so /registro/cardiólogo matches the 'cardiologo' key instead of 302ing to /registro.
@@ -20938,7 +20951,7 @@ ${regDisclaimer(en)}`
     ]
     res.setHeader('Content-Type', 'text/html; charset=utf-8')
     res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=604800')
-    res.status(200).send(layout({ bareTitle: true, title: titleT, description: descT, slug: canonicalPathT, bodyHtml: bodyT + pieMd(`https://registromedicopr.com/${canonicalPathT}`), jsonLd: jsonLdT, md: true, ogImage: REGISTRO_OG, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com', lang: en ? 'en' : 'es' }))
+    res.status(200).send(layout({ bareTitle: true, title: titleT, description: descT, slug: canonicalPathT, bodyHtml: bodyT + (en ? '' : libroBloqueRegistro(`registro-${specUrl}${regionUrl ? '-' + regionUrl : ''}`)) + pieMd(`https://registromedicopr.com/${canonicalPathT}`), jsonLd: jsonLdT, md: true, ogImage: REGISTRO_OG, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com', lang: en ? 'en' : 'es' }))
     return
   }
 
@@ -21146,7 +21159,7 @@ ${regDisclaimer(en)}
   // Región sin ninguno = soft 404 para Google. Se sirve (dice a dónde ir) pero no se indexa.
   if (!providers.length) res.setHeader('X-Robots-Tag', 'noindex, follow')
   res.status(200).send(layout({
-    bareTitle: true, title, description, slug: canonicalPath, bodyHtml: body, jsonLd,
+    bareTitle: true, title, description, slug: canonicalPath, bodyHtml: body + (en ? '' : libroBloqueRegistro(`registro-${specUrl}${regionUrl ? '-' + regionUrl : ''}`)), jsonLd,
     ogImage: REGISTRO_OG, host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
     lang: en ? 'en' : 'es',
   }))
