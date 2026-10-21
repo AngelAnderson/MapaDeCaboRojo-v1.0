@@ -20729,7 +20729,19 @@ async function handleRegistroHub(req: any, res: any) {
     const titlePlan = (nT && nTel && planesTit.length)
       ? t(`${cleanEs} en ${muni.name}: ${nTel} con teléfono · ${joinEs(planesTit)}`, `${cleanEn} in ${muni.name}: ${nTel} with phone · ${joinEn(planesTit)}`)
       : ''
-    const titleT = titlePlan ? titlePlan : nT
+    // 21 oct 2026 (dale de Angel, GSC-GA Decision 1): 66% de las impresiones del Registro son
+    // "especialidad + pueblo" en posicion 8-20; las busquedas de plan son 83 consultas / 351 impresiones.
+    // El titulo dice lo que se busca: cuantos hay, en que pueblo, con telefono. "Verificado" NO va:
+    // procedenciaSello() da 'registro' a la gran mayoria (NPPES), asi que el titulo dice "con telefono"
+    // y la descripcion dice "del registro federal NPPES". Los planes quedan en la descripcion.
+    // Solo etiquetas de 1 palabra que terminan en vocal se pluralizan sin riesgo; el resto conserva la forma vieja.
+    const plSimple = /^[a-záéíóúñ]+$/.test(cleanEs.toLocaleLowerCase('es')) && /[aeiou]$/.test(cleanEs.toLocaleLowerCase('es'))
+    const titleMolde = (nTel > 0 && !en)
+      ? (plSimple
+          ? `${nTel} ${specPluralEs(nTel, x.l)} en ${muni.name} con teléfono · Registro Médico PR`
+          : `${cleanEs} en ${muni.name}: ${nTel} con teléfono · Registro Médico PR`)
+      : (nTel > 0 && en) ? `${cleanEn} in ${muni.name}: ${nTel} with phone · Registro Médico PR` : ''
+    const titleT = titleMolde ? titleMolde : titlePlan ? titlePlan : nT
       ? t(nT === 1 ? `${cleanEs} en ${muni.name}: hay 1, con teléfono${planSuf}` : `${cleanEs} en ${muni.name}: los ${nT} que hay, con teléfono${planSuf}`,
           nT === 1 ? `${cleanEn} in ${muni.name}: there is 1, with phone${planSuf}` : `${cleanEn} in ${muni.name}: all ${nT}, with phone${planSuf}`)
       : cerca
@@ -20738,7 +20750,7 @@ async function handleRegistroHub(req: any, res: any) {
     // La meta evita "los 4 cardiólogo": el conteo no toca el sustantivo, así no hay que
     // pluralizar etiquetas de 2 y 3 palabras ("dentista pediátrico", "trabajador social").
     const descT = inTown.length
-      ? t(`${cleanEs} en ${muni.name}: ${nT} con oficina ahí, ${nT === 1 ? 'con su teléfono' : 'cada uno con su teléfono al lado'}.${hayPlan ? ` De esos, ${frasePlanEs}.` : ''} Del registro federal NPPES, en español. Gratis y sin cuenta.`, `${cleanEn} in ${muni.name}: ${nT} with a local office, ${nT === 1 ? 'with phone number' : 'each with a phone number'}.${hayPlan ? ` Of those, ${frasePlanEn}.` : ''} From the federal NPPES registry. Free, no account.`)
+      ? t(`${nTel > 0 ? nTel : nT} ${plSimple ? specPluralEs(nTel > 0 ? nTel : nT, x.l) : cleanEs} en ${muni.name}, ${nT === 1 ? 'con su teléfono' : 'cada uno con su teléfono al lado'}. Del registro federal NPPES. Qué planes aceptan: pregúntale al Veci al 787-417-7711.${hayPlan ? ` Aparecen en directorios de plan: ${frasePlanEs}.` : ''}`, `${cleanEn} in ${muni.name}: ${nT} with a local office, ${nT === 1 ? 'with phone number' : 'each with a phone number'}.${hayPlan ? ` Of those, ${frasePlanEn}.` : ''} From the federal NPPES registry. Free, no account.`)
       : t(`El registro federal no muestra ninguno con oficina en ${muni.name}.${cerca ? ` El más cercano está en ${cerca.nearest}, a unos ${Math.round(cerca.km)} km.` : ''} Aquí están los de al lado, con pueblo y teléfono. Gratis y sin cuenta.`, `The federal registry shows none with an office in ${muni.name}. Here are the closest ones${townReg ? ` in ${townReg}` : ''}, with town and phone. Free, no account.`)
     const labelCorto = cleanSpecLabel(x.l).toLocaleLowerCase('es')
     const plural = (n: number) => (n !== 1 && /^[a-záéíóúñ]+$/.test(labelCorto) && /[aeiou]$/.test(labelCorto)) ? labelCorto + 's' : labelCorto
