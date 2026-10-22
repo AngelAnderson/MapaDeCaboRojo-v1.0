@@ -11135,9 +11135,26 @@ const RED_TITULARES = {
 // 10 oct (tarde): los 70 candidatos se revisaron a mano uno por uno contra NPPES y 3 extracciones del
 // PDF 2027 (Dropbox/Claude/Outbox/Registro/MMM-2027-Bajas-Revisadas-2026-10-10.md): 13 SE FUE, 35 siguen
 // (el parser les partió el nombre), 22 tenían el NPI de otra persona. Se publica 13, no el rango 22-70.
-// Sin lista con nombres a propósito: Angel decide si sale (11 son médicos o clínicos, 1 ambulancia,
+// 22 oct: la lista con nombres SALE por dale de Angel (10 oct): ver SALIDAS_2027 (11 médicos o clínicos, 1 ambulancia,
 // 1 naturópata). Un NPI equivocado es peor que ninguno.
 const RED_2027 = { npisJun26: 5539, npisEne27: 5590, salidas: 13, edicion: 'enero de 2027', pdf: '15 de septiembre de 2026' }
+// Fuente: Outbox/Registro/MMM-2027-Bajas-Revisadas-2026-10-10.md (tabla "La lista SE FUE (13)"). Pueblo = directorio jun 2026.
+// Texto fijo: "no aparece en el directorio de enero 2027 de MMM". NUNCA "dejó de aceptar" ni "verificado".
+const SALIDAS_2027: [string, string, string, string][] = [
+  ['Wanda Almodovar', 'Medicina Interna', 'Yauco', '1093093635'],
+  ['Edgardo Febo Salgado', 'Medicina General', 'Gurabo', '1164466850'],
+  ['Alicia Feliberti-Irizarry', 'Medicina de Emergencia', 'Bayamón', '1215962949'],
+  ['Walter Nieves', 'Oftalmología', 'Isabela', '1225007453'],
+  ['Benigno Caban Gomez', 'Dentista (salud pública dental)', 'Arecibo', '1245237197'],
+  ['Lymarie Aguila Gonzalez', 'Dermatología', 'Manatí', '1598705287'],
+  ['Medical Ems Inc', 'Ambulancia', 'Aguada', '1841672482'],
+  ['Jephte Rodriguez Martinez', 'Medicina General', 'Mayagüez', '1023190071'],
+  ['Maria Velez-Maldonado', 'Medicina General', 'Ponce', '1417033762'],
+  ['Javier Cintron-Rivera', 'Medicina General', 'Ponce', '1447835962'],
+  ['Ana Rodriguez Zayas', 'Naturopatía', 'Carolina', '1548838790'],
+  ['Adolfo Sanchez Ortiz', 'Medicina Interna y Cardiología', 'Cayey', '1821017419'],
+  ['Antonio Morales-Lopez', 'Medicina Interna y Reumatología', 'Caguas', '1972511566'],
+]
 
 async function handleSeFueTuMedico(req: any, res: any) {
   const nf = (n: number) => n.toLocaleString('en-US')
@@ -11295,7 +11312,9 @@ async function handleSeFueTuMedico(req: any, res: any) {
     <h2 class="text-xl font-bold text-slate-900 m-0">Junio 2026 contra enero 2027: lo nuevo</h2>
     <p class="text-[16px] text-slate-800 mt-2 mb-0">Comparamos el directorio de MMM de junio de 2026 con el de enero de 2027. De ${nf(RED_2027.npisJun26)} proveedores que pudimos cruzar con su número federal, <b>${RED_2027.salidas} que estaban en el directorio de junio 2026 no aparecen en el de enero 2027</b>. El resto sigue ahí. Los revisamos uno por uno contra el registro federal y buscamos a cada uno por nombre y por teléfono dentro de la edición nueva: el que aparece, no cuenta como salida. Que no aparezca no dice por qué: puede ser retiro, mudanza o cambio de grupo.</p>
     <p class="text-[16px] text-slate-800 mt-2 mb-0">Para saber si <b>tu</b> médico aparece en la edición 2027, búscalo por nombre en el <a href="/" class="text-teal-700 font-semibold underline">buscador del Registro</a>: su página dice si está en el directorio de MMM de ${RED_2027.edicion}. O busca por <a href="/registro" class="text-teal-700 font-semibold underline">especialidad y pueblo</a>: cada lista marca quién aparece en MMM.</p>
-    <p class="text-sm text-slate-600 mt-2 mb-0">Por qué no ponemos aquí los nombres de esos ${RED_2027.salidas}: un directorio dice quién aparece, no por qué alguien dejó de aparecer, y un nombre en esta lista pesa. Antes de llegar a ${RED_2027.salidas} descartamos filas donde el número federal estaba pegado al nombre equivocado (una farmacia leída como radiología, por ejemplo). Si tu médico es uno de ellos, su página en el Registro te lo dice.</p>
+    <p class="text-[16px] text-slate-800 mt-3 mb-1"><b>Los ${RED_2027.salidas} nombres</b> (10 de octubre de 2026). Cada uno <b>no aparece en el directorio de enero 2027 de MMM</b> (Individuales y Grupales). Eso es todo lo que dice la lista: no sabemos por qué, y los 13 siguen activos en el registro federal NPPES. Pueblo y especialidad son los de la edición de junio 2026.</p>
+    <ul class="list-none pl-0 m-0">${SALIDAS_2027.map(([n, e, t, npi]) => `<li class="py-2 border-t border-teal-200 text-[16px] text-slate-900"><b>${escapeHtml(n)}</b><span class="text-slate-700"> · ${escapeHtml(e)} · ${escapeHtml(t)} · NPI ${npi}</span></li>`).join('')}</ul>
+    <p class="text-[16px] text-slate-800 mt-3 mb-0">Dos de los 13 no son médicos de consulta: una ambulancia (Medical EMS Inc) y una naturópata. Si tu médico está aquí, llama a la oficina y pregunta por nombre y NPI antes de decidir nada. Nunca te decimos que cambies de plan por una lista.</p>
   </div>
 
   <p class="text-lg text-slate-700 mt-6">Antes de eso, comparamos 3 ediciones de MMM (dic 2024, dic 2025 y jun 2026). Esto es lo que se movió. Y más abajo, lo mismo con la reforma: las ediciones de Plan Vital.</p>
