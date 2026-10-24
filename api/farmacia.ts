@@ -25,6 +25,7 @@ import { opcionesConPlazo } from './_lib/db-plazo.js'
 import { correctButtonHtml } from './_lib/correct-button.js';
 import { paginaLd, ldScript, partesAT, selloConFecha } from './_lib/procedencia.js';
 import { slugVivoPara } from './_lib/redirect-archivada.js';
+import { fueRemovidoAPeticion, responderRemovidoNegocio } from './_lib/removido.js';
 import { rutaDeRecord } from './_lib/rutas-salud.js';
 
 const supabase = createClient(
@@ -173,6 +174,12 @@ export default async function handler(req: any, res: any) {
 
   if (!slug) {
     res.status(400).send('<h1>400 – Slug requerido</h1>');
+    return;
+  }
+
+  // El dueño pidió salir: 410 antes de buscar la ficha y antes de slugVivoPara.
+  if (await fueRemovidoAPeticion(slug)) {
+    responderRemovidoNegocio(res, String(req.headers?.host || ''));
     return;
   }
 
@@ -656,12 +663,12 @@ ${veciSmsScript()}
       const emptyEs = `
         <p style="color:#475569;font-size:1rem;margin-bottom:0.75rem;">Aún no tenemos los planes médicos confirmados de ${placeName}.</p>
         <div style="background:#fef3c7;border-left:3px solid #f59e0b;padding:0.75rem 1rem;border-radius:6px;font-size:1rem;color:#78350f;">
-          <strong>¿Eres dueño o trabajas aquí?</strong> Textea <strong>PLANES ${esc(place.name)}</strong> al 787-417-7711 con los planes que aceptan — actualizamos esto en 24h. Pacientes con tu plan te encuentran primero.
+          <strong>¿Eres dueño o trabajas aquí?</strong> Textea <strong>PLANES ${esc(place.name)}</strong> al 787-417-7711 con los planes que aceptan y lo actualizamos. Pacientes con tu plan te encuentran primero.
         </div>`;
       const emptyEn = `
         <p style="color:#475569;font-size:1rem;margin-bottom:0.75rem;">We don't yet have confirmed insurance data for ${placeName}.</p>
         <div style="background:#fef3c7;border-left:3px solid #f59e0b;padding:0.75rem 1rem;border-radius:6px;font-size:1rem;color:#78350f;">
-          <strong>Are you the owner or staff?</strong> Text <strong>PLANES ${esc(place.name)}</strong> to 787-417-7711 with the plans you accept — we update within 24h. Patients with your insurance find you first.
+          <strong>Are you the owner or staff?</strong> Text <strong>PLANES ${esc(place.name)}</strong> to 787-417-7711 with the plans you accept and we update it. Patients with your insurance find you first.
         </div>`;
       const table = hasData ? `
         <table style="width:100%;border-collapse:collapse;margin-top:0.5rem;">
@@ -693,11 +700,11 @@ ${veciSmsScript()}
       const empty = lang === 'en'
         ? `<p style="color:#475569;font-size:1rem;margin-bottom:0.75rem;">No reviews yet for ${placeName}.</p>
            <div style="background:#dbeafe;border-left:3px solid #3b82f6;padding:0.75rem 1rem;border-radius:6px;font-size:1rem;color:#1e3a8a;">
-             <strong>Been here? Help other vecinos.</strong> Text <strong>REVIEW ${esc(place.name)} [1-5] [your experience]</strong> to 787-417-7711. Approved within 24h. Plan-specific reviews = trust signal for diáspora.
+             <strong>Been here? Help other vecinos.</strong> Text <strong>REVIEW ${esc(place.name)} [1-5] [your experience]</strong> to 787-417-7711. We review it before it goes up. Plan-specific reviews = trust signal for diáspora.
            </div>`
         : `<p style="color:#475569;font-size:1rem;margin-bottom:0.75rem;">Aún no hay reseñas de vecinos para ${placeName}.</p>
            <div style="background:#dbeafe;border-left:3px solid #3b82f6;padding:0.75rem 1rem;border-radius:6px;font-size:1rem;color:#1e3a8a;">
-             <strong>¿Has ido? Ayuda a otros vecinos.</strong> Textea <strong>REVIEW ${esc(place.name)} [1-5] [tu experiencia]</strong> al 787-417-7711. Aprobamos en 24h. Reseñas con tu plan médico = señal de confianza pa' diáspora.
+             <strong>¿Has ido? Ayuda a otros vecinos.</strong> Textea <strong>REVIEW ${esc(place.name)} [1-5] [tu experiencia]</strong> al 787-417-7711. La revisamos antes de publicarla. Reseñas con tu plan médico = señal de confianza pa' diáspora.
            </div>`;
       const renderReview = (r: any) => {
         const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);

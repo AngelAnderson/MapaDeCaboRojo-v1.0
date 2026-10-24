@@ -37,7 +37,7 @@ export function correctButtonHtml(opts: CorrectButtonOpts = {}): string {
       <h2 id="cb-title" style="margin:0;font-size:20px;color:#0f172a">Corrige lo que veas</h2>
       <button id="cb-close" type="button" aria-label="Cerrar" style="background:transparent;border:0;font-size:24px;cursor:pointer;color:#475569;line-height:1">×</button>
     </div>
-    <p style="margin:0 0 16px;color:#475569;font-size:1rem;line-height:1.5">Vio algo mal o que falta en esta página? Cuéntenos en una línea — Angel lo revisa el lunes.</p>
+    <p style="margin:0 0 16px;color:#475569;font-size:1rem;line-height:1.5">¿Viste algo mal o algo que falta? Cuéntanos en 1 línea. Lo revisamos y corregimos la página.</p>
 
     <textarea id="cb-msg" rows="4" placeholder="Ej: la farmacia cerró · este horario está mal · falta el teléfono · etc." maxlength="2000" style="width:100%;box-sizing:border-box;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-family:inherit;font-size:1rem;resize:vertical;margin-bottom:12px"></textarea>
 
@@ -117,7 +117,7 @@ export function correctButtonHtml(opts: CorrectButtonOpts = {}): string {
       })
     }).then(function(r){
       if (r.ok) {
-        setFeedback('Gracias vecino. Angel lo revisa el lunes.', true);
+        setFeedback('Gracias, vecino. Ya nos llegó.', true);
         msgEl.value = '';
         setTimeout(function(){ modal.style.display = 'none'; submitBtn.disabled = false; submitBtn.textContent = 'O enviar aquí'; feedback.style.display = 'none'; }, 2500);
       } else if (r.status === 429) {

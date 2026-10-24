@@ -4,6 +4,7 @@ import { opcionesConPlazo } from './_lib/db-plazo.js'
 import { correctButtonHtml } from './_lib/correct-button.js';
 import { bloqueProcedencia, paginaLd, ldScript, CATEGORIA_ENLACE_ES, procedenciaSello, fechaCortaAT } from './_lib/procedencia.js';
 import { slugVivoPara } from './_lib/redirect-archivada.js';
+import { fueRemovidoAPeticion, responderRemovidoNegocio } from './_lib/removido.js';
 import { rutaDeRecord } from './_lib/rutas-salud.js';
 
 const supabase = createClient(
@@ -334,6 +335,12 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
+  // El dueño pidió salir: 410 antes de buscar la ficha y antes de slugVivoPara.
+  if (await fueRemovidoAPeticion(slug)) {
+    responderRemovidoNegocio(res, String(req.headers?.host || ''));
+    return;
+  }
+
   let place: any = null;
 
   // Try by slug first
@@ -446,7 +453,9 @@ export default async function handler(req: any, res: any) {
   const parking = formatAmenity(place.amenities, 'parking');
   const petFriendly = formatAmenity(place.amenities, 'pet_friendly');
   const wifi = formatAmenity(place.amenities, 'wifi');
-  const smsBody = encodeURIComponent(place.name);
+  // El prellenado dice a quién le escribe: al Veci, no al negocio (24 oct 2026: una clínica
+  // leyó "Textea <su nombre> al 787-417-7711" como si el 7711 fuera su número).
+  const smsBody = encodeURIComponent(`Hola Veci, tengo una pregunta sobre ${place.name}`);
   const ldHours = jsonLdOpeningHours(place.opening_hours);
 
   // LA SEÑAL en la ficha (EL SALTO v2 · 2026-08-19): cuántas búsquedas reales tuvo
@@ -529,7 +538,7 @@ export default async function handler(req: any, res: any) {
         name: `¿Cuál es el teléfono de ${place.name}?`,
         acceptedAnswer: { '@type': 'Answer', text: place.phone
           ? `El teléfono de ${place.name} es ${formatPhone(place.phone)}.${avisoTel ? ` ${avisoTel.texto}` : ''}`
-          : `Textea ${place.name} al 787-417-7711 y El Veci te consigue el contacto.` },
+          : `Todavía no tenemos su teléfono. Pregúntale al Veci al 787-417-7711 y te buscamos el contacto.` },
       },
     ],
   };
@@ -632,6 +641,7 @@ export default async function handler(req: any, res: any) {
     .cta p { color: #ffffff; margin-bottom: 0.75rem; font-size: 1.05rem; }
     .cta a { display: inline-block; background: #9a3412; color: white; text-decoration: none; padding: 0.9rem 1.75rem; min-height: 52px; border-radius: 8px; font-weight: 700; font-size: 1.1rem; }
     .cta a:hover { background: #ea6c10; }
+    .cta p.cta-nota { font-size: 1rem; margin: 0.9rem 0 0; color: #e6fffa; }
     .faq { background: white; border-radius: 12px; padding: 1.25rem 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 1rem; }
     .faq h2 { font-size: 1.15rem; font-weight: 700; color: #0f766e; margin-bottom: 0.75rem; }
     .faq-item { margin-bottom: 1rem; }
@@ -683,8 +693,9 @@ export default async function handler(req: any, res: any) {
     </div>` : ''}
 
     <div class="cta">
-      <p>¿Tienes preguntas sobre ${esc(place.name)}? Textea a El Veci y te ayudamos.</p>
-      <a href="https://wa.me/17874177711?text=${smsBody}">Textea ${esc(place.name)} al 787-417-7711</a>
+      <p>¿Tienes dudas sobre ${esc(place.name)}? El Veci te ayuda por texto, gratis.</p>
+      <a href="https://wa.me/17874177711?text=${smsBody}">Pregúntale al Veci: 787-417-7711</a>
+      <p class="cta-nota">El Veci es el servicio de CaboRojo.com. No es parte de ${esc(place.name)}.</p>
     </div>
 
     <div class="faq">
@@ -703,11 +714,11 @@ export default async function handler(req: any, res: any) {
         <h3>¿Cuál es el teléfono de ${esc(place.name)}?</h3>
         <p>${place.phone
           ? `El teléfono de ${esc(place.name)} es <a href="tel:${esc(place.phone)}">${esc(formatPhone(place.phone))}</a>.${avisoTel ? ` ${esc(avisoTel.texto)}` : ''}`
-          : `Todavía no tenemos el teléfono. Textea <strong>${esc(place.name)}</strong> al 787-417-7711 y El Veci te consigue el contacto.`}</p>
+          : `Todavía no tenemos su teléfono. Pregúntale al Veci al <strong>787-417-7711</strong> y te buscamos el contacto.`}</p>
       </div>
       ${parking !== 'No especificado' ? `<div class="faq-item">
         <h3>¿Tiene estacionamiento ${esc(place.name)}?</h3>
-        <p>Estacionamiento: ${parking}. Para más detalles, textea <strong>${esc(place.name)}</strong> al 787-417-7711.</p>
+        <p>Estacionamiento: ${parking}. Para más detalles, pregúntale al Veci al <strong>787-417-7711</strong>.</p>
       </div>` : ''}
     </div>
 
