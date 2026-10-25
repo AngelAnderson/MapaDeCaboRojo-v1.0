@@ -208,6 +208,10 @@
       "destination": "/api/mapa-pages?page=cuido&m=:m"
     },
     {
+      "source": "/cuido/:m/:h",
+      "destination": "/api/mapa-pages?page=cuido&m=:m&h=:h"
+    },
+    {
       "source": "/registro/desiertos",
       "destination": "/api/mapa-pages?page=registro-desiertos"
     },
@@ -598,6 +602,46 @@
     {
       "source": "/api/(.*)",
       "destination": "/api/$1"
+    },
+    {
+      "source": "/:m",
+      "has": [
+        {
+          "type": "host",
+          "value": "hogaresdeancianospr.com"
+        }
+      ],
+      "destination": "/api/mapa-pages?page=cuido&m=:m"
+    },
+    {
+      "source": "/:m/:h",
+      "has": [
+        {
+          "type": "host",
+          "value": "hogaresdeancianospr.com"
+        }
+      ],
+      "destination": "/api/mapa-pages?page=cuido&m=:m&h=:h"
+    },
+    {
+      "source": "/:m",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.hogaresdeancianospr.com"
+        }
+      ],
+      "destination": "/api/mapa-pages?page=cuido&m=:m"
+    },
+    {
+      "source": "/:m/:h",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.hogaresdeancianospr.com"
+        }
+      ],
+      "destination": "/api/mapa-pages?page=cuido&m=:m&h=:h"
     },
     {
       "source": "/(.*)",

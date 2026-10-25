@@ -15,6 +15,7 @@
  */
 
 import { hojaLlamadaScript } from './_lib/hoja-llamada.js'
+import { isCuidoHost, CUIDO_BASE, slugTexto, slugHogar } from './_lib/cuido-hosts.js'
 import { telefonoAlternoMedicare } from './_lib/telefono-alterno.js'
 import { createClient } from '@supabase/supabase-js'
 import { createHash, createHmac, timingSafeEqual } from 'crypto'
@@ -248,14 +249,17 @@ function layout(opts: {
                          // Google corta, y el dominio ya sale debajo del título de todos modos.
 }): string {
   // Host-aware branding. registromedicopr.com is its OWN property — not Mapa de Cabo Rojo.
-  const isReg = /registromedicopr\.com/i.test(opts.host || '')
+  // Dominio propio del directorio Cuido (aún sin comprar; lista en _lib/cuido-hosts.ts).
+  // Hereda el estilo del Registro (isReg) pero con su marca, su canónico y sin GA4 ajeno.
+  const isCuido = isCuidoHost(opts.host)
+  const isReg = isCuido || /registromedicopr\.com/i.test(opts.host || '')
   const isPRSF = /puertoricosinfiltros\.com/i.test(opts.host || '')
   const isEn = opts.lang === 'en'
   const langHref = `/${opts.slug}?lang=${isEn ? 'es' : 'en'}`
-  const canonicalBase = opts.canonicalHost || (isPRSF ? 'https://puertoricosinfiltros.com' : isReg ? 'https://registromedicopr.com' : SITE_URL)
-  const brandName = isPRSF ? 'Puerto Rico Sin Filtros' : isReg ? 'Registro Médico PR' : 'Mapa de Cabo Rojo'
+  const canonicalBase = opts.canonicalHost || (isCuido ? CUIDO_BASE : isPRSF ? 'https://puertoricosinfiltros.com' : isReg ? 'https://registromedicopr.com' : SITE_URL)
+  const brandName = isCuido ? 'Hogares de Ancianos PR' : isPRSF ? 'Puerto Rico Sin Filtros' : isReg ? 'Registro Médico PR' : 'Mapa de Cabo Rojo'
   // Each domain has its own GA4 property — keep data clean/separate from Mapa.
-  const GA = isReg ? 'G-P1H28B6EET' : isPRSF ? 'G-S848YPDVZT' : 'G-6KBMV0LKQ4'
+  const GA = isCuido ? '' : isReg ? 'G-P1H28B6EET' : isPRSF ? 'G-S848YPDVZT' : 'G-6KBMV0LKQ4'
   // La versión en inglés lleva SU propio canonical (12 oct 2026). Antes apuntaba a la española
   // y Google trataba la ?lang=en como duplicado, así que ignoraba el hreflang.
   const canonicalEs = opts.canonicalUrl || `${canonicalBase}/${opts.slug}`
@@ -334,7 +338,25 @@ function layout(opts: {
 <p class="text-slate-300 mt-5 text-sm">Eso es tener el lápiz en la mano. El porqué completo — por qué a un pueblo se le enseñó a consumir el feed en vez de leer el récord — lo cuenta Angel en <a href="https://www.angelanderson.com/te-programaron/" target="_blank" rel="noopener" class="text-teal-300 underline font-semibold">Te programaron</a>.</p>
 </div>
 </section>`
-  const header = isPRSF ? prsfHeader : isReg ? `
+  const cuidoHeader = `
+<header class="bg-white border-b border-slate-200 sticky top-0 z-10">
+<div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
+<a href="/" class="flex items-center gap-2 text-slate-900 hover:text-teal-700">
+<div class="bg-teal-700 w-8 h-8 rounded-lg flex items-center justify-center text-white"><i class="fa-solid fa-house-chimney-medical text-sm" aria-hidden="true"></i></div>
+<span class="font-black tracking-tight">Hogares de Ancianos PR</span>
+</a>
+<a href="/" class="text-[16px] font-semibold text-teal-800 hover:text-teal-700">Todos los pueblos</a>
+</div>
+</header>`
+  const cuidoFooter = `
+<footer class="border-t border-slate-200 mt-12 py-10 bg-white">
+<div class="max-w-4xl mx-auto px-4">
+<p class="text-base font-semibold text-teal-800 text-center">Los hogares de cuido de Puerto Rico con licencia, por pueblo.</p>
+<p class="text-[16px] text-slate-600 mt-2 text-center">Los datos salen del registro público del Departamento de la Familia. Lo que la gente confirmó se marca con fecha.</p>
+<p class="text-[16px] text-slate-600 mt-2 text-center">Parte de la familia de <a href="https://registromedicopr.com" class="text-teal-800 underline">Registro Médico PR</a>. Angel Anderson, desde Cabo Rojo.</p>
+</div>
+</footer>`
+  const header = isCuido ? cuidoHeader : isPRSF ? prsfHeader : isReg ? `
 <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
 <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
 <a href="/registro${isEn ? '?lang=en' : ''}" class="flex items-center gap-2 text-slate-900 hover:text-teal-700">
@@ -399,7 +421,7 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 </header>`
 
   // --- Footer (host-aware). Registro = quiet, no newsletter/tienda; desiertos kept low-key. ---
-  const footer = isPRSF ? ((opts.sinMaquina ? '' : laMaquinaPRSF) + prsfFooter) : isReg ? `
+  const footer = isCuido ? cuidoFooter : isPRSF ? ((opts.sinMaquina ? '' : laMaquinaPRSF) + prsfFooter) : isReg ? `
 <footer class="border-t border-slate-200 mt-12 py-10 bg-white">
 <div class="max-w-4xl mx-auto px-4">
 <p class="text-base font-semibold text-teal-800 text-center">${isEn ? 'The Puerto Rico medical specialist registry, in plain language.' : 'El registro de especialistas médicos de Puerto Rico, en español y por pueblo.'}</p>
@@ -496,8 +518,8 @@ ${isPRSF ? '<meta name="google-site-verification" content="N42qvVBU_PKj99wLrOAEe
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="${ogImageUrl}">
 ${isReg ? `<link rel="icon" type="image/svg+xml" href="/registro-favicon.svg">` : `<link rel="icon" href="/favicon.ico">`}
-<script async src="https://www.googletagmanager.com/gtag/js?id=${GA}"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA}');</script>
+${GA ? `<script async src="https://www.googletagmanager.com/gtag/js?id=${GA}"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA}');</script>` : ''}
 <script defer src="/_vercel/insights/script.js"></script>
 ${isReg ? `<script>(function(){try{var m=localStorage.getItem('theme');var d=m?(m==='dark'):window.matchMedia('(prefers-color-scheme:dark)').matches;if(d)document.documentElement.classList.add('dark');}catch(e){}})();</script>` : ''}
 <script src="https://cdn.tailwindcss.com"></script>
@@ -23473,7 +23495,7 @@ async function handleOesteViejo(req: any, res: any) {
 <p style="font-size:16px;line-height:1.7;opacity:.8">Un detalle de geografia, para que nadie piense que nos contradecimos: aqui contamos <strong>6 geriatras en estos 14 pueblos</strong>, y nuestro registro medico dice <strong>5 en la region Oeste</strong>. Los dos son correctos. La diferencia es Yauco, que el registro clasifica en el Sur y esta pagina incluye por ser parte del suroeste viejo.</p>
 <p style="font-size:16px;line-height:1.7;opacity:.8">Las camas ocupadas y las tarifas las reporta cada establecimiento al Departamento de la Familia. Son el numero oficial, pero son autorreportados. Si ves un dato incorrecto, escribenos y lo corregimos con fecha.</p>
 
-<p style="font-size:17px;line-height:1.7;margin-top:26px">Los 1,290 hogares de cuido licenciados de Puerto Rico, con telefono, precio y camas libres, se buscan por pueblo en <a href="https://registromedicopr.com/cuido" style="color:#5eead4">registromedicopr.com/cuido</a>. Lo que cuesta el cuido pueblo por pueblo, en <a href="/lo-que-cuesta" style="color:#5eead4">Lo que cuesta guardar a Mami</a>.</p>`
+<p style="font-size:17px;line-height:1.7;margin-top:26px">Los 1,290 hogares de cuido licenciados de Puerto Rico, con telefono y vencimiento de licencia, se buscan por pueblo en <a href="https://registromedicopr.com/cuido" style="color:#5eead4">registromedicopr.com/cuido</a>. Lo que cuesta el cuido pueblo por pueblo, en <a href="/lo-que-cuesta" style="color:#5eead4">Lo que cuesta guardar a Mami</a>.</p>`
 
   return res.status(200).send(layout({
     title: 'El oeste es la region mas vieja de Puerto Rico, y no tiene quien atienda a sus viejos',
@@ -23547,23 +23569,43 @@ Fuentes: registro SULME del Departamento de la Familia de Puerto Rico (sulme.fam
   }))
 }
 
+// Fecha de la última consulta al registro SULME de Familia que está cargada en `places`.
+// Los 1,290 hogares se cargaron el 14 ago 2026 (verification_source='SULME_Familia_PR').
+// Cuando se recargue la tabla, cambiar esta fecha EN EL MISMO commit: es el sello de cada ficha.
+const CUIDO_CONSULTA_ISO = '2026-08-14'
+const CUIDO_CONSULTA_TXT = '14 de agosto de 2026'
+
 async function handleCuido(req: any, res: any) {
   const host = String(req.headers?.host || '')
   const muniRaw = String(req.query?.m || '').trim()
+  const hogarRaw = String(req.query?.h || '').trim().toLowerCase()
+  const propio = isCuidoHost(host)
+  // En registromedicopr.com las rutas viven bajo /cuido; en el dominio propio, en la raíz.
+  const B = propio ? '' : '/cuido'
+  const origen = propio ? CUIDO_BASE : 'https://registromedicopr.com'
+  const rutaIndice = propio ? '/' : '/cuido'
 
-  const { data: rows } = await supabase
-    .from('places')
-    .select('name, municipality, phone, address, description, automated_notes')
-    .eq('subcategory', 'hogar de ancianos')
-    .eq('verification_source', 'SULME_Familia_PR')
-    .eq('visibility', 'published')
-    .order('municipality')
-    .limit(2000)
+  // Paginado explícito: PostgREST corta en 1,000 filas del lado del servidor y .limit(2000)
+  // no lo sube (ya costó Cataño y Maricao en el sitemap). Orden por id: estable.
+  const rows: any[] = []
+  for (let from = 0; from < 5000; from += 1000) {
+    const { data, error } = await supabase
+      .from('places')
+      .select('id, name, municipality, phone, address, description, automated_notes, lat, lon')
+      .eq('subcategory', 'hogar de ancianos')
+      .eq('verification_source', 'SULME_Familia_PR')
+      .eq('visibility', 'published')
+      .order('id')
+      .range(from, from + 999)
+    if (error) break
+    rows.push(...(data || []))
+    if (!data || data.length < 1000) break
+  }
 
-  type Nota = { licencia?: string; licencia_exp?: string; cumplimiento?: string; camas?: number; ocupadas?: number }
+  type Nota = { licencia?: string; licencia_exp?: string; cumplimiento?: string; camas?: number; ocupadas?: number; querellas_proceso?: number; querellas_con_fundamento?: number }
   const parse = (s: any): Nota => { try { return JSON.parse(s || '{}') } catch { return {} } }
 
-  const all = (rows || []).map(r => ({ ...r, n: parse((r as any).automated_notes) }))
+  const all = rows.map(r => ({ ...r, n: parse(r.automated_notes), slugH: slugHogar(r.name, r.id) }))
   const byMuni = new Map<string, typeof all>()
   all.forEach(r => {
     const m = r.municipality || 'Sin pueblo'
@@ -23575,118 +23617,228 @@ async function handleCuido(req: any, res: any) {
   // que va en slug porque %20 en un mensaje de texto algunos carriers lo filtran
   // y muchos clientes no lo convierten en enlace).
   const norm = (s: string) => s.toLowerCase().normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '')
+    .replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '')
   const muni = muniRaw ? [...byMuni.keys()].find(k => norm(k) === norm(muniRaw)) : ''
 
   const totalCamas = all.reduce((a, r) => a + (r.n.camas || 0), 0)
-  const totalOcup = all.reduce((a, r) => a + (r.n.ocupadas || 0), 0)
+  const muniPath = (m: string) => `${B}/${slugTexto(m)}`
+  const hogarPath = (r: any) => `${B}/${slugTexto(r.municipality || '')}/${r.slugH}`
 
-  const diasPara = (exp?: string) => {
-    if (!exp) return null
-    const d = Math.round((new Date(exp).getTime() - Date.now()) / 86400000)
-    return Number.isFinite(d) ? d : null
+  // Nunca se publica "camas libres" ni "camas ocupadas": el campo de ocupación lo reporta
+  // cada hogar y no suena real (26% en toda la isla). Solo la capacidad licenciada.
+  const hoy = new Date()
+  const fechaEs2 = (iso?: string) => {
+    if (!iso) return ''
+    const d = new Date(iso + 'T12:00:00')
+    return Number.isFinite(d.getTime()) ? d.toLocaleDateString('es-PR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Puerto_Rico' }) : iso
+  }
+  // Estado de la licencia SEGÚN EL REGISTRO. La tabla es del 14 ago: una fecha que ya pasó
+  // desde entonces puede ser una renovación que todavía no cargamos, así que no se afirma
+  // "vencida", se dice qué dice el registro y se manda a pedir la licencia vigente.
+  const estadoLic = (exp?: string) => {
+    if (!exp) return { tono: 'gris', corto: 'Sin fecha de vencimiento en el registro', largo: 'El registro de Familia no trae fecha de vencimiento para este hogar. Pide ver la licencia vigente.' }
+    const expT = new Date(exp + 'T23:59:59').getTime()
+    const dias = Math.round((expT - hoy.getTime()) / 86400000)
+    if (expT >= hoy.getTime()) {
+      return dias <= 90
+        ? { tono: 'ambar', corto: `Licencia vence en ${dias} día${dias === 1 ? '' : 's'}`, largo: `Según el registro, la licencia vence el ${fechaEs2(exp)} (en ${dias} días). Pregunta si ya la renovaron.` }
+        : { tono: 'verde', corto: 'Licencia vigente según el registro', largo: `Según el registro, la licencia vence el ${fechaEs2(exp)}.` }
+    }
+    return new Date(exp + 'T23:59:59').getTime() >= new Date(CUIDO_CONSULTA_ISO + 'T00:00:00').getTime()
+      ? { tono: 'ambar', corto: 'Vencimiento en el registro ya pasó: pide la licencia vigente', largo: `Cuando consultamos el registro (${CUIDO_CONSULTA_TXT}) la licencia vencía el ${fechaEs2(exp)}. Esa fecha ya pasó: puede que la hayan renovado y nuestra copia no lo tiene. Pide ver la licencia vigente colgada en el hogar.` }
+      : { tono: 'rojo', corto: 'Licencia vencida según el registro', largo: `El registro de Familia tenía esta licencia vencida desde el ${fechaEs2(exp)} cuando lo consultamos (${CUIDO_CONSULTA_TXT}). Pide ver la licencia vigente antes de ir.` }
+  }
+  const claseTono: Record<string, string> = {
+    verde: 'bg-emerald-50 text-emerald-900 border border-emerald-300',
+    ambar: 'bg-amber-50 text-amber-900 border border-amber-400',
+    rojo: 'bg-red-50 text-red-900 border border-red-400',
+    gris: 'bg-slate-100 text-slate-800 border border-slate-300',
+  }
+  const telDe = (r: any) => {
+    const d = String(r.phone || '').replace(/[^\d]/g, '')
+    return d.length === 10 ? '+1' + d : d
+  }
+  const botonLlamar = (r: any) => {
+    const t = telDe(r)
+    return t ? `<a href="tel:${t}" class="inline-flex items-center justify-center gap-2 mt-3 min-h-[48px] w-full sm:w-auto bg-teal-700 hover:bg-teal-800 text-white font-bold text-lg px-6 rounded-xl no-underline"><i class="fa-solid fa-phone" aria-hidden="true"></i> Llamar ${escapeHtml(r.phone || '')}</a>` : ''
   }
 
   const aviso = `<div class="not-prose mt-5 rounded-2xl border-2 border-amber-300 bg-amber-50 p-4">
-  <p class="font-black text-slate-900">Esto no es un directorio de médicos.</p>
-  <p class="text-sm text-slate-700 mt-1">Un hogar de cuido lo licencia el <strong>Departamento de la Familia</strong> bajo la Ley 94-1977. No da servicios médicos y no factura a seguros, así que casi ninguno aparece en el registro federal de proveedores. Son dos registros distintos y aquí están separados a propósito.</p>
+  <p class="font-black text-slate-900 text-base">Esto no es un directorio de médicos.</p>
+  <p class="text-base text-slate-800 mt-1">Un hogar de cuido lo licencia el <strong>Departamento de la Familia</strong> bajo la Ley 94-1977. No da servicios médicos y no factura a seguros, así que casi ninguno aparece en el registro federal de proveedores. Son dos registros distintos y aquí están separados a propósito.</p>
 </div>`
 
   const comoVerificar = `<div class="not-prose mt-5 rounded-2xl border-2 border-teal-300 bg-teal-50 p-5">
   <p class="font-black text-slate-900 text-lg">Antes de dejar a alguien tuyo en un sitio</p>
-  <ol class="mt-2 space-y-1.5 text-sm text-slate-800 list-decimal pl-5">
+  <ol class="mt-2 space-y-1.5 text-base text-slate-800 list-decimal pl-5">
     <li><strong>Pide ver la licencia.</strong> La ley obliga a que esté colgada en un sitio visible al público. Si no te la enseñan, ahí tienes tu respuesta.</li>
     <li><strong>Mira la fecha de vencimiento</strong>, no solo que exista. Una licencia vencida no es licencia.</li>
     <li><strong>Verifícalo aquí o en el buscador de Familia</strong> antes de ir, desde el teléfono.</li>
     <li><strong>Pregunta cuántas personas cuidan por turno</strong>, sobre todo de noche.</li>
     <li><strong>Ve sin avisar una segunda vez.</strong> Lo que veas sin cita es lo que hay.</li>
   </ol>
-  <p class="text-xs text-slate-600 mt-3">Verificar es responsabilidad de la familia. Desde diciembre 2025 se puede hacer desde el celular, pero la licencia en la pared se puede pedir desde 1977.</p>
+  <p class="text-base text-slate-700 mt-3">Verificar es responsabilidad de la familia. Desde diciembre 2025 se puede hacer desde el celular, pero la licencia en la pared se puede pedir desde 1977.</p>
 </div>`
 
   const cruces = `<div class="not-prose mt-6 grid gap-3 sm:grid-cols-2">
-  <a href="https://puertoricosinfiltros.com/lo-que-cuesta" class="block rounded-xl border border-slate-200 bg-white p-4 no-underline hover:border-teal-400">
-    <div class="font-bold text-slate-900 text-sm">Lo que cuesta guardar a Mami</div>
-    <div class="text-xs text-slate-600 mt-1">El precio del cuido pueblo por pueblo. Mediana de la isla: $1,900/mes, el 91% del ingreso de un hogar completo.</div>
+  <a href="https://puertoricosinfiltros.com/lo-que-cuesta" class="block rounded-xl border border-slate-300 bg-white p-4 no-underline hover:border-teal-400">
+    <div class="font-bold text-slate-900 text-base">Lo que cuesta guardar a Mami</div>
+    <div class="text-base text-slate-700 mt-1">El precio del cuido pueblo por pueblo. Mediana de la isla: $1,900/mes, el 91% del ingreso de un hogar completo.</div>
   </a>
-  <a href="https://puertoricosinfiltros.com/el-oeste-viejo" class="block rounded-xl border border-slate-200 bg-white p-4 no-underline hover:border-teal-400">
-    <div class="font-bold text-slate-900 text-sm">El oeste es la región más vieja de PR</div>
-    <div class="text-xs text-slate-600 mt-1">102,920 personas mayores, 76% de las camas vacías, y 6 geriatras para los 14 pueblos.</div>
+  <a href="https://puertoricosinfiltros.com/el-oeste-viejo" class="block rounded-xl border border-slate-300 bg-white p-4 no-underline hover:border-teal-400">
+    <div class="font-bold text-slate-900 text-base">El oeste es la región más vieja de PR</div>
+    <div class="text-base text-slate-700 mt-1">102,920 personas mayores y 6 geriatras para los 14 pueblos.</div>
   </a>
 </div>`
 
-  const fuente = `<p class="text-xs text-slate-500 mt-6">Fuente: registro SULME del Departamento de la Familia de Puerto Rico, consultado el 14 de agosto de 2026. Las camas ocupadas y la tarifa las reporta cada establecimiento a Familia. Buscador oficial: <a href="https://sulme.familiapr.com/mapaPublico" rel="nofollow" class="text-teal-700 underline">sulme.familiapr.com</a>. Si ves un dato incorrecto, escríbenos y lo corregimos con fecha.</p>`
+  const fuente = `<p class="text-base text-slate-700 mt-6">Fuente: registro SULME del Departamento de la Familia de Puerto Rico, consultado el ${CUIDO_CONSULTA_TXT}. Los datos son los que Familia publica; no los hemos verificado en persona. La tarifa la informa cada establecimiento a Familia. Buscador oficial: <a href="https://sulme.familiapr.com/mapaPublico" rel="nofollow" class="text-teal-800 underline">sulme.familiapr.com</a>. Si ves un dato incorrecto, escríbenos y lo corregimos con fecha.</p>`
 
+  // ---------- Ficha de un hogar: /cuido/<pueblo>/<slug> ----------
+  if (hogarRaw) {
+    const lista = muni ? byMuni.get(muni)! : []
+    const r = lista.find(x => x.slugH === hogarRaw)
+    if (!r || !muni) {
+      res.setHeader('Cache-Control', 'public, s-maxage=300')
+      return res.status(404).send(layout({
+        title: 'Hogar de cuido no encontrado', description: 'Esa ficha no existe o cambió de dirección.',
+        slug: `cuido/${hogarRaw}`, host,
+        bodyHtml: `<meta name="robots" content="noindex"><h1>No encontramos ese hogar</h1><p class="text-lg text-slate-700 mt-3">Puede que el enlace esté viejo. Busca por pueblo.</p><p class="mt-4"><a href="${rutaIndice}" class="text-teal-800 underline font-semibold text-lg">Ver todos los pueblos →</a></p>`,
+      }))
+    }
+    const n = r.n
+    const est = estadoLic(n.licencia_exp)
+    const qFund = Number(n.querellas_con_fundamento || 0)
+    const qProc = Number(n.querellas_proceso || 0)
+    const tarifa = (String(r.description || '').match(/Tarifa informada:\s*\$([\d,]+(?:\.\d{2})?)/) || [])[1]
+    const mapaUrl = (r.lat && r.lon)
+      ? `https://www.google.com/maps/search/?api=1&query=${r.lat},${r.lon}`
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.address || r.name)}`
+    const otros = lista.filter(x => x.id !== r.id).sort((a, b) => (b.n.camas || 0) - (a.n.camas || 0)).slice(0, 6)
+    const fila = (k: string, v: string) => `<div class="py-3 border-b border-slate-200"><dt class="text-base text-slate-600">${k}</dt><dd class="text-lg font-semibold text-slate-900 m-0">${v}</dd></div>`
+    const body = `
+<p class="text-base mt-0"><a href="${muniPath(muni)}" class="text-teal-800 underline">← Hogares de cuido en ${escapeHtml(muni)}</a></p>
+<h1 class="mt-2">${escapeHtml(r.name)}</h1>
+<p class="text-lg text-slate-700 mt-1">Hogar de cuido para adultos mayores en ${escapeHtml(muni)}, Puerto Rico.</p>
+<div class="not-prose mt-4 rounded-xl p-4 text-base ${claseTono[est.tono]}">
+  <p class="font-black m-0">${est.corto}</p>
+  <p class="m-0 mt-1">${est.largo}</p>
+</div>
+${botonLlamar(r)}
+<div class="not-prose mt-4"><a href="${mapaUrl}" rel="noopener" class="inline-flex items-center justify-center gap-2 min-h-[48px] w-full sm:w-auto border-2 border-teal-700 text-teal-800 font-bold text-lg px-6 rounded-xl no-underline"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Cómo llegar</a></div>
+<dl class="not-prose mt-6 m-0">
+  ${r.address ? fila('Dirección', escapeHtml(r.address)) : ''}
+  ${n.licencia ? fila('Número de licencia', escapeHtml(String(n.licencia))) : ''}
+  ${n.licencia_exp ? fila('Licencia vence (según el registro)', escapeHtml(fechaEs2(n.licencia_exp))) : ''}
+  ${n.camas ? fila('Camas licenciadas', `${n.camas} <span class="text-base font-normal text-slate-600">(capacidad según Familia; no sabemos cuántas están ocupadas)</span>`) : ''}
+  ${n.cumplimiento ? fila('Cumplimiento según Familia', escapeHtml(n.cumplimiento)) : ''}
+  ${''/* 25 oct 2026: querellas por nombre del hogar = decisión de Angel pendiente (memoria SULME); no se publican hasta su sí */}
+  ${tarifa ? fila('Tarifa mensual que el hogar informó a Familia', `$${escapeHtml(tarifa)} <span class="text-base font-normal text-slate-600">(la reporta el hogar; confírmala al llamar)</span>`) : ''}
+  ${fila('Última consulta a Familia', CUIDO_CONSULTA_TXT)}
+</dl>
+<p class="text-base text-slate-700 mt-4">Licencia según el Departamento de la Familia, consultado el ${CUIDO_CONSULTA_TXT}. Es el dato del registro, no una visita nuestra.</p>
+${aviso}
+${comoVerificar}
+${otros.length ? `<h2 class="mt-8">Otros hogares en ${escapeHtml(muni)}</h2>
+<ul class="not-prose mt-3 grid gap-2 sm:grid-cols-2 list-none p-0">${otros.map(o => `<li><a href="${hogarPath(o)}" class="block min-h-[48px] bg-white border border-slate-300 rounded-xl p-3 no-underline text-slate-900 font-semibold text-base hover:border-teal-400">${escapeHtml(o.name)}${o.n.camas ? `<span class="block font-normal text-slate-600">${o.n.camas} camas licenciadas</span>` : ''}</a></li>`).join('')}</ul>` : ''}
+${cruces}
+<p class="mt-6"><a href="${muniPath(muni)}" class="text-teal-800 underline font-semibold text-lg">Ver los ${lista.length} hogares de ${escapeHtml(muni)} →</a></p>
+${fuente}`
+    const canon = `${origen}${hogarPath(r)}`
+    res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
+    return res.status(200).send(layout({
+      title: `${r.name}, hogar de cuido en ${muni} — licencia y teléfono`,
+      description: `${r.name} en ${muni}: licencia ${n.licencia ? '#' + n.licencia + ' ' : ''}según Familia${n.licencia_exp ? ' (vence ' + fechaEs2(n.licencia_exp) + ')' : ''}, ${n.camas ? n.camas + ' camas licenciadas, ' : ''}teléfono y cómo llegar. Consultado el ${CUIDO_CONSULTA_TXT}.`,
+      slug: propio ? `${slugTexto(muni)}/${r.slugH}` : `cuido/${slugTexto(muni)}/${r.slugH}`,
+      canonicalUrl: canon, host, bodyHtml: body,
+      jsonLd: {
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'LocalBusiness',
+            '@id': canon + '#hogar',
+            name: r.name,
+            url: canon,
+            ...(r.phone ? { telephone: r.phone } : {}),
+            address: { '@type': 'PostalAddress', streetAddress: r.address || undefined, addressLocality: muni, addressRegion: 'PR', addressCountry: 'US' },
+            ...(r.lat && r.lon ? { geo: { '@type': 'GeoCoordinates', latitude: r.lat, longitude: r.lon } } : {}),
+            description: `Hogar de cuido para adultos mayores en ${muni}, Puerto Rico, con licencia del Departamento de la Familia según su registro público (consultado ${CUIDO_CONSULTA_TXT}).`,
+          },
+          {
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              { '@type': 'ListItem', position: 1, name: 'Hogares de cuido', item: `${origen}${rutaIndice}` },
+              { '@type': 'ListItem', position: 2, name: muni, item: `${origen}${muniPath(muni)}` },
+              { '@type': 'ListItem', position: 3, name: r.name, item: canon },
+            ],
+          },
+        ],
+      },
+    }))
+  }
+
+  // ---------- Lista de un pueblo: /cuido/<pueblo> ----------
+  if (muniRaw && !muni) {
+    res.setHeader('Cache-Control', 'public, s-maxage=300')
+    return res.status(404).send(layout({
+      title: 'Pueblo no encontrado', description: 'No hay hogares de cuido con ese nombre de pueblo.',
+      slug: `cuido/${slugTexto(muniRaw)}`, host,
+      bodyHtml: `<meta name="robots" content="noindex"><h1>No encontramos ese pueblo</h1><p class="text-lg text-slate-700 mt-3">Escoge uno de la lista.</p><p class="mt-4"><a href="${rutaIndice}" class="text-teal-800 underline font-semibold text-lg">Ver todos los pueblos →</a></p>`,
+    }))
+  }
+  res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
   if (muni) {
     const list = byMuni.get(muni)!.slice().sort((a, b) => (b.n.camas || 0) - (a.n.camas || 0))
     const camas = list.reduce((a, r) => a + (r.n.camas || 0), 0)
-    const ocup = list.reduce((a, r) => a + (r.n.ocupadas || 0), 0)
     const cards = list.map(r => {
-      const d = diasPara(r.n.licencia_exp)
-      const libres = (r.n.camas || 0) - (r.n.ocupadas || 0)
-      const badge = d === null
-        ? `<span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded">Sin fecha de vencimiento en el registro</span>`
-        : d < 0
-          ? `<span class="text-xs bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded">Licencia vencida hace ${Math.abs(d)} días</span>`
-          : d <= 90
-            ? `<span class="text-xs bg-amber-100 text-amber-700 font-bold px-2 py-0.5 rounded">Licencia vence en ${d} días</span>`
-            : `<span class="text-xs bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded">Licencia vigente</span>`
-      const tel = (r.phone || '').replace(/[^\d]/g, '')
-      return `<div class="bg-white border border-slate-200 rounded-xl p-4">
-        <div class="flex flex-wrap items-start justify-between gap-2">
-          <h3 class="font-black text-slate-900 text-base m-0">${escapeHtml(r.name)}</h3>
-          ${badge}
-        </div>
-        ${r.address ? `<p class="text-sm text-slate-600 mt-1 mb-0">${escapeHtml(r.address)}</p>` : ''}
-        <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-slate-700">
-          ${r.n.camas ? `<span><strong>${r.n.camas}</strong> camas${libres > 0 ? ` · <strong>${libres}</strong> disponibles` : ''}</span>` : ''}
+      const est = estadoLic(r.n.licencia_exp)
+      return `<div class="bg-white border border-slate-300 rounded-xl p-4">
+        <h3 class="font-black text-slate-900 text-lg m-0"><a href="${hogarPath(r)}" class="inline-block min-h-[48px] py-3 text-slate-900 underline decoration-teal-600">${escapeHtml(r.name)}</a></h3>
+        <p class="mt-2 mb-0"><span class="inline-block text-base font-bold px-2 py-0.5 rounded ${claseTono[est.tono]}">${est.corto}</span></p>
+        ${r.address ? `<p class="text-base text-slate-700 mt-2 mb-0">${escapeHtml(r.address)}</p>` : ''}
+        <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-base text-slate-800">
+          ${r.n.camas ? `<span><strong>${r.n.camas}</strong> camas licenciadas</span>` : ''}
           ${r.n.cumplimiento ? `<span>${escapeHtml(r.n.cumplimiento)}</span>` : ''}
         </div>
-        ${tel ? `<a href="tel:${tel}" class="inline-flex items-center gap-2 mt-3 min-h-[48px] bg-teal-700 hover:bg-teal-800 text-white font-bold text-base px-5 rounded-xl no-underline"><i class="fa-solid fa-phone" aria-hidden="true"></i> Llamar ${escapeHtml(r.phone || '')}</a>` : ''}
+        ${botonLlamar(r)}
+        <p class="mt-3 mb-0"><a href="${hogarPath(r)}" class="inline-flex items-center min-h-[48px] text-teal-800 underline font-semibold text-base">Ver la ficha completa →</a></p>
       </div>`
     }).join('')
 
     const body = `
 <h1>Hogares de cuido en ${escapeHtml(muni)}</h1>
-<p class="text-lg text-slate-600 mt-3">Hay <strong>${list.length}</strong> establecimiento${list.length === 1 ? '' : 's'} de cuido con licencia del Departamento de la Familia en ${escapeHtml(muni)}. Entre todos suman <strong>${camas}</strong> camas, con <strong>${ocup}</strong> ocupadas según el registro.</p>
+<p class="text-lg text-slate-700 mt-3">Hay <strong>${list.length}</strong> establecimiento${list.length === 1 ? '' : 's'} de cuido con licencia del Departamento de la Familia en ${escapeHtml(muni)}. Entre todos suman <strong>${camas}</strong> camas licenciadas.</p>
 ${aviso}
 <h2 class="sr-only">Los ${list.length} hogares de cuido de ${escapeHtml(muni)}</h2>
 <div class="not-prose mt-6 grid gap-3 sm:grid-cols-2">${cards}</div>
 ${comoVerificar}
 ${cruces}
-<p class="mt-6"><a href="/cuido" class="text-teal-700 font-semibold">Ver todos los pueblos →</a></p>
+<p class="mt-6"><a href="${rutaIndice}" class="text-teal-800 underline font-semibold text-lg">Ver todos los pueblos →</a></p>
 ${fuente}`
 
     return res.status(200).send(layout({
       title: `Hogares de cuido en ${muni} — licenciados por Familia`,
-      description: `${list.length} hogares de cuido con licencia vigente en ${muni}, Puerto Rico. Camas, disponibilidad y cómo verificar la licencia antes de dejar a un familiar.`,
-      // La canónica tiene que ser la MISMA forma que la grilla enlaza (línea de abajo:
-      // minúsculas, sin acentos, con guiones). Con encodeURIComponent salía
-      // /cuido/Cabo%20Rojo mientras el sitio enlazaba /cuido/cabo-rojo: las 2 servían
-      // 200 con el mismo contenido y las 2 declaraban canónica la del %20, o sea que
-      // el URL que la gente sí visita se declaraba a sí mismo no-canónico. Son 77
-      // páginas × 2 formas = 154 URLs peleando por ser 77 — el mismo aviso de Search
-      // Console del 28 jul. Además %20 en un enlace por SMS lo filtran algunos
-      // carriers, que es justo por lo que existe la forma con guiones.
-      slug: `cuido/${muni.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-')}`, host, bodyHtml: body,
+      description: `${list.length} hogares de cuido con licencia en ${muni}, Puerto Rico, según el Departamento de la Familia (consultado ${CUIDO_CONSULTA_TXT}). Teléfono, vencimiento de la licencia y cómo verificar antes de dejar a un familiar.`,
+      // La canónica es la misma forma que la grilla enlaza (minúsculas, sin acentos, guiones);
+      // ver el aviso de Search Console del 28 jul sobre /cuido/Cabo%20Rojo vs /cuido/cabo-rojo.
+      slug: propio ? slugTexto(muni) : `cuido/${slugTexto(muni)}`,
+      canonicalUrl: `${origen}${muniPath(muni)}`, host, bodyHtml: body,
     }))
   }
 
   const munis = [...byMuni.entries()]
     .map(([m, rs]) => ({ m, n: rs.length, camas: rs.reduce((a, r) => a + (r.n.camas || 0), 0) }))
     .sort((a, b) => a.m.localeCompare(b.m, 'es'))
-  const grid = munis.map(x => `<a href="/cuido/${x.m.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-')}" class="block bg-white border border-slate-200 rounded-xl p-3 no-underline hover:border-teal-400">
-    <div class="font-bold text-slate-900 text-sm">${escapeHtml(x.m)}</div>
-    <div class="text-xs text-slate-500">${x.n} hogar${x.n === 1 ? '' : 'es'} · ${x.camas} camas</div>
+  const grid = munis.map(x => `<a href="${muniPath(x.m)}" class="block min-h-[48px] bg-white border border-slate-300 rounded-xl p-3 no-underline hover:border-teal-400">
+    <div class="font-bold text-slate-900 text-base">${escapeHtml(x.m)}</div>
+    <div class="text-base text-slate-700">${x.n} hogar${x.n === 1 ? '' : 'es'} · ${x.camas} camas</div>
   </a>`).join('')
 
   const body = `
 <h1>Hogares de cuido de Puerto Rico</h1>
-<p class="text-lg text-slate-600 mt-3">Los <strong>${all.length}</strong> establecimientos de cuido para adultos mayores con licencia del Departamento de la Familia, en <strong>${munis.length}</strong> pueblos. Con camas, disponibilidad y hasta cuándo vence cada licencia.</p>
-<div class="not-prose mt-5 grid grid-cols-3 gap-3 text-center">
-  <div class="bg-white border-2 border-slate-200 rounded-xl p-4"><div class="text-3xl font-black text-slate-800">${all.length}</div><div class="text-xs text-slate-500 mt-1">establecimientos</div></div>
-  <div class="bg-white border-2 border-slate-200 rounded-xl p-4"><div class="text-3xl font-black text-slate-800">${totalCamas.toLocaleString('es')}</div><div class="text-xs text-slate-500 mt-1">camas licenciadas</div></div>
-  <div class="bg-white border-2 border-teal-300 rounded-xl p-4"><div class="text-3xl font-black text-teal-700">${(totalCamas - totalOcup).toLocaleString('es')}</div><div class="text-xs text-slate-500 mt-1">camas sin ocupar</div></div>
+<p class="text-lg text-slate-700 mt-3">Los <strong>${all.length}</strong> establecimientos de cuido para adultos mayores con licencia del Departamento de la Familia, en <strong>${munis.length}</strong> pueblos. Con teléfono y hasta cuándo vence cada licencia según el registro.</p>
+<div class="not-prose mt-5 grid grid-cols-2 gap-3 text-center">
+  <div class="bg-white border-2 border-slate-300 rounded-xl p-4"><div class="text-3xl font-black text-slate-800">${all.length}</div><div class="text-base text-slate-700 mt-1">establecimientos</div></div>
+  <div class="bg-white border-2 border-teal-300 rounded-xl p-4"><div class="text-3xl font-black text-teal-800">${totalCamas.toLocaleString('es')}</div><div class="text-base text-slate-700 mt-1">camas licenciadas</div></div>
 </div>
 ${aviso}
 <h2 class="mt-8">Busca tu pueblo</h2>
@@ -23697,8 +23849,8 @@ ${fuente}`
 
   return res.status(200).send(layout({
     title: 'Hogares de cuido de Puerto Rico — licenciados por Familia',
-    description: `Los ${all.length} hogares de cuido para adultos mayores con licencia del Departamento de la Familia en Puerto Rico, por pueblo. Camas disponibles, vencimiento de licencia y cómo verificar antes de dejar a un familiar.`,
-    slug: 'cuido', host, bodyHtml: body,
+    description: `Los ${all.length} hogares de cuido para adultos mayores con licencia del Departamento de la Familia en Puerto Rico, por pueblo. Teléfono, vencimiento de la licencia y cómo verificar antes de dejar a un familiar.`,
+    slug: propio ? '' : 'cuido', canonicalUrl: `${origen}${propio ? '/' : '/cuido'}`, host, bodyHtml: body,
   }))
 }
 
@@ -24045,6 +24197,8 @@ function wrongHost(req: any, page: string): string | null {
       return 'https://registromedicopr.com' + p + (en ? '?lang=en' : '')
     }
   }
+  // El dominio propio de Cuido sirve la página 'cuido' en su raíz: no se manda a registromedicopr.com.
+  if (page === 'cuido' && isCuidoHost(host)) return null
   const target = PAGE_CANONICAL[page]
   if (!target) return null
   if (!host) return null
@@ -24066,6 +24220,14 @@ function wrongHost(req: any, page: string): string | null {
 
 function handleNotFound(req: any, res: any) {
   const host = String(req.headers?.host || '')
+  if (isCuidoHost(host)) {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow')
+    return res.status(404).send(layout({
+      title: 'Esa página no existe', description: 'Esa dirección no existe. Busca por pueblo.',
+      slug: '', host, canonicalUrl: CUIDO_BASE + '/',
+      bodyHtml: `<h1>Esa página no existe</h1><p class="text-lg text-slate-700 mt-3">Puede que el enlace venga cortado o viejo.</p><p class="mt-4"><a href="/" class="text-teal-800 underline font-semibold text-lg">Buscar un hogar de cuido por pueblo →</a></p>`,
+    }))
+  }
   const esReg = /registromedicopr/i.test(host)
   const canonicalHost = esReg ? 'https://registromedicopr.com' : 'https://puertoricosinfiltros.com'
   res.setHeader('X-Robots-Tag', 'noindex, nofollow')

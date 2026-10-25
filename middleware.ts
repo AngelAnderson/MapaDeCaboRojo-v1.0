@@ -7,6 +7,11 @@ export const config = {
   matcher: ['/', '/categoria/:slug*'],
 }
 
+// Dominio propio del directorio Cuido (aún sin comprar): su raíz sirve el índice de /cuido.
+// Misma lista que api/_lib/cuido-hosts.ts (el edge no puede leer env de la función; si se
+// agrega un host por env CUIDO_HOSTS, agregarlo aquí también).
+const CUIDO_HOSTS = ['hogaresdeancianospr.com', 'www.hogaresdeancianospr.com']
+
 export default function middleware(request: Request) {
   const host = (request.headers.get('host') || '').split(':')[0].toLowerCase()
   const isReg = host === 'registromedicopr.com' || host === 'www.registromedicopr.com'
@@ -25,6 +30,9 @@ export default function middleware(request: Request) {
   if (isReg && path === '/') {
     // URL stays registromedicopr.com/ — content served from the registro handler.
     return rewrite(new URL('/api/mapa-pages?page=registro', request.url))
+  }
+  if (CUIDO_HOSTS.includes(host) && path === '/') {
+    return rewrite(new URL('/api/mapa-pages?page=cuido', request.url))
   }
   if (host === 'puertoricosinfiltros.com' || host === 'www.puertoricosinfiltros.com') {
     // URL stays puertoricosinfiltros.com/ — the third face of the substrate: PR's public record.

@@ -4,6 +4,7 @@ import { opcionesConPlazo } from './_lib/db-plazo.js'
 import { MCP_ENDPOINT } from './_lib/agentes.js';
 import { SPECIALIST_SUBS } from './_lib/registro-subs.js';
 import { rutaDeRecord, esDelRegistro } from './_lib/rutas-salud.js';
+import { isCuidoHost, CUIDO_BASE, slugTexto, slugHogar } from './_lib/cuido-hosts.js';
 
 const supabase = createClient(
   process.env.VITE_SUPABASE_URL || '',
@@ -37,9 +38,12 @@ const AI_CRAWLERS = ['GPTBot', 'ChatGPT-User', 'ClaudeBot', 'Claude-Web', 'anthr
 // copia aquí que se decía "espejo EXACTO" de las otras dos y no lo era.
 
 function robotsFor(host: string): string {
+  const isCuido = isCuidoHost(host);
   const isPRSF = /puertoricosinfiltros\.com/i.test(host);
   const isReg = /registromedicopr\.com/i.test(host);
-  const base = isPRSF
+  const base = isCuido
+    ? CUIDO_BASE
+    : isPRSF
     ? 'https://puertoricosinfiltros.com'
     : isReg
       ? 'https://registromedicopr.com'
@@ -145,6 +149,7 @@ export default async function handler(req: any, res: any) {
     
     // 3. Build XML
     const urls = [];
+    const cuidoUrls: string[] = []; // sitemap del dominio propio de Cuido (host aún sin comprar)
 
     // Static Pages
     urls.push(`
@@ -442,7 +447,7 @@ export default async function handler(req: any, res: any) {
     // el mismo bug de fronteras corridas, un piso más abajo.
     const cuidoMunis = await fetchAll(() => supabase
       .from('places')
-      .select('id, municipality')
+      .select('id, name, municipality')
       .eq('subcategory', 'hogar de ancianos')
       .eq('verification_source', 'SULME_Familia_PR')
       .eq('visibility', 'published'), ['id']);
@@ -454,6 +459,24 @@ export default async function handler(req: any, res: any) {
           <priority>0.7</priority>
         </url>
       `);
+    }
+    // Fichas por hogar (/cuido/<pueblo>/<slug>): misma regla de slug que la página
+    // (api/_lib/cuido-hosts.ts), para que sitemap, enlace y canónica sean UNA sola URL.
+    const url1 = (loc: string, pri: string) => `
+        <url>
+          <loc>${loc}</loc>
+          <changefreq>monthly</changefreq>
+          <priority>${pri}</priority>
+        </url>`;
+    cuidoUrls.push(url1(CUIDO_BASE + '/', '1.0'));
+    for (const m of [...new Set((cuidoMunis || []).map((r: any) => r.municipality).filter(Boolean))]) {
+      cuidoUrls.push(url1(`${CUIDO_BASE}/${slugTexto(m as string)}`, '0.8'));
+    }
+    for (const h of (cuidoMunis || []) as any[]) {
+      if (!h.municipality || !h.name) continue;
+      const ruta = `${slugTexto(h.municipality)}/${slugHogar(h.name, h.id)}`;
+      urls.push(url1(`${REG_BASE}/cuido/${ruta}`, '0.6'));
+      cuidoUrls.push(url1(`${CUIDO_BASE}/${ruta}`, '0.7'));
     }
 
     // Category pages
@@ -525,8 +548,11 @@ export default async function handler(req: any, res: any) {
     // (no cross-domain entries → clean in Search Console).
     const isReg = /registromedicopr\.com/i.test(String(req.headers?.host || ''));
     const isPRSF = /puertoricosinfiltros\.com/i.test(String(req.headers?.host || ''));
+    const isCuido = isCuidoHost(String(req.headers?.host || ''));
     let outUrls: string[];
-    if (isPRSF) {
+    if (isCuido) {
+      outUrls = cuidoUrls;
+    } else if (isPRSF) {
       // Host-aware: puertoricosinfiltros.com lista solo sus récords propios (limpio en GSC).
       const B = 'https://puertoricosinfiltros.com';
       // Lista a mano = se queda corta: el 11 ago 2026 habia 9 records vivos (200) que nunca
