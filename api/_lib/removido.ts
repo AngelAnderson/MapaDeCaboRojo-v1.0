@@ -61,8 +61,7 @@ export function responderRemovidoNegocio(res: any, host?: string) {
 <main>
   <h1>Esta ficha ya no está en el directorio</h1>
   <p>Este negocio pidió no aparecer aquí, y lo sacamos.</p>
-  <p>¿Buscas algo parecido? El Veci te ayuda por texto, gratis: <strong>787-417-7711</strong>.</p>
-  <p><a class="boton" href="${inicio}">Buscar en el directorio</a></p>
+  <p><a class="boton" href="${inicio}">Ir al inicio</a></p>
 </main>
 </body>
 </html>`);
