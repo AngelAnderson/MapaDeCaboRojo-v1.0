@@ -698,6 +698,21 @@ ${isPRSF ? `<script>(function(){function L(ev,rec,t){try{fetch('/api/mapa-pages?
 
 // =============== /mision ===============
 
+// Intro "Corta" de Angel Anderson, aprobada por Angel el 26 oct 2026 (Context/intro-angel.md). Palabra por palabra, en español.
+function introAngelCorta(): string {
+  return `<section class="not-prose mt-10 mb-4 bg-white border-2 border-slate-200 rounded-2xl p-6 sm:p-8" lang="es" aria-labelledby="por-que-existe-registro">
+  <h2 id="por-que-existe-registro" class="text-2xl font-black text-slate-900 m-0">Por qué existe este registro</h2>
+  <div class="text-lg leading-relaxed text-slate-800 mt-4 space-y-4">
+    <p class="m-0">Soy Angel Anderson. Serví 20 años en la Fuerza Aérea y trabajo en marketing desde 2003.</p>
+    <p class="m-0">Regresé a Puerto Rico a ayudar negocios a conseguir clientes. Creé CaboRojo.com y El Veci, un vecino que contesta por texto.</p>
+    <p class="m-0"><strong>Pero en mayo nos tocó buscar un médico para mi esposa. Nos dijeron que llamáramos en octubre. ¡5 meses solamente para llamar!</strong></p>
+    <p class="m-0">Así que construí una herramienta, conseguimos la cita y la compartí como RegistroMedicoPR.com.</p>
+    <p class="m-0">Hoy reúne información de más de <strong>30,000 proveedores</strong> y la usan más de <strong>22,000 personas al mes, sin publicidad</strong>.</p>
+    <p class="m-0"><strong>Porque encontrar un médico no significa conseguir atención médica.</strong></p>
+  </div>
+</section>`
+}
+
 function handleMision(_req: any, res: any) {
   const body = `
 <h1>El mapa vivo pa' poner orden en el revolú de Cabo Rojo.</h1>
@@ -5562,6 +5577,7 @@ async function handleQuienEstaDetras(req: any, res: any) {
     <iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/4gu4-h8Ji7Q" title="${te('Por qué existe RegistroMedicoPR', 'Why RegistroMedicoPR exists')}" style="width:100%;height:100%;border:0;border-radius:16px;" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen></iframe>
   </div>
 </div>
+${introAngelCorta()}
 <p class="text-base text-slate-700 mt-8"><a href="/registro${q}" class="text-teal-700 font-semibold">${te('Buscar un especialista →', 'Find a specialist →')}</a></p>
 </section>
 `
@@ -6112,6 +6128,8 @@ async function handleRegistro(req: any, res: any) {
   });
 })();
 </script>
+
+${introAngelCorta()}
 
 <script>
 (function(){
