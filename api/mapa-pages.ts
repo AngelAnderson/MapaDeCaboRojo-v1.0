@@ -5577,7 +5577,6 @@ async function handleQuienEstaDetras(req: any, res: any) {
     <iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/4gu4-h8Ji7Q" title="${te('Por qué existe RegistroMedicoPR', 'Why RegistroMedicoPR exists')}" style="width:100%;height:100%;border:0;border-radius:16px;" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen></iframe>
   </div>
 </div>
-${introAngelCorta()}
 <p class="text-base text-slate-700 mt-8"><a href="/registro${q}" class="text-teal-700 font-semibold">${te('Buscar un especialista →', 'Find a specialist →')}</a></p>
 </section>
 `
