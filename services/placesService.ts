@@ -75,24 +75,39 @@ export const autocompletePlace = async (query: string, sessionToken?: string): P
     }
 };
 
+// 28 oct 2026: coordenadas SIN Google Places. Primero se leen del link (gratis, sin red);
+// si no están, el servidor usa Nominatim (OpenStreetMap). Antes esto costaba Autocomplete + Details
+// por cada sugerencia pública (la misma API del incidente del 18 abr 2026).
+const PR = { minLat: 17.80, maxLat: 18.60, minLng: -67.40, maxLng: -65.10 };
+export const coordsDeLink = (text: string): { lat: number, lng: number } | null => {
+    let t = String(text || '');
+    try { t = decodeURIComponent(t); } catch {}
+    const pats = [
+        /!3d(-?\d{1,2}\.\d+)!4d(-?\d{1,3}\.\d+)/,
+        /[?&](?:q|query|ll|destination|center)=(-?\d{1,2}\.\d+),\s*(-?\d{1,3}\.\d+)/,
+        /@(-?\d{1,2}\.\d+),(-?\d{1,3}\.\d+)/,
+        /^\s*(-?\d{1,2}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)\s*$/,
+    ];
+    for (const re of pats) {
+        const m = t.match(re);
+        if (m) {
+            const lat = parseFloat(m[1]), lng = parseFloat(m[2]);
+            if (lat >= PR.minLat && lat <= PR.maxLat && lng >= PR.minLng && lng <= PR.maxLng) return { lat, lng };
+        }
+    }
+    return null;
+};
+
 export const findCoordinates = async (query: string): Promise<{ lat: number, lng: number } | null> => {
     if (!query) return null;
-    
-    // Create a temporary session token for this specific lookup flow to save costs
-    // This groups the autocomplete search + details fetch into one transaction
-    const sessionToken = generateSessionToken();
-
+    const local = coordsDeLink(query);
+    if (local) return local;
     try {
-        // First try to get a place_id via autocomplete
-        const predictions = await autocompletePlace(query, sessionToken);
-        if (predictions.length > 0) {
-            const placeId = predictions[0].place_id;
-            const details = await fetchPlaceDetails(placeId, sessionToken); // Use same token
-            if (details?.coords) {
-                return details.coords;
-            }
+        const res = await callPlacesProxy('geocode', { q: query });
+        if (res && res.ok && typeof res.lat === 'number' && typeof res.lng === 'number') {
+            return { lat: res.lat, lng: res.lng };
         }
-        return null; 
+        return null;
     } catch (e) {
         console.error("Find Coordinates failed:", e);
         return null;

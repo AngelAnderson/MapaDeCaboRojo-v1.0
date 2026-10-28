@@ -170,7 +170,7 @@ async function handleUserAction(action: string, req: any, res: any) {
 // --- HANDLERS ---
 
 async function handleSyncPlace({ placeId, googlePlaceId }: any, res: any) {
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY || process.env.VITE_GOOGLE_PLACES_API_KEY;
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey || !placeId || !googlePlaceId) throw new Error("Missing Config or IDs");
 
   const fields = 'name,formatted_address,geometry,website,international_phone_number,opening_hours,price_level,rating,photos,business_status';
@@ -331,7 +331,7 @@ async function handleSyncWeather({ placeId, lat, lon }: any, res: any) {
 }
 
 async function handleSyncVibe({ placeId, googlePlaceId }: any, res: any) {
-    const apiKey = process.env.GOOGLE_PLACES_API_KEY || process.env.VITE_GOOGLE_PLACES_API_KEY;
+    const apiKey = process.env.GOOGLE_PLACES_API_KEY;
     if (!apiKey) throw new Error("Missing API Key");
 
     const gUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${googlePlaceId}&fields=name,reviews&language=es&key=${apiKey}`;

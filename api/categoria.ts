@@ -1901,10 +1901,10 @@ export default async function handler(req: any, res: any) {
 
       var map = L.map('cat-map', { scrollWheelZoom: false, tap: false });
 
-      // OpenStreetMap tiles — free, no key needed
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      // CARTO Voyager (datos OpenStreetMap): gratis, sin llave, mismo fondo que la app
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         maxZoom: 19,
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/attributions">CARTO</a>'
       }).addTo(map);
 
       var markers = [];

@@ -6213,8 +6213,8 @@ async function handle_cultura(req: any, res: any) {
       const markers = ${JSON.stringify(markers)};
       if (markers.length && typeof L !== 'undefined') {
         const map = L.map('cultura-map', { scrollWheelZoom: false }).setView([18.04, -67.16], 11);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap', maxZoom: 18
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+          attribution: '© OpenStreetMap © CARTO', maxZoom: 19
         }).addTo(map);
         const bounds = L.latLngBounds([]);
         markers.forEach(m => {

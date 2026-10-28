@@ -19,15 +19,13 @@ export default defineConfig(({ mode }) => {
   // Places API calls must go through a server-side proxy, not the browser.
   const supabaseUrl = env.VITE_SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
   const supabaseKey = env.VITE_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
-  // Maps JS key — MUST be referrer-restricted in Google Console before use
-  const mapsJsKey = env.VITE_GOOGLE_MAPS_JS_KEY || process.env.VITE_GOOGLE_MAPS_JS_KEY || '';
+  // 2026-10-28: Removed VITE_GOOGLE_MAPS_JS_KEY define — nothing read it (the map is Leaflet + CARTO).
 
   return {
     plugins: [react()],
     define: {
       'process.env.VITE_SUPABASE_URL': JSON.stringify(supabaseUrl),
       'process.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(supabaseKey),
-      'process.env.VITE_GOOGLE_MAPS_JS_KEY': JSON.stringify(mapsJsKey),
       'process.env': {}
     },
     build: {

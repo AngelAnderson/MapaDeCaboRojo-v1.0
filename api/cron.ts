@@ -235,7 +235,7 @@ async function runAlertas(res: any) {
 // --- Vibe ---
 async function runVibe(res: any) {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY || process.env.VITE_GOOGLE_PLACES_API_KEY;
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!apiKey) throw new Error("Google API Key missing");
 
   const { data: places } = await supabase
