@@ -198,6 +198,8 @@ export default async function handler(req: any, res: any) {
     // reportando sus errores (así seguía vivo el aviso de Dataset de /transparencia
     // y /senales-del-pueblo tres días después de la poda del 27 jul 2026).
     const narrativePages: Array<{ slug: string; priority: number; changefreq: string }> = [
+      { slug: 'donde-comer-hoy', priority: 0.9, changefreq: 'daily' },         // ¿Dónde comemos hoy? · abiertos ahora en Cabo Rojo (29 oct 2026)
+      { slug: 'ruta-joyuda', priority: 0.9, changefreq: 'daily' },             // la misma, con Joyuda escogido (29 oct 2026)
       { slug: 'nevera', priority: 0.9, changefreq: 'weekly' },                 // Se dañó. ¿A quién llamo? · los 8 que resuelven, con sello y fecha (9 sep 2026)
       { slug: 'tienda', priority: 0.9, changefreq: 'weekly' },                 // storefront · La Vitrina + libro + Conserje
       { slug: 'pon-tu-negocio-en-el-mapa', priority: 0.9, changefreq: 'weekly' }, // §13 revenue CTA

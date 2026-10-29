@@ -88,7 +88,8 @@ async function capaHttp() {
 
   console.log('\nRutas');
   for (const ruta of ['/3d', '/clasico', '/pon-tu-negocio-en-el-mapa', '/tienda',
-                      '/barrios', '/negocio/tano-plumbing', '/llms.txt']) {
+                      '/barrios', '/negocio/tano-plumbing', '/llms.txt',
+                      '/donde-comer-hoy', '/ruta-joyuda']) {
     const rr = await fetch(BASE + ruta, { redirect: 'manual' });
     check(`${ruta} responde 200`, rr.status === 200, `dio ${rr.status}`);
   }

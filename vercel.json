@@ -160,6 +160,14 @@
       "destination": "/api/categoria?cat=:cat"
     },
     {
+      "source": "/donde-comer-hoy",
+      "destination": "/api/mapa-pages?page=donde-comer-hoy"
+    },
+    {
+      "source": "/ruta-joyuda",
+      "destination": "/api/mapa-pages?page=ruta-joyuda"
+    },
+    {
       "source": "/barrios",
       "destination": "/api/mapa-pages?page=barrios"
     },

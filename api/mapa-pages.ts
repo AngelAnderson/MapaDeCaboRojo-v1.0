@@ -23,6 +23,7 @@ import { handleActivos } from './_lib/activos.js'
 import { conFrescura } from './_lib/agentes.js'
 import { paginaMedicaLd, procedenciaSello, fechaVerificacion, fechaCortaAT, partesAT, fechaEs, VERIFICADOR, EDITOR_REGISTRO, NPPES_DATASET } from './_lib/procedencia.js'
 import { handleBarrios } from './_lib/barrios.js'
+import { handleDondeComerHoy } from './_lib/comer.js'
 import { cargarSenal, type SenalCategoria } from './_lib/la-senal.js'
 import { handleRentas } from './_lib/rentas.js'
 import { handleSuelo } from './_lib/suelo.js'
@@ -12939,7 +12940,8 @@ async function handleSinFiltrosLog(req: any, res: any) {
 // target = 10 dígitos exactos o no entra. Es el número de una oficina, no de la persona.
 // 'salida' (11 oct 2026): quien sale de una ficha SIN llamar, con el tiempo en la página por tramo. Era la incógnita #5:
 // medíamos el clic, no la duda. target = tramo de segundos ('0-10','10-30','30-90','90+'), nada más.
-const REGISTRO_EVENTS = new Set(['click_to_call', 'click_whatsapp', 'veci_click', 'symptom_match', 'call_outcome', 'loqueviene_click', 'numero_reportado', 'salida'])
+// directions_click, menu_click, recommendation_view (29 oct 2026): /donde-comer-hoy y /ruta-joyuda (api/_lib/comer.ts).
+const REGISTRO_EVENTS = new Set(['click_to_call', 'click_whatsapp', 'veci_click', 'symptom_match', 'call_outcome', 'loqueviene_click', 'numero_reportado', 'salida', 'directions_click', 'menu_click', 'recommendation_view'])
 const SALIDA_TRAMOS = new Set(['0-10', '10-30', '30-90', '90+'])
 // 28 sep 2026: resultado de la llamada ("la verdad después del click"). Solo estas claves.
 // no_llame (28 sep 2026): 72% cerraba la hoja con la ×; las 5 opciones suponían que alguien habló.
@@ -24092,6 +24094,8 @@ const PAGE_CANONICAL: Record<string, string> = {
   'agua': 'https://puertoricosinfiltros.com/agua',
   'atlas': 'https://registromedicopr.com/atlas',
   'barrios': 'https://www.mapadecaborojo.com/barrios',
+  'donde-comer-hoy': 'https://www.mapadecaborojo.com/donde-comer-hoy',
+  'ruta-joyuda': 'https://www.mapadecaborojo.com/ruta-joyuda',
   'basura': 'https://puertoricosinfiltros.com/basura',
   'boletin': 'https://puertoricosinfiltros.com/notas',
   'panel': 'https://puertoricosinfiltros.com/panel',
@@ -24389,6 +24393,8 @@ export default async function handler(req: any, res: any) {
     case 'esencia': return await handleEsencia(req, res)
     case 'suelo': return handleSuelo(req, res, { layout, escapeHtml })
     case 'activos': return handleActivos(req, res, { layout, escapeHtml })
+    case 'donde-comer-hoy': return await handleDondeComerHoy(req, res, { layout, escapeHtml, supabase })
+    case 'ruta-joyuda': return await handleDondeComerHoy(req, res, { layout, escapeHtml, supabase }, { zonaFija: 'joyuda' })
     case 'barrios': return await handleBarrios(req, res, { layout, escapeHtml, supabase })
     case 'barrio': return await handleBarrios(req, res, { layout, escapeHtml, supabase })
     case 'rentas': return await handleRentas(req, res, { layout, escapeHtml, supabase })
