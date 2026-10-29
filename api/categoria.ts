@@ -1574,9 +1574,17 @@ export default async function handler(req: any, res: any) {
           <span class="cifra-l">mejor puntuado<br>${esc(recorta(String(_mejorPuntuado.name), 26))}</span>
         </div>` : ''}
       </div>
+      ${cat === 'mariscos' ? `<div class="atajos">
+        <span class="atajos-lbl">Empieza por aquí</span>
+        <div class="atajos-fila">
+          <a class="atajo" href="/donde-comer-hoy?t=mariscos" style="text-decoration:none">¿Dónde comemos mariscos hoy? Te damos 3</a>
+          <a class="atajo" href="/ruta-joyuda" style="text-decoration:none">La Ruta Joyuda</a>
+        </div>
+      </div>` : ''}
       ${isRestaurant ? `<div class="atajos">
         <span class="atajos-lbl">Empieza por aquí</span>
         <div class="atajos-fila">
+          <a class="atajo" href="/donde-comer-hoy" style="text-decoration:none">¿Dónde comemos hoy? Te damos 3</a>
           <button type="button" class="atajo atajo-vivo" data-salto="abierto">Abiertos ahora (<span id="atajo-n">${_abiertosAhora}</span>)</button>
           <button type="button" class="atajo" data-salto="tipo:mariscos">Mariscos</button>
           <button type="button" class="atajo" data-salto="tipo:cafe">Desayuno y café</button>
