@@ -312,6 +312,10 @@
       "destination": "/api/mapa-pages?page=quien-esta-detras"
     },
     {
+      "source": "/por-que-existe",
+      "destination": "/api/mapa-pages?page=por-que-existe"
+    },
+    {
       "source": "/raras",
       "destination": "/api/mapa-pages?page=raras"
     },

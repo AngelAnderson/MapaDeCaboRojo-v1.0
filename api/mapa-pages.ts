@@ -710,6 +710,7 @@ function introAngelCorta(): string {
     <p class="m-0">Así que construí una herramienta, conseguimos la cita y la compartí como RegistroMedicoPR.com.</p>
     <p class="m-0">Hoy reúne información de más de <strong>30,000 proveedores</strong> y la usan más de <strong>22,000 personas al mes, sin publicidad</strong>.</p>
     <p class="m-0"><strong>Porque encontrar un médico no significa conseguir atención médica.</strong></p>
+    <p class="m-0 text-base"><a href="/por-que-existe" class="text-teal-700 font-semibold underline">Por qué existe el Registro, en 1 página →</a></p>
   </div>
 </section>`
 }
@@ -5575,7 +5576,7 @@ async function handleQuienEstaDetras(req: any, res: any) {
 <div class="not-prose mt-8 mb-2">
   <p class="text-base text-slate-700 mb-4">${te('La historia de por qué existe, en 3 minutos.', 'The story of why it exists, in 3 minutes.')}</p>
   <div class="mx-auto" style="max-width:360px;aspect-ratio:9/16;">
-    <iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/4gu4-h8Ji7Q" title="${te('Por qué existe RegistroMedicoPR', 'Why RegistroMedicoPR exists')}" style="width:100%;height:100%;border:0;border-radius:16px;" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+    <iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/${VIDEO_POR_QUE_EXISTE}" title="${te('Por qué existe RegistroMedicoPR', 'Why RegistroMedicoPR exists')}" style="width:100%;height:100%;border:0;border-radius:16px;" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen></iframe>
   </div>
 </div>
 <p class="text-base text-slate-700 mt-8"><a href="/registro${q}" class="text-teal-700 font-semibold">${te('Buscar un especialista →', 'Find a specialist →')}</a></p>
@@ -5606,6 +5607,196 @@ async function handleQuienEstaDetras(req: any, res: any) {
         description: 'Nació y vive en Cabo Rojo, Puerto Rico. Sirvió 20 años en la Fuerza Aérea de Estados Unidos. No es médico. Fundó el Registro Médico PR.',
         homeLocation: { '@type': 'Place', name: 'Cabo Rojo, Puerto Rico' },
       },
+      publisher: EDITOR_REGISTRO,
+    },
+  }))
+}
+
+// =============== /por-que-existe — la tesis del Registro en palabras de Angel (registromedicopr.com) ===============
+// 30 oct 2026, dictado de Angel en la caminata: "vine a ayudar negocios a conseguir clientes; terminé investigando
+// por qué es tan difícil conseguir cuidado médico. Puedes encontrar un doctor; conseguir cuidado es otra cosa."
+// v2 (30 oct 8:30 AM, Angel: "que cause curiosidad, credibilidad, autoridad, y que la gente use, vuelva y escriba"):
+// gancho arriba, ninguna tarjeta vacía (vivo ?? respaldo con fecha), de dónde sale cada número, pruébalo ahora,
+// cuéntame cómo te fue, vuelve, y el video original abajo (VIDEO_POR_QUE_EXISTE: cuando Angel grabe otro, 1 línea).
+// Frases LOCKED de Context/intro-angel.md (26 oct). Las 3 frases nuevas son PROPUESTA hasta su "para usar";
+// producción solo con "ok por qué" (orden permanente del Registro: texto nuevo de cara al público se pregunta).
+// Sin tabla ni vista nueva: lee lo mismo que /los-que-si y /registro/censo. Todo número lleva fecha y fuente.
+// "500 fichas al día" era la capacidad del cron, no lo observado (Angel lo vio): ahora se publica el conteo real de 7 días.
+const VIDEO_POR_QUE_EXISTE = '4gu4-h8Ji7Q' // el video original (3 min). Se cambia aquí y sale en las 3 páginas que lo usan.
+async function handlePorQueExiste(req: any, res: any) {
+  const nf = (n: number) => n.toLocaleString('en-US')
+  const hoy = new Date().toLocaleDateString('es-PR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Puerto_Rico' })
+  const RESPALDO_FECHA = '30 de octubre de 2026' // última corrida a mano; solo se enseña si la base no contesta
+  const desde90 = new Date(Date.now() - 90 * 86400000).toISOString()
+  const desde7 = new Date(Date.now() - 7 * 86400000).toISOString()
+  const cnt = async (q: any): Promise<number | null> => { try { const { count, error } = await q; return error ? null : (count ?? 0) } catch { return null } }
+  const base = () => supabase.from('places').select('id', { count: 'exact', head: true }).not('npi', 'is', null).eq('status', 'open').eq('visibility', 'published')
+
+  const [npiPR, cotejadas7, crNpi, crTel, cr90, clics7] = await Promise.all([
+    cnt(base()),
+    cnt(base().gte('last_verified_at', desde7)),
+    cnt(base().eq('municipality', 'Cabo Rojo')),
+    cnt(base().eq('municipality', 'Cabo Rojo').not('phone', 'is', null)),
+    cnt(base().eq('municipality', 'Cabo Rojo').gte('last_verified_at', desde90)),
+    cnt(supabase.from('registro_events').select('id', { count: 'exact', head: true }).eq('event', 'click_to_call').gte('created_at', desde7)),
+  ])
+  // qué pasó cuando un vecino llamó (90 d; solo los que contaron algo)
+  const res90: Array<{ ficha: string; resultado: string }> = []
+  let res90ok = false
+  try {
+    const { data, error } = await supabase.from('registro_resultados_llamada').select('ficha,resultado')
+      .gte('llamo_pr', desde90).in('resultado', ['no_contestaron', 'contesto', 'contesto_no_resolvio', 'cita', 'resuelto', 'no_aceptan', 'otra_opcion', 'numero_malo', 'otro_numero']).not('ficha', 'like', '/prueba%').limit(5000)
+    if (!error) { res90ok = true; for (const r of (data || [])) res90.push({ ficha: String(r.ficha || ''), resultado: String(r.resultado || '') }) }
+  } catch { /* aditivo */ }
+  const tot = res90.length
+  const n = (k: string) => res90.filter(r => r.resultado === k).length
+  const vivo = res90ok && tot > 0
+  const T = vivo ? tot : 954, NOCONT = vivo ? n('no_contestaron') : 572, CITA = vivo ? n('cita') + n('resuelto') : 49, NOACEP = vivo ? n('no_aceptan') : 37
+  const de10 = (x: number) => T ? Math.round((x / T) * 10) : 0
+  let acepta: number | null = null
+  try {
+    const { data, error } = await supabase.from('registro_provider_status').select('place_slug').eq('accepting_patients', true).gte('verified_at', desde90).limit(2000)
+    if (!error) acepta = new Set((data || []).map((r: any) => r.place_slug)).size
+  } catch { /* aditivo */ }
+  let desiertos: Array<{ especialidad: string; pueblos_sin_ninguno: number }> = []
+  let desiertosVivo = false
+  try {
+    const { data, error } = await supabase.from('desiertos_resumen').select('especialidad,pueblos_sin_ninguno')
+    if (!error) desiertos = ((data || []) as any[]).filter(r => (r.pueblos_sin_ninguno ?? 0) > 0).sort((a, b) => b.pueblos_sin_ninguno - a.pueblos_sin_ninguno).slice(0, 4)
+  } catch { /* aditivo */ }
+  desiertosVivo = desiertos.length > 0
+  if (!desiertos.length) desiertos = [{ especialidad: 'ortopeda', pueblos_sin_ninguno: 59 }, { especialidad: 'urólogo', pueblos_sin_ninguno: 58 }, { especialidad: 'endocrinólogo', pueblos_sin_ninguno: 55 }, { especialidad: 'neurólogo', pueblos_sin_ninguno: 53 }]
+  // Cabo Rojo: llamadas reportadas 90 d sobre fichas del pueblo
+  let crLlam = 31, crCont = 2, crCita = 1, crVivo = false
+  if (vivo) {
+    try {
+      const { data } = await supabase.from('places').select('slug').eq('municipality', 'Cabo Rojo').not('npi', 'is', null).eq('status', 'open').eq('visibility', 'published').limit(1000)
+      const cr = new Set((data || []).map((p: any) => '/especialista/' + p.slug))
+      crLlam = 0; crCont = 0; crCita = 0; crVivo = true
+      for (const r of res90) if (cr.has(r.ficha)) { crLlam++; if (['contesto', 'contesto_no_resolvio', 'cita', 'resuelto'].includes(r.resultado)) crCont++; if (r.resultado === 'cita' || r.resultado === 'resuelto') crCita++ }
+    } catch { /* aditivo */ }
+  }
+
+  // vivo ?? respaldo: ninguna tarjeta sale vacía; la fecha dice cuál de los 2 es
+  const v = (live: number | null, resp: number) => ({ n: live ?? resp, f: live === null ? `al ${RESPALDO_FECHA}` : `hoy, ${hoy}` })
+  const P_NPI = v(npiPR, 30612), P_COT = v(cotejadas7, 1470), P_CLI = v(clics7, 2009), P_ACE = v(acepta, 29)
+  const P_CR = { npi: v(crNpi, 241), tel: v(crTel, 233), c90: v(cr90, 72) }
+  const fLlam = vivo ? `hoy, ${hoy}` : `al ${RESPALDO_FECHA}`
+  const fDes = desiertosVivo ? `hoy, ${hoy}` : `al ${RESPALDO_FECHA}`
+  const tile = (big: string, txt: string, f: string) => `<div class="bg-white border-2 border-slate-200 rounded-2xl p-5"><div class="text-3xl font-black text-teal-800 leading-none">${big}</div><div class="text-[17px] text-slate-800 mt-2">${txt}</div><div class="text-base text-slate-600 mt-2">${f}</div></div>`
+  const btn = (href: string, txt: string, cls = 'bg-teal-700 hover:bg-teal-800 text-white') => `<a href="${href}" class="inline-flex items-center justify-center gap-2 ${cls} font-bold px-5 rounded-full text-[17px]" style="min-height:48px">${txt}</a>`
+  const esp = (s: string) => escapeHtml(String(s).toLowerCase())
+  const waCuenta = 'https://wa.me/17874177711?text=' + encodeURIComponent('Quiero contar cómo me fue buscando médico: llamé a __ oficinas y contestó __.')
+
+  const body = `
+<section class="max-w-3xl mx-auto px-4 pt-10 prose-narrative" lang="es">
+<p class="text-base font-bold uppercase tracking-wide text-rose-700 m-0">Por qué existe el Registro</p>
+<h1 class="font-display mt-2">¿Cuántas llamadas hay que hacer para conseguir un médico en Puerto Rico?</h1>
+<p class="text-xl text-slate-900"><strong>De cada 10 vecinos que nos contaron cómo les fue, ${de10(NOCONT)} no consiguieron que contestaran.</strong> <span class="text-base text-slate-600">${nf(T)} reportes en 90 días, ${fLlam}.</span></p>
+<p class="text-xl font-semibold text-slate-900">Vine a conseguir clientes. Terminé buscando soluciones para pacientes.</p>
+<p class="text-[17px]">Soy <strong>Angel Anderson</strong>. Regresé a Puerto Rico en 2021 a ayudar negocios a conseguir clientes. Creé <a href="https://caborojo.com">CaboRojo.com</a> y El Veci, un vecino que contesta por texto al <strong>787-417-7711</strong>. Terminé investigando por qué es tan difícil conseguir cuidado médico.</p>
+
+<h2 class="font-display">Encontrar un médico es fácil. Conseguir que te atienda es otra cosa.</h2>
+<p class="text-[17px]">Hoy puedes encontrar un doctor en 10 segundos. El cuidado médico es otra cosa, porque:</p>
+<ul class="text-[17px]">
+<li>muchas oficinas <strong>no están cogiendo pacientes nuevos</strong>;</li>
+<li>muchas <strong>no contestan el teléfono</strong>, por el volumen de pacientes que ya tienen;</li>
+<li>y muchas veces <strong>hay que llegar hasta la oficina</strong> para conseguir una cita.</li>
+</ul>
+<blockquote class="text-[17px] border-l-4 border-slate-300 pl-4 italic text-slate-700">«Llevo 2 semanas comunicándome.» <span class="not-italic text-base">Un vecino, por texto al 787-417-7711, octubre de 2026.</span></blockquote>
+<p class="text-[17px]">Nos pasó a nosotros. En mayo de 2026 nos tocó buscar un médico para mi esposa y nos dijeron: «llamen en octubre, cuando abramos la agenda». <strong>5 meses para poder llamar.</strong> No quise esperar. Construí una herramienta, conseguimos la cita y la publiqué como RegistroMedicoPR.com.</p>
+
+<h2 class="font-display">Lo que hace el Registro</h2>
+<ol class="text-[17px]">
+<li><strong>Quita fricción.</strong> Nombre, pueblo y teléfono del especialista en 10 segundos. Gratis, sin cuenta y sin plan.</li>
+<li><strong>Valida.</strong> En los últimos 7 días cotejamos <strong>${nf(P_COT.n)} fichas</strong> contra el registro federal de proveedores (NPPES) y guardamos la fecha de cada cotejo <span class="text-slate-600">(${P_COT.f})</span>.</li>
+<li><strong>Crea capas de datos que no existían.</strong> Qué pasó cuando un vecino llamó. Qué oficina confirmó que está cogiendo pacientes nuevos. Qué planes dice aceptar. Y cuándo se confirmó cada cosa. Eso no está en ningún directorio.</li>
+</ol>
+<p class="text-[17px]">No es para leerla. Es para hacer algo con ella: que antes de tu próxima llamada sepas qué pasó cuando otro vecino llamó a esa misma oficina.</p>
+
+<h2 class="font-display">La radiografía del acceso al cuidado en los 78 municipios</h2>
+<p class="text-base text-slate-700">Cada número con su fecha y su fuente. Ninguno proyectado. Se recalculan solos cada hora.</p>
+<div class="not-prose grid sm:grid-cols-2 gap-4 my-4">
+${tile(nf(P_NPI.n), 'proveedores de salud con número federal en Puerto Rico', `NPPES · ${P_NPI.f}`)}
+${tile(`${de10(NOCONT)} de 10`, `vecinos que nos contaron cómo les fue no consiguieron que contestaran. ${de10(CITA)} de 10 salieron con cita. ${NOACEP ? nf(NOACEP) + ' oficinas dijeron que no aceptan pacientes nuevos.' : ''}`, `${nf(T)} reportes de vecinos en 90 días · ${fLlam}`)}
+${tile(nf(P_ACE.n), 'oficinas confirmaron directo que están cogiendo pacientes nuevos en los últimos 90 días', `confirmación de la oficina · ${P_ACE.f}`)}
+${tile(nf(desiertos[0].pueblos_sin_ninguno), `pueblos sin ningún ${esp(desiertos[0].especialidad)}${desiertos.slice(1).map(d => `; ${nf(d.pueblos_sin_ninguno)} sin ${esp(d.especialidad)}`).join('')}`, `fichas con número federal por municipio · ${fDes}`)}
+</div>
+<p class="text-base text-slate-700">Punto ciego, dicho de frente: quien nos cuenta cómo le fue se autoselecciona, y la mala experiencia se reporta más. Por eso decimos «de cada 10 que nos contaron», nunca un porcentaje con decimales.</p>
+<div class="not-prose bg-amber-50 border-2 border-amber-200 rounded-2xl p-5 my-4">
+<p class="font-black text-slate-900 m-0 text-[17px]">Y en Cabo Rojo</p>
+<p class="text-[17px] text-slate-800 mt-2 m-0">${nf(P_CR.npi.n)} fichas de salud con número federal · ${nf(P_CR.tel.n)} con teléfono · ${nf(P_CR.c90.n)} cotejadas con el registro federal en los últimos 90 días · ${nf(crLlam)} llamadas reportadas por vecinos en 90 días: ${nf(crCont)} contestaron y ${nf(crCita)} salieron con cita.</p>
+<p class="text-base text-slate-600 mt-2 m-0">places y reportes de vecinos · ${crVivo ? `hoy, ${hoy}` : `al ${RESPALDO_FECHA}`}</p>
+</div>
+
+<h2 class="font-display">De dónde sale cada número</h2>
+<ul class="text-[17px]">
+<li><strong>El registro federal (NPPES).</strong> La base de los ${nf(P_NPI.n)} proveedores es la misma que usan Medicare y los planes. Prueba que la persona existe y tiene número federal, no que el teléfono contesta.</li>
+<li><strong>Los vecinos.</strong> Después de tocar «Llamar» en una ficha, la persona nos dice qué pasó: contestó, no contestó, cita, no aceptan. En 7 días se tocó «Llamar» <strong>${nf(P_CLI.n)} veces</strong> <span class="text-slate-600">(${P_CLI.f})</span>.</li>
+<li><strong>La oficina.</strong> Lo que confirma el médico o su oficina (teléfono, planes, pacientes nuevos) sale arriba de lo federal, con la fecha.</li>
+<li><strong>Lo de afuera, con fuente.</strong> En la última revisión nacional de directorios de Medicare Advantage que hizo CMS (2018), <strong>48.74%</strong> de las ubicaciones tenía al menos 1 error. En el estudio del Senado de EE.UU. (2023), <strong>18%</strong> de 120 llamadas a proveedores de salud mental consiguieron cita. Nadie volvió a medir eso en Puerto Rico. Nosotros sí, llamada por llamada.</li>
+<li><strong>Quién lo hace y quién paga.</strong> <a href="/quien-esta-detras">No soy médico y nadie paga por aparecer ni por salir primero</a>. Cuánto es copia del registro federal y cuánto está confirmado: <a href="/como-sabemos">cómo sabemos lo que decimos</a>.</li>
+</ul>
+<p class="text-[17px]">Las capas, una por una: <a href="/los-que-si">Los que sí</a> (dieron cita, cogen pacientes) · <a href="/registro/censo">el censo</a> · <a href="/registro/desiertos">pueblos sin especialista</a> · <a href="/marcador">la nota de los 78</a>.</p>
+
+<h2 class="font-display">Pruébalo ahora</h2>
+<p class="text-[17px]">Escoge una especialidad y mira qué pasó cuando otros vecinos llamaron. Gratis, sin cuenta y sin plan.</p>
+<div class="not-prose flex flex-col gap-3 my-4">
+${btn('/registro/psiquiatra/oeste', 'Psiquiatras del oeste, la especialidad más buscada')}
+${btn('/registro/pediatra/oeste', 'Pediatras del oeste')}
+${btn('/registro/cardiologo/oeste', 'Cardiólogos del oeste')}
+${btn('/registro', 'Otra especialidad u otra región', 'bg-white border-2 border-teal-700 text-teal-800 hover:bg-teal-50')}
+</div>
+<p class="text-[17px]">Si prefieres por texto: escribe la especialidad y tu pueblo al <strong>787-417-7711</strong> y El Veci te contesta.</p>
+
+<h2 class="font-display">Si tu oficina está cogiendo pacientes nuevos, dilo. Te ponemos al frente.</h2>
+<p class="text-[17px]">Los vecinos nos preguntan todos los días: «no contesta, ¿tienen otro?». Si tu oficina contesta y está cogiendo pacientes, eso es exactamente lo que ellos quieren saber. Confirmarlo es gratis y toma 1 texto.</p>
+<div class="not-prose flex flex-col gap-3 my-4">
+${btn('https://wa.me/17874177711?text=CONFIRMA', '🩺 Textea CONFIRMA al 787-417-7711')}
+${btn('/tu-ficha', 'Qué controlas tú en tu ficha', 'bg-white border-2 border-teal-700 text-teal-800 hover:bg-teal-50')}
+</div>
+<p class="text-[17px]">También puedes usar el botón «¿Es tu perfil?» que hay en cada ficha. Lo que confirmes sale en tu ficha y en <a href="/los-que-si">Los que sí</a> con la fecha. A los 90 días vuelve a «sin confirmar», porque esto cambia. <strong>Nadie paga por aparecer ni por salir primero.</strong></p>
+
+<h2 class="font-display">Cuéntame cómo te fue</h2>
+<p class="text-[17px]">Cada llamada que nos cuentas le ahorra la misma llamada al próximo vecino. Si ya llamaste a 2, 3 o 6 oficinas, dinos cuáles contestaron.</p>
+<div class="not-prose my-4">${btn(waCuenta, '💬 Contar cómo me fue, por WhatsApp')}</div>
+
+<div class="not-prose bg-slate-100 rounded-2xl p-5 my-6">
+<p class="font-black text-slate-900 m-0 text-[17px]">Vuelve</p>
+<p class="text-[17px] text-slate-800 mt-2 m-0">Esta página cambia sola: los números de arriba se recalculan cada hora con lo que los vecinos y las oficinas van contando. El informe mensual <em>¿Quién contesta en Puerto Rico?</em> sale el sábado 7 de noviembre, aquí mismo.</p>
+</div>
+
+<div class="not-prose mt-8 mb-2">
+  <p class="text-[17px] text-slate-800 mb-3">La historia de por qué existe, en 3 minutos. El video original.</p>
+  <div class="mx-auto" style="max-width:360px;aspect-ratio:9/16;">
+    <iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/${VIDEO_POR_QUE_EXISTE}" title="Por qué existe RegistroMedicoPR" style="width:100%;height:100%;border:0;border-radius:16px;" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+  </div>
+</div>
+
+<p class="text-xl font-bold text-slate-900 mt-8">Porque encontrar un médico no significa conseguir atención médica.</p>
+<p class="text-[17px]">- Angel</p>
+<div class="not-prose mt-6">${btn('/registro', 'Buscar un especialista →')}</div>
+</section>
+`
+  res.setHeader('Content-Type', 'text/html; charset=utf-8')
+  res.setHeader('Cache-Control', 'public, max-age=600, s-maxage=3600, stale-while-revalidate=86400')
+  res.status(200).send(layout({
+    bareTitle: true,
+    title: 'Por qué existe el Registro Médico PR',
+    description: '¿Cuántas llamadas hay que hacer para conseguir un médico en Puerto Rico? Encontrar un médico es fácil. Conseguir que te atienda es otra cosa. Qué hace el Registro, la radiografía del acceso al cuidado en los 78 municipios y cómo una oficina que está cogiendo pacientes nuevos se pone al frente.',
+    slug: 'por-que-existe',
+    lang: 'es',
+    ogImage: REGISTRO_OG,
+    host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
+    canonicalUrl: 'https://registromedicopr.com/por-que-existe',
+    bodyHtml: body,
+    jsonLd: {
+      '@context': 'https://schema.org', '@type': 'AboutPage',
+      url: 'https://registromedicopr.com/por-que-existe',
+      name: 'Por qué existe el Registro Médico PR',
+      inLanguage: 'es',
+      dateModified: '2026-10-30',
+      about: EDITOR_REGISTRO,
       publisher: EDITOR_REGISTRO,
     },
   }))
@@ -6385,7 +6576,7 @@ ${introAngelCorta()}
   <h2 class="text-xl font-bold text-slate-900 mb-1">${t('Encuentra opciones de médicos sin llamar a medio Puerto Rico', 'Find doctor options without calling half of Puerto Rico')}</h2>
   <p class="text-base text-slate-700 mb-4">${t('Nos dijeron en mayo que la cita era para octubre. Esta es la historia, en 3 minutos.', 'In May we were told the appointment would be in October. Here is the story, in 3 minutes.')}</p>
   <div class="mx-auto" style="max-width:360px;aspect-ratio:9/16;">
-    <iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/4gu4-h8Ji7Q" title="Por qué existe RegistroMedicoPR" style="width:100%;height:100%;border:0;border-radius:16px;" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+    <iframe loading="lazy" src="https://www.youtube-nocookie.com/embed/${VIDEO_POR_QUE_EXISTE}" title="Por qué existe RegistroMedicoPR" style="width:100%;height:100%;border:0;border-radius:16px;" allow="accelerometer; encrypted-media; picture-in-picture" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -20739,11 +20930,32 @@ async function handleRegistroHub(req: any, res: any) {
       townReg ? supabase.from('places').select('name,municipality,slug,phone,npi').eq('subcategory', x.s).eq('category', 'HEALTH').not('npi', 'is', null).not('slug', 'is', null).eq('status', 'open').eq('visibility', 'published').or('fuera_de_pr.is.null,fuera_de_pr.eq.false').eq('region', townReg).order('municipality', { ascending: true }).limit(120) : Promise.resolve({ data: [] as any[] }),
     ])
     if (inTownRes.error || (inRegionRes as any).error) { responderBaseCaida(res); return }
-    const inTown = (inTownRes.data || [])
+    // 26 oct 2026: los que contestaron en 30 dias van primero y los que solo tienen fallos, al final.
+    // Sin dato = en medio (orden alfabetico de siempre). La vista registro_senal_telefono puede no
+    // existir todavia (migracion sin aplicar): si falla, no se reordena y la pagina sale como antes.
+    const senalTel = new Map<string, { ok: number; fallos: number }>()
+    try {
+      const d10s = Array.from(new Set([...(inTownRes.data || []), ...((inRegionRes as any).data || [])]
+        .map((p: any) => String(p.phone || '').replace(/\D/g, '').slice(-10)).filter((d: string) => d.length === 10)))
+      if (d10s.length) {
+        const { data: sg, error: sgErr } = await supabase.from('registro_senal_telefono').select('d10,ok,fallos').in('d10', d10s)
+        if (!sgErr) (sg || []).forEach((r: any) => senalTel.set(String(r.d10), { ok: Number(r.ok) || 0, fallos: Number(r.fallos) || 0 }))
+      }
+    } catch { /* aditivo: sin senal, mismo orden de siempre */ }
+    const rangoTel = (p: any) => {
+      const g = senalTel.get(String(p.phone || '').replace(/\D/g, '').slice(-10))
+      if (!g) return 1
+      return g.ok > 0 ? 0 : (g.fallos > 0 ? 2 : 1)
+    }
+    const porSenal = (list: any[]) => senalTel.size
+      ? list.map((p: any, i: number) => ({ p, i, r: rangoTel(p), ok: senalTel.get(String(p.phone || '').replace(/\D/g, '').slice(-10))?.ok || 0 }))
+          .sort((a, b) => a.r - b.r || (a.r === 0 ? b.ok - a.ok : 0) || a.i - b.i).map(x => x.p)
+      : list
+    const inTown = porSenal(inTownRes.data || [])
     // Pueblo sin ninguno: la página sirve (dice a dónde ir), pero no se indexa. Google la
     // contaba como soft 404 ("no hay ninguno" con 200).
     if (!inTown.length) res.setHeader('X-Robots-Tag', 'noindex, follow')
-    const nearby = ((inRegionRes as any).data || []).filter((p: any) => p.municipality !== muni.name)
+    const nearby = porSenal(((inRegionRes as any).data || []).filter((p: any) => p.municipality !== muni.name))
     // Cuando en el pueblo no hay ninguno, lo útil no es repetir que no hay: es
     // decir a dónde le toca ir y cuán lejos queda. Distancia entre centroides de
     // municipio (Census Gazetteer), en línea recta; por carretera siempre es más.
@@ -24402,6 +24614,7 @@ export default async function handler(req: any, res: any) {
     case 'cambios': return await handleCambios(req, res)
     case 'como-sabemos': return await handleComoSabemos(req, res)
     case 'quien-esta-detras': return await handleQuienEstaDetras(req, res)
+    case 'por-que-existe': return await handlePorQueExiste(req, res)
     case 'observatorio': return await handleObservatorio(req, res)
     case 'promesas': return handlePromesas(req, res)
     case 'calculadora': return handleCalculadora(req, res)

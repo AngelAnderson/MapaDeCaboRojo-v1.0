@@ -262,6 +262,7 @@ export default async function handler(req: any, res: any) {
       { slug: 'cambios', priority: 0.8, changefreq: 'weekly' },
       { slug: 'como-sabemos', priority: 0.75, changefreq: 'daily' },   // 28 sep 2026: la línea de neutralidad
       { slug: 'quien-esta-detras', priority: 0.7, changefreq: 'monthly' },   // 3 oct 2026: quién hace el registro y quién no paga
+      { slug: 'por-que-existe', priority: 0.8, changefreq: 'weekly' },   // 30 oct 2026: la tesis del Registro en palabras de Angel, números vivos
       { slug: 'comparte', priority: 0.85, changefreq: 'monthly' },
       { slug: 'porque', priority: 0.9, changefreq: 'monthly' },
       // Par de /porque: aquella explica POR QUÉ, esta contesta ¿Y AHORA QUÉ?
