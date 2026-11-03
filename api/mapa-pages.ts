@@ -11964,10 +11964,17 @@ async function handleLosQueSi(req: any, res: any) {
     : `Y en Cabo Rojo: sin dato local todavía en estos 90 días. Si llamaste a un médico de Cabo Rojo, dinos qué pasó.`
   // Pueblos con más fichas en las listas (máx 12) para los botones del filtro
   const cuentaPueblo: Record<string, number> = {}
-  const contar = (p: string) => { const k = String(p || '').trim(); if (k) cuentaPueblo[k] = (cuentaPueblo[k] || 0) + 1 }
+  // places.municipality trae 2 grafías ("Bayamon" y "Bayamón"): se agrupa sin acentos y se muestra la que lleva acento
+  const grafia: Record<string, string> = {}
+  const contar = (p: string) => {
+    const k0 = String(p || '').trim(); if (!k0) return
+    const k = norm(k0)
+    if (!grafia[k] || (norm(grafia[k]) === grafia[k].toLowerCase() && k0 !== k0.normalize('NFD').replace(/[\u0300-\u036f]/g, ''))) grafia[k] = k0
+    cuentaPueblo[k] = (cuentaPueblo[k] || 0) + 1
+  }
   for (const s of new Set([...Object.keys(contesto), ...Object.keys(citas), ...Object.keys(acepta)])) if (fichas[s]) contar(fichas[s].municipality)
   for (const x of LF_TELESALUD) contar(x.pueblo)
-  const pueblosTop = Object.keys(cuentaPueblo).sort((a, b) => cuentaPueblo[b] - cuentaPueblo[a] || a.localeCompare(b, 'es')).slice(0, 12)
+  const pueblosTop = Object.keys(cuentaPueblo).sort((a, b) => cuentaPueblo[b] - cuentaPueblo[a] || a.localeCompare(b, 'es')).slice(0, 12).map(k => grafia[k])
   const btnPueblo = 'btn-pueblo min-h-[48px] px-4 rounded-full border-2 border-slate-400 bg-white text-slate-900 text-[16px] font-semibold cursor-pointer'
   const filtroPueblos = `<div class="mt-8"><p class="text-lg font-bold text-slate-900 mb-2">Filtra por pueblo</p><div id="pueblos" class="flex flex-wrap gap-2" role="group" aria-label="Filtrar por pueblo">`
     + `<button type="button" class="${btnPueblo}" data-p="" aria-pressed="true">Todos</button>`
