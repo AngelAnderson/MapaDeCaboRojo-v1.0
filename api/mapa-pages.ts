@@ -11883,6 +11883,7 @@ if(V)V.classList.toggle('hidden',!(t&&vis===0));});})();</script>`
 // 11 oct 2026 (dale de Angel: "las otras listas que debemos tener"). La hermana positiva de
 // /listas-federales: una lista negativa trae búsquedas, una positiva trae gente (el médico QUIERE
 // estar aquí y nos da su dato solo). 3 secciones, todas con fuente y fecha:
+//  · contestaron el teléfono: registro_resultados_llamada resultado in (contesto, cita, contesto_no_resolvio) en 90 días, 1 fila por ficha (3 nov 2026)
 //  · le dieron cita: registro_resultados_llamada resultado='cita' en 90 días (lo reporta el paciente)
 //  · cogiendo pacientes nuevos: registro_provider_status confirmado en 90 días (regla del Censo)
 //  · telesalud: Care Compare (LF_TELESALUD), solo con NPI y nombre que casan
@@ -11902,15 +11903,23 @@ async function handleLosQueSi(req: any, res: any) {
 
   const citas: Record<string, string> = {}
   const acepta: Record<string, string> = {}
+  // 3 nov 2026: "Contestaron el teléfono" = la fila más reciente por ficha entre contesto, cita y contesto_no_resolvio.
+  const contesto: Record<string, { fecha: string; res: string }> = {}
+  const sinRespuesta = new Set<string>() // fichas que un paciente intentó llamar y nadie contestó (solo para el denominador local)
   try {
-    const { data } = await supabase.from('registro_resultados_llamada').select('ficha,llamo_pr').eq('resultado', 'cita').gte('llamo_pr', desde).like('ficha', '/especialista/%').limit(1000)
-    for (const r of (data || [])) { const s = String(r.ficha).replace('/especialista/', ''); if (!citas[s] || r.llamo_pr > citas[s]) citas[s] = r.llamo_pr }
+    const { data } = await supabase.from('registro_resultados_llamada').select('ficha,llamo_pr,resultado').in('resultado', ['contesto', 'cita', 'contesto_no_resolvio', 'no_contestaron']).gte('llamo_pr', desde).like('ficha', '/especialista/%').limit(1000)
+    for (const r of (data || [])) {
+      const s = String(r.ficha).replace('/especialista/', '')
+      if (r.resultado === 'no_contestaron') { sinRespuesta.add(s); continue }
+      if (r.resultado === 'cita' && (!citas[s] || r.llamo_pr > citas[s])) citas[s] = r.llamo_pr
+      if (!contesto[s] || r.llamo_pr > contesto[s].fecha) contesto[s] = { fecha: r.llamo_pr, res: r.resultado }
+    }
   } catch { /* aditivo */ }
   try {
     const { data } = await supabase.from('registro_provider_status').select('place_slug,verified_at').eq('accepting_patients', true).gte('verified_at', desde).limit(1000)
     for (const r of (data || [])) { if (!acepta[r.place_slug] || r.verified_at > acepta[r.place_slug]) acepta[r.place_slug] = r.verified_at }
   } catch { /* aditivo */ }
-  const slugs = [...new Set([...Object.keys(citas), ...Object.keys(acepta)])]
+  const slugs = [...new Set([...Object.keys(citas), ...Object.keys(acepta), ...Object.keys(contesto), ...sinRespuesta])]
   const fichas: Record<string, any> = {}
   for (let i = 0; i < slugs.length; i += 200) {
     try {
@@ -11929,21 +11938,66 @@ async function handleLosQueSi(req: any, res: any) {
   const porPueblo: Record<string, typeof LF_TELESALUD> = {}
   for (const x of LF_TELESALUD) (porPueblo[x.pueblo || 'Sin pueblo'] ||= []).push(x)
   const listaTele = Object.keys(porPueblo).sort((a, b) => a.localeCompare(b, 'es')).map(p => `<section class="grupo mb-4"><h3 class="text-lg font-bold text-slate-900 border-b-2 border-slate-200 pb-1 mb-0">${escapeHtml(p)} <span class="text-slate-600 font-normal text-base">· ${porPueblo[p].length}</span></h3><ul class="list-none pl-0 m-0 divide-y divide-slate-100">${porPueblo[p].map(x => `<li class="py-2 text-[17px]" data-b="${escapeHtml((x.nom + ' ' + x.esp + ' ' + x.pueblo).toLowerCase())}"><a href="/especialista/${escapeHtml(x.s)}" class="text-teal-700 font-semibold underline">${escapeHtml(x.nom)}</a> <span class="text-slate-600">· ${escapeHtml(x.esp)}</span></li>`).join('')}</ul></section>`).join('')
+  const listaContesto = Object.keys(contesto).filter(s => fichas[s]).sort((a, b) => contesto[b].fecha.localeCompare(contesto[a].fecha))
+    .map(s => {
+      const c = contesto[s]
+      const que = c.res === 'cita' ? 'contestaron y le dieron cita' : c.res === 'contesto_no_resolvio' ? 'contestaron, sin resolver lo que buscaba' : 'contestaron'
+      return fila(s, fichas[s], `Un paciente que llamó desde el Registro reportó que ${que} el ${fecha(c.fecha)}.`)
+    }).join('')
   const nCitas = Object.keys(citas).filter(s => fichas[s]).length
   const nAcepta = Object.keys(acepta).filter(s => fichas[s]).length
+  const nContesto = Object.keys(contesto).filter(s => fichas[s]).length
+  // Hoy en Puerto Rico (para "Última actualización" y la línea de Cabo Rojo)
+  const hoyPR = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Puerto_Rico' })
+  const norm = (t: string) => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
+  const OESTE = new Set(['cabo rojo', 'mayaguez', 'san german', 'lajas', 'hormigueros', 'anasco', 'sabana grande', 'aguadilla', 'rincon', 'moca', 'isabela', 'aguada', 'guanica', 'las marias', 'maricao'].map(norm))
+  // Denominador honesto: fichas abiertas y publicadas que un paciente intentó llamar en 90 días y a las que, al menos una vez, contestaron o no.
+  const intentadas = [...new Set([...Object.keys(contesto), ...sinRespuesta])].filter(s => fichas[s])
+  const dentro = (pred: (m: string) => boolean) => {
+    const tot = intentadas.filter(s => pred(norm(fichas[s].municipality)))
+    return { m: tot.length, n: tot.filter(s => contesto[s]).length }
+  }
+  const crStat = dentro(m => m === 'cabo rojo')
+  const oesteStat = dentro(m => OESTE.has(m))
+  const lineaCR = crStat.m > 0
+    ? `Y en Cabo Rojo: <b>${nf(crStat.n)} de ${nf(crStat.m)}</b> médicos que un paciente intentó llamar desde el Registro contestaron; en el oeste, <b>${nf(oesteStat.n)} de ${nf(oesteStat.m)}</b>. Datos de los últimos 90 días, hasta el ${fecha(hoyPR)}.`
+    : `Y en Cabo Rojo: sin dato local todavía en estos 90 días. Si llamaste a un médico de Cabo Rojo, dinos qué pasó.`
+  // Pueblos con más fichas en las listas (máx 12) para los botones del filtro
+  const cuentaPueblo: Record<string, number> = {}
+  const contar = (p: string) => { const k = String(p || '').trim(); if (k) cuentaPueblo[k] = (cuentaPueblo[k] || 0) + 1 }
+  for (const s of new Set([...Object.keys(contesto), ...Object.keys(citas), ...Object.keys(acepta)])) if (fichas[s]) contar(fichas[s].municipality)
+  for (const x of LF_TELESALUD) contar(x.pueblo)
+  const pueblosTop = Object.keys(cuentaPueblo).sort((a, b) => cuentaPueblo[b] - cuentaPueblo[a] || a.localeCompare(b, 'es')).slice(0, 12)
+  const btnPueblo = 'btn-pueblo min-h-[48px] px-4 rounded-full border-2 border-slate-400 bg-white text-slate-900 text-[16px] font-semibold cursor-pointer'
+  const filtroPueblos = `<div class="mt-8"><p class="text-lg font-bold text-slate-900 mb-2">Filtra por pueblo</p><div id="pueblos" class="flex flex-wrap gap-2" role="group" aria-label="Filtrar por pueblo">`
+    + `<button type="button" class="${btnPueblo}" data-p="" aria-pressed="true">Todos</button>`
+    + pueblosTop.map(p => `<button type="button" class="${btnPueblo}" data-p="${escapeHtml(p)}" aria-pressed="false">${escapeHtml(p)}</button>`).join('')
+    + `</div></div>`
 
   const body = `
 <article class="max-w-3xl mx-auto px-4 py-8">
   <nav class="text-[16px] text-slate-600 mb-3"><a href="/" class="hover:text-teal-700 underline">Registro Médico PR</a> › Los que sí</nav>
-  <h1 class="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">Los que sí: dieron cita, cogen pacientes, atienden por telesalud</h1>
+  <h1 class="text-3xl sm:text-4xl font-black text-slate-900 leading-tight">Los que sí: contestaron, dieron cita, cogen pacientes, atienden por telesalud</h1>
   <p class="text-lg text-slate-700 mt-4">Casi todo lo que se publica de médicos en Puerto Rico es quién no contesta. Esta es la otra lista: los que sí. Cada nombre dice qué pasó y cuándo, y sale de lo que nos contaron los pacientes, de lo que confirmamos directo o de lo que publica Medicare.</p>
+  <div class="bg-teal-50 border-2 border-teal-300 rounded-xl p-4 mt-6">
+    <p class="text-[17px] text-slate-900 m-0"><b>¿Eres la oficina y estás cogiendo pacientes?</b> Confírmalo y sales aquí con la fecha.</p>
+    <a href="sms:+17874177711" class="mt-3 flex items-center justify-center min-h-[56px] rounded-xl bg-teal-700 text-white text-lg font-bold no-underline">Textea al 787-417-7711</a>
+    <p class="text-[16px] text-slate-800 m-0 mt-3">Nadie paga por aparecer ni por salir primero.</p>
+  </div>
   <div class="grid grid-cols-2 gap-3 mt-6">
-    <div class="bg-teal-700 text-white rounded-xl p-4"><div class="text-4xl font-black">${nf(nCitas)}</div><div class="text-[16px] mt-1">le dieron cita a alguien en los últimos 90 días</div></div>
+    <div class="bg-teal-700 text-white rounded-xl p-4 col-span-2"><div class="text-4xl font-black">${nf(nContesto)}</div><div class="text-[16px] mt-1">contestaron el teléfono en 90 días</div></div>
+    <div class="bg-slate-100 rounded-xl p-4"><div class="text-4xl font-black text-slate-900">${nf(nCitas)}</div><div class="text-[16px] mt-1 text-slate-700">le dieron cita a alguien en los últimos 90 días</div></div>
     <div class="bg-slate-100 rounded-xl p-4"><div class="text-4xl font-black text-slate-900">${nf(nAcepta)}</div><div class="text-[16px] mt-1 text-slate-700">cogiendo pacientes nuevos, confirmado en 90 días</div></div>
     <div class="bg-slate-100 rounded-xl p-4 col-span-2"><div class="text-4xl font-black text-slate-900">${nf(LF_TELESALUD.length)}</div><div class="text-[16px] mt-1 text-slate-700">médicos que atienden por telesalud, según el archivo de Medicare</div></div>
   </div>
-  <label for="q" class="block text-lg font-bold text-slate-900 mt-8 mb-2">Busca un nombre, una especialidad o un pueblo</label>
+  <p class="text-[17px] text-slate-900 mt-4 mb-0">${lineaCR}</p>
+  ${filtroPueblos}
+  <label for="q" class="block text-lg font-bold text-slate-900 mt-6 mb-2">Busca un nombre, una especialidad o un pueblo</label>
   <input id="q" type="search" placeholder="Ejemplo: Mayagüez o internista" class="w-full border-2 border-slate-400 rounded-lg px-3 py-3 text-lg" autocomplete="off">
+
+  <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Contestaron el teléfono</h2>
+  <p class="text-[17px] text-slate-700">Pacientes que llamaron desde el Registro y nos contaron que alguien contestó. Una fila por médico, con la fecha más reciente.</p>
+  <ul class="lista list-none pl-0 m-0 divide-y divide-slate-100">${listaContesto || '<li class="py-2 text-[16px]">Todavía nadie ha reportado que le contestaran en estos 90 días.</li>'}</ul>
 
   <h2 class="text-2xl font-bold text-slate-900 mt-10 mb-2">Le dieron cita</h2>
   <p class="text-[17px] text-slate-700">Pacientes que llamaron desde el Registro y nos dijeron qué pasó.</p>
@@ -11958,23 +12012,26 @@ async function handleLosQueSi(req: any, res: any) {
   <div id="tele">${listaTele}</div>
 
   <div class="bg-teal-50 border-2 border-teal-300 rounded-xl p-4 mt-8">
-    <p class="text-[17px] text-slate-900 m-0"><b>¿Llamaste a un médico del Registro? Dinos qué pasó.</b> Con 1 texto ayudas al próximo que llame. ¿Eres la oficina y estás cogiendo pacientes? Escríbenos y sales aquí.</p>
+    <p class="text-[17px] text-slate-900 m-0"><b>¿Llamaste a un médico del Registro? Dinos qué pasó.</b> Con 1 texto ayudas al próximo que llame.</p>
     <a href="sms:+17874177711" class="mt-3 flex items-center justify-center min-h-[56px] rounded-xl bg-teal-700 text-white text-lg font-bold no-underline">Textea al 787-417-7711</a>
   </div>
   <p class="text-[16px] text-slate-600 mt-8 border-t border-slate-200 pt-4">Fuentes: reportes de pacientes que llamaron desde el Registro (90 días), confirmaciones directas con las oficinas (90 días) y el archivo de médicos de Medicare, Care Compare (actualizado el ${fecha(LF_META.generado)}). Estar aquí no quiere decir que acepta tu plan: eso se pregunta al llamar. La lista de los que Medicare no paga está en <a href="/listas-federales" class="underline text-teal-700">las listas federales</a>.</p>
+  <p class="text-[16px] text-slate-600 mt-3">Última actualización: ${fecha(hoyPR)}</p>
 </article>
 <script>(function(){var q=document.getElementById('q');if(!q)return;
 function n(s){return (s||'').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');}
 q.addEventListener('input',function(){var t=n(q.value.trim());
 document.querySelectorAll('.lista li[data-b]').forEach(function(li){li.style.display=!t||n(li.getAttribute('data-b')).indexOf(t)>-1?'':'none';});
-document.querySelectorAll('#tele .grupo').forEach(function(sec){var c=0;sec.querySelectorAll('li').forEach(function(li){var ok=!t||n(li.getAttribute('data-b')).indexOf(t)>-1;li.style.display=ok?'':'none';if(ok)c++;});sec.style.display=c?'':'none';});});})();</script>`
+document.querySelectorAll('#tele .grupo').forEach(function(sec){var c=0;sec.querySelectorAll('li').forEach(function(li){var ok=!t||n(li.getAttribute('data-b')).indexOf(t)>-1;li.style.display=ok?'':'none';if(ok)c++;});sec.style.display=c?'':'none';});});
+var bs=document.querySelectorAll('#pueblos .btn-pueblo');bs.forEach(function(b){b.addEventListener('click',function(){q.value=b.getAttribute('data-p')||'';q.dispatchEvent(new Event('input'));bs.forEach(function(x){var on=x===b;x.setAttribute('aria-pressed',on?'true':'false');x.style.background=on?'#0f766e':'#fff';x.style.color=on?'#fff':'#0f172a';x.style.borderColor=on?'#0f766e':'#94a3b8';});});});
+var f0=document.querySelector('#pueblos .btn-pueblo');if(f0){f0.style.background='#0f766e';f0.style.color='#fff';f0.style.borderColor='#0f766e';}})();</script>`
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
   res.status(200).send(layout({
     bareTitle: true,
     title: 'Médicos que sí contestan, dan cita y cogen pacientes en PR',
-    description: `${nCitas} médicos le dieron cita a alguien en 90 días, ${nAcepta} cogen pacientes nuevos y ${LF_TELESALUD.length} atienden por telesalud. Con fecha y fuente. Gratis.`,
+    description: `${nContesto} médicos contestaron el teléfono en 90 días, ${nCitas} le dieron cita a alguien, ${nAcepta} cogen pacientes nuevos y ${LF_TELESALUD.length} atienden por telesalud. Con fecha y fuente. Gratis.`,
     slug: 'los-que-si', bodyHtml: body,
     host: req.headers?.host, canonicalHost: 'https://registromedicopr.com',
   }))
