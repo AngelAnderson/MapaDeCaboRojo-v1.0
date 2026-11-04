@@ -12031,7 +12031,12 @@ q.addEventListener('input',function(){var t=n(q.value.trim());
 document.querySelectorAll('.lista li[data-b]').forEach(function(li){li.style.display=!t||n(li.getAttribute('data-b')).indexOf(t)>-1?'':'none';});
 document.querySelectorAll('#tele .grupo').forEach(function(sec){var c=0;sec.querySelectorAll('li').forEach(function(li){var ok=!t||n(li.getAttribute('data-b')).indexOf(t)>-1;li.style.display=ok?'':'none';if(ok)c++;});sec.style.display=c?'':'none';});});
 var bs=document.querySelectorAll('#pueblos .btn-pueblo');bs.forEach(function(b){b.addEventListener('click',function(){q.value=b.getAttribute('data-p')||'';q.dispatchEvent(new Event('input'));bs.forEach(function(x){var on=x===b;x.setAttribute('aria-pressed',on?'true':'false');x.style.background=on?'#0f766e':'#fff';x.style.color=on?'#fff':'#0f172a';x.style.borderColor=on?'#0f766e':'#94a3b8';});});});
-var f0=document.querySelector('#pueblos .btn-pueblo');if(f0){f0.style.background='#0f766e';f0.style.color='#fff';f0.style.borderColor='#0f766e';}})();</script>`
+var f0=document.querySelector('#pueblos .btn-pueblo');if(f0){f0.style.background='#0f766e';f0.style.color='#fff';f0.style.borderColor='#0f766e';}
+var G={cabecera:['generalista','internista','medicina de familia'],corazon:['cardiolog','endocrin','nefrolog','neumolog'],ojos:['oftalmolog','optometra','audiolog','dermatolog'],mente:['psiquiatra','psicolog','neurolog','neurocirujano'],huesos:['fisiatra','podiatra','quiropractico','ortoped'],dientes:['dentista','cirujano oral']};
+var gk='';try{gk=(new URLSearchParams(location.search).get('grupo')||'').toLowerCase();}catch(e){}
+if(Object.prototype.hasOwnProperty.call(G,gk)){var ts=G[gk],c=0;document.querySelectorAll('.lista li[data-b]').forEach(function(li){var b=n(li.getAttribute('data-b'));var ok=ts.some(function(t){return b.indexOf(t)>-1;});li.style.display=ok?'':'none';if(ok)c++;});
+var aviso=document.createElement('p');aviso.className='text-[17px] text-slate-900 bg-amber-50 border-2 border-amber-300 rounded-lg p-3 mt-4';aviso.innerHTML='Estás viendo solo un grupo ('+c+' filas). <a href="/los-que-si" class="underline font-semibold">Ver la lista completa</a>.';q.parentNode.insertBefore(aviso,q);}
+})();</script>`
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8')
   res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
