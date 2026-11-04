@@ -27,7 +27,7 @@ const getEnvVar = (key: string): string => {
 
 // Client-side anon key fallback (anon keys are public by Supabase design — RLS enforces access)
 const DEFAULT_URL = 'https://vprjteqgmanntvisjrvp.supabase.co';
-const DEFAULT_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwcmp0ZXFnbWFubnR2aXNqcnZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ0NDAwODgsImV4cCI6MjA4MDAxNjA4OH0.JBRyroLWbjh6Ow9un24c77mbr_zl9P7hdd6YUzt8LgY';
+const DEFAULT_KEY = 'sb_publishable_MhNUAe6fCM8GK1NBc9YuQA_SzzEaM4V';
 
 // Use VITE_ keys primarily, fallback to hardcoded strings
 const SUPABASE_URL = getEnvVar('VITE_SUPABASE_URL') || DEFAULT_URL;
