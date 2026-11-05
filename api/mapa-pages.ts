@@ -459,6 +459,7 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
 <a href="/quien-esta-detras${isEn ? '?lang=en' : ''}" class="hover:text-teal-700">${isEn ? 'Who is behind it' : 'Quién está detrás'}</a>
 <a href="mailto:angel@angelanderson.com" class="hover:text-teal-700">${isEn ? 'Report an outdated fact' : 'Reporta un dato viejo'}</a>
 <a href="https://wa.me/17874177711?text=ESPECIALISTA" class="hover:text-teal-700">${isEn ? 'Ask El Veci (WhatsApp)' : 'Pregúntale al Veci (WhatsApp)'}</a>
+${isEn ? '' : libroLinksFooterRegistro()}
 </div></div>
 </div>
 <p class="mt-8 text-[15px] text-slate-600 text-center">${isEn ? 'Questions about who to see? Text El Veci:' : '¿Dudas de a quién ir? Escríbele al Veci:'} <strong>${PHONE_CTA}</strong>. ${isEn ? '' : 'Si te sirve, llégate.'}</p>
@@ -469,6 +470,7 @@ document.addEventListener('click',function(e){if(!n.hidden&&!n.contains(e.target
   ? `Nobody pays to be listed here or to rank higher. Data comes from the federal registry (NPPES), Puerto Rico's licensing board, and the offices and patients who confirm it. <a href="/como-sabemos?lang=en" class="text-teal-700 underline font-semibold">How we know what we say →</a>`
   : `Nadie paga por aparecer aquí ni por salir primero. Los datos salen del registro federal (NPPES), de la Junta de Licenciamiento y de las oficinas y pacientes que los confirman. <a href="/como-sabemos" class="text-teal-700 underline font-semibold">Cómo sabemos lo que decimos →</a>`}</p>
 </div>
+${LIBRO_CLICK_SCRIPT}
 </footer>` : `
 <footer class="border-t border-slate-200 mt-12 py-8 bg-white">
 <div class="max-w-4xl mx-auto px-4 text-center">
@@ -7960,7 +7962,7 @@ ${SHARE_COPY_SCRIPT}
     slug: `especialista/${place.slug}`,
     // Lo Que Viene (27 sep 2026) quitado de la ficha el 28 sep: 0 suscriptores en su primer día y la ficha
     // ganó la hoja "¿Cómo te fue con la llamada?" (Antes de añadir, quita). Sigue en angelanderson.com/loqueviene y el Veci.
-    bodyHtml: body + `<p class="text-xs text-slate-500 mt-8 border-t border-slate-200 pt-3">${t('¿Eres tú y no quieres salir aquí?', 'Is this you and you don\'t want to be listed?')} <a href="/especialista/${escapeHtml(place.slug)}/remover" rel="nofollow" class="text-teal-700 font-semibold underline">${t('Quita tu ficha en 1 clic', 'Remove your listing in 1 click')}</a>.</p>`,
+    bodyHtml: body + (lang !== 'en' && /registromedicopr\.com/i.test(String(req.headers?.host || '')) ? libroBloqueRegistro(`especialista-${place.slug}`, 'especialista') : '') + `<p class="text-xs text-slate-500 mt-8 border-t border-slate-200 pt-3">${t('¿Eres tú y no quieres salir aquí?', 'Is this you and you don\'t want to be listed?')} <a href="/especialista/${escapeHtml(place.slug)}/remover" rel="nofollow" class="text-teal-700 font-semibold underline">${t('Quita tu ficha en 1 clic', 'Remove your listing in 1 click')}</a>.</p>`,
     jsonLd,
     // Tarjeta OG personalizada por proveedor (motor /api/og, theme medico) — cubre todo el registro
     ogImage: `https://registromedicopr.com/api/og?theme=medico&t=${encodeURIComponent(name)}&k=${encodeURIComponent(specLabel)}&sub=${encodeURIComponent(`${muni}, Puerto Rico · NPI ${npi}`)}&badge=${encodeURIComponent(npiVivo ? 'NPI activo' : 'NPI no vigente')}&site=registromedicopr.com`,
@@ -13201,7 +13203,7 @@ async function handleSinFiltrosLog(req: any, res: any) {
 // 'salida' (11 oct 2026): quien sale de una ficha SIN llamar, con el tiempo en la página por tramo. Era la incógnita #5:
 // medíamos el clic, no la duda. target = tramo de segundos ('0-10','10-30','30-90','90+'), nada más.
 // directions_click, menu_click, recommendation_view (29 oct 2026): /donde-comer-hoy y /ruta-joyuda (api/_lib/comer.ts).
-const REGISTRO_EVENTS = new Set(['click_to_call', 'click_whatsapp', 'veci_click', 'symptom_match', 'call_outcome', 'loqueviene_click', 'numero_reportado', 'salida', 'directions_click', 'menu_click', 'recommendation_view'])
+const REGISTRO_EVENTS = new Set(['click_to_call', 'click_whatsapp', 'veci_click', 'symptom_match', 'call_outcome', 'loqueviene_click', 'numero_reportado', 'salida', 'directions_click', 'menu_click', 'recommendation_view', 'libro_click'])
 const SALIDA_TRAMOS = new Set(['0-10', '10-30', '30-90', '90+'])
 // 28 sep 2026: resultado de la llamada ("la verdad después del click"). Solo estas claves.
 // no_llame (28 sep 2026): 72% cerraba la hoja con la ×; las 5 opciones suponían que alguien habló.
@@ -20944,17 +20946,40 @@ function geriatriaSegundaHtml(list: any[], en: boolean, lp: string): string {
 <div class="not-prose mt-2 overflow-auto border border-slate-200 rounded-xl"><table class="w-full text-sm"><thead><tr class="bg-slate-50 text-left text-slate-600"><th class="py-2 px-3">${t('Médico', 'Doctor')}</th><th class="py-2 px-3">${t('Pueblo', 'Town')}</th><th class="py-2 px-3 text-right">${t('Teléfono', 'Phone')}</th></tr></thead><tbody>${filas}</tbody></table></div>`
 }
 
-// 21 oct 2026 (libro en páginas, Angel): bloque de libro en los hubs del Registro. Sin precio. Solo en español (el libro es en español).
-// Medida: clics a amazon.com con utm_source=registromedicopr (GA4 link_click) y pedidos KDP (pantallazo semanal). Cobro 18 nov.
-function libroBloqueRegistro(slug: string): string {
-  const u = `https://amazon.com/dp/B0HLQ66J6Z?utm_source=registromedicopr&utm_medium=libro-block&utm_campaign=${encodeURIComponent(slug)}`
-  return `<!-- libro-v1 --><div id="libro-v1" data-libro="${escapeHtml(slug)}" style="max-width:760px;margin:32px auto 24px;padding:20px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;">`
-    + `<p style="font-size:16px;line-height:1.4;color:#9A3412;margin:0 0 8px;font-weight:700;">Lo que todavía no aprendemos</p>`
-    + `<p style="font-size:22px;line-height:1.3;color:#0F172A;margin:0 0 10px;font-weight:700;">Salvador Brau, de Cabo Rojo: «Verifica antes de repetir.»</p>`
-    + `<p style="font-size:17px;line-height:1.55;color:#1E293B;margin:0;">Por eso este directorio dice cuándo se verificó cada ficha y de dónde salió el dato. Esa lección y otras 49 de figuras de Puerto Rico están en un libro, cada una con una pregunta para esta semana.</p>`
-    + `<p style="margin:16px 0 12px;"><a href="${u}" rel="noopener" target="_blank" style="display:inline-block;min-height:48px;line-height:20px;padding:14px 22px;background:#0F172A;color:#FFFFFF;font-size:17px;font-weight:700;text-decoration:none;border-radius:8px;">Ver Lo que todavía no aprendemos en Amazon</a></p>`
-    + `<p style="font-size:16px;line-height:1.55;color:#1E293B;margin:0;">Si es para tu equipo, <a href="https://mastiempo.net/mayoreo" style="color:#0F172A;text-decoration:underline;">mira los pedidos por cantidad</a> o escríbeme <strong>LIBROS</strong> por privado al <a href="https://wa.me/17874177711?text=LIBROS" rel="noopener" style="color:#0F172A;text-decoration:underline;">787-417-7711</a>.</p>`
-    + `</div><!-- /libro-v1 -->`
+// 21 oct 2026 (libro en páginas, Angel): bloque de libro en los hubs del Registro. Solo en español (los libros son en español).
+// 5 nov 2026 (libro-v2, plan "Los 2 libros en todas partes", B2): ahora enseña los 2 libros, sin precio, y deja claro que no es anuncio de un médico.
+// Medida v1: 0 clics atribuibles (no había evento propio). v2 manda libro_click a registro_events (target = "<medio>:<libro>"; medio = hub|especialista|footer).
+// Cobro 19 nov. Solo se llama desde rutas del Registro (isReg).
+const LIBRO_UTM = (medio: string) => `utm_source=registromedicopr&utm_medium=${medio}&utm_campaign=libros-nov`
+function libroLinksFooterRegistro(): string {
+  const q = LIBRO_UTM('footer')
+  return `<!-- libro-v2 --><a href="https://loquetodavianoaprendemos.com/libro?${q}" rel="noopener" data-libro="lqtna:footer" class="hover:text-teal-700">Libro: Lo que todavía no aprendemos</a>`
+    + `<a href="https://mastiempo.net/libro?${q}" rel="noopener" data-libro="ajorao:footer" class="hover:text-teal-700">Libro: AJORÁO NO ES UN PLAN</a><!-- /libro-v2 -->`
+}
+// Un solo script delegado por página (va en el pie): cuenta clics a cualquier a[data-libro="<libro>:<medio>"].
+const LIBRO_CLICK_SCRIPT = `<script>document.addEventListener('click',function(e){var a=e.target.closest?e.target.closest('a[data-libro]'):null;if(!a)return;var V='';try{V=localStorage.getItem('rg_vid')||''}catch(x){}try{fetch('/api/mapa-pages?page=registro-log',{method:'POST',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'libro_click',record:location.pathname.slice(0,120),target:a.getAttribute('data-libro'),referrer:document.referrer||'',vid:V})})}catch(x){}},true)</script>`
+function libroBloqueRegistro(slug: string, medio: 'hub' | 'especialista' = 'hub'): string {
+  const q = LIBRO_UTM(medio)
+  const btn = 'display:block;box-sizing:border-box;min-height:48px;line-height:20px;padding:14px 22px;background:#0F172A;color:#FFFFFF;font-size:17px;font-weight:700;text-decoration:none;border-radius:8px;text-align:center;'
+  const lnk = 'color:#0F172A;text-decoration:underline;display:inline-block;padding:14px 4px;'
+  const lqtna = `https://loquetodavianoaprendemos.com/libro?${q}`
+  const ajorao = `https://mastiempo.net/libro?${q}`
+  const amz = (asin: string) => `https://amazon.com/dp/${asin}?${q}&utm_content=${encodeURIComponent(slug.slice(0, 60))}`
+  const intro = medio === 'hub'
+    ? `<p style="font-size:22px;line-height:1.3;color:#0F172A;margin:0 0 10px;font-weight:700;">Salvador Brau, de Cabo Rojo: «Verifica antes de repetir.»</p>`
+      + `<p style="font-size:17px;line-height:1.55;color:#1E293B;margin:0 0 12px;">Por eso este directorio dice cuándo se confirmó cada ficha y de dónde salió el dato. Esa lección y otras 49 de figuras de Puerto Rico están en un libro, cada una con una pregunta para esta semana.</p>`
+    : `<p style="font-size:20px;line-height:1.3;color:#0F172A;margin:0 0 10px;font-weight:700;">Dos libros de la gente que hace este registro</p>`
+  return `<!-- libro-v2 --><div id="libro-v2" data-libro-bloque="${escapeHtml(slug)}" style="max-width:760px;margin:32px auto 24px;padding:20px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;">`
+    + `<p style="font-size:16px;line-height:1.4;color:#9A3412;margin:0 0 8px;font-weight:700;">De las personas detrás del Registro</p>`
+    + intro
+    + `<p style="font-size:16px;line-height:1.55;color:#1E293B;margin:0 0 16px;">Estos libros son de quienes hacen este registro. No son un anuncio de ningún médico: nadie paga por aparecer aquí ni por salir primero.</p>`
+    + `<p style="font-size:17px;line-height:1.4;color:#0F172A;margin:0 0 8px;font-weight:700;">Lo que todavía no aprendemos</p>`
+    + `<a href="${lqtna}" rel="noopener" target="_blank" data-libro="lqtna:${medio}" style="${btn}">Ver Lo que todavía no aprendemos</a>`
+    + `<p style="font-size:16px;line-height:1.55;color:#1E293B;margin:4px 0 16px;">En Amazon: <a href="${amz('B0HLQ66J6Z')}" rel="noopener" target="_blank" data-libro="lqtna-amazon-dura:${medio}" style="${lnk}">tapa dura</a> · <a href="${amz('B0HLSZP1HH')}" rel="noopener" target="_blank" data-libro="lqtna-amazon-blanda:${medio}" style="${lnk}">tapa blanda</a></p>`
+    + `<p style="font-size:17px;line-height:1.4;color:#0F172A;margin:0 0 8px;font-weight:700;">AJORÁO NO ES UN PLAN</p>`
+    + `<a href="${ajorao}" rel="noopener" target="_blank" data-libro="ajorao:${medio}" style="${btn}">Ver AJORÁO NO ES UN PLAN</a>`
+    + `<p style="font-size:16px;line-height:1.55;color:#1E293B;margin:16px 0 0;">Si es para tu equipo, <a href="https://mastiempo.net/mayoreo" style="color:#0F172A;text-decoration:underline;">mira los pedidos por cantidad</a> o escríbeme <strong>LIBROS</strong> por privado al <a href="https://wa.me/17874177711?text=LIBROS" rel="noopener" style="color:#0F172A;text-decoration:underline;">787-417-7711</a>.</p>`
+    + `</div><!-- /libro-v2 -->`
 }
 
 async function handleRegistroHub(req: any, res: any) {
