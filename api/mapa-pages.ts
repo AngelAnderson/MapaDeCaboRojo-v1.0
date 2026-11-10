@@ -16,6 +16,7 @@
 
 import { hojaLlamadaScript } from './_lib/hoja-llamada.js'
 import { isCuidoHost, CUIDO_BASE, slugTexto, slugHogar } from './_lib/cuido-hosts.js'
+import { reclamoHogarHtml, RECLAMO_HOGAR_SCRIPT, notasReclamoHogar, rutaFichaHogar } from './_lib/cuido-reclamo.js'
 import { telefonoAlternoMedicare } from './_lib/telefono-alterno.js'
 import { createClient } from '@supabase/supabase-js'
 import { createHash, createHmac, timingSafeEqual } from 'crypto'
@@ -7983,7 +7984,17 @@ async function handleEspecialistaClaim(req: any, res: any) {
     const b = req.body && typeof req.body === 'object' ? req.body : JSON.parse(req.body || '{}')
     if (!b.npi && !b.place_id) { res.status(400).send(JSON.stringify({ ok: false })); return }
     const plans = String(b.accepted_plans || '').split(/[,;]+/).map((s: string) => s.trim()).filter(Boolean)
-    await supabase.from('provider_claims').insert({
+    // 10 nov 2026: la ficha de un hogar de cuido usa este mismo POST (api/_lib/cuido-reclamo.ts).
+    // Un hogar no tiene NPI: entra por place_id (uuid) y lo suyo (tarifa, camas hoy) va en notes.
+    const esCuido = b.origen === 'cuido'
+    if (esCuido && !/^[0-9a-f-]{36}$/i.test(String(b.place_id || ''))) { res.status(400).send(JSON.stringify({ ok: false })); return }
+    const notasCuido = esCuido ? notasReclamoHogar(b) : null
+    const rutaCuido = esCuido ? rutaFichaHogar(b.ficha_path) : null
+    // dry_run: valida y devuelve lo que guardaría, sin fila y sin correos (para probar en producción).
+    if (b.dry_run === true || String(req.query?.dry_run || '') === '1') {
+      res.status(200).send(JSON.stringify({ ok: true, dry_run: true, source: esCuido ? 'cuido_page' : 'especialista_page', notes: notasCuido, ficha: rutaCuido })); return
+    }
+    const { error: errReclamo } = await supabase.from('provider_claims').insert({
       place_id: b.place_id || null,
       npi: String(b.npi || '').slice(0, 20) || null,
       provider_name: String(b.provider_name || '').slice(0, 200) || null,
@@ -8004,7 +8015,8 @@ async function handleEspecialistaClaim(req: any, res: any) {
       // de gastar 3 intentos contra un fijo.
       recibe_sms: b.recibe_sms === 'no' ? false : true,
       wants_vitrina: !!b.wants_vitrina,
-      source: 'especialista_page',
+      notes: notasCuido,
+      source: esCuido ? 'cuido_page' : 'especialista_page',
     })
     // 2026-08-02: cerrar el loop con quien ayuda — el que reclama recibe su página de
     // vuelta al instante con la promesa de corrección fechada. Antes el form se tragaba
@@ -8020,14 +8032,21 @@ async function handleEspecialistaClaim(req: any, res: any) {
           const { data } = await supabase.from('places').select('slug').eq('npi', String(b.npi)).limit(1)
           slug = data?.[0]?.slug || null
         }
-        const pageUrl = slug ? `https://registromedicopr.com/especialista/${slug}` : 'https://registromedicopr.com/registro'
+        // Un hogar de cuido no tiene slug en places: su página sale de la ruta validada de la ficha.
+        const pageUrl = rutaCuido ? `${rutaCuido.startsWith('/cuido/') ? 'https://registromedicopr.com' : CUIDO_BASE}${rutaCuido}`
+          : esCuido ? 'https://registromedicopr.com/cuido'
+          : slug ? `https://registromedicopr.com/especialista/${slug}` : 'https://registromedicopr.com/registro'
         await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             from: FROM_EMAIL, to: String(b.contact_email), reply_to: REPLY_TO,
-            subject: 'Recibimos tu corrección · Registro Médico PR',
-            html: `<p>Gracias por ayudar a mantener el registro al día.</p>
+            subject: esCuido ? 'Recibimos los datos de tu hogar · Registro Médico PR' : 'Recibimos tu corrección · Registro Médico PR',
+            html: esCuido ? `<p>Gracias por poner al día la ficha de <strong>${escapeHtml(String(b.provider_name || 'tu hogar'))}</strong>.</p>
+<p>Esta es la página pública: <a href="${pageUrl}">${pageUrl}</a></p>
+<p>Lo que nos enviaste lo revisamos antes de publicarlo. Si algo más está mal (teléfono, dirección), responde a este correo y se corrige.</p>
+<p>Es gratis: es para que la familia que busca un hogar encuentre el dato correcto.</p>
+<p>- Angel | registromedicopr.com</p>` : `<p>Gracias por ayudar a mantener el registro al día.</p>
 <p>Recibimos lo que nos enviaste sobre <strong>${escapeHtml(String(b.provider_name || 'su perfil'))}</strong>. Esta es la página pública: <a href="${pageUrl}">${pageUrl}</a></p>
 <p>Las correcciones se aplican a mano y quedan anotadas con fecha en <a href="https://registromedicopr.com/cambios">registromedicopr.com/cambios</a>. Si algo más está mal (teléfono, dirección, horario, planes), responde a este correo y se corrige.</p>
 <p>El registro federal a veces pasa años sin actualizarse. Esto se arregla entre todos, y es gratis: es pa' que los vecinos encuentren quién resuelve.</p>
@@ -8044,8 +8063,9 @@ async function handleEspecialistaClaim(req: any, res: any) {
           headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             from: FROM_EMAIL, to: REPLY_TO, reply_to: b.contact_email || REPLY_TO,
-            subject: `🩺 Reclamo de perfil: ${b.provider_name || b.npi}${b.wants_vitrina ? ' · QUIERE VITRINA' : ''}`,
-            html: `<p><strong>${escapeHtml(String(b.provider_name || ''))}</strong> (NPI ${escapeHtml(String(b.npi || ''))})</p>
+            subject: esCuido ? `🏠 Hogar de cuido puso su ficha al día: ${b.provider_name || b.place_id}` : `🩺 Reclamo de perfil: ${b.provider_name || b.npi}${b.wants_vitrina ? ' · QUIERE VITRINA' : ''}`,
+            html: `<p><strong>${escapeHtml(String(b.provider_name || ''))}</strong> (${esCuido ? 'hogar de cuido' : 'NPI ' + escapeHtml(String(b.npi || ''))})</p>
+${esCuido ? `<p><strong>${escapeHtml(notasCuido || 'No trajo tarifa ni camas.')}</strong>${rutaCuido ? `<br>Ficha: ${escapeHtml(rutaCuido)}` : ''}</p>` : ''}
 <p>Reclamado por: ${escapeHtml(String(b.claimant_name || ''))} (${escapeHtml(String(b.claimant_role || ''))})<br>
 Tel: ${escapeHtml(String(b.contact_phone || '—'))} · Email: ${escapeHtml(String(b.contact_email || '—'))}<br>
 Tel corregido: ${escapeHtml(String(b.corrected_phone || '—'))}<br>
@@ -8060,7 +8080,9 @@ ${b.wants_vitrina ? '<strong>⭐ Quiere que lo llamen sobre La Vitrina Especiali
         })
       } catch { /* email best-effort */ }
     }
-    res.status(200).send(JSON.stringify({ ok: true }))
+    // Antes devolvía ok aunque la fila no entrara. Los correos salen igual (el dato no se pierde),
+    // pero el que llenó el formulario ya no ve "Gracias" si la fila no se guardó.
+    res.status(200).send(JSON.stringify({ ok: !errReclamo }))
   } catch {
     res.status(200).send(JSON.stringify({ ok: false }))
   }
@@ -13202,7 +13224,8 @@ async function handleSinFiltrosLog(req: any, res: any) {
 // 'salida' (11 oct 2026): quien sale de una ficha SIN llamar, con el tiempo en la página por tramo. Era la incógnita #5:
 // medíamos el clic, no la duda. target = tramo de segundos ('0-10','10-30','30-90','90+'), nada más.
 // directions_click, menu_click, recommendation_view (29 oct 2026): /donde-comer-hoy y /ruta-joyuda (api/_lib/comer.ts).
-const REGISTRO_EVENTS = new Set(['click_to_call', 'click_whatsapp', 'veci_click', 'symptom_match', 'call_outcome', 'loqueviene_click', 'numero_reportado', 'salida', 'directions_click', 'menu_click', 'recommendation_view', 'libro_click', 'proximo_click'])
+// reclamo_abierto (10 nov 2026): alguien abrió "¿Este es tu hogar? Ponlo al día" en una ficha de cuido (api/_lib/cuido-reclamo.ts).
+const REGISTRO_EVENTS = new Set(['click_to_call', 'click_whatsapp', 'veci_click', 'symptom_match', 'call_outcome', 'loqueviene_click', 'numero_reportado', 'salida', 'directions_click', 'menu_click', 'recommendation_view', 'libro_click', 'proximo_click', 'reclamo_abierto'])
 const SALIDA_TRAMOS = new Set(['0-10', '10-30', '30-90', '90+'])
 // 28 sep 2026: resultado de la llamada ("la verdad después del click"). Solo estas claves.
 // no_llame (28 sep 2026): 72% cerraba la hoja con la ×; las 5 opciones suponían que alguien habló.
@@ -24060,13 +24083,15 @@ ${botonLlamar(r)}
   ${fila('Última consulta a Familia', CUIDO_CONSULTA_TXT)}
 </dl>
 <p class="text-base text-slate-700 mt-4">Licencia según el Departamento de la Familia, consultado el ${CUIDO_CONSULTA_TXT}. Es el dato del registro, no una visita nuestra.</p>
+${reclamoHogarHtml({ placeId: r.id, name: r.name, path: hogarPath(r) })}
 ${aviso}
 ${comoVerificar}
 ${otros.length ? `<h2 class="mt-8">Otros hogares en ${escapeHtml(muni)}</h2>
 <ul class="not-prose mt-3 grid gap-2 sm:grid-cols-2 list-none p-0">${otros.map(o => `<li><a href="${hogarPath(o)}" class="block min-h-[48px] bg-white border border-slate-300 rounded-xl p-3 no-underline text-slate-900 font-semibold text-base hover:border-teal-400">${escapeHtml(o.name)}${o.n.camas ? `<span class="block font-normal text-slate-600">${o.n.camas} camas licenciadas</span>` : ''}</a></li>`).join('')}</ul>` : ''}
 ${cruces}
 <p class="mt-6"><a href="${muniPath(muni)}" class="text-teal-800 underline font-semibold text-lg">Ver los ${lista.length} hogares de ${escapeHtml(muni)} →</a></p>
-${fuente}`
+${fuente}
+${RECLAMO_HOGAR_SCRIPT}`
     const canon = `${origen}${hogarPath(r)}`
     res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
     return res.status(200).send(layout({
