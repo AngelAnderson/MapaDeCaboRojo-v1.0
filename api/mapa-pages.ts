@@ -6595,7 +6595,6 @@ ${regDisclaimer(en)}
   <p class="text-base text-white mb-4">${t('Antes de dar vueltas, escríbele al Veci. Te dice quién resuelve, sin enredos. Al', 'Before driving around, text El Veci. He tells you who can help, no hassle. At')} <strong>${PHONE_CTA}</strong>:</p>
   <div class="flex flex-wrap gap-3 justify-center">
     <a href="https://wa.me/17874177711?text=ESPECIALISTA" class="inline-flex items-center gap-2 bg-white text-teal-800 font-bold px-5 py-3 rounded-full text-base hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ESPECIALISTA</a>
-    <a href="/acceso" class="inline-flex items-center gap-2 bg-teal-800 text-white font-bold px-5 py-3 rounded-full text-base hover:bg-teal-900"><i class="fa-solid fa-chart-simple"></i> ${t('Ver el reporte de acceso', 'See the access report')}</a>
   </div>
   <p class="text-base text-white mt-4">Menos revolú. Más vida.</p>
 </div>
@@ -7484,7 +7483,7 @@ async function handleEspecialista(req: any, res: any) {
     ${waLink ? `<a href="${waLink}" onclick="try{gtag('event','click_whatsapp',{${evtAttr}})}catch(e){}" class="flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-base no-underline hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${T.wa}</a>` : ''}
     <a href="https://wa.me/17874177711?text=${spec ? spec.kw : 'ESPECIALISTA'}" class="${waLink ? '' : 'col-span-2 '}flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-base no-underline hover:bg-teal-50"><i class="fa-brands fa-whatsapp"></i> ${T.veci}</a>
     ${webUrl ? `<a href="${escapeHtml(webUrl)}" target="_blank" rel="noopener nofollow" class="col-span-2 flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-base no-underline hover:bg-teal-50"><i class="fa-solid fa-globe"></i> ${t('Página web de la oficina', 'Office website')}</a>` : ''}
-  </div>
+  </div>${telLink ? `<div id="rg-mia-f" class="not-prose" data-rg-d="${escapeHtml(String(place.phone || '').replace(/\D/g, '').slice(-10))}"></div>` : ''}
   <p class="not-prose mt-3 text-base font-semibold text-stone-800" style="font-size:16px">${t('Antes de ir, pregunta: ¿aceptan mi plan 2027?', 'Before you go, ask: do you take my 2027 plan?')}</p>${place.hours ? `<p class="not-prose mt-3 text-base text-stone-700"><b>${t('Horario', 'Hours')}:</b> ${horasLegibles(place.hours, t)}</p>` : ''}`
 
   // ═══ La Cita del Lunes (23 sep 2026, Recibo Cero) ═══
@@ -13203,7 +13202,7 @@ async function handleSinFiltrosLog(req: any, res: any) {
 // 'salida' (11 oct 2026): quien sale de una ficha SIN llamar, con el tiempo en la página por tramo. Era la incógnita #5:
 // medíamos el clic, no la duda. target = tramo de segundos ('0-10','10-30','30-90','90+'), nada más.
 // directions_click, menu_click, recommendation_view (29 oct 2026): /donde-comer-hoy y /ruta-joyuda (api/_lib/comer.ts).
-const REGISTRO_EVENTS = new Set(['click_to_call', 'click_whatsapp', 'veci_click', 'symptom_match', 'call_outcome', 'loqueviene_click', 'numero_reportado', 'salida', 'directions_click', 'menu_click', 'recommendation_view', 'libro_click'])
+const REGISTRO_EVENTS = new Set(['click_to_call', 'click_whatsapp', 'veci_click', 'symptom_match', 'call_outcome', 'loqueviene_click', 'numero_reportado', 'salida', 'directions_click', 'menu_click', 'recommendation_view', 'libro_click', 'proximo_click'])
 const SALIDA_TRAMOS = new Set(['0-10', '10-30', '30-90', '90+'])
 // 28 sep 2026: resultado de la llamada ("la verdad después del click"). Solo estas claves.
 // no_llame (28 sep 2026): 72% cerraba la hoja con la ×; las 5 opciones suponían que alguien habló.
@@ -21068,7 +21067,7 @@ async function handleRegistroHub(req: any, res: any) {
     const conMMM = inTown.filter((p: any) => planMap.get(String(p.npi))?.mmm).length
     const conVital = inTown.filter((p: any) => planMap.get(String(p.npi))?.vital).length
     const conMCS = inTown.filter((p: any) => planMap.get(String(p.npi))?.mcs).length
-    const rowsOf = (list: any[], showTown: boolean) => list.map((p: any) => `<tr class="border-t border-slate-100"><td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td>${showTown ? `<td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '—')}</td>` : ''}<td class="py-2 px-3">${planBadges(planMap.get(String(p.npi)), en)}</td><td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[48px] px-3 border border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs rounded-full whitespace-nowrap reg-call"><i class="fa-solid fa-phone"></i> ${t('Llamar', 'Call')}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td></tr>`).join('')
+    const rowsOf = (list: any[], showTown: boolean) => list.map((p: any) => `<tr class="border-t border-slate-100"><td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td>${showTown ? `<td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '—')}</td>` : ''}<td class="py-2 px-3">${planBadges(planMap.get(String(p.npi)), en)}</td><td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" data-rg-n="${escapeHtml(cleanProviderName(p.name))}" data-rg-m="${escapeHtml(p.municipality || '')}" data-rg-g="${showTown ? 2 : 1}" class="inline-flex items-center justify-center gap-1 min-h-[48px] px-3 border border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs rounded-full whitespace-nowrap reg-call"><i class="fa-solid fa-phone"></i> ${t('Llamar', 'Call')}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td></tr>`).join('')
     const theadOf = (showTown: boolean) => `<thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(label)}</th>${showTown ? `<th class="py-2 px-3">${t('Pueblo', 'Town')}</th>` : ''}<th class="py-2 px-3">${t('Plan', 'Plan')}</th><th class="py-2 px-3 text-right">${t('Teléfono', 'Phone')}</th></tr></thead>`
     // El título compite en posición 8-11 contra "Best/Top 10". Gana el que dice el resultado:
     // cuántos hay y que traen teléfono. Y cuando no hay, decirlo es lo único que nadie más hace.
@@ -21337,7 +21336,7 @@ ${regDisclaimer(en)}`
     <td class="py-2 px-3"><a href="/especialista/${encodeURIComponent(p.slug)}${lp}" class="font-semibold text-slate-800 hover:text-teal-700 hover:underline">${escapeHtml(cleanProviderName(p.name))}</a></td>
     <td class="py-2 px-3 text-slate-600">${escapeHtml(p.municipality || '—')}</td>
     <td class="py-2 px-3">${planBadges(planMapH.get(String((p as any).npi)), en)}</td>
-    <td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" class="inline-flex items-center justify-center gap-1 min-h-[48px] px-3 border border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs rounded-full whitespace-nowrap reg-call"><i class="fa-solid fa-phone"></i> ${t('Llamar', 'Call')}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td>
+    <td class="py-2 px-3 text-right">${p.phone ? `<a href="tel:${escapeHtml((p.phone || '').replace(/\D/g, ''))}" data-rg-n="${escapeHtml(cleanProviderName(p.name))}" data-rg-m="${escapeHtml(p.municipality || '')}" data-rg-g="1" class="inline-flex items-center justify-center gap-1 min-h-[48px] px-3 border border-teal-600 text-teal-700 hover:bg-teal-600 hover:text-white font-bold text-xs rounded-full whitespace-nowrap reg-call"><i class="fa-solid fa-phone"></i> ${t('Llamar', 'Call')}</a>` : `<span class="text-slate-400">${t('sin teléfono', 'no phone')}</span>`}</td>
   </tr>`).join('')
   const thead = `<thead><tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500"><th class="py-2 px-3">${escapeHtml(label)}</th><th class="py-2 px-3">${t('Pueblo', 'Town')}</th><th class="py-2 px-3">${t('Plan', 'Plan')}</th><th class="py-2 px-3 text-right">${t('Teléfono', 'Phone')}</th></tr></thead>`
 

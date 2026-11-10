@@ -18,6 +18,25 @@
 
 **Rule for new work:** build in dialect A. When you touch a B or C file, move what you touch toward A; never introduce a 4th dialect.
 
+## Registro (registromedicopr.com)
+
+Extracted from `layout()` in `api/mapa-pages.ts` on 2026-11-10, not invented. The dialect C row above is out of date for the Registro: its shell loads Fraunces + Source Sans 3 and has its own dark mode. Read this before touching anything visual on registromedicopr.com.
+
+| Role | Value |
+|---|---|
+| Main action (call buttons, Sí) | `#0f766e` (teal-700), hover `#115e59`; white text |
+| No / wrong number | `#b91c1c` |
+| Text | `#0f172a`; secondary `#475569` (slate-400/500 are forced to it) |
+| Page background | `#faf9f7` |
+| Tints | answered `#ecfdf5` / `#6ee7b7` · called, no answer `#fffbeb` / `#fcd34d` · action card `#f0fdfa` |
+| Dark mode | `#0f172a` page, `#1e293b` cards, `#334155` borders, `#f1f5f9` text, links `#5eead4` (toggle stores `theme` in localStorage) |
+| Type | Fraunces 500-700 for headings and the one name that matters; Source Sans 3 for everything else |
+| Sizes | nothing under 16px (the shell forces it); body 17-18px; main button 19px |
+| Touch | 48px minimum, the main call button 56px full width; the phone is always a button |
+| Layout | 1 column, `max-w-3xl`; provider tables become cards under 640px |
+
+Rules of the house: never "verificado" as a promise, never "acepta tu plan", never "recomendado"; Spanish first; every new piece of call UI lives in `api/_lib/hoja-llamada.ts` (one copy for lists, fichas and the after-call sheet). Signature of the call flow: the count, "Llevas 2 de 13".
+
 ## Tokens (dialect A, canonical)
 
 ### Color
