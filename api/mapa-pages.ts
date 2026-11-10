@@ -55,7 +55,8 @@ const supabase = createClient(
 
 const SITE_URL = 'https://www.mapadecaborojo.com'
 const PHONE_CTA = '787-417-7711'
-const RESEND_API_KEY = process.env.RESEND_API_KEY || ''
+// .trim(): la variable de producción traía un salto de línea al final (10 nov 2026).
+const RESEND_API_KEY = (process.env.RESEND_API_KEY || '').trim()
 const FROM_EMAIL = 'MapaDeCaboRojo <newsletter@mapadecaborojo.com>'
 const REPLY_TO = 'angel@angelanderson.com'
 
@@ -7972,6 +7973,25 @@ ${SHARE_COPY_SCRIPT}
   }))
 }
 
+// 10 nov 2026: los 2 correos del reclamo fallaban callados. La llave de producción no era de
+// Resend (400 "API key is invalid") y el remitente usaba un dominio sin verificar en la cuenta.
+// Ahora el fallo queda en el log de Vercel y el remitente es del dominio verificado.
+const FROM_REGISTRO = 'Registro Médico PR <registro@avisos.caborojo.com>'
+async function enviarCorreoResend(etiqueta: string, cuerpo: Record<string, unknown>): Promise<boolean> {
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(cuerpo),
+    })
+    if (r.ok) return true
+    console.error(`[correo ${etiqueta}] Resend ${r.status}: ${(await r.text()).slice(0, 200)}`)
+  } catch (e: any) {
+    console.error(`[correo ${etiqueta}] no salió: ${String(e?.message || e).slice(0, 200)}`)
+  }
+  return false
+}
+
 async function handleEspecialistaClaim(req: any, res: any) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8')
   try {
@@ -8036,11 +8056,8 @@ async function handleEspecialistaClaim(req: any, res: any) {
         const pageUrl = rutaCuido ? `${rutaCuido.startsWith('/cuido/') ? 'https://registromedicopr.com' : CUIDO_BASE}${rutaCuido}`
           : esCuido ? 'https://registromedicopr.com/cuido'
           : slug ? `https://registromedicopr.com/especialista/${slug}` : 'https://registromedicopr.com/registro'
-        await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            from: FROM_EMAIL, to: String(b.contact_email), reply_to: REPLY_TO,
+        await enviarCorreoResend('reclamo-confirmacion', {
+            from: FROM_REGISTRO, to: String(b.contact_email), reply_to: REPLY_TO,
             subject: esCuido ? 'Recibimos los datos de tu hogar · Registro Médico PR' : 'Recibimos tu corrección · Registro Médico PR',
             html: esCuido ? `<p>Gracias por poner al día la ficha de <strong>${escapeHtml(String(b.provider_name || 'tu hogar'))}</strong>.</p>
 <p>Esta es la página pública: <a href="${pageUrl}">${pageUrl}</a></p>
@@ -8051,18 +8068,14 @@ async function handleEspecialistaClaim(req: any, res: any) {
 <p>Las correcciones se aplican a mano y quedan anotadas con fecha en <a href="https://registromedicopr.com/cambios">registromedicopr.com/cambios</a>. Si algo más está mal (teléfono, dirección, horario, planes), responde a este correo y se corrige.</p>
 <p>El registro federal a veces pasa años sin actualizarse. Esto se arregla entre todos, y es gratis: es pa' que los vecinos encuentren quién resuelve.</p>
 <p>- Angel | registromedicopr.com</p>`,
-          }),
         })
-      } catch { /* email best-effort */ }
+      } catch (e: any) { console.error(`[correo reclamo-confirmacion] no se armó: ${String(e?.message || e).slice(0, 200)}`) }
     }
     // Notify Angel (non-blocking)
     if (RESEND_API_KEY) {
       try {
-        await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            from: FROM_EMAIL, to: REPLY_TO, reply_to: b.contact_email || REPLY_TO,
+        await enviarCorreoResend('reclamo-aviso', {
+            from: FROM_REGISTRO, to: REPLY_TO, reply_to: b.contact_email || REPLY_TO,
             subject: esCuido ? `🏠 Hogar de cuido puso su ficha al día: ${b.provider_name || b.place_id}` : `🩺 Reclamo de perfil: ${b.provider_name || b.npi}${b.wants_vitrina ? ' · QUIERE VITRINA' : ''}`,
             html: `<p><strong>${escapeHtml(String(b.provider_name || ''))}</strong> (${esCuido ? 'hogar de cuido' : 'NPI ' + escapeHtml(String(b.npi || ''))})</p>
 ${esCuido ? `<p><strong>${escapeHtml(notasCuido || 'No trajo tarifa ni camas.')}</strong>${rutaCuido ? `<br>Ficha: ${escapeHtml(rutaCuido)}` : ''}</p>` : ''}
@@ -8076,9 +8089,10 @@ Planes: ${escapeHtml(plans.join(', ') || '—')}<br>
 Web: ${escapeHtml(String(b.website || '—'))}<br>
 ${b.wants_vitrina ? '<strong>⭐ Quiere que lo llamen sobre La Vitrina Especialista</strong>' : ''}</p>
 <p style="color:#64748b;font-size:12px">provider_claims · registromedicopr.com</p>`,
-          }),
         })
-      } catch { /* email best-effort */ }
+      } catch (e: any) { console.error(`[correo reclamo-aviso] no se armó: ${String(e?.message || e).slice(0, 200)}`) }
+    } else {
+      console.error('[correo reclamo-aviso] sin RESEND_API_KEY: el reclamo quedó solo en provider_claims')
     }
     // Antes devolvía ok aunque la fila no entrara. Los correos salen igual (el dato no se pierde),
     // pero el que llenó el formulario ya no ve "Gracias" si la fila no se guardó.
