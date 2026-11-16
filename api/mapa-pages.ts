@@ -7482,9 +7482,15 @@ async function handleEspecialista(req: any, res: any) {
   const actionBtns = `${centralHtml}<div class="not-prose grid grid-cols-2 gap-2 ${centralHtml ? 'mt-3' : 'mt-5'}">
     ${telLink ? `<a href="${telLink}" onclick="try{gtag('event','click_to_call',{${evtAttr}})}catch(e){}" class="col-span-2 flex items-center justify-center gap-2 bg-teal-700 hover:bg-teal-800 text-white font-bold px-5 min-h-[56px] rounded-xl text-lg no-underline"><i class="fa-solid fa-phone"></i> ${T.call} ${escapeHtml(place.phone)}</a>` : ''}
     ${telLink ? altMedicareBtn : ''}
-    ${waLink ? `<a href="${waLink}" onclick="try{gtag('event','click_whatsapp',{${evtAttr}})}catch(e){}" class="flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-base no-underline hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${T.wa}</a>` : ''}
-    <a href="https://wa.me/17874177711?text=${spec ? spec.kw : 'ESPECIALISTA'}" class="${waLink ? '' : 'col-span-2 '}flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-base no-underline hover:bg-teal-50"><i class="fa-brands fa-whatsapp"></i> ${T.veci}</a>
+    ${waLink ? `<a href="${waLink}" onclick="try{gtag('event','click_whatsapp',{${evtAttr}})}catch(e){}" class="col-span-2 flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-base no-underline hover:bg-teal-50"><i class="fa-brands fa-whatsapp text-lg"></i> ${t('WhatsApp de la oficina', 'Office WhatsApp')}</a>` : ''}
     ${webUrl ? `<a href="${escapeHtml(webUrl)}" target="_blank" rel="noopener nofollow" class="col-span-2 flex items-center justify-center gap-2 bg-white border border-stone-300 text-stone-800 font-bold px-3 min-h-[48px] rounded-xl text-base no-underline hover:bg-teal-50"><i class="fa-solid fa-globe"></i> ${t('Página web de la oficina', 'Office website')}</a>` : ''}
+  </div>
+  <!-- 16 nov 2026: el botón del Veci estaba pegado al WhatsApp del médico y con el mismo estilo.
+       39 personas en una semana le escribieron al 787-417-7711 creyendo que era la oficina
+       (citas, recetas, "llámenme"). Se separa, se ve distinto y dice que no es la oficina. -->
+  <div class="not-prose mt-3 rounded-xl border border-dashed border-amber-300 bg-amber-50 px-4 py-3 text-sm text-stone-700">
+    <b>${t('¿No contestan?', 'No answer?')}</b> ${t('El Veci te busca otra opción. Ojo: el Veci es un directorio gratis, <b>no es la oficina</b> de este médico; no ve citas ni recetas.', 'El Veci can find you another option. Note: El Veci is a free directory, <b>not this doctor\'s office</b>; it can\'t see appointments or prescriptions.')}
+    <a href="https://wa.me/17874177711?text=${spec ? spec.kw : 'ESPECIALISTA'}" onclick="try{gtag('event','veci_click',{${evtAttr}})}catch(e){}" class="block mt-2 font-bold text-amber-800 underline">${t('Pregúntale al Veci por otra opción', 'Ask El Veci for another option')}</a>
   </div>${telLink ? `<div id="rg-mia-f" class="not-prose" data-rg-d="${escapeHtml(String(place.phone || '').replace(/\D/g, '').slice(-10))}"></div>` : ''}
   <p class="not-prose mt-3 text-base font-semibold text-stone-800" style="font-size:16px">${t('Antes de ir, pregunta: ¿aceptan mi plan 2027?', 'Before you go, ask: do you take my 2027 plan?')}</p>${place.hours ? `<p class="not-prose mt-3 text-base text-stone-700"><b>${t('Horario', 'Hours')}:</b> ${horasLegibles(place.hours, t)}</p>` : ''}`
 
